@@ -17,6 +17,7 @@ def run_agent(task):
     assistant.write_report()
     assistant.write_resource_report()
     assistant.write_outline_report()
+    assistant.write_lessons()
 
     end_time = datetime.datetime.now()
     print("End time: ", end_time)
