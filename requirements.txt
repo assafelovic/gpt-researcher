@@ -1,6 +1,12 @@
-openai~=0.27.0
-python-dotenv~=0.21.0
+# dependencies
+asyncio==3.4.3
+beautifulsoup4==4.9.3
+colorama==0.4.6
 duckduckgo_search==3.0.2
-playwright
-asyncio
-md2pdf
+md2pdf==1.0.1
+openai~=0.27.0
+playwright==1.35.0
+python-dotenv~=0.21.0
+pyyaml==6.0
+selenium==4.10.0
+webdriver-manager==3.8.6

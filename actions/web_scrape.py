@@ -7,7 +7,10 @@ from pathlib import Path
 from sys import platform
 
 from bs4 import BeautifulSoup
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
@@ -15,8 +18,6 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.safari.options import Options as SafariOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.firefox import GeckoDriverManager
 
 import processing.text as summary
 
@@ -24,12 +25,24 @@ from config import Config
 from processing.html import extract_hyperlinks, format_hyperlinks
 
 from concurrent.futures import ThreadPoolExecutor
+
 executor = ThreadPoolExecutor()
 
 FILE_DIR = Path(__file__).parent.parent
 CFG = Config()
 
+
 async def async_browse(url: str, question: str) -> str:
+    """Browse a website and return the answer and links to the user
+
+    Args:
+        url (str): The url of the website to browse
+        question (str): The question asked by the user
+
+    Returns:
+        str: The answer and links to the user
+        """
+
     loop = asyncio.get_event_loop()
 
     driver, text = await loop.run_in_executor(executor, scrape_text_with_selenium, url)
@@ -38,6 +51,7 @@ async def async_browse(url: str, question: str) -> str:
 
     await loop.run_in_executor(executor, close_browser, driver)
     return f"Information gathered from url {url}: {summary_text}"
+
 
 def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
     """Browse a website and return the answer and links to the user
@@ -89,13 +103,15 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
 
     options = options_available[CFG.selenium_web_browser]()
     options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/112.0.5615.49 Safari/537.36 "
     )
     options.add_argument('--headless')
 
     if CFG.selenium_web_browser == "firefox":
+        service = Service(executable_path=GeckoDriverManager().install())
         driver = webdriver.Firefox(
-            executable_path=GeckoDriverManager().install(), options=options
+            service=service, options=options
         )
     elif CFG.selenium_web_browser == "safari":
         # Requires a bit more setup on the users end
@@ -106,8 +122,9 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--remote-debugging-port=9222")
         options.add_argument("--no-sandbox")
+        service = Service(executable_path=ChromeDriverManager().install())
         driver = webdriver.Chrome(
-            executable_path=ChromeDriverManager().install(), options=options
+            service=service, options=options
         )
     driver.get(url)
 
@@ -122,7 +139,7 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     for script in soup(["script", "style"]):
         script.extract()
 
-    #text = soup.get_text()
+    # text = soup.get_text()
     text = get_text(soup)
 
     lines = (line.strip() for line in text.splitlines())
@@ -130,12 +147,22 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     text = "\n".join(chunk for chunk in chunks if chunk)
     return driver, text
 
+
 def get_text(soup):
+    """Get the text from the soup
+
+    Args:
+        soup (BeautifulSoup): The soup to get the text from
+
+    Returns:
+        str: The text from the soup
+    """
     text = ""
     tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'p']
     for element in soup.find_all(tags):  # Find all the <p> elements
         text += element.text + "\n\n"
     return text
+
 
 def scrape_links_with_selenium(driver: WebDriver, url: str) -> list[str]:
     """Scrape links from a website using selenium
