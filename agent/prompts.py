@@ -61,3 +61,31 @@ def generate_outline_report_prompt(question, research_summary):
            ' for the research report, including the main sections, subsections, and key points to be covered.' \
            ' The research report should be detailed, informative, in-depth, and a minimum of 1,200 words.' \
            ' Use appropriate Markdown syntax to format the outline and ensure readability.'
+
+def generate_concepts_prompt(question, research_summary):
+    """ Generates the concepts prompt for the given question.
+    Args: question (str): The question to generate the concepts prompt for
+            research_summary (str): The research summary to generate the concepts prompt for
+    Returns: str: The concepts prompt for the given question
+    """
+
+    return f'"""{research_summary}""" Using the above information, generate a list of 5 main concepts to learn for a research report'\
+           f' on the following question or topic: "{question}". The outline should provide a well-structured framework'\
+           'You must respond with a list of strings in the following format: ["concepts 1", "concepts 2", "concepts 3", "concepts 4, concepts 5"]'
+
+
+def generate_lesson_prompt(concept):
+    """
+    Generates the lesson prompt for the given question.
+    Args:
+        concept (str): The concept to generate the lesson prompt for.
+    Returns:
+        str: The lesson prompt for the given concept.
+    """
+
+    prompt = f'generate a comprehensive lesson about {concept} in Markdown syntax. This should include the definition'\
+    'of {concept}, its historical background and development, its applications or uses in different'\
+    'fields, and notable events or facts related to {concept}.'
+
+    return prompt
+

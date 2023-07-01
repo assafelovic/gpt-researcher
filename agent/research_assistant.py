@@ -68,7 +68,7 @@ class ResearchAssistant:
             "content": prompts.generate_search_queries_prompt(self.question),
         }]
         result = create_chat_completion(
-            model=CFG.fast_llm_model,
+            model='gpt-4',
             messages=messages,
         )
         print(f"Search queries: {result}")
@@ -195,3 +195,49 @@ class ResearchAssistant:
         print(f"Outline Report written to {file_path}.pdf")
         return answer
 
+    def create_concepts(self):
+        """ Creates the concepts for the given question.
+        Args: None
+        Returns: list[str]: The concepts for the given question
+        """
+
+        messages = [{
+            "role": "system",
+            "content": prompts.generate_agent_role_prompt(),
+        }, {
+            "role": "user",
+            "content": prompts.generate_concepts_prompt(self.question, self.research_summary),
+        }]
+        result = create_chat_completion(
+            model=CFG.fast_llm_model,
+            messages=messages,
+        )
+        print(f"Search queries: {result}")
+        return json.loads(result)
+
+    def write_lessons(self):
+        """ Writes lessons on essential concepts of the research.
+        Args: None
+        Returns: None
+        """
+        concepts = self.create_concepts()
+        for concept in concepts:
+
+            messages = [{
+                "role": "system",
+                "content": prompts.generate_agent_role_prompt(),
+            }, {
+                "role": "user",
+                "content": prompts.generate_lesson_prompt(concept),
+            }]
+            print(f"Writing a lesson on: {concept}...")
+            answer = create_chat_completion(
+                model="gpt-4",
+                messages=messages,
+                stream=True,
+            )
+            file_path = f"./outputs/{self.directory_name}/lessons/{concept}"
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            write_to_file(f"{file_path}.md", answer)
+            md_to_pdf(f"{file_path}.md", f"{file_path}.pdf")
+            print(f"Lesson written to {file_path}.pdf")
