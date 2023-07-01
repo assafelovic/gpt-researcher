@@ -5,7 +5,12 @@ import asyncio
 import json
 from actions.web_search import web_search
 from actions.web_scrape import async_browse
-from processing.text import write_to_file, create_message, create_chat_completion, md_to_pdf, read_txt_files
+from processing.text import \
+    write_to_file, \
+    create_message, \
+    create_chat_completion, \
+    read_txt_files, \
+    write_md_to_pdf
 from config import Config
 from agent import prompts
 import os
@@ -54,50 +59,29 @@ class ResearchAssistant:
                 new_urls.append(url)
         return new_urls
 
+    def call_agent(self, action, stream=False):
+        messages = [{
+            "role": "system",
+            "content": prompts.generate_agent_role_prompt(),
+        }, {
+            "role": "user",
+            "content": action,
+        }]
+        answer = create_chat_completion(
+            model="gpt-4",
+            messages=messages,
+            stream=stream,
+        )
+        return answer
+
     def create_search_queries(self):
         """ Creates the search queries for the given question.
         Args: None
         Returns: list[str]: The search queries for the given question
         """
-
-        messages = [{
-            "role": "system",
-            "content": prompts.generate_agent_role_prompt(),
-        }, {
-            "role": "user",
-            "content": prompts.generate_search_queries_prompt(self.question),
-        }]
-        result = create_chat_completion(
-            model='gpt-4',
-            messages=messages,
-        )
+        result = self.call_agent(prompts.generate_search_queries_prompt(self.question))
         print(f"Search queries: {result}")
         return json.loads(result)
-
-    def write_report(self):
-        """ Writes the report for the given question.
-        Args: None
-        Returns: str: The report for the given question
-        """
-
-        messages = [{
-            "role": "system",
-            "content": prompts.generate_agent_role_prompt(),
-        }, {
-            "role": "user",
-            "content": prompts.generate_report_prompt(self.question, self.research_summary),
-        }]
-        print(f"Writing report for query: {self.question}...")
-        answer = create_chat_completion(
-            model="gpt-4",
-            messages=messages,
-            stream=True,
-        )
-        file_path = f"./outputs/{self.directory_name}/report"
-        write_to_file(f"{file_path}.md", answer)
-        md_to_pdf(f"{file_path}.md", f"{file_path}.pdf")
-        print(f"Report written to {file_path}.pdf")
-        return answer
 
     async def async_search(self, query):
         """ Runs the async search for the given query.
@@ -137,83 +121,34 @@ class ResearchAssistant:
         if not self.research_summary:
             search_queries = self.create_search_queries()  # + [self.question]
             for query in search_queries:
-                research_result = self.run_search_summary(query)  # summarize(run_search_summary(query), query)
-                self.research_summary += f"{research_result}\n\n"  # f"{query}\n{research_result}\n\n"
+                research_result = self.run_search_summary(query)
+                self.research_summary += f"{research_result}\n\n"
                 print("Research summary so far: ", self.research_summary)
 
         print(self.research_summary)
         print("Total research words: {0}".format(len(self.research_summary.split(" "))))
         return self.research_summary
 
-    def write_resource_report(self):
-        """ Writes the resource report for the given question.
-        Args: None
-        Returns: str: The resource report for the given question
-        """
-
-        messages = [{
-            "role": "system",
-            "content": prompts.generate_agent_role_prompt(),
-        }, {
-            "role": "user",
-            "content": prompts.generate_resource_report_prompt(self.question, self.research_summary),
-        }]
-        print(f"Writing resource report for query: {self.question}...")
-        answer = create_chat_completion(
-            model="gpt-4",
-            messages=messages,
-            stream=True,
-        )
-        file_path = f"./outputs/{self.directory_name}/resource_report"
-        write_to_file(f"{file_path}.md", answer)
-        md_to_pdf(f"{file_path}.md", f"{file_path}.pdf")
-        print(f"Resource Report written to {file_path}.pdf")
-        return answer
-
-    def write_outline_report(self):
-        """ Writes the outline report for the given question.
-        Args: None
-        Returns: str: The outline report for the given question
-        """
-
-        messages = [{
-            "role": "system",
-            "content": prompts.generate_agent_role_prompt(),
-        }, {
-            "role": "user",
-            "content": prompts.generate_outline_report_prompt(self.question, self.research_summary),
-        }]
-        print(f"Writing resource report for query: {self.question}...")
-        answer = create_chat_completion(
-            model="gpt-4",
-            messages=messages,
-            stream=True,
-        )
-        file_path = f"./outputs/{self.directory_name}/outline_report"
-        write_to_file(f"{file_path}.md", answer)
-        md_to_pdf(f"{file_path}.md", f"{file_path}.pdf")
-        print(f"Outline Report written to {file_path}.pdf")
-        return answer
-
     def create_concepts(self):
         """ Creates the concepts for the given question.
         Args: None
         Returns: list[str]: The concepts for the given question
         """
+        result = self.call_agent(prompts.generate_concepts_prompt(self.question, self.research_summary))
 
-        messages = [{
-            "role": "system",
-            "content": prompts.generate_agent_role_prompt(),
-        }, {
-            "role": "user",
-            "content": prompts.generate_concepts_prompt(self.question, self.research_summary),
-        }]
-        result = create_chat_completion(
-            model=CFG.fast_llm_model,
-            messages=messages,
-        )
         print(f"Search queries: {result}")
         return json.loads(result)
+
+    def write_report(self, report_type):
+        """ Writes the report for the given question.
+        Args: None
+        Returns: str: The report for the given question
+        """
+        report_type = prompts.get_report_by_type(report_type)
+        answer = self.call_agent(report_type(self.question, self.research_summary), stream=True)
+        print(f"Writing {report_type} for query: {self.question}...")
+        write_md_to_pdf(report_type, self.directory_name, answer)
+        return answer
 
     def write_lessons(self):
         """ Writes lessons on essential concepts of the research.
@@ -222,22 +157,5 @@ class ResearchAssistant:
         """
         concepts = self.create_concepts()
         for concept in concepts:
-
-            messages = [{
-                "role": "system",
-                "content": prompts.generate_agent_role_prompt(),
-            }, {
-                "role": "user",
-                "content": prompts.generate_lesson_prompt(concept),
-            }]
-            print(f"Writing a lesson on: {concept}...")
-            answer = create_chat_completion(
-                model="gpt-4",
-                messages=messages,
-                stream=True,
-            )
-            file_path = f"./outputs/{self.directory_name}/lessons/{concept}"
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            write_to_file(f"{file_path}.md", answer)
-            md_to_pdf(f"{file_path}.md", f"{file_path}.pdf")
-            print(f"Lesson written to {file_path}.pdf")
+            answer = self.call_agent(prompts.generate_lesson_prompt(concept), stream=True)
+            write_md_to_pdf("Lesson", self.directory_name, answer)
