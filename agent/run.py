@@ -3,7 +3,7 @@ from agent.research_assistant import ResearchAssistant
 import datetime
 
 
-def run_agent(task):
+def run_agent(task, report_type):
     """ Runs the agent with the given task.
     Args: task (str): The task to run the agent with
     Returns: None
@@ -14,9 +14,10 @@ def run_agent(task):
 
     assistant = ResearchAssistant(task)
     assistant.conduct_research()
-    assistant.write_report()
-    assistant.write_resource_report()
-    assistant.write_outline_report()
+    assistant.write_report(report_type)
+    #assistant.write_report("research_report")
+    #assistant.write_report("resource_report")
+    #assistant.write_report("outline_report")
     assistant.write_lessons()
 
     end_time = datetime.datetime.now()
