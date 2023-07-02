@@ -84,8 +84,16 @@ def generate_lesson_prompt(concept):
     """
 
     prompt = f'generate a comprehensive lesson about {concept} in Markdown syntax. This should include the definition'\
-    'of {concept}, its historical background and development, its applications or uses in different'\
-    'fields, and notable events or facts related to {concept}.'
+    f'of {concept}, its historical background and development, its applications or uses in different'\
+    f'fields, and notable events or facts related to {concept}.'
 
     return prompt
+
+def get_report_by_type(report_type):
+    report_type_mapping = {
+        'research_report': generate_report_prompt,
+        'resource_report': generate_resource_report_prompt,
+        'outline_report': generate_outline_report_prompt
+    }
+    return report_type_mapping[report_type]
 
