@@ -13,8 +13,6 @@ CFG = Config()
 
 openai.api_key = CFG.openai_api_key
 
-# Overly simple abstraction until we create something better
-# simple retry mechanism when getting a rate error or a bad gateway
 def create_chat_completion(
     messages: list,  # type: ignore
     model: str | None = None,
