@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ResearchGPT</title>
+    <meta name="description" content="A research assistant powered by GPT-4">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="../static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+        textarea {
+            width: 100%;
+        }
+        h2 {
+            margin-top: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .navbar {
+            margin-bottom: 20px;
+        }
+        footer {
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #333;
+            color: #f7f7f7;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">ResearchGPT</a>
+    </nav>
+
+    <div class="container">
+        <form method="POST" class="mt-5">
+            <div class="form-group">
+                <label for="task">What would you like me to research next?</label>
+                <textarea name="task" rows="5" class="form-control" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="report_type">What type of report would you like me to generate?</label>
+                <select name="report_type" class="form-control" required>
+                    <option value="research_report">Research Report</option>
+                    <option value="resource_report">Resource Report</option>
+                    <option value="outline_report">Outline Report</option>
+                </select>
+            </div>
+            <input type="submit" value="Research" class="btn btn-primary">
+        </form>
+
+        {% if report %}
+            <div>
+                <h2>Research Report</h2>
+
+                <div id="reportContainer">
+                    {{ report | safe }}  <!-- Display the report as HTML -->
+                </div>
+
+                <button onclick="copyToClipboard()" class="btn btn-secondary mt-3">Copy to clipboard</button>
+                <a href="/{{ path }}" class="btn btn-secondary mt-3">Download as PDF</a>  <!-- Use the 'path' variable for the download link -->
+            </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        <p>ResearchGPT &copy; 2023</p>
+    </footer>
+
+    <script>
+        function copyToClipboard() {
+            var textarea = document.createElement('textarea')
+            textarea.id = 'temp_element'
+            textarea.style.height = 0
+            document.body.appendChild(textarea)
+            textarea.value = document.getElementById('reportContainer').innerText
+            var selector = document.querySelector('#temp_element')
+            selector.select()
+            document.execCommand('copy')
+            // Remove the <textarea> element
+            document.body.removeChild(textarea)
+        }
+    </script>
+
+</body>
+</html>

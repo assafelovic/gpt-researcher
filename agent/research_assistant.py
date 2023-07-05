@@ -3,6 +3,7 @@
 # libraries
 import asyncio
 import json
+import string
 from actions.web_search import web_search
 from actions.web_scrape import async_browse
 from processing.text import \
@@ -29,6 +30,8 @@ class ResearchAssistant:
         self.visited_urls = set()
         self.research_summary = ""
         self.directory_name = question[:100] if len(question) > 100 else question
+        self.directory_name = ''.join(c for c in self.directory_name if c in string.ascii_letters or c in string.digits or c.isspace())
+
         self.dir_path = os.path.dirname(f"./outputs/{self.directory_name}/")
 
     def summarize(self, text, topic):
@@ -95,33 +98,30 @@ class ResearchAssistant:
         print("Visited urls: ", self.visited_urls)
         return await asyncio.gather(*tasks)
 
-    def run_search_summary(self, query):
+    async def run_search_summary(self, query):
         """ Runs the search summary for the given query.
         Args: query (str): The query to run the search summary for
         Returns: str: The search summary for the given query
         """
-
         print(f"Running research for {query}...")
-        loop = asyncio.get_event_loop()
-        responses = loop.run_until_complete(self.async_search(query))
+        responses = await self.async_search(query)
 
         result = "\n".join(responses)
         os.makedirs(os.path.dirname(f"./outputs/{self.directory_name}/research-{query}.txt"), exist_ok=True)
         write_to_file(f"./outputs/{self.directory_name}/research-{query}.txt", result)
         return result
 
-    def conduct_research(self):
+    async def conduct_research(self):
         """ Conducts the research for the given question.
         Args: None
         Returns: str: The research for the given question
         """
-
         self.research_summary = read_txt_files(self.dir_path) if os.path.isdir(self.dir_path) else ""
 
         if not self.research_summary:
             search_queries = self.create_search_queries()  # + [self.question]
             for query in search_queries:
-                research_result = self.run_search_summary(query)
+                research_result = await self.run_search_summary(query)
                 self.research_summary += f"{research_result}\n\n"
                 print("Research summary so far: ", self.research_summary)
 
@@ -144,11 +144,11 @@ class ResearchAssistant:
         Args: None
         Returns: str: The report for the given question
         """
-        report_type = prompts.get_report_by_type(report_type)
-        answer = self.call_agent(report_type(self.question, self.research_summary), stream=True)
-        print(f"Writing {report_type} for query: {self.question}...")
-        write_md_to_pdf(report_type, self.directory_name, answer)
-        return answer
+        report_type_func = prompts.get_report_by_type(report_type)
+        answer = self.call_agent(report_type_func(self.question, self.research_summary), stream=True)
+        print(f"Writing {report_type} report for query: {self.question}...")
+        path = write_md_to_pdf(report_type, self.directory_name, answer)
+        return answer, path
 
     def write_lessons(self):
         """ Writes lessons on essential concepts of the research.
