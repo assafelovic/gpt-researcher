@@ -12,7 +12,7 @@ ResearchGPT is an open-source autonomous agent designed for comprehensive online
 The main idea is to run a "planner" and "execution" agent, whereas the planner generates questions to research, and the execution agents seek the most related information. Finally, the planner aggregates all related information and creates a final research report.
 
 <div align="center">
-<img align="center" height="150" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
+<img align="center" height="450" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
 </div>
 
 More specifcally:
