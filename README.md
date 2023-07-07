@@ -52,8 +52,8 @@ $ export OPENAI_API_KEY={Your API Key here}
 ```bash
 $ uvicorn main:app --reload
 ```
-
-> **Step #5** - Open http://localhost:8000 on any browser and enjoy researching!
+<br />
+> **Step #5** - Go to http://localhost:8000 on any browser and enjoy researching!
 
 ## 🛡 Disclaimer
 
