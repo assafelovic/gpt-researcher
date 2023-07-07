@@ -1,4 +1,5 @@
 """Text processing functions"""
+import urllib
 from typing import Dict, Generator, Optional
 import string
 
@@ -59,24 +60,18 @@ def summarize_text(
     if not text:
         return "Error: No text to summarize"
 
-    text_length = len(text)
-    print(f"Text length: {text_length} characters")
-
     summaries = []
     chunks = list(split_text(text))
     scroll_ratio = 1 / len(chunks)
 
-    print("Summarizing text for url {0}...".format(url))
     for i, chunk in enumerate(chunks):
         if driver:
             scroll_to_percentage(driver, scroll_ratio * i)
-        print(f"Adding chunk {i + 1} / {len(chunks)} to memory")
 
         memory_to_add = f"Source: {url}\n" f"Raw content part#{i + 1}: {chunk}"
 
         #MEMORY.add_documents([Document(page_content=memory_to_add)])
 
-        print(f"Summarizing chunk {i + 1} / {len(chunks)}")
         messages = [create_message(chunk, question)]
 
         summary = create_chat_completion(
@@ -84,13 +79,10 @@ def summarize_text(
             messages=messages,
         )
         summaries.append(summary)
-        print(f"Added chunk {i + 1} summary to memory")
-
         memory_to_add = f"Source: {url}\n" f"Content summary part#{i + 1}: {summary}"
 
         #MEMORY.add_documents([Document(page_content=memory_to_add)])
 
-    print(f"Summarized {len(chunks)} chunks.")
 
     combined_summary = "\n".join(summaries)
     messages = [create_message(combined_summary, question)]
@@ -141,15 +133,18 @@ def write_to_file(filename: str, text: str) -> None:
         text (str): The text to write
         filename (str): The filename to write to
     """
-    with open(filename, "a") as file:
+    with open(filename, "w") as file:
         file.write(text)
 
-def write_md_to_pdf(task: str, directory_name: str, text: str) -> None:
+async def write_md_to_pdf(task: str, directory_name: str, text: str) -> None:
     file_path = f"./outputs/{directory_name}/{task}"
     write_to_file(f"{file_path}.md", text)
     md_to_pdf(f"{file_path}.md", f"{file_path}.pdf")
     print(f"{task} written to {file_path}.pdf")
-    return f"{file_path}.pdf"
+
+    encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
+
+    return encoded_file_path
 
 def read_txt_files(directory):
     all_text = ''

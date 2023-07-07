@@ -92,7 +92,6 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     Returns:
         Tuple[WebDriver, str]: The webdriver and the text scraped from the website
     """
-    print("Scraping text from website {0}...".format(url))
     logging.getLogger("selenium").setLevel(logging.CRITICAL)
 
     options_available = {
