@@ -1,4 +1,4 @@
-# GPT Researcher
+# 🔎 GPT Researcher
 GPT Researcher is an open-source autonomous agent designed for comprehensive online research on a variety of tasks. It produces detailed research reports in PDF format (for now), with customization options for focusing on relevant resources, outlines, and lessons. Inspired by [BabyAGI](https://github.com/yoheinakajima/babyagi) and the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) paper, GPT Researcher addresses issues of speed and determinism, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
 
 # Why GPT Researcher?
