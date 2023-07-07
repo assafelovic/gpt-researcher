@@ -29,7 +29,7 @@ More specifcally:
 
 ```bash
 $ git clone https://github.com/assafelovic/researchGPT.git
-$ cd researchGPT
+$ cd gpt-researcher
 ```
 
 <br />
