@@ -12,7 +12,7 @@ GPT Researcher is an open-source autonomous agent designed for comprehensive onl
 The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner aggregates all related information and creates a  research report.
 
 <div align="center">
-<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
+<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/arch.png">
 </div>
 
 More specifcally:
