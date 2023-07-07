@@ -1,23 +1,23 @@
-# ResearchGPT
-ResearchGPT is an open-source autonomous agent designed for comprehensive online research on a variety of tasks. It produces detailed research reports in PDF format, with customization options for focusing on relevant resources, outlines, and lessons. Inspired by AutoGPT, ResearchGPT addresses issues of speed and determinism, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operation.
+# GPT Researcher
+GPT Researcher is an open-source autonomous agent designed for comprehensive online research on a variety of tasks. It produces detailed research reports in PDF format (for now), with customization options for focusing on relevant resources, outlines, and lessons. Inspired by AutoGPT, ResearchGPT addresses issues of speed and determinism, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
 
-# Why ResearchGPT?
+# Why GPT Researcher?
 
-- To form abjective conclusions for manual research tasks can take time, sometimes weeks to find the right online resources.
-- Current LLMs are trained on past and sometimes irrelevant information.
-- Solutions that enable web search such as ChatGPT + Web Plugin, only consider limited resources that in some cases result in superficial conclusions or biased answers.
-- Using only a selection of resources can create bias in determing the right conclusions and answers. 
+- To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right online resources and answers.
+- Current LLMs are trained on past and outdated information.
+- Solutions that enable web search (such as ChatGPT + Web Plugin), only consider limited resources that in some cases result in superficial conclusions or biased answers.
+- Using only a selection of resources can create bias in determing the right conclusions for research questions or tasks. 
 
 # Architecture
-The main idea is to run a "planner" and "execution" agent, whereas the planner generates questions to research, and the execution agents seek the most related information. Finally, the planner aggregates all related information and creates a final research report.
+The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner aggregates all related information and creates a  research report.
 
 <div align="center">
 <img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
 </div>
 
 More specifcally:
-* Generate a set of research questions that together form an objective opinion on any task. 
-* For each research question, trigger a research agent that scrapes online resources for information relevant to the given task.
+* Generate a set of research questions that together form an objective opinion on any given task. 
+* For each research question (in parallel), trigger a crawler agent that scrapes online resources for information relevant to the given task.
 * For each relevant inforamtion, summarize it and keep track of its sources.
 * Finally, aggreate all summarized information and generate a final research report.
 
