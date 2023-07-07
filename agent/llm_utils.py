@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from fastapi import WebSocket
 import time
 from ast import List
 
@@ -19,6 +19,7 @@ def create_chat_completion(
     temperature: float = CFG.temperature,
     max_tokens: int | None = None,
     stream: bool | None = False,
+    websocket: WebSocket | None = None,
 ) -> str:
     """Create a chat completion using the OpenAI API
 
@@ -54,7 +55,7 @@ def create_chat_completion(
                 )
                 response = result.choices[0].message["content"]
             else:
-                response = stream_response(model, messages, temperature, max_tokens)
+                response = stream_response(model, messages, temperature, max_tokens, websocket)
             break
         except RateLimitError:
             if CFG.debug_mode:
@@ -119,7 +120,7 @@ def create_embedding_with_ada(text) -> list:
             )
         time.sleep(backoff)
 
-def stream_response(model, messages, temperature, max_tokens):
+async def stream_response(model, messages, temperature, max_tokens, websocket):
     paragraph = ""
     response = ""
     print(f"streaming response...")
@@ -136,7 +137,7 @@ def stream_response(model, messages, temperature, max_tokens):
             response += content
             paragraph += content
             if "\n" in paragraph:
-                print(f"{paragraph}\nTotal response words: {len(response.split())}")
+                await websocket.send_json({"type": "report", "output": paragraph})
                 paragraph = ""
     print(f"streaming response complete")
     return response
