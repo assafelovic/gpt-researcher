@@ -1,17 +1,27 @@
-# Description: Main file for running the agent
+from fastapi import FastAPI, Request, Form
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 from agent.run import run_agent
+from markdown import markdown
 
-OPTION_TO_REPORT_TYPE = {
-    "1": "research_report",
-    "2": "resource_report",
-    "3": "outline_report"
-}
 
-if __name__ == "__main__":
-    while True:
-        research_task = input("What would you like me to research next?\n>> ")
-        report_type = input("What type of report would you like me to generate?\n"
-                            "[1] - Research Report\n"
-                            "[2] - Resource Report\n"
-                            "[3] - Outline Report\n>>")
-        run_agent(research_task, OPTION_TO_REPORT_TYPE[report_type])
+class ResearchRequest(BaseModel):
+    task: str
+    report_type: str
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
+
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/")
+async def read_root(request: Request):
+    return templates.TemplateResponse('index.html', {"request": request, "report": None})
+
+@app.post("/")
+async def create_report(request: Request, task: str = Form(...), report_type: str = Form(...)):
+    report, path = await run_agent(task, report_type)
+    html_report = markdown(report)
+    return templates.TemplateResponse('index.html', {"request": request, "report": html_report, "path": path})
