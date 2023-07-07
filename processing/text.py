@@ -1,5 +1,6 @@
 """Text processing functions"""
 from typing import Dict, Generator, Optional
+import string
 
 from selenium.webdriver.remote.webdriver import WebDriver
 
@@ -144,11 +145,11 @@ def write_to_file(filename: str, text: str) -> None:
         file.write(text)
 
 def write_md_to_pdf(task: str, directory_name: str, text: str) -> None:
-    file_path = f"./outputs/{directory_name}/{task}.pdf"
+    file_path = f"./outputs/{directory_name}/{task}"
     write_to_file(f"{file_path}.md", text)
     md_to_pdf(f"{file_path}.md", f"{file_path}.pdf")
     print(f"{task} written to {file_path}.pdf")
-
+    return f"{file_path}.pdf"
 
 def read_txt_files(directory):
     all_text = ''

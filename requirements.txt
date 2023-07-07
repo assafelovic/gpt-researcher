@@ -10,3 +10,9 @@ python-dotenv~=0.21.0
 pyyaml==6.0
 selenium==4.10.0
 webdriver-manager==3.8.6
+flask
+uvicorn
+pydantic
+fastapi
+python-multipart
+markdown
