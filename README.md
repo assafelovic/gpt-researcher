@@ -47,11 +47,13 @@ $ export OPENAI_API_KEY={Your API Key here}
 ```
 <br />
 
-> **Step #4** - Run the agent and enjoy researching!
+> **Step #4** - Run the agent with FastAPI
 
 ```bash
-$ python main.py
+$ uvicorn main:app --reload
 ```
+
+> **Step #5** - Open http://localhost:8000 on any browser and enjoy researching!
 
 ## 🛡 Disclaimer
 
