@@ -3,8 +3,8 @@ GPT Researcher is an open-source autonomous agent designed for comprehensive onl
 
 # Why GPT Researcher?
 
-- To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right online resources and answers.
-- Current LLMs are trained on past and outdated information.
+- To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right resources and information.
+- Current LLMs are trained on past and outdated information, with heavy risks of hallucinations, making them almost irrelevant for research tasks.
 - Solutions that enable web search (such as ChatGPT + Web Plugin), only consider limited resources that in some cases result in superficial conclusions or biased answers.
 - Using only a selection of resources can create bias in determing the right conclusions for research questions or tasks. 
 
