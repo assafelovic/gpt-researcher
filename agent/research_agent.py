@@ -40,7 +40,7 @@ class ResearchAgent:
         """
 
         messages = [create_message(text, topic)]
-        await self.websocket.send_json({"type": "logs", "output": f"Summarizing text for query: {text}"})
+        await self.websocket.send_json({"type": "logs", "output": f"📝 Summarizing text for query: {text}"})
 
         return create_chat_completion(
             model=CFG.fast_llm_model,
@@ -56,7 +56,7 @@ class ResearchAgent:
         new_urls = []
         for url in url_set_input:
             if url not in self.visited_urls:
-                await self.websocket.send_json({"type": "logs", "output": f"{url}\n"})
+                await self.websocket.send_json({"type": "logs", "output": f"✅ Adding source url to research: {url}\n"})
 
                 self.visited_urls.add(url)
                 new_urls.append(url)
@@ -84,7 +84,7 @@ class ResearchAgent:
         Returns: list[str]: The search queries for the given question
         """
         result = await self.call_agent(prompts.generate_search_queries_prompt(self.question))
-        await self.websocket.send_json({"type": "logs", "output": f"Search queries: {result}"})
+        await self.websocket.send_json({"type": "logs", "output": f"🧠 I will conduct my research based on the following queries: {result}..."})
         return json.loads(result)
 
     async def async_search(self, query):
@@ -105,7 +105,7 @@ class ResearchAgent:
         Returns: str: The search summary for the given query
         """
 
-        await self.websocket.send_json({"type": "logs", "output": f"\n\nRunning research for {query}...\n\n"})
+        await self.websocket.send_json({"type": "logs", "output": f"🔎 Running research for '{query}'..."})
 
         loop = asyncio.get_event_loop()
         responses = await self.async_search(query)
@@ -129,7 +129,7 @@ class ResearchAgent:
                 research_result = await self.run_search_summary(query)
                 self.research_summary += f"{research_result}\n\n"
                 await self.websocket.send_json(
-                    {"type": "logs", "output": f"Research summary so far: {self.research_summary}..."})
+                    {"type": "logs", "output": f"✅ Research summary so far: '{self.research_summary}'..."})
 
         await self.websocket.send_json({"type": "logs", "output": self.research_summary})
 
@@ -145,7 +145,7 @@ class ResearchAgent:
         """
         result = self.call_agent(prompts.generate_concepts_prompt(self.question, self.research_summary))
 
-        await self.websocket.send_json({"type": "logs", "output": f"\n\nSearch queries: {result}\n\n"})
+        await self.websocket.send_json({"type": "logs", "output": f"I will research based on the following concepts: {result}\n"})
         return json.loads(result)
 
     async def write_report(self, report_type, websocket):
@@ -154,9 +154,10 @@ class ResearchAgent:
         Returns: str: The report for the given question
         """
         report_type_func = prompts.get_report_by_type(report_type)
+        await websocket.send_json(
+            {"type": "logs", "output": f"✍️ Writing {report_type} for research task: {self.question}..."})
         answer = await self.call_agent(report_type_func(self.question, self.research_summary), stream=True,
                                        websocket=websocket)
-        await websocket.send_json({"type": "logs", "output": f"Writing {report_type} for query: {self.question}..."})
 
         path = await write_md_to_pdf(report_type, self.directory_name, await answer)
 

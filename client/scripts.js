@@ -24,9 +24,10 @@ function startResearch() {
         if (data.type === 'logs') {
             // Append the agent output to the output section
             const output = document.getElementById("output");
-            output.innerHTML += "<br>"+data.output+"<br>";
+            output.innerHTML += '<div class="agent_response">'+data.output+'</div>';
             output.scrollTop = output.scrollHeight;  // Scroll to the bottom of the output
             output.style.display = "block";
+            updateScroll();
         } else if (data.type === 'report') {
             // Update the report section with new data
             const reportContainer = document.getElementById("reportContainer");
@@ -41,7 +42,7 @@ function startResearch() {
         }
     };
     socket.onopen = function (event) {
-        let task = document.querySelector('textarea[name="task"]').value;
+        let task = document.querySelector('input[name="task"]').value;
         let report_type = document.querySelector('select[name="report_type"]').value;
         let data = "start " + JSON.stringify({task: task, report_type: report_type});
         socket.send(data);
