@@ -18,7 +18,7 @@ import os
 CFG = Config()
 
 
-class ResearchAssistant:
+class ResearchAgent:
     def __init__(self, question, websocket):
         """ Initializes the research assistant with the given question.
         Args: question (str): The question to research

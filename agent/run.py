@@ -4,7 +4,7 @@ import datetime
 from typing import List, Dict
 from fastapi import WebSocket
 
-from agent.research_assistant import ResearchAssistant
+from agent.research_agent import ResearchAgent
 
 
 class WebSocketManager:
@@ -44,7 +44,7 @@ async def run_agent(task, report_type, websocket):
 
     await websocket.send_json({"type": "logs", "output": f"Start time: {str(start_time)}\n\n"})
 
-    assistant = ResearchAssistant(task, websocket)
+    assistant = ResearchAgent(task, websocket)
     await assistant.conduct_research()
 
     report, path = await assistant.write_report(report_type, websocket)
