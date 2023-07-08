@@ -1,22 +1,58 @@
 import asyncio
-from agent.research_assistant import ResearchAssistant
 import datetime
 
-async def run_agent(task, report_type):
-    """ Runs the agent with the given task.
-    Args: task (str): The task to run the agent with
-    Returns: None
-    """
+from typing import List, Dict
+from fastapi import WebSocket
 
+from agent.research_agent import ResearchAgent
+
+
+class WebSocketManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+        self.sender_tasks: Dict[WebSocket, asyncio.Task] = {}
+        self.message_queues: Dict[WebSocket, asyncio.Queue] = {}
+
+    async def start_sender(self, websocket: WebSocket):
+        queue = self.message_queues[websocket]
+        while True:
+            message = await queue.get()
+            if websocket in self.active_connections:
+                await websocket.send_text(message)
+            else:
+                break
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        self.message_queues[websocket] = asyncio.Queue()
+        self.sender_tasks[websocket] = asyncio.create_task(self.start_sender(websocket))
+
+    async def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+        self.sender_tasks[websocket].cancel()
+        del self.sender_tasks[websocket]
+        del self.message_queues[websocket]
+
+    async def start_streaming(self, task, report_type, websocket):
+        report, path = await run_agent(task, report_type, websocket)
+        return report, path
+
+
+async def run_agent(task, report_type, websocket):
     start_time = datetime.datetime.now()
-    print("Start time: ", start_time)
 
-    assistant = ResearchAssistant(task)
+    await websocket.send_json({"type": "logs", "output": f"Start time: {str(start_time)}\n\n"})
+
+    assistant = ResearchAgent(task, websocket)
     await assistant.conduct_research()
-    report, path = assistant.write_report(report_type)
-    #assistant.write_lessons()
+
+    report, path = await assistant.write_report(report_type, websocket)
+
+    await websocket.send_json({"type": "path", "output": path})
 
     end_time = datetime.datetime.now()
-    print("End time: ", end_time)
-    print("Total run time: ", end_time - start_time)
+    await websocket.send_json({"type": "logs", "output": f"\nEnd time: {end_time}\n"})
+    await websocket.send_json({"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"})
+
     return report, path
