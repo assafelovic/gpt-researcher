@@ -41,16 +41,18 @@ async def async_browse(url: str, question: str) -> str:
 
     Returns:
         str: The answer and links to the user
-        """
-
+    """
     loop = asyncio.get_event_loop()
 
-    driver, text = await loop.run_in_executor(executor, scrape_text_with_selenium, url)
-    await loop.run_in_executor(executor, add_header, driver)
-    summary_text = await loop.run_in_executor(executor, summary.summarize_text, url, text, question, driver)
+    try:
+        driver, text = await loop.run_in_executor(executor, scrape_text_with_selenium, url)
+        await loop.run_in_executor(executor, add_header, driver)
+        summary_text = await loop.run_in_executor(executor, summary.summarize_text, url, text, question, driver)
 
-    await loop.run_in_executor(executor, close_browser, driver)
-    return f"Information gathered from url {url}: {summary_text}"
+        return f"Information gathered from url {url}: {summary_text}"
+    except Exception as e:
+        print(f"An error occurred while processing the url {url}: {e}")
+        return f"Error processing the url {url}: {e}"
 
 
 def browse_website(url: str, question: str) -> tuple[str, WebDriver]:

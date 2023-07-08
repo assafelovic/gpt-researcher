@@ -60,6 +60,7 @@ class ResearchAgent:
 
                 self.visited_urls.add(url)
                 new_urls.append(url)
+        await self.websocket.send_json({"type": "logs", "output": f"📝 Summarizing sources..."})
         return new_urls
 
     async def call_agent(self, action, stream=False, websocket=None):
