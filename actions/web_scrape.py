@@ -41,16 +41,18 @@ async def async_browse(url: str, question: str) -> str:
 
     Returns:
         str: The answer and links to the user
-        """
-
+    """
     loop = asyncio.get_event_loop()
 
-    driver, text = await loop.run_in_executor(executor, scrape_text_with_selenium, url)
-    await loop.run_in_executor(executor, add_header, driver)
-    summary_text = await loop.run_in_executor(executor, summary.summarize_text, url, text, question, driver)
+    try:
+        driver, text = await loop.run_in_executor(executor, scrape_text_with_selenium, url)
+        await loop.run_in_executor(executor, add_header, driver)
+        summary_text = await loop.run_in_executor(executor, summary.summarize_text, url, text, question, driver)
 
-    await loop.run_in_executor(executor, close_browser, driver)
-    return f"Information gathered from url {url}: {summary_text}"
+        return f"Information gathered from url {url}: {summary_text}"
+    except Exception as e:
+        print(f"An error occurred while processing the url {url}: {e}")
+        return f"Error processing the url {url}: {e}"
 
 
 def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
@@ -92,7 +94,6 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     Returns:
         Tuple[WebDriver, str]: The webdriver and the text scraped from the website
     """
-    print("Scraping text from website {0}...".format(url))
     logging.getLogger("selenium").setLevel(logging.CRITICAL)
 
     options_available = {
@@ -107,6 +108,9 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
         "Chrome/112.0.5615.49 Safari/537.36 "
     )
     options.add_argument('--headless')
+    options.add_experimental_option(
+        "prefs", {"download_restrictions": 3}
+    )
 
     if CFG.selenium_web_browser == "firefox":
         service = Service(executable_path=GeckoDriverManager().install())
