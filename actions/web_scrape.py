@@ -106,6 +106,9 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
         "Chrome/112.0.5615.49 Safari/537.36 "
     )
     options.add_argument('--headless')
+    options.add_experimental_option(
+        "prefs", {"download_restrictions": 3}
+    )
 
     if CFG.selenium_web_browser == "firefox":
         service = Service(executable_path=GeckoDriverManager().install())
