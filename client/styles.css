@@ -33,7 +33,6 @@ body {
     max-width: 500px;
     margin: auto;
     margin-bottom: 2rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, .3);
 }
 
 .container {
@@ -52,15 +51,15 @@ body {
     box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.2);
 }
 
-textarea, select, #output, #reportContainer {
+input, select, #output, #reportContainer {
     background-color: rgba(255,255,255,0.1);
     border: none;
     color: #fff;
     transition: all .3s ease-in-out;
 }
 
-textarea:hover, textarea:focus, select:hover, select:focus {
-    background-color: rgba(248, 248, 248, 0.3);
+input:hover, input:focus, select:hover, select:focus {
+    background-color: #dfe4ea;
     border: 1px solid rgba(255, 255, 255, 0.5);
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease-in-out;
