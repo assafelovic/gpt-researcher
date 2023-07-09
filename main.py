@@ -34,7 +34,6 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            print("Waiting for data...")
             data = await websocket.receive_text()
             if data.startswith("start"):
                 json_data = json.loads(data[6:])
