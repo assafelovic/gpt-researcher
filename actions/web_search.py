@@ -4,7 +4,7 @@ from duckduckgo_search import DDGS
 
 ddgs = DDGS()
 
-def web_search(query: str, num_results: int = 5) -> str:
+def web_search(query: str, num_results: int = 4) -> str:
     """Useful for general internet search queries."""
     print("Searching with query {0}...".format(query))
     search_results = []

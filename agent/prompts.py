@@ -1,11 +1,20 @@
-AGENT_ROLE_PROMPT = "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
+#AGENT_ROLE_PROMPT = "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
 
-def generate_agent_role_prompt():
+def generate_agent_role_prompt(agent):
     """ Generates the agent role prompt.
-    Args: None
-    Returns: str: The agent role prompt
+    Args: agent (str): The type of the agent.
+    Returns: str: The agent role prompt.
     """
-    return AGENT_ROLE_PROMPT
+    prompts = {
+        "Finance Agent": "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends.",
+        "Travel Agent": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights.",
+        "Academic Research Agent": "You are an AI academic research assistant. Your primary responsibility is to create thorough, academically rigorous, unbiased, and systematically organized reports on a given research topic, following the standards of scholarly work.",
+        "Computer Science Agent": "You are an AI computer science expert assistant. Your principal task is to generate meticulous, insightful, unbiased, and logically structured reports on provided computing topics, principles, and algorithms.",
+        "Math Agent": "You are an AI mathematician assistant. Your main objective is to compile detailed, logically sound, objective, and carefully structured reports on given mathematical theories, concepts, or problems.",
+    }
+
+    return prompts.get(agent, "No such agent")
+
 
 def generate_report_prompt(question, research_summary):
     """ Generates the report prompt for the given question and research summary.

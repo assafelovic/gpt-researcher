@@ -14,18 +14,21 @@ from processing.text import \
 from config import Config
 from agent import prompts
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 
 CFG = Config()
 
 
 class ResearchAgent:
-    def __init__(self, question, websocket):
+    def __init__(self, question, agent, websocket):
         """ Initializes the research assistant with the given question.
         Args: question (str): The question to research
         Returns: None
         """
 
         self.question = question
+        self.agent = agent
         self.visited_urls = set()
         self.research_summary = ""
         self.directory_name = question[:100] if len(question) > 100 else question
@@ -57,16 +60,16 @@ class ResearchAgent:
         for url in url_set_input:
             if url not in self.visited_urls:
                 await self.websocket.send_json({"type": "logs", "output": f"✅ Adding source url to research: {url}\n"})
-
                 self.visited_urls.add(url)
                 new_urls.append(url)
+
         await self.websocket.send_json({"type": "logs", "output": f"📝 Summarizing sources..."})
         return new_urls
 
     async def call_agent(self, action, stream=False, websocket=None):
         messages = [{
             "role": "system",
-            "content": prompts.generate_agent_role_prompt(),
+            "content": prompts.generate_agent_role_prompt(self.agent),
         }, {
             "role": "user",
             "content": action,
@@ -93,12 +96,16 @@ class ResearchAgent:
         Args: query (str): The query to run the async search for
         Returns: list[str]: The async search for the given query
         """
-
         search_results = json.loads(web_search(query))
         new_search_urls = self.get_new_urls([url.get("href") for url in search_results])
-        tasks = [asyncio.create_task(async_browse(url, query)) for url in await new_search_urls]
 
-        return await asyncio.gather(*tasks)
+        # Create a list to hold the coroutine objects
+        tasks = [async_browse(url, query,) for url in await new_search_urls]
+
+        # Gather the results as they become available
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+
+        return responses
 
     async def run_search_summary(self, query):
         """ Runs the search summary for the given query.
@@ -108,7 +115,6 @@ class ResearchAgent:
 
         await self.websocket.send_json({"type": "logs", "output": f"🔎 Running research for '{query}'..."})
 
-        loop = asyncio.get_event_loop()
         responses = await self.async_search(query)
 
         result = "\n".join(responses)
@@ -129,15 +135,12 @@ class ResearchAgent:
             for query in search_queries:
                 research_result = await self.run_search_summary(query)
                 self.research_summary += f"{research_result}\n\n"
-                await self.websocket.send_json(
-                    {"type": "logs", "output": f"✅ Research summary so far: '{self.research_summary}'..."})
-
-        await self.websocket.send_json({"type": "logs", "output": self.research_summary})
 
         await self.websocket.send_json(
             {"type": "logs", "output": f"Total research words: {len(self.research_summary.split(' '))}"})
 
         return self.research_summary
+
 
     async def create_concepts(self):
         """ Creates the concepts for the given question.

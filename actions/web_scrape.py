@@ -43,6 +43,8 @@ async def async_browse(url: str, question: str) -> str:
         str: The answer and links to the user
     """
     loop = asyncio.get_event_loop()
+    executor = ThreadPoolExecutor(max_workers=8)
+    print(f"Scraping url {url} with question {question}")
 
     try:
         driver, text = await loop.run_in_executor(executor, scrape_text_with_selenium, url)
@@ -53,6 +55,7 @@ async def async_browse(url: str, question: str) -> str:
     except Exception as e:
         print(f"An error occurred while processing the url {url}: {e}")
         return f"Error processing the url {url}: {e}"
+
 
 
 def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
@@ -103,10 +106,7 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     }
 
     options = options_available[CFG.selenium_web_browser]()
-    options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/112.0.5615.49 Safari/537.36 "
-    )
+    options.add_argument(CFG.user_agent)
     options.add_argument('--headless')
     options.add_experimental_option(
         "prefs", {"download_restrictions": 3}
