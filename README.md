@@ -11,7 +11,7 @@ Our mission is to empower individuals and organizations with accurate, unbiased,
 - Using only a selection of resources can create bias in determing the right conclusions for research questions or tasks. 
 
 # Architecture
-The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner aggregates all related information and creates a  research report.
+The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. The agents leverage both gpt3.5-turbo-16k and gpt-4 to complete a research task.
 
 <div align="center">
 <img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/arch.png">
