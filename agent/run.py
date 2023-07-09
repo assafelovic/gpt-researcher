@@ -3,7 +3,7 @@ import datetime
 
 from typing import List, Dict
 from fastapi import WebSocket
-
+from config import check_openai_api_key
 from agent.research_agent import ResearchAgent
 
 
@@ -34,17 +34,19 @@ class WebSocketManager:
         del self.sender_tasks[websocket]
         del self.message_queues[websocket]
 
-    async def start_streaming(self, task, report_type, websocket):
-        report, path = await run_agent(task, report_type, websocket)
+    async def start_streaming(self, task, report_type, agent, websocket):
+        report, path = await run_agent(task, report_type, agent, websocket)
         return report, path
 
 
-async def run_agent(task, report_type, websocket):
+async def run_agent(task, report_type, agent, websocket):
+    check_openai_api_key()
+
     start_time = datetime.datetime.now()
 
-    await websocket.send_json({"type": "logs", "output": f"Start time: {str(start_time)}\n\n"})
+    # await websocket.send_json({"type": "logs", "output": f"Start time: {str(start_time)}\n\n"})
 
-    assistant = ResearchAgent(task, websocket)
+    assistant = ResearchAgent(task, agent, websocket)
     await assistant.conduct_research()
 
     report, path = await assistant.write_report(report_type, websocket)

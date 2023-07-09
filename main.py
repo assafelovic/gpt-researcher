@@ -10,6 +10,8 @@ from agent.run import WebSocketManager
 class ResearchRequest(BaseModel):
     task: str
     report_type: str
+    agent: str
+
 
 
 app = FastAPI()
@@ -37,8 +39,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 json_data = json.loads(data[6:])
                 task = json_data.get("task")
                 report_type = json_data.get("report_type")
-                if task and report_type:
-                    await manager.start_streaming(task, report_type, websocket)
+                agent = json_data.get("agent")
+                if task and report_type and agent:
+                    await manager.start_streaming(task, report_type, agent, websocket)
                 else:
                     print("Error: not enough parameters provided.")
 
