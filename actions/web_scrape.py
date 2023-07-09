@@ -106,10 +106,7 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     }
 
     options = options_available[CFG.selenium_web_browser]()
-    options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/112.0.5615.49 Safari/537.36 "
-    )
+    options.add_argument(CFG.user_agent)
     options.add_argument('--headless')
     options.add_experimental_option(
         "prefs", {"download_restrictions": 3}
