@@ -44,7 +44,7 @@ async def run_agent(task, report_type, agent, websocket):
 
     start_time = datetime.datetime.now()
 
-    await websocket.send_json({"type": "logs", "output": f"Start time: {str(start_time)}\n\n"})
+    # await websocket.send_json({"type": "logs", "output": f"Start time: {str(start_time)}\n\n"})
 
     assistant = ResearchAgent(task, agent, websocket)
     await assistant.conduct_research()
