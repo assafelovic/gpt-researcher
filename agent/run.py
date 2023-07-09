@@ -3,7 +3,7 @@ import datetime
 
 from typing import List, Dict
 from fastapi import WebSocket
-
+from config import check_openai_api_key
 from agent.research_agent import ResearchAgent
 
 
@@ -40,6 +40,8 @@ class WebSocketManager:
 
 
 async def run_agent(task, report_type, agent, websocket):
+    check_openai_api_key()
+
     start_time = datetime.datetime.now()
 
     await websocket.send_json({"type": "logs", "output": f"Start time: {str(start_time)}\n\n"})
