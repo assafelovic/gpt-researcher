@@ -2,15 +2,31 @@
 <html lang="en">
 
 <head>
-    <title>ResearchGPT</title>
+    <title>GPT Researcher</title>
     <meta name="description" content="A research assistant powered by GPT-4">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="../static/favicon.ico">
+    <link rel="icon" href="./static/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/site/styles.css"/>
+    <style>
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+        }
+        .agent-name {
+            text-align: center;
+        }
+        .agent-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+    </style>
 </head>
 <body>
 
@@ -21,7 +37,7 @@
                 <span style="background-image:linear-gradient(to right, #9867F0, #ED4E50); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hours of Research</span>
             </h1>
             <p class="max-w-5xl mx-auto text-gray-600 mt-8" style="font-size:20px">
-                Say Hello to ResearchGPT, your AI mate for rapid insights and comprehensive research. ResearchGPT takes care of everything from accurate source gathering to organization of research results - all in one platform designed to make your research process a breeze.
+                Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research. GPT Researcher takes care of everything from accurate source gathering to organization of research results - all in one platform designed to make your research process a breeze.
             </p>
             <a href="#form" class="btn btn-primary">Get Started</a>
         </div>
@@ -32,6 +48,31 @@
             <div class="form-group">
                 <label for="task">What would you like me to research next?</label>
                 <input type="text" name="task" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="agent">Select your agent:</label>
+                <div class="row">
+                    <div class="col agent-item">
+                        <label for="financeAgent"><img src="./static/financeAgentAvatar.png" class="avatar"></label>
+                        <div class="agent-name"><input type="radio" name="agent" id="financeAgent" value="Finance Agent" required>Finance Agent</div>
+                    </div>
+                    <div class="col agent-item">
+                        <label for="travelAgent"><img src="./static/travelAgentAvatar.png" class="avatar"></label>
+                        <div class="agent-name"><input type="radio" name="agent" id="travelAgent" value="Travel Agent">Travel Agent</div>
+                    </div>
+                    <div class="col agent-item">
+                        <label for="academicResearchAgent"><img src="./static/academicResearchAgentAvatar.png" class="avatar"></label>
+                        <div class="agent-name"><input type="radio" name="agent" id="academicResearchAgent" value="Academic Research Agent">Academic Research Agent</div>
+                    </div>
+                    <div class="col agent-item">
+                        <label for="computerScienceAgent"><img src="./static/computerScienceAgentAvatar.png" class="avatar"></label>
+                        <div class="agent-name"><input type="radio" name="agent" id="computerScienceAgent" value="Computer Science Agent">Computer Science Agent</div>
+                    </div>
+                    <div class="col agent-item">
+                        <label for="mathAgent"><img src="./static/mathAgentAvatar.png" class="avatar"></label>
+                        <div class="agent-name"><input type="radio" name="agent" id="mathAgent" value="Math Agent">Math Agent</div>
+                    </div>
+                </div>
             </div>
             <div class="form-group">
                 <label for="report_type">What type of report would you like me to generate?</label>
@@ -57,7 +98,7 @@
     </main>
 
     <footer>
-        <p>ResearchGPT &copy; 2023 | <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">Github Page</a></p>
+        <p>GPT Researcher &copy; 2023 | <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">Github Page</a></p>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>

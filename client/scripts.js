@@ -44,7 +44,8 @@ function startResearch() {
     socket.onopen = function (event) {
         let task = document.querySelector('input[name="task"]').value;
         let report_type = document.querySelector('select[name="report_type"]').value;
-        let data = "start " + JSON.stringify({task: task, report_type: report_type});
+        let agent = document.querySelector('input[name="agent"]:checked').value;  // Corrected line
+        let data = "start " + JSON.stringify({task: task, report_type: report_type, agent: agent});
         socket.send(data);
     };
     function updateScroll() {

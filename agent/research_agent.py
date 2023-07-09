@@ -19,13 +19,14 @@ CFG = Config()
 
 
 class ResearchAgent:
-    def __init__(self, question, websocket):
+    def __init__(self, question, agent, websocket):
         """ Initializes the research assistant with the given question.
         Args: question (str): The question to research
         Returns: None
         """
 
         self.question = question
+        self.agent = agent
         self.visited_urls = set()
         self.research_summary = ""
         self.directory_name = question[:100] if len(question) > 100 else question
@@ -66,7 +67,7 @@ class ResearchAgent:
     async def call_agent(self, action, stream=False, websocket=None):
         messages = [{
             "role": "system",
-            "content": prompts.generate_agent_role_prompt(),
+            "content": prompts.generate_agent_role_prompt(self.agent),
         }, {
             "role": "user",
             "content": action,
