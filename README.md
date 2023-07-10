@@ -13,9 +13,8 @@ Our mission is to empower individuals and organizations with accurate, unbiased,
 # Architecture
 The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. The agents leverage both gpt3.5-turbo-16k and gpt-4 to complete a research task.
 
-<div align="center">
-<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/arch.png">
-</div>
+![tavily-architecture](https://github.com/assafelovic/gpt-researcher/assets/13554167/7a1f537c-cb92-493d-810b-8403a780661e)
+
 
 More specifcally:
 * Generate a set of research questions that together form an objective opinion on any given task. 
@@ -24,9 +23,9 @@ More specifcally:
 * Finally, filter and aggregate all summarized sources and generate a final research report.
 
 # Demo
+https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0-b58d-098a31c40fda
 
-
-## Quickstart
+# Quickstart
 
 > **Step #1** - Download the project
 
