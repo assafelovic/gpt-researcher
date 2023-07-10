@@ -75,7 +75,7 @@ class ResearchAgent:
             "content": action,
         }]
         answer = create_chat_completion(
-            model="gpt-4",
+            model=CFG.smart_llm_model,
             messages=messages,
             stream=stream,
             websocket=websocket,
@@ -88,6 +88,7 @@ class ResearchAgent:
         Returns: list[str]: The search queries for the given question
         """
         result = await self.call_agent(prompts.generate_search_queries_prompt(self.question))
+        print(result)
         await self.websocket.send_json({"type": "logs", "output": f"🧠 I will conduct my research based on the following queries: {result}..."})
         return json.loads(result)
 
