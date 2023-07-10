@@ -1,5 +1,5 @@
 # 🔎 GPT Researcher
-GPT Researcher is an open-source autonomous agent designed for comprehensive online research on a variety of tasks. It produces detailed research reports in PDF format (for now), with customization options for focusing on relevant resources, outlines, and lessons. Inspired by [BabyAGI](https://github.com/yoheinakajima/babyagi) and the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) paper, GPT Researcher addresses issues of speed and determinsm, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
+GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks. It produces detailed, factual and unbiased research reports, with customization options for focusing on relevant resources, outlines, and lessons. Inspired by [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) and the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) paper, GPT Researcher addresses issues of speed and determinism, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
 
 Our mission is to empower individuals and organizations with accurate, unbiased, and factual information by leveraging the power of AI.
 
@@ -19,11 +19,12 @@ The main idea is to run "planner" and "execution" agents, whereas the planner ge
 
 More specifcally:
 * Generate a set of research questions that together form an objective opinion on any given task. 
-* For each research question (in parallel), trigger a crawler agent that scrapes online resources for information relevant to the given task.
-* For each relevant inforamtion, summarize it and keep track of its sources.
-* Finally, aggreate all summarized information and generate a final research report.
+* For each research question, trigger a crawler agent that scrapes online resources for information relevant to the given task.
+* For each scraped resources, summarize based on relevant information and keep track of its sources.
+* Finally, filter and aggregate all summarized sources and generate a final research report.
 
-<h2 align="center"> Demo </h2>
+# Demo
+
 
 ## Quickstart
 
@@ -60,6 +61,6 @@ $ uvicorn main:app --reload
 
 ## 🛡 Disclaimer
 
-This project, ResearchGPT, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the MIT education license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
+This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the MIT education license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
 
 **Please note that the use of the GPT-4 language model can be expensive due to its token usage.** By utilizing this project, you acknowledge that you are responsible for monitoring and managing your own token usage and the associated costs. It is highly recommended to check your OpenAI API usage regularly and set up any necessary limits or alerts to prevent unexpected charges.
