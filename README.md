@@ -47,7 +47,7 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 > **Step #1** - Download the project
 
 ```bash
-$ git clone https://github.com/assafelovic/researchGPT.git
+$ git clone https://github.com/assafelovic/gpt-researcher.git
 $ cd gpt-researcher
 ```
 
