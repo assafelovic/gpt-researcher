@@ -1,16 +1,23 @@
 # 🔎 GPT Researcher
-GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks. It produces detailed, factual and unbiased research reports, with customization options for focusing on relevant resources, outlines, and lessons. Inspired by [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) and the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) paper, GPT Researcher addresses issues of speed and determinism, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
+[![Official Website](https://img.shields.io/badge/Official%20Website-tavily.com-blue?style=flat&logo=world&logoColor=white)](https://tavily.com)
+[![Discord Follow](https://dcbadge.vercel.app/api/server/rqw8dnM8?style=flat)](https://discord.com/invite/rqw8dnM8)
+[![GitHub Repo stars](https://img.shields.io/github/stars/assafelovic/gpt-researcher?style=social)](https://github.com/assafelovic/gpt-researcher)
+[![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
+
+**GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks.** 
+
+The agent can produce detailed, factual and unbiased research reports, with customization options for focusing on relevant resources, outlines, and lessons. Inspired by [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) and the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) paper, GPT Researcher addresses issues of speed and determinism, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
 
 Our mission is to empower individuals and organizations with accurate, unbiased, and factual information by leveraging the power of AI.
 
-# Why GPT Researcher?
+## Why GPT Researcher?
 
 - To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right resources and information.
 - Current LLMs are trained on past and outdated information, with heavy risks of hallucinations, making them almost irrelevant for research tasks.
 - Solutions that enable web search (such as ChatGPT + Web Plugin), only consider limited resources that in some cases result in superficial conclusions or biased answers.
 - Using only a selection of resources can create bias in determing the right conclusions for research questions or tasks. 
 
-# Architecture
+## Architecture
 The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. The agents leverage both gpt3.5-turbo-16k and gpt-4 to complete a research task.
 
 <div align="center">
@@ -24,10 +31,18 @@ More specifcally:
 * For each scraped resources, summarize based on relevant information and keep track of its sources.
 * Finally, filter and aggregate all summarized sources and generate a final research report.
 
-# Demo
+## Demo
 https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0-b58d-098a31c40fda
 
-# Quickstart
+## Features
+- 📝 Generate research, outlines, resources and lessons reports
+- 🌐 Aggregates over 20 web sources per research to form objective and factual conclusions
+- 🖥️ Includes an easy-to-use web interface (HTML/CSS/JS)
+- 🔍 Scrapes web sources with javascript support
+- 📂 Keeps track and context of visited and used web sources
+- 📄 Export research reports to PDF and more...
+
+## Quickstart
 
 > **Step #1** - Download the project
 
