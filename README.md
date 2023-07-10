@@ -1,6 +1,8 @@
 # 🔎 GPT Researcher
 GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks. It produces detailed, factual and unbiased research reports, with customization options for focusing on relevant resources, outlines, and lessons. Inspired by [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) and the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) paper, GPT Researcher addresses issues of speed and determinism, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
 
+Our mission is to empower individuals and organizations with accurate, unbiased, and factual information by leveraging the power of AI.
+
 # Why GPT Researcher?
 
 - To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right resources and information.
@@ -9,7 +11,7 @@ GPT Researcher is an autonomous agent designed for comprehensive online research
 - Using only a selection of resources can create bias in determing the right conclusions for research questions or tasks. 
 
 # Architecture
-The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner aggregates all related information and creates a  research report.
+The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. The agents leverage both gpt3.5-turbo-16k and gpt-4 to complete a research task.
 
 <div align="center">
 <img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/arch.png">
