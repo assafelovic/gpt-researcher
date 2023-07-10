@@ -19,7 +19,10 @@ app = FastAPI()
 app.mount("/site", StaticFiles(directory="client"), name="site")
 app.mount("/static", StaticFiles(directory="client/static"), name="static")
 # Dynamic directory for outputs once first research is run
-if os.path.isdir("/outputs"):
+@app.on_event("startup")
+def startup_event():
+    if not os.path.isdir("outputs"):
+        os.makedirs("outputs")
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
 
 templates = Jinja2Templates(directory="client")
