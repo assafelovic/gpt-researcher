@@ -14,7 +14,6 @@ from processing.text import \
 from config import Config
 from agent import prompts
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 CFG = Config()
