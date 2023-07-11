@@ -75,6 +75,8 @@ $ uvicorn main:app --reload
 
 > **Step #5** - Go to http://localhost:8000 on any browser and enjoy researching!
 
+- **update:** if you are having issues with weasyprint, please visit their website and follow the installation instructions: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
+
 ## 🛡 Disclaimer
 
 This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the MIT education license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
