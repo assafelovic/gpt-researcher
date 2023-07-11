@@ -62,7 +62,6 @@ class ResearchAgent:
                 self.visited_urls.add(url)
                 new_urls.append(url)
 
-        await self.websocket.send_json({"type": "logs", "output": f"📝 Summarizing sources..."})
         return new_urls
 
     async def call_agent(self, action, stream=False, websocket=None):
@@ -98,8 +97,11 @@ class ResearchAgent:
         search_results = json.loads(web_search(query))
         new_search_urls = self.get_new_urls([url.get("href") for url in search_results])
 
+        await self.websocket.send_json(
+            {"type": "logs", "output": f"🌐 Browsing the following sites for relevant information: {new_search_urls}..."})
+
         # Create a list to hold the coroutine objects
-        tasks = [async_browse(url, query,) for url in await new_search_urls]
+        tasks = [async_browse(url, query, self.websocket) for url in await new_search_urls]
 
         # Gather the results as they become available
         responses = await asyncio.gather(*tasks, return_exceptions=True)
