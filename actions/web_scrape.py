@@ -18,6 +18,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.safari.options import Options as SafariOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from fastapi import WebSocket
 
 import processing.text as summary
 
@@ -32,24 +33,31 @@ FILE_DIR = Path(__file__).parent.parent
 CFG = Config()
 
 
-async def async_browse(url: str, question: str) -> str:
+async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
     """Browse a website and return the answer and links to the user
 
     Args:
         url (str): The url of the website to browse
         question (str): The question asked by the user
+        websocket (WebSocketManager): The websocket manager
 
     Returns:
         str: The answer and links to the user
     """
     loop = asyncio.get_event_loop()
     executor = ThreadPoolExecutor(max_workers=8)
+
     print(f"Scraping url {url} with question {question}")
+    await websocket.send_json(
+        {"type": "logs", "output": f"🔎 Browsing the {url} for relevant about: {question}..."})
 
     try:
         driver, text = await loop.run_in_executor(executor, scrape_text_with_selenium, url)
         await loop.run_in_executor(executor, add_header, driver)
         summary_text = await loop.run_in_executor(executor, summary.summarize_text, url, text, question, driver)
+
+        await websocket.send_json(
+            {"type": "logs", "output": f"📝 Information gathered from url {url}: {summary_text}"})
 
         return f"Information gathered from url {url}: {summary_text}"
     except Exception as e:
