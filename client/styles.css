@@ -83,7 +83,7 @@ input:hover, input:focus, select:hover, select:focus {
     box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
 }
 
-label {
+.agent_question {
     font-size: 1.2rem;
     font-weight: 500;
     margin-bottom: 0.5rem;

@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import json
+import os
 
 from agent.run import WebSocketManager
 
@@ -17,7 +18,12 @@ class ResearchRequest(BaseModel):
 app = FastAPI()
 app.mount("/site", StaticFiles(directory="client"), name="site")
 app.mount("/static", StaticFiles(directory="client/static"), name="static")
-app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
+# Dynamic directory for outputs once first research is run
+@app.on_event("startup")
+def startup_event():
+    if not os.path.isdir("outputs"):
+        os.makedirs("outputs")
+    app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
 
 templates = Jinja2Templates(directory="client")
 
