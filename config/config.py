@@ -2,7 +2,6 @@
 import os
 
 import openai
-import yaml
 from colorama import Fore
 from dotenv import load_dotenv
 
