@@ -1,0 +1,9 @@
+version: '3'
+services:
+  gpt-researcher:
+    image: assafelovic/gpt-researcher
+    build: ./
+    environment: 
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - 8000:8000
