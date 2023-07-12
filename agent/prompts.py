@@ -1,4 +1,3 @@
-
 def generate_agent_role_prompt(agent):
     """ Generates the agent role prompt.
     Args: agent (str): The type of the agent.
