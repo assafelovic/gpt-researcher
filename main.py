@@ -46,8 +46,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 task = json_data.get("task")
                 report_type = json_data.get("report_type")
                 agent = json_data.get("agent")
+                api_key = json_data.get("api_key")
                 if task and report_type and agent:
-                    await manager.start_streaming(task, report_type, agent, websocket)
+                    await manager.start_streaming(task, report_type, agent, websocket, api_key)
                 else:
                     print("Error: not enough parameters provided.")
 

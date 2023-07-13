@@ -25,8 +25,9 @@ const listenToSockEvents = () => {
     socket.onopen = (event) => {
         let task = document.querySelector('input[name="task"]').value;
         let report_type = document.querySelector('select[name="report_type"]').value;
-        let agent = document.querySelector('input[name="agent"]:checked').value;  // Corrected line
-        let data = "start " + JSON.stringify({task: task, report_type: report_type, agent: agent});
+        let agent = document.querySelector('input[name="agent"]:checked').value;
+        let api_key = document.querySelector('input[name="api_key"]').value; // Get the API key from the input field
+        let data = "start " + JSON.stringify({task: task, report_type: report_type, agent: agent, api_key: api_key}); // Include the API key in the data
         socket.send(data);
     };
 }
