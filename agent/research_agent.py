@@ -14,6 +14,7 @@ from processing.text import \
 from config import Config
 from agent import prompts
 import os
+import string
 
 
 CFG = Config()
@@ -30,7 +31,7 @@ class ResearchAgent:
         self.agent = agent
         self.visited_urls = set()
         self.research_summary = ""
-        self.directory_name = question[:100] if len(question) > 100 else question
+        self.directory_name = ''.join(c for c in question if c.isascii() and c not in string.punctuation)[:100]
         self.dir_path = os.path.dirname(f"./outputs/{self.directory_name}/")
         self.websocket = websocket
 
