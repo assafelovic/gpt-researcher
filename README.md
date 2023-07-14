@@ -1,5 +1,4 @@
 # 🔎 GPT Researcher
-<a href="https://www.producthunt.com/posts/gpt-researcher?utm_source=badge-featured&utm_medium=badge&utm_souce=badge-gpt&#0045;researcher" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=404302&theme=light" alt="GPT&#0032;Researcher - Autonomous&#0032;agent&#0032;designed&#0032;for&#0032;comprehensive&#0032;online&#0032;research | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a><br>
 [![Official Website](https://img.shields.io/badge/Official%20Website-tavily.com-blue?style=flat&logo=world&logoColor=white)](https://tavily.com)
 [![Discord Follow](https://dcbadge.vercel.app/api/server/rqw8dnM8?style=flat)](https://discord.com/invite/rqw8dnM8)
 [![GitHub Repo stars](https://img.shields.io/github/stars/assafelovic/gpt-researcher?style=social)](https://github.com/assafelovic/gpt-researcher)
