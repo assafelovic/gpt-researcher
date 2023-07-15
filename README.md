@@ -108,7 +108,7 @@ $ docker-compose up
 
 ## 🛡 Disclaimer
 
-This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the MIT education license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
+This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the Apache 2.0 license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
 
 Our view on unbiased research claims:
 1. The whole point of our scraping system is to reduce incorrect fact. How? The more sites we scrape the less chances of incorrect data. We are scraping 20 per research, the chances that they are all wrong is extremely low.
@@ -119,6 +119,9 @@ Our view on unbiased research claims:
 
 ## 🔧 Troubleshooting
 We're constantly working to provide a more stable version. In the meantime, see here for known issues:
+
+**model: gpt-4 does not exist**
+This relates to not having permission to use gpt-4 yet. Based on OpenAI, it will be [widely available for all by end of July](https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4).
 
 **cannot load library 'gobject-2.0-0'**
 
