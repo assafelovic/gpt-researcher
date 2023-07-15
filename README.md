@@ -121,6 +121,8 @@ The issue relates to the library WeasyPrint (which is used to generate PDFs from
 
 We're using [Selenium](https://www.selenium.dev) for site scraping. Some sites fail to be scraped. In these cases, restart and try running again.
 
+If none of the above work, you can [try out our hosted beta](http://gpt-researcher-web.us-east-1.elasticbeanstalk.com/).
+
 ## 🛡 Disclaimer
 
 This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the Apache 2.0 license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
