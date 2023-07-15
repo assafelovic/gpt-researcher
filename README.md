@@ -106,6 +106,9 @@ $ docker-compose up
 
 - **update:** if you are having issues with weasyprint, please visit their website and follow the installation instructions: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
 
+## 🚀 Contributing
+We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
+
 
 ## 🔧 Troubleshooting
 We're constantly working to provide a more stable version. In the meantime, see here for known issues:
