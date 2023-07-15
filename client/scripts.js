@@ -10,8 +10,10 @@ const startResearch = () => {
 }
 
 const listenToSockEvents = () => {
+    const {protocol, host, pathname} = window.location;
+    const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
     const converter = new showdown.Converter();
-    const socket = new WebSocket("ws://localhost:8000/ws");
+    const socket = new WebSocket(ws_uri);
     socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'logs') {
