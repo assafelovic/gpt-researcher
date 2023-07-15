@@ -137,7 +137,3 @@ Our view on unbiased research claims:
 
 **Please note that the use of the GPT-4 language model can be expensive due to its token usage.** By utilizing this project, you acknowledge that you are responsible for monitoring and managing your own token usage and the associated costs. It is highly recommended to check your OpenAI API usage regularly and set up any necessary limits or alerts to prevent unexpected charges.
 
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date)](https://star-history.com/#assafelovic/gpt-researcher&Date)
-
