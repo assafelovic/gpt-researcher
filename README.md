@@ -80,6 +80,7 @@ $ uvicorn main:app --reload
 
 - **update:** if you are having issues with weasyprint, please visit their website and follow the installation instructions: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
 
+
 ## Try it with Docker
 
 > **Step 1** - Install Docker
@@ -101,6 +102,60 @@ $ docker-compose up
 > **Step 4** - Go to http://localhost:8000 on any browser and enjoy researching!
 
 - **update:** if you are having issues with weasyprint, please visit their website and follow the installation instructions: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
+
+
+## Deployment
+
+Assuming you'd like to deploy the app on a linux server, here's some quick tips to get up & running: <br />
+
+> **Step 1** On your linux server, follow the above 5 steps to "Try it with Docker"
+> **Step 2** Map incoming server requests to localhost:8000 & the the Websocket Connection to http://localhost:8000/ws
+
+If you're using Nginx, here's a sample of a valid nginx.conf file
+
+```bash
+events {}
+
+http {
+    server {
+        listen 80;
+        server_name name.example;
+
+        location / {
+            proxy_set_header   X-Forwarded-For $remote_addr;
+            proxy_set_header   Host $http_host;
+            proxy_pass         http://localhost:8000;
+        }
+
+        location /ws {
+            proxy_pass http://localhost:8000/ws;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+        }
+    }
+}
+```
+
+Some commands to achieve:
+
+```bash
+$ vim /etc/nginx/nginx.conf
+```
+
+Edit it to reflect above. Then verify all is good with:
+
+```bash
+$ sudo nginx -t
+```
+
+If there are no errors:
+
+```bash
+$ sudo systemctl restart nginx
+```
+
 
 ## 🛡 Disclaimer
 
