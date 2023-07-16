@@ -124,7 +124,7 @@ The issue relates to the library WeasyPrint (which is used to generate PDFs from
 
 We're using [Selenium](https://www.selenium.dev) for site scraping. Some sites fail to be scraped. In these cases, restart and try running again.
 
-If none of the above work, you can [try out our hosted beta](http://gpt-researcher-web.us-east-1.elasticbeanstalk.com/).
+If none of the above work, you can [try out our hosted beta](https://app.tavily.com).
 
 ## 🛡 Disclaimer
 
