@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ResearchForm from './ResearchForm'
+import Report from './Report'
 
 import {addAgentResponse, writeReport, updateDownloadLink, 
   updateScroll, copyToClipboard} from '../helpers/scripts';
@@ -43,6 +44,10 @@ export default function ChatBox() {
       };
   }
 
+  const onSubmittingResearchForm = (arg) => { 
+    console.log('accessing child state from parent callback (Research form data logged in ChatBox.js): ', arg) 
+  }
+
   return (
     <div>
       <section className="landing">
@@ -62,18 +67,13 @@ export default function ChatBox() {
       </section>
 
       <main className="container" id="form">
-          <ResearchForm />
+          <ResearchForm onSubmit={onSubmittingResearchForm}/>
 
           <div className="margin-div">
               <h2>Agent Output</h2>
               <div id="output"></div>
           </div>
-          <div className="margin-div">
-              <h2>Research Report</h2>
-              <div id="reportContainer"></div>
-              <button onclick="copyToClipboard()" className="btn btn-secondary mt-3">Copy to clipboard</button>
-              <a id="downloadLink" href="#" className="btn btn-secondary mt-3" target="_blank">Download as PDF</a>
-          </div>
+          <Report />
       </main>
     </div>
   );

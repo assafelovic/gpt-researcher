@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 
-export default function ResearchForm() {
-  // Declare a new state variable, which we'll call "count"
-  const [count, setCount] = useState(0);
+export default function ResearchForm({onSubmit}) {
+    // Declare a new state variable, which we'll call "count"
+    const [count, setCount] = useState(0);
 
-  return (
-    <form method="POST" className="mt-3" onSubmit={startResearch()}>
+    return (
+        <form method="POST" className="mt-3" onSubmit={onSubmit()}>
             <div className="form-group">
                 <label htmlFor="task" className="agent_question">What would you like me to research next?</label>
                 <input type="text" name="task" className="form-control" required />
@@ -16,9 +16,9 @@ export default function ResearchForm() {
                     <div className="col agent-item">
                         <label htmlFor="defaultAgent"><img src="/static/defaultAgentAvatar.JPG" className="avatar" /></label>
                         <div className="agent-name">
-                          <input type="radio" name="agent" id="defaultAgent"
+                        <input type="radio" name="agent" id="defaultAgent"
                                 value="Default Agent" />
-                                  Default Agent</div>
+                                Default Agent</div>
                     </div>
                     <div className="col agent-item">
                         <label htmlFor="businessAnalystAgent"><img src="/static/businessAnalystAgentAvatar.png"
@@ -61,5 +61,5 @@ export default function ResearchForm() {
             </div>
             <input type="submit" value="Research" className="btn btn-primary button-padding" />
         </form>
-  );
+    );
 }
