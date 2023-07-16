@@ -145,3 +145,10 @@ footer {
   flex-direction: column;
   align-items: center;
 }
+
+/* refactoring inline css */
+.sayGoodbye {
+  background-image:linear-gradient(to right, #9867F0, #ED4E50); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent;
+}
