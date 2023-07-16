@@ -1,10 +1,10 @@
 import logo from './logo.svg';
 import './App.css';
-import {startResearch, listenToSockEvents, addAgentResponse, 
-  writeReport, updateDownloadLink, updateScroll, copyToClipboard} from './helpers/scripts';
-
+import ChatBox from './components/ChatBox'
 
 function App() {
+  
+
   return (
     <div className="App">
       <header className="App-header">
