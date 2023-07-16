@@ -1,4 +1,4 @@
-const startResearch = () => {
+export const startResearch = () => {
     // Clear output and reportContainer divs
 
     document.getElementById("output").innerHTML = "";
@@ -9,7 +9,7 @@ const startResearch = () => {
     listenToSockEvents();
 }
 
-const listenToSockEvents = () => {
+export const listenToSockEvents = () => {
     const {protocol, host, pathname} = window.location;
     const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
     const converter = new showdown.Converter();
@@ -33,7 +33,7 @@ const listenToSockEvents = () => {
     };
 }
 
-const addAgentResponse = (data) => {
+export const addAgentResponse = (data) => {
     const output = document.getElementById("output");
     output.innerHTML += '<div class="agent_response">'+data.output+'</div>';
     output.scrollTop = output.scrollHeight;  // Scroll to the bottom of the output
@@ -41,24 +41,24 @@ const addAgentResponse = (data) => {
     updateScroll();
 }
 
-const writeReport = (data, converter) => {
+export const writeReport = (data, converter) => {
     const reportContainer = document.getElementById("reportContainer");
     const markdownOutput = converter.makeHtml(data.output);
     reportContainer.innerHTML += markdownOutput;
     updateScroll();
 }
 
-const updateDownloadLink = (data) => {
+export const updateDownloadLink = (data) => {
     const path = data.output;
     const downloadLink = document.getElementById("downloadLink");
     downloadLink.href = path;
 }
 
-const updateScroll = () => {
+export const updateScroll = () => {
     window.scrollTo(0,document.body.scrollHeight);
 }
 
-const copyToClipboard = () => {
+export const copyToClipboard = () => {
     const textarea = document.createElement('textarea');
     textarea.id = 'temp_element';
     textarea.style.height = 0;
