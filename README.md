@@ -106,9 +106,9 @@ $ docker-compose up
 
 ## Deployment
 
-Assuming you'd like to deploy the app on a linux server, here's some quick tips to get up & running: <br />
+Assuming you'd like to deploy the app with Docker on a linux server, here's some quick tips to get up & running: <br />
 
-> **Step 1** On your linux server, follow the above 5 steps to "Try it with Docker"
+> **Step 1** On your linux server, follow the above steps to "Try it with Docker"
 > **Step 2** Map incoming server requests to localhost:8000 & the the Websocket Connection to http://localhost:8000/ws
 
 If you're using Nginx, here's a sample of a valid nginx.conf file
