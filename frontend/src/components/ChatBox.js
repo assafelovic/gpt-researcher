@@ -3,7 +3,7 @@ import {addAgentResponse, writeReport, updateDownloadLink,
   updateScroll, copyToClipboard} from '../helpers/scripts';
 
 export function ChatBox() {
-  const [count, setCount] = useState(0);
+  const [report, writeReport] = useState("");
 
   const startResearch = () => {
       // Clear output and reportContainer divs
@@ -19,18 +19,19 @@ export function ChatBox() {
   const listenToSockEvents = () => {
       const {protocol, host, pathname} = window.location;
       const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
-      const converter = new showdown.Converter();
       const socket = new WebSocket(ws_uri);
+
       socket.onmessage = (event) => {
           const data = JSON.parse(event.data);
           if (data.type === 'logs') {
               addAgentResponse(data);
           } else if (data.type === 'report') {
-              writeReport(data, converter);
+              writeReport(data);
           } else if (data.type === 'path') {
               updateDownloadLink(data);
           }
       };
+
       socket.onopen = (event) => {
           let task = document.querySelector('input[name="task"]').value;
           let report_type = document.querySelector('select[name="report_type"]').value;
