@@ -57,7 +57,7 @@ export default function ChatBox() {
                   <span className="sayGoodbye">Hours
                       of Research</span>
               </h1>
-              <p className="max-w-5xl mx-auto text-gray-600 mt-8" style="font-size:20px">
+              <p className="max-w-5xl mx-auto text-gray-600 mt-8" style={{fontSize: "20px"}}>
                   Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research. GPT Researcher
                   takes care of everything from accurate source gathering to organization of research results - all in one
                   platform designed to make your research process a breeze.

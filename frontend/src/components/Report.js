@@ -7,7 +7,7 @@ export default function Report({data}) {
         textarea.id = 'temp_element';
         textarea.style.height = 0;
         document.body.appendChild(textarea);
-        textarea.value = document.getElementById('reportContainer').innerText;
+        textarea.value = document.getElementById('reportContainer')?.innerText;
         const selector = document.querySelector('#temp_element');
         selector.select();
         document.execCommand('copy');
