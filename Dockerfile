@@ -5,7 +5,7 @@ RUN apt-get install -y fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-
 
 # Install broswer
 RUN apt update
-RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+RUN wget https://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.198-1_amd64.deb
 RUN apt install wget
 RUN dpkg -i google-chrome-stable_current_amd64.deb
 RUN apt-get install -f
