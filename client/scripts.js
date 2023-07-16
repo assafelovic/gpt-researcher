@@ -10,11 +10,10 @@ const startResearch = () => {
 }
 
 const listenToSockEvents = () => {
+    const {protocol, host, pathname} = window.location;
+    const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
     const converter = new showdown.Converter();
-
-    // will not use tls if the connection is not made over https
-    const protocol = window.location.protocol.includes('https') ? 'wss': 'ws'
-    const socket = new WebSocket(`${protocol}://${window.location.host}/ws`);
+    const socket = new WebSocket(ws_uri);
 
     socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
