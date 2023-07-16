@@ -52,50 +52,49 @@
     <main class="container" id="form">
         <form method="POST" class="mt-3" onsubmit="startResearch(); return false;">
             <div class="form-group">
-                <label for="task" class="agent_question">What would you like me to research next?</label>
-                <input type="text" name="task" class="form-control" required>
+                <label for="task" class="agent-question">What would you like me to research next?</label>
+                <input type="text" id="task" name="task" class="form-control" required>
             </div>
             <div class="form-group">
                 <label for="agent">Select your agent:</label>
                 <div class="row">
                     <div class="col agent-item">
-                        <label for="defaultAgent"><img src="/static/defaultAgentAvatar.JPG" class="avatar"></label>
+                        <label for="defaultAgent"><img src="/static/defaultAgentAvatar.JPG" class="avatar" alt="Default Agent"></label>
                         <div class="agent-name"><input type="radio" name="agent" id="defaultAgent"
                                 value="Default Agent">Default Agent</div>
                     </div>
                     <div class="col agent-item">
                         <label for="businessAnalystAgent"><img src="/static/businessAnalystAgentAvatar.png"
-                                class="avatar"></label>
+                                class="avatar" alt="Business Analyst Agent"></label>
                         <div class="agent-name"><input type="radio" name="agent" id="businessAnalystAgent"
                                 value="Business Analyst Agent">Business Analyst Agent</div>
                     </div>
                     <div class="col agent-item">
-                        <label for="financeAgent"><img src="/static/financeAgentAvatar.png" class="avatar"></label>
+                        <label for="financeAgent"><img src="/static/financeAgentAvatar.png" class="avatar" alt="Finance Agent"></label>
                         <div class="agent-name"><input type="radio" name="agent" id="financeAgent" value="Finance Agent"
                                 required>Finance Agent</div>
                     </div>
                     <div class="col agent-item">
-                        <label for="travelAgent"><img src="/static/travelAgentAvatar.png" class="avatar"></label>
+                        <label for="travelAgent"><img src="/static/travelAgentAvatar.png" class="avatar" alt="Travel Agent"></label>
                         <div class="agent-name"><input type="radio" name="agent" id="travelAgent"
                                 value="Travel Agent">Travel Agent</div>
                     </div>
                     <div class="col agent-item">
                         <label for="academicResearchAgent"><img src="/static/academicResearchAgentAvatar.png"
-                                class="avatar"></label>
+                                class="avatar" alt="Academic Research Agent"></label>
                         <div class="agent-name"><input type="radio" name="agent" id="academicResearchAgent"
                                 value="Academic Research Agent">Academic Research Agent</div>
                     </div>
                     <div class="col agent-item">
-                        <label for="computerSecurityanalyst"><img src="/static/computerSecurityanalystAvatar.png"
-                                class="avatar"></label>
-                        <div class="agent-name"><input type="radio" name="agent" id="computerSecurityanalyst"
+                        <label for="computerSecurityAnalyst"><img src="/static/computerSecurityAnalystAvatar.png"
+                                class="avatar" alt="Computer Security Analyst Agent"></label>
+                        <div class="agent-name"><input type="radio" name="agent" id="computerSecurityAnalyst"
                                 value="Computer Security Analyst Agent">Computer Security Analyst Agent</div>
                     </div>
                 </div>
             </div>
             <div class="form-group">
-                <label for="report_type" class="agent_question">What type of report would you like me to
-                    generate?</label>
+                <label for="report_type" class="agent-question">What type of report would you like me to generate?</label>
                 <select name="report_type" class="form-control" required>
                     <option value="research_report">Research Report</option>
                     <option value="resource_report">Resource Report</option>
@@ -118,7 +117,7 @@
     </main>
 
     <footer>
-        <p>GPT Researcher &copy; 2023 | <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">Github
+        <p>GPT Researcher &copy; 2023 | <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GitHub
                 Page</a></p>
     </footer>
 
