@@ -14,36 +14,36 @@ export default function ResearchForm({onSubmit}) {
                 <label htmlFor="agent">Select your agent:</label>
                 <div className="row">
                     <div className="col agent-item">
-                        <label htmlFor="defaultAgent"><img src="/static/defaultAgentAvatar.JPG" className="avatar" /></label>
+                        <label htmlFor="defaultAgent"><img src="defaultAgentAvatar.JPG" className="avatar" /></label>
                         <div className="agent-name">
                         <input type="radio" name="agent" id="defaultAgent"
                                 value="Default Agent" />
                                 Default Agent</div>
                     </div>
                     <div className="col agent-item">
-                        <label htmlFor="businessAnalystAgent"><img src="/static/businessAnalystAgentAvatar.png"
+                        <label htmlFor="businessAnalystAgent"><img src="businessAnalystAgentAvatar.png"
                                 className="avatar" /></label>
                         <div className="agent-name"><input type="radio" name="agent" id="businessAnalystAgent"
                                 value="Business Analyst Agent" />Business Analyst Agent</div>
                     </div>
                     <div className="col agent-item">
-                        <label htmlFor="financeAgent"><img src="/static/financeAgentAvatar.png" className="avatar" /></label>
+                        <label htmlFor="financeAgent"><img src="financeAgentAvatar.png" className="avatar" /></label>
                         <div className="agent-name"><input type="radio" name="agent" id="financeAgent" value="Finance Agent"
                                 required />Finance Agent</div>
                     </div>
                     <div className="col agent-item">
-                        <label htmlFor="travelAgent"><img src="/static/travelAgentAvatar.png" className="avatar" /></label>
+                        <label htmlFor="travelAgent"><img src="travelAgentAvatar.png" className="avatar" /></label>
                         <div className="agent-name"><input type="radio" name="agent" id="travelAgent"
                                 value="Travel Agent" />Travel Agent</div>
                     </div>
                     <div className="col agent-item">
-                        <label htmlFor="academicResearchAgent"><img src="/static/academicResearchAgentAvatar.png"
+                        <label htmlFor="academicResearchAgent"><img src="academicResearchAgentAvatar.png"
                                 className="avatar" /></label>
                         <div className="agent-name"><input type="radio" name="agent" id="academicResearchAgent"
                                 value="Academic Research Agent" />Academic Research Agent</div>
                     </div>
                     <div className="col agent-item">
-                        <label htmlFor="computerSecurityanalyst"><img src="/static/computerSecurityanalystAvatar.png"
+                        <label htmlFor="computerSecurityanalyst"><img src="computerSecurityanalystAvatar.png"
                                 className="avatar" /></label>
                         <div className="agent-name"><input type="radio" name="agent" id="computerSecurityanalyst"
                                 value="Computer Security Analyst Agent" />Computer Security Analyst Agent</div>
