@@ -163,10 +163,9 @@ $ sudo systemctl restart nginx
 
 
 ## 🛡 Disclaimer
-=======
+
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
->>>>>>> 30e728e9f3775bb8bd8c9094b6b7ba4b00ad788d
 
 
 ## 🔧 Troubleshooting
