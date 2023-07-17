@@ -99,6 +99,7 @@ footer {
     text-align: center;
     padding: 10px 0;
 }
+
 .margin-div {
     margin-top: 20px;
     margin-bottom: 20px;
@@ -112,13 +113,14 @@ footer {
     border-radius: 12px;
 }
 
- #output {
+#output {
     height: 300px;
     overflow: auto;
     padding: 10px;
     margin-bottom: 10px;
     margin-top: 10px;
 }
+
 #reportContainer {
     background-color: rgba(255,255,255,0.1);
     border: none;
@@ -126,5 +128,4 @@ footer {
     transition: all .3s ease-in-out;
     padding: 10px;
     border-radius: 12px;
-
 }
