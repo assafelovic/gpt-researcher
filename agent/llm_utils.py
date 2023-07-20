@@ -103,7 +103,7 @@ async def stream_response(model, messages, temperature, max_tokens, websocket):
     return response
 
 
-def find_agent(task: str) -> str:
+def choose_agent(task: str) -> str:
     description = [
         {
             "name": "research",
@@ -115,8 +115,8 @@ def find_agent(task: str) -> str:
                         "type": "string",
                         "description":
                             """
-                                Determines the field of the topic and the name of the agent we could use in order to research about the topic,
-                                provided.
+                                Determines the field of the topic and the name of the agent we could use in order to research 
+                                about the topic provided.
                             """,
                         "enum": ["Business Analyst Agent", "Finance Agent", "Travel Agent",
                                  "Academic Research Agent", "Computer Security Analyst Agent"]
