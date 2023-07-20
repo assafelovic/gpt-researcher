@@ -5,6 +5,7 @@ from pydantic import BaseModel
 import json
 import os
 
+from agent.llm_utils import find_agent
 from agent.run import WebSocketManager
 
 
@@ -46,6 +47,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 task = json_data.get("task")
                 report_type = json_data.get("report_type")
                 agent = json_data.get("agent")
+                if agent == "Auto Agent":
+                    agent = find_agent(task)
+                await websocket.send_json({"type": "logs", "output": f"🕵️ Agent: {agent}"})
                 if task and report_type and agent:
                     await manager.start_streaming(task, report_type, agent, websocket)
                 else:

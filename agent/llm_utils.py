@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+import json
+
 from fastapi import WebSocket
 import time
 
@@ -98,3 +101,43 @@ async def stream_response(model, messages, temperature, max_tokens, websocket):
                 paragraph = ""
     print(f"streaming response complete")
     return response
+
+
+def find_agent(task: str) -> str:
+    description = [
+        {
+            "name": "research",
+            "description": "Researches the given topic even if it can't be answered",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "agent": {
+                        "type": "string",
+                        "description":
+                            """
+                                Determines the field of the topic and the name of the agent we could use in order to research about the topic,
+                                provided.
+                            """,
+                        "enum": ["Business Analyst Agent", "Finance Agent", "Travel Agent",
+                                 "Academic Research Agent", "Computer Security Analyst Agent"]
+                    },
+                },
+                "required": ["agent"],
+            },
+        }
+    ]
+
+    response = openai.ChatCompletion.create(
+        model=CFG.smart_llm_model,
+        messages=[
+            {"role": "user", "content": f"{task}"}],
+        functions=description,
+        temperature=0,
+    )
+    message = response["choices"][0]["message"]
+
+    if message.get("function_call"):
+        function_name = message["function_call"]["name"]
+        return json.loads(message["function_call"]["arguments"]).get("agent")
+    else:
+        return "Default Agent"
