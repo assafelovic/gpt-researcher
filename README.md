@@ -109,6 +109,8 @@ $ docker-compose up
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
 
+Please check out our [roadmap](https://github.com/users/assafelovic/projects/3/views/1) page and let us know if you're interested in any contribution.
+
 
 ## 🔧 Troubleshooting
 We're constantly working to provide a more stable version. In the meantime, see here for known issues:
