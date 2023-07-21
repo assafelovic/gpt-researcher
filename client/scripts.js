@@ -83,6 +83,3 @@ const GPTResearcher = (() => {
     };
   })();
   
-  // Initialize the research process
-  GPTResearcher.startResearch();
-  
