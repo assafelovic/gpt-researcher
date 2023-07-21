@@ -82,4 +82,3 @@ const GPTResearcher = (() => {
       copyToClipboard,
     };
   })();
-  
