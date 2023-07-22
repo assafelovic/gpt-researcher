@@ -1,8 +1,8 @@
 export const addAgentResponse = (data) => {
     const output = document.getElementById("output");
-    output.innerHTML += '<div class="agent_response">'+data.output+'</div>';
-    output.scrollTop = output.scrollHeight;  // Scroll to the bottom of the output
-    output.style.display = "block";
+    // output.innerHTML += '<div class="agent_response">'+data.output+'</div>';
+    // output.scrollTop = output.scrollHeight;  // Scroll to the bottom of the output
+    // output.style.display = "block";
     updateScroll();
 }
 

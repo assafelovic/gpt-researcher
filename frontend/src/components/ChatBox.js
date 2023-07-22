@@ -7,12 +7,15 @@ import {addAgentResponse, writeReport, updateDownloadLink,
 
 export default function ChatBox() {
   const [report, writeReport] = useState("");
+  const [task, setTask] = useState("");
+  const [report_type, setReportType] = useState("");
+  const [agent, setAgent] = useState("");
 
   const startResearch = () => {
       // Clear output and reportContainer divs
 
-      document.getElementById("output").innerHTML = "";
-      document.getElementById("reportContainer").innerHTML = "";
+    //   document.getElementById("output").innerHTML = "";
+    //   document.getElementById("reportContainer").innerHTML = "";
 
       addAgentResponse({output: "🤔 Thinking about research questions for the task..."});
 
@@ -36,9 +39,9 @@ export default function ChatBox() {
       };
 
       socket.onopen = (event) => {
-          let task = document.querySelector('input[name="task"]').value;
-          let report_type = document.querySelector('select[name="report_type"]').value;
-          let agent = document.querySelector('input[name="agent"]:checked').value;  // Corrected line
+        //   let task = document.querySelector('input[name="task"]').value;
+        //   let report_type = document.querySelector('select[name="report_type"]').value;
+        //   let agent = document.querySelector('input[name="agent"]:checked').value;  // Corrected line
           let data = "start " + JSON.stringify({task: task, report_type: report_type, agent: agent});
           socket.send(data);
       };
@@ -64,7 +67,7 @@ export default function ChatBox() {
       </section>
 
       <main className="container" id="form">
-          <ResearchForm onSubmit={onSubmittingResearchForm}/>
+          <ResearchForm onSubmit={startResearch}/>
 
           <div className="margin-div">
               <h2>Agent Output</h2>
