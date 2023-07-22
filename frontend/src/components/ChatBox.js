@@ -53,14 +53,11 @@ export default function ChatBox() {
       <section className="landing">
           <div className="max-w-5xl mx-auto text-center">
               <h1 className="text-4xl font-extrabold mx-auto lg:text-7xl">
-                  Say Goodbye to
-                  <span className="sayGoodbye">Hours
-                      of Research</span>
+                  Say Hello to
+                  <span className="sayGoodbye"> GPTBud</span>
               </h1>
               <p className="max-w-5xl mx-auto text-gray-600 mt-8" style={{fontSize: "20px"}}>
-                  Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research. GPT Researcher
-                  takes care of everything from accurate source gathering to organization of research results - all in one
-                  platform designed to make your research process a breeze.
+                  The power of Google Search & GPT Combined for a Better Search Experience.
               </p>
               <a href="#form" className="btn btn-primary">Get Started</a>
           </div>
