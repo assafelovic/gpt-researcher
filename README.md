@@ -109,7 +109,7 @@ $ docker-compose up
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
 
-Please check out our [roadmap](https://github.com/users/assafelovic/projects/3/views/1) page and let us know if you're interested in any contribution.
+Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/2pFkc83fRq) if you're interested in joining our mission.
 
 
 ## 🔧 Troubleshooting
