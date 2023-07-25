@@ -151,6 +151,7 @@ def choose_agent_configuration():
                                  "Academic Research Agent", "Computer Security Analyst Agent"
                                  
                                  if an agent for the field required doesn't exist make one up
+                                 fit an emoji to every agent before the agent name
                             """,
                     },
                     "instructions": {
