@@ -82,7 +82,3 @@ const GPTResearcher = (() => {
       copyToClipboard,
     };
   })();
-  
-  // Initialize the research process
-  GPTResearcher.startResearch();
-  
