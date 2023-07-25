@@ -26,7 +26,7 @@ export default function Report({data}) {
     `;
 
     return (
-        <div className="margin-div">
+        <div>
             <h2>Research Report</h2>
             <div id="reportContainer">
                 <MarkdownView
@@ -34,8 +34,6 @@ export default function Report({data}) {
                     options={{ tables: true, emoji: true }}
                 />
             </div>
-            <button onClick={copyToClipboard()} className="btn btn-secondary mt-3">Copy to clipboard</button>
-            <a id="downloadLink" href="#" className="btn btn-secondary mt-3" target="_blank">Download as PDF</a>
         </div>
     );
 };

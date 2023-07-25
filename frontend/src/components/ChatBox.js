@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import ResearchForm from './ResearchForm'
 import Report from './Report'
+import AgentLogs from './AgentLogs'
 
 import {addAgentResponse, writeReport, updateDownloadLink, 
   updateScroll, copyToClipboard} from '../helpers/scripts';
 
 export default function ChatBox() {
-  const [report, writeReport] = useState("");
+  const submitRef = useRef();
+
   const [task, setTask] = useState("");
   const [report_type, setReportType] = useState("");
   const [agent, setAgent] = useState("");
+  const [agentLogs, setAgentLogs] = useState("");
+  const [report, setReport] = useState("");
 
   const startResearch = () => {
       // Clear output and reportContainer divs
@@ -67,13 +71,18 @@ export default function ChatBox() {
       </section>
 
       <main className="container" id="form">
-          <ResearchForm onSubmit={startResearch}/>
+          <ResearchForm submitRef={submitRef}/>
 
-          <div className="margin-div">
-              <h2>Agent Output</h2>
-              <div id="output"></div>
-          </div>
-          <Report />
+          {agentLogs ? <AgentLogs /> : ''}
+          {report ? 
+              <div className="margin-div">
+                  <Report />
+                  <button onClick={copyToClipboard()} className="btn btn-secondary mt-3">Copy to clipboard</button>
+                  <a id="downloadLink" href="#" className="btn btn-secondary mt-3" target="_blank">Download as PDF</a>
+            </div>
+           
+          : ''}
+          
       </main>
     </div>
   );
