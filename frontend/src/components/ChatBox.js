@@ -2,18 +2,27 @@ import React, { useState, useRef } from 'react';
 import ResearchForm from './ResearchForm'
 import Report from './Report'
 import AgentLogs from './AgentLogs'
+import AccessReport from './AccessReport'
 
-import {addAgentResponse, writeReport, updateDownloadLink, 
-  updateScroll, copyToClipboard} from '../helpers/scripts';
+import {addAgentResponse, writeReport, updateDownloadLink} from '../helpers/scripts';
 
 export default function ChatBox() {
-  const submitRef = useRef();
 
   const [task, setTask] = useState("");
   const [report_type, setReportType] = useState("");
   const [agent, setAgent] = useState("");
   const [agentLogs, setAgentLogs] = useState("");
   const [report, setReport] = useState("");
+
+  const onFormSubmit = (e) => {
+    e.preventDefault();
+    console.log('form submitted in ChatBox.js: ')
+    console.log('e in ChatBox.js: ', e)
+    
+    let {task, agent, report_type} = e.target;
+
+    console.log(task.value, agent.value, report_type.value)
+  }
 
   const startResearch = () => {
       // Clear output and reportContainer divs
@@ -51,10 +60,6 @@ export default function ChatBox() {
       };
   }
 
-  const onSubmittingResearchForm = (arg) => { 
-    console.log('accessing child state from parent callback (Research form data logged in ChatBox.js): ', arg) 
-  }
-
   return (
     <div>
       <section className="landing">
@@ -71,14 +76,13 @@ export default function ChatBox() {
       </section>
 
       <main className="container" id="form">
-          <ResearchForm submitRef={submitRef}/>
+          <ResearchForm onFormSubmit={onFormSubmit}/>
 
-          {agentLogs ? <AgentLogs /> : ''}
+          {agentLogs ? <AgentLogs agentLogs={agentLogs}/> : ''}
           {report ? 
               <div className="margin-div">
-                  <Report />
-                  <button onClick={copyToClipboard()} className="btn btn-secondary mt-3">Copy to clipboard</button>
-                  <a id="downloadLink" href="#" className="btn btn-secondary mt-3" target="_blank">Download as PDF</a>
+                  <Report report={report}/>
+                  <AccessReport />
             </div>
            
           : ''}

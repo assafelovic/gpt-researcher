@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 
-export default function ResearchForm({onSubmit}) {
+export default function ResearchForm({onFormSubmit}) {
     // Declare a new state variable, which we'll call "count"
     const [count, setCount] = useState(0);
 
     return (
-        <form method="POST" className="mt-3" onSubmit={onSubmit()}>
+        <form method="POST" className="mt-3" onSubmit={onFormSubmit}>
             <div className="form-group">
                 <label htmlFor="task" className="agent_question">What would you like me to research next?</label>
                 <input type="text" name="task" className="form-control" required />
