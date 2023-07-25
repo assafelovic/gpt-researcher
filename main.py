@@ -55,7 +55,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 else:
                     agent_role_prompt = None
 
-                await websocket.send_json({"type": "logs", "output": f"🕵️ Agent: {agent}"})
+                await websocket.send_json({"type": "logs", "output": f"{agent}"})
                 if task and report_type and agent:
                     await manager.start_streaming(task, report_type, agent, agent_role_prompt, websocket)
                 else:
