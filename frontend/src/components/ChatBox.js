@@ -10,9 +10,6 @@ const socket = new WebSocket(ws_uri);
 
 export default function ChatBox() {
 
-  const [task, setTask] = useState("");
-  const [reportType, setReportType] = useState("");
-  const [agent, setAgent] = useState("");
   const [agentLogs, setAgentLogs] = useState([]);
   const [report, setReport] = useState("");
   const [accessData, setAccessData] = useState({});
@@ -28,7 +25,7 @@ export default function ChatBox() {
             setAccessData(data);
         }
     };
-  }, [agentLogs])
+  }, [agentLogs, report, accessData])
 
   const onFormSubmit = (e) => {
     e.preventDefault();

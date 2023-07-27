@@ -8,7 +8,7 @@ export default function Report({report}) {
             <h2>Research Report</h2>
             <div id="reportContainer">
                 <MarkdownView
-                    markdown={report.output}
+                    markdown={report}
                     options={{ tables: true, emoji: true }}
                 />
             </div>
