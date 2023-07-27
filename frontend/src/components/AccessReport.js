@@ -1,15 +1,11 @@
-export default function AccessReport({accessData}){  
-    const copyToClipboard = () => {
-        const textarea = document.createElement('textarea');
-        textarea.id = 'temp_element';
-        textarea.style.height = 0;
-        document.body.appendChild(textarea);
-        textarea.value = document.getElementById('reportContainer')?.innerText;
-        const selector = document.querySelector('#temp_element');
-        selector.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
+export default function AccessReport({accessData, report}){  
+  function copyToClipboard(text) {
+    if ('clipboard' in navigator) {
+      navigator.clipboard.writeText(report);
+    } else {
+      document.execCommand('copy', true, report);
     }
+  }
 
     const reportAccessLink = `http://localhost:8000/${accessData.output?.replace('./', '')}`
 

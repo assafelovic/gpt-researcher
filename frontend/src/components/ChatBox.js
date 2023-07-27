@@ -4,8 +4,10 @@ import Report from './Report'
 import AgentLogs from './AgentLogs'
 import AccessReport from './AccessReport'
 
-import {addAgentResponse, writeReport, updateDownloadLink} from '../helpers/scripts';
-let ws_uri = 'ws://localhost:8000/ws'
+const {protocol, pathname} = window.location;
+let {host} = window.location;
+host = host.includes('localhost') ? 'localhost:8000' : host;
+const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
 const socket = new WebSocket(ws_uri);
 
 export default function ChatBox() {
@@ -29,20 +31,13 @@ export default function ChatBox() {
 
   const onFormSubmit = (e) => {
     e.preventDefault();
-    console.log('form submitted in ChatBox.js: ')
     let {task, agent, report_type} = e.target;
-
-    console.log(task.value, agent.value, report_type.value)
-    
     setAgentLogs([{output: "🤔 Thinking about research questions for the task..."}]);
     startResearch(task, report_type, agent)
   }
 
   const startResearch = (task, report_type, agent) => {     
-      // To-Do: Consider Clearing output and reportContainer divs
-      // const {protocol, host, pathname} = window.location;
-      // const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
-
+      setReport("")
       let data = "start " + JSON.stringify({task: task.value, report_type: report_type.value, agent: agent.value});
       socket.send(data);
   }
@@ -68,7 +63,7 @@ export default function ChatBox() {
           {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs}/> : ''}
           <div className="margin-div">
             {report ? <Report report={report}/> : ''}
-            {Object.keys(accessData).length != 0 ? <AccessReport accessData={accessData} /> : ''}               
+            {Object.keys(accessData).length != 0 ? <AccessReport accessData={accessData} report={report} /> : ''}               
           </div>
           
       </main>
