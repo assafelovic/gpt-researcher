@@ -7,7 +7,7 @@ md2pdf==1.0.1
 openai~=0.27.8
 playwright==1.35.0
 python-dotenv~=1.0.0
-pyyaml==6.0
+pyyaml==6.0.1
 selenium==4.10.0
 webdriver-manager==3.9.1
 flask
