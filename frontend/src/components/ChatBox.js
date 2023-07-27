@@ -11,17 +11,20 @@ export default function ChatBox() {
   const [task, setTask] = useState("");
   const [report_type, setReportType] = useState("");
   const [agent, setAgent] = useState("");
-  const [agentLogs, setAgentLogs] = useState("");
+  const [agentLogs, setAgentLogs] = useState([]);
   const [report, setReport] = useState("");
 
   const onFormSubmit = (e) => {
     e.preventDefault();
     console.log('form submitted in ChatBox.js: ')
-    console.log('e in ChatBox.js: ', e)
-    
     let {task, agent, report_type} = e.target;
 
     console.log(task.value, agent.value, report_type.value)
+    setTask(task.value)
+    setAgent(agent.value)
+    setReportType(report_type)
+    setAgentLogs([{output: "🤔 Thinking about research questions for the task..."}]);
+    startResearch()
   }
 
   const startResearch = () => {
@@ -29,8 +32,6 @@ export default function ChatBox() {
 
     //   document.getElementById("output").innerHTML = "";
     //   document.getElementById("reportContainer").innerHTML = "";
-
-      addAgentResponse({output: "🤔 Thinking about research questions for the task..."});
 
       listenToSockEvents();
   }
@@ -43,7 +44,7 @@ export default function ChatBox() {
       socket.onmessage = (event) => {
           const data = JSON.parse(event.data);
           if (data.type === 'logs') {
-              addAgentResponse(data);
+            setAgentLogs([...agentLogs, ...data])
           } else if (data.type === 'report') {
               writeReport(data);
           } else if (data.type === 'path') {
@@ -78,7 +79,7 @@ export default function ChatBox() {
       <main className="container" id="form">
           <ResearchForm onFormSubmit={onFormSubmit}/>
 
-          {agentLogs ? <AgentLogs agentLogs={agentLogs}/> : ''}
+          {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs}/> : ''}
           {report ? 
               <div className="margin-div">
                   <Report report={report}/>
