@@ -111,25 +111,29 @@ def choose_agent(task: str) -> str:
         agent - The agent that will be used
         agent_role_prompt (str): The prompt for the agent
     """
-    configuration = choose_agent_configuration()
+    try:
+        configuration = choose_agent_configuration()
 
-    response = openai.ChatCompletion.create(
-        model=CFG.smart_llm_model,
-        messages=[
-            {"role": "user", "content": f"{task}"}],
-        functions=configuration,
-        temperature=0,
-    )
-    message = response["choices"][0]["message"]
+        response = openai.ChatCompletion.create(
+            model=CFG.smart_llm_model,
+            messages=[
+                {"role": "user", "content": f"{task}"}],
+            functions=configuration,
+            temperature=0,
+        )
+        message = response["choices"][0]["message"]
 
-    if message.get("function_call"):
-        function_name = message["function_call"]["name"]
-        return {"agent": json.loads(message["function_call"]["arguments"]).get("agent"),
-                "agent_role_prompt": json.loads(message["function_call"]["arguments"]).get("instructions")}
-    else:
-        {"agent": "Default Agent",
-         "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
-
+        if message.get("function_call"):
+            function_name = message["function_call"]["name"]
+            return {"agent": json.loads(message["function_call"]["arguments"]).get("agent"),
+                    "agent_role_prompt": json.loads(message["function_call"]["arguments"]).get("instructions")}
+        else:
+            return {"agent": "Default Agent",
+             "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
+    except Exception as e:
+        print(f"{Fore.RED}Error in choose_agent: {e}{Style.RESET_ALL}")
+        return {"agent": "Default Agent",
+                "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
 
 def choose_agent_configuration():
     configuration = [
