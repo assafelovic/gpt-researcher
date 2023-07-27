@@ -3,14 +3,14 @@ export const addAgentResponse = (data) => {
     // output.innerHTML += '<div class="agent_response">'+data.output+'</div>';
     // output.scrollTop = output.scrollHeight;  // Scroll to the bottom of the output
     // output.style.display = "block";
-    updateScroll();
+    // updateScroll();
 }
 
 export const writeReport = (data, converter) => {
     const reportContainer = document.getElementById("reportContainer");
     const markdownOutput = converter.makeHtml(data.output);
     reportContainer.innerHTML += markdownOutput;
-    updateScroll();
+    // updateScroll();
 }
 
 export const updateDownloadLink = (data) => {
@@ -20,5 +20,5 @@ export const updateDownloadLink = (data) => {
 }
 
 export const updateScroll = () => {
-    window.scrollTo(0,document.body.scrollHeight);
+    // window.scrollTo(0,document.body.scrollHeight);
 }

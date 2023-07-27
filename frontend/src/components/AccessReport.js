@@ -1,4 +1,4 @@
-export default function AccessReport(){  
+export default function AccessReport({accessData}){  
     const copyToClipboard = () => {
         const textarea = document.createElement('textarea');
         textarea.id = 'temp_element';
@@ -11,10 +11,12 @@ export default function AccessReport(){
         document.body.removeChild(textarea);
     }
 
+    const reportAccessLink = `http://localhost:8000/${accessData.output?.replace('./', '')}`
+
     return (
       <div>
         <button onClick={copyToClipboard()} className="btn btn-secondary mt-3">Copy to clipboard</button>
-        <a id="downloadLink" href="#" className="btn btn-secondary mt-3" target="_blank">Download as PDF</a>
+        <a id="downloadLink" href={reportAccessLink} className="btn btn-secondary mt-3" target="_blank">View as PDF</a>
       </div>
     );
   }
