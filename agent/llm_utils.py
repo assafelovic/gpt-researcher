@@ -14,6 +14,7 @@ from config import Config
 CFG = Config()
 
 openai.api_key = CFG.openai_api_key
+openai.api_base = CFG.openai_api_base
 
 from typing import Optional
 import logging

@@ -70,6 +70,7 @@ $ pip install -r requirements.txt
 
 ```bash
 $ export OPENAI_API_KEY={Your API Key here}
+$ export OPENAI_API_BASE={Your API Base here} (required if you are using a custom API base)
 ```
 <br />
 
@@ -94,6 +95,7 @@ Follow instructions at https://docs.docker.com/engine/install/
 
 ```bash
 $ export OPENAI_API_KEY={Your API Key here}
+$ export OPENAI_API_BASE={Your API Base here} (required if you are using a custom API base)
 ```
 
 > **Step 3** - Run the application
