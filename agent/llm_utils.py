@@ -128,7 +128,7 @@ def choose_agent(task: str) -> str:
             return {"agent": json.loads(message["function_call"]["arguments"]).get("agent"),
                     "agent_role_prompt": json.loads(message["function_call"]["arguments"]).get("instructions")}
         else:
-            {"agent": "Default Agent",
+            return {"agent": "Default Agent",
              "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
     except Exception as e:
         print(f"{Fore.RED}Error in choose_agent: {e}{Style.RESET_ALL}")
