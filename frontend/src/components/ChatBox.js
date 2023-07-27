@@ -13,6 +13,7 @@ export default function ChatBox() {
   const [agent, setAgent] = useState("");
   const [agentLogs, setAgentLogs] = useState([]);
   const [report, setReport] = useState("");
+  const [accessData, setAccessData] = useState({});
 
   const onFormSubmit = (e) => {
     e.preventDefault();
@@ -45,11 +46,13 @@ export default function ChatBox() {
       socket.onmessage = (event) => {
           const data = JSON.parse(event.data);
           if (data.type === 'logs') {
-            setAgentLogs(data)
+              let logs = Object.assign([], agentLogs)
+              logs.push(data)
+              setAgentLogs(logs)
           } else if (data.type === 'report') {
-              writeReport(data);
+              setReport(data);
           } else if (data.type === 'path') {
-              updateDownloadLink(data);
+              setAccessData(data);
           }
       };
 
