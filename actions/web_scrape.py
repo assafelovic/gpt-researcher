@@ -134,10 +134,7 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
         options.add_experimental_option(
             "prefs", {"download_restrictions": 3}
         )
-        service = Service(executable_path=ChromeDriverManager().install())
-        driver = webdriver.Chrome(
-            service=service, options=options
-        )
+        driver = webdriver.Chrome(options=options)
     driver.get(url)
 
     WebDriverWait(driver, 10).until(
