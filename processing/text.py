@@ -161,5 +161,5 @@ def md_to_pdf(input_file, output_file):
     md2pdf(output_file,
            md_content=None,
            md_file_path=input_file,
-           css_file_path=None,
+           css_file_path="./processing/styles.css",
            base_url=None)
