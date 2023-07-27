@@ -9,7 +9,7 @@ import {addAgentResponse, writeReport, updateDownloadLink} from '../helpers/scri
 export default function ChatBox() {
 
   const [task, setTask] = useState("");
-  const [report_type, setReportType] = useState("");
+  const [reportType, setReportType] = useState("");
   const [agent, setAgent] = useState("");
   const [agentLogs, setAgentLogs] = useState([]);
   const [report, setReport] = useState("");
@@ -22,29 +22,32 @@ export default function ChatBox() {
     console.log(task.value, agent.value, report_type.value)
     setTask(task.value)
     setAgent(agent.value)
-    setReportType(report_type)
+    setReportType(report_type.value)
     setAgentLogs([{output: "🤔 Thinking about research questions for the task..."}]);
-    startResearch()
+    startResearch(task, reportType, agent)
   }
 
-  const startResearch = () => {
+  const startResearch = (task, reportType, agent) => {
       // Clear output and reportContainer divs
 
     //   document.getElementById("output").innerHTML = "";
     //   document.getElementById("reportContainer").innerHTML = "";
 
-      listenToSockEvents();
+      listenToSockEvents(task, reportType, agent);
   }
 
-  const listenToSockEvents = () => {
-      const {protocol, host, pathname} = window.location;
-      const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
+  const listenToSockEvents = (task, reportType, agent) => {
+      // const {protocol, host, pathname} = window.location;
+      // const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
+
+      let ws_uri = 'ws://localhost:8000/ws'
+
       const socket = new WebSocket(ws_uri);
 
       socket.onmessage = (event) => {
           const data = JSON.parse(event.data);
           if (data.type === 'logs') {
-            setAgentLogs([...agentLogs, ...data])
+            setAgentLogs(data)
           } else if (data.type === 'report') {
               writeReport(data);
           } else if (data.type === 'path') {
@@ -56,7 +59,7 @@ export default function ChatBox() {
         //   let task = document.querySelector('input[name="task"]').value;
         //   let report_type = document.querySelector('select[name="report_type"]').value;
         //   let agent = document.querySelector('input[name="agent"]:checked').value;  // Corrected line
-          let data = "start " + JSON.stringify({task: task, report_type: report_type, agent: agent});
+          let data = "start " + JSON.stringify({task: task.value, report_type: 'research_report', agent: agent.value});
           socket.send(data);
       };
   }
