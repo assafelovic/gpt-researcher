@@ -3,6 +3,8 @@
 # libraries
 import asyncio
 import json
+import uuid
+
 from actions.web_search import web_search
 from actions.web_scrape import async_browse
 from processing.text import \
@@ -32,18 +34,10 @@ class ResearchAgent:
         self.agent_role_prompt = agent_role_prompt
         self.visited_urls = set()
         self.research_summary = ""
-        self.directory_name, self.dir_path = self.create_dir_and_directory_names(question)
+        self.directory_name = uuid.uuid4()
+        self.dir_path = os.path.dirname(f"./outputs/{self.directory_name}/")
         self.websocket = websocket
 
-    def create_dir_and_directory_names(self, base_name: str):
-        directory_name = ''.join(c for c in base_name if c.isascii() and c not in string.punctuation)[:100]
-        dir_path = f"./outputs/{directory_name}"
-        i = 0
-        while os.path.exists(dir_path):
-            i += 1
-            directory_name = f"{directory_name}_{i}"
-            dir_path = f"./outputs/{directory_name}_{i}"
-        return directory_name, dir_path
 
     async def summarize(self, text, topic):
         """ Summarizes the given text for the given topic.
