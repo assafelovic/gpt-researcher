@@ -17,6 +17,8 @@ openai.api_key = CFG.openai_api_key
 
 from typing import Optional
 import logging
+from langchain.chat_models.openai import convert_openai_messages
+from langchain.chat_models import ChatOpenAI
 
 def create_chat_completion(
     messages: list,  # type: ignore
@@ -69,13 +71,10 @@ def send_chat_completion_request(
     messages, model, temperature, max_tokens, stream, websocket
 ):
     if not stream:
-        result = openai.ChatCompletion.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        return result.choices[0].message["content"]
+        llm = ChatOpenAI(model=model, temperature=temperature, max_tokens=max_tokens)
+        lc_messages = convert_openai_messages(messages)
+        result = llm.invoke(lc_messages)
+        return result.content
     else:
         return stream_response(model, messages, temperature, max_tokens, websocket)
 
@@ -84,15 +83,10 @@ async def stream_response(model, messages, temperature, max_tokens, websocket):
     paragraph = ""
     response = ""
     print(f"streaming response...")
-
-    for chunk in openai.ChatCompletion.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            stream=True,
-    ):
-        content = chunk["choices"][0].get("delta", {}).get("content")
+    llm = ChatOpenAI(model=model, temperature=temperature, max_tokens=max_tokens)
+    lc_messages = convert_openai_messages(messages)
+    for chunk in llm.stream(lc_messages):
+        content = chunk.content
         if content is not None:
             response += content
             paragraph += content
@@ -113,15 +107,15 @@ def choose_agent(task: str) -> str:
     """
     try:
         configuration = choose_agent_configuration()
-
-        response = openai.ChatCompletion.create(
-            model=CFG.smart_llm_model,
-            messages=[
-                {"role": "user", "content": f"{task}"}],
+        llm = ChatOpenAI(model=CFG.smart_llm_model, temperature=0)
+        lc_messages = convert_openai_messages([
+                {"role": "user", "content": f"{task}"}])
+        
+        response = llm.invoke(lc_messages,
             functions=configuration,
             temperature=0,
         )
-        message = response["choices"][0]["message"]
+        message = response.additional_kwargs
 
         if message.get("function_call"):
             function_name = message["function_call"]["name"]
@@ -134,6 +128,9 @@ def choose_agent(task: str) -> str:
         print(f"{Fore.RED}Error in choose_agent: {e}{Style.RESET_ALL}")
         return {"agent": "Default Agent",
                 "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
+
+
+
 
 def choose_agent_configuration():
     configuration = [
@@ -178,5 +175,3 @@ def choose_agent_configuration():
         }
     ]
     return configuration
-
-
