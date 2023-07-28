@@ -129,9 +129,6 @@ def choose_agent(task: str) -> str:
         return {"agent": "Default Agent",
                 "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
 
-
-
-
 def choose_agent_configuration():
     configuration = [
         {
@@ -175,3 +172,5 @@ def choose_agent_configuration():
         }
     ]
     return configuration
+
+
