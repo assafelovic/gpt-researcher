@@ -32,9 +32,18 @@ class ResearchAgent:
         self.agent_role_prompt = agent_role_prompt
         self.visited_urls = set()
         self.research_summary = ""
-        self.directory_name = ''.join(c for c in question if c.isascii() and c not in string.punctuation)[:100]
-        self.dir_path = os.path.dirname(f"./outputs/{self.directory_name}/")
+        self.directory_name, self.dir_path = self.create_dir_and_directory_names(question)
         self.websocket = websocket
+
+    def create_dir_and_directory_names(self, base_name: str):
+        base_name = ''.join(c for c in base_name if c.isascii() and c not in string.punctuation)[:100]
+        dir_path = f"./outputs/{base_name}"
+        i = 0
+        while os.path.exists(dir_path):
+            i += 1
+            directory_name = f"{base_name}_{i}"
+            dir_path = f"./outputs/{base_name}_{i}"
+        return directory_name, dir_path
 
     async def summarize(self, text, topic):
         """ Summarizes the given text for the given topic.
