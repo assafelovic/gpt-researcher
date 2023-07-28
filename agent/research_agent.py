@@ -36,13 +36,13 @@ class ResearchAgent:
         self.websocket = websocket
 
     def create_dir_and_directory_names(self, base_name: str):
-        base_name = ''.join(c for c in base_name if c.isascii() and c not in string.punctuation)[:100]
-        dir_path = f"./outputs/{base_name}"
+        directory_name = ''.join(c for c in base_name if c.isascii() and c not in string.punctuation)[:100]
+        dir_path = f"./outputs/{directory_name}"
         i = 0
         while os.path.exists(dir_path):
             i += 1
-            directory_name = f"{base_name}_{i}"
-            dir_path = f"./outputs/{base_name}_{i}"
+            directory_name = f"{directory_name}_{i}"
+            dir_path = f"./outputs/{directory_name}_{i}"
         return directory_name, dir_path
 
     async def summarize(self, text, topic):
