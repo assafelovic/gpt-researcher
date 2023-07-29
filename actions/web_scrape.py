@@ -116,9 +116,6 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     options = options_available[CFG.selenium_web_browser]()
     options.add_argument(CFG.user_agent)
     options.add_argument('--headless')
-    options.add_experimental_option(
-        "prefs", {"download_restrictions": 3}
-    )
 
     if CFG.selenium_web_browser == "firefox":
         service = Service(executable_path=GeckoDriverManager().install())
@@ -134,10 +131,10 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--remote-debugging-port=9222")
         options.add_argument("--no-sandbox")
-        service = Service(executable_path=ChromeDriverManager().install())
-        driver = webdriver.Chrome(
-            service=service, options=options
+        options.add_experimental_option(
+            "prefs", {"download_restrictions": 3}
         )
+        driver = webdriver.Chrome(options=options)
     driver.get(url)
 
     WebDriverWait(driver, 10).until(

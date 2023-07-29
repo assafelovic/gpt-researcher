@@ -3,6 +3,8 @@
 # libraries
 import asyncio
 import json
+import uuid
+
 from actions.web_search import web_search
 from actions.web_scrape import async_browse
 from processing.text import \
@@ -21,7 +23,7 @@ CFG = Config()
 
 
 class ResearchAgent:
-    def __init__(self, question, agent, websocket):
+    def __init__(self, question, agent, agent_role_prompt, websocket):
         """ Initializes the research assistant with the given question.
         Args: question (str): The question to research
         Returns: None
@@ -29,11 +31,13 @@ class ResearchAgent:
 
         self.question = question
         self.agent = agent
+        self.agent_role_prompt = agent_role_prompt
         self.visited_urls = set()
         self.research_summary = ""
-        self.directory_name = ''.join(c for c in question if c.isascii() and c not in string.punctuation)[:100]
+        self.directory_name = uuid.uuid4()
         self.dir_path = os.path.dirname(f"./outputs/{self.directory_name}/")
         self.websocket = websocket
+
 
     async def summarize(self, text, topic):
         """ Summarizes the given text for the given topic.
@@ -68,7 +72,7 @@ class ResearchAgent:
     async def call_agent(self, action, stream=False, websocket=None):
         messages = [{
             "role": "system",
-            "content": prompts.generate_agent_role_prompt(self.agent),
+            "content": self.agent_role_prompt if self.agent_role_prompt else prompts.generate_agent_role_prompt(self.agent)
         }, {
             "role": "user",
             "content": action,

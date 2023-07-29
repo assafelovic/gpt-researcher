@@ -11,7 +11,7 @@ export default function AccessReport({accessData, report}){
 
     return (
       <div>
-        <button onClick={copyToClipboard()} className="btn btn-secondary mt-3">Copy to clipboard</button>
+        {/* <button onClick={copyToClipboard()} className="btn btn-secondary mt-3">Copy to clipboard</button> */}
         <a id="downloadLink" href={reportAccessLink} className="btn btn-secondary mt-3" target="_blank">View as PDF</a>
       </div>
     );

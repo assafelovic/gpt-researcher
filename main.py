@@ -5,6 +5,7 @@ from pydantic import BaseModel
 import json
 import os
 
+from agent.llm_utils import choose_agent
 from agent.run import WebSocketManager
 
 
@@ -16,16 +17,12 @@ class ResearchRequest(BaseModel):
 
 
 app = FastAPI()
-app.mount("/site", StaticFiles(directory="client"), name="site")
-app.mount("/static", StaticFiles(directory="client/static"), name="static")
 # Dynamic directory for outputs once first research is run
 @app.on_event("startup")
 def startup_event():
     if not os.path.isdir("outputs"):
         os.makedirs("outputs")
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
-
-templates = Jinja2Templates(directory="client")
 
 manager = WebSocketManager()
 
@@ -46,8 +43,17 @@ async def websocket_endpoint(websocket: WebSocket):
                 task = json_data.get("task")
                 report_type = json_data.get("report_type")
                 agent = json_data.get("agent")
+                # temporary so "normal agents" can still be used and not just auto generated, will be removed when we move to auto generated
+                if agent == "Auto Agent":
+                    agent_dict = choose_agent(task)
+                    agent = agent_dict.get("agent")
+                    agent_role_prompt = agent_dict.get("agent_role_prompt")
+                else:
+                    agent_role_prompt = None
+
+                await websocket.send_json({"type": "logs", "output": f"Initiated an Agent: {agent}"})
                 if task and report_type and agent:
-                    await manager.start_streaming(task, report_type, agent, websocket)
+                    await manager.start_streaming(task, report_type, agent, agent_role_prompt, websocket)
                 else:
                     print("Error: not enough parameters provided.")
 

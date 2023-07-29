@@ -1,6 +1,6 @@
 # 🔎 GPT Researcher
 [![Official Website](https://img.shields.io/badge/Official%20Website-tavily.com-blue?style=flat&logo=world&logoColor=white)](https://tavily.com)
-[![Discord Follow](https://dcbadge.vercel.app/api/server/rqw8dnM8?style=flat)](https://discord.com/invite/rqw8dnM8)
+[![Discord Follow](https://dcbadge.vercel.app/api/server/2pFkc83fRq?style=flat)](https://discord.com/invite/2pFkc83fRq)
 [![GitHub Repo stars](https://img.shields.io/github/stars/assafelovic/gpt-researcher?style=social)](https://github.com/assafelovic/gpt-researcher)
 [![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
 
@@ -109,6 +109,61 @@ $ docker-compose up
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
 
+Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/2pFkc83fRq) if you're interested in joining our mission.
+
+
+## Deployment
+
+Assuming you'd like to deploy the app with Docker on a linux server, here's some quick tips to get up & running: <br />
+
+> **Step 1** On your linux server, follow the above steps to "Try it with Docker"
+> **Step 2** Map incoming server requests to localhost:8000 & the the Websocket Connection to http://localhost:8000/ws
+
+If you're using Nginx, here's a sample of a valid nginx.conf file
+
+```bash
+events {}
+
+http {
+    server {
+        listen 80;
+        server_name name.example;
+
+        location / {
+            proxy_set_header   X-Forwarded-For $remote_addr;
+            proxy_set_header   Host $http_host;
+            proxy_pass         http://localhost:3000;
+        }
+
+        location /ws {
+            proxy_pass http://localhost:8000/ws;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+        }
+    }
+}
+```
+
+Some commands to achieve:
+
+```bash
+$ vim /etc/nginx/nginx.conf
+```
+
+Edit it to reflect above. Then verify all is good with:
+
+```bash
+$ sudo nginx -t
+```
+
+If there are no errors:
+
+```bash
+$ sudo systemctl restart nginx
+```
+
 
 ## 🔧 Troubleshooting
 We're constantly working to provide a more stable version. In the meantime, see here for known issues:
@@ -123,6 +178,17 @@ The issue relates to the library WeasyPrint (which is used to generate PDFs from
 **Error processing the url**
 
 We're using [Selenium](https://www.selenium.dev) for site scraping. Some sites fail to be scraped. In these cases, restart and try running again.
+
+
+**Chrome version issues**
+
+Many users have an issue with their chromedriver because the latest chrome browser version doesn't have a compatible chrome driver yet.
+
+To downgrade your Chrome web browser using [slimjet](https://www.slimjet.com/chrome/google-chrome-old-version.php), follow these steps. First, visit the website and scroll down to find the list of available older Chrome versions. Choose the version you wish to install
+making sure it's compatible with your operating system.
+Once you've selected the desired version, click on the corresponding link to download the installer. Before proceeding with the installation, it's crucial to uninstall your current version of Chrome to avoid conflicts.
+
+It's important to check if the version you downgrade to, has a chromedriver available in the official [chrome driver website](https://chromedriver.chromium.org/downloads)
 
 **If none of the above work, you can [try out our hosted beta](https://app.tavily.com)**
 
