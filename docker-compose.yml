@@ -1,9 +1,26 @@
 version: '3'
 services:
   gpt-researcher:
-    image: assafelovic/gpt-researcher
+    image: kramer1346/gpt-researcher
     build: ./
     environment: 
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - 8000:8000
+  nginx:
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - "80:80"
+  client:
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./frontend
+    volumes:
+      - /app/node_modules
+      - ./frontend:/app
