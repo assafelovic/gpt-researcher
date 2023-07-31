@@ -12,11 +12,10 @@ jobs:
         uses: docker/setup-buildx-action@v2
         with:
           driver: docker
-      - name: Build service
+      - name: Build Dockerfile
         uses: docker/build-push-action@v4
         with:
           push: false
           tags: assafelovic/gpt-researcher:latest
-          context: gpt-researcher
           file: Dockerfile
 
