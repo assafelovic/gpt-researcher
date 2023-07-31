@@ -22,6 +22,8 @@ const GPTResearcher = (() => {
           writeReport(data, converter);
         } else if (data.type === 'path') {
           updateDownloadLink(data);
+        } else if (data.type === 'error') {
+          addAgentResponse(data);
         }
       };
   
@@ -29,11 +31,13 @@ const GPTResearcher = (() => {
         const task = document.querySelector('input[name="task"]').value;
         const report_type = document.querySelector('select[name="report_type"]').value;
         const agent = document.querySelector('input[name="agent"]:checked').value;
-  
+        const llm_model = document.querySelector('input[name="llm_model"]:checked').value;
+
         const requestData = {
           task: task,
           report_type: report_type,
           agent: agent,
+          llm_model: llm_model
         };
   
         socket.send(`start ${JSON.stringify(requestData)}`);
@@ -42,7 +46,13 @@ const GPTResearcher = (() => {
   
     const addAgentResponse = (data) => {
       const output = document.getElementById("output");
-      output.innerHTML += '<div class="agent_response">' + data.output + '</div>';
+      let responseClass = "agent_response";
+    
+      if (data.type === 'error') {
+        responseClass += " error";
+      }
+    
+      output.innerHTML += `<div class="${responseClass}">${data.output}</div>`;
       output.scrollTop = output.scrollHeight;
       output.style.display = "block";
       updateScroll();

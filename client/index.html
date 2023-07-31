@@ -81,6 +81,21 @@
                 <option value="outline_report">Outline Report</option>
             </select>
         </div>
+        <div class="form-group">
+            <label for="llm_model" class="agent-question">Which language model would you like me to use?</label>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="llm_model" id="gpt-4" value="gpt-4" checked>
+                <label class="form-check-label" for="gpt-4">
+                    GPT-4
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="llm_model" id="gpt-3.5-turbo-16k" value="gpt-3.5-turbo-16k">
+                <label class="form-check-label" for="gpt-3.5-turbo-16k">
+                    GPT-3.5-Turbo-16k
+                </label>
+            </div>
+        </div>
         <input type="submit" value="Research" class="btn btn-primary button-padding">
     </form>
 

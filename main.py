@@ -4,9 +4,14 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import json
 import os
+import openai
 
 from agent.llm_utils import choose_agent
 from agent.run import WebSocketManager
+
+from config import Config
+
+CFG = Config()
 
 
 class ResearchRequest(BaseModel):
@@ -47,6 +52,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 task = json_data.get("task")
                 report_type = json_data.get("report_type")
                 agent = json_data.get("agent")
+                llm_model = json_data.get("llm_model", "gpt-4")
+                CFG.set_smart_llm_model(llm_model)
+
                 # temporary so "normal agents" can still be used and not just auto generated, will be removed when we move to auto generated
                 if agent == "Auto Agent":
                     agent_dict = choose_agent(task)
@@ -60,7 +68,8 @@ async def websocket_endpoint(websocket: WebSocket):
                     await manager.start_streaming(task, report_type, agent, agent_role_prompt, websocket)
                 else:
                     print("Error: not enough parameters provided.")
-
+    except openai.error.InvalidRequestError as e:
+        await websocket.send_json({"type": "error", "output": str(e)})
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
 

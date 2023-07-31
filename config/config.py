@@ -15,6 +15,13 @@ class Config(metaclass=Singleton):
     Configuration class to store the state of bools for different scripts access.
     """
 
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(Config, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
     def __init__(self) -> None:
         """Initialize the Config class"""
         self.debug_mode = False
