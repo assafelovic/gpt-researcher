@@ -1,5 +1,5 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+name: GitHub Actions Workflow
+run-name: ${{ github.actor }} has started docker build workflow.
 on:
   pull_request:
     types: [opened, edited, ready_for_review]
