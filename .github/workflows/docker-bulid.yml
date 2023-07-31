@@ -1,11 +1,14 @@
 name: GitHub Actions Demo
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: push
+on:
+  pull_request:
+    types: [opened, edited, ready_for_review]
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - name: Git checkout
+        uses: actions/checkout@master
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
