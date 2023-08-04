@@ -69,13 +69,19 @@ def send_chat_completion_request(
     messages, model, temperature, max_tokens, stream, websocket
 ):
     if not stream:
-        result = completion(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        return result.choices[0].message["content"]
+        model_fallback_list = ["claude-instant-1", "gpt-3.5-turbo", "chatgpt-test"]
+        model_fallback_list = [model] + model_fallback_list
+        for model in model_fallback_list:
+            try:
+                result = completion(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                return result.choices[0].message["content"]
+            except:
+                pass
     else:
         return stream_response(model, messages, temperature, max_tokens, websocket)
 
