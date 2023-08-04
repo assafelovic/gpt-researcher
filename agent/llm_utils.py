@@ -69,7 +69,7 @@ def send_chat_completion_request(
     messages, model, temperature, max_tokens, stream, websocket
 ):
     if not stream:
-        model_fallback_list = ["claude-instant-1", "gpt-3.5-turbo", "chatgpt-test"]
+        model_fallback_list = ["claude-instant-1", "gpt-3.5-turbo", "gpt-3.5-turbo-16k"]
         model_fallback_list = [model] + model_fallback_list
         for model in model_fallback_list:
             try:
