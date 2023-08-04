@@ -16,3 +16,4 @@ pydantic
 fastapi
 python-multipart
 markdown
+litellm==0.1.2291
