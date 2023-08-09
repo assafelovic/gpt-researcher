@@ -9,6 +9,7 @@ import openai
 from colorama import Fore, Style
 from openai.error import APIError, RateLimitError
 
+from agent.prompts import auto_agent_instructions
 from config import Config
 
 CFG = Config()
@@ -112,71 +113,18 @@ def choose_agent(task: str) -> str:
         agent_role_prompt (str): The prompt for the agent
     """
     try:
-        configuration = choose_agent_configuration()
-
         response = openai.ChatCompletion.create(
             model=CFG.smart_llm_model,
             messages=[
-                {"role": "user", "content": f"{task}"}],
-            functions=configuration,
+                {"role": "system", "content": f"{auto_agent_instructions()}"},
+                {"role": "user", "content": f"task: {task}"}],
             temperature=0,
         )
-        message = response["choices"][0]["message"]
 
-        if message.get("function_call"):
-            function_name = message["function_call"]["name"]
-            return {"agent": json.loads(message["function_call"]["arguments"]).get("agent"),
-                    "agent_role_prompt": json.loads(message["function_call"]["arguments"]).get("instructions")}
-        else:
-            return {"agent": "Default Agent",
-             "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
+        return json.loads(response["choices"][0]["message"]["content"])
     except Exception as e:
         print(f"{Fore.RED}Error in choose_agent: {e}{Style.RESET_ALL}")
         return {"agent": "Default Agent",
                 "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
-
-def choose_agent_configuration():
-    configuration = [
-        {
-            "name": "research",
-            "description": "Researches the given topic even if it can't be answered",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "agent": {
-                        "type": "string",
-                        "description":
-                            """
-                                Determines the field of the topic and the name of the agent we could use in order to research 
-                                about the topic provided.
-                                
-                                Example of agents:
-                                    "Business Analyst Agent", "Finance Agent", "Travel Agent",
-                                 "Academic Research Agent", "Computer Security Analyst Agent"
-                                 
-                                 if an agent for the field required doesn't exist make one up
-                                 fit an emoji to every agent before the agent name
-                            """,
-                    },
-                    "instructions": {
-                        "type": "string",
-                        "description":
-                            """
-                            each provided agent needs instructions in order to start working,
-                            examples for agents and their instructions:
-                                    "Finance Agent": "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends.",
-                                    "Travel Agent": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights.",
-                                    "Academic Research Agent": "You are an AI academic research assistant. Your primary responsibility is to create thorough, academically rigorous, unbiased, and systematically organized reports on a given research topic, following the standards of scholarly work.",
-                                    "Business Analyst": "You are an experienced AI business analyst assistant. Your main objective is to produce comprehensive, insightful, impartial, and systematically structured business reports based on provided business data, market trends, and strategic analysis.",
-                                    "Computer Security Analyst Agent": "You are an AI specializing in computer security analysis. Your principal duty is to generate comprehensive, meticulously detailed, impartial, and systematically structured reports on computer security topics. This includes Exploits, Techniques, Threat Actors, and Advanced Persistent Threat (APT) Groups. All produced reports should adhere to the highest standards of scholarly work and provide in-depth insights into the complexities of computer security.",
-                                    
-                            """,
-                    },
-                },
-                "required": ["agent", "instructions"],
-            },
-        }
-    ]
-    return configuration
 
 
