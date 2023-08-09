@@ -71,6 +71,10 @@ $ pip install -r requirements.txt
 ```bash
 $ export OPENAI_API_KEY={Your API Key here}
 ```
+
+- **You can use any other LLM model (including open sources)** supported by [Langchain](https://python.langchain.com/docs/get_started/introduction.html), just change the model name (fast_llm_model & smart_llm_model) in the config/config.py file. Follow [this guide](https://python.langchain.com/docs/integrations/llms/) to learn how to integrate LLMs. 
+- **We highly recommend using GPT models for optimal performance.**
+
 <br />
 
 > **Step 4** - Run the agent with FastAPI
