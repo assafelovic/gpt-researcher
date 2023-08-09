@@ -9,7 +9,7 @@ playwright==1.36.0
 python-dotenv~=1.0.0
 pyyaml==6.0.1
 selenium==4.10.0
-webdriver-manager==3.9.1
+webdriver-manager==4.0.0
 flask
 uvicorn
 pydantic
