@@ -16,7 +16,6 @@ from processing.text import \
 from config import Config
 from agent import prompts
 import os
-import string
 
 
 CFG = Config()
@@ -28,7 +27,6 @@ class ResearchAgent:
         Args: question (str): The question to research
         Returns: None
         """
-        print(agent_role_prompt)
 
         self.question = question
         self.agent = agent
