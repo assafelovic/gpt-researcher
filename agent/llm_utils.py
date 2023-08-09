@@ -97,7 +97,7 @@ async def stream_response(model, messages, temperature, max_tokens, websocket):
     return response
 
 
-def choose_agent(task: str) -> str:
+def choose_agent(task: str) -> dict:
     """Determines what agent should be used
     Args:
         task (str): The research question the user asked
@@ -118,7 +118,6 @@ def choose_agent(task: str) -> str:
         message = response.additional_kwargs
 
         if message.get("function_call"):
-            function_name = message["function_call"]["name"]
             return {"agent": json.loads(message["function_call"]["arguments"]).get("agent"),
                     "agent_role_prompt": json.loads(message["function_call"]["arguments"]).get("instructions")}
         else:
