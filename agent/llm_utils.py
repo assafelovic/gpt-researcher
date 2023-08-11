@@ -6,6 +6,7 @@ from fastapi import WebSocket
 import time
 
 import openai
+from langchain.adapters import openai as lc_openai
 from colorama import Fore, Style
 from openai.error import APIError, RateLimitError
 
@@ -48,21 +49,12 @@ def create_chat_completion(
 
     # create response
     for attempt in range(10):  # maximum of 10 attempts
-        try:
-            response = send_chat_completion_request(
-                messages, model, temperature, max_tokens, stream, websocket
-            )
-            return response
-        except RateLimitError:
-            logging.warning("Rate limit reached, backing off...")
-            time.sleep(2 ** (attempt + 2))  # exponential backoff
-        except APIError as e:
-            if e.http_status != 502 or attempt == 9:  # if not Bad Gateway error or final attempt
-                raise
-            logging.error("API Error: Bad gateway, backing off...")
-            time.sleep(2 ** (attempt + 2))  # exponential backoff
+        response = send_chat_completion_request(
+            messages, model, temperature, max_tokens, stream, websocket
+        )
+        return response
 
-    logging.error("Failed to get response after 10 attempts")
+    logging.error("Failed to get response from OpenAI API")
     raise RuntimeError("Failed to get response from OpenAI API")
 
 
@@ -70,13 +62,13 @@ def send_chat_completion_request(
     messages, model, temperature, max_tokens, stream, websocket
 ):
     if not stream:
-        result = openai.ChatCompletion.create(
+        result = lc_openai.ChatCompletion.create(
             model=model,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
         )
-        return result.choices[0].message["content"]
+        return result["choices"][0]["message"]["content"]
     else:
         return stream_response(model, messages, temperature, max_tokens, websocket)
 
@@ -86,7 +78,7 @@ async def stream_response(model, messages, temperature, max_tokens, websocket):
     response = ""
     print(f"streaming response...")
 
-    for chunk in openai.ChatCompletion.create(
+    for chunk in lc_openai.ChatCompletion.create(
             model=model,
             messages=messages,
             temperature=temperature,
@@ -113,7 +105,7 @@ def choose_agent(task: str) -> str:
         agent_role_prompt (str): The prompt for the agent
     """
     try:
-        response = openai.ChatCompletion.create(
+        response = lc_openai.ChatCompletion.create(
             model=CFG.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{auto_agent_instructions()}"},
