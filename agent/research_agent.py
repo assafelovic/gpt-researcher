@@ -31,7 +31,7 @@ class ResearchAgent:
 
         self.question = question
         self.agent = agent
-        self.agent_role_prompt = agent_role_prompt
+        self.agent_role_prompt = agent_role_prompt if agent_role_prompt else prompts.generate_agent_role_prompt(agent)
         self.visited_urls = set()
         self.research_summary = ""
         self.directory_name = uuid.uuid4()
@@ -72,7 +72,7 @@ class ResearchAgent:
     async def call_agent(self, action, stream=False, websocket=None):
         messages = [{
             "role": "system",
-            "content": self.agent_role_prompt if self.agent_role_prompt else prompts.generate_agent_role_prompt(self.agent)
+            "content": self.agent_role_prompt
         }, {
             "role": "user",
             "content": action,
