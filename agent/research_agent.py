@@ -4,6 +4,8 @@
 import asyncio
 import json
 import uuid
+import sys
+import hashlib
 
 from actions.web_search import web_search
 from actions.web_scrape import async_browse
@@ -91,9 +93,15 @@ class ResearchAgent:
         Returns: list[str]: The search queries for the given question
         """
         result = await self.call_agent(prompts.generate_search_queries_prompt(self.question))
+        print(f"result = {result}", file=sys.stderr, flush=True)
+
+
         print(result)
         await self.websocket.send_json({"type": "logs", "output": f"🧠 I will conduct my research based on the following queries: {result}..."})
-        return json.loads(result)
+        # return json.loads(result)
+        return json.loads(result) if type(result) != str else result.strip("[]").replace('"', '').split("] [")
+
+
 
     async def async_search(self, query):
         """ Runs the async search for the given query.
@@ -124,10 +132,19 @@ class ResearchAgent:
 
         responses = await self.async_search(query)
 
+        # result = "\n".join(responses)
+        # os.makedirs(os.path.dirname(f"./outputs/{self.directory_name}/research-{query}.txt"), exist_ok=True)
+        # write_to_file(f"./outputs/{self.directory_name}/research-{query}.txt", result)
+        # return result
         result = "\n".join(responses)
-        os.makedirs(os.path.dirname(f"./outputs/{self.directory_name}/research-{query}.txt"), exist_ok=True)
-        write_to_file(f"./outputs/{self.directory_name}/research-{query}.txt", result)
-        return result
+        query_hash = hashlib.sha256(query.encode()).hexdigest()[:10]
+        filename = f"./outputs/research-{query_hash}.txt"
+        # Shorten the file name
+        # filename = f"./outputs/research-{query}.txt"
+        # os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        # filename = f"research-{query}.txt"
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+        write_to_file(filename, result)
 
     async def conduct_research(self):
         """ Conducts the research for the given question.
@@ -169,9 +186,14 @@ class ResearchAgent:
             {"type": "logs", "output": f"✍️ Writing {report_type} for research task: {self.question}..."})
         answer = await self.call_agent(report_type_func(self.question, self.research_summary), stream=True,
                                        websocket=websocket)
-
-        path = await write_md_to_pdf(report_type, self.directory_name, await answer)
-
+        file_directory = f"./outputs/{self.directory_name}"
+        os.makedirs(file_directory, exist_ok=True)  
+        file_path = f"{file_directory}/research_report"
+        write_to_file(f"{file_path}.md", str(answer))  # Write the MD file
+        # with open(file_path, "w") as file:
+        #     file.write(str(answer))
+        path = await write_md_to_pdf(report_type, self.directory_name,await answer)
+        # path = await write_md_to_pdf(report_type, self.directory_name, await answer)
         return answer, path
 
     async def write_lessons(self):
