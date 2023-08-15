@@ -160,6 +160,9 @@
         <p class="mt-2 text-left" style="font-size: 0.8rem;">An agent tailored specifically to your task
                         will be generated to provide the most precise and relevant research results.</p>
         <div id="output"></div>
+        <div class="progress mt-3">
+            <div class="progress-bar" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
     </div>
     <div class="margin-div">
         <h2>Research Report</h2>
@@ -195,6 +198,11 @@
         autoAgentDiv.style.display = 'flex';
         agentChoices[0].style.display = 'none';
     });
+
+    const progressBar = document.querySelector('.progress-bar');
+    const progress = {{ progress }};
+    progressBar.style.width = `${progress}%`;
+    progressBar.setAttribute('aria-valuenow', progress);
 </script>
 </body>
 

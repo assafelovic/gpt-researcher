@@ -32,7 +32,7 @@ class ResearchAgent:
         self.dir_path = os.path.dirname(f"./outputs/{self.directory_name}/")
         self.websocket = websocket
         self.channels = [""," site:twitter.com"," site:quora.com"," site:reddit.com"," site:medium.com"," site:trustpilot.com"," site:sensortower.com"]
-
+        self.progress = 0
 
     async def summarize(self, text, topic):
         """ Summarizes the given text for the given topic.
@@ -168,6 +168,7 @@ class ResearchAgent:
                     await self.websocket.send_json(
                         {"type": "logs", "output": f"💡 Research query [{idx}/{num_queries}]: {query}..."})
                     await self.run_search_summary(query)
+                    self.progress = idx / num_queries * 100
 
             await self.websocket.send_json(
                 {"type": "logs", "output": f"Total research words: {len(self.research_summary.split(' '))}"})
