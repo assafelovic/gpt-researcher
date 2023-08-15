@@ -6,3 +6,4 @@ env/
 outputs/
 #Ignore pycache
 **/__pycache__/
+.aider*
