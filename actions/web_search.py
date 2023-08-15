@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import traceback
 from duckduckgo_search import DDGS
 
 def web_search(query: str, num_results: int = 8) -> str:
@@ -10,16 +11,15 @@ def web_search(query: str, num_results: int = 8) -> str:
     try:
         ddgs = DDGS()
         results = ddgs.text(query)
+        results = list(results)
     except AssertionError:
-        # This is the error that we are trying to catch.
-        traceback_str = f"Traceback (most recent call last):\n{repr(e)}"
+        traceback_str = traceback.format_exc()
         print("Ignoring error:", traceback_str)
         return json.dumps(search_results)
 
     if results is None:
-        return json.dumps({"error": "error in getting vqd"})
+        return json.dumps(search_results)
 
-    results = list(results)
 
     total_added = 0
     for j in results:
@@ -27,6 +27,5 @@ def web_search(query: str, num_results: int = 8) -> str:
         total_added += 1
         if total_added >= num_results:
             break
-
 
     return json.dumps(search_results, ensure_ascii=False, indent=4)
