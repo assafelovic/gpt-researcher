@@ -2,16 +2,15 @@ from __future__ import annotations
 import json
 from duckduckgo_search import DDGS
 
-ddgs = DDGS()
-
-def web_search(query: str, num_results: int = 8) -> str:
+async def web_search(query: str, num_results: int = 8) -> str:
     """Useful for general internet search queries."""
     print("Searching with query {0}...".format(query))
     search_results = []
     if not query:
         return json.dumps(search_results)
 
-    results = ddgs.text(query)
+    ddgs = DDGS()
+    results = await ddgs.text(query)
     if not results:
         return json.dumps(search_results)
 

@@ -31,6 +31,7 @@ class ResearchAgent:
         self.directory_name = uuid.uuid4()
         self.dir_path = os.path.dirname(f"./outputs/{self.directory_name}/")
         self.websocket = websocket
+        self.channels = [""," site:twitter.com"," site:quora.com"," site:reddit.com"," site:medium.com"," site:trustpilot.com"," site:sensortower.com"]
 
 
     async def summarize(self, text, topic):
@@ -115,7 +116,7 @@ class ResearchAgent:
         Returns: list[str]: The async search for the given query
         """
         try:
-            search_results = json.loads(web_search(query))
+            search_results = json.loads(await web_search(query))
             new_search_urls = self.get_new_urls([url.get("href") for url in search_results])
 
             await self.websocket.send_json(
