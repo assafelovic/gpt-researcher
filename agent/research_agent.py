@@ -1,6 +1,3 @@
-# Description: Research assistant class that handles the research process for a given question.
-
-# libraries
 import asyncio
 import json
 import uuid
@@ -9,17 +6,11 @@ import hashlib
 
 from actions.web_search import web_search
 from actions.web_scrape import async_browse
-from processing.text import \
-    write_to_file, \
-    create_message, \
-    create_chat_completion, \
-    read_txt_files, \
-    write_md_to_pdf
+from processing.text import write_to_file, create_message, create_chat_completion, read_txt_files, write_md_to_pdf
 from config import Config
 from agent import prompts
 import os
 import string
-
 
 CFG = Config()
 
@@ -94,13 +85,10 @@ class ResearchAgent:
         """
         result = await self.call_agent(prompts.generate_search_queries_prompt(self.question))
         print(f"result = {result}", file=sys.stderr, flush=True)
-
-
         print(result)
         await self.websocket.send_json({"type": "logs", "output": f"🧠 I will conduct my research based on the following queries: {result}..."})
         # return json.loads(result)
         return json.loads(result) if type(result) != str else result.strip("[]").replace('"', '').split("] [")
-
 
 
     async def async_search(self, query):
@@ -132,17 +120,9 @@ class ResearchAgent:
 
         responses = await self.async_search(query)
 
-        # result = "\n".join(responses)
-        # os.makedirs(os.path.dirname(f"./outputs/{self.directory_name}/research-{query}.txt"), exist_ok=True)
-        # write_to_file(f"./outputs/{self.directory_name}/research-{query}.txt", result)
-        # return result
         result = "\n".join(responses)
         query_hash = hashlib.sha256(query.encode()).hexdigest()[:10]
         filename = f"./outputs/research-{query_hash}.txt"
-        # Shorten the file name
-        # filename = f"./outputs/research-{query}.txt"
-        # os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        # filename = f"research-{query}.txt"
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         write_to_file(filename, result)
 
@@ -156,9 +136,11 @@ class ResearchAgent:
 
         if not self.research_summary:
             search_queries = await self.create_search_queries()
-            for query in search_queries:
-                research_result = await self.run_search_summary(query)
-                self.research_summary += f"{research_result}\n\n"
+            num_queries = len(search_queries)
+            for idx, query in enumerate(search_queries, 1):
+                await self.websocket.send_json(
+                    {"type": "logs", "output": f"💡 Research query [{idx}/{num_queries}]: {query}..."})
+                await self.run_search_summary(query)
 
         await self.websocket.send_json(
             {"type": "logs", "output": f"Total research words: {len(self.research_summary.split(' '))}"})
@@ -171,8 +153,7 @@ class ResearchAgent:
         Args: None
         Returns: list[str]: The concepts for the given question
         """
-        result = self.call_agent(prompts.generate_concepts_prompt(self.question, self.research_summary))
-
+        result =  self.call_agent(prompts.generate_concepts_prompt(self.question, self.research_summary))
         await self.websocket.send_json({"type": "logs", "output": f"I will research based on the following concepts: {result}\n"})
         return json.loads(result)
 
@@ -190,10 +171,7 @@ class ResearchAgent:
         os.makedirs(file_directory, exist_ok=True)  
         file_path = f"{file_directory}/research_report"
         write_to_file(f"{file_path}.md", str(answer))  # Write the MD file
-        # with open(file_path, "w") as file:
-        #     file.write(str(answer))
-        path = await write_md_to_pdf(report_type, self.directory_name,await answer)
-        # path = await write_md_to_pdf(report_type, self.directory_name, await answer)
+        path = await write_md_to_pdf(report_type, self.directory_name, await answer)
         return answer, path
 
     async def write_lessons(self):
@@ -202,6 +180,9 @@ class ResearchAgent:
         Returns: None
         """
         concepts = await self.create_concepts()
-        for concept in concepts:
+        num_concepts = len(concepts)
+        for idx, concept in enumerate(concepts, 1):
+            await self.websocket.send_json(
+                {"type": "logs", "output": f"📖 Writing lesson [{idx}/{num_concepts}]: {concept}..."})
             answer = await self.call_agent(prompts.generate_lesson_prompt(concept), stream=True)
-            write_md_to_pdf("Lesson", self.directory_name, answer)
+            await write_md_to_pdf("Lesson", self.directory_name, answer)

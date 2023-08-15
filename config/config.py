@@ -14,9 +14,9 @@ class Config(metaclass=Singleton):
     """
     Configuration class to store the state of bools for different scripts access.
     """
-
     def __init__(self) -> None:
         """Initialize the Config class"""
+        print(f"__init__ input values: {locals()}")
         self.debug_mode = False
         self.allow_downloads = False
 
@@ -43,30 +43,37 @@ class Config(metaclass=Singleton):
 
     def set_fast_llm_model(self, value: str) -> None:
         """Set the fast LLM model value."""
+        print(f"set_fast_llm_model input value: {value}")
         self.fast_llm_model = value
 
     def set_smart_llm_model(self, value: str) -> None:
         """Set the smart LLM model value."""
+        print(f"set_smart_llm_model input value: {value}")
         self.smart_llm_model = value
 
     def set_fast_token_limit(self, value: int) -> None:
         """Set the fast token limit value."""
+        print(f"set_fast_token_limit input value: {value}")
         self.fast_token_limit = value
 
     def set_smart_token_limit(self, value: int) -> None:
         """Set the smart token limit value."""
+        print(f"set_smart_token_limit input value: {value}")
         self.smart_token_limit = value
 
     def set_browse_chunk_max_length(self, value: int) -> None:
         """Set the browse_website command chunk max length value."""
+        print(f"set_browse_chunk_max_length input value: {value}")
         self.browse_chunk_max_length = value
 
     def set_openai_api_key(self, value: str) -> None:
         """Set the OpenAI API key value."""
+        print(f"set_openai_api_key input value: {value}")
         self.openai_api_key = value
 
     def set_debug_mode(self, value: bool) -> None:
         """Set the debug mode value."""
+        print(f"set_debug_mode input value: {value}")
         self.debug_mode = value
 
 
