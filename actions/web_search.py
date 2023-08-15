@@ -10,9 +10,17 @@ async def web_search(query: str, num_results: int = 8) -> str:
         return json.dumps(search_results)
 
     ddgs = DDGS()
-    results = await ddgs.text(query)
+    try:
+        results = await ddgs.text(query)
+    except AssertionError:
+        # This is the error that we are trying to catch.
+        print("Ignoring error:", e)
+        return json.dumps(search_results)
+
     if not results:
         return json.dumps(search_results)
+
+    results = list(results)
 
     total_added = 0
     for j in results:
