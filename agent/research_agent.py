@@ -1,9 +1,37 @@
 import traceback
 
-...
+import asyncio
+import json
+import uuid
+import sys
+import hashlib
+
+from actions.web_search import web_search
+from actions.web_scrape import async_browse
+from processing.text import write_to_file, create_message, create_chat_completion, read_txt_files, write_md_to_pdf
+from config import Config
+from agent import prompts
+import os
+import string
+
+CFG = Config()
 
 class ResearchAgent:
-    ...
+    def __init__(self, question, agent, agent_role_prompt, websocket):
+        """ Initializes the research assistant with the given question.
+        Args: question (str): The question to research
+        Returns: None
+        """
+
+        self.question = question
+        self.agent = agent
+        self.agent_role_prompt = agent_role_prompt if agent_role_prompt else prompts.generate_agent_role_prompt(agent)
+        self.visited_urls = set()
+        self.research_summary = ""
+        self.directory_name = uuid.uuid4()
+        self.dir_path = os.path.dirname(f"./outputs/{self.directory_name}/")
+        self.websocket = websocket
+
 
     async def summarize(self, text, topic):
         """ Summarizes the given text for the given topic.
