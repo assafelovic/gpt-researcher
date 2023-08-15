@@ -36,7 +36,7 @@ body {
 }
 
 .container {
-    max-width: 900px;
+    max-width: 1000px;
     margin: auto;
     padding: 20px;
     background-color: rgba(255, 255, 255, 0.1);
@@ -44,6 +44,7 @@ body {
     box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.1);
     transition: all .3s ease-in-out;
     margin-bottom: 180px;
+    margin-top: 50px;
 }
 
 .container:hover {
