@@ -1,4 +1,4 @@
-FROM python:3.11.4
+FROM python:3.11.4-slim-bullseye as install-browser
 
 RUN apt-get update --fix-missing && apt-get install -y curl unzip wget gnupg2 fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcups2 libdbus-1-3 libdrm2 libgbm1 libgtk-3-0 libgtk-4-1 libnspr4 libnss3 libu2f-udev libvulkan1 libxcomposite1 libxdamage1 libxfixes3 libxkbcommon0 libxrandr2 xdg-utils
 # Install Chrome browser
@@ -12,10 +12,19 @@ RUN LATEST_CHROMEDRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/L
     && unzip chromedriver_linux64.zip -d /usr/local/bin \
     && rm chromedriver_linux64.zip
 
-WORKDIR /app
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
 
 COPY ./requirements.txt ./requirements.txt
 RUN pip install -r requirements.txt
+
+FROM gpt-researcher-install AS gpt-researcher
+
+RUN useradd -ms /bin/bash gpt-researcher \
+    && chown -R gpt-researcher:gpt-researcher /usr/src/app
+
+USER gpt-researcher
+
 COPY ./ ./
 
 EXPOSE 8000
