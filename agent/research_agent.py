@@ -210,6 +210,8 @@ class ResearchAgent:
             file_path = f"{file_directory}/research_report"
             write_to_file(f"{file_path}.md", str(answer))  # Write the MD file
             path = await write_md_to_pdf(report_type, self.directory_name, await answer)
+            self.progress = 100
+            await self.websocket.send_json({"type": "progress", "progress": self.progress})
             return answer, path
         except Exception as e:
             traceback.print_exc()
