@@ -169,6 +169,7 @@ class ResearchAgent:
                         {"type": "logs", "output": f"💡 Research query [{idx}/{num_queries}]: {query}..."})
                     await self.run_search_summary(query)
                     self.progress = idx / num_queries * 100
+                    await self.websocket.send_json({"type": "progress", "progress": self.progress})
 
             await self.websocket.send_json(
                 {"type": "logs", "output": f"Total research words: {len(self.research_summary.split(' '))}"})
