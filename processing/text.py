@@ -8,7 +8,8 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from config import Config
 from agent.llm_utils import create_chat_completion
 import os
-from md2pdf.core import md2pdf
+import pdfkit
+import markdown
 
 CFG = Config()
 
@@ -158,8 +159,9 @@ def read_txt_files(directory):
 
 
 def md_to_pdf(input_file, output_file):
-    md2pdf(output_file,
-           md_content=None,
-           md_file_path=input_file,
-           css_file_path=None,
-           base_url=None)
+    with open(input_file, 'r') as md_file:
+        md_content = md_file.read()
+
+    html_content = markdown.markdown(md_content)
+
+    pdfkit.from_string(html_content, output_file, css='./processing/styles.css')
