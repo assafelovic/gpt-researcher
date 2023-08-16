@@ -42,6 +42,49 @@ def generate_search_queries_prompt(question):
     return f'Write {num_search_queries} google search queries to search online that form an objective opinion from the following: "{question}"'\
            f'You must respond only with a list of strings in the following json format: {queries_str}'
 
+def generate_property_management_report_prompt(property_name, management_summary):
+    """
+    Generates the property management report prompt for the given property and management summary.
+
+    Args:
+        property_name (str): The name of the property to generate the report prompt for.
+        management_summary (str): The management summary to generate the report prompt for.
+
+    Returns:
+        str: The property management report prompt for the given property and management summary.
+    """
+    
+    return f'"""{management_summary}""" Based on the provided information, create a comprehensive property management report for the'\
+           f' property "{property_name}". The report should outline the property management activities carried out, including'\
+           f' rent collection, maintenance and repairs, tenant communication, lease agreements, and tenant turnover processes.'\
+           f' Describe any challenges faced during property management and how they were addressed. Highlight successful'\
+           f' strategies used to maintain tenant satisfaction and property value. Utilize both qualitative and quantitative data,'\
+           f' such as occupancy rates, maintenance records, and tenant feedback. Ensure that the report is well-structured,'\
+           f' Write all source urls at the end of the report in apa format.'\
+           f' informative, and follows appropriate formatting. The report should have a minimum length of 1,200 words and with markdown syntax and apa format.'
+           
+def generate_network_security_assessment_prompt(network_name, research_summary):
+    """
+    Generates the network security assessment report prompt for the given network and research summary.
+
+    Args:
+        network_name (str): The name of the network to generate the report prompt for.
+        research_summary (str): The research summary to generate the report prompt for.
+
+    Returns:
+        str: The network security assessment report prompt for the given network and research summary.
+    """
+    
+    return f'"""{research_summary}""" Based on the provided information, perform a comprehensive network security assessment'\
+           f' for the "{network_name}" network. Evaluate the network architecture, components, and configurations to'\
+           f' identify potential security vulnerabilities, weaknesses, and risks. Include an analysis of potential'\
+           f' attack vectors, such as unauthorized access, data breaches, and malware propagation. Provide actionable'\
+           f' recommendations and best practices for enhancing the network security posture. Utilize both qualitative'\
+           f' and quantitative data, such as vulnerability scans, penetration testing results, and threat intelligence.'\
+           f' Ensure that the assessment report is well-structured, informative, and follows appropriate formatting.'\
+           f' Write all source urls at the end of the report in apa format.'\
+           f' The report should have a minimum length of 1,200 words and with markdown syntax and apa format.'
+           
 def generate_architecture_report_prompt(software_name, research_summary):
     """
     Generates the architecture report prompt for the given software and research summary.
@@ -216,6 +259,8 @@ def get_report_by_type(report_type):
         'market_report': generate_market_analysis_report_prompt,
         'architecture_report': generate_architecture_report_prompt,
         'medical_report': generate_medical_research_paper_prompt,
+        'property_report': generate_property_management_report_prompt,
+        'network_security_report': generate_network_security_assessment_prompt,
         'outline_report': generate_outline_report_prompt
     }
     return report_type_mapping[report_type]
