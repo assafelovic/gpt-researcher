@@ -103,6 +103,24 @@ def generate_risk_assessment_report_prompt(project_name, research_summary):
            ' is well-structured, informative, and follows appropriate formatting. The report should have a minimum'\
            ' length of 1,200 words.'
 
+def generate_medical_research_paper_prompt(topic, research_summary):
+    """
+    Generates the medical research paper prompt for the given research topic.
+
+    Args:
+        topic (str): The research topic for the research paper.
+        research_summary (str): The research summary to generate the research paper prompt for.
+
+    Returns:
+        str: The medical research paper prompt for the given research topic.
+    """
+    
+    return f'"""{research_summary}""" Based on the provided information, conduct an original medical research study on the topic'\
+           f' of {topic}. Develop a clear research question, hypothesis, and methodology for your study. Collect and analyze'\
+           f' relevant data, present your findings, and draw conclusions based on the results. Discuss the implications of'\
+           f' your research findings for medical practice or knowledge. Ensure that the research paper is well-structured,'\
+           f' adheres to scientific writing standards, and follows appropriate citation formats. The paper should have a'\
+           f' minimum length of 1,200 words.'
 def generate_ux_report_prompt(product_name, research_summary):
     """
     Generates the user experience (UX) report prompt for the given product and research summary.
@@ -191,6 +209,7 @@ def get_report_by_type(report_type):
         'risk_report': generate_risk_assessment_report_prompt,
         'market_report': generate_market_analysis_report_prompt,
         'architecture_report': generate_architecture_report_prompt,
+        'medical_report': generate_medical_research_paper_prompt,
         'outline_report': generate_outline_report_prompt
     }
     return report_type_mapping[report_type]
