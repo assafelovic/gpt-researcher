@@ -60,6 +60,7 @@ def generate_architecture_report_prompt(software_name, research_summary):
            ' to clearly convey the software\'s architecture. The report should also discuss considerations like'\
            ' scalability, maintainability, security, and performance. Ensure that the report is well-structured,'\
            ' informative, and follows Markdown syntax. Include relevant facts, figures, and technical details.'\
+           ' Write all source urls at the end of the report in apa format.'\
            ' The report should have a minimum length of 1,200 words and with markdown syntax and apa format. '
 
 def generate_market_analysis_report_prompt(market_name, research_summary):
@@ -80,6 +81,7 @@ def generate_market_analysis_report_prompt(market_name, research_summary):
            ' and quantitative data to provide a thorough analysis. Consider factors such as market size, market share,'\
            ' industry challenges, and emerging technologies. Ensure that the report is well-structured, informative,'\
            ' and follows appropriate formatting. Include relevant facts, figures, charts, and graphs to support your'\
+           ' Write all source urls at the end of the report in apa format.'\
            ' analysis. The report should have a minimum length of 1,200 words and with markdown syntax and apa format. '
 
 def generate_risk_assessment_report_prompt(project_name, research_summary):
@@ -101,6 +103,7 @@ def generate_risk_assessment_report_prompt(project_name, research_summary):
            ' operational, and external risks. Utilize both qualitative and quantitative data to support your analysis.'\
            ' Include relevant facts, figures, and examples to illustrate the identified risks. Ensure that the report'\
            ' is well-structured, informative, and follows appropriate formatting. The report should have a minimum'\
+           ' Write all source urls at the end of the report in apa format.'\
            ' length of 1,200 words and with markdown syntax and apa format. '
 
 def generate_medical_research_paper_prompt(topic, research_summary):
@@ -120,6 +123,7 @@ def generate_medical_research_paper_prompt(topic, research_summary):
            f' relevant data, present your findings, and draw conclusions based on the results. Discuss the implications of'\
            f' your research findings for medical practice or knowledge. Ensure that the research paper is well-structured,'\
            f' adheres to scientific writing standards, and follows appropriate citation formats. The paper should have a'\
+           f' Write all source urls at the end of the report in apa format.'\
            f' minimum length of 1,200 words and with markdown syntax and apa format. '
 def generate_ux_report_prompt(product_name, research_summary):
     """
@@ -139,6 +143,8 @@ def generate_ux_report_prompt(product_name, research_summary):
            ' navigation. Provide recommendations for improvements that enhance the user experience. Utilize both'\
            ' qualitative and quantitative data, such as user feedback, usability testing, and analytics. Include'\
            ' relevant facts, figures, and examples to support your analysis. Ensure that the report is well-structured,'\
+           ' The report should have a minimum length of 1,200 words and with markdown syntax and apa format. '\
+           ' Write all source urls at the end of the report in apa format.'\
            ' informative, and follows appropriate formatting. The report should have a minimum length of 1,200 words and with markdown syntax and apa format. '
 
                   
