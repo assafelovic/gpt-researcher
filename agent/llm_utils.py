@@ -4,7 +4,7 @@ import json
 
 from fastapi import WebSocket
 import time
-
+from litellm import completion
 import openai
 from langchain.adapters import openai as lc_openai
 from colorama import Fore, Style
@@ -62,14 +62,19 @@ def send_chat_completion_request(
     messages, model, temperature, max_tokens, stream, websocket
 ):
     if not stream:
-        result = lc_openai.ChatCompletion.create(
-            model=model, # Change model here to use different models
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            provider="ChatOpenAI", # Change provider here to use a different API
-        )
-        return result["choices"][0]["message"]["content"]
+        model_fallback_list = ["claude-instant-1", "gpt-3.5-turbo", "gpt-3.5-turbo-16k"]
+        model_fallback_list = [model] + model_fallback_list
+        for model in model_fallback_list:
+            try:
+                result = completion(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                return result.choices[0].message["content"]
+            except:
+                pass
     else:
         return stream_response(model, messages, temperature, max_tokens, websocket)
 
@@ -107,7 +112,9 @@ def choose_agent(task: str) -> str:
         agent_role_prompt (str): The prompt for the agent
     """
     try:
-        response = create_chat_completion(
+        configuration = choose_agent_configuration()
+
+        response = completion(
             model=CFG.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{auto_agent_instructions()}"},
