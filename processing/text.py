@@ -8,7 +8,6 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from config import Config
 from agent.llm_utils import create_chat_completion
 import os
-import pdfkit
 import markdown
 
 CFG = Config()
