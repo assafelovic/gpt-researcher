@@ -25,7 +25,7 @@ The main idea is to run "planner" and "execution" agents, whereas the planner ge
 </div>
 
 
-More specifcally:
+More specifically:
 * Generate a set of research questions that together form an objective opinion on any given task. 
 * For each research question, trigger a crawler agent that scrapes online resources for information relevant to the given task.
 * For each scraped resources, summarize based on relevant information and keep track of its sources.
