@@ -13,6 +13,8 @@ class ResearchRequest(BaseModel):
     task: str
     report_type: str
     agent: str
+    language: str  # New fiedl for language
+    
 
 
 
@@ -47,6 +49,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 task = json_data.get("task")
                 report_type = json_data.get("report_type")
                 agent = json_data.get("agent")
+                language = json_data.get("language")  # New field for language
                 # temporary so "normal agents" can still be used and not just auto generated, will be removed when we move to auto generated
                 if agent == "Auto Agent":
                     agent_dict = choose_agent(task)
@@ -57,7 +60,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 await websocket.send_json({"type": "logs", "output": f"Initiated an Agent: {agent}"})
                 if task and report_type and agent:
-                    await manager.start_streaming(task, report_type, agent, agent_role_prompt, websocket)
+                    await manager.start_streaming(task, report_type, agent, agent_role_prompt, language, websocket)  # New field for language
                 else:
                     print("Error: not enough parameters provided.")
 

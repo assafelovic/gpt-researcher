@@ -23,7 +23,7 @@ CFG = Config()
 
 
 class ResearchAgent:
-    def __init__(self, question, agent, agent_role_prompt, websocket):
+    def __init__(self, question, agent, agent_role_prompt, language, websocket):
         """ Initializes the research assistant with the given question.
         Args: question (str): The question to research
         Returns: None
@@ -31,7 +31,8 @@ class ResearchAgent:
 
         self.question = question
         self.agent = agent
-        self.agent_role_prompt = agent_role_prompt if agent_role_prompt else prompts.generate_agent_role_prompt(agent)
+        self.language = language  # New field for language
+        self.agent_role_prompt = agent_role_prompt if agent_role_prompt else prompts.generate_agent_role_prompt(agent, self.language)
         self.visited_urls = set()
         self.research_summary = ""
         self.directory_name = uuid.uuid4()
@@ -53,6 +54,7 @@ class ResearchAgent:
             model=CFG.fast_llm_model,
             messages=messages,
         )
+
 
     async def get_new_urls(self, url_set_input):
         """ Gets the new urls from the given url set.
@@ -90,7 +92,7 @@ class ResearchAgent:
         Args: None
         Returns: list[str]: The search queries for the given question
         """
-        result = await self.call_agent(prompts.generate_search_queries_prompt(self.question))
+        result = await self.call_agent(prompts.generate_search_queries_prompt(self.question, self.language))
         print(result)
         await self.websocket.send_json({"type": "logs", "output": f"🧠 I will conduct my research based on the following queries: {result}..."})
         return json.loads(result)
@@ -154,7 +156,7 @@ class ResearchAgent:
         Args: None
         Returns: list[str]: The concepts for the given question
         """
-        result = self.call_agent(prompts.generate_concepts_prompt(self.question, self.research_summary))
+        result = self.call_agent(prompts.generate_concepts_prompt(self.question, self.research_summary, self.language))
 
         await self.websocket.send_json({"type": "logs", "output": f"I will research based on the following concepts: {result}\n"})
         return json.loads(result)

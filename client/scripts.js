@@ -29,11 +29,13 @@ const GPTResearcher = (() => {
         const task = document.querySelector('input[name="task"]').value;
         const report_type = document.querySelector('select[name="report_type"]').value;
         const agent = document.querySelector('input[name="agent"]:checked').value;
-  
+        const language = document.getElementById("language").value;  // get language from dropdown
+        
         const requestData = {
           task: task,
           report_type: report_type,
           agent: agent,
+          language: language  // add language to request data
         };
   
         socket.send(`start ${JSON.stringify(requestData)}`);

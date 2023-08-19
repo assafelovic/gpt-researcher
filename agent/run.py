@@ -39,15 +39,16 @@ class WebSocketManager:
         return report, path
 
 
-async def run_agent(task, report_type, agent, agent_role_prompt, websocket):
+async def run_agent(task, report_type, agent, agent_role_prompt, language, websocket):  # New field for language
     check_openai_api_key()
 
     start_time = datetime.datetime.now()
 
     # await websocket.send_json({"type": "logs", "output": f"Start time: {str(start_time)}\n\n"})
 
-    assistant = ResearchAgent(task, agent, agent_role_prompt, websocket)
+    assistant = ResearchAgent(task, agent, agent_role_prompt, language, websocket)  # Pasar el idioma al constructor del agente
     await assistant.conduct_research()
+
 
     report, path = await assistant.write_report(report_type, websocket)
 
