@@ -60,7 +60,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 await websocket.send_json({"type": "logs", "output": f"Initiated an Agent: {agent}"})
                 if task and report_type and agent:
-                    await manager.start_streaming(task, report_type, agent, agent_role_prompt, language, websocket)  # New field for language
+                    await manager.start_streaming(task, report_type, agent, agent_role_prompt, language, websocket) # New field for language
                 else:
                     print("Error: not enough parameters provided.")
 

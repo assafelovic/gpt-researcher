@@ -19,40 +19,33 @@ def generate_agent_role_prompt(agent, language):
 
 
 
-def generate_report_prompt(question, research_summary):
+def generate_report_prompt(question, research_summary,language):
     """ Generates the report prompt for the given question and research summary.
     Args: question (str): The question to generate the report prompt for
             research_summary (str): The research summary to generate the report prompt for
     Returns: str: The report prompt for the given question and research summary
     """
 
-    return f'"""{research_summary}""" Using the above information, answer   the following'\
+    return f'"""{research_summary}""" Using the above information, answer  in "{language}" the following'\
            f' question or topic: "{question}" in a detailed report --'\
            " The report should focus on the answer to the question, should be well structured, informative," \
            " in depth, with facts and numbers if available, a minimum of 1,200 words and with markdown syntax and apa format. "\
             "You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions." \
            "Write all used source urls at the end of the report in apa format"
 
-def generate_search_queries_prompt(question):
+def generate_search_queries_prompt(question,language):
     """ Generates the search queries prompt for the given question.
     Args: question (str): The question to generate the search queries prompt for
     Returns: str: The search queries prompt for the given question
     """
 
-    return f'Write 4 google search queries to search online that form an objective opinion from the following: "{question}"'\
+    return f'Write 4 google search queries in English and 4 in {language} to search online that form an objective opinion from the following: "{question}"'\
            f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3", "query 4"]'
 
 
-def generate_resource_report_prompt(question, research_summary):
-    """Generates the resource report prompt for the given question and research summary.
-    Args:
-        question (str): The question to generate the resource report prompt for.
-        research_summary (str): The research summary to generate the resource report prompt for.
-    Returns:
-        str: The resource report prompt for the given question and research summary.
-    """
+def generate_resource_report_prompt(question, research_summary, language):
     return (f'"""{research_summary}""" Based on the above information, generate '
-            '  a bibliography recommendation report for the following' 
+            f'in {language} a bibliography recommendation report for the following' 
             f' question or topic: "{question}". The report should provide a detailed analysis of each recommended resource,' 
             ' explaining how each source can contribute to finding answers to the research question.' 
             ' Focus on the relevance, reliability, and significance of each source.' 
@@ -60,32 +53,33 @@ def generate_resource_report_prompt(question, research_summary):
             ' Include relevant facts, figures, and numbers whenever available.' 
             ' The report should have a minimum length of 1,200 words.')
 
-def generate_outline_report_prompt(question, research_summary):
+
+def generate_outline_report_prompt(question, research_summary,language):
     """ Generates the outline report prompt for the given question and research summary.
     Args: question (str): The question to generate the outline report prompt for
             research_summary (str): The research summary to generate the outline report prompt for
     Returns: str: The outline report prompt for the given question and research summary
     """
     return (f'"""{research_summary}""" Using the above information, generate  '
-            'an outline for a research report in Markdown syntax'
+            'an outline in {language} for a research report in Markdown syntax'
             f' for the following question or topic: "{question}". The outline should provide a well-structured framework'
             ' for the research report, including the main sections, subsections, and key points to be covered.'
             ' The research report should be detailed, informative, in-depth, and a minimum of 1,200 words.' 
             ' Use appropriate Markdown syntax to format the outline and ensure readability.')
 
-def generate_concepts_prompt(question, research_summary):
+def generate_concepts_prompt(question, research_summary,language):
     """ Generates the concepts prompt for the given question.
     Args: question (str): The question to generate the concepts prompt for
             research_summary (str): The research summary to generate the concepts prompt for
     Returns: str: The concepts prompt for the given question
     """
-    return (f'"""{research_summary}""" Using the above information, generate  '
+    return (f'"""{research_summary}""" Using the above information, generate in {language}, '
             ' a list of 5 main concepts to learn for a research report'
             f' on the following question or topic: "{question}". The outline should provide a well-structured framework'
             'You must respond with a list of strings in the following format: ["concepts 1", "concepts 2", "concepts 3", "concepts 4, concepts 5"]')
 
 
-def generate_lesson_prompt(concept):
+def generate_lesson_prompt(concept,language):
     """
     Generates the lesson prompt for the given question.
     Args:
@@ -94,7 +88,7 @@ def generate_lesson_prompt(concept):
         str: The lesson prompt for the given concept.
     """
 
-    prompt = f'generate  a comprehensive lesson about {concept} in Markdown syntax. This should include the definition'\
+    prompt = f'generate  a comprehensive lesson in {language} about {concept} in Markdown syntax. This should include the definition'\
     f'of {concept}, its historical background and development, its applications or uses in different'\
     f'fields, and notable events or facts related to {concept}.'
 

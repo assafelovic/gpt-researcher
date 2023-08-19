@@ -34,8 +34,8 @@ class WebSocketManager:
         del self.sender_tasks[websocket]
         del self.message_queues[websocket]
 
-    async def start_streaming(self, task, report_type, agent, agent_role_prompt, websocket):
-        report, path = await run_agent(task, report_type, agent, agent_role_prompt, websocket)
+    async def start_streaming(self, task, report_type, agent, agent_role_prompt, language, websocket):
+        report, path = await run_agent(task, report_type, agent, agent_role_prompt,language,websocket)
         return report, path
 
 
