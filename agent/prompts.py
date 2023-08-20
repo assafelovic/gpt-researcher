@@ -33,14 +33,13 @@ def generate_report_prompt(question, research_summary,language):
             "You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions." \
            "Write all used source urls at the end of the report in apa format"
 
-def generate_search_queries_prompt(question,language):
+def generate_search_queries_prompt(question, language):
     """ Generates the search queries prompt for the given question.
     Args: question (str): The question to generate the search queries prompt for
     Returns: str: The search queries prompt for the given question
     """
 
-    return f'Write 4 google search queries in English and 4 in {language} to search online that form an objective opinion from the following: "{question}"'\
-           f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3", "query 4"]'
+    return f'For the topic "{question}", list 4 search queries in English and 4 in {language}.'
 
 
 def generate_resource_report_prompt(question, research_summary, language):

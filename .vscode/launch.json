@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: FastAPI",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/start.py",
+            "args": ["-Xfrozen_modules=off"],
+            "jinja": true,
+            "justMyCode": true
+        }
+    ]
+}

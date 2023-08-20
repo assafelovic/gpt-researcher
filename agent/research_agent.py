@@ -93,9 +93,22 @@ class ResearchAgent:
         Returns: list[str]: The search queries for the given question
         """
         result = await self.call_agent(prompts.generate_search_queries_prompt(self.question,self.language))
-        print(result)
-        await self.websocket.send_json({"type": "logs", "output": f"🧠 I will conduct my research based on the following queries: {result}..."})
-        return json.loads(result)
+    
+        # Procesar el resultado para extraer las consultas individuales
+        lines = result.split('\n')  # Divide la cadena en líneas individuales
+        queries = []
+
+        for line in lines:
+        # Busca las comillas en cada línea para extraer la consulta
+            start = line.find('"')
+            end = line.rfind('"')
+            if start != -1 and end != -1:
+                queries.append(line[start+1:end])
+
+        await self.websocket.send_json({"type": "logs", "output": f"🧠 I will conduct my research based on the following queries: {queries}..."})
+    
+        return queries
+    
 
     async def async_search(self, query):
         """ Runs the async search for the given query.
@@ -159,6 +172,7 @@ class ResearchAgent:
         result = self.call_agent(prompts.generate_concepts_prompt(self.question, self.research_summary, self.language))
 
         await self.websocket.send_json({"type": "logs", "output": f"I will research based on the following concepts: {result}\n"})
+        
         return json.loads(result)
 
     async def write_report(self, report_type, websocket):
@@ -169,8 +183,8 @@ class ResearchAgent:
         report_type_func = prompts.get_report_by_type(report_type)
         await websocket.send_json(
             {"type": "logs", "output": f"✍️ Writing {report_type} for research task: {self.question}..."})
-        answer = await self.call_agent(report_type_func(self.question, self.research_summary), stream=True,
-                                       websocket=websocket)
+        answer = await self.call_agent(report_type_func(self.question, self.research_summary, self.language), stream=True, websocket=websocket)
+
 
         path = await write_md_to_pdf(report_type, self.directory_name, await answer)
 
