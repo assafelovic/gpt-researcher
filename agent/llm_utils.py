@@ -66,8 +66,8 @@ def send_chat_completion_request(
             model=model, # Change model here to use different models
             messages=messages,
             temperature=temperature,
-            max_tokens=max_tokens,
-            provider="ChatOpenAI", # Change provider here to use a different API
+            max_tokens_to_sample=50000,
+            provider="ChatAnthropic", # Change provider here to use a different API
         )
         return result["choices"][0]["message"]["content"]
     else:
@@ -83,8 +83,8 @@ async def stream_response(model, messages, temperature, max_tokens, websocket):
             model=model,
             messages=messages,
             temperature=temperature,
-            max_tokens=max_tokens,
-            provider="ChatOpenAI",
+            max_tokens_to_sample=50000,
+            provider="ChatAnthropic",
             stream=True,
     ):
         content = chunk["choices"][0].get("delta", {}).get("content")
