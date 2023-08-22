@@ -1,27 +1,27 @@
-FROM python:3.11.4
+FROM python:3.11.4-slim-bullseye as install-browser
 
-RUN apt-get update
-RUN apt-get install -y fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcups2 libdbus-1-3 libdrm2 libgbm1 libgtk-3-0 libgtk-4-1 libnspr4 libnss3 libu2f-udev libvulkan1 libxcomposite1 libxdamage1 libxfixes3 libxkbcommon0 libxrandr2 xdg-utils
+RUN apt-get update \
+    && apt-get satisfy -y \
+    "chromium, chromium-driver (>= 115.0)" \
+    && chromium --version && chromedriver --version
 
-# Install broswer
-RUN apt update
-RUN wget https://dl.google.com/linux/deb/pool/main/g/google-chrome-stable/google-chrome-stable_114.0.5735.198-1_amd64.deb
-RUN apt install wget
-RUN dpkg -i google-chrome-stable_114.0.5735.198-1_amd64.deb
-RUN apt-get install -f
-RUN google-chrome --version
+FROM install-browser as gpt-researcher-install
 
-# Install chrome driver
-RUN wget https://chromedriver.storage.googleapis.com/114.0.5735.90/chromedriver_linux64.zip
-RUN unzip chromedriver_linux64.zip
-RUN mv chromedriver /usr/bin/chromedriver
-RUN chown root:root /usr/bin/chromedriver
-RUN chmod +x /usr/bin/chromedriver
+ENV PIP_ROOT_USER_ACTION=ignore
 
-WORKDIR /app
+RUN mkdir /usr/src/app
+WORKDIR /usr/src/app
 
 COPY ./requirements.txt ./requirements.txt
 RUN pip install -r requirements.txt
+
+FROM gpt-researcher-install AS gpt-researcher
+
+RUN useradd -ms /bin/bash gpt-researcher \
+    && chown -R gpt-researcher:gpt-researcher /usr/src/app
+
+USER gpt-researcher
+
 COPY ./ ./
 
 EXPOSE 8000

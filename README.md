@@ -25,7 +25,7 @@ The main idea is to run "planner" and "execution" agents, whereas the planner ge
 </div>
 
 
-More specifcally:
+More specifically:
 * Generate a set of research questions that together form an objective opinion on any given task. 
 * For each research question, trigger a crawler agent that scrapes online resources for information relevant to the given task.
 * For each scraped resources, summarize based on relevant information and keep track of its sources.
@@ -72,7 +72,7 @@ $ pip install -r requirements.txt
 $ export OPENAI_API_KEY={Your API Key here}
 ```
 
-- **By default we use OpenAI, but you can use any other LLM model (including open sources)** supported by [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai), simply change the model name in config/config.py and provider in agent/llm_utils.py file. Follow [this guide](https://python.langchain.com/docs/integrations/llms/) to learn how to integrate LLMs with Langchain. 
+- **By default, we use OpenAI, but you can use any other LLM model (including open sources)** supported by [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai), simply change the llm model and provider in config/config.py. Follow [this guide](https://python.langchain.com/docs/integrations/llms/) to learn how to integrate LLMs with Langchain. 
 - **We highly recommend using GPT models for optimal performance.**
 
 <br />

@@ -8,7 +8,7 @@ openai~=0.27.8
 playwright==1.36.0
 python-dotenv~=1.0.0
 pyyaml==6.0.1
-selenium==4.10.0
+selenium==4.11.2
 webdriver-manager==4.0.0
 flask
 uvicorn
@@ -16,4 +16,4 @@ pydantic
 fastapi
 python-multipart
 markdown
-langchain==0.0.262
+langchain==0.0.263

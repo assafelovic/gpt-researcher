@@ -21,6 +21,7 @@ class Config(metaclass=Singleton):
         self.allow_downloads = False
 
         self.selenium_web_browser = os.getenv("USE_WEB_BROWSER", "chrome")
+        self.llm_provider = os.getenv("LLM_PROVIDER", "ChatAnthropic")
         self.fast_llm_model = os.getenv("FAST_LLM_MODEL", "claude-2")
         self.smart_llm_model = os.getenv("SMART_LLM_MODEL", "claude-2")
         self.fast_token_limit = int(os.getenv("FAST_TOKEN_LIMIT", 4000))

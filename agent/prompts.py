@@ -26,8 +26,8 @@ def generate_report_prompt(question, research_summary):
            f' question or topic: "{question}" in a detailed report --'\
            " The report should focus on the answer to the question, should be well structured, informative," \
            " in depth, with facts and numbers if available, a minimum of 1,200 words and with markdown syntax and apa format. "\
-            "You MUST determine your own concrete and valid opinion based on the information found. Do NOT deter to general and meaningless conclusions." \
-           "Write all source urls at the end of the report in apa format"
+            "You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions." \
+           "Write all used source urls at the end of the report in apa format"
 
 def generate_search_queries_prompt(question):
     """ Generates the search queries prompt for the given question.
