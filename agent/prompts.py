@@ -9,8 +9,7 @@ def generate_agent_role_prompt(agent):
         "Academic Research Agent": "You are an AI academic research assistant. Your primary responsibility is to create thorough, academically rigorous, unbiased, and systematically organized reports on a given research topic, following the standards of scholarly work.",
         "Business Analyst": "You are an experienced AI business analyst assistant. Your main objective is to produce comprehensive, insightful, impartial, and systematically structured business reports based on provided business data, market trends, and strategic analysis.",
         "Computer Security Analyst Agent": "You are an AI specializing in computer security analysis. Your principal duty is to generate comprehensive, meticulously detailed, impartial, and systematically structured reports on computer security topics. This includes Exploits, Techniques, Threat Actors, and Advanced Persistent Threat (APT) Groups. All produced reports should adhere to the highest standards of scholarly work and provide in-depth insights into the complexities of computer security.",
-        # Note: for OSS model, we can use instruction tokens
-        "Default Agent": "[INST] <<SYS>> You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text. <</SYS>>[/INST]"
+        "Default Agent": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
     }
 
     return prompts.get(agent, "No such agent")
@@ -36,10 +35,10 @@ def generate_search_queries_prompt(question):
     Returns: str: The search queries prompt for the given question
     """
 
-    # Note: for OSS model, we can use instruction tokens
-    return f'[INST] ### Input: Write 4 google search queries to search online that form an objective opinion from the following: "{question}"'\
-           f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3", "query 4"] ### Output list:[/INST]'
-
+    # LLaMA requires a more detailed prompt to produce a list of strings
+    return f'You are a helpful assistant that returns a python list of strings. Reponses only contain this python list and no introductory text.'\
+           f'ONLY provide a python list of 3 Google search queries related to the input question. Respond STRICTLY in the format: ["Query 1", "Query 2", "Query 3"] without any introductory or additional text.'\
+           f'Input question: {question}'
 
 def generate_resource_report_prompt(question, research_summary):
     """Generates the resource report prompt for the given question and research summary.
@@ -80,10 +79,10 @@ def generate_concepts_prompt(question, research_summary):
     Returns: str: The concepts prompt for the given question
     """
 
-    return f'"""{research_summary}""" Using the above information, generate a list of 5 main concepts to learn for a research report'\
-           f' on the following question or topic: "{question}". The outline should provide a well-structured framework'\
-           'You must respond with a list of strings in the following format: ["concepts 1", "concepts 2", "concepts 3", "concepts 4, concepts 5"]'
-
+    # LLaMA requires a more detailed prompt to produce a list of strings
+    return f'You are a helpful assistant that returns a python list of strings. Reponses only contain this python list and no introductory text.'\
+           f'"""{research_summary}""" using the above information, generate a list of 5 main concepts to learn for a research report on the following question or topic: "{question}"'\
+           f'Respond STRICTLY in the format: ["concepts 1", "concepts 2", "concepts 3", "concepts 4, concepts 5"] without any introductory or additional text.'\
 
 def generate_lesson_prompt(concept):
     """
