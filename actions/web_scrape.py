@@ -1,11 +1,10 @@
-"""Selenium web scraping module."""
 from __future__ import annotations
 
 import logging
 import asyncio
 from pathlib import Path
 from sys import platform
-
+import traceback
 from bs4 import BeautifulSoup
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
@@ -21,7 +20,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from fastapi import WebSocket
 
 import processing.text as summary
-
 from config import Config
 from processing.html import extract_hyperlinks, format_hyperlinks
 
@@ -31,7 +29,6 @@ executor = ThreadPoolExecutor()
 
 FILE_DIR = Path(__file__).parent.parent
 CFG = Config()
-
 
 async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
     """Browse a website and return the answer and links to the user
@@ -61,10 +58,11 @@ async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
 
         return f"Information gathered from url {url}: {summary_text}"
     except Exception as e:
+        error_trace = traceback.format_exc()
         print(f"An error occurred while processing the url {url}: {e}")
+        await websocket.send_json(
+            {"type": "logs", "output": f"⚠️ Error processing the url {url}: {e}\n\n{error_trace}"})
         return f"Error processing the url {url}: {e}"
-
-
 
 def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
     """Browse a website and return the answer and links to the user
@@ -89,8 +87,6 @@ def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
     # Limit links to 5
     if len(links) > 5:
         links = links[:5]
-
-    # write_to_file('research-{0}.txt'.format(url), summary_text + "\nSource Links: {0}\n\n".format(links))
 
     close_browser(driver)
     return f"Answer gathered from website: {summary_text} \n \n Links: {links}", driver
@@ -130,31 +126,36 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
         if platform == "linux" or platform == "linux2":
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--remote-debugging-port=9222")
-        options.add_argument("--no-sandbox")
-        options.add_experimental_option(
-            "prefs", {"download_restrictions": 3}
-        )
+            options.add_argument("--no-sandbox")
+            options.add_argument("--disable-gpu")
+            options.add_argument("--disable-software-rasterizer")
+        options.add_experimental_option("prefs", {"download_restrictions": 3})
         driver = webdriver.Chrome(options=options)
-    driver.get(url)
+    try:
+        driver.get(url)
 
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.TAG_NAME, "body"))
-    )
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.TAG_NAME, "body"))
+        )
 
-    # Get the HTML content directly from the browser's DOM
-    page_source = driver.execute_script("return document.body.outerHTML;")
-    soup = BeautifulSoup(page_source, "html.parser")
+        # Get the HTML content directly from the browser's DOM
+        page_source = driver.execute_script("return document.body.outerHTML;")
+        soup = BeautifulSoup(page_source, "html.parser")
 
-    for script in soup(["script", "style"]):
-        script.extract()
+        for script in soup(["script", "style"]):
+            script.extract()
 
-    # text = soup.get_text()
-    text = get_text(soup)
+        text = get_text(soup)
 
-    lines = (line.strip() for line in text.splitlines())
-    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-    text = "\n".join(chunk for chunk in chunks if chunk)
-    return driver, text
+        lines = (line.strip() for line in text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        text = "\n".join(chunk for chunk in chunks if chunk)
+        return driver, text
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        print(f"An error occurred scrape_text_with_selenium {url}: {e}")
+        driver.quit()
+        return None, f"Error al intentar obtener la página web {url}: {e}"
 
 
 def get_text(soup):
