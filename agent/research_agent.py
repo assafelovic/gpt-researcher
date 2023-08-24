@@ -69,10 +69,12 @@ class ResearchAgent:
 
         return new_urls
 
-    async def call_agent(self, action, stream=False, websocket=None):
+    async def call_agent(self, action, stream=False, websocket=None, system_prompt=None):
+        if not system_prompt:
+            system_prompt=self.agent_role_prompt
         messages = [{
             "role": "system",
-            "content": self.agent_role_prompt
+            "content": system_prompt
         }, {
             "role": "user",
             "content": action,
@@ -90,7 +92,8 @@ class ResearchAgent:
         Args: None
         Returns: list[str]: The search queries for the given question
         """
-        result = await self.call_agent(prompts.generate_search_queries_prompt(self.question))
+        # LLaMA2-13b-chat: Needs a very specific prompt and no system prompt to produce a list of strings.
+        result = await self.call_agent(prompts.generate_search_queries_prompt(self.question),system_prompt="")
         print(result)
         await self.websocket.send_json({"type": "logs", "output": f"🧠 I will conduct my research based on the following queries: {result}..."})
         return json.loads(result)
@@ -154,7 +157,8 @@ class ResearchAgent:
         Args: None
         Returns: list[str]: The concepts for the given question
         """
-        result = self.call_agent(prompts.generate_concepts_prompt(self.question, self.research_summary))
+        # LLaMA2-13b-chat: Needs a very specific prompt and no system prompt to produce a list of strings.
+        result = self.call_agent(prompts.generate_concepts_prompt(self.question, self.research_summary,system_prompt=""))
 
         await self.websocket.send_json({"type": "logs", "output": f"I will research based on the following concepts: {result}\n"})
         return json.loads(result)
