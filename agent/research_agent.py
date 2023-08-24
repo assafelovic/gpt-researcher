@@ -117,14 +117,13 @@ class ResearchAgent:
         """
         try:
             search_results = web_search(query)
-            new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
+            new_search_urls = await self.get_new_urls([url.get("href") if isinstance(url, dict) else url for url in search_results])
 
             await self.websocket.send_json(
                 {"type": "logs", "output": f"🌐 Browsing the following sites for relevant information: {new_search_urls}..."})
 
             # Create a list to hold the coroutine objects
             tasks = [async_browse(url, query, self.websocket) for url in new_search_urls]
-
 
             # Gather the results as they become available
             responses = await asyncio.gather(*tasks, return_exceptions=True)
