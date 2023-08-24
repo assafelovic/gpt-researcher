@@ -116,6 +116,7 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     options = options_available[CFG.selenium_web_browser]()
     options.add_argument(CFG.user_agent)
     options.add_argument('--headless')
+    options.add_argument("--enable-javascript")
 
     if CFG.selenium_web_browser == "firefox":
         service = Service(executable_path=GeckoDriverManager().install())
