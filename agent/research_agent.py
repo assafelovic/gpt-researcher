@@ -117,9 +117,7 @@ class ResearchAgent:
         """
         try:
             search_results = json.loads(web_search(query))
-            # new_search_urls = self.get_new_urls([url.get("href") for url in search_results])
-            new_search_urls = await self.get_new_urls([url.get("href") if isinstance(url, dict) else url for url in search_results])
-
+            new_search_urls = self.get_new_urls([url.get("href") for url in search_results])
 
             await self.websocket.send_json(
                 {"type": "logs", "output": f"🌐 Browsing the following sites for relevant information: {new_search_urls}..."})
