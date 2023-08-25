@@ -18,3 +18,4 @@ python-multipart
 markdown
 langchain==0.0.263
 litellm==0.1.2291
+urllib3

@@ -18,7 +18,8 @@ from selenium.webdriver.safari.options import Options as SafariOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from fastapi import WebSocket
-
+import urllib3
+from urllib3.exceptions import ReadTimeoutError
 import processing.text as summary
 from config import Config
 from processing.html import extract_hyperlinks, format_hyperlinks
@@ -29,6 +30,7 @@ executor = ThreadPoolExecutor()
 
 FILE_DIR = Path(__file__).parent.parent
 CFG = Config()
+MAX_RETRIES = 3
 
 async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
     """Browse a website and return the answer and links to the user
@@ -52,17 +54,18 @@ async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
         driver, text = await loop.run_in_executor(executor, scrape_text_with_selenium, url)
         await loop.run_in_executor(executor, add_header, driver)
         summary_text = await loop.run_in_executor(executor, summary.summarize_text, url, text, question, driver)
-
-        await websocket.send_json(
-            {"type": "logs", "output": f"📝 Information gathered from url {url}: {summary_text}"})
-
+        await websocket.send_json({"type": "logs", "output": f"📝 Information gathered from url {url}: {summary_text}"})
         return f"Information gathered from url {url}: {summary_text}"
-    except Exception as e:
-        error_trace = traceback.format_exc()
-        print(f"An error occurred while processing the url {url}: {e}")
-        await websocket.send_json(
-            {"type": "logs", "output": f"⚠️ Error processing the url {url}: {e}\n\n{error_trace}"})
+    except (urllib3.exceptions.ProtocolError, http.client.RemoteDisconnected) as e:
+        await websocket.send_json({"type": "logs", "output": f"⚠️ Error processing the url {url}: {e}"})
         return f"Error processing the url {url}: {e}"
+    except Exception as e:
+        if attempt < MAX_RETRIES - 1:
+            await websocket.send_json({"type": "logs", "output": f"⚠️ An error occurred while processing the url {url}. Retrying ({attempt + 1}/{MAX_RETRIES})..."})
+        else:
+            error_trace = traceback.format_exc()
+            await websocket.send_json({"type": "logs", "output": f"⚠️ An unexpected error occurred while processing the url {url}: {e}\n\n{error_trace}"})
+            return f"An unexpected error occurred while processing the url {url}: {e}"
 
 def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
     """Browse a website and return the answer and links to the user
