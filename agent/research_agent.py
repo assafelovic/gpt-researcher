@@ -144,14 +144,16 @@ class ResearchAgent:
 
             responses = await self.async_search(query)
 
-            result = "\n".join(responses)
+            result = "\n".join(response for response in responses if isinstance(response, str))
             query_hash = hashlib.sha256(query.encode()).hexdigest()[:10]
             filename = f"./outputs/research-{query_hash}.txt"
             os.makedirs(os.path.dirname(filename), exist_ok=True)
             write_to_file(filename, result)
         except Exception as e:
             traceback.print_exc()
-            await self.websocket.send_json({"type": "logs", "output": f"❌ Error occurred during search summary: {str(e)}"})
+            print(f"Error occurred during search summary {str(e)}")
+
+            # await self.websocket.send_json({"type": "logs", "output": f"❌ Error occurred during search summary: {str(e)}"})
 
     async def conduct_research(self):
         """ Conducts the research for the given question.
@@ -159,6 +161,8 @@ class ResearchAgent:
         Returns: str: The research for the given question
         """
         try:
+            self.progress = 0
+            await self.websocket.send_json({"type": "progress", "progress": self.progress})
             self.research_summary = read_txt_files(self.dir_path) if os.path.isdir(self.dir_path) else ""
 
             if not self.research_summary:
@@ -178,7 +182,8 @@ class ResearchAgent:
             return self.research_summary
         except Exception as e:
             traceback.print_exc()
-            await self.websocket.send_json({"type": "logs", "output": f"❌ Error occurred during research: {str(e)}"})
+            print(f" Error occurred during research: {str(e)}")
+            # await self.websocket.send_json({"type": "logs", "output": f"❌ Error occurred during research: {str(e)}"})
             return ""
 
     async def create_concepts(self):
@@ -192,6 +197,7 @@ class ResearchAgent:
             return json.loads(result)
         except Exception as e:
             traceback.print_exc()
+            print(f"Error occurred while creating concepts{str(e)}")
             await self.websocket.send_json({"type": "logs", "output": f"❌ Error occurred while creating concepts: {str(e)}"})
             return []
 
