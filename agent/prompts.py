@@ -42,6 +42,27 @@ def generate_search_queries_prompt(question):
     return f'Write {num_search_queries} google search queries to search online that form an objective opinion from the following: "{question}"'\
            f'You must respond only with a list of strings in the following json format: {queries_str}'
 
+def generate_readme_report_prompt(project_name, research_summary):
+    """
+    Generates the README.md report prompt for the given project and research summary.
+
+    Args:
+        project_name (str): The name of the project to generate the report prompt for.
+        research_summary (str): The research summary to generate the report prompt for.
+
+    Returns:
+        str: The README.md report prompt for the given project and research summary.
+    """
+
+    return f'"""{research_summary}""" Based on the provided information, research and implement a comprehensive README.md'\
+           f' guide for the "{project_name}" project. The guide should provide clear instructions on how to set up'\
+           f' the project, including installation steps, dependencies, and configuration details. Include information'\
+           f' on project structure, file organization, and usage examples. Provide explanations of key concepts,'\
+           f' features, and functionality. Consider best practices for documentation and readability. Ensure that the'\
+           f' guide is well-structured, informative, and follows appropriate formatting (Markdown syntax). Write all'\
+           f' source URLs at the end of the guide in APA format. The guide should have a minimum length of 1,200 words'\
+           f' and with Markdown syntax and APA format.'
+
 def generate_property_management_report_prompt(property_name, management_summary):
     """
     Generates the property management report prompt for the given property and management summary.
@@ -253,6 +274,7 @@ def generate_lesson_prompt(concept):
 def get_report_by_type(report_type):
     report_type_mapping = {
         'research_report': generate_report_prompt,
+        'generate_readme': generate_readme_report_prompt,
         'resource_report': generate_resource_report_prompt,
         'ux_report': generate_ux_report_prompt,
         'risk_report': generate_risk_assessment_report_prompt,
