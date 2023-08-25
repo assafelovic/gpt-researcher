@@ -216,17 +216,16 @@ class ResearchAgent:
             os.makedirs(file_directory, exist_ok=True)
             file_path = f"{file_directory}/research_report"
             write_to_file(f"{file_path}.md", str(answer))  # Write the MD file
-            path = await write_md_to_pdf(report_type, self.directory_name, answer)
-        
+            path = await write_md_to_pdf(report_type, self.directory_name, await answer)
             self.progress = 100
             await self.websocket.send_json({"type": "progress", "progress": self.progress})
             return answer, path
-        except Timeout as e:
+        except openai.error.Timeout as e:
             await websocket.send_json({"type": "logs", "output": f"⚠️ Timeout occurred while generating the report: {str(e)}"})
             return "", ""
         except Exception as e:
             traceback.print_exc()
-            await self.websocket.send_json({"type": "logs", "output": f"❌ Error occurred while writing report: {str(e)}"})
+            await websocket.send_json({"type": "logs", "output": f"❌ Error occurred while writing report: {str(e)}"})
             return "", ""
 
     async def write_lessons(self):
