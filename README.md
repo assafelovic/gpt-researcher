@@ -110,6 +110,26 @@ $ docker-compose up
 
 - **update:** if you are having issues with weasyprint, please visit their website and follow the installation instructions: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
 
+## 📖 Obsidian Integration
+
+GPT Researcher supports exporting to Obsidian, a popular knowledge management tool. To enable this feature, you need to install the Obsidian Local REST API plugin and configure it properly. Here are the steps:
+
+1. Open Obsidian, go to `Settings > Third-party plugins > Community Plugins > Browse` and search for `Local REST API`. Install and enable the plugin.
+
+2. After enabling the plugin, you will need to get the API token. Go to `Settings > Local REST API > API Key` and copy the token.
+
+3. Set the token as an environment variable in your project. You can do this by adding the following line to your .env file: 
+``` bash
+ OBSIDIAN_TOKEN={Your Obsidian API Token here}
+```
+4. You also need to set the base URL of your Obsidian instance including the path to the folder within your obsidian vault as an environment variable. By default, the Obsidian Local REST API runs on `http://localhost:27124` and the root folder is referenced by `vault`. So, add the following line to your .env file:
+```bash
+OBSIDIAN_URL=https://127.0.0.1:27124/vault
+```
+5. Add the self-signed certificate of Local REST API to your python environment.
+
+6. Now, you can use Send to Obsidian Button to directly export your research reports into your vault.
+
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
 

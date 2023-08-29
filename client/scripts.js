@@ -39,18 +39,24 @@ const GPTResearcher = (() => {
         socket.send(`start ${JSON.stringify(requestData)}`);
       };
     };
+
+    let agentMarkdownContent = "";
   
     const addAgentResponse = (data) => {
       const output = document.getElementById("output");
       output.innerHTML += '<div class="agent_response">' + data.output + '</div>';
+      agentMarkdownContent += data.output;
       output.scrollTop = output.scrollHeight;
       output.style.display = "block";
       updateScroll();
     };
   
+    let markdownContent = "";
+
     const writeReport = (data, converter) => {
       const reportContainer = document.getElementById("reportContainer");
       const markdownOutput = converter.makeHtml(data.output);
+      markdownContent += data.output;
       reportContainer.innerHTML += markdownOutput;
       updateScroll();
     };
@@ -76,9 +82,22 @@ const GPTResearcher = (() => {
       document.execCommand('copy');
       document.body.removeChild(textarea);
     };
+
+    const sendToObsidian = () => {
+      const content = markdownContent + '\n\n # Agent Output \n\n ' + agentMarkdownContent;
+    
+      fetch('/obsidian', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        body: content
+      })
+    };
   
     return {
       startResearch,
       copyToClipboard,
+      sendToObsidian,
     };
   })();
