@@ -66,9 +66,12 @@ async def post_to_obsidian(content: str = Body(...)):
     filename = first_heading_match.group(1) if first_heading_match else 'default_filename'
     filename = re.sub(r"[:]", " -", filename)
     filename = re.sub(r"[#:/\\[\]|^]", "", filename)
+    
     base_url = os.getenv("OBSIDIAN_URL")
+    if not base_url.endswith('/'):
+        base_url += '/'
     token = os.getenv("OBSIDIAN_TOKEN")
-    url = f"{base_url}/{quote(filename)}.md"
+    url = f"{base_url}{quote(filename)}.md"
     
     headers = {
         'accept': '*/*',
