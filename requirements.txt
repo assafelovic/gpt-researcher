@@ -16,4 +16,4 @@ pydantic
 fastapi
 python-multipart
 markdown
-langchain==0.0.263
+langchain==0.0.275
