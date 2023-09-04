@@ -30,6 +30,8 @@ class Config(metaclass=Singleton):
 
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         self.obsidian_token = os.getenv("OBSIDIAN_TOKEN")
+        self.obsidian_folder = os.getenv("OBSIDIAN_FOLDER")
+        
         self.temperature = float(os.getenv("TEMPERATURE", "1"))
 
         self.user_agent = os.getenv(

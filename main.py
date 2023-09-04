@@ -60,30 +60,63 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
 
-@app.post("/obsidian")
-async def post_to_obsidian(content: str = Body(...)):
-    first_heading_match = re.search(r"^#\s(.+)$", content, re.MULTILINE)
-    filename = first_heading_match.group(1) if first_heading_match else 'default_filename'
-    filename = re.sub(r"[:]", " -", filename)
-    filename = re.sub(r"[#:/\\[\]|^]", "", filename)
+async def obsidian_command(command: str, url: str, token: str, filename: str, content: str) -> dict:
+    """
+    Executes a command in Obsidian.
+
+    Args:
+        command (str): The command to execute (e.g., "create", "open").
+        url (str): The base URL of the Obsidian vault.
+        token (str): The authorization token for accessing the Obsidian vault.
+        filename (str): The name of the file to be created or opened, including the relative path within the vault.
+        content (str): The content of the file to be created (only used for "create" command).
+
+    Returns:
+        dict: A dictionary with a message indicating the result of the command.
+
+    Raises:
+        HTTPException: If there was an error executing the command in Obsidian.
+    """
+    if command == "create":
+        endpoint = f"vault/{quote(filename)}.md"
+        method = "POST"
+        data = content.encode('utf-8')
+    elif command == "open":
+        endpoint = f"open/{quote(filename)}.md?newLeaf=false"
+        method = "GET"
+        data = None
+    else:
+        raise ValueError("Invalid command")
     
-    base_url = os.getenv("OBSIDIAN_URL")
-    if not base_url.endswith('/'):
-        base_url += '/'
-    token = os.getenv("OBSIDIAN_TOKEN")
-    url = f"{base_url}{quote(filename)}.md"
+    endpoint = re.sub(r"//+", "/", endpoint)
     
     headers = {
         'accept': '*/*',
         'Authorization': f'Bearer {token}',
         'Content-Type': 'text/markdown'
     }
-    response = requests.post(url, headers=headers, data=content.encode('utf-8'))
+    response = requests.request(method, f"{url}{endpoint}", headers=headers, data=data)
 
-    if response.status_code != 204:
-        raise HTTPException(status_code=400, detail="Error posting to Obsidian")
+    if response.status_code < 200 or response.status_code >= 300:
+        raise HTTPException(status_code=response.status_code, detail=f"Error executing {command} command in Obsidian")
 
-    return {"message": "File created successfully"}
+    return {"message": f"{command.capitalize()} command executed successfully"}
+
+@app.post("/obsidian")
+async def post_to_obsidian(content: str = Body(...)):
+    first_heading_match = re.search(r"^#\s(.+)$", content, re.MULTILINE)
+    filename = first_heading_match.group(1) if first_heading_match else 'default_filename'
+    filename = re.sub(r"[:]", " -", filename)
+    filename = re.sub(r"[#:/\\[\]|^]", "", filename)
+    filename = f"{os.getenv('OBSIDIAN_FOLDER')}/{filename}"
+
+    base_url = os.getenv("OBSIDIAN_URL")
+    if not base_url.endswith('/'):
+        base_url += '/'
+    token = os.getenv("OBSIDIAN_TOKEN")
+    
+    await obsidian_command(command="create", url=base_url, token=token, filename=filename, content=content)
+    await obsidian_command(command="open", url=base_url, filename=filename, token=token)
 
 if __name__ == "__main__":
     import uvicorn
