@@ -3,7 +3,7 @@ date: <% tp.file.creation_date() %>
 modification_date: <% await tp.file.last_modified_date() %>
 tags: 
   - gpt-researcher
-ai-model: gpt-researcher
+ai-model: [[gpt-researcher]]
 prompt: {PROMPT}
 ---
 
