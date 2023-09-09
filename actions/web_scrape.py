@@ -19,6 +19,7 @@ from selenium.webdriver.safari.options import Options as SafariOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from fastapi import WebSocket
+import chromedriver_autoinstaller
 
 import processing.text as summary
 
@@ -31,6 +32,7 @@ executor = ThreadPoolExecutor()
 
 FILE_DIR = Path(__file__).parent.parent
 CFG = Config()
+chromedriver_autoinstaller.install() #Installs the latest compat version of chromedriver
 
 
 async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
