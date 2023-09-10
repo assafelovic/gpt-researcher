@@ -17,3 +17,4 @@ fastapi
 python-multipart
 markdown
 langchain==0.0.275
+chromedriver-autoinstaller
