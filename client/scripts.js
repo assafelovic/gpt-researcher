@@ -1,7 +1,16 @@
 const GPTResearcher = (() => {
+    const init = () => {
+      // Not sure, but I think it would be better to add event handlers here instead of in the HTML
+      //document.getElementById("startResearch").addEventListener("click", startResearch);
+      //document.getElementById("copyToClipboard").addEventListener("click", copyToClipboard);
+
+      updateState("initial");
+    }
+
     const startResearch = () => {
       document.getElementById("output").innerHTML = "";
       document.getElementById("reportContainer").innerHTML = "";
+      updateState("in_progress")
   
       addAgentResponse({ output: "🤔 Thinking about research questions for the task..." });
   
@@ -21,7 +30,9 @@ const GPTResearcher = (() => {
         } else if (data.type === 'report') {
           writeReport(data, converter);
         } else if (data.type === 'path') {
+          updateState("finished")
           updateDownloadLink(data);
+
         }
       };
   
@@ -57,8 +68,7 @@ const GPTResearcher = (() => {
   
     const updateDownloadLink = (data) => {
       const path = data.output;
-      const downloadLink = document.getElementById("downloadLink");
-      downloadLink.href = path;
+      document.getElementById("downloadLink").setAttribute("href", path);
     };
   
     const updateScroll = () => {
@@ -76,7 +86,63 @@ const GPTResearcher = (() => {
       document.execCommand('copy');
       document.body.removeChild(textarea);
     };
-  
+
+    const updateState = (state) => {
+      var status = "";
+      switch (state) {
+        case "in_progress":
+          status = "Research in progress..."
+          setReportActionsStatus("disabled");
+          break;
+        case "finished":
+          status = "Research finished!"
+          setReportActionsStatus("enabled");
+          break;
+        case "error":
+          status = "Research failed!"
+          setReportActionsStatus("disabled");
+          break;
+        case "initial":
+          status = ""
+          setReportActionsStatus("hidden");
+          break;
+        default:
+          setReportActionsStatus("disabled");
+      }
+      document.getElementById("status").innerHTML = status;
+      if (document.getElementById("status").innerHTML == "") {
+        document.getElementById("status").style.display = "none";
+      } else {
+        document.getElementById("status").style.display = "block";
+      }
+    }
+
+    /**
+     * Shows or hides the download and copy buttons
+     * @param {str} status Kind of hacky. Takes "enabled", "disabled", or "hidden". "Hidden is same as disabled but also hides the div"
+     */
+    const setReportActionsStatus = (status) => {
+      const reportActions = document.getElementById("reportActions");
+      // Disable everything in reportActions until research is finished
+
+      if (status == "enabled") {
+        reportActions.querySelectorAll("a").forEach((link) => {
+          link.classList.remove("disabled");
+          link.removeAttribute('onclick');
+          reportActions.style.display = "block";
+        });
+      } else {
+        reportActions.querySelectorAll("a").forEach((link) => {
+          link.classList.add("disabled");
+          link.setAttribute('onclick', "return false;");
+        });
+        if (status == "hidden") {
+          reportActions.style.display = "none";
+        }
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
     return {
       startResearch,
       copyToClipboard,
