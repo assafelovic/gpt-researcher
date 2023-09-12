@@ -19,7 +19,7 @@ from selenium.webdriver.safari.options import Options as SafariOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from fastapi import WebSocket
-import chromedriver_autoinstaller
+#import chromedriver_autoinstaller
 
 import processing.text as summary
 
@@ -32,7 +32,7 @@ executor = ThreadPoolExecutor()
 
 FILE_DIR = Path(__file__).parent.parent
 CFG = Config()
-chromedriver_autoinstaller.install() #Installs the latest compat version of chromedriver
+#chromedriver_autoinstaller.install()
 
 
 async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
@@ -137,7 +137,10 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
         options.add_experimental_option(
             "prefs", {"download_restrictions": 3}
         )
-        driver = webdriver.Chrome(options=options)
+        service = Service(executable_path=ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
+
+    print(f"scraping url {url}...")
     driver.get(url)
 
     WebDriverWait(driver, 10).until(
