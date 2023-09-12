@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     for stock in stocks[:1]:
         researcher = Researcher(GPTResearcherActor(), OpenAIWriterActor())
-        research = researcher.run(stock)
+        research = researcher.run(f"is the stock {stock} a good buy?")
         with open(f"{output_path}/{stock}.md", "w") as f:
             f.write(research)
         md2pdf(f"{output_path}/{stock}.md", f"{output_path}/{stock}.pdf")
