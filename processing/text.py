@@ -46,6 +46,7 @@ def split_text(text: str, max_length: int = 8192) -> Generator[str, None, None]:
 def summarize_text(
     url: str, text: str, question: str, driver: Optional[WebDriver] = None
 ) -> str:
+    print(question)
     """Summarize text using the OpenAI API
 
     Args:
@@ -61,9 +62,10 @@ def summarize_text(
         return "Error: No text to summarize"
 
     summaries = []
-    chunks = list(split_text(text, 3500))
+    chunks = list(split_text(text))
     scroll_ratio = 1 / len(chunks)
 
+    print(f"Summarizing url: {url} with total chunks: {len(chunks)}")
     for i, chunk in enumerate(chunks):
         if driver:
             scroll_to_percentage(driver, scroll_ratio * i)
@@ -83,14 +85,17 @@ def summarize_text(
 
         #MEMORY.add_documents([Document(page_content=memory_to_add)])
 
-
     combined_summary = "\n".join(summaries)
     messages = [create_message(combined_summary, question)]
 
-    return create_chat_completion(
+    final_summary = create_chat_completion(
         model=CFG.fast_llm_model,
         messages=messages,
     )
+    print("Final summary length: ", len(combined_summary))
+    print(final_summary)
+
+    return final_summary
 
 
 def scroll_to_percentage(driver: WebDriver, ratio: float) -> None:
@@ -120,9 +125,10 @@ def create_message(chunk: str, question: str) -> Dict[str, str]:
     """
     return {
         "role": "user",
-        "content": f'"""{chunk}""" Using the above text, answer the following'
+        "content": f'"""{chunk}""" Using the above text, the following'
         f' question: "{question}" -- if the question cannot be answered using the text,'
-        " simply summarize the text in depth. "
+        " simply summarize the text. "
+        "You should NOT answer in more than 300 words. "
         "Include all factual information, numbers, stats etc if available.",
     }
 

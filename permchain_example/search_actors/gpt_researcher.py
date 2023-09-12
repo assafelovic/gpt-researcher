@@ -1,4 +1,4 @@
-from processing.text import split_text
+from processing.text import split_text, summarize_text
 from actions.web_scrape import scrape_text_with_selenium
 from actions.web_search import web_search
 
@@ -10,20 +10,10 @@ import json
 from langchain.schema.messages import SystemMessage
 from agent.prompts import auto_agent_instructions
 
-summary_message = (
-    '"""{chunk}""" Using the above text, answer the following'
-        ' question: "{question}" -- if the question cannot be answered using the text,'
-        " simply summarize the text in depth. "
-        "Include all factual information, numbers, stats etc if available."
-)
-SUMMARY_PROMPT = ChatPromptTemplate.from_messages([
-    ("user", summary_message)
-])
 search_message = (
-    'Write 4 google search queries to search online that form an objective opinion from the following: "{question}"'\
-    'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3", "query 4"]'
+    'Write 3 google search queries to search online that form an objective opinion from the following: "{question}"'\
+    'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"]'
 )
-
 SEARCH_PROMPT = ChatPromptTemplate.from_messages([
     ("system", "{agent_prompt}"),
     ("user", search_message)
@@ -32,33 +22,21 @@ SEARCH_PROMPT = ChatPromptTemplate.from_messages([
 AUTO_AGENT_INSTRUCTIONS = auto_agent_instructions()
 CHOOSE_AGENT_PROMPT = ChatPromptTemplate.from_messages([
     SystemMessage(content=AUTO_AGENT_INSTRUCTIONS),
-("user", "task: {task}")
+    ("user", "task: {task}")
 ])
-
-
-summary_chain = SUMMARY_PROMPT | ChatOpenAI() | StrOutputParser()
-chunk_and_combine = (lambda x: [{
-    "question": x["question"],
-    "chunk": chunk
-} for chunk in split_text(x["text"])]) | summary_chain.map() | (lambda x: "\n".join(x))
-
-recursive_summary_chain = {
-    "question": lambda x: x["question"],
-    "chunk": chunk_and_combine
-} | summary_chain
 
 scrape_and_summarize = {
     "question": lambda x: x["question"],
     "text": lambda x: scrape_text_with_selenium(x['url'])[1],
     "url": lambda x: x['url']
 } | RunnableMap({
-    "summary": recursive_summary_chain,
-    "url": lambda x: x['url']
-}) | (lambda x: f"Source Url: {x['url']}\nSummary: {x['summary']}")
+        "summary": lambda x: summarize_text(text=x["text"], question=x["question"], url=x["url"]),
+        "url": lambda x: x['url']
+})  | (lambda x: f"Source Url: {x['url']}\nSummary: {x['summary']}")
 
 multi_search = (lambda x: [
     {"url": url.get("href"), "question": x["question"]}
-    for url in json.loads(web_search(x["question"]))
+    for url in json.loads(web_search(query=x["question"], num_results=2))
 ]) | scrape_and_summarize.map() | (lambda x: "\n".join(x))
 
 search_query = SEARCH_PROMPT | ChatOpenAI() |  StrOutputParser() | json.loads
