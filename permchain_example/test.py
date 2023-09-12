@@ -22,7 +22,7 @@ if __name__ == '__main__':
     stocks = ["MSFT"]
 
     for stock in stocks[:1]:
-        researcher = Researcher(TavilySearchActor(), OpenAIWriterActor())
+        researcher = Researcher(GPTResearcherActor(), OpenAIWriterActor())
         research = researcher.run(stock)
         with open(f"{output_path}/{stock}.md", "w") as f:
             f.write(research)

@@ -61,14 +61,14 @@ def summarize_text(
         return "Error: No text to summarize"
 
     summaries = []
-    chunks = list(split_text(text))
+    chunks = list(split_text(text, 3500))
     scroll_ratio = 1 / len(chunks)
 
     for i, chunk in enumerate(chunks):
         if driver:
             scroll_to_percentage(driver, scroll_ratio * i)
 
-        memory_to_add = f"Source: {url}\n" f"Raw content part#{i + 1}: {chunk}"
+        #memory_to_add = f"Source: {url}\n" f"Raw content part#{i + 1}: {chunk}"
 
         #MEMORY.add_documents([Document(page_content=memory_to_add)])
 
@@ -79,7 +79,7 @@ def summarize_text(
             messages=messages,
         )
         summaries.append(summary)
-        memory_to_add = f"Source: {url}\n" f"Content summary part#{i + 1}: {summary}"
+        #memory_to_add = f"Source: {url}\n" f"Content summary part#{i + 1}: {summary}"
 
         #MEMORY.add_documents([Document(page_content=memory_to_add)])
 
