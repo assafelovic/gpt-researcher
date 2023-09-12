@@ -21,9 +21,8 @@ SUMMARY_PROMPT = ChatPromptTemplate.from_messages([
     ("user", summary_message)
 ])
 search_message = (
-    f'The current date is: {date.today()}. '
     'Write 4 google search queries to search online that form an objective opinion from the following: "{question}"'\
-    f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3", "query 4"]'
+    'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3", "query 4"]'
 )
 
 SEARCH_PROMPT = ChatPromptTemplate.from_messages([
