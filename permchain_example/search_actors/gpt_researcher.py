@@ -9,7 +9,6 @@ from langchain.schema.runnable import RunnableMap
 import json
 from langchain.schema.messages import SystemMessage
 from agent.prompts import auto_agent_instructions
-from datetime import date
 
 summary_message = (
     '"""{chunk}""" Using the above text, answer the following'
