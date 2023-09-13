@@ -79,6 +79,7 @@ def summarize_text(
         summary = create_chat_completion(
             model=CFG.fast_llm_model,
             messages=messages,
+            max_tokens=CFG.summary_token_limit
         )
         summaries.append(summary)
         #memory_to_add = f"Source: {url}\n" f"Content summary part#{i + 1}: {summary}"
@@ -91,6 +92,7 @@ def summarize_text(
     final_summary = create_chat_completion(
         model=CFG.fast_llm_model,
         messages=messages,
+        max_tokens=CFG.summary_token_limit
     )
     print("Final summary length: ", len(combined_summary))
     print(final_summary)
@@ -125,10 +127,9 @@ def create_message(chunk: str, question: str) -> Dict[str, str]:
     """
     return {
         "role": "user",
-        "content": f'"""{chunk}""" Using the above text, the following'
+        "content": f'"""{chunk}""" Using the above text, answer in short the following'
         f' question: "{question}" -- if the question cannot be answered using the text,'
         " simply summarize the text. "
-        "You should NOT answer in more than 300 words. "
         "Include all factual information, numbers, stats etc if available.",
     }
 
