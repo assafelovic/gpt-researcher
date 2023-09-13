@@ -11,8 +11,8 @@ from langchain.schema.messages import SystemMessage
 from agent.prompts import auto_agent_instructions
 
 search_message = (
-    'Write 3 google search queries to search online that form an objective opinion from the following: "{question}"'\
-    'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"]'
+    'Write 4 google search queries to search online that form an objective opinion from the following: "{question}"'\
+    'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3", "query 4"]'
 )
 SEARCH_PROMPT = ChatPromptTemplate.from_messages([
     ("system", "{agent_prompt}"),
@@ -34,10 +34,14 @@ scrape_and_summarize = {
         "url": lambda x: x['url']
 })  | (lambda x: f"Source Url: {x['url']}\nSummary: {x['summary']}")
 
-multi_search = (lambda x: [
-    {"url": url.get("href"), "question": x["question"]}
-    for url in json.loads(web_search(query=x["question"], num_results=2))
-]) | scrape_and_summarize.map() | (lambda x: "\n".join(x))
+seen_urls = set()
+multi_search = (
+    lambda x: [
+        {"url": url.get("href"), "question": x["question"]}
+        for url in json.loads(web_search(query=x["question"], num_results=3))
+        if not (url.get("href") in seen_urls or seen_urls.add(url.get("href")))
+   ]
+) | scrape_and_summarize.map() | (lambda x: "\n".join(x))
 
 search_query = SEARCH_PROMPT | ChatOpenAI() |  StrOutputParser() | json.loads
 choose_agent = CHOOSE_AGENT_PROMPT | ChatOpenAI() | StrOutputParser() | json.loads

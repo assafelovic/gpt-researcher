@@ -19,7 +19,7 @@ if __name__ == '__main__':
     def md2pdf(md_file, pdf_file):
         md_to_pdf(md_file, pdf_file)
 
-    stocks = ["MSFT"]
+    stocks = ["AAPL"]
 
     for stock in stocks[:1]:
         researcher = Researcher(GPTResearcherActor(), OpenAIWriterActor())
