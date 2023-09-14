@@ -27,6 +27,7 @@ def create_chat_completion(
     max_tokens: Optional[int] = None,
     stream: Optional[bool] = False,
     websocket: WebSocket | None = None,
+    rabbit: None = None
 ) -> str:
     """Create a chat completion using the OpenAI API
     Args:
@@ -50,7 +51,7 @@ def create_chat_completion(
     # create response
     for attempt in range(10):  # maximum of 10 attempts
         response = send_chat_completion_request(
-            messages, model, temperature, max_tokens, stream, websocket
+            messages, model, temperature, max_tokens, stream, websocket, rabbit
         )
         return response
 
@@ -59,7 +60,7 @@ def create_chat_completion(
 
 
 def send_chat_completion_request(
-    messages, model, temperature, max_tokens, stream, websocket
+    messages, model, temperature, max_tokens, stream, websocket, rabbit
 ):
     if not stream:
         result = lc_openai.ChatCompletion.create(
@@ -71,10 +72,10 @@ def send_chat_completion_request(
         )
         return result["choices"][0]["message"]["content"]
     else:
-        return stream_response(model, messages, temperature, max_tokens, websocket)
+        return stream_response(model, messages, temperature, max_tokens, websocket, rabbit)
 
 
-async def stream_response(model, messages, temperature, max_tokens, websocket):
+async def stream_response(model, messages, temperature, max_tokens, websocket, rabbit):
     paragraph = ""
     response = ""
     print(f"streaming response...")
@@ -92,7 +93,8 @@ async def stream_response(model, messages, temperature, max_tokens, websocket):
             response += content
             paragraph += content
             if "\n" in paragraph:
-                await websocket.send_json({"type": "report", "output": paragraph})
+                rabbit.publish_to_rabbit({"type": "finalReport", "paragraph": paragraph})
+                await websocket.send_json({"type": "report", "output": paragraph})                
                 paragraph = ""
     print(f"streaming response complete")
     return response
