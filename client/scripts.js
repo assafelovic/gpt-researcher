@@ -1,7 +1,12 @@
 const GPTResearcher = (() => {
+    let agentMarkdownContent = "";
+    let markdownContent = "";
+
     const startResearch = () => {
       document.getElementById("output").innerHTML = "";
       document.getElementById("reportContainer").innerHTML = "";
+      markdownContent = "";
+      agentMarkdownContent = "";
   
       addAgentResponse({ output: "🤔 Thinking about research questions for the task..." });
   
@@ -43,15 +48,19 @@ const GPTResearcher = (() => {
     const addAgentResponse = (data) => {
       const output = document.getElementById("output");
       output.innerHTML += '<div class="agent_response">' + data.output + '</div>';
+      agentMarkdownContent += data.output;
       output.scrollTop = output.scrollHeight;
       output.style.display = "block";
       updateScroll();
     };
-  
+
     const writeReport = (data, converter) => {
       const reportContainer = document.getElementById("reportContainer");
       const markdownOutput = converter.makeHtml(data.output);
+      markdownContent += data.output;
       reportContainer.innerHTML += markdownOutput;
+      document.getElementById('downloadObsidian').disabled = false;
+      document.getElementById('copyToClipboard').disabled = false;
       updateScroll();
     };
   
@@ -76,9 +85,40 @@ const GPTResearcher = (() => {
       document.execCommand('copy');
       document.body.removeChild(textarea);
     };
+
+    const sendToObsidian = async () => {
+      let template;
+      try {
+        const response = await fetch('/site/obsidian_template.md');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        template = await response.text();
+      } catch (e) {
+        console.log('There was an error fetching the template: ', e);
+      }
+
+      if (template) {
+        const prompt = document.querySelector('#task').value;
+        template = template.replace('{PROMPT}', prompt);
+        template = template.replace('{RESEARCH_REPORT}', markdownContent);
+        template = template.replace('{AGENT_OUTPUT}', agentMarkdownContent);
+      } else {
+        console.log('Template is not defined. Check fetch operation.');
+      }
+
+      fetch('/obsidian', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain'
+        },
+        body: template
+      })
+    };
   
     return {
       startResearch,
       copyToClipboard,
+      sendToObsidian,
     };
   })();
