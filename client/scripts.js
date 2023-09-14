@@ -1,7 +1,12 @@
 const GPTResearcher = (() => {
+    let agentMarkdownContent = "";
+    let markdownContent = "";
+
     const startResearch = () => {
       document.getElementById("output").innerHTML = "";
       document.getElementById("reportContainer").innerHTML = "";
+      markdownContent = "";
+      agentMarkdownContent = "";
   
       addAgentResponse({ output: "🤔 Thinking about research questions for the task..." });
   
@@ -39,8 +44,6 @@ const GPTResearcher = (() => {
         socket.send(`start ${JSON.stringify(requestData)}`);
       };
     };
-
-    let agentMarkdownContent = "";
   
     const addAgentResponse = (data) => {
       const output = document.getElementById("output");
@@ -50,8 +53,6 @@ const GPTResearcher = (() => {
       output.style.display = "block";
       updateScroll();
     };
-  
-    let markdownContent = "";
 
     const writeReport = (data, converter) => {
       const reportContainer = document.getElementById("reportContainer");
