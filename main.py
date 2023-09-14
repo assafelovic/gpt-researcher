@@ -60,7 +60,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
 
-async def obsidian_command(command: str, url: str, token: str, filename: str, content: str) -> dict:
+async def obsidian_command(command: str, url: str, token: str, filename: str, content: str = "") -> dict:
     """
     Executes a command in Obsidian.
 
