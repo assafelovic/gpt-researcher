@@ -19,6 +19,7 @@ from selenium.webdriver.safari.options import Options as SafariOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from fastapi import WebSocket
+import chromedriver_autoinstaller
 
 import processing.text as summary
 
@@ -31,6 +32,7 @@ executor = ThreadPoolExecutor()
 
 FILE_DIR = Path(__file__).parent.parent
 CFG = Config()
+chromedriver_autoinstaller.install() #Installs the latest compat version of chromedriver
 
 
 async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
@@ -114,7 +116,7 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     }
 
     options = options_available[CFG.selenium_web_browser]()
-    options.add_argument(CFG.user_agent)
+    options.add_argument(f"user-agent={CFG.user_agent}")
     options.add_argument('--headless')
     options.add_argument("--enable-javascript")
 
