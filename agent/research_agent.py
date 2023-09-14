@@ -138,8 +138,6 @@ class ResearchAgent:
         responses = await self.async_search(query)
 
         result = "\n".join(responses)
-        result_logs = {"type": "final report", "output": result}
-        self.rabbit.publish_to_rabbit({"type": "final report", "output": result})
         
         os.makedirs(os.path.dirname(f"./outputs/{self.directory_name}/research-{query}.txt"), exist_ok=True)
         write_to_file(f"./outputs/{self.directory_name}/research-{query}.txt", result)

@@ -36,8 +36,8 @@ services:
     ports:
      - "4000:4000"
     environment:
-      - RABBIT=amqp://guest:guest@rabbit:5672
-      - DATABASE_URL=${DATABASE_URL}
+      RABBIT: "amqp://guest:guest@rabbit:5672"
+      DATABASE_URL: ${DATABASE_URL}
     depends_on:
       - rabbit
     restart: always
