@@ -37,36 +37,6 @@ const reportSchema = new mongoose.Schema(
         body: { 
             type : Array , 
             "default" : []
-        },
-        excerpt: {
-            type: String,
-            max: 1000
-        },
-        mtitle: {
-            type: String
-        },
-        mdesc: {
-            type: String
-        },
-        hidden: { 
-            type: Boolean, 
-            default: false 
-        },
-        page_link: {
-            type: String
-        },
-        
-        categories: [{ 
-            type: ObjectId, 
-            ref: 'Category'
-        }],
-        tags: [{ 
-            type: ObjectId, 
-            ref: 'Tag'
-        }],
-        postedBy: {
-            type: ObjectId,
-            ref: 'User'
         }
     },
     { timestamps: true }
