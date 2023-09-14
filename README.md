@@ -45,8 +45,9 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 - 🔍 Scrapes web sources with javascript support
 - 📂 Keeps track and context of visited and used web sources
 - 📄 Export research reports to PDF and more...
+- 💾 Saves logs & reports in MongoDB
 
-## Quickstart
+## Quickstart - Running the Python Research Service
 > **Step 0** - Install Python 3.11 or later. [See here](https://www.tutorialsteacher.com/python/install-python) for a step-by-step guide.
 
 <br />
@@ -86,6 +87,11 @@ $ uvicorn main:app --reload
 
 > **Step 5** - Go to http://localhost:8000 on any browser and enjoy researching!
 
+Note: You'll still need to run the NodeJS History Service & Rabbit Broker Service in order for the app to run successfully.
+In addition, if you're running the Python service outside of Docker Compose you will need to change the host='rabbit' line in agent/rabbit.py to host='localhost'.
+
+To run any or all services via Docker Compose (recommended), please follow the instructions below.
+
 - **update:** if you are having issues with weasyprint, please visit their website and follow the installation instructions: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
 
 ## Try it with Docker
@@ -98,12 +104,13 @@ Follow instructions at https://docs.docker.com/engine/install/
 
 ```bash
 $ export OPENAI_API_KEY={Your API Key here}
+$ export DATABASE_URL="{Your Mongo Connection String here}"
 ```
 
 > **Step 3** - Run the application
 
 ```bash
-$ docker-compose up
+$ docker-compose up --build
 ```
 
 > **Step 4** - Go to http://localhost:8000 on any browser and enjoy researching!
