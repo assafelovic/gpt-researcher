@@ -34,27 +34,35 @@ class WebSocketManager:
         del self.sender_tasks[websocket]
         del self.message_queues[websocket]
 
-    async def start_streaming(self, task, report_type, agent, agent_role_prompt, websocket):
-        report, path = await run_agent(task, report_type, agent, agent_role_prompt, websocket)
+    async def start_streaming(self, task, report_type, agent, agent_role_prompt, websocket, rabbit):
+        report, path = await run_agent(task, report_type, agent, agent_role_prompt, websocket, rabbit)
         return report, path
 
 
-async def run_agent(task, report_type, agent, agent_role_prompt, websocket):
+async def run_agent(task, report_type, agent, agent_role_prompt, websocket, rabbit):
     check_openai_api_key()
 
     start_time = datetime.datetime.now()
 
     # await websocket.send_json({"type": "logs", "output": f"Start time: {str(start_time)}\n\n"})
 
-    assistant = ResearchAgent(task, agent, agent_role_prompt, websocket)
+    assistant = ResearchAgent(task, agent, agent_role_prompt, websocket, rabbit)
     await assistant.conduct_research()
 
     report, path = await assistant.write_report(report_type, websocket)
 
-    await websocket.send_json({"type": "path", "output": path})
+    report_logs = {"type": "path", "output": path}
+    rabbit.publish_to_rabbit(report_logs)
+    await websocket.send_json(report_logs)
 
     end_time = datetime.datetime.now()
-    await websocket.send_json({"type": "logs", "output": f"\nEnd time: {end_time}\n"})
-    await websocket.send_json({"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"})
+
+    end_time_logs = {"type": "logs", "output": f"\nEnd time: {end_time}\n"}
+    rabbit.publish_to_rabbit(end_time_logs)
+    await websocket.send_json(end_time_logs)
+
+    total_run_time_logs = {"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"}
+    rabbit.publish_to_rabbit(total_run_time_logs)
+    await websocket.send_json(total_run_time_logs)
 
     return report, path
