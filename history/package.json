@@ -1,0 +1,23 @@
+{
+  "name": "history",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "node ./src/index.js",
+    "start:dev": "nodemon --legacy-watch ./src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "amqplib": "^0.10.0",
+    "express": "^5.0.0-beta.1",
+    "mongoose": "^5.6.10",
+    "slugify": "^1.6.6",
+    "wait-port": "^0.2.6"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.21"
+  }
+}

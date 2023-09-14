@@ -1,0 +1,9 @@
+FROM node:18.5.0
+
+WORKDIR /usr/src/app
+COPY package*.json ./
+COPY . .
+
+CMD npm install --prefer-offline && \
+    npx wait-port rabbit:5672 && \
+    npm run start:dev
