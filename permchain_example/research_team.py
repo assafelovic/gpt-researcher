@@ -27,7 +27,7 @@ class ResearchTeam:
         editor_inbox = Topic("editor_inbox")
         reviser_inbox = Topic("reviser_inbox")
         research_chain = (
-            # Listed in inputs
+                # Listed in inputs
                 Topic.IN.subscribe()
                 | {"draft": lambda x: self.research_actor_instance.run(x["question"])}
                 # The draft always goes to the critique inbox
@@ -35,7 +35,7 @@ class ResearchTeam:
         )
 
         editor_chain = (
-            # Listen for events in the editor_inbox
+                # Listen for events in the editor_inbox
                 editor_inbox.subscribe()
                 | self.editor_actor_instance.runnable
                 # Depending on the output, different things should happen
