@@ -26,7 +26,7 @@ class ResearchTeam:
         # create topics
         editor_inbox = Topic("editor_inbox")
         reviser_inbox = Topic("reviser_inbox")
-        draft_chain = (
+        research_chain = (
             # Listed in inputs
                 Topic.IN.subscribe()
                 | {"draft": lambda x: self.research_actor_instance.run(x["question"])}
@@ -65,10 +65,10 @@ class ResearchTeam:
         )
 
         web_researcher = PubSub(
-            processes=(draft_chain, editor_chain, reviser_chain),
+            processes=(research_chain, editor_chain, reviser_chain),
             connection=InMemoryPubSubConnection(),
         )
 
         res = web_researcher.invoke({"question": query})
         print(res)
-        return res[0]["draft"]["answer"]
+        return res[0]["draft"]
