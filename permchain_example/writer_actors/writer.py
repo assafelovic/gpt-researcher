@@ -1,7 +1,6 @@
 from langchain.prompts import ChatPromptTemplate
-from langchain.chat_models import ChatOpenAI, ChatAnthropic
+from langchain.chat_models import ChatOpenAI
 from langchain.schema.output_parser import StrOutputParser
-from datetime import date
 from config import Config
 
 CFG = Config()
