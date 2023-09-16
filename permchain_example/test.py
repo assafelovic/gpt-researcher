@@ -16,9 +16,6 @@ if __name__ == '__main__':
         # If the directory does not exist, create it
         os.makedirs(output_path)
 
-    def md2pdf(md_file, pdf_file):
-        md_to_pdf(md_file, pdf_file)
-
     stocks = ["AAPL"]
 
     for stock in stocks[:1]:
@@ -26,6 +23,6 @@ if __name__ == '__main__':
         research = researcher.run(f"is the stock {stock} a good buy?")
         with open(f"{output_path}/{stock}.md", "w") as f:
             f.write(research)
-        md2pdf(f"{output_path}/{stock}.md", f"{output_path}/{stock}.pdf")
+        md_to_pdf(f"{output_path}/{stock}.md", f"{output_path}/{stock}.pdf")
 
 
