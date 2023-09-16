@@ -6,7 +6,7 @@ from config import Config
 
 CFG = Config()
 
-class OpenAIWriterActor:
+class WriterActor:
     def __init__(self):
         self.model = ChatOpenAI(model=CFG.smart_llm_model)
         self.prompt = ChatPromptTemplate.from_messages([

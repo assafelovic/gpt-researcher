@@ -11,8 +11,8 @@ from langchain.schema.messages import SystemMessage
 from agent.prompts import auto_agent_instructions
 
 search_message = (
-    'Write 4 google search queries to search online that form an objective opinion from the following: "{question}"'\
-    'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3", "query 4"]'
+    'Write 3 google search queries to search online that form an objective opinion from the following: "{question}"'\
+    'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"]'
 )
 SEARCH_PROMPT = ChatPromptTemplate.from_messages([
     ("system", "{agent_prompt}"),
