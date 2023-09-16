@@ -93,8 +93,11 @@
     <div class="margin-div">
         <h2>Research Report</h2>
         <div id="reportContainer"></div>
-        <button onclick="GPTResearcher.copyToClipboard()" class="btn btn-secondary mt-3">Copy to clipboard</button>
-        <a id="downloadLink" href="#" class="btn btn-secondary mt-3" target="_blank">Download as PDF</a>
+        <div id="reportActions">
+            <div class="alert alert-info" role="alert" id="status"></div>
+            <a onclick="GPTResearcher.copyToClipboard()" class="btn btn-secondary mt-3">Copy to clipboard</button>
+            <a id="downloadLink" href="#" class="btn btn-secondary mt-3" target="_blank">Download as PDF</a>
+        </div>
     </div>
 </main>
 
@@ -106,17 +109,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
 <script src="/site/scripts.js"></script>
 <script>
-    const btnChoose = document.getElementById('btnChoose');
+    // const btnChoose = document.getElementById('btnChoose');
     const btnShowAuto = document.getElementById('btnShowAuto');
     const autoAgentDiv = document.getElementById('autoAgentDiv');
     const agentChoices = document.getElementsByClassName('agent-choices');
 
+    /**
     btnChoose.addEventListener('click', function () {
         btnShowAuto.style.display = 'inline-block';
         btnChoose.style.display = 'none';
         autoAgentDiv.style.display = 'none';
         agentChoices[0].style.display = 'flex';
     });
+    **/
 
     btnShowAuto.addEventListener('click', function () {
         btnShowAuto.style.display = 'none';
