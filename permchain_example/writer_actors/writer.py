@@ -29,6 +29,5 @@ class WriterActor:
             "answer": {
                 "query": lambda x: x["query"],
                 "results": lambda x: "\n\n".join(x["results"])
-              }
-              | self.prompt | self.model | StrOutputParser()
+              } | self.prompt | self.model | StrOutputParser()
         }

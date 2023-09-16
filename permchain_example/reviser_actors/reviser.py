@@ -20,6 +20,5 @@ class ReviserActor:
             "answer": {
                 "draft": lambda x: x["draft"],
                 "notes": lambda x: x["notes"],
-              }
-          | self.prompt | self.model | StrOutputParser()
+            } | self.prompt | self.model | StrOutputParser()
         }
