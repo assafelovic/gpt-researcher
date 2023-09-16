@@ -12,8 +12,8 @@ from permchain.topic import Topic
         - Searching for relevant information across multiple sources
         - Extracting relevant information
         - Writing a well structured report
+        - Validating the report
         - Revising the report
-        - Editing the report
         - Repeat until the report is satisfactory
 '''
 class ResearchTeam:
@@ -26,21 +26,21 @@ class ResearchTeam:
         # create topics
         editor_inbox = Topic("editor_inbox")
         reviser_inbox = Topic("reviser_inbox")
+
         research_chain = (
-                # Listed in inputs
-                Topic.IN.subscribe()
-                | {"draft": lambda x: self.research_actor_instance.run(x["question"])}
-                # The draft always goes to the critique inbox
-                | editor_inbox.publish()
+            # Listed in inputs
+            Topic.IN.subscribe()
+            | {"draft": lambda x: self.research_actor_instance.run(x["question"])}
+            # The draft always goes to the editor inbox
+            | editor_inbox.publish()
         )
 
         editor_chain = (
-                # Listen for events in the editor_inbox
-                editor_inbox.subscribe()
-                | self.editor_actor_instance.runnable
-                # Depending on the output, different things should happen
-                | OpenAIFunctionsRouter(
-            {
+            # Listen for events in the editor_inbox
+            editor_inbox.subscribe()
+            | self.editor_actor_instance.runnable
+            # Depending on the output, different things should happen
+            | OpenAIFunctionsRouter({
                 # If revise is chosen, we send a push to the critique_inbox
                 "revise": (
                         {
@@ -52,16 +52,15 @@ class ResearchTeam:
                 ),
                 # If accepted, then we return
                 "accept": editor_inbox.current() | Topic.OUT.publish(),
-            },
-        )
+            })
         )
 
         reviser_chain = (
             # Listen for events in the reviser's inbox
-                reviser_inbox.subscribe()
-                | {"draft": self.revise_actor_instance.runnable}
-                # Publish to the critique inbox
-                | editor_inbox.publish()
+            reviser_inbox.subscribe()
+            | self.revise_actor_instance.runnable
+            # Publish to the editor inbox
+            | editor_inbox.publish()
         )
 
         web_researcher = PubSub(
