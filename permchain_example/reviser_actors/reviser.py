@@ -17,7 +17,7 @@ class ReviserActor:
     @property
     def runnable(self):
         return {
-            "answer": {
+            "draft": {
                 "draft": lambda x: x["draft"],
                 "notes": lambda x: x["notes"],
             } | self.prompt | self.model | StrOutputParser()
