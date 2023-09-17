@@ -1,19 +1,19 @@
-from processing.text import split_text, summarize_text
+import json
+from processing.text import summarize_text
 from actions.web_scrape import scrape_text_with_selenium
 from actions.web_search import web_search
 
-from langchain.chat_models import ChatOpenAI, ChatAnthropic
-from langchain.prompts import SystemMessagePromptTemplate, ChatPromptTemplate
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnableMap
-import json
+from langchain.schema.runnable import RunnableMap, RunnableLambda
 from langchain.schema.messages import SystemMessage
-from agent.prompts import auto_agent_instructions
+from agent.prompts import auto_agent_instructions, generate_search_queries_prompt
+from config import Config
 
-search_message = (
-    'Write 3 google search queries to search online that form an objective opinion from the following: "{question}"'\
-    'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"]'
-)
+CFG = Config()
+
+search_message = (generate_search_queries_prompt("{question}"))
 SEARCH_PROMPT = ChatPromptTemplate.from_messages([
     ("system", "{agent_prompt}"),
     ("user", search_message)
@@ -32,7 +32,7 @@ scrape_and_summarize = {
 } | RunnableMap({
         "summary": lambda x: summarize_text(text=x["text"], question=x["question"], url=x["url"]),
         "url": lambda x: x['url']
-})  | (lambda x: f"Source Url: {x['url']}\nSummary: {x['summary']}")
+}) | (lambda x: f"Source Url: {x['url']}\nSummary: {x['summary']}")
 
 seen_urls = set()
 multi_search = (
@@ -43,8 +43,8 @@ multi_search = (
    ]
 ) | scrape_and_summarize.map() | (lambda x: "\n".join(x))
 
-search_query = SEARCH_PROMPT | ChatOpenAI() |  StrOutputParser() | json.loads
-choose_agent = CHOOSE_AGENT_PROMPT | ChatOpenAI() | StrOutputParser() | json.loads
+search_query = SEARCH_PROMPT | ChatOpenAI(model=CFG.smart_llm_model) | StrOutputParser() | json.loads
+choose_agent = CHOOSE_AGENT_PROMPT | ChatOpenAI(model=CFG.smart_llm_model) | StrOutputParser() | json.loads
 
 get_search_queries = {
     "question": lambda x: x,
@@ -57,9 +57,9 @@ class GPTResearcherActor:
     @property
     def runnable(self):
         return (
-                get_search_queries
-                | (lambda x: [{"question": q} for q in x])
-                | multi_search.map()
-                | (lambda x: "\n\n".join(x))
+            get_search_queries
+            | (lambda x: [{"question": q} for q in x])
+            | multi_search.map()
+            | (lambda x: "\n\n".join(x))
         )
 
