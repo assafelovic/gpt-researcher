@@ -143,8 +143,8 @@ def write_to_file(filename: str, text: str) -> None:
     with open(filename, "w") as file:
         file.write(text)
 
-async def write_md_to_pdf(task: str, directory_name: str, text: str) -> None:
-    file_path = f"./outputs/{directory_name}/{task}"
+async def write_md_to_pdf(task: str, path: str, text: str) -> None:
+    file_path = f"{path}/{task}"
     write_to_file(f"{file_path}.md", text)
     md_to_pdf(f"{file_path}.md", f"{file_path}.pdf")
     print(f"{task} written to {file_path}.pdf")
