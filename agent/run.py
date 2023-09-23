@@ -5,7 +5,8 @@ from typing import List, Dict
 from fastapi import WebSocket
 from config import check_openai_api_key
 from agent.research_agent import ResearchAgent
-
+from config import Config
+CFG = Config()
 
 class WebSocketManager:
     def __init__(self):
@@ -52,17 +53,20 @@ async def run_agent(task, report_type, agent, agent_role_prompt, websocket, rabb
     report, path = await assistant.write_report(report_type, websocket)
 
     report_logs = {"type": "path", "output": path}
-    rabbit.publish_to_rabbit(report_logs)
+    if CFG.database_url is not None:
+        rabbit.publish_to_rabbit(report_logs)
     await websocket.send_json(report_logs)
 
     end_time = datetime.datetime.now()
 
     end_time_logs = {"type": "logs", "output": f"\nEnd time: {end_time}\n"}
-    rabbit.publish_to_rabbit(end_time_logs)
+    if CFG.database_url is not None:
+        rabbit.publish_to_rabbit(end_time_logs)
     await websocket.send_json(end_time_logs)
 
     total_run_time_logs = {"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"}
-    rabbit.publish_to_rabbit(total_run_time_logs)
+    if CFG.database_url is not None:
+        rabbit.publish_to_rabbit(total_run_time_logs)
     await websocket.send_json(total_run_time_logs)
 
     return report, path

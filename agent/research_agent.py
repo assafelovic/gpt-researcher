@@ -49,7 +49,8 @@ class ResearchAgent:
         messages = [create_message(text, topic)]
 
         summary_text_logs = {"type": "logs", "output": f"📝 Summarizing text for query: {text}"}
-        self.rabbit.publish_to_rabbit(summary_text_logs)
+        if CFG.database_url is not None:
+            self.rabbit.publish_to_rabbit(summary_text_logs)
         await self.websocket.send_json(summary_text_logs)
 
         return create_chat_completion(
@@ -67,7 +68,8 @@ class ResearchAgent:
         for url in url_set_input:
             if url not in self.visited_urls:
                 adding_source_url_logs = {"type": "logs", "output": f"✅ Adding source url to research: {url}\n"}
-                self.rabbit.publish_to_rabbit(adding_source_url_logs)
+                if CFG.database_url is not None:
+                    self.rabbit.publish_to_rabbit(adding_source_url_logs)
                 await self.websocket.send_json(adding_source_url_logs)
                 self.visited_urls.add(url)
                 new_urls.append(url)
@@ -100,8 +102,8 @@ class ResearchAgent:
         print(result)
 
         research_queries_logs = {"type": "logs", "output": f"🧠 I will conduct my research based on the following queries: {result}..."}
-
-        self.rabbit.publish_to_rabbit(research_queries_logs)
+        if CFG.database_url is not None:
+            self.rabbit.publish_to_rabbit(research_queries_logs)
         await self.websocket.send_json(research_queries_logs)
         return json.loads(result)
 
@@ -114,7 +116,8 @@ class ResearchAgent:
         new_search_urls = self.get_new_urls([url.get("href") for url in search_results])
         
         sites_to_browse_logs = {"type": "logs", "output": f"🌐 Browsing the following sites for relevant information: {new_search_urls}..."}
-        self.rabbit.publish_to_rabbit(sites_to_browse_logs)
+        if CFG.database_url is not None:
+            self.rabbit.publish_to_rabbit(sites_to_browse_logs)
         await self.websocket.send_json(sites_to_browse_logs)
 
         # Create a list to hold the coroutine objects
@@ -132,7 +135,8 @@ class ResearchAgent:
         """
 
         query_to_research_logs = {"type": "logs", "output": f"🔎 Running research for '{query}'..."}
-        self.rabbit.publish_to_rabbit(query_to_research_logs)
+        if CFG.database_url is not None:
+            self.rabbit.publish_to_rabbit(query_to_research_logs)
         await self.websocket.send_json(query_to_research_logs)
 
         responses = await self.async_search(query)
@@ -158,7 +162,8 @@ class ResearchAgent:
                 self.research_summary += f"{research_result}\n\n"
 
         research_summary_logs = {"type": "logs", "output": f"Total research words: {len(self.research_summary.split(' '))}"}
-        self.rabbit.publish_to_rabbit(research_summary_logs)
+        if CFG.database_url is not None:
+            self.rabbit.publish_to_rabbit(research_summary_logs)
         await self.websocket.send_json(research_summary_logs)
 
         return self.research_summary
@@ -172,7 +177,8 @@ class ResearchAgent:
         result = self.call_agent(prompts.generate_concepts_prompt(self.question, self.research_summary))
         
         concepts_to_research_logs = {"type": "logs", "output": f"I will research based on the following concepts: {result}\n"}
-        self.rabbit.publish_to_rabbit(concepts_to_research_logs)
+        if CFG.database_url is not None:
+            self.rabbit.publish_to_rabbit(concepts_to_research_logs)
         await self.websocket.send_json(concepts_to_research_logs)
         return json.loads(result)
 
@@ -184,8 +190,8 @@ class ResearchAgent:
         report_type_func = prompts.get_report_by_type(report_type)
         
         writing_report_logs = {"type": "logs", "output": f"✍️ Writing {report_type} for research task: {self.question}..."}
-
-        self.rabbit.publish_to_rabbit(writing_report_logs)
+        if CFG.database_url is not None:
+            self.rabbit.publish_to_rabbit(writing_report_logs)
         await websocket.send_json(writing_report_logs)
         answer = await self.call_agent(report_type_func(self.question, self.research_summary), stream=True,
                                        websocket=websocket)

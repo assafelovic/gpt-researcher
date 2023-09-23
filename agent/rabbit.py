@@ -3,7 +3,7 @@ import pika
 import uuid
 import json
 
-rabbitConnection = pika.BlockingConnection(pika.ConnectionParameters(blocked_connection_timeout=3600,heartbeat=3600,host='rabbit'))
+rabbitConnection = None
 
 class RabbitTaskManager:
     def __init__(self, task, agent, agent_role_prompt):

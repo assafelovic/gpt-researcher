@@ -93,7 +93,8 @@ async def stream_response(model, messages, temperature, max_tokens, websocket, r
             response += content
             paragraph += content
             if "\n" in paragraph:
-                rabbit.publish_to_rabbit({"type": "finalReport", "paragraph": paragraph})
+                if CFG.database_url is not None:
+                    rabbit.publish_to_rabbit({"type": "finalReport", "paragraph": paragraph})
                 await websocket.send_json({"type": "report", "output": paragraph})                
                 paragraph = ""
     print(f"streaming response complete")
