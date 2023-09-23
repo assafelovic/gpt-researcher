@@ -7,37 +7,37 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - 8000:8000
-    depends_on:
-      rabbit:
-        condition: service_healthy
+  #   depends_on:
+  #     rabbit:
+  #       condition: service_healthy
 
-  rabbit:
-    build: ./extensions/rabbitmq/.
-    ports: 
-        - "15672:15672"
-        - "5672:5672"
-    container_name: rabbit
-    healthcheck:
-        test: ["CMD", "curl", "-f", "http://localhost:15672"]
-        interval: 30s
-        timeout: 10s
-        retries: 5
-    restart: always
+  # rabbit:
+  #   build: ./extensions/rabbitmq/.
+  #   ports: 
+  #       - "15672:15672"
+  #       - "5672:5672"
+  #   container_name: rabbit
+  #   healthcheck:
+  #       test: ["CMD", "curl", "-f", "http://localhost:15672"]
+  #       interval: 30s
+  #       timeout: 10s
+  #       retries: 5
+  #   restart: always
 
-  history:
-    image: history
-    build: 
-      context: ./extensions/history
-      dockerfile: Dockerfile-dev
-    container_name: history
-    volumes:
-      - /tmp/history/npm-cache:/root/.npm:z
-      - ./extensions/history/src:/usr/src/app/src:z
-    ports:
-     - "4000:4000"
-    environment:
-      RABBIT: "amqp://guest:guest@rabbit:5672"
-      DATABASE_URL: ${DATABASE_URL}
-    depends_on:
-      - rabbit
-    restart: always
+  # history:
+  #   image: history
+  #   build: 
+  #     context: ./extensions/history
+  #     dockerfile: Dockerfile-dev
+  #   container_name: history
+  #   volumes:
+  #     - /tmp/history/npm-cache:/root/.npm:z
+  #     - ./extensions/history/src:/usr/src/app/src:z
+  #   ports:
+  #    - "4000:4000"
+  #   environment:
+  #     RABBIT: "amqp://guest:guest@rabbit:5672"
+  #     DATABASE_URL: ${DATABASE_URL}
+  #   depends_on:
+  #     - rabbit
+  #   restart: always
