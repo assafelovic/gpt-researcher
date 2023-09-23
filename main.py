@@ -7,7 +7,9 @@ import os
 
 from agent.llm_utils import choose_agent
 from agent.run import WebSocketManager
-
+from agent.rabbit import RabbitTaskManager
+from config import Config
+CFG = Config()
 
 class ResearchRequest(BaseModel):
     task: str
@@ -55,9 +57,17 @@ async def websocket_endpoint(websocket: WebSocket):
                 else:
                     agent_role_prompt = None
 
-                await websocket.send_json({"type": "logs", "output": f"Initiated an Agent: {agent}"})
                 if task and report_type and agent:
-                    await manager.start_streaming(task, report_type, agent, agent_role_prompt, websocket)
+                    agent_choice_message = {"type": "logs", "output": f"Initiated an Agent: {agent}"}
+                    print(f"CFG.database_url: {CFG.database_url}")
+                    rabbit=None
+                    if CFG.database_url is not None:
+                        rabbit = RabbitTaskManager(task, agent, agent_role_prompt)
+                        await rabbit.create_channel()
+                        rabbit.publish_to_rabbit(json_data)
+                        rabbit.publish_to_rabbit(agent_choice_message)
+                    await websocket.send_json(agent_choice_message)
+                    await manager.start_streaming(task, report_type, agent, agent_role_prompt, websocket, rabbit)
                 else:
                     print("Error: not enough parameters provided.")
 
