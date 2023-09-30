@@ -18,3 +18,13 @@ The research agent (gpt-researcher) is in charge of finding and summarizing rele
 - Send the report to the editor agent for validation
 - Send the report to the reviser agent for revision
 - Repeat until the report is satisfactory
+
+## How to run
+1. Install required packages:
+    ```bash
+    pip install -r requirements.txt
+    ```
+2. Run the application:
+    ```bash
+    python test.py
+    ```
