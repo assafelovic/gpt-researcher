@@ -28,3 +28,6 @@ The research agent (gpt-researcher) is in charge of finding and summarizing rele
     ```bash
     python test.py
     ```
+   
+## Usage
+To change the research topic, edit the `query` variable in `test.py` to the desired topic.
