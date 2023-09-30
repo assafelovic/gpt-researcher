@@ -22,10 +22,11 @@ if __name__ == '__main__':
     stocks = ["NVDA"]
 
     for stock in stocks[:1]:
+        query = f"is the stock {stock} a good buy?"
         researcher = Researcher(GPTResearcherActor(), WriterActor())
         research_team = ResearchTeam(researcher, EditorActor(), ReviserActor())
 
-        draft = research_team.run(f"is the stock {stock} a good buy?")
+        draft = research_team.run(query)
         with open(f"{output_path}/{stock}.md", "w") as f:
             f.write(draft)
         md_to_pdf(f"{output_path}/{stock}.md", f"{output_path}/{stock}.pdf")
