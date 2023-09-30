@@ -19,7 +19,7 @@ if __name__ == '__main__':
         # If the directory does not exist, create it
         os.makedirs(output_path)
 
-    stocks = ["WIX"]
+    stocks = ["NVDA"]
 
     for stock in stocks[:1]:
         researcher = Researcher(GPTResearcherActor(), WriterActor())
