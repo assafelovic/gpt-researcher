@@ -3,7 +3,7 @@ from processing.text import summarize_text
 from actions.web_scrape import scrape_text_with_selenium
 from actions.web_search import web_search
 
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatLiteLLM
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnableMap, RunnableLambda
@@ -43,8 +43,8 @@ multi_search = (
    ]
 ) | scrape_and_summarize.map() | (lambda x: "\n".join(x))
 
-search_query = SEARCH_PROMPT | ChatOpenAI(model=CFG.smart_llm_model) | StrOutputParser() | json.loads
-choose_agent = CHOOSE_AGENT_PROMPT | ChatOpenAI(model=CFG.smart_llm_model) | StrOutputParser() | json.loads
+search_query = SEARCH_PROMPT | ChatLiteLLM(model=CFG.smart_llm_model) | StrOutputParser() | json.loads
+choose_agent = CHOOSE_AGENT_PROMPT | ChatLiteLLM(model=CFG.smart_llm_model) | StrOutputParser() | json.loads
 
 get_search_queries = {
     "question": lambda x: x,

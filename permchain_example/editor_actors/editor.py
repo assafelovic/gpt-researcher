@@ -1,4 +1,4 @@
-from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatLiteLLM
 from langchain.prompts import SystemMessagePromptTemplate
 from config import Config
 
@@ -18,7 +18,7 @@ If not all of the above criteria are met, you should send appropriate revision n
 
 class EditorActor:
     def __init__(self):
-        self.model = ChatOpenAI(model=CFG.smart_llm_model)
+        self.model = ChatLiteLLM(model=CFG.smart_llm_model)
         self.prompt = SystemMessagePromptTemplate.from_template(EDIT_TEMPLATE) + "Draft:\n\n{draft}"
         self.functions = [
             {
