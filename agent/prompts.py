@@ -1,3 +1,4 @@
+from datetime import datetime
 def generate_agent_role_prompt(agent):
     """ Generates the agent role prompt.
     Args: agent (str): The type of the agent.
@@ -25,9 +26,10 @@ def generate_report_prompt(question, research_summary):
     return f'"""{research_summary}""" Using the above information, answer the following'\
            f' question or topic: "{question}" in a detailed report --'\
            " The report should focus on the answer to the question, should be well structured, informative," \
-           " in depth, with facts and numbers if available, a minimum of 1,200 words and with markdown syntax and apa format. "\
-            "You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions." \
-           "Write all used source urls at the end of the report in apa format"
+           " in depth, with facts and numbers if available, a minimum of 1,200 words and with markdown syntax and apa format.\n "\
+            "You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.\n" \
+           f"Write all used source urls at the end of the report in apa format.\n " \
+           f"Assume that the current date is {datetime.now().strftime('%B %d, %Y')}"
 
 def generate_search_queries_prompt(question):
     """ Generates the search queries prompt for the given question.
@@ -35,8 +37,8 @@ def generate_search_queries_prompt(question):
     Returns: str: The search queries prompt for the given question
     """
 
-    return f'Write 4 google search queries to search online that form an objective opinion from the following: "{question}"'\
-           f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3", "query 4"]'
+    return f'Write 3 google search queries to search online that form an objective opinion from the following: "{question}"'\
+           f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"]'
 
 
 def generate_resource_report_prompt(question, research_summary):

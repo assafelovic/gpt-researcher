@@ -64,11 +64,12 @@ def summarize_text(
     chunks = list(split_text(text))
     scroll_ratio = 1 / len(chunks)
 
+    print(f"Summarizing url: {url} with total chunks: {len(chunks)}")
     for i, chunk in enumerate(chunks):
         if driver:
             scroll_to_percentage(driver, scroll_ratio * i)
 
-        memory_to_add = f"Source: {url}\n" f"Raw content part#{i + 1}: {chunk}"
+        #memory_to_add = f"Source: {url}\n" f"Raw content part#{i + 1}: {chunk}"
 
         #MEMORY.add_documents([Document(page_content=memory_to_add)])
 
@@ -77,20 +78,25 @@ def summarize_text(
         summary = create_chat_completion(
             model=CFG.fast_llm_model,
             messages=messages,
+            max_tokens=CFG.summary_token_limit
         )
         summaries.append(summary)
-        memory_to_add = f"Source: {url}\n" f"Content summary part#{i + 1}: {summary}"
+        #memory_to_add = f"Source: {url}\n" f"Content summary part#{i + 1}: {summary}"
 
         #MEMORY.add_documents([Document(page_content=memory_to_add)])
-
 
     combined_summary = "\n".join(summaries)
     messages = [create_message(combined_summary, question)]
 
-    return create_chat_completion(
+    final_summary = create_chat_completion(
         model=CFG.fast_llm_model,
         messages=messages,
+        max_tokens=CFG.summary_token_limit
     )
+    print("Final summary length: ", len(combined_summary))
+    print(final_summary)
+
+    return final_summary
 
 
 def scroll_to_percentage(driver: WebDriver, ratio: float) -> None:
@@ -120,9 +126,9 @@ def create_message(chunk: str, question: str) -> Dict[str, str]:
     """
     return {
         "role": "user",
-        "content": f'"""{chunk}""" Using the above text, answer the following'
+        "content": f'"""{chunk}""" Using the above text, answer in short the following'
         f' question: "{question}" -- if the question cannot be answered using the text,'
-        " simply summarize the text in depth. "
+        " simply summarize the text. "
         "Include all factual information, numbers, stats etc if available.",
     }
 
@@ -136,8 +142,8 @@ def write_to_file(filename: str, text: str) -> None:
     with open(filename, "w") as file:
         file.write(text)
 
-async def write_md_to_pdf(task: str, directory_name: str, text: str) -> None:
-    file_path = f"./outputs/{directory_name}/{task}"
+async def write_md_to_pdf(task: str, path: str, text: str) -> None:
+    file_path = f"{path}/{task}"
     write_to_file(f"{file_path}.md", text)
     md_to_pdf(f"{file_path}.md", f"{file_path}.pdf")
     print(f"{task} written to {file_path}.pdf")
