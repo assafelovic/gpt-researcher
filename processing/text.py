@@ -46,7 +46,6 @@ def split_text(text: str, max_length: int = 8192) -> Generator[str, None, None]:
 def summarize_text(
     url: str, text: str, question: str, driver: Optional[WebDriver] = None
 ) -> str:
-    print(question)
     """Summarize text using the OpenAI API
 
     Args:
