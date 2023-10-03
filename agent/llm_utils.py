@@ -98,7 +98,7 @@ async def stream_response(model, messages, temperature, max_tokens, websocket):
     return response
 
 
-def choose_agent(task: str) -> str:
+def choose_agent(task: str) -> dict:
     """Determines what agent should be used
     Args:
         task (str): The research question the user asked
