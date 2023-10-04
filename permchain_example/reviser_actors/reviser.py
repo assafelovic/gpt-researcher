@@ -1,4 +1,4 @@
-from langchain.chat_models import ChatOpenAI, ChatAnthropic
+from langchain.chat_models import ChatLiteLLM, ChatAnthropic
 from langchain.schema.output_parser import StrOutputParser
 from langchain.prompts import SystemMessagePromptTemplate
 from config import Config
@@ -7,7 +7,7 @@ CFG = Config()
 
 class ReviserActor:
     def __init__(self):
-        self.model = ChatOpenAI(model=CFG.smart_llm_model)
+        self.model = ChatLiteLLM(model=CFG.smart_llm_model)
         self.prompt = SystemMessagePromptTemplate.from_template(
             "You are an expert writer. "
             "You have been tasked by your editor with revising the following draft, which was written by a non-expert. "
