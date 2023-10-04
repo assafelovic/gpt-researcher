@@ -52,7 +52,7 @@ async def async_browse(url: str, question: str, websocket: WebSocket, rabbit) ->
     print(f"Scraping url {url} with question {question}")
 
     browsing_url_for_question_logs = {"type": "logs", "output": f"🔎 Browsing the url: {url} for relevant info about question: {question}..."}
-    if CFG.database_url is not None:
+    if CFG.save_in_db:
         rabbit.publish_to_rabbit(browsing_url_for_question_logs)
 
     await websocket.send_json(browsing_url_for_question_logs)
@@ -63,7 +63,7 @@ async def async_browse(url: str, question: str, websocket: WebSocket, rabbit) ->
         summary_text = await loop.run_in_executor(executor, summary.summarize_text, url, text, question, driver)
 
         information_gathered_logs = {"type": "logs", "output": f"📝 Information gathered from url {url}: {summary_text}"}
-        if CFG.database_url is not None:
+        if CFG.save_in_db:
             rabbit.publish_to_rabbit(information_gathered_logs)
         await websocket.send_json(information_gathered_logs)
 

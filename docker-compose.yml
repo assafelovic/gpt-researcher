@@ -7,9 +7,6 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - 8000:8000
-  #   depends_on:
-  #     rabbit:
-  #       condition: service_healthy
 
   # rabbit:
   #   build: ./extensions/rabbitmq/.

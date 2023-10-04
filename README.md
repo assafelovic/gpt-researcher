@@ -6,7 +6,7 @@
 
 **GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks.** 
 
-The agent can produce detailed, factual and unbiased research reports, with customization options for focusing on relevant resources, outlines, and lessons. Inspired by [AutoGPT](https://github.com/Significant-Gravitas/Auto-GPT) and the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) paper, GPT Researcher addresses issues of speed and determinism, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
+The agent can produce detailed, factual and unbiased research reports, with customization options for focusing on relevant resources, outlines, and lessons. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG (Retrieval Augmented Generation)](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses issues of speed, determinism and reliability, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
 
 **Our mission is to empower individuals and organizations with accurate, unbiased, and factual information by leveraging the power of AI.**
 
@@ -45,31 +45,8 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 - 🔍 Scrapes web sources with javascript support
 - 📂 Keeps track and context of visited and used web sources
 - 📄 Export research reports to PDF and more...
-- 💾 Saves logs & reports in MongoDB
 
-
-## Quickstart - Try it with Docker (recommended)
-
-> **Step 1** - Install Docker
-
-Follow instructions at https://docs.docker.com/engine/install/
-
-> **Step 2** - Create .env file with your OpenAI Key or simply export it
-
-```bash
-$ export OPENAI_API_KEY={Your API Key here}
-$ export DATABASE_URL="{Your Mongo Connection String here}"
-```
-
-> **Step 3** - Run the application
-
-```bash
-$ docker-compose up --build
-```
-
-> **Step 4** - Go to http://localhost:8000 on any browser and enjoy researching!
-
-## Running the Python Research Service outside of Docker
+## Quickstart
 > **Step 0** - Install Python 3.11 or later. [See here](https://www.tutorialsteacher.com/python/install-python) for a step-by-step guide.
 
 <br />
@@ -107,14 +84,47 @@ $ uvicorn main:app --reload
 ```
 <br />
 
-Note: You'll still need to run the NodeJS History Service & Rabbit Broker Service in order for the app to run successfully.
-In addition, if you're running the Python service outside of Docker Compose you will need to change the host='rabbit' line in agent/rabbit.py to host='localhost'.
-
-To run any or all services via Docker Compose (recommended), please follow the instructions above.
-
-> **Step 5** - Assuming that the GPT-Researcher, History & Rabbit Broker Services are running, go to http://localhost:8000 on any browser and enjoy researching!
+> **Step 5** - Go to http://localhost:8000 on any browser and enjoy researching!
 
 - **update:** if you are having issues with weasyprint, please visit their website and follow the installation instructions: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
+
+## Try it with Docker
+
+> **Step 1** - Install Docker
+
+Follow instructions at https://docs.docker.com/engine/install/
+
+> **Step 2** - Create .env file with your OpenAI Key or simply export it
+
+```bash
+$ export OPENAI_API_KEY={Your API Key here}
+```
+
+> **Step 3** - Run the application
+
+```bash
+$ docker-compose up
+```
+
+> **Step 4** - Go to http://localhost:8000 on any browser and enjoy researching!
+
+- **update:** if you are having issues with weasyprint, please visit their website and follow the installation instructions: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
+
+
+## 🗃️ Enable Saving In MongoDB
+
+To save the logs & reports in MongoDB, follow these steps:
+
+> **Step 1** - Set the following environment variables:
+
+```bash
+$ export OPENAI_API_KEY={Your API Key here}
+$ export DATABASE_URL="{Your MongoDB URI here}"
+$ export SAVE_IN_DB=True
+```
+
+> **Step 2** - Within your docker-compose.yml file, uncomment the lines related to the rabbit & history containers.
+
 
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
@@ -137,4 +147,3 @@ Our view on unbiased research claims:
 3. In research, people also tend towards biases as most have already opinions on the topics they research about. This tool scrapes many opinions and will evenly explain diverse views that a biased person would never have read.
 
 **Please note that the use of the GPT-4 language model can be expensive due to its token usage.** By utilizing this project, you acknowledge that you are responsible for monitoring and managing your own token usage and the associated costs. It is highly recommended to check your OpenAI API usage regularly and set up any necessary limits or alerts to prevent unexpected charges.
-

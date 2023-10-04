@@ -61,7 +61,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     agent_choice_message = {"type": "logs", "output": f"Initiated an Agent: {agent}"}
                     print(f"CFG.database_url: {CFG.database_url}")
                     rabbit=None
-                    if CFG.database_url is not None:
+                    if CFG.save_in_db:
                         rabbit = RabbitTaskManager(task, agent, agent_role_prompt)
                         await rabbit.create_channel()
                         rabbit.publish_to_rabbit(json_data)

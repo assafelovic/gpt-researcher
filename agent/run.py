@@ -53,19 +53,19 @@ async def run_agent(task, report_type, agent, agent_role_prompt, websocket, rabb
     report, path = await assistant.write_report(report_type, websocket)
 
     report_logs = {"type": "path", "output": path}
-    if CFG.database_url is not None:
+    if CFG.save_in_db:
         rabbit.publish_to_rabbit(report_logs)
     await websocket.send_json(report_logs)
 
     end_time = datetime.datetime.now()
 
     end_time_logs = {"type": "logs", "output": f"\nEnd time: {end_time}\n"}
-    if CFG.database_url is not None:
+    if CFG.save_in_db:
         rabbit.publish_to_rabbit(end_time_logs)
     await websocket.send_json(end_time_logs)
 
     total_run_time_logs = {"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"}
-    if CFG.database_url is not None:
+    if CFG.save_in_db:
         rabbit.publish_to_rabbit(total_run_time_logs)
     await websocket.send_json(total_run_time_logs)
 
