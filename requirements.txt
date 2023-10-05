@@ -16,6 +16,6 @@ pydantic
 fastapi
 python-multipart
 markdown
-langchain==0.0.275
+langchain==0.0.308
 tavily-python
-permchain
+permchain==0.0.3
