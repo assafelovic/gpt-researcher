@@ -1,7 +1,9 @@
 #Ignore env containing secrets
 .env
+.envrc
 #Ignore Virtual Env
 env/
+.venv/
 #Ignore generated outputs
 outputs/
 #Ignore pycache

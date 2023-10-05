@@ -64,10 +64,12 @@ class ResearchTeam:
         )
 
         web_researcher = PubSub(
-            processes=(research_chain, editor_chain, reviser_chain),
+            research_chain,
+            editor_chain,
+            reviser_chain,
             connection=InMemoryPubSubConnection(),
         )
 
         res = web_researcher.invoke({"question": query})
         print(res)
-        return res[0]["draft"]
+        return res["draft"]

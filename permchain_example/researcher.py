@@ -27,9 +27,10 @@ class Researcher:
         )
 
         researcher = PubSub(
-            processes=(search_actor, write_actor),
+            search_actor,
+            write_actor,
             connection=InMemoryPubSubConnection(),
         )
 
         res = researcher.invoke(query)
-        return res[0]['answer']
+        return res["answer"]
