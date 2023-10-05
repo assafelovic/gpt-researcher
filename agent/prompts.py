@@ -38,7 +38,8 @@ def generate_search_queries_prompt(question):
     """
 
     return f'Write 3 google search queries to search online that form an objective opinion from the following: "{question}"'\
-           f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"]'
+           f'Use the current date if needed: {datetime.now().strftime("%B %d, %Y")}.\n' \
+           f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"].'
 
 
 def generate_resource_report_prompt(question, research_summary):
