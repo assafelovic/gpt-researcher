@@ -21,6 +21,7 @@ class Config(metaclass=Singleton):
         self.allow_downloads = False
 
         self.selenium_web_browser = os.getenv("USE_WEB_BROWSER", "chrome")
+        self.search_api = os.getenv("SEARCH_API", "tavily")
         self.llm_provider = os.getenv("LLM_PROVIDER", "ChatOpenAI")
         self.fast_llm_model = os.getenv("FAST_LLM_MODEL", "gpt-3.5-turbo-16k")
         self.smart_llm_model = os.getenv("SMART_LLM_MODEL", "gpt-4")
