@@ -8,6 +8,7 @@ from config import Config
 ddgs = DDGS()
 CFG = Config()
 
+
 def web_search(query: str, num_results: int = 4) -> str:
     """Useful for general internet search queries."""
     print("Searching with query {0}...".format(query))
