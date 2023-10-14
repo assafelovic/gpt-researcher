@@ -72,13 +72,31 @@ class Config(metaclass=Singleton):
         self.debug_mode = value
 
 
-def check_openai_api_key() -> None:
-    """Check if the OpenAI API key is set in config.py or as an environment variable."""
+def check_config_setup() -> None:
     cfg = Config()
+    check_openai_api_key(cfg)
+    check_tavily_api_key(cfg)
+
+
+def check_openai_api_key(cfg) -> None:
+    """Check if the OpenAI API key is set in config.py or as an environment variable."""
     if not cfg.openai_api_key:
         print(
             Fore.RED
             + "Please set your OpenAI API key in .env or as an environment variable."
         )
         print("You can get your key from https://platform.openai.com/account/api-keys")
+        exit(1)
+
+
+def check_tavily_api_key(cfg) -> None:
+    """Check if the Tavily Search API key is set in config.py or as an environment variable."""
+    tavily_api_key = os.getenv("TAVILY_API_KEY")
+    if not tavily_api_key and cfg.search_api == "tavily":
+        print(
+            Fore.RED
+            + "Please set your Tavily Search API key in .env or as an environment variable 'TAVILY_API_KEY'.\n"
+            + "Alternativly, you can change the search_api value in config.py to 'duckduckgo'"
+        )
+        print("You can get your key from https://app.tavily.com")
         exit(1)
