@@ -96,7 +96,7 @@ def check_tavily_api_key(cfg) -> None:
         print(
             Fore.RED
             + "Please set your Tavily Search API key in .env or as an environment variable 'TAVILY_API_KEY'.\n"
-            + "Alternativly, you can change the search_api value in config.py to 'duckduckgo'"
+            + "Alternatively, you can change the 'search_api' value in config.py to 'duckduckgo'"
         )
         print("You can get your key from https://app.tavily.com")
         exit(1)
