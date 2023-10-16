@@ -72,6 +72,8 @@ $ pip install -r requirements.txt
 
 ```bash
 $ export OPENAI_API_KEY={Your OpenAI API Key here}
+```
+```bash
 $ export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
