@@ -71,7 +71,8 @@ $ pip install -r requirements.txt
 > **Step 3** - Create .env file with your OpenAI Key and Tavily API key or simply export it
 
 ```bash
-$ export OPENAI_API_KEY={Your API Key here}
+$ export OPENAI_API_KEY={Your OpenAI API Key here}
+$ export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 - **By default, we use [OpenAI GPT](https://platform.openai.com/docs/guides/gpt), but you can use any other LLM model (including open sources)** supported by [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai), simply change the llm model and provider in config/config.py. Follow [this guide](https://python.langchain.com/docs/integrations/llms/) to learn how to integrate LLMs with Langchain. 
@@ -101,6 +102,7 @@ Follow instructions at https://docs.docker.com/engine/install/
 
 ```bash
 $ export OPENAI_API_KEY={Your API Key here}
+$ export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 > **Step 3** - Run the application
