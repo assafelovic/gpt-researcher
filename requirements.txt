@@ -17,5 +17,5 @@ fastapi
 python-multipart
 markdown
 langchain==0.0.308
-tavily-python
+tavily-python==0.1.9
 permchain==0.0.3
