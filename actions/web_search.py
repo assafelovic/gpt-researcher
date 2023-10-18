@@ -5,7 +5,6 @@ from tavily import Client
 import os
 from config import Config
 
-ddgs = DDGS()
 CFG = Config()
 
 
@@ -23,6 +22,7 @@ def web_search(query: str, num_results: int = 4) -> str:
         # Normalizing results to match the format of the other search APIs
         search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results]
     elif CFG.search_api == "duckduckgo":
+        ddgs = DDGS()
         search_response = ddgs.text(query)
 
     total_added = 0
