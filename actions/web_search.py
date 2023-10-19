@@ -39,7 +39,7 @@ def web_search(query: str, num_results: int = 4) -> str:
 
     return json.dumps(search_results, ensure_ascii=False, indent=4)
 
-def serp_web_search(serp_api_key:str, query: str, num_results: int = 4) -> str:
+def serp_web_search(serp_api_key:str, query: str, num_results: int = 10) -> str:
     """Useful for general internet search queries using the Serp API."""
     url = "https://google.serper.dev/search"
     payload = json.dumps({"q": query, "num": num_results})
@@ -63,6 +63,9 @@ def serp_web_search(serp_api_key:str, query: str, num_results: int = 4) -> str:
 
     # Normalizing results to match the format of the other search APIs
     for result in results:
+        # skip youtube results
+        if "youtube.com" in result["link"]:
+            continue
         search_result = {
             "title": result["title"],
             "href": result["link"],
@@ -73,7 +76,7 @@ def serp_web_search(serp_api_key:str, query: str, num_results: int = 4) -> str:
     return json.dumps(search_results, ensure_ascii=False, indent=4)
 
 
-def google_web_search(google_api_key:str, google_cx:str, query: str, num_result: int = 4) -> str:
+def google_web_search(google_api_key:str, google_cx:str, query: str, num_result: int = 10) -> str:
     """Useful for general internet search queries using the Google API."""
 
     url = f"https://www.googleapis.com/customsearch/v1?key={google_api_key}&cx={google_cx}&q={query}&start=1"
@@ -93,6 +96,9 @@ def google_web_search(google_api_key:str, google_cx:str, query: str, num_result:
 
     # Normalizing results to match the format of the other search APIs
     for result in results:
+        # skip youtube results
+        if "youtube.com" in result["link"]:
+            continue
         search_result = {
             "title": result["title"],
             "href": result["link"],
