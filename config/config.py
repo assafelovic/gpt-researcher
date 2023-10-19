@@ -76,6 +76,8 @@ def check_config_setup() -> None:
     cfg = Config()
     check_openai_api_key(cfg)
     check_tavily_api_key(cfg)
+    check_google_api_key(cfg)
+    check_serp_api_key(cfg)
 
 
 def check_openai_api_key(cfg) -> None:
@@ -88,7 +90,6 @@ def check_openai_api_key(cfg) -> None:
         print("You can get your key from https://platform.openai.com/account/api-keys")
         exit(1)
 
-
 def check_tavily_api_key(cfg) -> None:
     """Check if the Tavily Search API key is set in config.py or as an environment variable."""
     tavily_api_key = os.getenv("TAVILY_API_KEY")
@@ -99,4 +100,29 @@ def check_tavily_api_key(cfg) -> None:
             + "Alternatively, you can change the 'search_api' value in config.py to 'duckduckgo'"
         )
         print("You can get your key from https://app.tavily.com")
+        exit(1)
+
+def check_google_api_key(cfg) -> None:
+    """Check if the Google API key is set in config.py or as an environment variable."""
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+    google_cx = os.getenv("GOOGLE_CX")
+    if not google_api_key and not google_cx and cfg.search_api == "google":
+        print(
+            Fore.RED
+            + "Please set your Google API key in .env or as an environment variable 'GOOGLE_API_KEY'.\n"
+            + "Alternatively, you can change the 'search_api' value in config.py to 'duckduckgo'"
+        )
+        print("You can get your key from https://developers.google.com/custom-search/v1/overview")
+        exit(1)
+
+def check_serp_api_key(cfg) -> None:
+    """Check if the SERP API key is set in config.py or as an environment variable."""
+    serp_api_key = os.getenv("SERP_API_KEY")
+    if not serp_api_key and cfg.search_api == "serp":
+        print(
+            Fore.RED
+            + "Please set your SERP API key in .env or as an environment variable 'SERP_API_KEY'.\n"
+            + "Alternatively, you can change the 'search_api' value in config.py to 'duckduckgo'"
+        )
+        print("You can get your key from https://serper.dev/")
         exit(1)
