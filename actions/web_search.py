@@ -22,9 +22,9 @@ def web_search(query: str, num_results: int = 4) -> str:
         results = tavily_search.search(query, search_depth="basic").get("results", [])
         # Normalizing results to match the format of the other search APIs
         search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results]
-    elif CFG.search_api == "serp":
+    elif CFG.search_api == "googleSerp":
         return serp_web_search(os.environ["SERP_API_KEY"], query, num_results)
-    elif CFG.search_api == "google":
+    elif CFG.search_api == "googleAPI":
         return google_web_search(os.environ["GOOGLE_API_KEY"], os.environ["GOOGLE_CX"], query, num_results)
     elif CFG.search_api == "duckduckgo":
         ddgs = DDGS()
