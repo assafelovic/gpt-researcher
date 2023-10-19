@@ -1,8 +1,9 @@
 from __future__ import annotations
+import os
 import json
+import requests
 from duckduckgo_search import DDGS
 from tavily import Client
-import os
 from config import Config
 
 CFG = Config()
@@ -21,6 +22,10 @@ def web_search(query: str, num_results: int = 4) -> str:
         results = tavily_search.search(query, search_depth="basic").get("results", [])
         # Normalizing results to match the format of the other search APIs
         search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results]
+    elif CFG.search_api == "serp":
+        return serp_web_search(os.environ["SERP_API_KEY"], query, num_results)
+    elif CFG.search_api == "google":
+        return google_web_search(os.environ["GOOGLE_API_KEY"], os.environ["GOOGLE_CX"], query, num_results)
     elif CFG.search_api == "duckduckgo":
         ddgs = DDGS()
         search_response = ddgs.text(query)
@@ -33,3 +38,68 @@ def web_search(query: str, num_results: int = 4) -> str:
             break
 
     return json.dumps(search_results, ensure_ascii=False, indent=4)
+
+def serp_web_search(serp_api_key:str, query: str, num_results: int = 4) -> str:
+    """Useful for general internet search queries using the Serp API."""
+    url = "https://google.serper.dev/search"
+    payload = json.dumps({"q": query, "num": num_results})
+    headers = {
+        "X-API-KEY": serp_api_key,
+        "Content-Type": "application/json",
+    }
+
+    resp = requests.request("POST", url, headers=headers, data=payload)
+    if resp is None:
+        return
+    try:
+        search_results = json.loads(resp.text)
+    except Exception:
+        return
+    if search_results is None:
+        return
+
+    results = search_results["organic"]
+    search_results = []
+
+    # Normalizing results to match the format of the other search APIs
+    for result in results:
+        search_result = {
+            "title": result["title"],
+            "href": result["link"],
+            "body": result["snippet"],
+        }
+        search_results.append(search_result)
+    print("Searching with query {0}...".format(query))
+    return json.dumps(search_results, ensure_ascii=False, indent=4)
+
+
+def google_web_search(google_api_key:str, google_cx:str, query: str, num_result: int = 4) -> str:
+    """Useful for general internet search queries using the Google API."""
+
+    url = f"https://www.googleapis.com/customsearch/v1?key={google_api_key}&cx={google_cx}&q={query}&start=1"
+    resp = requests.get(url)
+
+    if resp is None:
+        return
+    try:
+        search_results = json.loads(resp.text)
+    except Exception:
+        return
+    if search_results is None:
+        return
+
+    results = search_results.get("items", [])
+    search_results = []
+
+    # Normalizing results to match the format of the other search APIs
+    for result in results:
+        search_result = {
+            "title": result["title"],
+            "href": result["link"],
+            "body": result["snippet"],
+        }
+        search_results.append(search_result)
+
+    print("Searching with query {0}...".format(query))
+
+    return json.dumps(search_results[:num_result], ensure_ascii=False, indent=4)
