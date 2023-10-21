@@ -19,6 +19,8 @@ from selenium.webdriver.safari.options import Options as SafariOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from fastapi import WebSocket
+from langchain.document_loaders import PyMuPDFLoader
+from langchain.retrievers import ArxivRetriever
 
 import processing.text as summary
 
@@ -49,21 +51,32 @@ async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
 
     print(f"Scraping url {url} with question {question}")
     await websocket.send_json(
-        {"type": "logs", "output": f"🔎 Browsing the {url} for relevant about: {question}..."})
+        {
+            "type": "logs",
+            "output": f"🔎 Browsing the {url} for relevant about: {question}...",
+        }
+    )
 
     try:
-        driver, text = await loop.run_in_executor(executor, scrape_text_with_selenium, url)
+        driver, text = await loop.run_in_executor(
+            executor, scrape_text_with_selenium, url
+        )
         await loop.run_in_executor(executor, add_header, driver)
-        summary_text = await loop.run_in_executor(executor, summary.summarize_text, url, text, question, driver)
+        summary_text = await loop.run_in_executor(
+            executor, summary.summarize_text, url, text, question, driver
+        )
 
         await websocket.send_json(
-            {"type": "logs", "output": f"📝 Information gathered from url {url}: {summary_text}"})
+            {
+                "type": "logs",
+                "output": f"📝 Information gathered from url {url}: {summary_text}",
+            }
+        )
 
         return f"Information gathered from url {url}: {summary_text}"
     except Exception as e:
         print(f"An error occurred while processing the url {url}: {e}")
         return f"Error processing the url {url}: {e}"
-
 
 
 def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
@@ -115,14 +128,12 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
 
     options = options_available[CFG.selenium_web_browser]()
     options.add_argument(f"user-agent={CFG.user_agent}")
-    options.add_argument('--headless')
+    options.add_argument("--headless")
     options.add_argument("--enable-javascript")
 
     if CFG.selenium_web_browser == "firefox":
         service = Service(executable_path=GeckoDriverManager().install())
-        driver = webdriver.Firefox(
-            service=service, options=options
-        )
+        driver = webdriver.Firefox(service=service, options=options)
     elif CFG.selenium_web_browser == "safari":
         # Requires a bit more setup on the users end
         # See https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari
@@ -132,9 +143,7 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--remote-debugging-port=9222")
         options.add_argument("--no-sandbox")
-        options.add_experimental_option(
-            "prefs", {"download_restrictions": 3}
-        )
+        options.add_experimental_option("prefs", {"download_restrictions": 3})
         driver = webdriver.Chrome(options=options)
 
     print(f"scraping url {url}...")
@@ -144,15 +153,23 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
         EC.presence_of_element_located((By.TAG_NAME, "body"))
     )
 
-    # Get the HTML content directly from the browser's DOM
-    page_source = driver.execute_script("return document.body.outerHTML;")
-    soup = BeautifulSoup(page_source, "html.parser")
+    # check if url is a pdf or arxiv link
+    if url.endswith(".pdf"):
+        text = scrape_pdf_with_pymupdf(url)
+    elif "arxiv" in url:
+        # parse the document number from the url
+        doc_num = url.split("/")[-1]
+        text = scrape_pdf_with_arxiv(doc_num)
+    else:
+        # Get the HTML content directly from the browser's DOM
+        page_source = driver.execute_script("return document.body.outerHTML;")
+        soup = BeautifulSoup(page_source, "html.parser")
 
-    for script in soup(["script", "style"]):
-        script.extract()
+        for script in soup(["script", "style"]):
+            script.extract()
 
-    # text = soup.get_text()
-    text = get_text(soup)
+        # text = soup.get_text()
+        text = get_text(soup)
 
     lines = (line.strip() for line in text.splitlines())
     chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
@@ -170,7 +187,7 @@ def get_text(soup):
         str: The text from the soup
     """
     text = ""
-    tags = ['h1', 'h2', 'h3', 'h4', 'h5', 'p']
+    tags = ["h1", "h2", "h3", "h4", "h5", "p"]
     for element in soup.find_all(tags):  # Find all the <p> elements
         text += element.text + "\n\n"
     return text
@@ -218,3 +235,32 @@ def add_header(driver: WebDriver) -> None:
         None
     """
     driver.execute_script(open(f"{FILE_DIR}/js/overlay.js", "r").read())
+
+
+def scrape_pdf_with_pymupdf(url) -> str:
+    """Scrape a pdf with pymupdf
+
+    Args:
+        url (str): The url of the pdf to scrape
+
+    Returns:
+        str: The text scraped from the pdf
+    """
+    loader = PyMuPDFLoader(url)
+    doc = loader.load()
+    return str(doc)
+
+
+def scrape_pdf_with_arxiv(query) -> str:
+    """Scrape a pdf with arxiv
+    default document length of 70000 about ~15 pages or None for no limit
+
+    Args:
+        query (str): The query to search for
+
+    Returns:
+        str: The text scraped from the pdf
+    """
+    retriever = ArxivRetriever(load_max_docs=2, doc_content_chars_max=None)
+    docs = retriever.get_relevant_documents(query=query)
+    return docs[0].page_content
