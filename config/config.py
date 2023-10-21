@@ -87,6 +87,9 @@ class APIKeyError(Exception):
         elif self.service_name == "Google":
             service_env = "Google_API_KEY and GOOGLE_CX"
             link = "https://developers.google.com/custom-search/v1/overview"
+        elif self.service_name == "Searx":
+            service_env = "SEARX_URL"
+            link = "https://searx.space/"
         elif self.service_name == "OpenAI":
             link = "https://platform.openai.com/account/api-keys"
             return (
@@ -105,9 +108,14 @@ class APIKeyError(Exception):
 def check_config_setup() -> None:
     cfg = Config()
     check_openai_api_key(cfg)
-    check_tavily_api_key(cfg)
-    check_google_api_key(cfg)
-    check_serp_api_key(cfg)
+    if cfg.search_api == "tavily":
+        check_tavily_api_key(cfg)
+    elif cfg.search_api == "googleAPI":
+        check_google_api_key(cfg)
+    elif cfg.search_api == "googleSerp":
+        check_serp_api_key(cfg)
+    elif cfg.search_api == "searx":
+        check_searx_url(cfg)
 
 def check_openai_api_key(cfg) -> None:
     """Check if the OpenAI API key is set in config.py or as an environment variable."""
@@ -132,3 +140,9 @@ def check_serp_api_key(cfg) -> None:
     serp_api_key = os.getenv("SERP_API_KEY")
     if not serp_api_key and cfg.search_api == "googleSerp":
         raise APIKeyError("GoogleSerp")
+
+def check_searx_url(cfg) -> None:
+    """Check if the Searx URL is set in config.py or as an environment variable."""
+    searx_url = os.getenv("SEARX_URL")
+    if not searx_url and cfg.search_api == "searx":
+        raise APIKeyError("Searx")
