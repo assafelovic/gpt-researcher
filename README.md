@@ -18,7 +18,9 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 - Using only a selection of resources can create bias in determining the right conclusions for research questions or tasks. 
 
 ## Architecture
-The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. The agents leverage both gpt3.5-turbo-16k and gpt-4 to complete a research task.
+The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. 
+The agents leverage both gpt3.5-turbo and gpt-4 to complete a research task. We optimize for costs using each only when necessary. 
+**The average research task takes about 3 minutes to complete, and costs about $0.1.**
 
 <div align="center">
 <img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/arch.png">
