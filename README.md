@@ -81,8 +81,6 @@ $ export TAVILY_API_KEY={Your Tavily API Key here}
 - **For search engine, we use [Tavily Search API](https://app.tavily.com) (optimized for LLM search), but you can also revert to other search engines of your choice by changing the search provider in config/config.py to `"duckduckgo"`, `"googleAPI"`, `"googleSerp"`, or `"searx"`. Then add the corresponding env API key as seen in the config.py file.**
 - **We highly recommend using [OpenAI GPT](https://platform.openai.com/docs/guides/gpt) models and [Tavily Search API](https://app.tavily.com) for optimal performance.**
 
-
-
 <br />
 
 > **Step 4** - Run the agent with FastAPI
