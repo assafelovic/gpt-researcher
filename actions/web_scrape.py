@@ -53,7 +53,7 @@ async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
     await websocket.send_json(
         {
             "type": "logs",
-            "output": f"?? Browsing the {url} for relevant about: {question}...",
+            "output": f"🔎 Browsing the {url} for relevant about: {question}...",
         }
     )
 
@@ -69,7 +69,7 @@ async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
         await websocket.send_json(
             {
                 "type": "logs",
-                "output": f"?? Information gathered from url {url}: {summary_text}",
+                "output": f"📝 Information gathered from url {url}: {summary_text}",
             }
         )
 
