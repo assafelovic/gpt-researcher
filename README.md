@@ -115,8 +115,6 @@ $ docker-compose up
 
 > **Step 4** - Go to http://localhost:8000 on any browser and enjoy researching!
 
-- **update:** if you are having issues with weasyprint, please visit their website and follow the installation instructions: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
-
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
 
