@@ -22,7 +22,7 @@ The main idea is to run "planner" and "execution" agents, whereas the planner ge
 The agents leverage both gpt3.5-turbo and gpt-4 to complete a research task. We optimize for costs using each only when necessary. **The average research task takes about 3 minutes to complete, and costs about $0.1.**
 
 <div align="center">
-<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/arch.png">
+<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
 </div>
 
 
