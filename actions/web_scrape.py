@@ -7,10 +7,7 @@ from pathlib import Path
 from sys import platform
 
 from bs4 import BeautifulSoup
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.firefox import GeckoDriverManager
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
@@ -132,8 +129,7 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     options.add_argument("--enable-javascript")
 
     if CFG.selenium_web_browser == "firefox":
-        service = Service(executable_path=GeckoDriverManager().install())
-        driver = webdriver.Firefox(service=service, options=options)
+        driver = webdriver.Firefox(options=options)
     elif CFG.selenium_web_browser == "safari":
         # Requires a bit more setup on the users end
         # See https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari
