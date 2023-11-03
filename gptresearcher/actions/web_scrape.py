@@ -19,20 +19,21 @@ from fastapi import WebSocket
 from langchain.document_loaders import PyMuPDFLoader
 from langchain.retrievers import ArxivRetriever
 
-import processing.text as summary
+from gptresearcher import processing as summary
 
 from config import Config
-from processing.html import extract_hyperlinks, format_hyperlinks
+from gptresearcher.processing.html import extract_hyperlinks, format_hyperlinks
 
 from concurrent.futures import ThreadPoolExecutor
+
+from gptresearcher.processing.text import summarize_text
 
 executor = ThreadPoolExecutor()
 
 FILE_DIR = Path(__file__).parent.parent
-CFG = Config()
 
 
-async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
+async def async_browse(researcher, url: str, question: str, websocket: WebSocket) -> str:
     """Browse a website and return the answer and links to the user
 
     Args:
@@ -47,28 +48,33 @@ async def async_browse(url: str, question: str, websocket: WebSocket) -> str:
     executor = ThreadPoolExecutor(max_workers=8)
 
     print(f"Scraping url {url} with question {question}")
-    await websocket.send_json(
-        {
-            "type": "logs",
-            "output": f"🔎 Browsing the {url} for relevant about: {question}...",
-        }
-    )
-
-    try:
-        driver, text = await loop.run_in_executor(
-            executor, scrape_text_with_selenium, url
-        )
-        await loop.run_in_executor(executor, add_header, driver)
-        summary_text = await loop.run_in_executor(
-            executor, summary.summarize_text, url, text, question, driver
-        )
-
+    if websocket:
         await websocket.send_json(
             {
                 "type": "logs",
-                "output": f"📝 Information gathered from url {url}: {summary_text}",
+                "output": f"🔎 Browsing the {url} for relevant about: {question}...",
             }
         )
+    else:
+        print(f"🔎 Browsing the {url} for relevant about: {question}...")
+
+    try:
+        driver, text = await loop.run_in_executor(
+            executor, scrape_text_with_selenium, researcher, url
+        )
+        await loop.run_in_executor(executor, add_header, driver)
+        summary_text = await loop.run_in_executor(
+            executor, summarize_text, researcher, url, text, question, driver
+        )
+        if websocket:
+            await websocket.send_json(
+                {
+                    "type": "logs",
+                    "output": f"📝 Information gathered from url {url}: {summary_text}",
+                }
+            )
+        else:
+            print(f"📝 Information gathered from url {url}: {summary_text}")
 
         return f"Information gathered from url {url}: {summary_text}"
     except Exception as e:
@@ -106,7 +112,7 @@ def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
     return f"Answer gathered from website: {summary_text} \n \n Links: {links}", driver
 
 
-def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
+def scrape_text_with_selenium(researcher, url: str) -> tuple[WebDriver, str]:
     """Scrape text from a website using selenium
 
     Args:
@@ -123,14 +129,14 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
         "firefox": FirefoxOptions,
     }
 
-    options = options_available[CFG.selenium_web_browser]()
-    options.add_argument(f"user-agent={CFG.user_agent}")
+    options = options_available[researcher.selenium_web_browser]()
+    options.add_argument(f"user-agent={researcher.user_agent}")
     options.add_argument("--headless")
     options.add_argument("--enable-javascript")
 
-    if CFG.selenium_web_browser == "firefox":
+    if researcher.selenium_web_browser == "firefox":
         driver = webdriver.Firefox(options=options)
-    elif CFG.selenium_web_browser == "safari":
+    elif researcher.selenium_web_browser == "safari":
         # Requires a bit more setup on the users end
         # See https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari
         driver = webdriver.Safari(options=options)

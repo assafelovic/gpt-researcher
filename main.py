@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import json
 import os
 
-from agent.llm_utils import choose_agent
+from gptresearcher.context.llm_utils import choose_agent
 from agent.run import WebSocketManager
 
 
@@ -46,18 +46,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 json_data = json.loads(data[6:])
                 task = json_data.get("task")
                 report_type = json_data.get("report_type")
-                agent = json_data.get("agent")
-                # temporary so "normal agents" can still be used and not just auto generated, will be removed when we move to auto generated
-                if agent == "Auto Agent":
-                    agent_dict = choose_agent(task)
-                    agent = agent_dict.get("agent")
-                    agent_role_prompt = agent_dict.get("agent_role_prompt")
-                else:
-                    agent_role_prompt = None
-
-                await websocket.send_json({"type": "logs", "output": f"Initiated an Agent: {agent}"})
-                if task and report_type and agent:
-                    await manager.start_streaming(task, report_type, agent, agent_role_prompt, websocket)
+                if task and report_type:
+                    await manager.start_streaming(task, report_type, websocket)
                 else:
                     print("Error: not enough parameters provided.")
 

@@ -3,13 +3,12 @@ import os, sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from permchain_example.researcher import Researcher
-from permchain_example.search_actors.search_api import TavilySearchActor
 from permchain_example.editor_actors.editor import EditorActor
 from permchain_example.reviser_actors.reviser import ReviserActor
 from permchain_example.search_actors.gpt_researcher import GPTResearcherActor
 from permchain_example.writer_actors.writer import WriterActor
 from permchain_example.research_team import ResearchTeam
-from processing.text import md_to_pdf
+from gptresearcher.processing.text import md_to_pdf
 
 
 

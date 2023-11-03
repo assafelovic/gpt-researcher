@@ -1,14 +1,14 @@
 import json
-from processing.text import summarize_text
-from actions.web_scrape import scrape_text_with_selenium
-from actions.web_search import web_search
+from gptresearcher.processing.text import summarize_text
+from gptresearcher.actions.web_scrape import scrape_text_with_selenium
+from gptresearcher.actions.web_search import web_search
 
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import RunnableMap, RunnableLambda
+from langchain.schema.runnable import RunnableMap
 from langchain.schema.messages import SystemMessage
-from agent.prompts import auto_agent_instructions, generate_search_queries_prompt
+from gptresearcher.context.prompts import auto_agent_instructions, generate_search_queries_prompt
 from config import Config
 
 CFG = Config()
