@@ -1,16 +1,13 @@
 """Text processing functions"""
 import urllib
 from typing import Dict, Generator, Optional
-import string
 
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from config import Config
-from agent.llm_utils import create_chat_completion
+from gptresearcher.context.llm_utils import create_chat_completion
 import os
 from md2pdf.core import md2pdf
-
-CFG = Config()
 
 
 def split_text(text: str, max_length: int = 8192) -> Generator[str, None, None]:
@@ -44,7 +41,7 @@ def split_text(text: str, max_length: int = 8192) -> Generator[str, None, None]:
 
 
 def summarize_text(
-    url: str, text: str, question: str, driver: Optional[WebDriver] = None
+    researcher, url: str, text: str, question: str, driver: Optional[WebDriver] = None
 ) -> str:
     """Summarize text using the OpenAI API
 
@@ -76,9 +73,10 @@ def summarize_text(
         messages = [create_message(chunk, question)]
 
         summary = create_chat_completion(
-            model=CFG.fast_llm_model,
+            model=researcher.fast_llm_model,
             messages=messages,
-            max_tokens=CFG.summary_token_limit
+            max_tokens=researcher.summary_token_limit,
+            llm_provider=researcher.llm_provider
         )
         summaries.append(summary)
         #memory_to_add = f"Source: {url}\n" f"Content summary part#{i + 1}: {summary}"
@@ -89,9 +87,10 @@ def summarize_text(
     messages = [create_message(combined_summary, question)]
 
     final_summary = create_chat_completion(
-        model=CFG.fast_llm_model,
+        model=researcher.fast_llm_model,
         messages=messages,
-        max_tokens=CFG.summary_token_limit
+        max_tokens=researcher.summary_token_limit,
+        llm_provider=researcher.llm_provider,
     )
     print("Final summary length: ", len(combined_summary))
     print(final_summary)

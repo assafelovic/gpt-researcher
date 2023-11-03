@@ -5,43 +5,39 @@ import asyncio
 import json
 import hashlib
 
-from actions.web_search import web_search
-from actions.web_scrape import async_browse
-from processing.text import \
+from gptresearcher.actions.web_search import web_search
+from gptresearcher.actions.web_scrape import async_browse
+from gptresearcher.context.llm_utils import choose_agent
+from gptresearcher.processing.text import \
     write_to_file, \
     create_message, \
     create_chat_completion, \
     read_txt_files, \
     write_md_to_pdf
 from config import Config
-from agent import prompts
+from gptresearcher.context import prompts
 import os
-import string
 
 
-CFG = Config()
-
-
-class ResearchAgent:
-    def __init__(self, question, agent, agent_role_prompt, websocket=None):
-        """ Initializes the research assistant with the given question.
-        Args: question (str): The question to research
-        Returns: None
-        """
-
+class ResearchContext:
+    def __init__(self, question, researcher, websocket=None):
         self.question = question
-        self.agent = agent
-        self.agent_role_prompt = agent_role_prompt if agent_role_prompt else prompts.generate_agent_role_prompt(agent)
-        self.visited_urls = set()
-        self.research_summary = ""
-        self.dir_path = f"./outputs/{hashlib.sha1(question.encode()).hexdigest()}"
+        self.researcher = researcher
         self.websocket = websocket
+        self.agent_role_prompt = choose_agent(self.researcher, question).get(
+            "agent_role_prompt") or "Assist me with this research topic"
+        self.research_summary = ""
+        self.visited_urls = set()
+        self.dir_path = f"../outputs/{hashlib.sha1(question.encode()).hexdigest()}"
+
+    async def prepare_directories(self):
+        # Ensure the directory for saving research exists
+        os.makedirs(self.dir_path, exist_ok=True)
 
     async def stream_output(self, output):
         if not self.websocket:
             return print(output)
         await self.websocket.send_json({"type": "logs", "output": output})
-
 
     async def summarize(self, text, topic):
         """ Summarizes the given text for the given topic.
@@ -54,7 +50,8 @@ class ResearchAgent:
         await self.stream_output(f"📝 Summarizing text for query: {text}")
 
         return create_chat_completion(
-            model=CFG.fast_llm_model,
+            model=self.researcher.fast_llm_model,
+            temperature=self.researcher.temperature,
             messages=messages,
         )
 
@@ -83,10 +80,11 @@ class ResearchAgent:
             "content": action,
         }]
         answer = create_chat_completion(
-            model=CFG.smart_llm_model,
+            model=self.researcher.smart_llm_model,
             messages=messages,
             stream=stream,
             websocket=websocket,
+            llm_provider=self.researcher.llm_provider
         )
         return answer
 
@@ -104,13 +102,13 @@ class ResearchAgent:
         Args: query (str): The query to run the async search for
         Returns: list[str]: The async search for the given query
         """
-        search_results = json.loads(web_search(query))
+        search_results = json.loads(web_search(self.researcher, query))
         new_search_urls = self.get_new_urls([url.get("href") for url in search_results])
 
         await self.stream_output(f"🌐 Browsing the following sites for relevant information: {new_search_urls}...")
 
         # Create a list to hold the coroutine objects
-        tasks = [async_browse(url, query, self.websocket) for url in await new_search_urls]
+        tasks = [async_browse(self.researcher, url, query, self.websocket) for url in await new_search_urls]
 
         # Gather the results as they become available
         responses = await asyncio.gather(*tasks, return_exceptions=True)
@@ -148,7 +146,6 @@ class ResearchAgent:
         await self.stream_output(f"Total research words: {len(self.research_summary.split(' '))}")
 
         return self.research_summary
-
 
     async def create_concepts(self):
         """ Creates the concepts for the given question.
