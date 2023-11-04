@@ -3,10 +3,11 @@ import os
 import json
 import requests
 from duckduckgo_search import DDGS
-from tavily import Client
+from tavily import TavilyClient
 from langchain.utilities import SearxSearchWrapper
 from config import Config
 
+CFG = Config()
 
 def web_search(researcher, query: str, num_results: int = 4) -> str:
     """Useful for general internet search queries."""
@@ -16,9 +17,9 @@ def web_search(researcher, query: str, num_results: int = 4) -> str:
     if not query:
         return json.dumps(search_results)
 
-    if researcher.search_api == "tavily":
-        tavily_search = Client(os.environ["TAVILY_API_KEY"])
-        results = tavily_search.search(query, search_depth="basic").get("results", [])
+    if CFG.search_api == "tavily":
+        tavily_search = TavilyClient(os.environ["TAVILY_API_KEY"])
+        results = tavily_search.search(query, search_depth="advanced").get("results", [])
         # Normalizing results to match the format of the other search APIs
         search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results]
 
