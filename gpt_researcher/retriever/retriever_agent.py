@@ -7,7 +7,7 @@ import hashlib
 
 from gpt_researcher.actions.web_search import web_search
 from gpt_researcher.actions.web_scrape import async_browse
-from gpt_researcher.context.llm_utils import choose_agent
+from gpt_researcher.retriever.llm_utils import choose_agent
 from gpt_researcher.processing.text import \
     write_to_file, \
     create_message, \
@@ -15,11 +15,11 @@ from gpt_researcher.processing.text import \
     read_txt_files, \
     write_md_to_pdf
 from config import Config
-from gpt_researcher.context import prompts
+from gpt_researcher.retriever import prompts
 import os
 
 
-class ResearchContext:
+class RetrieverAgent:
     def __init__(self, question, researcher, websocket=None):
         self.question = question
         self.researcher = researcher

@@ -1,47 +1,39 @@
 from typing import Optional
 import os
+import configparser
 
 import openai
 
-from gpt_researcher.context.research_context import ResearchContext
+from gpt_researcher.retriever.retriever_agent import RetrieverAgent
 from gpt_researcher.utils.setup_check import check_agent_setup, check_openai_api_key
 
 
 class GPTResearcher:
-    def __init__(
-            self,
-            openai_api_key: Optional[str] = None,
-            debug_mode: bool = False,
-            allow_downloads: bool = False,
-            selenium_web_browser: str = "chrome",
-            search_api: str = "tavily",
-            llm_provider: str = "ChatOpenAI",
-            fast_llm_model: str = "gpt-3.5-turbo-16k",
-            smart_llm_model: str = "gpt-4",
-            fast_token_limit: int = 2000,
-            smart_token_limit: int = 4000,
-            browse_chunk_max_length: int = 8192,
-            summary_token_limit: int = 700,
-            temperature: float = 1.0,
-            user_agent: str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36",
-            memory_backend: str = "local"
-    ):
-        self.debug_mode = debug_mode
-        self.allow_downloads = allow_downloads
-        self.selenium_web_browser = selenium_web_browser
-        self.search_api = search_api
-        self.llm_provider = llm_provider
-        self.fast_llm_model = fast_llm_model
-        self.smart_llm_model = smart_llm_model
-        self.fast_token_limit = fast_token_limit
-        self.smart_token_limit = smart_token_limit
-        self.browse_chunk_max_length = browse_chunk_max_length
-        self.summary_token_limit = summary_token_limit
-        self.temperature = temperature
-        self.user_agent = user_agent
-        self.memory_backend = memory_backend
+    def __init__(self, **kwargs):
+        default_kwargs = {
+            'openai_api_key': None,
+            'debug_mode': False,
+            'allow_downloads': False,
+            'selenium_web_browser': 'chrome',
+            'search_api': 'tavily',
+            'llm_provider': 'ChatOpenAI',
+            'fast_llm_model': 'gpt-3.5-turbo-16k',
+            'smart_llm_model': 'gpt-4',
+            'fast_token_limit': 2000,
+            'smart_token_limit': 4000,
+            'browse_chunk_max_length': 8192,
+            'summary_token_limit': 700,
+            'temperature': 1.0,
+            'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
+            'memory_backend': 'local'
+        }
 
-        self.openai_api_key = openai_api_key if openai_api_key else os.getenv("OPENAI_API_KEY")
+        default_kwargs.update(kwargs)
+
+        for key, value in default_kwargs.items():
+            setattr(self, key, value)
+
+        self.openai_api_key = self.openai_api_key if self.openai_api_key else os.getenv("OPENAI_API_KEY")
 
         # Initialize the OpenAI API client
         openai.api_key = self.openai_api_key
@@ -78,7 +70,7 @@ class GPTResearcher:
         self.debug_mode = value
 
     async def conduct_research(self, question, report_type, websocket=None):
-        research_context = ResearchContext(
+        research_context = RetrieverAgent(
             question,
             self,
             websocket=websocket,
