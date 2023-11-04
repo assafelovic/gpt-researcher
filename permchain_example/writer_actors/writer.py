@@ -1,7 +1,7 @@
 from langchain.prompts import ChatPromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.schema.output_parser import StrOutputParser
-from gptresearcher.context.prompts import generate_report_prompt, generate_agent_role_prompt
+from gpt_researcher.context.prompts import generate_report_prompt, generate_agent_role_prompt
 from config import Config
 
 CFG = Config()

@@ -3,8 +3,8 @@ import os
 
 import openai
 
-from gptresearcher.context.research_context import ResearchContext
-from gptresearcher.utils.setup_check import check_agent_setup, check_openai_api_key
+from gpt_researcher.context.research_context import ResearchContext
+from gpt_researcher.utils.setup_check import check_agent_setup, check_openai_api_key
 
 
 class GPTResearcher:
@@ -100,7 +100,7 @@ import asyncio
 async def main():
     researcher = GPTResearcher()
 
-    report, path = await researcher.conduct_research("What are the impacts of climate change?", "research_report")
+    report, path = await researcher.conduct_research("rank the strongest characters in jujutsu kaisen", "research_report")
 
     print(report)
 

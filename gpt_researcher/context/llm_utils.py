@@ -8,7 +8,7 @@ import openai
 from langchain.adapters import openai as lc_openai
 from colorama import Fore, Style
 
-from gptresearcher.context.prompts import auto_agent_instructions
+from gpt_researcher.context.prompts import auto_agent_instructions
 from config import Config
 
 from typing import Optional

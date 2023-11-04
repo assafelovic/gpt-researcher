@@ -8,7 +8,7 @@ from permchain_example.reviser_actors.reviser import ReviserActor
 from permchain_example.search_actors.gpt_researcher import GPTResearcherActor
 from permchain_example.writer_actors.writer import WriterActor
 from permchain_example.research_team import ResearchTeam
-from gptresearcher.processing.text import md_to_pdf
+from gpt_researcher.processing.text import md_to_pdf
 
 
 

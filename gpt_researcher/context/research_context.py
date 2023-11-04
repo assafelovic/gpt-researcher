@@ -5,17 +5,17 @@ import asyncio
 import json
 import hashlib
 
-from gptresearcher.actions.web_search import web_search
-from gptresearcher.actions.web_scrape import async_browse
-from gptresearcher.context.llm_utils import choose_agent
-from gptresearcher.processing.text import \
+from gpt_researcher.actions.web_search import web_search
+from gpt_researcher.actions.web_scrape import async_browse
+from gpt_researcher.context.llm_utils import choose_agent
+from gpt_researcher.processing.text import \
     write_to_file, \
     create_message, \
     create_chat_completion, \
     read_txt_files, \
     write_md_to_pdf
 from config import Config
-from gptresearcher.context import prompts
+from gpt_researcher.context import prompts
 import os
 
 
@@ -31,7 +31,6 @@ class ResearchContext:
         self.dir_path = f"../outputs/{hashlib.sha1(question.encode()).hexdigest()}"
 
     async def prepare_directories(self):
-        # Ensure the directory for saving research exists
         os.makedirs(self.dir_path, exist_ok=True)
 
     async def stream_output(self, output):

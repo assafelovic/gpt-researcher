@@ -19,14 +19,14 @@ from fastapi import WebSocket
 from langchain.document_loaders import PyMuPDFLoader
 from langchain.retrievers import ArxivRetriever
 
-from gptresearcher import processing as summary
+from gpt_researcher import processing as summary
 
 from config import Config
-from gptresearcher.processing.html import extract_hyperlinks, format_hyperlinks
+from gpt_researcher.processing.html import extract_hyperlinks, format_hyperlinks
 
 from concurrent.futures import ThreadPoolExecutor
 
-from gptresearcher.processing.text import summarize_text
+from gpt_researcher.processing.text import summarize_text
 
 executor = ThreadPoolExecutor()
 

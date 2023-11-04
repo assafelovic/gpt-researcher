@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import json
 import os
 
-from gptresearcher.context.llm_utils import choose_agent
+from gpt_researcher.context.llm_utils import choose_agent
 from agent.run import WebSocketManager
 
 

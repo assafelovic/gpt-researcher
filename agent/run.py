@@ -5,7 +5,7 @@ from typing import List, Dict
 from fastapi import WebSocket
 from config import check_config_setup
 
-from gptresearcher.gpt_researcher import GPTResearcher
+from gpt_researcher.gpt_researcher import GPTResearcher
 
 
 class WebSocketManager:
