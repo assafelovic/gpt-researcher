@@ -99,12 +99,12 @@ async def stream_response(model, messages, temperature, max_tokens, llm_provider
 
 
 def choose_agent(researcher, task: str) -> dict:
-    """Determines what agent should be used
+    """Determines what server should be used
     Args:
         task (str): The research question the user asked
     Returns:
-        agent - The agent that will be used
-        agent_role_prompt (str): The prompt for the agent
+        server - The server that will be used
+        agent_role_prompt (str): The prompt for the server
     """
     try:
         response = create_chat_completion(
@@ -116,9 +116,9 @@ def choose_agent(researcher, task: str) -> dict:
             llm_provider=researcher.llm_provider
         )
         agent_dict = json.loads(response)
-        print(f"Agent: {agent_dict.get('agent')}")
+        print(f"Agent: {agent_dict.get('server')}")
         return agent_dict
     except Exception as e:
         print(f"{Fore.RED}Error in choose_agent: {e}{Style.RESET_ALL}")
-        return {"agent": "Default Agent",
+        return {"server": "Default Agent",
                 "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
