@@ -1,8 +1,8 @@
 from datetime import datetime
 def generate_agent_role_prompt(agent):
-    """ Generates the agent role prompt.
-    Args: agent (str): The type of the agent.
-    Returns: str: The agent role prompt.
+    """ Generates the server role prompt.
+    Args: server (str): The type of the server.
+    Returns: str: The server role prompt.
     """
     prompts = {
         "Finance Agent": "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends.",
@@ -13,7 +13,7 @@ def generate_agent_role_prompt(agent):
         "Default Agent": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
     }
 
-    return prompts.get(agent, "No such agent")
+    return prompts.get(agent, "No such server")
 
 
 def generate_report_prompt(question, research_summary):
@@ -111,27 +111,27 @@ def get_report_by_type(report_type):
 
 def auto_agent_instructions():
     return """
-        This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer. The research is conducted by a specific agent, defined by its type and role, with each agent requiring distinct instructions.
+        This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer. The research is conducted by a specific server, defined by its type and role, with each server requiring distinct instructions.
         Agent
-        The agent is determined by the field of the topic and the specific name of the agent that could be utilized to research the topic provided. Agents are categorized by their area of expertise, and each agent type is associated with a corresponding emoji.
+        The server is determined by the field of the topic and the specific name of the server that could be utilized to research the topic provided. Agents are categorized by their area of expertise, and each server type is associated with a corresponding emoji.
 
         examples:
         task: "should I invest in apple stocks?"
         response: 
         {
-            "agent": "💰 Finance Agent",
+            "server": "💰 Finance Agent",
             "agent_role_prompt: "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends."
         }
         task: "could reselling sneakers become profitable?"
         response: 
         { 
-            "agent":  "📈 Business Analyst Agent",
+            "server":  "📈 Business Analyst Agent",
             "agent_role_prompt": "You are an experienced AI business analyst assistant. Your main objective is to produce comprehensive, insightful, impartial, and systematically structured business reports based on provided business data, market trends, and strategic analysis."
         }
         task: "what are the most interesting sites in Tel Aviv?"
         response:
         {
-            "agent:  "🌍 Travel Agent",
+            "server:  "🌍 Travel Agent",
             "agent_role_prompt": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights."
         }
     """
