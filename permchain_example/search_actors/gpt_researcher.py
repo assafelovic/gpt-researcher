@@ -8,7 +8,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 from langchain.schema.runnable import RunnableMap
 from langchain.schema.messages import SystemMessage
-from gpt_researcher.context.prompts import auto_agent_instructions, generate_search_queries_prompt
+from gpt_researcher.retriever.prompts import auto_agent_instructions, generate_search_queries_prompt
 from config import Config
 
 CFG = Config()
