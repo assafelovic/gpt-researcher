@@ -16,19 +16,24 @@ def generate_agent_role_prompt(agent):
     return prompts.get(agent, "No such agent")
 
 
-def generate_report_prompt(question, research_summary):
+def generate_report_prompt(question, research_summary, report_format="apa"):
     """ Generates the report prompt for the given question and research summary.
     Args: question (str): The question to generate the report prompt for
             research_summary (str): The research summary to generate the report prompt for
     Returns: str: The report prompt for the given question and research summary
     """
 
-    return f'"""{research_summary}""" Using the above information, answer the following'\
+    return f'Information: """{research_summary}"""\n\n' \
+           f'Using the above information, answer the following'\
            f' question or topic: "{question}" in a detailed report --'\
            " The report should focus on the answer to the question, should be well structured, informative," \
-           " in depth, with facts and numbers if available, a minimum of 1,200 words and with markdown syntax and apa format.\n "\
+           " in depth, with facts and numbers if available and a minimum of 1,200 words.\n" \
+           "You should strive to write the report as long as you can using all relevant and necessary information provided.\n" \
+           "You must write the report with markdown syntax.\n "\
             "You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.\n" \
-           f"Write all used source urls at the end of the report in apa format.\n " \
+           f"Write all used source urls at the end of the report, and make sure to not add duplicated sources, but only one reference for each.\n" \
+           f"You must write the report in {report_format} format.\n " \
+            f"Please do your best, this is very important to my career. "\
            f"Assume that the current date is {datetime.now().strftime('%B %d, %Y')}"
 
 def generate_search_queries_prompt(question):
