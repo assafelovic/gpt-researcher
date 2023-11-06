@@ -98,22 +98,24 @@ async def stream_response(model, messages, temperature, max_tokens, llm_provider
     return response
 
 
-def choose_agent(researcher, task: str) -> dict:
+def choose_agent(smart_llm_model: str, llm_provider: str, task: str) -> dict:
     """Determines what server should be used
     Args:
         task (str): The research question the user asked
+        smart_llm_model (str): the llm model to be used
+        llm_provider (str): the llm provider used
     Returns:
         server - The server that will be used
         agent_role_prompt (str): The prompt for the server
     """
     try:
         response = create_chat_completion(
-            model=researcher.smart_llm_model,
+            model=smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{auto_agent_instructions()}"},
                 {"role": "user", "content": f"task: {task}"}],
             temperature=0,
-            llm_provider=researcher.llm_provider
+            llm_provider=llm_provider
         )
         agent_dict = json.loads(response)
         print(f"Agent: {agent_dict.get('server')}")

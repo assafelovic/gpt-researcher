@@ -16,12 +16,11 @@ from selenium.webdriver.safari.options import Options as SafariOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from fastapi import WebSocket
-from langchain.document_loaders import PyMuPDFLoader
-from langchain.retrievers import ArxivRetriever
 
 from gpt_researcher import processing as summary
 
 from config import Config
+from gpt_researcher.actions import scrape_skills
 from gpt_researcher.processing.html import extract_hyperlinks, format_hyperlinks
 
 from concurrent.futures import ThreadPoolExecutor
@@ -33,10 +32,20 @@ executor = ThreadPoolExecutor()
 FILE_DIR = Path(__file__).parent.parent
 
 
-async def async_browse(researcher, url: str, question: str, websocket: WebSocket) -> str:
+async def async_browse(
+        selenium_web_browser: str,
+        user_agent: str,
+        fast_llm_model: str,
+        summary_token_limit: str,
+        llm_provider: str,
+        url: str, question: str,
+        websocket: WebSocket
+) -> str:
     """Browse a website and return the answer and links to the user
 
     Args:
+        selenium_web_browser (str): The web browser used for scraping
+        user_agent (str): The user agent used when scraping
         url (str): The url of the website to browse
         question (str): The question asked by the user
         websocket (WebSocketManager): The websocket manager
@@ -60,11 +69,11 @@ async def async_browse(researcher, url: str, question: str, websocket: WebSocket
 
     try:
         driver, text = await loop.run_in_executor(
-            executor, scrape_text_with_selenium, researcher, url
+            executor, scrape_text_with_selenium, selenium_web_browser, user_agent, url
         )
         await loop.run_in_executor(executor, add_header, driver)
         summary_text = await loop.run_in_executor(
-            executor, summarize_text, researcher, url, text, question, driver
+            executor, summarize_text, fast_llm_model, summary_token_limit, llm_provider, url, text, question, driver
         )
         if websocket:
             await websocket.send_json(
@@ -112,11 +121,13 @@ def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
     return f"Answer gathered from website: {summary_text} \n \n Links: {links}", driver
 
 
-def scrape_text_with_selenium(researcher, url: str) -> tuple[WebDriver, str]:
+def scrape_text_with_selenium(selenium_web_browser: str, user_agent: str, url: str) -> tuple[WebDriver, str]:
     """Scrape text from a website using selenium
 
     Args:
         url (str): The url of the website to scrape
+        selenium_web_browser (str): The web browser used to scrape
+        user_agent (str): The user agent used when scraping
 
     Returns:
         Tuple[WebDriver, str]: The webdriver and the text scraped from the website
@@ -129,14 +140,14 @@ def scrape_text_with_selenium(researcher, url: str) -> tuple[WebDriver, str]:
         "firefox": FirefoxOptions,
     }
 
-    options = options_available[researcher.selenium_web_browser]()
-    options.add_argument(f"user-agent={researcher.user_agent}")
+    options = options_available[selenium_web_browser]()
+    options.add_argument(f"user-agent={user_agent}")
     options.add_argument("--headless")
     options.add_argument("--enable-javascript")
 
-    if researcher.selenium_web_browser == "firefox":
+    if selenium_web_browser == "firefox":
         driver = webdriver.Firefox(options=options)
-    elif researcher.selenium_web_browser == "safari":
+    elif selenium_web_browser == "safari":
         # Requires a bit more setup on the users end
         # See https://developer.apple.com/documentation/webkit/testing_with_webdriver_in_safari
         driver = webdriver.Safari(options=options)
@@ -157,11 +168,11 @@ def scrape_text_with_selenium(researcher, url: str) -> tuple[WebDriver, str]:
 
     # check if url is a pdf or arxiv link
     if url.endswith(".pdf"):
-        text = scrape_pdf_with_pymupdf(url)
+        text = scrape_skills.scrape_pdf_with_pymupdf(url)
     elif "arxiv" in url:
         # parse the document number from the url
         doc_num = url.split("/")[-1]
-        text = scrape_pdf_with_arxiv(doc_num)
+        text = scrape_skills.scrape_pdf_with_arxiv(doc_num)
     else:
         # Get the HTML content directly from the browser's DOM
         page_source = driver.execute_script("return document.body.outerHTML;")
@@ -237,32 +248,3 @@ def add_header(driver: WebDriver) -> None:
         None
     """
     driver.execute_script(open(f"{FILE_DIR}/js/overlay.js", "r").read())
-
-
-def scrape_pdf_with_pymupdf(url) -> str:
-    """Scrape a pdf with pymupdf
-
-    Args:
-        url (str): The url of the pdf to scrape
-
-    Returns:
-        str: The text scraped from the pdf
-    """
-    loader = PyMuPDFLoader(url)
-    doc = loader.load()
-    return str(doc)
-
-
-def scrape_pdf_with_arxiv(query) -> str:
-    """Scrape a pdf with arxiv
-    default document length of 70000 about ~15 pages or None for no limit
-
-    Args:
-        query (str): The query to search for
-
-    Returns:
-        str: The text scraped from the pdf
-    """
-    retriever = ArxivRetriever(load_max_docs=2, doc_content_chars_max=None)
-    docs = retriever.get_relevant_documents(query=query)
-    return docs[0].page_content
