@@ -24,8 +24,11 @@ class RetrieverAgent:
         self.question = question
         self.researcher = researcher
         self.websocket = websocket
-        self.agent_role_prompt = choose_agent(self.researcher, question).get(
-            "agent_role_prompt") or "Assist me with this research topic"
+        self.agent_role_prompt = choose_agent(
+            self.researcher.smart_llm_model,
+            self.researcher.llm_provider,
+            question
+        ).get("agent_role_prompt") or "Assist me with this research topic"
         self.research_summary = ""
         self.visited_urls = set()
         self.dir_path = f"../outputs/{hashlib.sha1(question.encode()).hexdigest()}"
@@ -101,13 +104,23 @@ class RetrieverAgent:
         Args: query (str): The query to run the async search for
         Returns: list[str]: The async search for the given query
         """
-        search_results = json.loads(web_search(self.researcher, query))
+        search_results = json.loads(web_search(self.researcher.search_api, query))
         new_search_urls = self.get_new_urls([url.get("href") for url in search_results])
 
         await self.stream_output(f"🌐 Browsing the following sites for relevant information: {new_search_urls}...")
 
         # Create a list to hold the coroutine objects
-        tasks = [async_browse(self.researcher, url, query, self.websocket) for url in await new_search_urls]
+        tasks = [async_browse(
+            self.researcher.selenium_web_browser,
+            self.researcher.user_agent,
+            self.researcher.fast_llm_model,
+            self.researcher.summary_token_limit,
+            self.researcher.llm_provider,
+            url,
+            query,
+            self.websocket
+        )
+            for url in await new_search_urls]
 
         # Gather the results as they become available
         responses = await asyncio.gather(*tasks, return_exceptions=True)

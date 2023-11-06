@@ -1,6 +1,7 @@
+import json
 from typing import Optional
 import os
-import configparser
+import asyncio
 
 import openai
 
@@ -10,36 +11,35 @@ from gpt_researcher.utils.setup_check import check_agent_setup, check_openai_api
 
 class GPTResearcher:
     def __init__(self, **kwargs):
-        default_kwargs = {
-            'openai_api_key': None,
-            'debug_mode': False,
-            'allow_downloads': False,
-            'selenium_web_browser': 'chrome',
-            'search_api': 'tavily',
-            'llm_provider': 'ChatOpenAI',
-            'fast_llm_model': 'gpt-3.5-turbo-16k',
-            'smart_llm_model': 'gpt-4',
-            'fast_token_limit': 2000,
-            'smart_token_limit': 4000,
-            'browse_chunk_max_length': 8192,
-            'summary_token_limit': 700,
-            'temperature': 1.0,
-            'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36',
-            'memory_backend': 'local'
-        }
-
-        default_kwargs.update(kwargs)
-
-        for key, value in default_kwargs.items():
-            setattr(self, key, value)
+        self.openai_api_key = kwargs.get('openai_api_key', None)
+        self.debug_mode = kwargs.get('debug_mode', False)
+        self.allow_downloads = kwargs.get('allow_downloads', False)
+        self.selenium_web_browser = kwargs.get('selenium_web_browser', 'chrome')
+        self.search_api = kwargs.get('search_api', 'tavily')
+        self.llm_provider = kwargs.get('llm_provider', 'ChatOpenAI')
+        self.fast_llm_model = kwargs.get('fast_llm_model', 'gpt-3.5-turbo-16k')
+        self.smart_llm_model = kwargs.get('smart_llm_model', 'gpt-4')
+        self.fast_token_limit = kwargs.get('fast_token_limit', 2000)
+        self.smart_token_limit = kwargs.get('fast_token_limit', 4000)
+        self.browse_chunk_max_length = kwargs.get('browse_chunk_max_length', 8192)
+        self.summary_token_limit = kwargs.get('summary_token_limit', 700)
+        self.temperature = kwargs.get('temperature', 1.0)
+        self.user_agent = kwargs.get('user_agent',
+                                     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36')
+        self.memory_backend = kwargs.get('memory_backend', 'local')
 
         self.openai_api_key = self.openai_api_key if self.openai_api_key else os.getenv("OPENAI_API_KEY")
 
-        # Initialize the OpenAI API client
         openai.api_key = self.openai_api_key
 
         check_agent_setup(self)
         check_openai_api_key(self)
+
+    @classmethod
+    def from_json(cls, file_path: str):
+        with open(file_path) as f:
+            config = json.load(f)
+        return cls(**config)
 
     def set_fast_llm_model(self, value: str) -> None:
         """Set the fast LLM model value."""
@@ -86,13 +86,12 @@ class GPTResearcher:
         return report, path
 
 
-import asyncio
-
-
+# Example
 async def main():
-    researcher = GPTResearcher()
+    researcher = GPTResearcher.from_json("config.json")
 
-    report, path = await researcher.conduct_research("rank the strongest characters in jujutsu kaisen", "research_report")
+    report, path = await researcher.conduct_research("rank the strongest characters in jujutsu kaisen",
+                                                     "research_report")
 
     print(report)
 
