@@ -4,7 +4,7 @@ beautifulsoup4==4.12.2
 colorama==0.4.6
 duckduckgo_search==3.9.3
 md2pdf==1.0.1
-openai~=0.28.1
+openai~=1.0.1
 playwright==1.38.0
 python-dotenv~=1.0.0
 pyyaml==6.0.1
