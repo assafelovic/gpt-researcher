@@ -19,8 +19,7 @@ def web_search(query: str, num_results: int = 4) -> str:
         return json.dumps(search_results)
 
     if CFG.search_api == "tavily":
-        tavily_search = TavilyClient(os.environ["TAVILY_API_KEY"])
-        results = tavily_search.search(query, search_depth="advanced").get("results", [])
+        results = tavily_web_search(query, num_results)
         # Normalizing results to match the format of the other search APIs
         search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results]
 
@@ -48,6 +47,15 @@ def web_search(query: str, num_results: int = 4) -> str:
             break
 
     return json.dumps(search_results, ensure_ascii=False, indent=4)
+
+def tavily_web_search(query: str, num_results: int = 10):
+    tavily_search = TavilyClient(os.environ["TAVILY_API_KEY"])
+    try:
+        results = tavily_search.search(query, search_depth="advanced", max_results=num_results).get("results", [])
+    except Exception as e:
+        print(e)
+        results = []
+    return results
 
 def serp_web_search(serp_api_key:str, query: str, num_results: int = 10) -> str:
     """Useful for general internet search queries using the Serp API."""
