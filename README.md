@@ -93,8 +93,6 @@ $ uvicorn main:app --reload
 
 > **Step 5** - Go to http://localhost:8000 on any browser and enjoy researching!
 
-- **update:** if you are having issues with weasyprint, please visit their website and follow the installation instructions: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
-
 ## Try it with Docker
 
 > **Step 1** - Install Docker
