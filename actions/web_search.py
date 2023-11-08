@@ -59,14 +59,9 @@ def tavily_web_search(query: str, num_results: int = 10):
 
 def serp_web_search(serp_api_key:str, query: str, num_results: int = 10) -> str:
     """Useful for general internet search queries using the Serp API."""
-    url = "https://google.serper.dev/search"
-    payload = json.dumps({"q": query, "num": num_results})
-    headers = {
-        "X-API-KEY": serp_api_key,
-        "Content-Type": "application/json",
-    }
+    url = "https://serpapi.com/search.json?engine=google&q=" + query + "&api_key=" + serp_api_key
+    resp = requests.request("GET", url)
 
-    resp = requests.request("POST", url, headers=headers, data=payload)
     if resp is None:
         return
     try:
@@ -76,7 +71,7 @@ def serp_web_search(serp_api_key:str, query: str, num_results: int = 10) -> str:
     if search_results is None:
         return
 
-    results = search_results["organic"]
+    results = search_results["organic_results"]
     search_results = []
 
     # Normalizing results to match the format of the other search APIs
