@@ -8,3 +8,7 @@ env/
 outputs/
 #Ignore pycache
 **/__pycache__/
+node_modules
+.idea
+.DS_Store
+.docusaurus
