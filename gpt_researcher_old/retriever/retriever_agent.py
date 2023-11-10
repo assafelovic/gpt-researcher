@@ -5,17 +5,17 @@ import asyncio
 import json
 import hashlib
 
-from gpt_researcher.actions.web_search import web_search
-from gpt_researcher.actions.web_scrape import async_browse
-from gpt_researcher.retriever.llm_utils import choose_agent
-from gpt_researcher.processing.text import \
+from gpt_researcher_old.actions.web_search import web_search
+from gpt_researcher_old.actions.web_scrape import async_browse
+from gpt_researcher_old.retriever.llm_utils import choose_agent
+from gpt_researcher_old.processing.text import \
     write_to_file, \
     create_message, \
     create_chat_completion, \
     read_txt_files, \
     write_md_to_pdf
 from config import Config
-from gpt_researcher.retriever import prompts
+from gpt_researcher_old.retriever import prompts
 import os
 
 

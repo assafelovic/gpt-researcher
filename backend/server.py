@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import json
 import os
 
-from gpt_researcher.retriever.llm_utils import choose_agent
+from gpt_researcher_old.retriever.llm_utils import choose_agent
 from server.run import WebSocketManager
 
 

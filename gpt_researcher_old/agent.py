@@ -2,11 +2,10 @@ import json
 from typing import Optional
 import os
 import asyncio
-
 import openai
 
-from gpt_researcher.retriever.retriever_agent import RetrieverAgent
-from gpt_researcher.utils.setup_check import check_agent_setup, check_openai_api_key
+from gpt_researcher_old.retriever.retriever_agent import RetrieverAgent
+from gpt_researcher_old.utils.setup_check import check_agent_setup, check_openai_api_key
 
 
 class GPTResearcher:

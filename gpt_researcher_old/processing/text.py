@@ -5,7 +5,7 @@ from typing import Dict, Generator, Optional
 from selenium.webdriver.remote.webdriver import WebDriver
 
 from config import Config
-from gpt_researcher.retriever.llm_utils import create_chat_completion
+from gpt_researcher_old.retriever.llm_utils import create_chat_completion
 import os
 from md2pdf.core import md2pdf
 

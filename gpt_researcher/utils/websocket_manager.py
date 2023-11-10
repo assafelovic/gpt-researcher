@@ -1,3 +1,7 @@
+# connect any client to gpt-researcher using websocket
+
+
+
 import asyncio
 import datetime
 
@@ -5,7 +9,7 @@ from typing import List, Dict
 from fastapi import WebSocket
 from config import check_config_setup
 
-from gpt_researcher.agent import GPTResearcher
+from gpt_researcher_old.agent import GPTResearcher
 
 
 class WebSocketManager:
