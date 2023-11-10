@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([[737],{4023:s=>{s.exports=JSON.parse('{"allTagsPath":"/gpt-researcher/blog/tags","slug":"/gpt-researcher/blog/tags/docusaurus","name":"docusaurus","count":1,"permalink":"/gpt-researcher/blog/tags/docusaurus"}')}}]);
