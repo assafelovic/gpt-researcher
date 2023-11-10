@@ -6,7 +6,7 @@ from tavily import TavilyClient
 from gpt_researcher.config.config import Config
 
 
-class Tavily(query):
+class TavilySearch():
     def __init__(self, query):
         self.query = query
         self.api_key = self.get_api_key()
@@ -24,7 +24,7 @@ class Tavily(query):
 
     def search(self):
         # Search the query
-        results = self.client.search(self.query, max_results=10)
+        results = self.client.search(self.query, search_depth="advanced")
         # Return the results
         results = str(results["results"])
         return results
