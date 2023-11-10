@@ -5,12 +5,12 @@ const katex = require('rehype-katex');
 module.exports = {
   title: 'Tavily',
   tagline: 'Tavily is the leading search engine optimized for LLMs',
-  url: 'https://docs.tavily.com',
-  baseUrl: '/',
-  onBrokenLinks: 'throw',
+  url: 'https://assafelovic.github.io',
+  baseUrl: '/docs/',
+  onBrokenLinks: 'ignore',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
-  organizationName: 'Tavily',
+  organizationName: 'assafelovic',
   projectName: 'gpt-researcher',
   themeConfig: {
     navbar: {
