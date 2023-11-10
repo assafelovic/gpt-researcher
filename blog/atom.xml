@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://docs.tavily.com/docs/blog</id>
+    <title>Tavily Blog</title>
+    <updated>2021-08-26T00:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://docs.tavily.com/docs/blog"/>
+    <subtitle>Tavily Blog</subtitle>
+    <icon>https://docs.tavily.com/docs/img/favicon.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[Welcome]]></title>
+        <id>welcome</id>
+        <link href="https://docs.tavily.com/docs/blog/welcome"/>
+        <updated>2021-08-26T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Docusaurus blogging features are powered by the blog plugin.]]></summary>
+        <content type="html"><![CDATA[<p><a href="https://docusaurus.io/docs/blog">Docusaurus blogging features</a> are powered by the <a href="https://docusaurus.io/docs/api/plugins/@docusaurus/plugin-content-blog">blog plugin</a>.</p><p>Simply add Markdown files (or folders) to the <code>blog</code> directory.</p><p>Regular blog authors can be added to <code>authors.yml</code>.</p><p>The blog post date can be extracted from filenames, such as:</p><ul><li><code>2019-05-30-welcome.md</code></li><li><code>2019-05-30-welcome/index.md</code></li></ul><p>A blog post folder can be convenient to co-locate blog post images:</p><p><img src="./docusaurus-plushie-banner.jpeg" alt="Docusaurus Plushie"/></p><p>The blog supports tags as well!</p><p><strong>And if you don&#x27;t want a blog</strong>: just delete this directory, and use <code>blog: false</code> in your Docusaurus config.</p>]]></content>
+        <author>
+            <name>Sébastien Lorber</name>
+            <uri>https://sebastienlorber.com</uri>
+        </author>
+        <author>
+            <name>Yangshun Tay</name>
+            <uri>https://github.com/yangshun</uri>
+        </author>
+    </entry>
+</feed>
