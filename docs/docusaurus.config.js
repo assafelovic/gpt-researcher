@@ -8,6 +8,7 @@ module.exports = {
   url: 'https://assafelovic.github.io',
   baseUrl: '/docs/',
   onBrokenLinks: 'ignore',
+  //deploymentBranch: 'main',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
   organizationName: 'assafelovic',
