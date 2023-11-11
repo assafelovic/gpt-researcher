@@ -1,16 +1,10 @@
+# libraries
 from __future__ import annotations
-
 import json
-
 from fastapi import WebSocket
-
-import openai
 from langchain.adapters import openai as lc_openai
 from colorama import Fore, Style
-
 from gpt_researcher_old.retriever.prompts import auto_agent_instructions
-from config import Config
-
 from typing import Optional
 
 

@@ -3,7 +3,6 @@
 # libraries
 import os
 from tavily import TavilyClient
-from gpt_researcher.config.config import Config
 
 
 class TavilySearch():
@@ -24,7 +23,11 @@ class TavilySearch():
 
     def search(self):
         # Search the query
-        results = self.client.search(self.query, search_depth="advanced")
+        results = self.client.search(self.query, search_depth="advanced", max_results=5, include_raw_content=True)
         # Return the results
-        results = str(results["results"])
-        return results
+        results = [{
+            "url": r["url"],
+            "content": r["content"]
+        } for r in results]
+
+        return str(results)
