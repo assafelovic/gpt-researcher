@@ -13,21 +13,22 @@ class ResearchRequest(BaseModel):
     agent: str
 
 
-
 app = FastAPI()
-app.mount("/site", StaticFiles(directory="../frontend"), name="site")
-app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
+
+app.mount("/site", StaticFiles(directory="./frontend"), name="site")
+app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
+
+templates = Jinja2Templates(directory="./frontend")
+
+manager = WebSocketManager()
+
+
 # Dynamic directory for outputs once first research is run
 @app.on_event("startup")
 def startup_event():
     if not os.path.isdir("outputs"):
         os.makedirs("outputs")
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
-
-templates = Jinja2Templates(directory="../frontend")
-
-manager = WebSocketManager()
-
 
 @app.get("/")
 async def read_root(request: Request):
@@ -51,9 +52,3 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)
