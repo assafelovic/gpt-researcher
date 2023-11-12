@@ -4,16 +4,213 @@
         <title>Tavily Blog</title>
         <link>https://docs.tavily.com/blog</link>
         <description>Tavily Blog</description>
-        <lastBuildDate>Thu, 26 Aug 2021 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Sun, 12 Nov 2023 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
-            <title><![CDATA[Welcome]]></title>
-            <link>https://docs.tavily.com/blog/welcome</link>
-            <guid>welcome</guid>
-            <pubDate>Thu, 26 Aug 2021 00:00:00 GMT</pubDate>
-            <description><![CDATA[Docusaurus blogging features are powered by the blog plugin.]]></description>
-            <content:encoded><![CDATA[<p><a href="https://docusaurus.io/docs/blog">Docusaurus blogging features</a> are powered by the <a href="https://docusaurus.io/docs/api/plugins/@docusaurus/plugin-content-blog">blog plugin</a>.</p><p>Simply add Markdown files (or folders) to the <code>blog</code> directory.</p><p>Regular blog authors can be added to <code>authors.yml</code>.</p><p>The blog post date can be extracted from filenames, such as:</p><ul><li><code>2019-05-30-welcome.md</code></li><li><code>2019-05-30-welcome/index.md</code></li></ul><p>A blog post folder can be convenient to co-locate blog post images:</p><p><img src="./docusaurus-plushie-banner.jpeg" alt="Docusaurus Plushie"/></p><p>The blog supports tags as well!</p><p><strong>And if you don&#x27;t want a blog</strong>: just delete this directory, and use <code>blog: false</code> in your Docusaurus config.</p>]]></content:encoded>
+            <title><![CDATA[How to build an OpenAI Assistant with Internet access]]></title>
+            <link>https://docs.tavily.com/blog/building-openai-assistant</link>
+            <guid>building-openai-assistant</guid>
+            <pubDate>Sun, 12 Nov 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[OpenAI has done it again with a groundbreaking DevDay showcasing some of the latest improvements to the OpenAI suite of tools, products and services. One major release was the new Assistants API that makes it easier for developers to build their own assistive AI apps that have goals and can call models and tools.]]></description>
+            <content:encoded><![CDATA[<p>OpenAI has done it again with a <a href="https://openai.com/blog/new-models-and-developer-products-announced-at-devday">groundbreaking DevDay</a> showcasing some of the latest improvements to the OpenAI suite of tools, products and services. One major release was the new <a href="https://platform.openai.com/docs/assistants/overview">Assistants API</a> that makes it easier for developers to build their own assistive AI apps that have goals and can call models and tools.</p><p>The new Assistants API currently supports three types of tools: Code Interpreter, Retrieval, and Function calling. Although you might expect the Retrieval tool to support online information retrieval (such as search APIs or as ChatGPT plugins), it only supports raw data for now such as text or CSV files.</p><p>This blog will demonstrate how to leverage the latest Assistants API with online information using the function calling tool.</p><p>To skip the tutorial below, feel free to check out the full <a href="https://gist.github.com/assafelovic/579822cd42d52d80db1e1c1ff82ffffd">Github Gist here</a>.</p><p>At a high level, a typical integration of the Assistants API has the following steps:</p><ul><li>Create an <a href="https://platform.openai.com/docs/api-reference/assistants/createAssistant">Assistant</a> in the API by defining its custom instructions and picking a model. If helpful, enable tools like Code Interpreter, Retrieval, and Function calling.</li><li>Create a <a href="https://platform.openai.com/docs/api-reference/threads">Thread</a> when a user starts a conversation.</li><li>Add <a href="https://platform.openai.com/docs/api-reference/messages">Messages</a> to the Thread as the user ask questions.</li><li><a href="https://platform.openai.com/docs/api-reference/runs">Run</a> the Assistant on the Thread to trigger responses. This automatically calls the relevant tools.</li></ul><p>As you can see below, an Assistant object includes Threads for storing and handling conversation sessions between the assistant and users, and Run for invocation of an Assistant on a Thread.</p><p><img src="./diagram-assistant.jpeg" alt="OpenAI Assistant Object"/></p><p>Let’s go ahead and implement these steps one by one! For the example, we will build a finance GPT that can provide insights about financial questions. We will use the <a href="https://github.com/openai/openai-python/tree/main#installation">OpenAI Python SDK v1.2</a> and <a href="https://tavily.com">Tavily Search API</a>.</p><p>First things first, let’s define the assistant’s instructions:</p><pre><code class="language-python">assistant_prompt_instruction = &quot;&quot;&quot;You are a finance expert. 
+Your goal is to provide answers based on information from the internet. 
+You must use the provided Tavily search API function to find relevant online information. 
+You should never use your own knowledge to answer questions.
+Please include relevant url sources in the end of your answers.
+&quot;&quot;&quot;
+</code></pre><p>Next, let’s finalize step 1 and create an assistant using the latest <a href="https://github.com/openai/openai-python/tree/main#installation">GPT-4 Turbo model</a> (128K context), and the call function using the <a href="https://tavily.com/">Tavily web search API</a>:</p><pre><code class="language-python"># Create an assistant
+assistant = client.beta.assistants.create(
+    instructions=assistant_prompt_instruction,
+    model=&quot;gpt-4-1106-preview&quot;,
+    tools=[{
+        &quot;type&quot;: &quot;function&quot;,
+        &quot;function&quot;: {
+            &quot;name&quot;: &quot;tavily_search&quot;,
+            &quot;description&quot;: &quot;Get information on recent events from the web.&quot;,
+            &quot;parameters&quot;: {
+                &quot;type&quot;: &quot;object&quot;,
+                &quot;properties&quot;: {
+                    &quot;query&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;The search query to use. For example: &#x27;Latest news on Nvidia stock performance&#x27;&quot;},
+                },
+                &quot;required&quot;: [&quot;query&quot;]
+            }
+        }
+    }]
+)
+</code></pre><p>Step 2+3 are quite straight forward, we’ll initiate a new thread and update it with a user message:</p><pre><code class="language-python">thread = client.beta.threads.create()
+user_input = input(&quot;You: &quot;)
+message = client.beta.threads.messages.create(
+    thread_id=thread.id,
+    role=&quot;user&quot;,
+    content=user_input,
+)
+</code></pre><p>Finally, we’ll run the assistant on the thread to trigger the function call and get the response:</p><pre><code class="language-python">run = client.beta.threads.runs.create(
+    thread_id=thread.id,
+    assistant_id=assistant_id,
+)
+</code></pre><p>So far so good! But this is where it gets a bit messy. Unlike with the regular GPT APIs, the Assistants API doesn’t return a synchronous response, but returns a status. This allows for asynchronous operations across assistants, but requires more overhead for fetching statuses and dealing with each manually.</p><p><img src="./diagram-1.png" alt="Status Diagram"/></p><p>To manage this status lifecycle, let’s build a function that can be reused and handles waiting for various statuses (such as ‘requires_action’):</p><pre><code class="language-python"># Function to wait for a run to complete
+def wait_for_run_completion(thread_id, run_id):
+    while True:
+        time.sleep(1)
+        run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
+        print(f&quot;Current run status: {run.status}&quot;)
+        if run.status in [&#x27;completed&#x27;, &#x27;failed&#x27;, &#x27;requires_action&#x27;]:
+            return run
+</code></pre><p>This function will sleep as long as the run has not been finalized such as in cases where it’s completed or requires an action from a function call.</p><p>We’re almost there! Lastly, let’s take care of when the assistant wants to call the web search API:</p><pre><code class="language-python"># Function to handle tool output submission
+def submit_tool_outputs(thread_id, run_id, tools_to_call):
+    tool_output_array = []
+    for tool in tools_to_call:
+        output = None
+        tool_call_id = tool.id
+        function_name = tool.function.name
+        function_args = tool.function.arguments
+
+        if function_name == &quot;tavily_search&quot;:
+            output = tavily_search(query=json.loads(function_args)[&quot;query&quot;])
+
+        if output:
+            tool_output_array.append({&quot;tool_call_id&quot;: tool_call_id, &quot;output&quot;: output})
+
+    return client.beta.threads.runs.submit_tool_outputs(
+        thread_id=thread_id,
+        run_id=run_id,
+        tool_outputs=tool_output_array
+    )
+</code></pre><p>As seen above, if the assistant has reasoned that a function call should trigger, we extract the given required function params and pass back to the runnable thread. We catch this status and call our functions as seen below:</p><pre><code class="language-python">if run.status == &#x27;requires_action&#x27;:
+    run = submit_tool_outputs(thread.id, run.id, run.required_action.submit_tool_outputs.tool_calls)
+    run = wait_for_run_completion(thread.id, run.id)
+</code></pre><p>That’s it! We now have a working OpenAI Assistant that can be used to answer financial questions using real time online information. Below is the full runnable code:</p><pre><code class="language-python">import os
+import json
+import time
+from openai import OpenAI
+from tavily import TavilyClient
+
+# Initialize clients with API keys
+client = OpenAI(api_key=os.environ[&quot;OPENAI_API_KEY&quot;])
+tavily_client = TavilyClient(api_key=os.environ[&quot;TAVILY_API_KEY&quot;])
+
+assistant_prompt_instruction = &quot;&quot;&quot;You are a finance expert. 
+Your goal is to provide answers based on information from the internet. 
+You must use the provided Tavily search API function to find relevant online information. 
+You should never use your own knowledge to answer questions.
+Please include relevant url sources in the end of your answers.
+&quot;&quot;&quot;
+
+# Function to perform a Tavily search
+def tavily_search(query):
+    search_result = tavily_client.get_search_context(query, search_depth=&quot;advanced&quot;, max_tokens=8000)
+    return search_result
+
+# Function to wait for a run to complete
+def wait_for_run_completion(thread_id, run_id):
+    while True:
+        time.sleep(1)
+        run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
+        print(f&quot;Current run status: {run.status}&quot;)
+        if run.status in [&#x27;completed&#x27;, &#x27;failed&#x27;, &#x27;requires_action&#x27;]:
+            return run
+
+# Function to handle tool output submission
+def submit_tool_outputs(thread_id, run_id, tools_to_call):
+    tool_output_array = []
+    for tool in tools_to_call:
+        output = None
+        tool_call_id = tool.id
+        function_name = tool.function.name
+        function_args = tool.function.arguments
+
+        if function_name == &quot;tavily_search&quot;:
+            output = tavily_search(query=json.loads(function_args)[&quot;query&quot;])
+
+        if output:
+            tool_output_array.append({&quot;tool_call_id&quot;: tool_call_id, &quot;output&quot;: output})
+
+    return client.beta.threads.runs.submit_tool_outputs(
+        thread_id=thread_id,
+        run_id=run_id,
+        tool_outputs=tool_output_array
+    )
+
+# Function to print messages from a thread
+def print_messages_from_thread(thread_id):
+    messages = client.beta.threads.messages.list(thread_id=thread_id)
+    for msg in messages:
+        print(f&quot;{msg.role}: {msg.content[0].text.value}&quot;)
+
+# Create an assistant
+assistant = client.beta.assistants.create(
+    instructions=assistant_prompt_instruction,
+    model=&quot;gpt-4-1106-preview&quot;,
+    tools=[{
+        &quot;type&quot;: &quot;function&quot;,
+        &quot;function&quot;: {
+            &quot;name&quot;: &quot;tavily_search&quot;,
+            &quot;description&quot;: &quot;Get information on recent events from the web.&quot;,
+            &quot;parameters&quot;: {
+                &quot;type&quot;: &quot;object&quot;,
+                &quot;properties&quot;: {
+                    &quot;query&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;The search query to use. For example: &#x27;Latest news on Nvidia stock performance&#x27;&quot;},
+                },
+                &quot;required&quot;: [&quot;query&quot;]
+            }
+        }
+    }]
+)
+assistant_id = assistant.id
+print(f&quot;Assistant ID: {assistant_id}&quot;)
+
+# Create a thread
+thread = client.beta.threads.create()
+print(f&quot;Thread: {thread}&quot;)
+
+# Ongoing conversation loop
+while True:
+    user_input = input(&quot;You: &quot;)
+    if user_input.lower() == &#x27;exit&#x27;:
+        break
+
+    # Create a message
+    message = client.beta.threads.messages.create(
+        thread_id=thread.id,
+        role=&quot;user&quot;,
+        content=user_input,
+    )
+
+    # Create a run
+    run = client.beta.threads.runs.create(
+        thread_id=thread.id,
+        assistant_id=assistant_id,
+    )
+    print(f&quot;Run ID: {run.id}&quot;)
+
+    # Wait for run to complete
+    run = wait_for_run_completion(thread.id, run.id)
+
+    if run.status == &#x27;failed&#x27;:
+        print(run.error)
+        continue
+    elif run.status == &#x27;requires_action&#x27;:
+        run = submit_tool_outputs(thread.id, run.id, run.required_action.submit_tool_outputs.tool_calls)
+        run = wait_for_run_completion(thread.id, run.id)
+
+    # Print messages from the thread
+    print_messages_from_thread(thread.id)
+</code></pre><p>The assistant can be further customized and improved using additional retrieval information, OpenAI’s coding interpreter and more. Also, you can go ahead and add more function tools to make the assistant even smarter.</p><p>Feel free to drop a comment below if you have any further questions!</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[How we built GPT Researcher]]></title>
+            <link>https://docs.tavily.com/blog/building-gpt-researcher</link>
+            <guid>building-gpt-researcher</guid>
+            <pubDate>Fri, 22 Sep 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[After AutoGPT was published, I immediately took it for a spin. The first use case that came to mind was autonomous online research. Forming objective conclusions for manual research tasks can take time, sometimes weeks, to find the right resources and information. Seeing how well AutoGPT created tasks and executed them got me thinking about the great potential of using AI to conduct comprehensive research and what it meant for the future of online research.]]></description>
+            <content:encoded><![CDATA[<p>After <a href="https://github.com/Significant-Gravitas/AutoGPT">AutoGPT</a> was published, I immediately took it for a spin. The first use case that came to mind was autonomous online research. Forming objective conclusions for manual research tasks can take time, sometimes weeks, to find the right resources and information. Seeing how well AutoGPT created tasks and executed them got me thinking about the great potential of using AI to conduct comprehensive research and what it meant for the future of online research.</p><p>But the problem with AutoGPT was that it usually ran into never-ending loops, required human interference for almost every step, constantly lost track of its progress, and almost never actually completed the task.</p><p>Nonetheless, the information and context gathered during the research task were lost (such as keeping track of sources), and sometimes hallucinated.</p><p>The passion for leveraging AI for online research and the limitations I found put me on a mission to try and solve it while sharing my work with the world. This is when I created <a href="https://github.com/assafelovic/gpt-researcher">GPT Researcher</a> — an open source autonomous agent for online comprehensive research.</p><p>In this article, I will share the steps that guided me toward the proposed solution.</p><h3>Moving from infinite loops to deterministic results</h3><p>The first step in solving these issues was to seek a more deterministic solution that could ultimately guarantee completing any research task within a fixed time frame, without human interference.</p><p>This is when I stumbled upon the recent paper <a href="https://arxiv.org/abs/2305.04091">Plan and Solve</a>. The paper aims to provide a better solution for the challenges stated above. The idea is quite simple and consists of two components: first, devising a plan to divide the entire task into smaller subtasks and then carrying out the subtasks according to the plan.</p><p><img src="./planner.jpeg" alt="Planner-Excutor-Model"/></p><p>As it relates to research, first create an outline of questions to research related to the task, and then deterministically execute an agent for every outline item. This approach eliminates the uncertainty in task completion by breaking the agent steps into a deterministic finite set of tasks. Once all tasks are completed, the agent concludes the research.</p><p>Following this strategy has improved the reliability of completing research tasks to 100%. Now the challenge is, how to improve quality and speed?</p><h3>Aiming for objective and unbiased results</h3><p>The biggest challenge with LLMs is the lack of factuality and unbiased responses caused by hallucinations and out-of-date training sets (GPT is currently trained on datasets from 2021). But the irony is that for research tasks, it is crucial to optimize for these exact two criteria: factuality and bias.</p><p>To tackle this challenges, I assumed the following:</p><ul><li>Law of large numbers — More content will lead to less biased results. Especially if gathered properly.</li><li>Leveraging LLMs for the summarization of factual information can significantly improve the overall better factuality of results.</li></ul><p>After experimenting with LLMs for quite some time, I can say that the areas where foundation models excel are in the summarization and rewriting of given content. So, in theory, if LLMs only review given content and summarize and rewrite it, potentially it would reduce hallucinations significantly.</p><p>In addition, assuming the given content is unbiased, or at least holds opinions and information from all sides of a topic, the rewritten result would also be unbiased. So how can content be unbiased? The <a href="https://en.wikipedia.org/wiki/Law_of_large_numbers">law of large numbers</a>. In other words, if enough sites that hold relevant information are scraped, the possibility of biased information reduces greatly. So the idea would be to scrape just enough sites together to form an objective opinion on any topic.</p><p>Great! Sounds like, for now, we have an idea for how to create both deterministic, factual, and unbiased results. But what about the speed problem?</p><h3>Speeding up the research process</h3><p>Another issue with AutoGPT is that it works synchronously. The main idea of it is to create a list of tasks and then execute them one by one. So if, let’s say, a research task requires visiting 20 sites, and each site takes around one minute to scrape and summarize, the overall research task would take a minimum of +20 minutes. That’s assuming it ever stops. But what if we could parallelize agent work?</p><p>By levering Python libraries such as asyncio, the agent tasks have been optimized to work in parallel, thus significantly reducing the time to research.</p><pre><code class="language-python"># Create a list to hold the coroutine agent tasks
+tasks = [async_browse(url, query, self.websocket) for url in await new_search_urls]
+
+# Gather the results as they become available
+responses = await asyncio.gather(*tasks, return_exceptions=True)
+</code></pre><p>In the example above, we trigger scraping for all URLs in parallel, and only once all is done, continue with the task. Based on many tests, an average research task takes around three minutes (!!). That’s 85% faster than AutoGPT.</p><h3>Finalizing the research report</h3><p>Finally, after aggregating as much information as possible about a given research task, the challenge is to write a comprehensive report about it.</p><p>After experimenting with several OpenAI models and even open source, I’ve concluded that the best results are currently achieved with GPT-4. The task is straightforward — provide GPT-4 as context with all the aggregated information, and ask it to write a detailed report about it given the original research task.</p><p>The prompt is as follows:</p><pre><code class="language-commandline">&quot;{research_summary}&quot; Using the above information, answer the following question or topic: &quot;{question}&quot; in a detailed report — The report should focus on the answer to the question, should be well structured, informative, in depth, with facts and numbers if available, a minimum of 1,200 words and with markdown syntax and apa format. Write all source urls at the end of the report in apa format. You should write your report only based on the given information and nothing else.
+</code></pre><p>The results are quite impressive, with some minor hallucinations in very few samples, but it’s fair to assume that as GPT improves over time, results will only get better.</p><h3>The final architecture</h3><p>Now that we’ve reviewed the necessary steps of GPT Researcher, let’s break down the final architecture, as shown below:</p><div align="center"><img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png"/></div><p>More specifically:</p><ul><li>Generate an outline of research questions that form an objective opinion on any given task.</li><li>For each research question, trigger a crawler agent that scrapes online resources for information relevant to the given task.</li><li>For each scraped resource, keep track, filter, and summarize only if it includes relevant information.</li><li>Finally, aggregate all summarized sources and generate a final research report.</li></ul><h3>Going forward</h3><p>The future of online research automation is heading toward a major disruption. As AI continues to improve, it is only a matter of time before AI agents can perform comprehensive research tasks for any of our day-to-day needs. AI research can disrupt areas of finance, legal, academia, health, and retail, reducing our time for each research by 95% while optimizing for factual and unbiased reports within an influx and overload of ever-growing online information.</p><p>Imagine if an AI can eventually understand and analyze any form of online content — videos, images, graphs, tables, reviews, text, audio. And imagine if it could support and analyze hundreds of thousands of words of aggregated information within a single prompt. Even imagine that AI can eventually improve in reasoning and analysis, making it much more suitable for reaching new and innovative research conclusions. And that it can do all that in minutes, if not seconds.</p><p>It’s all a matter of time and what <a href="https://github.com/assafelovic/gpt-researcher">GPT Researcher</a> is all about.</p>]]></content:encoded>
         </item>
     </channel>
 </rss>
