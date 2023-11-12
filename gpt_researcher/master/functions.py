@@ -77,7 +77,7 @@ def generate_report(query, context, agent_role_prompt, report_type):
     generate_prompt = get_report_by_type(report_type)
     report = ""
     try:
-        response = create_chat_completion(
+        report = create_chat_completion(
             model=cfg.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
@@ -85,7 +85,6 @@ def generate_report(query, context, agent_role_prompt, report_type):
             temperature=0,
             llm_provider=cfg.llm_provider
         )
-        report = json.loads(response)
     except Exception as e:
         print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")
     return report

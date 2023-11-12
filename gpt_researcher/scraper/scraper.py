@@ -41,7 +41,7 @@ class Scraper:
 
             if len(content) < 100:
                 return {'url': link, 'raw_content': None}
-            return {'url': link, 'raw_content': content}
+            return {'url': link, 'raw_content': content[:5000]}
         except Exception as e:
             return {'url': link, 'raw_content': None}
 
