@@ -6,7 +6,7 @@ module.exports = {
   title: 'Tavily',
   tagline: 'Tavily is the leading search engine optimized for LLMs',
   url: 'https://docs.tavily.com',
-  baseUrl: '/docs/',
+  baseUrl: '/',
   onBrokenLinks: 'ignore',
   //deploymentBranch: 'master',
   onBrokenMarkdownLinks: 'warn',
@@ -28,17 +28,18 @@ module.exports = {
           position: 'left',
           label: 'Docs',
         },
-        /*{
-            href: 'https://app.tavily.com',
-            position: 'left',
-            label: 'API',
-        },*/
-        /*{to: 'blog', label: 'Blog', position: 'left'},*/
+
+        {to: 'blog', label: 'Blog', position: 'left'},
         {
           type: 'doc',
           docId: 'faq',
           position: 'left',
           label: 'FAQ',
+        },
+        {
+            href: 'https://app.tavily.com',
+            position: 'right',
+            label: 'Get API Key',
         },
         {
             href: 'mailto:support@tavily.com',
