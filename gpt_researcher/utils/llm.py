@@ -35,8 +35,6 @@ async def create_chat_completion(
         raise ValueError("Model cannot be None")
     if max_tokens is not None and max_tokens > 8001:
         raise ValueError(f"Max tokens cannot be more than 8001, but got {max_tokens}")
-    if stream and websocket is None:
-        raise ValueError("Websocket cannot be None when stream is True")
 
     # create response
     for attempt in range(10):  # maximum of 10 attempts
@@ -71,7 +69,6 @@ async def send_chat_completion_request(
 async def stream_response(model, messages, temperature, max_tokens, llm_provider, websocket=None):
     paragraph = ""
     response = ""
-    print(f"streaming response...")
 
     for chunk in lc_openai.ChatCompletion.create(
             model=model,
@@ -89,9 +86,8 @@ async def stream_response(model, messages, temperature, max_tokens, llm_provider
                 if websocket is not None:
                     await websocket.send_json({"type": "report", "output": paragraph})
                 else:
-                    print(paragraph)
+                    print(f"{Fore.GREEN}{paragraph}{Style.RESET_ALL}")
                 paragraph = ""
-    print(f"streaming response complete")
     return response
 
 
