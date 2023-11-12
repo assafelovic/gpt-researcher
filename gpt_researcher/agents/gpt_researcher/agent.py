@@ -6,6 +6,7 @@ class GPTResearcher:
         self.query = query
         self.agent = None
         self.role = None
+        self.report_type = report_type
         self.websocket = websocket
         self.retriever = get_retriever()
         self.context = []
@@ -27,7 +28,8 @@ class GPTResearcher:
             self.stream_output(context)
 
         # Conduct Research
-        report, path = conduct_research(self.query, self.context, self.role)
+        report, path = generate_report(query=self.query, context=self.context,
+                                       agent_role_prompt=self.role, report_type=self.report_type)
         self.stream_output(report)
 
         return report, path
@@ -40,7 +42,7 @@ class GPTResearcher:
         raw_data = scrape_urls(urls)
 
         # Summarize Raw Data
-        summary = summarize(raw_data)
+        summary = summarize(query=sub_query, text=raw_data, agent_role_prompt=self.role)
 
         # Run Tasks
         return summary
