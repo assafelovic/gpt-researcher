@@ -6,7 +6,7 @@ module.exports = {
   title: 'Tavily',
   tagline: 'Tavily is the leading search engine optimized for LLMs',
   url: 'https://docs.tavily.com',
-  baseUrl: '/',
+  baseUrl: '/docs/',
   onBrokenLinks: 'ignore',
   //deploymentBranch: 'master',
   onBrokenMarkdownLinks: 'warn',
