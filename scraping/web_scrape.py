@@ -17,15 +17,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from fastapi import WebSocket
 
-from gpt_researcher_old import processing as summary
-
-from config import Config
-from gpt_researcher_old.actions import scrape_skills
-from gpt_researcher_old.processing.html import extract_hyperlinks, format_hyperlinks
+from scraping import scrape_skills, processing as summary
+from scraping.processing.html import extract_hyperlinks, format_hyperlinks
 
 from concurrent.futures import ThreadPoolExecutor
 
-from gpt_researcher_old.processing.text import summarize_text
+from scraping.processing.text import summarize_text
 
 executor = ThreadPoolExecutor()
 
