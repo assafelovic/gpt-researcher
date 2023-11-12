@@ -3,9 +3,10 @@
 # libraries
 import os
 from tavily import TavilyClient
+from langchain.utilities import SearxSearchWrapper
 
 
-class TavilySearch():
+class SearxSearch():
     """
     Tavily API Retriever
     """
@@ -27,10 +28,10 @@ class TavilySearch():
         """
         # Get the API key
         try:
-            api_key = os.environ["TAVILY_API_KEY"]
+            api_key = os.environ["SEARX_URL"]
         except:
-            raise Exception("Tavily API key not found. Please set the TAVILY_API_KEY environment variable. "
-                            "You can get a key at https://app.tavily.com")
+            raise Exception("Searx URL key not found. Please set the SEARX_URL environment variable. "
+                            "You can get your key from https://searx.space/")
         return api_key
 
     def search(self):
@@ -39,8 +40,8 @@ class TavilySearch():
         Returns:
 
         """
-        # Search the query
-        results = self.client.search(self.query, search_depth="advanced", max_results=5)
-        # Return the results
-        search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results.get("results", [])]
+        searx = SearxSearchWrapper(searx_host=os.environ["SEARX_URL"])
+        results = searx.results(self.query, 5)
+        # Normalizing results to match the format of the other search APIs
+        search_response = [{"href": obj["link"], "body": obj["snippet"]} for obj in results]
         return search_response
