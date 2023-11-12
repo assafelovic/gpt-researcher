@@ -1,25 +1,41 @@
 from gpt_researcher.utils.llm import *
-from gpt_researcher.config.config import Config
-from gpt_researcher.scraper.scraper import Scraper
+from gpt_researcher.scraper import Scraper
 from gpt_researcher.master.prompts import *
 import json
 
-cfg = Config()
 
+def get_retriever(retriever):
+    """
+    Gets the retriever
+    Args:
+        retriever: retriever name
 
-def get_retriever():
-    if cfg.retriver == "duckduckgo":
-        from gpt_researcher.retrievers.duckduckgo.duckduckgo import Duckduckgo
+    Returns:
+        retriever: Retriever class
+
+    """
+    if retriever == "duckduckgo":
+        from gpt_researcher.retrievers import Duckduckgo
         retriever = Duckduckgo
-    elif cfg.retriver == "tavily":
-        from gpt_researcher.retrievers.tavily_search.tavily_search import TavilySearch
+    elif retriever == "tavily":
+        from gpt_researcher.retrievers import TavilySearch
         retriever = TavilySearch
     else:
         raise Exception("Retriever not found.")
     return retriever
 
 
-async def choose_agent(query):
+async def choose_agent(query, cfg):
+    """
+    Chooses the agent automatically
+    Args:
+        query: original query
+        cfg: Config
+
+    Returns:
+        agent: Agent name
+        agent_role_prompt: Agent role prompt
+    """
     try:
         response = await create_chat_completion(
             model=cfg.smart_llm_model,
@@ -35,7 +51,18 @@ async def choose_agent(query):
         return "Default Agent", "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
 
 
-async def get_sub_queries(query, agent_role_prompt):
+async def get_sub_queries(query, agent_role_prompt, cfg):
+    """
+    Gets the sub queries
+    Args:
+        query: original query
+        agent_role_prompt: agent role prompt
+        cfg: Config
+
+    Returns:
+        sub_queries: List of sub queries
+
+    """
     response = await create_chat_completion(
         model=cfg.smart_llm_model,
         messages=[
@@ -49,6 +76,15 @@ async def get_sub_queries(query, agent_role_prompt):
 
 
 def scrape_urls(urls):
+    """
+    Scrapes the urls
+    Args:
+        urls: List of urls
+
+    Returns:
+        text: str
+
+    """
     text = ""
     try:
         text = Scraper(urls).run()
@@ -57,7 +93,19 @@ def scrape_urls(urls):
     return text
 
 
-async def summarize(query, text, agent_role_prompt):
+async def summarize(query, text, agent_role_prompt, cfg):
+    """
+    Summarizes the text
+    Args:
+        query:
+        text:
+        agent_role_prompt:
+        cfg:
+
+    Returns:
+        summary:
+
+    """
     summary = ""
     try:
         summary = await create_chat_completion(
@@ -73,11 +121,24 @@ async def summarize(query, text, agent_role_prompt):
     return summary
 
 
-async def generate_report(query, context, agent_role_prompt, report_type, websocket):
+async def generate_report(query, context, agent_role_prompt, report_type, websocket, cfg):
+    """
+    generates the final report
+    Args:
+        query:
+        context:
+        agent_role_prompt:
+        report_type:
+        websocket:
+        cfg:
+
+    Returns:
+        report:
+
+    """
     generate_prompt = get_report_by_type(report_type)
     report = ""
     try:
-        print("Generating report...")
         report = await create_chat_completion(
             model=cfg.smart_llm_model,
             messages=[
@@ -89,7 +150,6 @@ async def generate_report(query, context, agent_role_prompt, report_type, websoc
             websocket=websocket,
             max_tokens=cfg.smart_token_limit
         )
-        print("Report generated.")
     except Exception as e:
         print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")
 

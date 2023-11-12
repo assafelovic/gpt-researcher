@@ -68,7 +68,7 @@ async def send_chat_completion_request(
         return await stream_response(model, messages, temperature, max_tokens, llm_provider, websocket)
 
 
-async def stream_response(model, messages, temperature, max_tokens, llm_provider, websocket):
+async def stream_response(model, messages, temperature, max_tokens, llm_provider, websocket=None):
     paragraph = ""
     response = ""
     print(f"streaming response...")
@@ -86,7 +86,10 @@ async def stream_response(model, messages, temperature, max_tokens, llm_provider
             response += content
             paragraph += content
             if "\n" in paragraph:
-                await websocket.send_json({"type": "report", "output": paragraph})
+                if websocket is not None:
+                    await websocket.send_json({"type": "report", "output": paragraph})
+                else:
+                    print(paragraph)
                 paragraph = ""
     print(f"streaming response complete")
     return response

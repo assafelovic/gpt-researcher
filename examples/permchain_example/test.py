@@ -1,13 +1,13 @@
 # main
 import os, sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from permchain_example.researcher import Researcher
-from permchain_example.editor_actors.editor import EditorActor
-from permchain_example.reviser_actors.reviser import ReviserActor
-from permchain_example.search_actors.gpt_researcher import GPTResearcherActor
-from permchain_example.writer_actors.writer import WriterActor
-from permchain_example.research_team import ResearchTeam
+from examples.permchain_example.researcher import Researcher
+from examples.permchain_example.editor_actors.editor import EditorActor
+from examples.permchain_example.reviser_actors.reviser import ReviserActor
+from examples.permchain_example.search_actors.gpt_researcher import GPTResearcherActor
+from examples.permchain_example.writer_actors.writer import WriterActor
+from examples.permchain_example.research_team import ResearchTeam
 from gpt_researcher_old.processing.text import md_to_pdf
 
 
