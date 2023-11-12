@@ -8,7 +8,7 @@ from gpt_researcher_old.retriever.prompts import auto_agent_instructions
 from typing import Optional
 
 
-def create_chat_completion(
+async def create_chat_completion(
         messages: list,  # type: ignore
         model: Optional[str] = None,
         temperature: float = 1.0,
@@ -40,7 +40,7 @@ def create_chat_completion(
 
     # create response
     for attempt in range(10):  # maximum of 10 attempts
-        response = send_chat_completion_request(
+        response = await send_chat_completion_request(
             messages, model, temperature, max_tokens, stream, llm_provider, websocket
         )
         return response
@@ -52,7 +52,7 @@ def create_chat_completion(
 import logging
 
 
-def send_chat_completion_request(
+async def send_chat_completion_request(
         messages, model, temperature, max_tokens, stream, llm_provider, websocket
 ):
     if not stream:
@@ -65,7 +65,7 @@ def send_chat_completion_request(
         )
         return result["choices"][0]["message"]["content"]
     else:
-        return stream_response(model, messages, temperature, max_tokens, llm_provider, websocket)
+        return await stream_response(model, messages, temperature, max_tokens, llm_provider, websocket)
 
 
 async def stream_response(model, messages, temperature, max_tokens, llm_provider, websocket):
