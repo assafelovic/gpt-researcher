@@ -3,7 +3,7 @@ import asyncio
 import datetime
 from typing import List, Dict
 from fastapi import WebSocket
-from gpt_researcher.agents.gpt_researcher.agent import GPTResearcher
+from gpt_researcher.master.agent import GPTResearcher
 
 
 class WebSocketManager:
@@ -34,8 +34,8 @@ class WebSocketManager:
         del self.message_queues[websocket]
 
     async def start_streaming(self, task, report_type, websocket):
-        report, path = await run_agent(task, report_type, websocket)
-        return report, path
+        report = await run_agent(task, report_type, websocket)
+        return report
 
 
 async def run_agent(task, report_type, websocket):
@@ -43,11 +43,9 @@ async def run_agent(task, report_type, websocket):
     start_time = datetime.datetime.now()
     # run agent
     researcher = GPTResearcher(task, report_type, websocket)
-    report, path = await researcher.run()
-    # send report path to client
-    await websocket.send_json({"type": "path", "output": path})
+    report = await researcher.run()
     # measure time
     end_time = datetime.datetime.now()
     await websocket.send_json({"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"})
 
-    return report, path
+    return report
