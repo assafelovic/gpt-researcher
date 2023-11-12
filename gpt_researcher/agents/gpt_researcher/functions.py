@@ -57,14 +57,14 @@ def scrape_urls(urls):
     return text
 
 
-def summarize(text):
+def summarize(query, text, agent_role_prompt):
     summary = ""
     try:
         response = create_chat_completion(
             model=cfg.fast_llm_model,
             messages=[
-                {"role": "system", "content": f"{generate_summary_prompt()}"},
-                {"role": "user", "content": f"{text}"}],
+                {"role": "system", "content": f"{agent_role_prompt}"},
+                {"role": "user", "content": f"{generate_summary_prompt(query, text)}"}],
             temperature=0,
             llm_provider=cfg.llm_provider
         )
