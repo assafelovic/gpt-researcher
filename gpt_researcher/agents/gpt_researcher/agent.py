@@ -2,7 +2,7 @@ from gpt_researcher.agents.gpt_researcher.functions import *
 
 
 class GPTResearcher:
-    def __init__(self, query, websocket=None):
+    def __init__(self, query, report_type, websocket=None):
         self.query = query
         self.agent = None
         self.role = None

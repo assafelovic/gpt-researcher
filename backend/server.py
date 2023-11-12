@@ -4,9 +4,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import json
 import os
-
-from gpt_researcher_old.retriever.llm_utils import choose_agent
-from server.run import WebSocketManager
+from gpt_researcher.utils.websocket_manager import WebSocketManager
 
 
 class ResearchRequest(BaseModel):
