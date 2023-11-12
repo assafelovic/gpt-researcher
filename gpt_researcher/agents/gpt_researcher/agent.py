@@ -11,32 +11,33 @@ class GPTResearcher:
         self.retriever = get_retriever()
         self.context = []
 
-    def run(self):
+    async def run(self):
         # Generate Agent
         self.agent, self.role = choose_agent(self.query)
-        self.stream_output(self.agent)
+        await self.stream_output(self.agent)
 
         # Generate Sub-Queries
         sub_queries = get_sub_queries(self.query, self.role)
-        self.stream_output(sub_queries)
+        await self.stream_output(sub_queries)
 
         # Run Sub-Queries
         for sub_query in sub_queries:
-            self.stream_output(sub_query)
+            await self.stream_output(sub_query)
             context = self.run_sub_query(sub_query)
             self.context.append(context)
-            self.stream_output(context)
+            await self.stream_output(context)
 
         # Conduct Research
-        report, path = generate_report(query=self.query, context=self.context,
+        report = generate_report(query=self.query, context=self.context,
                                        agent_role_prompt=self.role, report_type=self.report_type)
-        self.stream_output(report)
+        await self.stream_output(report)
 
-        return report, path
+        return report
 
     def run_sub_query(self, sub_query):
         # Get Urls
-        urls = self.retriever.search(self.query)
+        retriever = self.retriever(sub_query)
+        urls = retriever.search()
 
         # Scrape Urls
         raw_data = scrape_urls(urls)

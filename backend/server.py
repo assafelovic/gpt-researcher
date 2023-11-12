@@ -15,8 +15,8 @@ class ResearchRequest(BaseModel):
 
 
 app = FastAPI()
-app.mount("/site", StaticFiles(directory="client"), name="site")
-app.mount("/static", StaticFiles(directory="client/static"), name="static")
+app.mount("/site", StaticFiles(directory="../frontend"), name="site")
+app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
 # Dynamic directory for outputs once first research is run
 @app.on_event("startup")
 def startup_event():
@@ -24,7 +24,7 @@ def startup_event():
         os.makedirs("outputs")
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
 
-templates = Jinja2Templates(directory="client")
+templates = Jinja2Templates(directory="../frontend")
 
 manager = WebSocketManager()
 
