@@ -19,9 +19,9 @@ def get_retriever():
     return retriever
 
 
-def choose_agent(query):
+async def choose_agent(query):
     try:
-        response = create_chat_completion(
+        response = await create_chat_completion(
             model=cfg.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{auto_agent_instructions()}"},
@@ -35,8 +35,8 @@ def choose_agent(query):
         return "Default Agent", "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
 
 
-def get_sub_queries(query, agent_role_prompt):
-    response = create_chat_completion(
+async def get_sub_queries(query, agent_role_prompt):
+    response = await create_chat_completion(
         model=cfg.smart_llm_model,
         messages=[
             {"role": "system", "content": f"{agent_role_prompt}"},
@@ -57,10 +57,10 @@ def scrape_urls(urls):
     return text
 
 
-def summarize(query, text, agent_role_prompt):
+async def summarize(query, text, agent_role_prompt):
     summary = ""
     try:
-        summary = create_chat_completion(
+        summary = await create_chat_completion(
             model=cfg.fast_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
@@ -73,18 +73,24 @@ def summarize(query, text, agent_role_prompt):
     return summary
 
 
-def generate_report(query, context, agent_role_prompt, report_type):
+async def generate_report(query, context, agent_role_prompt, report_type, websocket):
     generate_prompt = get_report_by_type(report_type)
     report = ""
     try:
-        report = create_chat_completion(
+        print("Generating report...")
+        report = await create_chat_completion(
             model=cfg.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
                 {"role": "user", "content": f"{generate_prompt(query, context)}"}],
             temperature=0,
-            llm_provider=cfg.llm_provider
+            llm_provider=cfg.llm_provider,
+            stream=websocket is not None,
+            websocket=websocket,
+            max_tokens=cfg.smart_token_limit
         )
+        print("Report generated.")
     except Exception as e:
         print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")
+
     return report

@@ -14,11 +14,11 @@ class GPTResearcher:
 
     async def run(self):
         # Generate Agent
-        self.agent, self.role = choose_agent(self.query)
+        self.agent, self.role = await choose_agent(self.query)
         await self.stream_output("logs", self.agent)
 
         # Generate Sub-Queries
-        sub_queries = get_sub_queries(self.query, self.role)
+        sub_queries = await get_sub_queries(self.query, self.role)
         await self.stream_output("logs",
                                  f"🧠 I will conduct my research based on the following queries: {sub_queries}...")
 
@@ -31,10 +31,10 @@ class GPTResearcher:
 
         # Conduct Research
         await self.stream_output("logs", f"✍️ Writing {self.report_type} for research task: {self.query}...")
-        report = generate_report(query=self.query, context=self.context,
-                                 agent_role_prompt=self.role, report_type=self.report_type)
-        await self.stream_output("report", report)
-
+        report = await generate_report(query=self.query, context=self.context,
+                                 agent_role_prompt=self.role, report_type=self.report_type,
+                                 websocket=self.websocket)
+        print(report)
         return report
 
     async def run_sub_query(self, sub_query):
@@ -52,7 +52,7 @@ class GPTResearcher:
         await self.stream_output("logs", f"📝 Summarizing sources...")
         raw_data = scrape_urls(urls_to_scrape)
         # Summarize Raw Data
-        summary = summarize(query=sub_query, text=raw_data, agent_role_prompt=self.role)
+        summary = await summarize(query=sub_query, text=raw_data, agent_role_prompt=self.role)
 
         # Run Tasks
         return summary
