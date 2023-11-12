@@ -41,16 +41,18 @@ class GPTResearcher:
         # Get Urls
         retriever = self.retriever(sub_query)
         urls = retriever.search()
+        urls_to_scrape = []
         for url in urls:
             if url not in self.visited_urls:
                 await self.stream_output("logs", f"✅ Adding source url to research: {url}\n")
                 self.visited_urls.add(url)
+                urls_to_scrape.append(url)
 
         # Scrape Urls
         await self.stream_output("logs", f"📝 Summarizing sources...")
-        raw_data = scrape_urls(urls)
+        raw_data = scrape_urls(urls_to_scrape)
         # Summarize Raw Data
-        summary = summarize(query=sub_query, text=raw_data[:1000], agent_role_prompt=self.role)
+        summary = summarize(query=sub_query, text=raw_data, agent_role_prompt=self.role)
 
         # Run Tasks
         return summary
