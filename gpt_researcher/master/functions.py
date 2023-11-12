@@ -14,14 +14,26 @@ def get_retriever(retriever):
         retriever: Retriever class
 
     """
-    if retriever == "duckduckgo":
-        from gpt_researcher.retrievers import Duckduckgo
-        retriever = Duckduckgo
-    elif retriever == "tavily":
-        from gpt_researcher.retrievers import TavilySearch
-        retriever = TavilySearch
-    else:
-        raise Exception("Retriever not found.")
+    match retriever:
+        case "duckduckgo":
+            from gpt_researcher.retrievers import Duckduckgo
+            retriever = Duckduckgo
+        case "tavily":
+            from gpt_researcher.retrievers import TavilySearch
+            retriever = TavilySearch
+        case "google":
+            from gpt_researcher.retrievers import GoogleSearch
+            retriever = GoogleSearch
+        case "searx":
+            from gpt_researcher.retrievers import SearxSearch
+            retriever = SearxSearch
+        case "serp":
+            from gpt_researcher.retrievers import SerpSearch
+            retriever = SerpSearch
+
+        case _:
+            raise Exception("Retriever not found.")
+
     return retriever
 
 
