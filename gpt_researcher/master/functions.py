@@ -146,7 +146,7 @@ async def generate_report(query, context, agent_role_prompt, report_type, websoc
                 {"role": "user", "content": f"{generate_prompt(query, context)}"}],
             temperature=0,
             llm_provider=cfg.llm_provider,
-            stream=websocket is not None,
+            stream=True,
             websocket=websocket,
             max_tokens=cfg.smart_token_limit
         )
