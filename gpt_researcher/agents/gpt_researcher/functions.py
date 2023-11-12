@@ -1,7 +1,7 @@
 from gpt_researcher.utils.llm import *
 from gpt_researcher.config.config import Config
 from gpt_researcher.scraper.scraper import Scraper
-from prompts import *
+from gpt_researcher.agents.gpt_researcher.prompts import *
 import json
 
 cfg = Config()
@@ -60,7 +60,7 @@ def scrape_urls(urls):
 def summarize(query, text, agent_role_prompt):
     summary = ""
     try:
-        response = create_chat_completion(
+        summary = create_chat_completion(
             model=cfg.fast_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
@@ -68,7 +68,6 @@ def summarize(query, text, agent_role_prompt):
             temperature=0,
             llm_provider=cfg.llm_provider
         )
-        summary = json.loads(response)
     except Exception as e:
         print(f"{Fore.RED}Error in summarize: {e}{Style.RESET_ALL}")
     return summary

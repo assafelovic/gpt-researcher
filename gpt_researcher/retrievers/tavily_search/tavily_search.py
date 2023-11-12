@@ -11,7 +11,6 @@ class TavilySearch():
         self.api_key = self.get_api_key()
         self.client = TavilyClient(self.api_key)
 
-
     def get_api_key(self):
         # Get the API key
         try:
@@ -20,14 +19,9 @@ class TavilySearch():
             raise Exception("Tavily API key not found. Please set the TAVILY_API_KEY environment variable.")
         return api_key
 
-
     def search(self):
         # Search the query
-        results = self.client.search(self.query, search_depth="advanced", max_results=5, include_raw_content=True)
+        results = self.client.search(self.query, search_depth="basic", max_results=5)
         # Return the results
-        results = [{
-            "url": r["url"],
-            "content": r["content"]
-        } for r in results]
-
-        return str(results)
+        results = [r["url"] for r in results["results"]]
+        return results
