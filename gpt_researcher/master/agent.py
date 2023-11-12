@@ -1,3 +1,5 @@
+import time
+
 from gpt_researcher.master.functions import *
 
 
@@ -32,9 +34,9 @@ class GPTResearcher:
         # Conduct Research
         await self.stream_output("logs", f"✍️ Writing {self.report_type} for research task: {self.query}...")
         report = await generate_report(query=self.query, context=self.context,
-                                 agent_role_prompt=self.role, report_type=self.report_type,
-                                 websocket=self.websocket)
-        print(report)
+                                       agent_role_prompt=self.role, report_type=self.report_type,
+                                       websocket=self.websocket)
+        time.sleep(1)
         return report
 
     async def run_sub_query(self, sub_query):
