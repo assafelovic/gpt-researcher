@@ -1,0 +1,22 @@
+{
+  "items": [
+    {
+      "items": [
+        "reference/config/config",
+        "reference/config/singleton"
+      ],
+      "label": "config",
+      "type": "category"
+    },
+    {
+      "items": [
+        "reference/processing/html",
+        "reference/processing/text"
+      ],
+      "label": "processing",
+      "type": "category"
+    }
+  ],
+  "label": "Reference",
+  "type": "category"
+}

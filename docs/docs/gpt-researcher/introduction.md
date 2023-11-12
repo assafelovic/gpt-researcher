@@ -1,17 +1,10 @@
-# 🔎 GPT Researcher
-[![Official Website](https://img.shields.io/badge/Official%20Website-tavily.com-blue?style=flat&logo=world&logoColor=white)](https://tavily.com)
-[![Discord Follow](https://dcbadge.vercel.app/api/server/2pFkc83fRq?style=flat)](https://discord.com/invite/2pFkc83fRq)
-[![GitHub Repo stars](https://img.shields.io/github/stars/assafelovic/gpt-researcher?style=social)](https://github.com/assafelovic/gpt-researcher)
-[![Twitter Follow](https://img.shields.io/twitter/follow/tavilyai?style=social)](https://twitter.com/tavilyai)
+# Introduction
 
 **GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks.** 
 
 The agent can produce detailed, factual and unbiased research reports, with customization options for focusing on relevant resources, outlines, and lessons. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses issues of speed, determinism and reliability, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
 
-**Our mission is to empower individuals and organizations with accurate, unbiased, and factual information by leveraging the power of AI.**
-
 ## Why GPT Researcher?
-
 
 - To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right resources and information.
 - Current LLMs are trained on past and outdated information, with heavy risks of hallucinations, making them almost irrelevant for research tasks.
@@ -23,7 +16,7 @@ The main idea is to run "planner" and "execution" agents, whereas the planner ge
 The agents leverage both gpt3.5-turbo and gpt-4-turbo (128K context) to complete a research task. We optimize for costs using each only when necessary. **The average research task takes around 3 minutes to complete, and costs ~$0.1.**
 
 <div align="center">
-<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
+<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png" />
 </div>
 
 
@@ -50,69 +43,6 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 - 📂 Keeps track and context of visited and used web sources
 - 📄 Export research reports to PDF and more...
 
-## 📖 Documentation
-
-Please see [here](https://docs.tavily.com/docs/gpt-researcher/getting-started) for full documentation on:
-
-- Getting started (installation, setting up the environment, simple examples)
-- How-To examples (demos, integrations, docker support)
-- Reference (full API docs)
-- Tavily API integration (high-level explanation of core concepts)
-
-## Quickstart
-> **Step 0** - Install Python 3.11 or later. [See here](https://www.tutorialsteacher.com/python/install-python) for a step-by-step guide.
-
-<br />
-
-> **Step 1** - Download the project
-
-```bash
-$ git clone https://github.com/assafelovic/gpt-researcher.git
-$ cd gpt-researcher
-```
-
-<br />
-
-> **Step 2** - Install dependencies
-```bash
-$ pip install -r requirements.txt
-```
-<br />
-
-> **Step 3** - Create .env file with your OpenAI Key and Tavily API key or simply export it
-
-```bash
-$ export OPENAI_API_KEY={Your OpenAI API Key here}
-```
-```bash
-$ export TAVILY_API_KEY={Your Tavily API Key here}
-```
-
-- **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources) supported by [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai), simply change the llm model and provider in config/config.py. Follow [this guide](https://python.langchain.com/docs/integrations/llms/) to learn how to integrate LLMs with Langchain. 
-- **For search engine, we recommend [Tavily Search API](https://app.tavily.com) (optimized for LLMs)**, but you can also refer to other search engines of your choice by changing the search provider in config/config.py to `"duckduckgo"`, `"googleAPI"`, `"googleSerp"`, or `"searx"`. Then add the corresponding env API key as seen in the config.py file.
-- **We highly recommend using [OpenAI GPT](https://platform.openai.com/docs/guides/gpt) models and [Tavily Search API](https://app.tavily.com) for optimal performance.**
-
-<br />
-
-> **Step 4** - Run the agent with FastAPI
-
-```bash
-$ uvicorn main:app --reload
-```
-<br />
-
-> **Step 5** - Go to http://localhost:8000 on any browser and enjoy researching!
-
-## 🚀 Contributing
-We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
-
-Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/2pFkc83fRq) if you're interested in joining our mission.
-
-
-## 🔧 Troubleshooting
-We're constantly working to provide a more stable version. If you're running into any issues, please first check out the resolved issues or ask us via our [Discord community](https://discord.gg/2pFkc83fRq).
-
-**If none of the above work for you, you can [try out our hosted beta](https://app.tavily.com)**
 
 ## 🛡 Disclaimer
 
@@ -124,7 +54,3 @@ Our view on unbiased research claims:
 3. In research, people also tend towards biases as most have already opinions on the topics they research about. This tool scrapes many opinions and will evenly explain diverse views that a biased person would never have read.
 
 **Please note that the use of the GPT-4 language model can be expensive due to its token usage.** By utilizing this project, you acknowledge that you are responsible for monitoring and managing your own token usage and the associated costs. It is highly recommended to check your OpenAI API usage regularly and set up any necessary limits or alerts to prevent unexpected charges.
-
-## ✉️ Support / Contact us
-- [Community Discord](https://discord.gg/spBgZmm3Xe)
-- Our email: support@tavily.com
