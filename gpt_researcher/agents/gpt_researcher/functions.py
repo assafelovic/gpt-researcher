@@ -74,7 +74,7 @@ def summarize(query, text, agent_role_prompt):
     return summary
 
 
-def generate_report(query, summary, agent_role_prompt, report_type):
+def generate_report(query, context, agent_role_prompt, report_type):
     generate_prompt = get_report_by_type(report_type)
     report = ""
     try:
@@ -82,7 +82,7 @@ def generate_report(query, summary, agent_role_prompt, report_type):
             model=cfg.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": f"{generate_prompt(query, summary)}"}],
+                {"role": "user", "content": f"{generate_prompt(query, context)}"}],
             temperature=0,
             llm_provider=cfg.llm_provider
         )
