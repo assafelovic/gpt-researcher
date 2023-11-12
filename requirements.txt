@@ -20,3 +20,4 @@ tavily-python==0.2.6
 permchain==0.0.3
 arxiv
 pymupdf
+requests

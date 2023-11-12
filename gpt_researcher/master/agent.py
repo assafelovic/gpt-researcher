@@ -57,6 +57,22 @@ class GPTResearcher:
         time.sleep(1)
         return report
 
+    async def get_new_urls(self, url_set_input):
+        """ Gets the new urls from the given url set.
+        Args: url_set_input (set[str]): The url set to get the new urls from
+        Returns: list[str]: The new urls from the given url set
+        """
+
+        new_urls = []
+        for url in url_set_input:
+            if url not in self.visited_urls:
+                await self.stream_output("logs", f"✅ Adding source url to research: {url}\n")
+
+                self.visited_urls.add(url)
+                new_urls.append(url)
+
+        return new_urls
+
     async def run_sub_query(self, sub_query):
         """
         Runs a sub-query
@@ -68,17 +84,13 @@ class GPTResearcher:
         """
         # Get Urls
         retriever = self.retriever(sub_query)
-        urls = retriever.search()
-        urls_to_scrape = []
-        for url in urls:
-            if url not in self.visited_urls:
-                await self.stream_output("logs", f"✅ Adding source url to research: {url}\n")
-                self.visited_urls.add(url)
-                urls_to_scrape.append(url)
+        search_results = retriever.search()
+        new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
 
         # Scrape Urls
         await self.stream_output("logs", f"📝 Summarizing sources...")
-        raw_data = scrape_urls(urls_to_scrape)
+        raw_data = scrape_urls(new_search_urls)
+
         # Summarize Raw Data
         summary = await summarize(query=sub_query, text=raw_data, agent_role_prompt=self.role, cfg=self.cfg)
 
