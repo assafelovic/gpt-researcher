@@ -128,10 +128,10 @@ def create_message(chunk: str, question: str) -> Dict[str, str]:
     """
     return {
         "role": "user",
-        "content": f'"""{chunk}""" Using the above text, answer in short the following'
-        f' question: "{question}" -- if the question cannot be answered using the text,'
-        " simply summarize the text. "
-        "Include all factual information, numbers, stats etc if available.",
+        "content": f'"""{chunk}"""\n'
+        f'Using the above text, summarize it based on the following task or query: "{question}".\n'
+        f'If the query cannot be answered using the text, YOU MUST summarize the text in short.\n'
+        f'Include all factual information such as numbers, stats, quotes, etc if available.',
     }
 
 def write_to_file(filename: str, text: str) -> None:
