@@ -7,7 +7,7 @@ class Duckduckgo:
     def __init__(self):
         self.ddg = DDGS()
 
-    def search(self, query, max_results=10):
+    def search(self, query, max_results=5):
         """
         Performs the search
         :param query:
@@ -16,5 +16,4 @@ class Duckduckgo:
         """
         ddgs_gen = self.ddg.text(query, region='wt-wt')
         urls = [r["href"] for r in islice(ddgs_gen, max_results)]
-        results = Scraper(urls).run()
-        return str(results)
+        return urls

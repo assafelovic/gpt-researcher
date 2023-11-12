@@ -1,7 +1,7 @@
 from gpt_researcher.utils.llm import *
 from gpt_researcher.config.config import Config
 from gpt_researcher.scraper.scraper import Scraper
-from gpt_researcher.agents.gpt_researcher.prompts import *
+from gpt_researcher.master.prompts import *
 import json
 
 cfg = Config()
