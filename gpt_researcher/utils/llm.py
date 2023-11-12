@@ -4,8 +4,9 @@ import json
 from fastapi import WebSocket
 from langchain.adapters import openai as lc_openai
 from colorama import Fore, Style
-from gpt_researcher_old.retriever.prompts import auto_agent_instructions
 from typing import Optional
+
+from gpt_researcher.master.prompts import auto_agent_instructions
 
 
 async def create_chat_completion(

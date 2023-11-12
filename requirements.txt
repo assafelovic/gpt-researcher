@@ -21,3 +21,4 @@ permchain==0.0.3
 arxiv
 pymupdf
 requests
+jinja2
