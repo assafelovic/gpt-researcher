@@ -5,7 +5,15 @@ from bs4 import BeautifulSoup
 
 
 class Scraper:
+    """
+    Scraper class to extract the content from the links
+    """
     def __init__(self, urls):
+        """
+        Initialize the Scraper class.
+        Args:
+            urls:
+        """
         self.urls = urls
         self.session = requests.Session()
         self.session.headers.update({

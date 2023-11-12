@@ -87,7 +87,7 @@ class GPTResearcher:
 
 # Example
 async def main():
-    researcher = GPTResearcher.from_json("config.json")
+    researcher = GPTResearcher.from_json("../config.json")
 
     report, path = await researcher.conduct_research("rank the strongest characters in jujutsu kaisen",
                                                      "research_report")

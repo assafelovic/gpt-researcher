@@ -1,9 +1,11 @@
 from itertools import islice
 from duckduckgo_search import DDGS
-from gpt_researcher.scraper.scraper import Scraper
 
 
 class Duckduckgo:
+    """
+    Duckduckgo API Retriever
+    """
     def __init__(self):
         self.ddg = DDGS()
 
