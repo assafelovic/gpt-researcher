@@ -1,3 +1,4 @@
+import asyncio
 from gpt_researcher.utils.llm import *
 from gpt_researcher.scraper import Scraper
 from gpt_researcher.master.prompts import *
@@ -98,26 +99,78 @@ def scrape_urls(urls, cfg=None):
         text: str
 
     """
-    text = ""
+    content = []
     user_agent = cfg.user_agent if cfg else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
     try:
-        text = Scraper(urls, user_agent).run()
+        content = Scraper(urls, user_agent).run()
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
-    return text
+    return content
 
 
-async def summarize(query, text, agent_role_prompt, cfg):
+async def summarize(query, content, agent_role_prompt, cfg, websocket=None):
+    """
+    Asynchronously summarizes a list of URLs.
+
+    Args:
+        query (str): The search query.
+        content (list): List of dictionaries with 'url' and 'raw_content'.
+        agent_role_prompt (str): The role prompt for the agent.
+        cfg (object): Configuration object.
+
+    Returns:
+        list: A list of dictionaries with 'url' and 'summary'.
+    """
+
+    # Function to handle each summarization task
+    async def handle_task(url, chunk):
+        summary = await summarize_url(query, chunk, agent_role_prompt, cfg)
+        if summary:
+            await stream_output("logs", f"🌐 {url}", websocket)
+            await stream_output("logs", f"📃 {summary}", websocket)
+        return url, summary
+
+    # Split raw content into chunks of 10,000 words
+    def chunk_content(raw_content, chunk_size=10000):
+        words = raw_content.split()
+        for i in range(0, len(words), chunk_size):
+            yield ' '.join(words[i:i+chunk_size])
+
+    # Prepare tasks for all chunks of all URLs
+    tasks = []
+    for item in content:
+        url = item['url']
+        raw_content = item['raw_content']
+        for chunk in chunk_content(raw_content):
+            tasks.append(handle_task(url, chunk))
+
+    # Run all tasks concurrently
+    all_summaries = await asyncio.gather(*tasks)
+
+    # Aggregate summaries by URL
+    final_summaries = {}
+    for url, summary in all_summaries:
+        if summary:
+            final_summaries.setdefault(url, []).append(summary)
+
+    # Concatenate summaries for each URL
+    concatenated_summaries = [{'url': url, 'summary': ' '.join(summs)} for url, summs in final_summaries.items()]
+
+    return concatenated_summaries
+
+
+
+async def summarize_url(query, raw_data, agent_role_prompt, cfg):
     """
     Summarizes the text
     Args:
         query:
-        text:
+        raw_data:
         agent_role_prompt:
         cfg:
 
     Returns:
-        summary:
+        summary: str
 
     """
     summary = ""
@@ -126,13 +179,14 @@ async def summarize(query, text, agent_role_prompt, cfg):
             model=cfg.fast_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": f"{generate_summary_prompt(query, text)}"}],
+                {"role": "user", "content": f"{generate_summary_prompt(query, raw_data)}"}],
             temperature=0,
             llm_provider=cfg.llm_provider
         )
     except Exception as e:
         print(f"{Fore.RED}Error in summarize: {e}{Style.RESET_ALL}")
     return summary
+
 
 
 async def generate_report(query, context, agent_role_prompt, report_type, websocket, cfg):
@@ -168,3 +222,18 @@ async def generate_report(query, context, agent_role_prompt, report_type, websoc
         print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")
 
     return report
+
+
+async def stream_output(type, output, websocket=None):
+    """
+    Streams output to the websocket
+    Args:
+        type:
+        output:
+
+    Returns:
+        None
+    """
+    if not websocket:
+        return print(output)
+    await websocket.send_json({"type": type, "output": output})

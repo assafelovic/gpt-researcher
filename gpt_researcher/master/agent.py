@@ -35,26 +35,25 @@ class GPTResearcher:
         print(f"🔎 Running research for '{self.query}'...")
         # Generate Agent
         self.agent, self.role = await choose_agent(self.query, self.cfg)
-        await self.stream_output("logs", self.agent)
+        await stream_output("logs", self.agent, self.websocket)
 
         # Generate Sub-Queries
         sub_queries = await get_sub_queries(self.query, self.role, self.cfg)
-        await self.stream_output("logs",
-                                 f"🧠 I will conduct my research based on the following queries: {sub_queries}...")
+        await stream_output("logs",
+                                 f"🧠 I will conduct my research based on the following queries: {sub_queries}...", self.websocket)
 
         # Run Sub-Queries
         for sub_query in sub_queries:
-            await self.stream_output("logs", f"🔎 Running research for '{sub_query}'...")
+            await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
             context = await self.run_sub_query(sub_query)
             self.context.append(context)
-            await self.stream_output("logs", context)
 
         # Conduct Research
-        await self.stream_output("logs", f"✍️ Writing {self.report_type} for research task: {self.query}...")
+        await stream_output("logs", f"✍️ Writing {self.report_type} for research task: {self.query}...", self.websocket)
         report = await generate_report(query=self.query, context=self.context,
                                        agent_role_prompt=self.role, report_type=self.report_type,
                                        websocket=self.websocket, cfg=self.cfg)
-        time.sleep(1)
+        time.sleep(2)
         return report
 
     async def get_new_urls(self, url_set_input):
@@ -66,7 +65,7 @@ class GPTResearcher:
         new_urls = []
         for url in url_set_input:
             if url not in self.visited_urls:
-                await self.stream_output("logs", f"✅ Adding source url to research: {url}\n")
+                await stream_output("logs", f"✅ Adding source url to research: {url}\n", self.websocket)
 
                 self.visited_urls.add(url)
                 new_urls.append(url)
@@ -88,25 +87,12 @@ class GPTResearcher:
         new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
 
         # Scrape Urls
-        await self.stream_output("logs", f"📝 Summarizing sources...")
-        raw_data = scrape_urls(new_search_urls, self.cfg)
+        await stream_output("logs", f"📝 Summarizing sources...\n", self.websocket)
+        content = scrape_urls(new_search_urls, self.cfg)
 
         # Summarize Raw Data
-        summary = await summarize(query=sub_query, text=raw_data, agent_role_prompt=self.role, cfg=self.cfg)
+        summary = await summarize(query=sub_query, content=content, agent_role_prompt=self.role, cfg=self.cfg, websocket=self.websocket)
 
         # Run Tasks
         return summary
 
-    async def stream_output(self, type, output):
-        """
-        Streams output to the websocket
-        Args:
-            type:
-            output:
-
-        Returns:
-            None
-        """
-        if not self.websocket:
-            return print(output)
-        await self.websocket.send_json({"type": type, "output": output})

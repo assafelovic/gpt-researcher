@@ -106,11 +106,14 @@ def auto_agent_instructions():
         }
     """
 
-def generate_summary_prompt(question, data):
+def generate_summary_prompt(query, data):
     """ Generates the summary prompt for the given question and text.
     Args: question (str): The question to generate the summary prompt for
             text (str): The text to generate the summary prompt for
     Returns: str: The summary prompt for the given question and text
     """
 
-    return f'"""{data}"""\n\nUsing the above information and based on the question: "{question}", generate a summary for each of the urls. The summary should be concise, informative, and well-structured. It should be a minimum of 200 words. Please keep it in the same json format.'
+    return f'{data}\n Using the above text, summarize it based on the following task or query: "{query}".\n If the ' \
+           f'query cannot be answered using the text, YOU MUST summarize the text in short.\n Include all factual ' \
+           f'information such as numbers, stats, quotes, etc if available. '
+
