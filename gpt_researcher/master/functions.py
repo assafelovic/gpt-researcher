@@ -126,7 +126,7 @@ async def summarize(query, content, agent_role_prompt, cfg, websocket=None):
     async def handle_task(url, chunk):
         summary = await summarize_url(query, chunk, agent_role_prompt, cfg)
         if summary:
-            await stream_output("logs", f"🌐 {url}", websocket)
+            await stream_output("logs", f"🌐 Summarizing url: {url}", websocket)
             await stream_output("logs", f"📃 {summary}", websocket)
         return url, summary
 
