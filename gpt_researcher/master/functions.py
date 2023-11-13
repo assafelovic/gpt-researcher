@@ -220,7 +220,7 @@ async def generate_report(query, context, agent_role_prompt, report_type, websoc
     return report
 
 
-async def stream_output(type, output, websocket=None):
+async def stream_output(type, output, websocket=None, logging=True):
     """
     Streams output to the websocket
     Args:
@@ -230,6 +230,6 @@ async def stream_output(type, output, websocket=None):
     Returns:
         None
     """
-    if not websocket:
+    if not websocket or logging:
         return print(output)
     await websocket.send_json({"type": type, "output": output})
