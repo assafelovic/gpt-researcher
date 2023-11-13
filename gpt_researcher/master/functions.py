@@ -231,5 +231,7 @@ async def stream_output(type, output, websocket=None, logging=True):
         None
     """
     if not websocket or logging:
-        return print(output)
-    await websocket.send_json({"type": type, "output": output})
+        print(output)
+
+    if websocket:
+        await websocket.send_json({"type": type, "output": output})
