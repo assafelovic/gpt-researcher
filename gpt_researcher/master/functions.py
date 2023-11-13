@@ -122,7 +122,7 @@ async def summarize(query, content, agent_role_prompt, cfg, websocket=None):
         list: A list of dictionaries with 'url' and 'summary'.
     """
 
-    # Function to handle each summarization task
+    # Function to handle each summarization task for a chunk
     async def handle_task(url, chunk):
         summary = await summarize_url(query, chunk, agent_role_prompt, cfg)
         if summary:
@@ -130,34 +130,30 @@ async def summarize(query, content, agent_role_prompt, cfg, websocket=None):
             await stream_output("logs", f"📃 {summary}", websocket)
         return url, summary
 
-    # Split raw content into chunks of 10,000 words
+    # Function to split raw content into chunks of 10,000 words
     def chunk_content(raw_content, chunk_size=10000):
         words = raw_content.split()
         for i in range(0, len(words), chunk_size):
             yield ' '.join(words[i:i+chunk_size])
 
-    # Prepare tasks for all chunks of all URLs
-    tasks = []
+    # Process each item one by one, but process chunks in parallel
+    concatenated_summaries = []
     for item in content:
         url = item['url']
         raw_content = item['raw_content']
-        for chunk in chunk_content(raw_content):
-            tasks.append(handle_task(url, chunk))
 
-    # Run all tasks concurrently
-    all_summaries = await asyncio.gather(*tasks)
+        # Create tasks for all chunks of the current URL
+        chunk_tasks = [handle_task(url, chunk) for chunk in chunk_content(raw_content)]
 
-    # Aggregate summaries by URL
-    final_summaries = {}
-    for url, summary in all_summaries:
-        if summary:
-            final_summaries.setdefault(url, []).append(summary)
+        # Run chunk tasks concurrently
+        chunk_summaries = await asyncio.gather(*chunk_tasks)
 
-    # Concatenate summaries for each URL
-    concatenated_summaries = [{'url': url, 'summary': ' '.join(summs)} for url, summs in final_summaries.items()]
+        # Aggregate and concatenate summaries for the current URL
+        summaries = [summary for _, summary in chunk_summaries if summary]
+        concatenated_summary = ' '.join(summaries)
+        concatenated_summaries.append({'url': url, 'summary': concatenated_summary})
 
     return concatenated_summaries
-
 
 
 async def summarize_url(query, raw_data, agent_role_prompt, cfg):
