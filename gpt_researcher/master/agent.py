@@ -89,7 +89,7 @@ class GPTResearcher:
 
         # Scrape Urls
         await self.stream_output("logs", f"📝 Summarizing sources...")
-        raw_data = scrape_urls(new_search_urls)
+        raw_data = scrape_urls(new_search_urls, self.cfg)
 
         # Summarize Raw Data
         summary = await summarize(query=sub_query, text=raw_data, agent_role_prompt=self.role, cfg=self.cfg)
