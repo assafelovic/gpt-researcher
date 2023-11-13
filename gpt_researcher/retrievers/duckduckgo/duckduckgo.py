@@ -17,6 +17,5 @@ class Duckduckgo:
         :param max_results:
         :return:
         """
-        ddgs_gen = self.ddg.text(self.query, region='wt-wt')
-        urls = [r["href"] for r in islice(ddgs_gen, max_results)]
-        return urls
+        ddgs_gen = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
+        return ddgs_gen
