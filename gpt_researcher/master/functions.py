@@ -155,7 +155,7 @@ async def generate_report(query, context, agent_role_prompt, report_type, websoc
             model=cfg.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": f"{generate_prompt(query, context)}"}],
+                {"role": "user", "content": f"{generate_prompt(query, context, cfg.report_format, cfg.total_words)}"}],
             temperature=0,
             llm_provider=cfg.llm_provider,
             stream=True,

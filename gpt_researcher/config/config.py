@@ -20,9 +20,9 @@ class Config:
         self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) " \
                           "Chrome/83.0.4103.97 Safari/537.36 "
         self.memory_backend = "local"
-        self.total_report_words = 1000
+        self.total_words = 1000
         self.report_format = "apa"
-        self.total_research_iterations = 1
+        self.max_iterations = 1
 
         self.load_config_file()
 
