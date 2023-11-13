@@ -37,8 +37,8 @@ class GPTResearcher:
         self.agent, self.role = await choose_agent(self.query, self.cfg)
         await stream_output("logs", self.agent, self.websocket)
 
-        # Generate Sub-Queries
-        sub_queries = await get_sub_queries(self.query, self.role, self.cfg)
+        # Generate Sub-Queries including original query
+        sub_queries = await get_sub_queries(self.query, self.role, self.cfg) + [self.query]
         await stream_output("logs",
                                  f"🧠 I will conduct my research based on the following queries: {sub_queries}...", self.websocket)
 
