@@ -1,0 +1,17 @@
+{
+            "openai_api_key": null,
+            "debug_mode": false,
+            "allow_downloads": false,
+            "selenium_web_browser": "chrome",
+            "search_api": "tavily",
+            "llm_provider": "ChatOpenAI",
+            "fast_llm_model": "gpt-3.5-turbo-16k",
+            "smart_llm_model": "gpt-4",
+            "fast_token_limit": 2000,
+            "smart_token_limit": 4000,
+            "browse_chunk_max_length": 8192,
+            "summary_token_limit": 700,
+            "temperature": 1.0,
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36",
+            "memory_backend": "local"
+}
