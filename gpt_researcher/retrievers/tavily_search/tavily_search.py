@@ -40,7 +40,7 @@ class TavilySearch():
 
         """
         # Search the query
-        results = self.client.search(self.query, search_depth="advanced", max_results=5)
+        results = self.client.search(self.query, search_depth="basic", max_results=5)
         # Return the results
         search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results.get("results", [])]
         return search_response
