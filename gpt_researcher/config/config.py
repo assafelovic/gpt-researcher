@@ -16,10 +16,14 @@ class Config:
         self.smart_token_limit = 4000
         self.browse_chunk_max_length = 8192
         self.summary_token_limit = 700
-        self.temperature = 1.0
+        self.temperature = 0.6
         self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) " \
                           "Chrome/83.0.4103.97 Safari/537.36 "
         self.memory_backend = "local"
+        self.total_report_words = 1000
+        self.report_format = "apa"
+        self.total_research_iterations = 1
+
         self.load_config_file()
 
     def load_config_file(self) -> None:
