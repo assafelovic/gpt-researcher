@@ -20,7 +20,7 @@ class Config:
         self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)" \
                           " Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
         self.memory_backend = "local"
-        self.total_words = 1000
+        self.total_words = 1200
         self.report_format = "apa"
         self.max_iterations = 1
 
