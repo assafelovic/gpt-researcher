@@ -4,7 +4,7 @@
 It really depends on what you're aiming for. 
 
 If you're looking to connect your AI application to the internet with our tailored API, check out the [Tavily API](/docs/tavily-api/introduction) documentation. 
-If you're looking to build and deploy our open source autonomous research agent GPT Researcher, please see [GPT Researcher documentation](/docs/gpt-researcher/introduction).
+If you're looking to build and deploy our open source autonomous research agent GPT Researcher, please see [GPT Researcher](/docs/gpt-researcher/introduction) documentation.
 You can also check out demos and examples for inspiration [here](/docs/examples/examples).
 ### What is GPT Researcher?
 GPT Researcher is a popular open source autonomous research agent that takes care of the tedious task of research for you, by scraping, filtering and aggregating over 20+ web sources per a single research task.
