@@ -2,7 +2,7 @@ const GPTResearcher = (() => {
     const init = () => {
       // Not sure, but I think it would be better to add event handlers here instead of in the HTML
       //document.getElementById("startResearch").addEventListener("click", startResearch);
-      //document.getElementById("copyToClipboard").addEventListener("click", copyToClipboard);
+      document.getElementById("copyToClipboard").addEventListener("click", copyToClipboard);
 
       updateState("initial");
     }
