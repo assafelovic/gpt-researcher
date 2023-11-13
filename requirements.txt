@@ -2,10 +2,10 @@
 asyncio==3.4.3
 beautifulsoup4==4.12.2
 colorama==0.4.6
-duckduckgo_search==3.9.3
+duckduckgo_search==3.9.5
 md2pdf==1.0.1
-openai~=0.28.1
-playwright==1.38.0
+openai~=1.2.3
+playwright==1.39.0
 python-dotenv~=1.0.0
 pyyaml==6.0.1
 selenium
@@ -15,7 +15,7 @@ pydantic
 fastapi
 python-multipart
 markdown
-langchain==0.0.308
+langchain==0.0.335
 tavily-python==0.2.6
 permchain==0.0.3
 arxiv

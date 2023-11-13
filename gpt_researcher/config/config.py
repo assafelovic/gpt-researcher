@@ -11,14 +11,14 @@ class Config:
         self.retriever = "tavily"
         self.llm_provider = "ChatOpenAI"
         self.fast_llm_model = "gpt-3.5-turbo-16k"
-        self.smart_llm_model = "gpt-4"
+        self.smart_llm_model = "gpt-4-1106-preview"
         self.fast_token_limit = 2000
         self.smart_token_limit = 4000
         self.browse_chunk_max_length = 8192
         self.summary_token_limit = 700
         self.temperature = 0.6
-        self.user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) " \
-                          "Chrome/83.0.4103.97 Safari/537.36 "
+        self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)" \
+                          " Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
         self.memory_backend = "local"
         self.total_words = 1000
         self.report_format = "apa"

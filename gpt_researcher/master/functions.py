@@ -87,19 +87,21 @@ async def get_sub_queries(query, agent_role_prompt, cfg):
     return sub_queries
 
 
-def scrape_urls(urls):
+def scrape_urls(urls, cfg=None):
     """
     Scrapes the urls
     Args:
         urls: List of urls
+        cfg: Config (optional)
 
     Returns:
         text: str
 
     """
     text = ""
+    user_agent = cfg.user_agent if cfg else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
     try:
-        text = Scraper(urls).run()
+        text = Scraper(urls, user_agent).run()
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
     return text
