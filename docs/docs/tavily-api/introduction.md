@@ -10,22 +10,25 @@ To try our API in action, you can now use GPT Researcher on our hosted version [
 
 1. **Purpose-Built**: Tailored just for LLM Agents, we ensure our features and results resonate with your unique needs. We take care of all the burden in searching, scraping, filtering and extracting information from online sources. All in a single API call!
 2. **Versatility**: Beyond just fetching results, Tavily Search API offers precision. With customizable search depths, domain management, and parsing html content controls, you're in the driver's seat.
-3. **Performance**: Committed to rapidity and efficiency, our API guarantees real-time outcomes without sidelining accuracy. Please note that we're just getting started, so performance may vary and improve over time.
+3. **Performance**: Committed to rapidity and efficiency, our API guarantees real-time information. Please note that we're just getting started, so performance may vary and improve over time.
 4. **Integration-friendly**: We appreciate the essence of adaptability. That's why integrating our API with your existing setup is a breeze. You can choose our Python library or a simple API call or any of our supported partners such as [Langchain](https://python.langchain.com/docs/integrations/tools/tavily_search) and [LLamaIndex](https://llamahub.ai/l/tools-tavily).
 5. **Transparent & Informative**: Our detailed documentation ensures you're never left in the dark. From setup basics to nuanced features, we've got you covered.
 
 ## How does the Search API work?
 Current search APIs such as Google, Serp and Bing retrieve search results based on user query. However, the results are sometimes irrelevant to the goal of the search, and return simple site URLs and snippets of content which are not always relevant. Because of this, any developer would need to then scrape the sites for relevant content, filter irrelevant information, optimize the content to fit LLM context limits, and more. This tasks is a burden and requires skills to get right.
 
-Tavily Search API aggregates over 20+ sites per a single API call, and uses propietary AI to score, filter and rank the top most relevant sources and content to your task, query or goal. In addition, Tavily allows developers to add custom fields such as context and limit response tokens to enable the optimal search experience for LLMs.
+Tavily Search API aggregates over 20+ sites per a single API call, and uses propietary AI to score, filter and rank the top most relevant sources and content to your task, query or goal. 
+In addition, Tavily allows developers to add custom fields such as context and limit response tokens to enable the optimal search experience for LLMs.
+
+Tavily can also help your AI agent make better decisions such as suggesting follow up search queries or including a short answer for cross agent communication.
 
 Remember: With LLM hallucinations, it's crucial to optimize for RAG with the right context and information.
 
 ## Getting Started
-1. **Sign Up**: Begin by [signing up](https://app.tavily.com) on our platform. It's the first step towards harnessing the power of precision search.
+1. **Sign Up**: Begin by [signing up](https://app.tavily.com) on our platform.
 2. **Obtain Your Unique Key**: Once registered, a unique Tavily API key is generated, ensuring you a seamless connection with our services.
-3. **Test Drive in the API Playground**: Before diving in, familiarize yourself by testing out endpoints in our interactive [API playground](https://app.tavily.com/playground). Experience firsthand the capabilities we bring to the table.
-4. **Explore & Learn**: Dive into our [Python SDK](https://app.tavily.com/documentation/python) or [REST API](https://app.tavily.com/documentation/api) documentation to grasp the depth of our API's prowess. The documentation offers a comprehensive rundown of functionalities, supplemented with practical sample inputs and outputs.
+3. **Test Drive in the API Playground**: Before diving in, familiarize yourself by testing out endpoints in our interactive [API playground](https://app.tavily.com/playground). 
+4. **Explore & Learn**: Dive into our [Python SDK](/docs/tavily-api/python-sdk) or [REST API](/docs/tavily-api/rest_api) documentation to get familiar with the various features. The documentation offers a comprehensive rundown of functionalities, supplemented with practical sample inputs and outputs.
 5. **Sample Use - Research Assistant**: Want a real-world application? Check out our [Research Assistant](https://app.tavily.com/chat) — a prime example that showcases how the API can optimize your AI content generation with factual and unbiased results.
 6. **Stay Alert**: It's always good to be prepared. Familiarize yourself with our 'Error Codes' to anticipate and troubleshoot potential hiccups. Also, ensure you abide by our guidelines; delve into 'Authentication' and 'Rate Limiting' sections to stay compliant and optimized.
 
