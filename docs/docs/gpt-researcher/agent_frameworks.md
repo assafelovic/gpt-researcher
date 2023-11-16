@@ -4,7 +4,7 @@ We are strong advocates for the future of AI agents, envisioning a world where a
 
 We hold the belief that research is a pivotal element in successfully tackling these complex tasks, ensuring superior outcomes.
 
-Consider the scenario of developing a coding agent responsible for incorporating the latest API documentation and best practices. It would be wise to integrate an agent specializing in research to curate the most recent and relevant documentation, before crafting a technical design that would subsequently be handed off to the coding assistant tasked with generating the code. This approach is applicable across various sectors, including finance, business analysis, healthcare, marketing, and legal, among others.
+Consider the scenario of developing a coding agent responsible for coding tasks using the latest API documentation and best practices. It would be wise to integrate an agent specializing in research to curate the most recent and relevant documentation, before crafting a technical design that would subsequently be handed off to the coding assistant tasked with generating the code. This approach is applicable across various sectors, including finance, business analysis, healthcare, marketing, and legal, among others.
 
 One agent framework that we're excited about is [PermChain](https://github.com/langchain-ai/permchain), built by the amazing team at [Langchain](https://www.langchain.com/).
 PermChain is a Python library for building stateful, multi-actor applications with LLMs. It extends the [LangChain Expression Language](https://python.langchain.com/docs/expression_language/) with the ability to coordinate multiple chains (or actors) across multiple steps of computation.
