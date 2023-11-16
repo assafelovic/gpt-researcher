@@ -12,7 +12,6 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 
 ## Why GPT Researcher?
 
-
 - To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right resources and information.
 - Current LLMs are trained on past and outdated information, with heavy risks of hallucinations, making them almost irrelevant for research tasks.
 - Solutions that enable web search (such as ChatGPT + Web Plugin), only consider limited resources and content that in some cases result in superficial conclusions or biased answers.
@@ -103,16 +102,12 @@ $ uvicorn main:app --reload
 
 > **Step 5** - Go to http://localhost:8000 on any browser and enjoy researching!
 
+To learn how to get started with Docker or to learn more about the features and services check out the [documentation](https://docs.tavily.com) page.
+
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
 
 Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/2pFkc83fRq) if you're interested in joining our mission.
-
-
-## 🔧 Troubleshooting
-We're constantly working to provide a more stable version. If you're running into any issues, please first check out the resolved issues or ask us via our [Discord community](https://discord.gg/2pFkc83fRq).
-
-**If none of the above work for you, you can [try out our hosted beta](https://app.tavily.com)**
 
 ## 🛡 Disclaimer
 
