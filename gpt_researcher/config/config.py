@@ -22,7 +22,7 @@ class Config:
         self.memory_backend = "local"
         self.total_words = 1000
         self.report_format = "apa"
-        self.max_iterations = 1
+        self.max_iterations = 3
 
         self.load_config_file()
 
