@@ -20,6 +20,8 @@
       items: [
         'gpt-researcher/introduction',
         'gpt-researcher/getting-started',
+        'gpt-researcher/config',
+         'gpt-researcher/example',
         'gpt-researcher/pip-package',
         'gpt-researcher/troubleshooting',
       ],
