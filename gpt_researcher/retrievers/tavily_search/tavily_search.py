@@ -33,14 +33,14 @@ class TavilySearch():
                             "You can get a key at https://app.tavily.com")
         return api_key
 
-    def search(self):
+    def search(self, max_results=7):
         """
         Searches the query
         Returns:
 
         """
         # Search the query
-        results = self.client.search(self.query, search_depth="basic", max_results=5)
+        results = self.client.search(self.query, search_depth="basic", max_results=max_results)
         # Return the results
         search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results.get("results", [])]
         return search_response
