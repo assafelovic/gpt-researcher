@@ -1,6 +1,7 @@
 import time
 from gpt_researcher.config import Config
 from gpt_researcher.master.functions import *
+from gpt_researcher.context import ContextCompressor
 
 
 class GPTResearcher:
