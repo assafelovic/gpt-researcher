@@ -1,7 +1,7 @@
 import time
 from gpt_researcher.config import Config
 from gpt_researcher.master.functions import *
-from gpt_researcher.context import ContextCompressor
+from gpt_researcher.context.compression import ContextCompressor
 
 
 class GPTResearcher:
@@ -41,12 +41,15 @@ class GPTResearcher:
         # Generate Sub-Queries including original query
         sub_queries = await get_sub_queries(self.query, self.role, self.cfg) + [self.query]
         await stream_output("logs",
-                                 f"🧠 I will conduct my research based on the following queries: {sub_queries}...", self.websocket)
+                            f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
+                            self.websocket)
 
         # Run Sub-Queries
         for sub_query in sub_queries:
             await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
-            context = await self.run_sub_query(sub_query)
+            scraped_sites = await self.scrape_sites_by_query(sub_query)
+            context = await self.get_similar_content_by_query(sub_query, scraped_sites)
+            await stream_output("logs", f"📃 {context}", self.websocket)
             self.context.append(context)
 
         # Conduct Research
@@ -73,7 +76,7 @@ class GPTResearcher:
 
         return new_urls
 
-    async def run_sub_query(self, sub_query):
+    async def scrape_sites_by_query(self, sub_query):
         """
         Runs a sub-query
         Args:
@@ -89,11 +92,14 @@ class GPTResearcher:
 
         # Scrape Urls
         # await stream_output("logs", f"📝Scraping urls {new_search_urls}...\n", self.websocket)
-        scraped_content_results = scrape_urls(new_search_urls, self.cfg)
         await stream_output("logs", f"🤔Researching for relevant information...\n", self.websocket)
-        # Summarize Raw Data
-        summary = await summarize(query=sub_query, content=scraped_content_results, agent_role_prompt=self.role, cfg=self.cfg, websocket=self.websocket)
+        scraped_content_results = scrape_urls(new_search_urls, self.cfg)
+        return scraped_content_results
 
+    async def get_similar_content_by_query(self, query, pages):
+        await stream_output("logs", f"🌐 Summarizing url: {query}", self.websocket)
+        # Summarize Raw Data
+        context_compressor = ContextCompressor(documents=pages)
         # Run Tasks
-        return summary
+        return context_compressor.get_context(query, max_results=8)
 
