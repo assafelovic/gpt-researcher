@@ -7,7 +7,7 @@ import json
 from tavily import TavilyClient
 
 
-class GoogleSearch():
+class GoogleSearch:
     """
     Tavily API Retriever
     """
@@ -50,7 +50,7 @@ class GoogleSearch():
                             "You can get a key at https://developers.google.com/custom-search/v1/overview")
         return api_key
 
-    def search(self):
+    def search(self, max_results=7):
         """
         Searches the query
         Returns:

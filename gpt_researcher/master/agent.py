@@ -53,7 +53,6 @@ class GPTResearcher:
             context = await self.get_similar_content_by_query(sub_query, scraped_sites)
             await stream_output("logs", f"📃 {context}", self.websocket)
             self.context.append(context)
-
         # Conduct Research
         await stream_output("logs", f"✍️ Writing {self.report_type} for research task: {self.query}...", self.websocket)
         report = await generate_report(query=self.query, context=self.context,
@@ -89,7 +88,7 @@ class GPTResearcher:
         """
         # Get Urls
         retriever = self.retriever(sub_query)
-        search_results = retriever.search()
+        search_results = retriever.search(max_results=self.cfg.max_search_results_per_query)
         new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
 
         # Scrape Urls
