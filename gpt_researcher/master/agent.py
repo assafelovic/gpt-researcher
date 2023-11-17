@@ -2,6 +2,7 @@ import time
 from gpt_researcher.config import Config
 from gpt_researcher.master.functions import *
 from gpt_researcher.context.compression import ContextCompressor
+from gpt_researcher.memory import Memory
 
 
 class GPTResearcher:
@@ -25,6 +26,7 @@ class GPTResearcher:
         self.cfg = Config(config_path)
         self.retriever = get_retriever(self.cfg.retriever)
         self.context = []
+        self.memory = Memory()
         self.visited_urls = set()
 
     async def run(self):
@@ -99,7 +101,7 @@ class GPTResearcher:
     async def get_similar_content_by_query(self, query, pages):
         await stream_output("logs", f"🌐 Summarizing url: {query}", self.websocket)
         # Summarize Raw Data
-        context_compressor = ContextCompressor(documents=pages)
+        context_compressor = ContextCompressor(documents=pages, embeddings=self.memory.get_embeddings())
         # Run Tasks
         return context_compressor.get_context(query, max_results=8)
 

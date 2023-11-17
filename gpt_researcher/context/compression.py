@@ -1,4 +1,3 @@
-from langchain.embeddings import OpenAIEmbeddings
 from .retriever import SearchAPIRetriever
 from langchain.retrievers import (
     ContextualCompressionRetriever,
@@ -11,15 +10,15 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 class ContextCompressor:
-    def __init__(self, documents, max_results=5, **kwargs):
+    def __init__(self, documents, embeddings, max_results=5, **kwargs):
         self.max_results = max_results
         self.documents = documents
         self.kwargs = kwargs
+        self.embeddings = embeddings
 
     def _get_contextual_retriever(self):
-        embeddings = OpenAIEmbeddings()
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-        relevance_filter = EmbeddingsFilter(embeddings=embeddings, similarity_threshold=0.78)
+        relevance_filter = EmbeddingsFilter(embeddings=self.embeddings, similarity_threshold=0.78)
         pipeline_compressor = DocumentCompressorPipeline(
             transformers=[splitter, relevance_filter]
         )
