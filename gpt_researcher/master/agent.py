@@ -89,10 +89,10 @@ class GPTResearcher:
 
         # Scrape Urls
         # await stream_output("logs", f"📝Scraping urls {new_search_urls}...\n", self.websocket)
-        content = scrape_urls(new_search_urls, self.cfg)
+        scraped_content_results = scrape_urls(new_search_urls, self.cfg)
         await stream_output("logs", f"🤔Researching for relevant information...\n", self.websocket)
         # Summarize Raw Data
-        summary = await summarize(query=sub_query, content=content, agent_role_prompt=self.role, cfg=self.cfg, websocket=self.websocket)
+        summary = await summarize(query=sub_query, content=scraped_content_results, agent_role_prompt=self.role, cfg=self.cfg, websocket=self.websocket)
 
         # Run Tasks
         return summary
