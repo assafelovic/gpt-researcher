@@ -35,7 +35,7 @@ class SerpSearch():
                             "You can get a key at https://serper.dev/")
         return api_key
 
-    def search(self):
+    def search(self, max_results=7):
         """
         Searches the query
         Returns:
