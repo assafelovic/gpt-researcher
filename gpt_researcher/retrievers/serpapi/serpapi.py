@@ -1,4 +1,4 @@
-# Google Serper Retriever
+# SerpApi Retriever
 
 # libraries
 import os
@@ -6,30 +6,31 @@ import requests
 import json
 
 
-class SerperSearch():
+class SerpApiSearch():
     """
-    Google Serper Retriever
+    SerpApi Retriever
     """
     def __init__(self, query):
         """
-        Initializes the SerperSearch object
+        Initializes the SerpApiSearch object
         Args:
             query:
         """
+        raise NotImplementedError("SerpApiSearch is not fully implemented yet.")
         self.query = query
         self.api_key = self.get_api_key()
 
     def get_api_key(self):
         """
-        Gets the Serper API key
+        Gets the SerpApi API key
         Returns:
 
         """
         try:
-            api_key = os.environ["SERPER_API_KEY"]
+            api_key = os.environ["SERPAPI_API_KEY"]
         except:
-            raise Exception("Serper API key not found. Please set the SERPER_API_KEY environment variable. "
-                            "You can get a key at https://serper.dev/")
+            raise Exception("SerpApi API key not found. Please set the SERPAPI_API_KEY environment variable. "
+                            "You can get a key at https://serpapi.com/")
         return api_key
 
     def search(self, max_results=7):
@@ -39,19 +40,15 @@ class SerperSearch():
 
         """
         print("Searching with query {0}...".format(self.query))
-        """Useful for general internet search queries using the Serp API."""
+        """Useful for general internet search queries using SerpApi."""
 
 
-        # Search the query (see https://serper.dev/playground for the format)
-        url = "https://google.serper.dev/search"
-
-        headers = {
-        'X-API-KEY': self.api_key,
-        'Content-Type': 'application/json'
-        }
-        data = json.dumps({"q": self.query})
-
-        resp = requests.request("POST", url, headers=headers, data=data)
+        # Perform the search
+        # TODO: query needs to be url encoded, so the code won't work as is.
+        # Encoding should look something like this (but this is untested):
+        # url_encoded_query = self.query.replace(" ", "+")
+        url = "https://serpapi.com/search.json?engine=google&q=" + self.query + "&api_key=" + self.api_key
+        resp = requests.request("GET", url)
 
         # Preprocess the results
         if resp is None:
@@ -63,7 +60,7 @@ class SerperSearch():
         if search_results is None:
             return
 
-        results = search_results["organic"]
+        results = search_results["organic_results"]
         search_results = []
 
         # Normalize the results to match the format of the other search APIs
