@@ -25,9 +25,13 @@ def get_retriever(retriever):
         case "searx":
             from gpt_researcher.retrievers import SearxSearch
             retriever = SearxSearch
-        case "serp":
-            from gpt_researcher.retrievers import SerpSearch
-            retriever = SerpSearch
+        case "serpapi":
+            raise NotImplementedError("SerpApiSearch is not fully implemented yet.")
+            from gpt_researcher.retrievers import SerpApiSearch
+            retriever = SerpApiSearch
+        case "googleSerp":
+            from gpt_researcher.retrievers import SerperSearch
+            retriever = SerperSearch
         case "duckduckgo":
             from gpt_researcher.retrievers import Duckduckgo
             retriever = Duckduckgo
