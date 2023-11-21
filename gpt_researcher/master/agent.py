@@ -38,6 +38,7 @@ class GPTResearcher:
         print(f"🔎 Running research for '{self.query}'...")
         # Generate Agent
         self.agent, self.role = await choose_agent(self.query, self.cfg)
+        
         await stream_output("logs", self.agent, self.websocket)
 
         # Generate Sub-Queries including original query
@@ -45,7 +46,7 @@ class GPTResearcher:
         await stream_output("logs",
                             f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
                             self.websocket)
-
+        await stream_output("logs", f"Config: {self.cfg.__dict__}", self.websocket)
         # Run Sub-Queries
         for sub_query in sub_queries:
             await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
@@ -104,3 +105,7 @@ class GPTResearcher:
         # Run Tasks
         return context_compressor.get_context(query, max_results=8)
 
+    async def update_config(self, key, value):
+        """Update configuration setting."""
+        self.cfg.update_setting(key, value)
+        # Handle any necessary updates or side-effects

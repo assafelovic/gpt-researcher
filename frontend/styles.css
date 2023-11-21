@@ -129,3 +129,77 @@ footer {
     padding: 10px;
     border-radius: 12px;
 }
+
+
+/* Config Rendering */
+.collapsible {
+    background-color: rgba(255,255,255,0.1); /* Semi-transparent white */
+    color: white;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+    transition: 0.4s;
+    border-radius: 12px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.collapsible:hover {
+    background-color: rgba(255,255,255,0.2); /* Slightly darker on hover */
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.content {
+    padding: 0 18px;
+    display: none;
+    overflow: hidden;
+    background-color: rgba(255,255,255,0.1); /* Semi-transparent white */
+    color: #fff; /* White text */
+    border-radius: 12px;
+    margin-top: 10px; /* Space between button and content */
+}
+
+.config-item .content input {
+    flex-grow: 1;
+    margin-left: 10px;
+    background-color: rgba(255,255,255,0.1); /* Semi-transparent white */
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.config-item .content input:hover, .config-item .content input:focus {
+    background-color: #dfe4ea;
+    color: #333;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.update-all-configs {
+    margin-top: 20px; /* Spacing from the last config input */
+    margin-bottom: 20px;
+    /* Any additional styling you want specifically for this button */
+}
+
+.small-description {
+    color: #CFCFCF; /* Lighter gray for contrast */
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem; /* Less space below the description */
+}
+
+/* Style for labels */
+.form-group label {
+    font-size: 1rem;
+    color: #FFFFFF; /* White color for better readability */
+    display: block;
+    margin-bottom: 0rem;
+}
+
+
+.form-group div {
+    margin-bottom : 1.7rem;
+}
