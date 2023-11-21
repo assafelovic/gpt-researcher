@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from typing import Any
+from typing import Any,  List
 import json
 import os
 from gpt_researcher.utils.websocket_manager import WebSocketManager
@@ -63,25 +63,25 @@ async def websocket_endpoint(websocket: WebSocket):
         await manager.disconnect(websocket)
 
 
-@app.post("/update-config")
-async def update_config(config_update: ConfigUpdateRequest):
-    try:
-        # Read existing config
-        config_data = Config.read_config_from_file()
+@app.post("/update-configs")
+async def update_configs(config_updates: List[ConfigUpdateRequest]):
+    results = []
+    config_data = Config.read_config_from_file()
+    for update in config_updates:
+        try:
 
-        # Update config
-        config_data[config_update.key] = config_update.value
+            # Update config
+            config_data[update.key] = Config.type_mapping[update.key](update.value)
 
-        # Write updated config to file
-        Config.write_config_to_file(config_data)
+            results.append({"key": update.key, "status": "success"})
+        except Exception as e:
+            print(f"Error updating configuration {update.key}: {str(e)}")
+            results.append({"key": update.key, "status": "error"})
 
-        return {"message": "Configuration updated successfully"}
-    except Exception as e:
-        # Log the actual error for debugging
-        print(f"Error updating configuration: {str(e)}")
-
-        # Return a generic error message to the client
-        raise HTTPException(status_code=500, detail="Error updating configuration")
+    # Write updated config to file
+    Config.write_config_to_file(config_data)
+    results.append({"key":"config_write", "status": "success"})
+    return results
 
 
 @app.get("/get-config")

@@ -194,28 +194,6 @@ const GPTResearcher = (() => {
         }
     };
 
-    const updateConfig = () => {
-      const key = document.getElementById('configKey').value;
-      const value = document.getElementById('configValue').value;
-
-      // AJAX request to FastAPI server
-      fetch('/update-config', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ key, value })
-      })
-      .then(response => response.json())
-      .then(data => {
-          console.log('Success:', data);
-          alert('Configuration updated successfully');
-      })
-      .catch((error) => {
-          console.error('Error:', error);
-          alert('Failed to update configuration');
-      });
-    };
     
     const updateAllConfigs = () => {
       const configFields = document.getElementById('configFields');
@@ -223,24 +201,21 @@ const GPTResearcher = (() => {
       const updates = Array.from(inputs).map(input => {
           return { key: input.id.replace('config-', ''), value: input.value };
       });
-
-      Promise.all(updates.map(update => {
-          return fetch('/update-config', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(update)
-          });
-      }))
-      .then(responses => Promise.all(responses.map(res => res.json())))
+  
+      fetch('/update-configs', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updates)
+      })
+      .then(response => response.json())
       .then(data => {
-          // Check if all updates were successful
-          console.log(data);
-          if (data.every(response => response.message === "Configuration updated successfully")) {
+          if (data.every(update => update.status === "success")) {
               alert('All configurations have been updated successfully.');
           } else {
-              alert('Some configurations could not be updated.');
+              const failedUpdates = data.filter(update => update.status !== "success");
+              alert('Failed to update configurations: ' + failedUpdates.map(update => update.key).join(', '));
           }
       })
       .catch((error) => {
@@ -248,7 +223,6 @@ const GPTResearcher = (() => {
           alert('Failed to update configurations.');
       });
     };
-
 
   document.addEventListener("DOMContentLoaded", () => {
       init();
