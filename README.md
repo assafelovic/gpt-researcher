@@ -70,7 +70,7 @@ Please see [here](https://docs.tavily.com/docs/gpt-researcher/getting-started) f
 
 ```bash
 $ git clone https://github.com/assafelovic/gpt-researcher.git
-$ cd gpt-researcher
+$ cd gpt_researcher
 ```
 
 <br />
