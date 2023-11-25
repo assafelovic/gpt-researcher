@@ -46,7 +46,7 @@ class GPTResearcher:
         await stream_output("logs",
                             f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
                             self.websocket)
-        await stream_output("logs", f"Config: {self.cfg.__dict__}", self.websocket)
+    
         # Run Sub-Queries
         for sub_query in sub_queries:
             await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)

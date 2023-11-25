@@ -93,7 +93,6 @@ class Config:
     @classmethod
     def get_config_description(cls, display_all: bool = False):
         # Filter the config description to only include the keys that are to_display
-        print(cls,cls.to_display)
         if display_all:
             return cls.config_description
         else:
