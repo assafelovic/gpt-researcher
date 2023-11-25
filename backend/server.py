@@ -87,8 +87,14 @@ async def update_configs(config_updates: List[ConfigUpdateRequest]):
 @app.get("/get-config")
 async def get_config():
     try:
-        config_data = Config.read_config_from_file()
-        config_descriptions = Config.config_description
+        config_data = Config.read_config_from_file(display_all=False)
+        config_descriptions = Config.get_config_description(display_all=False)
         return {"config": config_data, "descriptions": config_descriptions}
     except Exception as e:
+
+        import logging
+        import traceback
+
+        error_traceback = traceback.format_exc()
+        logging.error(f"Exception in get_config: {error_traceback}")
         raise HTTPException(status_code=500, detail=str(e))
