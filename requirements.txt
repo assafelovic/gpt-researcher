@@ -17,7 +17,7 @@ python-multipart==0.0.6
 markdown==3.5.1
 langchain==0.0.335
 tavily-python==0.2.8
-permchain==0.0.3
+permchain==0.0.6
 arxiv==2.0.0
 PyMuPDF==1.23.6
 requests==2.31.0
