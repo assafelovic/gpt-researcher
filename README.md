@@ -100,6 +100,7 @@ if __name__ == "__main__":
 
     report = asyncio.run(get_report(query, report_type))
     print(report)
+
 ```
 
 
