@@ -11,18 +11,16 @@ Follow these easy steps to get started:
 ```bash
 pip install gpt-researcher
 ```
-2. Create a .env file with your OpenAI API key or simply export it
+2. **Environment Variables:** Create a .env file with your OpenAI API key or simply export it
 ```bash
 export OPENAI_API_KEY={Your OpenAI API Key here}
 ```
 ```bash
 export TAVILY_API_KEY={Your Tavily API Key here}
 ```
-3. Start using GPT Researcher in your own codebase
+3. **Start using GPT Researcher in your own codebase**
 
 ## Example Usage 📝
-Implement get_report_by_type function to utilize different report types:
-
 ```python
 from gpt_researcher import GPTResearcher
 import asyncio
