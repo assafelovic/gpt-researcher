@@ -1,4 +1,4 @@
-# 🚀 PIP Package 🚀
+# PIP Package
 
 🌟 **Exciting News!** Now, you can integrate `gpt-researcher` with your apps seamlessly!
 
