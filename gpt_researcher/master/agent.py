@@ -9,7 +9,7 @@ class GPTResearcher:
     """
     GPT Researcher
     """
-    def __init__(self, query, report_type, config_path=None, websocket=None):
+    def __init__(self, query, report_type, urls=None, config_path=None, websocket=None):
         """
         Initialize the GPT Researcher class.
         Args:
@@ -28,6 +28,7 @@ class GPTResearcher:
         self.context = []
         self.memory = Memory()
         self.visited_urls = set()
+        self.urls = urls
 
     async def run(self):
         """
@@ -35,24 +36,32 @@ class GPTResearcher:
         Returns:
             Report
         """
+
         print(f"🔎 Running research for '{self.query}'...")
         # Generate Agent
         self.agent, self.role = await choose_agent(self.query, self.cfg)
         await stream_output("logs", self.agent, self.websocket)
 
-        # Generate Sub-Queries including original query
-        sub_queries = await get_sub_queries(self.query, self.role, self.cfg) + [self.query]
-        await stream_output("logs",
-                            f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
-                            self.websocket)
+        if self.urls:
+            await stream_output("logs",
+                                f"🧠 I will conduct my research based on the following urls: {self.urls}...",
+                                self.websocket)
+            scraped_sites = scrape_urls(self.urls, self.cfg)
+            self.context = await self.get_similar_content_by_query(self.query, scraped_sites)
+        else:
+            # Generate Sub-Queries including original query
+            sub_queries = await get_sub_queries(self.query, self.role, self.cfg) + [self.query]
+            await stream_output("logs",
+                                f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
+                                self.websocket)
 
-        # Run Sub-Queries
-        for sub_query in sub_queries:
-            await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
-            scraped_sites = await self.scrape_sites_by_query(sub_query)
-            context = await self.get_similar_content_by_query(sub_query, scraped_sites)
-            await stream_output("logs", f"📃 {context}", self.websocket)
-            self.context.append(context)
+            # Run Sub-Queries
+            for sub_query in sub_queries:
+                await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
+                scraped_sites = await self.scrape_sites_by_query(sub_query)
+                context = await self.get_similar_content_by_query(sub_query, scraped_sites)
+                await stream_output("logs", f"📃 {context}", self.websocket)
+                self.context.append(context)
         # Conduct Research
         await stream_output("logs", f"✍️ Writing {self.report_type} for research task: {self.query}...", self.websocket)
         report = await generate_report(query=self.query, context=self.context,
