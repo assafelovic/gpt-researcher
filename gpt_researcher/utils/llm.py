@@ -39,8 +39,9 @@ async def create_chat_completion(
 
     # create response
     for attempt in range(10):  # maximum of 10 attempts
+        deployment_name=model
         response = await send_chat_completion_request(
-            messages, model, temperature, max_tokens, stream, llm_provider, websocket
+            messages, deployment_name, temperature, max_tokens, stream, llm_provider, websocket
         )
         return response
 
@@ -56,7 +57,7 @@ async def send_chat_completion_request(
 ):
     if not stream:
         result = lc_openai.ChatCompletion.create(
-            model=model,  # Change model here to use different models
+            deployment_name=model,  # Change model here to use different models
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -64,7 +65,8 @@ async def send_chat_completion_request(
         )
         return result["choices"][0]["message"]["content"]
     else:
-        return await stream_response(model, messages, temperature, max_tokens, llm_provider, websocket)
+        deployment_name=model
+        return await stream_response(deployment_name, messages, temperature, max_tokens, llm_provider, websocket)
 
 
 async def stream_response(model, messages, temperature, max_tokens, llm_provider, websocket=None):
@@ -72,7 +74,7 @@ async def stream_response(model, messages, temperature, max_tokens, llm_provider
     response = ""
 
     for chunk in lc_openai.ChatCompletion.create(
-            model=model,
+            deployment_name=model,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -104,7 +106,7 @@ def choose_agent(smart_llm_model: str, llm_provider: str, task: str) -> dict:
     """
     try:
         response = create_chat_completion(
-            model=smart_llm_model,
+            deployment_name=smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{auto_agent_instructions()}"},
                 {"role": "user", "content": f"task: {task}"}],

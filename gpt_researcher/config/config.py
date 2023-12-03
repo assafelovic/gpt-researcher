@@ -9,7 +9,8 @@ class Config:
         """Initialize the config class."""
         self.config_file = config_file
         self.retriever = "tavily"
-        self.llm_provider = "ChatOpenAI"
+        self.llm_provider = "AzureChatOpenAI"
+        self.azure_embedding_model = "ada2"
         self.fast_llm_model = "gpt-3.5-turbo-16k"
         self.smart_llm_model = "gpt-4-1106-preview"
         self.fast_token_limit = 2000
