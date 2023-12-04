@@ -1,11 +1,17 @@
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from typing import Any,  List
 import json
 import os
 from gpt_researcher.utils.websocket_manager import WebSocketManager
 from .utils import write_md_to_pdf
+from pydantic import BaseModel
+from gpt_researcher.config.config import Config 
+
+class ConfigUpdateRequest(BaseModel):
+    key: str
+    value: Any
 
 
 class ResearchRequest(BaseModel):
@@ -56,3 +62,39 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
 
+
+@app.post("/update-configs")
+async def update_configs(config_updates: List[ConfigUpdateRequest]):
+    results = []
+    config_data = Config.read_config_from_file()
+    for update in config_updates:
+        try:
+
+            # Update config
+            config_data[update.key] = Config.type_mapping[update.key](update.value)
+
+            results.append({"key": update.key, "status": "success"})
+        except Exception as e:
+            print(f"Error updating configuration {update.key}: {str(e)}")
+            results.append({"key": update.key, "status": "error"})
+
+    # Write updated config to file
+    Config.write_config_to_file(config_data)
+    results.append({"key":"config_write", "status": "success"})
+    return results
+
+
+@app.get("/get-config")
+async def get_config():
+    try:
+        config_data = Config.read_config_from_file(display_all=False)
+        config_descriptions = Config.get_config_description(display_all=False)
+        return {"config": config_data, "descriptions": config_descriptions}
+    except Exception as e:
+
+        import logging
+        import traceback
+
+        error_traceback = traceback.format_exc()
+        logging.error(f"Exception in get_config: {error_traceback}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -66,3 +66,8 @@ async def run_agent(task, report_type, websocket):
     await websocket.send_json({"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"})
 
     return report
+
+async def update_config(self, key, value):
+    """Update configuration setting."""
+    self.cfg.update_setting(key, value)
+    # Handle any necessary updates or side-effects

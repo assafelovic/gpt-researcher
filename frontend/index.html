@@ -26,6 +26,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin-bottom: 20px;
         }
 
         .agent-choices {
@@ -60,6 +61,16 @@
 <main class="container" id="form">
     <div class="agent-item"><img src="/static/defaultAgentAvatar.JPG" class="avatar"
                                                 alt="Auto Agent"></div>
+
+    <!-- Configuration Update Section -->
+    <div class="config-settings">
+        <button class="collapsible">Configuration Settings</button>
+        
+        <div class="content" id="configFields"></div>
+        
+    </div>
+    
+
     <form method="POST" class="mt-3" onsubmit="GPTResearcher.startResearch(); return false;">
         <div class="form-group">
             <label for="task" class="agent-question">What would you like me to research next?</label>

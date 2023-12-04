@@ -142,9 +142,96 @@ const GPTResearcher = (() => {
       }
     }
 
-    document.addEventListener("DOMContentLoaded", init);
+    const fetchAndDisplayConfig = () => {
+      fetch('/get-config')
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
+          }
+          return response.json();
+      })
+      .then(data => {
+          const { config, descriptions } = data;
+          const configFields = document.getElementById('configFields');
+          configFields.innerHTML = '';
+  
+          Object.keys(config).forEach(key => {
+              configFields.innerHTML += `
+                  <div class="form-group">
+                      <label>${key}</label>
+                      <small class="small-description">${descriptions[key]}</small>
+                      <input type="text" class="form-control" id="config-${key}" value="${config[key]}">
+                      
+                  </div>
+              `;
+          });
+  
+          configFields.innerHTML += `
+              <button onclick="GPTResearcher.updateAllConfigs()" class="btn btn-primary update-all-configs">Update All Configurations</button>`;
+          initializeCollapsible();
+      })
+      .catch((error) => {
+          console.error('Error:', error);
+      });
+    };
+  
+    // Function to initialize collapsible element
+    const initializeCollapsible = () => {
+      const collapsible = document.querySelector(".collapsible");
+      if (collapsible) {
+          const content = collapsible.nextElementSibling;
+          collapsible.addEventListener("click", function() {
+              this.classList.toggle("active");
+              if (content.style.display === "block" || content.style.display === "") {
+                  content.style.display = "none";
+              } else {
+                  content.style.display = "block";
+              }
+          });
+
+          // Start with the configuration section collapsed
+          content.style.display = "none";
+        }
+    };
+
+    
+    const updateAllConfigs = () => {
+      const configFields = document.getElementById('configFields');
+      const inputs = configFields.getElementsByTagName('input');
+      const updates = Array.from(inputs).map(input => {
+          return { key: input.id.replace('config-', ''), value: input.value };
+      });
+  
+      fetch('/update-configs', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updates)
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.every(update => update.status === "success")) {
+              alert('All configurations have been updated successfully.');
+          } else {
+              const failedUpdates = data.filter(update => update.status !== "success");
+              alert('Failed to update configurations: ' + failedUpdates.map(update => update.key).join(', '));
+          }
+      })
+      .catch((error) => {
+          console.error('Error:', error);
+          alert('Failed to update configurations.');
+      });
+    };
+
+  document.addEventListener("DOMContentLoaded", () => {
+      init();
+      fetchAndDisplayConfig();
+  });
+
     return {
       startResearch,
       copyToClipboard,
+      updateAllConfigs,
     };
   })();
