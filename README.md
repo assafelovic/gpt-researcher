@@ -75,25 +75,25 @@ Please see [here](https://docs.tavily.com/docs/gpt-researcher/getting-started) f
 > **Step 1** - Download the project
 
 ```bash
-$ git clone https://github.com/assafelovic/gpt-researcher.git
-$ cd gpt-researcher
+git clone https://github.com/assafelovic/gpt-researcher.git
+cd gpt-researcher
 ```
 
 <br />
 
 > **Step 2** - Install dependencies
 ```bash
-$ pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 <br />
 
 > **Step 3** - Create .env file with your OpenAI Key and Tavily API key or simply export it
 
 ```bash
-$ export OPENAI_API_KEY={Your OpenAI API Key here}
+export OPENAI_API_KEY={Your OpenAI API Key here}
 ```
 ```bash
-$ export TAVILY_API_KEY={Your Tavily API Key here}
+export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 - **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources) supported by [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai), simply change the llm model and provider in config/config.py. Follow [this guide](https://python.langchain.com/docs/integrations/llms/) to learn how to integrate LLMs with Langchain. 
@@ -105,7 +105,7 @@ $ export TAVILY_API_KEY={Your Tavily API Key here}
 > **Step 4** - Run the agent with FastAPI
 
 ```bash
-$ uvicorn main:app --reload
+uvicorn main:app --reload
 ```
 <br />
 
