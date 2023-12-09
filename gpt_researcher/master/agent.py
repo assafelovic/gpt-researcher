@@ -47,7 +47,9 @@ class GPTResearcher:
         else:
             self.context = await self.get_context_by_search(self.query)
 
-        # Conduct Research
+        # Write Research Report
+        if self.report_type == "custom_report":
+            self.role = self.cfg.agent_role if self.cfg.agent_role else self.role
         await stream_output("logs", f"✍️ Writing {self.report_type} for research task: {self.query}...", self.websocket)
         report = await generate_report(query=self.query, context=self.context,
                                        agent_role_prompt=self.role, report_type=self.report_type,
