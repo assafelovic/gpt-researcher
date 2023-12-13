@@ -25,7 +25,7 @@ Search for data based on a query.
 #### Parameters
 - **api_key** (required): Your unique API key.
 - **query** (required): The search query string.
-- **search_depth** (optional): The depth of the search. It can be **basic** or **advanced**. Default is **basic** for basic_search and **advanced** for advanced_search.
+- **search_depth** (optional): The depth of the search. It can be **basic** or **advanced**. Default is **basic** for quick results and **advanced** for indepth high quality results but longer response time. Advanced calls equals 2 requests.
 - **include_images** (optional): Include a list of query related images in the response. Default is False.
 - **include_answer** (optional): Include answers in the search results. Default is False.
 - **include_raw_content** (optional): Include raw content in the search results. Default is False.
