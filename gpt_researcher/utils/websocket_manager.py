@@ -59,7 +59,7 @@ async def run_agent(task, report_type, websocket):
     # add customized JSON config file path here
     config_path = None
     # run agent
-    researcher = GPTResearcher(task, report_type, config_path, websocket)
+    researcher = GPTResearcher(query=task, report_type=report_type, source_urls=None, config_path=config_path, websocket=websocket)
     report = await researcher.run()
     # measure time
     end_time = datetime.datetime.now()
