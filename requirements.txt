@@ -15,7 +15,7 @@ pydantic==2.5.1
 fastapi==0.104.1
 python-multipart==0.0.6
 markdown==3.5.1
-langchain==0.0.335
+langchain==0.0.350
 tavily-python==0.2.8
 permchain==0.0.6
 arxiv==2.0.0
