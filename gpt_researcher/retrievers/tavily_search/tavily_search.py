@@ -3,6 +3,7 @@
 # libraries
 import os
 from tavily import TavilyClient
+from duckduckgo_search import DDGS
 
 
 class TavilySearch():
@@ -39,8 +40,12 @@ class TavilySearch():
         Returns:
 
         """
-        # Search the query
-        results = self.client.search(self.query, search_depth="advanced", max_results=max_results)
-        # Return the results
-        search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results.get("results", [])]
+        try:
+            # Search the query
+            results = self.client.search(self.query, search_depth="advanced", max_results=max_results)
+            # Return the results
+            search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results.get("results", [])]
+        except Exception as e: # Fallback in case overload on Tavily Search API
+            ddg = DDGS()
+            search_response = ddg.text(self.query, region='wt-wt', max_results=max_results)
         return search_response
