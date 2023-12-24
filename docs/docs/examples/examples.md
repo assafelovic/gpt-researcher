@@ -13,11 +13,11 @@ client = TavilyClient(api_key="")
 ```
 ```python  
 # simple query using tavily's advanced search
-client.search("What happend in the latest burning man floods?", search_depth="advanced")
+client.search("What happened in the latest burning man floods?", search_depth="advanced")
 ```
 ### Response
 ```commandline
-{'query': 'What happend in the latest burning man floods?',
+{'query': 'What happened in the latest burning man floods?',
  'follow_up_questions': ['How severe were the floods at Burning Man?',
   'What were the impacts of the floods?',
   'How did the organizers handle the floods at Burning Man?'],
@@ -62,7 +62,7 @@ from langchain.adapters.openai import convert_openai_messages
 from langchain.chat_models import ChatOpenAI
 
 # setup query
-query = "What happend in the latest burning man floods?"
+query = "What happened in the latest burning man floods?"
 
 # run tavily search
 content = client.search(query, search_depth="advanced")["results"]
