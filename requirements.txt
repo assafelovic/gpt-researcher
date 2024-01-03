@@ -2,7 +2,7 @@
 asyncio==3.4.3
 beautifulsoup4==4.12.2
 colorama==0.4.6
-duckduckgo_search==3.9.8
+duckduckgo_search==4.1.1
 md2pdf==1.0.1
 openai~=1.3.3
 playwright==1.39.0
