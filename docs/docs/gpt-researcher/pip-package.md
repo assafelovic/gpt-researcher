@@ -38,7 +38,7 @@ if __name__ == "__main__":
     report = asyncio.run(get_report(query, report_type))
     print(report)
 ```
-<br></br>
+
 # Specific Examples 🌐
 ## Example 1: Research Report 📚
 ```python
@@ -56,7 +56,7 @@ report_type = "resource_report"
 query = "Outline for an article on the impact of AI in education"
 report_type = "outline_report"
 ```
-<br></br>
+
 # Integration with Web Frameworks 🌍
 ## FastAPI Example
 ```python
