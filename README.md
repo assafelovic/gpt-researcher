@@ -161,6 +161,7 @@ python -m uvicorn main:app --reload
 ```
 
 - **Issue: OSError** - For Windows 11 Pro/Home users encountering the 'OSError: cannot load library 'gobject-2.0-0'' error, please refer to [this OSError GitHub issue](https://github.com/assafelovic/gpt-researcher/issues/314). To resolve this issue, install the `WeasyPrint` software on your local machine by using the [GTK for Windows Runtime Environment Installer](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/tag/2022-01-04).
+
 <br />
 
 > **Step 6** - Visit http://localhost:8000 in any web browser and explore your research!
