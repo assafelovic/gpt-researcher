@@ -76,7 +76,7 @@ async def get_report(report_type: str, query: str):
 # uvicorn main:app --reload
 ```
 
-## Flask Example
+### Flask Example
 ```python
 from flask import Flask, request
 from gpt_researcher import GPTResearcher
