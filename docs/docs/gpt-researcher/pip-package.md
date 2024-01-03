@@ -39,26 +39,26 @@ if __name__ == "__main__":
     print(report)
 ```
 
-# Specific Examples 🌐
-## Example 1: Research Report 📚
+## Specific Examples 🌐
+### Example 1: Research Report 📚
 ```python
 query = "Latest developments in renewable energy technologies"
 report_type = "research_report"
 ```
-## Example 2: Resource Report 📋
+### Example 2: Resource Report 📋
 ```python
 query = "List of top AI conferences in 2023"
 report_type = "resource_report"
 ```
 
-## Example 3: Outline Report 📝
+### Example 3: Outline Report 📝
 ```python
 query = "Outline for an article on the impact of AI in education"
 report_type = "outline_report"
 ```
 
-# Integration with Web Frameworks 🌍
-## FastAPI Example
+## Integration with Web Frameworks 🌍
+### FastAPI Example
 ```python
 from fastapi import FastAPI
 from gpt_researcher import GPTResearcher
