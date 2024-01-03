@@ -9,7 +9,7 @@ class GPTResearcher:
     """
     GPT Researcher
     """
-    def __init__(self, query, report_type, source_urls=None, config_path=None, websocket=None):
+    def __init__(self, query, report_type="research_report", source_urls=None, config_path=None, websocket=None):
         """
         Initialize the GPT Researcher class.
         Args:
