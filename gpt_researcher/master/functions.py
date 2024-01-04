@@ -19,6 +19,9 @@ def get_retriever(retriever):
         case "tavily":
             from gpt_researcher.retrievers import TavilySearch
             retriever = TavilySearch
+        case "tavily_news":
+            from gpt_researcher.retrievers import TavilyNews
+            retriever = TavilyNews
         case "google":
             from gpt_researcher.retrievers import GoogleSearch
             retriever = GoogleSearch
@@ -35,6 +38,9 @@ def get_retriever(retriever):
         case "duckduckgo":
             from gpt_researcher.retrievers import Duckduckgo
             retriever = Duckduckgo
+        case "BingSearch":
+            from gpt_researcher.retrievers import BingSearch
+            retriever = BingSearch
 
         case _:
             raise Exception("Retriever not found.")
