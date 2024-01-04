@@ -8,6 +8,8 @@ env/
 outputs/
 #Ignore pycache
 **/__pycache__/
+#Ignore mypy cache
+.mypy_cache/
 node_modules
 .idea
 .DS_Store
