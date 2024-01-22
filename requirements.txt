@@ -10,7 +10,7 @@ python-dotenv~=1.0.0
 pyyaml==6.0.1
 selenium==4.15.2
 webdriver-manager==4.0.1
-uvicorn==0.24.0.post1
+uvicorn==0.26.0
 pydantic==2.5.1
 fastapi==0.104.1
 python-multipart==0.0.6
