@@ -23,3 +23,4 @@ PyMuPDF==1.23.6
 requests==2.31.0
 jinja2==3.1.2
 aiofiles~=23.2.1
+newspaper3k==0.2.8
