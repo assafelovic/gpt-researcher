@@ -72,7 +72,7 @@ Please see [here](https://docs.tavily.com/docs/gpt-researcher/getting-started) f
 
 <br />
 
-> **Step 1** - Download the project
+> **Step 1** - Download the project and navigate to its directory. You'll encounter two options: Virtual Environment and Poetry. Select either Step-2 or Step-3 based on your familiarity with each.:
 
 ```bash
 git clone https://github.com/assafelovic/gpt-researcher.git
@@ -81,19 +81,72 @@ cd gpt-researcher
 
 <br />
 
-> **Step 2** - Install dependencies
+> **Step 2** - 🌐🌀 Virtual Environment 🛡️.
+
+#### *Establishing the Virtual Environment with Activate/Deactivate configuration*
+
+Create a virtual environment using the `venv` package with the environment name `<your_name>`, for example, `env`. Execute the following command in the PowerShell/CMD terminal:
+
 ```bash
-pip install -r requirements.txt
+python -m venv env
 ```
+
+To activate the virtual environment, use the following activation script in PowerShell/CMD terminal:
+
+```bash
+.\env\Scripts\activate
+```
+
+To deactivate the virtual environment, run the following deactivation script in PowerShell/CMD terminal:
+
+```bash
+deactivate
+```
+
+#### *Install the dependencies for a Virtual environment*
+
+After activating the `env` environment, install dependencies using the `requirements.txt` file with the following command:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
 <br />
 
-> **Step 3** - Create .env file with your OpenAI Key and Tavily API key or simply export it
+> **Step 3** - 📜🎭 Poetry 📝
+
+#### *Establishing the Poetry dependencies and virtual environment with Poetry version `~1.7.1`*
+
+Install project dependencies and simultaneously create a virtual environment for the specified project. By executing this command, Poetry reads the project's "pyproject.toml" file to determine the required dependencies and their versions, ensuring a consistent and isolated development environment. The virtual environment allows for a clean separation of project-specific dependencies, preventing conflicts with system-wide packages and enabling more straightforward dependency management throughout the project's lifecycle.
+
+```bash
+poetry install
+```
+
+#### *Activate the virtual environment associated with a Poetry project*
+
+By running this command, the user enters a shell session within the isolated environment associated with the project, providing a dedicated space for development and execution. This virtual environment ensures that the project dependencies are encapsulated, avoiding conflicts with system-wide packages. Activating the Poetry shell is essential for seamlessly working on a project, as it ensures that the correct versions of dependencies are used and provides a controlled environment conducive to efficient development and testing.
+
+```bash
+poetry shell
+```
+
+<br />
+
+> **Step 4** - Set up API keys using two methods: exporting them directly and storing them in a `.env` file.
+
+For Linux/Temporary Windows Setup, use the export method:
 
 ```bash
 export OPENAI_API_KEY={Your OpenAI API Key here}
-```
-```bash
 export TAVILY_API_KEY={Your Tavily API Key here}
+```
+
+For a more permanent setup, create a `.env` file in the current `gpt-researcher` folder and input the keys as follows:
+
+```bash
+OPENAI_API_KEY={Your OpenAI API Key here}
+TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 - **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources) supported by [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai), simply change the llm model and provider in config/config.py. Follow [this guide](https://python.langchain.com/docs/integrations/llms/) to learn how to integrate LLMs with Langchain. 
@@ -102,14 +155,16 @@ export TAVILY_API_KEY={Your Tavily API Key here}
 
 <br />
 
-> **Step 4** - Run the agent with FastAPI
-
+> **Step 5** - Launch the FastAPI application agent on a *Virtual Environment or Poetry* setup by executing the following command:
 ```bash
-uvicorn main:app --reload
+python -m uvicorn main:app --reload
 ```
+
+- **Issue: OSError** - For Windows 11 Pro/Home users encountering the 'OSError: cannot load library 'gobject-2.0-0'' error, please refer to [this OSError GitHub issue](https://github.com/assafelovic/gpt-researcher/issues/314). To resolve this issue, install the `WeasyPrint` software on your local machine by using the [GTK for Windows Runtime Environment Installer](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/tag/2022-01-04).
+
 <br />
 
-> **Step 5** - Go to http://localhost:8000 on any browser and enjoy researching!
+> **Step 6** - Visit http://localhost:8000 in any web browser and explore your research!
 
 To learn how to get started with Docker or to learn more about the features and services check out the [documentation](https://docs.tavily.com) page.
 
