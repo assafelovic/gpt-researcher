@@ -113,7 +113,7 @@ def scrape_urls(urls, cfg=None):
     content = []
     user_agent = cfg.user_agent if cfg else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
     try:
-        content = Scraper(urls, user_agent).run()
+        content = Scraper(urls, user_agent, cfg.scraper).run()
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
     return content

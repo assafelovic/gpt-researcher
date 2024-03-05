@@ -10,7 +10,7 @@ class Scraper:
     """
     Scraper class to extract the content from the links
     """
-    def __init__(self, urls, user_agent, scraper="bs"):
+    def __init__(self, urls, user_agent, scraper):
         """
         Initialize the Scraper class.
         Args:
