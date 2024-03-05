@@ -26,6 +26,7 @@ class Config:
         self.report_format = os.getenv('REPORT_FORMAT', "APA")
         self.max_iterations = int(os.getenv('MAX_ITERATIONS', 3))
         self.agent_role = os.getenv('AGENT_ROLE', None)
+        self.scraper = os.getenv("SCRAPER", "bs")
 
         self.load_config_file()
 
