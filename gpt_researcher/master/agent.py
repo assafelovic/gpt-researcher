@@ -27,7 +27,7 @@ class GPTResearcher:
         self.retriever = get_retriever(self.cfg.retriever)
         self.context = []
         self.source_urls = source_urls
-        self.memory = Memory()
+        self.memory = Memory(self.cfg.embedding_provider)
         self.visited_urls = set()
 
     async def run(self):
