@@ -4,13 +4,13 @@ from langchain.retrievers import ArxivRetriever
 from functools import partial
 import requests
 from bs4 import BeautifulSoup
-
+from newspaper import Article
 
 class Scraper:
     """
     Scraper class to extract the content from the links
     """
-    def __init__(self, urls, user_agent):
+    def __init__(self, urls, user_agent, scraper):
         """
         Initialize the Scraper class.
         Args:
@@ -21,6 +21,7 @@ class Scraper:
         self.session.headers.update({
             "User-Agent": user_agent
         })
+        self.scraper = scraper
 
     def run(self):
         """
@@ -43,8 +44,10 @@ class Scraper:
             elif "arxiv.org" in link:
                 doc_num = link.split("/")[-1]
                 content = self.scrape_pdf_with_arxiv(doc_num)
-            elif link:
+            elif link and self.scraper=="bs":
                 content = self.scrape_text_with_bs(link, session)
+            else:
+                content = self.scrape_url_with_newspaper(link)
 
             if len(content) < 100:
                 return {'url': link, 'raw_content': None}
@@ -64,6 +67,31 @@ class Scraper:
         chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
         content = "\n".join(chunk for chunk in chunks if chunk)
         return content
+
+    def scrape_url_with_newspaper(self, url) -> str:
+        try:
+            # Uses newspaper3k to extract webpage content 
+            article = Article(
+                url,
+                language="en",
+                memoize_articles=False,
+                fetch_images=False
+            )
+            article.download()
+            article.parse()
+
+            # Extracting the title and text if present from the parsed article
+            title = article.title
+            text = article.text
+
+            # If title, summary are not present then return blank string
+            if not (title and text):
+                return ""
+
+            return f"{title} : {text}"
+        
+        except Exception as e:
+            return ""
 
     def scrape_pdf_with_pymupdf(self, url) -> str:
         """Scrape a pdf with pymupdf
