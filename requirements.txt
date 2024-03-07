@@ -22,3 +22,4 @@ PyMuPDF
 requests
 jinja2
 aiofiles
+newspaper3k
