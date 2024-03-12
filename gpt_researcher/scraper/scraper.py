@@ -3,7 +3,7 @@ from functools import partial
 
 import requests
 
-from .scraper import (
+from gpt_researcher.scraper import (
     ArxivScraper,
     BeautifulSoupScraper,
     NewspaperScraper,
