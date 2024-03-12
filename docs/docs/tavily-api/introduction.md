@@ -17,7 +17,7 @@ To try our API in action, you can now use GPT Researcher on our hosted version [
 ## How does the Search API work?
 Current search APIs such as Google, Serp and Bing retrieve search results based on user query. However, the results are sometimes irrelevant to the goal of the search, and return simple site URLs and snippets of content which are not always relevant. Because of this, any developer would need to then scrape the sites for relevant content, filter irrelevant information, optimize the content to fit LLM context limits, and more. This tasks is a burden and requires skills to get right.
 
-Tavily Search API aggregates over 20+ sites per a single API call, and uses propietary AI to score, filter and rank the top most relevant sources and content to your task, query or goal. 
+Tavily Search API aggregates over 20+ sites per a single API call, and uses proprietary AI to score, filter and rank the top most relevant sources and content to your task, query or goal. 
 In addition, Tavily allows developers to add custom fields such as context and limit response tokens to enable the optimal search experience for LLMs.
 
 Tavily can also help your AI agent make better decisions such as suggesting follow up search queries or including a short answer for cross agent communication.
