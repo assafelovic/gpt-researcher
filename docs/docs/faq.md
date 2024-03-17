@@ -36,7 +36,7 @@ Lastly, Tavily indexes and ranks search results based on factors such as trusted
 
 Remember: With LLM hallucinations, it's crucial to optimize for RAG with the right context and information.
 ### What is Tavily API pricing?
-Tavily is free to use for up to 1,000 API calls. If you're interested in more, we're excited to introduce our partners program which allows you to get increased API limit for free in exchange for feedback and collaboration.
+Tavily is free to use for up to 1,000 API calls. Check out our [pricing page](https://tavily.com/#pricing) for more information.
 
 At the moment we don't have a pricing model, since we're still in beta and focused on building the best product for our users. We're always open to feedback and suggestions, so please reach out if you have any ideas!
 ### What are your plans for the future?
