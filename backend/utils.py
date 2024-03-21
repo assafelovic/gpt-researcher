@@ -59,17 +59,21 @@ async def write_md_to_word(text: str) -> str:
     file_path = f"outputs/{task}"
 
     try:
-        # Convert Markdown to HTML
+        # Convert report markdown to HTML
         html = mistune.html(text)
+        # Create a document object
         doc = Document()
+        # Convert the html generated from the report to document format
         HtmlToDocx().add_html_to_document(html, doc)
 
-        doc.save({file_path}.docx)
+        # Saving the docx document to file_path
+        doc.save(f"{file_path}.docx")
         
         print(f"Report written to {file_path}.docx")
+
+        encoded_file_path = urllib.parse.quote(f"{file_path}.docx")
+        return encoded_file_path
+    
     except Exception as e:
         print(f"Error in converting Markdown to DOCX: {e}")
         return ""
-
-    encoded_file_path = urllib.parse.quote(f"{file_path}.docx")
-    return encoded_file_path
