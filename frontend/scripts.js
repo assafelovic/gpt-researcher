@@ -32,7 +32,6 @@ const GPTResearcher = (() => {
         } else if (data.type === 'path') {
           updateState("finished")
           updateDownloadLink(data);
-
         }
       };
   
@@ -67,8 +66,10 @@ const GPTResearcher = (() => {
     };
   
     const updateDownloadLink = (data) => {
-      const path = data.output;
-      document.getElementById("downloadLink").setAttribute("href", path);
+      const pdf_path = data.output.pdf;
+      const docx_path = data.output.docx;
+      document.getElementById("downloadLink").setAttribute("href", pdf_path);
+      document.getElementById("downloadLinkWord").setAttribute("href", docx_path);
     };
   
     const updateScroll = () => {
