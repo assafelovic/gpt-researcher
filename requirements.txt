@@ -8,8 +8,6 @@ playwright
 openai
 python-dotenv
 pyyaml
-selenium
-webdriver-manager
 uvicorn
 pydantic
 fastapi
@@ -25,3 +23,4 @@ aiofiles
 newspaper3k
 langchain_community
 SQLAlchemy
+langgraph
