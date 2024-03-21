@@ -3,7 +3,7 @@
 # libraries
 import os
 from tavily import TavilyClient
-from langchain.utilities import SearxSearchWrapper
+from langchain_community.utilities import SearxSearchWrapper
 
 
 class SearxSearch():
