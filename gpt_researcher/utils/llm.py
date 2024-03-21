@@ -2,10 +2,9 @@
 from __future__ import annotations
 import json
 from fastapi import WebSocket
-from langchain.adapters import openai as lc_openai
 from colorama import Fore, Style
 from typing import Optional
-
+from langchain_openai import ChatOpenAI
 from gpt_researcher.master.prompts import auto_agent_instructions
 
 
@@ -38,7 +37,7 @@ async def create_chat_completion(
         raise ValueError(f"Max tokens cannot be more than 8001, but got {max_tokens}")
 
     # create response
-    for attempt in range(10):  # maximum of 10 attempts
+    for _ in range(10):  # maximum of 10 attempts
         response = await send_chat_completion_request(
             messages, model, temperature, max_tokens, stream, llm_provider, websocket
         )
@@ -53,33 +52,36 @@ import logging
 
 async def send_chat_completion_request(
         messages, model, temperature, max_tokens, stream, llm_provider, websocket
-):
-    if not stream:
-        result = lc_openai.ChatCompletion.create(
-            model=model,  # Change model here to use different models
-            messages=messages,
+):   
+    if not stream:        
+        chat = ChatOpenAI(
+            model=model, 
             temperature=temperature,
-            max_tokens=max_tokens,
-            provider=llm_provider,  # Change provider here to use a different API
+            max_tokens=max_tokens
         )
-        return result["choices"][0]["message"]["content"]
+
+        output = await chat.ainvoke(messages)
+        
+        return output.content
+        
     else:
-        return await stream_response(model, messages, temperature, max_tokens, llm_provider, websocket)
+        return await stream_response(
+            model, messages, temperature, max_tokens, llm_provider, websocket
+        )
 
 
 async def stream_response(model, messages, temperature, max_tokens, llm_provider, websocket=None):
+    chat = ChatOpenAI(
+        model=model, 
+        temperature=temperature,
+        max_tokens=max_tokens
+    )
+
     paragraph = ""
     response = ""
-
-    for chunk in lc_openai.ChatCompletion.create(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            provider=llm_provider,
-            stream=True,
-    ):
-        content = chunk["choices"][0].get("delta", {}).get("content")
+    
+    async for chunk in chat.astream(messages):
+        content = chunk.content
         if content is not None:
             response += content
             paragraph += content
@@ -89,6 +91,7 @@ async def stream_response(model, messages, temperature, max_tokens, llm_provider
                 else:
                     print(f"{Fore.GREEN}{paragraph}{Style.RESET_ALL}")
                 paragraph = ""
+                
     return response
 
 

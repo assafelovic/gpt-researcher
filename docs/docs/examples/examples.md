@@ -59,7 +59,7 @@ openai_api_key = ""
 ```python
 # libraries
 from langchain.adapters.openai import convert_openai_messages
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 
 # setup query
 query = "What happened in the latest burning man floods?"
