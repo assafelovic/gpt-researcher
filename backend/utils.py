@@ -2,6 +2,9 @@ import aiofiles
 import urllib
 import uuid
 from md2pdf.core import md2pdf
+import mistune
+from docx import Document
+from htmldocx import HtmlToDocx
 
 async def write_to_file(filename: str, text: str) -> None:
     """Asynchronously write text to a file in UTF-8 encoding.
@@ -41,4 +44,32 @@ async def write_md_to_pdf(text: str) -> str:
         return ""
 
     encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
+    return encoded_file_path
+
+async def write_md_to_word(text: str) -> str:
+    """Converts Markdown text to a DOCX file and returns the file path.
+
+    Args:
+        text (str): Markdown text to convert.
+
+    Returns:
+        str: The encoded file path of the generated DOCX.
+    """
+    task = uuid.uuid4().hex
+    file_path = f"outputs/{task}"
+
+    try:
+        # Convert Markdown to HTML
+        html = mistune.html(text)
+        doc = Document()
+        HtmlToDocx().add_html_to_document(html, doc)
+
+        doc.save({file_path}.docx)
+        
+        print(f"Report written to {file_path}.docx")
+    except Exception as e:
+        print(f"Error in converting Markdown to DOCX: {e}")
+        return ""
+
+    encoded_file_path = urllib.parse.quote(f"{file_path}.docx")
     return encoded_file_path
