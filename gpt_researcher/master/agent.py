@@ -1,9 +1,9 @@
+import asyncio
 import time
 from gpt_researcher.config import Config
 from gpt_researcher.master.functions import *
 from gpt_researcher.context.compression import ContextCompressor
 from gpt_researcher.memory import Memory
-
 
 class GPTResearcher:
     """
@@ -81,15 +81,24 @@ class GPTResearcher:
                             f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
                             self.websocket)
 
-        # Run Sub-Queries
-        for sub_query in sub_queries:
-            await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
-            scraped_sites = await self.scrape_sites_by_query(sub_query)
-            content = await self.get_similar_content_by_query(sub_query, scraped_sites)
-            await stream_output("logs", f"📃 {content}", self.websocket)
-            context.append(content)
-
+        # Using asyncio.gather to process the sub_queries asynchronously
+        context = await asyncio.gather(*[self.process_sub_query(sub_query) for sub_query in sub_queries])
         return context
+    
+    async def process_sub_query(self, sub_query: str):
+        """Takes in a sub query and scrapes urls based on it and gathers context.
+
+        Args:
+            sub_query (str): The sub-query generated from the original query
+
+        Returns:
+            str: The context gathered from search
+        """
+        await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
+        scraped_sites = await self.scrape_sites_by_query(sub_query)
+        content = await self.get_similar_content_by_query(sub_query, scraped_sites)
+        await stream_output("logs", f"📃 {content}", self.websocket)
+        return content
 
     async def get_new_urls(self, url_set_input):
         """ Gets the new urls from the given url set.

@@ -10,7 +10,7 @@ class Memory:
                 from langchain.embeddings import OllamaEmbeddings
                 _embeddings = OllamaEmbeddings(model="llama2")
             case "openai":
-                from langchain.embeddings import OpenAIEmbeddings
+                from langchain_openai import OpenAIEmbeddings
                 _embeddings = OpenAIEmbeddings()
             case "huggingface":
                 from langchain.embeddings import HuggingFaceEmbeddings

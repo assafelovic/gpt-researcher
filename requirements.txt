@@ -25,3 +25,7 @@ aiofiles
 newspaper3k
 langchain_community
 SQLAlchemy
+langchain-openai
+mistune
+python-docx
+htmldocx
