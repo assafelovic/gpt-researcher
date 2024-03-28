@@ -1,14 +1,19 @@
 # libraries
 from __future__ import annotations
-import logging
 
 import json
+import logging
 from typing import Optional
 
 from colorama import Fore, Style
 from fastapi import WebSocket
+from langchain.output_parsers import PydanticOutputParser
+from langchain.prompts import PromptTemplate
+from langchain_openai import ChatOpenAI
 
 from gpt_researcher.master.prompts import auto_agent_instructions
+
+from .validators import Subtopics
 
 
 def get_provider(llm_provider):
@@ -100,3 +105,50 @@ def choose_agent(smart_llm_model: str, llm_provider: str, task: str) -> dict:
         print(f"{Fore.RED}Error in choose_agent: {e}{Style.RESET_ALL}")
         return {"server": "Default Agent",
                 "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
+
+
+async def construct_subtopics(task: str, data: str, config, subtopics: list = []) -> list:
+    try:
+        parser = PydanticOutputParser(pydantic_object=Subtopics)
+
+        prompt = PromptTemplate(
+            template="""
+                Provided the main topic:
+                
+                {task}
+                
+                and research data:
+                
+                {data}
+                
+                - Construct a list of subtopics which indicate the headers of a report document to be generated on the task. 
+                - You MUST retain these subtopics along with their sources : {subtopics}.
+                - There should NOT be any duplicate subtopics.
+                - Limit the number of subtopics to a maximum of {max_subtopics} (can be lower)
+                - Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
+                
+                {format_instructions}
+            """,
+            input_variables=["task", "data", "subtopics", "max_subtopics"],
+            partial_variables={
+                "format_instructions": parser.get_format_instructions()},
+        )
+
+        print(f"\n🤖 Calling {config.smart_llm_model}...\n")
+
+        model = ChatOpenAI(model=config.smart_llm_model)
+
+        chain = prompt | model | parser
+
+        output = chain.invoke({
+            "task": task,
+            "data": data,
+            "subtopics": subtopics,
+            "max_subtopics": config.max_subtopics
+        })
+
+        return output
+
+    except Exception as e:
+        print("Exception in parsing subtopics : ", e)
+        return subtopics

@@ -1,4 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
+
+from gpt_researcher.utils.enum import ReportType
 
 
 def generate_search_queries_prompt(question, max_iterations=3):
@@ -78,10 +80,11 @@ def generate_outline_report_prompt(question, context, report_format="apa", total
 
 def get_report_by_type(report_type):
     report_type_mapping = {
-        'research_report': generate_report_prompt,
-        'resource_report': generate_resource_report_prompt,
-        'outline_report': generate_outline_report_prompt,
-        'custom_report': generate_custom_report_prompt
+        ReportType.ResearchReport.value : generate_report_prompt,
+        ReportType.ResourceReport.value : generate_resource_report_prompt,
+        ReportType.OutlineReport.value : generate_outline_report_prompt,
+        ReportType.CustomReport.value : generate_custom_report_prompt,
+        ReportType.SubtopicReport.value : generate_subtopic_report_prompt
     }
     return report_type_mapping[report_type]
 
@@ -124,3 +127,66 @@ def generate_summary_prompt(query, data):
            f'query cannot be answered using the text, YOU MUST summarize the text in short.\n Include all factual ' \
            f'information such as numbers, stats, quotes, etc if available. '
 
+
+################################################################################################
+
+# DETAILED REPORT PROMPTS
+
+
+def generate_subtopic_report_prompt(
+    current_subtopic,
+    existing_headers,
+    main_topic,
+    context,
+    report_format="apa",
+    total_words=1000,
+) -> str:
+    prompt = (
+        f'"""{context}""" Using the above latest information,'
+        f"""construct a detailed report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
+        - The report should focus on the answer to the question, should be well structured, informative,
+        in-depth, with facts and numbers if available, a minimum of {total_words} words and with markdown syntax.
+        - As this sub-report will be part of a bigger report, you must ONLY include the main body divided into suitable subtopics,
+        without any introduction, conclusion, or reference section.
+        
+        - This is a list of existing subtopic reports and their sections headers : 
+        {existing_headers}.
+        
+        - You MUST AVOID using any of the above headers or any related details, to avoid duplicates!
+        - Ensure that you use smaller Markdown headers (e.g., H2 or H3) to structure your content and avoid using the largest Markdown header (H1).
+        The H1 header will be used for the heading of the larger report later on.
+        - Do NOT include any conclusion or summary section! - Do NOT include a conclusion or summary!
+        Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required."""
+    )
+
+    return prompt
+
+
+def generate_report_introduction(question: str, research_summary: str = "") -> str:
+    """
+    The function `generate_report_introduction` generates a prompt for preparing a detailed report
+    introduction on a given topic, with an optional research summary.
+
+    Args:
+      question (str): The main question or topic for the report. This should be a string.
+      research_summary (str): The research summary is a brief overview of the findings or key points
+    from your research on the topic. It provides context and background information that can be used to
+    support the introduction of your report.
+
+    Returns:
+      The function `generate_report_introduction` returns a string that contains a prompt for preparing
+    a detailed report introduction on a given topic.
+    """
+    prompt = f"""Prepare a detailed report introduction on the topic -- {question}.
+        - The introduction should be succinct, well-structured, informative with markdown syntax.
+        - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
+        - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
+        Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
+    """
+
+    if research_summary:
+        prompt = (
+            f'"""{research_summary}""" Using the above latest information,' + prompt
+        )
+
+    return prompt
