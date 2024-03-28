@@ -270,10 +270,29 @@ async def stream_output(type, output, websocket=None, logging=True):
     if websocket:
         await websocket.send_json({"type": type, "output": output})
 
-# Function to extract headers from markdown text
+async def get_report_introduction(query, context, role, config, websocket=None):
+    try:
+        introduction = await create_chat_completion(
+            model=config.smart_llm_model,
+            messages=[
+                {"role": "system", "content": f"{role}"},
+                {"role": "user", "content": generate_report_introduction(query, context)}],
+            temperature=0,
+            llm_provider=config.llm_provider,
+            stream=True,
+            websocket=websocket,
+            max_tokens=config.smart_token_limit
+        )
+        
+        return introduction
+    except Exception as e:
+        print(f"{Fore.RED}Error in generating report introduction: {e}{Style.RESET_ALL}")
 
-
+    return ""
+    
 def extract_headers(markdown_text: str):
+    # Function to extract headers from markdown text
+
     headers = []
     parsed_md = markdown.markdown(markdown_text)  # Parse markdown text
     lines = parsed_md.split("\n")  # Split text into lines
