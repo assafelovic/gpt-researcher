@@ -198,6 +198,12 @@ class GPTResearcher:
     ########################################################################################
 
     # DETAILED REPORT
+    
+    async def write_introduction(self):
+        # Construct Report Introduction from main topic research
+        introduction = await get_report_introduction(self.query, self.context, self.role, self.cfg, self.websocket)
+        
+        return introduction
 
     async def get_subtopics(self):
         """

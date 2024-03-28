@@ -33,15 +33,18 @@ class DetailedReport():
 
         # Get list of all subtopics
         subtopics = await self._get_all_subtopics()
+        
+        # Generate report introduction
+        report_introduction = await self.main_task_assistant.write_introduction()
 
         # Generate the subtopic reports based on the subtopics gathered
-        _, report = await self._generate_subtopic_reports(subtopics)
+        _, report_body = await self._generate_subtopic_reports(subtopics)
 
         # Construct the final list of visited urls
         self.main_task_assistant.visited_urls.update(self.global_urls)
 
-        # # Construct the final detailed report (Optionally add more details to subtopic reports)
-        # report = await self._construct_detailed_report(subtopics_report_body)
+        # Construct the final detailed report (Optionally add more details to subtopic reports)
+        report = await self._construct_detailed_report(report_introduction, report_body)
 
         return report
 
@@ -129,3 +132,6 @@ class DetailedReport():
         )
 
         return subtopic_report
+
+    async def _construct_detailed_report(self, introduction: str, report_body: str):
+        return f"{introduction}\n\n{table_of_contents(report_body)}\n\n{report_body}"
