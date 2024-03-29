@@ -3,7 +3,8 @@ import asyncio
 from fastapi import WebSocket
 
 from gpt_researcher.master.agent import GPTResearcher
-from gpt_researcher.master.functions import extract_headers, table_of_contents
+from gpt_researcher.master.functions import (add_source_urls, extract_headers,
+                                             table_of_contents)
 
 
 class DetailedReport():
@@ -43,7 +44,7 @@ class DetailedReport():
         # Construct the final list of visited urls
         self.main_task_assistant.visited_urls.update(self.global_urls)
 
-        # Construct the final detailed report (Optionally add more details to subtopic reports)
+        # Construct the final detailed report (Optionally add more details to the report)
         report = await self._construct_detailed_report(report_introduction, report_body)
 
         return report
@@ -134,4 +135,10 @@ class DetailedReport():
         return subtopic_report
 
     async def _construct_detailed_report(self, introduction: str, report_body: str):
-        return f"{introduction}\n\n{table_of_contents(report_body)}\n\n{report_body}"
+        # Generating a table of contents from report headers
+        table_of_contents = table_of_contents(report_body)
+        
+        # Concatenating all source urls at the end of the report
+        report_with_references = add_source_urls(report_body, self.main_task_assistant.visited_urls)
+        
+        return f"{introduction}\n\n{table_of_contents}\n\n{report_with_references}"
