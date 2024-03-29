@@ -146,8 +146,9 @@ def generate_subtopic_report_prompt(
         f"""construct a detailed report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
         - The report should focus on the answer to the question, should be well structured, informative,
         in-depth, with facts and numbers if available, a minimum of {total_words} words and with markdown syntax.
+        - Follow {report_format} format.
         - As this sub-report will be part of a bigger report, you must ONLY include the main body divided into suitable subtopics,
-        without any introduction, conclusion, or reference section.
+        WITHOUT any introduction, conclusion, or reference section.
         
         - This is a list of existing subtopic reports and their sections headers : 
         {existing_headers}.
@@ -155,7 +156,9 @@ def generate_subtopic_report_prompt(
         - You MUST AVOID using any of the above headers or any related details, to avoid duplicates!
         - Ensure that you use smaller Markdown headers (e.g., H2 or H3) to structure your content and avoid using the largest Markdown header (H1).
         The H1 header will be used for the heading of the larger report later on.
-        - Do NOT include any conclusion or summary section! - Do NOT include a conclusion or summary!
+        
+        - The report MUST NOT contain any conclusion or summary section at the end! Only the report body is enough.
+        
         Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required."""
     )
 
@@ -164,29 +167,25 @@ def generate_subtopic_report_prompt(
 
 def generate_report_introduction(question: str, research_summary: str = "") -> str:
     """
-    The function `generate_report_introduction` generates a prompt for preparing a detailed report
-    introduction on a given topic, with an optional research summary.
-
+    This function generates a prompt for creating a detailed report introduction based on a given
+    question and research summary.
+    
     Args:
-      question (str): The main question or topic for the report. This should be a string.
-      research_summary (str): The research summary is a brief overview of the findings or key points
-    from your research on the topic. It provides context and background information that can be used to
-    support the introduction of your report.
-
+      question (str): The `generate_report_introduction` function takes in two parameters:
+      research_summary (str): The `generate_report_introduction` function takes in two parameters:
+    
     Returns:
-      The function `generate_report_introduction` returns a string that contains a prompt for preparing
-    a detailed report introduction on a given topic.
+      The function `generate_report_introduction` returns a formatted prompt for preparing a detailed
+    report introduction on a given question. The prompt includes instructions on how to structure the
+    introduction, use markdown syntax, and assumes the current date for reference if needed.
     """
-    prompt = f"""Prepare a detailed report introduction on the topic -- {question}.
+    
+    prompt = f"""{research_summary}\n 
+        Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
         - The introduction should be succinct, well-structured, informative with markdown syntax.
         - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
         - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
         Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
     """
-
-    if research_summary:
-        prompt = (
-            f'"""{research_summary}""" Using the above latest information,' + prompt
-        )
 
     return prompt

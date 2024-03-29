@@ -136,9 +136,9 @@ class DetailedReport():
 
     async def _construct_detailed_report(self, introduction: str, report_body: str):
         # Generating a table of contents from report headers
-        table_of_contents = table_of_contents(report_body)
+        toc = table_of_contents(report_body)
         
         # Concatenating all source urls at the end of the report
         report_with_references = add_source_urls(report_body, self.main_task_assistant.visited_urls)
         
-        return f"{introduction}\n\n{table_of_contents}\n\n{report_with_references}"
+        return f"{introduction}\n\n{toc}\n\n{report_with_references}"
