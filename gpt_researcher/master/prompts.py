@@ -143,7 +143,7 @@ def generate_summary_prompt(query, data):
 # DETAILED REPORT PROMPTS
 
 def generate_subtopics_prompt() -> str:
-    prompt = """
+    return """
                 Provided the main topic:
                 
                 {task}
@@ -153,15 +153,17 @@ def generate_subtopics_prompt() -> str:
                 {data}
                 
                 - Construct a list of subtopics which indicate the headers of a report document to be generated on the task. 
-                - You MUST retain these subtopics along with their sources : {subtopics}.
+                - These are a possible list of subtopics : {subtopics}.
                 - There should NOT be any duplicate subtopics.
                 - Limit the number of subtopics to a maximum of {max_subtopics} (can be lower)
                 - Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
                 
+                "IMPORTANT!":
+                - Every subtopic MUST be relevant to the amin topic!
+                
                 {format_instructions}
             """
-                
-    return prompt
+
 
 def generate_subtopic_report_prompt(
     current_subtopic,
@@ -171,59 +173,49 @@ def generate_subtopic_report_prompt(
     report_format="apa",
     total_words=1000,
 ) -> str:
-    prompt = (
-        f'"""{context}""" Using the above latest information,'
-        f"""construct a detailed report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
-        - The report should focus on the answer to the question, should be well structured, informative,
-        in-depth, with facts and numbers if available, a minimum of {total_words} words and with markdown syntax.
-        - Follow {report_format} format.
-        - As this sub-report will be part of a bigger report, you must ONLY include the main body divided into suitable subtopics,
-        WITHOUT any introduction, conclusion, or reference section.
-        
-        You MUST include hyperlinks to the relevant URLs wherever they are referenced in the report:
-        eg:    
-            # Report Header
-            
-            This is a sample text. ([url website](url))
-        
-        - This is a list of existing subtopic reports and their sections headers : 
-        {existing_headers}.
-        
-        - You MUST AVOID using any of the above headers or any related details, to avoid duplicates!
-        
-        - Ensure that you use smaller Markdown headers (e.g., H2 or H3) to structure your content and avoid using the largest Markdown header (H1).
-        The H1 header will be used for the heading of the larger report later on.
-        - The report MUST NOT contain any conclusion or summary section at the end! Only the report body is enough.
-        
-        - Do NOT stray away from the main topic. Leave out information unrelated to the main topic!
-        
-        Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required."""
-    )
 
-    return prompt
+    return f"""
+    "Context":
+    "{context}"
+    
+    "Main Topic and Subtopic":
+    Using the latest information available, construct a detailed report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
+    
+    "Content Focus":
+    - The report should focus on answering the question, be well-structured, informative, in-depth, and include facts and numbers if available.
+    - Use markdown syntax and follow the {report_format.upper()} format.
+    
+    "Structure and Formatting":
+    - As this sub-report will be part of a larger report, include only the main body divided into suitable subtopics without any introduction, conclusion, or reference section.
+    
+    - Include hyperlinks to relevant URLs wherever referenced in the report, for example:
+    
+        # Report Header
+        
+        This is a sample text. ([url website](url))
+    
+    "Existing Subtopic Reports":
+    - This is a list of existing subtopic reports and their section headers:
+    
+        {existing_headers}.
+    
+    - Do not use any of the above headers or related details to avoid duplicates. Use smaller Markdown headers (e.g., H2 or H3) for content structure, avoiding the largest header (H1) as it will be used for the larger report's heading.
+    
+    "Date":
+    Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
+    
+    "IMPORTANT!":
+    - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
+    - Must NOT have any introduction, conclusion, summary or reference section.
+    - Must NOT have any introduction, conclusion, summary or reference section.
+    """
 
 
 def generate_report_introduction(question: str, research_summary: str = "") -> str:
-    """
-    This function generates a prompt for creating a detailed report introduction based on a given
-    question and research summary.
-
-    Args:
-      question (str): The `generate_report_introduction` function takes in two parameters:
-      research_summary (str): The `generate_report_introduction` function takes in two parameters:
-
-    Returns:
-      The function `generate_report_introduction` returns a formatted prompt for preparing a detailed
-    report introduction on a given question. The prompt includes instructions on how to structure the
-    introduction, use markdown syntax, and assumes the current date for reference if needed.
-    """
-
-    prompt = f"""{research_summary}\n 
+    return f"""{research_summary}\n 
         Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
         - The introduction should be succinct, well-structured, informative with markdown syntax.
         - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
         - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
         Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
     """
-
-    return prompt
