@@ -11,7 +11,7 @@ from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 
-from gpt_researcher.master.prompts import auto_agent_instructions
+from gpt_researcher.master.prompts import auto_agent_instructions, generate_subtopics_prompt
 
 from .validators import Subtopics
 
@@ -112,23 +112,7 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
         parser = PydanticOutputParser(pydantic_object=Subtopics)
 
         prompt = PromptTemplate(
-            template="""
-                Provided the main topic:
-                
-                {task}
-                
-                and research data:
-                
-                {data}
-                
-                - Construct a list of subtopics which indicate the headers of a report document to be generated on the task. 
-                - You MUST retain these subtopics along with their sources : {subtopics}.
-                - There should NOT be any duplicate subtopics.
-                - Limit the number of subtopics to a maximum of {max_subtopics} (can be lower)
-                - Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
-                
-                {format_instructions}
-            """,
+            template=generate_subtopics_prompt(),
             input_variables=["task", "data", "subtopics", "max_subtopics"],
             partial_variables={
                 "format_instructions": parser.get_format_instructions()},
