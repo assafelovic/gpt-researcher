@@ -32,7 +32,15 @@ def generate_report_prompt(question, context, report_format="apa", total_words=1
            "You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.\n" \
            f"You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.\n" \
            "Every url should be hyperlinked: [url website](url)"\
-           f"You MUST write the report in {report_format} format.\n " \
+           """
+            Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report : 
+        
+            eg:    
+                # Report Header
+                
+                This is a sample text. ([url website](url))
+            """\
+            f"You MUST write the report in {report_format} format.\n " \
             f"Cite search results using inline notations. Only cite the most \
             relevant results that answer the query accurately. Place these citations at the end \
             of the sentence or paragraph that reference them.\n"\
@@ -57,8 +65,9 @@ def generate_resource_report_prompt(question, context, report_format="apa", tota
            'Ensure that the report is well-structured, informative, in-depth, and follows Markdown syntax.\n' \
            'Include relevant facts, figures, and numbers whenever available.\n' \
            'The report should have a minimum length of 700 words.\n' \
-            'You MUST include all relevant source urls.'\
-            'Every url should be hyperlinked: [url website](url)'
+        'You MUST include all relevant source urls.'\
+        'Every url should be hyperlinked: [url website](url)'
+
 
 def generate_custom_report_prompt(query_prompt, context, report_format="apa", total_words=1000):
     return f'"{context}"\n\n{query_prompt}'
@@ -80,11 +89,11 @@ def generate_outline_report_prompt(question, context, report_format="apa", total
 
 def get_report_by_type(report_type):
     report_type_mapping = {
-        ReportType.ResearchReport.value : generate_report_prompt,
-        ReportType.ResourceReport.value : generate_resource_report_prompt,
-        ReportType.OutlineReport.value : generate_outline_report_prompt,
-        ReportType.CustomReport.value : generate_custom_report_prompt,
-        ReportType.SubtopicReport.value : generate_subtopic_report_prompt
+        ReportType.ResearchReport.value: generate_report_prompt,
+        ReportType.ResourceReport.value: generate_resource_report_prompt,
+        ReportType.OutlineReport.value: generate_outline_report_prompt,
+        ReportType.CustomReport.value: generate_custom_report_prompt,
+        ReportType.SubtopicReport.value: generate_subtopic_report_prompt
     }
     return report_type_mapping[report_type]
 
@@ -115,6 +124,7 @@ def auto_agent_instructions():
             "agent_role_prompt": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights."
         }
     """
+
 
 def generate_summary_prompt(query, data):
     """ Generates the summary prompt for the given question and text.
@@ -150,6 +160,13 @@ def generate_subtopic_report_prompt(
         - As this sub-report will be part of a bigger report, you must ONLY include the main body divided into suitable subtopics,
         WITHOUT any introduction, conclusion, or reference section.
         
+        You MUST include hyperlinks to the relevant URLs wherever they are referenced in the report : 
+        
+        eg:    
+            # Report Header
+            
+            This is a sample text. ([url website](url))
+        
         - This is a list of existing subtopic reports and their sections headers : 
         {existing_headers}.
         
@@ -169,17 +186,17 @@ def generate_report_introduction(question: str, research_summary: str = "") -> s
     """
     This function generates a prompt for creating a detailed report introduction based on a given
     question and research summary.
-    
+
     Args:
       question (str): The `generate_report_introduction` function takes in two parameters:
       research_summary (str): The `generate_report_introduction` function takes in two parameters:
-    
+
     Returns:
       The function `generate_report_introduction` returns a formatted prompt for preparing a detailed
     report introduction on a given question. The prompt includes instructions on how to structure the
     introduction, use markdown syntax, and assumes the current date for reference if needed.
     """
-    
+
     prompt = f"""{research_summary}\n 
         Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
         - The introduction should be succinct, well-structured, informative with markdown syntax.
