@@ -142,6 +142,26 @@ def generate_summary_prompt(query, data):
 
 # DETAILED REPORT PROMPTS
 
+def generate_subtopics_prompt() -> str:
+    prompt = """
+                Provided the main topic:
+                
+                {task}
+                
+                and research data:
+                
+                {data}
+                
+                - Construct a list of subtopics which indicate the headers of a report document to be generated on the task. 
+                - You MUST retain these subtopics along with their sources : {subtopics}.
+                - There should NOT be any duplicate subtopics.
+                - Limit the number of subtopics to a maximum of {max_subtopics} (can be lower)
+                - Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
+                
+                {format_instructions}
+            """
+                
+    return prompt
 
 def generate_subtopic_report_prompt(
     current_subtopic,
@@ -160,8 +180,7 @@ def generate_subtopic_report_prompt(
         - As this sub-report will be part of a bigger report, you must ONLY include the main body divided into suitable subtopics,
         WITHOUT any introduction, conclusion, or reference section.
         
-        You MUST include hyperlinks to the relevant URLs wherever they are referenced in the report : 
-        
+        You MUST include hyperlinks to the relevant URLs wherever they are referenced in the report:
         eg:    
             # Report Header
             
@@ -171,10 +190,12 @@ def generate_subtopic_report_prompt(
         {existing_headers}.
         
         - You MUST AVOID using any of the above headers or any related details, to avoid duplicates!
+        
         - Ensure that you use smaller Markdown headers (e.g., H2 or H3) to structure your content and avoid using the largest Markdown header (H1).
         The H1 header will be used for the heading of the larger report later on.
-        
         - The report MUST NOT contain any conclusion or summary section at the end! Only the report body is enough.
+        
+        - Do NOT stray away from the main topic. Leave out information unrelated to the main topic!
         
         Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required."""
     )
