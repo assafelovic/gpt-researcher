@@ -155,11 +155,11 @@ def generate_subtopics_prompt() -> str:
                 - Construct a list of subtopics which indicate the headers of a report document to be generated on the task. 
                 - These are a possible list of subtopics : {subtopics}.
                 - There should NOT be any duplicate subtopics.
-                - Limit the number of subtopics to a maximum of {max_subtopics} (can be lower)
+                - Limit the number of subtopics to a maximum of {max_subtopics}
                 - Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
                 
                 "IMPORTANT!":
-                - Every subtopic MUST be relevant to the amin topic!
+                - Every subtopic MUST be relevant to the main topic and provided research data ONLY!
                 
                 {format_instructions}
             """
@@ -207,14 +207,13 @@ def generate_subtopic_report_prompt(
     "IMPORTANT!":
     - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
     - Must NOT have any introduction, conclusion, summary or reference section.
-    - Must NOT have any introduction, conclusion, summary or reference section.
     """
 
 
 def generate_report_introduction(question: str, research_summary: str = "") -> str:
     return f"""{research_summary}\n 
         Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
-        - The introduction should be succinct, well-structured, informative with markdown syntax.
+        - The introduction should be succinct, well-structured, informative with markdown syntax and related link sources.
         - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
         - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
         Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
