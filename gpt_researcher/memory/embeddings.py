@@ -1,5 +1,5 @@
 from langchain_community.vectorstores import FAISS
-from gpt_researcher.config import Config
+import os
 
 
 class Memory:
@@ -15,7 +15,7 @@ class Memory:
                 _embeddings = OpenAIEmbeddings()
             case "azureopenai":
                 from langchain_openai import AzureOpenAIEmbeddings
-                _embeddings = AzureOpenAIEmbeddings(deployment=Config().azure_embedding_model, chunk_size=16)
+                _embeddings = AzureOpenAIEmbeddings(deployment=os.environ["AZURE_EMBEDDING_MODEL"], chunk_size=16)
             case "huggingface":
                 from langchain.embeddings import HuggingFaceEmbeddings
                 _embeddings = HuggingFaceEmbeddings()

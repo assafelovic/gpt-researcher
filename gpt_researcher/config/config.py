@@ -11,7 +11,6 @@ class Config:
         self.config_file = config_file if config_file else os.getenv('CONFIG_FILE')
         self.retriever = os.getenv('SEARCH_RETRIEVER', "BingSearch")
         self.embedding_provider = os.getenv('EMBEDDING_PROVIDER', 'azureopenai')
-        self.azure_embedding_model = os.getenv('AZURE_EMBEDDING_MODEL', "ada2")
         self.llm_provider = os.getenv('LLM_PROVIDER', "azureopenai")
         self.fast_llm_model = os.getenv('FAST_LLM_MODEL', "gpt-3.5-turbo-16k")
         self.smart_llm_model = os.getenv('SMART_LLM_MODEL', "gpt4")
