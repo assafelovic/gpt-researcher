@@ -76,12 +76,13 @@
         <div class="form-group">
             <label for="report_type" class="agent-question">What type of report would you like me to generate?</label>
             <select name="report_type" class="form-control" required>
-                <option value="research_report">Research Report</option>
+                <option value="research_report">Summary - Short and fast</option>
+                <option value="detailed_report">Detailed - In depth and detailed</option>
                 <option value="resource_report">Resource Report</option>
-                <option value="outline_report">Outline Report</option>
-                <option value="detailed_report">Detailed Report</option>
             </select>
         </div>
+        <div class="form-group">
+</div>
         <input type="submit" value="Research" class="btn btn-primary button-padding">
     </form>
 
@@ -98,13 +99,13 @@
             <div class="alert alert-info" role="alert" id="status"></div>
             <a id="copyToClipboard" onclick="GPTResearcher.copyToClipboard()" class="btn btn-secondary mt-3" style="margin-right: 10px;">Copy to clipboard</a>
             <a id="downloadLink" href="#" class="btn btn-secondary mt-3" style="margin-right: 10px;" target="_blank">Download as PDF</a>
-            <a id="downloadLinkWord" href="#" class="btn btn-secondary mt-3" target="_blank">Download as WORD</a>
+            <a id="downloadLinkWord" href="#" class="btn btn-secondary mt-3" target="_blank">Download as Docx</a>
         </div>
     </div>
 </main>
 
 <footer>
-    <p>GPT Researcher &copy; 2023 | <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GitHub
+    <p>GPT Researcher &copy; 2024 | <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GitHub
         Page</a></p>
 </footer>
 
