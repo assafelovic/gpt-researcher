@@ -15,7 +15,7 @@ class ContextCompressor:
         self.documents = documents
         self.kwargs = kwargs
         self.embeddings = embeddings
-        self.similarity_threshold = 0.48
+        self.similarity_threshold = 0.58
 
     def _get_contextual_retriever(self):
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
