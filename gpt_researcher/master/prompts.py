@@ -214,8 +214,9 @@ def generate_subtopic_report_prompt(
 def generate_report_introduction(question: str, research_summary: str = "") -> str:
     return f"""{research_summary}\n 
         Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
-        - The introduction should be succinct, well-structured, informative with markdown syntax and related link sources.
+        - The introduction should be succinct, well-structured, informative with markdown syntax.
         - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
         - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
+        - You must include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
         Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
     """
