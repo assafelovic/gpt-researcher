@@ -12,7 +12,7 @@ class GPTResearcher:
     def __init__(
         self,
         query: str, 
-        report_type: str=ReportType.ResearchReport.value, 
+        report_type: str=ReportType.ResearchReport.value,
         source_urls=None, 
         config_path=None, 
         websocket=None,
@@ -79,7 +79,7 @@ class GPTResearcher:
         if self.report_type == "custom_report":
             self.role = self.cfg.agent_role if self.cfg.agent_role else self.role
         
-        await stream_output("logs", f"✍️ Writing {self.report_type} for research task: {self.query}...", self.websocket)
+        await stream_output("logs", f"✍️ Writing summary for research task: {self.query}...", self.websocket)
         
         if self.report_type == "custom_report":
             self.role = (
@@ -146,9 +146,14 @@ class GPTResearcher:
             str: The context gathered from search
         """
         await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
+
         scraped_sites = await self.scrape_sites_by_query(sub_query)
         content = await self.get_similar_content_by_query(sub_query, scraped_sites)
-        await stream_output("logs", f"📃 {content}", self.websocket)
+
+        if content:
+            await stream_output("logs", f"📃 {content}", self.websocket)
+        else:
+            await stream_output("logs", f"🤷 No content found for '{sub_query}'...", self.websocket)
         return content
 
     async def get_new_urls(self, url_set_input):
@@ -222,5 +227,7 @@ class GPTResearcher:
             # This is a list of user provided subtopics
             subtopics=self.subtopics,
         )
+
+        await stream_output("logs", f"📋Subtopics: {subtopics}", self.websocket)
         
         return subtopics
