@@ -21,6 +21,9 @@ def get_provider(llm_provider):
         case "openai":
             from ..llm_provider import OpenAIProvider
             llm_provider = OpenAIProvider
+        case "azureopenai":
+            from ..llm_provider import AzureOpenAIProvider
+            llm_provider = AzureOpenAIProvider
         case "google":
             from ..llm_provider import GoogleProvider
             llm_provider = GoogleProvider
