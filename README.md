@@ -52,11 +52,12 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 
 ## Features
 - 📝 Generate research, outlines, resources and lessons reports
+- 📜 Can generate long and detailed research reports (over 2K words)
 - 🌐 Aggregates over 20 web sources per research to form objective and factual conclusions
 - 🖥️ Includes an easy-to-use web interface (HTML/CSS/JS)
 - 🔍 Scrapes web sources with javascript support
 - 📂 Keeps track and context of visited and used web sources
-- 📄 Export research reports to PDF and more...
+- 📄 Export research reports to PDF, Word and more...
 
 ## 📖 Documentation
 
@@ -173,6 +174,10 @@ We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md
 
 Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/2pFkc83fRq) if you're interested in joining our mission.
 
+## ✉️ Support / Contact us
+- [Community Discord](https://discord.gg/spBgZmm3Xe)
+- Our email: assafelovic@gmail.com
+
 ## 🛡 Disclaimer
 
 This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the MIT license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
@@ -184,6 +189,14 @@ Our view on unbiased research claims:
 
 **Please note that the use of the GPT-4 language model can be expensive due to its token usage.** By utilizing this project, you acknowledge that you are responsible for monitoring and managing your own token usage and the associated costs. It is highly recommended to check your OpenAI API usage regularly and set up any necessary limits or alerts to prevent unexpected charges.
 
-## ✉️ Support / Contact us
-- [Community Discord](https://discord.gg/spBgZmm3Xe)
-- Our email: assafelovic@gmail.com
+---
+
+<p align="center">
+<a href="https://star-history.com/#assafelovic/gpt-researcher">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date" />
+  </picture>
+</a>
+</p>
