@@ -3,7 +3,15 @@ import os
 from colorama import Fore, Style
 from langchain_openai import AzureChatOpenAI
 
+'''
+Please note: Needs additional env vars such as: 
+    AZURE_OPENAI_ENDPOINT  e.g. https://xxxx.openai.azure.com/", 
+    OPENAI_API_VERSION, 
+    OPENAI_API_TYPE
 
+Note new entry in config.py to specify the Azure OpenAI embedding model name:
+self.azure_embedding_model = os.getenv('AZURE_EMBEDDING_MODEL', "INSERT_EMBEDDIGN_MODEL_DEPLOYMENT_NAME")
+'''
 class AzureOpenAIProvider:
 
     def __init__(
