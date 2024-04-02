@@ -1,5 +1,4 @@
 # dependencies
-asyncio
 beautifulsoup4
 colorama
 duckduckgo_search
