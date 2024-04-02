@@ -181,6 +181,7 @@ def generate_subtopic_report_prompt(
     
     "Main Topic and Subtopic":
     Using the latest information available, construct a detailed report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
+    You must limit the number of subsections to a maximum of 5.
     
     "Content Focus":
     - The report should focus on answering the question, be well-structured, informative, in-depth, and include facts and numbers if available.
