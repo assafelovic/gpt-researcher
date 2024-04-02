@@ -64,9 +64,9 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/d5df04a9-631a-4509
 Please see [here](https://docs.tavily.com/docs/gpt-researcher/getting-started) for full documentation on:
 
 - Getting started (installation, setting up the environment, simple examples)
+- Customization and configuration
 - How-To examples (demos, integrations, docker support)
 - Reference (full API docs)
-- Tavily API integration (high-level explanation of core concepts)
 
 ## Quickstart
 > **Step 0** - Install Python 3.11 or later. [See here](https://www.tutorialsteacher.com/python/install-python) for a step-by-step guide.
