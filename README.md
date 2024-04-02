@@ -43,7 +43,7 @@ More specifically:
 * Finally, filter and aggregate all summarized sources and generate a final research report.
 
 ## Demo
-https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0-b58d-098a31c40fda
+https://github.com/assafelovic/gpt-researcher/assets/13554167/d5df04a9-631a-4509-aa55-2049b5a9e9bc
 
 ## Tutorials
  - [How it Works](https://docs.tavily.com/blog/building-gpt-researcher)
