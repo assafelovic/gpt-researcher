@@ -30,3 +30,4 @@ python-docx
 htmldocx
 langchain-google-genai
 unstructured
+lxml[html_clean]

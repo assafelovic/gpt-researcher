@@ -24,18 +24,24 @@ class GPTResearcher:
         websocket=None,
         agent=None,
         role=None,
-        parent_query="",
-        subtopics=[],
-        visited_urls=set(),
-        context=[]
+        context=[],
+        parent_query: str = "",
+        subtopics: list = [],
+        visited_urls: set = set()
     ):
         """
         Initialize the GPT Researcher class.
         Args:
-            query:
-            report_type:
-            config_path:
-            websocket:
+            query: str,
+            report_type: str
+            source_urls
+            config_path
+            websocket
+            agent
+            role
+            parent_query: str
+            subtopics: list
+            visited_urls: set
         """
         self.query = query
         self.agent = agent
@@ -64,8 +70,10 @@ class GPTResearcher:
         Runs the GPT Researcher to conduct research
         """
         await stream_output("logs", f"🔎 Running research for '{self.query}'...", self.websocket)
+  
         # Generate Agent
-        self.agent, self.role = await choose_agent(self.query, self.cfg)
+        if not (self.agent and self.role):
+            self.agent, self.role = await choose_agent(self.query, self.cfg)
         await stream_output("logs", self.agent, self.websocket)
             
         # If specified, the researcher will use the given urls as the context for the research.
@@ -81,7 +89,7 @@ class GPTResearcher:
 
         # Extending the global context (This is useful instead of setting the context directly above to avoid over-writing input context)
         self.context.extend(context)
-        
+      
         time.sleep(2)
 
     async def write_report(self, existing_headers: list = []):
@@ -139,7 +147,7 @@ class GPTResearcher:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await get_sub_queries(query, self.role, self.cfg) + [query]
+        sub_queries = await get_sub_queries(query, self.role, self.cfg, self.parent_query, self.report_type) + [query]
         await stream_output("logs",
                             f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
                             self.websocket)
@@ -200,7 +208,6 @@ class GPTResearcher:
 
         # Get Urls
         retriever = self.retriever(sub_query)
-
         search_results = retriever.search(
             max_results=self.cfg.max_search_results_per_query)
         new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
