@@ -123,7 +123,13 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
 
         print(f"\n🤖 Calling {config.smart_llm_model}...\n")
 
-        model = ChatOpenAI(model=config.smart_llm_model)
+        if config.llm_provider == "openai":
+            model = ChatOpenAI(model=config.smart_llm_model)
+        elif config.llm_provider == "azureopenai":
+            from langchain_openai import AzureChatOpenAI
+            model = AzureChatOpenAI(model=config.smart_llm_model)
+        else:
+            return []
 
         chain = prompt | model | parser
 
