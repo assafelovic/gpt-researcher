@@ -26,9 +26,18 @@ class DocumentLoader:
                 file_extension = file_extension_with_dot.strip(".")
                 tasks.append(self._load_document(file_path, file_extension))
 
-        results = await asyncio.gather(*tasks)
-        docs = [item for sublist in results for item in sublist]
-        
+        docs = []
+        for pages in await asyncio.gather(*tasks):
+            for page in pages:
+                if page.page_content:
+                    docs.append({
+                        "raw_content": page.page_content,
+                        "url": os.path.basename(page.metadata['source'])
+                    })
+                    
+        if not docs:
+            raise ValueError("🤷 Failed to load any documents!")
+
         return docs
 
     async def _load_document(self, file_path: str, file_extension: str) -> list:
@@ -44,12 +53,12 @@ class DocumentLoader:
                 "xlsx": UnstructuredExcelLoader(file_path, mode="elements"),
                 "md": UnstructuredMarkdownLoader(file_path)
             }
-            
+
             loader = loader_dict.get(file_extension, None)
             if loader:
                 data = loader.load()
                 return data
 
         except Exception as e:
-            print(e)
+            print(f"Failed to load document : {file_path}")
             return []
