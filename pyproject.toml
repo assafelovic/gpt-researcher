@@ -37,7 +37,7 @@ SQLAlchemy = ">=2.0.28"
 mistune = "^3.0.2"
 htmldocx = "^0.0.6"
 python-docx = "^1.1.0"
-langchain-openai = "^0.1.0"
+langchain-openai = "^0.1.1"
 langchain-google-genai = "^0.0.11"
 unstructured = "^0.13.0"
 
