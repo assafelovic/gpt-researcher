@@ -4,13 +4,18 @@ from colorama import Fore, Style
 from langchain_openai import AzureChatOpenAI
 
 '''
-Please note: Needs additional env vars such as: 
-    AZURE_OPENAI_ENDPOINT  e.g. https://xxxx.openai.azure.com/", 
-    OPENAI_API_VERSION, 
-    OPENAI_API_TYPE
+Please note:
+Needs additional env vars such as: 
+    AZURE_OPENAI_ENDPOINT  e.g. https://xxxx.openai.azure.com/",
+    AZURE_OPENAI_API_KEY e.g "xxxxxxxxxxxxxxxxxxxxx",
+    OPENAI_API_VERSION, e.g. "2024-03-01-preview" but needs to updated over time as API verison updates,
+    AZURE_EMBEDDING_MODEL e.g. "ada2" The Azure OpenAI embedding model deployment name.
 
-Note new entry in config.py to specify the Azure OpenAI embedding model name:
-self.azure_embedding_model = os.getenv('AZURE_EMBEDDING_MODEL', "INSERT_EMBEDDIGN_MODEL_DEPLOYMENT_NAME")
+config.py settings for Azure OpenAI should look like:
+    self.embedding_provider = os.getenv('EMBEDDING_PROVIDER', 'azureopenai')
+    self.llm_provider = os.getenv('LLM_PROVIDER', "azureopenai")
+    self.fast_llm_model = os.getenv('FAST_LLM_MODEL', "gpt-3.5-turbo-16k") #Deployment name of your GPT3.5T model as per azure OpenAI studio deployment section
+    self.smart_llm_model = os.getenv('SMART_LLM_MODEL', "gpt4")  #Deployment name of your GPT4 1106-Preview+ (GPT4T) model as per azure OpenAI studio deployment section
 '''
 class AzureOpenAIProvider:
 
