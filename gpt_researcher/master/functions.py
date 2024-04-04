@@ -7,7 +7,6 @@ from gpt_researcher.master.prompts import *
 from gpt_researcher.scraper.scraper import Scraper
 from gpt_researcher.utils.llm import *
 
-
 def get_retriever(retriever):
     """
     Gets the retriever
@@ -78,7 +77,7 @@ async def choose_agent(query, cfg):
         return "Default Agent", "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
 
 
-async def get_sub_queries(query, agent_role_prompt, cfg):
+async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str, report_type:str):
     """
     Gets the sub queries
     Args:
@@ -95,7 +94,7 @@ async def get_sub_queries(query, agent_role_prompt, cfg):
         model=cfg.smart_llm_model,
         messages=[
             {"role": "system", "content": f"{agent_role_prompt}"},
-            {"role": "user", "content": generate_search_queries_prompt(query, max_iterations=max_research_iterations)}],
+            {"role": "user", "content": generate_search_queries_prompt(query, parent_query, report_type, max_iterations=max_research_iterations)}],
         temperature=0,
         llm_provider=cfg.llm_provider
     )
