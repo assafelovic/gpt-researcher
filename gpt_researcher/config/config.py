@@ -30,8 +30,15 @@ class Config:
         self.scraper = os.getenv("SCRAPER", "bs")
         self.max_subtopics = os.getenv("MAX_SUBTOPICS", 3)
         self.doc_path = os.getenv("DOC_PATH", "")
-
+        
         self.load_config_file()
+        
+        if self.doc_path:
+            self.validate_doc_path()
+        
+    def validate_doc_path(self):
+        """Ensure that the folder exists at the doc path"""
+        os.makedirs(self.doc_path, exist_ok=True)
 
     def load_config_file(self) -> None:
         """Load the config file."""
