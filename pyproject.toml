@@ -41,6 +41,9 @@ langchain-openai = "^0.1.0"
 langchain-google-genai = "^0.0.11"
 
 
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.23.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
