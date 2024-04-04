@@ -3,13 +3,23 @@ from datetime import datetime, timezone
 from gpt_researcher.utils.enum import ReportType
 
 
-def generate_search_queries_prompt(question, max_iterations=3):
+def generate_search_queries_prompt(question: str, parent_query: str, report_type: str, max_iterations: int=3,):
     """ Generates the search queries prompt for the given question.
-    Args: question (str): The question to generate the search queries prompt for
+    Args: 
+        question (str): The question to generate the search queries prompt for
+        parent_query (str): The main question (only relevant for detailed reports)
+        report_type (str): The report type
+        max_iterations (int): The maximum number of search queries to generate
+    
     Returns: str: The search queries prompt for the given question
     """
+    
+    if report_type == ReportType.DetailedReport.value:
+        task = f"{parent_query} : {question}"
+    else:
+        task = question
 
-    return f'Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{question}"' \
+    return f'Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"' \
            f'Use the current date if needed: {datetime.now().strftime("%B %d, %Y")}.\n' \
            f'Also include in the queries specified task details such as locations, names, etc.\n' \
            f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"].'
