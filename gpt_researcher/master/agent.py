@@ -244,6 +244,7 @@ class GPTResearcher:
     async def get_similar_content_by_query(self, query, pages):
         if self.verbose:
             await stream_output("logs", f"📝 Getting relevant content based on query: {query}...", self.websocket)
+
         # Summarize Raw Data
         context_compressor = ContextCompressor(
             documents=pages,
