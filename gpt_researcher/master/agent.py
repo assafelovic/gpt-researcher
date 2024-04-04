@@ -111,6 +111,7 @@ class GPTResearcher:
                 context=self.context,
                 agent_role_prompt=self.role,
                 report_type=self.report_type,
+                report_source=self.report_source,
                 websocket=self.websocket,
                 cfg=self.cfg,
                 main_topic=self.parent_query,
@@ -122,6 +123,7 @@ class GPTResearcher:
                 context=self.context,
                 agent_role_prompt=self.role,
                 report_type=self.report_type,
+                report_source=self.report_source,
                 websocket=self.websocket,
                 cfg=self.cfg
             )
