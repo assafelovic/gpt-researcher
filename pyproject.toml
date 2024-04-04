@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<4.0"
+python = ">=3.10,<3.12"
 beautifulsoup4 = ">=4.12.2"
 colorama = ">=0.4.6"
 duckduckgo_search = ">=4.1.1"
@@ -39,6 +39,7 @@ htmldocx = "^0.0.6"
 python-docx = "^1.1.0"
 langchain-openai = "^0.1.0"
 langchain-google-genai = "^0.0.11"
+unstructured = "^0.13.0"
 
 
 [build-system]
