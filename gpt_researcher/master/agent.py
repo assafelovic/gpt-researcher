@@ -63,7 +63,7 @@ class GPTResearcher:
         """
         Runs the GPT Researcher to conduct research
         """
-        print(f"🔎 Running research for '{self.query}'...")
+        await stream_output("logs", f"🔎 Running research for '{self.query}'...", self.websocket)
         # Generate Agent
         self.agent, self.role = await choose_agent(self.query, self.cfg)
         await stream_output("logs", self.agent, self.websocket)
@@ -210,7 +210,7 @@ class GPTResearcher:
 
         return scraped_content_results
 
-    async def get_similar_content_by_query(self, query, pages):
+    async def get_similar_content_by_query(self, query, pages):        
         await stream_output("logs", f"📝 Getting relevant content based on query: {query}...", self.websocket)
         # Summarize Raw Data
         context_compressor = ContextCompressor(
