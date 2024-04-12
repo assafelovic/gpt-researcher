@@ -8,6 +8,8 @@ from gpt_researcher.scraper.scraper import Scraper
 from gpt_researcher.utils.llm import *
 
 def get_retriever(retriever):
+    print("@@@@@@")
+    print(retriever)
     """
     Gets the retriever
     Args:
