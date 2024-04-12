@@ -98,17 +98,6 @@ def generate_outline_report_prompt(question, context, report_format="apa", total
            ' Use appropriate Markdown syntax to format the outline and ensure readability.'
 
 
-def get_report_by_type(report_type):
-    report_type_mapping = {
-        ReportType.ResearchReport.value: generate_report_prompt,
-        ReportType.ResourceReport.value: generate_resource_report_prompt,
-        ReportType.OutlineReport.value: generate_outline_report_prompt,
-        ReportType.CustomReport.value: generate_custom_report_prompt,
-        ReportType.SubtopicReport.value: generate_subtopic_report_prompt
-    }
-    return report_type_mapping[report_type]
-
-
 def auto_agent_instructions():
     return """
         This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer. The research is conducted by a specific server, defined by its type and role, with each server requiring distinct instructions.

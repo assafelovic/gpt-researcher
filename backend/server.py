@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import json
 import os
 from gpt_researcher.utils.websocket_manager import WebSocketManager
-from .utils import write_md_to_pdf, write_md_to_word
+from utils import write_md_to_pdf, write_md_to_word
 
 
 class ResearchRequest(BaseModel):
