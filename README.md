@@ -1,5 +1,5 @@
 # 🔎 GPT Researcher
-[![Official Website](https://img.shields.io/badge/Official%20Website-tavily.com-blue?style=for-the-badge&logo=world&logoColor=white)](https://tavily.com)
+[![Official Website](https://img.shields.io/badge/Official%20Website-gptr.dev-blue?style=for-the-badge&logo=world&logoColor=white)](https://gptr.dev)
 [![Discord Follow](https://dcbadge.vercel.app/api/server/2pFkc83fRq?style=for-the-badge)](https://discord.com/invite/2pFkc83fRq)
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/assafelovic/gpt-researcher?style=social)](https://github.com/assafelovic/gpt-researcher)
@@ -43,7 +43,8 @@ More specifically:
 * Finally, filter and aggregate all summarized sources and generate a final research report.
 
 ## Demo
-https://github.com/assafelovic/gpt-researcher/assets/13554167/d5df04a9-631a-4509-aa55-2049b5a9e9bc
+https://github.com/assafelovic/gpt-researcher/assets/13554167/dd6cf08f-b31e-40c6-9907-1915f52a7110
+
 
 ## Tutorials
  - [How it Works](https://docs.tavily.com/blog/building-gpt-researcher)
@@ -151,7 +152,7 @@ TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 - **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources) supported by [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai), simply change the llm model and provider in config/config.py. 
-- **For search engine, we recommend [Tavily Search API](https://app.tavily.com)**, but you can also refer to other search engines of your choice by changing the search provider in config/config.py to `"duckduckgo"`, `"googleAPI"`, `"googleSerp"`, or `"searx"`. Then add the corresponding env API key as seen in the config.py file.
+- **For search engine, we recommend [Tavily Search API](https://app.tavily.com)**, but you can also refer to other search engines of your choice by changing the search provider in config/config.py to `"duckduckgo"`, `"googleAPI"`, `"bing"`, `"googleSerp"`, or `"searx"`. Then add the corresponding env API key as seen in the config.py file.
 
 <br />
 
