@@ -46,7 +46,7 @@ $ uvicorn main:app --reload
 ## Using Virtual Environment or Poetry
 Select either based on your familiarity with each:
 
-### 🌐🌀 Virtual Environment
+### Virtual Environment
 
 #### *Establishing the Virtual Environment with Activate/Deactivate configuration*
 
@@ -78,7 +78,7 @@ python -m pip install -r requirements.txt
 
 <br />
 
-### 📜🎭 Poetry
+### Poetry
 
 #### *Establishing the Poetry dependencies and virtual environment with Poetry version `~1.7.1`*
 
