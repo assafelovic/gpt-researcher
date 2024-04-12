@@ -232,9 +232,8 @@ report_type_mapping = {
 
 
 def get_prompt_by_report_type(report_type):
-    default_report_type = ReportType.ResearchReport.value
     prompt_by_type = report_type_mapping.get(report_type)
     if not prompt_by_type:
-        prompt_by_type = report_type_mapping.get(default_report_type)
-        print(f"Invalid report type: {report_type}. Using default report type: {default_report_type}")
+        raise Exception(f"Invalid report type: {report_type}.\n"
+                        f"Please use one of the following: {list(ReportType)}")
     return prompt_by_type
