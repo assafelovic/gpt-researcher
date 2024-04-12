@@ -5,9 +5,9 @@ from typing import Dict, List
 
 from fastapi import WebSocket
 
-from gpt_researcher.report_type import BasicReport, DetailedReport
+from backend.report_type import BasicReport, DetailedReport
 
-from .enum import ReportType
+from gpt_researcher.utils.enum import ReportType
 
 
 class WebSocketManager:
@@ -63,11 +63,10 @@ async def run_agent(task, report_type, websocket):
     # measure time
     start_time = datetime.datetime.now()
     # add customized JSON config file path here
-    config_path = None
+    config_path = ""
     # Instead of running the agent directly run it through the different report type classes
     if report_type == ReportType.DetailedReport.value:
-        researcher = DetailedReport(query=task, report_type=report_type,
-                                    source_urls=None, config_path=config_path, websocket=websocket)
+        researcher = DetailedReport(query=task, source_urls=None, config_path=config_path, websocket=websocket)
     else:
         researcher = BasicReport(query=task, report_type=report_type,
                                  source_urls=None, config_path=config_path, websocket=websocket)
