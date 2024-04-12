@@ -15,7 +15,7 @@ async def main():
     # Initialize the researcher
     researcher = GPTResearcher(query=query, report_type=report_type, config_path=None)
     # Conduct research on the given query
-    researcher.conduct_research()
+    await researcher.conduct_research()
     # Write the report
     report = await researcher.write_report()
     
