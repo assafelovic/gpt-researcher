@@ -44,6 +44,7 @@ class GPTResearcher:
         self.agent = agent
         self.role = role
         self.report_type = report_type
+        self.report_prompt = get_prompt_by_report_type(self.report_type)  # this validates the report type
         self.websocket = websocket
         self.cfg = Config(config_path)
         self.retriever = get_retriever(self.cfg.retriever)

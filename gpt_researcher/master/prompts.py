@@ -235,5 +235,5 @@ def get_prompt_by_report_type(report_type):
     prompt_by_type = report_type_mapping.get(report_type)
     if not prompt_by_type:
         raise Exception(f"Invalid report type: {report_type}.\n"
-                        f"Please use one of the following: {', '.join(report.name for report in ReportType)}")
+                        f"Please use one of the following: {', '.join(report.value for report in ReportType)}")
     return prompt_by_type
