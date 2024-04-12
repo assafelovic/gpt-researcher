@@ -116,7 +116,7 @@ $ uvicorn main:app --reload
 
 <br />
 
-**To learn how to get started with Docker, Poetry or a virtual environment check out the [documentation](https://docs.tavily.com/docs/gpt-researcher/getting-started) page.**
+**To learn how to get started with [Docker](https://docs.tavily.com/docs/gpt-researcher/getting-started#try-it-with-docker), [Poetry](https://docs.tavily.com/docs/gpt-researcher/getting-started#poetry) or a [virtual environment](https://docs.tavily.com/docs/gpt-researcher/getting-started#virtual-environment) check out the [documentation](https://docs.tavily.com/docs/gpt-researcher/getting-started) page.**
 
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
