@@ -81,14 +81,14 @@ $ cd gpt-researcher
 
 > **Step 3** - Set up API keys using two methods: exporting them directly or storing them in a `.env` file.
 
-For Linux/Temporary Windows Setup, use the export method:
+For Linux/Windows temporary setup, use the export method:
 
 ```bash
 export OPENAI_API_KEY={Your OpenAI API Key here}
 export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
-For a more permanent setup, create a `.env` file in the current `gpt-researcher` folder and input the keys as follows:
+For a more permanent setup, create a `.env` file in the current `gpt-researcher` directory and input the keys as follows:
 
 ```bash
 OPENAI_API_KEY={Your OpenAI API Key here}
