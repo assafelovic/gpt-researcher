@@ -75,8 +75,8 @@ Please see [here](https://docs.tavily.com/docs/gpt-researcher/getting-started) f
 > **Step 1** - Download the project and navigate to its directory
 
 ```bash
-$ git clone https://github.com/assafelovic/gpt-researcher.git
-$ cd gpt-researcher
+git clone https://github.com/assafelovic/gpt-researcher.git
+cd gpt-researcher
 ```
 
 > **Step 3** - Set up API keys using two methods: exporting them directly or storing them in a `.env` file.
@@ -103,13 +103,13 @@ TAVILY_API_KEY={Your Tavily API Key here}
 > **Step 1** - Install dependencies
 
 ```bash
-$ pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 > **Step 2** - Run the agent with FastAPI
 
 ```bash
-$ uvicorn main:app --reload
+uvicorn main:app --reload
 ```
 
 > **Step 3** - Go to http://localhost:8000 on any browser and enjoy researching!
