@@ -5,7 +5,6 @@ import markdown
 
 from gpt_researcher.master.prompts import *
 from gpt_researcher.scraper.scraper import Scraper
-from gpt_researcher.utils.enum import get_prompt_by_report_type
 from gpt_researcher.utils.llm import *
 
 def get_retriever(retriever):
