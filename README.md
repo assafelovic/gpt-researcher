@@ -69,73 +69,17 @@ Please see [here](https://docs.tavily.com/docs/gpt-researcher/getting-started) f
 - How-To examples (demos, integrations, docker support)
 - Reference (full API docs)
 
-## Quickstart
+## ⚙️ Getting Started
 > **Step 0** - Install Python 3.11 or later. [See here](https://www.tutorialsteacher.com/python/install-python) for a step-by-step guide.
 
-<br />
-
-> **Step 1** - Download the project and navigate to its directory. You'll encounter two options: Virtual Environment and Poetry. Select either Step-2 or Step-3 based on your familiarity with each.:
+> **Step 1** - Download the project and navigate to its directory
 
 ```bash
-git clone https://github.com/assafelovic/gpt-researcher.git
-cd gpt-researcher
+$ git clone https://github.com/assafelovic/gpt-researcher.git
+$ cd gpt-researcher
 ```
 
-<br />
-
-> **Step 2** - 🌐🌀 Virtual Environment 🛡️.
-
-#### *Establishing the Virtual Environment with Activate/Deactivate configuration*
-
-Create a virtual environment using the `venv` package with the environment name `<your_name>`, for example, `env`. Execute the following command in the PowerShell/CMD terminal:
-
-```bash
-python -m venv env
-```
-
-To activate the virtual environment, use the following activation script in PowerShell/CMD terminal:
-
-```bash
-.\env\Scripts\activate
-```
-
-To deactivate the virtual environment, run the following deactivation script in PowerShell/CMD terminal:
-
-```bash
-deactivate
-```
-
-#### *Install the dependencies for a Virtual environment*
-
-After activating the `env` environment, install dependencies using the `requirements.txt` file with the following command:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-<br />
-
-> **Step 3** - 📜🎭 Poetry 📝
-
-#### *Establishing the Poetry dependencies and virtual environment with Poetry version `~1.7.1`*
-
-Install project dependencies and simultaneously create a virtual environment for the specified project. By executing this command, Poetry reads the project's "pyproject.toml" file to determine the required dependencies and their versions, ensuring a consistent and isolated development environment. The virtual environment allows for a clean separation of project-specific dependencies, preventing conflicts with system-wide packages and enabling more straightforward dependency management throughout the project's lifecycle.
-
-```bash
-poetry install
-```
-
-#### *Activate the virtual environment associated with a Poetry project*
-
-By running this command, the user enters a shell session within the isolated environment associated with the project, providing a dedicated space for development and execution. This virtual environment ensures that the project dependencies are encapsulated, avoiding conflicts with system-wide packages. Activating the Poetry shell is essential for seamlessly working on a project, as it ensures that the correct versions of dependencies are used and provides a controlled environment conducive to efficient development and testing.
-
-```bash
-poetry shell
-```
-
-<br />
-
-> **Step 4** - Set up API keys using two methods: exporting them directly and storing them in a `.env` file.
+> **Step 3** - Set up API keys using two methods: exporting them directly or storing them in a `.env` file.
 
 For Linux/Temporary Windows Setup, use the export method:
 
@@ -152,22 +96,27 @@ TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 - **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources) supported by [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai), simply change the llm model and provider in config/config.py. 
-- **For search engine, we recommend [Tavily Search API](https://app.tavily.com)**, but you can also refer to other search engines of your choice by changing the search provider in config/config.py to `"duckduckgo"`, `"googleAPI"`, `"bing"`, `"googleSerp"`, or `"searx"`. Then add the corresponding env API key as seen in the config.py file.
+- **For web search API, we recommend [Tavily Search API](https://app.tavily.com)**, but you can also refer to other search APIs of your choice by changing the search provider in config/config.py to `"duckduckgo"`, `"googleAPI"`, `"bing"`, `"googleSerp"`, `"searx"` and more. Then add the corresponding env API key as seen in the config.py file.
 
-<br />
+### Quickstart
 
-> **Step 5** - Launch the FastAPI application agent on a *Virtual Environment or Poetry* setup by executing the following command:
+> **Step 1** - Install dependencies
+
 ```bash
-python -m uvicorn main:app --reload
+$ pip install -r requirements.txt
 ```
 
-- **Issue: OSError** - For Windows 11 Pro/Home users encountering the 'OSError: cannot load library 'gobject-2.0-0'' error, please refer to [this OSError GitHub issue](https://github.com/assafelovic/gpt-researcher/issues/314). To resolve this issue, install the `WeasyPrint` software on your local machine by using the [GTK for Windows Runtime Environment Installer](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/tag/2022-01-04).
+> **Step 2** - Run the agent with FastAPI
+
+```bash
+$ uvicorn main:app --reload
+```
+
+> **Step 3** - Go to http://localhost:8000 on any browser and enjoy researching!
 
 <br />
 
-> **Step 6** - Visit http://localhost:8000 in any web browser and explore your research!
-
-To learn how to get started with Docker or to learn more about the features and services check out the [documentation](https://docs.tavily.com) page.
+**To learn how to get started with Docker, Poetry or a virtual environment check out the [documentation](https://docs.tavily.com/docs/gpt-researcher/getting-started) page.**
 
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.

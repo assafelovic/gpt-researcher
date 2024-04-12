@@ -37,11 +37,12 @@ More specifically:
 
 ## Features
 - 📝 Generate research, outlines, resources and lessons reports
+- 📜 Can generate long and detailed research reports (over 2K words)
 - 🌐 Aggregates over 20 web sources per research to form objective and factual conclusions
 - 🖥️ Includes an easy-to-use web interface (HTML/CSS/JS)
 - 🔍 Scrapes web sources with javascript support
 - 📂 Keeps track and context of visited and used web sources
-- 📄 Export research reports to PDF and more...
+- 📄 Export research reports to PDF, Word and more...
 
 
 ## Disclaimer

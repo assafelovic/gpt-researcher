@@ -226,7 +226,7 @@ async def generate_report(
         report:
 
     """
-    generate_prompt = get_report_by_type(report_type)
+    generate_prompt = get_prompt_by_report_type(report_type)
     report = ""
 
     if report_type == "subtopic_report":

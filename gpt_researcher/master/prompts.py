@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-
+import warnings
 from gpt_researcher.utils.enum import ReportType
 
 
@@ -96,17 +96,6 @@ def generate_outline_report_prompt(question, context, report_format="apa", total
            ' for the research report, including the main sections, subsections, and key points to be covered.' \
            ' The research report should be detailed, informative, in-depth, and a minimum of 1,200 words.' \
            ' Use appropriate Markdown syntax to format the outline and ensure readability.'
-
-
-def get_report_by_type(report_type):
-    report_type_mapping = {
-        ReportType.ResearchReport.value: generate_report_prompt,
-        ReportType.ResourceReport.value: generate_resource_report_prompt,
-        ReportType.OutlineReport.value: generate_outline_report_prompt,
-        ReportType.CustomReport.value: generate_custom_report_prompt,
-        ReportType.SubtopicReport.value: generate_subtopic_report_prompt
-    }
-    return report_type_mapping[report_type]
 
 
 def auto_agent_instructions():
@@ -231,3 +220,24 @@ def generate_report_introduction(question: str, research_summary: str = "") -> s
         - You must include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
         Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
     """
+
+
+report_type_mapping = {
+    ReportType.ResearchReport.value: generate_report_prompt,
+    ReportType.ResourceReport.value: generate_resource_report_prompt,
+    ReportType.OutlineReport.value: generate_outline_report_prompt,
+    ReportType.CustomReport.value: generate_custom_report_prompt,
+    ReportType.SubtopicReport.value: generate_subtopic_report_prompt
+}
+
+
+def get_prompt_by_report_type(report_type):
+    prompt_by_type = report_type_mapping.get(report_type)
+    default_report_type = ReportType.ResearchReport.value
+    if not prompt_by_type:
+        warnings.warn(f"Invalid report type: {report_type}.\n"
+                        f"Please use one of the following: {', '.join([enum_value for enum_value in report_type_mapping.keys()])}\n"
+                        f"Using default report type: {default_report_type} prompt.",
+                        UserWarning)
+        prompt_by_type = report_type_mapping.get(default_report_type)
+    return prompt_by_type
