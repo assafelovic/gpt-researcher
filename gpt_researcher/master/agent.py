@@ -88,16 +88,11 @@ class GPTResearcher:
         Returns:
             str: The report
         """
-        # Write Research Report
-        if self.report_type == "custom_report":
-            self.role = self.cfg.agent_role if self.cfg.agent_role else self.role
 
         await stream_output("logs", f"✍️ Writing summary for research task: {self.query}...", self.websocket)
 
         if self.report_type == "custom_report":
-            self.role = (
-                self.cfg.agent_role if self.cfg.agent_role else self.role
-            )
+            self.role = self.cfg.agent_role if self.cfg.agent_role else self.role
         elif self.report_type == "subtopic_report":
             report = await generate_report(
                 query=self.query,
