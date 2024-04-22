@@ -12,9 +12,13 @@ async def main():
     # Report Type
     report_type = "research_report"
 
-    # Run Research
+    # Initialize the researcher
     researcher = GPTResearcher(query=query, report_type=report_type, config_path=None)
-    report = await researcher.run()
+    # Conduct research on the given query
+    await researcher.conduct_research()
+    # Write the report
+    report = await researcher.write_report()
+    
     return report
 
 

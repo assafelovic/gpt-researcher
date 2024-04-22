@@ -1,13 +1,18 @@
 # connect any client to gpt-researcher using websocket
 import asyncio
 import datetime
-from typing import List, Dict
+from typing import Dict, List
+
 from fastapi import WebSocket
-from gpt_researcher.master.agent import GPTResearcher
+
+from backend.report_type import BasicReport, DetailedReport
+
+from gpt_researcher.utils.enum import ReportType
 
 
 class WebSocketManager:
     """Manage websockets"""
+
     def __init__(self):
         """Initialize the WebSocketManager class."""
         self.active_connections: List[WebSocket] = []
@@ -35,7 +40,8 @@ class WebSocketManager:
         await websocket.accept()
         self.active_connections.append(websocket)
         self.message_queues[websocket] = asyncio.Queue()
-        self.sender_tasks[websocket] = asyncio.create_task(self.start_sender(websocket))
+        self.sender_tasks[websocket] = asyncio.create_task(
+            self.start_sender(websocket))
 
     async def disconnect(self, websocket: WebSocket):
         """Disconnect a websocket."""
@@ -57,9 +63,14 @@ async def run_agent(task, report_type, websocket):
     # measure time
     start_time = datetime.datetime.now()
     # add customized JSON config file path here
-    config_path = None
-    # run agent
-    researcher = GPTResearcher(query=task, report_type=report_type, source_urls=None, config_path=config_path, websocket=websocket)
+    config_path = ""
+    # Instead of running the agent directly run it through the different report type classes
+    if report_type == ReportType.DetailedReport.value:
+        researcher = DetailedReport(query=task, source_urls=None, config_path=config_path, websocket=websocket)
+    else:
+        researcher = BasicReport(query=task, report_type=report_type,
+                                 source_urls=None, config_path=config_path, websocket=websocket)
+
     report = await researcher.run()
     # measure time
     end_time = datetime.datetime.now()

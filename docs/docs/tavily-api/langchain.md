@@ -10,7 +10,7 @@ Tavily API can now empower your Langchain application with real time online info
 import os
 from langchain.utilities.tavily_search import TavilySearchAPIWrapper
 from langchain.agents import initialize_agent, AgentType
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 from langchain.tools.tavily_search import TavilySearchResults
 
 # set up API key

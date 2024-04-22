@@ -115,6 +115,7 @@ footer {
 
 #output {
     height: 300px;
+    font-family: 'Times New Roman', Times, , "Courier New", serif;
     overflow: auto;
     padding: 10px;
     margin-bottom: 10px;
