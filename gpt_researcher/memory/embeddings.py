@@ -1,4 +1,5 @@
 from langchain_community.vectorstores import FAISS
+import os
 
 
 class Memory:
@@ -10,8 +11,11 @@ class Memory:
                 from langchain.embeddings import OllamaEmbeddings
                 _embeddings = OllamaEmbeddings(model="llama2")
             case "openai":
-                from langchain.embeddings import OpenAIEmbeddings
+                from langchain_openai import OpenAIEmbeddings
                 _embeddings = OpenAIEmbeddings()
+            case "azureopenai":
+                from langchain_openai import AzureOpenAIEmbeddings
+                _embeddings = AzureOpenAIEmbeddings(deployment=os.environ["AZURE_EMBEDDING_MODEL"], chunk_size=16)
             case "huggingface":
                 from langchain.embeddings import HuggingFaceEmbeddings
                 _embeddings = HuggingFaceEmbeddings()

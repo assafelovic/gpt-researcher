@@ -1,5 +1,4 @@
 # dependencies
-asyncio
 beautifulsoup4
 colorama
 duckduckgo_search
@@ -24,3 +23,9 @@ newspaper3k
 langchain_community
 SQLAlchemy
 langgraph
+langchain-openai
+mistune
+python-docx
+htmldocx
+langchain-google-genai
+lxml[html_clean]

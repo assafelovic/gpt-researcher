@@ -8,15 +8,15 @@ with open("requirements.txt", "r") as f:
 
 setup(
     name="gpt-researcher",
-    version="0.1.0",
+    version="0.2.6",
     description="GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks.",
     package_dir={'gpt_researcher': 'gpt_researcher'},
     packages=find_packages(),
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/assafelovic/gpt-researcher",
-    author="Tavily",
-    author_email="support@tavily.com",
+    author="Assaf Elovic",
+    author_email="assaf.elovic@gmail.com",
     license="MIT",
     classifiers=[
         "License :: OSI Approved :: MIT License",

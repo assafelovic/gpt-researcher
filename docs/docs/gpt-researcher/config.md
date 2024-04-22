@@ -22,7 +22,7 @@ Here is an example of the default config.py file found in `/gpt_researcher/confi
 def __init__(self, config_file: str = None):
     self.config_file = config_file
     self.retriever = "tavily"
-    self.llm_provider = "ChatOpenAI"
+    self.llm_provider = "openai"
     self.fast_llm_model = "gpt-3.5-turbo-16k"
     self.smart_llm_model = "gpt-4-1106-preview"
     self.fast_token_limit = 2000
@@ -42,7 +42,7 @@ def __init__(self, config_file: str = None):
 
 Please note that you can also include your own external JSON file by adding the path in the `config_file` param.
 
-To learn more about additional LLM support you can check out the [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai) and [Langchain supported LLMs](https://python.langchain.com/docs/integrations/llms/) documentation. Simply pass different model names in the `llm_provider` config param.
+To learn more about additional LLM support you can check out the [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai) and [Langchain supported LLMs](https://python.langchain.com/docs/integrations/llms/) documentation. Simply pass different provider names in the `llm_provider` config param.
 
 You can also change the search engine by modifying the `retriever` param to others such as `duckduckgo`, `googleAPI`, `googleSerp`, `searx` and more. 
 

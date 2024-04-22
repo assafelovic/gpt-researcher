@@ -4,8 +4,8 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import json
 import os
-from gpt_researcher.utils.websocket_manager import WebSocketManager
-from .utils import write_md_to_pdf
+from backend.websocket_manager import WebSocketManager
+from backend.utils import write_md_to_pdf, write_md_to_word
 
 
 class ResearchRequest(BaseModel):
@@ -48,8 +48,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 report_type = json_data.get("report_type")
                 if task and report_type:
                     report = await manager.start_streaming(task, report_type, websocket)
-                    path = await write_md_to_pdf(report)
-                    await websocket.send_json({"type": "path", "output": path})
+                    # Saving report as pdf
+                    pdf_path = await write_md_to_pdf(report)
+                    # Saving report as docx
+                    docx_path = await write_md_to_word(report)
+                    # Returning the path of saved report files
+                    await websocket.send_json({"type": "path", "output": {"pdf": pdf_path, "docx": docx_path}})
                 else:
                     print("Error: not enough parameters provided.")
 
