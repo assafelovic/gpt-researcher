@@ -1,0 +1,6 @@
+@app.get("/robots.txt")
+async def robots_txt():
+    content = """User-agent: *
+Disallow: /
+"""
+    return Response(content=content, media_type="text/plain")
