@@ -1,8 +1,29 @@
 #Ignore env containing secrets
 .env
+.venv
+.envrc
+
 #Ignore Virtual Env
 env/
+venv/
+.venv/
+
+# Other Environments
+ENV/
+env.bak/
+venv.bak/
+
 #Ignore generated outputs
 outputs/
+
 #Ignore pycache
 **/__pycache__/
+
+#Ignore mypy cache
+.mypy_cache/
+node_modules
+.idea
+.DS_Store
+.docusaurus
+build
+docs/build
