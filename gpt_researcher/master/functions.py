@@ -85,9 +85,9 @@ async def choose_agent(query, cfg):
  #       query: original query
  #       agent_role_prompt: agent role prompt
  #       cfg: Config
-#
+ #
  #   Returns:
-  #      sub_queries: List of sub queries
+ #       sub_queries: List of sub queries
 #
 
 async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str, report_type: str):

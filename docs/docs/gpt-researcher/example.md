@@ -15,7 +15,8 @@ async def fetch_report(query, report_type):
     Fetch a research report based on the provided query and report type.
     """
     researcher = GPTResearcher(query=query, report_type=report_type, config_path=None)
-    report = await researcher.run()
+    await researcher.conduct_research()
+    report = await researcher.write_report()
     return report
 
 async def generate_research_report():
@@ -24,7 +25,7 @@ async def generate_research_report():
     """
     report = await fetch_report(QUERY, REPORT_TYPE)
     print(report)
-
+    
 if __name__ == "__main__":
     asyncio.run(generate_research_report())
 ```

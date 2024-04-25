@@ -17,7 +17,7 @@ class Config:
         self.fast_token_limit = int(os.getenv('FAST_TOKEN_LIMIT', 2000))
         self.smart_token_limit = int(os.getenv('SMART_TOKEN_LIMIT', 4000))
         self.browse_chunk_max_length = int(os.getenv('BROWSE_CHUNK_MAX_LENGTH', 8192))
-        self.summary_token_limit = int(os.getenv('SUMMARY_TOKEN_LIMIT', 700))
+        self.summary_token_limit = int(os.getenv('SUMMARY_TOKEN_LIMIT', 1000))
         self.temperature = float(os.getenv('TEMPERATURE', 0.55))
         self.user_agent = os.getenv('USER_AGENT', "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                                                    "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0")
