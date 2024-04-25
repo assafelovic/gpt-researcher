@@ -22,7 +22,6 @@ aiofiles
 newspaper3k
 langchain_community
 SQLAlchemy
-langgraph
 langchain-openai
 mistune
 python-docx
