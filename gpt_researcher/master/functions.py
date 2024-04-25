@@ -1,5 +1,6 @@
 import asyncio
 import json
+from fastapi import HTTPException
 
 import markdown
 
@@ -77,18 +78,44 @@ async def choose_agent(query, cfg):
         return "Default Agent", "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
 
 
-async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str, report_type:str):
+#async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str, report_type:str):
+ #   """
+ #   Gets the sub queries
+ #   Args:
+ #       query: original query
+ #       agent_role_prompt: agent role prompt
+ #       cfg: Config
+#
+ #   Returns:
+  #      sub_queries: List of sub queries
+#
+
+async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str, report_type: str):
     """
     Gets the sub queries
     Args:
         query: original query
         agent_role_prompt: agent role prompt
         cfg: Config
+        parent_query: Parent query for context
+        report_type: Type of the report to generate
 
     Returns:
         sub_queries: List of sub queries
 
     """
+ #   max_research_iterations = cfg.max_iterations if cfg.max_iterations else 1
+ #   response = await create_chat_completion(
+ #       model=cfg.smart_llm_model,
+ #       messages=[
+ #           {"role": "system", "content": f"{agent_role_prompt}"},
+ #           {"role": "user", "content": generate_search_queries_prompt(query, parent_query, report_type, max_iterations=max_research_iterations)}],
+ #       temperature=0,
+ #       llm_provider=cfg.llm_provider
+ #   )
+ #   sub_queries = json.loads(response)
+#    return sub_queries
+
     max_research_iterations = cfg.max_iterations if cfg.max_iterations else 1
     response = await create_chat_completion(
         model=cfg.smart_llm_model,
@@ -98,9 +125,28 @@ async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query:
         temperature=0,
         llm_provider=cfg.llm_provider
     )
-    sub_queries = json.loads(response)
+    
+    # Log the response for debugging purposes
+    print(f"Response received from create_chat_completion: {response}")
+    
+    # Initialize sub_queries to None or a default value
+    sub_queries = None
+    
+    # Try to parse the JSON, and handle exceptions if parsing fails
+    try:
+        sub_queries = json.loads(response)
+    except json.JSONDecodeError as e:
+        # Logging the error
+        print(f"JSON decoding failed: {e} - Response content: {response}")
+        # You can also use a logging library here if you prefer.
+        
+        # Optionally, raise an HTTPException for FastAPI to return a HTTP 400 response to the client
+        # raise HTTPException(status_code=400, detail="Invalid response format received.")
+        
+        # If the function must not raise an exception, set sub_queries to a default or empty value
+        sub_queries = []  # or {} or None, depending on how your code expects to handle this
+    
     return sub_queries
-
 
 def scrape_urls(urls, cfg=None):
     """
