@@ -1,0 +1,2 @@
+corpora/wordnet
+tokenizers/punkt
