@@ -52,13 +52,13 @@ class WebSocketManager:
             del self.sender_tasks[websocket]
             del self.message_queues[websocket]
 
-    async def start_streaming(self, task, report_type, websocket):
+    async def start_streaming(self, task, report_type, report_source, websocket):
         """Start streaming the output."""
-        report = await run_agent(task, report_type, websocket)
+        report = await run_agent(task, report_type, report_source, websocket)
         return report
 
 
-async def run_agent(task, report_type, websocket):
+async def run_agent(task, report_type, report_source, websocket):
     """Run the agent."""
     # measure time
     start_time = datetime.datetime.now()
@@ -66,9 +66,10 @@ async def run_agent(task, report_type, websocket):
     config_path = ""
     # Instead of running the agent directly run it through the different report type classes
     if report_type == ReportType.DetailedReport.value:
-        researcher = DetailedReport(query=task, source_urls=None, config_path=config_path, websocket=websocket)
+        researcher = DetailedReport(query=task, report_type=report_type, report_source=report_source,
+                                    source_urls=None, config_path=config_path, websocket=websocket)
     else:
-        researcher = BasicReport(query=task, report_type=report_type,
+        researcher = BasicReport(query=task, report_type=report_type, report_source=report_source,
                                  source_urls=None, config_path=config_path, websocket=websocket)
 
     report = await researcher.run()
