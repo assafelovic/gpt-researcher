@@ -1,3 +1,5 @@
+docs/my-docs
+
 #Ignore env containing secrets
 .env
 .venv
