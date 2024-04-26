@@ -16,11 +16,6 @@ class ResearchRequest(BaseModel):
 
 app = FastAPI()
 
-app.mount("/site", StaticFiles(directory="./frontend"), name="site")
-app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
-
-templates = Jinja2Templates(directory="./frontend")
-
 manager = WebSocketManager()
 
 
