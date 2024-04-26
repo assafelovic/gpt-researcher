@@ -48,7 +48,7 @@ export default function ChatBox() {
           <div className="max-w-5xl mx-auto text-center">
               <h1 className="text-4xl font-extrabold mx-auto lg:text-7xl">
                   Say Hello to
-                  <span className="sayGoodbye"> GPTBud</span>
+                  <span className="sayGoodbye"> GPT Researcher</span>
               </h1>
               <p className="max-w-5xl mx-auto text-gray-600 mt-8" style={{fontSize: "20px"}}>
                   The power of Google Search & GPT Combined for a Better Search Experience.
