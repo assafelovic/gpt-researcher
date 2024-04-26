@@ -3,9 +3,10 @@ import time
 
 from gpt_researcher.config import Config
 from gpt_researcher.context.compression import ContextCompressor
+from gpt_researcher.document import DocumentLoader
 from gpt_researcher.master.functions import *
 from gpt_researcher.memory import Memory
-from gpt_researcher.utils.enum import ReportType
+from gpt_researcher.utils.enum import ReportSource, ReportType
 
 
 class GPTResearcher:
@@ -17,6 +18,7 @@ class GPTResearcher:
         self,
         query: str,
         report_type: str = ReportType.ResearchReport.value,
+        report_source=ReportSource.External.value,
         source_urls=None,
         config_path=None,
         websocket=None,
@@ -46,6 +48,7 @@ class GPTResearcher:
         self.role = role
         self.report_type = report_type
         self.report_prompt = get_prompt_by_report_type(self.report_type)  # this validates the report type
+        self.report_source = report_source
         self.websocket = websocket
         self.cfg = Config(config_path)
         self.retriever = get_retriever(self.cfg.retriever)
@@ -79,7 +82,7 @@ class GPTResearcher:
             await stream_output("logs", self.agent, self.websocket)
 
         # If specified, the researcher will use the given urls as the context for the research.
-        if self.source_urls:
+        if self.source_urls and self.report_source != ReportSource.Internal.value:
             self.context = await self.get_context_by_urls(self.source_urls)
         else:
             self.context = await self.get_context_by_search(self.query)
@@ -204,6 +207,7 @@ class GPTResearcher:
         Returns:
             Summary
         """
+<<<<<<< HEAD
         # Get Urls
         retriever = self.retriever(sub_query)
         search_results = retriever.search(
@@ -211,9 +215,31 @@ class GPTResearcher:
         new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
 
         # Scrape Urls
+<<<<<<< HEAD
         if self.verbose:
             await stream_output("logs", f"🤔 Researching for relevant information...\n", self.websocket)
         scraped_content_results = scrape_urls(new_search_urls, self.cfg)
+=======
+        # await stream_output("logs", f"📝Scraping urls {new_search_urls}...\n", self.websocket)
+=======
+>>>>>>> 37d8ca8 (Document loaders integrated for loading different types of documents)
+        await stream_output("logs", f"🤔 Researching for relevant information...\n", self.websocket)
+
+        if self.report_source == ReportSource.Internal.value:
+            await stream_output("logs", f"📝 Loading data from documents...\n", self.websocket)
+            scraped_content_results = DocumentLoader(self.cfg.doc_path).load()
+        else:
+            # Get Urls
+            retriever = self.retriever(sub_query)
+
+            search_results = retriever.search(
+                max_results=self.cfg.max_search_results_per_query)
+            new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
+
+            # Scrape Urls
+            scraped_content_results = scrape_urls(new_search_urls, self.cfg)
+
+>>>>>>> 93ae065 (resolve conflicts with master)
         return scraped_content_results
 
     async def get_similar_content_by_query(self, query, pages):
