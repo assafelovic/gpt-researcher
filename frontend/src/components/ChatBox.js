@@ -31,14 +31,14 @@ export default function ChatBox() {
 
   const onFormSubmit = (e) => {
     e.preventDefault();
-    let {task, agent, report_type} = e.target;
+    let {task, report_type, report_source} = e.target;
     setAgentLogs([{output: "🤔 Thinking about research questions for the task..."}]);
-    startResearch(task, report_type, agent)
+    startResearch(task, report_type, report_source)
   }
 
-  const startResearch = (task, report_type, agent) => {     
+  const startResearch = (task, report_type, report_source) => {     
       setReport("")
-      let data = "start " + JSON.stringify({task: task.value, report_type: report_type.value, agent: agent.value});
+      let data = "start " + JSON.stringify({task: task.value, report_type: report_type.value, report_source: report_source.value});
       socket.send(data);
   }
 
@@ -63,7 +63,7 @@ export default function ChatBox() {
           {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs}/> : ''}
           <div className="margin-div">
             {report ? <Report report={report}/> : ''}
-            {Object.keys(accessData).length != 0 ? <AccessReport accessData={accessData} report={report} /> : ''}               
+            {/* {Object.keys(accessData).length != 0 ? <AccessReport accessData={accessData} report={report} /> : ''}            */}
           </div>
           
       </main>

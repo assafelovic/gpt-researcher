@@ -10,6 +10,8 @@ export default function AccessReport({accessData, report}){
   const getReportLink = () => {
     const output = accessData.output;
 
+    console.log('output', output);
+
     if (output && typeof output === 'string') {
       return `http://localhost:8000/${output.replace('./', '')}`;
       // Now you can use reportAccessLink
