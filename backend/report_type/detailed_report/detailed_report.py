@@ -17,14 +17,8 @@ class DetailedReport():
         self.websocket = websocket
         self.subtopics = subtopics
         
-<<<<<<< HEAD:backend/report_type/detailed_report/detailed_report.py
         # A parent task assistant. Adding research_report as default
-        self.main_task_assistant = GPTResearcher(self.query, "research_report", self.source_urls, self.config_path, self.websocket)
-=======
-        # A parent task assistant
-        self.main_task_assistant = GPTResearcher(self.query, self.report_type, self.report_source, self.source_urls, self.config_path, self.websocket)
->>>>>>> 37d8ca8 (Document loaders integrated for loading different types of documents):gpt_researcher/report_type/detailed_report/detailed_report.py
-
+        self.main_task_assistant = GPTResearcher(self.query, "research_report", self.report_source, self.source_urls, self.config_path, self.websocket)
         self.existing_headers = []
         # This is a global variable to store the entire context accumulated at any point through searching and scraping
         self.global_context = []
