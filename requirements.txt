@@ -7,8 +7,6 @@ playwright
 openai
 python-dotenv
 pyyaml
-selenium
-webdriver-manager
 uvicorn
 pydantic
 fastapi
