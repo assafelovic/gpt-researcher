@@ -1,18 +1,17 @@
 from dotenv import load_dotenv
 from agents import MasterAgent
 import asyncio
+import json
 
 load_dotenv()
-
-task = {
-    "query": "What is Langgraph?",
-    "max_sub_headers": 3,
-}
+with open('task.json', 'r') as f:
+    task = json.load(f)
 
 
 async def main():
     master_agent = MasterAgent(task)
-    await master_agent.run()
+    research_report = await master_agent.run()
+    print(research_report)
 
 if __name__ == "__main__":
     asyncio.run(main())
