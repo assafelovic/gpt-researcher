@@ -2,6 +2,7 @@ from datetime import datetime
 from langchain.adapters.openai import convert_openai_messages
 from langchain_openai import ChatOpenAI
 import json5 as json
+from .utils.views import print_agent_output
 
 sample_json = """
 {
@@ -51,7 +52,8 @@ class WriterAgent:
         return json.loads(response)
 
     def run(self, research_data: dict):
+        print_agent_output(f"Writing final research report based on research data...", agent="WRITER")
         research_report_json = self.write(research_data)
         research_report_json["subheaders"] = research_data.get("research_data")
-        print(json.dumps(research_report_json, indent=4))
+        #print(json.dumps(research_report_json, indent=4))
         return research_report_json

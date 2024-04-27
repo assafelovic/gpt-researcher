@@ -1,8 +1,8 @@
 import aiofiles
 import urllib
 import uuid
-from md2pdf.core import md2pdf
 import mistune
+from md2pdf.core import md2pdf
 from docx import Document
 from htmldocx import HtmlToDocx
 
@@ -21,6 +21,21 @@ async def write_to_file(filename: str, text: str) -> None:
         await file.write(text_utf8)
 
 
+async def write_text_to_md(text: str, path: str) -> str:
+    """Writes text to a Markdown file and returns the file path.
+
+    Args:
+        text (str): Text to write to the Markdown file.
+
+    Returns:
+        str: The file path of the generated Markdown file.
+    """
+    task = uuid.uuid4().hex
+    file_path = f"{path}/{task}.md"
+    await write_to_file(file_path, text)
+    return file_path
+
+
 async def write_md_to_pdf(text: str, path: str) -> str:
     """Converts Markdown text to a PDF file and returns the file path.
 
@@ -31,13 +46,14 @@ async def write_md_to_pdf(text: str, path: str) -> str:
         str: The encoded file path of the generated PDF.
     """
     task = uuid.uuid4().hex
-    file_path = f"{path}/{task}"
-    await write_to_file(f"{file_path}.md", text)
+    file_path = f"{path}/{task}.pdf"
 
     try:
-        md2pdf(f"{file_path}.pdf",
-               md_content=None,
-               md_file_path=f"{file_path}.md",
+        print(text)
+        print("writing to pdf...")
+        md2pdf(file_path,
+               md_content=text,
+               # md_file_path=f"{file_path}.md",
                css_file_path="./agents/utils/pdf_styles.css",
                base_url=None)
         print(f"Report written to {file_path}.pdf")
@@ -45,11 +61,11 @@ async def write_md_to_pdf(text: str, path: str) -> str:
         print(f"Error in converting Markdown to PDF: {e}")
         return ""
 
-    encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
+    encoded_file_path = urllib.parse.quote(file_path)
     return encoded_file_path
 
 
-async def write_md_to_word(text: str, path:str) -> str:
+async def write_md_to_word(text: str, path: str) -> str:
     """Converts Markdown text to a DOCX file and returns the file path.
 
     Args:
@@ -59,7 +75,7 @@ async def write_md_to_word(text: str, path:str) -> str:
         str: The encoded file path of the generated DOCX.
     """
     task = uuid.uuid4().hex
-    file_path = f"{path}/{task}"
+    file_path = f"{path}/{task}.docx"
 
     try:
         # Convert report markdown to HTML
@@ -70,9 +86,9 @@ async def write_md_to_word(text: str, path:str) -> str:
         HtmlToDocx().add_html_to_document(html, doc)
 
         # Saving the docx document to file_path
-        doc.save(f"{file_path}.docx")
+        doc.save(file_path)
 
-        print(f"Report written to {file_path}.docx")
+        print(f"Report written to {file_path}")
 
         encoded_file_path = urllib.parse.quote(f"{file_path}.docx")
         return encoded_file_path
