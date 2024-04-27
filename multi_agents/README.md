@@ -23,7 +23,9 @@ Generally, the process is based on the following stages:
 4. Review and revision
 5. Publication
 
-![gptr-langgraph-4](https://github.com/assafelovic/gpt-researcher/assets/13554167/72204b67-5726-4462-8904-26316c356bd8)
+<div align="center">
+<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/gptr-langgraph.png">
+</div>
 
 
 
