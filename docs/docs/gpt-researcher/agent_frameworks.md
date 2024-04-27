@@ -11,7 +11,7 @@ LangGraph is a Python library for building stateful, multi-actor applications wi
 
 What's great about LangGraph is that it follows a DAG architecture, enabling each specialized agent to communicate with one another, and subsequently trigger actions among other agents within the graph. 
 
-We've added an example for leveraging [GPT Researcher with LangGraph](https://github.com/assafelovic/gpt-researcher/multi_agents) which can be found in `/multi_agents`.
+We've added an example for leveraging [GPT Researcher with LangGraph](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) which can be found in `/multi_agents`.
 
 The example demonstrates a generic use case for an editorial agent team that works together to complete a research report on a given task.
 
