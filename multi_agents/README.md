@@ -23,13 +23,12 @@ Generally, the process is based on the following stages:
 4. Review and revision
 5. Publication
 
+### Architecture
 <div align="center">
 <img align="left" height="600" src="https://cowriter-images.s3.amazonaws.com/gptr-langgraph.png">
 </div>
-<br><br>
 
-
-
+### Steps
 More specifically (as seen in the architecture diagram) the process is as follows:
 - Browser (gpt-researcher) - Browses the internet for initial research based on the given research task.
 - Editor - Plans the report outline and structure based on the initial research.
