@@ -7,13 +7,13 @@ This example uses Langgraph to automate the process of an in depth research on a
 
 ## The Multi Agent Team
 The research team is made up of 7 AI agents:
-- *Chief Editor* - Oversees the research process and manages the team. This is the "master" agent that coordinates the other agents using Langgraph.
-- *Researcher* (gpt-researcher) - A specialized autonomous agent that conducts in depth research on a given topic.
-- *Editor* - Responsible for planning the research outline and structure.
-- *Reviewer* - Validates the correctness of the research results given a set of criteria.
-- *Revisor* - Revises the research results based on the feedback from the reviewer.
-- *Writer* - Responsible for compiling and writing the final report.
-- *Publisher* - Responsible for publishing the final report in various formats.
+- **Chief Editor** - Oversees the research process and manages the team. This is the "master" agent that coordinates the other agents using Langgraph.
+- **Researcher** (gpt-researcher) - A specialized autonomous agent that conducts in depth research on a given topic.
+- **Editor** - Responsible for planning the research outline and structure.
+- **Reviewer** - Validates the correctness of the research results given a set of criteria.
+- **Revisor** - Revises the research results based on the feedback from the reviewer.
+- **Writer** - Responsible for compiling and writing the final report.
+- **Publisher** - Responsible for publishing the final report in various formats.
 
 ## How it works
 Generally, the process is based on the following stages: 
