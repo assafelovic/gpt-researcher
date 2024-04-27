@@ -1,7 +1,7 @@
 import os
 import time
-from concurrent.futures import ThreadPoolExecutor
 from langgraph.graph import Graph, END
+from .utils.views import print_agent_output
 
 # Import agent classes
 from . import \
@@ -9,6 +9,8 @@ from . import \
     EditorAgent, \
     PublisherAgent, \
     ResearchAgent
+    #ReviewerAgent, \
+    #RevisorAgent
 
 
 class MasterAgent:
@@ -22,7 +24,7 @@ class MasterAgent:
         writer_agent = WriterAgent()
         editor_agent = EditorAgent(self.task)
         research_agent = ResearchAgent()
-        publisher_agent = PublisherAgent(self.output_dir)
+        publisher_agent = PublisherAgent(self.output_dir, self.task)
 
         # Define a Langchain graph
         workflow = Graph()
@@ -31,12 +33,12 @@ class MasterAgent:
         workflow.add_node("browser", research_agent.run_initial_research)
         workflow.add_node("planner", editor_agent.create_outline)
         workflow.add_node("researcher", research_agent.run_depth_research)
-        workflow.add_node("writer", writer_agent.run) # consider this to be 'editor' instead, then followed by critique and reviser.
+        workflow.add_node("writer", writer_agent.run)
         workflow.add_node("publisher", publisher_agent.run)
         # Set up edges
-        '''workflow.add_conditional_edges(start_key='critique',
-                                       condition=lambda x: "accept" if x['critique'] is None else "revise",
-                                       conditional_edge_mapping={"accept": "design", "revise": "write"})'''
+        '''workflow.add_conditional_edges(start_key='review',
+                                       condition=lambda x: "accept" if x['review'] is None else "revise",
+                                       conditional_edge_mapping={"accept": "publisher", "revise": "reviser"})'''
 
         workflow.add_edge('browser', 'planner')
         workflow.add_edge('planner', 'researcher')
@@ -50,9 +52,7 @@ class MasterAgent:
         # compile the graph
         chain = workflow.compile()
 
-        # Execute the graph for each query in parallel
-        #with ThreadPoolExecutor() as executor:
-        #    parallel_results = list(executor.map(lambda q: chain.invoke({"query": q}), queries))
+        print_agent_output(f"Starting the research process for query '{self.task.get('query')}'...", "MASTER")
         result = await chain.ainvoke(self.task)
 
         return result

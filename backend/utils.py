@@ -19,6 +19,20 @@ async def write_to_file(filename: str, text: str) -> None:
     async with aiofiles.open(filename, "w", encoding='utf-8') as file:
         await file.write(text_utf8)
 
+async def write_text_to_md(text: str) -> str:
+    """Writes text to a Markdown file and returns the file path.
+
+    Args:
+        text (str): Text to write to the Markdown file.
+
+    Returns:
+        str: The file path of the generated Markdown file.
+    """
+    task = uuid.uuid4().hex
+    file_path = f"outputs/{task}.md"
+    await write_to_file(file_path, text)
+    return file_path
+
 async def write_md_to_pdf(text: str) -> str:
     """Converts Markdown text to a PDF file and returns the file path.
 
@@ -29,13 +43,12 @@ async def write_md_to_pdf(text: str) -> str:
         str: The encoded file path of the generated PDF.
     """
     task = uuid.uuid4().hex
-    file_path = f"outputs/{task}"
-    await write_to_file(f"{file_path}.md", text)
+    file_path = f"outputs/{task}.pdf"
 
     try:
-        md2pdf(f"{file_path}.pdf",
-               md_content=None,
-               md_file_path=f"{file_path}.md",
+        md2pdf(file_path,
+               md_content=text,
+               #md_file_path=f"{file_path}.md",
                css_file_path="./frontend/pdf_styles.css",
                base_url=None)
         print(f"Report written to {file_path}.pdf")
@@ -43,7 +56,7 @@ async def write_md_to_pdf(text: str) -> str:
         print(f"Error in converting Markdown to PDF: {e}")
         return ""
 
-    encoded_file_path = urllib.parse.quote(f"{file_path}.pdf")
+    encoded_file_path = urllib.parse.quote(file_path)
     return encoded_file_path
 
 async def write_md_to_word(text: str) -> str:
@@ -56,7 +69,7 @@ async def write_md_to_word(text: str) -> str:
         str: The encoded file path of the generated DOCX.
     """
     task = uuid.uuid4().hex
-    file_path = f"outputs/{task}"
+    file_path = f"outputs/{task}.docx"
 
     try:
         # Convert report markdown to HTML
@@ -67,9 +80,9 @@ async def write_md_to_word(text: str) -> str:
         HtmlToDocx().add_html_to_document(html, doc)
 
         # Saving the docx document to file_path
-        doc.save(f"{file_path}.docx")
+        doc.save(file_path)
         
-        print(f"Report written to {file_path}.docx")
+        print(f"Report written to {file_path}")
 
         encoded_file_path = urllib.parse.quote(f"{file_path}.docx")
         return encoded_file_path

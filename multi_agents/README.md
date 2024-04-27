@@ -11,7 +11,7 @@ The research team is made up of 7 AI agents:
 - *Researcher* (gpt-researcher) - A specialized autonomous agent that conducts in depth research on a given topic.
 - *Editor* - Responsible for planning the research outline and structure.
 - *Reviewer* - Validates the correctness of the research results given a set of criteria.
-- *Reviser* - Revises the research results based on the feedback from the reviewer.
+- *Revisor* - Revises the research results based on the feedback from the reviewer.
 - *Writer* - Responsible for compiling and writing the final report.
 - *Publisher* - Responsible for publishing the final report in various formats.
 
@@ -31,7 +31,7 @@ More specifically (as seen in the architecture diagram) the process is as follow
 - Below runs in parallel for each section of the planned research outline:
   - Researcher (gpt-researcher) - Runs an in depth research on the subtopic and writes a draft.
   - Reviewer - Validates the correctness of the draft given a set of criteria.
-  - Reviser - Revises the draft until it is satisfactory.
+  - Revisor - Revises the draft until it is satisfactory.
 - Writer - Compiles and writes the final report including an introduction, conclusion and references section from the given research findings.
 - Publisher - Publishes the final report to multi formats such as PDF, Docx, Markdown, etc.
 
