@@ -12,7 +12,13 @@ class PublisherAgent:
         self.output_dir = output_dir
         self.task = task
 
-    async def publish_research_report(self, research_report_data: dict):
+    async def publish_research_report(self, research_data: dict):
+        layout = self.generate_layout(research_data)
+        await self.write_report_by_formats(layout, self.task.get("publish_formats"))
+
+        return layout
+
+    def generate_layout(self, research_report_data: dict):
         subheaders = '\n\n'.join(f"{value}"
                                  for subheader in research_report_data.get("subheaders")
                                  for key, value in subheader.items())
@@ -29,11 +35,9 @@ class PublisherAgent:
 ## References
 {references}
 """
-        publish_formats = self.task.get("publish_formats")
-        await self.write_report_to_formats(layout, publish_formats)
         return layout
 
-    async def write_report_to_formats(self, layout:str, publish_formats: dict):
+    async def write_report_by_formats(self, layout:str, publish_formats: dict):
         if publish_formats.get("pdf"):
             await write_md_to_pdf(layout, self.output_dir)
         if publish_formats.get("docx"):
@@ -41,7 +45,7 @@ class PublisherAgent:
         if publish_formats.get("markdown"):
             await write_text_to_md(layout, self.output_dir)
 
-    async def run(self, research_report_data: dict):
-        print_agent_output(output="Publishing final research report...", agent="PUBLISHER")
-        final_research_report = await self.publish_research_report(research_report_data)
+    async def run(self, research_data: dict):
+        print_agent_output(output="Publishing final research report based on retrieved data...", agent="PUBLISHER")
+        final_research_report = await self.publish_research_report(research_data)
         return final_research_report
