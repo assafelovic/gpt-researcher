@@ -1,9 +1,11 @@
 # Langgraph x GPT Researcher
-Example of Langchain's multi agent framework Langgraph with GPT Researcher.
+LangGraph is a library for building stateful, multi-actor applications with LLMs. 
+This example uses Langgraph to automate the process of an in depth research on any given topic.
 
 ## Use case
-LangGraph is a library for building stateful, multi-actor applications with LLMs, built on top of LangChain. 
-This example uses Langgraph to automate the process of an in depth research on any given topic.
+By using Langgraph, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. 
+This example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
+An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 
 ## The Multi Agent Team
 The research team is made up of 7 AI agents:
@@ -33,10 +35,10 @@ Generally, the process is based on the following stages:
 More specifically (as seen in the architecture diagram) the process is as follows:
 - Browser (gpt-researcher) - Browses the internet for initial research based on the given research task.
 - Editor - Plans the report outline and structure based on the initial research.
-- Below runs in parallel for each section of the planned research outline:
-  - Researcher (gpt-researcher) - Runs an in depth research on the subtopic and writes a draft.
-  - Reviewer - Validates the correctness of the draft given a set of criteria.
-  - Revisor - Revises the draft until it is satisfactory.
+- For each outline topic (in parallel):
+  - Researcher (gpt-researcher) - Runs an in depth research on the subtopics and writes a draft.
+  - Reviewer - Validates the correctness of the draft given a set of criteria and provides feedback.
+  - Revisor - Revises the draft until it is satisfactory based on the reviewer feedback.
 - Writer - Compiles and writes the final report including an introduction, conclusion and references section from the given research findings.
 - Publisher - Publishes the final report to multi formats such as PDF, Docx, Markdown, etc.
 
@@ -51,4 +53,4 @@ More specifically (as seen in the architecture diagram) the process is as follow
     ```
 
 ## Usage
-To change the research topic and customize the report, edit the `task.json` file in the main directory.
+To change the research query and customize the report, edit the `task.json` file in the main directory.
