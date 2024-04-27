@@ -23,7 +23,8 @@ Generally, the process is based on the following stages:
 4. Review and revision
 5. Publication
 
-[Image](https://google.com)
+![gptr-langgraph-3](https://github.com/assafelovic/gpt-researcher/assets/13554167/551a1606-3ad6-4e30-8dcc-c5057981a99f)
+
 
 More specifically (as seen in the architecture diagram) the process is as follows:
 - Browser (gpt-researcher) - Browses the internet for initial research based on the given research task.
