@@ -24,7 +24,7 @@ Generally, the process is based on the following stages:
 5. Publication
 
 <div align="center">
-<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/gptr-langgraph.png">
+<img align="left" height="600" src="https://cowriter-images.s3.amazonaws.com/gptr-langgraph.png">
 </div>
 
 
