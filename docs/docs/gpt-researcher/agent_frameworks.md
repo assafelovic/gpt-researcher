@@ -34,7 +34,10 @@ Generally, the process is based on the following stages:
 5. Publication
 
 ### Architecture
-![LangGraph x GPT Researcher architecture](https://cowriter-images.s3.amazonaws.com/gptr-langgraph-architecture.png)
+<div align="center">
+<img align="center" height="600" src="https://cowriter-images.s3.amazonaws.com/gptr-langgraph-architecture.png"></img>
+</div>
+<br clear="all"/>
 
 ### Steps
 More specifically (as seen in the architecture diagram) the process is as follows:
