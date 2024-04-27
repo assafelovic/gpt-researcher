@@ -23,7 +23,8 @@ Generally, the process is based on the following stages:
 4. Review and revision
 5. Publication
 
-![gptr-langgraph-3](https://github.com/assafelovic/gpt-researcher/assets/13554167/551a1606-3ad6-4e30-8dcc-c5057981a99f)
+![gptr-langgraph-4](https://github.com/assafelovic/gpt-researcher/assets/13554167/72204b67-5726-4462-8904-26316c356bd8)
+
 
 
 More specifically (as seen in the architecture diagram) the process is as follows:
