@@ -120,7 +120,7 @@ uvicorn main:app --reload
 
 ### Run as PIP package
 ```bash
-pip install gpt_researcher
+pip install gpt-researcher
 ```
 
 ```python
