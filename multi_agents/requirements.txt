@@ -1,2 +1,2 @@
 langgraph
-gpt_researcher
+gpt-researcher
