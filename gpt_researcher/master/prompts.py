@@ -201,9 +201,7 @@ def generate_subtopic_report_prompt(
     existing_headers: list,
     main_topic: str,
     context,
-    report_source: str,
     report_format: str = "apa",
-    total_words: int = 1000,
     max_subsections=5
 ) -> str:
 
