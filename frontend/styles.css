@@ -4,6 +4,10 @@
     100% {background-position: 0% 50%;}
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     font-family: 'Montserrat', sans-serif;
     color: #fff;
