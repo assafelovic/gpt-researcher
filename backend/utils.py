@@ -19,7 +19,7 @@ async def write_to_file(filename: str, text: str) -> None:
     async with aiofiles.open(filename, "w", encoding='utf-8') as file:
         await file.write(text_utf8)
 
-async def write_text_to_md(text: str) -> str:
+async def write_text_to_md(text: str, filename: str = "") -> str:
     """Writes text to a Markdown file and returns the file path.
 
     Args:
@@ -28,12 +28,11 @@ async def write_text_to_md(text: str) -> str:
     Returns:
         str: The file path of the generated Markdown file.
     """
-    task = uuid.uuid4().hex
-    file_path = f"outputs/{task}.md"
+    file_path = f"outputs/{filename}.md"
     await write_to_file(file_path, text)
     return file_path
 
-async def write_md_to_pdf(text: str) -> str:
+async def write_md_to_pdf(text: str, filename: str = "") -> str:
     """Converts Markdown text to a PDF file and returns the file path.
 
     Args:
@@ -42,8 +41,7 @@ async def write_md_to_pdf(text: str) -> str:
     Returns:
         str: The encoded file path of the generated PDF.
     """
-    task = uuid.uuid4().hex
-    file_path = f"outputs/{task}.pdf"
+    file_path = f"outputs/{filename}.pdf"
 
     try:
         md2pdf(file_path,
@@ -59,7 +57,7 @@ async def write_md_to_pdf(text: str) -> str:
     encoded_file_path = urllib.parse.quote(file_path)
     return encoded_file_path
 
-async def write_md_to_word(text: str) -> str:
+async def write_md_to_word(text: str, filename: str = "") -> str:
     """Converts Markdown text to a DOCX file and returns the file path.
 
     Args:
@@ -68,8 +66,7 @@ async def write_md_to_word(text: str) -> str:
     Returns:
         str: The encoded file path of the generated DOCX.
     """
-    task = uuid.uuid4().hex
-    file_path = f"outputs/{task}.docx"
+    file_path = f"outputs/{filename}.docx"
 
     try:
         # Convert report markdown to HTML
@@ -84,7 +81,7 @@ async def write_md_to_word(text: str) -> str:
         
         print(f"Report written to {file_path}")
 
-        encoded_file_path = urllib.parse.quote(f"{file_path}.docx")
+        encoded_file_path = urllib.parse.quote(file_path)
         return encoded_file_path
     
     except Exception as e:
