@@ -24,8 +24,13 @@ class PublisherAgent:
                                  for key, value in subheader.items())
         references = '\n'.join(f"{reference}" for reference in research_report_data.get("sources"))
         layout = f"""#{research_report_data.get('title')}
+#### Date: {research_report_data.get('date')}
+
 ## Introduction
 {research_report_data.get('introduction')}
+
+## Table of Contents
+{research_report_data.get('table_of_contents')}
 
 {subheaders}
 
