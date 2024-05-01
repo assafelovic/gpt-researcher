@@ -22,8 +22,8 @@ The research team is made up of 7 AI agents:
 Generally, the process is based on the following stages: 
 1. Planning stage
 2. Data collection and analysis
-3. Writing and submission
-4. Review and revision
+3. Review and revision
+4. Writing and submission
 5. Publication
 
 ### Architecture
