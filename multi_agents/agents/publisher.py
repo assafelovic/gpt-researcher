@@ -8,34 +8,33 @@ from .utils.views import print_agent_output
 
 
 class PublisherAgent:
-    def __init__(self, output_dir: str, task: dict):
+    def __init__(self, output_dir: str):
         self.output_dir = output_dir
-        self.task = task
 
-    async def publish_research_report(self, research_data: dict):
-        layout = self.generate_layout(research_data)
-        await self.write_report_by_formats(layout, self.task.get("publish_formats"))
+    async def publish_research_report(self, research_state: dict, publish_formats: dict):
+        layout = self.generate_layout(research_state)
+        await self.write_report_by_formats(layout, publish_formats)
 
         return layout
 
-    def generate_layout(self, research_report_data: dict):
+    def generate_layout(self, research_state: dict):
         subheaders = '\n\n'.join(f"{value}"
-                                 for subheader in research_report_data.get("subheaders")
+                                 for subheader in research_state.get("research_data")
                                  for key, value in subheader.items())
-        references = '\n'.join(f"{reference}" for reference in research_report_data.get("sources"))
-        layout = f"""#{research_report_data.get('title')}
-#### Date: {research_report_data.get('date')}
+        references = '\n'.join(f"{reference}" for reference in research_state.get("sources"))
+        layout = f"""#{research_state.get('title')}
+#### Date: {research_state.get('date')}
 
 ## Introduction
-{research_report_data.get('introduction')}
+{research_state.get('introduction')}
 
 ## Table of Contents
-{research_report_data.get('table_of_contents')}
+{research_state.get('table_of_contents')}
 
 {subheaders}
 
 ## Conclusion
-{research_report_data.get('conclusion')}
+{research_state.get('conclusion')}
 
 ## References
 {references}
@@ -50,7 +49,9 @@ class PublisherAgent:
         if publish_formats.get("markdown"):
             await write_text_to_md(layout, self.output_dir)
 
-    async def run(self, research_data: dict):
+    async def run(self, research_state: dict):
+        task = research_state.get("task")
+        publish_formats = task.get("publish_formats")
         print_agent_output(output="Publishing final research report based on retrieved data...", agent="PUBLISHER")
-        final_research_report = await self.publish_research_report(research_data)
-        return final_research_report
+        final_research_report = await self.publish_research_report(research_state, publish_formats)
+        return {"report": final_research_report}

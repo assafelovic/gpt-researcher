@@ -27,16 +27,17 @@ class ResearchAgent:
             report = None
         return {subtopic: report}
 
-    async def run_initial_research(self, task: dict):
+    async def run_initial_research(self, research_state: dict):
+        task = research_state.get("task")
         query = task.get("query")
         print_agent_output(f"Running initial research on the following query: {query}", agent="RESEARCHER")
-        return await self.research(query)
+        return {"task":task, "initial_research": await self.research(query)}
 
-    async def run_depth_research(self, outline: dict):
-        title = outline.get("title")
-        subheaders = outline.get("subheaders")
+    async def run_depth_research(self, research_state: dict):
+        title = research_state.get("title")
+        subheaders = research_state.get("subheaders")
         print_agent_output(f"Running in depth research on the following subtopics: {subheaders}", agent="RESEARCHER")
 
         tasks = [self.run_subtopic_research(title, query) for query in subheaders]
         results = await asyncio.gather(*tasks)
-        return {"title": title, "research_data": results}
+        return {"research_data": results}

@@ -1,7 +1,8 @@
 import os
 import time
-from langgraph.graph import Graph, END
+from langgraph.graph import Graph, StateGraph, END
 from .utils.views import print_agent_output
+from memory.research import ResearchState
 
 # Import agent classes
 from . import \
@@ -24,10 +25,10 @@ class MasterAgent:
         writer_agent = WriterAgent()
         editor_agent = EditorAgent(self.task)
         research_agent = ResearchAgent()
-        publisher_agent = PublisherAgent(self.output_dir, self.task)
+        publisher_agent = PublisherAgent(self.output_dir)
 
-        # Define a Langchain graph
-        workflow = Graph()
+        # Define a Langchain StateGraph with the ResearchState
+        workflow = StateGraph(ResearchState)
 
         # Add nodes for each agent
         workflow.add_node("browser", research_agent.run_initial_research)
@@ -53,6 +54,6 @@ class MasterAgent:
         chain = workflow.compile()
 
         print_agent_output(f"Starting the research process for query '{self.task.get('query')}'...", "MASTER")
-        result = await chain.ainvoke(self.task)
+        result = await chain.ainvoke({"task": self.task})
 
         return result

@@ -6,12 +6,10 @@ from .utils.views import print_agent_output
 
 sample_json = """
 {
-  "title": research title as given in input,
-  "date": today's date,
-  "table_of_contents": A table of contents in markdown syntax based on the research headers and subheaders,
+  "table_of_contents": A table of contents in markdown syntax (using '-') based on the research headers and subheaders,
   "introduction": An indepth introduction to the topic in markdown syntax and hyperlink references to relevant sources,
   "conclusion": A conclusion to the entire research based on all research data in markdown syntax and hyperlink references to relevant sources,
-  "sources": A list of all sources in the entire research data in markdown syntax and apa format
+  "sources": A list with strings of all used source links in the entire research data in markdown syntax and apa citation format. For example: ['-  Title, year, Author [source url](source)', ...]
 }
 """
 
@@ -20,9 +18,9 @@ class WriterAgent:
     def __init__(self):
         pass
 
-    def write(self, research_data: dict):
-        query = research_data.get("title")
-        data = research_data.get("research_data")
+    def write(self, research_state: dict):
+        query = research_state.get("title")
+        data = research_state.get("research_data")
 
         prompt = [{
             "role": "system",
@@ -34,11 +32,11 @@ class WriterAgent:
             "content": f"Today's date is {datetime.now().strftime('%d/%m/%Y')}\n."
                        f"Query or Topic: {query}\n"
                        f"Research data: {str(data)}\n"
-                       f"Your task is to write a critically acclaimed in depth and long "
-                       f"introduction and conclusion in markdown syntax "
-                       f"based on the provided research data.\n"
-                       f"Please include any relevant sources to the introduction and conclusion as markdown hyperlinks -"
-                       f"For example: 'This is a sample text. ([url website](url))'\n"
+                       f"Your task is to write an in depth, well written and detailed "
+                       f"introduction and conclusion to the research report based on the provided research data. "
+                       f"Do not include headers in the results.\n"
+                       f"You MUST include any relevant sources to the introduction and conclusion as markdown hyperlinks -"
+                       f"For example: 'This is a sample text. ([url website](url))'\n\n"
                        f"You MUST return nothing but a JSON in the following format:\n"
                        f"{sample_json}\n\n"
 
@@ -52,9 +50,9 @@ class WriterAgent:
         response = ChatOpenAI(model='gpt-4-turbo', max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
         return json.loads(response)
 
-    def run(self, research_data: dict):
+    def run(self, research_state: dict):
         print_agent_output(f"Writing final research report based on research data...", agent="WRITER")
-        research_report_json = self.write(research_data)
-        research_report_json["subheaders"] = research_data.get("research_data")
+        research_layout_content = self.write(research_state)
         #print(json.dumps(research_report_json, indent=4))
-        return research_report_json
+        print_agent_output(research_layout_content, agent="WRITER")
+        return research_layout_content
