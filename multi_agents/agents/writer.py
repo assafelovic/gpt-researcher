@@ -8,6 +8,7 @@ sample_json = """
 {
   "title": research title as given in input,
   "date": today's date,
+  "table_of_contents": A table of contents in markdown syntax based on the research headers and subheaders,
   "introduction": An indepth introduction to the topic in markdown syntax and hyperlink references to relevant sources,
   "conclusion": A conclusion to the entire research based on all research data in markdown syntax and hyperlink references to relevant sources,
   "sources": A list of all sources in the entire research data in markdown syntax and apa format
