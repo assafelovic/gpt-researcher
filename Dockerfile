@@ -5,7 +5,8 @@ RUN apt-get update \
     "chromium, chromium-driver (>= 115.0)" \
     && chromium --version && chromedriver --version
 
-RUN apt-get install -y firefox-esr wget \
+RUN apt-get update \
+    && apt-get install -y --fix-missing firefox-esr wget \
     && wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz \
     && tar -xvzf geckodriver* \
     && chmod +x geckodriver \
