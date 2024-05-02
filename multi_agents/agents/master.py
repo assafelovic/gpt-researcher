@@ -10,7 +10,7 @@ from . import \
     EditorAgent, \
     PublisherAgent, \
     ResearchAgent
-    #ReviewerAgent, \
+    #ReviewerAgent
     #ReviserAgent
 
 

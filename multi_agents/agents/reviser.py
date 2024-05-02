@@ -27,7 +27,7 @@ class ReviserAgent:
         }]
 
         lc_messages = convert_openai_messages(prompt)
-        response = ChatOpenAI(model='gpt-4-0125-preview', max_retries=1).invoke(lc_messages).content
+        response = ChatOpenAI(model='gpt-4-turbo', max_retries=1).invoke(lc_messages).content
         return response
 
     def run(self, draft: str):

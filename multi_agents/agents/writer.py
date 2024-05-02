@@ -21,6 +21,7 @@ class WriterAgent:
     def write(self, research_state: dict):
         query = research_state.get("title")
         data = research_state.get("research_data")
+        task = research_state.get("task")
 
         prompt = [{
             "role": "system",
@@ -47,7 +48,7 @@ class WriterAgent:
             "response_format": {"type": "json_object"}
         }
 
-        response = ChatOpenAI(model='gpt-4-turbo', max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
+        response = ChatOpenAI(model=task.get("model"), max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
         return json.loads(response)
 
     def run(self, research_state: dict):

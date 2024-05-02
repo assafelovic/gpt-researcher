@@ -1,11 +1,13 @@
 {
-  "query": "Is AI in a hype cycle?",
-  "max_subheaders": 3,
+  "query": "What is Groq and how does it work?",
+  "max_sections": 4,
   "publish_formats": {
     "markdown": true,
     "pdf": true,
     "docx": true
   },
+  "follow_guidelines": true,
+  "model": "gpt-4-turbo",
   "guidelines": [
     "The report MUST fully answer the original question",
     "The report MUST be written in apa format",
