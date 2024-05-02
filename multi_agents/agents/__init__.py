@@ -3,7 +3,7 @@ from .writer import WriterAgent
 from .editor import EditorAgent
 from .publisher import PublisherAgent
 from .master import MasterAgent
-from .revisor import RevisorAgent
+from .reviser import ReviserAgent
 from .reviewer import ReviewerAgent
 
 __all__ = [
@@ -12,6 +12,6 @@ __all__ = [
     "WriterAgent",
     "EditorAgent",
     "PublisherAgent",
-    "RevisorAgent",
+    "ReviserAgent",
     "ReviewerAgent"
 ]
