@@ -11,7 +11,7 @@ from . import \
     PublisherAgent, \
     ResearchAgent
     #ReviewerAgent, \
-    #RevisorAgent
+    #ReviserAgent
 
 
 class MasterAgent:
