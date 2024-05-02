@@ -7,7 +7,7 @@ import json
 
 class EditorAgent:
     def __init__(self, task: dict):
-        self.max_subheaders = task.get("max_subheaders")
+        self.max_sections = task.get("max_sections")
 
     def create_outline(self, summary_report: str):
         """
@@ -25,14 +25,14 @@ class EditorAgent:
             "role": "user",
             "content": f"Today's date is {datetime.now().strftime('%d/%m/%Y')}\n."
                        f"Research summary report: '{summary_report}'\n\n"
-                       f"Your task is to generate an outline of subheaders for the research project"
+                       f"Your task is to generate an outline of sections headers for the research project"
                        f" based on the research summary report above.\n"
-                       f"You must generate a maximum of {self.max_subheaders} subheaders.\n"
+                       f"You must generate a maximum of {self.max_sections} section headers.\n"
                        f"You must focus ONLY on related research topics for subheaders and do NOT include introduction, conclusion and references.\n"
                        f"You must return nothing but a JSON with the fields 'title' (str) and "
-                       f"'subheaders' (maximum {self.max_subheaders} subheaders) with the following structure: "
+                       f"'sections' (maximum {self.max_sections} section headers) with the following structure: "
                        f"'{{title: string research title, date: today's date, "
-                       f"subheaders: ['subheader1', 'subheader2', 'subheader3' ...]}}.\n "
+                       f"sections: ['section header 1', 'section header 2', 'section header 3' ...]}}.\n "
         }]
 
         lc_messages = convert_openai_messages(prompt)
@@ -49,5 +49,5 @@ class EditorAgent:
         return {
             "title": research_info.get("title"),
             "date": research_info.get("date"),
-            "subheaders": research_info.get("subheaders")
+            "sections": research_info.get("sections")
         }

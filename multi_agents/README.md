@@ -55,3 +55,21 @@ More specifically (as seen in the architecture diagram) the process is as follow
 
 ## Usage
 To change the research query and customize the report, edit the `task.json` file in the main directory.
+#### Task.json contains the following fields:
+```json
+{
+  "query": "Is AI in a hype cycle?", // The research query
+  "max_sections": 3, // The maximum number of sections in the report
+  "publish_formats": { // The formats to publish the report in
+    "markdown": true,
+    "pdf": true,
+    "docx": true
+  },
+  "follow_guidelines": true, // if true, the report must follow the guidelines below
+  "guidelines": [
+    "The report MUST fully answer the original question",
+    "The report MUST be written in apa format",
+    "The report MUST be written in english"
+  ]
+}
+```
