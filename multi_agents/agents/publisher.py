@@ -18,7 +18,7 @@ class PublisherAgent:
         return layout
 
     def generate_layout(self, research_state: dict):
-        subheaders = '\n\n'.join(f"{value}"
+        sections = '\n\n'.join(f"{value}"
                                  for subheader in research_state.get("research_data")
                                  for key, value in subheader.items())
         references = '\n'.join(f"{reference}" for reference in research_state.get("sources"))
@@ -31,7 +31,7 @@ class PublisherAgent:
 ## Table of Contents
 {research_state.get('table_of_contents')}
 
-{subheaders}
+{sections}
 
 ## Conclusion
 {research_state.get('conclusion')}

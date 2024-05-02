@@ -53,6 +53,5 @@ class WriterAgent:
     def run(self, research_state: dict):
         print_agent_output(f"Writing final research report based on research data...", agent="WRITER")
         research_layout_content = self.write(research_state)
-        #print(json.dumps(research_report_json, indent=4))
         print_agent_output(research_layout_content, agent="WRITER")
         return research_layout_content

@@ -5,7 +5,7 @@ import operator
 class ResearchState(TypedDict):
     task: dict
     initial_research: str
-    subheaders: List[str]
+    sections: List[str]
     title: str
     date: str
     table_of_contents: str
