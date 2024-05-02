@@ -31,7 +31,7 @@ class EditorAgent:
                        f"You must focus ONLY on related research topics for subheaders and do NOT include introduction, conclusion and references.\n"
                        f"You must return nothing but a JSON with the fields 'title' (str) and "
                        f"'subheaders' (maximum {self.max_subheaders} subheaders) with the following structure: "
-                       f"'{{title: string research title, "
+                       f"'{{title: string research title, date: today's date, "
                        f"subheaders: ['subheader1', 'subheader2', 'subheader3' ...]}}.\n "
         }]
 
@@ -42,7 +42,12 @@ class EditorAgent:
         response = ChatOpenAI(model='gpt-4-turbo', max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
         return json.loads(response)
 
-    def run(self, summary_report: str):
+    def run(self, research_state: dict):
+        initial_research = research_state.get("initial_research")
         print_agent_output(f"Editor: Planning an outline layout based on initial research...", agent="EDITOR")
-        research_info = self.create_outline(summary_report)
-        return research_info
+        research_info = self.create_outline(initial_research)
+        return {
+            "title": research_info.get("title"),
+            "date": research_info.get("date"),
+            "subheaders": research_info.get("subheaders")
+        }
