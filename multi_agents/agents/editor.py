@@ -7,7 +7,7 @@ import json
 
 class EditorAgent:
     def __init__(self, task: dict):
-        self.max_sections = task.get("max_sections")
+        self.task = task
 
     def create_outline(self, summary_report: str):
         """
@@ -17,6 +17,7 @@ class EditorAgent:
         :param total_sub_headers:
         :return:
         """
+        max_sections = self.task.get("max_sections")
         prompt = [{
             "role": "system",
             "content": "You are a research director. Your goal is to oversee the research project"
@@ -27,10 +28,10 @@ class EditorAgent:
                        f"Research summary report: '{summary_report}'\n\n"
                        f"Your task is to generate an outline of sections headers for the research project"
                        f" based on the research summary report above.\n"
-                       f"You must generate a maximum of {self.max_sections} section headers.\n"
+                       f"You must generate a maximum of {max_sections} section headers.\n"
                        f"You must focus ONLY on related research topics for subheaders and do NOT include introduction, conclusion and references.\n"
                        f"You must return nothing but a JSON with the fields 'title' (str) and "
-                       f"'sections' (maximum {self.max_sections} section headers) with the following structure: "
+                       f"'sections' (maximum {max_sections} section headers) with the following structure: "
                        f"'{{title: string research title, date: today's date, "
                        f"sections: ['section header 1', 'section header 2', 'section header 3' ...]}}.\n "
         }]
@@ -39,7 +40,7 @@ class EditorAgent:
         optional_params = {
             "response_format": {"type": "json_object"}
         }
-        response = ChatOpenAI(model='gpt-4-turbo', max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
+        response = ChatOpenAI(model=self.task.get("model"), max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
         return json.loads(response)
 
     def run(self, research_state: dict):
