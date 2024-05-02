@@ -9,9 +9,9 @@ from . import \
     WriterAgent, \
     EditorAgent, \
     PublisherAgent, \
-    ResearchAgent
-    #ReviewerAgent
-    #ReviserAgent
+    ResearchAgent, \
+    ReviewerAgent, \
+    ReviserAgent
 
 
 class MasterAgent:
