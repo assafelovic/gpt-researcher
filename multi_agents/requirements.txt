@@ -1,2 +1,2 @@
-langgraph
+langgraph==0.0.40
 gpt-researcher
