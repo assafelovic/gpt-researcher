@@ -1,5 +1,5 @@
 {
-  "query": "What is Groq and how does it work?",
+  "query": "What is GPT Researcher?",
   "max_sections": 4,
   "publish_formats": {
     "markdown": true,
@@ -11,6 +11,8 @@
   "guidelines": [
     "The report MUST fully answer the original question",
     "The report MUST be written in apa format",
+    "The report MUST be written in a formal tone",
+    "Each sub header MUST include supporting sources. If none exist, erase the sub header or rewrite it to be a part of the previous section",
     "The report MUST be written in english"
   ]
 }
