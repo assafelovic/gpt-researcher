@@ -33,11 +33,9 @@ class ResearchAgent:
         print_agent_output(f"Running initial research on the following query: {query}", agent="RESEARCHER")
         return {"task":task, "initial_research": await self.research(query)}
 
-    async def run_depth_research(self, research_state: dict):
-        title = research_state.get("title")
-        sections = research_state.get("sections")
-        print_agent_output(f"Running in depth research on the following report sections: {sections}", agent="RESEARCHER")
-
-        tasks = [self.run_subtopic_research(title, query) for query in sections]
-        results = await asyncio.gather(*tasks)
-        return {"research_data": results}
+    async def run_depth_research(self, draft_state: dict):
+        title = draft_state.get("title")
+        topic = draft_state.get("topic")
+        print_agent_output(f"Running in depth research on the following report topic: {topic}", agent="RESEARCHER")
+        research_draft = await self.run_subtopic_research(title, topic)
+        return {"draft": research_draft}
