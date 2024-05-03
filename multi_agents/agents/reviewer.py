@@ -34,7 +34,16 @@ class ReviewerAgent:
         response = ChatOpenAI(model='gpt-4-turbo', max_retries=1).invoke(lc_messages).content
         return response
 
-    def run(self, draft: str):
-        print_agent_output(f"Reviewing draft...", agent="REVIEWER")
-        review = self.review_draft(draft)
-        return review
+    def run(self, draft_state: dict):
+        draft = draft_state.get("draft")
+        task = draft_state.get("task")
+        guidelines = task.get("guidelines")
+        to_follow_guidelines = task.get("follow_guidelines")
+        review = None
+        if to_follow_guidelines:
+            print_agent_output(f"Reviewing draft...", agent="REVIEWER")
+            print_agent_output(f"Following guidelines {guidelines}...", agent="REVIEWER")
+            review = self.review_draft(draft)
+        else:
+            print_agent_output(f"Ignoring guidelines...", agent="REVIEWER")
+        return {"review": review}
