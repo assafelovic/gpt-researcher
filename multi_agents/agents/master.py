@@ -30,7 +30,7 @@ class MasterAgent:
 
         # Add nodes for each agent
         workflow.add_node("browser", research_agent.run_initial_research)
-        workflow.add_node("planner", editor_agent.create_outline)
+        workflow.add_node("planner", editor_agent.plan_research)
         workflow.add_node("researcher", editor_agent.run_parallel_research)
         workflow.add_node("writer", writer_agent.run)
         workflow.add_node("publisher", publisher_agent.run)
