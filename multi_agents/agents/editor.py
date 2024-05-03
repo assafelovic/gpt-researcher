@@ -2,7 +2,15 @@ from datetime import datetime
 from langchain.adapters.openai import convert_openai_messages
 from langchain_openai import ChatOpenAI
 from .utils.views import print_agent_output
+from langgraph.graph import StateGraph, END
+import asyncio
 import json
+
+from memory.draft import DraftState
+from . import \
+    ResearchAgent, \
+    ReviewerAgent, \
+    ReviserAgent
 
 
 class EditorAgent:
@@ -43,9 +51,39 @@ class EditorAgent:
         response = ChatOpenAI(model=self.task.get("model"), max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
         return json.loads(response)
 
+    async def run_parallel_research(self, research_state: dict):
+        research_agent = ResearchAgent()
+        reviewer_agent = ReviewerAgent()
+        reviser_agent = ReviserAgent()
+        queries = research_state.get("sections")
+        title = research_state.get("title")
+        workflow = StateGraph(DraftState)
+
+        workflow.add_node("researcher", research_agent.run_depth_research)
+        #workflow.add_node("reviewer", reviewer_agent.run)
+        #workflow.add_node("reviser", reviser_agent.run)
+        # Set up edges
+        '''workflow.add_conditional_edges(start_key='review',
+                                       condition=lambda x: "accept" if x['review'] is None else "revise",
+                                       conditional_edge_mapping={"accept": END, "revise": "reviser"})'''
+
+        # set up start and end nodes
+        workflow.set_entry_point("researcher")
+        workflow.add_edge('researcher', END)
+
+        chain = workflow.compile()
+
+        # Execute the graph for each query in parallel
+        print_agent_output(f"Running the following research tasks in parallel: {queries}...", agent="EDITOR")
+        final_drafts = [chain.ainvoke({"task": research_state.get("task"), "topic": query, "title": title})
+                        for query in queries]
+        research_results = [result['draft'] for result in await asyncio.gather(*final_drafts)]
+
+        return {"research_data": research_results}
+
     def run(self, research_state: dict):
         initial_research = research_state.get("initial_research")
-        print_agent_output(f"Editor: Planning an outline layout based on initial research...", agent="EDITOR")
+        print_agent_output(f"Planning an outline layout based on initial research...", agent="EDITOR")
         research_info = self.create_outline(initial_research)
         return {
             "title": research_info.get("title"),
