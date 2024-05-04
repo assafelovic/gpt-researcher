@@ -10,8 +10,6 @@ from . import \
     EditorAgent, \
     PublisherAgent, \
     ResearchAgent
-    #ReviewerAgent, \
-    #ReviserAgent
 
 
 class MasterAgent:
@@ -20,7 +18,7 @@ class MasterAgent:
         self.task = task
         os.makedirs(self.output_dir, exist_ok=True)
 
-    async def run(self):
+    def init_research_team(self):
         # Initialize agents
         writer_agent = WriterAgent()
         editor_agent = EditorAgent(self.task)
@@ -32,14 +30,10 @@ class MasterAgent:
 
         # Add nodes for each agent
         workflow.add_node("browser", research_agent.run_initial_research)
-        workflow.add_node("planner", editor_agent.create_outline)
-        workflow.add_node("researcher", research_agent.run_depth_research)
+        workflow.add_node("planner", editor_agent.plan_research)
+        workflow.add_node("researcher", editor_agent.run_parallel_research)
         workflow.add_node("writer", writer_agent.run)
         workflow.add_node("publisher", publisher_agent.run)
-        # Set up edges
-        '''workflow.add_conditional_edges(start_key='review',
-                                       condition=lambda x: "accept" if x['review'] is None else "revise",
-                                       conditional_edge_mapping={"accept": "publisher", "revise": "reviser"})'''
 
         workflow.add_edge('browser', 'planner')
         workflow.add_edge('planner', 'researcher')
@@ -50,8 +44,13 @@ class MasterAgent:
         workflow.set_entry_point("browser")
         workflow.add_edge('publisher', END)
 
+        return workflow
+
+    async def run(self):
+        research_team = self.init_research_team()
+
         # compile the graph
-        chain = workflow.compile()
+        chain = research_team.compile()
 
         print_agent_output(f"Starting the research process for query '{self.task.get('query')}'...", "MASTER")
         result = await chain.ainvoke({"task": self.task})

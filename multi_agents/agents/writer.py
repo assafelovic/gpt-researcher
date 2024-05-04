@@ -21,6 +21,9 @@ class WriterAgent:
     def write(self, research_state: dict):
         query = research_state.get("title")
         data = research_state.get("research_data")
+        task = research_state.get("task")
+        follow_guidelines = task.get("follow_guidelines")
+        guidelines = task.get("guidelines")
 
         prompt = [{
             "role": "system",
@@ -37,6 +40,7 @@ class WriterAgent:
                        f"Do not include headers in the results.\n"
                        f"You MUST include any relevant sources to the introduction and conclusion as markdown hyperlinks -"
                        f"For example: 'This is a sample text. ([url website](url))'\n\n"
+                       f"{f'You must follow the guidelines provided: {guidelines}' if follow_guidelines else ''}\n"
                        f"You MUST return nothing but a JSON in the following format:\n"
                        f"{sample_json}\n\n"
 
@@ -47,7 +51,7 @@ class WriterAgent:
             "response_format": {"type": "json_object"}
         }
 
-        response = ChatOpenAI(model='gpt-4-turbo', max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
+        response = ChatOpenAI(model=task.get("model"), max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
         return json.loads(response)
 
     def run(self, research_state: dict):
