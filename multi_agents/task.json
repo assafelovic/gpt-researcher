@@ -1,18 +1,17 @@
 {
-  "query": "What is GPT Researcher?",
-  "max_sections": 4,
+  "query": "How is Groq by x.ai different than ChatGPT?",
+  "max_sections": 3,
   "publish_formats": {
     "markdown": true,
     "pdf": true,
     "docx": true
   },
-  "follow_guidelines": true,
+  "follow_guidelines": false,
   "model": "gpt-4-turbo",
   "guidelines": [
-    "The report MUST fully answer the original question",
+    "The report MUST be written in markdown syntax with source hyperlinks",
     "The report MUST be written in apa format",
-    "The report MUST be written in a formal tone",
-    "Each sub header MUST include supporting sources. If none exist, erase the sub header or rewrite it to be a part of the previous section",
+    "Each sub section MUST include supporting sources. If none exist, erase the sub section or rewrite it to be a part of the previous section",
     "The report MUST be written in english"
   ]
 }
