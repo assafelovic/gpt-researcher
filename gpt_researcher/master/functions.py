@@ -51,10 +51,12 @@ def get_retriever(retriever):
     return retriever
 
 
-async def choose_agent(query, cfg):
+async def choose_agent(query, cfg, parent_query=None):
     """
     Chooses the agent automatically
     Args:
+        parent_query: In some cases the research is conducted on a subtopic from the main query.
+        Tge parent query allows the agent to know the main context for better reasoning.
         query: original query
         cfg: Config
 
@@ -62,6 +64,7 @@ async def choose_agent(query, cfg):
         agent: Agent name
         agent_role_prompt: Agent role prompt
     """
+    query = f"{parent_query} - {query}" if parent_query else f"{query}"
     try:
         response = await create_chat_completion(
             model=cfg.smart_llm_model,
