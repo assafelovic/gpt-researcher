@@ -70,7 +70,7 @@ class GPTResearcher:
         
         # Generate Agent
         if not (self.agent and self.role):
-            self.agent, self.role = await choose_agent(self.query, self.cfg)
+            self.agent, self.role = await choose_agent(self.query, self.cfg, self.parent_query)
         await stream_output("logs", self.agent, self.websocket)
 
         # If specified, the researcher will use the given urls as the context for the research.
