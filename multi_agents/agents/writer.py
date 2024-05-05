@@ -1,8 +1,7 @@
 from datetime import datetime
-from langchain.adapters.openai import convert_openai_messages
-from langchain_openai import ChatOpenAI
 import json5 as json
 from .utils.views import print_agent_output
+from .utils.llms import call_model
 
 sample_json = """
 {
@@ -18,7 +17,7 @@ class WriterAgent:
     def __init__(self):
         pass
 
-    def write(self, research_state: dict):
+    def write_sections(self, research_state: dict):
         query = research_state.get("title")
         data = research_state.get("research_data")
         task = research_state.get("task")
@@ -46,16 +45,38 @@ class WriterAgent:
 
         }]
 
-        lc_messages = convert_openai_messages(prompt)
-        optional_params = {
-            "response_format": {"type": "json_object"}
-        }
-
-        response = ChatOpenAI(model=task.get("model"), max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
+        response = call_model(prompt, task.get("model"), max_retries=2)
         return json.loads(response)
+
+    def revise_headers(self, research_state: dict):
+        task = research_state.get("task")
+        prompt = [{
+            "role": "system",
+            "content": """You are a research writer. 
+Your sole purpose is to revise the headers data based on the given guidelines."""
+        }, {
+            "role": "user",
+            "content": f"""Your task is to revise the given headers JSON based on the guidelines given.
+You are to follow the guidelines but the values should be in simple strings, ignoring all markdown syntax.
+You must return nothing but a JSON in the same format as given in headers data.
+Guidelines: {research_state.get("task").get("guidelines")}\n
+Headers Data: {research_state.get("headers")}\n
+"""
+
+        }]
+
+        response = call_model(prompt, task.get("model"))
+        return {"headers": json.loads(response)}
 
     def run(self, research_state: dict):
         print_agent_output(f"Writing final research report based on research data...", agent="WRITER")
-        research_layout_content = self.write(research_state)
+        research_layout_content = self.write_sections(research_state)
         print_agent_output(research_layout_content, agent="WRITER")
-        return research_layout_content
+
+        headers = research_state.get("headers")
+        if research_state.get("task").get("follow_guidelines"):
+            print_agent_output("Rewriting layout based on guidelines...", agent="WRITER")
+            headers = self.revise_headers(research_state).get("headers")
+            print_agent_output(str(headers), agent="WRITER")
+
+        return {**research_layout_content, "headers": headers}

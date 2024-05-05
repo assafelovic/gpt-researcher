@@ -1,4 +1,3 @@
-import os
 from .utils.file_formats import \
     write_md_to_pdf, \
     write_md_to_word, \
@@ -22,21 +21,22 @@ class PublisherAgent:
                                  for subheader in research_state.get("research_data")
                                  for key, value in subheader.items())
         references = '\n'.join(f"{reference}" for reference in research_state.get("sources"))
-        layout = f"""#{research_state.get('title')}
-#### Date: {research_state.get('date')}
+        headers = research_state.get("headers")
+        layout = f"""# {headers.get('title')}
+#### {headers.get("date")}: {research_state.get('date')}
 
-## Introduction
+## {headers.get("introduction")}
 {research_state.get('introduction')}
 
-## Table of Contents
+## {headers.get("table_of_contents")}
 {research_state.get('table_of_contents')}
 
 {sections}
 
-## Conclusion
+## {headers.get("conclusion")}
 {research_state.get('conclusion')}
 
-## References
+## {headers.get("references")}
 {references}
 """
         return layout

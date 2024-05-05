@@ -1,7 +1,5 @@
-from datetime import datetime
-from langchain.adapters.openai import convert_openai_messages
-from langchain_openai import ChatOpenAI
 from .utils.views import print_agent_output
+from .utils.llms import call_model
 
 TEMPLATE = """You are an expert research article reviewer. \
 Your goal is to review research drafts and provide feedback to the reviser only based on specific guidelines. \
@@ -43,8 +41,7 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
             "content": review_prompt
         }]
 
-        lc_messages = convert_openai_messages(prompt)
-        response = ChatOpenAI(model='gpt-4-turbo', max_retries=1).invoke(lc_messages).content
+        response = call_model(prompt, model=task.get("model"))
 
         if 'None' in response:
             return None
@@ -59,7 +56,7 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
             print_agent_output(f"Reviewing draft...", agent="REVIEWER")
             print_agent_output(f"Following guidelines {guidelines}...", agent="REVIEWER")
             review = self.review_draft(draft_state)
-            print_agent_output(f"Review feedback {review}...", agent="REVIEWER")
+            print_agent_output(f"Review feedback is: {review}...", agent="REVIEWER")
         else:
             print_agent_output(f"Ignoring guidelines...", agent="REVIEWER")
         return {"review": review}

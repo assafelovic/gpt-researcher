@@ -1,7 +1,5 @@
-from datetime import datetime
-from langchain.adapters.openai import convert_openai_messages
-from langchain_openai import ChatOpenAI
 from .utils.views import print_agent_output
+from .utils.llms import call_model
 import json
 
 sample_revision_notes = """
@@ -24,6 +22,7 @@ class ReviserAgent:
         :return:
         """
         review = draft_state.get("review")
+        task = draft_state.get("task")
         draft_report = draft_state.get("draft")
         prompt = [{
             "role": "system",
@@ -39,8 +38,7 @@ You MUST return nothing but a JSON in the following format:
 """
         }]
 
-        lc_messages = convert_openai_messages(prompt)
-        response = ChatOpenAI(model='gpt-4-turbo', max_retries=1).invoke(lc_messages).content
+        response = call_model(prompt, model=task.get("model"))
         return json.loads(response)
 
     def run(self, draft_state: dict):
