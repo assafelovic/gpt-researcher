@@ -9,7 +9,7 @@ class ResearchAgent:
 
     async def research(self, query: str, research_report: str = "research_report", parent_query: str = ""):
         # Initialize the researcher
-        researcher = GPTResearcher(query=query, report_type=research_report, config_path=None, parent_query=parent_query)
+        researcher = GPTResearcher(parent_query=parent_query, query=query, report_type=research_report, config_path=None)
         # Conduct research on the given query
         await researcher.conduct_research()
         # Write the report
@@ -19,7 +19,7 @@ class ResearchAgent:
 
     async def run_subtopic_research(self, title: str, subtopic: str):
         try:
-            report = await self.research(f"{subtopic}", research_report="subtopic_report", parent_query=title)
+            report = await self.research(parent_query=title, query=subtopic, research_report="subtopic_report")
         except Exception as e:
             print(f"{Fore.RED}Error in researching topic {subtopic}: {e}{Style.RESET_ALL}")
             report = None
