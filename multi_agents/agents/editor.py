@@ -1,7 +1,6 @@
 from datetime import datetime
-from langchain.adapters.openai import convert_openai_messages
-from langchain_openai import ChatOpenAI
 from .utils.views import print_agent_output
+from .utils.llms import call_model
 from langgraph.graph import StateGraph, END
 import asyncio
 import json
@@ -16,6 +15,16 @@ from . import \
 class EditorAgent:
     def __init__(self, task: dict):
         self.task = task
+
+    def get_headers(self, plan: dict):
+        return {
+            "title": plan.get("title"),
+            "date": "Date",
+            "introduction": "Introduction",
+            "table_of_contents": "Table of Contents",
+            "conclusion": "Conclusion",
+            "references": "References"
+        }
 
     def plan_research(self, research_state: dict):
         """
@@ -46,16 +55,14 @@ class EditorAgent:
                        f"sections: ['section header 1', 'section header 2', 'section header 3' ...]}}.\n "
         }]
 
-        lc_messages = convert_openai_messages(prompt)
-        optional_params = {
-            "response_format": {"type": "json_object"}
-        }
         print_agent_output(f"Planning an outline layout based on initial research...", agent="EDITOR")
-        response = ChatOpenAI(model=self.task.get("model"), max_retries=1, model_kwargs=optional_params).invoke(lc_messages).content
+        response = call_model(prompt=prompt, model=self.task.get("model"), response_format="json")
         plan = json.loads(response)
+
         return {
             "title": plan.get("title"),
             "date": plan.get("date"),
+            "headers": self.get_headers(plan),
             "sections": plan.get("sections")
         }
 

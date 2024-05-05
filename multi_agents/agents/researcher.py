@@ -1,8 +1,6 @@
 from gpt_researcher import GPTResearcher
-import asyncio
 from colorama import Fore, Style
 from .utils.views import print_agent_output
-import json
 
 
 class ResearchAgent:
