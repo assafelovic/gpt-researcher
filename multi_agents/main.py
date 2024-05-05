@@ -3,7 +3,9 @@ from agents import MasterAgent
 import asyncio
 import json
 import os
-os.environ["LANGCHAIN_TRACING_V2"] = "true"
+
+if os.environ.get("LANGCHAIN_API_KEY"):
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
 load_dotenv()
 
 with open('task.json', 'r') as f:
