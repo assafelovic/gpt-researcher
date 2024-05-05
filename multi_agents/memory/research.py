@@ -9,6 +9,7 @@ class ResearchState(TypedDict):
     research_data: List[dict]
     # Report layout
     title: str
+    headers: dict
     date: str
     table_of_contents: str
     introduction: str
