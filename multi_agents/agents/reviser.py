@@ -38,7 +38,7 @@ You MUST return nothing but a JSON in the following format:
 """
         }]
 
-        response = call_model(prompt, model=task.get("model"))
+        response = call_model(prompt, model=task.get("model"), response_format='json')
         return json.loads(response)
 
     def run(self, draft_state: dict):
