@@ -16,16 +16,6 @@ class EditorAgent:
     def __init__(self, task: dict):
         self.task = task
 
-    def get_headers(self, plan: dict):
-        return {
-            "title": plan.get("title"),
-            "date": "Date",
-            "introduction": "Introduction",
-            "table_of_contents": "Table of Contents",
-            "conclusion": "Conclusion",
-            "references": "References"
-        }
-
     def plan_research(self, research_state: dict):
         """
         Curate relevant sources for a query
@@ -62,7 +52,6 @@ class EditorAgent:
         return {
             "title": plan.get("title"),
             "date": plan.get("date"),
-            "headers": self.get_headers(plan),
             "sections": plan.get("sections")
         }
 
