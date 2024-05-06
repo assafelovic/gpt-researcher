@@ -101,7 +101,6 @@ async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query:
         temperature=0,
         llm_provider=cfg.llm_provider
     )
-    print(f"Subqueries: {response}")
     sub_queries = json.loads(response)
     return sub_queries
 
