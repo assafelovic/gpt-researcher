@@ -70,7 +70,7 @@ class GPTResearcher:
         
         # Generate Agent
         if not (self.agent and self.role):
-            self.agent, self.role = await choose_agent(self.query, self.cfg)
+            self.agent, self.role = await choose_agent(self.query, self.cfg, self.parent_query)
         await stream_output("logs", self.agent, self.websocket)
 
         # If specified, the researcher will use the given urls as the context for the research.
@@ -135,7 +135,12 @@ class GPTResearcher:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await get_sub_queries(query, self.role, self.cfg, self.parent_query, self.report_type) + [query]
+        sub_queries = await get_sub_queries(query, self.role, self.cfg, self.parent_query, self.report_type)
+
+        # If this is not part of a sub researcher, add original query to research for better results
+        if self.report_type != "subtopic_report":
+            sub_queries.append(query)
+
         await stream_output("logs",
                             f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
                             self.websocket)

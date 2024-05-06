@@ -1,0 +1,6 @@
+langgraph==0.0.40
+gpt_researcher
+langchain-community
+python-dotenv
+weasyprint
+json5

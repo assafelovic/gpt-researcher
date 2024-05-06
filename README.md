@@ -69,6 +69,7 @@ Please see [here](https://docs.tavily.com/docs/gpt-researcher/getting-started) f
 - Reference (full API docs)
 
 ## ⚙️ Getting Started
+### Installation
 > **Step 0** - Install Python 3.11 or later. [See here](https://www.tutorialsteacher.com/python/install-python) for a step-by-step guide.
 
 > **Step 1** - Download the project and navigate to its directory
@@ -94,7 +95,7 @@ OPENAI_API_KEY={Your OpenAI API Key here}
 TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
-- **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources) supported by [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai), simply change the llm model and provider in config/config.py. 
+- **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources) supported by [Langchain Adapter](https://python.langchain.com/docs/integrations/adapters/openai/), simply change the llm model and provider in config/config.py. 
 - **For web search API, we recommend [Tavily Search API](https://app.tavily.com)**, but you can also refer to other search APIs of your choice by changing the search provider in config/config.py to `"duckduckgo"`, `"googleAPI"`, `"bing"`, `"googleSerp"`, `"searx"` and more. Then add the corresponding env API key as seen in the config.py file.
 
 ### Quickstart
@@ -116,6 +117,25 @@ uvicorn main:app --reload
 <br />
 
 **To learn how to get started with [Docker](https://docs.tavily.com/docs/gpt-researcher/getting-started#try-it-with-docker), [Poetry](https://docs.tavily.com/docs/gpt-researcher/getting-started#poetry) or a [virtual environment](https://docs.tavily.com/docs/gpt-researcher/getting-started#virtual-environment) check out the [documentation](https://docs.tavily.com/docs/gpt-researcher/getting-started) page.**
+
+### Run as PIP package
+```bash
+pip install gpt-researcher
+```
+
+```python
+from gpt_researcher import GPTResearcher
+
+query = "why is Nvidia stock going up?"
+researcher = GPTResearcher(query=query, report_type="research_report")
+# Conduct research on the given query
+await researcher.conduct_research()
+# Write the report
+report = await researcher.write_report()
+```
+
+**For more examples and configurations, please refer to the [PIP documentation](https://docs.tavily.com/docs/gpt-researcher/pip-package) page.**
+
 
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.

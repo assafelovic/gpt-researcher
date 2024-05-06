@@ -1,19 +1,12 @@
-# Multi Agent Frameworks
+# LangGraph x GPT Researcher
+[LangGraph](https://python.langchain.com/docs/langgraph) is a library for building stateful, multi-actor applications with LLMs. 
+This example uses Langgraph to automate the process of an in depth research on any given topic.
 
-We are strong advocates for the future of AI agents, envisioning a world where autonomous agents communicate and collaborate as a cohesive team to undertake and complete complex tasks.
+## Use case
+By using Langgraph, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. 
+Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
 
-We hold the belief that research is a pivotal element in successfully tackling these complex tasks, ensuring superior outcomes.
-
-Consider the scenario of developing a coding agent responsible for coding tasks using the latest API documentation and best practices. It would be wise to integrate an agent specializing in research to curate the most recent and relevant documentation, before crafting a technical design that would subsequently be handed off to the coding assistant tasked with generating the code. This approach is applicable across various sectors, including finance, business analysis, healthcare, marketing, and legal, among others.
-
-One multi-agent framework that we're excited about is [LangGraph](https://python.langchain.com/docs/langgraph/), built by the team at [Langchain](https://www.langchain.com/).
-LangGraph is a Python library for building stateful, multi-actor applications with LLMs. It extends the [LangChain Expression Language](https://python.langchain.com/docs/expression_language/) with the ability to coordinate multiple chains (or actors) across multiple steps of computation.
-
-What's great about LangGraph is that it follows a DAG architecture, enabling each specialized agent to communicate with one another, and subsequently trigger actions among other agents within the graph. 
-
-We've added an example for leveraging [GPT Researcher with LangGraph](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) which can be found in `/multi_agents`.
-
-The example demonstrates a generic use case for an editorial agent team that works together to complete a research report on a given task.
+An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 
 ## The Multi Agent Team
 The research team is made up of 7 AI agents:
@@ -29,13 +22,13 @@ The research team is made up of 7 AI agents:
 Generally, the process is based on the following stages: 
 1. Planning stage
 2. Data collection and analysis
-3. Writing and submission
-4. Review and revision
+3. Review and revision
+4. Writing and submission
 5. Publication
 
 ### Architecture
 <div align="center">
-<img align="center" height="600" src="https://cowriter-images.s3.amazonaws.com/gptr-langgraph-architecture.png"></img>
+<img align="center" height="600" src="https://cowriter-images.s3.amazonaws.com/gptr-langgraph-architecture.png">
 </div>
 <br clear="all"/>
 
@@ -62,3 +55,30 @@ More specifically (as seen in the architecture diagram) the process is as follow
 
 ## Usage
 To change the research query and customize the report, edit the `task.json` file in the main directory.
+#### Task.json contains the following fields:
+- `query` - The research query or task.
+- `model` - The OpenAI LLM to use for the agents.
+- `max_sections` - The maximum number of sections in the report. Each section is a subtopic of the research query.
+- `publish_formats` - The formats to publish the report in. The reports will be written in the `output` directory.
+- `follow_guidelines` - If true, the research report will follow the guidelines below. It will take longer to complete. If false, the report will be generated faster but may not follow the guidelines.
+- `guidelines` - A list of guidelines that the report must follow.
+
+#### For example:
+```json
+{
+  "query": "Is AI in a hype cycle?",
+  "model": "gpt-4-turbo",
+  "max_sections": 3, 
+  "publish_formats": { 
+    "markdown": true,
+    "pdf": true,
+    "docx": true
+  },
+  "follow_guidelines": true,
+  "guidelines": [
+    "The report MUST fully answer the original question",
+    "The report MUST be written in apa format",
+    "The report MUST be written in english"
+  ]
+}
+```
