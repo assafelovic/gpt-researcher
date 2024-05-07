@@ -10,8 +10,8 @@
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/assafelovic/gpt-researcher?style=for-the-badge&color=orange
 
--  [English](README.md)
--  [中文](README-zh_CN.md)
+-  [English](https://github.com/assafelovic/gpt-researcher/blob/master/README.md)
+-  [中文](https://github.com/assafelovic/gpt-researcher/blob/master/README-zh_CN.md)
 
 **GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks.** 
 
@@ -138,7 +138,7 @@ report = await researcher.write_report()
 
 
 ## 🚀 Contributing
-We highly welcome contributions! Please check out [contributing](CONTRIBUTING.md) if you're interested.
+We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md) if you're interested.
 
 Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/2pFkc83fRq) if you're interested in joining our mission.
 
