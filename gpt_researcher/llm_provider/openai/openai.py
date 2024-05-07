@@ -16,6 +16,7 @@ class OpenAIProvider:
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.api_key = self.get_api_key()
+        self.base_url = self.get_base_url()
         self.llm = self.get_llm_model()
 
     def get_api_key(self):
@@ -26,10 +27,20 @@ class OpenAIProvider:
         """
         try:
             api_key = os.environ["OPENAI_API_KEY"]
-        except:
+        except KeyError:
             raise Exception(
                 "OpenAI API key not found. Please set the OPENAI_API_KEY environment variable.")
         return api_key
+
+    def get_base_url(self):
+        """
+        Gets the OpenAI Base URL from the environment variable if defined otherwise use the default one
+        Returns:
+
+        """
+        base_url = os.environ.get("OPENAI_BASE_URL", None)
+        return base_url
+
 
     def get_llm_model(self):
         # Initializing the chat model
@@ -39,6 +50,8 @@ class OpenAIProvider:
             max_tokens=self.max_tokens,
             api_key=self.api_key
         )
+        if self.base_url:
+            llm.base_url = self.base_url
 
         return llm
 
@@ -68,5 +81,5 @@ class OpenAIProvider:
                     else:
                         print(f"{Fore.GREEN}{paragraph}{Style.RESET_ALL}")
                     paragraph = ""
-                    
+
         return response
