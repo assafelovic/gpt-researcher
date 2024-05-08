@@ -48,6 +48,11 @@ More specifically (as seen in the architecture diagram) the process is as follow
     ```bash
     pip install -r requirements.txt
     ```
+3. Update env variables
+   ```bash
+   export OPENAI_API_KEY={Your OpenAI API Key here}
+   export TAVILY_API_KEY={Your Tavily API Key here}
+   ```
 2. Run the application:
     ```bash
     python main.py
