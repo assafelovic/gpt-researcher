@@ -26,9 +26,14 @@ from gpt_researcher import GPTResearcher
 import asyncio
 
 
+from gpt_researcher import GPTResearcher
+import asyncio
+
+
 async def get_report(query: str, report_type: str) -> str:
     researcher = GPTResearcher(query, report_type)
-    report = await researcher.run()
+    await researcher.conduct_research()
+    report = await researcher.write_report()
     return report
 
 if __name__ == "__main__":
@@ -67,9 +72,10 @@ import asyncio
 app = FastAPI()
 
 @app.get("/report/{report_type}")
-async def get_report(report_type: str, query: str):
+async def get_report(query: str, report_type: str) -> str:
     researcher = GPTResearcher(query, report_type)
-    report = await researcher.run()
+    await researcher.conduct_research()
+    report = await researcher.write_report()
     return {"report": report}
 
 # Run the server
@@ -86,8 +92,9 @@ app = Flask(__name__)
 
 @app.route('/report/<report_type>', methods=['GET'])
 def get_report(report_type):
-    query = request.args.get('query')
-    report = asyncio.run(GPTResearcher(query, report_type).run())
+    researcher = GPTResearcher(query, report_type)
+    await researcher.conduct_research()
+    report = await researcher.write_report()
     return report
 
 # Run the server
