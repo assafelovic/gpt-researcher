@@ -14,7 +14,8 @@ from . import \
 
 class MasterAgent:
     def __init__(self, task: dict):
-        self.output_dir = f"./outputs/run_{int(time.time())}_{task.get('query')}"
+        self.task_id = int(time.time()) # Currently time based, but can be any unique identifier
+        self.output_dir = f"./outputs/run_{self.task_id}_{task.get('query')[0:60]}"
         self.task = task
         os.makedirs(self.output_dir, exist_ok=True)
 
