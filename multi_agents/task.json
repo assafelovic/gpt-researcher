@@ -1,5 +1,5 @@
 {
-  "query": "How is Groq by x.ai different than ChatGPT?",
+  "query": "Is AI in a hype cycle?",
   "max_sections": 3,
   "publish_formats": {
     "markdown": true,
