@@ -22,6 +22,7 @@
         'gpt-researcher/getting-started',
         'gpt-researcher/config',
          'gpt-researcher/example',
+         'gpt-researcher/tailored-research'
          'gpt-researcher/agent_frameworks',
         'gpt-researcher/pip-package',
         'gpt-researcher/troubleshooting',
