@@ -67,6 +67,7 @@ To change the research query and customize the report, edit the `task.json` file
 - `publish_formats` - The formats to publish the report in. The reports will be written in the `output` directory.
 - `follow_guidelines` - If true, the research report will follow the guidelines below. It will take longer to complete. If false, the report will be generated faster but may not follow the guidelines.
 - `guidelines` - A list of guidelines that the report must follow.
+- `verbose` - If true, the application will print detailed logs to the console.
 
 #### For example:
 ```json
@@ -84,6 +85,7 @@ To change the research query and customize the report, edit the `task.json` file
     "The report MUST fully answer the original question",
     "The report MUST be written in apa format",
     "The report MUST be written in english"
-  ]
+  ],
+  "verbose": true
 }
 ```

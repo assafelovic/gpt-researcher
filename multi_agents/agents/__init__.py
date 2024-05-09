@@ -4,10 +4,10 @@ from .publisher import PublisherAgent
 from .reviser import ReviserAgent
 from .reviewer import ReviewerAgent
 from .editor import EditorAgent
-from .master import MasterAgent
+from .master import ChiefEditorAgent
 
 __all__ = [
-    "MasterAgent",
+    "ChiefEditorAgent",
     "ResearchAgent",
     "WriterAgent",
     "EditorAgent",
