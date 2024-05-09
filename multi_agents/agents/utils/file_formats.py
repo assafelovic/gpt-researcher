@@ -33,6 +33,7 @@ async def write_text_to_md(text: str, path: str) -> str:
     task = uuid.uuid4().hex
     file_path = f"{path}/{task}.md"
     await write_to_file(file_path, text)
+    print(f"Report written to {file_path}")
     return file_path
 
 
