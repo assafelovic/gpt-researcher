@@ -43,6 +43,9 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
 
         response = call_model(prompt, model=task.get("model"))
 
+        if task.get("verbose"):
+            print_agent_output(f"Review feedback is: {response}...", agent="REVIEWER")
+
         if 'None' in response:
             return None
         return response
@@ -54,9 +57,11 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
         review = None
         if to_follow_guidelines:
             print_agent_output(f"Reviewing draft...", agent="REVIEWER")
-            print_agent_output(f"Following guidelines {guidelines}...", agent="REVIEWER")
+
+            if task.get("verbose"):
+                print_agent_output(f"Following guidelines {guidelines}...", agent="REVIEWER")
+
             review = self.review_draft(draft_state)
-            print_agent_output(f"Review feedback is: {review}...", agent="REVIEWER")
         else:
             print_agent_output(f"Ignoring guidelines...", agent="REVIEWER")
         return {"review": review}

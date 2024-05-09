@@ -80,7 +80,9 @@ Headers Data: {headers}\n
     def run(self, research_state: dict):
         print_agent_output(f"Writing final research report based on research data...", agent="WRITER")
         research_layout_content = self.write_sections(research_state)
-        print_agent_output(research_layout_content, agent="WRITER")
+
+        if research_state.get("task").get("verbose"):
+            print_agent_output(research_layout_content, agent="WRITER")
 
         headers = self.get_headers(research_state)
         if research_state.get("task").get("follow_guidelines"):
