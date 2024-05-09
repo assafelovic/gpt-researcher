@@ -42,11 +42,14 @@ class TavilySearch():
         """
         try:
             # Search the query
-            results = self.client.search(self.query, search_depth="advanced", max_results=max_results)
+            results = self.client.search(self.query, search_depth="basic", max_results=max_results)
+            sources = results.get("results", [])
+            if not sources:
+                raise Exception("No results found with Tavily API search.")
             # Return the results
-            search_response = [{"href": obj["url"], "body": obj["content"]} for obj in results.get("results", [])]
+            search_response = [{"href": obj["url"], "body": obj["content"]} for obj in sources]
         except Exception as e: # Fallback in case overload on Tavily Search API
-            print(f"Error: {e}")
+            print(f"Error: {e}. Fallback to DuckDuckGo Search API...")
             ddg = DDGS()
             search_response = ddg.text(self.query, region='wt-wt', max_results=max_results)
         return search_response
