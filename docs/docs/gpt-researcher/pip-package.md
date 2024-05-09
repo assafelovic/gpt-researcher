@@ -106,12 +106,12 @@ pip install 'flask[async]'
 ```python
 from flask import Flask, request
 from gpt_researcher import GPTResearcher
-import asyncio
 
 app = Flask(__name__)
 
 @app.route('/report/<report_type>', methods=['GET'])
 async def get_report(report_type):
+    query = request.args.get('query')
     researcher = GPTResearcher(query, report_type)
     await researcher.conduct_research()
     report = await researcher.write_report()
@@ -119,4 +119,7 @@ async def get_report(report_type):
 
 # Run the server
 # flask run
+
+# Example run: GET http://localhost:5000/report/research_report?query=what team may win the NBA finals?
+``` 
 ```
