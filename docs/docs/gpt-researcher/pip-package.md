@@ -119,7 +119,17 @@ async def get_report(report_type):
 
 # Run the server
 # flask run
-
-# Example run: GET http://localhost:5000/report/research_report?query=what team may win the NBA finals?
-``` 
 ```
+**Run the server**
+
+```bash
+flask run
+```
+
+**Example Request**
+
+```bash
+curl -X GET "http://localhost:5000/report/research_report?query=what team may win the nba finals?"
+```
+
+**Note**: The above code snippets are just examples. You can customize them as per your requirements.
