@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from agents import MasterAgent
+from agents import ChiefEditorAgent
 import asyncio
 import json
 import os
@@ -14,9 +14,10 @@ async def main():
     with open('task.json', 'r') as f:
         task = json.load(f)
 
-    master_agent = MasterAgent(task)
-    research_report = await master_agent.run()
-    print(research_report)
+    chief_editor = ChiefEditorAgent(task)
+    research_report = await chief_editor.run_research_task()
+
+    return research_report
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -42,9 +42,11 @@ You MUST return nothing but a JSON in the following format:
         return json.loads(response)
 
     def run(self, draft_state: dict):
-        draft_title = draft_state.get("title")
         print_agent_output(f"Rewriting draft based on feedback...", agent="REVISOR")
         revision = self.revise_draft(draft_state)
-        print_agent_output(f"Revision notes: {revision.get('revision_notes')}", agent="REVISOR")
+
+        if draft_state.get("task").get("verbose"):
+            print_agent_output(f"Revision notes: {revision.get('revision_notes')}", agent="REVISOR")
+
         return {"draft": revision.get("draft"),
                 "revision_notes": revision.get("revision_notes")}

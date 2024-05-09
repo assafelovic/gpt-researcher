@@ -49,14 +49,12 @@ async def write_md_to_pdf(text: str, path: str) -> str:
     file_path = f"{path}/{task}.pdf"
 
     try:
-        print(text)
-        print("writing to pdf...")
         md2pdf(file_path,
                md_content=text,
                # md_file_path=f"{file_path}.md",
                css_file_path="./agents/utils/pdf_styles.css",
                base_url=None)
-        print(f"Report written to {file_path}.pdf")
+        print(f"Report written to {file_path}")
     except Exception as e:
         print(f"Error in converting Markdown to PDF: {e}")
         return ""
