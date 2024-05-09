@@ -9,7 +9,7 @@ class ResearchAgent:
 
     async def research(self, query: str, research_report: str = "research_report", parent_query: str = ""):
         # Initialize the researcher
-        researcher = GPTResearcher(parent_query=parent_query, query=query, report_type=research_report, config_path=None)
+        researcher = GPTResearcher(query=query, report_type=research_report, parent_query=parent_query)
         # Conduct research on the given query
         await researcher.conduct_research()
         # Write the report
