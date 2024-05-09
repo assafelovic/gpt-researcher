@@ -12,7 +12,7 @@ class Memory:
                 _embeddings = OllamaEmbeddings(model="llama2")
             case "openai":
                 from langchain_openai import OpenAIEmbeddings
-                _embeddings = OpenAIEmbeddings()
+                _embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
             case "azureopenai":
                 from langchain_openai import AzureOpenAIEmbeddings
                 _embeddings = AzureOpenAIEmbeddings(deployment=os.environ["AZURE_EMBEDDING_MODEL"], chunk_size=16)
