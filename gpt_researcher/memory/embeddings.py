@@ -9,7 +9,14 @@ class Memory:
         match embedding_provider:
             case "ollama":
                 from langchain.embeddings import OllamaEmbeddings
-                _embeddings = OllamaEmbeddings(model="llama2")
+
+                # Get Ollama host and embedding model from environment variables
+                # Set default value for OLLAMA_HOST
+                ollama_host = os.getenv("OLLAMA_HOST", "http://host.docker.internal:11434")
+                # Set default value for OLLAMA_EMBEDDING_MODEL
+                ollama_embedding_model = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
+
+                _embeddings = OllamaEmbeddings(model=ollama_embedding_model, base_url=ollama_host)
             case "openai":
                 from langchain_openai import OpenAIEmbeddings
                 _embeddings = OpenAIEmbeddings()
