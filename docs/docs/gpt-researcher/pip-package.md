@@ -38,7 +38,7 @@ import asyncio
 
 async def get_report(query: str, report_type: str) -> str:
     researcher = GPTResearcher(query, report_type)
-    research_data = await researcher.conduct_research()
+    research_result = await researcher.conduct_research()
     report = await researcher.write_report()
     return report
 
@@ -87,7 +87,7 @@ app = FastAPI()
 @app.get("/report/{report_type}")
 async def get_report(query: str, report_type: str) -> dict:
     researcher = GPTResearcher(query, report_type)
-    research_data = await researcher.conduct_research()
+    research_result = await researcher.conduct_research()
     report = await researcher.write_report()
     return {"report": report}
 
@@ -113,7 +113,7 @@ app = Flask(__name__)
 async def get_report(report_type):
     query = request.args.get('query')
     researcher = GPTResearcher(query, report_type)
-    research_data = await researcher.conduct_research()
+    research_result = await researcher.conduct_research()
     report = await researcher.write_report()
     return report
 
