@@ -86,6 +86,8 @@ class GPTResearcher:
 
         time.sleep(2)
 
+        return self.context
+
     async def write_report(self, existing_headers: list = []):
         """
         Writes the report based on research conducted
