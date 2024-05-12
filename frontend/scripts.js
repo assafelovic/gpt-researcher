@@ -5,32 +5,6 @@ const GPTResearcher = (() => {
       document.getElementById("copyToClipboard").addEventListener("click", copyToClipboard);
 
       updateState("initial");
-      conditionallyShowReportSourceOptions();
-    }
-
-    const conditionallyShowReportSourceOptions = () => {
-      function hideReportSourceConditionally() {
-          var reportType = document.getElementsByName('report_type')[0];
-          var reportSource = document.getElementsByName('report_source')[0];
-      
-          reportType.addEventListener('change', function() {
-              if (reportType.value === 'resource_report') {
-                  reportSource.style.display = 'none';
-              } else {
-                  reportSource.style.display = 'block';
-              }
-          });
-      
-          // Initial check on page load
-          if (reportType.value === 'resource_report') {
-              reportSource.style.display = 'none';
-          } else {
-              reportSource.style.display = 'block';
-          }
-      }
-      
-      // Call the function to set up the event listener
-      hideReportSourceConditionally();    
     }
 
     const startResearch = () => {
