@@ -48,4 +48,3 @@ class Config:
             config = json.load(f)
         for key, value in config.items():
             setattr(self, key.lower(), value)
-
