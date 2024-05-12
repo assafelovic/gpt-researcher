@@ -39,5 +39,5 @@ class Config:
         with open(self.config_file, "r") as f:
             config = json.load(f)
         for key, value in config.items():
-            self.__dict__[key.lower()] = value
+            setattr(self, key.lower(), value)
 
