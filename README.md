@@ -147,7 +147,7 @@ Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-road
 
 ## ✉️ Support / Contact us
 - [Community Discord](https://discord.gg/spBgZmm3Xe)
-- Our email: assafelovic@gmail.com
+- Author Email: assaf.elovic@gmail.com
 
 ## 🛡 Disclaimer
 
