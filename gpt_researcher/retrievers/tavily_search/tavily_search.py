@@ -2,7 +2,7 @@
 
 # libraries
 import os
-from tavily import TavilyClient
+from ..tavily_api import TavilyClient
 from duckduckgo_search import DDGS
 
 
@@ -10,15 +10,22 @@ class TavilySearch():
     """
     Tavily API Retriever
     """
-    def __init__(self, query):
+    def __init__(
+        self, 
+        query, 
+        include_domains: list = [],
+        exclude_domains: list = []
+    ):
         """
         Initializes the TavilySearch object
         Args:
             query:
+            include_domains (list): List of domains to include in the search (optional)
+            exclude_domains (list): List of domains to exclude from the search (optional)
         """
         self.query = query
         self.api_key = self.get_api_key()
-        self.client = TavilyClient(self.api_key)
+        self.client = TavilyClient(api_key=self.api_key, include_domains=include_domains, exclude_domains=exclude_domains)
 
     def get_api_key(self):
         """

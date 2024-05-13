@@ -1,24 +1,30 @@
-#detailed_report.py
+#custom_detailed_report.py
 
 import asyncio
-
-from fastapi import WebSocket
 
 from gpt_researcher.master.agent import GPTResearcher
 from gpt_researcher.master.functions import (add_source_urls, extract_headers,
                                              table_of_contents)
+from gpt_researcher.utils.llm import construct_director_sobjects
 
-
-class DetailedReport():
-    def __init__(self, query: str, source_urls, config_path: str, websocket: WebSocket, subtopics=[]):
+class CustomDetailedReport():
+    def __init__ (self, query: str, source_urls, config_path: str, subtopics=[], include_domains=None, exclude_domains=None, parent_sub_queries=None, child_sub_queries=None):
         self.query = query
         self.source_urls = source_urls
         self.config_path = config_path
-        self.websocket = websocket
         self.subtopics = subtopics
-        
-        # A parent task assistant. Adding research_report as default
-        self.main_task_assistant = GPTResearcher(self.query, "research_report", self.source_urls, self.config_path, self.websocket)
+        self.parent_sub_queries = parent_sub_queries
+        self.child_sub_queries = child_sub_queries
+        # A parent task assistant. Adding compliance_report as default
+        self.main_task_assistant = GPTResearcher(
+            self.query,
+            "compliance_report",
+            self.source_urls,
+            self.config_path,
+            include_domains=include_domains,
+            exclude_domains=exclude_domains,
+            custom_sub_queries=parent_sub_queries
+        )
 
         self.existing_headers = []
         # This is a global variable to store the entire context accumulated at any point through searching and scraping
@@ -27,6 +33,7 @@ class DetailedReport():
         # This is a global variable to store the entire url list accumulated at any point through searching and scraping
         if self.source_urls:
             self.global_urls = set(self.source_urls)
+        self.director_sobjects = []
 
     async def run(self):
 
@@ -34,7 +41,10 @@ class DetailedReport():
         await self._initial_research()
 
         # Get list of all subtopics
-        subtopics = await self._get_all_subtopics()
+        if self.subtopics:
+            subtopics = self.subtopics
+        else:
+            subtopics = await self._get_all_subtopics()
         
         # Generate report introduction
         report_introduction = await self.main_task_assistant.write_introduction()
@@ -48,7 +58,7 @@ class DetailedReport():
         # Construct the final detailed report (Optionally add more details to the report)
         report = await self._construct_detailed_report(report_introduction, report_body)
 
-        return report
+        return report, self.director_sobjects
 
     async def _initial_research(self):
         # Conduct research using the main task assistant to gather content for generating subtopics
@@ -67,7 +77,7 @@ class DetailedReport():
         subtopics_report_body = ""
 
         async def fetch_report(subtopic):
-
+            
             subtopic_report = await self._get_subtopic_report(subtopic)
 
             return {
@@ -97,17 +107,25 @@ class DetailedReport():
 
         return subtopic_reports, subtopics_report_body
 
-    async def _get_subtopic_report(self, subtopic: dict) -> tuple:
-        current_subtopic_task = subtopic.get("task")
+    async def _get_subtopic_report(self, subtopic: dict) -> tuple:  
+        print("Subtopic:", subtopic)
+        if self.main_task_assistant.report_type == 'compliance_report':
+            current_subtopic_task = subtopic
+        else:
+            current_subtopic_task = subtopic.get("task")
+        if self.child_sub_queries:
+            custom_sub_queries = [f"{current_subtopic_task} {child_sub_query}" for child_sub_query in self.child_sub_queries]
+        else:
+            custom_sub_queries = []
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
-            report_type="subtopic_report",
-            websocket=self.websocket,
+            report_type="director_report",
             parent_query=self.query,
-            subtopics=self.subtopics,
+            subtopics=custom_sub_queries,
             visited_urls=self.global_urls,
             agent=self.main_task_assistant.agent,
-            role=self.main_task_assistant.role
+            role=self.main_task_assistant.role,
+            custom_sub_queries=custom_sub_queries  # Pass the child_sub_queries as custom_sub_query
         )
 
         # The subtopics should start research from the context gathered till now
@@ -119,6 +137,11 @@ class DetailedReport():
         # Here the headers gathered from previous subtopic reports are passed to the write report function
         # The LLM is later instructed to avoid generating any information relating to these headers as they have already been generated
         subtopic_report = await subtopic_assistant.write_report(self.existing_headers)
+
+        #construct and add the directors
+        director_sobject = await construct_director_sobjects(subtopic_report, subtopic_assistant.visited_urls, subtopic_assistant.query, subtopic_assistant.context, self.main_task_assistant.cfg)
+        if director_sobject:
+            self.director_sobjects.append(director_sobject)
 
         # Update context of the global context variable
         self.global_context = list(set(subtopic_assistant.context))

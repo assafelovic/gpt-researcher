@@ -1,3 +1,5 @@
+#prompts.py
+
 from datetime import datetime, timezone
 import warnings
 from gpt_researcher.utils.enum import ReportType
@@ -164,6 +166,147 @@ def generate_subtopics_prompt() -> str:
                 {format_instructions}
             """
 
+def generate_compliance_report_prompt(
+        company_name, 
+        context, 
+        report_format="apa", 
+        total_words=100
+    ):
+    return f"""
+    Using the latest information available about the company {company_name}, generate a compliance report focusing on key data points needed to assess if the company is viable to successfully onboard to BVNK's services from a legal and compliance perspective.
+    
+    The report should include:
+    - Full legal company name and registration number
+    - Incorporation date and jurisdiction 
+    - List of all current active directors with full names
+    - Regulatory licenses and registrations held, especially related to financial services
+    - Any past regulatory actions, fines or investigations against the company
+    - Adverse media or reports of financial crime, fraud or unethical business practices
+    - Overall assessment of compliance risk level in onboarding this company as a BVNK client
+    
+    You must write the report with markdown syntax.
+    Use an unbiased and journalistic tone. 
+    You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.
+    You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
+    Every url should be hyperlinked: [url website](url)
+    Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report.
+    You MUST write the report in {report_format} format.
+    The report should have a minimum length of {total_words} words.
+    Assume that the current date is {datetime.now().strftime('%B %d, %Y')}.
+    
+    Information to use:
+    {context}
+    """
+
+def generate_directors_prompt() -> str:
+    return """
+    Provided the main topic:
+    
+    {task}
+    
+    and research data:
+    
+    {data}
+    
+    - Construct a list of full names of all current active directors mentioned in the research data.
+    - There should NOT be any duplicate names.
+    
+    "IMPORTANT!":
+    - Every name MUST be mentioned in the provided research data ONLY!
+    
+    {format_instructions}
+    """
+
+def generate_director_report_prompt(
+        director_name, 
+        company_name, 
+        context, 
+        existing_headers, 
+        report_format="apa", 
+        total_words=100,
+        max_subsections=1,
+    ) -> str:
+    return f"""    
+    Information to use:  
+    {context}
+
+    Using the latest information available, generate a detailed report on the director {director_name} of the company {company_name}, capturing additional compliance data points, including:
+
+    You must limit the number of subsections to a maximum of {max_subsections}.
+    
+    - Full name and any previous names/aliases
+    - Date of birth and nationality  
+    - Current residential address
+    - Professional background and experience
+    - Other past and current director appointments 
+    - Adverse media reports or criminal records
+    - Politically exposed person (PEP) status or sanctions listings
+    - Overall assessment of compliance risk level of this individual
+    
+    Existing Subtopic Reports:
+    {existing_headers}
+    
+    Do not use any of the above headers or related details to avoid duplicates.
+    
+    You must write the report with markdown syntax.
+    Use an unbiased and journalistic tone. 
+    You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.
+    You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
+    Every url should be hyperlinked: [url website](url)
+    Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report.
+    You MUST write the report in {report_format} format.
+    The report should have a minimum length of {total_words} words.
+    Assume that the current date is {datetime.now().strftime('%B %d, %Y')}.
+    """
+
+def generate_director_sobjects_prompt() -> str:
+    return """
+    from the given context:
+
+    {context}
+
+    from the given urls:
+
+    {visited_urls}
+    
+    Based on the following subtopic report:
+    
+    {subtopic_report}
+
+    for director:
+    
+    {director_name}
+    
+    Extract the following information for each director mentioned in the report:
+    - First name
+    - Last name
+    - Company name
+    - Email address (if available)
+    - Mobile phone number (if available)
+    - Job title
+    - Lead Source URL
+    
+    Use the provided source URL as the LeadSource for each director.
+    
+    {format_instructions}
+    """
+
+def generate_sales_report_prompt(company_name, context):
+    return f"""
+    Using the latest information available about the company {company_name}, generate a sales report to qualify the lead and assess viability for BVNK's products and services.
+    Copy codeInclude the following key data points:
+    - Company website and main business activities  
+    - Estimated annual revenue and growth rate
+    - Target markets and customer base
+    - Current payment methods accepted 
+    - Use of cryptocurrencies or stablecoins
+    - Potential use cases for BVNK's payments, treasury and stablecoin infrastructure 
+    - Any major competitors or partners identified
+    - Overall lead score and sales opportunity assessment
+
+    Information to use:
+    {context}  
+    """
 
 def generate_subtopic_report_prompt(
     current_subtopic,
@@ -230,7 +373,10 @@ report_type_mapping = {
     ReportType.ResourceReport.value: generate_resource_report_prompt,
     ReportType.OutlineReport.value: generate_outline_report_prompt,
     ReportType.CustomReport.value: generate_custom_report_prompt,
-    ReportType.SubtopicReport.value: generate_subtopic_report_prompt
+    ReportType.SubtopicReport.value: generate_subtopic_report_prompt,
+    ReportType.ComplianceReport.value: generate_compliance_report_prompt,
+    ReportType.DirectorReport.value: generate_director_report_prompt,
+    ReportType.SalesReport.value: generate_sales_report_prompt,
 }
 
 

@@ -1,3 +1,5 @@
+#functions.py
+
 import asyncio
 import json
 
@@ -101,6 +103,7 @@ async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query:
         temperature=0,
         llm_provider=cfg.llm_provider
     )
+    print("Response:", response)
     sub_queries = json.loads(response)
     return sub_queries
 
@@ -208,8 +211,8 @@ async def generate_report(
     context,
     agent_role_prompt,
     report_type,
-    websocket,
     cfg,
+    websocket=None,  # Default value set to None
     main_topic: str = "",
     existing_headers: list = []
 ):
@@ -239,17 +242,28 @@ async def generate_report(
             f"{generate_prompt(query, context, cfg.report_format, cfg.total_words)}")
 
     try:
-        report = await create_chat_completion(
-            model=cfg.smart_llm_model,
-            messages=[
-                {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": content}],
-            temperature=0,
-            llm_provider=cfg.llm_provider,
-            stream=True,
-            websocket=websocket,
-            max_tokens=cfg.smart_token_limit
-        )
+        if report_type == "director_report":
+            report = await create_chat_completion(
+                model=cfg.smart_llm_model,
+                messages=[
+                    {"role": "system", "content": f"{agent_role_prompt}"},
+                    {"role": "user", "content": content}],
+                temperature=0,
+                llm_provider=cfg.llm_provider,
+                max_tokens=cfg.smart_token_limit
+            )
+        else:
+            report = await create_chat_completion(
+                model=cfg.smart_llm_model,
+                messages=[
+                    {"role": "system", "content": f"{agent_role_prompt}"},
+                    {"role": "user", "content": content}],
+                temperature=0,
+                llm_provider=cfg.llm_provider,
+                stream=True,
+                websocket=websocket,
+                max_tokens=cfg.smart_token_limit
+            )
     except Exception as e:
         print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")
 
@@ -302,28 +316,31 @@ def extract_headers(markdown_text: str):
     stack = []  # Initialize stack to keep track of nested headers
     for line in lines:
         if line.startswith("<h") and len(line) > 1:  # Check if the line starts with an HTML header tag
-            level = int(line[2])  # Extract header level
-            header_text = line[
-                line.index(">") + 1: line.rindex("<")
-            ]  # Extract header text
+            try:
+                level = int(line[2])  # Extract header level
+                header_text = line[
+                    line.index(">") + 1: line.rindex("<")
+                ]  # Extract header text
 
-            # Pop headers from the stack with higher or equal level
-            while stack and stack[-1]["level"] >= level:
-                stack.pop()
+                # Pop headers from the stack with higher or equal level
+                while stack and stack[-1]["level"] >= level:
+                    stack.pop()
 
-            header = {
-                "level": level,
-                "text": header_text,
-            }  # Create header dictionary
-            if stack:
-                stack[-1].setdefault("children", []).append(
-                    header
-                )  # Append as child if parent exists
-            else:
-                # Append as top-level header if no parent exists
-                headers.append(header)
+                header = {
+                    "level": level,
+                    "text": header_text,
+                }  # Create header dictionary
+                if stack:
+                    stack[-1].setdefault("children", []).append(
+                        header
+                    )  # Append as child if parent exists
+                else:
+                    # Append as top-level header if no parent exists
+                    headers.append(header)
 
-            stack.append(header)  # Push header onto the stack
+                stack.append(header)  # Push header onto the stack
+            except ValueError:
+                continue  # Skip the line if it's not a valid header tag
 
     return headers  # Return the list of headers
 

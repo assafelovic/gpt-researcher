@@ -6,3 +6,6 @@ class ReportType(Enum):
     CustomReport = 'custom_report'
     DetailedReport = 'detailed_report'
     SubtopicReport = 'subtopic_report'
+    ComplianceReport = 'compliance_report'
+    DirectorReport = 'director_report'
+    SalesReport = 'sales_report'

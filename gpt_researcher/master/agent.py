@@ -1,3 +1,5 @@
+# agent.py
+
 import asyncio
 import time
 
@@ -26,6 +28,9 @@ class GPTResearcher:
         subtopics: list = [],
         visited_urls: set = set(),
         verbose: bool = True,
+        custom_sub_queries: list = [],
+        include_domains: list = [],
+        exclude_domains: list = []
     ):
         """
         Initialize the GPT Researcher class.
@@ -63,6 +68,9 @@ class GPTResearcher:
 
         # Stores all the user provided subtopics
         self.subtopics = subtopics
+        self.custom_sub_query = custom_sub_queries
+        self.include_domains = include_domains
+        self.exclude_domains = exclude_domains
 
     async def conduct_research(self):
         """
@@ -111,6 +119,16 @@ class GPTResearcher:
                 main_topic=self.parent_query,
                 existing_headers=existing_headers
             )
+        elif self.report_type == "director_report":
+            report = await generate_report(
+                query=self.query,
+                context=self.context,
+                agent_role_prompt=self.role,
+                report_type=self.report_type,
+                cfg=self.cfg,
+                main_topic=self.parent_query,
+                existing_headers=existing_headers
+            )
         else:
             report = await generate_report(
                 query=self.query,
@@ -143,7 +161,10 @@ class GPTResearcher:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await get_sub_queries(query, self.role, self.cfg, self.parent_query, self.report_type)
+        if self.custom_sub_query:
+            sub_queries = self.custom_sub_query
+        else:
+            sub_queries = await get_sub_queries(query, self.role, self.cfg, self.parent_query, self.report_type)
 
         # If this is not part of a sub researcher, add original query to research for better results
         if self.report_type != "subtopic_report":
@@ -205,7 +226,10 @@ class GPTResearcher:
             Summary
         """
         # Get Urls
-        retriever = self.retriever(sub_query)
+        if self.cfg.retriever == "tavily":
+            retriever = self.retriever(sub_query, include_domains=self.include_domains, exclude_domains=self.exclude_domains)
+        else:
+            retriever = self.retriever(sub_query)
         search_results = retriever.search(
             max_results=self.cfg.max_search_results_per_query)
         new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
@@ -246,13 +270,21 @@ class GPTResearcher:
         if self.verbose:
             await stream_output("logs", f"🤔 Generating subtopics...", self.websocket)
 
-        subtopics = await construct_subtopics(
-            task=self.query,
-            data=self.context,
-            config=self.cfg,
-            # This is a list of user provided subtopics
-            subtopics=self.subtopics,
-        )
+        if self.report_type == 'research_report':
+            subtopics = await construct_subtopics(
+                task=self.query,
+                data=self.context,
+                config=self.cfg,
+                subtopics=self.subtopics,
+            )
+        elif self.report_type == 'compliance_report':
+            subtopics = await construct_directors(
+                task=self.query,
+                data=self.context,
+                config=self.cfg,
+            )
+        else:
+            subtopics = []
 
         if self.verbose:
             await stream_output("logs", f"📋Subtopics: {subtopics}", self.websocket)

@@ -2,7 +2,7 @@
 
 # libraries
 import os
-from tavily import TavilyClient
+from ..tavily_api import TavilyClient
 
 
 class TavilyNews():

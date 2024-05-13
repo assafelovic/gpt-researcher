@@ -1,3 +1,4 @@
+# llm.py
 # libraries
 from __future__ import annotations
 
@@ -11,9 +12,9 @@ from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
 
-from gpt_researcher.master.prompts import auto_agent_instructions, generate_subtopics_prompt
+from gpt_researcher.master.prompts import auto_agent_instructions, generate_subtopics_prompt, generate_directors_prompt, generate_director_sobjects_prompt
 
-from .validators import Subtopics
+from .validators import Subtopics, Directors, DirectorSobject
 
 
 def get_provider(llm_provider):
@@ -145,3 +146,61 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
     except Exception as e:
         print("Exception in parsing subtopics : ", e)
         return subtopics
+    
+async def construct_directors(task: str, data: str, config) -> list:
+    try:
+        parser = PydanticOutputParser(pydantic_object=Directors)
+        prompt = PromptTemplate(
+            template=generate_directors_prompt(),
+            input_variables=["task", "data"],
+            partial_variables={
+                "format_instructions": parser.get_format_instructions()},
+        )
+        print(f"\n🤖 Calling {config.smart_llm_model}...\n")
+        if config.llm_provider == "openai":
+            model = ChatOpenAI(model=config.smart_llm_model)
+        elif config.llm_provider == "azureopenai":
+            from langchain_openai import AzureChatOpenAI
+            model = AzureChatOpenAI(model=config.smart_llm_model)
+        else:
+            return []
+
+        chain = prompt | model | parser
+        output = chain.invoke({
+            "task": task,
+            "data": data,
+        })
+        return output
+    except Exception as e:
+        print("Exception in parsing directors : ", e)
+        return []
+    
+async def construct_director_sobjects(subtopic_report: str, visited_urls: str, director_name: str, context: str, config) -> DirectorSobject:
+    try:
+        parser = PydanticOutputParser(pydantic_object=DirectorSobject)
+        prompt = PromptTemplate(
+            template=generate_director_sobjects_prompt(),
+            input_variables=["subtopic_report", "visited_urls" "director_name", "context"],
+            partial_variables={
+                "format_instructions": parser.get_format_instructions()},
+        )
+        print(f"\n🤖 Calling {config.smart_llm_model}...\n")
+        if config.llm_provider == "openai":
+            model = ChatOpenAI(model=config.smart_llm_model)
+        elif config.llm_provider == "azureopenai":
+            from langchain_openai import AzureChatOpenAI
+            model = AzureChatOpenAI(model=config.smart_llm_model)
+        else:
+            return None
+
+        chain = prompt | model | parser
+        output = chain.invoke({
+            "subtopic_report": subtopic_report,
+            "visited_urls": visited_urls,
+            "director_name": director_name,
+            "context": context,
+        })
+        return output
+    except Exception as e:
+        print("Exception in parsing director sobjects : ", e)
+        return None
