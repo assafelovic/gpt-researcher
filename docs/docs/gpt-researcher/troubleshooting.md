@@ -8,6 +8,24 @@ This relates to not having permission to use gpt-4 yet. Based on OpenAI, it will
 
 The issue relates to the library WeasyPrint (which is used to generate PDFs from the research report). Please follow this guide to resolve it: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
 
+Or you can install this package manually
+
+In case of MacOS you can install this lib using
+`brew install glib gobject-introspection`
+
+In case of Linux you can install this lib using
+`sudo apt install libglib2.0-dev`
+
+**cannot load library 'pango'**
+
+In case of MacOS you can install this lib using
+`brew install pango`
+
+In case of Linux you can install this lib using
+`sudo apt install libpango-1.0-0`
+
+**cannot load library 'gobject-2.0-0'**
+
 **Error processing the url**
 
 We're using [Selenium](https://www.selenium.dev) for site scraping. Some sites fail to be scraped. In these cases, restart and try running again.
