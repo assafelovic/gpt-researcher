@@ -73,7 +73,7 @@ To change the research query and customize the report, edit the `task.json` file
 ```json
 {
   "query": "Is AI in a hype cycle?",
-  "model": "gpt-4-turbo",
+  "model": "gpt-4o",
   "max_sections": 3, 
   "publish_formats": { 
     "markdown": true,
