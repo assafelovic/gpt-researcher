@@ -31,8 +31,6 @@ def get_retriever(retriever):
             from gpt_researcher.retrievers import SearxSearch
             retriever = SearxSearch
         case "serpapi":
-            raise NotImplementedError(
-                "SerpApiSearch is not fully implemented yet.")
             from gpt_researcher.retrievers import SerpApiSearch
             retriever = SerpApiSearch
         case "googleSerp":
