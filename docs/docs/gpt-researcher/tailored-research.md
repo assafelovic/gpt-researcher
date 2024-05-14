@@ -48,7 +48,7 @@ if __name__ == "__main__":
 ```
 
 ### Research on Local Documents 📄
-You can instruct the GPT Researcher to research on local documents by providing the path to those documents. 
+You can instruct the GPT Researcher to research on local documents by providing the path to those documents. Currently supported file formats are: PDF, plain text, CSV, Excel, Markdown, PowerPoint, and Word documents.
 
 *Step 1*: Add the env variable `DOC_PATH` pointing to the folder where your documents are located.
 
