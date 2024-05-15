@@ -1,8 +1,10 @@
 # 🔎 GPT Researcher
-[![Official Website](https://img.shields.io/badge/Official%20Website-tavily.com-blue?style=flat&logo=world&logoColor=white)](https://tavily.com)
-[![Discord Follow](https://dcbadge.vercel.app/api/server/2pFkc83fRq?style=flat)](https://discord.com/invite/2pFkc83fRq)
+[![Official Website](https://img.shields.io/badge/Official%20Website-gptr.dev-blue?style=for-the-badge&logo=world&logoColor=white)](https://gptr.dev)
+[![Discord Follow](https://dcbadge.vercel.app/api/server/MN9M86kb?style=for-the-badge)](https://discord.gg/MN9M86kb)
+
 [![GitHub Repo stars](https://img.shields.io/github/stars/assafelovic/gpt-researcher?style=social)](https://github.com/assafelovic/gpt-researcher)
-[![Twitter Follow](https://img.shields.io/twitter/follow/tavilyai?style=social)](https://twitter.com/tavilyai)
+[![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
+[![PyPI version](https://badge.fury.io/py/gpt-researcher.svg)](https://badge.fury.io/py/gpt-researcher)
 
 -  [English](README.md)
 -  [中文](README-zh_CN.md)
@@ -23,7 +25,7 @@
 
 ## 架构
 主要思想是运行“**计划者**”和“**执行**”代理，而**计划者**生成问题进行研究，“**执行**”代理根据每个生成的研究问题寻找最相关的信息。最后，“**计划者**”过滤和聚合所有相关信息并创建研究报告。<br /> <br /> 
-代理同时利用 gpt3.5-turbo 和 gpt-4-turbo（128K 上下文）来完成一项研究任务。我们仅在必要时使用这两种方法对成本进行优化。**研究任务平均耗时约 3 分钟，成本约为 ~0.1 美元**。
+代理同时利用 gpt3.5-turbo 和 gpt-4o（128K 上下文）来完成一项研究任务。我们仅在必要时使用这两种方法对成本进行优化。**研究任务平均耗时约 3 分钟，成本约为 ~0.1 美元**。
 
 <div align="center">
 <img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
