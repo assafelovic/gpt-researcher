@@ -22,7 +22,7 @@ class ChiefEditorAgent:
     def init_research_team(self):
         # Initialize agents
         writer_agent = WriterAgent()
-        editor_agent = EditorAgent(self.task)
+        editor_agent = EditorAgent()
         research_agent = ResearchAgent()
         publisher_agent = PublisherAgent(self.output_dir)
 
