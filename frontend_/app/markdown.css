@@ -1,0 +1,23 @@
+/* Custom CSS for chat message markdown */
+.custom-markdown ul {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+.custom-markdown ol {
+  list-style-type: decimal;
+  margin-left: 20px;
+}
+
+.custom-markdown li {
+  margin-bottom: 5px;
+}
+
+.custom-markdown ol ol {
+  list-style: lower-alpha;
+}
+
+.custom-markdown ul ul,
+.custom-markdown ol ol {
+  margin-left: 20px;
+}
