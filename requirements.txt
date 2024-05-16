@@ -29,3 +29,5 @@ htmldocx
 langchain-google-genai
 lxml[html_clean]
 websockets
+pytest
+pytest-asyncio

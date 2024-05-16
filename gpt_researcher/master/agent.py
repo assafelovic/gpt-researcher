@@ -95,6 +95,7 @@ class GPTResearcher:
         Returns:
             str: The report
         """
+        report = ""
         if self.verbose:
             await stream_output("logs", f"✍️ Writing summary for research task: {self.query}...", self.websocket)
 
