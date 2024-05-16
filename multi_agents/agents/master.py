@@ -15,14 +15,14 @@ from . import \
 class ChiefEditorAgent:
     def __init__(self, task: dict):
         self.task_id = int(time.time()) # Currently time based, but can be any unique identifier
-        self.output_dir = f"./outputs/run_{self.task_id}_{task.get('query')[0:40]}"
+        self.output_dir = f"./outputs/run_{self.task_id}_{task.get('query')[0:60]}"
         self.task = task
         os.makedirs(self.output_dir, exist_ok=True)
 
     def init_research_team(self):
         # Initialize agents
         writer_agent = WriterAgent()
-        editor_agent = EditorAgent(self.task)
+        editor_agent = EditorAgent()
         research_agent = ResearchAgent()
         publisher_agent = PublisherAgent(self.output_dir)
 

@@ -13,8 +13,8 @@ from . import \
 
 
 class EditorAgent:
-    def __init__(self, task: dict):
-        self.task = task
+    def __init__(self):
+        pass
 
     def plan_research(self, research_state: dict):
         """
@@ -26,7 +26,8 @@ class EditorAgent:
         """
 
         initial_research = research_state.get("initial_research")
-        max_sections = self.task.get("max_sections")
+        task = research_state.get("task")
+        max_sections = task.get("max_sections")
         prompt = [{
             "role": "system",
             "content": "You are a research director. Your goal is to oversee the research project"
@@ -46,7 +47,7 @@ class EditorAgent:
         }]
 
         print_agent_output(f"Planning an outline layout based on initial research...", agent="EDITOR")
-        response = call_model(prompt=prompt, model=self.task.get("model"), response_format="json")
+        response = call_model(prompt=prompt, model=task.get("model"), response_format="json")
         plan = json.loads(response)
 
         return {
