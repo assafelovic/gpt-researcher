@@ -1,10 +1,10 @@
 # Troubleshooting
 We're constantly working to provide a more stable version. If you're running into any issues, please first check out the resolved issues or ask us via our [Discord community](https://discord.gg/2pFkc83fRq).
 
-**model: gpt-4 does not exist**
+### model: gpt-4 does not exist
 This relates to not having permission to use gpt-4 yet. Based on OpenAI, it will be [widely available for all by end of July](https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4).
 
-**cannot load library 'gobject-2.0-0'**
+### cannot load library 'gobject-2.0-0'
 
 The issue relates to the library WeasyPrint (which is used to generate PDFs from the research report). Please follow this guide to resolve it: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
 
@@ -24,7 +24,17 @@ In case of MacOS you can install this lib using
 In case of Linux you can install this lib using
 `sudo apt install libpango-1.0-0`
 
-**cannot load library 'gobject-2.0-0'**
+**Workaround for Mac M chip users**
+
+If the above solutions don't work, you can try the following:
+- Install a fresh version of Python 3.11 pointed to brew:
+`brew install python@3.11`
+- Install the required libraries:
+`brew install pango glib gobject-introspection`
+- Install the required GPT Researcher Python packages:
+`pip3.11 install -r requirements.txt`
+- Run the app with Python 3.11 (using brew):
+`python3.11 -m uvicorn main:app --reload`
 
 **Error processing the url**
 
