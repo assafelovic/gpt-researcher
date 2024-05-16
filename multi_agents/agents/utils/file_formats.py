@@ -2,7 +2,6 @@ import aiofiles
 import urllib
 import uuid
 import mistune
-from md2pdf.core import md2pdf
 from docx import Document
 from htmldocx import HtmlToDocx
 
