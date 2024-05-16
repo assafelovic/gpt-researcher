@@ -28,7 +28,7 @@ async def write_text_to_md(text: str, filename: str = "") -> str:
     Returns:
         str: The file path of the generated Markdown file.
     """
-    file_path = f"outputs/{filename}.md"
+    file_path = f"outputs/{filename[:60]}.md"
     await write_to_file(file_path, text)
     return file_path
 
@@ -41,7 +41,7 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
     Returns:
         str: The encoded file path of the generated PDF.
     """
-    file_path = f"outputs/{filename}.pdf"
+    file_path = f"outputs/{filename[:60]}.pdf"
 
     try:
         md2pdf(file_path,
@@ -66,7 +66,7 @@ async def write_md_to_word(text: str, filename: str = "") -> str:
     Returns:
         str: The encoded file path of the generated DOCX.
     """
-    file_path = f"outputs/{filename}.docx"
+    file_path = f"outputs/{filename[:60]}.docx"
 
     try:
         # Convert report markdown to HTML
