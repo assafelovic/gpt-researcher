@@ -1,10 +1,16 @@
 import aiofiles
 import urllib
 import uuid
-from md2pdf.core import md2pdf
+try: 
+    from md2pdf.core import md2pdf
+except Exception as e:
+    print(f"Error in importing md2pdf: {e}")
 import mistune
-from docx import Document
-from htmldocx import HtmlToDocx
+try :
+    from docx import Document
+    from htmldocx import HtmlToDocx
+except Exception as e:
+    print(f"Error in importing docx: {e}")
 
 async def write_to_file(filename: str, text: str) -> None:
     """Asynchronously write text to a file in UTF-8 encoding.
