@@ -10,7 +10,7 @@ class TavilySearch():
     """
     Tavily API Retriever
     """
-    def __init__(self, query):
+    def __init__(self, query, topic="general"):
         """
         Initializes the TavilySearch object
         Args:
@@ -19,6 +19,7 @@ class TavilySearch():
         self.query = query
         self.api_key = self.get_api_key()
         self.client = TavilyClient(self.api_key)
+        self.topic = topic
 
     def get_api_key(self):
         """
@@ -42,7 +43,7 @@ class TavilySearch():
         """
         try:
             # Search the query
-            results = self.client.search(self.query, search_depth="basic", max_results=max_results)
+            results = self.client.search(self.query, search_depth="basic", max_results=max_results, topic=self.topic)
             sources = results.get("results", [])
             if not sources:
                 raise Exception("No results found with Tavily API search.")
