@@ -30,3 +30,5 @@ langchain-google-genai
 lxml[html_clean]
 websockets
 unstructured
+pytest
+pytest-asyncio
