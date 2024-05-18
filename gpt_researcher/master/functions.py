@@ -42,6 +42,9 @@ def get_retriever(retriever):
         case "BingSearch":
             from gpt_researcher.retrievers import BingSearch
             retriever = BingSearch
+        case "ArxivSearch":
+            from gpt_researcher.retrievers import ArxivSearch
+            retriever = ArxivSearch
 
         case _:
             raise Exception("Retriever not found.")
