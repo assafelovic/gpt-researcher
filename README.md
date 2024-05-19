@@ -1,6 +1,6 @@
-<h1 style="display: inline-flex; align-items: center;">
-  <img src="https://cowriter-images.s3.amazonaws.com/gptr-logo.png" alt="Image description" style="height: 50px; margin-right: 10px;">
-  GPT Researcher
+<h1>
+  <img src="https://cowriter-images.s3.amazonaws.com/gptr-logo.png" alt="GPT Researcher Logo" style="height: 50px; vertical-align: middle;">
+  <span style="line-height: 50px; vertical-align: middle;">GPT Researcher</span>
 </h1>
 
 [![Official Website](https://img.shields.io/badge/Official%20Website-gptr.dev-blue?style=for-the-badge&logo=world&logoColor=white)](https://gptr.dev)
