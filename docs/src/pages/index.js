@@ -29,8 +29,8 @@ export default function Home() {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Tavily Documentation`}
-      description="Tavily is the leading search engine optimized for AI agents - powered by LLMs.">
+      title={`GPT Researcher | Documentation`}
+      description="GPT Researcher is the leading autonomous agent designed for comprehensive online research on a variety of tasks.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
