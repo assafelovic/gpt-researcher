@@ -16,10 +16,10 @@ module.exports = {
   projectName: 'gpt-researcher',
   themeConfig: {
     navbar: {
-      //title: 'GPT Researcher',
+      title: 'GPT Researcher',
       logo: {
         alt: 'GPT Researcher',
-        src: 'img/gptr-logo.png',
+        src: 'img/favicon.ico',
       },
       items: [
         {

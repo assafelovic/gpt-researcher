@@ -6,7 +6,7 @@ import styles from './HomepageFeatures.module.css';
 const FeatureList = [
   {
     title: 'GPT Researcher',
-    Svg: require('../../static/img/gptresearcher.png').default,
+    Svg: require('../../static/img/favicon.ico').default,
     docLink: './docs/gpt-researcher/getting-started',
     description: (
       <>
@@ -14,7 +14,7 @@ const FeatureList = [
       </>
     ),
   },
-  {
+  /*{
     title: 'Tavily Search API',
     Svg: require('../../static/img/tavily.png').default,
     docLink: './docs/tavily-api/introduction',
@@ -23,7 +23,7 @@ const FeatureList = [
         Tavily Search API is a search engine optimized for LLMs, optimized for a factual, efficient, and persistent search experience
       </>
     ),
-  },
+  },*/
   {
     title: 'Examples and Demos',
     Svg: require('../../static/img/examples.png').default,
@@ -56,8 +56,8 @@ function Feature({Svg, title, description, docLink}) {
 export default function HomepageFeatures() {
   return (
     <section className={styles.features}>
-      <div className="container">
-        <div className="row">
+      <div className="container" style={{marginTop: 25}}>
+        <div className="row" style={{justifyContent: 'center'}}>
           {FeatureList.map((props, idx) => (
             <Feature key={idx} {...props} />
           ))}
