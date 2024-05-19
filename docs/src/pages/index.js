@@ -9,14 +9,14 @@ import HomepageFeatures from '../components/HomepageFeatures';
 function HomepageHeader() {
   const {siteConfig} = useDocusaurusContext();
   return (
-    <header className={clsx('hero hero--primary', styles.heroBanner)}>
+    <header className={clsx('hero hero--primary', styles.heroBanner)} style={{backgroundImage: "linear-gradient(to right, #f472b6, #a78bfa, #22d3ee)"}}>
       <div className="container">
         <h1 className="hero__title">{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/welcome">
+            to="/docs/gpt-researcher/getting-started">
             Getting Started - 5 min ⏱️
           </Link>
         </div>
@@ -29,8 +29,8 @@ export default function Home() {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Tavily Documentation`}
-      description="Tavily is the leading search engine optimized for AI agents - powered by LLMs.">
+      title={`Documentation`}
+      description="GPT Researcher is the leading autonomous agent designed for comprehensive online research on a variety of tasks.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

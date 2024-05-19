@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from agents import MasterAgent
+from agents import ChiefEditorAgent
 import asyncio
 import json
 import os
@@ -10,13 +10,23 @@ if os.environ.get("LANGCHAIN_API_KEY"):
 load_dotenv()
 
 
-async def main():
+def open_task():
     with open('task.json', 'r') as f:
         task = json.load(f)
 
-    master_agent = MasterAgent(task)
-    research_report = await master_agent.run()
-    print(research_report)
+    if not task:
+        raise Exception("No task provided. Please include a task.json file in the root directory.")
+
+    return task
+
+
+async def main():
+    task = open_task()
+
+    chief_editor = ChiefEditorAgent(task)
+    research_report = await chief_editor.run_research_task()
+
+    return research_report
 
 if __name__ == "__main__":
     asyncio.run(main())

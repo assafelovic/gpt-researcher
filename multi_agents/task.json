@@ -1,5 +1,5 @@
 {
-  "query": "How is Groq by x.ai different than ChatGPT?",
+  "query": "Is AI in a hype cycle?",
   "max_sections": 3,
   "publish_formats": {
     "markdown": true,
@@ -7,10 +7,11 @@
     "docx": true
   },
   "follow_guidelines": false,
-  "model": "gpt-4-turbo",
+  "model": "gpt-4o",
   "guidelines": [
     "The report MUST be written in APA format",
     "Each sub section MUST include supporting sources using hyperlinks. If none exist, erase the sub section or rewrite it to be a part of the previous section",
     "The report MUST be written in spanish"
-  ]
+  ],
+  "verbose": true
 }

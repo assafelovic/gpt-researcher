@@ -48,6 +48,11 @@ More specifically (as seen in the architecture diagram) the process is as follow
     ```bash
     pip install -r requirements.txt
     ```
+3. Update env variables
+   ```bash
+   export OPENAI_API_KEY={Your OpenAI API Key here}
+   export TAVILY_API_KEY={Your Tavily API Key here}
+   ```
 2. Run the application:
     ```bash
     python main.py
@@ -62,12 +67,13 @@ To change the research query and customize the report, edit the `task.json` file
 - `publish_formats` - The formats to publish the report in. The reports will be written in the `output` directory.
 - `follow_guidelines` - If true, the research report will follow the guidelines below. It will take longer to complete. If false, the report will be generated faster but may not follow the guidelines.
 - `guidelines` - A list of guidelines that the report must follow.
+- `verbose` - If true, the application will print detailed logs to the console.
 
 #### For example:
 ```json
 {
   "query": "Is AI in a hype cycle?",
-  "model": "gpt-4-turbo",
+  "model": "gpt-4o",
   "max_sections": 3, 
   "publish_formats": { 
     "markdown": true,
@@ -79,6 +85,7 @@ To change the research query and customize the report, edit the `task.json` file
     "The report MUST fully answer the original question",
     "The report MUST be written in apa format",
     "The report MUST be written in english"
-  ]
+  ],
+  "verbose": true
 }
 ```

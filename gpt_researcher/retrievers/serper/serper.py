@@ -49,9 +49,9 @@ class SerperSearch():
         'X-API-KEY': self.api_key,
         'Content-Type': 'application/json'
         }
-        data = json.dumps({"q": self.query})
+        data = json.dumps({"q": self.query, "num": max_results})
 
-        resp = requests.request("POST", url, headers=headers, data=data)
+        resp = requests.request("POST", url, timeout=10, headers=headers, data=data)
 
         # Preprocess the results
         if resp is None:
