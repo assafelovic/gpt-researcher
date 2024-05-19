@@ -1,8 +1,4 @@
-<div style="display: flex; align-items: center;">
-  <img src="https://cowriter-images.s3.amazonaws.com/gptr-logo.png" alt="Image description" style="height: 50px; margin-right: 10px; margin-bottom: 5px; align-self: flex-end;">
-  <h1 style="display: inline; margin: 0;">GPT Researcher</h1>
-</div>
-
+# 🔎 GPT Researcher
 [![Official Website](https://img.shields.io/badge/Official%20Website-gptr.dev-blue?style=for-the-badge&logo=world&logoColor=white)](https://gptr.dev)
 [![Discord Follow](https://dcbadge.vercel.app/api/server/MN9M86kb?style=for-the-badge)](https://discord.gg/MN9M86kb)
 
