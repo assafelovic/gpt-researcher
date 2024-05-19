@@ -4,9 +4,113 @@
         <title>GPT Researcher Blog</title>
         <link>https://docs.gptr.dev/blog</link>
         <description>GPT Researcher Blog</description>
-        <lastBuildDate>Sun, 12 Nov 2023 00:00:00 GMT</lastBuildDate>
+        <lastBuildDate>Sun, 19 May 2024 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
+        <item>
+            <title><![CDATA[How to Build the Ultimate Research Multi-Agent Assistant]]></title>
+            <link>https://docs.gptr.dev/blog/gptr-langgraph</link>
+            <guid>gptr-langgraph</guid>
+            <pubDate>Sun, 19 May 2024 00:00:00 GMT</pubDate>
+            <description><![CDATA[Header]]></description>
+            <content:encoded><![CDATA[<p><img src="./blog-langgraph.jpeg" alt="Header"/></p><h1>Introducing the GPT Researcher Multi-Agent Assistant</h1><h3>Learn how to build an autonomous research assistant using LangGraph with a team of specialized AI agents</h3><p>It has only been a year since the initial release of GPT Researcher, but methods for building, testing, and deploying AI agents have already evolved significantly. That’s just the nature and speed of the current AI progress. What started as simple zero-shot or few-shot prompting, has quickly evolved to agent function calling, RAG and now finally agentic workflows (aka “flow engineering”).</p><p>Andrew Ng has <a href="https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/">recently stated</a>, “I think AI agent workflows will drive massive AI progress this year — perhaps even more than the next generation of foundation models. This is an important trend, and I urge everyone who works in AI to pay attention to it.”</p><p>In this article you will learn why multi-agent workflows are the current best standard and how to build the optimal autonomous research multi-agent assistant using LangGraph.</p><p>To skip this tutorial, feel free to check out the Github repo of <a href="https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents">GPT Researcher x LangGraph</a>.</p><h2>Introducing LangGraph</h2><p>LangGraph is an extension of LangChain aimed at creating agent and multi-agent flows. It adds in the ability to create cyclical flows and comes with memory built in — both important attributes for creating agents.</p><p>LangGraph provides developers with a high degree of controllability and is important for creating custom agents and flows. Nearly all agents in production are customized towards the specific use case they are trying solve. LangGraph gives you the flexibility to create arbitrary customized agents, while providing an intuitive developer experience for doing so.</p><p>Enough with the smalltalk, let’s start building!</p><h2>Building the Ultimate Autonomous Research Agent</h2><p>By leveraging LangGraph, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. Having every agent focus and specialize only a specific skill, allows for better separation of concerns, customizability, and further development at scale as the project grows.</p><p>Inspired by the recent STORM paper, this example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication. This example will also leverage the leading autonomous research agent GPT Researcher.</p><h3>The Research Agent Team</h3><p>The research team consists of seven LLM agents:</p><ul><li><strong>Chief Editor</strong> — Oversees the research process and manages the team. This is the “master” agent that coordinates the other agents using LangGraph. This agent acts as the main LangGraph interface.</li><li><strong>GPT Researcher</strong> — A specialized autonomous agent that conducts in depth research on a given topic.</li><li><strong>Editor</strong> — Responsible for planning the research outline and structure.</li><li><strong>Reviewer</strong> — Validates the correctness of the research results given a set of criteria.</li><li><strong>Reviser</strong> — Revises the research results based on the feedback from the reviewer.</li><li><strong>Writer</strong> — Responsible for compiling and writing the final report.</li><li><strong>Publisher</strong> — Responsible for publishing the final report in various formats.</li></ul><h3>Architecture</h3><p>As seen below, the automation process is based on the following stages: Planning the research, data collection and analysis, review and revision, writing the report and finally publication:</p><p><img src="./architecture.jpeg" alt="Architecture"/></p><p>More specifically the process is as follows:</p><ul><li><p><strong>Browser (gpt-researcher)</strong> — Browses the internet for initial research based on the given research task. This step is crucial for LLMs to plan the research process based on up to date and relevant information, and not rely solely on pre-trained data for a given task or topic.</p></li><li><p><strong>Editor</strong> — Plans the report outline and structure based on the initial research. The Editor is also responsible for triggering the parallel research tasks based on the planned outline.</p></li><li><p>For each outline topic (in parallel):</p><ul><li><strong>Researcher (gpt-researcher)</strong> — Runs an in depth research on the subtopics and writes a draft. This agent leverages the GPT Researcher Python package under the hood, for optimized, in depth and factual research report.</li><li><strong>Reviewer</strong> — Validates the correctness of the draft given a set of guidelines and provides feedback to the reviser (if any).</li><li><strong>Reviser</strong> — Revises the draft until it is satisfactory based on the reviewer feedback.</li></ul></li><li><p><strong>Writer</strong> — Compiles and writes the final report including an introduction, conclusion and references section from the given research findings.</p></li><li><p><strong>Publisher</strong> — Publishes the final report to multi formats such as PDF, Docx, Markdown, etc.</p></li><li><p>We will not dive into all the code since there’s a lot of it, but focus mostly on the interesting parts I’ve found valuable to share.</p></li></ul><h2>Define the Graph State</h2><p>One of my favorite features with LangGraph is state management. States in LangGraph are facilitated through a structured approach where developers define a GraphState that encapsulates the entire state of the application. Each node in the graph can modify this state, allowing for dynamic responses based on the evolving context of the interaction.</p><p>Like in every start of a technical design, considering the data schema throughout the application is key. In this case we’ll define a ResearchState like so:</p><pre><code class="language-python">class ResearchState(TypedDict):
+    task: dict
+    initial_research: str
+    sections: List[str]
+    research_data: List[dict]
+    # Report layout
+    title: str
+    headers: dict
+    date: str
+    table_of_contents: str
+    introduction: str
+    conclusion: str
+    sources: List[str]
+    report: str
+</code></pre><p>As seen above, the state is divided into two main areas: the research task and the report layout content. As data circulates through the graph agents, each agent will, in turn, generate new data based on the existing state and update it for subsequent processing further down the graph with other agents.</p><p>We can then initialize the graph with the following:</p><pre><code class="language-python">from langgraph.graph import StateGraph
+workflow = StateGraph(ResearchState)
+</code></pre><p>Initializing the graph with LangGraph
+As stated above, one of the great things about multi-agent development is building each agent to have specialized and scoped skills. Let’s take an example of the Researcher agent using GPT Researcher python package:</p><pre><code class="language-python">from gpt_researcher import GPTResearcher
+
+class ResearchAgent:
+    def __init__(self):
+        pass
+  
+    async def research(self, query: str):
+        # Initialize the researcher
+        researcher = GPTResearcher(parent_query=parent_query, query=query, report_type=research_report, config_path=None)
+        # Conduct research on the given query
+        await researcher.conduct_research()
+        # Write the report
+        report = await researcher.write_report()
+  
+        return report
+</code></pre><p>As you can see above, we’ve created an instance of the Research agent. Now let’s assume we’ve done the same for each of the team’s agent. After creating all of the agents, we’d initialize the graph with LangGraph:</p><pre><code class="language-python">def init_research_team(self):
+    # Initialize agents
+    editor_agent = EditorAgent(self.task)
+    research_agent = ResearchAgent()
+    writer_agent = WriterAgent()
+    publisher_agent = PublisherAgent(self.output_dir)
+    
+    # Define a Langchain StateGraph with the ResearchState
+    workflow = StateGraph(ResearchState)
+    
+    # Add nodes for each agent
+    workflow.add_node(&quot;browser&quot;, research_agent.run_initial_research)
+    workflow.add_node(&quot;planner&quot;, editor_agent.plan_research)
+    workflow.add_node(&quot;researcher&quot;, editor_agent.run_parallel_research)
+    workflow.add_node(&quot;writer&quot;, writer_agent.run)
+    workflow.add_node(&quot;publisher&quot;, publisher_agent.run)
+    
+    workflow.add_edge(&#x27;browser&#x27;, &#x27;planner&#x27;)
+    workflow.add_edge(&#x27;planner&#x27;, &#x27;researcher&#x27;)
+    workflow.add_edge(&#x27;researcher&#x27;, &#x27;writer&#x27;)
+    workflow.add_edge(&#x27;writer&#x27;, &#x27;publisher&#x27;)
+    
+    # set up start and end nodes
+    workflow.set_entry_point(&quot;browser&quot;)
+    workflow.add_edge(&#x27;publisher&#x27;, END)
+    
+    return workflow
+</code></pre><p>As seen above, creating the LangGraph graph is very straight forward and consists of three main functions: add_node, add_edge and set_entry_point. With these main functions you can first add the nodes to the graph, connect the edges and finally set the starting point.</p><p>Focus check: If you’ve been following the code and architecture properly, you’ll notice that the Reviewer and Reviser agents are missing in the initialization above. Let’s dive into it!</p><h2>A Graph within a Graph to support stateful Parallelization</h2><p>This was the most exciting part of my experience working with LangGraph! One exciting feature of this autonomous assistant is having a parallel run for each research task, that would be reviewed and revised based on a set of predefined guidelines.</p><p>Knowing how to leverage parallel work within a process is key for optimizing speed. But how would you trigger parallel agent work if all agents report to the same state? This can cause race conditions and inconsistencies in the final data report. To solve this, you can create a sub graph, that would be triggered from the main LangGraph instance. This sub graph would hold its own state for each parallel run, and that would solve the issues that were raised.</p><p>As we’ve done before, let’s define the LangGraph state and its agents. Since this sub graph basically reviews and revises a research draft, we’ll define the state with draft information:</p><pre><code class="language-python">class DraftState(TypedDict):
+    task: dict
+    topic: str
+    draft: dict
+    review: str
+    revision_notes: str
+</code></pre><p>As seen in the DraftState, we mostly care about the topic discussed, and the reviewer and revision notes as they communicate between each other to finalize the subtopic research report. To create the circular condition we’ll take advantage of the last important piece of LangGraph which is conditional edges:</p><pre><code class="language-python">async def run_parallel_research(self, research_state: dict):
+    workflow = StateGraph(DraftState)
+    
+    workflow.add_node(&quot;researcher&quot;, research_agent.run_depth_research)
+    workflow.add_node(&quot;reviewer&quot;, reviewer_agent.run)
+    workflow.add_node(&quot;reviser&quot;, reviser_agent.run)
+    
+    # set up edges researcher-&gt;reviewer-&gt;reviser-&gt;reviewer...
+    workflow.set_entry_point(&quot;researcher&quot;)
+    workflow.add_edge(&#x27;researcher&#x27;, &#x27;reviewer&#x27;)
+    workflow.add_edge(&#x27;reviser&#x27;, &#x27;reviewer&#x27;)
+    workflow.add_conditional_edges(&#x27;reviewer&#x27;,
+                                   (lambda draft: &quot;accept&quot; if draft[&#x27;review&#x27;] is None else &quot;revise&quot;),
+                                   {&quot;accept&quot;: END, &quot;revise&quot;: &quot;reviser&quot;})
+</code></pre><p>By defining the conditional edges, the graph would direct to reviser if there exists review notes by the reviewer, or the cycle would end with the final draft. If you go back to the main graph we’ve built, you’ll see that this parallel work is under a node named “researcher” called by ChiefEditor agent.</p><p>Running the Research Assistant
+After finalizing the agents, states and graphs, it’s time to run our research assistant! To make it easier to customize, the assistant runs with a given task.json file:</p><pre><code class="language-json">{
+  &quot;query&quot;: &quot;Is AI in a hype cycle?&quot;,
+  &quot;max_sections&quot;: 3,
+  &quot;publish_formats&quot;: {
+    &quot;markdown&quot;: true,
+    &quot;pdf&quot;: true,
+    &quot;docx&quot;: true
+  },
+  &quot;follow_guidelines&quot;: false,
+  &quot;model&quot;: &quot;gpt-4-turbo&quot;,
+  &quot;guidelines&quot;: [
+    &quot;The report MUST be written in APA format&quot;,
+    &quot;Each sub section MUST include supporting sources using hyperlinks. If none exist, erase the sub section or rewrite it to be a part of the previous section&quot;,
+    &quot;The report MUST be written in spanish&quot;
+  ]
+}
+</code></pre><p>The task object is pretty self explanatory, however please notice that follow_guidelines if false would cause the graph to ignore the revision step and defined guidelines. Also, the max_sections field defines how many subheaders to research for. Having less will generate a shorter report.</p><p>Running the assistant will result in a final research report in formats such as Markdown, PDF and Docx.</p><p>To download and run the example check out the GPT Researcher x LangGraph <a href="https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents">open source page</a>.</p><h2>What’s Next?</h2><p>Going forward, there are super exciting things to think about. Human in the loop is key for optimized AI experiences. Having a human help the assistant revise and focus on just the right research plan, topics and outline, would enhance the overall quality and experience. Also generally, aiming for relying on human intervention throughout the AI flow ensures correctness, sense of control and deterministic results. Happy to see that LangGraph already supports this out of the box as seen here.</p><p>In addition, having support for research about both web and local data would be key for many types of business and personal use cases.</p><p>Lastly, more efforts can be done to improve the quality of retrieved sources and making sure the final report is built in the optimal storyline.</p><p>A step forward in LangGraph and multi-agent collaboration in a whole would be where assistants can plan and generate graphs dynamically based on given tasks. This vision would allow assistants to choose only a subset of agents for a given task and plan their strategy based on the graph fundamentals as presented in this article and open a whole new world of possibilities. Given the pace of innovation in the AI space, it won’t be long before a new disruptive version of GPT Researcher is launched. Looking forward to what the future brings!</p><p>To keep track of this project’s ongoing progress and updates please join our Discord community. And as always, if you have any feedback or further questions, please comment below!</p>]]></content:encoded>
+        </item>
         <item>
             <title><![CDATA[How to build an OpenAI Assistant with Internet access]]></title>
             <link>https://docs.gptr.dev/blog/building-openai-assistant</link>
