@@ -1,6 +1,5 @@
-
-<h1 style="display: flex; align-items: center;">
-  <img src="https://cowriter-images.s3.amazonaws.com/gptr-logo.png" alt="GPT Researcher Logo" style="height: 50px;">
+<h1 style="display: inline-flex; align-items: center;">
+  <img src="https://cowriter-images.s3.amazonaws.com/gptr-logo.png" alt="Image description" style="height: 50px; margin-right: 10px;">
   GPT Researcher
 </h1>
 
