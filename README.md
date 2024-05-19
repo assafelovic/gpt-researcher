@@ -46,7 +46,7 @@ More specifically:
 * Finally, filter and aggregate all summarized sources and generate a final research report.
 
 ## Tutorials
- - [How it Works](https://docs.tavily.com/blog/building-gpt-researcher)
+ - [How it Works](https://docs.gptr.dev/blog/building-gpt-researcher)
  - [How to Install](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
  - [Live Demo](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
@@ -61,7 +61,7 @@ More specifically:
 
 ## 📖 Documentation
 
-Please see [here](https://docs.tavily.com/docs/gpt-researcher/getting-started) for full documentation on:
+Please see [here](https://docs.gptr.dev/docs/gpt-researcher/getting-started) for full documentation on:
 
 - Getting started (installation, setting up the environment, simple examples)
 - Customization and configuration
@@ -111,7 +111,7 @@ uvicorn main:app --reload
 
 <br />
 
-**To learn how to get started with [Docker](https://docs.tavily.com/docs/gpt-researcher/getting-started#try-it-with-docker), [Poetry](https://docs.tavily.com/docs/gpt-researcher/getting-started#poetry) or a [virtual environment](https://docs.tavily.com/docs/gpt-researcher/getting-started#virtual-environment) check out the [documentation](https://docs.tavily.com/docs/gpt-researcher/getting-started) page.**
+**To learn how to get started with [Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker), [Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started#poetry) or a [virtual environment](https://docs.gptr.dev/docs/gpt-researcher/getting-started#virtual-environment) check out the [documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) page.**
 
 ### Run as PIP package
 ```bash
@@ -129,7 +129,7 @@ research_result = await researcher.conduct_research()
 report = await researcher.write_report()
 ```
 
-**For more examples and configurations, please refer to the [PIP documentation](https://docs.tavily.com/docs/gpt-researcher/pip-package) page.**
+**For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/pip-package) page.**
 
 ## 👪 Multi-Agent Assistant
 As AI evolves from prompt engineering and RAG to multi-agent systems, we're excited to introduce our new multi-agent assistant built with [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/).
@@ -138,7 +138,7 @@ By using LangGraph, the research process can be significantly improved in depth 
 
 An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 
-Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our [documentation](https://docs.tavily.com/docs/gpt-researcher/agent_frameworks) for more information.
+Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our [documentation](https://docs.gptr.dev/docs/gpt-researcher/agent_frameworks) for more information.
 
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md) if you're interested.
