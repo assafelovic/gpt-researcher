@@ -6,7 +6,7 @@ import styles from './HomepageFeatures.module.css';
 const FeatureList = [
   {
     title: 'GPT Researcher',
-    Svg: require('../../static/img/favicon.ico').default,
+    Svg: require('../../static/img/gptr-logo.png').default,
     docLink: './docs/gpt-researcher/getting-started',
     description: (
       <>
@@ -24,6 +24,16 @@ const FeatureList = [
       </>
     ),
   },*/
+  {
+    title: 'Multi-Agent Assistant',
+    Svg: require('../../static/img/multi-agent.png').default,
+    docLink: './docs/gpt-researcher/langgraph',
+    description: (
+      <>
+        Learn how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
+      </>
+    ),
+  },
   {
     title: 'Examples and Demos',
     Svg: require('../../static/img/examples.png').default,
@@ -56,7 +66,7 @@ function Feature({Svg, title, description, docLink}) {
 export default function HomepageFeatures() {
   return (
     <section className={styles.features}>
-      <div className="container" style={{marginTop: 25}}>
+      <div className="container" style={{marginTop: 40}}>
         <div className="row" style={{justifyContent: 'center'}}>
           {FeatureList.map((props, idx) => (
             <Feature key={idx} {...props} />

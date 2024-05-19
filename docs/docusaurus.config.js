@@ -19,7 +19,7 @@ module.exports = {
       title: 'GPT Researcher',
       logo: {
         alt: 'GPT Researcher',
-        src: 'img/favicon.ico',
+        src: 'img/gptr-logo.png',
       },
       items: [
         {
