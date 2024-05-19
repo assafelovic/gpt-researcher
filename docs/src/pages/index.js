@@ -29,7 +29,7 @@ export default function Home() {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`GPT Researcher | Documentation`}
+      title={`Documentation`}
       description="GPT Researcher is the leading autonomous agent designed for comprehensive online research on a variety of tasks.">
       <HomepageHeader />
       <main>
