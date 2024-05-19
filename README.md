@@ -1,4 +1,9 @@
-# 🔎 GPT Researcher
+
+<h1> 
+<img src="https://cowriter-images.s3.amazonaws.com/gptr-logo.png" alt="Image description" style="height: 1.2em; vertical-align: middle;">
+GPT Researcher
+</h1>
+
 [![Official Website](https://img.shields.io/badge/Official%20Website-gptr.dev-blue?style=for-the-badge&logo=world&logoColor=white)](https://gptr.dev)
 [![Discord Follow](https://dcbadge.vercel.app/api/server/MN9M86kb?style=for-the-badge)](https://discord.gg/MN9M86kb)
 
