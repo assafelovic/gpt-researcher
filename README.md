@@ -1,6 +1,6 @@
 
 <h1> 
-<img src="https://cowriter-images.s3.amazonaws.com/gptr-logo.png" alt="Image description" style="height: 1.2em; vertical-align: middle;">
+<img src="https://cowriter-images.s3.amazonaws.com/gptr-logo.png" alt="Image description" style="height: 50px; vertical-align: middle;">
 GPT Researcher
 </h1>
 
