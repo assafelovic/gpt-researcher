@@ -200,39 +200,36 @@ def generate_compliance_report_prompt(
 
 def generate_directors_prompt() -> str:
     return """
-    Provided the main topic:
+    Company name:
     
     {task}
     
-    and research data:
+    Research data:
     
     {data}
     
-    - Construct a list of full names of all current active directors mentioned in the research data.
+    - Construct a list of full names of all individuals mentioned in the research data who hold titles such as directors, officers, company owners, partners, executives, or managers related to the company name.
     - There should NOT be any duplicate names.
     
     "IMPORTANT!":
     - Every name MUST be mentioned in the provided research data ONLY!
+    - Do not create any names that are not mentioned, if you can't find any name, leave the list empty.
     
-    {format_instructions}
+
     """
 
 def generate_director_report_prompt(
         director_name, 
         company_name, 
         context, 
-        existing_headers, 
         report_format="apa", 
         total_words=100,
-        max_subsections=1,
     ) -> str:
     return f"""    
     Information to use:  
     {context}
 
     Using the latest information available, generate a detailed report on the director {director_name} of the company {company_name}, capturing additional compliance data points, including:
-
-    You must limit the number of subsections to a maximum of {max_subsections}.
     
     - Full name and any previous names/aliases
     - Date of birth and nationality  
@@ -242,11 +239,6 @@ def generate_director_report_prompt(
     - Adverse media reports or criminal records
     - Politically exposed person (PEP) status or sanctions listings
     - Overall assessment of compliance risk level of this individual
-    
-    Existing Subtopic Reports:
-    {existing_headers}
-    
-    Do not use any of the above headers or related details to avoid duplicates.
     
     You must write the report with markdown syntax.
     Use an unbiased and journalistic tone. 
@@ -259,36 +251,63 @@ def generate_director_report_prompt(
     Assume that the current date is {datetime.now().strftime('%B %d, %Y')}.
     """
 
-def generate_director_sobjects_prompt() -> str:
+def generate_director_sobject_prompt() -> str:
     return """
-    from the given context:
+    Director query:
 
+    {sub_query}
+    
+    Company name:
+    
+    {company}
+    
+    Research context:
+    
     {context}
 
-    from the given urls:
+    Visited urls:
 
     {visited_urls}
     
-    Based on the following subtopic report:
-    
-    {subtopic_report}
-
-    for director:
-    
-    {director_name}
-    
-    Extract the following information for each director mentioned in the report:
+    Extract the following information for the director mentioned in the report:
     - First name
     - Last name
     - Company name
     - Email address (if available)
     - Mobile phone number (if available)
     - Job title
-    - Lead Source URL
+    - Source URL: The primary source URL used in collecting data
     
-    Use the provided source URL as the LeadSource for each director.
+    Leave fields blank if you can't find the info.
+    """
+
+def generate_company_sobject_prompt() -> str:
+    return """
+    from the given context:
     
-    {format_instructions}
+    {context}
+    
+    from the given urls:
+    
+    {visited_urls}
+    
+    for company:
+    
+    {company}
+    
+    Extract the following information for the company:
+    - Full legal company name
+    - Company registration number
+    - Incorporation date
+    - Jurisdiction of incorporation
+    - Registered office address
+    - Regulatory licenses and registrations held, especially related to financial services
+    - Any past regulatory actions, fines or investigations against the company
+    - Adverse media or reports of financial crime, fraud or unethical business practices
+    - Overall assessment of compliance risk level in onboarding this company as a client
+    - source_url = The primary source URL used in collecting data
+
+    Leave fields blank if you can't find the info.
     """
 
 def generate_sales_report_prompt(company_name, context):

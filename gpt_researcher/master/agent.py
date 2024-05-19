@@ -167,7 +167,7 @@ class GPTResearcher:
             sub_queries = await get_sub_queries(query, self.role, self.cfg, self.parent_query, self.report_type)
 
         # If this is not part of a sub researcher, add original query to research for better results
-        if self.report_type != "subtopic_report":
+        if self.report_type not in ["subtopic_report","compliance_report","director_report"]:
             sub_queries.append(query)
 
         if self.verbose:
@@ -192,7 +192,9 @@ class GPTResearcher:
             await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
 
         scraped_sites = await self.scrape_sites_by_query(sub_query)
+        print("process_sub_query => scraped sites: ", scraped_sites)
         content = await self.get_similar_content_by_query(sub_query, scraped_sites)
+        print("process_sub_query => content: ", content)
 
         if content and self.verbose:
             await stream_output("logs", f"📃 {content}", self.websocket)
@@ -268,7 +270,7 @@ class GPTResearcher:
         `construct_subtopics` function.
         """
         if self.verbose:
-            await stream_output("logs", f"🤔 Generating subtopics...", self.websocket)
+            await stream_output("logs", f"🤔 Generating subtopics for {self.report_type}...", self.websocket)
 
         if self.report_type == 'research_report':
             subtopics = await construct_subtopics(

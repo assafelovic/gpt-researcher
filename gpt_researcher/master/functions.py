@@ -69,7 +69,7 @@ async def choose_agent(query, cfg, parent_query=None):
     query = f"{parent_query} - {query}" if parent_query else f"{query}"
     try:
         response = await create_chat_completion(
-            model=cfg.smart_llm_model,
+            model=cfg.fast_llm_model,
             messages=[
                 {"role": "system", "content": f"{auto_agent_instructions()}"},
                 {"role": "user", "content": f"task: {query}"}],
@@ -242,19 +242,19 @@ async def generate_report(
             f"{generate_prompt(query, context, cfg.report_format, cfg.total_words)}")
 
     try:
-        if report_type == "director_report":
+        if report_type in ("director_report", "compliance_report"):
             report = await create_chat_completion(
-                model=cfg.smart_llm_model,
+                model=cfg.fast_llm_model,
                 messages=[
                     {"role": "system", "content": f"{agent_role_prompt}"},
                     {"role": "user", "content": content}],
                 temperature=0,
                 llm_provider=cfg.llm_provider,
-                max_tokens=cfg.smart_token_limit
+                max_tokens=cfg.fast_token_limit
             )
         else:
             report = await create_chat_completion(
-                model=cfg.smart_llm_model,
+                model=cfg.fast_llm_model,
                 messages=[
                     {"role": "system", "content": f"{agent_role_prompt}"},
                     {"role": "user", "content": content}],
@@ -262,7 +262,7 @@ async def generate_report(
                 llm_provider=cfg.llm_provider,
                 stream=True,
                 websocket=websocket,
-                max_tokens=cfg.smart_token_limit
+                max_tokens=cfg.fast_token_limit
             )
     except Exception as e:
         print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")

@@ -5,10 +5,11 @@ import asyncio
 from gpt_researcher.master.agent import GPTResearcher
 from gpt_researcher.master.functions import (add_source_urls, extract_headers,
                                              table_of_contents)
-from gpt_researcher.utils.llm import construct_director_sobjects
+from gpt_researcher.utils.llm import construct_director_sobject, construct_company_sobject, construct_directors
+from gpt_researcher.utils.validators import CompanyReport, Director, Directors, Subtopics
 
 class CustomDetailedReport():
-    def __init__ (self, query: str, source_urls, config_path: str, subtopics=[], include_domains=None, exclude_domains=None, parent_sub_queries=None, child_sub_queries=None):
+    def __init__ (self, query: str, source_urls, config_path: str, subtopics=[], include_domains=None, exclude_domains=None, parent_sub_queries=None, child_sub_queries=None, directors=None):
         self.query = query
         self.source_urls = source_urls
         self.config_path = config_path
@@ -33,32 +34,51 @@ class CustomDetailedReport():
         # This is a global variable to store the entire url list accumulated at any point through searching and scraping
         if self.source_urls:
             self.global_urls = set(self.source_urls)
+        if directors is None:
+            directors = Directors(directors=[])
+        self.directors = directors
         self.director_sobjects = []
+        self.company_sobject = None
 
     async def run(self):
-
         # Conduct initial research using the main assistant
+        
         await self._initial_research()
 
         # Get list of all subtopics
-        if self.subtopics:
-            subtopics = self.subtopics
+        if self.directors:
+            directors = self.directors
         else:
-            subtopics = await self._get_all_subtopics()
+            directors = await construct_directors(
+                task=self.query,
+                data=self.main_task_assistant.context,
+                config=self.main_task_assistant.cfg,
+            )
         
         # Generate report introduction
-        report_introduction = await self.main_task_assistant.write_introduction()
+        compliance_report = await self.main_task_assistant.write_report()
+        
+        company_sobject = await construct_company_sobject(compliance_report, self.main_task_assistant.visited_urls, self.main_task_assistant.query, self.main_task_assistant.context, self.main_task_assistant.cfg)
+        if company_sobject:
+            self.company_sobject = company_sobject
 
         # Generate the subtopic reports based on the subtopics gathered
-        _, report_body = await self._generate_subtopic_reports(subtopics)
+        # _, report_body = await self._generate_directors_reports(directors)
+        await self._generate_directors_reports(directors)
 
         # Construct the final list of visited urls
         self.main_task_assistant.visited_urls.update(self.global_urls)
 
         # Construct the final detailed report (Optionally add more details to the report)
-        report = await self._construct_detailed_report(report_introduction, report_body)
+        # report = await self._construct_detailed_report(report_introduction, report_body)
 
-        return report, self.director_sobjects
+        # return report_introduction
+        return CompanyReport(
+            report=compliance_report,
+            company=self.company_sobject,
+            directors=self.director_sobjects,
+            source_urls=list(self.main_task_assistant.visited_urls)
+        )
 
     async def _initial_research(self):
         # Conduct research using the main task assistant to gather content for generating subtopics
@@ -69,54 +89,47 @@ class CustomDetailedReport():
         self.global_urls = self.main_task_assistant.visited_urls
 
     async def _get_all_subtopics(self) -> list:
-        subtopics = await self.main_task_assistant.get_subtopics()
-        return subtopics.dict()["subtopics"]
+        if self.main_task_assistant.report_type == "compliance_report":
+            directors = await self.main_task_assistant.get_subtopics()
+            return directors
+        else:
+            subtopics = await self.main_task_assistant.get_subtopics()
+            return subtopics.dict()["subtopics"]
 
-    async def _generate_subtopic_reports(self, subtopics: list) -> tuple:
-        subtopic_reports = []
-        subtopics_report_body = ""
+    async def _generate_directors_reports(self, directors: Directors) -> tuple:
+        director_reports = []
+        directors_report_body = ""
 
-        async def fetch_report(subtopic):
-            
-            subtopic_report = await self._get_subtopic_report(subtopic)
-
+        async def fetch_report(director):
+            director_report = await self._get_subtopic_report(director)
             return {
-                "topic": subtopic,
-                "report": subtopic_report
+                "topic": director,
+                "report": director_report
             }
 
-        # This is the asyncio version of the same code below
-        # Although this will definitely run faster, the problem
-        # lies in avoiding duplicate information.
-        # To solve this the headers from previous subtopic reports are extracted
-        # and passed to the next subtopic report generation.
-        # This is only possible to do sequentially
+        tasks = [fetch_report(director) for director in directors.directors]
+        results = await asyncio.gather(*tasks)
 
-        # tasks = [fetch_report(subtopic) for subtopic in subtopics]
-        # results = await asyncio.gather(*tasks)
+        for result in filter(lambda r: r["report"], results):
+            director_reports.append(result)
+            directors_report_body += "\n\n\n" + result["report"]
 
-        # for result in filter(lambda r: r["report"], results):
-        #     subtopic_reports.append(result)
-        #     subtopics_report_body += "\n\n\n" + result["report"]
+        return director_reports, directors_report_body
 
-        for subtopic in subtopics:
-            result = await fetch_report(subtopic)
-            if result["report"]:
-                subtopic_reports.append(result)
-                subtopics_report_body += "\n\n\n" + result["report"]
+    async def _get_subtopic_report(self, director: Director) -> tuple:
+        print("Director: ", director)
+        print("Report Type: ", self.main_task_assistant.report_type)
 
-        return subtopic_reports, subtopics_report_body
+        # current_subtopic_task = director.dict()["fullname"]
+        current_subtopic_task = director.fullname
 
-    async def _get_subtopic_report(self, subtopic: dict) -> tuple:  
-        print("Subtopic:", subtopic)
-        if self.main_task_assistant.report_type == 'compliance_report':
-            current_subtopic_task = subtopic
-        else:
-            current_subtopic_task = subtopic.get("task")
+        
         if self.child_sub_queries:
-            custom_sub_queries = [f"{current_subtopic_task} {child_sub_query}" for child_sub_query in self.child_sub_queries]
+            custom_sub_queries = [f"\"{current_subtopic_task}\" {child_sub_query}" for child_sub_query in self.child_sub_queries]
         else:
             custom_sub_queries = []
+        
+        print("Custom Sub Queries: ", custom_sub_queries)
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
             report_type="director_report",
@@ -136,27 +149,31 @@ class CustomDetailedReport():
 
         # Here the headers gathered from previous subtopic reports are passed to the write report function
         # The LLM is later instructed to avoid generating any information relating to these headers as they have already been generated
-        subtopic_report = await subtopic_assistant.write_report(self.existing_headers)
+        director_report = await subtopic_assistant.write_report(self.existing_headers)
 
+        # print(f"subtopic report for: {subtopic_assistant.query}: ", subtopic_report)
         #construct and add the directors
-        director_sobject = await construct_director_sobjects(subtopic_report, subtopic_assistant.visited_urls, subtopic_assistant.query, subtopic_assistant.context, self.main_task_assistant.cfg)
-        if director_sobject:
-            self.director_sobjects.append(director_sobject)
 
         # Update context of the global context variable
         self.global_context = list(set(subtopic_assistant.context))
         # Update url list of the global list variable
         self.global_urls.update(subtopic_assistant.visited_urls)
 
-        # After a subtopic report has been generated then append the headers of the report to existing headers
-        self.existing_headers.append(
-            {
-                "subtopic task": current_subtopic_task,
-                "headers": extract_headers(subtopic_report),
-            }
+        director_sobject = await construct_director_sobject(
+            subtopic_assistant.query, 
+            subtopic_assistant.visited_urls, 
+            subtopic_assistant.query, 
+            subtopic_assistant.context, 
+            self.main_task_assistant.cfg
         )
 
-        return subtopic_report
+        print(f"construct_director_sobjects output for {current_subtopic_task}: ", director_sobject)
+        if director_sobject:
+            director_sobject_dict = director_sobject.dict()
+            director_sobject_dict["report"] = director_report
+            self.director_sobjects.append(director_sobject_dict)
+
+        return director_report
 
     async def _construct_detailed_report(self, introduction: str, report_body: str):
         # Generating a table of contents from report headers

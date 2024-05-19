@@ -18,7 +18,7 @@ class ContextCompressor:
         self.similarity_threshold = 0.38
 
     def _get_contextual_retriever(self):
-        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+        splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
         relevance_filter = EmbeddingsFilter(embeddings=self.embeddings,
                                             similarity_threshold=self.similarity_threshold)
         pipeline_compressor = DocumentCompressorPipeline(
