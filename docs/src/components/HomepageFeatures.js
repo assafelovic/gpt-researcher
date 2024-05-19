@@ -66,7 +66,7 @@ function Feature({Svg, title, description, docLink}) {
 export default function HomepageFeatures() {
   return (
     <section className={styles.features}>
-      <div className="container" style={{marginTop: 40}}>
+      <div className="container" style={{marginTop: 30}}>
         <div className="row" style={{justifyContent: 'center'}}>
           {FeatureList.map((props, idx) => (
             <Feature key={idx} {...props} />
