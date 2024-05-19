@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
     <channel>
-        <title>Tavily Blog</title>
-        <link>https://docs.tavily.com/blog</link>
-        <description>Tavily Blog</description>
+        <title>GPT Researcher Blog</title>
+        <link>https://docs.gptr.dev/blog</link>
+        <description>GPT Researcher Blog</description>
         <lastBuildDate>Sun, 12 Nov 2023 00:00:00 GMT</lastBuildDate>
         <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
         <generator>https://github.com/jpmonette/feed</generator>
         <item>
             <title><![CDATA[How to build an OpenAI Assistant with Internet access]]></title>
-            <link>https://docs.tavily.com/blog/building-openai-assistant</link>
+            <link>https://docs.gptr.dev/blog/building-openai-assistant</link>
             <guid>building-openai-assistant</guid>
             <pubDate>Sun, 12 Nov 2023 00:00:00 GMT</pubDate>
             <description><![CDATA[OpenAI has done it again with a groundbreaking DevDay showcasing some of the latest improvements to the OpenAI suite of tools, products and services. One major release was the new Assistants API that makes it easier for developers to build their own assistive AI apps that have goals and can call models and tools.]]></description>
@@ -200,7 +200,7 @@ while True:
         </item>
         <item>
             <title><![CDATA[How we built GPT Researcher]]></title>
-            <link>https://docs.tavily.com/blog/building-gpt-researcher</link>
+            <link>https://docs.gptr.dev/blog/building-gpt-researcher</link>
             <guid>building-gpt-researcher</guid>
             <pubDate>Fri, 22 Sep 2023 00:00:00 GMT</pubDate>
             <description><![CDATA[After AutoGPT was published, we immediately took it for a spin. The first use case that came to mind was autonomous online research. Forming objective conclusions for manual research tasks can take time, sometimes weeks, to find the right resources and information. Seeing how well AutoGPT created tasks and executed them got me thinking about the great potential of using AI to conduct comprehensive research and what it meant for the future of online research.]]></description>
