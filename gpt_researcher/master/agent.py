@@ -18,7 +18,7 @@ class GPTResearcher:
         self,
         query: str,
         report_type: str = ReportType.ResearchReport.value,
-        report_source=ReportSource.External.value,
+        report_source=ReportSource.Web.value,
         source_urls=None,
         config_path=None,
         websocket=None,
@@ -86,7 +86,7 @@ class GPTResearcher:
         if self.source_urls:
             context = await self.get_context_by_urls(self.source_urls)
             
-        elif self.report_source == ReportSource.Internal.value:
+        elif self.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
             context = await self.get_context_by_search(self.query, document_data)
         

@@ -32,7 +32,7 @@ def generate_report_prompt(question: str, context, report_source: str, report_fo
     """
     
     reference_prompt = ""
-    if report_source == ReportSource.External.value:
+    if report_source == ReportSource.Web.value:
         reference_prompt = f"""
             You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
             Every url should be hyperlinked: [url website](url)
@@ -79,7 +79,7 @@ def generate_resource_report_prompt(question, context, report_source: str, repor
     """
     
     reference_prompt = ""
-    if report_source == ReportSource.External.value:
+    if report_source == ReportSource.Web.value:
         reference_prompt = f"""
             You MUST include all relevant source urls.
             Every url should be hyperlinked: [url website](url)
