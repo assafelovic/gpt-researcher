@@ -5,11 +5,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import Body
-from typing import List, Optional
-from pydantic import BaseModel
+from typing import List, Optional, Dict
+# from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel
 
 from backend.report_type.custom_detailed_report.custom_detailed_report import CustomDetailedReport
 from gpt_researcher.utils.validators import CompanyReport
+
+print(f"In main.py: BaseModel type: {type(BaseModel)}")
 
 class ComplianceReportRequest(BaseModel):
     query: str

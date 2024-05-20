@@ -8,6 +8,11 @@ from gpt_researcher.master.functions import (add_source_urls, extract_headers,
 from gpt_researcher.utils.llm import construct_director_sobject, construct_company_sobject, construct_directors
 from gpt_researcher.utils.validators import CompanyReport, Director, Directors, Subtopics
 
+print(f"In custom_detailed_report.py: CompanyReport type: {type(CompanyReport)}")
+print(f"In custom_detailed_report.py: Director type: {type(Director)}")
+print(f"In custom_detailed_report.py: Directors type: {type(Directors)}")
+print(f"In custom_detailed_report.py: Subtopics type: {type(Subtopics)}")
+
 class CustomDetailedReport():
     def __init__ (self, query: str, source_urls, config_path: str, subtopics=[], include_domains=None, exclude_domains=None, parent_sub_queries=None, child_sub_queries=None, directors=None):
         self.query = query
@@ -73,6 +78,11 @@ class CustomDetailedReport():
         # report = await self._construct_detailed_report(report_introduction, report_body)
 
         # return report_introduction
+        print(f"In run method: compliance_report type: {type(compliance_report)}")
+        print(f"In run method: self.company_sobject type: {type(self.company_sobject)}")
+        print(f"In run method: self.director_sobjects type: {type(self.director_sobjects)}")
+        
+
         return CompanyReport(
             report=compliance_report,
             company=self.company_sobject,
