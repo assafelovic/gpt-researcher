@@ -8,5 +8,5 @@ class ReportType(Enum):
     SubtopicReport = 'subtopic_report'
     
 class ReportSource(Enum):
-    External = 'internet'
-    Internal = 'documents'
+    Web = 'web'
+    Local = 'local'
