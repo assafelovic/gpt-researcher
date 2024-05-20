@@ -61,4 +61,5 @@ class DocumentLoader:
 
         except Exception as e:
             print(f"Failed to load document : {file_path}")
+            print(e)
             return []
