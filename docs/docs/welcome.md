@@ -13,11 +13,9 @@ This is why we've built the trending open source **[GPT Researcher](https://gith
 To learn more about GPT Researcher, check out the [documentation page](/docs/gpt-researcher/introduction).
 
 ### Tavily Search API
-Building an AI agent that leverages realtime online information is not a simple task. Scraping doesn't scale and requires expertise to refine, current search engine APIs don't provide explicit information to queries but simply potential related articles (which are not always related), and are not very customziable for AI agent needs. This is why we're excited to introduce the first search engine for AI agents - **Tavily Search API**.
+Tavily Search API is a search engine optimized for LLMs, aimed at efficient, quick and persistent search results. 
 
-Tavily Search API is a search engine optimized for LLMs, aimed at efficient, quick and persistent search results. Unlike other search APIs such as Serp or Google, Tavily focuses on optimizing search for AI developers and autonomous AI agents. We take care of all the burden in searching, scraping, filtering and extracting the most relevant information from online sources. All in a single API call! 
-
-To learn how to build your AI application with Tavily Search API, check out the [documentation page](/docs/tavily-api/introduction).
+To learn how to build your AI application with Tavily Search API, check out the [documentation page](https://docs.tavily.com/docs/tavily-api/introduction).
 
 To try our API in action, you can now use GPT Researcher on our hosted version [here](https://app.tavily.com/chat) or on our [API Playground](https://app.tavily.com/playground).
 
