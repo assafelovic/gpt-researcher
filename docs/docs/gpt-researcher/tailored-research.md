@@ -58,7 +58,7 @@ For example:
 export DOC_PATH="./docs/my-docs"
 ```
 
-*Step 2*: When you create an instance of the `GPTResearcher` class, pass the `report_source` argument as "documents".
+*Step 2*: When you create an instance of the `GPTResearcher` class, pass the `report_source` argument as "local".
 
 GPT Researcher will then conduct research on the provided documents.
 
@@ -75,7 +75,7 @@ async def get_report(query: str, report_type: str, report_source: str) -> str:
 if __name__ == "__main__":
     query = "What can you tell me about myself based on my documents?"
     report_type = "research_report"
-    report_source = "documents"
+    report_source = "local" # "local" or "web"
 
     report = asyncio.run(get_report(query=query, report_type=report_type, report_source=report_source))
     print(report)
