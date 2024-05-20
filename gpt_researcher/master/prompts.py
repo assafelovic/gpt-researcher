@@ -203,7 +203,7 @@ def generate_subtopic_report_prompt(
     context,
     report_format: str = "apa",
     max_subsections=5,
-    total_words=1000
+    total_words=800
 ) -> str:
 
     return f"""
