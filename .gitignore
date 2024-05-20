@@ -17,7 +17,7 @@ venv.bak/
 outputs/
 
 #Ignore my local docs
-docs/my-docs/
+my-docs/
 
 #Ignore pycache
 **/__pycache__/
