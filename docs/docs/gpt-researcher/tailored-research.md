@@ -55,10 +55,10 @@ You can instruct the GPT Researcher to research on local documents by providing 
 For example:
 
 ```bash
-export DOC_PATH="./docs/my-docs"
+export DOC_PATH="./my-docs"
 ```
 
-*Step 2*: When you create an instance of the `GPTResearcher` class, pass the `report_source` argument as "local".
+*Step 2*: When you create an instance of the `GPTResearcher` class, pass the `report_source` argument as `"local"`.
 
 GPT Researcher will then conduct research on the provided documents.
 
