@@ -51,7 +51,7 @@ More specifically:
  - [Live Demo](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
 ## Features
-- 📝 Generate research, outlines, resources and lessons reports
+- 📝 Generate research, outlines, resources and lessons reports with local documents and web sources
 - 📜 Can generate long and detailed research reports (over 2K words)
 - 🌐 Aggregates over 20 web sources per research to form objective and factual conclusions
 - 🖥️ Includes an easy-to-use web interface (HTML/CSS/JS)
