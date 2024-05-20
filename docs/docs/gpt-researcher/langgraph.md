@@ -1,4 +1,4 @@
-# Multi Agent Frameworks
+# GPTR x LangGraph
 
 We are strong advocates for the future of AI agents, envisioning a world where autonomous agents communicate and collaborate as a cohesive team to undertake and complete complex tasks.
 
@@ -62,3 +62,32 @@ More specifically (as seen in the architecture diagram) the process is as follow
 
 ## Usage
 To change the research query and customize the report, edit the `task.json` file in the main directory.
+#### Task.json contains the following fields:
+- `query` - The research query or task.
+- `model` - The OpenAI LLM to use for the agents.
+- `max_sections` - The maximum number of sections in the report. Each section is a subtopic of the research query.
+- `publish_formats` - The formats to publish the report in. The reports will be written in the `output` directory.
+- `follow_guidelines` - If true, the research report will follow the guidelines below. It will take longer to complete. If false, the report will be generated faster but may not follow the guidelines.
+- `guidelines` - A list of guidelines that the report must follow.
+- `verbose` - If true, the application will print detailed logs to the console.
+
+#### For example:
+```json
+{
+  "query": "Is AI in a hype cycle?",
+  "model": "gpt-4o",
+  "max_sections": 3, 
+  "publish_formats": { 
+    "markdown": true,
+    "pdf": true,
+    "docx": true
+  },
+  "follow_guidelines": true,
+  "guidelines": [
+    "The report MUST fully answer the original question",
+    "The report MUST be written in apa format",
+    "The report MUST be written in english"
+  ],
+  "verbose": true
+}
+```
