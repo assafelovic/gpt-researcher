@@ -4,6 +4,10 @@
     100% {background-position: 0% 50%;}
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 body {
     font-family: 'Montserrat', sans-serif;
     color: #fff;
@@ -84,9 +88,9 @@ input:hover, input:focus, select:hover, select:focus {
 }
 
 .agent_question {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     font-weight: 500;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
 }
 
 footer {

@@ -13,6 +13,9 @@ fastapi
 python-multipart
 markdown
 langchain
+langchain-openai
+langchain-google-genai
+langchain_community
 tavily-python
 arxiv
 PyMuPDF
@@ -20,12 +23,12 @@ requests
 jinja2
 aiofiles
 newspaper3k
-langchain_community
 SQLAlchemy
-langchain-openai
 mistune
 python-docx
 htmldocx
-langchain-google-genai
 lxml[html_clean]
 websockets
+unstructured
+pytest
+pytest-asyncio

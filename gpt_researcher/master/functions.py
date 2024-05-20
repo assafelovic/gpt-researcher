@@ -7,6 +7,7 @@ from gpt_researcher.master.prompts import *
 from gpt_researcher.scraper.scraper import Scraper
 from gpt_researcher.utils.llm import *
 
+
 def get_retriever(retriever):
     """
     Gets the retriever
@@ -78,7 +79,7 @@ async def choose_agent(query, cfg, parent_query=None):
         return "Default Agent", "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
 
 
-async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str, report_type:str):
+async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str, report_type: str):
     """
     Gets the sub queries
     Args:
@@ -99,6 +100,9 @@ async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query:
         temperature=0,
         llm_provider=cfg.llm_provider
     )
+
+    print("response : ", response)
+
     sub_queries = json.loads(response)
     return sub_queries
 
@@ -202,10 +206,11 @@ async def summarize_url(query, raw_data, agent_role_prompt, cfg):
 
 
 async def generate_report(
-    query,
+    query: str,
     context,
-    agent_role_prompt,
-    report_type,
+    agent_role_prompt: str,
+    report_type: str,
+    report_source: str,
     websocket,
     cfg,
     main_topic: str = "",
@@ -233,8 +238,7 @@ async def generate_report(
     if report_type == "subtopic_report":
         content = f"{generate_prompt(query, existing_headers, main_topic, context, cfg.report_format, cfg.total_words)}"
     else:
-        content = (
-            f"{generate_prompt(query, context, cfg.report_format, cfg.total_words)}")
+        content = f"{generate_prompt(query, context, report_source, cfg.report_format, cfg.total_words)}"
 
     try:
         report = await create_chat_completion(
@@ -270,6 +274,7 @@ async def stream_output(type, output, websocket=None, logging=True):
     if websocket:
         await websocket.send_json({"type": type, "output": output})
 
+
 async def get_report_introduction(query, context, role, config, websocket=None):
     try:
         introduction = await create_chat_completion(
@@ -286,9 +291,11 @@ async def get_report_introduction(query, context, role, config, websocket=None):
 
         return introduction
     except Exception as e:
-        print(f"{Fore.RED}Error in generating report introduction: {e}{Style.RESET_ALL}")
+        print(
+            f"{Fore.RED}Error in generating report introduction: {e}{Style.RESET_ALL}")
 
     return ""
+
 
 def extract_headers(markdown_text: str):
     # Function to extract headers from markdown text
@@ -299,7 +306,8 @@ def extract_headers(markdown_text: str):
 
     stack = []  # Initialize stack to keep track of nested headers
     for line in lines:
-        if line.startswith("<h") and len(line) > 1:  # Check if the line starts with an HTML header tag
+        # Check if the line starts with an HTML header tag
+        if line.startswith("<h") and len(line) > 1:
             level = int(line[2])  # Extract header level
             header_text = line[
                 line.index(">") + 1: line.rindex("<")
@@ -352,6 +360,7 @@ def table_of_contents(markdown_text: str):
     except Exception as e:
         print("table_of_contents Exception : ", e)  # Print exception if any
         return markdown_text  # Return original markdown text if an exception occurs
+
 
 def add_source_urls(report_markdown: str, visited_urls: set):
     """
