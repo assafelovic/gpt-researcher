@@ -2,8 +2,8 @@ import json
 import os
 import re
 import time
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -89,3 +89,14 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
+
+
+@app.post("/upload/")
+async def upload_file(file: UploadFile = File(...)):
+    upload_dir = "uploads"
+    if not os.path.exists(upload_dir):
+        os.makedirs(upload_dir)
+    file_path = os.path.join(upload_dir, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {"filename": file.filename, "path": file_path}
