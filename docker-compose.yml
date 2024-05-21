@@ -19,3 +19,5 @@ services:
     volumes:
       - /app/node_modules
       - ./react-frontend:/app
+    ports:
+      - 3000:3000
