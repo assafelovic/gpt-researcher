@@ -22,8 +22,8 @@ export default function ResearchForm({onFormSubmit}) {
             <div class="form-group">
                 <label for="report_source" class="agent-question">Report Source</label>
                 <select name="report_source" class="form-control" required>
-                    <option value="internet">The Internet</option>
-                    <option value="documents">My Documents</option>
+                    <option value="web">The Internet</option>
+                    <option value="local">My Documents</option>
                 </select>
             </div>
             <input type="submit" value="Research" className="btn btn-primary button-padding" />
