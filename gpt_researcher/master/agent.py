@@ -232,13 +232,6 @@ class GPTResearcher:
         if self.verbose:
             await stream_output("logs", f"🤔 Researching for relevant information...\n", self.websocket)
 
-        # Get Urls
-        retriever = self.retriever(sub_query)
-
-        search_results = retriever.search(
-            max_results=self.cfg.max_search_results_per_query)
-        new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
-
         # Scrape Urls
         scraped_content_results = scrape_urls(new_search_urls, self.cfg)
         return scraped_content_results
