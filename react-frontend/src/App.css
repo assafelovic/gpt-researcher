@@ -47,7 +47,8 @@ body {
   border-radius: 12px;
   box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.1);
   transition: all .3s ease-in-out;
-  margin-bottom: 180px;
+  margin-bottom: 250px;
+  margin-top: 100px;
 }
 
 .container:hover {
