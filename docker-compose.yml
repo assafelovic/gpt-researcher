@@ -15,7 +15,7 @@ services:
       - CHOKIDAR_USEPOLLING=true
     build:
       dockerfile: Dockerfile
-      context: ./frontend
+      context: ./react-frontend
     volumes:
       - /app/node_modules
-      - ./frontend:/app
+      - ./react-frontend:/app
