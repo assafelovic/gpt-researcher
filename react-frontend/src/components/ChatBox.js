@@ -51,7 +51,9 @@ export default function ChatBox() {
                   <span className="sayGoodbye"> Hours of Research</span>
               </h1>
               <p className="max-w-5xl mx-auto text-gray-600 mt-8" style={{fontSize: "20px"}}>
-                  The power of Tavily Search & GPT Combined for a Better Search Experience.
+              Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research. GPT Researcher
+            takes care of everything from accurate source gathering to organization of research results - all in one
+            platform designed to make your research process a breeze.
               </p>
               <a href="#form" className="btn btn-primary">Get Started</a>
           </div>
