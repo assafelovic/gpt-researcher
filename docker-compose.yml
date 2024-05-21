@@ -9,3 +9,13 @@ services:
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
     ports:
       - 8000:8000
+  react-client:
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    build:
+      dockerfile: Dockerfile
+      context: ./frontend
+    volumes:
+      - /app/node_modules
+      - ./frontend:/app
