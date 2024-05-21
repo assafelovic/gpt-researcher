@@ -4,6 +4,10 @@
   100% {background-position: 0% 50%;}
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Montserrat', sans-serif;
   color: #fff;
@@ -17,7 +21,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 50vh;
+  height: 100vh;
   text-align: center;
 }
 
@@ -84,9 +88,9 @@ input:hover, input:focus, select:hover, select:focus {
 }
 
 .agent_question {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 500;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.2rem;
 }
 
 footer {
@@ -115,6 +119,7 @@ footer {
 
 #output {
   height: 300px;
+  font-family: 'Times New Roman', Times, , "Courier New", serif;
   overflow: auto;
   padding: 10px;
   margin-bottom: 10px;
@@ -128,22 +133,6 @@ footer {
   transition: all .3s ease-in-out;
   padding: 10px;
   border-radius: 12px;
-}
-
-.avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-}
-
-.agent-name {
-  text-align: center;
-}
-
-.agent-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 /* refactoring inline css */
