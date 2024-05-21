@@ -147,6 +147,28 @@ report = await researcher.write_report()
 
 **For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/pip-package) page.**
 
+
+## Run the React App with Docker
+
+The React app comes with a drag-n-drop user interface for uploading and deleting files to be used as local documents by GPTResearcher.
+
+> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker)
+
+> **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
+
+> **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
+
+```bash
+$ docker-compose up --build
+```
+
+> **Step 4** - Be default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
+ - the Python server running on localhost:8000<br>
+ - the React app running on localhost:3000<br>
+
+Visit localhost:3000 on any browser and enjoy researching!
+
+
 ## 📄 Research on Local Documents
 
 You can instruct the GPT Researcher to run research tasks based on your local documents. Currently supported file formats are: PDF, plain text, CSV, Excel, Markdown, PowerPoint, and Word documents.
