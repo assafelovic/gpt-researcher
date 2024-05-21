@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import FileUpload from './FileUpload';
 
 export default function ResearchForm({onFormSubmit}) {
     // Declare a new state variable, which we'll call "count"
@@ -26,6 +27,7 @@ export default function ResearchForm({onFormSubmit}) {
                     <option value="local">My Documents</option>
                 </select>
             </div>
+            <FileUpload />
             <input type="submit" value="Research" className="btn btn-primary button-padding" />
         </form>
     );
