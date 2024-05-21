@@ -91,12 +91,31 @@ async def websocket_endpoint(websocket: WebSocket):
         await manager.disconnect(websocket)
 
 
+
+# Define DOC_PATH
+DOC_PATH = os.getenv("DOC_PATH", "uploads")
+if not os.path.exists(DOC_PATH):
+    os.makedirs(DOC_PATH)
+
+
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
-    upload_dir = "uploads"
-    if not os.path.exists(upload_dir):
-        os.makedirs(upload_dir)
-    file_path = os.path.join(upload_dir, file.filename)
+    file_path = os.path.join(DOC_PATH, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     return {"filename": file.filename, "path": file_path}
+
+
+@app.get("/files/")
+async def list_files():
+    files = os.listdir(DOC_PATH)
+    return {"files": files}
+
+@app.delete("/files/{filename}")
+async def delete_file(filename: str):
+    file_path = os.path.join(DOC_PATH, filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        return {"message": "File deleted successfully"}
+    else:
+        return JSONResponse(status_code=404, content={"message": "File not found"})
