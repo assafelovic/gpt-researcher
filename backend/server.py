@@ -4,7 +4,8 @@ import re
 import time
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile
-
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -93,10 +94,18 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
 
+# Enable CORS for your frontend domain (adjust accordingly)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Define DOC_PATH
-DOC_PATH = os.getenv("DOC_PATH", "uploads")
+DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 if not os.path.exists(DOC_PATH):
     os.makedirs(DOC_PATH)
 
