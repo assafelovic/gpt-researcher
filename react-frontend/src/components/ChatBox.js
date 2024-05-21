@@ -47,8 +47,8 @@ export default function ChatBox() {
       <section className="landing">
           <div className="max-w-5xl mx-auto text-center">
               <h1 className="text-4xl font-extrabold mx-auto lg:text-7xl">
-                  Say Hello to
-                  <span className="sayGoodbye"> GPT Researcher</span>
+                Say Goodbye to 
+                  <span className="sayGoodbye"> Hours of Research</span>
               </h1>
               <p className="max-w-5xl mx-auto text-gray-600 mt-8" style={{fontSize: "20px"}}>
                   The power of Tavily Search & GPT Combined for a Better Search Experience.

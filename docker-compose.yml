@@ -14,7 +14,7 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=true
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
       context: ./react-frontend
     volumes:
       - /app/node_modules
