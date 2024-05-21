@@ -2,6 +2,7 @@ import json
 import os
 import re
 import time
+
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile
 
 from fastapi.staticfiles import StaticFiles
@@ -10,6 +11,8 @@ from pydantic import BaseModel
 
 from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from backend.websocket_manager import WebSocketManager
+
+import shutil
 
 
 class ResearchRequest(BaseModel):
