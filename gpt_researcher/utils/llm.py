@@ -27,6 +27,9 @@ def get_provider(llm_provider):
         case "google":
             from ..llm_provider import GoogleProvider
             llm_provider = GoogleProvider
+        case "ollama":
+            from ..llm_provider import OllamaProvider
+            llm_provider = OllamaProvider
 
         case _:
             raise Exception("LLM provider not found.")
@@ -128,6 +131,11 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
         elif config.llm_provider == "azureopenai":
             from langchain_openai import AzureChatOpenAI
             model = AzureChatOpenAI(model=config.smart_llm_model)
+        elif config.llm_provider == "ollama":
+            from langchain_community.chat_models import ChatOllama
+            model = ChatOllama(model=config.smart_llm_model)
+            if config.ollama_base_url:
+                model.base_url = config.ollama_base_url
         else:
             return []
 

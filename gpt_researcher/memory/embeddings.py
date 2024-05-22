@@ -8,8 +8,8 @@ class Memory:
         _embeddings = None
         match embedding_provider:
             case "ollama":
-                from langchain.embeddings import OllamaEmbeddings
-                _embeddings = OllamaEmbeddings(model="llama2")
+                from langchain_community.embeddings import OllamaEmbeddings
+                _embeddings = OllamaEmbeddings(model=os.environ["OLLAMA_EMBEDDING_MODEL"], base_url=os.environ["OLLAMA_BASE_URL"])
             case "openai":
                 from langchain_openai import OpenAIEmbeddings
                 _embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
