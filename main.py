@@ -1,46 +1,34 @@
-#main.py
-
 from backend.server import app
 from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import Body
 from typing import List, Optional, Dict
-# from pydantic import BaseModel, Field
-from pydantic.v1 import BaseModel
+from pydantic import BaseModel
 
 from backend.report_type.custom_detailed_report.custom_detailed_report import CustomDetailedReport
 from gpt_researcher.utils.validators import CompanyReport
+from rq import Queue
+from worker import conn, process_compliance_report
 
-print(f"In main.py: BaseModel type: {type(BaseModel)}")
+q = Queue(connection=conn)
 
 class ComplianceReportRequest(BaseModel):
     query: str
-    subtopics: Optional[List[str]] = []
+    salesforce_id: str
+    directors: Optional[List[str]] = []
     directors: Optional[List[str]] = []
     include_domains: Optional[List[str]] = []
     exclude_domains: Optional[List[str]] = []
     parent_sub_queries: Optional[List[str]] = []
     child_sub_queries: Optional[List[str]] = []
 
-@app.post("/report/compliance_report", response_model=CompanyReport)
+@app.post("/report/compliance_report")
 async def get_compliance_report(request: ComplianceReportRequest = Body(...)):
-    researcher = CustomDetailedReport(
-        query=request.query,
-        source_urls=None,
-        config_path="",
-        subtopics=request.subtopics,
-        directors=request.directors,
-        include_domains=request.include_domains,
-        exclude_domains=request.exclude_domains,
-        parent_sub_queries=request.parent_sub_queries,
-        child_sub_queries=request.child_sub_queries
-    )
-    report = await researcher.run()
-    return report
+    job = q.enqueue(process_compliance_report, request.dict())
+    return {"message": "Compliance report is being processed. You will receive the results via the Salesforce endpoint.", "job_id": job.id}
 
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

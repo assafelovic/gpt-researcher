@@ -1,20 +1,16 @@
 #custom_detailed_report.py
 
 import asyncio
+from typing import Union, List, Optional
 
 from gpt_researcher.master.agent import GPTResearcher
-from gpt_researcher.master.functions import (add_source_urls, extract_headers,
+from gpt_researcher.master.functions import (add_source_urls,
                                              table_of_contents)
 from gpt_researcher.utils.llm import construct_director_sobject, construct_company_sobject, construct_directors
 from gpt_researcher.utils.validators import CompanyReport, Director, Directors, Subtopics
 
-print(f"In custom_detailed_report.py: CompanyReport type: {type(CompanyReport)}")
-print(f"In custom_detailed_report.py: Director type: {type(Director)}")
-print(f"In custom_detailed_report.py: Directors type: {type(Directors)}")
-print(f"In custom_detailed_report.py: Subtopics type: {type(Subtopics)}")
-
 class CustomDetailedReport():
-    def __init__ (self, query: str, source_urls, config_path: str, subtopics=[], include_domains=None, exclude_domains=None, parent_sub_queries=None, child_sub_queries=None, directors=None):
+    def __init__(self, query: str, source_urls, config_path: str, subtopics=[], include_domains=None, exclude_domains=None, parent_sub_queries=None, child_sub_queries=None, directors: Optional[Union[List[str], Directors]] = None):
         self.query = query
         self.source_urls = source_urls
         self.config_path = config_path
@@ -39,26 +35,33 @@ class CustomDetailedReport():
         # This is a global variable to store the entire url list accumulated at any point through searching and scraping
         if self.source_urls:
             self.global_urls = set(self.source_urls)
-        if directors is None:
-            directors = Directors(directors=[])
-        self.directors = directors
+        self.directors = self._initialize_directors(directors)
         self.director_sobjects = []
         self.company_sobject = None
 
+    def _initialize_directors(self, directors):
+        if directors is None:
+            return Directors(directors=[])
+        elif isinstance(directors, list):
+            directors_list = [Director(first_name=name.split()[0], last_name=" ".join(name.split()[1:])) for name in directors]
+            return Directors(directors=directors_list)
+        else:
+            return directors
+
     async def run(self):
         # Conduct initial research using the main assistant
-        
         await self._initial_research()
 
         # Get list of all subtopics
-        if self.directors:
-            directors = self.directors
-        else:
-            directors = await construct_directors(
+        if not self.directors.directors:
+            print(f"Constructing directors using construct_directors function")
+            self.directors = await construct_directors(
                 task=self.query,
                 data=self.main_task_assistant.context,
                 config=self.main_task_assistant.cfg,
             )
+        
+        print("Directors **** : ", self.directors.directors)
         
         # Generate report introduction
         compliance_report = await self.main_task_assistant.write_report()
@@ -69,7 +72,8 @@ class CustomDetailedReport():
 
         # Generate the subtopic reports based on the subtopics gathered
         # _, report_body = await self._generate_directors_reports(directors)
-        await self._generate_directors_reports(directors)
+        print("Directors **** : ", self.directors.directors)
+        await self._generate_directors_reports(self.directors)
 
         # Construct the final list of visited urls
         self.main_task_assistant.visited_urls.update(self.global_urls)
@@ -107,31 +111,19 @@ class CustomDetailedReport():
             return subtopics.dict()["subtopics"]
 
     async def _generate_directors_reports(self, directors: Directors) -> tuple:
-        director_reports = []
-        directors_report_body = ""
+        async def fetch_report(director: Director):
+                    await self._get_subtopic_report(director)
 
-        async def fetch_report(director):
-            director_report = await self._get_subtopic_report(director)
-            return {
-                "topic": director,
-                "report": director_report
-            }
-
+        print("Directors: ", directors)
         tasks = [fetch_report(director) for director in directors.directors]
-        results = await asyncio.gather(*tasks)
-
-        for result in filter(lambda r: r["report"], results):
-            director_reports.append(result)
-            directors_report_body += "\n\n\n" + result["report"]
-
-        return director_reports, directors_report_body
+        await asyncio.gather(*tasks)
 
     async def _get_subtopic_report(self, director: Director) -> tuple:
         print("Director: ", director)
         print("Report Type: ", self.main_task_assistant.report_type)
 
         # current_subtopic_task = director.dict()["fullname"]
-        current_subtopic_task = director.fullname
+        current_subtopic_task = f"{director.first_name} {director.last_name}"
 
         
         if self.child_sub_queries:

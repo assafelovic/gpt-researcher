@@ -1,5 +1,6 @@
 #validators.py
 
+from enum import Enum
 from typing import List, Optional, Dict
 # from pydantic import BaseModel, Field
 from langchain_core.pydantic_v1 import BaseModel, Field, validator
@@ -10,18 +11,41 @@ class Subtopic(BaseModel):
 class Subtopics(BaseModel):
     subtopics: List[Subtopic] = []
 
+class SalutationEnum(str, Enum):
+    none = "--None--"
+    mr = "Mr."
+    ms = "Ms."
+    mrs = "Mrs."
+    dr = "Dr."
+    prof = "Prof."
+    mx = "Mx."
+
+class LeadSourceEnum(str, Enum):
+    none = "--None--"
+    web = "Web"
+    phone_inquiry = "Phone Inquiry"
+    partner_referral = "Partner Referral"
+    purchased_list = "Purchased List"
+    other = "Other"
+    trade_show = "Trade Show"
+
 class DirectorSobject(BaseModel):
+    """Full list of details of the director"""
+    salutation: SalutationEnum = Field(description="Salutation that you think best fits director")
+    lead_source: LeadSourceEnum = Field(description="Lead source of the director")
     firstname: str = Field(description="First name of the director")
     lastname: str = Field(description="Last name of the director")
-    company_name: str = Field(description="Company name of the director")
+    related_companies: Optional[List[str]] = Field(description="List of related companies", default=None)
     email: Optional[str] = Field(description="Email address of the director", default=None)
     mobile_phone: Optional[str] = Field(description="Mobile phone number of the director", default=None)
     job_title: str = Field(description="Job title of the director")
     source_url: str = Field(description="The primary source URL used in collecting data")
 
 class Director(BaseModel):
-    """Name of the director"""
-    fullname: str = Field(description="full names of the individual mentioned in the research data who holds title such as director, officer, company owner, partner, executive, or manager related to the company name.")
+    """Full name of the of the individual mentioned in the research data who holds title such as director, officer, company owner, partner, executive, or manager related to the company name."""
+    first_name: str = Field(description="first name")
+    last_name: str = Field(description="last name")
+
 
 class Directors(BaseModel):
     """List of director names"""

@@ -229,16 +229,10 @@ def generate_director_report_prompt(
     Information to use:  
     {context}
 
-    Using the latest information available, generate a detailed report on the director {director_name} of the company {company_name}, capturing additional compliance data points, including:
+    Using the latest information available, generate a short report on the director {director_name} of the company {company_name}, capturing additional compliance data points, including:
     
     - Full name and any previous names/aliases
-    - Date of birth and nationality  
-    - Current residential address
-    - Professional background and experience
-    - Other past and current director appointments 
-    - Adverse media reports or criminal records
-    - Politically exposed person (PEP) status or sanctions listings
-    - Overall assessment of compliance risk level of this individual
+    - Overall assessment of compliance risk level of this individual, include relevant research urls
     
     You must write the report with markdown syntax.
     Use an unbiased and journalistic tone. 
