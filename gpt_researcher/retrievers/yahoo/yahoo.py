@@ -35,7 +35,6 @@ class YahooSearch:
             # Search the query
             results = search(self.query)
             sources = results.pages
-            print(sources)
             if not sources:
                 raise Exception("No results found with Tavily API search.")
             # Return the results
