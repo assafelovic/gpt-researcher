@@ -2,6 +2,7 @@
 beautifulsoup4
 colorama
 duckduckgo_search
+yahoo-search-py
 md2pdf
 playwright
 openai
