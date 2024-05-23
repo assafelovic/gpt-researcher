@@ -184,7 +184,7 @@ def generate_compliance_report_prompt(
     - Adverse media or reports of financial crime, fraud or unethical business practices
     - Overall assessment of compliance risk level in onboarding this company as a BVNK client
     
-    You must write the report with markdown syntax.
+    You must format the report with HTML format.
     Use an unbiased and journalistic tone. 
     You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.
     You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
@@ -234,7 +234,7 @@ def generate_director_report_prompt(
     - Full name and any previous names/aliases
     - Overall assessment of compliance risk level of this individual, include relevant research urls
     
-    You must write the report with markdown syntax.
+    You must format the report with HTML format.
     Use an unbiased and journalistic tone. 
     You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.
     You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
