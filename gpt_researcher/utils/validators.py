@@ -1,9 +1,15 @@
 #validators.py
+import logging
 
 from enum import Enum
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 # from pydantic import BaseModel, Field
 from langchain_core.pydantic_v1 import BaseModel, Field, validator
+from datetime import date, datetime
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Subtopic(BaseModel):
     task: str = Field(description="Task name", min_length=1)
@@ -29,22 +35,27 @@ class LeadSourceEnum(str, Enum):
     other = "Other"
     trade_show = "Trade Show"
 
+class RiskAssessmentEnum(str, Enum):
+    low = "low"
+    medium = "medium"
+    high = "high"
+
 class DirectorSobject(BaseModel):
     """Full list of details of the director"""
-    salutation: SalutationEnum = Field(description="Salutation that you think best fits director")
-    lead_source: LeadSourceEnum = Field(description="Lead source of the director")
-    firstname: str = Field(description="First name of the director")
-    lastname: str = Field(description="Last name of the director")
+    salutation: SalutationEnum = Field(..., description="Salutation that you think best fits director")
+    lead_source: LeadSourceEnum = Field(..., description="Lead source of the director")
+    firstname: str = Field(..., description="First name of the director")
+    lastname: str = Field(..., description="Last name of the director")
     related_companies: Optional[List[str]] = Field(description="List of related companies", default=None)
     email: Optional[str] = Field(description="Email address of the director", default=None)
     mobile_phone: Optional[str] = Field(description="Mobile phone number of the director", default=None)
-    job_title: str = Field(description="Job title of the director")
-    source_url: str = Field(description="The primary source URL used in collecting data")
+    job_title: str = Field(..., description="Job title of the director")
+    primary_source_url: str = Field(..., description="The primary source URL used in collecting data")
 
 class Director(BaseModel):
     """Full name of the of the individual mentioned in the research data who holds title such as director, officer, company owner, partner, executive, or manager related to the company name."""
-    first_name: str = Field(description="first name")
-    last_name: str = Field(description="last name")
+    first_name: str = Field(..., description="first name")
+    last_name: str = Field(..., description="last name")
 
 
 class Directors(BaseModel):
@@ -52,16 +63,30 @@ class Directors(BaseModel):
     directors: List[Director] = []
 
 class CompanySobject(BaseModel):
-    company_name: str = Field(description="Full legal company name")
-    registration_number: str = Field(description="Company registration number")
-    incorporation_date: str = Field(description="Incorporation date")
-    jurisdiction: str = Field(description="Jurisdiction of incorporation")
-    registered_address: str = Field(description="Registered office address")
-    licenses: Optional[str] = Field(description="Regulatory licenses and registrations held", default=None)
-    regulatory_actions: Optional[str] = Field(description="Past regulatory actions, fines or investigations", default=None)
-    adverse_media: Optional[str] = Field(description="Adverse media or reports of financial crime, fraud or unethical practices", default=None)
-    risk_assessment: str = Field(description="Overall assessment of compliance risk level")
-    source_url: str = Field(description="The primary source URL used in collecting data")
+    """Company Details"""
+    company_name: str = Field(..., description="Full legal company name")
+    registration_number: str = Field(..., description="Company registration number")
+    incorporation_date: Optional[str] = Field(None, description="Incorporation date (format: YYYY-MM-DD)")
+    jurisdiction: Optional[str] = Field(None, description="Jurisdiction of incorporation")
+    registered_address: Optional[str] = Field(None, description="Registered office address")
+    licenses: Optional[str] = Field(None, description="Regulatory licenses and registrations held")
+    regulatory_actions: Optional[str] = Field(None, description="Past regulatory actions, fines or investigations")
+    adverse_media: Optional[str] = Field(None, description="Adverse media or reports of financial crime, fraud or unethical practices")
+    risk_assessment: RiskAssessmentEnum = Field(..., description="Salutation that you think best fits director")
+    primary_source_url: str = Field(..., description="The primary source URL used in collecting data")
+
+    @validator("incorporation_date", pre=True)
+    def parse_incorporation_date(cls, value):
+        if value is None:
+            return None
+        try:
+            parsed_date = datetime.strptime(value, "%Y-%m-%d").date()
+            formatted_date = parsed_date.strftime("%Y-%m-%d")  # Convert date to string
+            logger.info(f"Successfully parsed incorporation date: {formatted_date}")
+            return formatted_date
+        except ValueError:
+            logger.error(f"Invalid incorporation date format. Expected YYYY-MM-DD, but got: {value}")
+            raise ValueError("Invalid incorporation date format. Expected YYYY-MM-DD.")
 
 class CompanyReport(BaseModel):
     report: str = Field(description="Company report")

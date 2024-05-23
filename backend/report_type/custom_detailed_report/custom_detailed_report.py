@@ -91,7 +91,7 @@ class CustomDetailedReport():
             report=compliance_report,
             company=self.company_sobject,
             directors=self.director_sobjects,
-            source_urls=list(self.main_task_assistant.visited_urls)
+            source_urls=list(self.main_task_assistant.visited_urls)  # Convert to list
         )
 
     async def _initial_research(self):
@@ -173,6 +173,7 @@ class CustomDetailedReport():
         if director_sobject:
             director_sobject_dict = director_sobject.dict()
             director_sobject_dict["report"] = director_report
+            director_sobject_dict["visited_urls"] = list(subtopic_assistant.visited_urls)  # Convert to list
             self.director_sobjects.append(director_sobject_dict)
 
         return director_report
