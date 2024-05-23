@@ -195,6 +195,7 @@ async def construct_directors(task: str, data: str, config) -> Directors:
         print(f"\n🤖 Calling {config.fast_llm_model}...\n")
         model = ChatOpenAI(model=config.fast_llm_model, temperature=0).bind_tools([Directors], tool_choice="Directors")
         
+        print("Construct Directors Output Tool Schema: ", model.kwargs["tools"])
         chain = prompt | model | parser
         output = chain.invoke({
             "task": task,
@@ -205,45 +206,6 @@ async def construct_directors(task: str, data: str, config) -> Directors:
         return output
     except Exception as e:
         print("Exception in parsing directors name list: ", e)
-        return []
-
-async def construct_director_sobject2(sub_query: str, visited_urls: str, company: str, context: str, config) -> DirectorSobject:
-    try:
-        parser = PydanticOutputParser(pydantic_object=DirectorSobject)
-        prompt = PromptTemplate(
-            template=generate_director_sobject_prompt(),
-            input_variables=["sub_query", "visited_urls", "company", "context"],
-            partial_variables={
-                "format_instructions": parser.get_format_instructions()
-            },
-        )
-
-        print(f"\n🤖 Calling {config.fast_llm_model}...\n")
-        if config.llm_provider == "openai":
-            model = ChatOpenAI(model=config.fast_llm_model)
-        elif config.llm_provider == "azureopenai":
-            from langchain_openai import AzureChatOpenAI
-            model = AzureChatOpenAI(model=config.fast_llm_model)
-        else:
-            return []
-
-        chain = prompt | model | parser
-        output = chain.invoke({
-            "sub_query": sub_query,
-            "visited_urls": visited_urls,
-            "company": company,
-            "context": context
-        })
-        
-        # print("LLM input for construct_director_sobjects:")
-        # print(f"Task: {task}")
-        # print(f"Data: {data}")
-        # print("LLM output for construct_director_sobjects:")
-        print("Construct Director SObjects Output: ", output)
-        return output
-
-    except Exception as e:
-        print("Exception in parsing director SObjects: ", e)
         return []
 
 async def construct_director_sobject(sub_query: str, visited_urls: str, company: str, context: str, config) -> DirectorSobject:
@@ -257,50 +219,19 @@ async def construct_director_sobject(sub_query: str, visited_urls: str, company:
         model = ChatOpenAI(model=config.fast_llm_model, temperature=0).bind_tools([DirectorSobject], tool_choice="DirectorSobject")
 
         chain = prompt | model | parser
+        print("Construct Director SObject Output Tool Schema: ", model.kwargs["tools"])
         output = chain.invoke({
             "sub_query": sub_query,
             "visited_urls": visited_urls,
             "company": company,
             "context": context
         })
-        
+        print("Construct Director SObject Output: ", output)
         return output
 
     except Exception as e:
         print("Exception in parsing director SObjects: ", e)
         return []
-
-async def construct_company_sobject2(subtopic_report: str, visited_urls: str, company: str, context: str, config) -> CompanySobject:
-    try:
-        parser = PydanticOutputParser(pydantic_object=CompanySobject)
-        prompt = PromptTemplate(
-            template=generate_company_sobject_prompt(),
-            input_variables=["subtopic_report", "visited_urls", "company", "context"],
-            partial_variables={
-                "format_instructions": parser.get_format_instructions()
-            },
-        )
-        print(f"\n🤖 Calling {config.fast_llm_model}...\n")
-        if config.llm_provider == "openai":
-            model = ChatOpenAI(model=config.fast_llm_model)
-        elif config.llm_provider == "azureopenai":
-            from langchain_openai import AzureChatOpenAI
-            model = AzureChatOpenAI(model=config.fast_llm_model)
-        else:
-            return None
-
-        chain = prompt | model | parser
-        output = chain.invoke({
-            "subtopic_report": subtopic_report, 
-            "visited_urls": visited_urls,
-            "company": company,
-            "context": context
-        })
-        print("Construct Company SObject Output: ", output)
-        return output
-    except Exception as e:
-        print("Exception in parsing company SObject: ", e)
-        return None
 
 async def construct_company_sobject(subtopic_report: str, visited_urls: str, company: str, context: str, config) -> CompanySobject:
     try:
@@ -313,6 +244,7 @@ async def construct_company_sobject(subtopic_report: str, visited_urls: str, com
         model = ChatOpenAI(model=config.fast_llm_model, temperature=0).bind_tools([CompanySobject], tool_choice="CompanySobject")
 
         chain = prompt | model | parser
+        print("Construct Company SObject Output Tool Schema: ", model.kwargs["tools"])
         output = chain.invoke({
             "subtopic_report": subtopic_report, 
             "visited_urls": visited_urls,

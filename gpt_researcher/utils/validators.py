@@ -77,7 +77,7 @@ class CompanySobject(BaseModel):
 
     @validator("incorporation_date", pre=True)
     def parse_incorporation_date(cls, value):
-        if value is None:
+        if not value:
             return None
         try:
             parsed_date = datetime.strptime(value, "%Y-%m-%d").date()

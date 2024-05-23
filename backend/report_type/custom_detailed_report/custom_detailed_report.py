@@ -183,7 +183,6 @@ class CustomDetailedReport():
             self.main_task_assistant.cfg
         )
 
-        print(f"construct_director_sobjects output for {current_subtopic_task}: ", director_sobject)
         if director_sobject:
             director_sobject_dict = director_sobject.dict()
             director_sobject_dict["report"] = director_report
