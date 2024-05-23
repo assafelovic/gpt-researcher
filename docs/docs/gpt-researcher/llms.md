@@ -8,6 +8,27 @@ Below you can find how to configure the various supported LLMs.
 
 ## Ollama
 
+To use [Ollama](http://www.ollama.com) you have to set the following environment variables
+
+```bash
+# use ollama for both, LLM and EMBEDDING provider
+LLM_PROVIDER=ollama
+EMBEDDING_PROVIDER=ollama
+
+# the Ollama endpoint to use
+OLLAMA_BASE_URL=http://localhost:11434
+
+# one of the LLM models supported by Ollama
+FAST_LLM_MODEL=llama3
+# one of the LLM models supported by Ollama 
+SMART_LLM_MODEL=llama3 
+# the temperature to use, defaults to 0.55
+TEMPERATURE=0.55
+
+# one of the embedding models supported by Ollama 
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+```
+
 ## Groq
 
 ## Anthropic
