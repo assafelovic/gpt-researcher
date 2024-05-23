@@ -18,14 +18,14 @@ EMBEDDING_PROVIDER=ollama
 # the Ollama endpoint to use
 OLLAMA_BASE_URL=http://localhost:11434
 
-# one of the LLM models supported by Ollama
+# specify one of the LLM models supported by Ollama
 FAST_LLM_MODEL=llama3
-# one of the LLM models supported by Ollama 
+# specify one of the LLM models supported by Ollama 
 SMART_LLM_MODEL=llama3 
 # the temperature to use, defaults to 0.55
 TEMPERATURE=0.55
 
-# one of the embedding models supported by Ollama 
+# specify one of the embedding models supported by Ollama 
 OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 ```
 
