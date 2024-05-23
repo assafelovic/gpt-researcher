@@ -8,9 +8,14 @@ from gpt_researcher.master.functions import (add_source_urls,
                                              table_of_contents)
 from gpt_researcher.utils.llm import construct_director_sobject, construct_company_sobject, construct_directors
 from gpt_researcher.utils.validators import CompanyReport, Director, Directors, Subtopics
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class CustomDetailedReport():
-    def __init__(self, query: str, source_urls, config_path: str, subtopics=[], include_domains=None, exclude_domains=None, parent_sub_queries=None, child_sub_queries=None, directors: Optional[Union[List[str], Directors]] = None):
+    def __init__(self, query: str, source_urls, directors, config_path: str, subtopics=[], include_domains=None, exclude_domains=None, parent_sub_queries=None, child_sub_queries=None, ):
         self.query = query
         self.source_urls = source_urls
         self.config_path = config_path
@@ -40,28 +45,40 @@ class CustomDetailedReport():
         self.company_sobject = None
 
     def _initialize_directors(self, directors):
-        if directors is None:
-            return Directors(directors=[])
-        elif isinstance(directors, list):
-            directors_list = [Director(first_name=name.split()[0], last_name=" ".join(name.split()[1:])) for name in directors]
-            return Directors(directors=directors_list)
+        if directors == []:
+            logger.info("No directors provided. Directors will be constructed.")
+            return None
         else:
-            return directors
+            logger.info(f"Initializing directors from provided list: {directors}")
+            directors_list = Directors(directors=[])
+            for name in directors:
+                name_parts = name.split()
+                if len(name_parts) >= 2:
+                    first_name = name_parts[0]
+                    last_name = " ".join(name_parts[1:])
+                    directors_list.directors.append(Director(first_name=first_name, last_name=last_name))
+                else:
+                    logger.warning(f"Cannot construct directors from user provided list; failed on name: {name}")
+                    logger.warning("Will default to construct directors from search")
+                    return None
+            return directors_list
 
     async def run(self):
         # Conduct initial research using the main assistant
         await self._initial_research()
 
         # Get list of all subtopics
-        if not self.directors.directors:
-            print(f"Constructing directors using construct_directors function")
+        if not self.directors:
+            logger.info(f"Constructing directors using construct_directors function")
             self.directors = await construct_directors(
                 task=self.query,
                 data=self.main_task_assistant.context,
                 config=self.main_task_assistant.cfg,
             )
+        else:
+            logger.info("Using the provided directors list")
         
-        print("Directors **** : ", self.directors.directors)
+        logger.info("Directors **** : %s", self.directors)
         
         # Generate report introduction
         compliance_report = await self.main_task_assistant.write_report()
@@ -72,7 +89,6 @@ class CustomDetailedReport():
 
         # Generate the subtopic reports based on the subtopics gathered
         # _, report_body = await self._generate_directors_reports(directors)
-        print("Directors **** : ", self.directors.directors)
         await self._generate_directors_reports(self.directors)
 
         # Construct the final list of visited urls
@@ -122,9 +138,7 @@ class CustomDetailedReport():
         print("Director: ", director)
         print("Report Type: ", self.main_task_assistant.report_type)
 
-        # current_subtopic_task = director.dict()["fullname"]
         current_subtopic_task = f"{director.first_name} {director.last_name}"
-
         
         if self.child_sub_queries:
             custom_sub_queries = [f"\"{current_subtopic_task}\" {child_sub_query}" for child_sub_query in self.child_sub_queries]

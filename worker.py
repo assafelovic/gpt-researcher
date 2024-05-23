@@ -16,7 +16,7 @@ def send_to_salesforce(report, salesforce_id):
     url = "https://fundpath-dev-ed.develop.my.salesforce.com/services/apexrest/compliance_report_response"
     headers = {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 00DQy00000770H2!AQEAQLfjpC9kTd_mtcz8zT4DVOQcxvDDD6GhGyOxBXo_P1xZPlLsU8Z1XXQvaEwSAJ0.VmRcd8iQcjIMYTOF_X0lRxZWVi1j",
+        "Authorization": "Bearer 00DQy00000770H2!AQEAQC7f6uBPuNFd9dUOc2icQGMycxxDa_DNaLwGozxXf9wFAd1cMFhzu1G7G2nNnjp5cePLiGNWYQclmxRBJ1pB101WMrxX",
         "Cookie": "BrowserId=Cw4X-1zQEe6mwN_5Z-AtVA; CookieConsentPolicy=0:1; LSKey-c$CookieConsentPolicy=0:1"
     }
     data = report.dict()

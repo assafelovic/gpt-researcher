@@ -66,7 +66,7 @@ class CompanySobject(BaseModel):
     """Company Details"""
     company_name: str = Field(..., description="Full legal company name")
     registration_number: str = Field(..., description="Company registration number")
-    incorporation_date: Optional[str] = Field(None, description="Incorporation date (format: YYYY-MM-DD)")
+    incorporation_date: Optional[str] = Field(None, description="Incorporation date in yyyy-mm-dd format (e.g. 2023-02-13)")
     jurisdiction: Optional[str] = Field(None, description="Jurisdiction of incorporation")
     registered_address: Optional[str] = Field(None, description="Registered office address")
     licenses: Optional[str] = Field(None, description="Regulatory licenses and registrations held")
