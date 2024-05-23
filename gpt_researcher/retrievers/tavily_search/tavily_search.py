@@ -4,6 +4,7 @@
 import os
 from tavily import TavilyClient
 from duckduckgo_search import DDGS
+from yahoo_search import search
 
 
 class TavilySearch():
@@ -51,6 +52,10 @@ class TavilySearch():
             search_response = [{"href": obj["url"], "body": obj["content"]} for obj in sources]
         except Exception as e: # Fallback in case overload on Tavily Search API
             print(f"Error: {e}. Fallback to DuckDuckGo Search API...")
-            ddg = DDGS()
-            search_response = ddg.text(self.query, region='wt-wt', max_results=max_results)
+            try:
+                ddg = DDGS()
+                search_response = ddg.text(self.query, region='wt-wt', max_results=max_results)
+            except Exception as e:
+                print(f"Error: {e}. Fallback to Yahoo Search API...")
+                search_response = [{"href": obj.link, "body": obj.text, "title": obj.title} for obj in search(self.query).pages]
         return search_response

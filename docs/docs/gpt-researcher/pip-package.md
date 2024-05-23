@@ -1,4 +1,6 @@
 # PIP Package
+[![PyPI version](https://badge.fury.io/py/gpt-researcher.svg)](https://badge.fury.io/py/gpt-researcher)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/examples/pip-run.ipynb)
 
 🌟 **Exciting News!** Now, you can integrate `gpt-researcher` with your apps seamlessly!
 
