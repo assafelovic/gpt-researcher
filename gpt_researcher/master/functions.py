@@ -22,12 +22,12 @@ def get_retriever(retriever):
         case "tavily":
             from gpt_researcher.retrievers import TavilySearch
             retriever = TavilySearch
-        case "tavily_news":
-            from gpt_researcher.retrievers import TavilyNews
-            retriever = TavilyNews
         case "google":
             from gpt_researcher.retrievers import GoogleSearch
             retriever = GoogleSearch
+        case "yahoo":
+            from gpt_researcher.retrievers import YahooSearch
+            retriever = YahooSearch
         case "searx":
             from gpt_researcher.retrievers import SearxSearch
             retriever = SearxSearch
@@ -40,7 +40,7 @@ def get_retriever(retriever):
         case "duckduckgo":
             from gpt_researcher.retrievers import Duckduckgo
             retriever = Duckduckgo
-        case "BingSearch":
+        case "bing":
             from gpt_researcher.retrievers import BingSearch
             retriever = BingSearch
 
