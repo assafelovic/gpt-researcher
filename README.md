@@ -120,6 +120,7 @@ pip install gpt-researcher
 ```
 
 ```python
+...
 from gpt_researcher import GPTResearcher
 
 query = "why is Nvidia stock going up?"
@@ -128,6 +129,7 @@ researcher = GPTResearcher(query=query, report_type="research_report")
 research_result = await researcher.conduct_research()
 # Write the report
 report = await researcher.write_report()
+...
 ```
 
 **For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/pip-package) page.**
