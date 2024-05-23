@@ -25,6 +25,7 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 
 - To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right resources and information.
 - Current LLMs are trained on past and outdated information, with heavy risks of hallucinations, making them almost irrelevant for research tasks.
+- Current LLMs are limited to short token outputs which are not sufficient for long detailed research reports (2k+ words).
 - Services that enable web search (such as ChatGPT + Web Plugin), only consider limited sources and content that in some cases result in superficial and biased answers.
 - Using only a selection of web sources can create bias in determining the right conclusions for research tasks.
 
