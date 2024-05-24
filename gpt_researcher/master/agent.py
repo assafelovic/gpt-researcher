@@ -3,9 +3,10 @@ import time
 
 from gpt_researcher.config import Config
 from gpt_researcher.context.compression import ContextCompressor
+from gpt_researcher.document import DocumentLoader
 from gpt_researcher.master.functions import *
 from gpt_researcher.memory import Memory
-from gpt_researcher.utils.enum import ReportType
+from gpt_researcher.utils.enum import ReportSource, ReportType
 
 
 class GPTResearcher:
@@ -17,6 +18,7 @@ class GPTResearcher:
         self,
         query: str,
         report_type: str = ReportType.ResearchReport.value,
+        report_source=ReportSource.Web.value,
         source_urls=None,
         config_path=None,
         websocket=None,
@@ -26,6 +28,7 @@ class GPTResearcher:
         subtopics: list = [],
         visited_urls: set = set(),
         verbose: bool = True,
+        context=[]
     ):
         """
         Initialize the GPT Researcher class.
@@ -46,10 +49,11 @@ class GPTResearcher:
         self.role = role
         self.report_type = report_type
         self.report_prompt = get_prompt_by_report_type(self.report_type)  # this validates the report type
+        self.report_source = report_source
         self.websocket = websocket
         self.cfg = Config(config_path)
         self.retriever = get_retriever(self.cfg.retriever)
-        self.context = []
+        self.context = context
         self.source_urls = source_urls
         self.memory = Memory(self.cfg.embedding_provider)
         self.visited_urls = visited_urls
@@ -80,10 +84,18 @@ class GPTResearcher:
 
         # If specified, the researcher will use the given urls as the context for the research.
         if self.source_urls:
-            self.context = await self.get_context_by_urls(self.source_urls)
+            context = await self.get_context_by_urls(self.source_urls)
+            
+        elif self.report_source == ReportSource.Local.value:
+            document_data = await DocumentLoader(self.cfg.doc_path).load()
+            context = await self.get_context_by_search(self.query, document_data)
+        
         else:
-            self.context = await self.get_context_by_search(self.query)
+            context = await self.get_context_by_search(self.query)
 
+        # Extending the global context (This is useful instead of setting the context directly above to avoid over-writing input context)
+        self.context.extend(context)
+        
         time.sleep(2)
 
         return self.context
@@ -95,6 +107,7 @@ class GPTResearcher:
         Returns:
             str: The report
         """
+
         if self.verbose:
             await stream_output("logs", f"✍️ Writing summary for research task: {self.query}...", self.websocket)
 
@@ -106,6 +119,7 @@ class GPTResearcher:
                 context=self.context,
                 agent_role_prompt=self.role,
                 report_type=self.report_type,
+                report_source=self.report_source,
                 websocket=self.websocket,
                 cfg=self.cfg,
                 main_topic=self.parent_query,
@@ -117,6 +131,7 @@ class GPTResearcher:
                 context=self.context,
                 agent_role_prompt=self.role,
                 report_type=self.report_type,
+                report_source=self.report_source,
                 websocket=self.websocket,
                 cfg=self.cfg
             )
@@ -135,7 +150,7 @@ class GPTResearcher:
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
         return await self.get_similar_content_by_query(self.query, scraped_sites)
 
-    async def get_context_by_search(self, query):
+    async def get_context_by_search(self, query, scraped_data: list = []):
         """
            Generates the context for the research task by searching the query and scraping the results
         Returns:
@@ -155,14 +170,15 @@ class GPTResearcher:
                                 self.websocket)
 
         # Using asyncio.gather to process the sub_queries asynchronously
-        context = await asyncio.gather(*[self.process_sub_query(sub_query) for sub_query in sub_queries])
+        context = await asyncio.gather(*[self.process_sub_query(sub_query, scraped_data) for sub_query in sub_queries])
         return context
 
-    async def process_sub_query(self, sub_query: str):
+    async def process_sub_query(self, sub_query: str, scraped_data: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context.
 
         Args:
             sub_query (str): The sub-query generated from the original query
+            scraped_data (list): Scraped data passed in
 
         Returns:
             str: The context gathered from search
@@ -170,8 +186,10 @@ class GPTResearcher:
         if self.verbose:
             await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
 
-        scraped_sites = await self.scrape_sites_by_query(sub_query)
-        content = await self.get_similar_content_by_query(sub_query, scraped_sites)
+        if not scraped_data:
+            scraped_data = await self.scrape_data_by_query(sub_query)
+
+        content = await self.get_similar_content_by_query(sub_query, scraped_data)
 
         if content and self.verbose:
             await stream_output("logs", f"📃 {content}", self.websocket)
@@ -195,7 +213,7 @@ class GPTResearcher:
 
         return new_urls
 
-    async def scrape_sites_by_query(self, sub_query):
+    async def scrape_data_by_query(self, sub_query):
         """
         Runs a sub-query
         Args:
@@ -213,15 +231,20 @@ class GPTResearcher:
         # Scrape Urls
         if self.verbose:
             await stream_output("logs", f"🤔 Researching for relevant information...\n", self.websocket)
+
+        # Scrape Urls
         scraped_content_results = scrape_urls(new_search_urls, self.cfg)
         return scraped_content_results
 
     async def get_similar_content_by_query(self, query, pages):
         if self.verbose:
             await stream_output("logs", f"📝 Getting relevant content based on query: {query}...", self.websocket)
+
         # Summarize Raw Data
         context_compressor = ContextCompressor(
-            documents=pages, embeddings=self.memory.get_embeddings())
+            documents=pages,
+            embeddings=self.memory.get_embeddings()
+        )
         # Run Tasks
         return context_compressor.get_context(query, max_results=8)
 

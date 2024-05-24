@@ -13,8 +13,8 @@
     <link rel="stylesheet" href="/site/styles.css"/>
     <style>
         .avatar {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
         }
 
@@ -58,7 +58,7 @@
 </section>
 
 <main class="container" id="form">
-    <div class="agent-item"><img src="/static/defaultAgentAvatar.JPG" class="avatar"
+    <div class="agent-item"><img src="/static/gptr-logo.png" class="avatar"
                                                 alt="Auto Agent"></div>
     <form method="POST" class="mt-3" onsubmit="GPTResearcher.startResearch(); return false;">
         <div class="form-group">
@@ -82,7 +82,13 @@
             </select>
         </div>
         <div class="form-group">
-</div>
+            <label for="report_source" class="agent-question">What sources would you like me to research from?</label>
+            <p class="text-left mt-0 pt-0" style="font-size: 0.7rem;">You can now do research on local documents as well. Please make sure to add the DOC_PATH env variable pointing to your documents folder.</p>
+            <select name="report_source" class="form-control" required>
+                <option value="web">The Web</option>
+                <option value="local">My Documents</option>
+            </select>
+        </div>
         <input type="submit" value="Research" class="btn btn-primary button-padding">
     </form>
 

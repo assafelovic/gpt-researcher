@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 import warnings
-from gpt_researcher.utils.enum import ReportType
-
+from gpt_researcher.utils.enum import ReportType, ReportSource
 
 def generate_search_queries_prompt(question: str, parent_query: str, report_type: str, max_iterations: int=3,):
     """ Generates the search queries prompt for the given question.
@@ -25,12 +24,30 @@ def generate_search_queries_prompt(question: str, parent_query: str, report_type
            f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"].'
 
 
-def generate_report_prompt(question, context, report_format="apa", total_words=1000):
+def generate_report_prompt(question: str, context, report_source: str, report_format="apa", total_words=1000):
     """ Generates the report prompt for the given question and research summary.
     Args: question (str): The question to generate the report prompt for
             research_summary (str): The research summary to generate the report prompt for
     Returns: str: The report prompt for the given question and research summary
     """
+    
+    reference_prompt = ""
+    if report_source == ReportSource.Web.value:
+        reference_prompt = f"""
+            You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
+            Every url should be hyperlinked: [url website](url)
+            Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report : 
+        
+            eg:    
+                # Report Header
+                
+                This is a sample text. ([url website](url))
+            """
+    else:
+        reference_prompt = f"""
+            You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
+        """
+        
 
     return f'Information: """{context}"""\n\n' \
            f'Using the above information, answer the following' \
@@ -41,16 +58,7 @@ def generate_report_prompt(question, context, report_format="apa", total_words=1
            "You must write the report with markdown syntax.\n " \
            f"Use an unbiased and journalistic tone. \n" \
            "You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.\n" \
-           f"You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.\n" \
-           "Every url should be hyperlinked: [url website](url)"\
-           """
-            Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report : 
-        
-            eg:    
-                # Report Header
-                
-                This is a sample text. ([url website](url))
-            """\
+           f"{reference_prompt}"\
             f"You MUST write the report in {report_format} format.\n " \
             f"Cite search results using inline notations. Only cite the most \
             relevant results that answer the query accurately. Place these citations at the end \
@@ -59,7 +67,7 @@ def generate_report_prompt(question, context, report_format="apa", total_words=1
             f"Assume that the current date is {datetime.now().strftime('%B %d, %Y')}"
 
 
-def generate_resource_report_prompt(question, context, report_format="apa", total_words=700):
+def generate_resource_report_prompt(question, context, report_source: str, report_format="apa", total_words=1000):
     """Generates the resource report prompt for the given question and research summary.
 
     Args:
@@ -69,6 +77,18 @@ def generate_resource_report_prompt(question, context, report_format="apa", tota
     Returns:
         str: The resource report prompt for the given question and research summary.
     """
+    
+    reference_prompt = ""
+    if report_source == ReportSource.Web.value:
+        reference_prompt = f"""
+            You MUST include all relevant source urls.
+            Every url should be hyperlinked: [url website](url)
+            """
+    else:
+        reference_prompt = f"""
+            You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
+        """
+    
     return f'"""{context}"""\n\nBased on the above information, generate a bibliography recommendation report for the following' \
            f' question or topic: "{question}". The report should provide a detailed analysis of each recommended resource,' \
            ' explaining how each source can contribute to finding answers to the research question.\n' \
@@ -76,15 +96,15 @@ def generate_resource_report_prompt(question, context, report_format="apa", tota
            'Ensure that the report is well-structured, informative, in-depth, and follows Markdown syntax.\n' \
            'Include relevant facts, figures, and numbers whenever available.\n' \
            f'The report should have a minimum length of {total_words} words.\n' \
-        'You MUST include all relevant source urls.'\
-        'Every url should be hyperlinked: [url website](url)'
+           'You MUST include all relevant source urls.'\
+           'Every url should be hyperlinked: [url website](url)'\
+           f'{reference_prompt}'
 
-
-def generate_custom_report_prompt(query_prompt, context, report_format="apa", total_words=1000):
+def generate_custom_report_prompt(query_prompt, context, report_source: str, report_format="apa", total_words=1000):
     return f'"{context}"\n\n{query_prompt}'
 
 
-def generate_outline_report_prompt(question, context, report_format="apa", total_words=1200):
+def generate_outline_report_prompt(question, context, report_source: str, report_format="apa", total_words=1000):
     """ Generates the outline report prompt for the given question and research summary.
     Args: question (str): The question to generate the outline report prompt for
             research_summary (str): The research summary to generate the outline report prompt for
@@ -96,6 +116,17 @@ def generate_outline_report_prompt(question, context, report_format="apa", total
            ' for the research report, including the main sections, subsections, and key points to be covered.' \
            f' The research report should be detailed, informative, in-depth, and a minimum of {total_words} words.' \
            ' Use appropriate Markdown syntax to format the outline and ensure readability.'
+
+
+def get_report_by_type(report_type: str):
+    report_type_mapping = {
+        ReportType.ResearchReport.value: generate_report_prompt,
+        ReportType.ResourceReport.value: generate_resource_report_prompt,
+        ReportType.OutlineReport.value: generate_outline_report_prompt,
+        ReportType.CustomReport.value: generate_custom_report_prompt,
+        ReportType.SubtopicReport.value: generate_subtopic_report_prompt
+    }
+    return report_type_mapping[report_type]
 
 
 def auto_agent_instructions():
@@ -167,12 +198,12 @@ def generate_subtopics_prompt() -> str:
 
 def generate_subtopic_report_prompt(
     current_subtopic,
-    existing_headers,
-    main_topic,
+    existing_headers: list,
+    main_topic: str,
     context,
-    report_format="apa",
-    total_words=800,
+    report_format: str = "apa",
     max_subsections=5,
+    total_words=800
 ) -> str:
 
     return f"""
