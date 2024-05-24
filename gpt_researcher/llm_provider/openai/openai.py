@@ -51,7 +51,7 @@ class OpenAIProvider:
             api_key=self.api_key
         )
         if self.base_url:
-            llm.base_url = self.base_url
+            llm.openai_api_base = self.base_url
 
         return llm
 

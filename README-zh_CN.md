@@ -43,7 +43,7 @@
 https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0-b58d-098a31c40fda
 
 ## 教程
- - [运行原理](https://docs.tavily.com/blog/building-gpt-researcher)
+ - [运行原理](https://docs.gptr.dev/blog/building-gpt-researcher)
  - [如何安装](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
  - [现场演示](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
@@ -57,7 +57,7 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 
 ## 📖 文档
 
-请参阅[此处](https://docs.tavily.com/docs/gpt-researcher/getting-started)，了解完整文档：
+请参阅[此处](https://docs.gptr.dev/docs/gpt-researcher/getting-started)，了解完整文档：
 
 - 入门（安装、设置环境、简单示例）
 - 操作示例（演示、集成、docker 支持）
@@ -107,7 +107,7 @@ $ uvicorn main:app --reload
 
 > **第 5 步** - 在任何浏览器上访问 http://localhost:8000，享受研究乐趣！
 
-要了解如何开始使用 Docker 或了解有关功能和服务的更多信息，请访问 [documentation](https://docs.tavily.com) 页面。
+要了解如何开始使用 Docker 或了解有关功能和服务的更多信息，请访问 [documentation](https://docs.gptr.dev) 页面。
 
 ## 🚀 贡献
 我们非常欢迎您的贡献！如果您感兴趣，请查看 [contributing](CONTRIBUTING.md)。

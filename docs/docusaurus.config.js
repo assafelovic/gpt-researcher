@@ -3,9 +3,9 @@ const math = require('remark-math');
 const katex = require('rehype-katex');
 
 module.exports = {
-  title: 'Tavily',
-  tagline: 'Tavily is the leading search engine optimized for LLMs',
-  url: 'https://docs.tavily.com',
+  title: 'GPT Researcher',
+  tagline: 'The leading autonomous AI research agent',
+  url: 'https://docs.gptr.dev',
   baseUrl: '/',
   onBrokenLinks: 'ignore',
   //deploymentBranch: 'master',
@@ -16,10 +16,10 @@ module.exports = {
   projectName: 'gpt-researcher',
   themeConfig: {
     navbar: {
-      //title: 'Tavily',
+      title: 'GPT Researcher',
       logo: {
-        alt: 'Tavily',
-        src: 'img/tavily.png',
+        alt: 'GPT Researcher',
+        src: 'img/gptr-logo.png',
       },
       items: [
         {
@@ -37,12 +37,7 @@ module.exports = {
           label: 'FAQ',
         },
         {
-            href: 'https://app.tavily.com',
-            position: 'right',
-            label: 'Get API Key',
-        },
-        {
-            href: 'mailto:support@tavily.com',
+            href: 'mailto:assaf.elovic@gmail.com',
             position: 'left',
             label: 'Contact',
         },
@@ -65,11 +60,11 @@ module.exports = {
             },
             {
               label: 'Twitter',
-              href: 'https://twitter.com/tavilyai',
+              href: 'https://twitter.com/assaf_elovic',
             },
             {
               label: 'LinkedIn',
-              href: 'https://www.linkedin.com/company/tavily/',
+              href: 'https://www.linkedin.com/in/assafe/',
             },
           ],
         },
@@ -78,20 +73,16 @@ module.exports = {
           items: [
             {
               label: 'Homepage',
-              href: 'https://tavily.com',
-            },
-            {
-              label: 'Tavily Platform',
-              href: 'https://tavily.com',
+              href: 'https://gptr.dev',
             },
             {
               label: 'Contact',
-              href: 'mailto:support@tavily.com',
+              href: 'mailto:assafelovic@gmail.com',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Tavily.`,
+      copyright: `Copyright © ${new Date().getFullYear()} GPT Researcher.`,
     },
   },
   presets: [

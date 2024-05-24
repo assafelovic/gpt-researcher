@@ -6,3 +6,7 @@ class ReportType(Enum):
     CustomReport = 'custom_report'
     DetailedReport = 'detailed_report'
     SubtopicReport = 'subtopic_report'
+    
+class ReportSource(Enum):
+    Web = 'web'
+    Local = 'local'
