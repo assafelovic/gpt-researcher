@@ -6,7 +6,6 @@ Below you can find how to configure the various supported LLMs.
 
 ## OpenAI
 Create a local OpenAI API using [llama.cpp Server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md#quick-start).
-6 
 
 ### custom OpenAI API LLM
 ```bash
