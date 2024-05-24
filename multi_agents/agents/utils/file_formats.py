@@ -2,8 +2,6 @@ import aiofiles
 import urllib
 import uuid
 import mistune
-from docx import Document
-from htmldocx import HtmlToDocx
 
 
 async def write_to_file(filename: str, text: str) -> None:
