@@ -89,3 +89,10 @@ To change the research query and customize the report, edit the `task.json` file
   "verbose": true
 }
 ```
+
+## To Deploy
+
+```shell
+pip install langgraph-cli
+langgraph up
+```
