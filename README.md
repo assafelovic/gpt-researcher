@@ -1,6 +1,6 @@
-<h1 style="display: flex; align-items: baseline; gap: 10px;">
+<h1 style="display: flex; align-items: center; gap: 10px;">
   <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/a45bac7c-092c-42e5-8eb6-69acbf20dde5" alt="Logo" width="30">
-  <span style="display: inline-block; line-height: 1;">GPT Researcher</span>
+  GPT Researcher
 </h1>
 
 [![Official Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white)](https://gptr.dev)
