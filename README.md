@@ -1,4 +1,4 @@
-# 🔎 GPT Researcher
+# ![gptr-logo-small](https://github.com/assafelovic/gpt-researcher/assets/13554167/330e3a6a-a8f1-47d0-9575-855046f5e1d1) GPT Researcher
 [![Official Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white)](https://gptr.dev)
 [![Discord Follow](https://dcbadge.vercel.app/api/server/SK3KKuSD?style=for-the-badge)](https://discord.gg/SK3KKuSD)
 [![Official Website](https://img.shields.io/badge/Documentation-GPTR-pink?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
