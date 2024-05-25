@@ -41,8 +41,9 @@ The main idea is to run "planner" and "execution" agents, whereas the planner ge
 The agents leverage both `gpt3.5-turbo` and `gpt-4o` (128K context) to complete a research task. We optimize for costs using each only when necessary. **The average research task takes around 3 minutes to complete, and costs ~$0.1.**
 
 <div align="center">
-<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
+<img align="center" height="500" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/ea762b60-ad4e-4be1-9800-62c40b9c43b9">
 </div>
+
 
 
 More specifically:
