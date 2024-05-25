@@ -8,6 +8,7 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 
 - To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right resources and information.
 - Current LLMs are trained on past and outdated information, with heavy risks of hallucinations, making them almost irrelevant for research tasks.
+- Current LLMs are limited to short token outputs which are not sufficient for long detailed research reports (2k+ words).
 - Solutions that enable web search (such as ChatGPT + Web Plugin), only consider limited resources and content that in some cases result in superficial conclusions or biased answers.
 - Using only a selection of resources can create bias in determining the right conclusions for research questions or tasks. 
 
@@ -16,7 +17,7 @@ The main idea is to run "planner" and "execution" agents, whereas the planner ge
 The agents leverage both gpt3.5-turbo and gpt-4-turbo (128K context) to complete a research task. We optimize for costs using each only when necessary. **The average research task takes around 3 minutes to complete, and costs ~$0.1.**
 
 <div align="center">
-<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png" />
+<img align="center" height="600" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527" />
 </div>
 
 
