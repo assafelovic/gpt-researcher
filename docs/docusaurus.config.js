@@ -5,7 +5,7 @@ const katex = require('rehype-katex');
 module.exports = {
   title: 'GPT Researcher',
   tagline: 'The leading autonomous AI research agent',
-  url: 'https://docs.gptr.dev',
+  url: 'docs.gptr.dev',
   baseUrl: '/',
   onBrokenLinks: 'ignore',
   //deploymentBranch: 'master',
