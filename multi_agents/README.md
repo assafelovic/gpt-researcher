@@ -89,3 +89,12 @@ To change the research query and customize the report, edit the `task.json` file
   "verbose": true
 }
 ```
+
+## To Deploy
+
+```shell
+pip install langgraph-cli
+langgraph up
+```
+
+From there, see documentation [here](https://github.com/langchain-ai/langgraph-example) on how to use the streaming and async endpoints, as well as the playground.
