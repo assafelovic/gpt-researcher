@@ -25,9 +25,6 @@ def get_retriever(retriever):
         case "google":
             from gpt_researcher.retrievers import GoogleSearch
             retriever = GoogleSearch
-        case "yahoo":
-            from gpt_researcher.retrievers import YahooSearch
-            retriever = YahooSearch
         case "searx":
             from gpt_researcher.retrievers import SearxSearch
             retriever = SearxSearch
