@@ -1,4 +1,4 @@
-langgraph==0.0.40
+langgraph
 gpt_researcher
 langchain-community
 python-dotenv
