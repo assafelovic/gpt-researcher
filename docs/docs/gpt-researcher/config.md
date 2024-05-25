@@ -14,9 +14,11 @@ As seen below, OpenAI still stands as the superior LLM. We assume it will stay t
 </div>
 
 The default config.py file can be found in `/gpt_researcher/config/`. It supports various options for customizing GPT Researcher to your needs.
-Below is a list of current support options. **Please follow config.py file for additional future support**.
+You can also include your own external JSON file `config.json` by adding the path in the `config_file` param. **Please follow the config.py file for additional future support**.
 
-- `RETRIEVER`: Web search engine used for retrieving sources. Defaults to `tavily`. Options: `duckduckgo`, `bing`, `google`, `serper`, `searx`.
+Below is a list of current supported options:
+
+- `RETRIEVER`: Web search engine used for retrieving sources. Defaults to `tavily`. Options: `duckduckgo`, `bing`, `google`, `serper`, `searx`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
 - `EMBEDDING_PROVIDER`: Provider for embedding model. Defaults to `openai`. Options: `ollama`, `huggingface`, `azureopenai`, `custom`.
 - `LLM_PROVIDER`: LLM provider. Defaults to `openai`. Options: `google`, `ollama`, `groq` and much more!
 - `FAST_LLM_MODEL`: Model name for fast LLM operations such summaries. Defaults to `gpt-3.5-turbo-16k`.
@@ -36,17 +38,13 @@ Below is a list of current support options. **Please follow config.py file for a
 - `USER_AGENT`: Custom User-Agent string for web crawling and web requests.
 - `MEMORY_BACKEND`: Backend used for memory operations, such as local storage of temporary data. Defaults to `local`.
 
-To change the default configurations, you can simply add env variables to your `.env` file as named in the config.py file.
+To change the default configurations, you can simply add env variables to your `.env` file as named above or export manually in your local project directory.
 For example, to change the search engine and report format:
 ```bash
 export RETRIEVER=bing
 export REPORT_FORMAT=IEEE
 ```
-
-Please note that you can also include your own external JSON file `config.json` by adding the path in the `config_file` param.
-
+Please note that you might need to export additional env vars and obtain API keys for other supported search retrievers and LLM providers. Please follow your console logs for further assistance.
 To learn more about additional LLM support you can check out the docs [here](/docs/gpt-researcher/llms).
 
-You can also change the search engine by modifying the `retriever` param to others such as `duckduckgo`, `bing`, `google`, `serper`, `searx` and more. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers.
-
-Please note that you might need to sign up and obtain an API key for any of the other supported retrievers and LLM providers.
+You can also include your own external JSON file `config.json` by adding the path in the `config_file` param.
