@@ -39,8 +39,12 @@ font-weight: 600;
     font-size: 22px;
 }
 
+.navbar {
+    font-size: 20px;
+}
+
 li {
-font-size: 20px;
+font-size: 22px;
 }
 
 blockquote {
