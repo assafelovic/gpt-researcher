@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.10,<4.0"
+python = ">=3.10,<3.12"
 beautifulsoup4 = ">=4.12.2"
 colorama = ">=0.4.6"
 duckduckgo_search = ">=4.1.1"
@@ -36,9 +36,10 @@ SQLAlchemy = ">=2.0.28"
 mistune = "^3.0.2"
 htmldocx = "^0.0.6"
 python-docx = "^1.1.0"
-langchain-openai = "^0.1.0"
+langchain-openai = "^0.1.1"
 langchain-google-genai = "^0.0.11"
 lxml = { version = ">=4.9.2", extras = ["html_clean"] }
+unstructured = "^0.13.0"
 
 [build-system]
 requires = ["poetry-core"]

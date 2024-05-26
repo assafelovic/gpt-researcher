@@ -10,6 +10,13 @@ class Memory:
             case "ollama":
                 from langchain.embeddings import OllamaEmbeddings
                 _embeddings = OllamaEmbeddings(model="llama2")
+            case "custom":
+                from langchain_openai import OpenAIEmbeddings
+                _embeddings = OpenAIEmbeddings(model=os.environ.get("OPENAI_EMBEDDING_MODEL", "custom"),
+                                                   openai_api_key=os.environ.get("OPENAI_API_KEY", "custom"), 
+                                                   openai_api_base=os.environ.get("OPENAI_BASE_URL", "http://localhost:1234/v1"), #default for lmstudio
+                                                   check_embedding_ctx_length=False, #quick fix for lmstudio
+                                                   ) 
             case "openai":
                 from langchain_openai import OpenAIEmbeddings
                 _embeddings = OpenAIEmbeddings(model="text-embedding-3-small")

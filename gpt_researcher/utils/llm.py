@@ -27,6 +27,9 @@ def get_provider(llm_provider):
         case "google":
             from ..llm_provider import GoogleProvider
             llm_provider = GoogleProvider
+        case "groq":
+            from ..llm_provider import GroqProvider
+            llm_provider = GroqProvider
 
         case _:
             raise Exception("LLM provider not found.")
@@ -123,13 +126,14 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
 
         print(f"\n🤖 Calling {config.smart_llm_model}...\n")
 
-        if config.llm_provider == "openai":
-            model = ChatOpenAI(model=config.smart_llm_model)
-        elif config.llm_provider == "azureopenai":
-            from langchain_openai import AzureChatOpenAI
-            model = AzureChatOpenAI(model=config.smart_llm_model)
-        else:
-            return []
+        temperature = config.temperature
+        # temperature = 0 # Note: temperature throughout the code base is currently set to Zero
+        ProviderClass = get_provider(config.llm_provider)
+        provider = ProviderClass(model=config.smart_llm_model,
+                                 temperature=temperature,
+                                 max_tokens=config.smart_token_limit)
+        model = provider.llm
+
 
         chain = prompt | model | parser
 
