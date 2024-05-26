@@ -31,5 +31,8 @@ htmldocx
 lxml[html_clean]
 websockets
 unstructured
-pytest
-pytest-asyncio
+pandas
+
+# uncomment for testing
+# pytest
+# pytest-asyncio
