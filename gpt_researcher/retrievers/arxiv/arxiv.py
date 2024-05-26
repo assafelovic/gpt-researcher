@@ -5,12 +5,12 @@ class ArxivSearch:
     """
     Arxiv API Retriever
     """
-    def __init__(self, query, area=None, start_date=None, end_date=None):
+    def __init__(self, query, sort='Relevance'):
         self.arxiv = arxiv
         self.query = query
-        self.area = area
-        self.start_date = start_date.strftime("%Y%m%d") if start_date else None
-        self.end_date = end_date.strftime("%Y%m%d") if end_date else None
+        assert sort in ['Relevance', 'SubmittedDate'], "Invalid sort criterion"
+        self.sort = arxiv.SortCriterion.SubmittedDate if sort == 'SubmittedDate' else arxiv.SortCriterion.Relevance
+        
 
     def search(self, max_results=5):
         """
@@ -19,14 +19,22 @@ class ArxivSearch:
         :param max_results:
         :return:
         """
+
         arxiv_gen = list(arxiv.Client().results(
         self.arxiv.Search(
-            query= self.query +
-            " AND " if self.query else "" +
-            "(" + self.area + ")" if self.area else "" +
-            (" AND submittedDate:[" + self.start_date + "* TO " + self.end_date + "*]" if (self.start_date is not None) and (self.end_date is not None) else ""), 
+            query= self.query, #+
             max_results=max_results,
-            sort_by=arxiv.SortCriterion.SubmittedDate if self.start_date and self.end_date else arxiv.SortCriterion.Relevance,
-        ).search))
+            sort_by=self.sort,
+        )))
+
+        search_result = []
+
+        for result in arxiv_gen:
+
+            search_result.append({
+                "title": result.title,
+                "href": result.pdf_url,
+                "body": result.summary,
+            })
         
-        return arxiv_gen
+        return search_result
