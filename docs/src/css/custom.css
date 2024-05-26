@@ -35,6 +35,18 @@ a {
 font-weight: 600;
 }
 
+.markdown > p {
+    font-size: 20px;
+}
+
+.navbar {
+    font-size: 20px;
+}
+
+li {
+font-size: 20px;
+}
+
 blockquote {
   /* samsung blue with lots of transparency */
   background-color: #0c4da224;
