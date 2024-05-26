@@ -16,6 +16,9 @@ venv.bak/
 #Ignore generated outputs
 outputs/
 
+#Ignore my local docs
+my-docs/
+
 #Ignore pycache
 **/__pycache__/
 
@@ -27,3 +30,4 @@ node_modules
 .docusaurus
 build
 docs/build
+multi_agents/.langgraph-data/
