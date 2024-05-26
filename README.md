@@ -1,4 +1,8 @@
-# 🔎 GPT Researcher
+<h1 style="display: flex; align-items: center; gap: 10px;">
+  <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/a45bac7c-092c-42e5-8eb6-69acbf20dde5" alt="Logo" width="25">
+  GPT Researcher
+</h1>
+
 [![Official Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white)](https://gptr.dev)
 [![Official Website](https://img.shields.io/badge/Documentation-GPTR-pink?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
 [![Discord Follow](https://dcbadge.vercel.app/api/server/SK3KKuSD?style=for-the-badge)](https://discord.gg/SK3KKuSD)
@@ -37,8 +41,9 @@ The main idea is to run "planner" and "execution" agents, whereas the planner ge
 The agents leverage both `gpt3.5-turbo` and `gpt-4o` (128K context) to complete a research task. We optimize for costs using each only when necessary. **The average research task takes around 3 minutes to complete, and costs ~$0.1.**
 
 <div align="center">
-<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
+<img align="center" height="600" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527">
 </div>
+
 
 
 More specifically:
