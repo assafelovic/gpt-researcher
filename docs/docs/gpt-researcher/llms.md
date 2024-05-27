@@ -6,6 +6,9 @@ Current supported LLMs are `openai`, `google` (gemini), `azureopenai`, `ollama`,
 Using any model will require at least updating the `LLM_PROVIDER` param and passing the LLM provider API Key. You might also need to update the `SMART_LLM_MODEL` and `FAST_LLM_MODEL` env vars.
 To learn more about support customization options see [here](/gpt-researcher/config).
 
+**Please note**: GPT Researcher is optimized and heavily tested on GPT models. Some other models might run intro context limit errors, and unexpected responses.
+Please provide any feedback in our [Discord community](https://discord.gg/DUmbTebB) channel, so we can better improve the experience and performance.
+
 Below you can find examples for how to configure the various supported LLMs.
 
 ## Custom OpenAI
