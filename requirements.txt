@@ -13,10 +13,10 @@ fastapi
 python-multipart
 markdown
 langchain
+langchain_community
 langchain-openai
 langchain-google-genai
 langchain-groq
-langchain_community
 langchain_anthropic
 langchain_mistralai
 langchain_huggingface
