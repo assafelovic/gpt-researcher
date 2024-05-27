@@ -1,5 +1,5 @@
 import importlib
-from typing import Optional, Any
+from typing import Any
 
 from colorama import Fore, Style
 
@@ -15,52 +15,52 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
-            return ChatOpenAI(**kwargs)
+            llm = ChatOpenAI(**kwargs)
         elif provider == "anthropic":
             _check_pkg("langchain_anthropic")
             from langchain_anthropic import ChatAnthropic
 
-            return ChatAnthropic(**kwargs)
+            llm = ChatAnthropic(**kwargs)
         elif provider == "azure_openai":
             _check_pkg("langchain_openai")
             from langchain_openai import AzureChatOpenAI
 
-            return AzureChatOpenAI(**kwargs)
+            llm = AzureChatOpenAI(**kwargs)
         elif provider == "cohere":
             _check_pkg("langchain_cohere")
             from langchain_cohere import ChatCohere
 
-            return ChatCohere(**kwargs)
+            llm = ChatCohere(**kwargs)
         elif provider == "google_vertexai":
             _check_pkg("langchain_google_vertexai")
             from langchain_google_vertexai import ChatVertexAI
 
-            return ChatVertexAI(**kwargs)
+            llm = ChatVertexAI(**kwargs)
         elif provider == "google_genai":
             _check_pkg("langchain_google_genai")
             from langchain_google_genai import ChatGoogleGenerativeAI
 
-            return ChatGoogleGenerativeAI(**kwargs)
+            llm = ChatGoogleGenerativeAI(**kwargs)
         elif provider == "fireworks":
             _check_pkg("langchain_fireworks")
             from langchain_fireworks import ChatFireworks
 
-            return ChatFireworks(**kwargs)
+            llm = ChatFireworks(**kwargs)
         elif provider == "ollama":
             _check_pkg("langchain_community")
             from langchain_community.chat_models import ChatOllama
 
-            return ChatOllama(**kwargs)
+            llm = ChatOllama(**kwargs)
         elif provider == "together":
             _check_pkg("langchain_together")
             from langchain_together import ChatTogether
 
-            return ChatTogether(**kwargs)
+            llm = ChatTogether(**kwargs)
         elif provider == "mistralai":
             _check_pkg("langchain_mistralai")
             from langchain_mistralai import ChatMistralAI
 
-            return ChatMistralAI(**kwargs)
+            llm = ChatMistralAI(**kwargs)
         elif provider == "huggingface":
             _check_pkg("langchain_huggingface")
             from langchain_huggingface import ChatHuggingFace
@@ -68,12 +68,12 @@ class GenericLLMProvider:
             if "model" in kwargs or "model_name" in kwargs:
                 model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
                 kwargs = {"model_id": model_id, **kwargs}
-            return ChatHuggingFace(**kwargs)
+            llm = ChatHuggingFace(**kwargs)
         elif provider == "groq":
             _check_pkg("langchain_groq")
             from langchain_groq import ChatGroq
 
-            return ChatGroq(**kwargs)
+            llm = ChatGroq(**kwargs)
         elif provider == "bedrock":
             _check_pkg("langchain_aws")
             from langchain_aws import ChatBedrock
@@ -81,13 +81,14 @@ class GenericLLMProvider:
             if "model" in kwargs or "model_name" in kwargs:
                 model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
                 kwargs = {"model_id": model_id, **kwargs}
-            return ChatBedrock(**kwargs)
+            llm = ChatBedrock(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
                 f"Unsupported {provider=}.\n\nSupported model providers are: "
                 f"{supported}"
             )
+        return cls(llm)
 
 
     async def get_chat_response(self, messages, stream, websocket=None):
@@ -139,7 +140,7 @@ _SUPPORTED_PROVIDERS = {
 
 def _check_pkg(pkg: str) -> None:
     try:
-        importlib.import_module(pkg)
+        importlib.util.find_spec(pkg)
     except ImportError as e:
         pkg_kebab = pkg.replace("_", "-")
         raise ImportError(
