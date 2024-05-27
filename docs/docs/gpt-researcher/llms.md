@@ -27,7 +27,7 @@ FAST_LLM_MODEL="gpt-3.5-turbo-16k"
 SMART_LLM_MODEL="gpt-4o"
 
 ```
-### Custom OpenAI API EMBEDDING
+### Custom OpenAI API Embedding
 ```bash
 # use a custom OpenAI API EMBEDDING provider
 EMBEDDING_PROVIDER="custom"
