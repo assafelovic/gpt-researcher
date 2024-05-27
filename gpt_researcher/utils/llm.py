@@ -45,7 +45,7 @@ def get_llm(llm_provider, **kwargs):
             from ..llm_provider import AnthropicProvider
             llm_provider = AnthropicProvider
         case _:
-            from ..generic import GenericLLMProvider
+            from gpt_researcher.llm_provider import GenericLLMProvider
 
             return GenericLLMProvider.from_provider(llm_provider, **kwargs)
 
