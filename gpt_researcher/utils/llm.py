@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Optional
+from typing import Optional, Any, Dict
 
 from colorama import Fore, Style
 from fastapi import WebSocket
@@ -15,7 +15,7 @@ from gpt_researcher.master.prompts import auto_agent_instructions, generate_subt
 from .validators import Subtopics
 
 
-def get_provider(llm_provider):
+def get_llm(llm_provider, **kwargs):
     match llm_provider:
         case "openai":
             from ..llm_provider import OpenAIProvider
@@ -45,11 +45,11 @@ def get_provider(llm_provider):
             from ..llm_provider import AnthropicProvider
             llm_provider = AnthropicProvider
         case _:
-            raise Exception("LLM provider not found. "
-                            "Check here to learn more about support LLMs: "
-                            "https://docs.gptr.dev/docs/gpt-researcher/llms")
+            from ..generic import GenericLLMProvider
 
-    return llm_provider
+            return GenericLLMProvider.from_provider(llm_provider, **kwargs)
+
+    return llm_provider(**kwargs)
 
 
 async def create_chat_completion(
@@ -60,6 +60,7 @@ async def create_chat_completion(
         llm_provider: Optional[str] = None,
         stream: Optional[bool] = False,
         websocket: WebSocket | None = None,
+        llm_kwargs: Dict[str, Any] | None = None,
 ) -> str:
     """Create a chat completion using the OpenAI API
     Args:
@@ -82,12 +83,7 @@ async def create_chat_completion(
             f"Max tokens cannot be more than 8001, but got {max_tokens}")
 
     # Get the provider from supported providers
-    ProviderClass = get_provider(llm_provider)
-    provider = ProviderClass(
-        model,
-        temperature,
-        max_tokens
-    )
+    provider = get_llm(llm_provider, model=model, temperature=temperature, max_tokens=max_tokens, **llm_kwargs)
 
     # create response
     for _ in range(10):  # maximum of 10 attempts
@@ -143,10 +139,7 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
 
         temperature = config.temperature
         # temperature = 0 # Note: temperature throughout the code base is currently set to Zero
-        ProviderClass = get_provider(config.llm_provider)
-        provider = ProviderClass(model=config.smart_llm_model,
-                                 temperature=temperature,
-                                 max_tokens=config.smart_token_limit)
+        provider = get_llm(config.llm_provider, model=config.smart_llm_model, temperature=temperature, max_tokens=config.smart_token_limit, **config.llm_kwargs)
         model = provider.llm
 
 
