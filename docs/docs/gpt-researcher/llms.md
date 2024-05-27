@@ -4,10 +4,10 @@ However, GPT Researcher supports various open/closed source LLMs, and you can ea
 
 Below you can find how to configure the various supported LLMs.
 
-## OpenAI
+## Custom OpenAI
 Create a local OpenAI API using [llama.cpp Server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md#quick-start).
 
-### custom OpenAI API LLM
+### Custom OpenAI API LLM
 ```bash
 # use a custom OpenAI API LLM provider
 LLM_PROVIDER="openai"
@@ -23,7 +23,7 @@ FAST_LLM_MODEL="gpt-3.5-turbo-16k"
 SMART_LLM_MODEL="gpt-4o"
 
 ```
-### custom OpenAI API EMBEDDING
+### Custom OpenAI API EMBEDDING
 ```bash
 # use a custom OpenAI API EMBEDDING provider
 EMBEDDING_PROVIDER="custom"
@@ -40,24 +40,28 @@ OPENAI_EMBEDDING_MODEL="custom_model"
 
 ## Ollama
 
-To use [Ollama](http://www.ollama.com) you have to set the following environment variables
+GPT Researcher supports both Ollama LLMs and embeddings. You can choose each or both.
+To use [Ollama](http://www.ollama.com) you can set the following environment variables
 
 ```bash
-# use ollama for both, LLM and EMBEDDING provider
+# Use ollama for both, LLM and EMBEDDING provider
 LLM_PROVIDER=ollama
-EMBEDDING_PROVIDER=ollama
 
-# the Ollama endpoint to use
+# Ollama endpoint to use
 OLLAMA_BASE_URL=http://localhost:11434
 
-# specify one of the LLM models supported by Ollama
+# Specify one of the LLM models supported by Ollama
 FAST_LLM_MODEL=llama3
-# specify one of the LLM models supported by Ollama 
+# Specify one of the LLM models supported by Ollama 
 SMART_LLM_MODEL=llama3 
-# the temperature to use, defaults to 0.55
+# The temperature to use, defaults to 0.55
 TEMPERATURE=0.55
+```
 
-# specify one of the embedding models supported by Ollama 
+**Optional** - You can also use ollama for embeddings
+```bash
+EMBEDDING_PROVIDER=ollama
+# Specify one of the embedding models supported by Ollama 
 OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 ```
 
