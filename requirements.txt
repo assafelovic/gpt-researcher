@@ -17,6 +17,10 @@ langchain-openai
 langchain-google-genai
 langchain-groq
 langchain_community
+langchain_anthropic
+langchain_mistralai
+langchain_huggingface
+langchain_together
 tavily-python
 arxiv
 PyMuPDF

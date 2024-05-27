@@ -9,7 +9,6 @@ from colorama import Fore, Style
 from fastapi import WebSocket
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
 
 from gpt_researcher.master.prompts import auto_agent_instructions, generate_subtopics_prompt
 
@@ -33,8 +32,22 @@ def get_provider(llm_provider):
         case "groq":
             from ..llm_provider import GroqProvider
             llm_provider = GroqProvider
+        case "together":
+            from ..llm_provider import TogetherProvider
+            llm_provider = TogetherProvider
+        case "huggingface":
+            from ..llm_provider import HugginFaceProvider
+            llm_provider = HugginFaceProvider
+        case "mistral":
+            from ..llm_provider import MistralProvider
+            llm_provider = MistralProvider
+        case "anthropic":
+            from ..llm_provider import AnthropicProvider
+            llm_provider = AnthropicProvider
         case _:
-            raise Exception("LLM provider not found.")
+            raise Exception("LLM provider not found. "
+                            "Check here to learn more about support LLMs: "
+                            "https://docs.gptr.dev/docs/gpt-researcher/llms")
 
     return llm_provider
 
