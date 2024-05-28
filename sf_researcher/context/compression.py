@@ -1,5 +1,3 @@
-#compression.py
-
 from .retriever import SearchAPIRetriever
 from langchain.retrievers import (
     ContextualCompressionRetriever,

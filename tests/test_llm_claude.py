@@ -4,9 +4,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import unittest
 import asyncio
-from gpt_researcher.utils.llm import construct_subtopics, construct_directors, construct_director_sobject
-from gpt_researcher.config import Config
-from gpt_researcher.utils.validators import Subtopics, Directors, DirectorSobject
+from sf_researcher.utils.llm import construct_subtopics, construct_directors, construct_director_sobject
+from sf_researcher.config import Config
+from sf_researcher.utils.validators import Subtopics, Directors, DirectorSobject
 
 os.environ["SMART_LLM_MODEL"] = "gpt-4"
 os.environ["LLM_PROVIDER"] = "openai"

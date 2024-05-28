@@ -40,6 +40,10 @@ langchain-openai = "^0.1.0"
 langchain-google-genai = "^0.0.11"
 lxml = { version = ">=4.9.2", extras = ["html_clean"] }
 rq = "^1.16.2"
+langchain-pinecone = "^0.1.1"
+jupyter = "^1.0.0"
+ipykernel = "^6.29.4"
+psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
 pytest-dotenv = "^0.5.2"
