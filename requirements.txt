@@ -2,7 +2,6 @@
 beautifulsoup4
 colorama
 duckduckgo_search
-yahoo-search-py
 md2pdf
 playwright
 openai
@@ -13,10 +12,15 @@ pydantic
 fastapi
 python-multipart
 markdown
-langchain
-langchain-openai
-langchain-google-genai
-langchain_community
+langchain>=0.2,<0.3
+langchain_community>=0.2,<0.3
+langchain-openai>=0.1,<0.2
+langchain-google-genai>=1,<2
+langchain-groq>=0.1,<0.2
+langchain_anthropic>=0.1,<0.2
+langchain_mistralai>=0.1,<0.2
+langchain_huggingface>=0.0.1,<0.1
+langchain_together>=0.1,<0.2
 tavily-python
 arxiv
 PyMuPDF
@@ -31,5 +35,8 @@ htmldocx
 lxml[html_clean]
 websockets
 unstructured
-pytest
-pytest-asyncio
+pandas
+
+# uncomment for testing
+# pytest
+# pytest-asyncio
