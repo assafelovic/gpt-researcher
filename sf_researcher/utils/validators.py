@@ -73,7 +73,7 @@ class CompanySobject(BaseModel):
     licenses: str = Field(default="", description="Regulatory licenses and registrations held")
     regulatory_actions: str = Field(default="", description="Past regulatory actions, fines or investigations")
     adverse_media: str = Field(default="", description="Adverse media or reports of financial crime, fraud or unethical practices")
-    risk_assessment: RiskAssessmentEnum = Field(..., description="Salutation that you think best fits director")
+    risk_assessment: RiskAssessmentEnum = Field(..., description="Overall risk assessment for the company")
     primary_source_url: str = Field(..., description="The primary source URL used in collecting data")
 
     @validator("incorporation_date", pre=True)

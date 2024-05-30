@@ -44,6 +44,7 @@ langchain-pinecone = "^0.1.1"
 jupyter = "^1.0.0"
 ipykernel = "^6.29.4"
 psycopg2-binary = "^2.9.9"
+langsmith = "^0.1.63"
 
 [tool.poetry.group.dev.dependencies]
 pytest-dotenv = "^0.5.2"

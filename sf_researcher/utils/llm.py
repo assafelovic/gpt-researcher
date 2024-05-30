@@ -2,6 +2,7 @@
 # libraries
 from __future__ import annotations
 
+import os
 import json
 import logging
 from typing import Optional
@@ -14,17 +15,25 @@ from langchain_openai import ChatOpenAI
 
 from sf_researcher.master.prompts import auto_agent_instructions, generate_subtopics_prompt, generate_directors_prompt, generate_director_sobject_prompt, generate_company_sobject_prompt
 
-from .validators import Subtopics, Directors, DirectorSobject, CompanySobject
+from .validators import *
 
 from langchain_core.output_parsers.openai_tools import PydanticToolsParser, JsonOutputToolsParser
 from langchain_core.prompts import ChatPromptTemplate
 
+from langsmith.wrappers import wrap_openai
+from langsmith import traceable
+from dotenv import load_dotenv
+load_dotenv()
+LANGCHAIN_TRACING_V2 = os.getenv("LANGCHAIN_TRACING_V2")
+LANGCHAIN_ENDPOINT = os.getenv("LANGCHAIN_ENDPOINT")
+LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
+LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT")
 
 def get_provider(llm_provider):
     match llm_provider:
         case "openai":
             from ..llm_provider import OpenAIProvider
-            llm_provider = OpenAIProvider
+            llm_provider = wrap_openai(OpenAIProvider)
         case "azureopenai":
             from ..llm_provider import AzureOpenAIProvider
             llm_provider = AzureOpenAIProvider
@@ -37,6 +46,7 @@ def get_provider(llm_provider):
 
     return llm_provider
 
+@traceable
 async def create_chat_completion(
         messages: list,  # type: ignore
         model: Optional[str] = None,

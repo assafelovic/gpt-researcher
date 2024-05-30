@@ -1,3 +1,6 @@
+#main.py
+
+import os
 from backend.server import app
 from dotenv import load_dotenv
 load_dotenv()
@@ -10,6 +13,11 @@ from sf_researcher.utils.validators import ComplianceReportRequest
 
 from rq import Queue
 from worker import conn, process_compliance_report
+
+LANGCHAIN_TRACING_V2 = os.getenv("LANGCHAIN_TRACING_V2")
+LANGCHAIN_ENDPOINT = os.getenv("LANGCHAIN_ENDPOINT")
+LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
+LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT")
 
 q = Queue(connection=conn)
 
