@@ -44,20 +44,21 @@ class GPTResearcher:
             subtopics: list
             visited_urls: set
         """
-        self.query = query
-        self.agent = agent
-        self.role = role
-        self.report_type = report_type
-        self.report_prompt = get_prompt_by_report_type(self.report_type)  # this validates the report type
-        self.report_source = report_source
-        self.websocket = websocket
+        self.query: str = query
+        self.agent: str = agent
+        self.role: str = role
+        self.report_type: str = report_type
+        self.report_prompt: str = get_prompt_by_report_type(self.report_type)  # this validates the report type
+        self.report_source: str = report_source
+        self.research_costs: float = 0.0
         self.cfg = Config(config_path)
         self.retriever = get_retriever(self.cfg.retriever)
         self.context = context
         self.source_urls = source_urls
         self.memory = Memory(self.cfg.embedding_provider)
-        self.visited_urls = visited_urls
-        self.verbose = verbose
+        self.visited_urls: set[str] = visited_urls
+        self.verbose: bool = verbose
+        self.websocket = websocket
 
         # Only relevant for DETAILED REPORTS
         # --------------------------------------
@@ -251,14 +252,22 @@ class GPTResearcher:
     ########################################################################################
 
     # GETTERS & SETTERS
-    def get_source_urls(self):
-        return self.visited_urls
+    def get_source_urls(self) -> list:
+        return list(self.visited_urls)
 
-    def get_research_context(self):
+    def get_research_context(self) -> list:
         return self.context
 
-    def set_verbose(self, verbose):
+    def get_costs(self) -> float:
+        return self.research_costs
+
+    def set_verbose(self, verbose: bool):
         self.verbose = verbose
+
+    def add_costs(self, cost: int) -> None:
+        if not isinstance(cost, int):
+            raise ValueError("Cost must be an integer")
+        self.research_costs += cost
 
 
 
