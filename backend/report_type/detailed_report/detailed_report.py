@@ -3,7 +3,7 @@ import asyncio
 from fastapi import WebSocket
 
 from gpt_researcher.master.agent import GPTResearcher
-from gpt_researcher.master.functions import (add_source_urls, extract_headers,
+from gpt_researcher.master.actions import (add_source_urls, extract_headers,
                                              table_of_contents)
 
 
