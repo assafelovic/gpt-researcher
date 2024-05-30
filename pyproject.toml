@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "gpt-researcher"
-version = "0.0.5"
+version = "0.6.1"
 description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
-authors = ["Tavily <support@tavily.com>"]
+authors = ["Assaf Elovic <assaf.elovic@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
@@ -40,6 +40,7 @@ htmldocx = "^0.0.6"
 python-docx = "^1.1.0"
 lxml = { version = ">=4.9.2", extras = ["html_clean"] }
 unstructured = "^0.13.0"
+tiktoken = ">=0.7.0"
 
 [build-system]
 requires = ["poetry-core"]

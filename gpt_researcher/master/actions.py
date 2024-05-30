@@ -47,7 +47,7 @@ def get_retriever(retriever):
     return retriever
 
 
-async def choose_agent(query, cfg, parent_query=None):
+async def choose_agent(query, cfg, parent_query=None, cost_callback: callable = None):
     """
     Chooses the agent automatically
     Args:
@@ -55,6 +55,7 @@ async def choose_agent(query, cfg, parent_query=None):
         Tge parent query allows the agent to know the main context for better reasoning.
         query: original query
         cfg: Config
+        cost_callback: callback for calculating llm costs
 
     Returns:
         agent: Agent name
@@ -68,21 +69,27 @@ async def choose_agent(query, cfg, parent_query=None):
                 {"role": "system", "content": f"{auto_agent_instructions()}"},
                 {"role": "user", "content": f"task: {query}"}],
             temperature=0,
-            llm_provider=cfg.llm_provider
+            llm_provider=cfg.llm_provider,
+            cost_callback=cost_callback
         )
         agent_dict = json.loads(response)
         return agent_dict["server"], agent_dict["agent_role_prompt"]
     except Exception as e:
+        print(f"Error choosing agent: {e}")
         return "Default Agent", "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
 
 
-async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str, report_type: str):
+async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str,
+                          report_type: str, cost_callback: callable = None):
     """
     Gets the sub queries
     Args:
         query: original query
         agent_role_prompt: agent role prompt
         cfg: Config
+        parent_query:
+        report_type:
+        cost_callback:
 
     Returns:
         sub_queries: List of sub queries
@@ -95,7 +102,8 @@ async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query:
             {"role": "system", "content": f"{agent_role_prompt}"},
             {"role": "user", "content": generate_search_queries_prompt(query, parent_query, report_type, max_iterations=max_research_iterations)}],
         temperature=0,
-        llm_provider=cfg.llm_provider
+        llm_provider=cfg.llm_provider,
+        cost_callback=cost_callback
     )
 
     print("response : ", response)
@@ -123,8 +131,9 @@ def scrape_urls(urls, cfg=None):
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
     return content
 
-
-async def summarize(query, content, agent_role_prompt, cfg, websocket=None):
+# Deprecated: Instead of summaries using ContextualRetriever embedding.
+# This exists in case we decide to modify in the future
+async def summarize(query, content, agent_role_prompt, cfg, websocket=None, cost_callback: callable = None):
     """
     Asynchronously summarizes a list of URLs.
 
@@ -140,7 +149,7 @@ async def summarize(query, content, agent_role_prompt, cfg, websocket=None):
 
     # Function to handle each summarization task for a chunk
     async def handle_task(url, chunk):
-        summary = await summarize_url(query, chunk, agent_role_prompt, cfg)
+        summary = await summarize_url(query, chunk, agent_role_prompt, cfg, cost_callback)
         if summary:
             await stream_output("logs", f"🌐 Summarizing url: {url}", websocket)
             await stream_output("logs", f"📃 {summary}", websocket)
@@ -174,7 +183,7 @@ async def summarize(query, content, agent_role_prompt, cfg, websocket=None):
     return concatenated_summaries
 
 
-async def summarize_url(query, raw_data, agent_role_prompt, cfg):
+async def summarize_url(query, raw_data, agent_role_prompt, cfg, cost_callback: callable = None):
     """
     Summarizes the text
     Args:
@@ -182,6 +191,7 @@ async def summarize_url(query, raw_data, agent_role_prompt, cfg):
         raw_data:
         agent_role_prompt:
         cfg:
+        cost_callback
 
     Returns:
         summary: str
@@ -195,7 +205,8 @@ async def summarize_url(query, raw_data, agent_role_prompt, cfg):
                 {"role": "system", "content": f"{agent_role_prompt}"},
                 {"role": "user", "content": f"{generate_summary_prompt(query, raw_data)}"}],
             temperature=0,
-            llm_provider=cfg.llm_provider
+            llm_provider=cfg.llm_provider,
+            cost_callback=cost_callback
         )
     except Exception as e:
         print(f"{Fore.RED}Error in summarize: {e}{Style.RESET_ALL}")
@@ -211,7 +222,8 @@ async def generate_report(
     websocket,
     cfg,
     main_topic: str = "",
-    existing_headers: list = []
+    existing_headers: list = [],
+    cost_callback: callable = None
 ):
     """
     generates the final report
@@ -224,6 +236,7 @@ async def generate_report(
         cfg:
         main_topic:
         existing_headers:
+        cost_callback:
 
     Returns:
         report:
@@ -247,7 +260,8 @@ async def generate_report(
             llm_provider=cfg.llm_provider,
             stream=True,
             websocket=websocket,
-            max_tokens=cfg.smart_token_limit
+            max_tokens=cfg.smart_token_limit,
+            cost_callback=cost_callback
         )
     except Exception as e:
         print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")
@@ -272,7 +286,7 @@ async def stream_output(type, output, websocket=None, logging=True):
         await websocket.send_json({"type": type, "output": output})
 
 
-async def get_report_introduction(query, context, role, config, websocket=None):
+async def get_report_introduction(query, context, role, config, websocket=None, cost_callback: callable = None):
     try:
         introduction = await create_chat_completion(
             model=config.smart_llm_model,
@@ -283,7 +297,8 @@ async def get_report_introduction(query, context, role, config, websocket=None):
             llm_provider=config.llm_provider,
             stream=True,
             websocket=websocket,
-            max_tokens=config.smart_token_limit
+            max_tokens=config.smart_token_limit,
+            cost_callback=cost_callback
         )
 
         return introduction

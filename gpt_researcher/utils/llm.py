@@ -11,7 +11,7 @@ from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 
 from gpt_researcher.master.prompts import auto_agent_instructions, generate_subtopics_prompt
-
+from .costs import estimate_llm_cost
 from .validators import Subtopics
 
 
@@ -60,6 +60,7 @@ async def create_chat_completion(
         llm_provider: Optional[str] = None,
         stream: Optional[bool] = False,
         websocket: WebSocket | None = None,
+        cost_callback: callable = None
 ) -> str:
     """Create a chat completion using the OpenAI API
     Args:
@@ -69,7 +70,8 @@ async def create_chat_completion(
         max_tokens (int, optional): The max tokens to use. Defaults to None.
         stream (bool, optional): Whether to stream the response. Defaults to False.
         llm_provider (str, optional): The LLM Provider to use.
-        webocket (WebSocket): The websocket used in the currect request
+        webocket (WebSocket): The websocket used in the currect request,
+        cost_callback: Callback function for updating cost
     Returns:
         str: The response from the chat completion
     """
@@ -89,43 +91,21 @@ async def create_chat_completion(
         max_tokens
     )
 
+    response = ""
     # create response
     for _ in range(10):  # maximum of 10 attempts
         response = await provider.get_chat_response(
             messages, stream, websocket
         )
+
+        if cost_callback:
+            llm_costs = estimate_llm_cost(str(messages), response)
+            cost_callback(llm_costs)
+
         return response
 
-    logging.error("Failed to get response from OpenAI API")
-    raise RuntimeError("Failed to get response from OpenAI API")
-
-
-def choose_agent(smart_llm_model: str, llm_provider: str, task: str) -> dict:
-    """Determines what server should be used
-    Args:
-        task (str): The research question the user asked
-        smart_llm_model (str): the llm model to be used
-        llm_provider (str): the llm provider used
-    Returns:
-        server - The server that will be used
-        agent_role_prompt (str): The prompt for the server
-    """
-    try:
-        response = create_chat_completion(
-            model=smart_llm_model,
-            messages=[
-                {"role": "system", "content": f"{auto_agent_instructions()}"},
-                {"role": "user", "content": f"task: {task}"}],
-            temperature=0,
-            llm_provider=llm_provider
-        )
-        agent_dict = json.loads(response)
-        print(f"Agent: {agent_dict.get('server')}")
-        return agent_dict
-    except Exception as e:
-        print(f"{Fore.RED}Error in choose_agent: {e}{Style.RESET_ALL}")
-        return {"server": "Default Agent",
-                "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
+    logging.error(f"Failed to get response from {llm_provider} API")
+    raise RuntimeError(f"Failed to get response from {llm_provider} API")
 
 
 async def construct_subtopics(task: str, data: str, config, subtopics: list = []) -> list:
