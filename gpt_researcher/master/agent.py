@@ -84,14 +84,14 @@ class GPTResearcher:
 
         # If specified, the researcher will use the given urls as the context for the research.
         if self.source_urls:
-            context = await self.get_context_by_urls(self.source_urls)
+            context = await self.__get_context_by_urls(self.source_urls)
             
         elif self.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
-            context = await self.get_context_by_search(self.query, document_data)
+            context = await self.__get_context_by_search(self.query, document_data)
         
         else:
-            context = await self.get_context_by_search(self.query)
+            context = await self.__get_context_by_search(self.query)
 
         # Extending the global context (This is useful instead of setting the context directly above to avoid over-writing input context)
         self.context.extend(context)
@@ -138,19 +138,19 @@ class GPTResearcher:
 
         return report
 
-    async def get_context_by_urls(self, urls):
+    async def __get_context_by_urls(self, urls):
         """
             Scrapes and compresses the context from the given urls
         """
-        new_search_urls = await self.get_new_urls(urls)
+        new_search_urls = await self.__get_new_urls(urls)
         if self.verbose:
             await stream_output("logs",
                             f"🧠 I will conduct my research based on the following urls: {new_search_urls}...",
                             self.websocket)
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
-        return await self.get_similar_content_by_query(self.query, scraped_sites)
+        return await self.__get_similar_content_by_query(self.query, scraped_sites)
 
-    async def get_context_by_search(self, query, scraped_data: list = []):
+    async def __get_context_by_search(self, query, scraped_data: list = []):
         """
            Generates the context for the research task by searching the query and scraping the results
         Returns:
@@ -170,10 +170,10 @@ class GPTResearcher:
                                 self.websocket)
 
         # Using asyncio.gather to process the sub_queries asynchronously
-        context = await asyncio.gather(*[self.process_sub_query(sub_query, scraped_data) for sub_query in sub_queries])
+        context = await asyncio.gather(*[self.__process_sub_query(sub_query, scraped_data) for sub_query in sub_queries])
         return context
 
-    async def process_sub_query(self, sub_query: str, scraped_data: list = []):
+    async def __process_sub_query(self, sub_query: str, scraped_data: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context.
 
         Args:
@@ -187,9 +187,9 @@ class GPTResearcher:
             await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
 
         if not scraped_data:
-            scraped_data = await self.scrape_data_by_query(sub_query)
+            scraped_data = await self.__scrape_data_by_query(sub_query)
 
-        content = await self.get_similar_content_by_query(sub_query, scraped_data)
+        content = await self.__get_similar_content_by_query(sub_query, scraped_data)
 
         if content and self.verbose:
             await stream_output("logs", f"📃 {content}", self.websocket)
@@ -197,7 +197,7 @@ class GPTResearcher:
             await stream_output("logs", f"🤷 No content found for '{sub_query}'...", self.websocket)
         return content
 
-    async def get_new_urls(self, url_set_input):
+    async def __get_new_urls(self, url_set_input):
         """ Gets the new urls from the given url set.
         Args: url_set_input (set[str]): The url set to get the new urls from
         Returns: list[str]: The new urls from the given url set
@@ -213,7 +213,7 @@ class GPTResearcher:
 
         return new_urls
 
-    async def scrape_data_by_query(self, sub_query):
+    async def __scrape_data_by_query(self, sub_query):
         """
         Runs a sub-query
         Args:
@@ -226,7 +226,7 @@ class GPTResearcher:
         retriever = self.retriever(sub_query)
         search_results = retriever.search(
             max_results=self.cfg.max_search_results_per_query)
-        new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
+        new_search_urls = await self.__get_new_urls([url.get("href") for url in search_results])
 
         # Scrape Urls
         if self.verbose:
@@ -236,7 +236,7 @@ class GPTResearcher:
         scraped_content_results = scrape_urls(new_search_urls, self.cfg)
         return scraped_content_results
 
-    async def get_similar_content_by_query(self, query, pages):
+    async def __get_similar_content_by_query(self, query, pages):
         if self.verbose:
             await stream_output("logs", f"📝 Getting relevant content based on query: {query}...", self.websocket)
 
@@ -247,6 +247,20 @@ class GPTResearcher:
         )
         # Run Tasks
         return context_compressor.get_context(query, max_results=8)
+
+    ########################################################################################
+
+    # GETTERS & SETTERS
+    def get_source_urls(self):
+        return self.visited_urls
+
+    def get_research_context(self):
+        return self.context
+
+    def set_verbose(self, verbose):
+        self.verbose = verbose
+
+
 
     ########################################################################################
 
