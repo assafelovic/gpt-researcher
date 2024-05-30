@@ -78,7 +78,8 @@ class GPTResearcher:
         
         # Generate Agent
         if not (self.agent and self.role):
-            self.agent, self.role = await choose_agent(self.query, self.cfg, self.parent_query)
+            self.agent, self.role = await choose_agent(query=self.query, cfg=self.cfg,
+                                                       parent_query=self.parent_query, cost_callback=self.add_costs)
 
         if self.verbose:
             await stream_output("logs", self.agent, self.websocket)
@@ -98,6 +99,8 @@ class GPTResearcher:
         self.context.extend(context)
         
         time.sleep(2)
+        if self.verbose:
+            await stream_output("logs", f"Finalized research step.\n💸 Total Research Costs: ${self.get_costs()}", self.websocket)
 
         return self.context
 
@@ -108,6 +111,7 @@ class GPTResearcher:
         Returns:
             str: The report
         """
+        report = ""
 
         if self.verbose:
             await stream_output("logs", f"✍️ Writing summary for research task: {self.query}...", self.websocket)
@@ -124,7 +128,8 @@ class GPTResearcher:
                 websocket=self.websocket,
                 cfg=self.cfg,
                 main_topic=self.parent_query,
-                existing_headers=existing_headers
+                existing_headers=existing_headers,
+                cost_callback=self.add_costs
             )
         else:
             report = await generate_report(
@@ -134,7 +139,8 @@ class GPTResearcher:
                 report_type=self.report_type,
                 report_source=self.report_source,
                 websocket=self.websocket,
-                cfg=self.cfg
+                cfg=self.cfg,
+                cost_callback=self.add_costs
             )
 
         return report
@@ -159,7 +165,9 @@ class GPTResearcher:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await get_sub_queries(query, self.role, self.cfg, self.parent_query, self.report_type)
+        sub_queries = await get_sub_queries(query=query, agent_role_prompt=self.role,
+                                            cfg=self.cfg, parent_query=self.parent_query,
+                                            report_type=self.report_type, cost_callback=self.add_costs)
 
         # If this is not part of a sub researcher, add original query to research for better results
         if self.report_type != "subtopic_report":
@@ -247,7 +255,7 @@ class GPTResearcher:
             embeddings=self.memory.get_embeddings()
         )
         # Run Tasks
-        return context_compressor.get_context(query, max_results=8)
+        return context_compressor.get_context(query=query, max_results=8, cost_callback=self.add_costs)
 
     ########################################################################################
 
@@ -265,8 +273,8 @@ class GPTResearcher:
         self.verbose = verbose
 
     def add_costs(self, cost: int) -> None:
-        if not isinstance(cost, int):
-            raise ValueError("Cost must be an integer")
+        if not isinstance(cost, float) and not isinstance(cost, int):
+            raise ValueError("Cost must be an integer or float")
         self.research_costs += cost
 
 
@@ -277,7 +285,8 @@ class GPTResearcher:
 
     async def write_introduction(self):
         # Construct Report Introduction from main topic research
-        introduction = await get_report_introduction(self.query, self.context, self.role, self.cfg, self.websocket)
+        introduction = await get_report_introduction(self.query, self.context, self.role,
+                                                     self.cfg, self.websocket, self.add_costs)
 
         return introduction
 
