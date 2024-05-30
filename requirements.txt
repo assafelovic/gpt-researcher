@@ -21,6 +21,7 @@ langchain_anthropic>=0.1,<0.2
 langchain_mistralai>=0.1,<0.2
 langchain_huggingface>=0.0.1,<0.1
 langchain_together>=0.1,<0.2
+tiktoken
 tavily-python
 arxiv
 PyMuPDF
