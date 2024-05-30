@@ -96,8 +96,8 @@ async def create_chat_completion(
         )
         return response
 
-    logging.error("Failed to get response from OpenAI API")
-    raise RuntimeError("Failed to get response from OpenAI API")
+    logging.error(f"Failed to get response from {llm_provider} API")
+    raise RuntimeError(f"Failed to get response from {llm_provider} API")
 
 
 def choose_agent(smart_llm_model: str, llm_provider: str, task: str) -> dict:
