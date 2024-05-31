@@ -25,10 +25,10 @@ class TogetherProvider:
 
         """
         try:
-            api_key = os.environ["MISTRAL_API_KEY"]
+            api_key = os.environ["TOGETHER_API_KEY"]
         except KeyError:
             raise Exception(
-                "Mistral API key not found. Please set the MISTRAL_API_KEY environment variable.")
+                "TOGETHER_API_KEY not found. Please set the TOGETHER_API_KEY environment variable.")
         return api_key
 
     def get_llm_model(self):
