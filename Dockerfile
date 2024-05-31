@@ -12,6 +12,12 @@ RUN apt-get update \
     && chmod +x geckodriver \
     && mv geckodriver /usr/local/bin/
 
+# Install build tools
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 FROM install-browser as gpt-researcher-install
 
 ENV PIP_ROOT_USER_ACTION=ignore
@@ -33,4 +39,3 @@ COPY --chown=gpt-researcher:gpt-researcher ./ ./
 
 EXPOSE 8000
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-
