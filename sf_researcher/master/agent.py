@@ -109,20 +109,19 @@ class SFResearcher:
         self.pinecone_manager.insert_documents(documents)
         time.sleep(2)
 
-    async def conduct_research_directors(self):
-        # Get list of all directors
-        if not self.directors:
-            logger.info(f"Constructing directors using construct_directors function")
-            self.directors = await construct_directors(
-                task=self.query,
+    async def conduct_research_contacts(self):
+        # Get list of all contacts
+        if not self.contacts:
+            logger.info(f"Constructing contacts using construct_contacts function")
+            self.contacts = await construct_contacts(
+                company_name=self.query,
                 data=self.context,
                 config=self.cfg,
             )
         else:
-            logger.info("Using the provided directors list")
+            logger.info("Using the provided contacts list")
         
-        logger.info("Directors **** : %s", self.directors)
-
+        logger.info("Contacts **** : %s", self.contacts)
 
     async def conduct_research_query(self):
         """
@@ -134,7 +133,7 @@ class SFResearcher:
         self.context = [doc.page_content for doc in raw_context]
         time.sleep(2)
 
-    async def write_report(self, existing_headers: list = []):
+    async def write_report(self):
         """
         Writes the report based on research conducted
 
@@ -144,27 +143,7 @@ class SFResearcher:
         if self.verbose:
             await stream_output("logs", f"✍️ Writing summary for research task: {self.query}...", self.websocket)
 
-        if self.report_type == "custom_report":
-            self.role = self.cfg.agent_role if self.cfg.agent_role else self.role
-        elif self.report_type == "director_report":
-            report = await generate_report(
-                query=self.query,
-                context=self.context,
-                agent_role_prompt=self.role,
-                report_type=self.report_type,
-                cfg=self.cfg,
-                main_topic=self.parent_query,
-                existing_headers=existing_headers
-            )
-        else:
-            report = await generate_report(
-                query=self.query,
-                context=self.context,
-                agent_role_prompt=self.role,
-                report_type=self.report_type,
-                websocket=self.websocket,
-                cfg=self.cfg
-            )
+        report = await generate_report(self)
 
         return report
 

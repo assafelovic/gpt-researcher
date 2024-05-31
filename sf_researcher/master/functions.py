@@ -207,14 +207,7 @@ async def summarize_url(query, raw_data, agent_role_prompt, cfg):
 
 
 async def generate_report(
-    query,
-    context,
-    agent_role_prompt,
-    report_type,
-    cfg,
-    websocket=None,  # Default value set to None
-    main_topic: str = "",
-    existing_headers: list = []
+    self
 ):
     """
     generates the final report
@@ -223,47 +216,36 @@ async def generate_report(
         context:
         agent_role_prompt:
         report_type:
-        websocket:
         cfg:
         main_topic:
-        existing_headers:
 
     Returns:
         report:
 
     """
-    generate_prompt = get_prompt_by_report_type(report_type)
+    
+    generate_prompt = get_prompt_by_report_type(self.report_type)
+
     report = ""
 
-    if report_type == "subtopic_report":
-        content = f"{generate_prompt(query, existing_headers, main_topic, context, cfg.report_format, cfg.total_words)}"
+    if self.report_type in ["compliance_report","sales_report"]:
+        content = (
+            f"{generate_prompt(self.query, self.context, self.cfg.report_format, self.cfg.total_words)}")
     else:
         content = (
-            f"{generate_prompt(query, context, cfg.report_format, cfg.total_words)}")
+            f"{generate_prompt(self.query, self.parent_query, self.context, self.cfg.report_format, self.cfg.total_words)}")
 
     try:
-        if report_type in ("director_report", "compliance_report"):
-            report = await create_chat_completion(
-                model=cfg.fast_llm_model,
-                messages=[
-                    {"role": "system", "content": f"{agent_role_prompt}"},
-                    {"role": "user", "content": content}],
-                temperature=0,
-                llm_provider=cfg.llm_provider,
-                max_tokens=cfg.fast_token_limit
-            )
-        else:
-            report = await create_chat_completion(
-                model=cfg.fast_llm_model,
-                messages=[
-                    {"role": "system", "content": f"{agent_role_prompt}"},
-                    {"role": "user", "content": content}],
-                temperature=0,
-                llm_provider=cfg.llm_provider,
-                stream=True,
-                websocket=websocket,
-                max_tokens=cfg.fast_token_limit
-            )
+        report = await create_chat_completion(
+            model=self.cfg.fast_llm_model,
+            messages=[
+                {"role": "system", "content": f"{self.role}"},
+                {"role": "user", "content": content}],
+            temperature=0,
+            llm_provider=self.cfg.llm_provider,
+            max_tokens=self.cfg.fast_token_limit
+        )
+
     except Exception as e:
         print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")
 

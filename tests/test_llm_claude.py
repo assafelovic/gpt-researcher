@@ -4,9 +4,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 import unittest
 import asyncio
-from sf_researcher.utils.llm import construct_subtopics, construct_directors, construct_director_sobject
+from sf_researcher.utils.llm import construct_subtopics, construct_contacts, construct_contact_sobject
 from sf_researcher.config import Config
-from sf_researcher.utils.validators import Subtopics, Directors, DirectorSobject
+from sf_researcher.utils.validators import Subtopics, Contacts, ContactSobject
 
 os.environ["SMART_LLM_MODEL"] = "gpt-4"
 os.environ["LLM_PROVIDER"] = "openai"
@@ -45,11 +45,11 @@ class TestLLMFunctions(unittest.TestCase):
         config = Config()
         
         loop = asyncio.get_event_loop()
-        directors = loop.run_until_complete(construct_directors(task, data, config))
+        directors = loop.run_until_complete(construct_contacts(task, data, config))
         
         print("Directors Output:", directors)
-        self.assertIsInstance(directors, Directors)
-        self.assertGreater(len(directors.directors), 0)
+        self.assertIsInstance(directors, Contacts)
+        self.assertGreater(len(directors.contacts), 0)
         
     def test_construct_director_sobjects(self):
         task = (
@@ -64,10 +64,10 @@ class TestLLMFunctions(unittest.TestCase):
         config = Config()
         
         loop = asyncio.get_event_loop()
-        sobject = loop.run_until_complete(construct_director_sobject(task, data, config))
+        sobject = loop.run_until_complete(construct_contact_sobject(task, data, config))
         
         print("Director Sobject Output:", sobject)
-        self.assertIsInstance(sobject, DirectorSobject)
+        self.assertIsInstance(sobject, ContactSobject)
         self.assertIsInstance(sobject.firstname, str)
         self.assertIsInstance(sobject.lastname, str)
         self.assertIsInstance(sobject.company_name, str)

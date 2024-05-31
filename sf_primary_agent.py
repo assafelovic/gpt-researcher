@@ -6,20 +6,22 @@ from typing import Union, List, Optional
 from sf_researcher.master.agent import SFResearcher
 from sf_researcher.master.functions import (add_source_urls,
                                              table_of_contents)
-from sf_researcher.utils.llm import construct_director_sobject, construct_company_sobject, construct_directors
-from sf_researcher.utils.validators import CompanyReport, Director, Directors, Subtopics
+from sf_researcher.utils.llm import *
+from sf_researcher.utils.validators import ReportResponse, Contact, Contacts, Subtopics
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class SFPrimaryAgent():
+class SFComplianceReport():
     def __init__(
             self, 
             query: str, 
-            directors,    
+            contacts,    
             namespace: str,  # Add namespace parameter here
+            main_report_type: str,
+            child_report_type: str,
             subtopics=[], 
             index_name: str = "sfresearcher",
             config_path=None,
@@ -29,6 +31,7 @@ class SFPrimaryAgent():
             parent_sub_queries=None, 
             child_sub_queries=None,
             verbose: bool = True,
+            
         ):
         self.query = query
         self.source_urls = source_urls
@@ -41,91 +44,92 @@ class SFPrimaryAgent():
             query=self.query,
             source_urls=self.source_urls,
             config_path=self.config_path,
-            report_type="compliance_report",
+            report_type=main_report_type,
             include_domains=include_domains,
             exclude_domains=exclude_domains,
             custom_sub_queries=parent_sub_queries,
             index_name=index_name,
             namespace=namespace,
         )
-
         self.existing_headers = []
         # This is a global variable to store the entire context accumulated at any point through searching and scraping
         self.global_context = []
-    
         # This is a global variable to store the entire url list accumulated at any point through searching and scraping
         if self.source_urls:
             self.global_urls = set(self.source_urls)
-        self.directors = self._initialize_directors(directors)
-        self.director_sobjects = []
+        self.contacts = self._initialize_contacts(contacts)
+        self.contact_sobjects = []
         self.company_sobject = None
         self.namespace = namespace
         self.index_name = index_name
         self.verbose = verbose
-
-    def _initialize_directors(self, directors):
-        if directors == []:
-            logger.info("No directors provided. Directors will be constructed.")
+        self.child_report_type = child_report_type
+        
+    def _initialize_contacts(self, contacts):
+        if contacts == []:
+            logger.info("No contacts provided. Contactss will be constructed.")
             return None
         else:
-            logger.info(f"Initializing directors from provided list: {directors}")
-            directors_list = Directors(directors=[])
-            for name in directors:
+            logger.info(f"Initializing contacts from provided list: {contacts}")
+            contacts_list = Contacts(contacts=[])
+            for name in contacts:
                 name_parts = name.split()
                 if len(name_parts) >= 2:
                     first_name = name_parts[0]
                     last_name = " ".join(name_parts[1:])
-                    directors_list.directors.append(Director(first_name=first_name, last_name=last_name))
+                    contacts_list.contacts.append(Contact(first_name=first_name, last_name=last_name))
                 else:
-                    logger.warning(f"Cannot construct directors from user provided list; failed on name: {name}")
-                    logger.warning("Will default to construct directors from search")
+                    logger.warning(f"Cannot construct contacts from user provided list; failed on name: {name}")
+                    logger.warning("Will default to construct contacts from search")
                     return None
-            return directors_list
+            return contacts_list
 
     async def run(self):
         # Conduct initial research using the main assistant
         await self._initial_research()
 
         # Get list of all subtopics
-        if not self.directors:
-            logger.info(f"Constructing directors using construct_directors function")
-            self.directors = await construct_directors(
-                task=self.query,
+        if not self.contacts:
+            logger.info(f"Constructing contacts using construct_contacts function")
+            self.contacts = await construct_contacts(
+                company_name=self.query,
                 data=self.main_task_assistant.context,
                 config=self.main_task_assistant.cfg,
             )
         else:
-            logger.info("Using the provided directors list")
+            logger.info("Using the provided contacts list")
         
-        logger.info("Directors **** : %s", self.directors)
+        logger.info("Contacts **** : %s", self.contacts)
         
-        # Generate report introduction
+        # Generate report => if compliance/sales report type is handled by function.py
         compliance_report = await self.main_task_assistant.write_report()
         
-        company_sobject = await construct_company_sobject(compliance_report, self.main_task_assistant.visited_urls, self.main_task_assistant.query, self.main_task_assistant.context, self.main_task_assistant.cfg)
-        if company_sobject:
-            self.company_sobject = company_sobject
+        if self.main_task_assistant.report_type == "compliance_report":
+            company_sobject = await construct_compliance_company_sobject(self.main_task_assistant.visited_urls, self.main_task_assistant.query, self.main_task_assistant.context, self.main_task_assistant.cfg)
+            if company_sobject:
+                self.company_sobject = company_sobject
+        
+        # create construct_sales_company_sobject
+        else:
+            company_sobject = await construct_sales_company_sobject(self.main_task_assistant.visited_urls, self.main_task_assistant.query, self.main_task_assistant.context, self.main_task_assistant.cfg)
+            if company_sobject:
+                self.company_sobject = company_sobject
 
         # Generate the subtopic reports based on the subtopics gathered
-        # _, report_body = await self._generate_directors_reports(directors)
-
-        await self._generate_directors_reports(self.directors)
+        await self._generate_contacts_reports(self.contacts)
 
         # Construct the final list of visited urls
         self.main_task_assistant.visited_urls.update(self.global_urls)
 
-        # Construct the final detailed report (Optionally add more details to the report)
-        # report = await self._construct_detailed_report(report_introduction, report_body)
-
         # return report_introduction
         print(f"In run method: compliance_report type: {type(compliance_report)}")
         print(f"In run method: self.company_sobject type: {type(self.company_sobject)}")
-        print(f"In run method: self.director_sobjects type: {type(self.director_sobjects)}")
+        print(f"In run method: self.contact_sobjects type: {type(self.contact_sobjects)}")
         
-        return CompanyReport(
+        return ReportResponse(
             report=compliance_report,
             company=self.company_sobject,
-            directors=self.director_sobjects,
+            contacts=self.contact_sobjects,
             source_urls=list(self.main_task_assistant.visited_urls)  # Convert to list
         )
 
@@ -138,27 +142,20 @@ class SFPrimaryAgent():
         # Update url list of the global list variable
         self.global_urls = self.main_task_assistant.visited_urls
 
-    async def _get_all_subtopics(self) -> list:
-        if self.main_task_assistant.report_type == "compliance_report":
-            directors = await self.main_task_assistant.get_subtopics()
-            return directors
-        else:
-            subtopics = await self.main_task_assistant.get_subtopics()
-            return subtopics.dict()["subtopics"]
+    async def _generate_contacts_reports(self, contacts: Contacts) -> tuple:
+        async def fetch_report(contact: Contact):
+                    await self._get_subtopic_report(contact)
 
-    async def _generate_directors_reports(self, directors: Directors) -> tuple:
-        async def fetch_report(director: Director):
-                    await self._get_subtopic_report(director)
-
-        print("Directors: ", directors)
-        tasks = [fetch_report(director) for director in directors.directors]
+        print("Contacts: ", contacts)
+        tasks = [fetch_report(contact) for contact in contacts.contacts]
         await asyncio.gather(*tasks)
 
-    async def _get_subtopic_report(self, director: Director) -> tuple:
-        print("Director: ", director)
-        print("Report Type: ", self.main_task_assistant.report_type)
+    async def _get_subtopic_report(self, contact: Contact) -> tuple:
+        print("Starting _get_subtopic_report")
+        print("Contact object: ", contact)
+        print("Main Assistant Report Type: ", self.main_task_assistant.report_type)
 
-        current_subtopic_task = f"{director.first_name} {director.last_name}"
+        current_subtopic_task = f"{contact.first_name} {contact.last_name}"
         
         if self.child_sub_queries:
             custom_sub_queries = [f"\"{current_subtopic_task}\" {child_sub_query}" for child_sub_query in self.child_sub_queries]
@@ -168,57 +165,43 @@ class SFPrimaryAgent():
         print("Custom Sub Queries: ", custom_sub_queries)
         subtopic_assistant = SFResearcher(
             query=current_subtopic_task,
-            report_type="director_report",
+            report_type=self.child_report_type,
             parent_query=self.query,
             subtopics=custom_sub_queries,
             visited_urls=self.global_urls,
             agent=self.main_task_assistant.agent,
             role=self.main_task_assistant.role,
-            custom_sub_queries=custom_sub_queries,  # Pass the child_sub_queries as custom_sub_query
+            custom_sub_queries=custom_sub_queries,
             index_name=self.index_name,
             namespace=self.namespace,
         )
 
         # The subtopics should start research from the context gathered till now
-        subtopic_assistant.context = list(set(self.global_context))
+        subtopic_assistant.context = self.main_task_assistant.context
 
         # Conduct research on the subtopic
         await subtopic_assistant.conduct_research_insert()
         await subtopic_assistant.conduct_research_query()
 
-        # Here the headers gathered from previous subtopic reports are passed to the write report function
-        # The LLM is later instructed to avoid generating any information relating to these headers as they have already been generated
-        director_report = await subtopic_assistant.write_report(self.existing_headers)
+        # Generate Report
+        contact_report = await subtopic_assistant.write_report()
 
-        # print(f"subtopic report for: {subtopic_assistant.query}: ", subtopic_report)
-        #construct and add the directors
-
-        # Update context of the global context variable
         self.global_context = list(set(subtopic_assistant.context))
-        # Update url list of the global list variable
         self.global_urls.update(subtopic_assistant.visited_urls)
 
-        director_sobject = await construct_director_sobject(
+        contact_sobject = await construct_contact_sobject(
             subtopic_assistant.query, 
             subtopic_assistant.visited_urls, 
-            subtopic_assistant.query, 
-            subtopic_assistant.context, 
+            subtopic_assistant.parent_query, 
+            subtopic_assistant.context,
+            subtopic_assistant.report_type,
             self.main_task_assistant.cfg
         )
 
-        if director_sobject:
-            director_sobject_dict = director_sobject.dict()
-            director_sobject_dict["report"] = director_report
-            director_sobject_dict["visited_urls"] = list(subtopic_assistant.visited_urls)  # Convert to list
-            self.director_sobjects.append(director_sobject_dict)
+        if contact_sobject:
+            contact_sobject_dict = contact_sobject.dict()
+            contact_sobject_dict["report"] = contact_report
+            contact_sobject_dict["visited_urls"] = list(subtopic_assistant.visited_urls)  # Convert to list
+            self.contact_sobjects.append(contact_sobject_dict)
 
-        return director_report
-
-    async def _construct_detailed_report(self, introduction: str, report_body: str):
-        # Generating a table of contents from report headers
-        toc = table_of_contents(report_body)
-        
-        # Concatenating all source urls at the end of the report
-        report_with_references = add_source_urls(report_body, self.main_task_assistant.visited_urls)
-        
-        return f"{introduction}\n\n{toc}\n\n{report_with_references}"
+        return contact_report

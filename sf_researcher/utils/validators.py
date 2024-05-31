@@ -40,30 +40,28 @@ class RiskAssessmentEnum(str, Enum):
     medium = "medium"
     high = "high"
 
-class DirectorSobject(BaseModel):
-    """Full list of details of the director"""
-    salutation: SalutationEnum = Field(..., description="Salutation that you think best fits director")
-    lead_source: LeadSourceEnum = Field(..., description="Lead source of the director")
-    firstname: str = Field(..., description="First name of the director")
-    lastname: str = Field(..., description="Last name of the director")
-    related_companies: str = Field(default="", description="List of related companies")
-    email: str = Field(default="", description="Email address of the director")
-    mobile_phone: str = Field(default="", description="Mobile phone number of the director")
-    job_title: str = Field(..., description="Job title of the director")
-    primary_source_url: str = Field(..., description="The primary source URL used in collecting data")
-
-
-class Director(BaseModel):
+class Contact(BaseModel):
     """Full name of the of the individual mentioned in the research data who holds title such as director, officer, company owner, partner, executive, or manager related to the company name."""
     first_name: str = Field(..., description="first name")
     last_name: str = Field(..., description="last name")
 
+class Contacts(BaseModel):
+    """List of contact names"""
+    contacts: List[Contact] = []
 
-class Directors(BaseModel):
-    """List of director names"""
-    directors: List[Director] = []
+class ContactSobject(BaseModel):
+    """Full list of details of the contact"""
+    salutation: SalutationEnum = Field(..., description="Salutation that you think best fits contact")
+    lead_source: LeadSourceEnum = Field(..., description="Lead source of the contact")
+    firstname: str = Field(..., description="First name of the contact")
+    lastname: str = Field(..., description="Last name of the contact")
+    related_companies: str = Field(default="", description="List of related companies")
+    email: str = Field(default="", description="Email address of the contact")
+    mobile_phone: str = Field(default="", description="Mobile phone number of the contact")
+    job_title: str = Field(..., description="Job title of the contact")
+    primary_source_url: str = Field(..., description="The primary source URL used in collecting data")
 
-class CompanySobject(BaseModel):
+class ComplianceCompanySobject(BaseModel):
     """Company Details"""
     company_name: str = Field(..., description="Full legal company name")
     registration_number: str = Field(default="", description="Company registration number")
@@ -89,16 +87,31 @@ class CompanySobject(BaseModel):
             logger.error(f"Invalid incorporation date format. Expected YYYY-MM-DD, but got: {value}")
             return ""
 
-class CompanyReport(BaseModel):
+class SalesCompanySobject(BaseModel):
+    """Company Sales Details"""
+    company_name: str = Field(..., description="Full legal company name")
+    annual_revenue: float = Field(default=0.0, description="Annual revenue of the company")
+    num_employees: int = Field(default=0, description="Number of employees in the company")
+    industry: str = Field(default="", description="Industry sector of the company")
+    website: str = Field(default="", description="Company website URL")
+    phone: str = Field(default="", description="Company phone number")
+    address: str = Field(default="", description="Company address")
+    city: str = Field(default="", description="City where the company is located")
+    state: str = Field(default="", description="State where the company is located")
+    zip_code: str = Field(default="", description="ZIP code of the company's location")
+    country: str = Field(default="", description="Country where the company is located")
+    primary_source_url: str = Field(..., description="The primary source URL used in collecting data")
+
+class ReportResponse(BaseModel):
     report: str = Field(description="Company report")
-    company: CompanySobject = Field(description="Company details")
-    directors: List[Dict] = Field(description="List of directors")
+    company: Union[ComplianceCompanySobject, SalesCompanySobject] = Field(description="Company details")
+    contacts: List[Dict] = Field(description="List of contacts")
     source_urls: List[str] = Field(description="List of source URLs")
 
-class ComplianceReportRequest(BaseModel):
+class ReportRequest(BaseModel):
     query: str
     salesforce_id: str
-    directors: Optional[List[str]] = []
+    contacts: Optional[List[str]] = []
     include_domains: Optional[List[str]] = []
     exclude_domains: Optional[List[str]] = []
     parent_sub_queries: Optional[List[str]] = []
