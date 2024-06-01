@@ -7,12 +7,15 @@
 [![Documentation](https://img.shields.io/badge/Documentation-DOCS-pink?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
 [![Discord Follow](https://img.shields.io/discord/1127851779011391548?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/cPhHPZ6Z)
 
-[![Twitter](https://img.shields.io/badge/Twitter-000000?style=for-the-badge&logo=x&logoColor=white)](https://twitter.com/assaf_elovic)
-[![Linkedin](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=whit)](https://www.linkedin.com/in/assafe/)
 [![Github License](https://img.shields.io/pypi/l/gpt-researcher?logoColor=white&logo=github&color=violet&style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://img.shields.io/pypi/v/gpt-researcher?logo=pypi&logoColor=white&style=for-the-badge)](https://badge.fury.io/py/gpt-researcher)
 [![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=for-the-badge&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/examples/pip-run.ipynb)
 ![Docker Image Version)](https://img.shields.io/docker/v/elestio/gpt-researcher/latest?arch=amd64&style=for-the-badge&logo=docker&logoColor=white)
+
+[![Twitter](https://img.shields.io/badge/Twitter-000000?style=for-the-badge&logo=x&logoColor=white)](https://twitter.com/assaf_elovic)
+[![Linkedin](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/assafe/)
+[![Email](https://img.shields.io/badge/Contact_us-0F9D58?style=for-the-badge&logo=gmail&logoColor=white)](https://www.linkedin.com/in/assafe/)
+
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
