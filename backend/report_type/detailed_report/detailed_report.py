@@ -101,6 +101,7 @@ class DetailedReport():
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
             report_type="subtopic_report",
+            report_source=self.report_source,
             websocket=self.websocket,
             parent_query=self.query,
             subtopics=self.subtopics,
