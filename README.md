@@ -5,15 +5,17 @@
 
 [![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=67e8f9)](https://gptr.dev)
 [![Documentation](https://img.shields.io/badge/Documentation-DOCS-pink?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
-[![Discord Follow](https://img.shields.io/discord/1127851779011391548?style=for-the-badge&logo=discord&logoColor=white&color=7e61ab)](https://discord.gg/cPhHPZ6Z)
+[![Discord Follow](https://dcbadge.vercel.app/api/server/QgZXvJAccX?style=for-the-badge)](https://discord.gg/QgZXvJAccX)
+<!--[![Discord Follow](https://img.shields.io/discord/1127851779011391548?style=for-the-badge&logo=discord&logoColor=white&color=7e61ab)](https://discord.gg/cPhHPZ6Z)-->
 
 <!--[![Github License](https://img.shields.io/pypi/l/gpt-researcher?logoColor=white&logo=github&color=FF5A5F&style=for-the-badge)](https://opensource.org/licenses/MIT)-->
+[![License](https://img.shields.io/github/license/assafelovic/gpt-researcher)](https://github.com/assafelovic/gpt-researcher/blob/main/LICENSE)
 [![PyPI version](https://img.shields.io/pypi/v/gpt-researcher?logo=pypi&logoColor=white&style=flat-square)](https://badge.fury.io/py/gpt-researcher)
 [![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat-square&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/examples/pip-run.ipynb)
 ![Docker Image Version)](https://img.shields.io/docker/v/elestio/gpt-researcher/latest?arch=amd64&style=flat-square&logo=docker&logoColor=white&color=1D63ED)
-[![Twitter](https://img.shields.io/badge/Twitter-000000?style=flat-square&logo=x&logoColor=white)](https://twitter.com/assaf_elovic)
-[![Linkedin](https://img.shields.io/badge/LinkedIn-0077B5?style=flat-square&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/assafe/)
-[![Email](https://img.shields.io/badge/Contact_us-0F9D58?style=flat-square&logo=gmail&logoColor=white)](https://www.linkedin.com/in/assafe/)
+![GitHub Release](https://img.shields.io/github/v/release/assafelovic/gpt-researcher)
+[![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
+<!--[![Twitter](https://img.shields.io/badge/Twitter-000000?style=flat-square&logo=x&logoColor=white)](https://twitter.com/assaf_elovic)-->
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
