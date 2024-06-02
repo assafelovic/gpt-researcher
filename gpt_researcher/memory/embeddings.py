@@ -1,6 +1,5 @@
 from langchain_community.vectorstores import FAISS
 import os
-OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 
 class Memory:
     def __init__(self, embedding_provider, **kwargs):
@@ -18,7 +17,8 @@ class Memory:
                                                    check_embedding_ctx_length=False) #quick fix for lmstudio
             case "openai":
                 from langchain_openai import OpenAIEmbeddings
-                _embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL)
+                _embeddings = OpenAIEmbeddings(model=os.environ.get(
+                    "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"))
             case "azureopenai":
                 from langchain_openai import AzureOpenAIEmbeddings
                 _embeddings = AzureOpenAIEmbeddings(deployment=os.environ["AZURE_EMBEDDING_MODEL"], chunk_size=16)
