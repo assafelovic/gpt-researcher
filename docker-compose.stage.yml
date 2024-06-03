@@ -1,0 +1,16 @@
+version: '3'
+services:
+  gpt-researcher:
+    container_name: vv-gpt-researcher
+    build: ./
+    ports:
+      - 8000:8000
+    volumes:
+      - "./:/usr/src/app/"
+    env_file:
+      - .env
+    networks:
+      - valorai-external-network
+networks:
+  valorai-external-network:
+    external: true

@@ -56,7 +56,7 @@ async def create_chat_completion(
         messages: list,  # type: ignore
         model: Optional[str] = None,
         temperature: float = 1.0,
-        max_tokens: Optional[int] = None,
+        max_tokens: Optional[int] = 2000,
         llm_provider: Optional[str] = None,
         stream: Optional[bool] = False,
         websocket: WebSocket | None = None,
