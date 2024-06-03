@@ -4,7 +4,7 @@
   GPT Researcher
 </h1>-->
 <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="85">
-<h1 style="padding-top:0; margin-top: 0 !important;">GPT Researcher</h1>
+<p style="font-size: 36px; font-weight: bold;">GPT Researcher</p>
 
 [![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=0891b2)](https://gptr.dev)
 [![Documentation](https://img.shields.io/badge/Documentation-DOCS-f472b6?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
