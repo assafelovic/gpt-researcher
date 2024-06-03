@@ -1,8 +1,8 @@
 version: '3'
 services:
   gpt-researcher:
+    image: gpt-researcher-valorai-adapter-gpt-researcher:latest
     container_name: vv-gpt-researcher
-    build: ./
     ports:
       - 8000:8000
     volumes:
