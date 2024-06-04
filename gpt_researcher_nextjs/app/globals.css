@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .loader {
+    text-align: left;
+    display: flex;
+    gap: 3px;
+  }
+
+  .loader span {
+    display: inline-block;
+    vertical-align: middle;
+    width: 7px;
+    height: 7px;
+    /* background: #4b4b4b; */
+    background: white;
+    border-radius: 50%;
+    animation: loader 0.6s infinite alternate;
+  }
+
+  .loader span:nth-of-type(2) {
+    animation-delay: 0.2s;
+  }
+
+  .loader span:nth-of-type(3) {
+    animation-delay: 0.6s;
+  }
+
+  @keyframes loader {
+    0% {
+      opacity: 1;
+      transform: scale(0.6);
+    }
+
+    100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+  }
+}
+
+body {
+  margin: 0px !important;
+}
