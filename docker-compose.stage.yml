@@ -3,8 +3,6 @@ services:
   gpt-researcher:
     container_name: vv-gpt-researcher
     build: ./
-    ports:
-      - 8000:8000
     volumes:
       - "./:/usr/src/app/"
     env_file:

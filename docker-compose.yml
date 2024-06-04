@@ -12,3 +12,9 @@ services:
       - "./:/usr/src/app/"
     env_file:
       - .env
+    networks:
+      - valorai-external-network
+
+networks:
+  valorai-external-network:
+    external: true
