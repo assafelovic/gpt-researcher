@@ -1,4 +1,4 @@
-@keyframes gradientBG {
+/* @keyframes gradientBG {
   0% {background-position: 0% 50%;}
   50% {background-position: 100% 50%;}
   100% {background-position: 0% 50%;}
@@ -137,8 +137,8 @@ footer {
 }
 
 /* refactoring inline css */
-.sayGoodbye {
+/* .sayGoodbye {
   background-image:linear-gradient(to right, #9867F0, #ED4E50); 
   -webkit-background-clip: text; 
   -webkit-text-fill-color: transparent;
-}
+}  */

@@ -12,9 +12,6 @@ const Footer = () => {
           </span>
         </a>
         <div className="flex items-center gap-3">
-          <Link href={"https://x.com/nutlope"} target="_blank">
-            <Image src="/img/x.svg" alt="twitter" width={15} height={15} />
-          </Link>
           <Link href={"https://github.com/assafelovic/gpt-researcher"} target="_blank">
             <Image
               src={"/img/github-footer.svg"}
