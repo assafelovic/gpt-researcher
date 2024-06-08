@@ -104,7 +104,7 @@ export OPENAI_API_KEY={Your OpenAI API Key here}
 For a more permanent setup, create a `.env` file in the current `gpt-researcher` directory and input the env vars (without `export`).
 
 - **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources). To learn how to change the LLM model, please refer to the [documentation](https://docs.gptr.dev/docs/gpt-researcher/llms) page. 
-- **For web search API, the default is `duckduckgo` (no signup required), but you can also refer to other web search APIs of your choice by adding env `RETRIEVER` to `google`, `bing`, `tavily`, `googleSerp`, `serpapi`, `searx` and more.
+- **For web search API, the default is `duckduckgo`** (no signup required), but you can also refer to other web search APIs of your choice by adding env `RETRIEVER` to `google`, `bing`, `tavily`, `googleSerp`, `serpapi`, `searx` and more.
 
 ### Quickstart
 
