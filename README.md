@@ -99,13 +99,12 @@ For Linux/Windows temporary setup, use the export method:
 
 ```bash
 export OPENAI_API_KEY={Your OpenAI API Key here}
-export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 For a more permanent setup, create a `.env` file in the current `gpt-researcher` directory and input the env vars (without `export`).
 
-- **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources) supported by [Langchain Adapter](https://python.langchain.com/docs/integrations/adapters/openai/), simply change the llm model and provider in config/config.py. 
-- **For web search API, we recommend [Tavily Search API](https://app.tavily.com)**, but you can also refer to other search APIs of your choice by changing the search provider in config/config.py to `"duckduckgo"`, `"googleAPI"`, `"bing"`, `"googleSerp"`, `"searx"` and more. Then add the corresponding env API key as seen in the config.py file.
+- **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources). To learn how to change the LLM model, please refer to the [documentation](https://docs.gptr.dev/docs/gpt-researcher/llms) page. 
+- **For web search API, the default is `duckduckgo` (no signup required), but you can also refer to other web search APIs of your choice by adding env `RETRIEVER` to `google`, `bing`, `tavily`, `googleSerp`, `serpapi`, `searx` and more.
 
 ### Quickstart
 
