@@ -42,7 +42,6 @@ class ContextCompressor:
 
     def get_context(self, query, max_results=5, cost_callback=None):
         compressed_docs = self.__get_contextual_retriever()
-        print(compressed_docs)
         if cost_callback:
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
         relevant_docs = compressed_docs.invoke(query)
