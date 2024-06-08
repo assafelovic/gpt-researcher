@@ -1,4 +1,4 @@
-from .tavily_search.tavily_search import TavilySearch
+from .tavily.tavily_search import TavilySearch
 from .duckduckgo.duckduckgo import Duckduckgo
 from .google.google import GoogleSearch
 from .serper.serper import SerperSearch
