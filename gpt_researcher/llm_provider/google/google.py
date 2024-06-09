@@ -13,8 +13,7 @@ class GoogleProvider:
         temperature,
         max_tokens
     ):
-        # May be extended to support more google models in the future
-        self.model = "gemini-pro"
+        self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.api_key = self.get_api_key()
@@ -36,7 +35,6 @@ class GoogleProvider:
     def get_llm_model(self):
         # Initializing the chat model
         llm = ChatGoogleGenerativeAI(
-            convert_system_message_to_human=True,
             model=self.model,
             temperature=self.temperature,
             max_output_tokens=self.max_tokens,
