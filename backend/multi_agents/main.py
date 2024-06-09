@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from agents import ChiefEditorAgent
+from backend.multi_agents.agents import ChiefEditorAgent  # Updated import
 import asyncio
 import json
 import os
@@ -8,7 +8,6 @@ import os
 if os.environ.get("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
 load_dotenv()
-
 
 def open_task():
     with open('task.json', 'r') as f:
@@ -19,8 +18,7 @@ def open_task():
 
     return task
 
-
-async def main():
+async def run_research_task():
     task = open_task()
 
     chief_editor = ChiefEditorAgent(task)
@@ -29,4 +27,4 @@ async def main():
     return research_report
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(run_research_task())
