@@ -51,9 +51,8 @@ export default function ChatBox() {
 
   return (
     <div>
-
       <main className="container" id="form">
-        <ResearchForm onFormSubmit={onFormSubmit} />
+        <ResearchForm onFormSubmit={onFormSubmit} defaultReportType="multi_agents" />
 
         {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs} /> : ''}
         <div className="margin-div">

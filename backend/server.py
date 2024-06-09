@@ -95,8 +95,11 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.post("/api/multi_agents")
 async def run_multi_agents():
     websocket = manager.active_connections[0] if manager.active_connections else None
-    report = await run_research_task(websocket)
-    return {"report": report}
+    if websocket:
+        report = await run_research_task(websocket)
+        return {"report": report}
+    else:
+        return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
 
 # Enable CORS for your frontend domain (adjust accordingly)
 app.add_middleware(
