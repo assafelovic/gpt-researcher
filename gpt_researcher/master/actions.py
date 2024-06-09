@@ -70,6 +70,7 @@ async def choose_agent(query, cfg, parent_query=None, cost_callback: callable = 
                 {"role": "user", "content": f"task: {query}"}],
             temperature=0,
             llm_provider=cfg.llm_provider,
+            llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback
         )
         agent_dict = json.loads(response)
@@ -103,6 +104,7 @@ async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query:
             {"role": "user", "content": generate_search_queries_prompt(query, parent_query, report_type, max_iterations=max_research_iterations)}],
         temperature=0,
         llm_provider=cfg.llm_provider,
+        llm_kwargs=cfg.llm_kwargs,
         cost_callback=cost_callback
     )
 
@@ -206,6 +208,7 @@ async def summarize_url(query, raw_data, agent_role_prompt, cfg, cost_callback: 
                 {"role": "user", "content": f"{generate_summary_prompt(query, raw_data)}"}],
             temperature=0,
             llm_provider=cfg.llm_provider,
+            llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback
         )
     except Exception as e:
@@ -261,6 +264,7 @@ async def generate_report(
             stream=True,
             websocket=websocket,
             max_tokens=cfg.smart_token_limit,
+            llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback
         )
     except Exception as e:
@@ -298,6 +302,7 @@ async def get_report_introduction(query, context, role, config, websocket=None, 
             stream=True,
             websocket=websocket,
             max_tokens=config.smart_token_limit,
+            llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback
         )
 

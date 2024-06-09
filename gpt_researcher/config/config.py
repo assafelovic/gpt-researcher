@@ -31,9 +31,11 @@ class Config:
         self.scraper = os.getenv("SCRAPER", "bs")
         self.max_subtopics = os.getenv("MAX_SUBTOPICS", 3)
         self.doc_path = os.getenv("DOC_PATH", "")
-        
+
         self.load_config_file()
-        
+        if not hasattr(self, "llm_kwargs"):
+            self.llm_kwargs = {}
+
         if self.doc_path:
             self.validate_doc_path()
         
