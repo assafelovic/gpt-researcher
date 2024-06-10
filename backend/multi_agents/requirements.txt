@@ -1,7 +1,0 @@
-langgraph-cli
-langgraph
-gpt_researcher
-langchain-community
-python-dotenv
-weasyprint
-json5
