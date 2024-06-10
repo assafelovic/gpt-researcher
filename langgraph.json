@@ -4,7 +4,7 @@
     "."
   ],
   "graphs": {
-    "agent": "./multi_agents/agent.py:graph"
+    "agent": "./backend/multi_agents/agent.py:graph"
   },
   "env": ".env"
 }
