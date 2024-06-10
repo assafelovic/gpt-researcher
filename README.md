@@ -117,7 +117,7 @@ pip install -r requirements.txt
 > **Step 2** - Run the agent with FastAPI
 
 ```bash
-uvicorn main:app --reload
+python -m uvicorn main:app --reload
 ```
 
 > **Step 3** - Go to http://localhost:8000 on any browser and enjoy researching!
