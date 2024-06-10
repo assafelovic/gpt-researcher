@@ -1,7 +1,7 @@
 {
   "python_version": "3.11",
   "dependencies": [
-    "./backend/multi_agents"
+    "./backend", "./gpt_researcher"
   ],
   "graphs": {
     "agent": "./backend/multi_agents/agent.py:graph"
