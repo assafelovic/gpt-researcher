@@ -8,7 +8,7 @@ with open("requirements.txt", "r") as f:
 
 setup(
     name="gpt-researcher",
-    version="0.6.1",
+    version="0.6.2",
     description="GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks.",
     package_dir={'gpt_researcher': 'gpt_researcher'},
     packages=find_packages(),
