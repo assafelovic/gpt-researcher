@@ -1,4 +1,4 @@
-from agents import ChiefEditorAgent
+from backend.multi_agents.agents import ChiefEditorAgent
 
 chief_editor = ChiefEditorAgent({
   "query": "Is AI in a hype cycle?",
