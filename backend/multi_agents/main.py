@@ -8,6 +8,8 @@ if os.environ.get("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
 load_dotenv()
 
+# backend/multi_agents/main.py
+
 async def run_research_task(query, websocket=None):
     task = {
         "query": query,
@@ -27,13 +29,13 @@ async def run_research_task(query, websocket=None):
         "verbose": True
     }
 
-    chief_editor = ChiefEditorAgent(task, websocket=None)
-    research_report = await chief_editor.run_research_task()
+    chief_editor = ChiefEditorAgent(task, websocket)
+    research_report = await chief_editor.run_research_task(websocket)
 
     return research_report
 
 async def main(query, websocket=None):
-    research_report = await run_research_task(query, websocket=None)
+    research_report = await run_research_task(query, websocket)
     return research_report
 
 if __name__ == "__main__":

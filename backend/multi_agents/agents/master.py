@@ -11,9 +11,6 @@ from . import \
     PublisherAgent, \
     ResearchAgent
 
-
-# backend/multi_agents/agents/master.py
-
 class ChiefEditorAgent:
     def __init__(self, task: dict, websocket):
         self.task_id = int(time.time()) # Currently time based, but can be any unique identifier
@@ -22,7 +19,7 @@ class ChiefEditorAgent:
         self.websocket = websocket
         os.makedirs(self.output_dir, exist_ok=True)
 
-    def init_research_team(self, task, websocket):
+    def init_research_team(self, websocket):
         # Initialize agents
         writer_agent = WriterAgent(websocket)
         editor_agent = EditorAgent(websocket)

@@ -12,5 +12,5 @@ chief_editor = ChiefEditorAgent({
   ],
   "verbose": False
 }, websocket=None)
-graph = chief_editor.init_research_team(task=None, websocket=None)
+graph = chief_editor.init_research_team(websocket=None)
 graph = graph.compile()
