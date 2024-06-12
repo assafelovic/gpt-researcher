@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { FC } from "react";
-import InputArea from "./InputArea";
+import InputArea from "./Search";
 
 import logo from './logo.svg';
 

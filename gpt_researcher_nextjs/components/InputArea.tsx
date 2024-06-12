@@ -1,60 +1,61 @@
-// InputArea.js
-import React, { useState, useEffect } from 'react';
-import ResearchForm from './Task/ResearchForm';
-import Report from './Task/Report';
-import AgentLogs from './Task/AgentLogs';
-import AccessReport from './Task/AccessReport';
+import Image from "next/image";
+import { FC } from "react";
+import TypeAnimation from "./TypeAnimation";
 
-const InputArea = () => {
-  const [task, setTask] = useState('');
-  const [reportType, setReportType] = useState('');
-  const [reportSource, setReportSource] = useState('');
-  const [agentLogs, setAgentLogs] = useState([]);
-  const [report, setReport] = useState('');
-  const [accessData, setAccessData] = useState('');
-  const [socket, setSocket] = useState(null);
+type TInputAreaProps = {
+  promptValue: string;
+  setPromptValue: React.Dispatch<React.SetStateAction<string>>;
+  handleDisplayResult: () => void;
+  disabled?: boolean;
+  reset?: () => void;
+};
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const { protocol, pathname } = window.location;
-      let { host } = window.location;
-      host = host.includes('localhost') ? 'localhost:8000' : host;
-      const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
-      
-      const newSocket = new WebSocket(ws_uri);
-      setSocket(newSocket);
-
-      newSocket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === 'agentLogs') {
-          setAgentLogs((prevLogs) => [...prevLogs, data.output]);
-        } else if (data.type === 'report') {
-          setReport(data.output);
-        } else if (data.type === 'accessData') {
-          setAccessData(data.output);
-        }
-      };
-
-      return () => newSocket.close();
-    }
-  }, []);
-
-  const handleFormSubmit = (task, reportType, reportSource) => {
-    setTask(task);
-    setReportType(reportType);
-    setReportSource(reportSource);
-    // Send data to WebSocket server if needed
-    let data = "start " + JSON.stringify({ task: task.value, report_type: report_type.value, report_source: report_source.value });
-    socket.send(data);
-  };
-
+const InputArea: FC<TInputAreaProps> = ({
+  promptValue,
+  setPromptValue,
+  handleDisplayResult,
+  disabled,
+  reset,
+}) => {
   return (
-    <div>
-      <ResearchForm onFormSubmit={handleFormSubmit} />
-      <AgentLogs agentLogs={agentLogs} />
-      <Report report={report} />
-      <AccessReport accessData={accessData} />
-    </div>
+    <form
+      className="mx-auto flex h-[66px] w-full items-center justify-between rounded-lg border bg-white px-3 shadow-[2px_2px_38px_0px_rgba(0,0,0,0.25),0px_-2px_4px_0px_rgba(0,0,0,0.25)_inset,1px_2px_4px_0px_rgba(0,0,0,0.25)_inset]"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (reset) reset();
+        handleDisplayResult();
+      }}
+    >
+      <input
+        type="text"
+        placeholder="Ask anything"
+        className="focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal] text-[#1B1B16]/30 text-black outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
+        disabled={disabled}
+        value={promptValue}
+        required
+        onChange={(e) => setPromptValue(e.target.value)}
+      />
+      <button
+        disabled={disabled}
+        type="submit"
+        className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-[linear-gradient(154deg,#1B1B16_23.37%,#565646_91.91%)] disabled:pointer-events-none disabled:opacity-75"
+      >
+        {disabled && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <TypeAnimation />
+          </div>
+        )}
+
+        <Image
+          unoptimized
+          src={"/img/arrow-narrow-right.svg"}
+          alt="search"
+          width={24}
+          height={24}
+          className={disabled ? "invisible" : ""}
+        />
+      </button>
+    </form>
   );
 };
 
