@@ -15,6 +15,10 @@ import {
   ReconnectInterval,
 } from "eventsource-parser";
 
+import Report from '../components/Task/Report';
+import AgentLogs from '../components/Task/AgentLogs';
+import AccessReport from '../components/Task/AccessReport';
+
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
   const [question, setQuestion] = useState("");
@@ -23,10 +27,13 @@ export default function Home() {
   const [answer, setAnswer] = useState("");
   const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState({});
+  const [chatBoxSettings, setChatBoxSettings] = useState({task: {value: ''}, report_type: {value: 'multi_agents'},  report_source: {value: 'web'}});
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [socket, setSocket] = useState(null);
+  const [agentLogs, setAgentLogs] = useState([]);
+  const [report, setReport] = useState("");
+  const [accessData, setAccessData] = useState({});
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -69,6 +76,8 @@ export default function Home() {
     setLoading(true);
     setQuestion(newQuestion);
     setPromptValue("");
+
+    startResearch(chatBoxSettings)
 
     await Promise.all([
       handleSourcesAndAnswer(newQuestion),
@@ -193,6 +202,11 @@ export default function Home() {
                     handleDisplayResult={handleDisplayResult}
                     reset={reset}
                   />
+                  {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs} /> : ''}
+                  <div className="margin-div">
+                    {report ? <Report report={report} /> : ''}
+                    {/* {Object.keys(accessData).length != 0 ? <AccessReport accessData={accessData} report={report} /> : ''} */}
+                  </div>
                 </>
               </div>
 
