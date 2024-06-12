@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import ResearchForm from './ResearchForm';
-import Report from './Report';
+import ResearchForm from '../Task/ResearchForm';
+import Report from '../Task/Report';
 import AgentLogs from './AgentLogs';
 import AccessReport from './AccessReport';
 
