@@ -86,17 +86,14 @@ class GPTResearcher:
 
         # If specified, the researcher will use the given urls as the context for the research.
         if self.source_urls:
-            context = await self.__get_context_by_urls(self.source_urls)
+            self.context = await self.__get_context_by_urls(self.source_urls)
             
         elif self.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
-            context = await self.__get_context_by_search(self.query, document_data)
-        
+            self.context = await self.__get_context_by_search(self.query, document_data)
+        # Default web based research
         else:
-            context = await self.__get_context_by_search(self.query)
-
-        # Extending the global context (This is useful instead of setting the context directly above to avoid over-writing input context)
-        self.context.extend(context)
+            self.context = await self.__get_context_by_search(self.query)
         
         time.sleep(2)
         if self.verbose:
