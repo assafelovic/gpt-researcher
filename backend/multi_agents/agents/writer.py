@@ -13,9 +13,11 @@ sample_json = """
 """
 
 
+# backend/multi_agents/agents/writer.py
+
 class WriterAgent:
-    def __init__(self):
-        pass
+    def __init__(self, websocket):
+        self.websocket = websocket
 
     def get_headers(self, research_state: dict):
         return {

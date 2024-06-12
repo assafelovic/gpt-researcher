@@ -4,8 +4,8 @@ from .utils.views import print_agent_output
 
 
 class ResearchAgent:
-    def __init__(self):
-        pass
+    def __init__(self, websocket):
+        self.websocket = websocket
 
     async def research(self, query: str, research_report: str = "research_report",
                        parent_query: str = "", verbose=True, source="web"):
@@ -33,6 +33,12 @@ class ResearchAgent:
         query = task.get("query")
         source = task.get("source", "web")
         print_agent_output(f"Running initial research on the following query: {query}", agent="RESEARCHER")
+        await self.websocket.send_json(
+            {
+                "type": "logs",
+                "output": f"Running initial research on the following query: {query}",
+            }
+        )
         return {"task": task, "initial_research": await self.research(query=query, verbose=task.get("verbose"),
                                                                       source=source)}
 
@@ -43,6 +49,12 @@ class ResearchAgent:
         source = task.get("source", "web")
         verbose = task.get("verbose")
         print_agent_output(f"Running in depth research on the following report topic: {topic}", agent="RESEARCHER")
+        await self.websocket.send_json(
+            {
+                "type": "logs",
+                "output": f"Running in depth research on the following report topic: {topic}",
+            }
+        )
         research_draft = await self.run_subtopic_research(parent_query=parent_query, subtopic=topic,
                                                           verbose=verbose, source=source)
         return {"draft": research_draft}

@@ -6,8 +6,8 @@ Your goal is to review research drafts and provide feedback to the reviser only 
 """
 
 class ReviewerAgent:
-    def __init__(self):
-        pass
+    def __init__(self, websocket):
+        self.websocket = websocket
 
     def review_draft(self, draft_state: dict):
         """

@@ -13,8 +13,8 @@ from . import \
 
 
 class EditorAgent:
-    def __init__(self):
-        pass
+    def __init__(self, websocket):
+        self.websocket = websocket
 
     def plan_research(self, research_state: dict):
         """
@@ -57,9 +57,9 @@ class EditorAgent:
         }
 
     async def run_parallel_research(self, research_state: dict):
-        research_agent = ResearchAgent()
-        reviewer_agent = ReviewerAgent()
-        reviser_agent = ReviserAgent()
+        research_agent = ResearchAgent(self.websocket)
+        reviewer_agent = ReviewerAgent(self.websocket)
+        reviser_agent = ReviserAgent(self.websocket)
         queries = research_state.get("sections")
         title = research_state.get("title")
         workflow = StateGraph(DraftState)

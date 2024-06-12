@@ -12,8 +12,8 @@ sample_revision_notes = """
 """
 
 class ReviserAgent:
-    def __init__(self):
-        pass
+    def __init__(self, websocket):
+        self.websocket = websocket
 
     def revise_draft(self, draft_state: dict):
         """
