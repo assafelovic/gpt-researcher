@@ -4,6 +4,8 @@ import ResearchForm from './Task/ResearchForm';
 import Report from './Task/Report';
 import AgentLogs from './Task/AgentLogs';
 import AccessReport from './Task/AccessReport';
+import InputArea from './InputArea';
+
 
 const Search = () => {
   const [task, setTask] = useState('');
@@ -50,7 +52,9 @@ const Search = () => {
 
   return (
     <div>
-      <ResearchForm onFormSubmit={handleFormSubmit} />
+      
+      <ResearchForm onFormSubmit={handleFormSubmit} defaultReportType="multi_agents"/>
+      
       <AgentLogs agentLogs={agentLogs} />
       <Report report={report} />
       <AccessReport accessData={accessData} />
