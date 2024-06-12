@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import FileUpload from './FileUpload';
+import FileUpload from '../Settings/FileUpload';
 
 export default function ResearchForm({ onFormSubmit, defaultReportType }) {
     // Declare a new state variable, which we'll call "count"
