@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ResearchForm from '../Task/ResearchForm';
 import Report from '../Task/Report';
-import AgentLogs from './AgentLogs';
-import AccessReport from './AccessReport';
+import AgentLogs from '../Task/AgentLogs';
+import AccessReport from '../Task/AccessReport';
 
 export default function ChatBox() {
   const [agentLogs, setAgentLogs] = useState([]);
