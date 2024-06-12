@@ -47,7 +47,8 @@ export default function Home() {
 
       newSocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.type === 'agentLogs') {
+        console.log('websocket data caught in frontend: ',data)
+        if (data.type === 'logs') {
           setAgentLogs((prevLogs) => [...prevLogs, data.output]);
         } else if (data.type === 'report') {
           setReport(data.output);
@@ -65,7 +66,7 @@ export default function Home() {
   const startResearch = (chatBoxSettings) => {
     const {task, report_type, report_source} = chatBoxSettings;
     setReport("");
-    let data = "start " + JSON.stringify({ task: task.value, report_type: report_type.value, report_source: report_source.value });
+    let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source });
     socket.send(data);
   };
 
