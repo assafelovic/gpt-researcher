@@ -4,7 +4,7 @@ import Report from '../Task/Report';
 import AgentLogs from '../Task/AgentLogs';
 import AccessReport from '../Task/AccessReport';
 
-export default function ChatBox() {
+export default function ChatBox({ setChatBoxSettings }) {
   const [agentLogs, setAgentLogs] = useState([]);
   const [report, setReport] = useState("");
   const [accessData, setAccessData] = useState({});
@@ -39,8 +39,9 @@ export default function ChatBox() {
   const onFormSubmit = (e) => {
     e.preventDefault();
     let { task, report_type, report_source } = e.target;
-    setAgentLogs([{ output: "🤔 Thinking about research questions for the task..." }]);
-    startResearch(task, report_type, report_source);
+    // setAgentLogs([{ output: "🤔 Thinking about research questions for the task..." }]);
+    // startResearch(task, report_type, report_source);
+    setChatBoxSettings({ task: task.value, report_type: report_type.value, report_source: report_source.value });
   };
 
   const startResearch = (task, report_type, report_source) => {

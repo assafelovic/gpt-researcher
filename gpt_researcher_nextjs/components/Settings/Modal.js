@@ -2,7 +2,7 @@ import React from "react";
 import './App.css';
 import ChatBox from './ChatBox'
 
-export default function Modal() {
+export default function Modal({ setChatBoxSettings }) {
   const [showModal, setShowModal] = React.useState(false);
   return (
     <div className="settings">
@@ -40,7 +40,7 @@ export default function Modal() {
                   
                     <div className="App">
                         <header className="App-header">
-                            <ChatBox />
+                          <ChatBox setChatBoxSettings={setChatBoxSettings} />
                         </header>
                     </div>
 

@@ -23,7 +23,10 @@ export default function Home() {
   const [answer, setAnswer] = useState("");
   const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [chatBoxSettings, setChatBoxSettings] = useState({});
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  console.log('chatBoxSettings',chatBoxSettings)
 
   const handleDisplayResult = async (newQuestion?: string) => {
     newQuestion = newQuestion || promptValue;
@@ -173,7 +176,7 @@ export default function Home() {
           </div>
         )}
       </main>
-      <Footer />
+      <Footer setChatBoxSettings={setChatBoxSettings} />
     </>
   );
 }
