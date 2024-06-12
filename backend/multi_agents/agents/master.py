@@ -12,18 +12,21 @@ from . import \
     ResearchAgent
 
 
+# backend/multi_agents/agents/master.py
+
 class ChiefEditorAgent:
-    def __init__(self, task: dict):
+    def __init__(self, task: dict, websocket):
         self.task_id = int(time.time()) # Currently time based, but can be any unique identifier
         self.output_dir = f"./outputs/run_{self.task_id}_{task.get('query')[0:40]}"
         self.task = task
+        self.websocket = websocket
         os.makedirs(self.output_dir, exist_ok=True)
 
-    def init_research_team(self):
+    def init_research_team(self, task, websocket):
         # Initialize agents
-        writer_agent = WriterAgent()
-        editor_agent = EditorAgent()
-        research_agent = ResearchAgent()
+        writer_agent = WriterAgent(websocket)
+        editor_agent = EditorAgent(websocket)
+        research_agent = ResearchAgent(websocket)
         publisher_agent = PublisherAgent(self.output_dir)
 
         # Define a Langchain StateGraph with the ResearchState
@@ -52,7 +55,7 @@ class ChiefEditorAgent:
         if websocket:
             await websocket.send_json({"type": "info", "message": "Multi-Agent Research task started"})
 
-        research_team = self.init_research_team()
+        research_team = self.init_research_team(websocket)
 
         # compile the graph
         chain = research_team.compile()
