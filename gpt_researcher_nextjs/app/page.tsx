@@ -8,7 +8,7 @@ import InputArea from "@/components/InputArea";
 import SimilarTopics from "@/components/SimilarTopics";
 import Sources from "@/components/Sources";
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   createParser,
   ParsedEvent,
@@ -26,7 +26,41 @@ export default function Home() {
   const [chatBoxSettings, setChatBoxSettings] = useState({});
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const { protocol, pathname } = window.location;
+      let { host } = window.location;
+      host = host.includes('localhost') ? 'localhost:8000' : host;
+      const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
+      
+      const newSocket = new WebSocket(ws_uri);
+      setSocket(newSocket);
+
+      newSocket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'agentLogs') {
+          setAgentLogs((prevLogs) => [...prevLogs, data.output]);
+        } else if (data.type === 'report') {
+          setReport(data.output);
+        } else if (data.type === 'accessData') {
+          setAccessData(data.output);
+        }
+      };
+
+      return () => newSocket.close();
+    }
+  }, []);
+
   console.log('chatBoxSettings',chatBoxSettings)
+
+  const startResearch = (chatBoxSettings) => {
+    const {task, report_type, report_source} = chatBoxSettings;
+    setReport("");
+    let data = "start " + JSON.stringify({ task: task.value, report_type: report_type.value, report_source: report_source.value });
+    socket.send(data);
+  };
 
   const handleDisplayResult = async (newQuestion?: string) => {
     newQuestion = newQuestion || promptValue;
