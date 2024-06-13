@@ -3,6 +3,8 @@ import './App.css';
 import ChatBox from './ChatBox';
 
 export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
+  console.log('chatBoxSettings',chatBoxSettings)
+
   const [showModal, setShowModal] = React.useState(false);
 
   const handleSaveChanges = () => {

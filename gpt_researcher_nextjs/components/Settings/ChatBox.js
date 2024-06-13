@@ -36,21 +36,12 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }) {
     }
   }, []);
 
-  const handleDropdownChange = (e) => {
-    const { name, value } = e.target;
-    setChatBoxSettings((prevSettings) => ({
-      ...prevSettings,
-      [name]: value,
-    }));
-  };
-
   return (
     <div>
       <main className="container" id="form">
         <ResearchForm 
-          onFormSubmit={(e) => e.preventDefault()} 
-          chatBoxSettings={chatBoxSettings}
-          handleDropdownChange={handleDropdownChange}
+          chatBoxSettings={chatBoxSettings} 
+          setChatBoxSettings={setChatBoxSettings} 
         />
 
         {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs} /> : ''}
