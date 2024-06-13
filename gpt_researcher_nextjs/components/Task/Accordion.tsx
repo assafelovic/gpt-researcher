@@ -4,8 +4,8 @@ const Accordion = ({ logs }) => {
   return (
     <section className="relative z-20 overflow-hidden bg-white pb-12 pt-20 dark:bg-dark lg:pb-[90px] lg:pt-[120px]">
       <div className="container mx-auto">
-        <div className="-mx-4 flex flex-wrap">
-          <div className="w-full px-4 lg:w-1/2">
+        <div className="-mx-4 flex flex-wrap justify-center"> {/* Centering the AccordionItems */}
+          <div className="w-full px-4 lg:w-3/4"> {/* Making the AccordionItem wider */}
             {logs.map((log, index) => (
               <AccordionItem key={index} header={log.header} text={log.text} />
             ))}
@@ -35,9 +35,9 @@ const Accordion = ({ logs }) => {
               y2="-418.681"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#3056D3" stop-opacity="0.36" />
-              <stop offset="1" stop-color="#F5F2FD" stop-opacity="0" />
-              <stop offset="1" stop-color="#F5F2FD" stop-opacity="0.096144" />
+              <stop stopColor="#3056D3" stopOpacity="0.36" />
+              <stop offset="1" stopColor="#F5F2FD" stopOpacity="0" />
+              <stop offset="1" stopColor="#F5F2FD" stopOpacity="0.096144" />
             </linearGradient>
           </defs>
         </svg>
@@ -51,15 +51,16 @@ export default Accordion;
 const AccordionItem = ({ header, text }) => {
   const [active, setActive] = useState(false);
 
-  const handleToggle = () => {
+  const handleToggle = (event) => {
     event.preventDefault();
     setActive(!active);
   };
+
   return (
     <div className="mb-8 w-full rounded-lg bg-white p-4 shadow-[0px_20px_95px_0px_rgba(201,203,204,0.30)] dark:bg-dark-2 dark:shadow-[0px_20px_95px_0px_rgba(0,0,0,0.30)] sm:p-8 lg:px-6 xl:px-8">
       <button
         className={`faq-btn flex w-full text-left`}
-        onClick={() => handleToggle()}
+        onClick={handleToggle}
       >
         <div className="mr-5 flex h-10 w-full max-w-[40px] items-center justify-center rounded-lg bg-primary/5 text-primary dark:bg-white/5">
           <svg
