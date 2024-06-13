@@ -226,7 +226,9 @@ class GPTResearcher:
             await stream_output("logs",
                                 "subqueries",
                                 f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
-                                self.websocket)
+                                self.websocket,
+                                True,
+                                sub_queries)
 
         # Using asyncio.gather to process the sub_queries asynchronously
         context = await asyncio.gather(

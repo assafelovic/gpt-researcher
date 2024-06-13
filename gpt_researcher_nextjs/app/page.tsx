@@ -36,6 +36,7 @@ export default function Home() {
   const [accordionLogs, setAccordionLogs] = useState([]);
   const [report, setReport] = useState("");
   const [accessData, setAccessData] = useState({});
+  const [subqueries, setSubqueries] = useState<string[]>([]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -50,7 +51,12 @@ export default function Home() {
       newSocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log('websocket data caught in frontend: ',data)
-        if (data.type != 'path' && data.content != '') {
+        if (data.content == 'subqueries') {
+          console.log('subqueries',data.metadata)
+          setSubqueries(data.metadata);
+        } else if(data.type=='report'){
+          setAnswer((prev) => prev + data.output);
+        } else if (data.type != 'path' && data.content != '') {
           setAccordionLogs((prevAccordionLogs) => [...prevAccordionLogs, { header: data.content, text: data.output }]);
         } else if (data.type === 'logs') {
           setAgentLogs((prevLogs) => [...prevLogs, data.output]);
@@ -166,6 +172,10 @@ export default function Home() {
     setSimilarQuestions([]);
   };
 
+  const handleClickSuggestion = (value: string) => {
+    setPromptValue(value);
+  };
+
   return (
     <>
       <Header />
@@ -211,6 +221,19 @@ export default function Home() {
                     {/* {Object.keys(accessData).length != 0 ? <AccessReport accessData={accessData} report={report} /> : ''} */}
                   </div>
                   <Accordion logs={accordionLogs} />
+                  <div className="flex flex-wrap items-center justify-center gap-2.5 pb-[30px] lg:flex-nowrap lg:justify-normal">
+                    {subqueries.map((item, index) => (
+                      <div
+                        className="flex h-[35px] cursor-pointer items-center justify-center gap-[5px] rounded border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"
+                        onClick={() => handleClickSuggestion(item)}
+                        key={index}
+                      >
+                        <span className="text-sm font-light leading-[normal] text-[#1B1B16]">
+                          {item}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </>
               </div>
 
