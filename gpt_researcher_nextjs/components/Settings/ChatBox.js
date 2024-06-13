@@ -5,7 +5,6 @@ import AgentLogs from '../Task/AgentLogs';
 import AccessReport from '../Task/AccessReport';
 
 export default function ChatBox({ chatBoxSettings, setChatBoxSettings }) {
-  console.log('chatBoxSettings',chatBoxSettings)
 
   const [agentLogs, setAgentLogs] = useState([]);
   const [report, setReport] = useState("");
