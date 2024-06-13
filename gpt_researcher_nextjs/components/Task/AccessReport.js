@@ -1,3 +1,6 @@
+let { host } = window.location;
+host = host.includes('localhost') ? 'localhost:8000' : host;
+
 export default function AccessReport({accessData, report}){  
   function copyToClipboard(text) {
     if ('clipboard' in navigator) {
@@ -7,23 +10,14 @@ export default function AccessReport({accessData, report}){
     }
   }
 
-  const getReportLink = () => {
-    const output = accessData.output;
-
-    console.log('output', output);
-
-    if (output && typeof output === 'string') {
-      return `http://localhost:8000/${output.replace('./', '')}`;
-      // Now you can use reportAccessLink
-    } else {
-      return `http://localhost:8000/${accessData.output}`
-    } 
+  const getReportLink = (dataType) => {
+      return `http://localhost:8000/${accessData[dataType]}`
   }
 
   return (
     <div>
-      {/* <button onClick={copyToClipboard()} className="btn btn-secondary mt-3">Copy to clipboard</button> */}
-      <a id="downloadLink" href={getReportLink()} className="btn btn-secondary mt-3" target="_blank">View as PDF</a>
+      <a id="downloadLink" href={getReportLink('pdf')} className="btn btn-secondary mt-3" target="_blank">View as PDF</a>
+      <a id="downloadLink" href={getReportLink('docx')} className="btn btn-secondary mt-3" target="_blank">Download docX</a>
     </div>
   );
 }
