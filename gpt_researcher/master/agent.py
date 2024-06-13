@@ -248,9 +248,7 @@ class GPTResearcher:
             str: The context gathered from search
         """
         if self.verbose:
-            await stream_output(
-                "logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket
-            )
+            await stream_output("logs", "running_subquery_research", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
 
         if not scraped_data:
             scraped_data = await self.__scrape_data_by_query(sub_query)
@@ -258,11 +256,9 @@ class GPTResearcher:
         content = await self.__get_similar_content_by_query(sub_query, scraped_data)
 
         if content and self.verbose:
-            await stream_output("logs", f"📃 {content}", self.websocket)
+            await stream_output("logs", "subquery_context_window", f"📃 {content}", self.websocket)
         elif self.verbose:
-            await stream_output(
-                "logs", f"🤷 No content found for '{sub_query}'...", self.websocket
-            )
+            await stream_output("logs", "subquery_context_not_found", f"🤷 No content found for '{sub_query}'...", self.websocket)
         return content
 
     async def __get_new_urls(self, url_set_input):
@@ -277,11 +273,7 @@ class GPTResearcher:
                 self.visited_urls.add(url)
                 new_urls.append(url)
                 if self.verbose:
-                    await stream_output(
-                        "logs",
-                        f"✅ Added source url to research: {url}\n",
-                        self.websocket,
-                    )
+                    await stream_output("logs", "added_source_url", f"✅ Added source url to research: {url}\n", self.websocket)
 
         return new_urls
 
@@ -305,9 +297,7 @@ class GPTResearcher:
 
         # Scrape Urls
         if self.verbose:
-            await stream_output(
-                "logs", f"🤔 Researching for relevant information...\n", self.websocket
-            )
+            await stream_output("logs", "researching", f"🤔 Researching for relevant information...\n", self.websocket)
 
         # Scrape Urls
         scraped_content_results = await asyncio.to_thread(scrape_urls, new_search_urls, self.cfg)
@@ -315,11 +305,7 @@ class GPTResearcher:
 
     async def __get_similar_content_by_query(self, query, pages):
         if self.verbose:
-            await stream_output(
-                "logs",
-                f"📝 Getting relevant content based on query: {query}...",
-                self.websocket,
-            )
+            await stream_output("logs", "fetching_query_content", f"📝 Getting relevant content based on query: {query}...", self.websocket)
 
         # Summarize Raw Data
         context_compressor = ContextCompressor(
@@ -376,7 +362,7 @@ class GPTResearcher:
         `construct_subtopics` function.
         """
         if self.verbose:
-            await stream_output("logs", f"🤔 Generating subtopics...", self.websocket)
+            await stream_output("logs", "generating_subtopics", f"🤔 Generating subtopics...", self.websocket)
 
         subtopics = await construct_subtopics(
             task=self.query,
@@ -387,6 +373,6 @@ class GPTResearcher:
         )
 
         if self.verbose:
-            await stream_output("logs", f"📋Subtopics: {subtopics}", self.websocket)
+            await stream_output("logs", "subtopics", f"📋Subtopics: {subtopics}", self.websocket)
 
         return subtopics
