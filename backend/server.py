@@ -4,6 +4,9 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from backend.websocket_manager import WebSocketManager
 from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
+from fastapi import FastAPI
+from gpt_researcher import GPTResearcher
+import asyncio
 import time
 import json
 import os
@@ -62,4 +65,11 @@ async def websocket_endpoint(websocket: WebSocket):
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
+
+@app.get("/report/{report_type}")
+async def get_report(query: str, report_type: str) -> dict:
+    researcher = GPTResearcher(query, report_type)
+    research_result = await researcher.conduct_research()
+    report = await researcher.write_report()
+    return {"report": report}
 

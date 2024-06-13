@@ -21,7 +21,7 @@ class NewspaperScraper:
         try:
             article = Article(
                 self.link,
-                language="en",
+                language="pt-BR",
                 memoize_articles=False,
                 fetch_images=False,
             )

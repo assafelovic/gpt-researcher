@@ -22,7 +22,8 @@ const GPTResearcher = (() => {
       const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
       const converter = new showdown.Converter();
       const socket = new WebSocket(ws_uri);
-  
+      writeReport(ws_uri, converter);
+      console.log(ws_uri);
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.type === 'logs') {
