@@ -32,11 +32,7 @@ export default function Home() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [socket, setSocket] = useState(null);
-  const [agentLogs, setAgentLogs] = useState([]);
-  const [accordionLogs, setAccordionLogs] = useState([]);
-  const [report, setReport] = useState("");
-  const [accessData, setAccessData] = useState({});
-  const [subqueries, setSubqueries] = useState<string[]>([]);
+  const [orderedData, setOrderedData] = useState([]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -50,21 +46,9 @@ export default function Home() {
 
       newSocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log('websocket data caught in frontend: ',data)
-        if (data.content == 'subqueries') {
-          console.log('subqueries',data.metadata)
-          setSubqueries(data.metadata);
-        } else if(data.type=='report'){
-          setAnswer((prev) => prev + data.output);
-        } else if (data.type != 'path' && data.content != '') {
-          setAccordionLogs((prevAccordionLogs) => [...prevAccordionLogs, { header: data.content, text: data.output }]);
-        } else if (data.type === 'logs') {
-          setAgentLogs((prevLogs) => [...prevLogs, data.output]);
-        } else if (data.type === 'report') {
-          setReport((prevReport) => prevReport + data.output);
-        } else if (data.type === 'accessData') {
-          setAccessData(data.output);
-        }
+        console.log('websocket data caught in frontend: ', data);
+        const uniqueKey = `${data.content}-${data.type}`;
+        setOrderedData((prevOrder) => [...prevOrder, { ...data, uniqueKey }]);
       };
 
       return () => newSocket.close();
@@ -73,7 +57,7 @@ export default function Home() {
 
   const startResearch = (chatBoxSettings) => {
     const {task, report_type, report_source} = chatBoxSettings;
-    setReport("");
+    
     let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source });
     socket.send(data);
   };
@@ -176,6 +160,39 @@ export default function Home() {
     setPromptValue(value);
   };
 
+  const renderComponentsInOrder = () => {
+    return orderedData.map((data, index) => {
+      const { type, content, metadata, output, uniqueKey } = data;
+  
+      if (content === 'subqueries') {
+        return (
+          <div key={uniqueKey} className="flex flex-wrap items-center justify-center gap-2.5 pb-[30px] lg:flex-nowrap lg:justify-normal">
+            {metadata.map((item, index) => (
+              <div
+                className="flex h-[35px] cursor-pointer items-center justify-center gap-[5px] rounded border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"
+                onClick={() => handleClickSuggestion(item)}
+                key={index}
+              >
+                <span className="text-sm font-light leading-[normal] text-[#1B1B16]">
+                  {item}
+                </span>
+              </div>
+            ))}
+          </div>
+        );
+      } else if (type === 'report') {
+        setAnswer((prev) => prev + output);
+        return <Answer key={uniqueKey} answer={answer} />;
+      } else if (type !== 'path' && content !== '') {
+        return <Accordion key={uniqueKey} logs={[{ header: content, text: output }]} />;
+      } else if (type === 'path') {
+        return <AccessReport key={uniqueKey} accessData={output} report={report} />;
+      } else {
+        return null;
+      }
+    });
+  };
+
   return (
     <>
       <Header />
@@ -207,34 +224,7 @@ export default function Home() {
                   </div>
                   <div className="grow">&quot;{question}&quot;</div>
                 </div>
-                <>
-                  <Sources sources={sources} />
-                  <Answer answer={answer} />
-                  <SimilarTopics
-                    similarQuestions={similarQuestions}
-                    handleDisplayResult={handleDisplayResult}
-                    reset={reset}
-                  />
-                  {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs} /> : ''}
-                  <div className="margin-div">
-                    {report ? <Report report={report} /> : ''}
-                    {/* {Object.keys(accessData).length != 0 ? <AccessReport accessData={accessData} report={report} /> : ''} */}
-                  </div>
-                  <Accordion logs={accordionLogs} />
-                  <div className="flex flex-wrap items-center justify-center gap-2.5 pb-[30px] lg:flex-nowrap lg:justify-normal">
-                    {subqueries.map((item, index) => (
-                      <div
-                        className="flex h-[35px] cursor-pointer items-center justify-center gap-[5px] rounded border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"
-                        onClick={() => handleClickSuggestion(item)}
-                        key={index}
-                      >
-                        <span className="text-sm font-light leading-[normal] text-[#1B1B16]">
-                          {item}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
+                {renderComponentsInOrder()}
               </div>
 
               <div className="pt-1 sm:pt-2" ref={chatContainerRef}></div>
