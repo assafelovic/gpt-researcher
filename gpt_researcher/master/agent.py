@@ -275,7 +275,7 @@ class GPTResearcher:
                 self.visited_urls.add(url)
                 new_urls.append(url)
                 if self.verbose:
-                    await stream_output("logs", "added_source_url", f"✅ Added source url to research: {url}\n", self.websocket)
+                    await stream_output("logs", "added_source_url", f"✅ Added source url to research: {url}\n", self.websocket, True, url)
 
         return new_urls
 
