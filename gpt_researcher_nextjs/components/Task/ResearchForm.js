@@ -15,10 +15,9 @@ export default function ResearchForm({ chatBoxSettings, setChatBoxSettings }) {
     };
 
     return (
-        <form method="POST" className="mt-3">
+        <form method="POST" className="mt-3" className="report_settings">
             <div className="form-group">
-                <label htmlFor="report_type" className="agent_question">What type of report would you like me to
-                    generate?</label>
+                <label htmlFor="report_type" className="agent_question">Report Type: </label>
                 <select name="report_type" value={report_type} onChange={onFormChange} className="form-control" required>
                     <option value="multi_agents">Multi Agents</option>
                     <option value="research_report">Research Report</option>
@@ -27,7 +26,7 @@ export default function ResearchForm({ chatBoxSettings, setChatBoxSettings }) {
                 </select>
             </div>
             <div className="form-group">
-                <label htmlFor="report_source" className="agent-question">Report Source</label>
+                <label htmlFor="report_source" className="agent_question">Report Source: </label>
                 <select name="report_source" value={report_source} onChange={onFormChange} className="form-control" required>
                     <option value="web">The Internet</option>
                     <option value="local">My Documents</option>
