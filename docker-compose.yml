@@ -7,6 +7,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+    restart: always
     ports:
       - 8000:8000
   # react-client:
@@ -15,9 +16,10 @@ services:
   #     - CHOKIDAR_USEPOLLING=true
   #   build:
   #     dockerfile: Dockerfile.dev
-  #     context: ./react-frontend
+  #     context: ./gpt_researcher_nextjs
   #   volumes:
   #     - /app/node_modules
-  #     - ./react-frontend:/app
+  #     - ./gpt_researcher_nextjs:/app
+  #   restart: always
   #   ports:
   #     - 3000:3000
