@@ -34,8 +34,6 @@ export default function Home() {
   const [socket, setSocket] = useState(null);
   const [orderedData, setOrderedData] = useState([]);
 
-  console.log('chatBoxSettings: ',chatBoxSettings)
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const { protocol, pathname } = window.location;
