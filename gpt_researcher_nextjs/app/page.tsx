@@ -28,7 +28,7 @@ export default function Home() {
   const [answer, setAnswer] = useState("");
   const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState({task: {value: ''}, report_type: {value: 'multi_agents'},  report_source: {value: 'web'}});
+  const [chatBoxSettings, setChatBoxSettings] = useState({task: {value: ''}, report_type: {value: ''},  report_source: {value: ''}});
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [socket, setSocket] = useState(null);
@@ -236,6 +236,11 @@ export default function Home() {
     });
   };
 
+  const saveSettings = (settings) => {
+    localStorage.setItem('chatBoxSettings', JSON.stringify(settings));
+    setChatBoxSettings(settings);
+  };
+
   return (
     <>
       <Header />
@@ -284,7 +289,7 @@ export default function Home() {
           </div>
         )}
       </main>
-      <Footer setChatBoxSettings={setChatBoxSettings} />
+      <Footer setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} saveSettings={saveSettings} />
     </>
   );
 }
