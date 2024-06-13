@@ -47,8 +47,8 @@ export default function Home() {
       newSocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log('websocket data caught in frontend: ', data);
-        const uniqueKey = `${data.content}-${data.type}`;
-        setOrderedData((prevOrder) => [...prevOrder, { ...data, uniqueKey }]);
+        const contentAndType = `${data.content}-${data.type}`;
+        setOrderedData((prevOrder) => [...prevOrder, { ...data, contentAndType }]);
 
         if (data.type === 'report') {
           setAnswer((prev) => prev + data.output);
@@ -166,8 +166,9 @@ export default function Home() {
 
   const renderComponentsInOrder = () => {
     return orderedData.map((data, index) => {
-      const { type, content, metadata, output, uniqueKey } = data;
-  
+      const { type, content, metadata, output } = data;
+      const uniqueKey = `${type}-${content}-${index}`;
+
       if (content === 'subqueries') {
         return (
           <div key={uniqueKey} className="flex flex-wrap items-center justify-center gap-2.5 pb-[30px] lg:flex-nowrap lg:justify-normal">
