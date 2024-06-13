@@ -18,6 +18,7 @@ import {
 import Report from '../components/Task/Report';
 import AgentLogs from '../components/Task/AgentLogs';
 import AccessReport from '../components/Task/AccessReport';
+import Accordion from '../components/Task/Accordion';
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
@@ -32,6 +33,7 @@ export default function Home() {
 
   const [socket, setSocket] = useState(null);
   const [agentLogs, setAgentLogs] = useState([]);
+  const [accordionLogs, setAccordionLogs] = useState([]);
   const [report, setReport] = useState("");
   const [accessData, setAccessData] = useState({});
 
@@ -48,7 +50,9 @@ export default function Home() {
       newSocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log('websocket data caught in frontend: ',data)
-        if (data.type === 'logs') {
+        if (data.type != 'path' && data.content != '') {
+          setAccordionLogs((prevAccordionLogs) => [...prevAccordionLogs, { header: data.content, text: data.output }]);
+        } else if (data.type === 'logs') {
           setAgentLogs((prevLogs) => [...prevLogs, data.output]);
         } else if (data.type === 'report') {
           setReport((prevReport) => prevReport + data.output);
@@ -206,6 +210,7 @@ export default function Home() {
                     {report ? <Report report={report} /> : ''}
                     {/* {Object.keys(accessData).length != 0 ? <AccessReport accessData={accessData} report={report} /> : ''} */}
                   </div>
+                  <Accordion logs={accordionLogs} />
                 </>
               </div>
 
