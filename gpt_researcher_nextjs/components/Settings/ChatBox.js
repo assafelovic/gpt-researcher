@@ -50,7 +50,6 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }) {
         <ResearchForm 
           onFormSubmit={(e) => e.preventDefault()} 
           chatBoxSettings={chatBoxSettings}
-          setChatBoxSettings={setChatBoxSettings}
           handleDropdownChange={handleDropdownChange}
         />
 
