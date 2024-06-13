@@ -102,15 +102,27 @@ export default function Home() {
   const preprocessOrderedData = (data) => {
     const groupedData = [];
     let currentAccordionGroup = null;
-  
+    let currentSourceGroup = null;
+
     data.forEach((item) => {
-      const { type, content } = item;
-  
+      const { type, content, metadata } = item;
+
       if (content === 'subqueries' || type === 'report') {
         if (currentAccordionGroup) {
           currentAccordionGroup = null;
         }
+        if (currentSourceGroup) {
+          groupedData.push(currentSourceGroup);
+          currentSourceGroup = null;
+        }
         groupedData.push(item);
+      } else if (content === 'added_source_url') {
+        if (!currentSourceGroup) {
+          currentSourceGroup = { type: 'sourceBlock', items: [] };
+          groupedData.push(currentSourceGroup);
+        }
+        const hostname = new URL(metadata).hostname.replace('www.', '');
+        currentSourceGroup.items.push({ name: hostname, url: metadata });
       } else if (type !== 'path' && content !== '') {
         if (!currentAccordionGroup) {
           currentAccordionGroup = { type: 'accordionBlock', items: [] };
@@ -121,16 +133,20 @@ export default function Home() {
         if (currentAccordionGroup) {
           currentAccordionGroup = null;
         }
+        if (currentSourceGroup) {
+          groupedData.push(currentSourceGroup);
+          currentSourceGroup = null;
+        }
         groupedData.push(item);
       }
     });
-  
+
     return groupedData;
   };
 
   const renderComponentsInOrder = () => {
     const groupedData = preprocessOrderedData(orderedData);
-  
+
     return groupedData.map((data, index) => {
       if (data.type === 'accordionBlock') {
         const uniqueKey = `accordionBlock-${index}`;
@@ -140,10 +156,13 @@ export default function Home() {
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
         return <Accordion key={uniqueKey} logs={logs} />;
+      } else if (data.type === 'sourceBlock') {
+        const uniqueKey = `sourceBlock-${index}`;
+        return <Sources key={uniqueKey} sources={data.items} isLoading={false} />;
       } else {
         const { type, content, metadata, output } = data;
         const uniqueKey = `${type}-${content}-${index}`;
-  
+
         if (content === 'subqueries') {
           return (
             <div key={uniqueKey} className="flex flex-wrap items-center justify-center gap-2.5 pb-[30px] lg:flex-nowrap lg:justify-normal">
