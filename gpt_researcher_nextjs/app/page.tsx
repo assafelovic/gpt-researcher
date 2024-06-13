@@ -27,7 +27,7 @@ export default function Home() {
   const [answer, setAnswer] = useState("");
   const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState({task: {value: ''}, report_type: 'multi_agents',  report_source: 'web'});
+  const [chatBoxSettings, setChatBoxSettings] = useState({task: {value: ''}, report_type: {value: 'multi_agents'},  report_source: {value: 'web'}});
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [socket, setSocket] = useState(null);
@@ -51,7 +51,7 @@ export default function Home() {
         if (data.type === 'logs') {
           setAgentLogs((prevLogs) => [...prevLogs, data.output]);
         } else if (data.type === 'report') {
-          setReport(data.output);
+          setReport((prevReport) => prevReport + data.output);
         } else if (data.type === 'accessData') {
           setAccessData(data.output);
         }
