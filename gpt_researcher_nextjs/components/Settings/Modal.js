@@ -2,11 +2,11 @@ import React from "react";
 import './App.css';
 import ChatBox from './ChatBox';
 
-export default function Modal({ setChatBoxSettings, chatBoxSettings, saveSettings }) {
+export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
   const [showModal, setShowModal] = React.useState(false);
 
   const handleSaveChanges = () => {
-    saveSettings(chatBoxSettings);
+    setChatBoxSettings(chatBoxSettings);
     setShowModal(false);
   };
 
@@ -45,7 +45,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings, saveSetting
                 <div className="relative p-6 flex-auto">
                   <div className="App">
                     <header className="App-header">
-                      <ChatBox setChatBoxSettings={setChatBoxSettings} />
+                      <ChatBox setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
                     </header>
                   </div>
                 </div>
