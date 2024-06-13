@@ -49,6 +49,10 @@ export default function Home() {
         console.log('websocket data caught in frontend: ', data);
         const uniqueKey = `${data.content}-${data.type}`;
         setOrderedData((prevOrder) => [...prevOrder, { ...data, uniqueKey }]);
+
+        if (data.type === 'report') {
+          setAnswer((prev) => prev + data.output);
+        }
       };
 
       return () => newSocket.close();
@@ -181,12 +185,12 @@ export default function Home() {
           </div>
         );
       } else if (type === 'report') {
-        setAnswer((prev) => prev + output);
-        return <Answer key={uniqueKey} answer={answer} />;
+        // Instead of setting the answer state here, we should ensure it's set in the WebSocket message handler
+        return <Answer key={uniqueKey} answer={output} />;
       } else if (type !== 'path' && content !== '') {
         return <Accordion key={uniqueKey} logs={[{ header: content, text: output }]} />;
       } else if (type === 'path') {
-        return <AccessReport key={uniqueKey} accessData={output} report={report} />;
+        return <AccessReport key={uniqueKey} accessData={output} report={answer} />;
       } else {
         return null;
       }
