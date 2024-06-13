@@ -28,11 +28,13 @@ export default function Home() {
   const [answer, setAnswer] = useState("");
   const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState({task: {value: ''}, report_type: {value: ''},  report_source: {value: ''}});
+  const [chatBoxSettings, setChatBoxSettings] = useState({});
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [socket, setSocket] = useState(null);
   const [orderedData, setOrderedData] = useState([]);
+
+  console.log('chatBoxSettings: ',chatBoxSettings)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -236,11 +238,6 @@ export default function Home() {
     });
   };
 
-  const saveSettings = (settings) => {
-    localStorage.setItem('chatBoxSettings', JSON.stringify(settings));
-    setChatBoxSettings(settings);
-  };
-
   return (
     <>
       <Header />
@@ -289,7 +286,7 @@ export default function Home() {
           </div>
         )}
       </main>
-      <Footer setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} saveSettings={saveSettings} />
+      <Footer setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
     </>
   );
 }
