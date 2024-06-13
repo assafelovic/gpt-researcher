@@ -21,11 +21,11 @@ class AzureOpenAIProvider:
 
     def __init__(
         self,
-        deployment_name,
+        model,
         temperature,
         max_tokens
     ):
-        self.deployment_name = deployment_name
+        self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.api_key = self.get_api_key()
@@ -47,7 +47,7 @@ class AzureOpenAIProvider:
     def get_llm_model(self):
         # Initializing the chat model
         llm = AzureChatOpenAI(
-            deployment_name=self.deployment_name,
+            model=self.model,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
             api_key=self.api_key
@@ -81,5 +81,5 @@ class AzureOpenAIProvider:
                     else:
                         print(f"{Fore.GREEN}{paragraph}{Style.RESET_ALL}")
                     paragraph = ""
-                    
+
         return response
