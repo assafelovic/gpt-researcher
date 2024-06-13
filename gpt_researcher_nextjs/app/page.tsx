@@ -28,7 +28,7 @@ export default function Home() {
   const [answer, setAnswer] = useState("");
   const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState({});
+  const [chatBoxSettings, setChatBoxSettings] = useState({report_source: 'web', report_type: 'research_report'});
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [socket, setSocket] = useState(null);
