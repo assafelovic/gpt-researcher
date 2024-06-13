@@ -164,36 +164,74 @@ export default function Home() {
     setPromptValue(value);
   };
 
-  const renderComponentsInOrder = () => {
-    return orderedData.map((data, index) => {
-      const { type, content, metadata, output } = data;
-      const uniqueKey = `${type}-${content}-${index}`;
-
-      if (content === 'subqueries') {
-        return (
-          <div key={uniqueKey} className="flex flex-wrap items-center justify-center gap-2.5 pb-[30px] lg:flex-nowrap lg:justify-normal">
-            {metadata.map((item, index) => (
-              <div
-                className="flex h-[35px] cursor-pointer items-center justify-center gap-[5px] rounded border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"
-                onClick={() => handleClickSuggestion(item)}
-                key={index}
-              >
-                <span className="text-sm font-light leading-[normal] text-[#1B1B16]">
-                  {item}
-                </span>
-              </div>
-            ))}
-          </div>
-        );
-      } else if (type === 'report') {
-        // Instead of setting the answer state here, we should ensure it's set in the WebSocket message handler
-        return <Answer key={uniqueKey} answer={output} />;
+  const preprocessOrderedData = (data) => {
+    const groupedData = [];
+    let currentAccordionGroup = null;
+  
+    data.forEach((item) => {
+      const { type, content } = item;
+  
+      if (content === 'subqueries' || type === 'report') {
+        if (currentAccordionGroup) {
+          currentAccordionGroup = null;
+        }
+        groupedData.push(item);
       } else if (type !== 'path' && content !== '') {
-        return <Accordion key={uniqueKey} logs={[{ header: content, text: output }]} />;
-      } else if (type === 'path') {
-        return <AccessReport key={uniqueKey} accessData={output} report={answer} />;
+        if (!currentAccordionGroup) {
+          currentAccordionGroup = { type: 'accordionBlock', items: [] };
+          groupedData.push(currentAccordionGroup);
+        }
+        currentAccordionGroup.items.push(item);
       } else {
-        return null;
+        if (currentAccordionGroup) {
+          currentAccordionGroup = null;
+        }
+        groupedData.push(item);
+      }
+    });
+  
+    return groupedData;
+  };
+
+  const renderComponentsInOrder = () => {
+    const groupedData = preprocessOrderedData(orderedData);
+  
+    return groupedData.map((data, index) => {
+      if (data.type === 'accordionBlock') {
+        const uniqueKey = `accordionBlock-${index}`;
+        const logs = data.items.map((item, subIndex) => ({
+          header: item.content,
+          text: item.output,
+          key: `${item.type}-${item.content}-${subIndex}`,
+        }));
+        return <Accordion key={uniqueKey} logs={logs} />;
+      } else {
+        const { type, content, metadata, output } = data;
+        const uniqueKey = `${type}-${content}-${index}`;
+  
+        if (content === 'subqueries') {
+          return (
+            <div key={uniqueKey} className="flex flex-wrap items-center justify-center gap-2.5 pb-[30px] lg:flex-nowrap lg:justify-normal">
+              {metadata.map((item, subIndex) => (
+                <div
+                  className="flex h-[35px] cursor-pointer items-center justify-center gap-[5px] rounded border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"
+                  onClick={() => handleClickSuggestion(item)}
+                  key={`${uniqueKey}-${subIndex}`}
+                >
+                  <span className="text-sm font-light leading-[normal] text-[#1B1B16]">
+                    {item}
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        } else if (type === 'report') {
+          return <Answer key={uniqueKey} answer={output} />;
+        } else if (type === 'path') {
+          return <AccessReport key={uniqueKey} accessData={output} report={answer} />;
+        } else {
+          return null;
+        }
       }
     });
   };

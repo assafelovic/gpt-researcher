@@ -1,7 +1,14 @@
-let { host } = window.location;
-host = host.includes('localhost') ? 'localhost:8000' : host;
+export default function AccessReport({ accessData, report }) {
+  const getHost = () => {
+    if (typeof window !== 'undefined') {
+      let { host } = window.location;
+      return host.includes('localhost') ? 'localhost:8000' : host;
+    }
+    return '';
+  };
 
-export default function AccessReport({accessData, report}){  
+  const host = getHost();
+
   function copyToClipboard(text) {
     if ('clipboard' in navigator) {
       navigator.clipboard.writeText(report);
@@ -11,13 +18,17 @@ export default function AccessReport({accessData, report}){
   }
 
   const getReportLink = (dataType) => {
-      return `http://localhost:8000/${accessData[dataType]}`
-  }
+    return `http://${host}/${accessData[dataType]}`;
+  };
 
   return (
     <div>
-      <a id="downloadLink" href={getReportLink('pdf')} className="btn btn-secondary mt-3" target="_blank">View as PDF</a>
-      <a id="downloadLink" href={getReportLink('docx')} className="btn btn-secondary mt-3" target="_blank">Download docX</a>
+      <a id="downloadLink" href={getReportLink('pdf')} className="btn btn-secondary mt-3" target="_blank">
+        View as PDF
+      </a>
+      <a id="downloadLink" href={getReportLink('docx')} className="btn btn-secondary mt-3" target="_blank">
+        Download docX
+      </a>
     </div>
   );
 }
