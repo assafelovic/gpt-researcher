@@ -20,6 +20,8 @@ import AgentLogs from '../components/Task/AgentLogs';
 import AccessReport from '../components/Task/AccessReport';
 import Accordion from '../components/Task/Accordion';
 
+import { handleSourcesAndAnswer, handleSimilarQuestions } from '../actions/apiActions';
+
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
   const [question, setQuestion] = useState("");
@@ -83,73 +85,6 @@ export default function Home() {
 
     setLoading(false);
   };
-
-  async function handleSourcesAndAnswer(question: string) {
-    let sourcesResponse = await fetch("/api/getSources", {
-      method: "POST",
-      body: JSON.stringify({ question }),
-    });
-    let sources = await sourcesResponse.json();
-
-    setSources(sources);
-
-    const response = await fetch("/api/getAnswer", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ question, sources }),
-    });
-
-    if (!response.ok) {
-      throw new Error(response.statusText);
-    }
-
-    if (response.status === 202) {
-      const fullAnswer = await response.text();
-      setAnswer(fullAnswer);
-      return;
-    }
-
-    // This data is a ReadableStream
-    const data = response.body;
-    if (!data) {
-      return;
-    }
-
-    const onParse = (event: ParsedEvent | ReconnectInterval) => {
-      if (event.type === "event") {
-        const data = event.data;
-        try {
-          const text = JSON.parse(data).text ?? "";
-          setAnswer((prev) => prev + text);
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    };
-
-    // https://web.dev/streams/#the-getreader-and-read-methods
-    const reader = data.getReader();
-    const decoder = new TextDecoder();
-    const parser = createParser(onParse);
-    let done = false;
-    while (!done) {
-      const { value, done: doneReading } = await reader.read();
-      done = doneReading;
-      const chunkValue = decoder.decode(value);
-      parser.feed(chunkValue);
-    }
-  }
-
-  async function handleSimilarQuestions(question: string) {
-    let res = await fetch("/api/getSimilarQuestions", {
-      method: "POST",
-      body: JSON.stringify({ question }),
-    });
-    let questions = await res.json();
-    setSimilarQuestions(questions);
-  }
 
   const reset = () => {
     setShowResult(false);
