@@ -27,7 +27,7 @@ export default function Home() {
   const [answer, setAnswer] = useState("");
   const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState({task: {value: ''}, report_type: {value: 'multi_agents'},  report_source: {value: 'web'}});
+  const [chatBoxSettings, setChatBoxSettings] = useState({task: {value: ''}, report_type: 'multi_agents',  report_source: 'web'});
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [socket, setSocket] = useState(null);
