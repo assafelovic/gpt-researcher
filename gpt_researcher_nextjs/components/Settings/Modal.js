@@ -3,8 +3,6 @@ import './App.css';
 import ChatBox from './ChatBox';
 
 export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
-  console.log('chatBoxSettings',chatBoxSettings)
-
   const [showModal, setShowModal] = React.useState(false);
 
   const handleSaveChanges = () => {
@@ -59,13 +57,6 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                     onClick={() => setShowModal(false)}
                   >
                     Close
-                  </button>
-                  <button
-                    className="bg-emerald-500 text-white active:bg-emerald-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                    type="button"
-                    onClick={handleSaveChanges}
-                  >
-                    Save Changes
                   </button>
                 </div>
               </div>
