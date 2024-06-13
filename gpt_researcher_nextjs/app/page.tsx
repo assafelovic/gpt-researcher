@@ -61,8 +61,6 @@ export default function Home() {
     }
   }, []);
 
-  console.log('chatBoxSettings',chatBoxSettings)
-
   const startResearch = (chatBoxSettings) => {
     const {task, report_type, report_source} = chatBoxSettings;
     setReport("");
