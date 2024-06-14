@@ -41,6 +41,7 @@ lxml[html_clean]
 websockets
 unstructured
 pandas
+json_repair
 
 # uncomment for testing
 # pytest
