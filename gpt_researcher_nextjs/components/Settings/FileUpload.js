@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
+import {getHost} from '../../helpers/getHost'
 
 const FileUpload = () => {
   const [files, setFiles] = useState([]);
+  const host = getHost();
   
   const fetchFiles = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/files/');
+      const response = await axios.get(`${host}/files/`);
       setFiles(response.data.files);
     } catch (error) {
       console.error('Error fetching files:', error);
@@ -25,7 +27,7 @@ const FileUpload = () => {
     });
     
     try {
-      await axios.post('http://localhost:8000/upload/', formData, {
+      await axios.post(`${host}/upload/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -38,7 +40,7 @@ const FileUpload = () => {
 
   const deleteFile = async (filename) => {
     try {
-      await axios.delete(`http://localhost:8000/files/${filename}`);
+      await axios.delete(`${host}/files/${filename}`);
       fetchFiles();
     } catch (error) {
       console.error('Error deleting file:', error);

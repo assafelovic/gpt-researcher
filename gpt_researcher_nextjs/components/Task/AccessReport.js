@@ -1,11 +1,6 @@
+import {getHost} from '../../helpers/getHost'
+
 export default function AccessReport({ accessData, report }) {
-  const getHost = () => {
-    if (typeof window !== 'undefined') {
-      let { host } = window.location;
-      return host.includes('localhost') ? 'localhost:8000' : host;
-    }
-    return '';
-  };
 
   const host = getHost();
 
@@ -18,7 +13,7 @@ export default function AccessReport({ accessData, report }) {
   }
 
   const getReportLink = (dataType) => {
-    return `http://${host}/${accessData[dataType]}`;
+    return `${host}/${accessData[dataType]}`;
   };
 
   return (
