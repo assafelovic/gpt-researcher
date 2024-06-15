@@ -9,7 +9,7 @@ class Config:
     def __init__(self, config_file: str = None):
         """Initialize the config class."""
         self.config_file = os.path.expanduser(config_file) if config_file else os.getenv('CONFIG_FILE')
-        self.retriever = os.getenv('RETRIEVER', "duckduckgo")
+        self.retriever = os.getenv('RETRIEVER', "tavily")
         self.embedding_provider = os.getenv('EMBEDDING_PROVIDER', 'openai')
         self.similarity_threshold = int(os.getenv('SIMILARITY_THRESHOLD', 0.38))
         self.llm_provider = os.getenv('LLM_PROVIDER', "openai")
