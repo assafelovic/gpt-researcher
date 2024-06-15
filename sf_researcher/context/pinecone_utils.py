@@ -5,13 +5,13 @@ import logging
 from langchain.schema import Document
 from langchain_pinecone import PineconeVectorStore
 from langchain.indexes import SQLRecordManager, index
-from langchain.text_splitter import CharacterTextSplitter
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from dotenv import load_dotenv
 load_dotenv()
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class PineconeManager:
@@ -55,41 +55,42 @@ class PineconeManager:
             raise Exception("Pinecone Environment not found. Please set the PINECONE_ENVIRONMENT environment variable.")
         return pinecone_env
 
-
     def process_scraped_content(self, scraped_content_results):
-        text_splitter = CharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
         documents = []
+        unique_urls = set()  # Track unique URLs
         for searchlist in scraped_content_results:
             for result in searchlist:
-                raw_content = result.get("raw_content", "")
-                if raw_content:
-                    chunks = text_splitter.split_text(raw_content)
-                    for i, chunk in enumerate(chunks):
+                url = result.get("url", "")
+                if url not in unique_urls:
+                    unique_urls.add(url)
+                    raw_content = result.get("raw_content", "")
+                    if raw_content:
+                        chunks = text_splitter.split_text(raw_content)
+                        for i, chunk in enumerate(chunks):
+                            documents.append(
+                                Document(
+                                    page_content=chunk,
+                                    metadata={
+                                        "title": result.get("title", ""),
+                                        "source": url,
+                                        "source_type": "web_search",
+                                        "chunk_index": i,
+                                    },
+                                )
+                            )
+                    else:
                         documents.append(
                             Document(
-                                page_content=chunk,
+                                page_content="",
                                 metadata={
                                     "title": result.get("title", ""),
-                                    "source": result.get("url", ""),
-                                    "score": result.get("score", 0.0),
+                                    "source": url,
                                     "source_type": "web_search",
-                                    "chunk_index": i,
+                                    "chunk_index": 0,
                                 },
                             )
                         )
-                else:
-                    documents.append(
-                        Document(
-                            page_content="",
-                            metadata={
-                                "title": result.get("title", ""),
-                                "source": result.get("url", ""),
-                                "score": result.get("score", 0.0),
-                                "source_type": "web_search",
-                                "chunk_index": 0,
-                            },
-                        )
-                    )
         return documents
 
     def insert_documents(self, documents):
@@ -101,14 +102,16 @@ class PineconeManager:
             cleanup="incremental",
             source_id_key="source",
         )
-        logger.debug("Indexing result: %s", result)
+        print(result)
+        logger.info(f"\n🧩 Indexing result: {result}\n", )
 
-    def query_documents(self, query):
-        vectorstore = PineconeVectorStore(
-            index_name=self.index_name,
-            embedding=self.embeddings,
-            namespace=self.namespace,
-        )
-        retriever = vectorstore.as_retriever()
+    def query_documents_metadata(self, query):
+        retriever = self.vectorstore.as_retriever()
         relevant_documents = retriever.get_relevant_documents(query)
+        logger.info(f"\n🧩 pinecone_manager.py query_documents_metadata similarity_search results: {relevant_documents}\n")
+        return relevant_documents
+    
+    def query_documents(self, query):
+        relevant_documents = self.vectorstore.similarity_search(query, k=4)
+        # logger.info(f"\n🧩 pinecone_manager.py similarity_search raw_results: \n{relevant_documents}\n")
         return relevant_documents

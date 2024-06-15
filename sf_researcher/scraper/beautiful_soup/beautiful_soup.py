@@ -1,5 +1,11 @@
-from bs4 import BeautifulSoup
+#beautiful_soup.py
 
+from bs4 import BeautifulSoup
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class BeautifulSoupScraper:
 
@@ -20,6 +26,9 @@ class BeautifulSoupScraper:
         """
         try:
             response = self.session.get(self.link, timeout=4)
+            if response.status_code != 200:
+                logger.error(f"❌ beautiful_soup.py Failed to fetch URL: {self.link}, Status code: {response.status_code}")
+                return ""
             soup = BeautifulSoup(
                 response.content, "lxml", from_encoding=response.encoding
             )

@@ -7,6 +7,6 @@ class ReportType(Enum):
     DetailedReport = 'detailed_report'
     SubtopicReport = 'subtopic_report'
     ComplianceReport = 'compliance_report'
-    ComplianceContactReport = 'contact_compliance_report'
+    ContactReport = 'contact_report'
     SalesReport = 'sales_report'
     SalesContactReport = 'sales_compliance_report'

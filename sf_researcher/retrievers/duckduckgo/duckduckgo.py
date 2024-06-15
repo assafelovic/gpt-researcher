@@ -18,4 +18,6 @@ class Duckduckgo:
         :return:
         """
         ddgs_gen = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
+
+        
         return ddgs_gen

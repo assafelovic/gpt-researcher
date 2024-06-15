@@ -1,9 +1,16 @@
 #scraper.py
 
+import os
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
+from apify_client import ApifyClient
 
 import requests
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from sf_researcher.scraper import (
     ArxivScraper,
@@ -12,7 +19,7 @@ from sf_researcher.scraper import (
     PyMuPDFScraper,
     WebBaseLoaderScraper,
 )
-
+from sf_researcher.scraper.apify.apify import ApifyScraper
 
 class Scraper:
     """
@@ -29,6 +36,7 @@ class Scraper:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": user_agent})
         self.scraper = scraper
+        self.apify_scraper = ApifyScraper()
 
     def run(self):
         """
@@ -51,9 +59,17 @@ class Scraper:
             content = scraper.scrape()
 
             if len(content) < 100:
-                return {"url": link, "raw_content": None}
+                logger.warning(f"❌ scraper.py Scraped content too short for URL: {link}\n content: {content}\n")
+                logger.info(f"🧬 scraper.py now scraping with apify")
+                content = self.apify_scraper.scrape(link)
+                if len(content) < 100:
+                    logger.warning(f"❌ scraper.py apify failed to return result: {link}\n content: {content}\n")
+                    return {"url": link, "raw_content": None}
+                else:    
+                    return {"url": link, "raw_content": content}
             return {"url": link, "raw_content": content}
         except Exception as e:
+            logger.error(f"❌ scraper.py Error scraping URL: {link}, Error: {e}")
             return {"url": link, "raw_content": None}
 
     def get_scraper(self, link):

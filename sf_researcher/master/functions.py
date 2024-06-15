@@ -81,33 +81,6 @@ async def choose_agent(query, cfg, parent_query=None):
     except Exception as e:
         return "Default Agent", "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
 
-
-async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str, report_type:str):
-    """
-    Gets the sub queries
-    Args:
-        query: original query
-        agent_role_prompt: agent role prompt
-        cfg: Config
-
-    Returns:
-        sub_queries: List of sub queries
-
-    """
-    max_research_iterations = cfg.max_iterations if cfg.max_iterations else 1
-    response = await create_chat_completion(
-        model=cfg.smart_llm_model,
-        messages=[
-            {"role": "system", "content": f"{agent_role_prompt}"},
-            {"role": "user", "content": generate_search_queries_prompt(query, parent_query, report_type, max_iterations=max_research_iterations)}],
-        temperature=0,
-        llm_provider=cfg.llm_provider
-    )
-    print("Response:", response)
-    sub_queries = json.loads(response)
-    return sub_queries
-
-
 def scrape_urls(urls, cfg=None):
     """
     Scrapes the urls
@@ -230,10 +203,10 @@ async def generate_report(
 
     if self.report_type in ["compliance_report","sales_report"]:
         content = (
-            f"{generate_prompt(self.query, self.context, self.cfg.report_format, self.cfg.total_words)}")
+            f"{generate_prompt(self.query, self.context, self.cfg.report_format)}")
     else:
         content = (
-            f"{generate_prompt(self.query, self.parent_query, self.context, self.cfg.report_format, self.cfg.total_words)}")
+            f"{generate_prompt(self.query, self.parent_query, self.context, self.cfg.report_format)}")
 
     try:
         report = await create_chat_completion(

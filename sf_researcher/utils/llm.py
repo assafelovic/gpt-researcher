@@ -9,17 +9,11 @@ from typing import Optional
 
 from colorama import Fore, Style
 from fastapi import WebSocket
-from langchain.output_parsers import PydanticOutputParser
-from langchain.prompts import PromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain_core.output_parsers.openai_tools import PydanticToolsParser, JsonOutputToolsParser
+from langchain_core.output_parsers.openai_tools import PydanticToolsParser
 from langchain_core.prompts import ChatPromptTemplate
-
 from sf_researcher.master.prompts import *
 from .validators import *
-
-from langsmith.wrappers import wrap_openai
-from langsmith import traceable
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,11 +22,15 @@ LANGCHAIN_ENDPOINT = os.getenv("LANGCHAIN_ENDPOINT")
 LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
 LANGCHAIN_PROJECT = os.getenv("LANGCHAIN_PROJECT")
 
+################################################################################################
+
+# INITIAL SETUP
+
 def get_provider(llm_provider):
     match llm_provider:
         case "openai":
             from ..llm_provider import OpenAIProvider
-            llm_provider = wrap_openai(OpenAIProvider)
+            llm_provider = OpenAIProvider
         case "azureopenai":
             from ..llm_provider import AzureOpenAIProvider
             llm_provider = AzureOpenAIProvider
@@ -45,11 +43,6 @@ def get_provider(llm_provider):
 
     return llm_provider
 
-################################################################################################
-
-# CONSTRUCT GENERAL TOOL CALLS 
-
-@traceable
 async def create_chat_completion(
         messages: list,  # type: ignore
         model: Optional[str] = None,
@@ -124,27 +117,52 @@ def choose_agent(smart_llm_model: str, llm_provider: str, task: str) -> dict:
         return {"server": "Default Agent",
                 "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."}
 
+
+################################################################################################
+
+# STRUCTURED OUTPUT CALLS 
+
 async def construct_contacts(company_name: str, data: str, config) -> Contacts:
     try:
         prompt = ChatPromptTemplate.from_messages(
-            [("system", "You are helpful assistant, helping to extract a list of directors names"), ("user", generate_contacts_prompt())]
+            [("system", "You are helpful assistant, helping to extract a list of directors names"), 
+             ("user", generate_contacts_prompt())]
         )
         parser = PydanticToolsParser(tools=[Contacts], first_tool_only=True)
 
-        print(f"\n🤖 Calling {config.fast_llm_model}...\n")
+        print(f"\n🤖 llm.py construct_contacts Calling {config.fast_llm_model}...\n")
         model = ChatOpenAI(model=config.fast_llm_model, temperature=0).bind_tools([Contacts], tool_choice="Contacts")
-        
-        print("Construct Contacts Output Tool Schema: ", model.kwargs["tools"])
+    
         chain = prompt | model | parser
         output = chain.invoke({
             "company_name": company_name,
-            "data": data
+            "data": data,
+            "max_contacts": config.max_contacts
         })
-
-        print(output)
         return output
     except Exception as e:
         print("Exception in parsing directors name list: ", e)
+        return []
+
+async def analyze_search_result(search_results, overall_goal: str, config) -> InitialSearchResults:
+    try:
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", "You are a helpful assistant analyzing the relevance of search results."), 
+             ("user", generate_search_analysis_prompt())]
+        )
+        parser = PydanticToolsParser(tools=[InitialSearchResults], first_tool_only=True)
+
+        print(f"\n🤖 llm.py analyze_search_result Calling {config.fast_llm_model}...\n")
+        model = ChatOpenAI(model=config.fast_llm_model, temperature=0).bind_tools([InitialSearchResults], tool_choice="InitialSearchResults")
+    
+        chain = prompt | model | parser
+        output = chain.invoke({
+            "overall_goal": overall_goal,
+            "search_results": search_results
+        })
+        return output
+    except Exception as e:
+        print("Exception in analyzing search result: ", e)
         return []
 
 ################################################################################################
@@ -166,18 +184,18 @@ async def construct_contact_sobject(contact_name: str, visited_urls: str, compan
         model = ChatOpenAI(model=config.fast_llm_model, temperature=0).bind_tools([ContactSobject], tool_choice="ContactSobject")
 
         chain = prompt | model | parser
-        print("Construct Director SObject Output Tool Schema: ", model.kwargs["tools"])
+
         output = chain.invoke({
             "contact_name": contact_name,
             "visited_urls": visited_urls,
             "company": company,
             "context": context
         })
-        print("Construct Compliance Contact SObject Output: ", output)
+        print(f"\n🤖 llm.py Compliance Contact SObject: {output}\n")
         return output
 
     except Exception as e:
-        print("Exception in parsing Compliance Contact SObjects: ", e)
+        print("\n🤖 llm.py Exception in parsing Compliance Contact SObjects: ", e)
         return []
 
 async def construct_contact_sobject(contact_name: str, visited_urls: str, company: str, context: str, report_type: str, config) -> ContactSobject:
@@ -195,18 +213,18 @@ async def construct_contact_sobject(contact_name: str, visited_urls: str, compan
         model = ChatOpenAI(model=config.fast_llm_model, temperature=0).bind_tools([ContactSobject], tool_choice="ContactSobject")
 
         chain = prompt | model | parser
-        print("Construct Director SObject Output Tool Schema: ", model.kwargs["tools"])
+        
         output = chain.invoke({
             "contact_name": contact_name,
             "visited_urls": visited_urls,
             "company": company,
             "context": context
         })
-        print("Construct Compliance Contact SObject Output: ", output)
+        print(f"\n🤖 llm.py Construct Compliance Contact SObject : {output}\n")
         return output
 
     except Exception as e:
-        print("Exception in parsing Compliance Contact SObjects: ", e)
+        print("\n🤖 llm.py Exception in parsing Compliance Contact SObjects: ", e)
         return []
 
 async def construct_compliance_company_sobject(visited_urls: str, company: str, context: str, config) -> ComplianceCompanySobject:
@@ -220,13 +238,13 @@ async def construct_compliance_company_sobject(visited_urls: str, company: str, 
         model = ChatOpenAI(model=config.fast_llm_model, temperature=0).bind_tools([ComplianceCompanySobject], tool_choice="ComplianceCompanySobject")
 
         chain = prompt | model | parser
-        print("Construct Company SObject Output Tool Schema: ", model.kwargs["tools"])
+
         output = chain.invoke({
             "visited_urls": visited_urls,
             "company": company,
             "context": context
         })
-        print("Construct Compliance Company SObject Output: ", output)
+        print(f"\n🤖 llm.py Construct Compliance Company SObject Output: {output}\n")
         return output
     except Exception as e:
         print("Exception in parsing company SObject: ", e)
@@ -243,13 +261,13 @@ async def construct_sales_company_sobject(visited_urls: str, company: str, conte
         model = ChatOpenAI(model=config.fast_llm_model, temperature=0).bind_tools([SalesCompanySobject], tool_choice="SalesCompanySobject")
 
         chain = prompt | model | parser
-        print("Construct Sales Company SObject Output Tool Schema: ", model.kwargs["tools"])
+
         output = chain.invoke({
             "visited_urls": visited_urls,
             "company": company,
             "context": context
         })
-        print("Construct Sales Company SObject Output: ", output)
+        print(f"\n🤖 llm.py Construct Sales Company SObject Output: {output}\n")
         return output
     except Exception as e:
         print("Exception in parsing company SObject: ", e)

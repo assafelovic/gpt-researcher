@@ -45,15 +45,41 @@ def generate_contacts_prompt() -> str:
     
     {data}
     
-    - Construct a list of full names of all individuals mentioned in the research data who hold titles such as directors, officers, company owners, partners, executives, or managers related to the company name.
+    - Construct a list of full names (first name and last name) of all individuals mentioned in the research data who hold titles such as directors, officers, company owners, partners, executives, or managers related to the company name.
     - There should NOT be any duplicate names.
     
     "IMPORTANT!":
     - Every name MUST be mentioned in the provided research data ONLY!
+    - Both first name and last name MUST be present and valid. Do not create placeholders like: unknown if you cannot find the first or last names. 
+    - Exclude any contacts that you cannot get both first and last names.
     - Do not create any names that are not mentioned, if you can't find any name, leave the list empty.
-    
-
+    - Limit the number of contacts to a maximum of {max_contacts}
     """
+
+def generate_search_analysis_prompt() -> str:
+    return """
+    Overall Goal:
+
+    {overall_goal}
+    
+    Search result:
+
+    {search_results}
+    
+    Given the above list of search results for each query, perform the following actions:
+
+    1. Exclusion:
+    - For each search result item, determine its relevance to the overall goal. If the search result item is not relevant exclude it from the results.
+    - Assess the title, URL, and snippet (body) of each search result to determine if it contains relevant information about the company, such as its profile, funding, investors, executives, or other key details.
+    - Only return search result items that are relevant to the overall goal.
+
+    2. Categorization:
+    - Categorize each search result item based on the type of information it provides about the company, such as company profile, funding details, executive information, competitor analysis, general overview, product details, market analysis, news mentions, financial performance, or customer reviews.
+    - Additionally, categorize each search result item based on its source type (e.g., official website, news article, financial report, social media, industry blog).
+
+    Provide the analysis results in a structured format, including the relevance scores, extracted entities, and assigned categories for each search result item.
+    """
+
 
 ################################################################################################
 
@@ -275,7 +301,7 @@ def generate_compliance_company_sobject_prompt() -> str:
 
 report_type_mapping = {
     ReportType.ComplianceReport.value: generate_compliance_report_prompt,
-    ReportType.ComplianceContactReport.value: generate_compliance_contact_report_prompt,
+    ReportType.ContactReport.value: generate_compliance_contact_report_prompt,
     ReportType.SalesReport.value: generate_sales_report_prompt,
     ReportType.SalesContactReport.value: generate_sales_contact_report_prompt,
 }

@@ -61,7 +61,6 @@ class SFResearcher:
         self.agent = agent
         self.role = role
         self.report_type = report_type
-        self.report_prompt = get_prompt_by_report_type(self.report_type)  # this validates the report type
         self.websocket = websocket
         self.cfg = Config(config_path)
         self.retriever = get_retriever(self.cfg.retriever)
@@ -97,41 +96,36 @@ class SFResearcher:
         self.agent, self.role = ("Compliance Agent", "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text.")
 
         if self.verbose:
-            await stream_output("logs", self.agent, self.websocket)
+            await stream_output("\nlogs", self.agent, self.websocket)
 
-        # self.context = await self.get_context_by_search(self.query)
         sub_queries = self.custom_sub_query
 
         # gather raw context
         scraped_content_results = await asyncio.gather(*[self.scrape_sites_by_query(sub_query) for sub_query in sub_queries])
         documents = self.pinecone_manager.process_scraped_content(scraped_content_results)
-        logger.info(f"pinecone procssed content results: {documents}")
+        logger.info(f"\n🧩 agent.py pinecone insert results: \n{documents}\n")
         self.pinecone_manager.insert_documents(documents)
         time.sleep(2)
 
-    async def conduct_research_contacts(self):
-        # Get list of all contacts
-        if not self.contacts:
-            logger.info(f"Constructing contacts using construct_contacts function")
-            self.contacts = await construct_contacts(
-                company_name=self.query,
-                data=self.context,
-                config=self.cfg,
-            )
-        else:
-            logger.info("Using the provided contacts list")
-        
-        logger.info("Contacts **** : %s", self.contacts)
-
-    async def conduct_research_query(self):
+    async def conduct_research_query(self, query_list):
         """
-        Queries the Pinecone index for relevant context based on the query
-        """
+    Queries the Pinecone index for relevant context based on the list of queries
+    """
+        aggregated_context = []
+        for query in query_list:
+            # Get context by similarity search for each query
+            raw_context = self.pinecone_manager.query_documents(query)
+            context_for_query = [doc.page_content for doc in raw_context]
+            logger.info(f"\n🧩 agent.py conduct_research_query query: {query}:\n")
+            for doc in raw_context:
+                print(f"🌐 Document source: {doc.metadata['source']}")
+                print(f"📑 Document content: {doc.page_content}\n")
+            aggregated_context.extend(context_for_query)
+            time.sleep(2)
 
-        #get context by similarity search
-        raw_context = self.pinecone_manager.query_documents(self.query)
-        self.context = [doc.page_content for doc in raw_context]
-        time.sleep(2)
+        # Aggregate all contexts into one
+        self.context = aggregated_context
+        logger.info(f"\n🧩 Aggregated self.context: {self.context}\n")
 
     async def write_report(self):
         """
@@ -158,32 +152,6 @@ class SFResearcher:
                             self.websocket)
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
         return await self.get_similar_content_by_query(self.query, scraped_sites)
-
-    async def get_context_by_search(self, query):
-        """
-           Generates the context for the research task by searching the query and scraping the results
-        Returns:
-            context: List of context
-        """
-        context = []
-        # Generate Sub-Queries including original query
-        if self.custom_sub_query:
-            sub_queries = self.custom_sub_query
-        else:
-            if self.verbose:
-                await stream_output("logs",
-                                    f"🧠 I will now generate a list of sub queries from the main query: {self.parent_query}...",
-                                    self.websocket)
-            sub_queries = await get_sub_queries(query, self.role, self.cfg, self.parent_query, self.report_type)
-
-        if self.verbose:
-            await stream_output("logs",
-                                f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
-                                self.websocket)
-
-        # Using asyncio.gather to process the sub_queries asynchronously
-        context = await asyncio.gather(*[self.process_sub_query(sub_query) for sub_query in sub_queries])
-        return context
 
     async def get_new_urls(self, url_set_input):
         """ Gets the new urls from the given url set.
@@ -217,22 +185,23 @@ class SFResearcher:
             retriever = self.retriever(sub_query)
         search_results = retriever.search(
             max_results=self.cfg.max_search_results_per_query)
-        new_search_urls = await self.get_new_urls([url.get("url") for url in search_results])
+        new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
 
-        logger.info(f"get_new_urls parsed results: {new_search_urls}")
         # Scrape Urls
         if self.verbose:
-            await stream_output("logs", f"🤔 Researching for relevant information...\n", self.websocket)
+            await stream_output("logs", f"🤔 Scraping sites for relevant information...\n", self.websocket)
         scraped_content_results = scrape_urls(new_search_urls, self.cfg)
-        logger.info(f"Scraped content results for sub-query '{sub_query}': {scraped_content_results}")
+        logger.info(f"\n🌐 scrape_urls content results for sub-query '{sub_query}':\n {scraped_content_results}\n")
 
-        updated_search_results = []
-        for search_result in search_results:
-            url = search_result['url']
-            matching_content = next((content for content in scraped_content_results if content['url'] == url), None)
-            if matching_content:
-                search_result['raw_content'] = matching_content['raw_content']
-                updated_search_results.append(search_result)
+        # updated_search_results = []
+        # for search_result in search_results:
+        #     url = search_result['href']
+        #     matching_content = next((content for content in scraped_content_results if content['url'] == url), None)
+        #     if matching_content:
+        #         search_result['raw_content'] = matching_content['raw_content']
+        #         updated_search_results.append(search_result)
 
-        logger.info(f"updated_search_results: {updated_search_results}")
-        return updated_search_results
+        # logger.info(f"\n📦 updated_search_results: \n{updated_search_results}\n")
+        # return updated_search_results
+
+        return scraped_content_results

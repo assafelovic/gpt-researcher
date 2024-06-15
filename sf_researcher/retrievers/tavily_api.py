@@ -56,7 +56,7 @@ class TavilyClient:
         response = requests.post(self.base_url, data=json.dumps(data), headers=self.headers, timeout=100)
 
         if response.status_code == 200:
-            logger.info(f"Search response received for query: {response.json()}")
+            logger.info(f"\n🌐 tavily_api.py Search response received for query: \n{response.json()}\n")
             return response.json()
         else:
             response.raise_for_status()  # Raises a HTTPError if the HTTP request returned an unsuccessful status code
@@ -68,5 +68,5 @@ class TavilyClient:
         try:
             return self._search(query, search_depth=search_depth, **kwargs)
         except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-            logger.exception(f"Search request failed after {self.max_retries} retries: {str(e)}")
+            logger.exception(f"\n🌐 tavily_api.py Search request failed after {self.max_retries} retries: {str(e)}")
             raise e

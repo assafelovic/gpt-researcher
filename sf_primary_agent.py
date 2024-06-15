@@ -4,17 +4,15 @@ import asyncio
 from typing import Union, List, Optional
 
 from sf_researcher.master.agent import SFResearcher
-from sf_researcher.master.functions import (add_source_urls,
-                                             table_of_contents)
 from sf_researcher.utils.llm import *
-from sf_researcher.utils.validators import ReportResponse, Contact, Contacts, Subtopics
+from sf_researcher.utils.validators import ReportResponse, Contact, Contacts
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class SFComplianceReport():
+class SFPrimaryAgent():
     def __init__(
             self, 
             query: str, 
@@ -30,8 +28,9 @@ class SFComplianceReport():
             exclude_domains=None, 
             parent_sub_queries=None, 
             child_sub_queries=None,
-            verbose: bool = True,
-            
+            parent_retreiver_queries=None,
+            child_retreiver_queries=None,
+            verbose: bool = True
         ):
         self.query = query
         self.source_urls = source_urls
@@ -51,8 +50,6 @@ class SFComplianceReport():
             index_name=index_name,
             namespace=namespace,
         )
-        self.existing_headers = []
-        # This is a global variable to store the entire context accumulated at any point through searching and scraping
         self.global_context = []
         # This is a global variable to store the entire url list accumulated at any point through searching and scraping
         if self.source_urls:
@@ -64,10 +61,12 @@ class SFComplianceReport():
         self.index_name = index_name
         self.verbose = verbose
         self.child_report_type = child_report_type
+        self.parent_retreiver_queries = parent_retreiver_queries
+        self.child_retreiver_queries = child_retreiver_queries
         
     def _initialize_contacts(self, contacts):
         if contacts == []:
-            logger.info("No contacts provided. Contactss will be constructed.")
+            logger.info("No contacts provided. Contacts will be constructed.")
             return None
         else:
             logger.info(f"Initializing contacts from provided list: {contacts}")
@@ -86,20 +85,25 @@ class SFComplianceReport():
 
     async def run(self):
         # Conduct initial research using the main assistant
-        await self._initial_research()
+        await self.main_task_assistant.conduct_research_insert()
+        await self.main_task_assistant.conduct_research_query(self.parent_retreiver_queries)
+        # Update context of the global context variable
+        self.global_context = self.main_task_assistant.context
+        # Update url list of the global list variable
+        self.global_urls = self.main_task_assistant.visited_urls
 
         # Get list of all subtopics
         if not self.contacts:
-            logger.info(f"Constructing contacts using construct_contacts function")
+            logger.info(f"\n👤 Constructing contacts\n")
             self.contacts = await construct_contacts(
                 company_name=self.query,
                 data=self.main_task_assistant.context,
                 config=self.main_task_assistant.cfg,
             )
         else:
-            logger.info("Using the provided contacts list")
+            logger.info("\n👤 Using the provided contacts list\n")
         
-        logger.info("Contacts **** : %s", self.contacts)
+        logger.info(f"\n👤 Contact Search List: {self.contacts}\n")
         
         # Generate report => if compliance/sales report type is handled by function.py
         compliance_report = await self.main_task_assistant.write_report()
@@ -119,12 +123,7 @@ class SFComplianceReport():
         await self._generate_contacts_reports(self.contacts)
 
         # Construct the final list of visited urls
-        self.main_task_assistant.visited_urls.update(self.global_urls)
-
-        # return report_introduction
-        print(f"In run method: compliance_report type: {type(compliance_report)}")
-        print(f"In run method: self.company_sobject type: {type(self.company_sobject)}")
-        print(f"In run method: self.contact_sobjects type: {type(self.contact_sobjects)}")
+        # self.main_task_assistant.visited_urls.update(self.global_urls)
         
         return ReportResponse(
             report=compliance_report,
@@ -133,28 +132,13 @@ class SFComplianceReport():
             source_urls=list(self.main_task_assistant.visited_urls)  # Convert to list
         )
 
-    async def _initial_research(self):
-        # Conduct research using the main task assistant to gather content for generating subtopics
-        await self.main_task_assistant.conduct_research_insert()
-        await self.main_task_assistant.conduct_research_query()
-        # Update context of the global context variable
-        self.global_context = self.main_task_assistant.context
-        # Update url list of the global list variable
-        self.global_urls = self.main_task_assistant.visited_urls
-
     async def _generate_contacts_reports(self, contacts: Contacts) -> tuple:
         async def fetch_report(contact: Contact):
-                    await self._get_subtopic_report(contact)
-
-        print("Contacts: ", contacts)
+                    await self._get_contact_report(contact)
         tasks = [fetch_report(contact) for contact in contacts.contacts]
         await asyncio.gather(*tasks)
 
-    async def _get_subtopic_report(self, contact: Contact) -> tuple:
-        print("Starting _get_subtopic_report")
-        print("Contact object: ", contact)
-        print("Main Assistant Report Type: ", self.main_task_assistant.report_type)
-
+    async def _get_contact_report(self, contact: Contact) -> tuple:
         current_subtopic_task = f"{contact.first_name} {contact.last_name}"
         
         if self.child_sub_queries:
@@ -162,7 +146,7 @@ class SFComplianceReport():
         else:
             custom_sub_queries = []
         
-        print("Custom Sub Queries: ", custom_sub_queries)
+        logger.info(f"👤 New Agent Created to search for: {contact}\n using queries: {custom_sub_queries}")
         subtopic_assistant = SFResearcher(
             query=current_subtopic_task,
             report_type=self.child_report_type,
@@ -181,7 +165,9 @@ class SFComplianceReport():
 
         # Conduct research on the subtopic
         await subtopic_assistant.conduct_research_insert()
-        await subtopic_assistant.conduct_research_query()
+
+        custom_retreiver_sub_queries = [f"\"{current_subtopic_task}\" {child_sub_query}" for child_sub_query in self.child_retreiver_queries]
+        await subtopic_assistant.conduct_research_query(custom_retreiver_sub_queries)
 
         # Generate Report
         contact_report = await subtopic_assistant.write_report()
