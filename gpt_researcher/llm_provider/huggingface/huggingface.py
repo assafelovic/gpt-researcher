@@ -1,7 +1,6 @@
 import os
 
 from colorama import Fore, Style
-from langchain_huggingface import ChatHuggingFace
 
 
 class HugginFaceProvider:
@@ -33,6 +32,8 @@ class HugginFaceProvider:
 
     def get_llm_model(self):
         # Initializing the chat model
+        from langchain_huggingface import ChatHuggingFace
+
         llm = ChatHuggingFace(
             model=self.model,
             temperature=self.temperature,
