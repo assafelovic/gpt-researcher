@@ -41,6 +41,9 @@ def get_retriever(retriever):
         case "tavily":
             from gpt_researcher.retrievers import TavilySearch
             retriever = TavilySearch
+        case "custom":
+            from gpt_researcher.retrievers import CustomRetriever
+            retriever = CustomRetriever
 
         case _:
             raise Exception("Retriever not found.")
