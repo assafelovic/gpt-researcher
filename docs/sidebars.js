@@ -33,6 +33,7 @@
       items: [
         'gpt-researcher/config',
         'gpt-researcher/tailored-research',
+        'gpt-researcher/retrievers',
         'gpt-researcher/llms',
         ]
     },
