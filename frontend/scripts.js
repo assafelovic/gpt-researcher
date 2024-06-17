@@ -12,7 +12,7 @@ const GPTResearcher = (() => {
       document.getElementById("reportContainer").innerHTML = "";
       updateState("in_progress")
 
-      addAgentResponse({ output: "🤔 Thinking about research questions for the task..." });
+      addAgentResponse({ output: "🤔 Pensando sobre perguntas de pesquisa para a tarefa..." });
 
       listenToSockEvents();
     };
@@ -91,15 +91,15 @@ const GPTResearcher = (() => {
       var status = "";
       switch (state) {
         case "in_progress":
-          status = "Research in progress..."
+          status = "Pesquisa em andamento..."
           setReportActionsStatus("disabled");
           break;
         case "finished":
-          status = "Research finished!"
+          status = "Pesquisa finalizada!"
           setReportActionsStatus("enabled");
           break;
         case "error":
-          status = "Research failed!"
+          status = "Falha na pesquisa!"
           setReportActionsStatus("disabled");
           break;
         case "initial":

@@ -26,37 +26,41 @@ def generate_search_queries_prompt(question: str, parent_query: str, report_type
 
 
 def generate_report_prompt(question, context, report_format="apa", total_words=1000):
-    """ Generates the report prompt for the given question and research summary.
-    Args: question (str): The question to generate the report prompt for
-            research_summary (str): The research summary to generate the report prompt for
-    Returns: str: The report prompt for the given question and research summary
+    """ Gera o prompt de relatório para a pergunta e resumo da pesquisa fornecidos.
+
+    Args:
+        question (str): A pergunta para gerar o prompt de relatório
+        research_summary (str): O resumo da pesquisa para gerar o prompt de relatório
+
+    Returns:
+        str: O prompt de relatório para a pergunta e resumo da pesquisa fornecidos
     """
 
-    return f'Information: """{context}"""\n\n' \
-           f'Using the above information, answer the following' \
-           f' query or task: "{question}" in a detailed report --' \
-           " The report should focus on the answer to the query, should be well structured, informative," \
-           f" in depth and comprehensive, with facts and numbers if available and a minimum of {total_words} words.\n" \
-           "You should strive to write the report as long as you can using all relevant and necessary information provided.\n" \
-           "You must write the report with markdown syntax.\n " \
-           f"Use an unbiased and journalistic tone. \n" \
-           "You MUST determine your own concrete and valid opinion based on the given information. Do NOT deter to general and meaningless conclusions.\n" \
-           f"You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.\n" \
-           "Every url should be hyperlinked: [url website](url)"\
+    return f'Informação: """{context}"""\n\n' \
+           f'Usando as informações acima, responda a seguinte' \
+           f' pergunta ou tarefa: "{question}" em um relatório detalhado --' \
+           " O relatório deve focar na resposta à pergunta, ser bem estruturado, informativo," \
+           f" em profundidade e abrangente, com fatos e números, se disponíveis, e um mínimo de {total_words} palavras.\n" \
+           "Você deve se esforçar para escrever o relatório o mais longo possível usando todas as informações relevantes e necessárias fornecidas.\n" \
+           "Você deve escrever o relatório com a sintaxe markdown.\n " \
+           f"Use um tom imparcial e jornalístico. \n" \
+           "VOCÊ DEVE determinar sua própria opinião concreta e válida com base nas informações fornecidas. NÃO faça conclusões gerais e sem sentido.\n" \
+           f"VOCÊ DEVE escrever todos os URLs das fontes utilizadas no final do relatório como referências, e certifique-se de não adicionar fontes duplicadas, mas apenas uma referência para cada.\n" \
+           "Cada URL deve estar hiperlinkado: [url website](url)"\
            """
-            Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report : 
+            Adicionalmente, VOCÊ DEVE incluir hyperlinks para os URLs relevantes onde quer que eles sejam referenciados no relatório:
         
             eg:    
                 # Report Header
                 
                 This is a sample text. ([url website](url))
             """\
-            f"You MUST write the report in {report_format} format.\n " \
-            f"Cite search results using inline notations. Only cite the most \
-            relevant results that answer the query accurately. Place these citations at the end \
-            of the sentence or paragraph that reference them.\n"\
-            f"Please do your best, this is very important to my career. " \
-            f"Assume that the current date is {datetime.now().strftime('%B %d, %Y')}"
+            f"VOCÊ DEVE escrever o relatório no formato {report_format}.\n " \
+            f"Cite os resultados da pesquisa usando anotações inline. Cite apenas os resultados mais \
+            relevantes que respondam à pergunta com precisão. Coloque essas citações no final \
+            da frase ou parágrafo que as referenciam.\n" \
+            f"Por favor, faça o seu melhor, isso é muito importante para a minha carreira. " \
+            f"Assuma que a data atual é {datetime.now().strftime('%B %d, %Y')}"
 
 
 def generate_resource_report_prompt(question, context, report_format="apa", total_words=700):
@@ -118,7 +122,7 @@ def auto_agent_instructions():
         task: "Quais são os locais mais interessantes em Tel Aviv?"
         response:
         {
-            "server:  "🌍  Agente de Viagens",
+            "server:  "🌍 Agente de Viagens",
             "agent_role_prompt": "Você é um assistente de inteligência artificial experiente em viagens pelo mundo. Seu principal objetivo é elaborar relatórios de viagem envolventes, esclarecedores, imparciais e bem estruturados sobre locais específicos, incluindo história, atrações e informações culturais."
         }
     """

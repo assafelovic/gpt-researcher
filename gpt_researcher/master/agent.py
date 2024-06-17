@@ -66,7 +66,7 @@ class GPTResearcher:
         """
         Runs the GPT Researcher to conduct research
         """
-        print(f"🔎 Running research for '{self.query}'...")
+        print(f"🔎 Executando pesquisa para '{self.query}'...")
         
         # Generate Agent
         if not (self.agent and self.role):
@@ -83,13 +83,13 @@ class GPTResearcher:
 
     async def write_report(self, existing_headers: list = []):
         """
-        Writes the report based on research conducted
+        Escreve o relatório baseado na pesquisa realizada
 
         Returns:
-            str: The report
+            str: O relatório
         """
 
-        await stream_output("logs", f"✍️ Writing summary for research task: {self.query}...", self.websocket)
+        await stream_output("logs", f"✍️ Escrevendo resumo para a tarefa de pesquisa: {self.query}...", self.websocket)
 
         if self.report_type == "custom_report":
             self.role = self.cfg.agent_role if self.cfg.agent_role else self.role
@@ -118,20 +118,20 @@ class GPTResearcher:
 
     async def get_context_by_urls(self, urls):
         """
-            Scrapes and compresses the context from the given urls
+            Coleta e comprime o contexto das urls fornecidas
         """
         new_search_urls = await self.get_new_urls(urls)
         await stream_output("logs",
-                            f"🧠 I will conduct my research based on the following urls: {new_search_urls}...",
+                            f"🧠 Eu vou conduzir minha pesquisa com base nas seguintes urls: {new_search_urls}...",
                             self.websocket)
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
         return await self.get_similar_content_by_query(self.query, scraped_sites)
 
     async def get_context_by_search(self, query):
         """
-           Generates the context for the research task by searching the query and scraping the results
+           Gera o contexto para a tarefa de pesquisa pesquisando a consulta e coletando os resultados
         Returns:
-            context: List of context
+            context: Lista de contextos
         """
         context = []
         # Generate Sub-Queries including original query
@@ -142,7 +142,7 @@ class GPTResearcher:
             sub_queries.append(query)
 
         await stream_output("logs",
-                            f"🧠 I will conduct my research based on the following queries: {sub_queries}...",
+                            f"🧠 Eu vou conduzir minha pesquisa com base nas seguintes consultas: {sub_queries}...",
                             self.websocket)
 
         # Using asyncio.gather to process the sub_queries asynchronously
@@ -150,15 +150,15 @@ class GPTResearcher:
         return context
 
     async def process_sub_query(self, sub_query: str):
-        """Takes in a sub query and scrapes urls based on it and gathers context.
+        """Recebe uma sub consulta e coleta urls com base nela e reúne o contexto.
 
         Args:
-            sub_query (str): The sub-query generated from the original query
+            sub_query (str): A sub-consulta gerada a partir da consulta original
 
         Returns:
-            str: The context gathered from search
+            str: O contexto coletado a partir da pesquisa
         """
-        await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
+        await stream_output("logs", f"\n🔎 Executando pesquisa para '{sub_query}'...", self.websocket)
 
         scraped_sites = await self.scrape_sites_by_query(sub_query)
         content = await self.get_similar_content_by_query(sub_query, scraped_sites)
@@ -166,19 +166,19 @@ class GPTResearcher:
         if content:
             await stream_output("logs", f"📃 {content}", self.websocket)
         else:
-            await stream_output("logs", f"🤷 No content found for '{sub_query}'...", self.websocket)
+            await stream_output("logs", f"🤷 Nenhum conteúdo encontrado para '{sub_query}'...", self.websocket)
         return content
 
     async def get_new_urls(self, url_set_input):
-        """ Gets the new urls from the given url set.
-        Args: url_set_input (set[str]): The url set to get the new urls from
-        Returns: list[str]: The new urls from the given url set
+        """ Obtém novas urls a partir do conjunto de urls fornecido.
+        Args: url_set_input (set[str]): O conjunto de urls para obter as novas urls
+        Returns: list[str]: As novas urls a partir do conjunto de urls fornecido
         """
 
         new_urls = []
         for url in url_set_input:
             if url not in self.visited_urls:
-                await stream_output("logs", f"✅ Adding source url to research: {url}\n", self.websocket)
+                await stream_output("logs", f"✅ Adicionando url fonte à pesquisa: {url}\n", self.websocket)
 
                 self.visited_urls.add(url)
                 new_urls.append(url)
@@ -202,12 +202,12 @@ class GPTResearcher:
 
         # Scrape Urls
         # await stream_output("logs", f"📝Scraping urls {new_search_urls}...\n", self.websocket)
-        await stream_output("logs", f"🤔 Researching for relevant information...\n", self.websocket)
+        await stream_output("logs", f"🤔 Pesquisando informações relevantes...\n", self.websocket)
         scraped_content_results = scrape_urls(new_search_urls, self.cfg)
         return scraped_content_results
 
     async def get_similar_content_by_query(self, query, pages):
-        await stream_output("logs", f"📝 Getting relevant content based on query: {query}...", self.websocket)
+        await stream_output("logs", f"📝 Obtendo conteúdo relevante com base na consulta: {query}...", self.websocket)
         # Summarize Raw Data
         context_compressor = ContextCompressor(
             documents=pages, embeddings=self.memory.get_embeddings())
@@ -226,13 +226,12 @@ class GPTResearcher:
 
     async def get_subtopics(self):
         """
-        This async function generates subtopics based on user input and other parameters.
+        Esta função assíncrona gera subtopicos com base na entrada do usuário e outros parâmetros.
 
         Returns:
-          The `get_subtopics` function is returning the `subtopics` that are generated by the
-        `construct_subtopics` function.
+          A função `get_subtopics` está retornando os `subtopicos` que são gerados pela função `construct_subtopics`.
         """
-        await stream_output("logs", f"🤔 Generating subtopics...", self.websocket)
+        await stream_output("logs", f"🤔 Gerando subtopicos...", self.websocket)
 
         subtopics = await construct_subtopics(
             task=self.query,
@@ -242,6 +241,6 @@ class GPTResearcher:
             subtopics=self.subtopics,
         )
 
-        await stream_output("logs", f"📋Subtopics: {subtopics}", self.websocket)
+        await stream_output("logs", f"📋subtopicos: {subtopics}", self.websocket)
 
         return subtopics
