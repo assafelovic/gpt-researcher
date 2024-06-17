@@ -54,4 +54,4 @@ More specifically:
 - 📂 Keeps track and context of visited and used web sources
 - 📄 Export research reports to PDF, Word and more...
 
-Let's get started [here](/gpt-researcher/getting-started/)!
+Let's get started [here](/docs/gpt-researcher/getting-started/)!
