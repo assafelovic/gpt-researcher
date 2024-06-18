@@ -7,7 +7,7 @@ from gpt_researcher.master.prompts import *
 from gpt_researcher.scraper.scraper import Scraper
 from gpt_researcher.utils.llm import *
 
-from json_repair import repair_json
+import json_repair
 
 def get_retriever(retriever):
     """
@@ -112,11 +112,8 @@ async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query:
         cost_callback=cost_callback
     )
 
-    repaired_response = repair_json(response)
-    #print("response : ", response)
-    print("repaired_response : ", repaired_response)
+    sub_queries = json_repair.loads(response)
 
-    sub_queries = json.loads(repaired_response)
     return sub_queries
 
 
