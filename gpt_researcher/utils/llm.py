@@ -6,11 +6,10 @@ import logging
 from typing import Optional, Any, Dict
 
 from colorama import Fore, Style
-from fastapi import WebSocket
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 
-from gpt_researcher.master.prompts import auto_agent_instructions, generate_subtopics_prompt
+from gpt_researcher.master.prompts import generate_subtopics_prompt
 from .costs import estimate_llm_cost
 from .validators import Subtopics
 
@@ -59,7 +58,7 @@ async def create_chat_completion(
         max_tokens: Optional[int] = None,
         llm_provider: Optional[str] = None,
         stream: Optional[bool] = False,
-        websocket: WebSocket | None = None,
+        websocket: Any | None = None,
         llm_kwargs: Dict[str, Any] | None = None,
         cost_callback: callable = None
 ) -> str:
