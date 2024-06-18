@@ -4,7 +4,7 @@
 
 🌟 **Exciting News!** Now, you can integrate `gpt-researcher` with your apps seamlessly!
 
-## Steps to Install GPT Researcher 🛠️
+## Steps to Install GPT Researcher
 
 Follow these easy steps to get started:
 
@@ -135,3 +135,36 @@ curl -X GET "http://localhost:5000/report/research_report?query=what team may wi
 ```
 
 **Note**: The above code snippets are just examples. You can customize them as per your requirements.
+
+## Getters and Setters
+If you're interested in getting more details about the research, you can use the following getters:
+
+### Get Research Sources
+Sources are the URLs that were used to gather information for the research.
+```python
+source_urls = researcher.get_source_urls()
+```
+
+### Get Research Context
+Context is all the retrieved information from the research. It includes the sources and their corresponding content.
+```python
+research_context = researcher.get_research_context()
+```
+
+### Get Research Costs
+Costs are the number of tokens consumed during the research process.
+```python
+research_costs = researcher.get_costs()
+```
+
+### Set Verbose
+You can set the verbose mode to get more detailed logs.
+```python
+researcher.set_verbose(True)
+```
+
+### Add Costs
+You can also add costs to the research process if you want to track the costs from external usage.
+```python
+researcher.add_costs(0.22)
+```

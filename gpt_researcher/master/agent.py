@@ -4,7 +4,7 @@ import time
 from gpt_researcher.config import Config
 from gpt_researcher.context.compression import ContextCompressor
 from gpt_researcher.document import DocumentLoader
-from gpt_researcher.master.functions import *
+from gpt_researcher.master.actions import *
 from gpt_researcher.memory import Memory
 from gpt_researcher.utils.enum import ReportSource, ReportType
 
@@ -44,20 +44,21 @@ class GPTResearcher:
             subtopics: list
             visited_urls: set
         """
-        self.query = query
-        self.agent = agent
-        self.role = role
-        self.report_type = report_type
-        self.report_prompt = get_prompt_by_report_type(self.report_type)  # this validates the report type
-        self.report_source = report_source
-        self.websocket = websocket
+        self.query: str = query
+        self.agent: str = agent
+        self.role: str = role
+        self.report_type: str = report_type
+        self.report_prompt: str = get_prompt_by_report_type(self.report_type)  # this validates the report type
+        self.report_source: str = report_source
+        self.research_costs: float = 0.0
         self.cfg = Config(config_path)
         self.retriever = get_retriever(self.cfg.retriever)
         self.context = context
         self.source_urls = source_urls
         self.memory = Memory(self.cfg.embedding_provider)
-        self.visited_urls = visited_urls
-        self.verbose = verbose
+        self.visited_urls: set[str] = visited_urls
+        self.verbose: bool = verbose
+        self.websocket = websocket
 
         # Only relevant for DETAILED REPORTS
         # --------------------------------------
@@ -77,26 +78,26 @@ class GPTResearcher:
         
         # Generate Agent
         if not (self.agent and self.role):
-            self.agent, self.role = await choose_agent(self.query, self.cfg, self.parent_query)
+            self.agent, self.role = await choose_agent(query=self.query, cfg=self.cfg,
+                                                       parent_query=self.parent_query, cost_callback=self.add_costs)
 
         if self.verbose:
             await stream_output("logs", self.agent, self.websocket)
 
         # If specified, the researcher will use the given urls as the context for the research.
         if self.source_urls:
-            context = await self.get_context_by_urls(self.source_urls)
+            self.context = await self.__get_context_by_urls(self.source_urls)
             
         elif self.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
-            context = await self.get_context_by_search(self.query, document_data)
-        
+            self.context = await self.__get_context_by_search(self.query, document_data)
+        # Default web based research
         else:
-            context = await self.get_context_by_search(self.query)
-
-        # Extending the global context (This is useful instead of setting the context directly above to avoid over-writing input context)
-        self.context.extend(context)
+            self.context = await self.__get_context_by_search(self.query)
         
         time.sleep(2)
+        if self.verbose:
+            await stream_output("logs", f"Finalized research step.\n💸 Total Research Costs: ${self.get_costs()}", self.websocket)
 
         return self.context
 
@@ -107,12 +108,22 @@ class GPTResearcher:
         Returns:
             str: The report
         """
+        report = ""
 
         if self.verbose:
             await stream_output("logs", f"✍️ Writing summary for research task: {self.query}...", self.websocket)
-
+            
         if self.report_type == "custom_report":
             self.role = self.cfg.agent_role if self.cfg.agent_role else self.role
+            report = await generate_report(
+                query=self.query,
+                context=self.context,
+                agent_role_prompt=self.role,
+                report_type=self.report_type,
+                report_source=self.report_source,
+                websocket=self.websocket,
+                cfg=self.cfg
+            )
         elif self.report_type == "subtopic_report":
             report = await generate_report(
                 query=self.query,
@@ -123,7 +134,8 @@ class GPTResearcher:
                 websocket=self.websocket,
                 cfg=self.cfg,
                 main_topic=self.parent_query,
-                existing_headers=existing_headers
+                existing_headers=existing_headers,
+                cost_callback=self.add_costs
             )
         else:
             report = await generate_report(
@@ -133,24 +145,25 @@ class GPTResearcher:
                 report_type=self.report_type,
                 report_source=self.report_source,
                 websocket=self.websocket,
-                cfg=self.cfg
+                cfg=self.cfg,
+                cost_callback=self.add_costs
             )
 
         return report
 
-    async def get_context_by_urls(self, urls):
+    async def __get_context_by_urls(self, urls):
         """
             Scrapes and compresses the context from the given urls
         """
-        new_search_urls = await self.get_new_urls(urls)
+        new_search_urls = await self.__get_new_urls(urls)
         if self.verbose:
             await stream_output("logs",
                             f"🧠 I will conduct my research based on the following urls: {new_search_urls}...",
                             self.websocket)
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
-        return await self.get_similar_content_by_query(self.query, scraped_sites)
+        return await self.__get_similar_content_by_query(self.query, scraped_sites)
 
-    async def get_context_by_search(self, query, scraped_data: list = []):
+    async def __get_context_by_search(self, query, scraped_data: list = []):
         """
            Generates the context for the research task by searching the query and scraping the results
         Returns:
@@ -158,7 +171,9 @@ class GPTResearcher:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await get_sub_queries(query, self.role, self.cfg, self.parent_query, self.report_type)
+        sub_queries = await get_sub_queries(query=query, agent_role_prompt=self.role,
+                                            cfg=self.cfg, parent_query=self.parent_query,
+                                            report_type=self.report_type, cost_callback=self.add_costs)
 
         # If this is not part of a sub researcher, add original query to research for better results
         if self.report_type != "subtopic_report":
@@ -170,10 +185,10 @@ class GPTResearcher:
                                 self.websocket)
 
         # Using asyncio.gather to process the sub_queries asynchronously
-        context = await asyncio.gather(*[self.process_sub_query(sub_query, scraped_data) for sub_query in sub_queries])
+        context = await asyncio.gather(*[self.__process_sub_query(sub_query, scraped_data) for sub_query in sub_queries])
         return context
 
-    async def process_sub_query(self, sub_query: str, scraped_data: list = []):
+    async def __process_sub_query(self, sub_query: str, scraped_data: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context.
 
         Args:
@@ -187,9 +202,9 @@ class GPTResearcher:
             await stream_output("logs", f"\n🔎 Running research for '{sub_query}'...", self.websocket)
 
         if not scraped_data:
-            scraped_data = await self.scrape_data_by_query(sub_query)
+            scraped_data = await self.__scrape_data_by_query(sub_query)
 
-        content = await self.get_similar_content_by_query(sub_query, scraped_data)
+        content = await self.__get_similar_content_by_query(sub_query, scraped_data)
 
         if content and self.verbose:
             await stream_output("logs", f"📃 {content}", self.websocket)
@@ -197,7 +212,7 @@ class GPTResearcher:
             await stream_output("logs", f"🤷 No content found for '{sub_query}'...", self.websocket)
         return content
 
-    async def get_new_urls(self, url_set_input):
+    async def __get_new_urls(self, url_set_input):
         """ Gets the new urls from the given url set.
         Args: url_set_input (set[str]): The url set to get the new urls from
         Returns: list[str]: The new urls from the given url set
@@ -213,7 +228,7 @@ class GPTResearcher:
 
         return new_urls
 
-    async def scrape_data_by_query(self, sub_query):
+    async def __scrape_data_by_query(self, sub_query):
         """
         Runs a sub-query
         Args:
@@ -226,7 +241,7 @@ class GPTResearcher:
         retriever = self.retriever(sub_query)
         search_results = retriever.search(
             max_results=self.cfg.max_search_results_per_query)
-        new_search_urls = await self.get_new_urls([url.get("href") for url in search_results])
+        new_search_urls = await self.__get_new_urls([url.get("href") for url in search_results])
 
         # Scrape Urls
         if self.verbose:
@@ -236,7 +251,7 @@ class GPTResearcher:
         scraped_content_results = scrape_urls(new_search_urls, self.cfg)
         return scraped_content_results
 
-    async def get_similar_content_by_query(self, query, pages):
+    async def __get_similar_content_by_query(self, query, pages):
         if self.verbose:
             await stream_output("logs", f"📝 Getting relevant content based on query: {query}...", self.websocket)
 
@@ -246,7 +261,29 @@ class GPTResearcher:
             embeddings=self.memory.get_embeddings()
         )
         # Run Tasks
-        return context_compressor.get_context(query, max_results=8)
+        return context_compressor.get_context(query=query, max_results=8, cost_callback=self.add_costs)
+
+    ########################################################################################
+
+    # GETTERS & SETTERS
+    def get_source_urls(self) -> list:
+        return list(self.visited_urls)
+
+    def get_research_context(self) -> list:
+        return self.context
+
+    def get_costs(self) -> float:
+        return self.research_costs
+
+    def set_verbose(self, verbose: bool):
+        self.verbose = verbose
+
+    def add_costs(self, cost: int) -> None:
+        if not isinstance(cost, float) and not isinstance(cost, int):
+            raise ValueError("Cost must be an integer or float")
+        self.research_costs += cost
+
+
 
     ########################################################################################
 
@@ -254,7 +291,8 @@ class GPTResearcher:
 
     async def write_introduction(self):
         # Construct Report Introduction from main topic research
-        introduction = await get_report_introduction(self.query, self.context, self.role, self.cfg, self.websocket)
+        introduction = await get_report_introduction(self.query, self.context, self.role,
+                                                     self.cfg, self.websocket, self.add_costs)
 
         return introduction
 
