@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const thread = await client.threads.create();
 
     // Start a streaming run
-    const messages = [{ role: "human", content: "whats the weather in la" }];
+    const messages = [{ role: "human", content: question }];
 
     const streamResponse = client.runs.stream(
       thread["thread_id"],
@@ -46,4 +46,3 @@ export async function POST(request: Request) {
     return new Response(e, { status: 202 });
   }
 }
-

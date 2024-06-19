@@ -20,7 +20,7 @@ import AgentLogs from '../components/Task/AgentLogs';
 import AccessReport from '../components/Task/AccessReport';
 import Accordion from '../components/Task/Accordion';
 
-import { handleSourcesAndAnswer, handleSimilarQuestions } from '../actions/apiActions';
+import { handleSourcesAndAnswer, handleSimilarQuestions, handleLanggraphAnswer } from '../actions/apiActions';
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
@@ -76,12 +76,16 @@ export default function Home() {
     setQuestion(newQuestion);
     setPromptValue("");
 
-    startResearch(chatBoxSettings)
+    if (chatBoxSettings.report_source === 'web' && chatBoxSettings.report_type === 'multi_agents') {
+      await handleLanggraphAnswer(newQuestion, sources);
+    } else {
+      startResearch(chatBoxSettings);
 
-    await Promise.all([
-      handleSourcesAndAnswer(newQuestion),
-      handleSimilarQuestions(newQuestion),
-    ]);
+      await Promise.all([
+        handleSourcesAndAnswer(newQuestion),
+        handleSimilarQuestions(newQuestion),
+      ]);
+    }
 
     setLoading(false);
   };
