@@ -76,8 +76,8 @@ export default function Home() {
     setQuestion(newQuestion);
     setPromptValue("");
 
-    if (chatBoxSettings.report_source === 'web' && chatBoxSettings.report_type === 'multi_agents') {
-      await handleLanggraphAnswer(newQuestion, sources);
+    if (chatBoxSettings.report_type === 'multi_agents') {
+      await handleLanggraphAnswer(newQuestion);
     } else {
       startResearch(chatBoxSettings);
 
