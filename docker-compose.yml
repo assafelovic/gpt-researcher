@@ -1,6 +1,7 @@
 version: '3'
 services:
   gpt-researcher:
+    pull_policy: build
     image: kramer1346/gpt-researcher
     build: ./
     environment: 
