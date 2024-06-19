@@ -1,4 +1,3 @@
-# connect any client to gpt-researcher using websocket
 import asyncio
 import datetime
 from typing import Dict, List
@@ -8,7 +7,7 @@ from fastapi import WebSocket
 from backend.report_type import BasicReport, DetailedReport
 
 from gpt_researcher.utils.enum import ReportType
-
+from backend.multi_agents.main import run_research_task
 
 class WebSocketManager:
     """Manage websockets"""
@@ -64,15 +63,18 @@ async def run_agent(task, report_type, report_source, websocket):
     start_time = datetime.datetime.now()
     # add customized JSON config file path here
     config_path = ""
-    # Instead of running the agent directly run it through the different report type classes
-    if report_type == ReportType.DetailedReport.value:
+    # Check if the report type is multi_agents
+    if report_type == "multi_agents":
+        report = await run_research_task(query=task, websocket=websocket)
+    elif report_type == ReportType.DetailedReport.value:
         researcher = DetailedReport(query=task, report_type=report_type, report_source=report_source,
                                     source_urls=None, config_path=config_path, websocket=websocket)
+        report = await researcher.run()
     else:
         researcher = BasicReport(query=task, report_type=report_type, report_source=report_source,
                                  source_urls=None, config_path=config_path, websocket=websocket)
+        report = await researcher.run()
 
-    report = await researcher.run()
     # measure time
     end_time = datetime.datetime.now()
     await websocket.send_json({"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"})

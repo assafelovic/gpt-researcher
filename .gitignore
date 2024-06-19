@@ -30,4 +30,6 @@ node_modules
 .docusaurus
 build
 docs/build
-multi_agents/.langgraph-data/
+.langgraph-data/
+.next/
+package-lock.json

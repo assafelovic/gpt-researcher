@@ -156,8 +156,8 @@ async def summarize(query, content, agent_role_prompt, cfg, websocket=None, cost
     async def handle_task(url, chunk):
         summary = await summarize_url(query, chunk, agent_role_prompt, cfg, cost_callback)
         if summary:
-            await stream_output("logs", f"🌐 Summarizing url: {url}", websocket)
-            await stream_output("logs", f"📃 {summary}", websocket)
+            await stream_output("logs", "url_summary_coming_up", f"🌐 Summarizing url: {url}", websocket)
+            await stream_output("logs", "url_summary", f"📃 {summary}", websocket)
         return url, summary
 
     # Function to split raw content into chunks of 10,000 words
@@ -276,11 +276,12 @@ async def generate_report(
     return report
 
 
-async def stream_output(type, output, websocket=None, logging=True):
+async def stream_output(type, content, output, websocket=None, logging=True, metadata=None):
     """
     Streams output to the websocket
     Args:
         type:
+        content:
         output:
 
     Returns:
@@ -290,7 +291,7 @@ async def stream_output(type, output, websocket=None, logging=True):
         print(output)
 
     if websocket:
-        await websocket.send_json({"type": type, "output": output})
+        await websocket.send_json({"type": type, "content": content, "output": output, "metadata": metadata})
 
 
 async def get_report_introduction(query, context, role, config, websocket=None, cost_callback: callable = None):
