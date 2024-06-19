@@ -19,7 +19,14 @@ export async function POST(request: Request) {
 
     // Example usage of EditorAgent
     const editorAgent = new EditorAgent();
-    const researchPlan = await editorAgent.planResearch({ initial_research: researchData });
+    const researchState = {
+      initial_research: researchData,
+      task: {
+        model: "editor_model",
+        max_sections: 5 // Ensure this value is set
+      }
+    };
+    const researchPlan = await editorAgent.planResearch(researchState);
 
     // Example usage of ChiefEditorAgent
     const chiefEditorAgent = new ChiefEditorAgent({ query: question });
