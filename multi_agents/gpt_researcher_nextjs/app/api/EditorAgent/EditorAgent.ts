@@ -26,28 +26,33 @@ export class EditorAgent {
       limit: 10,
     });
 
-    console.log('assistants',assistants)
-    
+    console.log('assistants', assistants);
+
     const agent = assistants[0];
     const thread = await this.client.threads.create();
     const messages = [{ role: "human", content: JSON.stringify(prompt) }];
 
-    const streamResponse = this.client.runs.stream(
-      thread["thread_id"],
-      agent["assistant_id"],
-      {
-        input: { messages },
-      },
-    );
+    console.log('Thread ID:', thread["thread_id"]);
+    console.log('Assistant ID:', agent["assistant_id"]);
 
-    console.log('streamResponse',streamResponse)
+    // Create a run
+    const run = await this.client.runs.create(thread["thread_id"], {
+      assistant_id: agent["assistant_id"]
+    });
 
-    for await (const chunk of streamResponse) {
-      console.log('chunk',chunk);
-    }
-
+    console.log('Run ID:', run["run_id"]);
 
     try {
+      const response = await this.client.runs.get(
+        thread["thread_id"],
+        agent["assistant_id"], // Ensure this is a string
+        {
+          input: { messages },
+        },
+      );
+
+      console.log('response of this.client.runs.get', response);
+
       // Ensure the response is a valid JSON string
       if (typeof response === 'string') {
         return JSON.parse(response);
@@ -56,7 +61,7 @@ export class EditorAgent {
         throw new Error("Invalid JSON response");
       }
     } catch (error) {
-      console.error("Failed to parse JSON response:", response);
+      console.error("Failed to fetch response:", error);
       throw error;
     }
   }
