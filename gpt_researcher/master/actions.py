@@ -327,7 +327,7 @@ def extract_headers(markdown_text: str):
     stack = []  # Initialize stack to keep track of nested headers
     for line in lines:
         # Check if the line starts with an HTML header tag
-        if line.startswith("<h") and len(line) > 1:
+        if line.startswith("<h") and len(line) > 2 and line[2].isdigit():
             level = int(line[2])  # Extract header level
             header_text = line[
                 line.index(">") + 1: line.rindex("<")
