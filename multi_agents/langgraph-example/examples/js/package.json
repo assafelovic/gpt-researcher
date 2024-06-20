@@ -1,0 +1,11 @@
+{
+  "name": "js",
+  "description": "Examples of LangGraph SDK",
+  "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "@langchain/langgraph-sdk": "*"
+  },
+  "type": "module"
+}
