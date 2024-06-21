@@ -33,6 +33,7 @@ export class EditorAgent {
     const thread = await this.client.threads.create();
     const messages = [{ role: "human", content: JSON.stringify(prompt) }];
 
+    console.log('Thread:', thread);
     console.log('Thread ID:', thread["thread_id"]);
     console.log('Assistant ID:', agent["assistant_id"]);
 
