@@ -7,6 +7,8 @@ import { PublisherAgent } from "../PublisherAgent/PublisherAgent";
 import { ReviewerAgent } from "../ReviewerAgent/ReviewerAgent";
 import { ReviserAgent } from "../ReviserAgent/ReviserAgent";
 
+import {task} from "../config/task.js";
+
 export async function POST(request: Request) {
   let { question, sources } = await request.json();
 
@@ -21,15 +23,12 @@ export async function POST(request: Request) {
     const editorAgent = new EditorAgent();
     const researchState = {
       initial_research: researchData,
-      task: {
-        model: "editor_model",
-        max_sections: 5 // Ensure this value is set
-      }
+      task
     };
     const researchPlan = await editorAgent.planResearch(researchState);
 
     // Example usage of ChiefEditorAgent
-    const chiefEditorAgent = new ChiefEditorAgent({ query: question });
+    const chiefEditorAgent = new ChiefEditorAgent(task);
     await chiefEditorAgent.runResearchTask();
 
     // Example usage of WriterAgent

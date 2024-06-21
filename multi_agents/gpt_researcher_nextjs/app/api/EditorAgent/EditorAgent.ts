@@ -1,5 +1,6 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { ResearchAgent } from "../ResearchAgent/ResearchAgent";
+import { task } from "../config/task.js";
 
 export class EditorAgent {
   private client: Client;
