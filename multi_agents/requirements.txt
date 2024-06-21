@@ -4,3 +4,4 @@ langchain-community
 python-dotenv
 weasyprint
 json5
+langgraph_sdk
