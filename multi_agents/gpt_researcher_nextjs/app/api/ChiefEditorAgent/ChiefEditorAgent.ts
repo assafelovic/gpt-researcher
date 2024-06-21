@@ -12,7 +12,7 @@ export class ChiefEditorAgent {
     this.task = task;
     this.outputDir = `./outputs/run_${Date.now()}_${task.query.substring(0, 40)}`;
     // Ensure the output directory exists
-    // fs.mkdirSync(this.outputDir, { recursive: true });
+    fs.mkdirSync(this.outputDir, { recursive: true });
   }
 
   initResearchTeam() {
