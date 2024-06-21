@@ -69,18 +69,22 @@ export async function POST(request: Request) {
     // Example usage of WriterAgent
     const writerAgent = new WriterAgent();
     const writtenSection = await writerAgent.writeSection("Introduction", researchData);
+    console.log("Written Section: ", writtenSection);
 
     // Example usage of PublisherAgent
     const publisherAgent = new PublisherAgent();
     const publishedReport = await publisherAgent.publishReport(writtenSection);
+    console.log("Published Report: ", publishedReport);
 
     // Example usage of ReviewerAgent
     const reviewerAgent = new ReviewerAgent();
     const reviewFeedback = await reviewerAgent.reviewDraft(writtenSection);
+    console.log("Review Feedback: ", reviewFeedback);
 
     // Example usage of ReviserAgent
     const reviserAgent = new ReviserAgent();
     const revisedDraft = await reviserAgent.reviseDraft(writtenSection, reviewFeedback);
+    console.log("Revised Draft: ", revisedDraft);
 
     return new Response(JSON.stringify(revisedDraft), {
       headers: new Headers({
