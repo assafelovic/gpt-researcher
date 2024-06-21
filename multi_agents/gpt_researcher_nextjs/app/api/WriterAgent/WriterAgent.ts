@@ -54,7 +54,7 @@ export class WriterAgent {
           throw new Error("Invalid JSON response");
         }
       }
-    }, 1000); // Polling every second
+    }, 5000); // Polling every second
 
   }
 }
