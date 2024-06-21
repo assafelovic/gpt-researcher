@@ -1,6 +1,7 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { ResearchAgent } from "../ResearchAgent/ResearchAgent";
 import { EditorAgent } from "../EditorAgent/EditorAgent";
+import fs from "fs";
 
 export class ChiefEditorAgent {
   private client: Client;
