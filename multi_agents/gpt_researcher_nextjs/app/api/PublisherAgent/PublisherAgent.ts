@@ -16,7 +16,8 @@ export class PublisherAgent {
       content: `Research report: ${JSON.stringify(report)}\n\nPublish the report in the desired format.`
     }];
 
-    const response = await this.client.assistants.invoke({
+    // Assuming the correct method is `invokeAssistant` instead of `invoke`
+    const response = await this.client.invokeAssistant({
       assistant_id: "publisher_model",
       input: { messages: prompt }
     });
