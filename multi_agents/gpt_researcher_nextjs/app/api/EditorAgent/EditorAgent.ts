@@ -40,41 +40,8 @@ export class EditorAgent {
     // Create a run
     const run = await this.client.runs.create(thread["thread_id"], agent["assistant_id"], { input: { messages } });
 
-    console.log('Run ID:', run["run_id"]);
+    console.log('Run ID in EditorAgent.ts:', run["run_id"]);
 
-    try {
-      // Poll the run until it completes
-      let finalRunStatus = await this.client.runs.get(thread["thread_id"], run["run_id"]);
-      while (finalRunStatus.status !== "success") {
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Polling every second
-        finalRunStatus = await this.client.runs.get(thread["thread_id"], run["run_id"]);
-      }
-
-      console.log('Final run status', finalRunStatus);
-
-      // Get the final results
-      const results = await this.client.runs.listEvents(thread["thread_id"], run["run_id"]);
-
-      // The results are sorted by time, so the most recent (final) step is the 0 index
-      const finalResult = results[0];
-      console.log('Final result', finalResult);
-
-      // Get the content of the final message
-      const finalMessages = (finalResult.data as Record<string, any>)["output"]["messages"];
-      const finalMessageContent = finalMessages[finalMessages.length - 1].content;
-      console.log('Final message content', finalMessageContent);
-
-      // Ensure the response is a valid JSON string
-      if (typeof finalMessageContent === 'string') {
-        return JSON.parse(finalMessageContent);
-      } else {
-        console.error("Response is not a valid JSON string:", finalMessageContent);
-        throw new Error("Invalid JSON response");
-      }
-    } catch (error) {
-      console.error("Failed to fetch response:", error);
-      throw error;
-    }
   }
 
   async runParallelResearch(researchState: any) {
