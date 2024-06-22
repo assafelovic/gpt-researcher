@@ -1,11 +1,11 @@
 import { Client } from "@langchain/langgraph-sdk";
-import { ResearchAgent } from "../ResearchAgent/ResearchAgent";
-import { EditorAgent } from "../EditorAgent/EditorAgent";
-import { ChiefEditorAgent } from "../ChiefEditorAgent/ChiefEditorAgent";
-import { WriterAgent } from "../WriterAgent/WriterAgent";
-import { PublisherAgent } from "../PublisherAgent/PublisherAgent";
-import { ReviewerAgent } from "../ReviewerAgent/ReviewerAgent";
-import { ReviserAgent } from "../ReviserAgent/ReviserAgent";
+import { EditorAgent } from "../Agents/EditorAgent";
+import { ChiefEditorAgent } from "../Agents/ChiefEditorAgent";
+import { PublisherAgent } from "../Agents/PublisherAgent";
+import { ResearchAgent } from "../Agents/ResearchAgent";
+import { ReviewerAgent } from "../Agents/ReviewerAgent";
+import { ReviserAgent } from "../Agents/ReviserAgent";
+import { WriterAgent } from "../Agents/WriterAgent";
 
 import {task} from "../config/task.js";
 
