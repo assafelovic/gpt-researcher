@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes gradientBG {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  line-height: 1.6;
+  background-size: 200% 200%;
+  background-image: linear-gradient(45deg, #151A2D, #2D284D, #151A2D);
+  animation: gradientBG 10s ease infinite;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
