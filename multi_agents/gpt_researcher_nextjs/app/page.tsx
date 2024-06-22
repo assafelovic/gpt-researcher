@@ -1,3 +1,5 @@
+// multi_agents/gpt_researcher_nextjs/app/page.tsx
+
 "use client";
 
 import Answer from "@/components/Answer";
@@ -69,6 +71,7 @@ export default function Home() {
     setLoading(true);
     setQuestion(newQuestion);
     setPromptValue("");
+    setAnswer(""); // Reset answer for new query
 
     if (chatBoxSettings.report_type === 'multi_agents') {
       let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion);
@@ -108,41 +111,54 @@ export default function Home() {
     const groupedData = [];
     let currentAccordionGroup = null;
     let currentSourceGroup = null;
+    let currentReportGroup = null;
 
     data.forEach((item) => {
-      const { type, content, metadata } = item;
+      const { type, content, metadata, output } = item;
 
-      if (content === 'subqueries' || type === 'report') {
-        if (currentAccordionGroup) {
-          currentAccordionGroup = null;
+      if (type === 'report') {
+        if (!currentReportGroup) {
+          currentReportGroup = { type: 'reportBlock', content: '' };
+          groupedData.push(currentReportGroup);
         }
-        if (currentSourceGroup) {
-          groupedData.push(currentSourceGroup);
-          currentSourceGroup = null;
-        }
-        groupedData.push(item);
-      } else if (content === 'added_source_url') {
-        if (!currentSourceGroup) {
-          currentSourceGroup = { type: 'sourceBlock', items: [] };
-          groupedData.push(currentSourceGroup);
-        }
-        const hostname = new URL(metadata).hostname.replace('www.', '');
-        currentSourceGroup.items.push({ name: hostname, url: metadata });
-      } else if (type !== 'path' && content !== '') {
-        if (!currentAccordionGroup) {
-          currentAccordionGroup = { type: 'accordionBlock', items: [] };
-          groupedData.push(currentAccordionGroup);
-        }
-        currentAccordionGroup.items.push(item);
+        currentReportGroup.content += output;
       } else {
-        if (currentAccordionGroup) {
-          currentAccordionGroup = null;
+        if (currentReportGroup) {
+          currentReportGroup = null;
         }
-        if (currentSourceGroup) {
-          groupedData.push(currentSourceGroup);
-          currentSourceGroup = null;
+
+        if (content === 'subqueries') {
+          if (currentAccordionGroup) {
+            currentAccordionGroup = null;
+          }
+          if (currentSourceGroup) {
+            groupedData.push(currentSourceGroup);
+            currentSourceGroup = null;
+          }
+          groupedData.push(item);
+        } else if (content === 'added_source_url') {
+          if (!currentSourceGroup) {
+            currentSourceGroup = { type: 'sourceBlock', items: [] };
+            groupedData.push(currentSourceGroup);
+          }
+          const hostname = new URL(metadata).hostname.replace('www.', '');
+          currentSourceGroup.items.push({ name: hostname, url: metadata });
+        } else if (type !== 'path' && content !== '') {
+          if (!currentAccordionGroup) {
+            currentAccordionGroup = { type: 'accordionBlock', items: [] };
+            groupedData.push(currentAccordionGroup);
+          }
+          currentAccordionGroup.items.push(item);
+        } else {
+          if (currentAccordionGroup) {
+            currentAccordionGroup = null;
+          }
+          if (currentSourceGroup) {
+            groupedData.push(currentSourceGroup);
+            currentSourceGroup = null;
+          }
+          groupedData.push(item);
         }
-        groupedData.push(item);
       }
     });
 
@@ -164,6 +180,9 @@ export default function Home() {
       } else if (data.type === 'sourceBlock') {
         const uniqueKey = `sourceBlock-${index}`;
         return <Sources key={uniqueKey} sources={data.items} isLoading={false} />;
+      } else if (data.type === 'reportBlock') {
+        const uniqueKey = `reportBlock-${index}`;
+        return <Answer key={uniqueKey} answer={data.content} />;
       } else {
         const { type, content, metadata, output } = data;
         const uniqueKey = `${type}-${content}-${index}`;
@@ -184,8 +203,6 @@ export default function Home() {
               ))}
             </div>
           );
-        } else if (type === 'report') {
-          return <Answer key={uniqueKey} answer={output} />;
         } else if (type === 'path') {
           return <AccessReport key={uniqueKey} accessData={output} report={answer} />;
         } else {
