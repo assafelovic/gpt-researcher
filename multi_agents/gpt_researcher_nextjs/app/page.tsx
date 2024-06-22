@@ -9,11 +9,6 @@ import SimilarTopics from "@/components/SimilarTopics";
 import Sources from "@/components/Sources";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import {
-  createParser,
-  ParsedEvent,
-  ReconnectInterval,
-} from "eventsource-parser";
 
 import Report from '../components/Task/Report';
 import AgentLogs from '../components/Task/AgentLogs';
@@ -21,6 +16,7 @@ import AccessReport from '../components/Task/AccessReport';
 import Accordion from '../components/Task/Accordion';
 
 import { handleSourcesAndAnswer, handleSimilarQuestions, handleLanggraphAnswer } from '../actions/apiActions';
+import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
@@ -77,7 +73,7 @@ export default function Home() {
     setPromptValue("");
 
     if (chatBoxSettings.report_type === 'multi_agents') {
-      await handleLanggraphAnswer(newQuestion);
+      await startLanggraphResearch(newQuestion);
     } else {
       startResearch(chatBoxSettings);
 
