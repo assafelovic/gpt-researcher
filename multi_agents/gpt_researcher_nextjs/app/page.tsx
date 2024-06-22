@@ -10,8 +10,6 @@ import Sources from "@/components/Sources";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-import Report from '../components/Task/Report';
-import AgentLogs from '../components/Task/AgentLogs';
 import AccessReport from '../components/Task/AccessReport';
 import Accordion from '../components/Task/Accordion';
 
