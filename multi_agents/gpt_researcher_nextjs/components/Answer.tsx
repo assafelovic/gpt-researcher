@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Toaster, toast } from "react-hot-toast";
+import MarkdownView from 'react-showdown';
 
 export default function Answer({ answer }: { answer: string }) {
   return (
@@ -59,7 +60,7 @@ export default function Answer({ answer }: { answer: string }) {
         <div className="flex flex-wrap content-center items-center gap-[15px]">
           <div className="w-full whitespace-pre-wrap text-base font-light leading-[152.5%] text-black">
             {answer ? (
-              answer.trim()
+              <MarkdownView markdown={answer.trim()} options={{ tables: true, emoji: true }} />
             ) : (
               <div className="flex w-full flex-col gap-2">
                 <div className="h-6 w-full animate-pulse rounded-md bg-gray-300" />
