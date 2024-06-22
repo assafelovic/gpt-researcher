@@ -20,6 +20,21 @@ body {
   animation: gradientBG 10s ease infinite;
 }
 
+.landing {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 30vh;
+  text-align: center;
+  color: white;
+}
+
+.landing h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
