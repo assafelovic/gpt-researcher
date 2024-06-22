@@ -23,7 +23,7 @@ export async function startLanggraphResearch(newQuestion) {
     const thread = await client.threads.create();
   
     // Start a streaming run
-    const input = { task: { query: newQuestion } };
+    const input = task;
   
     const streamResponse = client.runs.stream(
       thread["thread_id"],
