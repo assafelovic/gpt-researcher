@@ -33,9 +33,21 @@ const Hero: FC<THeroProps> = ({
             Powered by GPT Researcher
           </span>
         </a>
-        <h2 className="bg-custom-gradient bg-clip-text pb-7 pt-2 text-center text-3xl font-semibold leading-[normal] lg:text-[64px]">
-          Search smarter & faster
-        </h2>
+        <div className="landing">
+          <h1 className="text-4xl font-extrabold mx-auto lg:text-7xl">
+            Say Goodbye to <br/>
+            <span
+              style={{
+                backgroundImage: 'linear-gradient(to right, #9867F0, #ED4E50)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}
+            >
+              Hours of Research
+            </span>
+          </h1>
+        </div>
+        
 
         {/* input section */}
         <div className="w-full max-w-[708px] pb-6">
