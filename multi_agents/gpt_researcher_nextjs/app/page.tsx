@@ -71,7 +71,14 @@ export default function Home() {
     setPromptValue("");
 
     if (chatBoxSettings.report_type === 'multi_agents') {
-      await startLanggraphResearch(newQuestion);
+      let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion);
+
+      console.log('langsmith-gui-link in page.tsx', `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`)
+
+      for await (const chunk of streamResponse) {
+        console.log(chunk);
+      }
+
     } else {
       startResearch(chatBoxSettings);
 
