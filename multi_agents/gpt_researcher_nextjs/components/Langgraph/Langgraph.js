@@ -1,5 +1,6 @@
 import { Client } from "@langchain/langgraph-sdk";
 import { task } from '../../config/task';
+import { getHost } from '../../helpers/getHost'
 
 export async function startLanggraphResearch(newQuestion) {
     // Update the task query with the new question
@@ -32,8 +33,8 @@ export async function startLanggraphResearch(newQuestion) {
         input,
       },
     );
+
+    let host = getHost({purpose: 'langgraph-gui'});
   
-    for await (const chunk of streamResponse) {
-      console.log(chunk);
-    }
+    return {streamResponse, host, thread_id: thread["thread_id"]};
 }
