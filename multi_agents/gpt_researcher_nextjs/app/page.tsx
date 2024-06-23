@@ -50,6 +50,8 @@ export default function Home() {
 
         if (data.type === 'report') {
           setAnswer((prev) => prev + data.output);
+        } else if (data.type === 'path') {
+          setLoading(false);
         }
       };
 
@@ -90,8 +92,6 @@ export default function Home() {
       //   handleSimilarQuestions(newQuestion),
       // ]);
     }
-
-    setLoading(false);
   };
 
   const reset = () => {
