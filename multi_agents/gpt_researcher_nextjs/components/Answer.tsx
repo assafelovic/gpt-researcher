@@ -1,8 +1,29 @@
 import Image from "next/image";
 import { Toaster, toast } from "react-hot-toast";
-import MarkdownView from 'react-showdown';
+
+import { useEffect, useState } from 'react';
+import { remark } from 'remark';
+import html from 'remark-html';
+
 
 export default function Answer({ answer }: { answer: string }) {
+  async function markdownToHtml(markdown) {
+    try {
+      const result = await remark().use(html).process(markdown);
+      console.log('Markdown to HTML conversion result:', result.toString());
+      return result.toString();
+    } catch (error) {
+      console.error('Error converting Markdown to HTML:', error);
+      return ''; // Handle error gracefully, return empty string or default content
+    }
+  }
+
+  const [htmlContent, setHtmlContent] = useState('');
+
+  useEffect(() => {
+    markdownToHtml(answer).then((html) => setHtmlContent(html));
+  }, [answer]);
+  
   return (
     <div className="container flex h-auto w-full shrink-0 gap-4 rounded-lg border border-solid border-[#C2C2C2] bg-white p-5 lg:p-10">
       <div className="hidden lg:block">
@@ -60,7 +81,42 @@ export default function Answer({ answer }: { answer: string }) {
         <div className="flex flex-wrap content-center items-center gap-[15px]">
           <div className="w-full whitespace-pre-wrap text-base font-light leading-[152.5%] text-black">
             {answer ? (
-              <MarkdownView markdown={answer.trim()} options={{ tables: true, emoji: true }} />
+              <div>
+                <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+                <style jsx>{`
+                  .markdown-content {
+                    /* Reset margins and paddings */
+                    margin: 0;
+                    padding: 0;
+                    /* Override existing styles for headings */
+                    h1, h2, h3, h4, h5, h6 {
+                      font-size: inherit;
+                      font-weight: bold;
+                      margin-top: 1em;
+                      margin-bottom: 0.2em;
+                      line-height: 1.2;
+                    }
+                    /* Optionally add more specific styling */
+                    h1 {
+                      font-size: 2.5em;
+                      color: #333;
+                    }
+                    h2 {
+                      font-size: 2em;
+                      color: #555;
+                    }
+                    h3 {
+                      font-size: 1.5em;
+                      color: #777;
+                    }
+                    h4 {
+                      font-size: 1.2em;
+                      color: #999;
+                    }
+                    /* Add more styles as needed */
+                  }
+                `}</style>
+              </div>
             ) : (
               <div className="flex w-full flex-col gap-2">
                 <div className="h-6 w-full animate-pulse rounded-md bg-gray-300" />

@@ -1,5 +1,4 @@
 import React from 'react';
-import MarkdownView from 'react-showdown';
 
 export default function Report({report}) {
 
@@ -7,10 +6,10 @@ export default function Report({report}) {
         <div>
             <h2>Research Report</h2>
             <div id="reportContainer">
-                <MarkdownView
+                {/* <MarkdownView
                     markdown={report}
                     options={{ tables: true, emoji: true }}
-                />
+                /> */}
             </div>
         </div>
     );

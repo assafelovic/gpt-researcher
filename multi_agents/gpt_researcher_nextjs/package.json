@@ -28,7 +28,6 @@
     "react-dropzone": "^14.2.3",
     "react-hot-toast": "^2.4.1",
     "react-scripts": "5.0.1",
-    "react-showdown": "^2.3.1",
     "together-ai": "^0.6.0-alpha.3",
     "web-vitals": "^2.1.4",
     "zod": "^3.0.0",
