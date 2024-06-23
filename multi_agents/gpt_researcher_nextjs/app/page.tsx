@@ -5,32 +5,32 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import InputArea from "@/components/InputArea";
-import SimilarTopics from "@/components/SimilarTopics";
+
 import Sources from "@/components/Sources";
 import Question from "@/components/Question";
-import Image from "next/image";
+import SubQuestions from "@/components/SubQuestions";
+
 import { useEffect, useRef, useState } from "react";
 
 import AccessReport from '../components/Task/AccessReport';
 import Accordion from '../components/Task/Accordion';
 
-import { handleSourcesAndAnswer, handleSimilarQuestions, handleLanggraphAnswer } from '../actions/apiActions';
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
-  const [question, setQuestion] = useState("");
   const [showResult, setShowResult] = useState(false);
-  const [sources, setSources] = useState<{ name: string; url: string }[]>([]);
   const [answer, setAnswer] = useState("");
-  const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [chatBoxSettings, setChatBoxSettings] = useState({report_source: 'web', report_type: 'multi_agents'});
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
+  
+  const [question, setQuestion] = useState("");
+  const [sources, setSources] = useState<{ name: string; url: string }[]>([]);
+  const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
+  
   const [socket, setSocket] = useState(null);
   const [orderedData, setOrderedData] = useState([]);
-  const [langsmithLink, setLangsmithLink] = useState("");
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -82,7 +82,7 @@ export default function Home() {
       let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion);
 
       const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
-      setLangsmithLink(langsmithGuiLink);
+      
       console.log('langsmith-gui-link in page.tsx', langsmithGuiLink);
       // Add the Langgraph button to orderedData
       setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphButton', link: langsmithGuiLink }]);
@@ -225,19 +225,11 @@ export default function Home() {
 
         if (content === 'subqueries') {
           return (
-            <div key={uniqueKey} className="flex flex-col items-center gap-2.5 pb-[30px]">
-              {metadata.map((item, subIndex) => (
-                <div
-                  className="flex cursor-pointer items-center justify-center gap-[5px] rounded-full border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"
-                  onClick={() => handleClickSuggestion(item)}
-                  key={`${uniqueKey}-${subIndex}`}
-                >
-                  <span className="text-sm font-light leading-[normal] text-[#1B1B16]">
-                    {item}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <SubQuestions
+              key={uniqueKey}
+              metadata={data.metadata}
+              handleClickSuggestion={handleClickSuggestion}
+            />
           );
         } else if (type === 'path') {
           return <AccessReport key={uniqueKey} accessData={output} report={answer} />;
