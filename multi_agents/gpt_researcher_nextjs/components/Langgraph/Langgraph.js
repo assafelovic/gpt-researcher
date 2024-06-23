@@ -5,8 +5,9 @@ import { getHost } from '../../helpers/getHost'
 export async function startLanggraphResearch(newQuestion) {
     // Update the task query with the new question
     task.task.query = newQuestion;
+    const host = getHost({purpose: 'langgraph-gui'});
   
-    const client = new Client(task);
+    const client = new Client({apiUrl: host});
   
     // List all assistants
     const assistants = await client.assistants.search({
@@ -33,8 +34,6 @@ export async function startLanggraphResearch(newQuestion) {
         input,
       },
     );
-
-    let host = getHost({purpose: 'langgraph-gui'});
   
     return {streamResponse, host, thread_id: thread["thread_id"]};
 }
