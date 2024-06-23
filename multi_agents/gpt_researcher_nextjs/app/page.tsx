@@ -7,6 +7,7 @@ import Hero from "@/components/Hero";
 import InputArea from "@/components/InputArea";
 import SimilarTopics from "@/components/SimilarTopics";
 import Sources from "@/components/Sources";
+import Question from "@/components/Question";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
@@ -74,6 +75,9 @@ export default function Home() {
     setPromptValue("");
     setAnswer(""); // Reset answer for new query
 
+    // Add the new question to orderedData
+    setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: newQuestion }]);
+
     if (chatBoxSettings.report_type === 'multi_agents') {
       let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion);
 
@@ -135,6 +139,8 @@ export default function Home() {
         currentReportGroup.content += output;
       } else if (type === 'langgraphButton') {
         groupedData.push({ type: 'langgraphButton', link });
+      } else if (type === 'question') {
+        groupedData.push({ type: 'question', content });
       } else {
         if (currentReportGroup) {
           currentReportGroup = null;
@@ -210,6 +216,9 @@ export default function Home() {
             </a>
           </div>
         );
+      } else if (data.type === 'question') {
+        const uniqueKey = `question-${index}`;
+        return <Question key={uniqueKey} question={data.content} />;
       } else {
         const { type, content, metadata, output } = data;
         const uniqueKey = `${type}-${content}-${index}`;
@@ -255,21 +264,6 @@ export default function Home() {
           <div className="flex h-full min-h-[68vh] w-full grow flex-col justify-between">
             <div className="container w-full space-y-2">
               <div className="container space-y-2">
-                <div className="container flex w-full items-start gap-3 px-5 pt-2 lg:px-10">
-                  <div className="flex w-fit items-center gap-4">
-                    <Image
-                      src={"/img/message-question-circle.svg"}
-                      alt="message"
-                      width={30}
-                      height={30}
-                      className="size-[24px]"
-                    />
-                    <p className="pr-5 font-bold uppercase leading-[152%] text-white">
-                      Question:
-                    </p>
-                  </div>
-                  <div className="grow text-white">&quot;{question}&quot;</div>
-                </div>
                 {renderComponentsInOrder()}
               </div>
 
