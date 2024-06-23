@@ -1,5 +1,3 @@
-// multi_agents/gpt_researcher_nextjs/app/page.tsx
-
 "use client";
 
 import Answer from "@/components/Answer";
@@ -31,6 +29,7 @@ export default function Home() {
 
   const [socket, setSocket] = useState(null);
   const [orderedData, setOrderedData] = useState([]);
+  const [langsmithLink, setLangsmithLink] = useState("");
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -78,10 +77,16 @@ export default function Home() {
     if (chatBoxSettings.report_type === 'multi_agents') {
       let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion);
 
-      console.log('langsmith-gui-link in page.tsx', `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`)
+      const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
+      setLangsmithLink(langsmithGuiLink);
+      console.log('langsmith-gui-link in page.tsx', langsmithGuiLink);
 
       for await (const chunk of streamResponse) {
         console.log(chunk);
+        if (chunk.data.report !== "Full report content here") {
+          setOrderedData((prevOrder) => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
+          setLoading(false);
+        }
       }
 
     } else {
@@ -249,6 +254,19 @@ export default function Home() {
                 </div>
                 {renderComponentsInOrder()}
               </div>
+
+              {langsmithLink && (
+                <div className="flex justify-center py-4">
+                  <a
+                    href={langsmithLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 text-white bg-[#0DB7ED] rounded"
+                  >
+                    Your report is being processed by Langgraph
+                  </a>
+                </div>
+              )}
 
               <div className="pt-1 sm:pt-2" ref={chatContainerRef}></div>
             </div>
