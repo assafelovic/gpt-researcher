@@ -105,6 +105,10 @@ export default function Home() {
 
   const handleClickSuggestion = (value: string) => {
     setPromptValue(value);
+    const element = document.getElementById('input-area');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const preprocessOrderedData = (data) => {
@@ -189,10 +193,10 @@ export default function Home() {
 
         if (content === 'subqueries') {
           return (
-            <div key={uniqueKey} className="flex flex-wrap items-center justify-center gap-2.5 pb-[30px] lg:flex-nowrap lg:justify-normal">
+            <div key={uniqueKey} className="flex flex-col items-center gap-2.5 pb-[30px]">
               {metadata.map((item, subIndex) => (
                 <div
-                  className="flex h-[35px] cursor-pointer items-center justify-center gap-[5px] rounded border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"
+                  className="flex cursor-pointer items-center justify-center gap-[5px] rounded-full border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"
                   onClick={() => handleClickSuggestion(item)}
                   key={`${uniqueKey}-${subIndex}`}
                 >
@@ -248,7 +252,7 @@ export default function Home() {
 
               <div className="pt-1 sm:pt-2" ref={chatContainerRef}></div>
             </div>
-            <div className="container px-4 lg:px-0">
+            <div id="input-area" className="container px-4 lg:px-0">
               <InputArea
                 promptValue={promptValue}
                 setPromptValue={setPromptValue}
