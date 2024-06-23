@@ -11,7 +11,7 @@ services:
     restart: always
     ports:
       - 8000:8000
-  react-client:
+  gptr-nextjs:
     pull_policy: build
     image: gptresearcher/gptr-nextjs
     stdin_open: true
