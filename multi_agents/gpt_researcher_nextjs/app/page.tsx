@@ -80,10 +80,12 @@ export default function Home() {
       const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
       setLangsmithLink(langsmithGuiLink);
       console.log('langsmith-gui-link in page.tsx', langsmithGuiLink);
+      // Add the Langgraph button to orderedData
+      setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphButton', link: langsmithGuiLink }]);
 
       for await (const chunk of streamResponse) {
         console.log(chunk);
-        if (chunk.data.report !== null && chunk.data.report !== "Full report content here") {
+        if (chunk.data.report != null && chunk.data.report != "Full report content here") {
           setOrderedData((prevOrder) => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
           setLoading(false);
         }
@@ -123,7 +125,7 @@ export default function Home() {
     let currentReportGroup = null;
 
     data.forEach((item) => {
-      const { type, content, metadata, output } = item;
+      const { type, content, metadata, output, link } = item;
 
       if (type === 'report') {
         if (!currentReportGroup) {
@@ -131,6 +133,8 @@ export default function Home() {
           groupedData.push(currentReportGroup);
         }
         currentReportGroup.content += output;
+      } else if (type === 'langgraphButton') {
+        groupedData.push({ type: 'langgraphButton', link });
       } else {
         if (currentReportGroup) {
           currentReportGroup = null;
@@ -192,6 +196,20 @@ export default function Home() {
       } else if (data.type === 'reportBlock') {
         const uniqueKey = `reportBlock-${index}`;
         return <Answer key={uniqueKey} answer={data.content} />;
+      } else if (data.type === 'langgraphButton') {
+        const uniqueKey = `langgraphButton-${index}`;
+        return (
+          <div key={uniqueKey} className="flex justify-center py-4">
+            <a
+              href={data.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 text-white bg-[#0DB7ED] rounded"
+            >
+              View the full Langgraph logs here
+            </a>
+          </div>
+        );
       } else {
         const { type, content, metadata, output } = data;
         const uniqueKey = `${type}-${content}-${index}`;
@@ -254,19 +272,6 @@ export default function Home() {
                 </div>
                 {renderComponentsInOrder()}
               </div>
-
-              {langsmithLink && (
-                <div className="flex justify-center py-4">
-                  <a
-                    href={langsmithLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 text-white bg-[#0DB7ED] rounded"
-                  >
-                    Your report is being processed by Langgraph
-                  </a>
-                </div>
-              )}
 
               <div className="pt-1 sm:pt-2" ref={chatContainerRef}></div>
             </div>
