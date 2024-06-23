@@ -10,8 +10,16 @@ const Footer = ({ setChatBoxSettings, chatBoxSettings}) => {
         <Modal setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
         <div className="flex items-center gap-3">
           <Link href={"https://github.com/assafelovic/gpt-researcher"} target="_blank">
+              <Image
+                src={"/img/docker-blue.svg"}
+                alt="facebook"
+                width={16}
+                height={16}
+              />{" "}
+          </Link>
+          <Link href={"https://github.com/assafelovic/gpt-researcher"} target="_blank">
             <Image
-              src={"/img/github-footer.svg"}
+              src={"/img/github-blue.svg"}
               alt="facebook"
               width={16}
               height={16}
