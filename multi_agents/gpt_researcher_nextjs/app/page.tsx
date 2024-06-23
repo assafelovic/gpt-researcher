@@ -83,7 +83,7 @@ export default function Home() {
 
       for await (const chunk of streamResponse) {
         console.log(chunk);
-        if (chunk.data.report !== "Full report content here") {
+        if (chunk.data.report !== null && chunk.data.report !== "Full report content here") {
           setOrderedData((prevOrder) => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
           setLoading(false);
         }
