@@ -237,11 +237,11 @@ export default function Home() {
                       height={30}
                       className="size-[24px]"
                     />
-                    <p className="pr-5 font-bold uppercase leading-[152%] text-black">
+                    <p className="pr-5 font-bold uppercase leading-[152%] text-white">
                       Question:
                     </p>
                   </div>
-                  <div className="grow">&quot;{question}&quot;</div>
+                  <div className="grow text-white">&quot;{question}&quot;</div>
                 </div>
                 {renderComponentsInOrder()}
               </div>
