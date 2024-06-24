@@ -1,7 +1,7 @@
 # dependencies
 beautifulsoup4
 colorama
-duckduckgo_search>=6.1.5
+duckduckgo_search==5.3.1b1
 md2pdf
 playwright
 openai
@@ -27,6 +27,7 @@ langchain_fireworks
 langchain_aws
 tiktoken
 tavily-python
+gpt-researcher
 arxiv
 PyMuPDF
 requests

@@ -2,6 +2,7 @@ import asyncio
 import json
 
 import markdown
+import re
 
 from gpt_researcher.master.prompts import *
 from gpt_researcher.scraper.scraper import Scraper
@@ -77,11 +78,41 @@ async def choose_agent(query, cfg, parent_query=None, cost_callback: callable = 
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback
         )
+
         agent_dict = json.loads(response)
         return agent_dict["server"], agent_dict["agent_role_prompt"]
+    
     except Exception as e:
-        print(f"Error choosing agent: {e}")
-        return "Default Agent", "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
+        print("⚠️ Error in reading JSON, attempting to repair JSON")
+        return await handle_json_error(response)
+
+async def handle_json_error(response):
+    try:
+        agent_dict = json_repair.loads(response)
+        if agent_dict.get("server") and agent_dict.get("agent_role_prompt"):
+            return agent_dict["server"], agent_dict["agent_role_prompt"]
+    except Exception as e:
+        print(f"Error using json_repair: {e}")
+
+    json_string = extract_json_with_regex(response)
+    if json_string:
+        try:
+            json_data = json.loads(json_string)
+            return json_data["server"], json_data["agent_role_prompt"]
+        except json.JSONDecodeError as e:
+            print(f"Error decoding JSON: {e}")
+
+    print("No JSON found in the string. Falling back to Default Agent.")
+    return "Default Agent", (
+        "You are an AI critical thinker research assistant. Your sole purpose is to write well written, "
+        "critically acclaimed, objective and structured reports on given text."
+    )
+
+def extract_json_with_regex(response):
+    json_match = re.search(r'{.*?}', response, re.DOTALL)
+    if json_match:
+        return json_match.group(0)
+    return None
 
 
 async def get_sub_queries(query: str, agent_role_prompt: str, cfg, parent_query: str,
@@ -327,7 +358,7 @@ def extract_headers(markdown_text: str):
     stack = []  # Initialize stack to keep track of nested headers
     for line in lines:
         # Check if the line starts with an HTML header tag
-        if line.startswith("<h") and len(line) > 1:
+        if line.startswith("<h") and len(line) > 2 and line[2].isdigit():
             level = int(line[2])  # Extract header level
             header_text = line[
                 line.index(">") + 1: line.rindex("<")

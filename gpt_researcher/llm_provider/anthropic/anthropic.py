@@ -14,7 +14,7 @@ class AnthropicProvider:
     ):
         self.model = model
         self.temperature = temperature
-        self.max_tokens = max_tokens
+        self.max_tokens = max_tokens if max_tokens else 4096
         self.api_key = self.get_api_key()
         self.llm = self.get_llm_model()
 
@@ -37,6 +37,7 @@ class AnthropicProvider:
             model=self.model,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
+            max_tokens_to_sample=4096,
             api_key=self.api_key
         )
 

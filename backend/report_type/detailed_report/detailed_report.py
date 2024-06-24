@@ -59,7 +59,7 @@ class DetailedReport():
 
     async def _get_all_subtopics(self) -> list:
         subtopics = await self.main_task_assistant.get_subtopics()
-        return subtopics.dict()["subtopics"]
+        return subtopics.dict().get("subtopics", [])
 
     async def _generate_subtopic_reports(self, subtopics: list) -> tuple:
         subtopic_reports = []
