@@ -2483,18 +2483,18 @@ typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
 name = "pydyf"
-version = "0.9.0"
+version = "0.10.0"
 description = "A low-level PDF generator."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "pydyf-0.9.0-py3-none-any.whl", hash = "sha256:f0e447d9f69ca20cfa3ab3d17e274e26cc877bb6e36b4a83d196616a089db0dd"},
-    {file = "pydyf-0.9.0.tar.gz", hash = "sha256:d5b244e8fc24119ce7bd5d51ea2d6773c0ff88aa81597db556bc440c6b880610"},
+    {file = "pydyf-0.10.0-py3-none-any.whl", hash = "sha256:ef76b6c0976a091a9e15827fb5800e5e37e7cd1a3ca4d4bd19d10a14ea8c0ae3"},
+    {file = "pydyf-0.10.0.tar.gz", hash = "sha256:357194593efaf61d7b48ab97c3d59722114934967c3df3d7878ca6dd25b04c30"},
 ]
 
 [package.extras]
 doc = ["sphinx", "sphinx_rtd_theme"]
-test = ["flake8", "isort", "pillow", "pytest"]
+test = ["pillow", "pytest", "ruff"]
 
 [[package]]
 name = "pyee"
@@ -3239,13 +3239,13 @@ blobfile = ["blobfile (>=2)"]
 
 [[package]]
 name = "tinycss2"
-version = "1.2.1"
+version = "1.3.0"
 description = "A tiny CSS parser"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 files = [
-    {file = "tinycss2-1.2.1-py3-none-any.whl", hash = "sha256:2b80a96d41e7c3914b8cda8bc7f705a4d9c49275616e886103dd839dfc847847"},
-    {file = "tinycss2-1.2.1.tar.gz", hash = "sha256:8cff3a8f066c2ec677c06dbc7b45619804a6938478d9d73c284b29d14ecb0627"},
+    {file = "tinycss2-1.3.0-py3-none-any.whl", hash = "sha256:54a8dbdffb334d536851be0226030e9505965bb2f30f21a4a82c55fb2a80fae7"},
+    {file = "tinycss2-1.3.0.tar.gz", hash = "sha256:152f9acabd296a8375fbca5b84c961ff95971fcfc32e79550c8df8e29118c54d"},
 ]
 
 [package.dependencies]
@@ -3253,7 +3253,7 @@ webencodings = ">=0.4"
 
 [package.extras]
 doc = ["sphinx", "sphinx_rtd_theme"]
-test = ["flake8", "isort", "pytest"]
+test = ["pytest", "ruff"]
 
 [[package]]
 name = "tinysegmenter"
@@ -3532,13 +3532,13 @@ standard = ["colorama (>=0.4)", "httptools (>=0.5.0)", "python-dotenv (>=0.13)",
 
 [[package]]
 name = "weasyprint"
-version = "61.2"
+version = "62.3"
 description = "The Awesome Document Factory"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "weasyprint-61.2-py3-none-any.whl", hash = "sha256:76c6dc0e75e09182d5645d92c66ddf86b1b992c9420235b723fb374b584e5bf4"},
-    {file = "weasyprint-61.2.tar.gz", hash = "sha256:47df6cfeeff8c6c28cf2e4caf837cde17715efe462708ada74baa2eb391b6059"},
+    {file = "weasyprint-62.3-py3-none-any.whl", hash = "sha256:d31048646ce15084e135b33e334a61f526aa68d2f679fcc109ed0e0f5edaed21"},
+    {file = "weasyprint-62.3.tar.gz", hash = "sha256:8d8680d732f7fa0fcbc587692a5a5cb095c3525627066918d6e203cbf42b7fcd"},
 ]
 
 [package.dependencies]
@@ -3547,13 +3547,13 @@ cssselect2 = ">=0.1"
 fonttools = {version = ">=4.0.0", extras = ["woff"]}
 html5lib = ">=1.1"
 Pillow = ">=9.1.0"
-pydyf = ">=0.8.0"
+pydyf = ">=0.10.0"
 Pyphen = ">=0.9.1"
-tinycss2 = ">=1.0.0"
+tinycss2 = ">=1.3.0"
 
 [package.extras]
 doc = ["sphinx", "sphinx_rtd_theme"]
-test = ["flake8", "isort", "pytest"]
+test = ["pytest", "ruff"]
 
 [[package]]
 name = "webencodings"
@@ -3824,4 +3824,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.12"
-content-hash = "80a2f68eeb859b743f9bf668071740cf9c0940228607047e9da3abab46680d66"
+content-hash = "5ef6a08cde271e2813608ba2f02d3e0f96e3fa636a893cf09cad3c79022c45c2"
