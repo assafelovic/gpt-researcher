@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 
 import AccessReport from '../components/Task/AccessReport';
 import Accordion from '../components/Task/Accordion';
+import LogMessage from '../components/Task/LogMessage';
 
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 
@@ -189,13 +190,19 @@ export default function Home() {
 
     return groupedData.map((data, index) => {
       if (data.type === 'accordionBlock') {
+        console.log('data in accordionBlock', data)
         const uniqueKey = `accordionBlock-${index}`;
         const logs = data.items.map((item, subIndex) => ({
           header: item.content,
           text: item.output,
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
-        return <Accordion key={uniqueKey} logs={logs} />;
+        // Use Accordion for 'subquery_context_window' type, otherwise use LogMessage
+        if (data.content === 'subquery_context_window') {
+          return <Accordion key={uniqueKey} logs={logs} />;
+        } else {
+          return <LogMessage key={uniqueKey} logs={logs} />;
+        }
       } else if (data.type === 'sourceBlock') {
         const uniqueKey = `sourceBlock-${index}`;
         return <Sources key={uniqueKey} sources={data.items} isLoading={false} />;
