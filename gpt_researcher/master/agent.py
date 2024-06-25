@@ -3,7 +3,8 @@ import time
 
 from gpt_researcher.config import Config
 from gpt_researcher.context.compression import ContextCompressor
-from gpt_researcher.document import DocumentLoader
+from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
+
 from gpt_researcher.master.actions import *
 from gpt_researcher.memory import Memory
 from gpt_researcher.utils.enum import ReportSource, ReportType
@@ -97,7 +98,8 @@ class GPTResearcher:
             self.context = await self.__get_context_by_search(self.query, document_data)
 
         elif self.report_source == ReportSource.LangChainDocuments.value:
-            self.context = await self.__get_context_by_search(self.query, self.documents)
+            langchain_documents_data = await LangChainDocumentLoader(self.documents).load()
+            self.context = await self.__get_context_by_search(self.query, langchain_documents_data)
 
         # Default web based research
         else:
@@ -159,6 +161,7 @@ class GPTResearcher:
 
         return report
 
+
     async def __get_context_by_urls(self, urls):
         """
             Scrapes and compresses the context from the given urls
@@ -170,6 +173,7 @@ class GPTResearcher:
                             self.websocket)
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
         return await self.__get_similar_content_by_query(self.query, scraped_sites)
+
 
     async def __get_context_by_search(self, query, scraped_data: list = []):
         """
