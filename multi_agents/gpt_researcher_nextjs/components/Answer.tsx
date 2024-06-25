@@ -114,6 +114,31 @@ export default function Answer({ answer }: { answer: string }) {
                       color: #999;
                     }
                     /* Add more styles as needed */
+
+                    /* Table of Contents Styling */
+                    h2 + ul {
+                      list-style-type: none;
+                      padding-left: 0;
+                      margin-top: 1em;
+                      margin-bottom: 1em;
+                    }
+                    h2 + ul > li {
+                      margin-bottom: 0.5em;
+                    }
+                    h2 + ul > li > ul {
+                      margin-left: 1em;
+                      list-style-type: disc;
+                    }
+                    h2 + ul > li > ul > li {
+                      margin-bottom: 0.3em;
+                    }
+                    h2 + ul > li > ul > li > ul {
+                      margin-left: 1em;
+                      list-style-type: circle;
+                    }
+                    h2 + ul > li > ul > li > ul > li {
+                      margin-bottom: 0.2em;
+                    }
                   }
                 `}</style>
               </div>
