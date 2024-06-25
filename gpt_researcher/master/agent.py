@@ -8,6 +8,8 @@ from gpt_researcher.master.actions import *
 from gpt_researcher.memory import Memory
 from gpt_researcher.utils.enum import ReportSource, ReportType
 
+import sys
+
 
 class GPTResearcher:
     """
@@ -20,6 +22,7 @@ class GPTResearcher:
         report_type: str = ReportType.ResearchReport.value,
         report_source=ReportSource.Web.value,
         source_urls=None,
+        documents=None,
         config_path=None,
         websocket=None,
         agent=None,
@@ -55,6 +58,7 @@ class GPTResearcher:
         self.retriever = get_retriever(self.cfg.retriever)
         self.context = context
         self.source_urls = source_urls
+        self.documents = documents
         self.memory = Memory(self.cfg.embedding_provider)
         self.visited_urls: set[str] = visited_urls
         self.verbose: bool = verbose
@@ -91,6 +95,10 @@ class GPTResearcher:
         elif self.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
             self.context = await self.__get_context_by_search(self.query, document_data)
+
+        elif self.report_source == ReportSource.LangChainDocuments.value:
+            self.context = await self.__get_context_by_search(self.query, self.documents)
+
         # Default web based research
         else:
             self.context = await self.__get_context_by_search(self.query)
