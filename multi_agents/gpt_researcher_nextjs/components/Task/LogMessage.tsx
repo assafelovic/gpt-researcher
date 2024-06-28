@@ -9,7 +9,7 @@ const LogMessage = ({ logs }) => {
         <div className="-mx-4 flex flex-wrap justify-center">
           <div className="w-full px-4 lg:w-3/4">
             {logs.map((log, index) => {
-              if (log.header === 'subquery_context_window') {
+              if (log.header === 'subquery_context_window' || log.header === 'differences') {
                 return <Accordion key={index} logs={[log]} />;
               } else {
                 return (
