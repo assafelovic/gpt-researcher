@@ -91,7 +91,9 @@ export default function Home() {
     setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: newQuestion }]);
 
     if (chatBoxSettings.report_type === 'multi_agents') {
-      let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion);
+      let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion, (newData) => {
+        setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphStateUpdate', content: "graphState", output: JSON.stringify(newData.values) }]);
+      });
 
       const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
       
@@ -106,7 +108,6 @@ export default function Home() {
           setLoading(false);
         }
       }
-
     } else {
       startResearch(chatBoxSettings);
 
