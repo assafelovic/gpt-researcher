@@ -68,11 +68,15 @@ class GPTResearcher:
 
         # Stores all the user provided subtopics
         self.subtopics = subtopics
-
+        
     async def conduct_research(self):
         """
         Runs the GPT Researcher to conduct research
         """
+        # Reset visited_urls and source_urls at the start of each research task
+        self.visited_urls.clear()
+        self.source_urls = []
+
         if self.verbose:
             await stream_output("logs", f"🔎 Starting the research task for '{self.query}'...", self.websocket)
         
