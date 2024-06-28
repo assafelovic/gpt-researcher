@@ -32,7 +32,7 @@ export default function ResearchForm({ chatBoxSettings, setChatBoxSettings }) {
                     <option value="local">My Documents</option>
                 </select>
             </div>
-            {report_source == 'local' ? <FileUpload /> : <></>}
+            {report_source == 'local' && report_type != 'multi_agents' ? <FileUpload /> : <></>}
         </form>
     );
 }
