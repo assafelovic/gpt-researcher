@@ -216,12 +216,9 @@ export default function Home() {
           text: item.output,
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
-        // Use Accordion for 'subquery_context_window' type, otherwise use LogMessage
-        if (data.content === 'subquery_context_window' || data.content === 'differences') {
-          return <Accordion key={uniqueKey} logs={logs} />;
-        } else {
-          return <LogMessage key={uniqueKey} logs={logs} />;
-        }
+        
+        return <LogMessage key={uniqueKey} logs={logs} />;
+      
       } else if (data.type === 'sourceBlock') {
         const uniqueKey = `sourceBlock-${index}`;
         return <Sources key={uniqueKey} sources={data.items} isLoading={false} />;
