@@ -17,6 +17,7 @@ import Accordion from '../components/Task/Accordion';
 import LogMessage from '../components/Task/LogMessage';
 
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
+import findDifferences from '../helpers/findDifferences';
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
@@ -93,9 +94,7 @@ export default function Home() {
     const {report_type, report_source} = chatBoxSettings;
 
     if (report_type === 'multi_agents') {
-      let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion, report_source, (newData) => {
-        setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphStateUpdate', content: "graphState", output: JSON.stringify(newData.values) }]);
-      });
+      let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion, report_source);
 
       const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
       
@@ -103,12 +102,18 @@ export default function Home() {
       // Add the Langgraph button to orderedData
       setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphButton', link: langsmithGuiLink }]);
 
+      let previousChunk = null;
+
       for await (const chunk of streamResponse) {
         console.log(chunk);
         if (chunk.data.report != null && chunk.data.report != "Full report content here") {
           setOrderedData((prevOrder) => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
           setLoading(false);
-        }
+        } else if (previousChunk) {
+          const differences = findDifferences(previousChunk, chunk);
+          setOrderedData((prevOrder) => [...prevOrder, { type: 'differences', content: 'differences', output: JSON.stringify(differences) }]);
+        } 
+        previousChunk = chunk;
       }
     } else {
       startResearch(chatBoxSettings);
@@ -212,7 +217,7 @@ export default function Home() {
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
         // Use Accordion for 'subquery_context_window' type, otherwise use LogMessage
-        if (data.content === 'subquery_context_window') {
+        if (data.content === 'subquery_context_window' || data.content === 'differences') {
           return <Accordion key={uniqueKey} logs={logs} />;
         } else {
           return <LogMessage key={uniqueKey} logs={logs} />;
