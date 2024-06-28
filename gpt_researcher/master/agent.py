@@ -68,7 +68,7 @@ class GPTResearcher:
 
         # Stores all the user provided subtopics
         self.subtopics = subtopics
-        
+
     async def conduct_research(self):
         """
         Runs the GPT Researcher to conduct research
