@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { remark } from 'remark';
+import html from 'remark-html';
 
 const Accordion = ({ logs }) => {
   console.log('logs in Accordion', logs);
@@ -9,15 +11,98 @@ const Accordion = ({ logs }) => {
       : log.header;
   };
 
+  const markdownToHtml = async (markdown) => {
+    try {
+      const result = await remark().use(html).process(markdown);
+      return result.toString();
+    } catch (error) {
+      console.error('Error converting Markdown to HTML:', error);
+      return ''; // Handle error gracefully, return empty string or default content
+    }
+  };
+
   const renderLogContent = (log) => {
     if (log.header === 'differences') {
       const data = JSON.parse(log.text).data;
       return Object.keys(data).map((field, index) => {
         const fieldValue = data[field].after || data[field].before;
+        const [htmlContent, setHtmlContent] = useState('');
+        const [isMarkdown, setIsMarkdown] = useState(false);
+
+        useEffect(() => {
+          const checkIfMarkdown = async () => {
+            const html = await markdownToHtml(fieldValue);
+            if (html !== fieldValue) {
+              setIsMarkdown(true);
+              setHtmlContent(html);
+            } else {
+              setIsMarkdown(false);
+              setHtmlContent(fieldValue);
+            }
+          };
+          checkIfMarkdown();
+        }, [fieldValue]);
+
         return (
           <div key={index} className="mb-4">
             <h3 className="font-semibold text-lg text-gray-700 dark:text-gray-300">{field}:</h3>
-            <p className="text-gray-600 dark:text-gray-400">{JSON.stringify(fieldValue, null, 2)}</p>
+            {isMarkdown ? (
+              <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+            ) : (
+              <p className="text-gray-600 dark:text-gray-400">{htmlContent}</p>
+            )}
+            <style jsx>{`
+              .markdown-content {
+                margin: 0;
+                padding: 0;
+                h1, h2, h3, h4, h5, h6 {
+                  font-size: inherit;
+                  font-weight: bold;
+                  margin-top: 1em;
+                  margin-bottom: 0.2em;
+                  line-height: 1.2;
+                }
+                h1 {
+                  font-size: 2.5em;
+                  color: #333;
+                }
+                h2 {
+                  font-size: 2em;
+                  color: #555;
+                }
+                h3 {
+                  font-size: 1.5em;
+                  color: #777;
+                }
+                h4 {
+                  font-size: 1.2em;
+                  color: #999;
+                }
+                ul {
+                  list-style-type: none;
+                  padding-left: 0;
+                  margin-top: 1em;
+                  margin-bottom: 1em;
+                }
+                ul > li {
+                  margin-bottom: 0.5em;
+                }
+                ul > li > ul {
+                  margin-left: 1em;
+                  list-style-type: disc;
+                }
+                ul > li > ul > li {
+                  margin-bottom: 0.3em;
+                }
+                ul > li > ul > li > ul {
+                  margin-left: 1em;
+                  list-style-type: circle;
+                }
+                ul > li > ul > li > ul > li {
+                  margin-bottom: 0.2em;
+                }
+              }
+            `}</style>
           </div>
         );
       });
