@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { remark } from 'remark';
 import html from 'remark-html';
 
+const plainTextFields = ['task', 'sections', 'headers', 'sources', 'research_data'];
+
 const Accordion = ({ logs }) => {
   console.log('logs in Accordion', logs);
 
@@ -31,13 +33,18 @@ const Accordion = ({ logs }) => {
 
         useEffect(() => {
           const checkIfMarkdown = async () => {
-            const html = await markdownToHtml(fieldValue);
-            if (html !== fieldValue) {
-              setIsMarkdown(true);
-              setHtmlContent(html);
-            } else {
+            if (plainTextFields.includes(field)) {
               setIsMarkdown(false);
               setHtmlContent(fieldValue);
+            } else {
+              const html = await markdownToHtml(fieldValue);
+              if (html !== fieldValue) {
+                setIsMarkdown(true);
+                setHtmlContent(html);
+              } else {
+                setIsMarkdown(false);
+                setHtmlContent(fieldValue);
+              }
             }
           };
           checkIfMarkdown();
@@ -49,7 +56,7 @@ const Accordion = ({ logs }) => {
             {isMarkdown ? (
               <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
             ) : (
-              <p className="text-gray-600 dark:text-gray-400">{htmlContent}</p>
+              <p className="text-gray-600 dark:text-gray-400">{typeof htmlContent === 'object' ? JSON.stringify(htmlContent) : htmlContent}</p>
             )}
             <style jsx>{`
               .markdown-content {
