@@ -2,9 +2,10 @@ import { Client } from "@langchain/langgraph-sdk";
 import { task } from '../../config/task';
 import { getHost } from '../../helpers/getHost';
 
-export async function startLanggraphResearch(newQuestion, onUpdate) {
+export async function startLanggraphResearch(newQuestion, report_source, onUpdate) {
     // Update the task query with the new question
     task.task.query = newQuestion;
+    task.task.source = report_source;
     const host = getHost({purpose: 'langgraph-gui'});
   
     const client = new Client({apiUrl: host});

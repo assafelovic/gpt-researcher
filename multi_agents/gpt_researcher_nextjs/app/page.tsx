@@ -90,8 +90,10 @@ export default function Home() {
     // Add the new question to orderedData
     setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: newQuestion }]);
 
-    if (chatBoxSettings.report_type === 'multi_agents') {
-      let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion, (newData) => {
+    const {report_type, report_source} = chatBoxSettings;
+
+    if (report_type === 'multi_agents') {
+      let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion, report_source, (newData) => {
         setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphStateUpdate', content: "graphState", output: JSON.stringify(newData.values) }]);
       });
 
