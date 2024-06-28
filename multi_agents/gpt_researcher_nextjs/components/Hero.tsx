@@ -95,18 +95,18 @@ type suggestionType = {
 const suggestions: suggestionType[] = [
   {
     id: 1,
-    name: "How does photosynthesis work?",
-    icon: "/img/icon _leaf_.svg",
+    name: "What happened to the dinosaurs",
+    icon: "/img/dinosaur.svg",
   },
   {
     id: 2,
-    name: "How can I get a 6 pack in 3 months?",
-    icon: "/img/icon _dumbell_.svg",
+    name: "Help me plan an adventure to ",
+    icon: "/img/hiker.svg",
   },
   {
     id: 3,
-    name: "Can you explain the theory of relativity?",
-    icon: "/img/icon _atom_.svg",
+    name: "What made Michael Jordan the best",
+    icon: "/img/dunk.svg",
   },
 ];
 
