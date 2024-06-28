@@ -1,12 +1,29 @@
 import { useState } from 'react';
 
 const Accordion = ({ logs }) => {
-  console.log('logs in Accordion', logs)
+  console.log('logs in Accordion', logs);
 
   const getLogHeaderText = (log) => {
     return log.header === 'differences'
       ? 'The following fields on the Langgraph were updated: ' + Object.keys(JSON.parse(log.text).data).join(', ')
       : log.header;
+  };
+
+  const renderLogContent = (log) => {
+    if (log.header === 'differences') {
+      const data = JSON.parse(log.text).data;
+      return Object.keys(data).map((field, index) => {
+        const fieldValue = data[field].after || data[field].before;
+        return (
+          <div key={index} className="mb-4">
+            <h3 className="font-semibold text-lg text-gray-700 dark:text-gray-300">{field}:</h3>
+            <p className="text-gray-600 dark:text-gray-400">{JSON.stringify(fieldValue, null, 2)}</p>
+          </div>
+        );
+      });
+    } else {
+      return <p className="mb-2 text-gray-500 dark:text-gray-400">{log.text}</p>;
+    }
   };
 
   const [openIndex, setOpenIndex] = useState(null);
@@ -52,7 +69,7 @@ const Accordion = ({ logs }) => {
             aria-labelledby={`accordion-collapse-heading-${index}`}
           >
             <div className="p-5 border border-b-0 border-gray-200 dark:border-gray-700 dark:bg-gray-900">
-              <p className="mb-2 text-gray-500 dark:text-gray-400">{log.text}</p>
+              {renderLogContent(log)}
             </div>
           </div>
         </div>
