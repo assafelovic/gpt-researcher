@@ -1,6 +1,14 @@
 import { useState } from 'react';
 
 const Accordion = ({ logs }) => {
+  console.log('logs in Accordion', logs)
+
+  const getLogHeaderText = (log) => {
+    return log.header === 'differences'
+      ? 'The following fields on the Langgraph were updated: ' + Object.keys(JSON.parse(log.text).data).join(', ')
+      : log.header;
+  };
+
   const [openIndex, setOpenIndex] = useState(null);
 
   const handleToggle = (index) => {
@@ -19,7 +27,7 @@ const Accordion = ({ logs }) => {
               aria-expanded={openIndex === index}
               aria-controls={`accordion-collapse-body-${index}`}
             >
-              <span>{log.header}</span>
+              <span>{getLogHeaderText(log)}</span>
               <svg
                 data-accordion-icon
                 className={`w-3 h-3 ${openIndex === index ? 'rotate-180' : ''} shrink-0`}
