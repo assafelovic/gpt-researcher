@@ -81,9 +81,13 @@ export default function Answer({ answer }: { answer: string }) {
         <div className="flex flex-wrap content-center items-center gap-[15px]">
           <div className="w-full whitespace-pre-wrap text-base font-light leading-[152.5%] text-black">
             {answer ? (
-              <div>
+              <div className="answer-container">
                 <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
                 <style jsx>{`
+                .answer-container {
+                    font-family: Georgia, 'Times New Roman', Times, serif;
+                  }
+
                   .markdown-content {
                     /* Reset margins and paddings */
                     margin: 0;
