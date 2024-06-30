@@ -4,7 +4,7 @@ import Accordion from './Accordion';
 
 const LogMessage = ({ logs }) => {
   return (
-    <section className="relative z-20 overflow-hidden bg-white pb-12 pt-20 dark:bg-dark lg:pb-[90px] lg:pt-[120px]">
+    <section className="relative z-20 overflow-hidden bg-[#232340] pb-12 pt-20 dark:bg-dark lg:pb-[90px] lg:pt-[120px]">
       <div className="container mx-auto">
         <div className="-mx-4 flex flex-wrap justify-center">
           <div className="w-full px-4 lg:w-3/4">
