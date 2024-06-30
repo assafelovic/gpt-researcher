@@ -86,6 +86,7 @@ export default function Answer({ answer }: { answer: string }) {
                 <style jsx>{`
                 .answer-container {
                     font-family: Georgia, 'Times New Roman', Times, serif;
+                    
                   }
 
                   .markdown-content {
@@ -94,8 +95,7 @@ export default function Answer({ answer }: { answer: string }) {
                     padding: 0;
                     /* Override existing styles for headings */
                     h1, h2, h3, h4, h5, h6 {
-                      font-size: inherit;
-                      font-weight: bold;
+                      font-size: 18px; font-weight: 400; padding: 0px 0px 5px;
                       margin-top: 1em;
                       margin-bottom: 0.2em;
                       line-height: 1.2;
