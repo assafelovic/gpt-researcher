@@ -73,6 +73,10 @@ class GPTResearcher:
         """
         Runs the GPT Researcher to conduct research
         """
+        # Reset visited_urls and source_urls at the start of each research task
+        self.visited_urls.clear()
+        self.source_urls = []
+
         if self.verbose:
             await stream_output("logs", f"🔎 Starting the research task for '{self.query}'...", self.websocket)
         
