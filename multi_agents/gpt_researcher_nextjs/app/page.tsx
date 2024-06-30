@@ -10,7 +10,7 @@ import Sources from "@/components/Sources";
 import Question from "@/components/Question";
 import SubQuestions from "@/components/SubQuestions";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 
 import AccessReport from '../components/Task/AccessReport';
 import Accordion from '../components/Task/Accordion';
@@ -33,6 +33,12 @@ export default function Home() {
   
   const [socket, setSocket] = useState(null);
   const [orderedData, setOrderedData] = useState([]);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [orderedData]);
 
   const startResearch = (chatBoxSettings) => {
     if (chatBoxSettings.report_type !== 'multi_agents') {
