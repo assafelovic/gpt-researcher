@@ -8,7 +8,16 @@ export async function startLanggraphResearch(newQuestion, report_source) {
     task.task.source = report_source;
     const host = getHost({purpose: 'langgraph-gui'});
   
-    const client = new Client({apiUrl: host});
+    // Add your authentication token here
+    const authToken = process.env.LANGCHAIN_API_KEY;
+
+    const client = new Client({
+        apiUrl: host,
+        defaultHeaders: {
+            'Content-Type': 'application/json',
+            'X-Api-Key': authToken
+        }
+    });
   
     // List all assistants
     const assistants = await client.assistants.search({
