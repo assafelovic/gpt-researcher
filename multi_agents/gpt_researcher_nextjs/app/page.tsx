@@ -234,16 +234,17 @@ export default function Home() {
       } else if (data.type === 'langgraphButton') {
         const uniqueKey = `langgraphButton-${index}`;
         return (
-          <div key={uniqueKey} className="flex justify-center py-4">
-            <a
-              href={data.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-2 text-white bg-[#0DB7ED] rounded"
-            >
-              View the full Langgraph logs here
-            </a>
-          </div>
+          <div></div>
+          // <div key={uniqueKey} className="flex justify-center py-4">
+          //   <a
+          //     href={data.link}
+          //     target="_blank"
+          //     rel="noopener noreferrer"
+          //     className="px-4 py-2 text-white bg-[#0DB7ED] rounded"
+          //   >
+          //     View the full Langgraph logs here
+          //   </a>
+          // </div>
         );
       } else if (data.type === 'question') {
         const uniqueKey = `question-${index}`;
