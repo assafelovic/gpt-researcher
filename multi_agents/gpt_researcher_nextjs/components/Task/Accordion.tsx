@@ -17,11 +17,11 @@ const Accordion = ({ logs }) => {
     if (log.header === 'differences') {
       return log.processedData.map((data, index) => (
         <div key={index} className="mb-4">
-          <h3 className="font-semibold text-lg text-gray-700 dark:text-gray-300">{data.field}:</h3>
+          <h3 className="font-semibold text-lg text-body-color dark:text-dark-6">{data.field}:</h3>
           {data.isMarkdown ? (
             <div className="markdown-content" dangerouslySetInnerHTML={{ __html: data.htmlContent }} />
           ) : (
-            <p className="text-gray-600 dark:text-gray-400">{typeof data.htmlContent === 'object' ? JSON.stringify(data.htmlContent) : data.htmlContent}</p>
+            <p className="text-body-color dark:text-dark-6">{typeof data.htmlContent === 'object' ? JSON.stringify(data.htmlContent) : data.htmlContent}</p>
           )}
           <style jsx>{`
             .markdown-content {
@@ -78,7 +78,7 @@ const Accordion = ({ logs }) => {
         </div>
       ));
     } else {
-      return <p className="mb-2 text-body-color dark:text-dark-6 dark:text-gray-400">{log.text}</p>;
+      return <p className="mb-2 text-body-color dark:text-dark-6">{log.text}</p>;
     }
   };
 
@@ -95,7 +95,7 @@ const Accordion = ({ logs }) => {
           <h2 id={`accordion-collapse-heading-${index}`}>
             <button
               type="button"
-              className="flex items-center justify-between w-full p-5 font-medium rtl:text-right text-body-color dark:text-dark-6 border border-b-0 border-gray-200 rounded-t-xl focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 dark:border-gray-700 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 gap-3"
+              className="flex items-center justify-between w-full p-5 font-medium rtl:text-right text-body-color dark:text-dark-6 border border-b-0 border-black-200 rounded-t-xl focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 text-body-color dark:text-dark-6 hover:bg-gray-100 dark:hover:bg-gray-800 gap-3"
               onClick={() => handleToggle(index)}
               aria-expanded={openIndex === index}
               aria-controls={`accordion-collapse-body-${index}`}
