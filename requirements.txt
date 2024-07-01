@@ -43,6 +43,7 @@ websockets
 unstructured
 pandas
 json_repair
+exa_py
 
 # uncomment for testing
 # pytest
