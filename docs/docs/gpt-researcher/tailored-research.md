@@ -82,7 +82,7 @@ if __name__ == "__main__":
 ```
 
 ### Research on LangChain Documents 🦜️🔗
-You can instruct the GPT Researcher to research on instances of langchain documents by providing a list of langchain document instances.
+You can instruct the GPT Researcher to research on a list of langchain document instances.
 
 For example:
 
