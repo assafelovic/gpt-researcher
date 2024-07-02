@@ -1,4 +1,5 @@
 from .bing.bing import BingSearch
+from .arxiv.arxiv import ArxivSearch
 from .custom.custom import CustomRetriever
 from .duckduckgo.duckduckgo import Duckduckgo
 from .exa.exa import ExaSearch
@@ -17,5 +18,6 @@ __all__ = [
     "GoogleSearch",
     "SearxSearch",
     "BingSearch",
-    "ExaSearch",
+    "ArxivSearch",
+    "ExaSearch"
 ]
