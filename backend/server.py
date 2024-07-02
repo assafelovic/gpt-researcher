@@ -7,6 +7,7 @@ from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 import time
 import json
 import os
+import re
 
 
 class ResearchRequest(BaseModel):
@@ -36,6 +37,9 @@ def startup_event():
 async def read_root(request: Request):
     return templates.TemplateResponse('index.html', {"request": request, "report": None})
 
+# Add the sanitize_filename function here
+def sanitize_filename(filename):
+    return re.sub(r'[^\w\s-]', '', filename).strip()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -48,19 +52,19 @@ async def websocket_endpoint(websocket: WebSocket):
                 task = json_data.get("task")
                 report_type = json_data.get("report_type")
                 filename = f"task_{int(time.time())}_{task}"
+                sanitized_filename = sanitize_filename(filename)  # Sanitize the filename
                 report_source = json_data.get("report_source")
                 if task and report_type:
                     report = await manager.start_streaming(task, report_type, report_source, websocket)
                     # Saving report as pdf
-                    pdf_path = await write_md_to_pdf(report, filename)
+                    pdf_path = await write_md_to_pdf(report, sanitized_filename)
                     # Saving report as docx
-                    docx_path = await write_md_to_word(report, filename)
+                    docx_path = await write_md_to_word(report, sanitized_filename)
                     # Returning the path of saved report files
-                    md_path = await write_text_to_md(report, filename)
+                    md_path = await write_text_to_md(report, sanitized_filename)
                     await websocket.send_json({"type": "path", "output": {"pdf": pdf_path, "docx": docx_path, "md": md_path}})
                 else:
                     print("Error: not enough parameters provided.")
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
-
