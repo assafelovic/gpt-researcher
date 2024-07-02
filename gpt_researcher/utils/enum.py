@@ -10,3 +10,4 @@ class ReportType(Enum):
 class ReportSource(Enum):
     Web = 'web'
     Local = 'local'
+    LangChainDocuments = 'langchain_documents'
