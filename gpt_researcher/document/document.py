@@ -41,6 +41,7 @@ class DocumentLoader:
         return docs
 
     async def _load_document(self, file_path: str, file_extension: str) -> list:
+        ret_data = []
         try:
             loader_dict = {
                 "pdf": PyMuPDFLoader(file_path),
@@ -56,10 +57,10 @@ class DocumentLoader:
 
             loader = loader_dict.get(file_extension, None)
             if loader:
-                data = loader.load()
-                return data
+                ret_data = loader.load()
 
         except Exception as e:
             print(f"Failed to load document : {file_path}")
             print(e)
-            return []
+
+        return ret_data

@@ -3,11 +3,21 @@ from .openai.openai import OpenAIProvider
 from .azureopenai.azureopenai import AzureOpenAIProvider
 from .groq.groq import GroqProvider
 from .ollama.ollama import OllamaProvider
+from .together.together import TogetherProvider
+from .anthropic.anthropic import AnthropicProvider
+from .mistral.mistral import MistralProvider
+from .huggingface.huggingface import HugginFaceProvider
+from .generic import GenericLLMProvider
 
 __all__ = [
     "GoogleProvider",
     "OpenAIProvider",
     "AzureOpenAIProvider",
     "OllamaProvider",
-    "GroqProvider"
+    "GroqProvider",
+    "TogetherProvider",
+    "AnthropicProvider",
+    "MistralProvider",
+    "HugginFaceProvider",
+    "GenericLLMProvider",
 ]

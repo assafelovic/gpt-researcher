@@ -3,7 +3,7 @@ import asyncio
 from fastapi import WebSocket
 
 from gpt_researcher.master.agent import GPTResearcher
-from gpt_researcher.master.functions import (add_source_urls, extract_headers,
+from gpt_researcher.master.actions import (add_source_urls, extract_headers,
                                              table_of_contents)
 
 
@@ -59,7 +59,7 @@ class DetailedReport():
 
     async def _get_all_subtopics(self) -> list:
         subtopics = await self.main_task_assistant.get_subtopics()
-        return subtopics.dict()["subtopics"]
+        return subtopics.dict().get("subtopics", [])
 
     async def _generate_subtopic_reports(self, subtopics: list) -> tuple:
         subtopic_reports = []
@@ -101,6 +101,7 @@ class DetailedReport():
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
             report_type="subtopic_report",
+            report_source=self.report_source,
             websocket=self.websocket,
             parent_query=self.query,
             subtopics=self.subtopics,
