@@ -112,7 +112,7 @@ $ uvicorn main:app --reload
 ## 🚀 贡献
 我们非常欢迎您的贡献！如果您感兴趣，请查看 [contributing](CONTRIBUTING.md)。
 
-如果您有兴趣加入我们的任务，请查看我们的 [路线图](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) 页面，并通过我们的 [Discord 社区](https://discord.gg/2pFkc83fRq) 联系我们。
+如果您有兴趣加入我们的任务，请查看我们的 [路线图](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) 页面，并通过我们的 [Discord 社区](https://discord.gg/QgZXvJAccX) 联系我们。
 
 ## ✉️ 支持 / 联系我们
 - [社区讨论区](https://discord.gg/spBgZmm3Xe)
