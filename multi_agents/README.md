@@ -8,6 +8,8 @@ Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this exa
 
 An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 
+Please note: This example uses the OpenAI API only for optimized performance.
+
 ## The Multi Agent Team
 The research team is made up of 7 AI agents:
 - **Chief Editor** - Oversees the research process and manages the team. This is the "master" agent that coordinates the other agents using Langgraph.
