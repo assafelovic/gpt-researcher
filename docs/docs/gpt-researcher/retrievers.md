@@ -20,6 +20,8 @@ Thanks to our community, we have integrated the following web search engines:
 - [Serper](https://serper.dev/) - Env: `RETRIEVER=serper`
 - [Searx](https://searx.github.io/searx/) - Env: `RETRIEVER=searx`
 - [Duckduckgo](https://pypi.org/project/duckduckgo-search/) - Env: `RETRIEVER=duckduckgo`
+- [Arxiv](https://info.arxiv.org/help/api/index.html) - Env: `RETRIEVER=arxiv`
+- [Exa](https://docs.exa.ai/reference/getting-started) - Env: `RETRIEVER=exa`
 
 ## Custom Retrievers
 You can also use any custom retriever of your choice by specifying the `RETRIEVER=custom` env var.
