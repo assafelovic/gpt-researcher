@@ -108,7 +108,6 @@ def get_retriever(collection_name: str, search_kwargs: Dict[str, str]):
         embedding=embeddings,
         collection_name=collection_name,
         connection=engine,
-        async_mode=True,
     )
 
     return index.as_retriever(search_kwargs=search_kwargs)
