@@ -1,15 +1,5 @@
 import aiofiles
 import urllib
-import uuid
-try: 
-    from md2pdf.core import md2pdf
-except Exception as e:
-    print(f"Error in importing md2pdf: {e}")
-try :
-    from docx import Document
-    from htmldocx import HtmlToDocx
-except Exception as e:
-    print(f"Error in importing docx: {e}")
 import mistune
 
 
@@ -56,7 +46,7 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
         from md2pdf.core import md2pdf
         md2pdf(file_path,
                md_content=text,
-               #md_file_path=f"{file_path}.md",
+               # md_file_path=f"{file_path}.md",
                css_file_path="./frontend/pdf_styles.css",
                base_url=None)
         print(f"Report written to {file_path}.pdf")
@@ -91,12 +81,12 @@ async def write_md_to_word(text: str, filename: str = "") -> str:
 
         # Saving the docx document to file_path
         doc.save(file_path)
-        
+
         print(f"Report written to {file_path}")
 
         encoded_file_path = urllib.parse.quote(file_path)
         return encoded_file_path
-    
+
     except Exception as e:
         print(f"Error in converting Markdown to DOCX: {e}")
         return ""
