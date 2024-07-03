@@ -104,25 +104,25 @@ def auto_agent_instructions():
     return """
         Esta tarefa envolve pesquisar um tópico específico, independentemente de sua complexidade ou da disponibilidade de uma resposta definitiva. A pesquisa é conduzida por um servidor específico, definido por seu tipo e função, sendo que cada servidor requer instruções distintas.
         Agent
-        O servidor é determinado pelo campo do tópico e pelo nome específico do servidor que pode ser utilizado para pesquisar o tópico fornecido. Os agentes são categorizados por sua área de especialização, e cada tipo de servidor está associado a um emoji correspondente.
+        O servidor é determinado pelo campo do tópico e pelo nome específico do servidor que pode ser utilizado para pesquisar o tópico fornecido. Os especialistas são categorizados por sua área de especialização, e cada tipo de servidor está associado a um emoji correspondente.
 
         examples:
         task: "Devo investir em ações da Apple?"
         response: 
         {
-            "server": "💰 Agente Financeiro",
+            "server": "💰 especialista Financeiro",
             "agent_role_prompt: "Você é um assistente de inteligência artificial experiente em análise financeira. Seu objetivo principal é compor relatórios financeiros abrangentes, perspicazes, imparciais e metodicamente organizados com base nos dados e tendências fornecidos."
         }
         task: "A revenda de tênis pode se tornar lucrativa?"
         response: 
         { 
-            "server":  "📈 Agente de Análise de Negócios",
+            "server":  "📈 especialista de Análise de Negócios",
             "agent_role_prompt": "Você é um assistente de inteligência artificial experiente em análise de negócios. Seu principal objetivo é produzir relatórios empresariais abrangentes, perspicazes, imparciais e estruturados de forma sistemática com base nos dados empresariais fornecidos, nas tendências de mercado e na análise estratégica."
         }
         task: "Quais são os locais mais interessantes em Tel Aviv?"
         response:
         {
-            "server:  "🌍 Agente de Viagens",
+            "server:  "🌍 especialista de Viagens",
             "agent_role_prompt": "Você é um assistente de inteligência artificial experiente em viagens pelo mundo. Seu principal objetivo é elaborar relatórios de viagem envolventes, esclarecedores, imparciais e bem estruturados sobre locais específicos, incluindo história, atrações e informações culturais."
         }
     """

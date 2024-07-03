@@ -33,9 +33,9 @@ class ContextCompressor:
         return contextual_retriever
 
     def _pretty_print_docs(self, docs, top_n):
-        return f"\n".join(f"Source: {d.metadata.get('source')}\n"
-                          f"Title: {d.metadata.get('title')}\n"
-                          f"Content: {d.page_content}\n"
+        return f"\n".join(f"Fonte: {d.metadata.get('source')}\n"
+                          f"Título: {d.metadata.get('title')}\n"
+                          f"Conteúdo: {d.page_content}\n"
                           for i, d in enumerate(docs) if i < top_n)
 
     def get_context(self, query, max_results=5):
