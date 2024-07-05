@@ -8,7 +8,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
   const [activeTab, setActiveTab] = useState('search');
   const [apiVariables, setApiVariables] = useState({
     OPENAI_API_KEY: '',
-    LANGRAPH_API_KEY: '',
+    LANGCHAIN_API_KEY: '',
     LANGGRAPH_HOST_URL: ''
   });
 
@@ -92,8 +92,8 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                         <input type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
                       </label>
                       <label>
-                        LANGRAPH_API_KEY:
-                        <input type="text" name="LANGRAPH_API_KEY" value={apiVariables.LANGRAPH_API_KEY} onChange={handleInputChange} />
+                        LANGCHAIN_API_KEY:
+                        <input type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
                       </label>
                       <label>
                         LANGGRAPH_HOST_URL:

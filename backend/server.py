@@ -16,14 +16,18 @@ from backend.websocket_manager import WebSocketManager
 import shutil
 from multi_agents.main import run_research_task
 from gpt_researcher.document.document import DocumentLoader
-from gpt_researcher.master.actions import stream_output  # Import stream_output
-
+from gpt_researcher.master.actions import stream_output
 
 
 class ResearchRequest(BaseModel):
     task: str
     report_type: str
     agent: str
+
+class ConfigRequest(BaseModel):
+    OPENAI_API_KEY: str
+    LANGCHAIN_API_KEY: str
+    LANGGRAPH_HOST_URL: str
 
 app = FastAPI()
 
@@ -102,6 +106,22 @@ async def run_multi_agents():
         return {"report": report}
     else:
         return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
+
+@app.get("/getConfig")
+async def get_config():
+    config = {
+        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
+        "LANGCHAIN_API_KEY": os.getenv("LANGCHAIN_API_KEY", ""),
+        "LANGGRAPH_HOST_URL": os.getenv("LANGGRAPH_HOST_URL", "")
+    }
+    return config
+
+@app.post("/setConfig")
+async def set_config(config: ConfigRequest):
+    os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
+    os.environ["LANGCHAIN_API_KEY"] = config.LANGCHAIN_API_KEY
+    os.environ["LANGGRAPH_HOST_URL"] = config.LANGGRAPH_HOST_URL
+    return {"message": "Config updated successfully"}
 
 # Enable CORS for your frontend domain (adjust accordingly)
 app.add_middleware(
