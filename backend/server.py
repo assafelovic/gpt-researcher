@@ -14,7 +14,7 @@ from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from backend.websocket_manager import WebSocketManager
 
 import shutil
-from backend.multi_agents.main import run_research_task
+from multi_agents.main import run_research_task
 from gpt_researcher.document.document import DocumentLoader
 
 
