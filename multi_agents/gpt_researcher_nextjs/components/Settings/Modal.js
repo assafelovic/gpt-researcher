@@ -68,50 +68,43 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
       case 'google':
         return (
           <>
-            <label>
-              GOOGLE_API_KEY:
-              <input type="text" name="GOOGLE_API_KEY" value={apiVariables.GOOGLE_API_KEY} onChange={handleInputChange} />
-            </label>
-            <label>
-              GOOGLE_CX_KEY:
-              <input type="text" name="GOOGLE_CX_KEY" value={apiVariables.GOOGLE_CX_KEY} onChange={handleInputChange} />
-            </label>
+            <div className="grid grid-cols-2 gap-2.5 pb-2">
+              <label className="col-span-1">GOOGLE_API_KEY:</label>
+              <input className="col-span-1" type="text" name="GOOGLE_API_KEY" value={apiVariables.GOOGLE_API_KEY} onChange={handleInputChange} />
+            </div>
+            <div className="grid grid-cols-2 gap-2.5 pb-2">
+              <label className="col-span-1">GOOGLE_CX_KEY:</label>
+              <input className="col-span-1" type="text" name="GOOGLE_CX_KEY" value={apiVariables.GOOGLE_CX_KEY} onChange={handleInputChange} />
+            </div>
           </>
         );
       case 'bing':
         return (
-          <label>
-            BING_API_KEY:
-            <input type="text" name="BING_API_KEY" value={apiVariables.BING_API_KEY} onChange={handleInputChange} />
-          </label>
+          <div className="grid grid-cols-2 gap-2.5 pb-2">
+            <label className="col-span-1">BING_API_KEY:</label>
+            <input className="col-span-1" type="text" name="BING_API_KEY" value={apiVariables.BING_API_KEY} onChange={handleInputChange} />
+          </div>
         );
       case 'serpapi':
         return (
-          <label>
-            SERPAPI_API_KEY:
-            <input type="text" name="SERPAPI_API_KEY" value={apiVariables.SERPAPI_API_KEY} onChange={handleInputChange} />
-          </label>
+          <div className="grid grid-cols-2 gap-2.5 pb-2">
+            <label className="col-span-1">SERPAPI_API_KEY:</label>
+            <input className="col-span-1" type="text" name="SERPAPI_API_KEY" value={apiVariables.SERPAPI_API_KEY} onChange={handleInputChange} />
+          </div>
         );
       case 'googleSerp':
         return (
-          <label>
-            SERPER_API_KEY:
-            <input type="text" name="SERPER_API_KEY" value={apiVariables.SERPER_API_KEY} onChange={handleInputChange} />
-          </label>
+          <div className="grid grid-cols-2 gap-2.5 pb-2">
+            <label className="col-span-1">SERPER_API_KEY:</label>
+            <input className="col-span-1" type="text" name="SERPER_API_KEY" value={apiVariables.SERPER_API_KEY} onChange={handleInputChange} />
+          </div>
         );
       case 'searx':
         return (
-          <label>
-            SEARX_URL:
-            <input type="text" name="SEARX_URL" value={apiVariables.SEARX_URL} onChange={handleInputChange} />
-          </label>
-        );
-      case 'tavily':
-        return (
-          <label>
-            TAVILY_API_KEY:
-            <input type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
-          </label>
+          <div className="grid grid-cols-2 gap-2.5 pb-2">
+            <label className="col-span-1">SEARX_URL:</label>
+            <input className="col-span-1" type="text" name="SEARX_URL" value={apiVariables.SEARX_URL} onChange={handleInputChange} />
+          </div>
         );
       // Add cases for other retrievers if needed
       default:
@@ -161,34 +154,34 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                     </div>
                   )}
                   {activeTab === 'api' && (
-                    <div className="api-variables">
-                      <label>
-                        ANTHROPIC_API_KEY:
-                        <input type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
-                      </label>
-                      <label>
-                        TAVILY_API_KEY:
-                        <input type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
-                      </label>
-                      <label>
-                        LANGCHAIN_TRACING_V2:
-                        <input type="text" name="LANGCHAIN_TRACING_V2" value={apiVariables.LANGCHAIN_TRACING_V2} onChange={handleInputChange} />
-                      </label>
-                      <label>
-                        LANGCHAIN_API_KEY:
-                        <input type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
-                      </label>
-                      <label>
-                        OPENAI_API_KEY:
-                        <input type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
-                      </label>
-                      <label>
-                        DOC_PATH:
-                        <input type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
-                      </label>
-                      <label>
-                        RETRIEVER:
-                        <select name="RETRIEVER" value={apiVariables.RETRIEVER} onChange={handleInputChange}>
+                    <div className="api-variables flex flex-col gap-2.5">
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">ANTHROPIC_API_KEY:</label>
+                        <input className="col-span-1" type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">TAVILY_API_KEY:</label>
+                        <input className="col-span-1" type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">LANGCHAIN_TRACING_V2:</label>
+                        <input className="col-span-1" type="text" name="LANGCHAIN_TRACING_V2" value={apiVariables.LANGCHAIN_TRACING_V2} onChange={handleInputChange} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">LANGCHAIN_API_KEY:</label>
+                        <input className="col-span-1" type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">OPENAI_API_KEY:</label>
+                        <input className="col-span-1" type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">DOC_PATH:</label>
+                        <input className="col-span-1" type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">RETRIEVER:</label>
+                        <select className="col-span-1" name="RETRIEVER" value={apiVariables.RETRIEVER} onChange={handleInputChange}>
                           <option value="" disabled>Select Retriever</option>
                           <option value="google">Google</option>
                           <option value="searx">Searx</option>
@@ -198,7 +191,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                           <option value="bing">Bing</option>
                           <option value="tavily">Tavily</option>
                         </select>
-                      </label>
+                      </div>
                       {renderConditionalInputs()}
                     </div>
                   )}
