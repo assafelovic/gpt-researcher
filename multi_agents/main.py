@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from agents import ChiefEditorAgent
+from .agents import ChiefEditorAgent
 import asyncio
 import json
 import os
