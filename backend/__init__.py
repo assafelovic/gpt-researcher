@@ -1,1 +1,1 @@
-from . import multi_agents
+from multi_agents import agents
