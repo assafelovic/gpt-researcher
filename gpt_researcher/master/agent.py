@@ -3,10 +3,13 @@ import time
 
 from gpt_researcher.config import Config
 from gpt_researcher.context.compression import ContextCompressor
-from gpt_researcher.document import DocumentLoader
+from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
+
 from gpt_researcher.master.actions import *
 from gpt_researcher.memory import Memory
 from gpt_researcher.utils.enum import ReportSource, ReportType
+
+import sys
 
 
 class GPTResearcher:
@@ -20,6 +23,7 @@ class GPTResearcher:
         report_type: str = ReportType.ResearchReport.value,
         report_source=ReportSource.Web.value,
         source_urls=None,
+        documents=None,
         config_path=None,
         websocket=None,
         agent=None,
@@ -55,6 +59,7 @@ class GPTResearcher:
         self.retriever = get_retriever(self.cfg.retriever)
         self.context = context
         self.source_urls = source_urls
+        self.documents = documents
         self.memory = Memory(self.cfg.embedding_provider)
         self.visited_urls: set[str] = visited_urls
         self.verbose: bool = verbose
@@ -95,6 +100,11 @@ class GPTResearcher:
         elif self.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
             self.context = await self.__get_context_by_search(self.query, document_data)
+
+        elif self.report_source == ReportSource.LangChainDocuments.value:
+            langchain_documents_data = await LangChainDocumentLoader(self.documents).load()
+            self.context = await self.__get_context_by_search(self.query, langchain_documents_data)
+
         # Default web based research
         else:
             self.context = await self.__get_context_by_search(self.query)
@@ -155,6 +165,7 @@ class GPTResearcher:
 
         return report
 
+
     async def __get_context_by_urls(self, urls):
         """
             Scrapes and compresses the context from the given urls
@@ -166,6 +177,7 @@ class GPTResearcher:
                             self.websocket)
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
         return await self.__get_similar_content_by_query(self.query, scraped_sites)
+
 
     async def __get_context_by_search(self, query, scraped_data: list = []):
         """
