@@ -7,6 +7,7 @@ from fastapi import WebSocket
 from backend.report_type import BasicReport, DetailedReport
 from gpt_researcher.utils.enum import ReportType, Tone
 from multi_agents.main import run_research_task
+from gpt_researcher.master.actions import stream_output  # Import stream_output
 
 class WebSocketManager:
     """Manage websockets"""
@@ -64,7 +65,7 @@ async def run_agent(task, report_type, report_source, tone: Tone, websocket):
     config_path = ""
     # Instead of running the agent directly run it through the different report type classes
     if report_type == "multi_agents":
-        report = await run_research_task(query=task, websocket=websocket)
+        report = await run_research_task(query=task, websocket=websocket, stream_output=stream_output)
     elif report_type == ReportType.DetailedReport.value:
         researcher = DetailedReport(
             query=task,

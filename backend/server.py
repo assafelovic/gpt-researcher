@@ -16,6 +16,7 @@ from backend.websocket_manager import WebSocketManager
 import shutil
 from multi_agents.main import run_research_task
 from gpt_researcher.document.document import DocumentLoader
+from gpt_researcher.master.actions import stream_output  # Import stream_output
 
 
 
@@ -97,7 +98,7 @@ async def websocket_endpoint(websocket: WebSocket):
 async def run_multi_agents():
     websocket = manager.active_connections[0] if manager.active_connections else None
     if websocket:
-        report = await run_research_task(websocket)
+        report = await run_research_task("Is AI in a hype cycle?", websocket, stream_output)
         return {"report": report}
     else:
         return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
