@@ -7,16 +7,30 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState('search');
   const [apiVariables, setApiVariables] = useState({
-    OPENAI_API_KEY: '',
+    ANTHROPIC_API_KEY: '',
+    TAVILY_API_KEY: '',
+    LANGCHAIN_TRACING_V2: 'true',
     LANGCHAIN_API_KEY: '',
-    LANGGRAPH_HOST_URL: ''
+    OPENAI_API_KEY: '',
+    DOC_PATH: '',
+    RETRIEVER: '',
+    GOOGLE_API_KEY: '',
+    GOOGLE_CX_KEY: '',
+    BING_API_KEY: '',
+    SERPAPI_API_KEY: '',
+    SERPER_API_KEY: '',
+    SEARX_URL: ''
   });
 
   useEffect(() => {
-    if (showModal) {
+    const storedConfig = localStorage.getItem('apiVariables');
+    if (storedConfig) {
+      setApiVariables(JSON.parse(storedConfig));
+    } else {
       axios.get('http://localhost:8000/getConfig')
         .then(response => {
           setApiVariables(response.data);
+          localStorage.setItem('apiVariables', JSON.stringify(response.data));
         })
         .catch(error => {
           console.error('Error fetching config:', error);
@@ -29,6 +43,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
     axios.post('http://localhost:8000/setConfig', apiVariables)
       .then(response => {
         console.log('Config saved:', response.data);
+        localStorage.setItem('apiVariables', JSON.stringify(apiVariables));
       })
       .catch(error => {
         console.error('Error saving config:', error);
@@ -42,6 +57,66 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
       ...prevState,
       [name]: value
     }));
+    localStorage.setItem('apiVariables', JSON.stringify({
+      ...apiVariables,
+      [name]: value
+    }));
+  };
+
+  const renderConditionalInputs = () => {
+    switch (apiVariables.RETRIEVER) {
+      case 'google':
+        return (
+          <>
+            <label>
+              GOOGLE_API_KEY:
+              <input type="text" name="GOOGLE_API_KEY" value={apiVariables.GOOGLE_API_KEY} onChange={handleInputChange} />
+            </label>
+            <label>
+              GOOGLE_CX_KEY:
+              <input type="text" name="GOOGLE_CX_KEY" value={apiVariables.GOOGLE_CX_KEY} onChange={handleInputChange} />
+            </label>
+          </>
+        );
+      case 'bing':
+        return (
+          <label>
+            BING_API_KEY:
+            <input type="text" name="BING_API_KEY" value={apiVariables.BING_API_KEY} onChange={handleInputChange} />
+          </label>
+        );
+      case 'serpapi':
+        return (
+          <label>
+            SERPAPI_API_KEY:
+            <input type="text" name="SERPAPI_API_KEY" value={apiVariables.SERPAPI_API_KEY} onChange={handleInputChange} />
+          </label>
+        );
+      case 'googleSerp':
+        return (
+          <label>
+            SERPER_API_KEY:
+            <input type="text" name="SERPER_API_KEY" value={apiVariables.SERPER_API_KEY} onChange={handleInputChange} />
+          </label>
+        );
+      case 'searx':
+        return (
+          <label>
+            SEARX_URL:
+            <input type="text" name="SEARX_URL" value={apiVariables.SEARX_URL} onChange={handleInputChange} />
+          </label>
+        );
+      case 'tavily':
+        return (
+          <label>
+            TAVILY_API_KEY:
+            <input type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
+          </label>
+        );
+      // Add cases for other retrievers if needed
+      default:
+        return null;
+    }
   };
 
   return (
@@ -88,17 +163,43 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                   {activeTab === 'api' && (
                     <div className="api-variables">
                       <label>
-                        OPENAI_API_KEY:
-                        <input type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
+                        ANTHROPIC_API_KEY:
+                        <input type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
+                      </label>
+                      <label>
+                        TAVILY_API_KEY:
+                        <input type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
+                      </label>
+                      <label>
+                        LANGCHAIN_TRACING_V2:
+                        <input type="text" name="LANGCHAIN_TRACING_V2" value={apiVariables.LANGCHAIN_TRACING_V2} onChange={handleInputChange} />
                       </label>
                       <label>
                         LANGCHAIN_API_KEY:
                         <input type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
                       </label>
                       <label>
-                        LANGGRAPH_HOST_URL:
-                        <input type="text" name="LANGGRAPH_HOST_URL" value={apiVariables.LANGGRAPH_HOST_URL} onChange={handleInputChange} />
+                        OPENAI_API_KEY:
+                        <input type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
                       </label>
+                      <label>
+                        DOC_PATH:
+                        <input type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
+                      </label>
+                      <label>
+                        RETRIEVER:
+                        <select name="RETRIEVER" value={apiVariables.RETRIEVER} onChange={handleInputChange}>
+                          <option value="" disabled>Select Retriever</option>
+                          <option value="google">Google</option>
+                          <option value="searx">Searx</option>
+                          <option value="serpapi">SerpApi</option>
+                          <option value="googleSerp">GoogleSerp</option>
+                          <option value="duckduckgo">DuckDuckGo</option>
+                          <option value="bing">Bing</option>
+                          <option value="tavily">Tavily</option>
+                        </select>
+                      </label>
+                      {renderConditionalInputs()}
                     </div>
                   )}
                 </div>

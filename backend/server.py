@@ -25,9 +25,19 @@ class ResearchRequest(BaseModel):
     agent: str
 
 class ConfigRequest(BaseModel):
-    OPENAI_API_KEY: str
+    ANTHROPIC_API_KEY: str
+    TAVILY_API_KEY: str
+    LANGCHAIN_TRACING_V2: str
     LANGCHAIN_API_KEY: str
-    LANGGRAPH_HOST_URL: str
+    OPENAI_API_KEY: str
+    DOC_PATH: str
+    RETRIEVER: str
+    GOOGLE_API_KEY: str = ''
+    GOOGLE_CX_KEY: str = ''
+    BING_API_KEY: str = ''
+    SERPAPI_API_KEY: str = ''
+    SERPER_API_KEY: str = ''
+    SEARX_URL: str = ''
 
 app = FastAPI()
 
@@ -110,17 +120,37 @@ async def run_multi_agents():
 @app.get("/getConfig")
 async def get_config():
     config = {
-        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
+        "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY", ""),
+        "TAVILY_API_KEY": os.getenv("TAVILY_API_KEY", ""),
+        "LANGCHAIN_TRACING_V2": os.getenv("LANGCHAIN_TRACING_V2", "true"),
         "LANGCHAIN_API_KEY": os.getenv("LANGCHAIN_API_KEY", ""),
-        "LANGGRAPH_HOST_URL": os.getenv("LANGGRAPH_HOST_URL", "")
+        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
+        "DOC_PATH": os.getenv("DOC_PATH", ""),
+        "RETRIEVER": os.getenv("RETRIEVER", ""),
+        "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY", ""),
+        "GOOGLE_CX_KEY": os.getenv("GOOGLE_CX_KEY", ""),
+        "BING_API_KEY": os.getenv("BING_API_KEY", ""),
+        "SERPAPI_API_KEY": os.getenv("SERPAPI_API_KEY", ""),
+        "SERPER_API_KEY": os.getenv("SERPER_API_KEY", ""),
+        "SEARX_URL": os.getenv("SEARX_URL", "")
     }
     return config
 
 @app.post("/setConfig")
 async def set_config(config: ConfigRequest):
-    os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
+    os.environ["ANTHROPIC_API_KEY"] = config.ANTHROPIC_API_KEY
+    os.environ["TAVILY_API_KEY"] = config.TAVILY_API_KEY
+    os.environ["LANGCHAIN_TRACING_V2"] = config.LANGCHAIN_TRACING_V2
     os.environ["LANGCHAIN_API_KEY"] = config.LANGCHAIN_API_KEY
-    os.environ["LANGGRAPH_HOST_URL"] = config.LANGGRAPH_HOST_URL
+    os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
+    os.environ["DOC_PATH"] = config.DOC_PATH
+    os.environ["RETRIEVER"] = config.RETRIEVER
+    os.environ["GOOGLE_API_KEY"] = config.GOOGLE_API_KEY
+    os.environ["GOOGLE_CX_KEY"] = config.GOOGLE_CX_KEY
+    os.environ["BING_API_KEY"] = config.BING_API_KEY
+    os.environ["SERPAPI_API_KEY"] = config.SERPAPI_API_KEY
+    os.environ["SERPER_API_KEY"] = config.SERPER_API_KEY
+    os.environ["SEARX_URL"] = config.SEARX_URL
     return {"message": "Config updated successfully"}
 
 # Enable CORS for your frontend domain (adjust accordingly)
