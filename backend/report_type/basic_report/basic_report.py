@@ -12,7 +12,8 @@ class BasicReport():
         
     async def run(self):
         # Initialize researcher
-        researcher = GPTResearcher(self.query, self.report_type, self.report_source, self.source_urls, self.config_path, self.websocket)
+        researcher = GPTResearcher(query=self.query, report_type=self.report_type, report_source=self.report_source,
+                                   source_urls=self.source_urls, config_path=self.config_path, websocket=self.websocket)
         
         # Run research
         await researcher.conduct_research()

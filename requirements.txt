@@ -1,7 +1,7 @@
 # dependencies
 beautifulsoup4
 colorama
-duckduckgo_search==5.3.1b1
+duckduckgo_search
 md2pdf
 playwright
 openai
