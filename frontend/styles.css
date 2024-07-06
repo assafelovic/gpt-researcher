@@ -40,7 +40,6 @@ body {
 }
 
 .container {
-    max-width: 900px;
     margin: auto;
     padding: 20px;
     background-color: rgba(255, 255, 255, 0.1);
@@ -107,7 +106,7 @@ footer {
 .margin-div {
     margin-top: 20px;
     margin-bottom: 20px;
-    padding: 10px;
+    padding: 25px;
 }
 
 .agent_response {
@@ -124,6 +123,7 @@ footer {
     padding: 10px;
     margin-bottom: 10px;
     margin-top: 10px;
+    border-radius: 12px;
 }
 
 #reportContainer {
@@ -131,6 +131,6 @@ footer {
     border: none;
     color: #fff;
     transition: all .3s ease-in-out;
-    padding: 10px;
+    padding: 25px;
     border-radius: 12px;
 }

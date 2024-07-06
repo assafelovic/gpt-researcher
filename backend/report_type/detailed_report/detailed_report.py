@@ -18,7 +18,9 @@ class DetailedReport():
         self.subtopics = subtopics
         
         # A parent task assistant. Adding research_report as default
-        self.main_task_assistant = GPTResearcher(self.query, "research_report", self.report_source, self.source_urls, self.config_path, self.websocket)
+        self.main_task_assistant = GPTResearcher(query=self.query, report_type="research_report",
+                                                 report_source=self.report_source, source_urls=self.source_urls,
+                                                 config_path=self.config_path, websocket=self.websocket)
         self.existing_headers = []
         # This is a global variable to store the entire context accumulated at any point through searching and scraping
         self.global_context = []
@@ -81,13 +83,6 @@ class DetailedReport():
         # and passed to the next subtopic report generation.
         # This is only possible to do sequentially
 
-        # tasks = [fetch_report(subtopic) for subtopic in subtopics]
-        # results = await asyncio.gather(*tasks)
-
-        # for result in filter(lambda r: r["report"], results):
-        #     subtopic_reports.append(result)
-        #     subtopics_report_body += "\n\n\n" + result["report"]
-
         for subtopic in subtopics:
             result = await fetch_report(subtopic)
             if result["report"]:
@@ -96,7 +91,7 @@ class DetailedReport():
 
         return subtopic_reports, subtopics_report_body
 
-    async def _get_subtopic_report(self, subtopic: dict) -> tuple:
+    async def _get_subtopic_report(self, subtopic: dict) -> str:
         current_subtopic_task = subtopic.get("task")
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
