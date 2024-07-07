@@ -69,42 +69,42 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
       case 'google':
         return (
           <>
-            <div className="grid grid-cols-2 gap-2.5 pb-2">
-              <label className="col-span-1">GOOGLE_API_KEY:</label>
-              <input className="col-span-1" type="text" name="GOOGLE_API_KEY" value={apiVariables.GOOGLE_API_KEY} onChange={handleInputChange} />
+            <div className="form-group">
+              <label className="agent_question">GOOGLE_API_KEY:</label>
+              <input className="form-control" type="text" name="GOOGLE_API_KEY" value={apiVariables.GOOGLE_API_KEY} onChange={handleInputChange} />
             </div>
-            <div className="grid grid-cols-2 gap-2.5 pb-2">
-              <label className="col-span-1">GOOGLE_CX_KEY:</label>
-              <input className="col-span-1" type="text" name="GOOGLE_CX_KEY" value={apiVariables.GOOGLE_CX_KEY} onChange={handleInputChange} />
+            <div className="form-group">
+              <label className="agent_question">GOOGLE_CX_KEY:</label>
+              <input className="form-control" type="text" name="GOOGLE_CX_KEY" value={apiVariables.GOOGLE_CX_KEY} onChange={handleInputChange} />
             </div>
           </>
         );
       case 'bing':
         return (
-          <div className="grid grid-cols-2 gap-2.5 pb-2">
-            <label className="col-span-1">BING_API_KEY:</label>
-            <input className="col-span-1" type="text" name="BING_API_KEY" value={apiVariables.BING_API_KEY} onChange={handleInputChange} />
+          <div className="form-group">
+            <label className="agent_question">BING_API_KEY:</label>
+            <input className="form-control" type="text" name="BING_API_KEY" value={apiVariables.BING_API_KEY} onChange={handleInputChange} />
           </div>
         );
       case 'serpapi':
         return (
-          <div className="grid grid-cols-2 gap-2.5 pb-2">
-            <label className="col-span-1">SERPAPI_API_KEY:</label>
-            <input className="col-span-1" type="text" name="SERPAPI_API_KEY" value={apiVariables.SERPAPI_API_KEY} onChange={handleInputChange} />
+          <div className="form-group">
+            <label className="agent_question">SERPAPI_API_KEY:</label>
+            <input className="form-control" type="text" name="SERPAPI_API_KEY" value={apiVariables.SERPAPI_API_KEY} onChange={handleInputChange} />
           </div>
         );
       case 'googleSerp':
         return (
-          <div className="grid grid-cols-2 gap-2.5 pb-2">
-            <label className="col-span-1">SERPER_API_KEY:</label>
-            <input className="col-span-1" type="text" name="SERPER_API_KEY" value={apiVariables.SERPER_API_KEY} onChange={handleInputChange} />
+          <div className="form-group">
+            <label className="agent_question">SERPER_API_KEY:</label>
+            <input className="form-control" type="text" name="SERPER_API_KEY" value={apiVariables.SERPER_API_KEY} onChange={handleInputChange} />
           </div>
         );
       case 'searx':
         return (
-          <div className="grid grid-cols-2 gap-2.5 pb-2">
-            <label className="col-span-1">SEARX_URL:</label>
-            <input className="col-span-1" type="text" name="SEARX_URL" value={apiVariables.SEARX_URL} onChange={handleInputChange} />
+          <div className="form-group">
+            <label className="agent_question">SEARX_URL:</label>
+            <input className="form-control" type="text" name="SEARX_URL" value={apiVariables.SEARX_URL} onChange={handleInputChange} />
           </div>
         );
       // Add cases for other retrievers if needed
@@ -155,57 +155,58 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                     </div>
                   )}
                   {activeTab === 'api' && (
-                    <div className="api-variables flex flex-col gap-2.5">
+                    <main className="container" id="form">
+                      <form method="POST" className="report_settings">
+                        <div className="form-group">
+                          <label className="agent_question">Search Engine:</label>
+                          <select className="form-control" name="RETRIEVER" value={apiVariables.RETRIEVER} onChange={handleInputChange}>
+                            <option value="" disabled>Select Retriever</option>
+                            <option value="tavily">Tavily</option>
+                            <option value="google">Google</option>
+                            <option value="searx">Searx</option>
+                            <option value="serpapi">SerpApi</option>
+                            <option value="googleSerp">GoogleSerp</option>
+                            <option value="duckduckgo">DuckDuckGo</option>
+                            <option value="bing">Bing</option>
+                          </select>
+                        </div>
+                        {renderConditionalInputs()}
 
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">Search Engine:</label>
-                        <select className="col-span-1" name="RETRIEVER" value={apiVariables.RETRIEVER} onChange={handleInputChange}>
-                          <option value="" disabled>Select Retriever</option>
-                          <option value="tavily">Tavily</option>
-                          <option value="google">Google</option>
-                          <option value="searx">Searx</option>
-                          <option value="serpapi">SerpApi</option>
-                          <option value="googleSerp">GoogleSerp</option>
-                          <option value="duckduckgo">DuckDuckGo</option>
-                          <option value="bing">Bing</option>
-                        </select>
-                      </div>
-                      {renderConditionalInputs()}
+                        <div className="form-group">
+                          <label className="agent_question">OPENAI_API_KEY:</label>
+                          <input className="form-control" type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
+                        </div>
 
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">OPENAI_API_KEY:</label>
-                        <input className="col-span-1" type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
-                      </div>
+                        <div className="form-group">
+                          <label className="agent_question">DOC_PATH:</label>
+                          <input className="form-control" type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
+                        </div>
 
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">DOC_PATH:</label>
-                        <input className="col-span-1" type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
-                      </div>
+                        <div className="form-group">
+                          <label className="agent_question">TAVILY_API_KEY:</label>
+                          <input className="form-control" type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
+                        </div>
 
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">TAVILY_API_KEY:</label>
-                        <input className="col-span-1" type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
-                      </div>
+                        <div className="form-group">
+                          <label className="agent_question">LANGCHAIN_API_KEY:</label>
+                          <input className="form-control" type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
+                        </div>
 
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">LANGCHAIN_API_KEY:</label>
-                        <input className="col-span-1" type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
-                      </div>
+                        {apiVariables.LANGCHAIN_API_KEY && (
+                          <>
+                            <div className="form-group">
+                              <label className="agent_question">LANGGRAPH_HOST_URL:</label>
+                              <input className="form-control" type="text" name="LANGGRAPH_HOST_URL" value={apiVariables.LANGGRAPH_HOST_URL} onChange={handleInputChange} />
+                            </div>
 
-                      {apiVariables.LANGCHAIN_API_KEY && (
-                        <>
-                          <div className="grid grid-cols-2 gap-2.5 pb-2">
-                            <label className="col-span-1">LANGGRAPH_HOST_URL:</label>
-                            <input className="col-span-1" type="text" name="LANGGRAPH_HOST_URL" value={apiVariables.LANGGRAPH_HOST_URL} onChange={handleInputChange} />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-2.5 pb-2">
-                            <label className="col-span-1">ANTHROPIC_API_KEY:</label>
-                            <input className="col-span-1" type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
-                          </div>
-                        </>
-                      )}
-                    </div>
+                            <div className="form-group">
+                              <label className="agent_question">ANTHROPIC_API_KEY:</label>
+                              <input className="form-control" type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
+                            </div>
+                          </>
+                        )}
+                      </form>
+                    </main>
                   )}
                 </div>
                 <div className="flex items-center justify-end p-6 border-t border-solid border-blueGray-200 rounded-b">
