@@ -12,7 +12,7 @@ class ResearchAgent:
                        parent_query: str = "", verbose=True, source="web"):
         # Initialize the researcher
         researcher = GPTResearcher(query=query, report_type=research_report, parent_query=parent_query,
-                                   verbose=verbose, report_source=source)
+                                   verbose=verbose, report_source=source, websocket=self.websocket)
         # Conduct research on the given query
         await researcher.conduct_research()
         # Write the report
@@ -34,6 +34,11 @@ class ResearchAgent:
         query = task.get("query")
         source = task.get("source", "web")
         print_agent_output(f"Running initial research on the following query: {query}", agent="RESEARCHER")
+
+        if self.websocket and self.stream_output:
+            await self.stream_output("logs", "initial_research", f"Running initial research on the following query: {query}", self.websocket)
+        else:
+            print_agent_output(f"Running initial research on the following query: {query}", agent="RESEARCHER")
         return {"task": task, "initial_research": await self.research(query=query, verbose=task.get("verbose"),
                                                                       source=source)}
 
@@ -43,7 +48,10 @@ class ResearchAgent:
         parent_query = task.get("query")
         source = task.get("source", "web")
         verbose = task.get("verbose")
-        print_agent_output(f"Running in depth research on the following report topic: {topic}", agent="RESEARCHER")
+        if self.websocket and self.stream_output:
+            await self.stream_output("logs", "depth_research", f"Running in depth research on the following report topic: {topic}", self.websocket)
+        else:
+            print_agent_output(f"Running in depth research on the following report topic: {topic}", agent="RESEARCHER")
         research_draft = await self.run_subtopic_research(parent_query=parent_query, subtopic=topic,
                                                           verbose=verbose, source=source)
         return {"draft": research_draft}

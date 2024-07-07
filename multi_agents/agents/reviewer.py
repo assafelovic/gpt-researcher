@@ -9,7 +9,7 @@ class ReviewerAgent:
     def __init__(self):
         pass
 
-    def review_draft(self, draft_state: dict):
+    async def review_draft(self, draft_state: dict):
         """
         Review a draft article
         :param draft_state:
@@ -44,7 +44,10 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
         response = call_model(prompt, model=task.get("model"))
 
         if task.get("verbose"):
-            print_agent_output(f"Review feedback is: {response}...", agent="REVIEWER")
+            if self.websocket and self.stream_output:
+                await self.stream_output("logs", "review_feedback", f"Review feedback is: {response}...", self.websocket)
+            else:
+                print_agent_output(f"Review feedback is: {response}...", agent="REVIEWER")
 
         if 'None' in response:
             return None
