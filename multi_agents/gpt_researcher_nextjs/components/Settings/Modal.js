@@ -13,7 +13,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
     LANGCHAIN_API_KEY: '',
     OPENAI_API_KEY: '',
     DOC_PATH: '',
-    RETRIEVER: '',
+    RETRIEVER: 'tavily', // Set default retriever to Tavily
     GOOGLE_API_KEY: '',
     GOOGLE_CX_KEY: '',
     BING_API_KEY: '',
@@ -155,44 +155,47 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                   )}
                   {activeTab === 'api' && (
                     <div className="api-variables flex flex-col gap-2.5">
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">ANTHROPIC_API_KEY:</label>
-                        <input className="col-span-1" type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">TAVILY_API_KEY:</label>
-                        <input className="col-span-1" type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">LANGCHAIN_TRACING_V2:</label>
-                        <input className="col-span-1" type="text" name="LANGCHAIN_TRACING_V2" value={apiVariables.LANGCHAIN_TRACING_V2} onChange={handleInputChange} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">LANGCHAIN_API_KEY:</label>
-                        <input className="col-span-1" type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">OPENAI_API_KEY:</label>
-                        <input className="col-span-1" type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">DOC_PATH:</label>
-                        <input className="col-span-1" type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">RETRIEVER:</label>
+
+                    <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">Search Engine:</label>
                         <select className="col-span-1" name="RETRIEVER" value={apiVariables.RETRIEVER} onChange={handleInputChange}>
                           <option value="" disabled>Select Retriever</option>
+                          <option value="tavily">Tavily</option>
                           <option value="google">Google</option>
                           <option value="searx">Searx</option>
                           <option value="serpapi">SerpApi</option>
                           <option value="googleSerp">GoogleSerp</option>
                           <option value="duckduckgo">DuckDuckGo</option>
                           <option value="bing">Bing</option>
-                          <option value="tavily">Tavily</option>
                         </select>
+                    </div>
+                    {renderConditionalInputs()}
+
+                    <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">OPENAI_API_KEY:</label>
+                        <input className="col-span-1" type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
                       </div>
-                      {renderConditionalInputs()}
+
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">DOC_PATH:</label>
+                        <input className="col-span-1" type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
+                      </div>
+
+                    <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">TAVILY_API_KEY:</label>
+                        <input className="col-span-1" type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">LANGCHAIN_API_KEY:</label>
+                        <input className="col-span-1" type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
+                        <label className="col-span-1">ANTHROPIC_API_KEY:</label>
+                        <input className="col-span-1" type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
+                      </div>
+                      
                     </div>
                   )}
                 </div>
