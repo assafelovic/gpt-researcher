@@ -41,47 +41,45 @@ export default function Home() {
   }, [orderedData]);
 
   const startResearch = (chatBoxSettings) => {
-    if (chatBoxSettings.report_type !== 'multi_agents') {
-      if (!socket) {
-        if (typeof window !== 'undefined') {
-          const { protocol, pathname } = window.location;
-          let { host } = window.location;
-          host = host.includes('localhost') ? 'localhost:8000' : host;
-          const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
-          
-          const newSocket = new WebSocket(ws_uri);
-          setSocket(newSocket);
+    if (!socket) {
+      if (typeof window !== 'undefined') {
+        const { protocol, pathname } = window.location;
+        let { host } = window.location;
+        host = host.includes('localhost') ? 'localhost:8000' : host;
+        const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
+        
+        const newSocket = new WebSocket(ws_uri);
+        setSocket(newSocket);
 
-          newSocket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log('websocket data caught in frontend: ', data);
-            const contentAndType = `${data.content}-${data.type}`;
-            setOrderedData((prevOrder) => [...prevOrder, { ...data, contentAndType }]);
+        newSocket.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          console.log('websocket data caught in frontend: ', data);
+          const contentAndType = `${data.content}-${data.type}`;
+          setOrderedData((prevOrder) => [...prevOrder, { ...data, contentAndType }]);
 
-            if (data.type === 'report') {
-              setAnswer((prev) => prev + data.output);
-            } else if (data.type === 'path') {
-              setLoading(false);
-              newSocket.close();
-              setSocket(null);
-            }
-          };
-
-          newSocket.onopen = () => {
-            const { task, report_type, report_source } = chatBoxSettings;
-            let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source });
-            newSocket.send(data);
-          };
-
-          newSocket.onclose = () => {
+          if (data.type === 'report') {
+            setAnswer((prev) => prev + data.output);
+          } else if (data.type === 'path') {
+            setLoading(false);
+            newSocket.close();
             setSocket(null);
-          };
-        }
-      } else {
-        const { task, report_type, report_source } = chatBoxSettings;
-        let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source });
-        socket.send(data);
+          }
+        };
+
+        newSocket.onopen = () => {
+          const { task, report_type, report_source } = chatBoxSettings;
+          let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source });
+          newSocket.send(data);
+        };
+
+        newSocket.onclose = () => {
+          setSocket(null);
+        };
       }
+    } else {
+      const { task, report_type, report_source } = chatBoxSettings;
+      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source });
+      socket.send(data);
     }
   };
 
@@ -99,7 +97,13 @@ export default function Home() {
 
     const {report_type, report_source} = chatBoxSettings;
 
-    if (report_type === 'multi_agents') {
+    // Retrieve LANGGRAPH_HOST_URL from local storage or state
+    const storedConfig = localStorage.getItem('apiVariables');
+    const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
+    const langgraphHostUrl = apiVariables.LANGGRAPH_HOST_URL;
+
+    if (report_type === 'multi_agents' && langgraphHostUrl) {
+
       let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion, report_source);
 
       const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;

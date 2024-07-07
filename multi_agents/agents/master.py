@@ -4,7 +4,6 @@ from langgraph.graph import StateGraph, END
 from .utils.views import print_agent_output
 from ..memory.research import ResearchState
 
-
 # Import agent classes
 from . import \
     WriterAgent, \
@@ -12,20 +11,21 @@ from . import \
     PublisherAgent, \
     ResearchAgent
 
-
 class ChiefEditorAgent:
-    def __init__(self, task: dict):
+    def __init__(self, task: dict, websocket=None, stream_output=None):
         self.task_id = int(time.time()) # Currently time based, but can be any unique identifier
         self.output_dir = f"./outputs/run_{self.task_id}_{task.get('query')[0:40]}"
         self.task = task
+        self.websocket = websocket
+        self.stream_output = stream_output
         os.makedirs(self.output_dir, exist_ok=True)
 
     def init_research_team(self):
         # Initialize agents
-        writer_agent = WriterAgent()
-        editor_agent = EditorAgent()
-        research_agent = ResearchAgent()
-        publisher_agent = PublisherAgent(self.output_dir)
+        writer_agent = WriterAgent(self.websocket, self.stream_output)
+        editor_agent = EditorAgent(self.websocket, self.stream_output)
+        research_agent = ResearchAgent(self.websocket, self.stream_output)
+        publisher_agent = PublisherAgent(self.output_dir, self.websocket, self.stream_output)
 
         # Define a Langchain StateGraph with the ResearchState
         workflow = StateGraph(ResearchState)

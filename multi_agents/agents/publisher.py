@@ -7,9 +7,11 @@ from .utils.views import print_agent_output
 
 
 class PublisherAgent:
-    def __init__(self, output_dir: str):
+    def __init__(self, output_dir: str, websocket=None, stream_output=None):
+        self.websocket = websocket
+        self.stream_output = stream_output
         self.output_dir = output_dir
-
+        
     async def publish_research_report(self, research_state: dict, publish_formats: dict):
         layout = self.generate_layout(research_state)
         await self.write_report_by_formats(layout, publish_formats)

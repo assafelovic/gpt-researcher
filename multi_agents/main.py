@@ -37,7 +37,7 @@ async def run_research_task(query, websocket=None, stream_output=None):
         "verbose": True
     }
 
-    chief_editor = ChiefEditorAgent(task)
+    chief_editor = ChiefEditorAgent(task, websocket, stream_output)
     research_report = await chief_editor.run_research_task()
 
     if websocket and stream_output:
