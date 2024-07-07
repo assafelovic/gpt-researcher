@@ -28,7 +28,6 @@ const Hero: FC<THeroProps> = ({
           href="https://github.com/assafelovic/gpt-researcher"
           target="_blank"
         >
-          <Image src="/img/together-ai.svg" alt="hero" width={18} height={18} />
           <span className="text-center text-base font-light leading-[normal] text-[#1B1B16]">
             Powered by GPT Researcher
           </span>

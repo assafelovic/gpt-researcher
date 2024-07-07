@@ -19,7 +19,8 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
     BING_API_KEY: '',
     SERPAPI_API_KEY: '',
     SERPER_API_KEY: '',
-    SEARX_URL: ''
+    SEARX_URL: '',
+    LANGGRAPH_HOST_URL: '' // Add new state variable
   });
 
   useEffect(() => {
@@ -143,8 +144,8 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                 </div>
                 <div className="relative p-6 flex-auto">
                   <div className="tabs">
-                    <button onClick={() => setActiveTab('search')} className={activeTab === 'search' ? 'active' : ''}>Search Settings</button>
-                    <button onClick={() => setActiveTab('api')} className={activeTab === 'api' ? 'active' : ''}>API Variables</button>
+                    <button onClick={() => setActiveTab('search')} className={`tab-button ${activeTab === 'search' ? 'active' : ''}`}>Search Settings</button>
+                    <button onClick={() => setActiveTab('api')} className={`tab-button ${activeTab === 'api' ? 'active' : ''}`}>API Variables</button>
                   </div>
                   {activeTab === 'search' && (
                     <div className="App">
@@ -156,7 +157,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                   {activeTab === 'api' && (
                     <div className="api-variables flex flex-col gap-2.5">
 
-                    <div className="grid grid-cols-2 gap-2.5 pb-2">
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
                         <label className="col-span-1">Search Engine:</label>
                         <select className="col-span-1" name="RETRIEVER" value={apiVariables.RETRIEVER} onChange={handleInputChange}>
                           <option value="" disabled>Select Retriever</option>
@@ -168,10 +169,10 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                           <option value="duckduckgo">DuckDuckGo</option>
                           <option value="bing">Bing</option>
                         </select>
-                    </div>
-                    {renderConditionalInputs()}
+                      </div>
+                      {renderConditionalInputs()}
 
-                    <div className="grid grid-cols-2 gap-2.5 pb-2">
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
                         <label className="col-span-1">OPENAI_API_KEY:</label>
                         <input className="col-span-1" type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
                       </div>
@@ -181,7 +182,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                         <input className="col-span-1" type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
                       </div>
 
-                    <div className="grid grid-cols-2 gap-2.5 pb-2">
+                      <div className="grid grid-cols-2 gap-2.5 pb-2">
                         <label className="col-span-1">TAVILY_API_KEY:</label>
                         <input className="col-span-1" type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
                       </div>
@@ -191,11 +192,19 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                         <input className="col-span-1" type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5 pb-2">
-                        <label className="col-span-1">ANTHROPIC_API_KEY:</label>
-                        <input className="col-span-1" type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
-                      </div>
-                      
+                      {apiVariables.LANGCHAIN_API_KEY && (
+                        <>
+                          <div className="grid grid-cols-2 gap-2.5 pb-2">
+                            <label className="col-span-1">LANGGRAPH_HOST_URL:</label>
+                            <input className="col-span-1" type="text" name="LANGGRAPH_HOST_URL" value={apiVariables.LANGGRAPH_HOST_URL} onChange={handleInputChange} />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2.5 pb-2">
+                            <label className="col-span-1">ANTHROPIC_API_KEY:</label>
+                            <input className="col-span-1" type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>

@@ -10,6 +10,31 @@
   }
 }
 
+.tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+}
+
+.tab-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.tab-button:hover {
+  opacity: 0.8;
+}
+
+.tab-button.active {
+  background-image: linear-gradient(to right, #9867F0, #ED4E50);
+  color: white;
+  border-radius: 5px;
+}
+
 .settings html {
   scroll-behavior: smooth;
 }
