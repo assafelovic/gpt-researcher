@@ -70,41 +70,41 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
         return (
           <>
             <div className="form-group">
-              <label className="agent_question">GOOGLE_API_KEY:</label>
-              <input className="form-control" type="text" name="GOOGLE_API_KEY" value={apiVariables.GOOGLE_API_KEY} onChange={handleInputChange} />
+              <label className="form-group-label">GOOGLE_API_KEY</label>
+              <input type="text" name="GOOGLE_API_KEY" value={apiVariables.GOOGLE_API_KEY} onChange={handleInputChange} />
             </div>
             <div className="form-group">
-              <label className="agent_question">GOOGLE_CX_KEY:</label>
-              <input className="form-control" type="text" name="GOOGLE_CX_KEY" value={apiVariables.GOOGLE_CX_KEY} onChange={handleInputChange} />
+              <label className="form-group-label">GOOGLE_CX_KEY</label>
+              <input type="text" name="GOOGLE_CX_KEY" value={apiVariables.GOOGLE_CX_KEY} onChange={handleInputChange} />
             </div>
           </>
         );
       case 'bing':
         return (
           <div className="form-group">
-            <label className="agent_question">BING_API_KEY:</label>
-            <input className="form-control" type="text" name="BING_API_KEY" value={apiVariables.BING_API_KEY} onChange={handleInputChange} />
+            <label className="form-group-label">BING_API_KEY</label>
+            <input type="text" name="BING_API_KEY" value={apiVariables.BING_API_KEY} onChange={handleInputChange} />
           </div>
         );
       case 'serpapi':
         return (
           <div className="form-group">
-            <label className="agent_question">SERPAPI_API_KEY:</label>
-            <input className="form-control" type="text" name="SERPAPI_API_KEY" value={apiVariables.SERPAPI_API_KEY} onChange={handleInputChange} />
+            <label className="form-group-label">SERPAPI_API_KEY</label>
+            <input type="text" name="SERPAPI_API_KEY" value={apiVariables.SERPAPI_API_KEY} onChange={handleInputChange} />
           </div>
         );
       case 'googleSerp':
         return (
           <div className="form-group">
-            <label className="agent_question">SERPER_API_KEY:</label>
-            <input className="form-control" type="text" name="SERPER_API_KEY" value={apiVariables.SERPER_API_KEY} onChange={handleInputChange} />
+            <label className="form-group-label">SERPER_API_KEY</label>
+            <input type="text" name="SERPER_API_KEY" value={apiVariables.SERPER_API_KEY} onChange={handleInputChange} />
           </div>
         );
       case 'searx':
         return (
           <div className="form-group">
-            <label className="agent_question">SEARX_URL:</label>
-            <input className="form-control" type="text" name="SEARX_URL" value={apiVariables.SEARX_URL} onChange={handleInputChange} />
+            <label className="form-group-label">SEARX_URL</label>
+            <input type="text" name="SEARX_URL" value={apiVariables.SEARX_URL} onChange={handleInputChange} />
           </div>
         );
       // Add cases for other retrievers if needed
@@ -129,19 +129,6 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
           >
             <div className="relative w-auto my-6 mx-auto max-w-3xl">
               <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
-                <div className="flex items-start justify-between p-5 border-b border-solid border-blueGray-200 rounded-t">
-                  <h3 className="text-3xl font-semibold">
-                    Settings
-                  </h3>
-                  <button
-                    className="p-1 ml-auto bg-transparent border-0 text-black opacity-5 float-right text-3xl leading-none font-semibold outline-none focus:outline-none"
-                    onClick={() => setShowModal(false)}
-                  >
-                    <span className="bg-transparent text-black opacity-5 h-6 w-6 text-2xl block outline-none focus:outline-none">
-                      ×
-                    </span>
-                  </button>
-                </div>
                 <div className="relative p-6 flex-auto">
                   <div className="tabs">
                     <button onClick={() => setActiveTab('search')} className={`tab-button ${activeTab === 'search' ? 'active' : ''}`}>Search Settings</button>
@@ -158,8 +145,8 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                     <main className="container" id="form">
                       <form method="POST" className="report_settings">
                         <div className="form-group">
-                          <label className="agent_question">Search Engine:</label>
-                          <select className="form-control" name="RETRIEVER" value={apiVariables.RETRIEVER} onChange={handleInputChange}>
+                          <label className="form-group-label">Search Engine</label>
+                          <select name="RETRIEVER" value={apiVariables.RETRIEVER} onChange={handleInputChange}>
                             <option value="" disabled>Select Retriever</option>
                             <option value="tavily">Tavily</option>
                             <option value="google">Google</option>
@@ -173,35 +160,35 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                         {renderConditionalInputs()}
 
                         <div className="form-group">
-                          <label className="agent_question">OPENAI_API_KEY:</label>
-                          <input className="form-control" type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
+                          <label className="form-group-label">OPENAI_API_KEY</label>
+                          <input type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
                         </div>
 
                         <div className="form-group">
-                          <label className="agent_question">DOC_PATH:</label>
-                          <input className="form-control" type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
+                          <label className="form-group-label">DOC_PATH</label>
+                          <input type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
                         </div>
 
                         <div className="form-group">
-                          <label className="agent_question">TAVILY_API_KEY:</label>
-                          <input className="form-control" type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
+                          <label className="form-group-label">TAVILY_API_KEY</label>
+                          <input type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
                         </div>
 
                         <div className="form-group">
-                          <label className="agent_question">LANGCHAIN_API_KEY:</label>
-                          <input className="form-control" type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
+                          <label className="form-group-label">LANGCHAIN_API_KEY</label>
+                          <input type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
                         </div>
 
                         {apiVariables.LANGCHAIN_API_KEY && (
                           <>
                             <div className="form-group">
-                              <label className="agent_question">LANGGRAPH_HOST_URL:</label>
-                              <input className="form-control" type="text" name="LANGGRAPH_HOST_URL" value={apiVariables.LANGGRAPH_HOST_URL} onChange={handleInputChange} />
+                              <label className="form-group-label">LANGGRAPH_HOST_URL</label>
+                              <input type="text" name="LANGGRAPH_HOST_URL" value={apiVariables.LANGGRAPH_HOST_URL} onChange={handleInputChange} />
                             </div>
 
                             <div className="form-group">
-                              <label className="agent_question">ANTHROPIC_API_KEY:</label>
-                              <input className="form-control" type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
+                              <label className="form-group-label">ANTHROPIC_API_KEY</label>
+                              <input type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
                             </div>
                           </>
                         )}
@@ -209,7 +196,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                     </main>
                   )}
                 </div>
-                <div className="flex items-center justify-end p-6 border-t border-solid border-blueGray-200 rounded-b">
+                <div className="flex items-center justify-end p-3">
                   <button
                     className="bg-emerald-500 text-white active:bg-emerald-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
                     type="button"
