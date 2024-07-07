@@ -78,15 +78,25 @@ Headers Data: {headers}\n
         return {"headers": json.loads(response)}
 
     async def run(self, research_state: dict):
-        print_agent_output(f"Writing final research report based on research data...", agent="WRITER")
+        if self.websocket and self.stream_output:
+            await self.stream_output("logs", "writing_report", f"Writing final research report based on research data...", self.websocket)
+        else:
+            print_agent_output(f"Writing final research report based on research data...", agent="WRITER")
+
         research_layout_content = await self.write_sections(research_state)
 
         if research_state.get("task").get("verbose"):
-            print_agent_output(research_layout_content, agent="WRITER")
+            if self.websocket and self.stream_output:
+                await self.stream_output("logs", "research_layout_content", research_layout_content, self.websocket)
+            else:
+                print_agent_output(research_layout_content, agent="WRITER")
 
         headers = self.get_headers(research_state)
         if research_state.get("task").get("follow_guidelines"):
-            print_agent_output("Rewriting layout based on guidelines...", agent="WRITER")
+            if self.websocket and self.stream_output:
+                await self.stream_output("logs", "rewriting_layout", "Rewriting layout based on guidelines...", self.websocket)
+            else:
+                print_agent_output("Rewriting layout based on guidelines...", agent="WRITER")
             headers = await self.revise_headers(task=research_state.get("task"), headers=headers).get("headers")
 
         return {**research_layout_content, "headers": headers}

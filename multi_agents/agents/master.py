@@ -53,8 +53,11 @@ class ChiefEditorAgent:
 
         # compile the graph
         chain = research_team.compile()
-
-        print_agent_output(f"Starting the research process for query '{self.task.get('query')}'...", "MASTER")
+        if self.websocket and self.stream_output:
+            await self.stream_output("logs", "starting_research", f"Starting the research process for query '{self.task.get('query')}'...", self.websocket)
+        else:
+            print_agent_output(f"Starting the research process for query '{self.task.get('query')}'...", "MASTER")
+ 
         result = await chain.ainvoke({"task": self.task})
 
         return result

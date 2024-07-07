@@ -11,6 +11,6 @@ chief_editor = ChiefEditorAgent({
     "The report MUST be written in spanish"
   ],
   "verbose": False
-}, stream_output=None)
-graph = chief_editor.init_research_team(stream_output=None)
+}, websocket=None, stream_output=None)
+graph = chief_editor.init_research_team(websocket=None, stream_output=None)
 graph = graph.compile()
