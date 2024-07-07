@@ -13,8 +13,9 @@ from . import \
 
 
 class EditorAgent:
-    def __init__(self):
-        pass
+    def __init__(self, websocket=None, stream_output=None):
+        self.websocket = websocket
+        self.stream_output = stream_output
 
     def plan_research(self, research_state: dict):
         """

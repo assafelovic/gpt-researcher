@@ -4,8 +4,9 @@ from .utils.views import print_agent_output
 
 
 class ResearchAgent:
-    def __init__(self):
-        pass
+    def __init__(self, websocket=None, stream_output=None):
+        self.websocket = websocket
+        self.stream_output = stream_output
 
     async def research(self, query: str, research_report: str = "research_report",
                        parent_query: str = "", verbose=True, source="web"):

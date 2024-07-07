@@ -12,10 +12,10 @@ sample_json = """
 }
 """
 
-
 class WriterAgent:
-    def __init__(self):
-        pass
+    def __init__(self, websocket=None, stream_output=None):
+        self.websocket = websocket
+        self.stream_output = stream_output
 
     def get_headers(self, research_state: dict):
         return {
@@ -27,7 +27,7 @@ class WriterAgent:
             "references": "References"
         }
 
-    def write_sections(self, research_state: dict):
+    async def write_sections(self, research_state: dict):
         query = research_state.get("title")
         data = research_state.get("research_data")
         task = research_state.get("task")
@@ -55,10 +55,10 @@ class WriterAgent:
 
         }]
 
-        response = call_model(prompt, task.get("model"), max_retries=2, response_format='json')
+        response = await call_model(prompt, task.get("model"), max_retries=2, response_format='json')
         return json.loads(response)
 
-    def revise_headers(self, task: dict, headers: dict):
+    async def revise_headers(self, task: dict, headers: dict):
         prompt = [{
             "role": "system",
             "content": """You are a research writer. 
@@ -74,12 +74,12 @@ Headers Data: {headers}\n
 
         }]
 
-        response = call_model(prompt, task.get("model"), response_format='json')
+        response = await call_model(prompt, task.get("model"), response_format='json')
         return {"headers": json.loads(response)}
 
-    def run(self, research_state: dict):
+    async def run(self, research_state: dict):
         print_agent_output(f"Writing final research report based on research data...", agent="WRITER")
-        research_layout_content = self.write_sections(research_state)
+        research_layout_content = await self.write_sections(research_state)
 
         if research_state.get("task").get("verbose"):
             print_agent_output(research_layout_content, agent="WRITER")
@@ -87,6 +87,6 @@ Headers Data: {headers}\n
         headers = self.get_headers(research_state)
         if research_state.get("task").get("follow_guidelines"):
             print_agent_output("Rewriting layout based on guidelines...", agent="WRITER")
-            headers = self.revise_headers(task=research_state.get("task"), headers=headers).get("headers")
+            headers = await self.revise_headers(task=research_state.get("task"), headers=headers).get("headers")
 
         return {**research_layout_content, "headers": headers}
