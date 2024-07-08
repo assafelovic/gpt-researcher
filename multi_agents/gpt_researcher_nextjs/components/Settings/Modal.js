@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import './App.css';
 import ChatBox from './ChatBox';
 import axios from 'axios';
+import { getHost } from '../../helpers/getHost';
 
 export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
   const [showModal, setShowModal] = useState(false);
@@ -28,7 +29,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
     if (storedConfig) {
       setApiVariables(JSON.parse(storedConfig));
     } else {
-      axios.get('http://localhost:8000/getConfig')
+      axios.get(`${getHost()}/getConfig`)
         .then(response => {
           setApiVariables(response.data);
           localStorage.setItem('apiVariables', JSON.stringify(response.data));
@@ -41,7 +42,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
 
   const handleSaveChanges = () => {
     setChatBoxSettings(chatBoxSettings);
-    axios.post('http://localhost:8000/setConfig', apiVariables)
+    axios.post(`${getHost()}/setConfig`, apiVariables)
       .then(response => {
         console.log('Config saved:', response.data);
         localStorage.setItem('apiVariables', JSON.stringify(apiVariables));
