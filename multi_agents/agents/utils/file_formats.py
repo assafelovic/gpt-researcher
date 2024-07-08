@@ -52,7 +52,7 @@ async def write_md_to_pdf(text: str, path: str) -> str:
         md2pdf(file_path,
                md_content=text,
                # md_file_path=f"{file_path}.md",
-               css_file_path="./agents/utils/pdf_styles.css",
+               css_file_path="./multi_agents/agents/utils/pdf_styles.css",  # Updated path
                base_url=None)
         print(f"Report written to {file_path}")
     except Exception as e:
