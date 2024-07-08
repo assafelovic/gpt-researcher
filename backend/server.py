@@ -87,6 +87,10 @@ async def websocket_endpoint(websocket: WebSocket):
                     report = await manager.start_streaming(
                         task, report_type, report_source, tone, websocket
                     )
+                    # Ensure report is a string
+                    if not isinstance(report, str):
+                        report = str(report)
+
                     # Saving report as pdf
                     pdf_path = await write_md_to_pdf(report, sanitized_filename)
                     # Saving report as docx

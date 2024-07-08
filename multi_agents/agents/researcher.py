@@ -33,7 +33,6 @@ class ResearchAgent:
         task = research_state.get("task")
         query = task.get("query")
         source = task.get("source", "web")
-        print_agent_output(f"Running initial research on the following query: {query}", agent="RESEARCHER")
 
         if self.websocket and self.stream_output:
             await self.stream_output("logs", "initial_research", f"Running initial research on the following query: {query}", self.websocket)

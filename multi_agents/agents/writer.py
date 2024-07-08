@@ -87,7 +87,8 @@ Headers Data: {headers}\n
 
         if research_state.get("task").get("verbose"):
             if self.websocket and self.stream_output:
-                await self.stream_output("logs", "research_layout_content", research_layout_content, self.websocket)
+                research_layout_content_str = json.dumps(research_layout_content, indent=2)
+                await self.stream_output("logs", "research_layout_content", research_layout_content_str, self.websocket)
             else:
                 print_agent_output(research_layout_content, agent="WRITER")
 

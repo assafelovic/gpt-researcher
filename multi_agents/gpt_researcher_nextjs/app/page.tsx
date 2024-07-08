@@ -104,7 +104,7 @@ export default function Home() {
 
     if (report_type === 'multi_agents' && langgraphHostUrl) {
 
-      let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion, report_source);
+      let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion, report_source, langgraphHostUrl);
 
       const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
       
@@ -157,6 +157,7 @@ export default function Home() {
     let currentAccordionGroup = null;
     let currentSourceGroup = null;
     let currentReportGroup = null;
+    let finalReportGroup = null;
 
     data.forEach((item) => {
       const { type, content, metadata, output, link } = item;
@@ -167,6 +168,12 @@ export default function Home() {
           groupedData.push(currentReportGroup);
         }
         currentReportGroup.content += output;
+      } else if (type === 'logs' && content === 'research_report') {
+        if (!finalReportGroup) {
+          finalReportGroup = { type: 'reportBlock', content: '' };
+          groupedData.push(finalReportGroup);
+        }
+        finalReportGroup.content += output.report;
       } else if (type === 'langgraphButton') {
         groupedData.push({ type: 'langgraphButton', link });
       } else if (type === 'question') {

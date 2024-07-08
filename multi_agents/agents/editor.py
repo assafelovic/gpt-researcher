@@ -17,7 +17,7 @@ class EditorAgent:
         self.websocket = websocket
         self.stream_output = stream_output
 
-    def plan_research(self, research_state: dict):
+    async def plan_research(self, research_state: dict):
         """
         Curate relevant sources for a query
         :param summary_report:
@@ -48,7 +48,7 @@ class EditorAgent:
         }]
 
         print_agent_output(f"Planning an outline layout based on initial research...", agent="EDITOR")
-        response = call_model(prompt=prompt, model=task.get("model"), response_format="json")
+        response = await call_model(prompt=prompt, model=task.get("model"), response_format="json")
         plan = json.loads(response)
 
         return {
