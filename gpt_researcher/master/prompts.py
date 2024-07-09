@@ -1,7 +1,7 @@
 import warnings
 from datetime import date, datetime, timezone
 
-from gpt_researcher.utils.enum import ReportSource, ReportType
+from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 
 
 def generate_search_queries_prompt(
@@ -38,12 +38,7 @@ def generate_search_queries_prompt(
 
 
 def generate_report_prompt(
-    question: str,
-    context,
-    report_source: str,
-    tone: str,
-    report_format="apa",
-    total_words=1000,
+    question: str, context, report_source: str, report_format="apa", total_words=1000
 ):
     """Generates the report prompt for the given question and research summary.
     Args: question (str): The question to generate the report prompt for
@@ -76,7 +71,7 @@ You should strive to write the report as long as you can using all relevant and 
 Please follow all of the following guidelines in your report:
 - You MUST determine your own concrete and valid opinion based on the given information. Do NOT defer to general and meaningless conclusions.
 - You MUST write the report with markdown syntax and {report_format} format.
-- Use an {tone.value} tone.
+- Use an unbiased and journalistic tone.
 - Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
 - Don't forget to add a reference list at the end of the report in {report_format} format and full url links without hyperlinks.
 - {reference_prompt}
@@ -237,6 +232,7 @@ def generate_subtopic_report_prompt(
     report_format: str = "apa",
     max_subsections=5,
     total_words=800,
+    tone: Tone = Tone.Objective.value,
 ) -> str:
     return f"""
 "Context":
@@ -274,6 +270,7 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if
 - Must NOT have any introduction, conclusion, summary or reference section.
 - You MUST include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
 - The report should have a minimum length of {total_words} words.
+- Use an {tone} tone throughout the report.
 """
 
 
