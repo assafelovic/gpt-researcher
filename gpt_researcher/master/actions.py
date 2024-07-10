@@ -144,6 +144,7 @@ async def get_sub_queries(
     parent_query: str,
     report_type: str,
     cost_callback: callable = None,
+    openai_api_key=None
 ):
     """
     Gets the sub queries
@@ -178,6 +179,7 @@ async def get_sub_queries(
         llm_provider=cfg.llm_provider,
         llm_kwargs=cfg.llm_kwargs,
         cost_callback=cost_callback,
+        openai_api_key=openai_api_key
     )
 
     sub_queries = json_repair.loads(response)
