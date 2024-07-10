@@ -13,6 +13,7 @@ class BasicReport:
         tone: str,
         config_path: str,
         websocket: WebSocket,
+        headers=None
     ):
         self.query = query
         self.report_type = report_type
@@ -21,6 +22,7 @@ class BasicReport:
         self.tone = tone
         self.config_path = config_path
         self.websocket = websocket
+        self.headers = headers or {}
 
     async def run(self):
         # Initialize researcher
@@ -32,6 +34,7 @@ class BasicReport:
             tone=self.tone,
             config_path=self.config_path,
             websocket=self.websocket,
+            headers=self.headers
         )
 
         # Run research
