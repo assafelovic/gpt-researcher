@@ -6,8 +6,8 @@ Your goal is to review research drafts and provide feedback to the reviser only 
 """
 
 class ReviewerAgent:
-    def __init__(self):
-        pass
+    def __init__(self, headers=None):
+        self.headers = headers or {}
 
     async def review_draft(self, draft_state: dict):
         """
@@ -41,7 +41,7 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
             "content": review_prompt
         }]
 
-        response = call_model(prompt, model=task.get("model"))
+        response = call_model(prompt, model=task.get("model"), api_key=self.headers.get("openai_api_key"))
 
         if task.get("verbose"):
             if self.websocket and self.stream_output:

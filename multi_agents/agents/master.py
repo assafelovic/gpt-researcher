@@ -26,7 +26,7 @@ class ChiefEditorAgent:
         writer_agent = WriterAgent(self.websocket, self.stream_output, self.headers)
         editor_agent = EditorAgent(self.websocket, self.stream_output, self.headers)
         research_agent = ResearchAgent(self.websocket, self.stream_output, self.headers)
-        publisher_agent = PublisherAgent(self.output_dir, self.websocket, self.stream_output)
+        publisher_agent = PublisherAgent(self.output_dir, self.websocket, self.stream_output, self.headers)
 
         # Define a Langchain StateGraph with the ResearchState
         workflow = StateGraph(ResearchState)
