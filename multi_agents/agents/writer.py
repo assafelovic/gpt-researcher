@@ -13,9 +13,10 @@ sample_json = """
 """
 
 class WriterAgent:
-    def __init__(self, websocket=None, stream_output=None):
+    def __init__(self, websocket=None, stream_output=None, headers=None):
         self.websocket = websocket
         self.stream_output = stream_output
+        self.headers = headers
 
     def get_headers(self, research_state: dict):
         return {
@@ -55,7 +56,7 @@ class WriterAgent:
 
         }]
 
-        response = await call_model(prompt, task.get("model"), max_retries=2, response_format='json')
+        response = await call_model(prompt, task.get("model"), max_retries=2, response_format='json', api_key=self.headers.get("openai_api_key"))
         return json.loads(response)
 
     async def revise_headers(self, task: dict, headers: dict):
@@ -74,7 +75,7 @@ Headers Data: {headers}\n
 
         }]
 
-        response = await call_model(prompt, task.get("model"), response_format='json')
+        response = await call_model(prompt, task.get("model"), response_format='json', headers=self.headers)
         return {"headers": json.loads(response)}
 
     async def run(self, research_state: dict):
