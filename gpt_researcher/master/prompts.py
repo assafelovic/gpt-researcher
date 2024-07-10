@@ -270,7 +270,7 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if
 - Must NOT have any introduction, conclusion, summary or reference section.
 - You MUST include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
 - The report should have a minimum length of {total_words} words.
-- Use an {tone} tone throughout the report.
+- Use an {tone.value} tone throughout the report.
 """
 
 

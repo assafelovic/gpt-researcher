@@ -77,7 +77,6 @@ async def websocket_endpoint(websocket: WebSocket):
                     await websocket.send_json(
                         {
                             "type": "path",
-                            "tone": tone,
                             "output": {
                                 "pdf": pdf_path,
                                 "docx": docx_path,
