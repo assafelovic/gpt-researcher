@@ -42,14 +42,26 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
 
   const handleSaveChanges = () => {
     setChatBoxSettings(chatBoxSettings);
-    axios.post(`${getHost()}/setConfig`, apiVariables)
-      .then(response => {
-        console.log('Config saved:', response.data);
-        localStorage.setItem('apiVariables', JSON.stringify(apiVariables));
-      })
-      .catch(error => {
-        console.error('Error saving config:', error);
-      });
+    axios.post(`${getHost()}/setConfig`, apiVariables, {
+      headers: {
+        'langchain_api_key': apiVariables.LANGCHAIN_API_KEY,
+        'openai_api_key': apiVariables.OPENAI_API_KEY,
+        'tavily_api_key': apiVariables.TAVILY_API_KEY,
+        'google_api_key': apiVariables.GOOGLE_API_KEY,
+        'google_cx_key': apiVariables.GOOGLE_CX_KEY,
+        'bing_api_key': apiVariables.BING_API_KEY,
+        'serpapi_api_key': apiVariables.SERPAPI_API_KEY,
+        'serper_api_key': apiVariables.SERPER_API_KEY,
+        'searx_url': apiVariables.SEARX_URL
+      }
+    })
+    .then(response => {
+      console.log('Config saved:', response.data);
+      localStorage.setItem('apiVariables', JSON.stringify(apiVariables));
+    })
+    .catch(error => {
+      console.error('Error saving config:', error);
+    });
     setShowModal(false);
   };
 
