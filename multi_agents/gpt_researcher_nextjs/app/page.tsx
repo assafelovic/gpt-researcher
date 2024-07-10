@@ -71,6 +71,7 @@ export default function Home() {
           const storedConfig = localStorage.getItem('apiVariables');
           const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
           const headers = {
+            'retriever': apiVariables.RETRIEVER,
             'langchain_api_key': apiVariables.LANGCHAIN_API_KEY,
             'openai_api_key': apiVariables.OPENAI_API_KEY,
             'tavily_api_key': apiVariables.TAVILY_API_KEY,
