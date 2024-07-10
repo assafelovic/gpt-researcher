@@ -122,21 +122,30 @@ async def run_multi_agents():
         return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
 
 @app.get("/getConfig")
-async def get_config():
+async def get_config(
+    langchain_api_key: str = Header(None),
+    openai_api_key: str = Header(None),
+    tavily_api_key: str = Header(None),
+    google_api_key: str = Header(None),
+    google_cx_key: str = Header(None),
+    bing_api_key: str = Header(None),
+    serpapi_api_key: str = Header(None),
+    serper_api_key: str = Header(None),
+    searx_url: str = Header(None)
+):
     config = {
-        "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY", ""),
-        "TAVILY_API_KEY": os.getenv("TAVILY_API_KEY", ""),
+        "LANGCHAIN_API_KEY": langchain_api_key if langchain_api_key else os.getenv("LANGCHAIN_API_KEY", ""),
+        "OPENAI_API_KEY": openai_api_key if openai_api_key else os.getenv("OPENAI_API_KEY", ""),
+        "TAVILY_API_KEY": tavily_api_key if tavily_api_key else os.getenv("TAVILY_API_KEY", ""),
+        "GOOGLE_API_KEY": google_api_key if google_api_key else os.getenv("GOOGLE_API_KEY", ""),
+        "GOOGLE_CX_KEY": google_cx_key if google_cx_key else os.getenv("GOOGLE_CX_KEY", ""),
+        "BING_API_KEY": bing_api_key if bing_api_key else os.getenv("BING_API_KEY", ""),
+        "SERPAPI_API_KEY": serpapi_api_key if serpapi_api_key else os.getenv("SERPAPI_API_KEY", ""),
+        "SERPER_API_KEY": serper_api_key if serper_api_key else os.getenv("SERPER_API_KEY", ""),
+        "SEARX_URL": searx_url if searx_url else os.getenv("SEARX_URL", ""),
         "LANGCHAIN_TRACING_V2": os.getenv("LANGCHAIN_TRACING_V2", "true"),
-        "LANGCHAIN_API_KEY": os.getenv("LANGCHAIN_API_KEY", ""),
-        "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
         "DOC_PATH": os.getenv("DOC_PATH", ""),
-        "RETRIEVER": os.getenv("RETRIEVER", ""),
-        "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY", ""),
-        "GOOGLE_CX_KEY": os.getenv("GOOGLE_CX_KEY", ""),
-        "BING_API_KEY": os.getenv("BING_API_KEY", ""),
-        "SERPAPI_API_KEY": os.getenv("SERPAPI_API_KEY", ""),
-        "SERPER_API_KEY": os.getenv("SERPER_API_KEY", ""),
-        "SEARX_URL": os.getenv("SEARX_URL", "")
+        "RETRIEVER": os.getenv("RETRIEVER", "")
     }
     return config
 
