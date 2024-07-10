@@ -18,7 +18,7 @@ def open_task():
 
     return task
 
-async def run_research_task(query, websocket=None, stream_output=None):
+async def run_research_task(query, websocket=None, stream_output=None, headers=None):
     task = {
         "query": query,
         "max_sections": 3,
@@ -37,7 +37,7 @@ async def run_research_task(query, websocket=None, stream_output=None):
         "verbose": True
     }
 
-    chief_editor = ChiefEditorAgent(task, websocket, stream_output)
+    chief_editor = ChiefEditorAgent(task, websocket, stream_output, headers)
     research_report = await chief_editor.run_research_task()
 
     if websocket and stream_output:

@@ -12,19 +12,20 @@ from . import \
     ResearchAgent
 
 class ChiefEditorAgent:
-    def __init__(self, task: dict, websocket=None, stream_output=None):
+    def __init__(self, task: dict, websocket=None, stream_output=None, headers=None):
         self.task_id = int(time.time()) # Currently time based, but can be any unique identifier
         self.output_dir = f"./outputs/run_{self.task_id}_{task.get('query')[0:40]}"
         self.task = task
         self.websocket = websocket
         self.stream_output = stream_output
+        self.headers = headers or {}
         os.makedirs(self.output_dir, exist_ok=True)
 
     def init_research_team(self):
         # Initialize agents
-        writer_agent = WriterAgent(self.websocket, self.stream_output)
-        editor_agent = EditorAgent(self.websocket, self.stream_output)
-        research_agent = ResearchAgent(self.websocket, self.stream_output)
+        writer_agent = WriterAgent(self.websocket, self.stream_output, self.headers)
+        editor_agent = EditorAgent(self.websocket, self.stream_output, self.headers)
+        research_agent = ResearchAgent(self.websocket, self.stream_output, self.headers)
         publisher_agent = PublisherAgent(self.output_dir, self.websocket, self.stream_output)
 
         # Define a Langchain StateGraph with the ResearchState

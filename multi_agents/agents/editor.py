@@ -13,9 +13,10 @@ from . import \
 
 
 class EditorAgent:
-    def __init__(self, websocket=None, stream_output=None):
+    def __init__(self, websocket=None, stream_output=None, headers=None):
         self.websocket = websocket
         self.stream_output = stream_output
+        self.headers = headers or {}
 
     async def plan_research(self, research_state: dict):
         """
@@ -48,7 +49,7 @@ class EditorAgent:
         }]
 
         print_agent_output(f"Planning an outline layout based on initial research...", agent="EDITOR")
-        response = await call_model(prompt=prompt, model=task.get("model"), response_format="json")
+        response = await call_model(prompt=prompt, model=task.get("model"), response_format="json", api_key=self.headers.get("openai_api_key"))
         plan = json.loads(response)
 
         return {
