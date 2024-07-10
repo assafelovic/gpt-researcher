@@ -34,7 +34,8 @@ async def run_research_task(query, websocket=None, stream_output=None, headers=N
             "Each sub section MUST include supporting sources using hyperlinks. If none exist, erase the sub section or rewrite it to be a part of the previous section",
             "The report MUST be written in spanish"
         ],
-        "verbose": True
+        "verbose": True,
+        "llm_provider": "openai"
     }
 
     chief_editor = ChiefEditorAgent(task, websocket, stream_output, headers)
