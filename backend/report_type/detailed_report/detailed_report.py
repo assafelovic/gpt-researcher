@@ -8,6 +8,7 @@ from gpt_researcher.master.actions import (
     table_of_contents,
 )
 from gpt_researcher.master.agent import GPTResearcher
+from gpt_researcher.utils.enum import Tone
 
 
 class DetailedReport:
@@ -18,7 +19,7 @@ class DetailedReport:
         report_source: str,
         source_urls,
         config_path: str,
-        tone: str,
+        tone: Tone,
         websocket: WebSocket,
         subtopics=[],
     ):
@@ -38,6 +39,7 @@ class DetailedReport:
             report_source=self.report_source,
             source_urls=self.source_urls,
             config_path=self.config_path,
+            tone=self.tone,
             websocket=self.websocket,
         )
         self.existing_headers = []
@@ -119,6 +121,7 @@ class DetailedReport:
             visited_urls=self.global_urls,
             agent=self.main_task_assistant.agent,
             role=self.main_task_assistant.role,
+            tone=self.tone,
         )
 
         # The subtopics should start research from the context gathered till now
