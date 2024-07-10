@@ -99,6 +99,7 @@ class GPTResearcher:
                 cfg=self.cfg,
                 parent_query=self.parent_query,
                 cost_callback=self.add_costs,
+                headers=self.headers
             )
 
         if self.verbose:
@@ -159,6 +160,7 @@ class GPTResearcher:
                 tone=self.tone,
                 websocket=self.websocket,
                 cfg=self.cfg,
+                headers=self.headers
             )
         elif self.report_type == "subtopic_report":
             report = await generate_report(
@@ -173,6 +175,7 @@ class GPTResearcher:
                 main_topic=self.parent_query,
                 existing_headers=existing_headers,
                 cost_callback=self.add_costs,
+                headers=self.headers
             )
         else:
             report = await generate_report(
@@ -185,6 +188,7 @@ class GPTResearcher:
                 websocket=self.websocket,
                 cfg=self.cfg,
                 cost_callback=self.add_costs,
+                headers=self.headers
             )
 
         return report

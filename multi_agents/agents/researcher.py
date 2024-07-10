@@ -21,10 +21,10 @@ class ResearchAgent:
 
         return report
 
-    async def run_subtopic_research(self, parent_query: str, subtopic: str, verbose: bool = True, source="web"):
+    async def run_subtopic_research(self, parent_query: str, subtopic: str, verbose: bool = True, source="web", headers=None):
         try:
             report = await self.research(parent_query=parent_query, query=subtopic,
-                                         research_report="subtopic_report", verbose=verbose, source=source)
+                                         research_report="subtopic_report", verbose=verbose, source=source, headers=None)
         except Exception as e:
             print(f"{Fore.RED}Error in researching topic {subtopic}: {e}{Style.RESET_ALL}")
             report = None
@@ -40,7 +40,7 @@ class ResearchAgent:
         else:
             print_agent_output(f"Running initial research on the following query: {query}", agent="RESEARCHER")
         return {"task": task, "initial_research": await self.research(query=query, verbose=task.get("verbose"),
-                                                                      source=source)}
+                                                                      source=source, headers=self.headers)}
 
     async def run_depth_research(self, draft_state: dict):
         task = draft_state.get("task")
@@ -53,5 +53,5 @@ class ResearchAgent:
         else:
             print_agent_output(f"Running in depth research on the following report topic: {topic}", agent="RESEARCHER")
         research_draft = await self.run_subtopic_research(parent_query=parent_query, subtopic=topic,
-                                                          verbose=verbose, source=source)
+                                                          verbose=verbose, source=source, headers=self.headers)
         return {"draft": research_draft}
