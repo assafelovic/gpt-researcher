@@ -7,6 +7,7 @@ import markdown
 
 from gpt_researcher.master.prompts import *
 from gpt_researcher.scraper.scraper import Scraper
+from gpt_researcher.utils.enum import Tone
 from gpt_researcher.utils.llm import *
 
 
@@ -47,6 +48,7 @@ def get_retriever(retriever):
             retriever = BingSearch
         case "arxiv":
             from gpt_researcher.retrievers import ArxivSearch
+
             retriever = ArxivSearch
         case "tavily":
             from gpt_researcher.retrievers import TavilySearch
@@ -82,6 +84,8 @@ async def choose_agent(query, cfg, parent_query=None, cost_callback: callable = 
         agent_role_prompt: Agent role prompt
     """
     query = f"{parent_query} - {query}" if parent_query else f"{query}"
+    response = None  # Initialize response to ensure it's defined
+
     try:
         response = await create_chat_completion(
             model=cfg.smart_llm_model,
@@ -306,6 +310,7 @@ async def generate_report(
     context,
     agent_role_prompt: str,
     report_type: str,
+    tone: Tone,
     report_source: str,
     websocket,
     cfg,
@@ -321,6 +326,7 @@ async def generate_report(
         agent_role_prompt:
         report_type:
         websocket:
+        tone:
         cfg:
         main_topic:
         existing_headers:
@@ -334,9 +340,9 @@ async def generate_report(
     report = ""
 
     if report_type == "subtopic_report":
-        content = f"{generate_prompt(query, existing_headers, main_topic, context, cfg.report_format, cfg.total_words)}"
+        content = f"{generate_prompt(query, existing_headers, main_topic, context, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words)}"
     else:
-        content = f"{generate_prompt(query, context, report_source, cfg.report_format, cfg.total_words)}"
+        content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words)}"
 
     try:
         report = await create_chat_completion(
