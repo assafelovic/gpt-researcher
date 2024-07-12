@@ -300,7 +300,7 @@ class GPTResearcher:
         """
         # Get Urls
         retriever = self.retriever(sub_query)
-        search_results = retriever.search(
+        search_results = await asyncio.to_thread(retriever.search,
             max_results=self.cfg.max_search_results_per_query
         )
         new_search_urls = await self.__get_new_urls(
@@ -314,7 +314,7 @@ class GPTResearcher:
             )
 
         # Scrape Urls
-        scraped_content_results = scrape_urls(new_search_urls, self.cfg)
+        scraped_content_results = await asyncio.to_thread(scrape_urls, new_search_urls, self.cfg)
         return scraped_content_results
 
     async def __get_similar_content_by_query(self, query, pages):
@@ -330,7 +330,7 @@ class GPTResearcher:
             documents=pages, embeddings=self.memory.get_embeddings()
         )
         # Run Tasks
-        return context_compressor.get_context(
+        return await context_compressor.async_get_context(
             query=query, max_results=8, cost_callback=self.add_costs
         )
 
