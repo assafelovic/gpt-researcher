@@ -67,6 +67,7 @@ async def run_agent(task, report_type, report_source, tone: Tone, websocket, hea
     # Instead of running the agent directly run it through the different report type classes
     if report_type == "multi_agents":
         report = await run_research_task(query=task, websocket=websocket, stream_output=stream_output, headers=headers)
+        report = report.get("report", "")
     elif report_type == ReportType.DetailedReport.value:
         researcher = DetailedReport(
             query=task,
