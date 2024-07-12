@@ -19,8 +19,9 @@ class Memory:
                                                    check_embedding_ctx_length=False) #quick fix for lmstudio
             case "openai":
                 from langchain_openai import OpenAIEmbeddings
-                _embeddings = OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL,
-                                               openai_api_key=headers.get("openai_api_key") or os.environ.get("OPENAI_API_KEY"))
+                _embeddings = OpenAIEmbeddings(openai_api_key=headers.get("openai_api_key") or os.environ.get("OPENAI_API_KEY"),
+                                               model=OPENAI_EMBEDDING_MODEL
+                                              )
             case "azureopenai":
                 from langchain_openai import AzureOpenAIEmbeddings
                 _embeddings = AzureOpenAIEmbeddings(deployment=os.environ["AZURE_EMBEDDING_MODEL"], chunk_size=16)
