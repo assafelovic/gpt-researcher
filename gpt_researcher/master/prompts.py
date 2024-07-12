@@ -38,7 +38,12 @@ def generate_search_queries_prompt(
 
 
 def generate_report_prompt(
-    question: str, context, report_source: str, report_format="apa", total_words=1000
+    question: str,
+    context,
+    report_source: str,
+    report_format="apa",
+    total_words=1000,
+    tone=None,
 ):
     """Generates the report prompt for the given question and research summary.
     Args: question (str): The question to generate the report prompt for
@@ -60,6 +65,8 @@ def generate_report_prompt(
             You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
         """
 
+    tone_prompt = f"Write the report in a {tone} tone." if tone else ""
+
     return f"""
 Information: "{context}"
 ---
@@ -75,6 +82,7 @@ Please follow all of the following guidelines in your report:
 - Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
 - Don't forget to add a reference list at the end of the report in {report_format} format and full url links without hyperlinks.
 - {reference_prompt}
+- {tone_prompt}
 
 Please do your best, this is very important to my career.
 Assume that the current date is {date.today()}.
