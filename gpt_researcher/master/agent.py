@@ -48,7 +48,7 @@ class GPTResearcher:
             subtopics: list
             visited_urls: set
         """
-        self.headers = headers or {}  # Store the headers
+        self.headers = headers or {}
         self.query: str = query
         self.agent: str = agent
         self.role: str = role
@@ -64,7 +64,7 @@ class GPTResearcher:
         self.context = context
         self.source_urls = source_urls
         self.documents = documents
-        self.memory = Memory(self.cfg.embedding_provider, headers=headers)
+        self.memory = Memory(self.cfg.embedding_provider, self.headers)
         self.visited_urls: set[str] = visited_urls
         self.verbose: bool = verbose
         self.websocket = websocket
