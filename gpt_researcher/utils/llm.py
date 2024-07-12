@@ -43,6 +43,9 @@ def get_llm(llm_provider, **kwargs):
         case "anthropic":
             from ..llm_provider import AnthropicProvider
             llm_provider = AnthropicProvider
+        case "unify":
+            from ..llm_provider import UnifyProvider
+            llm_provider = UnifyProvider
         # Generic case for all other providers supported by Langchain
         case _:
             from gpt_researcher.llm_provider import GenericLLMProvider
