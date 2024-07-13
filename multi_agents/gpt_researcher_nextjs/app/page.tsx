@@ -41,6 +41,21 @@ export default function Home() {
   }, [orderedData]);
 
   const startResearch = (chatBoxSettings) => {
+    const storedConfig = localStorage.getItem('apiVariables');
+    const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
+    const headers = {
+      'retriever': apiVariables.RETRIEVER,
+      'langchain_api_key': apiVariables.LANGCHAIN_API_KEY,
+      'openai_api_key': apiVariables.OPENAI_API_KEY,
+      'tavily_api_key': apiVariables.TAVILY_API_KEY,
+      'google_api_key': apiVariables.GOOGLE_API_KEY,
+      'google_cx_key': apiVariables.GOOGLE_CX_KEY,
+      'bing_api_key': apiVariables.BING_API_KEY,
+      'serpapi_api_key': apiVariables.SERPAPI_API_KEY,
+      'serper_api_key': apiVariables.SERPER_API_KEY,
+      'searx_url': apiVariables.SEARX_URL
+    };
+    
     if (!socket) {
       if (typeof window !== 'undefined') {
         const { protocol, pathname } = window.location;
@@ -68,20 +83,6 @@ export default function Home() {
   
         newSocket.onopen = () => {
           const { task, report_type, report_source } = chatBoxSettings;
-          const storedConfig = localStorage.getItem('apiVariables');
-          const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
-          const headers = {
-            'retriever': apiVariables.RETRIEVER,
-            'langchain_api_key': apiVariables.LANGCHAIN_API_KEY,
-            'openai_api_key': apiVariables.OPENAI_API_KEY,
-            'tavily_api_key': apiVariables.TAVILY_API_KEY,
-            'google_api_key': apiVariables.GOOGLE_API_KEY,
-            'google_cx_key': apiVariables.GOOGLE_CX_KEY,
-            'bing_api_key': apiVariables.BING_API_KEY,
-            'serpapi_api_key': apiVariables.SERPAPI_API_KEY,
-            'serper_api_key': apiVariables.SERPER_API_KEY,
-            'searx_url': apiVariables.SEARX_URL
-          };
           let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, headers });
           newSocket.send(data);
         };
@@ -92,19 +93,6 @@ export default function Home() {
       }
     } else {
       const { task, report_type, report_source } = chatBoxSettings;
-      const storedConfig = localStorage.getItem('apiVariables');
-      const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
-      const headers = {
-        'langchain_api_key': apiVariables.LANGCHAIN_API_KEY,
-        'openai_api_key': apiVariables.OPENAI_API_KEY,
-        'tavily_api_key': apiVariables.TAVILY_API_KEY,
-        'google_api_key': apiVariables.GOOGLE_API_KEY,
-        'google_cx_key': apiVariables.GOOGLE_CX_KEY,
-        'bing_api_key': apiVariables.BING_API_KEY,
-        'serpapi_api_key': apiVariables.SERPAPI_API_KEY,
-        'serper_api_key': apiVariables.SERPER_API_KEY,
-        'searx_url': apiVariables.SEARX_URL
-      };
       let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, headers });
       socket.send(data);
     }
