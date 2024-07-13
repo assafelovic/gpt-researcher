@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+// multi_agents/gpt_researcher_nextjs/components/Task/ResearchForm.js
+
+import React from 'react';
 import FileUpload from '../Settings/FileUpload';
+import ToneSelector from '../Settings/ToneSelector'; // Import ToneSelector
 
 export default function ResearchForm({ chatBoxSettings, setChatBoxSettings }) {
-    console.log('chatBoxSettings',chatBoxSettings)
+    console.log('chatBoxSettings', chatBoxSettings);
 
-    let {report_type, report_source} = chatBoxSettings;
+    let { report_type, report_source, tone } = chatBoxSettings;
 
     const onFormChange = (e) => {
         const { name, value } = e.target;
@@ -14,8 +17,16 @@ export default function ResearchForm({ chatBoxSettings, setChatBoxSettings }) {
         }));
     };
 
+    const onToneChange = (e) => {
+        const { value } = e.target;
+        setChatBoxSettings((prevSettings) => ({
+            ...prevSettings,
+            tone: value,
+        }));
+    };
+
     return (
-        <form method="POST" className="mt-3" className="report_settings">
+        <form method="POST" className="mt-3 report_settings">
             <div className="form-group">
                 <label htmlFor="report_type" className="agent_question">Report Type </label>
                 <select name="report_type" value={report_type} onChange={onFormChange} className="form-control" required>
@@ -32,7 +43,8 @@ export default function ResearchForm({ chatBoxSettings, setChatBoxSettings }) {
                     <option value="local">My Documents</option>
                 </select>
             </div>
-            {report_source == 'local' && report_type != 'multi_agents' ? <FileUpload /> : <></>}
+            {report_source === 'local' && report_type !== 'multi_agents' ? <FileUpload /> : null}
+            <ToneSelector tone={tone} onToneChange={onToneChange} /> {/* Add ToneSelector component */}
         </form>
     );
 }

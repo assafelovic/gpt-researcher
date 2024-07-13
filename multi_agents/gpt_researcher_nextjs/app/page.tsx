@@ -1,3 +1,5 @@
+// multi_agents/gpt_researcher_nextjs/app/page.tsx
+
 "use client";
 
 import Answer from "@/components/Answer";
@@ -24,13 +26,13 @@ export default function Home() {
   const [showResult, setShowResult] = useState(false);
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState({report_source: 'web', report_type: 'research_report'});
+  const [chatBoxSettings, setChatBoxSettings] = useState({ report_source: 'web', report_type: 'research_report', tone: 'Objective' });
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  
+
   const [question, setQuestion] = useState("");
   const [sources, setSources] = useState<{ name: string; url: string }[]>([]);
   const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
-  
+
   const [socket, setSocket] = useState(null);
   const [orderedData, setOrderedData] = useState([]);
 
@@ -55,23 +57,23 @@ export default function Home() {
       'serper_api_key': apiVariables.SERPER_API_KEY,
       'searx_url': apiVariables.SEARX_URL
     };
-    
+
     if (!socket) {
       if (typeof window !== 'undefined') {
         const { protocol, pathname } = window.location;
         let { host } = window.location;
         host = host.includes('localhost') ? 'localhost:8000' : host;
         const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
-  
+
         const newSocket = new WebSocket(ws_uri);
         setSocket(newSocket);
-  
+
         newSocket.onmessage = (event) => {
           const data = JSON.parse(event.data);
           console.log('websocket data caught in frontend: ', data);
           const contentAndType = `${data.content}-${data.type}`;
           setOrderedData((prevOrder) => [...prevOrder, { ...data, contentAndType }]);
-  
+
           if (data.type === 'report') {
             setAnswer((prev) => prev + data.output);
           } else if (data.type === 'path') {
@@ -80,20 +82,20 @@ export default function Home() {
             setSocket(null);
           }
         };
-  
+
         newSocket.onopen = () => {
-          const { task, report_type, report_source } = chatBoxSettings;
-          let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, headers });
+          const { task, report_type, report_source, tone } = chatBoxSettings;
+          let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
           newSocket.send(data);
         };
-  
+
         newSocket.onclose = () => {
           setSocket(null);
         };
       }
     } else {
-      const { task, report_type, report_source } = chatBoxSettings;
-      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, headers });
+      const { task, report_type, report_source, tone } = chatBoxSettings;
+      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
       socket.send(data);
     }
   };
@@ -110,7 +112,7 @@ export default function Home() {
     // Add the new question to orderedData
     setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: newQuestion }]);
 
-    const {report_type, report_source} = chatBoxSettings;
+    const { report_type, report_source, tone } = chatBoxSettings;
 
     // Retrieve LANGGRAPH_HOST_URL from local storage or state
     const storedConfig = localStorage.getItem('apiVariables');
@@ -119,10 +121,10 @@ export default function Home() {
 
     if (report_type === 'multi_agents' && langgraphHostUrl) {
 
-      let {streamResponse, host, thread_id} = await startLanggraphResearch(newQuestion, report_source, langgraphHostUrl);
+      let { streamResponse, host, thread_id } = await startLanggraphResearch(newQuestion, report_source, langgraphHostUrl);
 
       const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
-      
+
       console.log('langsmith-gui-link in page.tsx', langsmithGuiLink);
       // Add the Langgraph button to orderedData
       setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphButton', link: langsmithGuiLink }]);
@@ -137,7 +139,7 @@ export default function Home() {
         } else if (previousChunk) {
           const differences = findDifferences(previousChunk, chunk);
           setOrderedData((prevOrder) => [...prevOrder, { type: 'differences', content: 'differences', output: JSON.stringify(differences) }]);
-        } 
+        }
         previousChunk = chunk;
       }
     } else {
@@ -248,9 +250,9 @@ export default function Home() {
           text: item.output,
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
-        
+
         return <LogMessage key={uniqueKey} logs={logs} />;
-      
+
       } else if (data.type === 'sourceBlock') {
         const uniqueKey = `sourceBlock-${index}`;
         return <Sources key={uniqueKey} sources={data.items} isLoading={false} />;
