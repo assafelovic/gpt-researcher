@@ -28,7 +28,10 @@ class WebSocketManager:
             message = await queue.get()
             if websocket in self.active_connections:
                 try:
-                    await websocket.send_text(message)
+                    if message == "ping":
+                        await websocket.send_text("pong")
+                    else:
+                        await websocket.send_text(message)
                 except:
                     break
             else:

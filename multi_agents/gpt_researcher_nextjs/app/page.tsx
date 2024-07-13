@@ -1,5 +1,3 @@
-// multi_agents/gpt_researcher_nextjs/app/page.tsx
-
 "use client";
 
 import Answer from "@/components/Answer";
@@ -11,9 +9,7 @@ import InputArea from "@/components/InputArea";
 import Sources from "@/components/Sources";
 import Question from "@/components/Question";
 import SubQuestions from "@/components/SubQuestions";
-
 import { useRef, useState, useEffect } from "react";
-
 import AccessReport from '../components/Task/AccessReport';
 import Accordion from '../components/Task/Accordion';
 import LogMessage from '../components/Task/LogMessage';
@@ -35,6 +31,7 @@ export default function Home() {
 
   const [socket, setSocket] = useState(null);
   const [orderedData, setOrderedData] = useState([]);
+  const heartbeatInterval = useRef(null);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -87,9 +84,15 @@ export default function Home() {
           const { task, report_type, report_source, tone } = chatBoxSettings;
           let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
           newSocket.send(data);
+
+          // Start sending heartbeat messages every 30 seconds
+          heartbeatInterval.current = setInterval(() => {
+            newSocket.send(JSON.stringify({ type: 'ping' }));
+          }, 30000);
         };
 
         newSocket.onclose = () => {
+          clearInterval(heartbeatInterval.current);
           setSocket(null);
         };
       }
