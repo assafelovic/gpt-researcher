@@ -178,10 +178,10 @@ export default function Home() {
     let currentSourceGroup = null;
     let currentReportGroup = null;
     let finalReportGroup = null;
-
+  
     data.forEach((item) => {
       const { type, content, metadata, output, link } = item;
-
+  
       if (type === 'report') {
         if (!currentReportGroup) {
           currentReportGroup = { type: 'reportBlock', content: '' };
@@ -202,7 +202,7 @@ export default function Home() {
         if (currentReportGroup) {
           currentReportGroup = null;
         }
-
+  
         if (content === 'subqueries') {
           if (currentAccordionGroup) {
             currentAccordionGroup = null;
@@ -230,23 +230,22 @@ export default function Home() {
             currentAccordionGroup = null;
           }
           if (currentSourceGroup) {
-            groupedData.push(currentSourceGroup);
             currentSourceGroup = null;
           }
           groupedData.push(item);
         }
       }
     });
-
+  
     return groupedData;
   };
 
   const renderComponentsInOrder = () => {
     const groupedData = preprocessOrderedData(orderedData);
+    console.log('orderedData in renderComponentsInOrder: ', groupedData)
 
     return groupedData.map((data, index) => {
       if (data.type === 'accordionBlock') {
-        console.log('data in accordionBlock', data)
         const uniqueKey = `accordionBlock-${index}`;
         const logs = data.items.map((item, subIndex) => ({
           header: item.content,
