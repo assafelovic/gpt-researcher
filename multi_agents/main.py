@@ -3,6 +3,7 @@ from .agents import ChiefEditorAgent
 import asyncio
 import json
 import os
+from gpt_researcher.utils.enum import Tone
 
 # Run with LangSmith if API key is set
 if os.environ.get("LANGCHAIN_API_KEY"):
@@ -18,7 +19,7 @@ def open_task():
 
     return task
 
-async def run_research_task(query, websocket=None, stream_output=None, headers=None):
+async def run_research_task(query, websocket=None, stream_output=None, tone=Tone.Objective, headers=None):
     task = {
         "query": query,
         "max_sections": 3,
@@ -38,7 +39,7 @@ async def run_research_task(query, websocket=None, stream_output=None, headers=N
         "llm_provider": "openai"
     }
 
-    chief_editor = ChiefEditorAgent(task, websocket, stream_output, headers)
+    chief_editor = ChiefEditorAgent(task, websocket, stream_output, tone, headers)
     research_report = await chief_editor.run_research_task()
 
     if websocket and stream_output:

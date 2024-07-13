@@ -1,12 +1,9 @@
 from langchain_community.vectorstores import FAISS
 import os
-import sys
 OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
 
 class Memory:
     def __init__(self, embedding_provider, headers=None, **kwargs):
-        print("Memory init here are the headers", headers)
-        sys.stdout.flush()  # Force the print statement to flush
         _embeddings = None
         headers = headers or {}
         match embedding_provider:

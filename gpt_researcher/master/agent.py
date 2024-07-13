@@ -52,7 +52,6 @@ class GPTResearcher:
         self.query: str = query
         self.agent: str = agent
         self.role: str = role
-        self.tone: Tone = tone
         self.report_type: str = report_type
         self.report_prompt: str = get_prompt_by_report_type(
             self.report_type
@@ -69,6 +68,14 @@ class GPTResearcher:
         self.verbose: bool = verbose
         self.websocket = websocket
         self.headers = headers or {}
+        # Ensure tone is an instance of Tone enum
+        if isinstance(tone, dict):
+            print(f"Invalid tone format: {tone}. Setting to default Tone.Objective.")
+            self.tone = Tone.Objective
+        elif isinstance(tone, str):
+            self.tone = Tone[tone]
+        else:
+            self.tone = tone
 
         # Only relevant for DETAILED REPORTS
         # --------------------------------------
