@@ -21,7 +21,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
     SERPAPI_API_KEY: '',
     SERPER_API_KEY: '',
     SEARX_URL: '',
-    LANGGRAPH_HOST_URL: '' // Add new state variable
+    LANGGRAPH_HOST_URL: ''
   });
 
   useEffect(() => {
