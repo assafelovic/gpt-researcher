@@ -19,7 +19,7 @@ services:
       - CHOKIDAR_USEPOLLING=true
     build:
       dockerfile: Dockerfile.dev
-      context: ./multi_agents/gpt_researcher_nextjs
+      context: multi_agents/frontend
     volumes:
       - /app/node_modules
       - ./multi_agents/gpt_researcher_nextjs:/app
