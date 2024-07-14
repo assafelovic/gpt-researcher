@@ -12,17 +12,17 @@ const Footer = ({ setChatBoxSettings, chatBoxSettings}) => {
           <Link href={"https://hub.docker.com/r/gptresearcher/gpt-researcher"} target="_blank">
               <Image
                 src={"/img/docker-blue.svg"}
-                alt="facebook"
-                width={16}
-                height={16}
+                alt="docker"
+                width={35}
+                height={35}
               />{" "}
           </Link>
           <Link href={"https://github.com/assafelovic/gpt-researcher"} target="_blank">
             <Image
               src={"/img/github-blue.svg"}
-              alt="facebook"
-              width={16}
-              height={16}
+              alt="github"
+              width={35}
+              height={35}
             />{" "}
           </Link>
         </div>

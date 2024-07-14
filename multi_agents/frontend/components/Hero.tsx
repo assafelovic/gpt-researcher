@@ -23,15 +23,6 @@ const Hero: FC<THeroProps> = ({
     <div>
 
       <div className="flex flex-col items-center justify-center">
-        <a
-          className="mb-4 inline-flex h-7 shrink-0 items-center gap-[9px] rounded-[50px] border-[0.5px] border-solid border-[#E6E6E6] bg-white px-3 py-4 shadow-[0px_1px_1px_0px_rgba(0,0,0,0.25)]"
-          href="https://github.com/assafelovic/gpt-researcher"
-          target="_blank"
-        >
-          <span className="text-center text-base font-light leading-[normal] text-[#1B1B16]">
-            Powered by GPT Researcher
-          </span>
-        </a>
         <div className="landing">
           <h1 className="text-4xl font-extrabold mx-auto lg:text-7xl">
             Say Goodbye to <br/>

@@ -7,7 +7,7 @@ interface SubQuestionsProps {
 
 const SubQuestions: React.FC<SubQuestionsProps> = ({ metadata, handleClickSuggestion }) => {
   return (
-    <div className="container flex w-full items-start gap-3 px-5 pt-2 lg:px-10">
+    <div className="container flex w-full items-start gap-3 pt-2">
       <div className="flex w-fit items-center gap-4">
         <Image
           src={"/img/thinking.svg"}
@@ -21,7 +21,7 @@ const SubQuestions: React.FC<SubQuestionsProps> = ({ metadata, handleClickSugges
         <p className="pr-5 font-bold leading-[152%] text-white pb-[30px]">
           Pondering your question from several angles
         </p>
-        <div className="flex flex-col items-center gap-2.5 pb-[30px]">
+        <div className="flex flex-row flex-wrap items-center gap-2.5 pb-[30px]">
           {metadata.map((item, subIndex) => (
             <div
               className="flex cursor-pointer items-center justify-center gap-[5px] rounded-full border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"

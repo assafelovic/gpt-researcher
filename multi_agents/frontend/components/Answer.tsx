@@ -25,24 +25,9 @@ export default function Answer({ answer }: { answer: string }) {
   }, [answer]);
   
   return (
-    <div className="container flex h-auto w-full shrink-0 gap-4 rounded-lg border border-solid border-[#C2C2C2] bg-white p-5 lg:p-10">
-      <div className="hidden lg:block">
-        <Image src="/img/Info.svg" alt="footer" width={24} height={24} />
-      </div>
+    <div className="container flex h-auto w-full shrink-0 gap-4 bg-gray-900 shadow-md rounded-lg border border-solid border-[#C2C2C2] p-5">
       <div className="w-full">
         <div className="flex items-center justify-between pb-3">
-          <div className="flex gap-4">
-            <Image
-              src="/img/Info.svg"
-              alt="footer"
-              width={24}
-              height={24}
-              className="block lg:hidden"
-            />
-            <h3 className="text-base font-bold uppercase text-black">
-              Answer:{" "}
-            </h3>
-          </div>
           {answer && (
             <div className="flex items-center gap-3">
               {/* <Image
@@ -60,12 +45,13 @@ export default function Answer({ answer }: { answer: string }) {
                   });
                 }}
               >
+
                 <Image
                   src="/img/copy.svg"
                   alt="footer"
                   width={20}
                   height={20}
-                  className="cursor-pointer"
+                  className="cursor-pointer text-white"
                 />
               </button>
               {/* <Image
@@ -79,7 +65,7 @@ export default function Answer({ answer }: { answer: string }) {
           )}
         </div>
         <div className="flex flex-wrap content-center items-center gap-[15px]">
-          <div className="w-full whitespace-pre-wrap text-base font-light leading-[152.5%] text-black">
+          <div className="w-full whitespace-pre-wrap text-base font-light leading-[152.5%] text-white">
             {answer ? (
               <div className="answer-container">
                 <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
@@ -95,27 +81,25 @@ export default function Answer({ answer }: { answer: string }) {
                     padding: 0;
                     /* Override existing styles for headings */
                     h1, h2, h3, h4, h5, h6 {
-                      font-size: 18px; font-weight: 400; padding: 0px 0px 5px;
-                      margin-top: 1em;
-                      margin-bottom: 0.2em;
+                      font-size: 18px; font-weight: 400; padding: 0;
                       line-height: 1.2;
                     }
                     /* Optionally add more specific styling */
                     h1 {
                       font-size: 2.5em;
-                      color: #333;
+                      color: white;
                     }
                     h2 {
                       font-size: 2em;
-                      color: #555;
+                      color: white;
                     }
                     h3 {
                       font-size: 1.5em;
-                      color: #777;
+                      color: white;
                     }
                     h4 {
                       font-size: 1.2em;
-                      color: #999;
+                      color: white;
                     }
                     /* Add more styles as needed */
 
@@ -123,7 +107,6 @@ export default function Answer({ answer }: { answer: string }) {
                     ul {
                       list-style-type: none;
                       padding-left: 0;
-                      margin-top: 1em;
                       margin-bottom: 1em;
                     }
                     ul > li {
