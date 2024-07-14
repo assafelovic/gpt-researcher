@@ -22,7 +22,7 @@ services:
       context: multi_agents/frontend
     volumes:
       - /app/node_modules
-      - ./multi_agents/gpt_researcher_nextjs:/app
+      - ./multi_agents/frontend:/app
     restart: always
     ports:
       - 3000:3000
