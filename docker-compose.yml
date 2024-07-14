@@ -11,18 +11,18 @@ services:
     restart: always
     ports:
       - 8000:8000
-  # gptr-nextjs:
-  #   pull_policy: build
-  #   image: gptresearcher/gptr-nextjs
-  #   stdin_open: true
-  #   environment:
-  #     - CHOKIDAR_USEPOLLING=true
-  #   build:
-  #     dockerfile: Dockerfile.dev
-  #     context: ./multi_agents/gpt_researcher_nextjs
-  #   volumes:
-  #     - /app/node_modules
-  #     - ./multi_agents/gpt_researcher_nextjs:/app
-  #   restart: always
-  #   ports:
-  #     - 3000:3000
+  gptr-nextjs:
+    pull_policy: build
+    image: gptresearcher/gptr-nextjs
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./multi_agents/gpt_researcher_nextjs
+    volumes:
+      - /app/node_modules
+      - ./multi_agents/gpt_researcher_nextjs:/app
+    restart: always
+    ports:
+      - 3000:3000
