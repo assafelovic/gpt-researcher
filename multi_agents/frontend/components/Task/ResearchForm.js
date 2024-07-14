@@ -30,10 +30,9 @@ export default function ResearchForm({ chatBoxSettings, setChatBoxSettings }) {
             <div className="form-group">
                 <label htmlFor="report_type" className="agent_question">Report Type </label>
                 <select name="report_type" value={report_type} onChange={onFormChange} className="form-control" required>
-                    <option value="multi_agents">Multi Agents</option>
-                    <option value="research_report">Research Report</option>
-                    <option value="resource_report">Resource Report</option>
-                    <option value="outline_report">Outline Report</option>
+                    <option value="multi_agents">Multi Agents Report</option>
+                    <option value="research_report">Summary - Short and fast (~2 min)</option>
+                    <option value="detailed_report">Detailed - In depth and longer (~5 min)</option>
                 </select>
             </div>
             <div className="form-group">

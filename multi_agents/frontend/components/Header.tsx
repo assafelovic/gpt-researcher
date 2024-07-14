@@ -10,9 +10,9 @@ const Header = () => {
             <Image
               src="/img/gptr-logo.png"
               alt="logo"
-              width={40}
-              height={39}
-              className="h-[33px] w-[35px] lg:h-10 lg:w-10"
+              width={60}
+              height={60}
+              className="lg:h-20 lg:w-20"
             />
           </a>
         </div>
