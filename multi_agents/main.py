@@ -1,9 +1,16 @@
 from dotenv import load_dotenv
-from .agents import ChiefEditorAgent
 import asyncio
 import json
 import os
-from gpt_researcher.utils.enum import Tone
+
+# Try to import ChiefEditorAgent from the package
+try:
+    from gpt_researcher.multi_agents.agents import ChiefEditorAgent
+    from gpt_researcher.utils.enum import Tone
+except ImportError:
+    # Fallback to local imports if running as a standalone script
+    from agents import ChiefEditorAgent
+    from utils.enum import Tone
 
 # Run with LangSmith if API key is set
 if os.environ.get("LANGCHAIN_API_KEY"):
@@ -55,5 +62,8 @@ async def main():
 
     return research_report
 
-if __name__ == "__main__":
+def run_server():
     asyncio.run(main())
+
+if __name__ == "__main__":
+    run_server()
