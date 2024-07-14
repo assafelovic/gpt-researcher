@@ -105,7 +105,7 @@ From there, see documentation [here](https://github.com/langchain-ai/langgraph-e
 
 ## NextJS Frontend App
 
-The React app is our Frontend 2.0 which we hope will enable us to display the robustness of the backend on the frontend, as well.
+The React app (located in `frontend` directory) is our Frontend 2.0 which we hope will enable us to display the robustness of the backend on the frontend, as well.
 
 It comes with loads of added features, such as: 
  - a drag-n-drop user interface for uploading and deleting files to be used as local documents by GPTResearcher.
@@ -136,7 +136,7 @@ Visit localhost:3000 on any browser and enjoy researching!
 ### Run the NextJS React App with NPM
 
 ```bash
-cd gpt_researcher_nextjs
+cd frontend
 nvm install 18.17.0
 nvm use v18.17.0
 npm install --legacy-peer-deps
