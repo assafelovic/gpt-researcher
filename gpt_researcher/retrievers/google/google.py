@@ -11,20 +11,21 @@ class GoogleSearch:
     """
     Tavily API Retriever
     """
-    def __init__(self, query):
+    def __init__(self, query, headers=None):
         """
         Initializes the TavilySearch object
         Args:
             query:
         """
         self.query = query
-        self.api_key = self.get_api_key() #GOOGLE_API_KEY
-        self.cx_key = self.get_cx_key() #GOOGLE_CX_KEY
+        self.headers = headers or {}
+        self.api_key = self.headers.get("google_api_key") or self.get_api_key()  # Use the passed api_key or fallback to environment variable
+        self.cx_key = self.headers.get("google_cx_key") or self.get_cx_key()  # Use the passed cx_key or fallback to environment variable
         self.client = TavilyClient(self.api_key)
 
     def get_api_key(self):
         """
-        Gets the Tavily API key
+        Gets the Google API key
         Returns:
 
         """
@@ -38,7 +39,7 @@ class GoogleSearch:
 
     def get_cx_key(self):
         """
-        Gets the Tavily API key
+        Gets the Google CX key
         Returns:
 
         """

@@ -1,4 +1,4 @@
-from agents import ChiefEditorAgent
+from multi_agents.agents import ChiefEditorAgent
 
 chief_editor = ChiefEditorAgent({
   "query": "Is AI in a hype cycle?",
@@ -11,6 +11,6 @@ chief_editor = ChiefEditorAgent({
     "The report MUST be written in spanish"
   ],
   "verbose": False
-})
+}, websocket=None, stream_output=None)
 graph = chief_editor.init_research_team()
 graph = graph.compile()

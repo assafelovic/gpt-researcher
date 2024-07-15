@@ -12,8 +12,8 @@ sample_revision_notes = """
 """
 
 class ReviserAgent:
-    def __init__(self):
-        pass
+    def __init__(self, headers=None):
+        self.headers = headers or {}
 
     def revise_draft(self, draft_state: dict):
         """
@@ -38,7 +38,7 @@ You MUST return nothing but a JSON in the following format:
 """
         }]
 
-        response = call_model(prompt, model=task.get("model"), response_format='json')
+        response = call_model(prompt, model=task.get("model"), response_format='json', api_key=self.headers.get("openai_api_key"))
         return json.loads(response)
 
     def run(self, draft_state: dict):
