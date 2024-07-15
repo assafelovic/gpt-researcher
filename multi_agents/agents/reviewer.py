@@ -6,10 +6,10 @@ Your goal is to review research drafts and provide feedback to the reviser only 
 """
 
 class ReviewerAgent:
-    def __init__(self):
-        pass
+    def __init__(self, headers=None):
+        self.headers = headers or {}
 
-    def review_draft(self, draft_state: dict):
+    async def review_draft(self, draft_state: dict):
         """
         Review a draft article
         :param draft_state:
@@ -41,10 +41,13 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
             "content": review_prompt
         }]
 
-        response = call_model(prompt, model=task.get("model"))
+        response = call_model(prompt, model=task.get("model"), api_key=self.headers.get("openai_api_key"))
 
         if task.get("verbose"):
-            print_agent_output(f"Review feedback is: {response}...", agent="REVIEWER")
+            if self.websocket and self.stream_output:
+                await self.stream_output("logs", "review_feedback", f"Review feedback is: {response}...", self.websocket)
+            else:
+                print_agent_output(f"Review feedback is: {response}...", agent="REVIEWER")
 
         if 'None' in response:
             return None

@@ -12,10 +12,11 @@ sample_json = """
 }
 """
 
-
 class WriterAgent:
-    def __init__(self):
-        pass
+    def __init__(self, websocket=None, stream_output=None, headers=None):
+        self.websocket = websocket
+        self.stream_output = stream_output
+        self.headers = headers
 
     def get_headers(self, research_state: dict):
         return {
@@ -27,7 +28,7 @@ class WriterAgent:
             "references": "References"
         }
 
-    def write_sections(self, research_state: dict):
+    async def write_sections(self, research_state: dict):
         query = research_state.get("title")
         data = research_state.get("research_data")
         task = research_state.get("task")
@@ -55,10 +56,10 @@ class WriterAgent:
 
         }]
 
-        response = call_model(prompt, task.get("model"), max_retries=2, response_format='json')
+        response = await call_model(prompt, task.get("model"), max_retries=2, response_format='json', api_key=self.headers.get("openai_api_key"))
         return json.loads(response)
 
-    def revise_headers(self, task: dict, headers: dict):
+    async def revise_headers(self, task: dict, headers: dict):
         prompt = [{
             "role": "system",
             "content": """You are a research writer. 
@@ -74,19 +75,30 @@ Headers Data: {headers}\n
 
         }]
 
-        response = call_model(prompt, task.get("model"), response_format='json')
+        response = await call_model(prompt, task.get("model"), response_format='json', headers=self.headers)
         return {"headers": json.loads(response)}
 
-    def run(self, research_state: dict):
-        print_agent_output(f"Writing final research report based on research data...", agent="WRITER")
-        research_layout_content = self.write_sections(research_state)
+    async def run(self, research_state: dict):
+        if self.websocket and self.stream_output:
+            await self.stream_output("logs", "writing_report", f"Writing final research report based on research data...", self.websocket)
+        else:
+            print_agent_output(f"Writing final research report based on research data...", agent="WRITER")
+
+        research_layout_content = await self.write_sections(research_state)
 
         if research_state.get("task").get("verbose"):
-            print_agent_output(research_layout_content, agent="WRITER")
+            if self.websocket and self.stream_output:
+                research_layout_content_str = json.dumps(research_layout_content, indent=2)
+                await self.stream_output("logs", "research_layout_content", research_layout_content_str, self.websocket)
+            else:
+                print_agent_output(research_layout_content, agent="WRITER")
 
         headers = self.get_headers(research_state)
         if research_state.get("task").get("follow_guidelines"):
-            print_agent_output("Rewriting layout based on guidelines...", agent="WRITER")
-            headers = self.revise_headers(task=research_state.get("task"), headers=headers).get("headers")
+            if self.websocket and self.stream_output:
+                await self.stream_output("logs", "rewriting_layout", "Rewriting layout based on guidelines...", self.websocket)
+            else:
+                print_agent_output("Rewriting layout based on guidelines...", agent="WRITER")
+            headers = await self.revise_headers(task=research_state.get("task"), headers=headers).get("headers")
 
         return {**research_layout_content, "headers": headers}

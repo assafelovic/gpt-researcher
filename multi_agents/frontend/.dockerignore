@@ -1,0 +1,57 @@
+.git
+
+# Ignore env containing secrets
+.env
+.venv
+.envrc
+
+# Ignore Virtual Env
+env/
+venv/
+.venv/
+
+# Other Environments
+ENV/
+env.bak/
+venv.bak/
+
+# Ignore generated outputs
+outputs/
+
+# Ignore my local docs
+my-docs/
+
+# Ignore pycache
+**/__pycache__/
+
+# Ignore mypy cache
+.mypy_cache/
+
+# Node modules
+node_modules
+
+# Ignore IDE config
+.idea
+
+# macOS specific files
+.DS_Store
+
+# Docusaurus build artifacts
+.docusaurus
+
+# Build directories
+build
+docs/build
+
+# Language graph data
+.langgraph-data/
+
+# Next.js build artifacts
+.next/
+
+# Package lock file
+package-lock.json
+
+# Docker-specific exclusions (if any)
+Dockerfile
+docker-compose.yml

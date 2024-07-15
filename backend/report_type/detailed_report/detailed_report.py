@@ -22,6 +22,7 @@ class DetailedReport:
         tone: Tone,
         websocket: WebSocket,
         subtopics=[],
+        headers=None
     ):
         self.query = query
         self.report_type = report_type
@@ -31,6 +32,7 @@ class DetailedReport:
         self.tone = tone
         self.websocket = websocket
         self.subtopics = subtopics
+        self.headers = headers or {}
 
         # A parent task assistant. Adding research_report as default
         self.main_task_assistant = GPTResearcher(
@@ -41,6 +43,7 @@ class DetailedReport:
             config_path=self.config_path,
             tone=self.tone,
             websocket=self.websocket,
+            headers=self.headers
         )
         self.existing_headers = []
         # This is a global variable to store the entire context accumulated at any point through searching and scraping
@@ -116,6 +119,7 @@ class DetailedReport:
             report_type="subtopic_report",
             report_source=self.report_source,
             websocket=self.websocket,
+            headers=self.headers,
             parent_query=self.query,
             subtopics=self.subtopics,
             visited_urls=self.global_urls,

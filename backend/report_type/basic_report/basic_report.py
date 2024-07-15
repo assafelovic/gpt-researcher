@@ -1,7 +1,7 @@
 from fastapi import WebSocket
 
 from gpt_researcher.master.agent import GPTResearcher
-
+from gpt_researcher.utils.enum import Tone
 
 class BasicReport:
     def __init__(
@@ -10,9 +10,10 @@ class BasicReport:
         report_type: str,
         report_source: str,
         source_urls,
-        tone: str,
+        tone: Tone,
         config_path: str,
         websocket: WebSocket,
+        headers=None
     ):
         self.query = query
         self.report_type = report_type
@@ -21,6 +22,7 @@ class BasicReport:
         self.tone = tone
         self.config_path = config_path
         self.websocket = websocket
+        self.headers = headers or {}
 
     async def run(self):
         # Initialize researcher
@@ -32,6 +34,7 @@ class BasicReport:
             tone=self.tone,
             config_path=self.config_path,
             websocket=self.websocket,
+            headers=self.headers
         )
 
         # Run research

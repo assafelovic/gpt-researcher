@@ -102,3 +102,43 @@ langgraph up
 ```
 
 From there, see documentation [here](https://github.com/langchain-ai/langgraph-example) on how to use the streaming and async endpoints, as well as the playground.
+
+## NextJS Frontend App
+
+The React app (located in `frontend` directory) is our Frontend 2.0 which we hope will enable us to display the robustness of the backend on the frontend, as well.
+
+It comes with loads of added features, such as: 
+ - a drag-n-drop user interface for uploading and deleting files to be used as local documents by GPTResearcher.
+ - a GUI for setting your GPTR environment variables.
+ - the ability to trigger the multi_agents flow via the Backend Module or Langgraph Cloud Host (currently in closed beta).
+ - stability fixes
+ - and more coming soon!
+
+### Run the NextJS React App with Docker
+
+> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker)
+
+> **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
+
+> **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
+
+```bash
+$ docker-compose up --build
+```
+
+> **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
+ - the Python server running on localhost:8000<br>
+ - the React app running on localhost:3000<br>
+
+Visit localhost:3000 on any browser and enjoy researching!
+
+
+### Run the NextJS React App with NPM
+
+```bash
+cd frontend
+nvm install 18.17.0
+nvm use v18.17.0
+npm install --legacy-peer-deps
+npm run dev
+```

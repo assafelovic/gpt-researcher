@@ -1,0 +1,215 @@
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+}
+
+.tab-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease-in-out;
+}
+
+.tab-button:hover {
+  opacity: 0.8;
+}
+
+.tab-button.active {
+  background-image: linear-gradient(to right, #9867F0, #ED4E50);
+  color: white;
+  border-radius: 5px;
+}
+
+.settings html {
+  scroll-behavior: smooth;
+}
+
+.settings body {
+  font-family: 'Montserrat', sans-serif;
+  color: #fff;
+  line-height: 1.6;
+  background-size: 200% 200%;
+  background-image: linear-gradient(45deg, #151A2D, #2D284D, #151A2D);
+  animation: gradientBG 10s ease infinite;
+}
+
+.settings .landing {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh; /* Adjusted height */
+  text-align: center;
+}
+
+.settings .landing h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+.settings .landing p {
+  font-size: 1.5rem;
+  font-weight: 400;
+  max-width: 500px;
+  margin: auto;
+  margin-bottom: 2rem;
+}
+
+.settings .container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.1);
+  transition: all .3s ease-in-out;
+  max-height: 80vh; /* Fixed maximum height */
+  overflow-y: auto; /* Enable scrolling if content overflows */
+}
+
+.settings .container:hover {
+  transform: scale(1.01);
+  box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.settings input, 
+.settings select, 
+.settings #output, 
+.settings #reportContainer {
+  background-color: rgba(0, 0, 0, 0.5); /* Darker background color */
+  border: none;
+  color: #fff; /* White text color */
+  transition: all .3s ease-in-out;
+}
+
+.settings input:hover, 
+.settings input:focus, 
+.settings select:hover, 
+.settings select:focus {
+  background-color: #333; /* Darker hover/focus background color */
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.settings .btn-primary {
+  background: linear-gradient(to right, #0062cc, #007bff);
+  border: none;
+  transition: all .3s ease-in-out;
+}
+
+.settings .btn-secondary {
+  background: linear-gradient(to right, #6c757d, #6c757d);
+  border: none;
+  transition: all .3s ease-in-out;
+}
+
+.settings .btn:hover {
+  opacity: 0.8;
+  transform: scale(1.1);
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.settings .agent_question {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.settings footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(to right, #151A2D, #111827);
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.settings .margin-div {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+.settings .agent_response {
+  background-color: #747d8c;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.settings #output {
+  height: 150px; /* Adjusted height */
+  font-family: 'Times New Roman', Times, "Courier New", serif;
+  overflow: auto;
+  padding: 10px;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.settings #reportContainer {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  transition: all .3s ease-in-out;
+  padding: 10px;
+  border-radius: 12px;
+}
+
+/* refactoring inline css */
+.settings .sayGoodbye {
+  background-image: linear-gradient(to right, #9867F0, #ED4E50);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.settings .form-group {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.settings .form-group label {
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.settings .form-group input,
+.settings .form-group select {
+  flex: 2;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 0.375rem; /* Rounded corners */
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background-color: rgba(0, 0, 0, 0.5); /* Darker background color */
+  color: #fff; /* White text color */
+  transition: all 0.3s ease-in-out;
+}
+
+.settings .form-group input:hover,
+.settings .form-group input:focus,
+.settings .form-group select:hover,
+.settings .form-group select:focus {
+  background-color: #333; /* Darker hover/focus background color */
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}

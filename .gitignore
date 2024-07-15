@@ -30,5 +30,8 @@ node_modules
 .docusaurus
 build
 docs/build
-multi_agents/.langgraph-data/
+
 .vscode/launch.json
+.langgraph-data/
+.next/
+package-lock.json

@@ -10,13 +10,14 @@ class TavilySearch():
     """
     Tavily API Retriever
     """
-    def __init__(self, query, topic="general"):
+    def __init__(self, query, headers, topic="general"):
         """
         Initializes the TavilySearch object
         Args:
             query:
         """
         self.query = query
+        self.headers = headers
         self.api_key = self.get_api_key()
         self.client = TavilyClient(self.api_key)
         self.topic = topic
@@ -27,12 +28,12 @@ class TavilySearch():
         Returns:
 
         """
-        # Get the API key
-        try:
-            api_key = os.environ["TAVILY_API_KEY"]
-        except:
-            raise Exception("Tavily API key not found. Please set the TAVILY_API_KEY environment variable. "
-                            "You can get a key at https://app.tavily.com")
+        api_key = self.headers.get("tavily_api_key")
+        if not api_key:
+            try:
+                api_key = os.environ["TAVILY_API_KEY"]
+            except KeyError:
+                raise Exception("Tavily API key not found. Please set the TAVILY_API_KEY environment variable.")
         return api_key
 
     def search(self, max_results=7):
