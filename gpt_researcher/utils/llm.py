@@ -57,7 +57,7 @@ async def create_chat_completion(
         temperature: float = 1.0,
         max_tokens: Optional[int] = None,
         llm_provider: Optional[str] = None,
-        openai_api_key=None, 
+        openai_api_key=None,
         stream: Optional[bool] = False,
         websocket: Any | None = None,
         llm_kwargs: Dict[str, Any] | None = None,
@@ -84,8 +84,20 @@ async def create_chat_completion(
         raise ValueError(
             f"Max tokens cannot be more than 8001, but got {max_tokens}")
 
+    # Prepare kwargs for the provider
+    provider_kwargs = {
+        "model": model,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        **(llm_kwargs or {})
+    }
+
+    # Add openai_api_key if the provider is not OllamaProvider
+    if llm_provider != "OllamaProvider":
+        provider_kwargs["openai_api_key"] = openai_api_key
+
     # Get the provider from supported providers
-    provider = get_llm(llm_provider, model=model, temperature=temperature, max_tokens=max_tokens, openai_api_key=openai_api_key, **(llm_kwargs or {}))
+    provider = get_llm(llm_provider, **provider_kwargs)
 
     response = ""
     # create response
