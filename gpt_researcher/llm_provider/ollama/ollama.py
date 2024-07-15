@@ -9,13 +9,15 @@ class OllamaProvider:
         self,
         model,
         temperature,
-        max_tokens
+        max_tokens,
+        **kwargs  # Accept additional keyword arguments
     ):
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.base_url = self.get_base_url()
         self.llm = self.get_llm_model()
+        self.openai_api_key = kwargs.get('openai_api_key', None)  # Optionally handle openai_api_key
 
     def get_base_url(self):
         """
