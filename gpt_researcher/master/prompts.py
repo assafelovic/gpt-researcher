@@ -28,9 +28,11 @@ def generate_search_queries_prompt(
     else:
         task = question
 
-    return f'Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"' \
-           f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"].\n' \
-           f'The response should contain ONLY the list.'
+    return (
+        f'Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"'
+        f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"].\n'
+        f"The response should contain ONLY the list."
+    )
 
 
 def generate_report_prompt(
@@ -61,7 +63,7 @@ def generate_report_prompt(
             You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
         """
 
-    tone_prompt = f"Write the report in a {tone} tone." if tone else ""
+    tone_prompt = f"Write the report in a {tone.value} tone." if tone else ""
 
     return f"""
 Information: "{context}"
@@ -236,7 +238,7 @@ def generate_subtopic_report_prompt(
     report_format: str = "apa",
     max_subsections=5,
     total_words=800,
-    tone: Tone = Tone.Objective.value,
+    tone: Tone = Tone.Objective,
 ) -> str:
     return f"""
 "Context":
