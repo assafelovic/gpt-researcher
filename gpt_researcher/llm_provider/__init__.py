@@ -7,6 +7,7 @@ from .together.together import TogetherProvider
 from .anthropic.anthropic import AnthropicProvider
 from .mistral.mistral import MistralProvider
 from .huggingface.huggingface import HugginFaceProvider
+from .unify.unify import UnifyProvider
 from .generic import GenericLLMProvider
 
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
     "AnthropicProvider",
     "MistralProvider",
     "HugginFaceProvider",
+    "UnifyProvider",
     "GenericLLMProvider",
 ]
