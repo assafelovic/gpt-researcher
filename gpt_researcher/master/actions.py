@@ -345,9 +345,15 @@ async def generate_report(
     report = ""
 
     if report_type == "subtopic_report":
-        content = f"{generate_prompt(query, existing_headers, main_topic, context, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words)}"
+        if tone is None:
+           content = f"{generate_prompt(query, existing_headers, main_topic, context, report_format=cfg.report_format, total_words=cfg.total_words)}"
+        else:
+           content = f"{generate_prompt(query, existing_headers, main_topic, context, report_format=cfg.report_format, tone=tone if tone else 'neutral', total_words=cfg.total_words)}"
     else:
-        content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words)}"
+        if tone is None:
+            content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, total_words=cfg.total_words)}"
+        else:   
+            content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, total_words=cfg.total_words)}"
 
     try:
         report = await create_chat_completion(
