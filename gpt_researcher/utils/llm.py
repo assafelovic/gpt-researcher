@@ -57,7 +57,7 @@ async def create_chat_completion(
         temperature: float = 1.0,
         max_tokens: Optional[int] = None,
         llm_provider: Optional[str] = None,
-        openai_api_key=None, 
+        openai_api_key=None,
         stream: Optional[bool] = False,
         websocket: Any | None = None,
         llm_kwargs: Dict[str, Any] | None = None,
