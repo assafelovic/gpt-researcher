@@ -343,18 +343,37 @@ async def generate_report(
     """
     generate_prompt = get_prompt_by_report_type(report_type)
     report = ""
-
+    
     if report_type == "subtopic_report":
-        if tone is None:
-           content = f"{generate_prompt(query, existing_headers, main_topic, context, report_format=cfg.report_format, total_words=cfg.total_words)}"
-        else:
-           content = f"{generate_prompt(query, existing_headers, main_topic, context, report_format=cfg.report_format, tone=tone if tone else 'neutral', total_words=cfg.total_words)}"
+        content = f"{generate_prompt(query, existing_headers, main_topic, context, report_format=cfg.report_format, total_words=cfg.total_words)}"
+        if tone:
+            content += f", tone={tone}"
+        summary = await create_chat_completion(
+            model=cfg.fast_llm_model,
+            messages=[
+                {"role": "system", "content": agent_role_prompt},
+                {"role": "user", "content": content}
+            ],
+            temperature=0,
+            llm_provider=cfg.llm_provider,
+            llm_kwargs=cfg.llm_kwargs,
+            cost_callback=cost_callback,
+        )
     else:
-        if tone is None:
-            content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, total_words=cfg.total_words)}"
-        else:   
-            content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, total_words=cfg.total_words)}"
-
+        content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, total_words=cfg.total_words)}"
+        if tone:
+            content += f", tone={tone}"
+        summary = await create_chat_completion(
+            model=cfg.fast_llm_model,
+            messages=[
+                {"role": "system", "content": agent_role_prompt},
+                {"role": "user", "content": content}
+            ],
+            temperature=0,
+            llm_provider=cfg.llm_provider,
+            llm_kwargs=cfg.llm_kwargs,
+            cost_callback=cost_callback,
+        )
     try:
         report = await create_chat_completion(
             model=cfg.smart_llm_model,
