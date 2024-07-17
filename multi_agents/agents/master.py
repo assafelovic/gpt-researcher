@@ -3,6 +3,7 @@ import time
 from langgraph.graph import StateGraph, END
 from .utils.views import print_agent_output
 from ..memory.research import ResearchState
+from .utils.utils import sanitize_filename
 
 
 # Import agent classes
@@ -15,7 +16,7 @@ from . import \
 class ChiefEditorAgent:
     def __init__(self, task: dict, websocket=None, stream_output=None, tone=None, headers=None):
         self.task_id = int(time.time()) # Currently time based, but can be any unique identifier
-        self.output_dir = f"./outputs/run_{self.task_id}_{task.get('query')[0:40]}"
+        self.output_dir = sanitize_filename(f"./outputs/run_{self.task_id}_{task.get('query')[0:40]}")
         self.task = task
         self.websocket = websocket
         self.stream_output = stream_output
