@@ -22,7 +22,8 @@
 <!--[![Twitter](https://img.shields.io/badge/Twitter-000000?style=flat-square&logo=x&logoColor=white)](https://twitter.com/assaf_elovic)-->
 
 [English](https://github.com/assafelovic/gpt-researcher/blob/master/README.md) |
-[中文](https://github.com/assafelovic/gpt-researcher/blob/master/README-zh_CN.md)
+[中文](https://github.com/assafelovic/gpt-researcher/blob/master/README-zh_CN.md) |
+[日本語](https://github.com/assafelovic/gpt-researcher/blob/master/README-ja_JP.md)
 </div>
 
 **GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks.** 
