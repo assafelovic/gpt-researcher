@@ -61,7 +61,7 @@ class GPTResearcher:
         self.cfg = Config(config_path)
         self.retriever = get_retriever(self.headers.get("retriever")) or get_retriever(
             self.cfg.retriever
-        )
+        ) or get_default_retriever()
         self.context = context
         self.source_urls = source_urls
         self.documents = documents
