@@ -59,7 +59,9 @@ class GPTResearcher:
         self.report_source: str = report_source
         self.research_costs: float = 0.0
         self.cfg = Config(config_path)
-        self.retriever = get_retriever( self.cfg.retriever)
+        self.retriever = get_retriever(self.headers.get("retriever")) or get_retriever(
+            self.cfg.retriever
+        ) or get_default_retriever()
         self.context = context
         self.source_urls = source_urls
         self.documents = documents
