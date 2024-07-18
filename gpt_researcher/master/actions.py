@@ -64,10 +64,13 @@ def get_retriever(retriever):
             retriever = CustomRetriever
 
         case _:
-            from gpt_researcher.retrievers import TavilySearch
-            retriever = TavilySearch
+            retriever = None
 
     return retriever
+
+def get_default_retriever(retriever):
+    from gpt_researcher.retrievers import TavilySearch
+    return TavilySearch
 
 
 async def choose_agent(query, cfg, parent_query=None, cost_callback: callable = None, headers=None):
