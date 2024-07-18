@@ -335,7 +335,7 @@ class GPTResearcher:
             Summary
         """
         # Get Urls
-        retriever = self.retriever(sub_query, headers=self.headers)
+        retriever = self.retriever(sub_query)
         search_results = await asyncio.to_thread(
             retriever.search, max_results=self.cfg.max_search_results_per_query
         )
