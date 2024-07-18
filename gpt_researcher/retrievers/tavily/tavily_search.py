@@ -10,14 +10,14 @@ class TavilySearch():
     """
     Tavily API Retriever
     """
-    def __init__(self, query, headers, topic="general"):
+    def __init__(self, query, headers=None, topic="general"):
         """
         Initializes the TavilySearch object
         Args:
             query:
         """
         self.query = query
-        self.headers = headers
+        self.headers = headers or {}
         self.api_key = self.get_api_key()
         self.client = TavilyClient(self.api_key)
         self.topic = topic
