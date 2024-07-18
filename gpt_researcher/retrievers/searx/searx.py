@@ -18,7 +18,6 @@ class SearxSearch():
         """
         self.query = query
         self.api_key = self.get_api_key()
-        self.client = TavilyClient(self.api_key)
 
     def get_api_key(self):
         """
