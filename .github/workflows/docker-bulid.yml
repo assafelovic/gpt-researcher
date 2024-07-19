@@ -21,4 +21,15 @@ jobs:
           push: false
           tags: assafelovic/gpt-researcher:latest
           file: Dockerfile
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-asyncio gpt-researcher
+      - name: Set environment variables
+        run: |
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
+          echo "TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }}" >> $GITHUB_ENV
+      - name: Run tests
+        run: |
+          pytest tests/all-6-report-types.py
 
