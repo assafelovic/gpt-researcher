@@ -1,5 +1,3 @@
-from langchain_community.document_loaders import WebBaseLoader
-
 
 class WebBaseLoaderScraper:
 
@@ -18,6 +16,7 @@ class WebBaseLoaderScraper:
         occurs during the process, an error message is printed and an empty string is returned.
         """
         try:
+            from langchain_community.document_loaders import WebBaseLoader
             loader = WebBaseLoader(self.link)
             loader.requests_kwargs = {"verify": False}
             docs = loader.load()
