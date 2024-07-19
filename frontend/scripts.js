@@ -82,8 +82,10 @@ const GPTResearcher = (() => {
   const updateDownloadLink = (data) => {
     const pdf_path = data.output.pdf
     const docx_path = data.output.docx
-    document.getElementById('downloadLink').setAttribute('href', pdf_path)
-    document.getElementById('downloadLinkWord').setAttribute('href', docx_path)
+    const md_path = data.output.md;
+    document.getElementById('downloadLink').setAttribute('href', pdf_path);
+    document.getElementById('downloadLinkWord').setAttribute('href', docx_path);
+    document.getElementById("downloadLinkMd").setAttribute("href", md_path);
   }
 
   const updateScroll = () => {
