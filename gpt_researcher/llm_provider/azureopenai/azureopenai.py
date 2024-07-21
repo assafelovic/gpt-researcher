@@ -14,8 +14,8 @@ Needs additional env vars such as:
 config.py settings for Azure OpenAI should look like:
     self.embedding_provider = os.getenv('EMBEDDING_PROVIDER', 'azureopenai')
     self.llm_provider = os.getenv('LLM_PROVIDER', "azureopenai")
-    self.fast_llm_model = os.getenv('FAST_LLM_MODEL', "gpt-3.5-turbo-16k") #Deployment name of your GPT3.5T model as per azure OpenAI studio deployment section
-    self.smart_llm_model = os.getenv('SMART_LLM_MODEL', "gpt4")  #Deployment name of your GPT4 1106-Preview+ (GPT4T) model as per azure OpenAI studio deployment section
+    self.fast_llm_model = os.getenv('FAST_LLM_MODEL', "gpt-4o-mini") #Deployment name of your GPT-4o model as per azure OpenAI studio deployment section
+    self.smart_llm_model = os.getenv('SMART_LLM_MODEL', "gpt-4o")  #Deployment name of your GPT-4o (GPT-4o) model as per azure OpenAI studio deployment section
 '''
 class AzureOpenAIProvider:
 
