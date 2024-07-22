@@ -14,8 +14,8 @@ class Config:
         self.similarity_threshold = int(os.getenv('SIMILARITY_THRESHOLD', 0.38))
         self.llm_provider = os.getenv('LLM_PROVIDER', "openai")
         self.ollama_base_url = os.getenv('OLLAMA_BASE_URL', None)
-        self.llm_model = "gpt-3.5-turbo"  
-        self.fast_llm_model = os.getenv('FAST_LLM_MODEL', "gpt-3.5-turbo-16k")
+        self.llm_model = "gpt-4o-mini"  
+        self.fast_llm_model = os.getenv('FAST_LLM_MODEL', "gpt-4o-mini")
         self.smart_llm_model = os.getenv('SMART_LLM_MODEL', "gpt-4o")
         self.fast_token_limit = int(os.getenv('FAST_TOKEN_LIMIT', 2000))
         self.smart_token_limit = int(os.getenv('SMART_TOKEN_LIMIT', 4000))
