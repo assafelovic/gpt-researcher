@@ -25,7 +25,7 @@ OPENAI_BASE_URL="http://localhost:1234/v1"
 OPENAI_API_KEY="Your Key"
 
 # specify the custom OpenAI API llm model  
-FAST_LLM_MODEL="gpt-3.5-turbo-16k"
+FAST_LLM_MODEL="gpt-4o-mini"
 # specify the custom OpenAI API llm model  
 SMART_LLM_MODEL="gpt-4o"
 

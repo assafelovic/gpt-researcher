@@ -46,7 +46,7 @@ def summarize_text(
     """Summarize text using the OpenAI API
 
     Args:
-        fast_llm_model (str): The fast LLM model e.g gpt3.5-turbo-16k
+        fast_llm_model (str): The fast LLM model e.g gpt-4o-mini
         summary_token_limit (int): The summary token limit
         llm_provider (str): The llm provider
         url (str): The url of the text
