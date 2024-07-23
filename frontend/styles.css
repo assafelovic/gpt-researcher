@@ -1,7 +1,13 @@
 @keyframes gradientBG {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
+    0% {
+        background-position: 0 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0 50%;
+    }
 }
 
 html {
@@ -35,27 +41,25 @@ body {
     font-size: 1.5rem;
     font-weight: 400;
     max-width: 500px;
-    margin: auto;
-    margin-bottom: 2rem;
+    margin: auto auto 2rem auto;
 }
 
 .container {
-    margin: auto;
     padding: 20px;
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     transition: all .3s ease-in-out;
-    margin-bottom: 180px;
+    margin: auto auto 180px auto;
 }
 
 .container:hover {
     transform: scale(1.01);
-    box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
 input, select, #output, #reportContainer {
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255, 255, 255, 0.1);
     border: none;
     color: #fff;
     transition: all .3s ease-in-out;
@@ -64,7 +68,7 @@ input, select, #output, #reportContainer {
 input:hover, input:focus, select:hover, select:focus {
     background-color: #dfe4ea;
     border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease-in-out;
 }
 
@@ -83,7 +87,7 @@ input:hover, input:focus, select:hover, select:focus {
 .btn:hover {
     opacity: 0.8;
     transform: scale(1.1);
-    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 .agent_question {
@@ -118,7 +122,7 @@ footer {
 
 #output {
     height: 300px;
-    font-family: 'Times New Roman', Times, , "Courier New", serif;
+    font-family: 'Times New Roman', Times, "Courier New", serif;
     overflow: auto;
     padding: 10px;
     margin-bottom: 10px;
@@ -127,10 +131,40 @@ footer {
 }
 
 #reportContainer {
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255, 255, 255, 0.1);
     border: none;
     color: #fff;
     transition: all .3s ease-in-out;
     padding: 25px;
     border-radius: 12px;
+}
+
+.tags-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    border: 1px solid #ccc;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.tag {
+    background-color: #007bff;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+}
+
+.tag .remove-tag {
+    margin-left: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.tag-input {
+    border: none;
+    outline: none;
+    flex-grow: 1;
 }
