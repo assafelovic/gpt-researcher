@@ -2,34 +2,33 @@ name: GitHub Actions Workflow
 run-name: ${{ github.actor }} has started docker build workflow.
 on:
   pull_request:
-    types: [opened, edited, ready_for_review]
+    types: [opened, edited, ready_for_review, synchronize]
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
         uses: actions/checkout@master
+      
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
+      
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
         with:
           driver: docker
+      
       - name: Build Dockerfile
         uses: docker/build-push-action@v4
         with:
           push: false
-          tags: assafelovic/gpt-researcher:latest
+          tags: gptresearcher/gpt-researcher:latest
           file: Dockerfile
-      - name: Install dependencies
+      
+      - name: Run Docker container
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest pytest-asyncio gpt-researcher
-      - name: Set environment variables
-        run: |
-          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
-          echo "TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }}" >> $GITHUB_ENV
-      - name: Run tests
-        run: |
-          pytest tests/all-6-report-types.py
-
+          docker run --rm \
+            -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+            -e TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }} \
+            gptresearcher/gpt-researcher:latest \
+            /bin/sh -c "pip install pytest pytest-asyncio && pytest tests/all-6-report-types.py"
