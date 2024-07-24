@@ -30,6 +30,12 @@ RUN pip install -r requirements.txt
 
 FROM gpt-researcher-install AS gpt-researcher
 
+ARG OPENAI_API_KEY
+ARG TAVILY_API_KEY
+
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
+ENV TAVILY_API_KEY=${TAVILY_API_KEY}
+
 RUN useradd -ms /bin/bash gpt-researcher \
     && chown -R gpt-researcher:gpt-researcher /usr/src/app
 
