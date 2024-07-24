@@ -18,12 +18,12 @@ jobs:
         with:
           driver: docker
       
-      - name: Build Docker images
-        uses: docker/build-push-action@v4
-        with:
-          push: false
-          tags: gptresearcher/gpt-researcher:latest
-          file: Dockerfile
+      # - name: Build Docker images
+      #   uses: docker/build-push-action@v4
+      #   with:
+      #     push: false
+      #     tags: gptresearcher/gpt-researcher:latest
+      #     file: Dockerfile
           
       - name: Set up Docker Compose
         run: |
