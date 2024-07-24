@@ -24,11 +24,12 @@ jobs:
           push: false
           tags: gptresearcher/gpt-researcher:latest
           file: Dockerfile
+          build-args: 
+            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+            TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
       
       - name: Run Docker container
         run: |
           docker run --rm \
-            -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-            -e TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }} \
             gptresearcher/gpt-researcher:latest \
             /bin/sh -c "pytest tests/all-6-report-types.py"
