@@ -31,4 +31,4 @@ jobs:
             -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
             -e TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }} \
             gptresearcher/gpt-researcher:latest \
-            /bin/sh -c "pip install --user pytest pytest-asyncio && PATH=$PATH:/root/.local/bin && pytest tests/all-6-report-types.py"
+            /bin/sh -c "pytest tests/all-6-report-types.py"
