@@ -18,7 +18,7 @@ jobs:
         with:
           driver: docker
       
-      - name: Build Dockerfile
+      - name: Build Docker images
         uses: docker/build-push-action@v4
         with:
           push: false
@@ -28,8 +28,15 @@ jobs:
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
             TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
       
-      - name: Run Docker container
+      - name: Set up Docker Compose
         run: |
-          docker run --rm \
-            gptresearcher/gpt-researcher:latest \
-            /bin/sh -c "pytest tests/all-6-report-types.py"
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+      
+      - name: Run tests with Docker Compose
+        run: |
+          docker-compose run --rm gpt-researcher-tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
