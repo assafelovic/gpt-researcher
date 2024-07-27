@@ -9,6 +9,15 @@ const GPTResearcher = (() => {
     updateState('initial')
   }
 
+  const changeSource = () => {
+    const report_source = document.querySelector('select[name="report_source"]').value
+    if (report_source === 'sources') {
+        document.getElementById('sources').style.display = 'block'
+    } else {
+        document.getElementById('sources').style.display = 'none'
+    }
+  }
+
   const startResearch = () => {
     document.getElementById('output').innerHTML = ''
     document.getElementById('reportContainer').innerHTML = ''
@@ -51,11 +60,17 @@ const GPTResearcher = (() => {
       ).value
       const tone = document.querySelector('select[name="tone"]').value
       const agent = document.querySelector('input[name="agent"]:checked').value
+      let source_urls = tags
+
+      if (report_source !== 'sources' && source_urls.length > 0) {
+        source_urls = source_urls.slice(0, source_urls.length - 1)
+      }
 
       const requestData = {
         task: task,
         report_type: report_type,
         report_source: report_source,
+        source_urls: source_urls,
         tone: tone,
         agent: agent,
       }
@@ -159,9 +174,36 @@ const GPTResearcher = (() => {
     }
   }
 
+  const tagsInput = document.getElementById('tags-input');
+  const input = document.getElementById('custom_source');
+
+  const tags = [];
+
+  const addTag = (url) => {
+    if (tags.includes(url)) return;
+    tags.push(url);
+
+    const tagElement = document.createElement('span');
+    tagElement.className = 'tag';
+    tagElement.textContent = url;
+
+    const removeButton = document.createElement('span');
+    removeButton.className = 'remove-tag';
+    removeButton.textContent = 'x';
+    removeButton.onclick = function () {
+        tagsInput.removeChild(tagElement);
+        tags.splice(tags.indexOf(url), 1);
+    };
+
+    tagElement.appendChild(removeButton);
+    tagsInput.insertBefore(tagElement, input);
+  }
+
   document.addEventListener('DOMContentLoaded', init)
   return {
     startResearch,
     copyToClipboard,
+    changeSource,
+      addTag,
   }
 })()

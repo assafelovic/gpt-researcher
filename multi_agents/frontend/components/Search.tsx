@@ -46,7 +46,7 @@ const Search = () => {
     setReportType(reportType);
     setReportSource(reportSource);
     // Send data to WebSocket server if needed
-    let data = "start " + JSON.stringify({ task: task.value, report_type: report_type.value, report_source: report_source.value });
+    let data = "start " + JSON.stringify({ task: task.value, report_type: reportType.value, report_source: reportSource.value });
     socket.send(data);
   };
 

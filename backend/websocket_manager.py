@@ -54,14 +54,14 @@ class WebSocketManager:
             del self.message_queues[websocket]
 
 
-    async def start_streaming(self, task, report_type, report_source, tone, websocket, headers=None):
+    async def start_streaming(self, task, report_type, report_source, source_urls, tone, websocket, headers=None):
         """Start streaming the output."""
         tone = Tone[tone]
-        report = await run_agent(task, report_type, report_source, tone, websocket, headers)
+        report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers)
         return report
 
 
-async def run_agent(task, report_type, report_source, tone: Tone, websocket, headers=None):
+async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers=None):
     """Run the agent."""
     # measure time
     start_time = datetime.datetime.now()
@@ -76,7 +76,7 @@ async def run_agent(task, report_type, report_source, tone: Tone, websocket, hea
             query=task,
             report_type=report_type,
             report_source=report_source,
-            source_urls=None,
+            source_urls=source_urls,
             tone=tone,
             config_path=config_path,
             websocket=websocket,
@@ -88,14 +88,14 @@ async def run_agent(task, report_type, report_source, tone: Tone, websocket, hea
             query=task,
             report_type=report_type,
             report_source=report_source,
-            source_urls=None,
+            source_urls=source_urls,
             tone=tone,
             config_path=config_path,
             websocket=websocket,
             headers=headers
         )
         report = await researcher.run()
-        
+
     # measure time
     end_time = datetime.datetime.now()
     await websocket.send_json(

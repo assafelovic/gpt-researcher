@@ -179,7 +179,19 @@
             autoAgentDiv.style.display = 'flex';
             agentChoices[0].style.display = 'none';
         });
-    </script>
+
+        const tagsInput = document.getElementById('tags-input');
+        const input = document.getElementById('custom_source');
+
+        input.addEventListener('keypress', function (e) {
+            if ((e.key === 'Enter' || e.key === ",") && input.value !== '') {
+                e.preventDefault();
+                GPTResearcher.addTag(input.value);
+                input.value = '';
+            }
+        });
+
+</script>
 </body>
 
 </html>
