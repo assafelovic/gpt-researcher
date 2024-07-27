@@ -94,7 +94,8 @@ class GPTResearcher:
         """
         # Reset visited_urls and source_urls at the start of each research task
         self.visited_urls.clear()
-        self.source_urls = []
+        if self.report_source != ReportSource.Sources.value:
+            self.source_urls = []
 
         if self.verbose:
             await stream_output(
