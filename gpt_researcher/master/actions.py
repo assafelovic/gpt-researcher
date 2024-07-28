@@ -58,6 +58,10 @@ def get_retriever(retriever):
             from gpt_researcher.retrievers import ExaSearch
 
             retriever = ExaSearch
+        case "semantic_scholar":
+            from gpt_researcher.retrievers import SemanticScholarSearch
+
+            retriever = SemanticScholarSearch
         case "custom":
             from gpt_researcher.retrievers import CustomRetriever
 
