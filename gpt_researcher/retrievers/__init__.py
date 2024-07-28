@@ -7,6 +7,7 @@ from .searx.searx import SearxSearch
 from .serpapi.serpapi import SerpApiSearch
 from .serper.serper import SerperSearch
 from .tavily.tavily_search import TavilySearch
+from .semantic_scholar.semantic_scholar import SemanticScholarSearch
 
 __all__ = [
     "TavilySearch",
@@ -17,5 +18,6 @@ __all__ = [
     "GoogleSearch",
     "SearxSearch",
     "BingSearch",
-    "ArxivSearch"
+    "ArxivSearch",
+    "SemanticScholarSearch",
 ]
