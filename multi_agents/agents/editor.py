@@ -60,8 +60,8 @@ class EditorAgent:
 
     async def run_parallel_research(self, research_state: dict):
         research_agent = ResearchAgent(self.websocket, self.stream_output, self.headers)
-        reviewer_agent = ReviewerAgent(self.headers)
-        reviser_agent = ReviserAgent(self.headers)
+        reviewer_agent = ReviewerAgent(self.websocket, self.stream_output, self.headers)
+        reviser_agent = ReviserAgent(self.websocket, self.stream_output, self.headers)
         queries = research_state.get("sections")
         title = research_state.get("title")
         workflow = StateGraph(DraftState)
