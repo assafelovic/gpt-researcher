@@ -6,7 +6,9 @@ Your goal is to review research drafts and provide feedback to the reviser only 
 """
 
 class ReviewerAgent:
-    def __init__(self, headers=None):
+    def __init__(self, websocket=None, stream_output=None, headers=None):
+        self.websocket = websocket
+        self.stream_output = stream_output
         self.headers = headers or {}
 
     async def review_draft(self, draft_state: dict):
@@ -41,7 +43,7 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
             "content": review_prompt
         }]
 
-        response = call_model(prompt, model=task.get("model"), api_key=self.headers.get("openai_api_key"))
+        response = await call_model(prompt, model=task.get("model"), api_key=self.headers.get("openai_api_key"))
 
         if task.get("verbose"):
             if self.websocket and self.stream_output:
@@ -53,7 +55,7 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
             return None
         return response
 
-    def run(self, draft_state: dict):
+    async def run(self, draft_state: dict):
         task = draft_state.get("task")
         guidelines = task.get("guidelines")
         to_follow_guidelines = task.get("follow_guidelines")
@@ -64,7 +66,7 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
             if task.get("verbose"):
                 print_agent_output(f"Following guidelines {guidelines}...", agent="REVIEWER")
 
-            review = self.review_draft(draft_state)
+            review = await self.review_draft(draft_state)
         else:
             print_agent_output(f"Ignoring guidelines...", agent="REVIEWER")
         return {"review": review}

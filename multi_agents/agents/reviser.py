@@ -12,10 +12,12 @@ sample_revision_notes = """
 """
 
 class ReviserAgent:
-    def __init__(self, headers=None):
+    def __init__(self, websocket=None, stream_output=None, headers=None):
+        self.websocket = websocket
+        self.stream_output = stream_output
         self.headers = headers or {}
 
-    def revise_draft(self, draft_state: dict):
+    async def revise_draft(self, draft_state: dict):
         """
         Review a draft article
         :param draft_state:
@@ -38,15 +40,18 @@ You MUST return nothing but a JSON in the following format:
 """
         }]
 
-        response = call_model(prompt, model=task.get("model"), response_format='json', api_key=self.headers.get("openai_api_key"))
+        response = await call_model(prompt, model=task.get("model"), response_format='json', api_key=self.headers.get("openai_api_key"))
         return json.loads(response)
 
-    def run(self, draft_state: dict):
+    async def run(self, draft_state: dict):
         print_agent_output(f"Rewriting draft based on feedback...", agent="REVISOR")
-        revision = self.revise_draft(draft_state)
+        revision = await self.revise_draft(draft_state)
 
         if draft_state.get("task").get("verbose"):
-            print_agent_output(f"Revision notes: {revision.get('revision_notes')}", agent="REVISOR")
+            if self.websocket and self.stream_output:
+                await self.stream_output("logs", "revision_notes", f"Revision notes: {revision.get('revision_notes')}", self.websocket)
+            else:
+                print_agent_output(f"Revision notes: {revision.get('revision_notes')}", agent="REVISOR")
 
         return {"draft": revision.get("draft"),
                 "revision_notes": revision.get("revision_notes")}
