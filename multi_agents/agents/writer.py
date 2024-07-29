@@ -75,7 +75,7 @@ Headers Data: {headers}\n
 
         }]
 
-        response = await call_model(prompt, task.get("model"), response_format='json', headers=self.headers)
+        response = await call_model(prompt, task.get("model"), response_format='json', api_key=self.headers.get("openai_api_key"))
         return {"headers": json.loads(response)}
 
     async def run(self, research_state: dict):
@@ -99,6 +99,7 @@ Headers Data: {headers}\n
                 await self.stream_output("logs", "rewriting_layout", "Rewriting layout based on guidelines...", self.websocket)
             else:
                 print_agent_output("Rewriting layout based on guidelines...", agent="WRITER")
-            headers = await self.revise_headers(task=research_state.get("task"), headers=headers).get("headers")
+            headers = await self.revise_headers(task=research_state.get("task"), headers=headers)
+            headers = headers.get("headers")
 
         return {**research_layout_content, "headers": headers}
