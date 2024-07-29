@@ -12,7 +12,9 @@ sample_revision_notes = """
 """
 
 class ReviserAgent:
-    def __init__(self, headers=None):
+    def __init__(self, websocket=None, stream_output=None, headers=None):
+        self.websocket = websocket
+        self.stream_output = stream_output
         self.headers = headers or {}
 
     async def revise_draft(self, draft_state: dict):
@@ -46,7 +48,10 @@ You MUST return nothing but a JSON in the following format:
         revision = await self.revise_draft(draft_state)
 
         if draft_state.get("task").get("verbose"):
-            print_agent_output(f"Revision notes: {revision.get('revision_notes')}", agent="REVISOR")
+            if self.websocket and self.stream_output:
+                await self.stream_output("logs", "revision_notes", f"Revision notes: {revision.get('revision_notes')}", self.websocket)
+            else:
+                print_agent_output(f"Revision notes: {revision.get('revision_notes')}", agent="REVISOR")
 
         return {"draft": revision.get("draft"),
                 "revision_notes": revision.get("revision_notes")}
