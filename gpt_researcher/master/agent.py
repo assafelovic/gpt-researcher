@@ -156,6 +156,28 @@ class GPTResearcher:
         Returns:
             str: The report
         """
+        if self.report_type == "subtopic_report":
+            if self.verbose:
+                await stream_output(
+                    "logs",
+                    "task_summary_coming_up",
+                    f"✍️ Writing draft section titles for research task: {self.query}...",
+                    self.websocket,
+                )
+
+            draft_section_titles = await generate_draft_section_titles(
+                query=self.query,
+                context=self.context,
+                agent_role_prompt=self.role,
+                report_type=self.report_type,
+                websocket=self.websocket,
+                cfg=self.cfg,
+                main_topic=self.parent_query,
+                existing_headers=existing_headers,
+                cost_callback=self.add_costs,
+                headers=self.headers,
+            )
+
         report = ""
 
         if self.verbose:
