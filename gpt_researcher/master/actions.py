@@ -317,6 +317,36 @@ async def summarize_url(
         print(f"{Fore.RED}Error in summarize: {e}{Style.RESET_ALL}")
     return summary
 
+async def generate_draft_section_titles(
+    query: str,
+    context,
+    agent_role_prompt: str,
+    report_type: str,
+    websocket,
+    cfg,
+    main_topic: str = "",
+    existing_headers: list = [],
+    cost_callback: callable = None,
+    headers=None
+) -> str:
+    assert report_type == "subtopic_report", "This function is only for subtopic reports"
+    content = f"{generate_draft_titles_prompt(query, existing_headers, main_topic, context)}"
+    try:
+        draft_section_titles = await create_chat_completion(
+            model=cfg.fast_llm_model,
+            messages=[
+                {"role": "system", "content": f"{agent_role_prompt}"},
+                {"role": "user", "content": content},
+            ],
+            temperature=0,
+            llm_provider=cfg.llm_provider,
+            llm_kwargs=cfg.llm_kwargs,
+            cost_callback=cost_callback,
+        )
+    except Exception as e:
+        print(f"{Fore.RED}Error in generate_draft_section_titles: {e}{Style.RESET_ALL}")
+    
+    return draft_section_titles
 
 async def generate_report(
     query: str,
