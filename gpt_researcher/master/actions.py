@@ -5,6 +5,8 @@ import re
 import json_repair
 import markdown
 
+from typing import List, Dict
+
 from gpt_researcher.master.prompts import *
 from gpt_researcher.scraper.scraper import Scraper
 from gpt_researcher.utils.enum import Tone
@@ -488,6 +490,37 @@ def extract_headers(markdown_text: str):
 
     return headers  # Return the list of headers
 
+def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
+    """
+    Extract all written sections from subtopic report
+    Args:
+        markdown_text: subtopic report text
+    Returns:
+        List of sections, each section is dictionary and contain following information
+        [
+            {
+                "section_title": "Pruning",
+                "written_content": "Pruning involves removing redundant or less ..."
+            },
+        ]
+    """
+    sections = []
+    parsed_md = markdown.markdown(markdown_text)
+    
+    # Use regex to find all headers and their content
+    pattern = r'<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)'
+    matches = re.findall(pattern, parsed_md, re.DOTALL)
+    
+    for title, content in matches:
+        # Clean up the content
+        clean_content = re.sub(r'<.*?>', '', content).strip()
+        if clean_content:
+            sections.append({
+                "section_title": title.strip(),
+                "written_content": clean_content
+            })
+    
+    return sections
 
 def table_of_contents(markdown_text: str):
     try:
