@@ -325,12 +325,11 @@ async def generate_draft_section_titles(
     websocket,
     cfg,
     main_topic: str = "",
-    existing_headers: list = [],
     cost_callback: callable = None,
     headers=None
 ) -> str:
     assert report_type == "subtopic_report", "This function is only for subtopic reports"
-    content = f"{generate_draft_titles_prompt(query, existing_headers, main_topic, context)}"
+    content = f"{generate_draft_titles_prompt(query, main_topic, context)}"
     try:
         draft_section_titles = await create_chat_completion(
             model=cfg.fast_llm_model,
