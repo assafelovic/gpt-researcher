@@ -253,22 +253,6 @@ You must limit the number of subsections to a maximum of {max_subsections}.
 - The report should focus on answering the question, be well-structured, informative, in-depth, and include facts and numbers if available.
 - Use markdown syntax and follow the {report_format.upper()} format.
 
-"Structure and Formatting":
-- As this sub-report will be part of a larger report, include only the main body divided into suitable subtopics without any introduction or conclusion section.
-
-- You MUST include markdown hyperlinks to relevant source URLs wherever referenced in the report, for example:
-
-    # Report Header
-    
-    This is a sample text. ([url website](url))
-
-- Use H2 for the main subtopic header (##) and H3 for subsections (###).
-- Use smaller Markdown headers (e.g., H2 or H3) for content structure, avoiding the largest header (H1) as it will be used for the larger report's heading.
-- Organize your content into distinct sections that complement but do not overlap with existing reports.
-
-"Date":
-Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
-
 "IMPORTANT:Content and Sections Uniqueness":
 - This part of the instructions is crucial to ensure the content is unique and does not overlap with existing reports.
 - Carefully review the existing headers and existing written contents provided below before writing any new subsections.
@@ -277,7 +261,6 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if
 - Do not repeat any information already covered in the existing written contents or closely related variations to avoid duplicates.
 - If you have nested subsections, ensure they are unique and not covered in the existing written contents.
 - Ensure that your content is entirely new and does not overlap with any information already covered in the previous subtopic reports.
-- MUST NOT write any content that is already covered in the existing written contents. Your content should be unique.
 
 "Existing Subtopic Reports":
 - Existing subtopic reports and their section headers:
@@ -288,10 +271,32 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if
 
     {relevant_written_contents}
 
+"Structure and Formatting":
+- As this sub-report will be part of a larger report, include only the main body divided into suitable subtopics without any introduction or conclusion section.
+
+- You MUST include markdown hyperlinks to relevant source URLs wherever referenced in the report, for example:
+
+    ### Section Header
+    
+    This is a sample text. ([url website](url))
+
+- Use H2 for the main subtopic header (##) and H3 for subsections (###).
+- Use smaller Markdown headers (e.g., H2 or H3) for content structure, avoiding the largest header (H1) as it will be used for the larger report's heading.
+- Organize your content into distinct sections that complement but do not overlap with existing reports.
+- When adding similar or identical subsections to your report, you should clearly indicate the differences between and the new content and the existing written content from previous subtopic reports. For example:
+
+    ### New header (similar to existing header)
+
+    While the previous section discussed [topic A], this section will explore [topic B]."
+
+"Date":
+Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
+
 "IMPORTANT!":
 - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
 - Must NOT have any introduction, conclusion, summary or reference section.
 - You MUST include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
+- You MUST mention the difference between the existing content and the new content in the report if you are adding the similar or same subsections wherever necessary.
 - The report should have a minimum length of {total_words} words.
 - Use an {tone.value} tone throughout the report.
 """
