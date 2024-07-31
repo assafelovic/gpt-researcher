@@ -151,7 +151,7 @@ class GPTResearcher:
 
         return self.context
 
-    async def write_report(self, existing_headers: list = []):
+    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = []):
         """
         Writes the report based on research conducted
 
@@ -193,6 +193,7 @@ class GPTResearcher:
                 cfg=self.cfg,
                 main_topic=self.parent_query,
                 existing_headers=existing_headers,
+                relevant_written_contents=relevant_written_contents,
                 cost_callback=self.add_costs,
                 headers=self.headers,
             )
@@ -541,5 +542,14 @@ class GPTResearcher:
         
         # Combine all results
         relevant_contents = set().union(*results)
-        
-        return list(relevant_contents)[:max_results]
+
+        # Limit the number of results
+        relevant_contents = list(relevant_contents)[:max_results]
+
+        if relevant_contents and self.verbose:
+            prettier_contents = "\n".join(relevant_contents)
+            await stream_output(
+                "logs", "relevant_contents_context", f"📃 {prettier_contents}", self.websocket
+            )
+
+        return relevant_contents

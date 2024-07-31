@@ -358,6 +358,7 @@ async def generate_report(
     cfg,
     main_topic: str = "",
     existing_headers: list = [],
+    relevant_written_contents: list = [],
     cost_callback: callable = None,
     headers=None
 ):
@@ -373,6 +374,7 @@ async def generate_report(
         cfg:
         main_topic:
         existing_headers:
+        relevant_written_contents:
         cost_callback:
 
     Returns:
@@ -383,7 +385,7 @@ async def generate_report(
     report = ""
     
     if report_type == "subtopic_report":
-        content = f"{generate_prompt(query, existing_headers, main_topic, context, report_format=cfg.report_format, total_words=cfg.total_words)}"
+        content = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context, report_format=cfg.report_format, total_words=cfg.total_words)}"
         if tone:
             content += f", tone={tone}"
         summary = await create_chat_completion(

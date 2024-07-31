@@ -233,6 +233,7 @@ def generate_subtopics_prompt() -> str:
 def generate_subtopic_report_prompt(
     current_subtopic,
     existing_headers: list,
+    relevant_written_contents: list,
     main_topic: str,
     context,
     report_format: str = "apa",
@@ -261,15 +262,31 @@ You must limit the number of subsections to a maximum of {max_subsections}.
     
     This is a sample text. ([url website](url))
 
-"Existing Subtopic Reports":
-- This is a list of existing subtopic reports and their section headers:
-
-    {existing_headers}.
-
-- Do not use any of the above headers or related details to avoid duplicates. Use smaller Markdown headers (e.g., H2 or H3) for content structure, avoiding the largest header (H1) as it will be used for the larger report's heading.
+- Use H2 for the main subtopic header (##) and H3 for subsections (###).
+- Use smaller Markdown headers (e.g., H2 or H3) for content structure, avoiding the largest header (H1) as it will be used for the larger report's heading.
+- Organize your content into distinct sections that complement but do not overlap with existing reports.
 
 "Date":
 Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
+
+"IMPORTANT:Content and Sections Uniqueness":
+- This part of the instructions is crucial to ensure the content is unique and does not overlap with existing reports.
+- Carefully review the existing headers and existing written contents provided below before writing any new subsections.
+- Prevent any content that is already covered in the existing written contents.
+- Do not use any of the existing headers as the new subsection headers.
+- Do not repeat any information already covered in the existing written contents or closely related variations to avoid duplicates.
+- If you have nested subsections, ensure they are unique and not covered in the existing written contents.
+- Ensure that your content is entirely new and does not overlap with any information already covered in the previous subtopic reports.
+- MUST NOT write any content that is already covered in the existing written contents. Your content should be unique.
+
+"Existing Subtopic Reports":
+- Existing subtopic reports and their section headers:
+
+    {existing_headers}
+
+- Existing written contents from previous subtopic reports:
+
+    {relevant_written_contents}
 
 "IMPORTANT!":
 - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
