@@ -59,9 +59,7 @@ class GPTResearcher:
         self.report_source: str = report_source
         self.research_costs: float = 0.0
         self.cfg = Config(config_path)
-        self.retriever = get_retriever(self.headers.get("retriever")) or get_retriever(
-            self.cfg.retriever
-        ) or get_default_retriever()
+        self.retrievers = get_retrievers(self.headers, self.cfg)
         self.context = context
         self.source_urls = source_urls
         self.documents = documents
@@ -328,35 +326,49 @@ class GPTResearcher:
 
     async def __scrape_data_by_query(self, sub_query):
         """
-        Runs a sub-query
+        Runs a sub-query across multiple retrievers and scrapes the resulting URLs.
+
         Args:
-            sub_query:
+            sub_query (str): The sub-query to search for.
 
         Returns:
-            Summary
+            list: A list of scraped content results.
         """
-        # Get Urls
-        retriever = self.retriever(sub_query)
-        search_results = await asyncio.to_thread(
-            retriever.search, max_results=self.cfg.max_search_results_per_query
-        )
+        # Initialize an empty list to store search results from all retrievers
+        all_search_results = []
+
+        # Iterate through all retrievers
+        for retriever_class in self.retrievers:
+            # Instantiate the retriever with the sub-query
+            retriever = retriever_class(sub_query)
+
+            # Perform the search using the current retriever
+            search_results = await asyncio.to_thread(
+                retriever.search, max_results=self.cfg.max_search_results_per_query
+            )
+
+            # Add the results from this retriever to the overall results
+            all_search_results.extend(search_results)
+
+        # Get new, unique URLs from all search results
         new_search_urls = await self.__get_new_urls(
-            [url.get("href") for url in search_results]
+            [url.get("href") for url in all_search_results]
         )
 
-        # Scrape Urls
+        # Log the research process if verbose mode is on
         if self.verbose:
             await stream_output(
                 "logs",
                 "researching",
-                f"🤔 Researching for relevant information...\n",
+                f"🤔 Researching for relevant information across multiple sources...\n",
                 self.websocket,
             )
 
-        # Scrape Urls
+        # Scrape the new URLs
         scraped_content_results = await asyncio.to_thread(
             scrape_urls, new_search_urls, self.cfg
         )
+
         return scraped_content_results
 
     async def __get_similar_content_by_query(self, query, pages):
