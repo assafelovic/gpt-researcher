@@ -148,7 +148,7 @@ class DetailedReport:
 
         # Here the headers gathered from previous subtopic reports are passed to the write report function
         # The LLM is later instructed to avoid generating any information relating to these headers as they have already been generated
-        subtopic_report = await subtopic_assistant.write_report(self.existing_headers)
+        subtopic_report = await subtopic_assistant.write_report(self.existing_headers, relevant_contents)
 
         # Update the global written sections list
         self.global_written_sections.extend(extract_sections(subtopic_report))
