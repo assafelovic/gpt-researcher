@@ -1,8 +1,10 @@
 import asyncio
 import time
 
+from typing import Set
+
 from gpt_researcher.config import Config
-from gpt_researcher.context.compression import ContextCompressor
+from gpt_researcher.context.compression import ContextCompressor, WrittenContentCompressor
 from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
 from gpt_researcher.master.actions import *
 from gpt_researcher.memory import Memory
@@ -473,3 +475,71 @@ class GPTResearcher:
         )
 
         return draft_section_titles
+    
+    async def __get_similar_written_contents_by_query(self,
+            query: str,
+            written_contents: List[Dict],
+            similarity_threshold: float = 0.5,
+            max_results: int = 10
+        ) -> List[str]:
+        """
+        Asynchronously retrieves similar written contents based on a given query.
+
+        Args:
+            query (str): The query to search for similar written contents.
+            written_contents (List[Dict]): List of written contents to search through.
+            similarity_threshold (float, optional): The minimum similarity score for content to be considered relevant. 
+                                                    Defaults to 0.5.
+            max_results (int, optional): The maximum number of similar contents to return. Defaults to 10.
+
+        Returns:
+            List[str]: A list of similar written contents, limited by max_results.
+        """
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "fetching_relevant_written_content",
+                f"📚 Getting relevant written content based on query: {query}...",
+                self.websocket,
+            )
+
+        # Retrieve similar written contents based on the query
+        # Use a higher similarity threshold to ensure more relevant results and reduce irrelevant matches
+        written_content_compressor = WrittenContentCompressor(
+            documents=written_contents, embeddings=self.memory.get_embeddings(), similarity_threshold=similarity_threshold
+        )
+        return await written_content_compressor.async_get_context(
+            query=query, max_results=max_results, cost_callback=self.add_costs
+        )
+    
+    async def get_similar_written_contents_by_draft_section_titles(
+        self, 
+        current_subtopic: str, 
+        draft_section_titles: List[str],
+        written_contents: List[Dict],
+        max_results: int = 10
+    ) -> List[str]:
+        """
+        Retrieve similar written contents based on current subtopic and draft section titles.
+        
+        Args:
+        current_subtopic (str): The current subtopic.
+        draft_section_titles (List[str]): List of draft section titles.
+        written_contents (List[Dict]): List of written contents to search through.
+        max_results (int): Maximum number of results to return. Defaults to 10.
+        
+        Returns:
+        List[str]: List of relevant written contents.
+        """
+        all_queries = [current_subtopic] + draft_section_titles
+        
+        async def process_query(query: str) -> Set[str]:
+            return set(await self.__get_similar_written_contents_by_query(query, written_contents))
+
+        # Run all queries in parallel
+        results = await asyncio.gather(*[process_query(query) for query in all_queries])
+        
+        # Combine all results
+        relevant_contents = set().union(*results)
+        
+        return list(relevant_contents)[:max_results]

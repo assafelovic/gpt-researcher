@@ -138,8 +138,13 @@ class DetailedReport:
         # Conduct research on the subtopic
         await subtopic_assistant.conduct_research()
 
+        # Use research results to generate draft section titles
         draft_section_titles = await subtopic_assistant.get_draft_section_titles()
         parse_draft_section_titles = extract_headers(draft_section_titles)
+        parse_draft_section_titles_text = [header.get("text", "") for header in parse_draft_section_titles]
+
+        # Use the draft section titles to get previous relevant written contents
+        relevant_contents = await subtopic_assistant.get_similar_written_contents_by_draft_section_titles(current_subtopic_task, parse_draft_section_titles_text, self.global_written_sections)
 
         # Here the headers gathered from previous subtopic reports are passed to the write report function
         # The LLM is later instructed to avoid generating any information relating to these headers as they have already been generated
