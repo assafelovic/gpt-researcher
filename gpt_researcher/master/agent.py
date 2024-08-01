@@ -1,4 +1,5 @@
 import asyncio
+import random
 import time
 
 from gpt_researcher.config import Config
@@ -334,8 +335,7 @@ class GPTResearcher:
         Returns:
             list: A list of scraped content results.
         """
-        # Initialize an empty list to store search results from all retrievers
-        all_search_results = []
+        new_search_urls = []
 
         # Iterate through all retrievers
         for retriever_class in self.retrievers:
@@ -347,13 +347,13 @@ class GPTResearcher:
                 retriever.search, max_results=self.cfg.max_search_results_per_query
             )
 
-            # Add the results from this retriever to the overall results
-            all_search_results.extend(search_results)
+            # Collect new URLs from search results
+            search_urls = [url.get("href") for url in search_results]
+            new_search_urls.extend(search_urls)
 
-        # Get new, unique URLs from all search results
-        new_search_urls = await self.__get_new_urls(
-            [url.get("href") for url in all_search_results]
-        )
+        # Get unique URLs
+        new_search_urls = await self.__get_new_urls(new_search_urls)
+        random.shuffle(new_search_urls)
 
         # Log the research process if verbose mode is on
         if self.verbose:
