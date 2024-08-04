@@ -52,16 +52,16 @@ def generate_report_prompt(
     reference_prompt = ""
     if report_source == ReportSource.Web.value:
         reference_prompt = f"""
-            You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
-            Every url should be hyperlinked: [url website](url)
-            Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report: 
-        
-            eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
-            """
+You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
+Every url should be hyperlinked: [url website](url)
+Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report: 
+
+eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
+"""
     else:
         reference_prompt = f"""
-            You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
-        """
+You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
+"""
 
     tone_prompt = f"Write the report in a {tone.value} tone." if tone else ""
 
@@ -162,30 +162,30 @@ def get_report_by_type(report_type: str):
 
 def auto_agent_instructions():
     return """
-        This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer. The research is conducted by a specific server, defined by its type and role, with each server requiring distinct instructions.
-        Agent
-        The server is determined by the field of the topic and the specific name of the server that could be utilized to research the topic provided. Agents are categorized by their area of expertise, and each server type is associated with a corresponding emoji.
+This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer. The research is conducted by a specific server, defined by its type and role, with each server requiring distinct instructions.
+Agent
+The server is determined by the field of the topic and the specific name of the server that could be utilized to research the topic provided. Agents are categorized by their area of expertise, and each server type is associated with a corresponding emoji.
 
-        examples:
-        task: "should I invest in apple stocks?"
-        response: 
-        {
-            "server": "💰 Finance Agent",
-            "agent_role_prompt: "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends."
-        }
-        task: "could reselling sneakers become profitable?"
-        response: 
-        { 
-            "server":  "📈 Business Analyst Agent",
-            "agent_role_prompt": "You are an experienced AI business analyst assistant. Your main objective is to produce comprehensive, insightful, impartial, and systematically structured business reports based on provided business data, market trends, and strategic analysis."
-        }
-        task: "what are the most interesting sites in Tel Aviv?"
-        response:
-        {
-            "server:  "🌍 Travel Agent",
-            "agent_role_prompt": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights."
-        }
-    """
+examples:
+task: "should I invest in apple stocks?"
+response: 
+{
+    "server": "💰 Finance Agent",
+    "agent_role_prompt: "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends."
+}
+task: "could reselling sneakers become profitable?"
+response: 
+{ 
+    "server":  "📈 Business Analyst Agent",
+    "agent_role_prompt": "You are an experienced AI business analyst assistant. Your main objective is to produce comprehensive, insightful, impartial, and systematically structured business reports based on provided business data, market trends, and strategic analysis."
+}
+task: "what are the most interesting sites in Tel Aviv?"
+response:
+{
+    "server:  "🌍 Travel Agent",
+    "agent_role_prompt": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights."
+}
+"""
 
 
 def generate_summary_prompt(query, data):
@@ -209,24 +209,24 @@ def generate_summary_prompt(query, data):
 
 def generate_subtopics_prompt() -> str:
     return """
-    Provided the main topic:
-    
-    {task}
-    
-    and research data:
-    
-    {data}
-    
-    - Construct a list of subtopics which indicate the headers of a report document to be generated on the task. 
-    - These are a possible list of subtopics : {subtopics}.
-    - There should NOT be any duplicate subtopics.
-    - Limit the number of subtopics to a maximum of {max_subtopics}
-    - Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
-    
-    "IMPORTANT!":
-    - Every subtopic MUST be relevant to the main topic and provided research data ONLY!
-    
-    {format_instructions}
+Provided the main topic:
+
+{task}
+
+and research data:
+
+{data}
+
+- Construct a list of subtopics which indicate the headers of a report document to be generated on the task. 
+- These are a possible list of subtopics : {subtopics}.
+- There should NOT be any duplicate subtopics.
+- Limit the number of subtopics to a maximum of {max_subtopics}
+- Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
+
+"IMPORTANT!":
+- Every subtopic MUST be relevant to the main topic and provided research data ONLY!
+
+{format_instructions}
 """
 
 
@@ -337,12 +337,12 @@ Provide the draft headers in a list format using markdown syntax, for example:
 
 def generate_report_introduction(question: str, research_summary: str = "") -> str:
     return f"""{research_summary}\n 
-    Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
-    - The introduction should be succinct, well-structured, informative with markdown syntax.
-    - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
-    - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
-    - You must include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
-    Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
+Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
+- The introduction should be succinct, well-structured, informative with markdown syntax.
+- As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
+- The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
+- You must include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
+Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 """
 
 
