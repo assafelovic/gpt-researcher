@@ -122,7 +122,6 @@ footer {
 
 #output {
     height: 300px;
-    font-family: 'Times New Roman', Times, "Courier New", serif;
     overflow: auto;
     padding: 10px;
     margin-bottom: 10px;
@@ -131,6 +130,7 @@ footer {
 }
 
 #reportContainer {
+    font-family: 'Georgia', 'Times New Roman', Times, "Courier New", serif;
     background-color: rgba(255, 255, 255, 0.1);
     border: none;
     color: #fff;
