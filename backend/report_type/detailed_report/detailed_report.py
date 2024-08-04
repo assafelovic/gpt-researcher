@@ -5,6 +5,7 @@ from fastapi import WebSocket
 from gpt_researcher.master.actions import (
     add_source_urls,
     extract_headers,
+    extract_sections,
     table_of_contents,
 )
 from gpt_researcher.master.agent import GPTResearcher
@@ -48,6 +49,9 @@ class DetailedReport:
         self.existing_headers = []
         # This is a global variable to store the entire context accumulated at any point through searching and scraping
         self.global_context = []
+
+        # This is a global variable to store all written sections. It will be used to retrieve relevant written content before any subtopic report to prevent redundant content writing.
+        self.global_written_sections = []
 
         # This is a global variable to store the entire url list accumulated at any point through searching and scraping
         if self.source_urls:
@@ -134,10 +138,20 @@ class DetailedReport:
         # Conduct research on the subtopic
         await subtopic_assistant.conduct_research()
 
+        # Use research results to generate draft section titles
+        draft_section_titles = await subtopic_assistant.get_draft_section_titles()
+        parse_draft_section_titles = extract_headers(draft_section_titles)
+        parse_draft_section_titles_text = [header.get("text", "") for header in parse_draft_section_titles]
+
+        # Use the draft section titles to get previous relevant written contents
+        relevant_contents = await subtopic_assistant.get_similar_written_contents_by_draft_section_titles(current_subtopic_task, parse_draft_section_titles_text, self.global_written_sections)
+
         # Here the headers gathered from previous subtopic reports are passed to the write report function
         # The LLM is later instructed to avoid generating any information relating to these headers as they have already been generated
-        subtopic_report = await subtopic_assistant.write_report(self.existing_headers)
+        subtopic_report = await subtopic_assistant.write_report(self.existing_headers, relevant_contents)
 
+        # Update the global written sections list
+        self.global_written_sections.extend(extract_sections(subtopic_report))
         # Update context of the global context variable
         self.global_context = list(set(subtopic_assistant.context))
         # Update url list of the global list variable
