@@ -500,7 +500,7 @@ class GPTResearcher:
             await stream_output(
                 "logs",
                 "fetching_relevant_written_content",
-                f"📚 Getting relevant written content based on query: {query}...",
+                f"🔎 Getting relevant written content based on query: {query}...",
                 self.websocket,
             )
 
