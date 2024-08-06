@@ -1,6 +1,8 @@
 import os
 import time
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.aiosqlite import AsyncSqliteSaver
+import datetime
 from .utils.views import print_agent_output
 from ..memory.research import ResearchState
 from .utils.utils import sanitize_filename
@@ -52,16 +54,24 @@ class ChiefEditorAgent:
 
         return workflow
 
-    async def run_research_task(self):
+    async def run_research_task(self, task_id=None):
         research_team = self.init_research_team()
 
         # compile the graph
-        chain = research_team.compile()
+        memory = AsyncSqliteSaver.from_conn_string(":memory:")
+        chain = research_team.compile(checkpointer=memory, interrupt_before=["researcher"])
         if self.websocket and self.stream_output:
             await self.stream_output("logs", "starting_research", f"Starting the research process for query '{self.task.get('query')}'...", self.websocket)
         else:
             print_agent_output(f"Starting the research process for query '{self.task.get('query')}'...", "MASTER")
+
+        config = {
+            "configurable": {
+                "thread_id": task_id,
+                "thread_ts": datetime.datetime.utcnow()
+            }
+        }
  
-        result = await chain.ainvoke({"task": self.task})
+        result = await chain.ainvoke({"task": self.task}, config=config)
 
         return result
