@@ -31,7 +31,7 @@ Generally, the process is based on the following stages:
 
 ### Architecture
 <div align="center">
-<img align="center" height="600" src="https://cowriter-images.s3.amazonaws.com/multi-agents-gptr.png">
+<img align="center" height="600" src="https://github.com/user-attachments/assets/ef561295-05f4-40a8-a57d-8178be687b18">
 </div>
 <br clear="all"/>
 
