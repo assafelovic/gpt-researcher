@@ -11,7 +11,7 @@ An average run generates a 5-6 page research report in multiple formats such as 
 Please note: This example uses the OpenAI API only for optimized performance.
 
 ## The Multi Agent Team
-The research team is made up of 7 AI agents:
+The research team is made up of 8 agents:
 - **Human** - The human in the loop that oversees the process and provides feedback to the agents.
 - **Chief Editor** - Oversees the research process and manages the team. This is the "master" agent that coordinates the other agents using Langgraph.
 - **Researcher** (gpt-researcher) - A specialized autonomous agent that conducts in depth research on a given topic.

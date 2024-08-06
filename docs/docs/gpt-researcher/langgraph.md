@@ -31,7 +31,7 @@ Generally, the process is based on the following stages:
 
 ### Architecture
 <div align="center">
-<img align="center" height="600" src="https://cowriter-images.s3.amazonaws.com/multi-agents-gptr.png">
+<img align="center" height="600" src="https://cowriter-images.s3.amazonaws.com/multi-agents-gptr.png"></img>
 </div>
 <br clear="all"/>
 
@@ -130,8 +130,8 @@ $ docker-compose up --build
 ```
 
 > **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
- - the Python server running on localhost:8000<br>
- - the React app running on localhost:3000<br>
+ - the Python server running on localhost:8000
+ - the React app running on localhost:3000
 
 Visit localhost:3000 on any browser and enjoy researching!
 
