@@ -1,6 +1,8 @@
 import os
 import time
 from langgraph.graph import StateGraph, END
+#from langgraph.checkpoint.memory import MemorySaver
+import datetime
 from .utils.views import print_agent_output
 from ..memory.research import ResearchState
 from .utils.utils import sanitize_filename
@@ -11,7 +13,9 @@ from . import \
     WriterAgent, \
     EditorAgent, \
     PublisherAgent, \
-    ResearchAgent
+    ResearchAgent, \
+    HumanAgent
+
 
 class ChiefEditorAgent:
     def __init__(self, task: dict, websocket=None, stream_output=None, tone=None, headers=None):
@@ -30,6 +34,7 @@ class ChiefEditorAgent:
         editor_agent = EditorAgent(self.websocket, self.stream_output, self.headers)
         research_agent = ResearchAgent(self.websocket, self.stream_output, self.tone, self.headers)
         publisher_agent = PublisherAgent(self.output_dir, self.websocket, self.stream_output, self.headers)
+        human_agent = HumanAgent(self.websocket, self.stream_output, self.headers)
 
         # Define a Langchain StateGraph with the ResearchState
         workflow = StateGraph(ResearchState)
@@ -40,9 +45,10 @@ class ChiefEditorAgent:
         workflow.add_node("researcher", editor_agent.run_parallel_research)
         workflow.add_node("writer", writer_agent.run)
         workflow.add_node("publisher", publisher_agent.run)
+        workflow.add_node("human", human_agent.review_plan)
 
         workflow.add_edge('browser', 'planner')
-        workflow.add_edge('planner', 'researcher')
+        workflow.add_edge('planner', 'human')
         workflow.add_edge('researcher', 'writer')
         workflow.add_edge('writer', 'publisher')
 
@@ -50,18 +56,31 @@ class ChiefEditorAgent:
         workflow.set_entry_point("browser")
         workflow.add_edge('publisher', END)
 
+        # Add human in the loop
+        workflow.add_conditional_edges('human',
+                                       (lambda review: "accept" if review['human_feedback'] is None else "revise"),
+                                       {"accept": "researcher", "revise": "planner"})
+
         return workflow
 
-    async def run_research_task(self):
+    async def run_research_task(self, task_id=None):
         research_team = self.init_research_team()
 
         # compile the graph
+        #memory = MemorySaver()
         chain = research_team.compile()
         if self.websocket and self.stream_output:
             await self.stream_output("logs", "starting_research", f"Starting the research process for query '{self.task.get('query')}'...", self.websocket)
         else:
             print_agent_output(f"Starting the research process for query '{self.task.get('query')}'...", "MASTER")
+
+        config = {
+            "configurable": {
+                "thread_id": task_id,
+                "thread_ts": datetime.datetime.utcnow()
+            }
+        }
  
-        result = await chain.ainvoke({"task": self.task})
+        result = await chain.ainvoke({"task": self.task}, config=config)
 
         return result
