@@ -7,6 +7,7 @@ class ResearchState(TypedDict):
     initial_research: str
     sections: List[str]
     research_data: List[dict]
+    human_feedback: str
     # Report layout
     title: str
     headers: dict
