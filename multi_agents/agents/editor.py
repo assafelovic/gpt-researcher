@@ -30,14 +30,19 @@ class EditorAgent:
         initial_research = research_state.get("initial_research")
         task = research_state.get("task")
         max_sections = task.get("max_sections")
+        include_human_feedback = task.get("include_human_feedback")
+        human_feedback = research_state.get("human_feedback")
+
         prompt = [{
             "role": "system",
-            "content": "You are a research director. Your goal is to oversee the research project"
-                       " from inception to completion.\n "
+            "content": "You are a research editor. Your goal is to oversee the research project"
+                       " from inception to completion. Your main task is to plan the article section "
+                       "layout based on an initial research summary.\n "
         }, {
             "role": "user",
             "content": f"Today's date is {datetime.now().strftime('%d/%m/%Y')}\n."
-                       f"Research summary report: '{initial_research}'\n\n"
+                       f"Research summary report: '{initial_research}'\n"
+                       f"{f'Human feedback: {human_feedback}. You must plan the sections based on the human feedback.' if include_human_feedback else ''}\n"
                        f"Your task is to generate an outline of sections headers for the research project"
                        f" based on the research summary report above.\n"
                        f"You must generate a maximum of {max_sections} section headers.\n"
