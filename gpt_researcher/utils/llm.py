@@ -35,8 +35,8 @@ def get_llm(llm_provider, **kwargs):
             from ..llm_provider import TogetherProvider
             llm_provider = TogetherProvider
         case "huggingface":
-            from ..llm_provider import HugginFaceProvider
-            llm_provider = HugginFaceProvider
+            from ..llm_provider import HuggingFaceProvider
+            llm_provider = HuggingFaceProvider
         case "mistral":
             from ..llm_provider import MistralProvider
             llm_provider = MistralProvider
