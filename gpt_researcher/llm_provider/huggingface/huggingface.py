@@ -3,7 +3,7 @@ import os
 from colorama import Fore, Style
 
 
-class HugginFaceProvider:
+class HuggingFaceProvider:
 
     def __init__(
             self,

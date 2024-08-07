@@ -9,6 +9,7 @@ from .semantic_scholar.semantic_scholar import SemanticScholarSearch
 from .serpapi.serpapi import SerpApiSearch
 from .serper.serper import SerperSearch
 from .tavily.tavily_search import TavilySearch
+from .exa.exa import ExaSearch
 
 __all__ = [
     "TavilySearch",
@@ -22,4 +23,5 @@ __all__ = [
     "ArxivSearch",
     "SemanticScholarSearch",
     "PubMedCentralSearch",
+    "ExaSearch"
 ]

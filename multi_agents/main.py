@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import sys
 import os
+import uuid
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from multi_agents.agents import ChiefEditorAgent
@@ -23,24 +24,8 @@ def open_task():
     return task
 
 async def run_research_task(query, websocket=None, stream_output=None, tone=Tone.Objective, headers=None):
-    task = {
-        "query": query,
-        "max_sections": 3,
-        "publish_formats": {
-            "markdown": True,
-            "pdf": True,
-            "docx": True
-        },
-        "follow_guidelines": False,
-        "model": "gpt-4o",
-        "guidelines": [
-            "The report MUST be written in APA format",
-            "Each sub section MUST include supporting sources using hyperlinks. If none exist, erase the sub section or rewrite it to be a part of the previous section",
-            "The report MUST be written in spanish"
-        ],
-        "verbose": True,
-        "llm_provider": "openai"
-    }
+    task = open_task()
+    task["query"] = query
 
     chief_editor = ChiefEditorAgent(task, websocket, stream_output, tone, headers)
     research_report = await chief_editor.run_research_task()
@@ -54,7 +39,7 @@ async def main():
     task = open_task()
 
     chief_editor = ChiefEditorAgent(task)
-    research_report = await chief_editor.run_research_task()
+    research_report = await chief_editor.run_research_task(task_id=uuid.uuid4())
 
     return research_report
 

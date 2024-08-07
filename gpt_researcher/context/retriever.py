@@ -27,3 +27,36 @@ class SearchAPIRetriever(BaseRetriever):
         ]
 
         return docs
+
+class SectionRetriever(BaseRetriever):
+    """
+    SectionRetriever:
+    This class is used to retrieve sections while avoiding redundant subtopics.
+    """
+    sections: List[Dict] = []
+    """
+    sections example:
+    [
+        {
+            "section_title": "Example Title",
+            "written_content": "Example content"
+        },
+        ...
+    ]
+    """
+    
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> List[Document]:
+
+        docs = [
+            Document(
+                page_content=page.get("written_content", ""),
+                metadata={
+                    "section_title": page.get("section_title", ""),
+                },
+            )
+            for page in self.sections  # Changed 'self.pages' to 'self.sections'
+        ]
+
+        return docs
