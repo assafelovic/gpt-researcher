@@ -8,8 +8,11 @@ Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this exa
 
 An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 
+Please note: This example uses the OpenAI API only for optimized performance.
+
 ## The Multi Agent Team
 The research team is made up of 7 AI agents:
+- **Human** - The human in the loop that oversees the process and provides feedback to the agents.
 - **Chief Editor** - Oversees the research process and manages the team. This is the "master" agent that coordinates the other agents using Langgraph.
 - **Researcher** (gpt-researcher) - A specialized autonomous agent that conducts in depth research on a given topic.
 - **Editor** - Responsible for planning the research outline and structure.
@@ -28,7 +31,7 @@ Generally, the process is based on the following stages:
 
 ### Architecture
 <div align="center">
-<img align="center" height="600" src="https://cowriter-images.s3.amazonaws.com/gptr-langgraph-architecture.png"></img>
+<img align="center" height="600" src="https://cowriter-images.s3.amazonaws.com/multi-agents-gptr.png"></img>
 </div>
 <br clear="all"/>
 
@@ -64,6 +67,7 @@ To change the research query and customize the report, edit the `task.json` file
 - `query` - The research query or task.
 - `model` - The OpenAI LLM to use for the agents.
 - `max_sections` - The maximum number of sections in the report. Each section is a subtopic of the research query.
+- `include_human_feedback` - If true, the user can provide feedback to the agents. If false, the agents will work autonomously.
 - `publish_formats` - The formats to publish the report in. The reports will be written in the `output` directory.
 - `source` - The location from which to conduct the research. Options: `web` or `local`. For local, please add `DOC_PATH` env var.
 - `follow_guidelines` - If true, the research report will follow the guidelines below. It will take longer to complete. If false, the report will be generated faster but may not follow the guidelines.
@@ -81,6 +85,7 @@ To change the research query and customize the report, edit the `task.json` file
     "pdf": true,
     "docx": true
   },
+  "include_human_feedback": false,
   "source": "web",
   "follow_guidelines": true,
   "guidelines": [
@@ -100,3 +105,43 @@ langgraph up
 ```
 
 From there, see documentation [here](https://github.com/langchain-ai/langgraph-example) on how to use the streaming and async endpoints, as well as the playground.
+
+## NextJS Frontend App
+
+The React app (located in `frontend` directory) is our Frontend 2.0 which we hope will enable us to display the robustness of the backend on the frontend, as well.
+
+It comes with loads of added features, such as: 
+ - a drag-n-drop user interface for uploading and deleting files to be used as local documents by GPTResearcher.
+ - a GUI for setting your GPTR environment variables.
+ - the ability to trigger the multi_agents flow via the Backend Module or Langgraph Cloud Host (currently in closed beta).
+ - stability fixes
+ - and more coming soon!
+
+### Run the NextJS React App with Docker
+
+> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker)
+
+> **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
+
+> **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
+
+```bash
+$ docker-compose up --build
+```
+
+> **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
+ - the Python server running on localhost:8000
+ - the React app running on localhost:3000
+
+Visit localhost:3000 on any browser and enjoy researching!
+
+
+### Run the NextJS React App with NPM
+
+```bash
+cd frontend
+nvm install 18.17.0
+nvm use v18.17.0
+npm install --legacy-peer-deps
+npm run dev
+```

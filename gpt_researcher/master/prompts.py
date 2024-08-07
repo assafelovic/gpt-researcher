@@ -52,16 +52,16 @@ def generate_report_prompt(
     reference_prompt = ""
     if report_source == ReportSource.Web.value:
         reference_prompt = f"""
-            You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
-            Every url should be hyperlinked: [url website](url)
-            Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report: 
-        
-            eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
-            """
+You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
+Every url should be hyperlinked: [url website](url)
+Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report: 
+
+eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
+"""
     else:
         reference_prompt = f"""
-            You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
-        """
+You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
+"""
 
     tone_prompt = f"Write the report in a {tone.value} tone." if tone else ""
 
@@ -162,30 +162,30 @@ def get_report_by_type(report_type: str):
 
 def auto_agent_instructions():
     return """
-        This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer. The research is conducted by a specific server, defined by its type and role, with each server requiring distinct instructions.
-        Agent
-        The server is determined by the field of the topic and the specific name of the server that could be utilized to research the topic provided. Agents are categorized by their area of expertise, and each server type is associated with a corresponding emoji.
+This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer. The research is conducted by a specific server, defined by its type and role, with each server requiring distinct instructions.
+Agent
+The server is determined by the field of the topic and the specific name of the server that could be utilized to research the topic provided. Agents are categorized by their area of expertise, and each server type is associated with a corresponding emoji.
 
-        examples:
-        task: "should I invest in apple stocks?"
-        response: 
-        {
-            "server": "💰 Finance Agent",
-            "agent_role_prompt: "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends."
-        }
-        task: "could reselling sneakers become profitable?"
-        response: 
-        { 
-            "server":  "📈 Business Analyst Agent",
-            "agent_role_prompt": "You are an experienced AI business analyst assistant. Your main objective is to produce comprehensive, insightful, impartial, and systematically structured business reports based on provided business data, market trends, and strategic analysis."
-        }
-        task: "what are the most interesting sites in Tel Aviv?"
-        response:
-        {
-            "server:  "🌍 Travel Agent",
-            "agent_role_prompt": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights."
-        }
-    """
+examples:
+task: "should I invest in apple stocks?"
+response: 
+{
+    "server": "💰 Finance Agent",
+    "agent_role_prompt: "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends."
+}
+task: "could reselling sneakers become profitable?"
+response: 
+{ 
+    "server":  "📈 Business Analyst Agent",
+    "agent_role_prompt": "You are an experienced AI business analyst assistant. Your main objective is to produce comprehensive, insightful, impartial, and systematically structured business reports based on provided business data, market trends, and strategic analysis."
+}
+task: "what are the most interesting sites in Tel Aviv?"
+response:
+{
+    "server:  "🌍 Travel Agent",
+    "agent_role_prompt": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights."
+}
+"""
 
 
 def generate_summary_prompt(query, data):
@@ -209,30 +209,31 @@ def generate_summary_prompt(query, data):
 
 def generate_subtopics_prompt() -> str:
     return """
-    Provided the main topic:
-    
-    {task}
-    
-    and research data:
-    
-    {data}
-    
-    - Construct a list of subtopics which indicate the headers of a report document to be generated on the task. 
-    - These are a possible list of subtopics : {subtopics}.
-    - There should NOT be any duplicate subtopics.
-    - Limit the number of subtopics to a maximum of {max_subtopics}
-    - Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
-    
-    "IMPORTANT!":
-    - Every subtopic MUST be relevant to the main topic and provided research data ONLY!
-    
-    {format_instructions}
+Provided the main topic:
+
+{task}
+
+and research data:
+
+{data}
+
+- Construct a list of subtopics which indicate the headers of a report document to be generated on the task. 
+- These are a possible list of subtopics : {subtopics}.
+- There should NOT be any duplicate subtopics.
+- Limit the number of subtopics to a maximum of {max_subtopics}
+- Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
+
+"IMPORTANT!":
+- Every subtopic MUST be relevant to the main topic and provided research data ONLY!
+
+{format_instructions}
 """
 
 
 def generate_subtopic_report_prompt(
     current_subtopic,
     existing_headers: list,
+    relevant_written_contents: list,
     main_topic: str,
     context,
     report_format: str = "apa",
@@ -252,21 +253,41 @@ You must limit the number of subsections to a maximum of {max_subsections}.
 - The report should focus on answering the question, be well-structured, informative, in-depth, and include facts and numbers if available.
 - Use markdown syntax and follow the {report_format.upper()} format.
 
+"IMPORTANT:Content and Sections Uniqueness":
+- This part of the instructions is crucial to ensure the content is unique and does not overlap with existing reports.
+- Carefully review the existing headers and existing written contents provided below before writing any new subsections.
+- Prevent any content that is already covered in the existing written contents.
+- Do not use any of the existing headers as the new subsection headers.
+- Do not repeat any information already covered in the existing written contents or closely related variations to avoid duplicates.
+- If you have nested subsections, ensure they are unique and not covered in the existing written contents.
+- Ensure that your content is entirely new and does not overlap with any information already covered in the previous subtopic reports.
+
+"Existing Subtopic Reports":
+- Existing subtopic reports and their section headers:
+
+    {existing_headers}
+
+- Existing written contents from previous subtopic reports:
+
+    {relevant_written_contents}
+
 "Structure and Formatting":
 - As this sub-report will be part of a larger report, include only the main body divided into suitable subtopics without any introduction or conclusion section.
 
 - You MUST include markdown hyperlinks to relevant source URLs wherever referenced in the report, for example:
 
-    # Report Header
+    ### Section Header
     
     This is a sample text. ([url website](url))
 
-"Existing Subtopic Reports":
-- This is a list of existing subtopic reports and their section headers:
+- Use H2 for the main subtopic header (##) and H3 for subsections (###).
+- Use smaller Markdown headers (e.g., H2 or H3) for content structure, avoiding the largest header (H1) as it will be used for the larger report's heading.
+- Organize your content into distinct sections that complement but do not overlap with existing reports.
+- When adding similar or identical subsections to your report, you should clearly indicate the differences between and the new content and the existing written content from previous subtopic reports. For example:
 
-    {existing_headers}.
+    ### New header (similar to existing header)
 
-- Do not use any of the above headers or related details to avoid duplicates. Use smaller Markdown headers (e.g., H2 or H3) for content structure, avoiding the largest header (H1) as it will be used for the larger report's heading.
+    While the previous section discussed [topic A], this section will explore [topic B]."
 
 "Date":
 Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
@@ -275,19 +296,53 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if
 - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
 - Must NOT have any introduction, conclusion, summary or reference section.
 - You MUST include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
+- You MUST mention the difference between the existing content and the new content in the report if you are adding the similar or same subsections wherever necessary.
 - The report should have a minimum length of {total_words} words.
 - Use an {tone.value} tone throughout the report.
 """
 
 
+def generate_draft_titles_prompt(
+    current_subtopic: str,
+    main_topic: str,
+    context: str,
+    max_subsections: int = 5
+) -> str:
+    return f"""
+"Context":
+"{context}"
+
+"Main Topic and Subtopic":
+Using the latest information available, construct a draft section title headers for a detailed report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
+
+"Task":
+1. Create a list of draft section title headers for the subtopic report.
+2. Each header should be concise and relevant to the subtopic.
+3. The header should't be too high level, but detailed enough to cover the main aspects of the subtopic.
+4. Use markdown syntax for the headers, using H3 (###) as H1 and H2 will be used for the larger report's heading.
+5. Ensure the headers cover main aspects of the subtopic.
+
+"Structure and Formatting":
+Provide the draft headers in a list format using markdown syntax, for example:
+
+### Header 1
+### Header 2
+### Header 3
+
+"IMPORTANT!":
+- The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
+- Must NOT have any introduction, conclusion, summary or reference section.
+- Focus solely on creating headers, not content.
+"""
+
 def generate_report_introduction(question: str, research_summary: str = "") -> str:
     return f"""{research_summary}\n 
-    Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
-    - The introduction should be succinct, well-structured, informative with markdown syntax.
-    - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
-    - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
-    - You must include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
-    Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
+Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
+- The introduction should be succinct, well-structured, informative with markdown syntax.
+- As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
+- The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
+- You must include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
+Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 """
 
 

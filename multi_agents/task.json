@@ -6,7 +6,8 @@
     "pdf": true,
     "docx": true
   },
-  "follow_guidelines": true,
+  "include_human_feedback": true,
+  "follow_guidelines": false,
   "model": "gpt-4o",
   "guidelines": [
     "The report MUST be written in APA format",

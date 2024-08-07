@@ -5,6 +5,8 @@ import re
 import json_repair
 import markdown
 
+from typing import List, Dict
+
 from gpt_researcher.master.prompts import *
 from gpt_researcher.scraper.scraper import Scraper
 from gpt_researcher.utils.enum import Tone
@@ -357,6 +359,35 @@ async def summarize_url(
         print(f"{Fore.RED}Error in summarize: {e}{Style.RESET_ALL}")
     return summary
 
+async def generate_draft_section_titles(
+    query: str,
+    context,
+    agent_role_prompt: str,
+    report_type: str,
+    websocket,
+    cfg,
+    main_topic: str = "",
+    cost_callback: callable = None,
+    headers=None
+) -> str:
+    assert report_type == "subtopic_report", "This function is only for subtopic reports"
+    content = f"{generate_draft_titles_prompt(query, main_topic, context)}"
+    try:
+        draft_section_titles = await create_chat_completion(
+            model=cfg.fast_llm_model,
+            messages=[
+                {"role": "system", "content": f"{agent_role_prompt}"},
+                {"role": "user", "content": content},
+            ],
+            temperature=0,
+            llm_provider=cfg.llm_provider,
+            llm_kwargs=cfg.llm_kwargs,
+            cost_callback=cost_callback,
+        )
+    except Exception as e:
+        print(f"{Fore.RED}Error in generate_draft_section_titles: {e}{Style.RESET_ALL}")
+    
+    return draft_section_titles
 
 async def generate_report(
     query: str,
@@ -369,6 +400,7 @@ async def generate_report(
     cfg,
     main_topic: str = "",
     existing_headers: list = [],
+    relevant_written_contents: list = [],
     cost_callback: callable = None,
     headers=None,
 ):
@@ -384,6 +416,7 @@ async def generate_report(
         cfg:
         main_topic:
         existing_headers:
+        relevant_written_contents:
         cost_callback:
 
     Returns:
@@ -394,7 +427,7 @@ async def generate_report(
     report = ""
 
     if report_type == "subtopic_report":
-        content = f"{generate_prompt(query, existing_headers, main_topic, context, report_format=cfg.report_format, total_words=cfg.total_words)}"
+        content = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context, report_format=cfg.report_format, total_words=cfg.total_words)}"
         if tone:
             content += f", tone={tone}"
         summary = await create_chat_completion(
@@ -534,6 +567,37 @@ def extract_headers(markdown_text: str):
 
     return headers  # Return the list of headers
 
+def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
+    """
+    Extract all written sections from subtopic report
+    Args:
+        markdown_text: subtopic report text
+    Returns:
+        List of sections, each section is dictionary and contain following information
+        [
+            {
+                "section_title": "Pruning",
+                "written_content": "Pruning involves removing redundant or less ..."
+            },
+        ]
+    """
+    sections = []
+    parsed_md = markdown.markdown(markdown_text)
+    
+    # Use regex to find all headers and their content
+    pattern = r'<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)'
+    matches = re.findall(pattern, parsed_md, re.DOTALL)
+    
+    for title, content in matches:
+        # Clean up the content
+        clean_content = re.sub(r'<.*?>', '', content).strip()
+        if clean_content:
+            sections.append({
+                "section_title": title.strip(),
+                "written_content": clean_content
+            })
+    
+    return sections
 
 def table_of_contents(markdown_text: str):
     try:
