@@ -47,7 +47,7 @@ export default function Answer({ answer }: { answer: string }) {
               >
 
                 <Image
-                  src="/img/copy.svg"
+                  src="/img/copy-white.svg"
                   alt="footer"
                   width={20}
                   height={20}
