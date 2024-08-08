@@ -178,6 +178,7 @@ export default function Home() {
     let currentSourceGroup = null;
     let currentReportGroup = null;
     let finalReportGroup = null;
+    let sourceBlockEncountered = false;
   
     data.forEach((item) => {
       const { type, content, metadata, output, link } = item;
@@ -216,15 +217,20 @@ export default function Home() {
           if (!currentSourceGroup) {
             currentSourceGroup = { type: 'sourceBlock', items: [] };
             groupedData.push(currentSourceGroup);
+            sourceBlockEncountered = true;
           }
           const hostname = new URL(metadata).hostname.replace('www.', '');
           currentSourceGroup.items.push({ name: hostname, url: metadata });
         } else if (type !== 'path' && content !== '') {
-          if (!currentAccordionGroup) {
-            currentAccordionGroup = { type: 'accordionBlock', items: [] };
-            groupedData.push(currentAccordionGroup);
+          if (sourceBlockEncountered) {
+            if (!currentAccordionGroup) {
+              currentAccordionGroup = { type: 'accordionBlock', items: [] };
+              groupedData.push(currentAccordionGroup);
+            }
+            currentAccordionGroup.items.push(item);
+          } else {
+            groupedData.push(item);
           }
-          currentAccordionGroup.items.push(item);
         } else {
           if (currentAccordionGroup) {
             currentAccordionGroup = null;
