@@ -9,14 +9,14 @@ class Config:
     def __init__(self, config_file: str = None):
         """Initialize the config class."""
         self.config_file = os.path.expanduser(config_file) if config_file else os.getenv('CONFIG_FILE')
-        self.retriever = os.getenv('RETRIEVER', "tavily")
+        self.retrievers = self.parse_retrievers(os.getenv('RETRIEVER', "tavily"))
         self.embedding_provider = os.getenv('EMBEDDING_PROVIDER', 'openai')
         self.similarity_threshold = int(os.getenv('SIMILARITY_THRESHOLD', 0.38))
         self.llm_provider = os.getenv('LLM_PROVIDER', "openai")
         self.ollama_base_url = os.getenv('OLLAMA_BASE_URL', None)
         self.llm_model = "gpt-4o-mini"  
         self.fast_llm_model = os.getenv('FAST_LLM_MODEL', "gpt-4o-mini")
-        self.smart_llm_model = os.getenv('SMART_LLM_MODEL', "gpt-4o-2024-08-06")
+        self.smart_llm_model = os.getenv('SMART_LLM_MODEL', "gpt-4o")
         self.fast_token_limit = int(os.getenv('FAST_TOKEN_LIMIT', 2000))
         self.smart_token_limit = int(os.getenv('SMART_TOKEN_LIMIT', 4000))
         self.browse_chunk_max_length = int(os.getenv('BROWSE_CHUNK_MAX_LENGTH', 8192))
@@ -27,7 +27,7 @@ class Config:
                                                    "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0")
         self.max_search_results_per_query = int(os.getenv('MAX_SEARCH_RESULTS_PER_QUERY', 5))
         self.memory_backend = os.getenv('MEMORY_BACKEND', "local")
-        self.total_words = int(os.getenv('TOTAL_WORDS', 1400))
+        self.total_words = int(os.getenv('TOTAL_WORDS', 800))
         self.report_format = os.getenv('REPORT_FORMAT', "APA")
         self.max_iterations = int(os.getenv('MAX_ITERATIONS', 3))
         self.agent_role = os.getenv('AGENT_ROLE', None)
@@ -42,7 +42,20 @@ class Config:
 
         if self.doc_path:
             self.validate_doc_path()
-        
+
+    def parse_retrievers(self, retriever_str: str):
+        """Parse the retriever string into a list of retrievers and validate them."""
+        VALID_RETRIEVERS = [
+            "arxiv", "bing", "custom", "duckduckgo", "exa", "google", "searx",
+            "semantic_scholar", "serpapi", "serper", "tavily", "pubmed_central"
+        ]
+        retrievers = [retriever.strip() for retriever in retriever_str.split(',')]
+        invalid_retrievers = [r for r in retrievers if r not in VALID_RETRIEVERS]
+        if invalid_retrievers:
+            raise ValueError(f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. "
+                             f"Valid options are: {', '.join(VALID_RETRIEVERS)}.")
+        return retrievers
+
     def validate_doc_path(self):
         """Ensure that the folder exists at the doc path"""
         os.makedirs(self.doc_path, exist_ok=True)

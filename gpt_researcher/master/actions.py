@@ -79,6 +79,38 @@ def get_retriever(retriever):
     return retriever
 
 
+def get_retrievers(headers, cfg):
+    """
+    Determine which retriever(s) to use based on headers, config, or default.
+
+    Args:
+        headers (dict): The headers dictionary
+        cfg (Config): The configuration object
+
+    Returns:
+        list: A list of retriever classes to be used for searching.
+    """
+    # Check headers first for multiple retrievers
+    if headers.get("retrievers"):
+        retrievers = headers.get("retrievers").split(",")
+    # If not found, check headers for a single retriever
+    elif headers.get("retriever"):
+        retrievers = [headers.get("retriever")]
+    # If not in headers, check config for multiple retrievers
+    elif cfg.retrievers:
+        retrievers = cfg.retrievers
+    # If not found, check config for a single retriever
+    elif cfg.retriever:
+        retrievers = [cfg.retriever]
+    # If still not set, use default retriever
+    else:
+        retrievers = [get_default_retriever().__name__]
+
+    # Convert retriever names to actual retriever classes
+    # Use get_default_retriever() as a fallback for any invalid retriever names
+    return [get_retriever(r) or get_default_retriever() for r in retrievers]
+
+
 def get_default_retriever(retriever):
     from gpt_researcher.retrievers import TavilySearch
 
