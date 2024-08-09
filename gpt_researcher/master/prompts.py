@@ -88,7 +88,7 @@ Assume that the current date is {date.today()}.
 
 
 def generate_resource_report_prompt(
-    question, context, report_source: str, report_format="apa", total_words=1000
+    question, context, report_source: str, report_format="apa", tone=None, total_words=1000
 ):
     """Generates the resource report prompt for the given question and research summary.
 
