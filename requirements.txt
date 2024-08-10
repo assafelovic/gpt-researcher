@@ -26,7 +26,7 @@ langchain_google_vertexai
 langchain_fireworks
 langchain_aws
 tiktoken
-tavily-python
+tavily-python==0.3.6
 gpt-researcher
 arxiv
 PyMuPDF
@@ -44,12 +44,6 @@ unstructured
 pandas
 json_repair
 exa_py
-
-# Additional dependencies from multi_agents/requirements.txt
-langgraph-cli
-langgraph
-weasyprint
-json5
 
 # uncomment for testing
 # pytest
