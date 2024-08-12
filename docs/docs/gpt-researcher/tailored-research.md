@@ -81,6 +81,14 @@ if __name__ == "__main__":
     print(report)
 ```
 
+### Hybrid Research 🔄
+You can combine the above methods to conduct hybrid research. For example, you can instruct the GPT Researcher to research on both web sources and local documents.
+Simply provide the sources and set the `report_source` argument as `"hybrid"` and watch the magic happen.
+
+Please note! You should set the proper retrievers for the web sources and doc path for local documents for this to work.
+To lean more about retrievers check out the [Retrievers](https://docs.gptr.dev/docs/gpt-researcher/retrievers) documentation.
+
+
 ### Research on LangChain Documents 🦜️🔗
 You can instruct the GPT Researcher to research on a list of langchain document instances.
 
