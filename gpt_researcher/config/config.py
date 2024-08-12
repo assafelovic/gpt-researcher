@@ -33,6 +33,7 @@ class Config:
         self.agent_role = os.getenv('AGENT_ROLE', None)
         self.scraper = os.getenv("SCRAPER", "bs")
         self.max_subtopics = os.getenv("MAX_SUBTOPICS", 3)
+        self.report_source = os.getenv("REPORT_SOURCE", None)
         self.doc_path = os.getenv("DOC_PATH", "")
         self.llm_kwargs = {} 
 
