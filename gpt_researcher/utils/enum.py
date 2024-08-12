@@ -15,6 +15,7 @@ class ReportSource(Enum):
     Local = "local"
     LangChainDocuments = "langchain_documents"
     Sources = "sources"
+    Hybrid = "hybrid"
 
 
 class Tone(Enum):

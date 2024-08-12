@@ -59,9 +59,9 @@ class GPTResearcher:
         self.report_prompt: str = get_prompt_by_report_type(
             self.report_type
         )  # this validates the report type
-        self.report_source: str = report_source
         self.research_costs: float = 0.0
         self.cfg = Config(config_path)
+        self.report_source: str = self.cfg.report_source or report_source
         self.retrievers = get_retrievers(self.headers, self.cfg)
         self.context = context
         self.source_urls = source_urls
@@ -126,6 +126,13 @@ class GPTResearcher:
         elif self.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
             self.context = await self.__get_context_by_search(self.query, document_data)
+
+        # Hybrid search including both local documents and web sources
+        elif self.report_source == ReportSource.Hybrid.value:
+            document_data = await DocumentLoader(self.cfg.doc_path).load()
+            docs_context = await self.__get_context_by_search(self.query, document_data)
+            web_context = await self.__get_context_by_search(self.query)
+            self.context = f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"
 
         elif self.report_source == ReportSource.LangChainDocuments.value:
             langchain_documents_data = await LangChainDocumentLoader(
