@@ -11,12 +11,13 @@ The issue relates to the library WeasyPrint (which is used to generate PDFs from
 Or you can install this package manually
 
 In case of MacOS you can install this lib using
-`brew install glib gobject-introspection`
+`brew install glib pango`
+If you face an issue with linking afterward, you can try running `brew link glib`
 
 In case of Linux you can install this lib using
 `sudo apt install libglib2.0-dev`
 
-**cannot load library 'pango'**
+### cannot load library 'pango'
 
 In case of MacOS you can install this lib using
 `brew install pango`
@@ -36,12 +37,12 @@ If the above solutions don't work, you can try the following:
 - Run the app with Python 3.11 (using brew):
 `python3.11 -m uvicorn main:app --reload`
 
-**Error processing the url**
+### Error processing the url
 
 We're using [Selenium](https://www.selenium.dev) for site scraping. Some sites fail to be scraped. In these cases, restart and try running again.
 
 
-**Chrome version issues**
+### Chrome version issues
 
 Many users have an issue with their chromedriver because the latest chrome browser version doesn't have a compatible chrome driver yet.
 
