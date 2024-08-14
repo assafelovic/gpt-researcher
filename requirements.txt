@@ -44,6 +44,8 @@ unstructured
 pandas
 json_repair
 exa_py
+json5
+langgraph
 
 # uncomment for testing
 # pytest
