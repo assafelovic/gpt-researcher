@@ -126,7 +126,7 @@ python -m uvicorn main:app --reload
 
 <br />
 
-**To learn how to get started with [Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker), [Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started#poetry) or a [virtual environment](https://docs.gptr.dev/docs/gpt-researcher/getting-started#virtual-environment) check out the [documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) page.**
+**To learn how to get started with [Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started#poetry) or a [virtual environment](https://docs.gptr.dev/docs/gpt-researcher/getting-started#virtual-environment) check out the [documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) page.**
 
 ### Run as PIP package
 ```bash
