@@ -126,7 +126,7 @@ python -m uvicorn main:app --reload
 
 <br />
 
-**To learn how to get started with [Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker), [Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started#poetry) or a [virtual environment](https://docs.gptr.dev/docs/gpt-researcher/getting-started#virtual-environment) check out the [documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) page.**
+**To learn how to get started with [Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started#poetry) or a [virtual environment](https://docs.gptr.dev/docs/gpt-researcher/getting-started#virtual-environment) check out the [documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) page.**
 
 ### Run as PIP package
 ```bash
@@ -147,6 +147,26 @@ report = await researcher.write_report()
 ```
 
 **For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/pip-package) page.**
+
+
+## Run with Docker
+
+> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker)
+
+> **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
+
+> **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
+
+```bash
+$ docker-compose up --build
+```
+
+> **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
+ - the Python server running on localhost:8000<br>
+ - the React app running on localhost:3000<br>
+
+Visit localhost:3000 on any browser and enjoy researching!
+
 
 
 ## 📄 Research on Local Documents

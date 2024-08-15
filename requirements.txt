@@ -38,12 +38,14 @@ SQLAlchemy
 mistune
 python-docx
 htmldocx
-lxml[html_clean]
+lxml_html_clean
 websockets
 unstructured
 pandas
 json_repair
 exa_py
+json5
+langgraph
 
 # uncomment for testing
 # pytest

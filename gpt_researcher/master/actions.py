@@ -465,7 +465,11 @@ async def stream_output(
         None
     """
     if not websocket or logging:
-        print(output)
+        try:
+            print(output)
+        except UnicodeEncodeError:
+            # Option 1: Replace problematic characters with a placeholder
+            print(output.encode('cp1252', errors='replace').decode('cp1252'))
 
     if websocket:
         await websocket.send_json(
