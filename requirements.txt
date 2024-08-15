@@ -13,7 +13,7 @@ langchain>=0.2,<0.3
 langchain_community>=0.2,<0.3
 langchain-openai>=0.1,<0.2
 tiktoken
-#gpt-researcher
+gpt-researcher
 arxiv
 PyMuPDF
 requests
