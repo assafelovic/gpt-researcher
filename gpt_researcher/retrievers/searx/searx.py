@@ -2,7 +2,6 @@
 
 # libraries
 import os
-from tavily import TavilyClient
 from langchain_community.utilities import SearxSearchWrapper
 
 
