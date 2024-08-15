@@ -40,9 +40,10 @@ export default function ResearchForm({ chatBoxSettings, setChatBoxSettings }) {
                 <select name="report_source" value={report_source} onChange={onFormChange} className="form-control" required>
                     <option value="web">The Internet</option>
                     <option value="local">My Documents</option>
+                    <option value="hybrid">Hybrid</option>
                 </select>
             </div>
-            {report_source === 'local' && report_type !== 'multi_agents' ? <FileUpload /> : null}
+            {report_source === 'local' || report_source === 'hybrid' ? <FileUpload /> : null}
             <ToneSelector tone={tone} onToneChange={onToneChange} /> {/* Add ToneSelector component */}
         </form>
     );

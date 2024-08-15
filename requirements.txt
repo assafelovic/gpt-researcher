@@ -22,7 +22,7 @@ aiofiles
 mistune
 python-docx
 htmldocx
-lxml[html_clean]
+lxml_html_clean
 websockets
 unstructured
 json_repair
