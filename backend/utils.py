@@ -50,7 +50,7 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
                # md_file_path=f"{file_path}.md",
                css_file_path="./frontend/pdf_styles.css",
                base_url=None)
-        print(f"Report written to {file_path}.pdf")
+        print(f"Report written to {file_path}")
     except Exception as e:
         print(f"Error in converting Markdown to PDF: {e}")
         return ""
