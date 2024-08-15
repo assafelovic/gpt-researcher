@@ -8,13 +8,11 @@ class HumanAgent:
         self.headers = headers or {}
 
     async def review_plan(self, research_state: dict):
-        """
-        Review a draft article
-        :param draft_state:
-        :return:
-        """
         layout = research_state.get("sections")
-        user_feedback = input(f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> ")
-        if "no" in user_feedback:
+        if self.websocket and self.stream_output:
+            await self.stream_output("human_feedback", "request", f"Any feedback on this plan? {layout}? If not, please reply with 'no'.", self.websocket)
+            response = await self.websocket.receive_text()
+            user_feedback = response if response.lower() != "no" else None
+        else:
             user_feedback = None
         return {"human_feedback": user_feedback}
