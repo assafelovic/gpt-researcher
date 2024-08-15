@@ -4,7 +4,6 @@
 import os
 import requests
 import json
-from tavily import TavilyClient
 
 
 class GoogleSearch:
@@ -21,7 +20,6 @@ class GoogleSearch:
         self.headers = headers or {}
         self.api_key = self.headers.get("google_api_key") or self.get_api_key()  # Use the passed api_key or fallback to environment variable
         self.cx_key = self.headers.get("google_cx_key") or self.get_cx_key()  # Use the passed cx_key or fallback to environment variable
-        self.client = TavilyClient(self.api_key)
 
     def get_api_key(self):
         """

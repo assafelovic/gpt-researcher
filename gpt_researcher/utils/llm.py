@@ -15,43 +15,8 @@ from .validators import Subtopics
 
 
 def get_llm(llm_provider, **kwargs):
-    match llm_provider:
-        case "openai":
-            from ..llm_provider import OpenAIProvider
-            llm_provider = OpenAIProvider
-        case "azureopenai":
-            from ..llm_provider import AzureOpenAIProvider
-            llm_provider = AzureOpenAIProvider
-        case "google":
-            from ..llm_provider import GoogleProvider
-            llm_provider = GoogleProvider
-        case "ollama":
-            from ..llm_provider import OllamaProvider
-            llm_provider = OllamaProvider
-        case "groq":
-            from ..llm_provider import GroqProvider
-            llm_provider = GroqProvider
-        case "together":
-            from ..llm_provider import TogetherProvider
-            llm_provider = TogetherProvider
-        case "huggingface":
-            from ..llm_provider import HuggingFaceProvider
-            llm_provider = HuggingFaceProvider
-        case "mistral":
-            from ..llm_provider import MistralProvider
-            llm_provider = MistralProvider
-        case "anthropic":
-            from ..llm_provider import AnthropicProvider
-            llm_provider = AnthropicProvider
-        case "unify":
-            from ..llm_provider import UnifyProvider
-            llm_provider = UnifyProvider
-        # Generic case for all other providers supported by Langchain
-        case _:
-            from gpt_researcher.llm_provider import GenericLLMProvider
-            return GenericLLMProvider.from_provider(llm_provider, **kwargs)
-
-    return llm_provider(**kwargs)
+    from gpt_researcher.llm_provider import GenericLLMProvider
+    return GenericLLMProvider.from_provider(llm_provider, **kwargs)
 
 
 async def create_chat_completion(
