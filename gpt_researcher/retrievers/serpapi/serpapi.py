@@ -3,7 +3,6 @@
 # libraries
 import os
 import requests
-from duckduckgo_search import DDGS
 import urllib.parse
 
 
@@ -56,6 +55,7 @@ class SerpApiSearch():
                 search_results = response.json()
                 if search_results:
                     results = search_results["organic_results"]
+                    results_processed = 0
                     for result in results:
                         # skip youtube results
                         if "youtube.com" in result["link"]:
@@ -68,10 +68,9 @@ class SerpApiSearch():
                             "body": result["snippet"],
                         }
                         search_response.append(search_result)
-                        results_processed += 1    
-        except Exception as e: # Fallback in case overload on Tavily Search API
-            print(f"Error: {e}")
-            ddg = DDGS()
-            search_response = ddg.text(self.query, region='wt-wt', max_results=max_results)
+                        results_processed += 1
+        except Exception as e:
+            print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
+            search_response = []
 
         return search_response

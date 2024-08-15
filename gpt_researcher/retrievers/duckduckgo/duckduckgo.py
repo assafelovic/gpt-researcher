@@ -1,5 +1,5 @@
 from itertools import islice
-from duckduckgo_search import DDGS
+from ..utils import check_pkg
 
 
 class Duckduckgo:
@@ -7,6 +7,8 @@ class Duckduckgo:
     Duckduckgo API Retriever
     """
     def __init__(self, query):
+        check_pkg('duckduckgo_search')
+        from duckduckgo_search import DDGS
         self.ddg = DDGS()
         self.query = query
 
@@ -17,5 +19,9 @@ class Duckduckgo:
         :param max_results:
         :return:
         """
-        ddgs_gen = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
-        return ddgs_gen
+        try:
+            search_response = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
+        except Exception as e:
+            print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
+            search_response = []
+        return search_response
