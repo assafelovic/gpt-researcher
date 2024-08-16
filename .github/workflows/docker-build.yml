@@ -23,7 +23,7 @@ jobs:
       #   with:
       #     push: false
       #     tags: gptresearcher/gpt-researcher:latest
-      #     file: Dockerfile
+      #     file: Dockerfile 
           
       - name: Set up Docker Compose
         run: |
