@@ -10,6 +10,8 @@
 -  [中文](README-zh_CN.md)
 -  [日本語](README-ja_JP.md)
 
+**演示**
+https://github.com/user-attachments/assets/7809de76-3b7d-4f89-b94e-da01b0c83723
 
 **GPT Researcher 是一个智能体代理，专为各种任务的综合在线研究而设计。**
 
