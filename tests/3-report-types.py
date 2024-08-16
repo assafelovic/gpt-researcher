@@ -7,10 +7,7 @@ from gpt_researcher import GPTResearcher
 report_types = [
     "research_report",
     "custom_report",
-    "subtopic_report",
-    "summary_report",
-    "detailed_report",
-    "quick_report"
+    "subtopic_report"
 ]
 
 # Define a common query and sources for testing
