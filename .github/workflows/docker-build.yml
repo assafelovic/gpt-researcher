@@ -2,7 +2,7 @@ name: GitHub Actions Workflow
 run-name: ${{ github.actor }} has started docker build workflow.
 on:
   pull_request:
-    types: [opened, edited, ready_for_review, synchronize]
+    types: [opened, synchronize]
 jobs:
   docker:
     runs-on: ubuntu-latest
