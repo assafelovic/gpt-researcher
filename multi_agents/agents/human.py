@@ -15,6 +15,8 @@ class HumanAgent:
         """
         layout = research_state.get("sections")
         user_feedback = input(f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> ")
+        if self.websocket and self.stream_output:
+            await self.stream_output("logs", "user_feedback", user_feedback, self.websocket)
         if "no" in user_feedback:
             user_feedback = None
         return {"human_feedback": user_feedback}
