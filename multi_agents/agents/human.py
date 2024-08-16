@@ -14,7 +14,7 @@ class HumanAgent:
         :return:
         """
         layout = research_state.get("sections")
-        user_feedback = None
+        user_feedback = 'no'
 
         if not self.websocket:
             user_feedback = input(f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> ")
