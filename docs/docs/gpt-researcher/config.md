@@ -19,7 +19,7 @@ You can also include your own external JSON file `config.json` by adding the pat
 Below is a list of current supported options:
 
 - **`RETRIEVER`**: Web search engine used for retrieving sources. Defaults to `tavily`. Options: `duckduckgo`, `bing`, `google`, `serper`, `searx`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
-- **`EMBEDDING_PROVIDER`**: Provider for embedding model. Defaults to `openai`. Options: `ollama`, `huggingface`, `azureopenai`, `custom`.
+- **`EMBEDDING_PROVIDER`**: Provider for embedding model. Defaults to `openai`. Options: `ollama`, `huggingface`, `azure_openai`, `custom`.
 - **`LLM_PROVIDER`**: LLM provider. Defaults to `openai`. Options: `google`, `ollama`, `groq` and much more!
 - **`FAST_LLM_MODEL`**: Model name for fast LLM operations such summaries. Defaults to `gpt-4o-mini`.
 - **`SMART_LLM_MODEL`**: Model name for smart operations like generating research reports and reasoning. Defaults to `gpt-4o`.
