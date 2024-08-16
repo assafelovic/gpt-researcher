@@ -113,6 +113,7 @@ export default function Home() {
 
   // Add this function to handle feedback submission
   const handleFeedbackSubmit = (feedback: string | null) => {
+    console.log('user feedback is passed to handleFeedbackSubmit: ', feedback);
     if (socket) {
       socket.send(JSON.stringify({ type: 'human_feedback', content: feedback }));
     }

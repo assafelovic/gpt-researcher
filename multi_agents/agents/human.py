@@ -8,6 +8,8 @@ class HumanAgent:
         self.headers = headers or {}
 
     async def review_plan(self, research_state: dict):
+        print(f"HumanAgent websocket: {self.websocket}")
+        print(f"HumanAgent stream_output: {self.stream_output}")
         layout = research_state.get("sections")
         if self.websocket and self.stream_output:
             try:
