@@ -11,15 +11,21 @@ class HumanAgent:
         print(f"HumanAgent websocket: {self.websocket}")
         print(f"HumanAgent stream_output: {self.stream_output}")
         layout = research_state.get("sections")
+
+        user_feedback = None
+        
         if self.websocket and self.stream_output:
             try:
                 await self.stream_output("human_feedback", "request", f"Any feedback on this plan? {layout}? If not, please reply with 'no'.", self.websocket)
                 response = await self.websocket.receive_text()
                 print(f"Received response: {response}")  # Add this line for debugging
-                user_feedback = response if response.lower() != "no" else None
+                user_feedback = response
             except Exception as e:
                 print(f"Error receiving human feedback: {e}")
-                user_feedback = None
         else:
+            user_feedback = input(f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> ")
+        
+        if user_feedback.lower() == "no":
             user_feedback = None
+
         return {"human_feedback": user_feedback}
