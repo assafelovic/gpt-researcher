@@ -16,6 +16,7 @@ import LogMessage from '../components/Task/LogMessage';
 
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
+import HumanFeedback from "@/components/HumanFeedback";
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
@@ -32,6 +33,7 @@ export default function Home() {
   const [socket, setSocket] = useState(null);
   const [orderedData, setOrderedData] = useState([]);
   const heartbeatInterval = useRef(null);
+  const [showHumanFeedback, setShowHumanFeedback] = useState(false);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -68,16 +70,22 @@ export default function Home() {
         newSocket.onmessage = (event) => {
           const data = JSON.parse(event.data);
           console.log('websocket data caught in frontend: ', data);
-          const contentAndType = `${data.content}-${data.type}`;
-          setOrderedData((prevOrder) => [...prevOrder, { ...data, contentAndType }]);
 
-          if (data.type === 'report') {
-            setAnswer((prev) => prev + data.output);
-          } else if (data.type === 'path') {
-            setLoading(false);
-            newSocket.close();
-            setSocket(null);
+          if (data.type === 'human_feedback' && data.content === 'request') {
+            setShowHumanFeedback(true);
+          } else {
+            const contentAndType = `${data.content}-${data.type}`;
+            setOrderedData((prevOrder) => [...prevOrder, { ...data, contentAndType }]);
+
+            if (data.type === 'report') {
+              setAnswer((prev) => prev + data.output);
+            } else if (data.type === 'path') {
+              setLoading(false);
+              newSocket.close();
+              setSocket(null);
+            }
           }
+          
         };
 
         newSocket.onopen = () => {
@@ -101,6 +109,15 @@ export default function Home() {
       let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
       socket.send(data);
     }
+  };
+
+  // Add this function to handle feedback submission
+  const handleFeedbackSubmit = (feedback: string | null) => {
+    console.log('user feedback is passed to handleFeedbackSubmit: ', feedback);
+    if (socket) {
+      socket.send(JSON.stringify({ type: 'human_feedback', content: feedback }));
+    }
+    setShowHumanFeedback(false);
   };
 
   const handleDisplayResult = async (newQuestion?: string) => {
@@ -324,6 +341,13 @@ export default function Home() {
               <div className="container space-y-2">
                 {renderComponentsInOrder()}
               </div>
+
+              {showHumanFeedback && (
+                <HumanFeedback
+                  websocket={socket}
+                  onFeedbackSubmit={handleFeedbackSubmit}
+                />
+              )}
 
               <div className="pt-1 sm:pt-2" ref={chatContainerRef}></div>
             </div>
