@@ -183,10 +183,6 @@ Step 2:
  - If you're running the frontend app on localhost:8000, simply select "My Documents" from the the "Report Source" Dropdown Options.
  - If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/docs/gpt-researcher/pip-package), pass the `report_source` argument as "documents" when you instantiate the `GPTResearcher` class [code sample here](https://docs.tavily.com/docs/gpt-researcher/tailored-research).
 
-### One-Click Deployment
-
-[![Deploy to RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/?app_id=274)
-
 ## 👪 Multi-Agent Assistant
 As AI evolves from prompt engineering and RAG to multi-agent systems, we're excited to introduce our new multi-agent assistant built with [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/).
 
