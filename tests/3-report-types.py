@@ -6,7 +6,6 @@ from gpt_researcher import GPTResearcher
 # Define the report types to test
 report_types = [
     "research_report",
-    "custom_report",
     "subtopic_report"
 ]
 
