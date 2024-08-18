@@ -10,6 +10,7 @@ report_types = [
 
 # Define a common query and sources for testing
 query = "What are the latest advancements in AI?"
+tone = 
 sources = ["https://en.wikipedia.org/wiki/Artificial_intelligence", "https://www.ibm.com/watson/ai"]
 
 # Define the output directory
