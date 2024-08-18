@@ -31,7 +31,7 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 
 **Our mission is to empower individuals and organizations with accurate, unbiased, and factual information by leveraging the power of AI.**
 
-## Why GPT Researcher?
+## Why GPT Researcher? 
 
 - To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right resources and information.
 - Current LLMs are trained on past and outdated information, with heavy risks of hallucinations, making them almost irrelevant for research tasks.
