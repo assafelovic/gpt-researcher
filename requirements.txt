@@ -26,6 +26,7 @@ lxml_html_clean
 websockets
 unstructured
 json_repair
+json5
 
 # uncomment for testing
 # pytest
