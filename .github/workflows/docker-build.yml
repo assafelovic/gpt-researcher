@@ -12,8 +12,6 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
       LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
-  docker:
-    runs-on: ubuntu-latest
     steps:
       - name: Git checkout
         uses: actions/checkout@master
