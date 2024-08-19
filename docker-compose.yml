@@ -34,8 +34,4 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
-    command: >
-      /bin/sh -c "
-      pip install pytest pytest-asyncio &&
-      python -m pytest tests/3-report-types.py
-      "
+    command: pytest -v tests/3-report-types.py
