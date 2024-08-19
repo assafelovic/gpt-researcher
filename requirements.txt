@@ -28,5 +28,5 @@ unstructured
 json_repair
 
 # uncomment for testing
-# pytest
-# pytest-asyncio
+pytest
+pytest-asyncio
