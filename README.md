@@ -41,7 +41,7 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 - Using only a selection of web sources can create bias in determining the right conclusions for research tasks.
 
 ## Demo
-https://github.com/assafelovic/gpt-researcher/assets/13554167/dd6cf08f-b31e-40c6-9907-1915f52a7110
+https://cowriter-images.s3.amazonaws.com/gptr-demo.mp4
 
 ## Architecture
 The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. <br /> <br /> 
