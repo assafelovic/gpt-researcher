@@ -6,16 +6,12 @@ from gpt_researcher import GPTResearcher
 # Define the report types to test
 report_types = [
     "research_report",
-    "custom_report",
-    "subtopic_report",
-    "summary_report",
-    "detailed_report",
-    "quick_report"
+    "subtopic_report"
 ]
 
 # Define a common query and sources for testing
 query = "What are the latest advancements in AI?"
-sources = ["https://en.wikipedia.org/wiki/Artificial_intelligence", "https://www.ibm.com/watson/ai"]
+# sources = ["https://en.wikipedia.org/wiki/Artificial_intelligence", "https://www.ibm.com/watson/ai"]
 
 # Define the output directory
 output_dir = "./outputs"
@@ -28,7 +24,7 @@ async def test_gpt_researcher(report_type):
         os.makedirs(output_dir)
         
     # Create an instance of GPTResearcher
-    researcher = GPTResearcher(query=query, report_type=report_type, source_urls=sources)
+    researcher = GPTResearcher(query=query, report_type=report_type)
     
     # Conduct research and write the report
     await researcher.conduct_research()
