@@ -11,6 +11,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     environment: tests  # Specify the environment to use for this job
+    if: ${{ secrets.OPENAI_API_KEY && secrets.TAVILY_API_KEY }}
     env:
       # Ensure these environment variables are set for the entire job
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
