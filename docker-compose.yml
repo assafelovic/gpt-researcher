@@ -19,10 +19,10 @@ services:
       - CHOKIDAR_USEPOLLING=true
     build:
       dockerfile: Dockerfile.dev
-      context: application
+      context: multi_agents/frontend
     volumes:
       - /app/node_modules
-      - ./application:/app
+      - ./multi_agents/frontend:/app
     restart: always
     ports:
       - 3000:3000
