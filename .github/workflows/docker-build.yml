@@ -1,5 +1,8 @@
 name: GitHub Actions Workflow
 run-name: ${{ github.actor }} has started docker build workflow.
+permissions:
+  contents: read
+  pull-requests: write
 on:
   pull_request:
     types: [opened, synchronize]
