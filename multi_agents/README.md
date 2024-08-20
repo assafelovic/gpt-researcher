@@ -126,7 +126,7 @@ It comes with loads of added features, such as:
 > **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
 
 ```bash
-$ docker-compose up --build
+$ docker compose up --build
 ```
 
 > **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
