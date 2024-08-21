@@ -35,9 +35,9 @@ class HumanAgent:
             else:
                 user_feedback = input(f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> ")
 
-        if user_feedback and "no" in user_feedback.lower():
+        if user_feedback and "no" in user_feedback.strip().lower():
             user_feedback = None
 
         print(f"User feedback before return: {user_feedback}")
 
-        return {"human_feedback": user_feedback, "human_feedback_still_required": False}
+        return {"human_feedback": user_feedback}
