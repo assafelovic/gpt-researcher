@@ -42,7 +42,6 @@ class EditorAgent:
             "role": "user",
             "content": f"Today's date is {datetime.now().strftime('%d/%m/%Y')}\n."
                        f"Research summary report: '{initial_research}'\n"
-                       f"{f'Human feedback: {human_feedback}. You must plan the sections based on the human feedback.' if include_human_feedback else ''}\n"
                        f"Your task is to generate an outline of sections headers for the research project"
                        f" based on the research summary report above.\n"
                        f"You must generate a maximum of {max_sections} section headers.\n"
@@ -69,6 +68,7 @@ class EditorAgent:
         reviser_agent = ReviserAgent(self.websocket, self.stream_output, self.headers)
         queries = research_state.get("sections")
         title = research_state.get("title")
+        human_feedback = research_state.get("human_feedback")
         workflow = StateGraph(DraftState)
 
         workflow.add_node("researcher", research_agent.run_depth_research)
@@ -90,7 +90,8 @@ class EditorAgent:
             await self.stream_output("logs", "parallel_research", f"Running parallel research for the following queries: {queries}", self.websocket)
         else:
             print_agent_output(f"Running the following research tasks in parallel: {queries}...", agent="EDITOR")
-        final_drafts = [chain.ainvoke({"task": research_state.get("task"), "topic": query, "title": title, "headers": self.headers})
+        final_drafts = [chain.ainvoke({"task": research_state.get("task"), "topic": query + ". Also: " + human_feedback,
+                                       "title": title, "headers": self.headers})
                         for query in queries]
         research_results = [result['draft'] for result in await asyncio.gather(*final_drafts)]
 
