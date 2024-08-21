@@ -35,7 +35,7 @@ class Memory:
                 _embeddings = OpenAIEmbeddings(
                     openai_api_key=headers.get("openai_api_key")
                     or os.environ.get("OPENAI_API_KEY"),
-                    model=OPENAI_EMBEDDING_MODEL,
+                    model=os.environ.get("OPENAI_EMBEDDING_MODEL",OPENAI_EMBEDDING_MODEL)
                 )
             case "azure_openai":
                 from langchain_openai import AzureOpenAIEmbeddings
