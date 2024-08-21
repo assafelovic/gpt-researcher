@@ -1,3 +1,4 @@
+import json
 from .utils.views import print_agent_output
 from .utils.llms import call_model
 
@@ -6,7 +7,6 @@ class HumanAgent:
         self.websocket = websocket
         self.stream_output = stream_output
         self.headers = headers or {}
-
     async def review_plan(self, research_state: dict):
         print(f"HumanAgent websocket: {self.websocket}")
         print(f"HumanAgent stream_output: {self.stream_output}")
@@ -21,15 +21,21 @@ class HumanAgent:
                 try:
                     await self.stream_output("human_feedback", "request", f"Any feedback on this plan? {layout}? If not, please reply with 'no'.", self.websocket)
                     response = await self.websocket.receive_text()
-                    print(f"Received response: {response}")  # Add this line for debugging
-                    user_feedback = response
+                    print(f"Received response: {response}", flush=True)
+                    response_data = json.loads(response)
+                    if response_data.get("type") == "human_feedback":
+                        user_feedback = response_data.get("content")
+                    else:
+                        print(f"Unexpected response type: {response_data.get('type')}", flush=True)
                 except Exception as e:
-                    print(f"Error receiving human feedback: {e}")
+                    print(f"Error receiving human feedback: {e}", flush=True)
             # Otherwise, prompt the user for feedback in the console
             else:
                 user_feedback = input(f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> ")
         
         if user_feedback and "no" in user_feedback.lower():
-            user_feedback = None
+            user_feedback = 'plan approved'
+
+        print(f"User feedback before return: {user_feedback}")
 
         return {"human_feedback": user_feedback}
