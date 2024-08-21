@@ -21,7 +21,7 @@ const SubQuestions: React.FC<SubQuestionsProps> = ({ metadata, handleClickSugges
         <p className="pr-5 font-bold leading-[152%] text-white pb-[30px]">
           Pondering your question from several angles
         </p>
-        <div className="flex flex-row flex-wrap items-center gap-2.5 pb-[30px]">
+        <div className="flex flex-row flex-wrap items-center gap-2.5 pb-[20px]">
           {metadata.map((item, subIndex) => (
             <div
               className="flex cursor-pointer items-center justify-center gap-[5px] rounded-full border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"

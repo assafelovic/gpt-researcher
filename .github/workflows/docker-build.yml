@@ -42,4 +42,4 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
       - name: Run tests with Docker Compose
         run: |
-          docker-compose run --rm gpt-researcher-tests
+          docker-compose --profile test run --rm gpt-researcher-tests

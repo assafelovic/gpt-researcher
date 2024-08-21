@@ -34,6 +34,8 @@ export default function Home() {
   const [orderedData, setOrderedData] = useState([]);
   const heartbeatInterval = useRef(null);
   const [showHumanFeedback, setShowHumanFeedback] = useState(false);
+  const [questionForHuman, setQuestionForHuman] = useState(false);
+  
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -72,6 +74,8 @@ export default function Home() {
           console.log('websocket data caught in frontend: ', data);
 
           if (data.type === 'human_feedback' && data.content === 'request') {
+            console.log('triggered human feedback condition')
+            setQuestionForHuman(data.output)
             setShowHumanFeedback(true);
           } else {
             const contentAndType = `${data.content}-${data.type}`;
@@ -94,9 +98,9 @@ export default function Home() {
           newSocket.send(data);
 
           // Start sending heartbeat messages every 30 seconds
-          heartbeatInterval.current = setInterval(() => {
-            newSocket.send(JSON.stringify({ type: 'ping' }));
-          }, 30000);
+          // heartbeatInterval.current = setInterval(() => {
+          //   newSocket.send(JSON.stringify({ type: 'ping' }));
+          // }, 30000);
         };
 
         newSocket.onclose = () => {
@@ -344,6 +348,7 @@ export default function Home() {
 
               {showHumanFeedback && (
                 <HumanFeedback
+                  questionForHuman={questionForHuman}
                   websocket={socket}
                   onFeedbackSubmit={handleFeedbackSubmit}
                 />
