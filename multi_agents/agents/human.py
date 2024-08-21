@@ -15,16 +15,19 @@ class HumanAgent:
 
         user_feedback = None
         
-        if self.websocket and self.stream_output and task.get("include_human_feedback"):
-            try:
-                await self.stream_output("human_feedback", "request", f"Any feedback on this plan? {layout}? If not, please reply with 'no'.", self.websocket)
-                response = await self.websocket.receive_text()
-                print(f"Received response: {response}")  # Add this line for debugging
-                user_feedback = response
-            except Exception as e:
-                print(f"Error receiving human feedback: {e}")
-        else:
-            user_feedback = input(f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> ")
+        if task.get("include_human_feedback"):
+            # Stream response to the user if a websocket is provided
+            if self.websocket and self.stream_output:
+                try:
+                    await self.stream_output("human_feedback", "request", f"Any feedback on this plan? {layout}? If not, please reply with 'no'.", self.websocket)
+                    response = await self.websocket.receive_text()
+                    print(f"Received response: {response}")  # Add this line for debugging
+                    user_feedback = response
+                except Exception as e:
+                    print(f"Error receiving human feedback: {e}")
+            # Otherwise, prompt the user for feedback in the console
+            else:
+                user_feedback = input(f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> ")
         
         if user_feedback and "no" in user_feedback.lower():
             user_feedback = None
