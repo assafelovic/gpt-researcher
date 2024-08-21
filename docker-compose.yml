@@ -28,12 +28,13 @@ services:
       - 3000:3000
 
   gpt-researcher-tests:
-    image: gptresearcher/gpt-researcher
+    image: gptresearcher/gpt-researcher-tests
     build: ./
     environment: 
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+    profiles: ["test"]
     command: >
       /bin/sh -c "
       pip install pytest pytest-asyncio &&
