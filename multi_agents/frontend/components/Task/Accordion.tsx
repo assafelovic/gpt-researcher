@@ -97,7 +97,7 @@ const Accordion = ({ logs }) => {
   };
 
   return (
-    <div id="accordion-collapse" data-accordion="collapse" className="mb-8 bg-gray-900 rounded-t-lg">
+    <div id="accordion-collapse" data-accordion="collapse" className="mb-4 bg-gray-900 rounded-t-lg">
   {logs.map((log, index) => (
     <div key={index}>
       <h2 id={`accordion-collapse-heading-${index}`}>
