@@ -43,7 +43,7 @@ const LogMessage = ({ logs }) => {
                 return (
                   <div
                       key={index}
-                      className="mb-8 w-full max-w-4xl mx-auto rounded-lg p-4 bg-gray-900 shadow-md"
+                      className="mb-4 w-full max-w-4xl mx-auto rounded-lg p-4 bg-gray-900 shadow-md"
                     >
                       <p className="py-3 text-base leading-relaxed text-white dark:text-white">
                         {log.text}
