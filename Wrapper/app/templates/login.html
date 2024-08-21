@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <style>
+          body {
+            font-family: 'Montserrat', sans-serif;
+            color: #fff;
+            line-height: 1.6;
+            background-size: 200% 200%;
+            background-image: linear-gradient(45deg, #151A2D, #2D284D, #151A2D);
+            animation: gradientBG 10s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0 50%; }
+        }
+
+        .landing {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: all .3s ease-in-out;
+        }
+
+        input {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            transition: all .3s ease-in-out;
+        }
+
+        input:hover, input:focus {
+            background-color: #dfe4ea;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(to right, #0062cc, #007bff);
+            border: none;
+            transition: all .3s ease-in-out;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        /* ... existing styles ... */
+        .btn-google {
+            background-color: #4285F4;
+            color: white;
+        }
+        .btn-google:hover {
+            background-color: #357ae8;
+        }
+    </style>
+</head>
+<body>
+    <div class="landing">
+        <div class="container">
+            <h2 class="mb-4">Login to GPT Researcher</h2>
+
+            <a href="/auth/google/login" class="btn btn-google btn-block mb-3">
+                <button type="submit" class="btn btn-block btn-google">Login with Google</button>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
