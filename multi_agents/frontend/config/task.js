@@ -1,6 +1,7 @@
 export const task = {
   "task": {
     "query": "Is AI in a hype cycle?",
+    "include_human_feedback": true,
     "model": "gpt-4o",
     "max_sections": 3,
     "publish_formats": {
