@@ -92,6 +92,9 @@ from langchain_openai import OpenAIEmbeddings
 
 CONNECTION_STRING = 'postgresql://someuser:somepass@localhost:5432/somedatabase'
 
+
+# assuming the vector store exists and contains the relevent documents
+# also assuming embeddings have been or will be generated
 vector_store = PGVector.from_existing_index(
     use_jsonb=True,
     embedding=OpenAIEmbeddings(),
@@ -99,6 +102,12 @@ vector_store = PGVector.from_existing_index(
     connection=CONNECTION_STRING,
     async_mode=True,
 )
+
+query = """
+    Create a short report about apples.
+    Include a section about which apples are considered best
+    during each season.
+"""
 
 # Create an instance of GPTResearcher
 researcher = GPTResearcher(
