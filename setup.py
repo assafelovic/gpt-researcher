@@ -1,6 +1,15 @@
 from setuptools import find_packages, setup
 
-exclude_packages = ["selenium", "webdriver", "fastapi", "fastapi.*", "uvicorn", "jinja2", "gpt-researcher"]
+exclude_packages = [
+    "selenium",
+    "webdriver",
+    "fastapi",
+    "fastapi.*",
+    "uvicorn",
+    "jinja2",
+    "gpt-researcher",
+    "langgraph"
+]
 
 with open(r"README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
@@ -10,7 +19,7 @@ with open("requirements.txt", "r") as f:
 
 setup(
     name="gpt-researcher",
-    version="0.8.8",
+    version="0.8.9",
     description="GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks.",
     package_dir={'gpt_researcher': 'gpt_researcher'},
     packages=find_packages(exclude=exclude_packages),
