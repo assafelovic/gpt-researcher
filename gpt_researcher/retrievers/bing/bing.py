@@ -65,12 +65,11 @@ class BingSearch():
             return
         try:
             search_results = json.loads(resp.text)
+            results = search_results["webPages"]["value"]
         except Exception:
             return
         if search_results is None:
             return
-
-        results = search_results["webPages"]["value"]
         search_results = []
 
         # Normalize the results to match the format of the other search APIs
