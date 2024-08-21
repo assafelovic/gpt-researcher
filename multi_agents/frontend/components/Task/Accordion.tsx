@@ -103,7 +103,7 @@ const Accordion = ({ logs }) => {
       <h2 id={`accordion-collapse-heading-${index}`}>
         <button
           type="button"
-          className="flex items-center w-full p-5 font-medium rtl:text-right text-white rounded-t-xl focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 text-white hover:bg-gray-100 hover:text-black dark:hover:bg-gray-800 gap-3"
+          className="flex items-center w-full p-5 font-medium rtl:text-right text-white rounded-t-xl focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 text-white hover:bg-gray-100 dark:hover:bg-gray-800 gap-3"
           onClick={() => handleToggle(index)}
           aria-expanded={openIndex === index}
           aria-controls={`accordion-collapse-body-${index}`}
