@@ -88,6 +88,7 @@ report = await researcher.write_report()
 ```python
 from gpt_researcher import GPTResearcher
 from langchain_postgres.vectorstores import PGVector
+from langchain_openai import OpenAIEmbeddings
 
 CONNECTION_STRING = 'postgresql://someuser:somepass@localhost:5432/somedatabase'
 
