@@ -14,12 +14,14 @@ class HumanAgent:
         layout = research_state.get("sections")
 
         user_feedback = None
-        
+
         if task.get("include_human_feedback"):
-            # Stream response to the user if a websocket is provided
+            # Stream response to the user if a websocket is provided (such as from web app)
             if self.websocket and self.stream_output:
                 try:
-                    await self.stream_output("human_feedback", "request", f"Any feedback on this plan? {layout}? If not, please reply with 'no'.", self.websocket)
+                    await self.stream_output("human_feedback", "request",
+                        f"Any feedback on this plan of topics to research? {layout}? If not, please reply with 'no'.",
+                        self.websocket)
                     response = await self.websocket.receive_text()
                     print(f"Received response: {response}", flush=True)
                     response_data = json.loads(response)
@@ -32,7 +34,7 @@ class HumanAgent:
             # Otherwise, prompt the user for feedback in the console
             else:
                 user_feedback = input(f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> ")
-        
+
         if user_feedback and "no" in user_feedback.lower():
             user_feedback = None
 
