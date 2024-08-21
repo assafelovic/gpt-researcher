@@ -59,8 +59,9 @@ class ChiefEditorAgent:
         # Add human in the loop
         workflow.add_conditional_edges(
             'human',
-            (lambda research_state: "revise" if research_state['human_feedback'] is None
-                        else "accept"),
+            (lambda research_state: "accept" if (research_state['human_feedback'] is not None 
+                or research_state['human_feedback_still_required'] != True)
+                        else "revise"),
             {"accept": "researcher", "revise": "planner"}
         )
 

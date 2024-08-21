@@ -30,9 +30,7 @@ class EditorAgent:
         initial_research = research_state.get("initial_research")
         task = research_state.get("task")
         max_sections = task.get("max_sections")
-        include_human_feedback = task.get("include_human_feedback")
-        human_feedback = research_state.get("human_feedback")
-
+        
         prompt = [{
             "role": "system",
             "content": "You are a research editor. Your goal is to oversee the research project"
@@ -90,9 +88,16 @@ class EditorAgent:
             await self.stream_output("logs", "parallel_research", f"Running parallel research for the following queries: {queries}", self.websocket)
         else:
             print_agent_output(f"Running the following research tasks in parallel: {queries}...", agent="EDITOR")
-        final_drafts = [chain.ainvoke({"task": research_state.get("task"), "topic": query + ". Also: " + human_feedback,
-                                       "title": title, "headers": self.headers})
-                        for query in queries]
+        
+        final_drafts = [
+            chain.ainvoke({
+                "task": research_state.get("task"),
+                "topic": query + (f". Also: {human_feedback}" if human_feedback is not None else ""),
+                "title": title,
+                "headers": self.headers
+            })
+            for query in queries
+        ]
         research_results = [result['draft'] for result in await asyncio.gather(*final_drafts)]
 
         return {"research_data": research_results}
