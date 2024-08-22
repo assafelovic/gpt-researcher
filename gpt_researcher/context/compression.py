@@ -1,5 +1,6 @@
 import os
 import asyncio
+from typing import Optional
 from .retriever import SearchAPIRetriever, SectionRetriever
 from langchain.retrievers import (
     ContextualCompressionRetriever,
@@ -14,9 +15,10 @@ from gpt_researcher.memory.embeddings import OPENAI_EMBEDDING_MODEL
 
 
 class VectorstoreCompressor:
-    def __init__(self, vector_store, max_results=5, **kwargs):
+    def __init__(self, vector_store, max_results=5, filter: Optional[dict] = None, **kwargs):
         self.vector_store = vector_store
         self.max_results = max_results
+        self.filter = filter
         self.kwargs = kwargs
 
     def __pretty_print_docs(self, docs):
@@ -26,7 +28,7 @@ class VectorstoreCompressor:
                           for d in docs)
 
     async def async_get_context(self, query, max_results=5):
-        results = await self.vector_store.asimilarity_search(query=query, k=max_results)
+        results = await self.vector_store.asimilarity_search(query=query, k=max_results, filter=self.filter)
         return self.__pretty_print_docs(results)
 
 

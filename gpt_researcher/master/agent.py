@@ -26,6 +26,7 @@ class GPTResearcher:
         source_urls=None,
         documents=None,
         vector_store=None,
+        vector_store_filter=None,
         config_path=None,
         websocket=None,
         agent=None,
@@ -68,6 +69,7 @@ class GPTResearcher:
         self.source_urls = source_urls
         self.documents = documents
         self.vector_store = vector_store
+        self.vector_store_filter = vector_store_filter
         self.memory = Memory(self.cfg.embedding_provider, self.headers)
         self.visited_urls: set[str] = visited_urls
         self.verbose: bool = verbose
@@ -145,7 +147,7 @@ class GPTResearcher:
             )
 
         elif self.report_source == ReportSource.LangChainVectorStore.value:
-            self.context = await self.__get_context_by_vectorstore(self.query)
+            self.context = await self.__get_context_by_vectorstore(self.query, self.vector_store_filter)
         # Default web based research
         else:
             self.context = await self.__get_context_by_search(self.query)
@@ -239,7 +241,7 @@ class GPTResearcher:
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
         return await self.__get_similar_content_by_query(self.query, scraped_sites)
 
-    async def __get_context_by_vectorstore(self, query):
+    async def __get_context_by_vectorstore(self, query, filter: Optional[dict] = None):
         """
             Generates the context for the research task by searching the vectorstore
         Returns:
@@ -265,7 +267,7 @@ class GPTResearcher:
         # Using asyncio.gather to process the sub_queries asynchronously
         context = await asyncio.gather(
             *[
-                self.__process_sub_query_with_vectorstore(sub_query)
+                self.__process_sub_query_with_vectorstore(sub_query, filter)
                 for sub_query in sub_queries
             ]
         )
@@ -303,7 +305,7 @@ class GPTResearcher:
         )
         return context
 
-    async def __process_sub_query_with_vectorstore(self, sub_query: str):
+    async def __process_sub_query_with_vectorstore(self, sub_query: str, filter: Optional[dict] = None):
         """Takes in a sub query and gathers context from the user provided vector store
 
         Args:
@@ -320,7 +322,7 @@ class GPTResearcher:
                 self.websocket,
             )
 
-        content = await self.__get_similar_content_by_query_with_vectorstore(sub_query)
+        content = await self.__get_similar_content_by_query_with_vectorstore(sub_query, filter)
 
         if content and self.verbose:
             await stream_output(
@@ -440,7 +442,7 @@ class GPTResearcher:
 
         return scraped_content_results
 
-    async def __get_similar_content_by_query_with_vectorstore(self, query):
+    async def __get_similar_content_by_query_with_vectorstore(self, query, filter):
         if self.verbose:
             await stream_output(
                 "logs",
@@ -450,7 +452,7 @@ class GPTResearcher:
             )  
 
         # Summarize data fetched from vector store
-        vectorstore_compressor = VectorstoreCompressor(self.vector_store)
+        vectorstore_compressor = VectorstoreCompressor(self.vector_store, filter)
 
         return await vectorstore_compressor.async_get_context(
             query=query, max_results=8
