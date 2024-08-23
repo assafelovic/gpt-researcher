@@ -1,7 +1,6 @@
 import importlib
 from typing import Any
-
-from colorama import Fore, Style
+from colorama import Fore, Style, init
 
 
 class GenericLLMProvider:
@@ -141,7 +140,10 @@ _SUPPORTED_PROVIDERS = {
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
         pkg_kebab = pkg.replace("_", "-")
+        # Import colorama and initialize it
+        init(autoreset=True)
+        # Use Fore.RED to color the error message
         raise ImportError(
-            f"Unable to import {pkg_kebab}. Please install with "
+            Fore.RED + f"Unable to import {pkg_kebab}. Please install with "
             f"`pip install -U {pkg_kebab}`"
         )
