@@ -15,7 +15,7 @@ const Question: React.FC<QuestionProps> = ({ question }) => {
           height={30}
           className="size-[24px]"
         />
-        <p className="pr-5 font-bold uppercase leading-[152%] text-white">
+        <p className="font-bold uppercase leading-[152%] text-white">
           Question:
         </p>
       </div>
