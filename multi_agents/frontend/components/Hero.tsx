@@ -96,7 +96,7 @@ const suggestions: suggestionType[] = [
   },
   {
     id: 3,
-    name: "What gold medals did the USA win in the Olympics?",
+    name: "What medals did the USA win in the Olympics?",
     icon: "/img/dunk.svg",
   },
 ];
