@@ -2,8 +2,6 @@ import Image from "next/image";
 import { FC } from "react";
 import InputArea from "./InputArea";
 
-import logo from './logo.svg';
-
 type THeroProps = {
   promptValue: string;
   setPromptValue: React.Dispatch<React.SetStateAction<string>>;
@@ -88,8 +86,8 @@ type suggestionType = {
 const suggestions: suggestionType[] = [
   {
     id: 1,
-    name: "What happened to the dinosaurs",
-    icon: "/img/dinosaur.svg",
+    name: "Is it too late to invest in Nvidia?",
+    icon: "/img/stock.svg",
   },
   {
     id: 2,
@@ -98,7 +96,7 @@ const suggestions: suggestionType[] = [
   },
   {
     id: 3,
-    name: "What made Michael Jordan the best",
+    name: "What gold medals did the USA win in the Olympics?",
     icon: "/img/dunk.svg",
   },
 ];
