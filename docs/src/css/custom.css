@@ -1,5 +1,5 @@
 :root {
-  --ifm-font-size-base: 17px;
+  --ifm-font-size-base: 16px;
   --ifm-code-font-size: 90%;
 
   --ifm-color-primary: #0c4da2;
@@ -36,15 +36,15 @@ font-weight: 600;
 }
 
 .markdown > p {
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .navbar {
-    font-size: 18px;
+    font-size: 16px;
 }
 
 li {
-font-size: 18px;
+font-size: 16px;
 }
 
 blockquote {

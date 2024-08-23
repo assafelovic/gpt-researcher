@@ -97,13 +97,13 @@ const Accordion = ({ logs }) => {
   };
 
   return (
-    <div id="accordion-collapse" data-accordion="collapse" className="mb-8 bg-gray-900 rounded-t-lg">
+    <div id="accordion-collapse" data-accordion="collapse" className="mb-4 bg-gray-800 rounded-lg">
   {logs.map((log, index) => (
     <div key={index}>
       <h2 id={`accordion-collapse-heading-${index}`}>
         <button
           type="button"
-          className="flex items-center w-full p-5 font-medium rtl:text-right text-white rounded-t-xl focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 text-white hover:bg-gray-100 hover:text-black dark:hover:bg-gray-800 gap-3"
+          className="flex items-center w-full p-5 font-medium rtl:text-right text-white rounded-t-xl focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 text-white hover:bg-gray-100 dark:hover:bg-gray-800 gap-3"
           onClick={() => handleToggle(index)}
           aria-expanded={openIndex === index}
           aria-controls={`accordion-collapse-body-${index}`}
@@ -132,7 +132,7 @@ const Accordion = ({ logs }) => {
         className={`${openIndex === index ? '' : 'hidden'}`}
         aria-labelledby={`accordion-collapse-heading-${index}`}
       >
-        <div className="p-5 border border-b-0 border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-white">
+        <div className="p-5 border border-b-0 border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-white">
           {renderLogContent(log)}
         </div>
       </div>

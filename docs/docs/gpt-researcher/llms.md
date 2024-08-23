@@ -46,9 +46,18 @@ OPENAI_EMBEDDING_MODEL="custom_model"
 
 ### Azure OpenAI
 
+See also the documentation in the Langchain [Azure OpenAI](https://api.python.langchain.com/en/latest/chat_models/langchain_openai.chat_models.azure.AzureChatOpenAI.html) page.
+
+On Azure OpenAI you will need to create deployments for each model you want to use. Please also specify the model names/deployment names in your `.env` file:
+
 ```bash
 EMBEDDING_PROVIDER="azure_openai"
 AZURE_OPENAI_API_KEY="Your key"
+AZURE_OPENAI_ENDPOINT="https://<your-endpoint>.openai.azure.com/"
+OPENAI_API_VERSION="2024-05-01-preview"
+FAST_LLM_MODEL="gpt-4o-mini"
+DEFAULT_LLM_MODEL="gpt-4o-mini"
+SMART_LLM_MODEL="gpt-4o"
 ```
 
 
