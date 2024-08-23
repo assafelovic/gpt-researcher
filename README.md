@@ -5,6 +5,7 @@
 </h1>-->
 <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
 
+
 ####
 
 [![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=0891b2)](https://gptr.dev)
@@ -41,7 +42,7 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 - Using only a selection of web sources can create bias in determining the right conclusions for research tasks.
 
 ## Demo
-https://github.com/user-attachments/assets/69e02679-5eb4-4367-8846-3efdeffdf53c
+https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 
 ## Architecture
 The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. <br /> <br /> 
