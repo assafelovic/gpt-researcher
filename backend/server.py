@@ -154,7 +154,8 @@ async def get_config(
         "SEARX_URL": searx_url if searx_url else os.getenv("SEARX_URL", ""),
         "LANGCHAIN_TRACING_V2": os.getenv("LANGCHAIN_TRACING_V2", "true"),
         "DOC_PATH": os.getenv("DOC_PATH", ""),
-        "RETRIEVER": os.getenv("RETRIEVER", "")
+        "RETRIEVER": os.getenv("RETRIEVER", ""),
+        "EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "")
     }
     return config
 

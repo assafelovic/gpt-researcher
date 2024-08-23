@@ -1,7 +1,7 @@
 from langchain_community.vectorstores import FAISS
 import os
 
-OPENAI_EMBEDDING_MODEL = "text-embedding-3-small"
+OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL","text-embedding-3-small")
 
 
 class Memory:
@@ -35,7 +35,7 @@ class Memory:
                 _embeddings = OpenAIEmbeddings(
                     openai_api_key=headers.get("openai_api_key")
                     or os.environ.get("OPENAI_API_KEY"),
-                    model=OPENAI_EMBEDDING_MODEL,
+                    model=OPENAI_EMBEDDING_MODEL
                 )
             case "azure_openai":
                 from langchain_openai import AzureOpenAIEmbeddings
