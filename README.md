@@ -5,6 +5,7 @@
 </h1>-->
 <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
 
+
 ####
 
 [![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=0891b2)](https://gptr.dev)
@@ -37,11 +38,11 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 - To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right resources and information.
 - Current LLMs are trained on past and outdated information, with heavy risks of hallucinations, making them almost irrelevant for research tasks.
 - Current LLMs are limited to short token outputs which are not sufficient for long detailed research reports (2k+ words).
-- Services that enable web search (such as ChatGPT + Web Plugin), only consider limited sources and content that in some cases result in misinformation and shallow results.
+- Services that enable web search such as ChatGPT or Perplexity, only consider limited sources and content that in some cases result in misinformation and shallow results.
 - Using only a selection of web sources can create bias in determining the right conclusions for research tasks.
 
 ## Demo
-https://github.com/user-attachments/assets/69e02679-5eb4-4367-8846-3efdeffdf53c
+https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 
 ## Architecture
 The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. <br /> <br /> 

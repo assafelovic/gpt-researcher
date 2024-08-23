@@ -2,8 +2,6 @@ import Image from "next/image";
 import { FC } from "react";
 import InputArea from "./InputArea";
 
-import logo from './logo.svg';
-
 type THeroProps = {
   promptValue: string;
   setPromptValue: React.Dispatch<React.SetStateAction<string>>;
@@ -23,24 +21,27 @@ const Hero: FC<THeroProps> = ({
     <div>
 
       <div className="flex flex-col items-center justify-center">
-        <div className="landing">
-          <h1 className="text-4xl font-extrabold mx-auto lg:text-7xl">
-            Say Goodbye to <br/>
-            <span
-              style={{
-                backgroundImage: 'linear-gradient(to right, #9867F0, #ED4E50)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
-              }}
-            >
-              Hours of Research
-            </span>
-          </h1>
+        <div className="landing flex flex-col items-center">
+            <h1 className="text-4xl font-extrabold text-center lg:text-7xl">
+              Say Goodbye to <br />
+              <span
+                style={{
+                  backgroundImage: 'linear-gradient(to right, #9867F0, #ED4E50)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                Hours of Research
+              </span>
+            </h1>
+            <h2 className="text-xl font-light text-center mb-4 ml-[20vw] mr-[20vw] mb-10 text-gray-300">
+              Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research
+            </h2>
         </div>
         
 
         {/* input section */}
-        <div className="w-full max-w-[708px] pb-6">
+        <div className="w-full max-w-[708px] pb-6 mt-20">
           <InputArea
             promptValue={promptValue}
             setPromptValue={setPromptValue}
@@ -85,8 +86,8 @@ type suggestionType = {
 const suggestions: suggestionType[] = [
   {
     id: 1,
-    name: "What happened to the dinosaurs",
-    icon: "/img/dinosaur.svg",
+    name: "Is it too late to invest in Nvidia?",
+    icon: "/img/stock2.svg",
   },
   {
     id: 2,
@@ -95,8 +96,8 @@ const suggestions: suggestionType[] = [
   },
   {
     id: 3,
-    name: "What made Michael Jordan the best",
-    icon: "/img/dunk.svg",
+    name: "What are the latest news on ",
+    icon: "/img/news.svg",
   },
 ];
 
