@@ -618,7 +618,6 @@ class GPTResearcher:
             parent_query=self.parent_query,
             report_type=self.report_type,
             cost_callback=self.add_costs,
-            openai_api_key=self.headers.get("openai_api_key"),
         )
     
     async def get_similar_written_contents_by_draft_section_titles(
