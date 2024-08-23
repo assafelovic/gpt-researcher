@@ -97,7 +97,7 @@ const Accordion = ({ logs }) => {
   };
 
   return (
-    <div id="accordion-collapse" data-accordion="collapse" className="mb-4 bg-gray-900 rounded-t-lg">
+    <div id="accordion-collapse" data-accordion="collapse" className="mb-4 bg-gray-800 rounded-lg">
   {logs.map((log, index) => (
     <div key={index}>
       <h2 id={`accordion-collapse-heading-${index}`}>
@@ -132,7 +132,7 @@ const Accordion = ({ logs }) => {
         className={`${openIndex === index ? '' : 'hidden'}`}
         aria-labelledby={`accordion-collapse-heading-${index}`}
       >
-        <div className="p-5 border border-b-0 border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-white">
+        <div className="p-5 border border-b-0 border-gray-200 dark:border-gray-700 dark:bg-gray-800 text-white">
           {renderLogContent(log)}
         </div>
       </div>
