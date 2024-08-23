@@ -34,14 +34,14 @@ const Hero: FC<THeroProps> = ({
                 Hours of Research
               </span>
             </h1>
-            <h2 className="text-xl font-light text-center mb-4 ml-[20vw] mr-[20vw] mb-10">
+            <h2 className="text-xl font-light text-center mb-4 ml-[20vw] mr-[20vw] mb-10 text-gray-300">
               Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research
             </h2>
         </div>
         
 
         {/* input section */}
-        <div className="w-full max-w-[708px] pb-6 mt-10">
+        <div className="w-full max-w-[708px] pb-6 mt-20">
           <InputArea
             promptValue={promptValue}
             setPromptValue={setPromptValue}
@@ -87,7 +87,7 @@ const suggestions: suggestionType[] = [
   {
     id: 1,
     name: "Is it too late to invest in Nvidia?",
-    icon: "/img/stock.svg",
+    icon: "/img/stock2.svg",
   },
   {
     id: 2,
@@ -96,8 +96,8 @@ const suggestions: suggestionType[] = [
   },
   {
     id: 3,
-    name: "What medals did the USA win in the Olympics?",
-    icon: "/img/dunk.svg",
+    name: "What are the latest news on ",
+    icon: "/img/news.svg",
   },
 ];
 
