@@ -146,7 +146,6 @@ async def choose_agent(
             llm_provider=cfg.llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
-            openai_api_key=headers.get("openai_api_key"),
         )
 
         agent_dict = json.loads(response)
@@ -194,7 +193,6 @@ async def get_sub_queries(
     parent_query: str,
     report_type: str,
     cost_callback: callable = None,
-    openai_api_key=None,
 ):
     """
     Gets the sub queries
@@ -229,7 +227,6 @@ async def get_sub_queries(
         llm_provider=cfg.llm_provider,
         llm_kwargs=cfg.llm_kwargs,
         cost_callback=cost_callback,
-        openai_api_key=openai_api_key,
     )
 
     sub_queries = json_repair.loads(response)
@@ -443,7 +440,6 @@ async def generate_report(
             max_tokens=cfg.smart_token_limit,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
-            openai_api_key=headers.get("openai_api_key"),
         )
     except Exception as e:
         print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")
