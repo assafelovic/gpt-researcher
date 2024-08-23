@@ -42,8 +42,9 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 - Using only a selection of web sources can create bias in determining the right conclusions for research tasks.
 
 ## Demo
-https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
-
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3" width="600" />
+</div>
 ## Architecture
 The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. <br /> <br /> 
 The agents leverage both `gpt-4o-mini` and `gpt-4o` (128K context) to complete a research task. We optimize for costs using each only when necessary. **The average research task takes around 3 minutes to complete, and costs ~$0.005.**
