@@ -6,7 +6,7 @@
     "pdf": true,
     "docx": true
   },
-  "include_human_feedback": true,
+  "include_human_feedback": false,
   "follow_guidelines": false,
   "model": "gpt-4o",
   "guidelines": [
