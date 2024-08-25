@@ -19,10 +19,10 @@ services:
       - CHOKIDAR_USEPOLLING=true
     build:
       dockerfile: Dockerfile.dev
-      context: application
+      context: frontend/nextjs
     volumes:
       - /app/node_modules
-      - ./application:/app
+      - ./frontend/nextjs:/app
     restart: always
     ports:
       - 3000:3000
