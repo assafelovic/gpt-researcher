@@ -4,3 +4,4 @@ langgraph-cli
 python-dotenv
 weasyprint
 json5
+loguru
