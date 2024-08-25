@@ -37,7 +37,7 @@ services:
     profiles: ["test"]
     command: >
       /bin/sh -c "
-      pip install pytest pytest-asyncio &&
+      pip install pytest pytest-asyncio faiss-cpu &&
       python -m pytest tests/report-types.py &&
       python -m pytest tests/vector-store.py
       "
