@@ -25,7 +25,7 @@ A lightweight solution using FastAPI to serve static files.
 3. Access at `http://localhost:8000`
 
 #### Demo
-<iframe height="400" width="700" src="https://cowriter-images.s3.amazonaws.com/gptr-demo.mp4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+<iframe height="400" width="700" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/dd6cf08f-b31e-40c6-9907-1915f52a7110" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 
 ## Option 2: NextJS Frontend
