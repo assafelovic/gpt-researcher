@@ -34,6 +34,7 @@
         'gpt-researcher/config',
         'gpt-researcher/tailored-research',
         'gpt-researcher/retrievers',
+        'gpt-researcher/vector-stores',
         'gpt-researcher/llms',
         ]
     },
