@@ -70,9 +70,9 @@ More specifically:
 - 📝 Generate research, outlines, resources and lessons reports with local documents and web sources
 - 📜 Can generate long and detailed research reports (over 2K words)
 - 🌐 Aggregates over 20 web sources per research to form objective and factual conclusions
-- 🖥️ Includes an easy-to-use web interface (HTML/CSS/JS)
+- 🖥️ Includes both lightweight (HTML/CSS/JS) and production ready (NextJS + Tailwind) UX/UI
 - 🔍 Scrapes web sources with javascript support
-- 📂 Keeps track and context of visited and used web sources
+- 📂 Keeps track and context and memory throughout the research process
 - 📄 Export research reports to PDF, Word and more...
 
 ## 📖 Documentation
