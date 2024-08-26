@@ -15,6 +15,9 @@ venv.bak/
 
 #Ignore generated outputs
 outputs/
+*.lock
+dist/
+gpt_researcher.egg-info/
 
 #Ignore my local docs
 my-docs/
