@@ -5,7 +5,7 @@ import time
 from typing import Set
 
 from gpt_researcher.config import Config
-from gpt_researcher.context.compression import ContextCompressor, WrittenContentCompressor
+from gpt_researcher.context.compression import ContextCompressor, WrittenContentCompressor, VectorstoreCompressor
 from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
 from gpt_researcher.master.actions import *
 from gpt_researcher.memory import Memory
@@ -25,6 +25,8 @@ class GPTResearcher:
         tone: Tone = Tone.Objective,
         source_urls=None,
         documents=None,
+        vector_store=None,
+        vector_store_filter=None,
         config_path=None,
         websocket=None,
         agent=None,
@@ -66,6 +68,8 @@ class GPTResearcher:
         self.context = context
         self.source_urls = source_urls
         self.documents = documents
+        self.vector_store = vector_store
+        self.vector_store_filter = vector_store_filter
         self.memory = Memory(self.cfg.embedding_provider, self.headers)
         self.visited_urls: set[str] = visited_urls
         self.verbose: bool = verbose
@@ -142,6 +146,8 @@ class GPTResearcher:
                 self.query, langchain_documents_data
             )
 
+        elif self.report_source == ReportSource.LangChainVectorStore.value:
+            self.context = await self.__get_context_by_vectorstore(self.query, self.vector_store_filter)
         # Default web based research
         else:
             self.context = await self.__get_context_by_search(self.query)
@@ -235,6 +241,38 @@ class GPTResearcher:
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
         return await self.__get_similar_content_by_query(self.query, scraped_sites)
 
+    async def __get_context_by_vectorstore(self, query, filter: Optional[dict] = None):
+        """
+            Generates the context for the research task by searching the vectorstore
+        Returns:
+            context: List of context
+        """
+        context = []
+        # Generate Sub-Queries including original query
+        sub_queries = await self.__get_sub_queries(query)
+        # If this is not part of a sub researcher, add original query to research for better results
+        if self.report_type != "subtopic_report":
+            sub_queries.append(query)
+
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "subqueries",
+                f"🗂️  I will conduct my research based on the following queries: {sub_queries}...",
+                self.websocket,
+                True,
+                sub_queries,
+            )
+
+        # Using asyncio.gather to process the sub_queries asynchronously
+        context = await asyncio.gather(
+            *[
+                self.__process_sub_query_with_vectorstore(sub_query, filter)
+                for sub_query in sub_queries
+            ]
+        )
+        return context
+
     async def __get_context_by_search(self, query, scraped_data: list = []):
         """
            Generates the context for the research task by searching the query and scraping the results
@@ -243,15 +281,7 @@ class GPTResearcher:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await get_sub_queries(
-            query=query,
-            agent_role_prompt=self.role,
-            cfg=self.cfg,
-            parent_query=self.parent_query,
-            report_type=self.report_type,
-            cost_callback=self.add_costs,
-        )
-
+        sub_queries = await self.__get_sub_queries(query)
         # If this is not part of a sub researcher, add original query to research for better results
         if self.report_type != "subtopic_report":
             sub_queries.append(query)
@@ -274,6 +304,38 @@ class GPTResearcher:
             ]
         )
         return context
+
+    async def __process_sub_query_with_vectorstore(self, sub_query: str, filter: Optional[dict] = None):
+        """Takes in a sub query and gathers context from the user provided vector store
+
+        Args:
+            sub_query (str): The sub-query generated from the original query
+
+        Returns:
+            str: The context gathered from search
+        """
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "running_subquery_with_vectorstore_research",
+                f"\n🔍 Running research for '{sub_query}'...",
+                self.websocket,
+            )
+
+        content = await self.__get_similar_content_by_query_with_vectorstore(sub_query, filter)
+
+        if content and self.verbose:
+            await stream_output(
+                "logs", "subquery_context_window", f"📃 {content}", self.websocket
+            )
+        elif self.verbose:
+            await stream_output(
+                "logs",
+                "subquery_context_not_found",
+                f"🤷 No content found for '{sub_query}'...",
+                self.websocket,
+            )
+        return content
 
     async def __process_sub_query(self, sub_query: str, scraped_data: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context.
@@ -379,6 +441,22 @@ class GPTResearcher:
         )
 
         return scraped_content_results
+
+    async def __get_similar_content_by_query_with_vectorstore(self, query, filter):
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "fetching_query_content",
+                f"📚 Getting relevant content based on query: {query}...",
+                self.websocket,
+            )  
+
+        # Summarize data fetched from vector store
+        vectorstore_compressor = VectorstoreCompressor(self.vector_store, filter)
+
+        return await vectorstore_compressor.async_get_context(
+            query=query, max_results=8
+        )
 
     async def __get_similar_content_by_query(self, query, pages):
         if self.verbose:
@@ -529,6 +607,17 @@ class GPTResearcher:
         )
         return await written_content_compressor.async_get_context(
             query=query, max_results=max_results, cost_callback=self.add_costs
+        )
+
+    async def __get_sub_queries(self, query):
+        # Generate Sub-Queries including original query
+        return await get_sub_queries(
+            query=query,
+            agent_role_prompt=self.role,
+            cfg=self.cfg,
+            parent_query=self.parent_query,
+            report_type=self.report_type,
+            cost_callback=self.add_costs,
         )
     
     async def get_similar_written_contents_by_draft_section_titles(

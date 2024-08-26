@@ -35,3 +35,6 @@ docs/build
 .langgraph-data/
 .next/
 package-lock.json
+
+#Vim swp files
+*.swp
