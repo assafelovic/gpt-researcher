@@ -25,7 +25,8 @@ A lightweight solution using FastAPI to serve static files.
 3. Access at `http://localhost:8000`
 
 #### Demo
-https://cowriter-images.s3.amazonaws.com/gptr-demo.mp4
+<iframe height="400" width="700" src="https://cowriter-images.s3.amazonaws.com/gptr-demo.mp4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 
 ## Option 2: NextJS Frontend
 
@@ -63,7 +64,7 @@ A more robust solution with enhanced features and performance.
 Note: Requires backend server on `localhost:8000` as detailed in option 1.
 
 #### Demo
-https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
+<iframe height="400" width="700" src="https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 ## Choosing an Option
 
