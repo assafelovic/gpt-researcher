@@ -193,6 +193,21 @@ An average run generates a 5-6 page research report in multiple formats such as 
 
 Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our [documentation](https://docs.gptr.dev/docs/gpt-researcher/langgraph) for more information.
 
+## 🖥️ Frontend Applications
+
+GPT-Researcher now features an enhanced frontend to improve the user experience and streamline the research process. The frontend offers:
+
+- An intuitive interface for inputting research queries
+- Real-time progress tracking of research tasks
+- Interactive display of research findings
+- Customizable settings for tailored research experiences
+
+Two deployment options are available:
+1. A lightweight static frontend served by FastAPI
+2. A feature-rich NextJS application for advanced functionality
+
+For detailed setup instructions and more information about the frontend features, please visit our [documentation page](https://docs.gptr.dev/docs/gpt-researcher/frontend).
+
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md) if you're interested.
 
