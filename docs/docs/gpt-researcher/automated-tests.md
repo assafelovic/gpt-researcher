@@ -22,8 +22,21 @@ docker-compose --profile test run --rm gpt-researcher-tests
 Attaching here the required settings & screenshots on the github repo level:
 
 Step 1: Within the repo, press the "Settings" tab
+
 Step 2: Create a new environment named "tests" (all lowercase)
-Step 3: Click into the "tests" environment & add environment secrets: TAVILY_API_KEY & OPENAI_API_KEY
+
+Step 3: Click into the "tests" environment & add environment secrets: 
+
+
+```
+OPENAI_API_KEY=
+TAVILY_API_KEY=
+```
+
+Get the keys from here:
+https://app.tavily.com/sign-in
+https://platform.openai.com/api-keys
+
 
 ![Screen Shot 2024-07-28 at 9 00 19](https://github.com/user-attachments/assets/7cd341c6-d8d4-461f-ab5e-325abc9fe509)
 ![Screen Shot 2024-07-28 at 9 02 55](https://github.com/user-attachments/assets/a3744f01-06a6-4c9d-8aa0-1fc742d3e866)
