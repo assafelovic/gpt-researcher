@@ -8,6 +8,13 @@ After deploying the Elestio server, you'll want to enter the [Open WebUI Admin A
 
 For our example, let's choose to download the `gemma2:2b` model.
 
+Choose a model from [Ollama's Library of LLM's](https://ollama.com/library?sort=popular)
+
+Paste the model name & size into the Web UI:
+
+<img width="1511" alt="Screen Shot 2024-08-27 at 23 26 28" src="https://github.com/user-attachments/assets/32abd048-745c-4232-9f1f-6af265cff250">
+
+
 This model now automatically becomes available via your Server's out-of-the-box API.
 
 
@@ -25,6 +32,9 @@ OLLAMA_EMBEDDING_MODEL=all-minilm
 LLM_PROVIDER=openai
 EMBEDDING_PROVIDER=ollama
 ```
+
+Replace FAST_LLM_MODEL & SMART_LLM_MODEL with the model you downloaded from the Elestio Web UI in the previous step.
+
 
 #### Disable Elestio Authentication or Added Auth Headers
 
