@@ -5,10 +5,7 @@
 Follow instructions at https://www.docker.com/products/docker-desktop/
 
 
-> **Step 2** - Follow this flow:
-
-<iframe height="400" width="700" src="https://www.youtube.com/watch?v=x1gKFt_6Us4" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-
+> **Step 2** - [Follow this flow](https://www.youtube.com/watch?v=x1gKFt_6Us4)
 
 This mainly includes cloning the '.env.example' file, adding your API Keys to the cloned file and saving the file as '.env'
 
