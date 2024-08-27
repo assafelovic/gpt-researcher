@@ -28,7 +28,7 @@ websockets
 unstructured
 json_repair
 json5
-logurun
+loguru
 
 # uncomment for testing
 # pytest
