@@ -5,6 +5,19 @@ This repository contains the code for the automated testing of the GPT-Researche
 
 The tests are triggered in a docker container which runs the tests via the `pytest` module.
 
+## Running the Tests
+
+You can run the tests:
+
+### Via a docker command
+
+```bash
+docker-compose --profile test run --rm gpt-researcher-tests
+```
+
+### Via a Github Action
+
+![image](https://github.com/user-attachments/assets/721fca20-01bb-4c10-9cf9-19d823bebbb0)
 
 Attaching here the required settings & screenshots on the github repo level:
 
