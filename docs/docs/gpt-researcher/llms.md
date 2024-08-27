@@ -1,4 +1,5 @@
 # Configure LLM
+
 As described in the [introduction](/docs/gpt-researcher/config), the default LLM is OpenAI due to its superior performance and speed. 
 With that said, GPT Researcher supports various open/closed source LLMs, and you can easily switch between them by adding the `LLM_PROVIDER` env variable and corresponding configuration params.
 Current supported LLMs are `openai`, `google` (gemini), `azure_openai`, `ollama`, `anthropic`, `mistral`, `huggingface` and `groq`.

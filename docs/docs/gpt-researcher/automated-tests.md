@@ -1,4 +1,3 @@
-
 # Automated Tests
 
 ## Automated Testing with Github Actions
