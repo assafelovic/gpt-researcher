@@ -15,6 +15,8 @@ class Config:
         self.embedding_provider = os.getenv("EMBEDDING_PROVIDER", "openai")
         self.similarity_threshold = int(os.getenv("SIMILARITY_THRESHOLD", 0.42))
         self.llm_provider = os.getenv("LLM_PROVIDER", "openai")
+        self.smart_llm_provider = os.getenv("SMART_LLM_PROVIDER", self.llm_provider)
+        self.fast_llm_provider = os.getenv("FAST_LLM_PROVIDER", self.llm_provider)
         self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", None)
         self.llm_model = os.getenv("DEFAULT_LLM_MODEL", "gpt-4o-mini")
         self.fast_llm_model = os.getenv("FAST_LLM_MODEL", "gpt-4o-mini")
