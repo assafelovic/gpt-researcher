@@ -1,4 +1,4 @@
-# How to Deploy on Linux
+# Running on Linux
 
 This guide will walk you through the process of deploying GPT Researcher on a Linux server.
 
