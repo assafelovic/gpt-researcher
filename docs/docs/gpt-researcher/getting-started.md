@@ -107,9 +107,14 @@ python -m uvicorn main:app --reload
 
 Follow instructions at https://www.docker.com/products/docker-desktop/
 
-> **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
 
-> **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
+> **Step 2** - Follow this flow:
+
+https://www.youtube.com/watch?v=x1gKFt_6Us4 
+
+This mainly includes cloning the '.env.example' file, adding your API Keys to the cloned file and saving the file as '.env'
+
+> **Step 3** - Within root, run with Docker.
 
 ```bash
 $ docker-compose up --build
