@@ -28,7 +28,9 @@ Step 2: Create a new environment named "tests" (all lowercase)
 Step 3: Click into the "tests" environment & add environment secrets of ```OPENAI_API_KEY``` & ```TAVILY_API_KEY```
 
 Get the keys from here:
+
 https://app.tavily.com/sign-in
+
 https://platform.openai.com/api-keys
 
 
