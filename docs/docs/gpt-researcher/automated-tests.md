@@ -1,4 +1,6 @@
 
+# Automated Tests
+
 ## Automated Testing with Github Actions
 
 This repository contains the code for the automated testing of the GPT-Researcher Repo using Github Actions. 

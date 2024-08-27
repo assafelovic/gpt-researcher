@@ -12,23 +12,48 @@
  module.exports = {
   docsSidebar: [
     'welcome',
+
     {
-      type: 'category',
-      label: 'GPT Researcher',
+      type: 'getting-started',
+      label: 'Getting Started',
       collapsible: true,
       collapsed: false,
       items: [
         'gpt-researcher/introduction',
         'gpt-researcher/getting-started-with-docker',
         'gpt-researcher/getting-started',
-        'gpt-researcher/pip-package',
         'gpt-researcher/frontend',
+      ]
+    },
+
+    {
+      type: 'category',
+      label: 'GPT Researcher',
+      collapsible: true,
+      collapsed: false,
+      items: [
+       
+        'gpt-researcher/pip-package',
         'gpt-researcher/automated-tests',
         'gpt-researcher/linux-deployment',
         'gpt-researcher/example',
         'gpt-researcher/troubleshooting',
       ],
     },
+    
+    
+    
+    {
+      type: 'llms',
+      label: 'Large Langeuage Models',
+      collapsible: true,
+      collapsed: false,
+      items: [
+        'gpt-researcher/llms',
+        'gpt-researcher/deploy-llm-on-elestio.md'
+      ]
+    },
+    
     {
       type: 'category',
       label: 'Customization',
@@ -38,7 +63,6 @@
         'gpt-researcher/config',
         'gpt-researcher/tailored-research',
         'gpt-researcher/retrievers',
-        'gpt-researcher/llms',
         'gpt-researcher/vector-stores',
         ]
     },
