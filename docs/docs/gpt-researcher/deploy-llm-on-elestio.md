@@ -27,6 +27,22 @@ LLM_PROVIDER=openai
 EMBEDDING_PROVIDER=ollama
 ```
 
+#### Disable Elestio Authentication or Added Auth Headers
+
+To remove the basic auth you have to follow the below steps:
+Go to your service -> Security -> at last Nginx -> in that find the below code:
+
+```bash
+auth_basic           "Authentication"; 
+
+auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
+```
+
+Comment these both these lines out and click the button "Update & Restart" to reflect the changes.
+
+
+#### Run LLM Test Script for GPTR
+
 And here's a custom python script you can use to query your custom LLM:
 
 ```python
