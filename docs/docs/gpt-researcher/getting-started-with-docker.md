@@ -1,4 +1,4 @@
-## Try it with Docker
+# Docker: Path of least resistance
 
 > **Step 1** - Install & Open Docker Desktop
 
