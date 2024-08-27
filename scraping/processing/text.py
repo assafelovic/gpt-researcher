@@ -41,14 +41,14 @@ def split_text(text: str, max_length: int = 8192) -> Generator[str, None, None]:
 
 
 def summarize_text(
-    fast_llm_model: str, summary_token_limit: int, llm_provider: str, url: str, text: str, question: str, driver: Optional[WebDriver] = None
+    fast_llm_model: str, summary_token_limit: int, fast_llm_provider: str, url: str, text: str, question: str, driver: Optional[WebDriver] = None
 ) -> str:
     """Summarize text using the OpenAI API
 
     Args:
         fast_llm_model (str): The fast LLM model e.g gpt-4o-mini
         summary_token_limit (int): The summary token limit
-        llm_provider (str): The llm provider
+        fast_llm_provider (str): The llm provider
         url (str): The url of the text
         text (str): The text to summarize
         question (str): The question to ask the model
@@ -79,7 +79,7 @@ def summarize_text(
             model=fast_llm_model,
             messages=messages,
             max_tokens=summary_token_limit,
-            llm_provider=llm_provider
+            llm_provider=fast_llm_provider
         )
         summaries.append(summary)
         #memory_to_add = f"Source: {url}\n" f"Content summary part#{i + 1}: {summary}"
@@ -93,7 +93,7 @@ def summarize_text(
         model=fast_llm_model,
         messages=messages,
         max_tokens=summary_token_limit,
-        llm_provider=llm_provider,
+        llm_provider=fast_llm_provider,
     )
     print("Final summary length: ", len(combined_summary))
     print(final_summary)

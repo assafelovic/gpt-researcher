@@ -34,7 +34,7 @@ async def async_browse(
         user_agent: str,
         fast_llm_model: str,
         summary_token_limit: str,
-        llm_provider: str,
+        fast_llm_provider: str,
         url: str, question: str,
         websocket: WebSocket
 ) -> str:
@@ -70,7 +70,7 @@ async def async_browse(
         )
         await loop.run_in_executor(executor, add_header, driver)
         summary_text = await loop.run_in_executor(
-            executor, summarize_text, fast_llm_model, summary_token_limit, llm_provider, url, text, question, driver
+            executor, summarize_text, fast_llm_model, summary_token_limit, fast_llm_provider, url, text, question, driver
         )
         if websocket:
             await websocket.send_json(

@@ -143,7 +143,7 @@ async def choose_agent(
                 {"role": "user", "content": f"task: {query}"},
             ],
             temperature=0,
-            llm_provider=cfg.llm_provider,
+            llm_provider=cfg.smart_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
         )
@@ -224,7 +224,7 @@ async def get_sub_queries(
             },
         ],
         temperature=0,
-        llm_provider=cfg.llm_provider,
+        llm_provider=cfg.smart_llm_provider,
         llm_kwargs=cfg.llm_kwargs,
         cost_callback=cost_callback,
     )
@@ -347,7 +347,7 @@ async def summarize_url(
                 },
             ],
             temperature=0,
-            llm_provider=cfg.llm_provider,
+            llm_provider=cfg.fast_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
         )
@@ -376,7 +376,7 @@ async def generate_draft_section_titles(
                 {"role": "user", "content": content},
             ],
             temperature=0,
-            llm_provider=cfg.llm_provider,
+            llm_provider=cfg.fast_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
         )
@@ -434,7 +434,7 @@ async def generate_report(
                 {"role": "user", "content": content},
             ],
             temperature=0,
-            llm_provider=cfg.llm_provider,
+            llm_provider=cfg.smart_llm_provider,
             stream=True,
             websocket=websocket,
             max_tokens=cfg.smart_token_limit,
@@ -487,7 +487,7 @@ async def get_report_introduction(
                 },
             ],
             temperature=0,
-            llm_provider=config.llm_provider,
+            llm_provider=config.smart_llm_provider,
             stream=True,
             websocket=websocket,
             max_tokens=config.smart_token_limit,
