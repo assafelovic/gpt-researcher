@@ -86,7 +86,7 @@ type suggestionType = {
 const suggestions: suggestionType[] = [
   {
     id: 1,
-    name: "Is it too late to invest in Nvidia?",
+    name: "Stock analysis on ",
     icon: "/img/stock2.svg",
   },
   {
