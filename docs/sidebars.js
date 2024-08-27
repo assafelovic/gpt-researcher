@@ -14,7 +14,7 @@
     'welcome',
 
     {
-      type: 'getting-started',
+      type: 'category',
       label: 'Getting Started',
       collapsible: true,
       collapsed: false,
@@ -23,6 +23,7 @@
         'gpt-researcher/getting-started-with-docker',
         'gpt-researcher/getting-started',
         'gpt-researcher/frontend',
+        'gpt-researcher/linux-deployment',
       ]
     },
 
@@ -32,20 +33,28 @@
       collapsible: true,
       collapsed: false,
       items: [
-       
         'gpt-researcher/pip-package',
-        'gpt-researcher/automated-tests',
-        'gpt-researcher/linux-deployment',
         'gpt-researcher/example',
+        'gpt-researcher/automated-tests',
         'gpt-researcher/troubleshooting',
       ],
     },
     
+    {
+      type: 'category',
+      label: 'Custom Context',
+      collapsible: true,
+      collapsed: false,
+      items: [
+        'gpt-researcher/tailored-research',
+        'gpt-researcher/vector-stores',
+        ]
+    },
     
     
     {
-      type: 'llms',
-      label: 'Large Langeuage Models',
+      type: 'category',
+      label: 'Large Language Models',
       collapsible: true,
       collapsed: false,
       items: [
@@ -53,17 +62,17 @@
         'gpt-researcher/deploy-llm-on-elestio.md'
       ]
     },
+
     
+
     {
       type: 'category',
-      label: 'Customization',
+      label: 'More Customization',
       collapsible: true,
       collapsed: true,
       items: [
         'gpt-researcher/config',
-        'gpt-researcher/tailored-research',
         'gpt-researcher/retrievers',
-        'gpt-researcher/vector-stores',
         ]
     },
     {
