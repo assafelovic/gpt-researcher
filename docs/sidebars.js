@@ -12,7 +12,6 @@
  module.exports = {
   docsSidebar: [
     'welcome',
-
     {
       type: 'category',
       label: 'Getting Started',
@@ -26,7 +25,6 @@
         'gpt-researcher/linux-deployment',
       ]
     },
-
     {
       type: 'category',
       label: 'GPT Researcher',
@@ -39,7 +37,6 @@
         'gpt-researcher/troubleshooting',
       ],
     },
-    
     {
       type: 'category',
       label: 'Custom Context',
@@ -51,8 +48,6 @@
         'gpt-researcher/vector-stores',
         ]
     },
-    
-    
     {
       type: 'category',
       label: 'Large Language Models',
