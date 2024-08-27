@@ -4,7 +4,7 @@ This guide will walk you through the process of deploying GPT Researcher on a Li
 
 ## Server Requirements
 
-The default Ubuntu droplet option on DigitalOcean works well, but this setup should work on any hosting service with similar specifications:
+The default Ubuntu droplet option on [DigitalOcean](https://m.do.co/c/1a2af257efba) works well, but this setup should work on any hosting service with similar specifications:
 
 - 2 GB RAM
 - 1 vCPU
