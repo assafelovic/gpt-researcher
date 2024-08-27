@@ -20,10 +20,13 @@
       items: [
         'gpt-researcher/introduction',
         'gpt-researcher/getting-started-with-docker',
-    
         'gpt-researcher/getting-started',
         'gpt-researcher/pip-package',
         'gpt-researcher/frontend',
+        'gpt-researcher/automated-tests',
+        
+        
+
         'gpt-researcher/linux-deployment',
         'gpt-researcher/example',
         'gpt-researcher/troubleshooting',
