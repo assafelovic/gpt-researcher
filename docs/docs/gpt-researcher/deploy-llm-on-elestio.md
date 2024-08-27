@@ -1,5 +1,5 @@
 
-# Deploy Custom LLM on Elestio
+# Deploy LLM on Elestio
 
 Elestio is a platform that allows you to deploy and manage custom language models. This guide will walk you through deploying a custom language model on Elestio.
 
