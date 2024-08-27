@@ -103,20 +103,21 @@ python -m uvicorn main:app --reload
 
 ## Try it with Docker
 
-> **Step 1** - Install Docker
+> **Step 1** - Install & Open Docker Desktop
 
-Follow instructions at https://docs.docker.com/engine/install/
+Follow instructions at https://www.docker.com/products/docker-desktop/
 
-> **Step 2** - Create .env file with your OpenAI Key or simply export it
+> **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
 
-```bash
-$ export OPENAI_API_KEY={Your API Key here}
-```
-
-> **Step 3** - Run the application
+> **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
 
 ```bash
-$ docker-compose up
+$ docker-compose up --build
 ```
 
-> **Step 4** - Go to http://localhost:8000 on any browser and enjoy researching!
+> **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
+ - the Python server running on localhost:8000<br>
+ - the React app running on localhost:3000<br>
+
+Visit localhost:3000 on any browser and enjoy researching!
+
