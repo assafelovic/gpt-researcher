@@ -1,4 +1,3 @@
-
 # 📄 Research on Local Documents
 
 You can instruct the GPT Researcher to run research tasks based on your local documents. Currently supported file formats are: PDF, plain text, CSV, Excel, Markdown, PowerPoint, and Word documents.
