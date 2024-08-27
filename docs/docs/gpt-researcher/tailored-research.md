@@ -1,4 +1,5 @@
 # Tailored Research
+
 The GPT Researcher package allows you to tailor the research to your needs such as researching on specific sources or local documents, and even specify the agent prompt instruction upon which the research is conducted.
 
 ### Research on Specific Sources 📚
