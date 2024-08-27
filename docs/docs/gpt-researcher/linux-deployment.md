@@ -24,6 +24,7 @@ Some more commands to achieve that:
 ### Step 1: Update the System
 ### First, ensure your package index is up-to-date:
 
+```bash
 sudo apt update
 ### Step 2: Install Git
 ### Git is a version control system. Install it using:
@@ -69,3 +70,53 @@ sudo systemctl enable nginx
 ### Verify Nginx installation:
 
 sudo systemctl status nginx
+```
+
+Here's your nginx config file:
+
+```bash
+events {}
+
+http {
+   server {
+       listen 80;
+       server_name name.example;
+
+       location / {
+           proxy_pass http://localhost:3000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_cache_bypass $http_upgrade;
+       }
+
+       location ~ ^/(ws|upload|files|outputs) {
+           proxy_pass http://localhost:8000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection "Upgrade";
+           proxy_set_header Host $host;
+       }
+   }
+}
+```
+
+And the relevant commands:
+
+
+```bash
+vim /etc/nginx/nginx.conf
+### Edit it to reflect above. Then verify all is good with:
+
+sudo nginx -t
+# If there are no errors:
+
+sudo systemctl restart nginx
+
+# Clone .env.example as .env
+# Run from root: 
+
+docker-compose up --build
+
+```
