@@ -47,6 +47,7 @@
       collapsed: false,
       items: [
         'gpt-researcher/tailored-research',
+        'gpt-researcher/local-docs',
         'gpt-researcher/vector-stores',
         ]
     },
@@ -64,7 +65,6 @@
     },
 
     
-
     {
       type: 'category',
       label: 'More Customization',
