@@ -1,0 +1,71 @@
+# How to Deploy on Linux
+
+This guide will walk you through the process of deploying GPT Researcher on a Linux server.
+
+## Server Requirements
+
+The default Ubuntu droplet option on DigitalOcean works well, but this setup should work on any hosting service with similar specifications:
+
+- 2 GB RAM
+- 1 vCPU
+- 50 GB SSD Storage
+
+Here's a screenshot of the recommended Ubuntu machine specifications:
+
+![Ubuntu Server Specifications](https://cdn.discordapp.com/attachments/1129340110916288553/1262372662299070504/Screen_Shot_2024-07-15_at_14.32.01.png?ex=66cf0c28&is=66cdbaa8&hm=c1798d9c37de585dc7df8558e92545144e31a2407d8a181cac7e8c16059fdcd6&)
+
+## Deployment Steps
+
+After setting up your server, follow these steps to install Docker, Docker Compose, and Nginx.
+
+
+Some more commands to achieve that:
+
+### Step 1: Update the System
+### First, ensure your package index is up-to-date:
+
+sudo apt update
+### Step 2: Install Git
+### Git is a version control system. Install it using:
+
+sudo apt install git -y
+
+### Verify the installation by checking the Git version:
+git --version
+### Step 3: Install Docker
+### Docker is a platform for developing, shipping, and running applications inside containers.
+
+### Install prerequisites:
+
+sudo apt install apt-transport-https ca-certificates curl software-properties-common -y
+### Add Docker’s official GPG key:
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+### Set up the stable repository:
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+### Update the package index again and install Docker:
+
+sudo apt update
+sudo apt install docker-ce -y
+### Verify Docker installation:
+
+sudo systemctl status docker
+### Optionally, add your user to the docker group to run Docker without sudo:
+
+sudo usermod -aG docker ${USER}
+### Log out and back in for the group change to take effect.
+
+Step 4: Install Nginx
+### Nginx is a high-performance web server.
+
+### Install Nginx:
+
+sudo apt install nginx -y
+### Start and enable Nginx:
+
+sudo systemctl start nginx
+sudo systemctl enable nginx
+### Verify Nginx installation:
+
+sudo systemctl status nginx
