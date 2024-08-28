@@ -64,7 +64,7 @@
       collapsed: false,
       items: [
         'gpt-researcher/llms/llms',
-        'gpt-researcher/llms/running-with-ollama.md'
+        'gpt-researcher/llms/running-with-ollama'
       ]
     },
     {
