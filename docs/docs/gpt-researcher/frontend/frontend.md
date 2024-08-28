@@ -2,10 +2,12 @@
 
 This frontend project aims to enhance the user experience of GPT-Researcher, providing an intuitive and efficient interface for automated research. It offers two deployment options to suit different needs and environments.
 
+View a Product Tutorial here: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
+
 
 ## NextJS Frontend App
 
-The React app (located in `frontend` directory) is our Frontend 2.0 which we hope will enable us to display the robustness of the backend on the frontend, as well.
+The React app (located in the `frontend` directory) is our Frontend 2.0 which we hope will enable us to display the robustness of the backend on the frontend, as well.
 
 It comes with loads of added features, such as: 
  - a drag-n-drop user interface for uploading and deleting files to be used as local documents by GPTResearcher.
