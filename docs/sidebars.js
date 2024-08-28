@@ -36,7 +36,6 @@
         'gpt-researcher/gptr/troubleshooting',
       ],
     },
-
     {
       type: 'category',
       label: 'Frontend',
@@ -47,8 +46,6 @@
         'gpt-researcher/frontend/playing-with-webhooks',
       ],
     },
-    
-    
     {
       type: 'category',
       label: 'Custom Context',
@@ -70,7 +67,6 @@
         'gpt-researcher/llms/deploy-llm-on-elestio.md'
       ]
     },
-    
     {
       type: 'category',
       label: 'More Customization',
