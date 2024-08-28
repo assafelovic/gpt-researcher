@@ -18,11 +18,10 @@
       collapsible: true,
       collapsed: false,
       items: [
-        'gpt-researcher/introduction',
-        'gpt-researcher/getting-started-with-docker',
-        'gpt-researcher/getting-started',
-        'gpt-researcher/frontend',
-        'gpt-researcher/linux-deployment',
+        'gpt-researcher/getting-started/introduction',
+        'gpt-researcher/getting-started/getting-started-with-docker',
+        'gpt-researcher/getting-started/getting-started',
+        'gpt-researcher/getting-started/linux-deployment',
       ]
     },
     {
@@ -31,12 +30,25 @@
       collapsible: true,
       collapsed: false,
       items: [
-        'gpt-researcher/pip-package',
-        'gpt-researcher/example',
-        'gpt-researcher/automated-tests',
-        'gpt-researcher/troubleshooting',
+        'gpt-researcher/gptr/pip-package',
+        'gpt-researcher/gptr/example',
+        'gpt-researcher/gptr/automated-tests',
+        'gpt-researcher/gptr/troubleshooting',
       ],
     },
+
+    {
+      type: 'category',
+      label: 'Frontend',
+      collapsible: true,
+      collapsed: false,
+      items: [
+        'gpt-researcher/frontend',
+        'gpt-researcher/playing-with-webhooks',
+      ],
+    },
+    
+    
     {
       type: 'category',
       label: 'Custom Context',
@@ -58,7 +70,6 @@
         'gpt-researcher/deploy-llm-on-elestio.md'
       ]
     },
-
     
     {
       type: 'category',
