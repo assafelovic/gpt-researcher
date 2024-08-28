@@ -64,7 +64,7 @@
       collapsed: false,
       items: [
         'gpt-researcher/llms/llms',
-        'gpt-researcher/llms/deploy-llm-on-elestio.md'
+        'gpt-researcher/llms/running-with-ollama.md'
       ]
     },
     {
