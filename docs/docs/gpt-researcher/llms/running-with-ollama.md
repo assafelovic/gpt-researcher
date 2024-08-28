@@ -13,9 +13,9 @@ If you deploy ollama locally, a .env like so, should enable powering GPT-Researc
 OPENAI_API_KEY="123"
 OPENAI_API_BASE="http://127.0.0.1:11434/v1"
 OLLAMA_BASE_URL="http://127.0.0.1:11434/"
-FAST_LLM_MODEL=gemma2:2b
-SMART_LLM_MODEL=gemma2:2b
-OLLAMA_EMBEDDING_MODEL=all-minilm
+FAST_LLM_MODEL=qwen2:1.5b
+SMART_LLM_MODEL=qwen2:1.5b
+OLLAMA_EMBEDDING_MODEL=all-minilm:22m
 LLM_PROVIDER=openai
 EMBEDDING_PROVIDER=ollama
 ```
@@ -48,9 +48,9 @@ Here's an example .env file that will enable powering GPT-Researcher with Elesti
 OPENAI_API_KEY="123"
 OPENAI_API_BASE="https://<your_custom_elestio_project>.vm.elestio.app:57987/v1"
 OLLAMA_BASE_URL="https://<your_custom_elestio_project>.vm.elestio.app:57987/"
-FAST_LLM_MODEL=gemma2:2b
-SMART_LLM_MODEL=gemma2:2b
-OLLAMA_EMBEDDING_MODEL=all-minilm
+FAST_LLM_MODEL=qwen2:1.5b
+SMART_LLM_MODEL=qwen2:1.5b
+OLLAMA_EMBEDDING_MODEL=all-minilm:22m
 LLM_PROVIDER=openai
 EMBEDDING_PROVIDER=ollama
 ```
