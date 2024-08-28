@@ -1,10 +1,28 @@
-# Deploy LLM on Elestio
+# Running with Ollama
 
-Elestio is a platform that allows you to deploy and manage custom language models. This guide will walk you through deploying a custom language model on Elestio.
+Ollama is a platform that allows you to deploy and manage custom language models. This guide will walk you through deploying a custom language model on Ollama.
 
-You can deploy an [Open WebUI](https://github.com/open-webui/open-webui/tree/main) server with [Elestio](https://elest.io/open-source/ollama)
+Read on to understand how to install a Custom LLM with the Ollama WebUI, and how to query it with GPT-Researcher.
 
-After deploying the Elestio server, you'll want to enter the [Open WebUI Admin App](https://github.com/open-webui/open-webui/tree/main) & download a custom LLM.
+
+## Querying your Custom LLM with GPT-Researcher
+
+If you deploy ollama locally, a .env like so, should enable powering GPT-Researcher with Ollama:
+
+```bash
+OPENAI_API_KEY="123"
+OPENAI_API_BASE="http://127.0.0.1:11434/v1"
+OLLAMA_BASE_URL="http://127.0.0.1:11434/"
+FAST_LLM_MODEL=gemma2:2b
+SMART_LLM_MODEL=gemma2:2b
+OLLAMA_EMBEDDING_MODEL=all-minilm
+LLM_PROVIDER=openai
+EMBEDDING_PROVIDER=ollama
+```
+
+Replace FAST_LLM_MODEL & SMART_LLM_MODEL with the model you downloaded from the Elestio Web UI in the previous step.
+
+After deploying Ollama WebUI, you'll want to enter the [Open WebUI Admin App](https://github.com/open-webui/open-webui/tree/main) & download a custom LLM.
 
 For our example, let's choose to download the `gemma2:2b` model.
 
@@ -18,9 +36,13 @@ Paste the model name & size into the Web UI:
 This model now automatically becomes available via your Server's out-of-the-box API.
 
 
-### Querying your Custom LLM with GPT-Researcher
+## Deploy Ollama on Elestio
 
-Here's the .env file you'll need to query your custom LLM with GPT-Researcher:
+Elestio is a platform that allows you to deploy and manage custom language models. This guide will walk you through deploying a custom language model on Elestio.
+
+You can deploy an [Open WebUI](https://github.com/open-webui/open-webui/tree/main) server with [Elestio](https://elest.io/open-source/ollama)
+
+Here's an example .env file that will enable powering GPT-Researcher with Elestio:
 
 ```bash
 OPENAI_API_KEY="123"
@@ -33,10 +55,7 @@ LLM_PROVIDER=openai
 EMBEDDING_PROVIDER=ollama
 ```
 
-Replace FAST_LLM_MODEL & SMART_LLM_MODEL with the model you downloaded from the Elestio Web UI in the previous step.
-
-
-#### Disable Elestio Authentication or Added Auth Headers
+#### Disable Elestio Authentication or Add Auth Headers
 
 To remove the basic auth you have to follow the below steps:
 Go to your service -> Security -> at last Nginx -> in that find the below code:
@@ -50,7 +69,7 @@ auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
 Comment these both these lines out and click the button "Update & Restart" to reflect the changes.
 
 
-#### Run LLM Test Script for GPTR
+## Run LLM Test Script for GPTR
 
 And here's a custom python script you can use to query your custom LLM:
 
