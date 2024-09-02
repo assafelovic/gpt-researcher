@@ -31,11 +31,11 @@ class DevTeamFlow:
     def init_flow(self):
         workflow = StateGraph(AgentState)
 
-        workflow.add_node("fetch_github", lambda state: self.github_agent.fetch_repo_data(state))
-        workflow.add_node("analyze_repo", lambda state: {**state, "repo_analysis": self.repo_analyzer_agent.analyze_repo(state)})
-        workflow.add_node("web_search", lambda state: {**state, "web_search_results": self.web_search_agent.search_web(state)})
-        workflow.add_node("rubber_duck", lambda state: {**state, "rubber_duck_thoughts": self.rubber_ducker_agent.think_aloud(state["repo_analysis"], state["web_search_results"])})
-        workflow.add_node("tech_lead", lambda state: {**state, "tech_lead_review": self.tech_lead_agent.review_and_compose(state)})
+        workflow.add_node("fetch_github", self.github_agent.fetch_repo_data)
+        workflow.add_node("analyze_repo", self.repo_analyzer_agent.analyze_repo)
+        workflow.add_node("web_search", self.web_search_agent.search_web)
+        workflow.add_node("rubber_duck", self.rubber_ducker_agent.think_aloud)
+        workflow.add_node("tech_lead", self.tech_lead_agent.review_and_compose)
 
         workflow.add_edge('fetch_github', 'analyze_repo')
         workflow.add_edge('analyze_repo', 'web_search')

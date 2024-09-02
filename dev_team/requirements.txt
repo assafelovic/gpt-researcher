@@ -8,4 +8,4 @@ gpt_researcher
 dotenv
 
 langchain-openai
-psycopg2-binary
+faiss-cpu
