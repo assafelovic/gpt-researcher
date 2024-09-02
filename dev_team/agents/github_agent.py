@@ -1,6 +1,6 @@
 import os
 from github import Github
-from langchain_community.vectorstores import FAISS  # Change this line
+from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OpenAIEmbeddings
 
 from langchain.text_splitter import CharacterTextSplitter
@@ -38,17 +38,16 @@ class GithubAgent:
                 print(f"Processing {content.name}")
                 print(content.decoded_content.decode())
                 # Create a Document instance with the correct structure
-                doc = Document(
-                    page_content=content.decoded_content.decode(),
-                    metadata={"source": content.name}
-                )
+                doc = Document(page_content=content.decoded_content.decode(), metadata={"source": content.name})
                 documents.append(doc)
         
+        text_splitter = CharacterTextSplitter(chunk_size=200, chunk_overlap=30, separator="\n")
+        split_docs = text_splitter.split_documents(documents)
+
         embeddings = OpenAIEmbeddings()
         
         # Create a FAISS index from the documents
-        self.vector_store = FAISS.from_texts(documents, embeddings)
-
+        self.vector_store = FAISS.from_documents(split_docs, embeddings)
         print("Index created successfully", self.vector_store)
 
         return self.vector_store

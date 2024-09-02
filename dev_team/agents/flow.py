@@ -19,6 +19,7 @@ class AgentState(TypedDict):
     web_search_results: list
     rubber_duck_thoughts: str
     tech_lead_review: str
+    vector_store: dict
 
 class DevTeamFlow:
     def __init__(self, github_token, repo_name):
