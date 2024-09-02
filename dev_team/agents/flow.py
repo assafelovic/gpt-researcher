@@ -1,10 +1,24 @@
 import os
 from langgraph.graph import StateGraph, END
-from . import GithubAgent, RepoAnalyzerAgent, WebSearchAgent, RubberDuckerAgent, TechLeadAgent
+from dev_team.agents import GithubAgent, RepoAnalyzerAgent, WebSearchAgent, RubberDuckerAgent, TechLeadAgent
 
-def run_dev_team_flow(repo_url: str, query: str):
-    # Function implementation
-    pass
+import asyncio
+
+async def run_dev_team_flow(repo_url: str, query: str):
+    flow = DevTeamFlow(github_token=os.environ.get("GITHUB_TOKEN"), repo_name=repo_url)
+    response = await flow.run_flow(query)
+    return response
+
+from typing import TypedDict, Annotated
+from langgraph.graph import StateGraph, END
+
+class AgentState(TypedDict):
+    query: str
+    github_data: dict
+    repo_analysis: str
+    web_search_results: list
+    rubber_duck_thoughts: str
+    tech_lead_review: str
 
 class DevTeamFlow:
     def __init__(self, github_token, repo_name):
@@ -15,13 +29,13 @@ class DevTeamFlow:
         self.tech_lead_agent = TechLeadAgent()
 
     def init_flow(self):
-        workflow = StateGraph()
+        workflow = StateGraph(AgentState)
 
-        workflow.add_node("fetch_github", self.github_agent.fetch_repo_data)
-        workflow.add_node("analyze_repo", self.repo_analyzer_agent.analyze_repo)
-        workflow.add_node("web_search", self.web_search_agent.search_web)
-        workflow.add_node("rubber_duck", self.rubber_ducker_agent.think_aloud)
-        workflow.add_node("tech_lead", self.tech_lead_agent.review_and_compose)
+        workflow.add_node("fetch_github", lambda state: self.github_agent.fetch_repo_data(state))
+        workflow.add_node("analyze_repo", lambda state: self.repo_analyzer_agent.analyze_repo(state))
+        workflow.add_node("web_search", lambda state: self.web_search_agent.search_web(state))
+        workflow.add_node("rubber_duck", lambda state: self.rubber_ducker_agent.think_aloud(state))
+        workflow.add_node("tech_lead", lambda state: self.tech_lead_agent.review_and_compose(state))
 
         workflow.add_edge('fetch_github', 'analyze_repo')
         workflow.add_edge('analyze_repo', 'web_search')
@@ -40,5 +54,14 @@ class DevTeamFlow:
         workflow = self.init_flow()
         chain = workflow.compile()
 
-        result = await chain.ainvoke({"query": query})
+        initial_state = AgentState(
+            query=query,
+            github_data={},
+            repo_analysis="",
+            web_search_results=[],
+            rubber_duck_thoughts="",
+            tech_lead_review=""
+        )
+
+        result = await chain.ainvoke(initial_state)
         return result

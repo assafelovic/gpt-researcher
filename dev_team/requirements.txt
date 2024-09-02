@@ -1,8 +1,11 @@
 PyGithub
 langchain
-chromadb
+
 openai
 colorama
 langgraph
 gpt_researcher
 dotenv
+
+langchain-openai
+psycopg2-binary

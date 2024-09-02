@@ -10,11 +10,12 @@ class GithubAgent:
         self.repo = self.github.get_repo(self.repo_name)  # Add this line
         self.vector_store = None
 
-    def fetch_repo_data(self):
-        contents = self.repo.get_contents("")
+    def fetch_repo_data(self, state=None):  # Add state parameter with default value None
+        repo = self.github.get_repo(self.repo_name)
+        contents = repo.get_contents("")
         directory_structure = self.log_directory_structure(contents)
         self.save_to_vector_store(contents)
-        return directory_structure
+        return {"github_data": directory_structure}  # Return a dictionary with the result
 
     def log_directory_structure(self, contents, path=""):
         structure = []
