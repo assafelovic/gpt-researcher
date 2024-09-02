@@ -1,0 +1,6 @@
+PyGithub
+langchain
+chromadb
+openai
+colorama
+langgraph
