@@ -7,11 +7,11 @@ class GithubAgent:
     def __init__(self, github_token, repo_name):
         self.github = Github(github_token)
         self.repo_name = repo_name
+        self.repo = self.github.get_repo(self.repo_name)  # Add this line
         self.vector_store = None
 
     def fetch_repo_data(self):
-        repo = self.github.get_repo(self.repo_name)
-        contents = repo.get_contents("")
+        contents = self.repo.get_contents("")
         directory_structure = self.log_directory_structure(contents)
         self.save_to_vector_store(contents)
         return directory_structure
