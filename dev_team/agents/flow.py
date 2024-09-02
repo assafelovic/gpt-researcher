@@ -20,12 +20,13 @@ class AgentState(TypedDict):
     rubber_duck_thoughts: str
     tech_lead_review: str
     vector_store: dict
+    repo_name: str
 
 class DevTeamFlow:
     def __init__(self, github_token, repo_name):
         self.github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name='elishakay/gpt-researcher')
         self.repo_analyzer_agent = RepoAnalyzerAgent()
-        self.web_search_agent = WebSearchAgent()
+        self.web_search_agent = WebSearchAgent(repo_name=repo_name)
         self.rubber_ducker_agent = RubberDuckerAgent()
         self.tech_lead_agent = TechLeadAgent()
 

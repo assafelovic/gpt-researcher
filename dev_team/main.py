@@ -5,7 +5,7 @@ from . import run_dev_team_flow
 load_dotenv()
 
 async def main():
-    result = await run_dev_team_flow(repo_url="https://github.com/elishakay/gpt-researcher", query="Analyze the project structure")
+    result = await run_dev_team_flow(repo_url="https://github.com/elishakay/gpt-researcher", query="How do I get started running gpt-researcher?")
     print(result)
 
 if __name__ == "__main__":

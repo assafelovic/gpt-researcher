@@ -19,7 +19,10 @@ class GithubAgent:
         contents = repo.get_contents("")
         directory_structure = self.log_directory_structure(contents)
         vector_store = await self.save_to_vector_store(contents)
-        return {"github_data": directory_structure, "vector_store": vector_store}  # Return a dictionary with the result
+        return {"github_data": directory_structure, 
+                "vector_store": vector_store,
+                "repo_name": self.repo_name
+                }  # Return a dictionary with the result
 
     def log_directory_structure(self, contents, path=""):
         structure = []
