@@ -1,8 +1,8 @@
 from langgraph.graph import StateGraph, END
 from . import GithubAgent, RepoAnalyzerAgent, WebSearchAgent, RubberDuckerAgent, TechLeadAgent
 
-def run_dev_team_flow():
-    # Implement the function here
+def run_dev_team_flow(repo_url: str, query: str):
+    # Function implementation
     pass
 
 class DevTeamFlow:

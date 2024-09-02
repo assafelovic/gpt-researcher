@@ -5,3 +5,4 @@ openai
 colorama
 langgraph
 gpt_researcher
+dotenv
