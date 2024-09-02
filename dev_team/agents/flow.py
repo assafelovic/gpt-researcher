@@ -1,3 +1,4 @@
+import os
 from langgraph.graph import StateGraph, END
 from . import GithubAgent, RepoAnalyzerAgent, WebSearchAgent, RubberDuckerAgent, TechLeadAgent
 
@@ -7,7 +8,7 @@ def run_dev_team_flow(repo_url: str, query: str):
 
 class DevTeamFlow:
     def __init__(self, github_token, repo_name):
-        self.github_agent = GithubAgent(github_token, repo_name)
+        self.github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name='elishakay/gpt-researcher')
         self.repo_analyzer_agent = None
         self.web_search_agent = WebSearchAgent()
         self.rubber_ducker_agent = RubberDuckerAgent()
