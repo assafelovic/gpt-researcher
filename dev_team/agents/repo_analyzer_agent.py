@@ -4,7 +4,8 @@ class RepoAnalyzerAgent:
     def __init__(self, vector_store):
         self.vector_store = vector_store
 
-    async def analyze_repo(self, query):
+    async def analyze_repo(self, state):
+        query = state.get("query")
         researcher = GPTResearcher(
             query=query,
             report_type="research_report",
@@ -13,4 +14,4 @@ class RepoAnalyzerAgent:
         )
         await researcher.conduct_research()
         report = await researcher.write_report()
-        return report
+        return {"repo_analysis": report}
