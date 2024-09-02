@@ -23,7 +23,7 @@ class AgentState(TypedDict):
 class DevTeamFlow:
     def __init__(self, github_token, repo_name):
         self.github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name='elishakay/gpt-researcher')
-        self.repo_analyzer_agent = None
+        self.repo_analyzer_agent = RepoAnalyzerAgent()
         self.web_search_agent = WebSearchAgent()
         self.rubber_ducker_agent = RubberDuckerAgent()
         self.tech_lead_agent = TechLeadAgent()
@@ -48,8 +48,8 @@ class DevTeamFlow:
         return workflow
 
     async def run_flow(self, query):
-        vector_store = self.github_agent.get_vector_store()
-        self.repo_analyzer_agent = RepoAnalyzerAgent(vector_store)
+        # vector_store = self.github_agent.get_vector_store()
+        # self.repo_analyzer_agent = RepoAnalyzerAgent(vector_store)
 
         workflow = self.init_flow()
         chain = workflow.compile()
