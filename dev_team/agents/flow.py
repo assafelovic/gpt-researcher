@@ -31,12 +31,11 @@ class DevTeamFlow:
     def init_flow(self):
         workflow = StateGraph(AgentState)
 
-        workflow.add_node("fetch_github", lambda x: self.github_agent.fetch_repo_data())
-        workflow.add_node("analyze_repo", lambda x: {"repo_analysis": self.repo_analyzer_agent.analyze_repo(x["query"])})
-        workflow.add_node("web_search", lambda x: {"web_search_results": self.web_search_agent.search_web(x["query"])})
-        workflow.add_node("rubber_duck", lambda x: {"rubber_duck_thoughts": self.rubber_ducker_agent.think_aloud(x)})
-        workflow.add_node("tech_lead", lambda x: {"tech_lead_review": self.tech_lead_agent.review_and_compose(x)})
-
+        workflow.add_node("fetch_github", lambda state: self.github_agent.fetch_repo_data(state))
+        workflow.add_node("analyze_repo", lambda state: {**state, "repo_analysis": self.repo_analyzer_agent.analyze_repo(state)})
+        workflow.add_node("web_search", lambda state: {**state, "web_search_results": self.web_search_agent.search_web(state)})
+        workflow.add_node("rubber_duck", lambda state: {**state, "rubber_duck_thoughts": self.rubber_ducker_agent.think_aloud(state["repo_analysis"], state["web_search_results"])})
+        workflow.add_node("tech_lead", lambda state: {**state, "tech_lead_review": self.tech_lead_agent.review_and_compose(state)})
 
         workflow.add_edge('fetch_github', 'analyze_repo')
         workflow.add_edge('analyze_repo', 'web_search')
@@ -55,6 +54,14 @@ class DevTeamFlow:
         workflow = self.init_flow()
         chain = workflow.compile()
 
-        initial_state = {"query": query}
+        initial_state = AgentState(
+            query=query,
+            github_data={},
+            repo_analysis="",
+            web_search_results=[],
+            rubber_duck_thoughts="",
+            tech_lead_review=""
+        )
+
         result = await chain.ainvoke(initial_state)
         return result
