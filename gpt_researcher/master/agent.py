@@ -69,6 +69,7 @@ class GPTResearcher:
         self.source_urls = source_urls
         self.documents = documents
         self.vector_store = VectorStoreWrapper(vector_store) if vector_store else None
+        print(f"Vector store: {vector_store}")
         self.vector_store_filter = vector_store_filter
         self.memory = Memory(self.cfg.embedding_provider, self.headers)
         self.visited_urls: set[str] = visited_urls
