@@ -7,7 +7,7 @@ load_dotenv()
 
 async def main():
     github_token = os.getenv('GITHUB_TOKEN')
-    repo_name = 'elishakay/gpt-researcher'
+    repo_name = 'assafelovic/gpt-researcher'
     query = "Analyze the project structure"
 
     flow = DevTeamFlow(github_token, repo_name)
