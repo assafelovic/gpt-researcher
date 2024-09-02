@@ -1,6 +1,4 @@
-
-# multi_agents/dev-team/flow.py
-from langchain.graph import Graph, Node, Edge
+from langgraph import Graph, Node, Edge
 from .agents import create_github_fetcher_agent, create_filesystem_analyzer_agent
 from .tools import github_fetcher_tools, filesystem_analyzer_tools
 

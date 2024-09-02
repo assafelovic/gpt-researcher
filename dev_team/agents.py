@@ -1,5 +1,3 @@
-
-# multi_agents/dev-team/agents.py
 from langchain.agents import AgentExecutor, create_openai_functions_agent
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI

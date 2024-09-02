@@ -1,5 +1,3 @@
-
-# multi_agents/dev-team/tools.py
 from langchain.tools import Tool
 from langchain_community.vectorstores import PGVector
 from langchain_openai import OpenAIEmbeddings
