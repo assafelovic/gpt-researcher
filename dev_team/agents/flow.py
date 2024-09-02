@@ -1,5 +1,5 @@
 from langgraph.graph import StateGraph, END
-from .agents import GithubAgent, RepoAnalyzerAgent, WebSearchAgent, RubberDuckerAgent, TechLeadAgent
+from . import GithubAgent, RepoAnalyzerAgent, WebSearchAgent, RubberDuckerAgent, TechLeadAgent
 
 class DevTeamFlow:
     def __init__(self, github_token, repo_name):

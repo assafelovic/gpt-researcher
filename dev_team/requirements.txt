@@ -4,3 +4,4 @@ chromadb
 openai
 colorama
 langgraph
+gpt_researcher
