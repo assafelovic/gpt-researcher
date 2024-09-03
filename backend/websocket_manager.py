@@ -61,7 +61,7 @@ class WebSocketManager:
         return report
 
 
-async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers=None):
+async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers=None, github_url=None):
     """Run the agent."""
     # measure time
     start_time = datetime.datetime.now()
@@ -83,6 +83,9 @@ async def run_agent(task, report_type, report_source, source_urls, tone: Tone, w
             headers=headers
         )
         report = await researcher.run()
+    elif report_type == "code_report":
+        # Trigger the dev_team process
+        report = await run_dev_team_task(github_url, websocket)
     else:
         researcher = BasicReport(
             query=task,
@@ -103,3 +106,12 @@ async def run_agent(task, report_type, report_source, source_urls, tone: Tone, w
     )
 
     return report
+
+async def run_dev_team_task(github_url, websocket):
+    """Run the dev_team task."""
+    # Here you would call the function that triggers the dev_team process
+    # For example, you might use subprocess to run a script
+    import subprocess
+    result = subprocess.run(["python", "-m", "dev_team.main", github_url], capture_output=True, text=True)
+    await websocket.send_json({"type": "report", "output": result.stdout})
+    return result.stdout

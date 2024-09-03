@@ -35,7 +35,7 @@ export default function Home() {
   const heartbeatInterval = useRef(null);
   const [showHumanFeedback, setShowHumanFeedback] = useState(false);
   const [questionForHuman, setQuestionForHuman] = useState(false);
-  
+  const [githubUrl, setGithubUrl] = useState("");
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -95,7 +95,7 @@ export default function Home() {
 
         newSocket.onopen = () => {
           const { task, report_type, report_source, tone } = chatBoxSettings;
-          let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
+          let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers, github_url: githubUrl });
           newSocket.send(data);
 
           // Start sending heartbeat messages every 30 seconds
@@ -111,7 +111,7 @@ export default function Home() {
       }
     } else {
       const { task, report_type, report_source, tone } = chatBoxSettings;
-      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
+      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers, github_url: githubUrl });
       socket.send(data);
     }
   };
@@ -387,6 +387,17 @@ export default function Home() {
         )}
       </main>
       <Footer setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
+      {chatBoxSettings.report_type === "code_report" && (
+        <div>
+          <label htmlFor="github-url">GitHub URL:</label>
+          <input
+            type="text"
+            id="github-url"
+            value={githubUrl}
+            onChange={(e) => setGithubUrl(e.target.value)}
+          />
+        </div>
+      )}
     </>
   );
 }
