@@ -14,4 +14,4 @@ class RubberDuckerAgent:
         """
         
         response = await call_model("gpt-4", prompt)
-        return response
+        return {"rubber_ducker_output": response} 
