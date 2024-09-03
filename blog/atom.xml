@@ -6,7 +6,7 @@
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://docs.gptr.dev/blog"/>
     <subtitle>GPT Researcher Blog</subtitle>
-    <icon>https://docs.gptr.dev/img/favicon.ico</icon>
+    <icon>https://docs.gptr.dev/img/gptr-logo.png</icon>
     <entry>
         <title type="html"><![CDATA[How to Build the Ultimate Research Multi-Agent Assistant]]></title>
         <id>gptr-langgraph</id>
