@@ -7,29 +7,35 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain_core.documents import Document
 
 class GithubAgent:
-    def __init__(self, github_token, repo_name):
+    def __init__(self, github_token, repo_name, branch_name=None):
         self.github = Github(github_token)
         self.repo_name = repo_name
+        self.branch_name = branch_name
         self.repo = self.github.get_repo(self.repo_name)
         self.vector_store = None
         self.get_vector_store()  # Add this line
 
-    async def fetch_repo_data(self, state=None):  # Add state parameter with default value None
+    async def fetch_repo_data(self, state=None):
         repo = self.github.get_repo(self.repo_name)
-        contents = repo.get_contents("")
+        contents = repo.get_contents("", ref=self.branch_name)
         directory_structure = self.log_directory_structure(contents)
         vector_store = await self.save_to_vector_store(contents)
-        return {"github_data": directory_structure, 
-                "vector_store": vector_store,
-                "repo_name": self.repo_name
-                }  # Return a dictionary with the result
+        return {
+            "github_data": directory_structure, 
+            "vector_store": vector_store,
+            "repo_name": self.repo_name,
+            "branch_name": self.branch_name
+        }
 
     def log_directory_structure(self, contents, path=""):
         structure = []
         for content in contents:
             if content.type == "dir":
                 structure.append(f"{path}{content.name}/")
-                structure.extend(self.log_directory_structure(self.repo.get_contents(content.path), f"{path}{content.name}/"))
+                structure.extend(self.log_directory_structure(
+                    self.repo.get_contents(content.path, ref=self.branch_name),
+                    f"{path}{content.name}/"
+                ))
             else:
                 structure.append(f"{path}{content.name}")
         return structure
@@ -40,8 +46,8 @@ class GithubAgent:
             if content.type == "file":
                 print(f"Processing {content.name}")
                 print(content.decoded_content.decode())
-                # Create a Document instance with the correct structure
-                doc = Document(page_content=content.decoded_content.decode(), metadata={"source": content.name})
+                file_content = self.repo.get_contents(content.path, ref=self.branch_name).decoded_content.decode()
+                doc = Document(page_content=file_content, metadata={"source": content.name})
                 documents.append(doc)
         
         text_splitter = CharacterTextSplitter(chunk_size=200, chunk_overlap=30, separator="\n")

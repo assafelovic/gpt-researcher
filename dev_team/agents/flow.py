@@ -4,8 +4,8 @@ from dev_team.agents import GithubAgent, RepoAnalyzerAgent, WebSearchAgent, Rubb
 
 import asyncio
 
-async def run_dev_team_flow(repo_url: str, query: str):
-    flow = DevTeamFlow(github_token=os.environ.get("GITHUB_TOKEN"), repo_name=repo_url)
+async def run_dev_team_flow(repo_url: str, query: str, branch_name: str):
+    flow = DevTeamFlow(github_token=os.environ.get("GITHUB_TOKEN"), repo_name=repo_url, branch_name=branch_name)
     response = await flow.run_flow(query)
     return response
 
@@ -24,8 +24,8 @@ class AgentState(TypedDict):
     model: str
 
 class DevTeamFlow:
-    def __init__(self, github_token, repo_name):
-        self.github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name='assafelovic/gpt-researcher')
+    def __init__(self, github_token, repo_name, branch_name):
+        self.github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name='elishakay/gpt-researcher', branch_name=branch_name)
         self.repo_analyzer_agent = RepoAnalyzerAgent()
         self.web_search_agent = WebSearchAgent(repo_name=repo_name)
         self.rubber_ducker_agent = RubberDuckerAgent()
@@ -36,13 +36,13 @@ class DevTeamFlow:
 
         workflow.add_node("fetch_github", self.github_agent.fetch_repo_data)
         workflow.add_node("analyze_repo", self.repo_analyzer_agent.analyze_repo)
-        workflow.add_node("web_search", self.web_search_agent.search_web)
+        # workflow.add_node("web_search", self.web_search_agent.search_web)
         workflow.add_node("rubber_duck", self.rubber_ducker_agent.think_aloud)
         workflow.add_node("tech_lead", self.tech_lead_agent.review_and_compose)
 
         workflow.add_edge('fetch_github', 'analyze_repo')
-        workflow.add_edge('analyze_repo', 'web_search')
-        workflow.add_edge('web_search', 'rubber_duck')
+        workflow.add_edge('analyze_repo', 'rubber_duck')
+        # workflow.add_edge('web_search', 'rubber_duck')
         workflow.add_edge('rubber_duck', 'tech_lead')
 
         workflow.set_entry_point("fetch_github")
