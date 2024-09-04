@@ -5,14 +5,15 @@ from langchain_community.embeddings import OpenAIEmbeddings
 
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_core.documents import Document
+import base64
 
 class GithubAgent:
-    def __init__(self, github_token, repo_name, branch_name=None):
+    def __init__(self, github_token, repo_name, vector_store=None, branch_name=None):
         self.github = Github(github_token)
         self.repo_name = repo_name
         self.branch_name = branch_name
         self.repo = self.github.get_repo(self.repo_name)
-        self.vector_store = None
+        self.vector_store = vector_store
         self.get_vector_store()  # Add this line
 
     async def fetch_repo_data(self, state=None):
@@ -21,8 +22,9 @@ class GithubAgent:
         directory_structure = self.log_directory_structure(contents)
         vector_store = await self.save_to_vector_store(contents)
         return {
-            "github_data": directory_structure, 
+            "github_data": directory_structure,
             "vector_store": vector_store,
+            "github_agent": self,
             "repo_name": self.repo_name,
             "branch_name": self.branch_name
         }
@@ -67,3 +69,16 @@ class GithubAgent:
 
     def get_vector_store(self):
         return self.vector_store
+    
+    async def search_by_file_name(self, file_names):
+        # Fetch relevant files from GitHub
+        relevant_files = []
+        for file_name in file_names:
+            content = self.repo.get_contents(file_name, ref=self.branch_name)
+            decoded_content = base64.b64decode(content.content).decode()
+            relevant_files.append({
+                "file_name": file_name,
+                "content": decoded_content
+            })
+
+        return relevant_files
