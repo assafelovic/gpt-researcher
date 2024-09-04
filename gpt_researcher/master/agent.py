@@ -21,7 +21,7 @@ class GPTResearcher:
         self,
         query: str,
         report_type: str = ReportType.ResearchReport.value,
-        report_source=ReportSource.Web.value,
+        report_source: str = ReportSource.Web.value,
         tone: Tone = Tone.Objective,
         source_urls=None,
         documents=None,
@@ -83,7 +83,6 @@ class GPTResearcher:
             self.tone = Tone[tone]
         else:
             self.tone = tone
-
         # Only relevant for DETAILED REPORTS
         # --------------------------------------
 
@@ -99,7 +98,9 @@ class GPTResearcher:
         """
         # Reset visited_urls and source_urls at the start of each research task
         self.visited_urls.clear()
-        if self.report_source != ReportSource.Sources.value:
+        # Due to deprecation of report_type in favor of report_source,
+        # we need to clear source_urls if report_source is not static
+        if self.report_source != "static" and self.report_type != "sources":
             self.source_urls = []
 
         if self.verbose:
@@ -163,14 +164,21 @@ class GPTResearcher:
 
         return self.context
 
-    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = []):
+    async def write_report(self,
+                           existing_headers: list = [],
+                           relevant_written_contents: list = [],
+                           ext_context=None) -> str:
         """
-        Writes the report based on research conducted
+        Writes the report based on research conducted.
+
+        Args:
+            existing_headers (list): List of existing headers.
+            relevant_written_contents (list): List of relevant written contents.
+            ext_context: External context if provided. Allows to write a report without conducting research first.
 
         Returns:
-            str: The report
+            str: The generated report.
         """
-        report = ""
 
         if self.verbose:
             await stream_output(
@@ -180,49 +188,32 @@ class GPTResearcher:
                 self.websocket,
             )
 
-        if self.report_type == "custom_report":
-            self.role = self.cfg.agent_role if self.cfg.agent_role else self.role
-            report = await generate_report(
-                query=self.query,
-                context=self.context,
-                agent_role_prompt=self.role,
-                report_type=self.report_type,
-                report_source=self.report_source,
-                tone=self.tone,
-                websocket=self.websocket,
-                cfg=self.cfg,
-                headers=self.headers,
-            )
-        elif self.report_type == "subtopic_report":
-            report = await generate_report(
-                query=self.query,
-                context=self.context,
-                agent_role_prompt=self.role,
-                report_type=self.report_type,
-                report_source=self.report_source,
-                websocket=self.websocket,
-                tone=self.tone,
-                cfg=self.cfg,
-                main_topic=self.parent_query,
-                existing_headers=existing_headers,
-                relevant_written_contents=relevant_written_contents,
-                cost_callback=self.add_costs,
-                headers=self.headers,
-            )
-        else:
-            report = await generate_report(
-                query=self.query,
-                context=self.context,
-                agent_role_prompt=self.role,
-                report_type=self.report_type,
-                report_source=self.report_source,
-                tone=self.tone,
-                websocket=self.websocket,
-                cfg=self.cfg,
-                cost_callback=self.add_costs,
-                headers=self.headers,
-            )
+        report_params = {
+            "query": self.query,
+            "context": ext_context or self.context,
+            "agent_role_prompt": self.cfg.agent_role or self.role,
+            "report_type": self.report_type,
+            "report_source": self.report_source,
+            "tone": self.tone,
+            "websocket": self.websocket,
+            "cfg": self.cfg,
+            "headers": self.headers,
+        }
 
+        if self.report_type == "subtopic_report":
+            report_params.update({
+                "main_topic": self.parent_query,
+                "existing_headers": existing_headers,
+                "relevant_written_contents": relevant_written_contents,
+                "cost_callback": self.add_costs,
+            })
+        elif self.report_type == "custom_report":
+            # Custom report type uses the same params, no additional updates needed
+            pass
+        else:
+            report_params["cost_callback"] = self.add_costs
+
+        report = await generate_report(**report_params)
         return report
 
     async def __get_context_by_urls(self, urls):
