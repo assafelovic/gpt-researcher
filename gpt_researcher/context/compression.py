@@ -101,13 +101,6 @@ class WrittenContentCompressor:
     def __pretty_docs_list(self, docs, top_n):
         return [f"Title: {d.metadata.get('section_title')}\nContent: {d.page_content}\n" for i, d in enumerate(docs) if i < top_n]
 
-    def get_context(self, query, max_results=5, cost_callback=None):
-        compressed_docs = self.__get_contextual_retriever()
-        if cost_callback:
-            cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
-        relevant_docs = compressed_docs.invoke(query)
-        return self.__pretty_print_docs(relevant_docs, max_results)
-
     async def async_get_context(self, query, max_results=5, cost_callback=None):
         compressed_docs = self.__get_contextual_retriever()
         if cost_callback:
