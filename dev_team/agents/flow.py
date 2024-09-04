@@ -21,6 +21,7 @@ class AgentState(TypedDict):
     tech_lead_review: str
     vector_store: dict
     repo_name: str
+    model: str
 
 class DevTeamFlow:
     def __init__(self, github_token, repo_name):
