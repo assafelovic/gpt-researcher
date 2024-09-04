@@ -1,5 +1,9 @@
 from .utils.llms import call_model
-
+sample_json = """
+{
+  "thoughts": "Your step-by-step reasoning here"
+}
+"""
 class RubberDuckerAgent:
     async def think_aloud(self, state):
         prompt = [
@@ -14,16 +18,13 @@ class RubberDuckerAgent:
             Think out loud about the game plan for answering the user's question. 
             Explain your reasoning step by step.
 
-            Respond in the following JSON format:
-            {{
-                "thoughts": "Your step-by-step reasoning here"
-            }}
+            You MUST return nothing but a JSON in the following format (without json markdown).
+            Respond in the following JSON format: {sample_json}
             """}
         ]
 
         response = await call_model(
             prompt=prompt,
-            model=state.get("model"),
-            response_format="json"
+            model=state.get("model")
         )
         return {"rubber_ducker_thoughts": response} 

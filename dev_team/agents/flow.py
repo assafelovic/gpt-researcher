@@ -17,7 +17,7 @@ class AgentState(TypedDict):
     github_data: dict
     repo_analysis: str
     web_search_results: list
-    rubber_duck_thoughts: str
+    rubber_ducker_thoughts: str
     tech_lead_review: str
     vector_store: dict
     repo_name: str
@@ -63,7 +63,7 @@ class DevTeamFlow:
             github_data={},
             repo_analysis="",
             web_search_results=[],
-            rubber_duck_thoughts="",
+            rubber_ducker_thoughts="",
             tech_lead_review=""
         )
 
