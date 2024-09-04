@@ -58,6 +58,7 @@ class DevTeamFlow:
 
         initial_state = AgentState(
             query=query,
+            model="gpt-4o",
             github_data={},
             repo_analysis="",
             web_search_results=[],

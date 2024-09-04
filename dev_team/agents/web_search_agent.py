@@ -17,4 +17,4 @@ class WebSearchAgent:
         )
         await researcher.conduct_research()
         report = await researcher.write_report()
-        return  {"web_search": report}
+        return  {"web_search_results": report}

@@ -1,17 +1,21 @@
 from .utils.llms import call_model
 
 class RubberDuckerAgent:
-    async def think_aloud(self, repo_analysis, web_search):
+    async def think_aloud(self, state):
         prompt = f"""
         Based on the repository analysis:
-        {repo_analysis}
+        {state.get("repo_analysis")}
         
         And the web search results:
-        {web_search}
+        {state.get("web_search_results")}
         
         Think out loud about the game plan for answering the user's question. 
         Explain your reasoning step by step.
         """
-        
-        response = await call_model("gpt-4", prompt)
-        return {"rubber_ducker_output": response} 
+
+        response = await call_model(
+            prompt=prompt,
+            model=state.get("model"),
+            response_format="json",
+        )
+        return {"rubber_ducker_thoughts": response} 
