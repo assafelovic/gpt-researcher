@@ -24,6 +24,7 @@ class GPTResearcher:
         report_source=ReportSource.Web.value,
         tone: Tone = Tone.Objective,
         source_urls=None,
+        add_additional_sources=False,
         documents=None,
         vector_store=None,
         vector_store_filter=None,
@@ -39,20 +40,30 @@ class GPTResearcher:
         headers: dict = None,  # Add headers parameter
     ):
         """
-        Initialize the GPT Researcher class.
+        Initializes the GPTResearcher class with the specified parameters to set up the research environment.
+
         Args:
-            query: str,
-            report_type: str
-            source_urls
-            tone
-            config_path
-            websocket
-            agent
-            role
-            parent_query: str
-            subtopics: list
-            visited_urls: set
+            query (str): The main query for which research is conducted.
+            report_type (str): Type of report to generate. Defaults to a research report.
+            report_source (str): The source of data for research. Defaults to web sources.
+            tone (Tone): The tone of the report; objective by default.
+            source_urls (list or None): Initial list of URLs for research.
+            add_additional_sources (bool): Whether to add additional sources/links to the research. Set a non-empty valid value for source_urls for this parameter to take effect.
+            documents (list or None): Predefined list of documents to use.
+            config_path (str or None): Path to the configuration file.
+            websocket: Websocket connection for real-time updates.
+            agent (str or None): Designated agent for conducting research.
+            role (str or None): Role of the agent if specified.
+            parent_query (str): Main query that this query is derived from if any.
+            subtopics (list): List of subtopics related to the main query from the user.
+            visited_urls (set): Set of URLs that have already been visited.
+            verbose (bool): Toggle for verbose output for debugging or detailed logs.
+            context (list): Initial context for the research.
+            headers (dict or None): HTTP headers for web requests.
+
+        Initializes internal state and prepares the gptr with necessary configuration.
         """
+        
         self.headers = headers or {}
         self.query: str = query
         self.agent: str = agent
@@ -67,6 +78,7 @@ class GPTResearcher:
         self.retrievers = get_retrievers(self.headers, self.cfg)
         self.context = context
         self.source_urls = source_urls
+        self.add_additional_sources: bool = add_additional_sources
         self.documents = documents
         self.vector_store = vector_store
         self.vector_store_filter = vector_store_filter
@@ -95,12 +107,10 @@ class GPTResearcher:
 
     async def conduct_research(self):
         """
-        Runs the GPT Researcher to conduct research
+        Runs the GPT Researcher to conduct research on the specified source
         """
         # Reset visited_urls and source_urls at the start of each research task
         self.visited_urls.clear()
-        if self.report_source != ReportSource.Sources.value:
-            self.source_urls = []
 
         if self.verbose:
             await stream_output(
@@ -126,6 +136,18 @@ class GPTResearcher:
         # If specified, the researcher will use the given urls as the context for the research.
         if self.source_urls:
             self.context = await self.__get_context_by_urls(self.source_urls)
+            if len(self.context) == 0 and self.verbose:
+                # Could not find any relevant resources in source_urls to answer the query or sub-query. Will answer using model's inherent knowledge
+                await stream_output(
+                    "logs",
+                    "answering_from_memory",
+                    f"🧐 I was unable to find relevant context in the provided sources...",
+                    self.websocket,
+                )
+            # If add_additional_sources parameter is set, more resources can be gathered to create additional context using default web search
+            if self.add_additional_sources:
+                additional_research = await self.__get_context_by_search(self.query)
+                self.context += ' '.join(additional_research)
 
         elif self.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
