@@ -19,19 +19,13 @@ class TechLeadAgent:
         prompt = [
             {"role": "system", "content": f"""You are the Tech Lead responsible for replying directly to the developer who has a question: {state.get('query')}"""},
             {"role": "user", "content": f"""
-                Please take into account the repository analysis:
-                {state.get("repo_analysis")}
-                
-                The web search results:
-                {state.get("web_search_results")}
-
-                And your assistant's thoughts in how we should handle the query:
-                {state.get("rubber_ducker_thoughts")}
-
+        
                 Here is the repo's directory structure: {state.get("github_data")}
 
                 Here are some relevant files from the developer's branch: {matching_docs}
-                
+
+                And your assistant's thoughts in how we should handle the query: {state.get("rubber_ducker_thoughts")}
+
                 If neccessary, please provide the full code snippets 
                 & relevant file names to add or edit on the branch in order to solve the developer's question.
                 

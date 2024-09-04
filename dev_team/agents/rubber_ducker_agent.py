@@ -19,11 +19,8 @@ class RubberDuckerAgent:
         prompt = [
             {"role": "system", "content": "You are a rubber duck debugging assistant."},
             {"role": "user", "content": f"""
-            Based on the repository analysis:
-            {state.get("repo_analysis")}
-            
-            And the web search results:
-            {state.get("web_search_results")}
+             
+            Here is the developer's question: {state.get('query')}
 
             Here is the repo's directory structure: {state.get("github_data")}
 

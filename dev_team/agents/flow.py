@@ -35,13 +35,13 @@ class DevTeamFlow:
         workflow = StateGraph(AgentState)
 
         workflow.add_node("fetch_github", self.github_agent.fetch_repo_data)
-        workflow.add_node("analyze_repo", self.repo_analyzer_agent.analyze_repo)
+        # workflow.add_node("analyze_repo", self.repo_analyzer_agent.analyze_repo)
         # workflow.add_node("web_search", self.web_search_agent.search_web)
         workflow.add_node("rubber_duck", self.rubber_ducker_agent.think_aloud)
         workflow.add_node("tech_lead", self.tech_lead_agent.review_and_compose)
 
-        workflow.add_edge('fetch_github', 'analyze_repo')
-        workflow.add_edge('analyze_repo', 'rubber_duck')
+        workflow.add_edge('fetch_github', 'rubber_duck')
+        # workflow.add_edge('analyze_repo', 'rubber_duck')
         # workflow.add_edge('web_search', 'rubber_duck')
         workflow.add_edge('rubber_duck', 'tech_lead')
 
