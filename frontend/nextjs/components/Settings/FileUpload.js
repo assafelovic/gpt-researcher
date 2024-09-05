@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from "react";
 import axios from 'axios';
 import { useDropzone } from 'react-dropzone';
 import {getHost} from '../../helpers/getHost'
@@ -6,19 +6,19 @@ import {getHost} from '../../helpers/getHost'
 const FileUpload = () => {
   const [files, setFiles] = useState([]);
   const host = getHost();
-  
-  const fetchFiles = async () => {
+
+  const fetchFiles = useCallback(async () => {
     try {
       const response = await axios.get(`${host}/files/`);
       setFiles(response.data.files);
     } catch (error) {
       console.error('Error fetching files:', error);
     }
-  };
+  }, [host]);
 
   useEffect(() => {
     fetchFiles();
-  }, []);
+  }, [fetchFiles]);
 
   const onDrop = async (acceptedFiles) => {
     const formData = new FormData();
