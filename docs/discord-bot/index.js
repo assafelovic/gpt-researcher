@@ -1,10 +1,8 @@
 require('dotenv').config();
 const Discord = require("discord.js")
-const fetch = require("node-fetch")
 const keepAlive = require("./server")
-const Database = require("@replit/database")
+const { sendWebhookMessage } = require('./gptr-webhook');
 
-const db = new Database()
 const client = new Discord.Client()
 
 client.on("ready", () => {
@@ -13,6 +11,9 @@ client.on("ready", () => {
 
 client.on("message", msg => {
   if (msg.author.bot) return
+
+  // Send the message to GPTR via WebSocket
+  sendWebhookMessage(msg.content);
 
   return msg.channel.send('sup')
   

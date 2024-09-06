@@ -10,7 +10,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.17.1",
     "node-fetch": "^2.6.1",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "ws": "^8.18.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
