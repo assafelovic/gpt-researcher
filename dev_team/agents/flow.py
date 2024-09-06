@@ -4,8 +4,8 @@ from dev_team.agents import GithubAgent, RepoAnalyzerAgent, WebSearchAgent, Rubb
 
 import asyncio
 
-async def run_dev_team_flow(repo_url: str, query: str, branch_name: str, websocket=None, stream_output=None):
-    flow = DevTeamFlow(github_token=os.environ.get("GITHUB_TOKEN"), repo_name=repo_url, branch_name=branch_name)
+async def run_dev_team_flow(repo_name: str, query: str, branch_name: str, websocket=None, stream_output=None):
+    flow = DevTeamFlow(github_token=os.environ.get("GITHUB_TOKEN"), repo_name=repo_name, branch_name=branch_name)
     response = await flow.run_flow(query)
     return response
 

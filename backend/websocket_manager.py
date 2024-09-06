@@ -54,15 +54,21 @@ class WebSocketManager:
             del self.message_queues[websocket]
 
 
-    async def start_streaming(self, task, report_type, report_source, source_urls, tone, websocket, headers=None):
+    async def start_streaming(self, task, report_type, report_source, source_urls, tone, websocket, repo_name, headers=None):
         """Start streaming the output."""
         tone = Tone[tone]
-        report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers)
+        report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers, repo_name)
         return report
 
 
-async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers=None, github_url=None):
+async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, repo_name, headers=None):
     """Run the agent."""
+
+    print(
+        f"Triggering run_agent with repo_name as: {repo_name}",
+        flush=True,
+    )
+
     # measure time
     start_time = datetime.datetime.now()
     # add customized JSON config file path here
@@ -86,7 +92,7 @@ async def run_agent(task, report_type, report_source, source_urls, tone: Tone, w
     elif report_type == "dev_team":
         # Trigger the dev_team process
         report = await trigger_dev_team_flow(
-            repo_url="https://github.com/elishakay/gpt-researcher",
+            repo_name=repo_name,
             query=task,
             branch_name="devs",
             websocket=websocket,

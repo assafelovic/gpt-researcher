@@ -50,7 +50,7 @@ function sendWebhookMessage(message) {
     report_source: 'web',
     tone: 'Objective',
     headers: {},
-    github_url: '' // Add GitHub URL if needed
+    repo_name: 'elishakay/gpt-researcher'
   };
 
   const payload = "start " + JSON.stringify(data);

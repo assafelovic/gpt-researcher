@@ -5,16 +5,20 @@ from . import run_dev_team_flow
 load_dotenv()
 
 async def main():
-    result = await run_dev_team_flow(repo_url="https://github.com/elishakay/gpt-researcher", 
+    result = await run_dev_team_flow(repo_name="elishakay/gpt-researcher", 
                                      query="I'd like to trigger the dev_team flow via websocket. It should be implemented via backend/server.py and backend/websocket_manager.py.",
                                      branch_name="devs")
     print(result)
 
-async def trigger_dev_team_flow(repo_url, query, branch_name, websocket=None, stream_output=None):
+async def trigger_dev_team_flow(repo_name, query, branch_name, websocket=None, stream_output=None):
+    print(
+        f"Triggering dev team flow with repo_name as: {repo_name}",
+        flush=True,
+    )
     if websocket and stream_output:
         await stream_output("logs", "dev_team_progress", "Starting dev team flow...", websocket)
 
-    result = await run_dev_team_flow(repo_url=repo_url, 
+    result = await run_dev_team_flow(repo_name=repo_name, 
                                      query=query,
                                      branch_name=branch_name,
                                      websocket=websocket,
