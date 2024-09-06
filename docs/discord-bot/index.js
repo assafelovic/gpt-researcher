@@ -1,63 +1,52 @@
 require('dotenv').config();
-const Discord = require("discord.js")
-const keepAlive = require("./server")
+const Discord = require("discord.js");
+const keepAlive = require("./server");
 const { sendWebhookMessage } = require('./gptr-webhook');
 
-const client = new Discord.Client()
+const client = new Discord.Client();
+
+function formatResponse(data) {
+  // Extract the thoughts from the rubber ducker and tech lead review sections
+  const rubberDuckerThoughts = JSON.parse(data.rubber_ducker_thoughts)
+  const techLeadReview = JSON.parse(data.tech_lead_review)
+  
+  // Format the response string to include both thoughts
+  const response = `
+    **Rubber Ducker Thoughts:**
+    ${rubberDuckerThoughts}
+
+    **Tech Lead Review:**
+    ${techLeadReview}
+  `;
+  
+  return response;
+}
 
 client.on("ready", () => {
-  console.log(`Logged in as ${client.user.tag}!`)
-})
+  console.log(`Logged in as ${client.user.tag}!`);
+});
 
-client.on("message", msg => {
-  if (msg.author.bot) return
+client.on("message", async msg => {
+  if (msg.author.bot) return;
 
-  // Send the message to GPTR via WebSocket
-  sendWebhookMessage(msg.content);
+  msg.channel.send('Looking through the code to investigate your query... give me a minute or so');
 
-  return msg.channel.send('sup')
-  
-//   db.get("responding").then(responding =>{
-//     if (responding && sadWords.some(word => msg.content.includes(word))) {
-//       db.get("encouragements").then(encouragements => {
-//         const encouragement = encouragements[Math.floor(Math.random() * encouragements.length)]
-//         msg.reply(encouragement)
-//       })
-//     }
-//   })
+  try {
+    // Await the response from GPTR via WebSocket
+    let gptrResponse = await sendWebhookMessage(msg.content);
 
+    // Check if the response is valid
+    if (gptrResponse && gptrResponse.rubber_ducker_thoughts && gptrResponse.tech_lead_review) {
+      let formattedResponse = formatResponse(gptrResponse);
+      return msg.channel.send(formattedResponse);
+    } else {
+      return msg.channel.send('Invalid response received from GPTR.');
+    }
+  } catch (error) {
+    console.error('Error handling message:', error);
+    return msg.channel.send('There was an error processing your request.');
+  }
+});
 
-//   if (msg.content.startsWith("$new")) {
-//     encouragingMessage = msg.content.split("$new ")[1]
-//     updateEncouragements(encouragingMessage)
-//     msg.channel.send("New encouraging message added.")
-//   }
-
-//   if (msg.content.startsWith("$del")) {
-//     index = parseInt(msg.content.split("$del ")[1])
-//     deleteEncouragement(index)
-//     msg.channel.send("Encouraging message deleted.")
-//   }
-
-//   if (msg.content.startsWith("$list")) {
-//     db.get("encouragements").then(encouragements => {
-//       msg.channel.send(encouragements)
-//     })
-//   }
-
-//   if (msg.content.startsWith("$responding")) {
-//     value = msg.content.split("$responding ")[1]
-
-//     if (value.toLowerCase() == "true") {
-//       db.set("responding", true)
-//       msg.channel.send("Responding is on.")
-//     } else {
-//        db.set("responding", false)
-//       msg.channel.send("Responding is off.")     
-//     }
-//   }
-
-})
-
-keepAlive()
-client.login(process.env.DISCORD_BOT_TOKEN)
+keepAlive();
+client.login(process.env.DISCORD_BOT_TOKEN);
