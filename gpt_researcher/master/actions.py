@@ -35,7 +35,7 @@ def get_retriever(retriever):
             from gpt_researcher.retrievers import SerpApiSearch
 
             retriever = SerpApiSearch
-        case "googleSerp":
+        case "serper":
             from gpt_researcher.retrievers import SerperSearch
 
             retriever = SerperSearch
