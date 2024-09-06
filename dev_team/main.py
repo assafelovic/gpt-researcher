@@ -11,7 +11,6 @@ async def main():
     print(result)
 
 async def trigger_dev_team_flow(repo_url, query, branch_name, websocket=None, stream_output=None):
-    # Your existing code here
     if websocket and stream_output:
         await stream_output("logs", "dev_team_progress", "Starting dev team flow...", websocket)
 
@@ -21,8 +20,18 @@ async def trigger_dev_team_flow(repo_url, query, branch_name, websocket=None, st
                                      websocket=websocket,
                                      stream_output=stream_output)
     
+    print("result in trigger dev team flow", result)
+
+    # Remove the FAISS object from the result dictionary
+    if isinstance(result, dict):
+        result = {k: v for k, v in result.items() if k != 'vector_store'}
+    
     if websocket and stream_output:
-        await stream_output("logs", "dev_team_result", result, websocket)
+        try:
+            await stream_output("logs", "dev_team_result", result, websocket)
+        except Exception as e:
+            print(f"Error sending result over WebSocket: {e}")
+            # You might want to send an error message to the client here
     
     return result
 
