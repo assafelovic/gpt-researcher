@@ -1,5 +1,7 @@
 from setuptools import find_packages, setup
 
+LATEST_VERSION = "0.9.4"
+
 exclude_packages = [
     "selenium",
     "webdriver",
@@ -19,7 +21,7 @@ with open("requirements.txt", "r") as f:
 
 setup(
     name="gpt-researcher",
-    version="0.9.2",
+    version=LATEST_VERSION,
     description="GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks.",
     package_dir={'gpt_researcher': 'gpt_researcher'},
     packages=find_packages(exclude=exclude_packages),
