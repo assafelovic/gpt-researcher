@@ -9,6 +9,7 @@
 -  [English](README.md)
 -  [中文](README-zh_CN.md)
 -  [日本語](README-ja_JP.md)
+-  [한국어](README-ko_KR.md)
 
 **GPT Researcher は、さまざまなタスクに対する包括的なオンラインリサーチのために設計された自律エージェントです。**
 
