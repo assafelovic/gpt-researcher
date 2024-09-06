@@ -24,7 +24,7 @@
 
 [English](https://github.com/assafelovic/gpt-researcher/blob/master/README.md) |
 [中文](https://github.com/assafelovic/gpt-researcher/blob/master/README-zh_CN.md) |
-[日本語](https://github.com/assafelovic/gpt-researcher/blob/master/README-ja_JP.md)
+[日本語](https://github.com/assafelovic/gpt-researcher/blob/master/README-ja_JP.md) |
 [한국어](https://github.com/assafelovic/gpt-researcher/blob/master/README-ko_KR.md)
 </div>
 
