@@ -10,7 +10,7 @@ class RubberDuckerAgent:
     async def think_aloud(self, state):
         github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name='elishakay/gpt-researcher', branch_name="devs", vector_store=state.get("vector_store"))
 
-        file_names_to_search = ["backend/server.py", "backend/websocket_manager.py"]
+        file_names_to_search = state.get("relevant_file_names")
 
         # Fetch the matching documents
         matching_docs = await github_agent.search_by_file_name(file_names_to_search)

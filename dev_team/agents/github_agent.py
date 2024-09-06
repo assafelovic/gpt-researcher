@@ -20,10 +20,10 @@ class GithubAgent:
         repo = self.github.get_repo(self.repo_name)
         contents = repo.get_contents("", ref=self.branch_name)
         directory_structure = self.log_directory_structure(contents)
-        vector_store = await self.save_to_vector_store(contents)
+        # vector_store = await self.save_to_vector_store(contents)
         return {
             "github_data": directory_structure,
-            "vector_store": vector_store,
+            # "vector_store": vector_store,
             "github_agent": self,
             "repo_name": self.repo_name,
             "branch_name": self.branch_name
