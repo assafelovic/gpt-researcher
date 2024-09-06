@@ -45,4 +45,26 @@ if __name__ == "__main__":
 
 ```
 
+### Customize the configuration (optional)
+If you want to modify the default configuration of GPT Researcher, you can create a custom JSON configuration file. This allows you to tailor the researcher's behavior to your specific needs. Here's how to do it:
 
+a. Create a JSON file (e.g., `your_config.json`) with your desired settings:
+
+```json
+{
+  "retrievers": ["google"],
+  "llm_provider": "cohere",
+  "fast_llm_model": "command",
+  "smart_llm_model": "command-nightly",
+  "max_iterations": 3,
+  "max_subtopics": 1
+}
+```
+
+b. When initializing the GPTResearcher, pass the path to your custom configuration file:
+
+```python
+researcher = GPTResearcher(query, report_type, config_path="your_config.json")
+```
+
+This will override the default settings with your custom configuration. You can find all available configuration options in the [GPT Researcher documentation](https://docs.gptr.dev/docs/gpt-researcher/config).
