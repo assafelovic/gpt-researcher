@@ -8,7 +8,7 @@ from backend.report_type import BasicReport, DetailedReport
 from gpt_researcher.utils.enum import ReportType, Tone
 from multi_agents.main import run_research_task
 from gpt_researcher.master.actions import stream_output  # Import stream_output
-
+from dev_team.main import trigger_dev_team_flow
 class WebSocketManager:
     """Manage websockets"""
 
@@ -83,9 +83,15 @@ async def run_agent(task, report_type, report_source, source_urls, tone: Tone, w
             headers=headers
         )
         report = await researcher.run()
-    elif report_type == "code_report":
+    elif report_type == "dev_team":
         # Trigger the dev_team process
-        report = await run_dev_team_task(github_url, websocket)
+        report = await trigger_dev_team_flow(
+            repo_url="https://github.com/elishakay/gpt-researcher",
+            query=task,
+            branch_name="devs",
+            websocket=websocket,
+            stream_output=stream_output
+        )
     else:
         researcher = BasicReport(
             query=task,
@@ -106,12 +112,3 @@ async def run_agent(task, report_type, report_source, source_urls, tone: Tone, w
     )
 
     return report
-
-async def run_dev_team_task(github_url, websocket):
-    """Run the dev_team task."""
-    # Here you would call the function that triggers the dev_team process
-    # For example, you might use subprocess to run a script
-    import subprocess
-    result = subprocess.run(["python", "-m", "dev_team.main", github_url], capture_output=True, text=True)
-    await websocket.send_json({"type": "report", "output": result.stdout})
-    return result.stdout

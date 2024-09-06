@@ -5,7 +5,7 @@ openai
 colorama
 langgraph
 gpt_researcher
-dotenv
+python-dotenv
 
 langchain-openai
 faiss-cpu
