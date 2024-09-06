@@ -7,12 +7,14 @@
     "@replit/database": "^2.0.0",
     "discord": "^0.8.2",
     "discord.js": "^12.5.1",
+    "dotenv": "^16.4.5",
     "express": "^4.17.1",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "nodemon": "^3.1.4"
   },
-  "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
