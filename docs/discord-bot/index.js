@@ -5,21 +5,12 @@ const { sendWebhookMessage } = require('./gptr-webhook');
 
 const client = new Discord.Client();
 
-function formatResponse(data) {
-  // Extract the thoughts from the rubber ducker and tech lead review sections
-  const rubberDuckerThoughts = JSON.parse(data.rubber_ducker_thoughts)
-  const techLeadReview = JSON.parse(data.tech_lead_review)
-  
-  // Format the response string to include both thoughts
-  const response = `
-    **Rubber Ducker Thoughts:**
-    ${rubberDuckerThoughts}
-
-    **Tech Lead Review:**
-    ${techLeadReview}
-  `;
-  
-  return response;
+function splitMessage(message, chunkSize = 1500) {
+  const chunks = [];
+  for (let i = 0; i < message.length; i += chunkSize) {
+    chunks.push(message.slice(i, i + chunkSize));
+  }
+  return chunks;
 }
 
 client.on("ready", () => {
@@ -37,14 +28,27 @@ client.on("message", async msg => {
 
     // Check if the response is valid
     if (gptrResponse && gptrResponse.rubber_ducker_thoughts && gptrResponse.tech_lead_review) {
-      let formattedResponse = formatResponse(gptrResponse);
-      return msg.channel.send(formattedResponse);
+      // Combine and split the messages into chunks
+      const rubberDuckerChunks = splitMessage(gptrResponse.rubber_ducker_thoughts);
+      const techLeadChunks = splitMessage(gptrResponse.tech_lead_review);
+
+      // Send each chunk of Rubber Ducker Thoughts
+      for (const chunk of rubberDuckerChunks) {
+        await msg.channel.send(`**Rubber Duck Thoughts:**\n${chunk}`);
+      }
+
+      // Send each chunk of AI Tech Lead Thoughts
+      for (const chunk of techLeadChunks) {
+        await msg.channel.send(`**AI Tech Lead Thoughts:**\n${chunk}`);
+      }
+
+      return true;
     } else {
-      return msg.channel.send('Invalid response received from GPTR.');
+      return msg.channel.send("Invalid response received from GPTR.");
     }
   } catch (error) {
-    console.error('Error handling message:', error);
-    return msg.channel.send('There was an error processing your request.');
+    console.error("Error handling message:", error);
+    return msg.channel.send("There was an error processing your request.");
   }
 });
 
