@@ -1,4 +1,4 @@
-# Docker: Path of least resistance
+# Docker: Quickstart
 
 > **Step 1** - Install & Open Docker Desktop
 
