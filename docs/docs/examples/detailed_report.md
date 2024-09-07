@@ -1,4 +1,4 @@
-# DetailedReport Class
+# Detailed Report
 
 ## Overview
 
