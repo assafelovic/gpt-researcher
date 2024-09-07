@@ -358,7 +358,8 @@ def generate_report_conclusion(report_content: str) -> str:
     4. Be approximately 2-3 paragraphs long
     
     If there is no "## Conclusion" section title written at the end of the report, please add it to the top of your conclusion. 
-
+    You must include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
+    
     Write the conclusion:
     """
 
