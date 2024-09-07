@@ -482,6 +482,40 @@ class GPTResearcher:
     def set_verbose(self, verbose: bool):
         self.verbose = verbose
 
+    async def write_report_conclusion(self, report_body: str) -> str:
+        """
+        Writes the conclusion of the report based on the research conducted.
+
+        Args:
+            report_body (str): The body of the report.
+
+        Returns:
+            str: The conclusion of the report.
+        """
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "writing_conclusion",
+                f"🙇️ Concluding report for research task: {self.query}...",
+                self.websocket,
+            )
+
+        conclusion = await write_conclusion(
+            report=report_body,
+            agent_role_prompt=self.role,
+            cfg=self.cfg,
+        )
+
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "report_conclusion",
+                f"✍️ Writing final conclusion: {conclusion}...",
+                self.websocket,
+            )
+
+        return conclusion
+
     def add_costs(self, cost: int) -> None:
         if not isinstance(cost, float) and not isinstance(cost, int):
             raise ValueError("Cost must be an integer or float")
@@ -492,6 +526,13 @@ class GPTResearcher:
     # DETAILED REPORT
 
     async def write_introduction(self):
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "generating_conclusion",
+                f"🤔 Generating subtopics...",
+                self.websocket,
+            )
         # Construct Report Introduction from main topic research
         introduction = await get_report_introduction(
             self.query,
