@@ -27,19 +27,13 @@ client.on("message", async msg => {
     let gptrResponse = await sendWebhookMessage(msg.content);
 
     // Check if the response is valid
-    if (gptrResponse && gptrResponse.rubber_ducker_thoughts && gptrResponse.tech_lead_review) {
+    if (gptrResponse && gptrResponse.rubber_ducker_thoughts) {
       // Combine and split the messages into chunks
-      const rubberDuckerChunks = splitMessage(gptrResponse.rubber_ducker_thoughts);
-      const techLeadChunks = splitMessage(gptrResponse.tech_lead_review);
+      const rubberDuckerChunks = splitMessage(JSON.parse(gptrResponse.rubber_ducker_thoughts).thoughts);
 
       // Send each chunk of Rubber Ducker Thoughts
       for (const chunk of rubberDuckerChunks) {
-        await msg.channel.send(`**Rubber Duck Thoughts:**\n${chunk}`);
-      }
-
-      // Send each chunk of AI Tech Lead Thoughts
-      for (const chunk of techLeadChunks) {
-        await msg.channel.send(`**AI Tech Lead Thoughts:**\n${chunk}`);
+        await msg.channel.send(chunk);
       }
 
       return true;

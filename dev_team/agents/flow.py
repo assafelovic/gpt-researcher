@@ -41,16 +41,16 @@ class DevTeamFlow:
         # workflow.add_node("web_search", self.web_search_agent.search_web)
         workflow.add_node("fetch_files", self.file_search_agent.find_relevant_files)
         workflow.add_node("rubber_duck", self.rubber_ducker_agent.think_aloud)
-        workflow.add_node("tech_lead", self.tech_lead_agent.review_and_compose)
+        # workflow.add_node("tech_lead", self.tech_lead_agent.review_and_compose)
 
         workflow.add_edge('fetch_github', 'fetch_files')
         workflow.add_edge('fetch_files', 'rubber_duck')
         # workflow.add_edge('analyze_repo', 'rubber_duck')
         # workflow.add_edge('web_search', 'rubber_duck')
-        workflow.add_edge('rubber_duck', 'tech_lead')
+        # workflow.add_edge('rubber_duck', 'tech_lead')
 
         workflow.set_entry_point("fetch_github")
-        workflow.add_edge('tech_lead', END)
+        workflow.add_edge('rubber_duck', END)
 
         return workflow
 
