@@ -1,4 +1,4 @@
-# Examples
+# Simple Run
 
 ### Run PIP Package
 ```python
