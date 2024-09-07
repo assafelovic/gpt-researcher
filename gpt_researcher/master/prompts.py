@@ -345,6 +345,25 @@ Using the above latest information, Prepare a detailed report introduction on th
 Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 """
 
+def generate_report_conclusion(report_content: str) -> str:
+    prompt = f"""
+    Based on the following research report, please write a concise conclusion that summarizes the main findings and their implications:
+
+    {report_content}
+
+    Your conclusion should:
+    1. Recap the main points of the research
+    2. Highlight the most important findings
+    3. Discuss any implications or next steps
+    4. Be approximately 2-3 paragraphs long
+    
+    If there is no "## Conclusion" section title written at the end of the report, please add it to the top of your conclusion. 
+
+    Write the conclusion:
+    """
+
+    return prompt
+
 
 report_type_mapping = {
     ReportType.ResearchReport.value: generate_report_prompt,

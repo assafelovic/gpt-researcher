@@ -3,7 +3,7 @@ from typing import List, Dict, Set, Optional
 from fastapi import WebSocket
 
 from gpt_researcher.master.actions import (
-    add_source_urls,
+    add_references,
     extract_headers,
     extract_sections,
     table_of_contents,
@@ -17,10 +17,10 @@ class DetailedReport:
         query: str,
         report_type: str,
         report_source: str,
-        source_urls: List[str],
-        config_path: str,
-        tone: Tone,
-        websocket: WebSocket,
+        source_urls: List[str] = [],
+        config_path: str = None,
+        tone: Tone = Tone.Formal,
+        websocket: WebSocket = None,
         subtopics: List[Dict] = [],
         headers: Optional[Dict] = None
     ):
@@ -121,5 +121,6 @@ class DetailedReport:
 
     async def _construct_detailed_report(self, introduction: str, report_body: str) -> str:
         toc = table_of_contents(report_body)
-        report_with_references = add_source_urls(report_body, self.main_task_assistant.visited_urls)
-        return f"{introduction}\n\n{toc}\n\n{report_with_references}"
+        conclusion = await self.main_task_assistant.write_report_conclusion(report_body)
+        conclusion_with_references = add_references(conclusion, self.main_task_assistant.visited_urls)
+        return f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
