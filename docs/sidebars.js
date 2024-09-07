@@ -32,6 +32,7 @@
       items: [
         'gpt-researcher/gptr/pip-package',
         'gpt-researcher/gptr/example',
+        'gpt-researcher/gptr/querying-the-backend',
         'gpt-researcher/gptr/config',
         'gpt-researcher/gptr/automated-tests',
         'gpt-researcher/gptr/troubleshooting',

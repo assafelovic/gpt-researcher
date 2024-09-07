@@ -184,7 +184,7 @@ You can instruct the GPT Researcher to run research tasks based on your local do
 Step 1: Add the env variable `DOC_PATH` pointing to the folder where your documents are located.
 
 ```bash
-export DOC_PATH="./docs/my-docs"
+export DOC_PATH="./my-docs"
 ```
 
 Step 2: 
