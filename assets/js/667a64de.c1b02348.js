@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([[2212],{8548:e=>{e.exports=JSON.parse('{"allTagsPath":"/blog/tags","slug":"/blog/tags/gpt-researcher","name":"gpt-researcher","count":2,"permalink":"/blog/tags/gpt-researcher"}')}}]);
