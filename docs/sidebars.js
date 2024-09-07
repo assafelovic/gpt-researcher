@@ -32,6 +32,7 @@
       items: [
         'gpt-researcher/gptr/pip-package',
         'gpt-researcher/gptr/example',
+        'gpt-researcher/gptr/config',
         'gpt-researcher/gptr/automated-tests',
         'gpt-researcher/gptr/troubleshooting',
       ],
@@ -69,12 +70,11 @@
     },
     {
       type: 'category',
-      label: 'More Customization',
+      label: 'Search Engines',
       collapsible: true,
       collapsed: true,
       items: [
-        'gpt-researcher/customization/config',
-        'gpt-researcher/customization/retrievers',
+        'gpt-researcher/search-engines/retrievers',
         ]
     },
     {
