@@ -49,7 +49,7 @@ Here's how you can use the `DetailedReport` class in your project:
 import asyncio
 from fastapi import WebSocket
 from gpt_researcher.utils.enum import Tone
-from backend.report_types.detailed_report import DetailedReport
+from backend.report_type import DetailedReport
 
 async def generate_report(websocket: WebSocket):
     detailed_report = DetailedReport(
