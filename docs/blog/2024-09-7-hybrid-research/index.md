@@ -3,8 +3,9 @@ slug: gptr-hybrid
 title: The Future of Research is Hybrid
 authors: [assafe]
 tags: [hybrid-research, gpt-researcher, langchain, langgraph, tavily]
+image: https://miro.medium.com/v2/resize:fit:1400/1*NgVIlZVSePqrK5EkB1wu4Q.png
 ---
-![Header](https://miro.medium.com/v2/resize:fit:1400/1*MaauY1ecsD05nL8JqW0Zdg.jpeg)
+![Hyrbrid Research with GPT Researcher](https://miro.medium.com/v2/resize:fit:1400/1*MaauY1ecsD05nL8JqW0Zdg.jpeg)
 
 Over the past few years, we've seen an explosion of new AI tools designed to disrupt research. Some, like [ChatPDF](https://www.chatpdf.com/) and [Consensus](https://consensus.app), focus on extracting insights from documents. Others, such as [Perplexity](https://www.perplexity.ai/), excel at scouring the web for information. But here's the thing: none of these tools combine both web and local document search within a single contextual research pipeline.
 
