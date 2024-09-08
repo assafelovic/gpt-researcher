@@ -27,7 +27,7 @@ const FeatureList = [
   {
     title: 'Multi-Agent Assistant',
     Svg: require('../../static/img/multi-agent.png').default,
-    docLink: './docs/gpt-researcher/langgraph',
+    docLink: './docs/gpt-researcher/multi_agents',
     description: (
       <>
         Learn how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
