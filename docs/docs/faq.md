@@ -4,7 +4,7 @@
 It really depends on what you're aiming for. 
 
 If you're looking to connect your AI application to the internet with Tavily tailored API, check out the [Tavily API](https://docs.tavily.com/docs/tavily-api/introductionn) documentation. 
-If you're looking to build and deploy our open source autonomous research agent GPT Researcher, please see [GPT Researcher](/docs/gpt-researcher/introduction) documentation.
+If you're looking to build and deploy our open source autonomous research agent GPT Researcher, please see [GPT Researcher](/docs/gpt-researcher/getting-started/introduction) documentation.
 You can also check out demos and examples for inspiration [here](/docs/examples/examples).
 
 ### What is GPT Researcher?
@@ -13,7 +13,7 @@ GPT Researcher is a popular open source autonomous research agent that takes car
 
 GPT Researcher is built with best practices for leveraging LLMs (prompt engineering, RAG, chains, embeddings, etc), and is optimized for quick and efficient research. It is also fully customizable and can be tailored to your specific needs.
 
-To learn more about GPT Researcher, check out the [documentation page](/docs/gpt-researcher/introduction).
+To learn more about GPT Researcher, check out the [documentation page](/docs/gpt-researcher/getting-started/introduction).
 
 ### How much does each research run cost?
 
