@@ -46,6 +46,11 @@ if __name__ == "__main__":
 ```
 
 ### Customize the configuration (optional)
+This will override the default settings with your custom configuration. You can find all available configuration options in the [GPT Researcher documentation](https://docs.gptr.dev/docs/gpt-researcher/config).
+
+
+#### Using a Custom JSON Configuration
+
 If you want to modify the default configuration of GPT Researcher, you can create a custom JSON configuration file. This allows you to tailor the researcher's behavior to your specific needs. Here's how to do it:
 
 a. Create a JSON file (e.g., `your_config.json`) with your desired settings:
@@ -67,4 +72,17 @@ b. When initializing the GPTResearcher, pass the path to your custom configurati
 researcher = GPTResearcher(query, report_type, config_path="your_config.json")
 ```
 
-This will override the default settings with your custom configuration. You can find all available configuration options in the [GPT Researcher documentation](https://docs.gptr.dev/docs/gpt-researcher/config).
+#### Using Environment Variables
+
+Alternatively, you can set up the same configuration using environment variables instead of a JSON file. Here's how the example from Part 1 would look in your `.env` file:
+
+```
+RETRIEVERS=google
+LLM_PROVIDER=cohere
+FAST_LLM_MODEL=command
+SMART_LLM_MODEL=command-nightly
+MAX_ITERATIONS=3
+MAX_SUBTOPICS=1
+```
+
+Simply add these lines to your `.env` file, and GPT Researcher will use the environment variables to configure its behavior. This approach provides flexibility when deploying in different environments.
