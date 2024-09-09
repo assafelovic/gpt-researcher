@@ -8,7 +8,7 @@ from backend.report_type import BasicReport, DetailedReport
 from gpt_researcher.utils.enum import ReportType, Tone
 from multi_agents.main import run_research_task
 from gpt_researcher.master.actions import stream_output  # Import stream_output
-from dev_team.main import trigger_dev_team_flow
+from multi_agents.dev_team.main import trigger_dev_team_flow
 class WebSocketManager:
     """Manage websockets"""
 

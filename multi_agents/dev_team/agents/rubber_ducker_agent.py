@@ -1,5 +1,5 @@
 from .utils.llms import call_model
-from dev_team.agents import GithubAgent
+from multi_agents.dev_team.agents import GithubAgent
 import os
 sample_json = """
 {
@@ -36,7 +36,13 @@ Another option is using block quotes. To use a block quote, you just need to put
 
 If you want to add multiple lines to a single block quote, just add (>>>) before the first line.
 """
+valid_json_guide = """
+To make this valid JSON, you should:
 
+Replace all single quotes with double quotes.
+Remove the concatenation (+) operators.
+Properly escape any necessary characters within strings (e.g., newline characters).
+"""
 class RubberDuckerAgent:
     async def think_aloud(self, state):
         github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name='elishakay/gpt-researcher', branch_name="devs", vector_store=state.get("vector_store"))
@@ -66,7 +72,9 @@ class RubberDuckerAgent:
             You MUST return nothing but a JSON in the following format (without json markdown).
             Respond in the following JSON format: {sample_json}
 
-            Please take into account the Discord markdown guide within your sample json's thoughts field: {discord_markdown_guide}
+            Please take into account the Discord markdown guide & valid JSON guide within your json response.
+            discord_markdown_guide: {discord_markdown_guide}
+            valid_json_guide: {valid_json_guide}
             """}
         ]
 

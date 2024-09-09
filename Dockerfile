@@ -31,9 +31,6 @@ RUN pip install -r requirements.txt
 COPY ./multi_agents/requirements.txt ./multi_agents/requirements.txt
 RUN pip install -r multi_agents/requirements.txt
 
-COPY ./dev_team/requirements.txt ./dev_team/requirements.txt
-RUN pip install -r dev_team/requirements.txt
-
 FROM gpt-researcher-install AS gpt-researcher
 
 ARG OPENAI_API_KEY

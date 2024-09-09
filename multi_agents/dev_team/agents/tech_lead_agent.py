@@ -1,5 +1,5 @@
 from .utils.llms import call_model
-from dev_team.agents import GithubAgent
+from multi_agents.dev_team.agents import GithubAgent
 import os
 sample_json = """
 {

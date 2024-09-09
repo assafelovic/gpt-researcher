@@ -1,6 +1,6 @@
 import asyncio
 from dotenv import load_dotenv
-from . import run_dev_team_flow
+from multi_agents.dev_team import run_dev_team_flow
 
 load_dotenv()
 
