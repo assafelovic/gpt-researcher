@@ -35,31 +35,44 @@ client.on(Events.InteractionCreate, async interaction => {
 		// Create the modal
 		const modal = new ModalBuilder()
 			.setCustomId('myModal')
-			.setTitle('My Modal');
+			.setTitle('Ask the AI Dev Team');
 
 		// Add components to modal
+		const queryInput = new TextInputBuilder()
+			.setCustomId('queryInput')
+			.setLabel("Your question")
+			.setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder("What are you exploring / trying to code today?");
 
-		// Create the text input components
-		const favoriteColorInput = new TextInputBuilder()
-			.setCustomId('favoriteColorInput')
-		    // The label is the prompt the user sees for this input
-			.setLabel("What's your favorite color?")
-		    // Short means only a single line of text
-			.setStyle(TextInputStyle.Short);
+		const relevantFilesInput = new TextInputBuilder()
+			.setCustomId('relevantFilesInput')
+			.setLabel("List some of the relevant file names (optional)")
+			.setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder("Whatever guidance you can provide will be helpful")
+      .setRequired(false);
 
-		const hobbiesInput = new TextInputBuilder()
-			.setCustomId('hobbiesInput')
-			.setLabel("What's some of your favorite hobbies?")
-		    // Paragraph means multiple lines of text.
-			.setStyle(TextInputStyle.Paragraph);
+    const repoNameInput = new TextInputBuilder()
+			.setCustomId('repoNameInput')
+			.setLabel("Repo name (optional)")
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder("assafelovic/gpt-researcher")
+      .setRequired(false)
 
-		// An action row only holds one text input,
+    const branchNameInput = new TextInputBuilder()
+			.setCustomId('branchNameInput')
+			.setLabel("Branch name (optional)")
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder("master")
+      .setRequired(false)
+
 		// so you need one action row per text input.
-		const firstActionRow = new ActionRowBuilder().addComponents(favoriteColorInput);
-		const secondActionRow = new ActionRowBuilder().addComponents(hobbiesInput);
+		const firstActionRow = new ActionRowBuilder().addComponents(queryInput);
+		const secondActionRow = new ActionRowBuilder().addComponents(relevantFilesInput);
+    const thirdActionRow = new ActionRowBuilder().addComponents(repoNameInput)
+    const fourthActionRow = new ActionRowBuilder().addComponents(branchNameInput)
 
 		// Add inputs to the modal
-		modal.addComponents(firstActionRow, secondActionRow);
+		modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow);
 
 		// Show the modal to the user
 		await interaction.showModal(modal);
@@ -69,11 +82,11 @@ client.on(Events.InteractionCreate, async interaction => {
 client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isModalSubmit()) return;
 	if (interaction.customId === 'myModal') {
-    const favoriteColor = interaction.fields.getTextInputValue('favoriteColorInput');
-	  const hobbies = interaction.fields.getTextInputValue('hobbiesInput');
+    const query = interaction.fields.getTextInputValue('queryInput');
+	  const relevantFiles = interaction.fields.getTextInputValue('relevantFilesInput');
 		await interaction.reply({ content: `
-      Your favorite color is: ${favoriteColor}
-      Your hobbies are: ${hobbies}  
+      Your query is: ${query}
+      Your relevantFiles are: ${relevantFiles}  
     ` });
 	}
 });
