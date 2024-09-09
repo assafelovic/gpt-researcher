@@ -5,7 +5,7 @@ import time
 from typing import Set
 
 from gpt_researcher.config import Config
-from gpt_researcher.context.compression import ContextCompressor, WrittenContentCompressor
+from gpt_researcher.context.compression import ContextCompressor, WrittenContentCompressor, VectorstoreCompressor
 from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
 from gpt_researcher.master.actions import *
 from gpt_researcher.memory import Memory
@@ -21,10 +21,12 @@ class GPTResearcher:
         self,
         query: str,
         report_type: str = ReportType.ResearchReport.value,
-        report_source=ReportSource.Web.value,
+        report_source: str = ReportSource.Web.value,
         tone: Tone = Tone.Objective,
         source_urls=None,
         documents=None,
+        vector_store=None,
+        vector_store_filter=None,
         config_path=None,
         websocket=None,
         agent=None,
@@ -66,6 +68,8 @@ class GPTResearcher:
         self.context = context
         self.source_urls = source_urls
         self.documents = documents
+        self.vector_store = vector_store
+        self.vector_store_filter = vector_store_filter
         self.memory = Memory(self.cfg.embedding_provider, self.headers)
         self.visited_urls: set[str] = visited_urls
         self.verbose: bool = verbose
@@ -79,7 +83,6 @@ class GPTResearcher:
             self.tone = Tone[tone]
         else:
             self.tone = tone
-
         # Only relevant for DETAILED REPORTS
         # --------------------------------------
 
@@ -95,7 +98,9 @@ class GPTResearcher:
         """
         # Reset visited_urls and source_urls at the start of each research task
         self.visited_urls.clear()
-        if self.report_source != ReportSource.Sources.value:
+        # Due to deprecation of report_type in favor of report_source,
+        # we need to clear source_urls if report_source is not static
+        if self.report_source != "static" and self.report_type != "sources":
             self.source_urls = []
 
         if self.verbose:
@@ -142,6 +147,8 @@ class GPTResearcher:
                 self.query, langchain_documents_data
             )
 
+        elif self.report_source == ReportSource.LangChainVectorStore.value:
+            self.context = await self.__get_context_by_vectorstore(self.query, self.vector_store_filter)
         # Default web based research
         else:
             self.context = await self.__get_context_by_search(self.query)
@@ -157,14 +164,21 @@ class GPTResearcher:
 
         return self.context
 
-    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = []):
+    async def write_report(self,
+                           existing_headers: list = [],
+                           relevant_written_contents: list = [],
+                           ext_context=None) -> str:
         """
-        Writes the report based on research conducted
+        Writes the report based on research conducted.
+
+        Args:
+            existing_headers (list): List of existing headers.
+            relevant_written_contents (list): List of relevant written contents.
+            ext_context: External context if provided. Allows to write a report without conducting research first.
 
         Returns:
-            str: The report
+            str: The generated report.
         """
-        report = ""
 
         if self.verbose:
             await stream_output(
@@ -174,49 +188,32 @@ class GPTResearcher:
                 self.websocket,
             )
 
-        if self.report_type == "custom_report":
-            self.role = self.cfg.agent_role if self.cfg.agent_role else self.role
-            report = await generate_report(
-                query=self.query,
-                context=self.context,
-                agent_role_prompt=self.role,
-                report_type=self.report_type,
-                report_source=self.report_source,
-                tone=self.tone,
-                websocket=self.websocket,
-                cfg=self.cfg,
-                headers=self.headers,
-            )
-        elif self.report_type == "subtopic_report":
-            report = await generate_report(
-                query=self.query,
-                context=self.context,
-                agent_role_prompt=self.role,
-                report_type=self.report_type,
-                report_source=self.report_source,
-                websocket=self.websocket,
-                tone=self.tone,
-                cfg=self.cfg,
-                main_topic=self.parent_query,
-                existing_headers=existing_headers,
-                relevant_written_contents=relevant_written_contents,
-                cost_callback=self.add_costs,
-                headers=self.headers,
-            )
-        else:
-            report = await generate_report(
-                query=self.query,
-                context=self.context,
-                agent_role_prompt=self.role,
-                report_type=self.report_type,
-                report_source=self.report_source,
-                tone=self.tone,
-                websocket=self.websocket,
-                cfg=self.cfg,
-                cost_callback=self.add_costs,
-                headers=self.headers,
-            )
+        report_params = {
+            "query": self.query,
+            "context": ext_context or self.context,
+            "agent_role_prompt": self.cfg.agent_role or self.role,
+            "report_type": self.report_type,
+            "report_source": self.report_source,
+            "tone": self.tone,
+            "websocket": self.websocket,
+            "cfg": self.cfg,
+            "headers": self.headers,
+        }
 
+        if self.report_type == "subtopic_report":
+            report_params.update({
+                "main_topic": self.parent_query,
+                "existing_headers": existing_headers,
+                "relevant_written_contents": relevant_written_contents,
+                "cost_callback": self.add_costs,
+            })
+        elif self.report_type == "custom_report":
+            # Custom report type uses the same params, no additional updates needed
+            pass
+        else:
+            report_params["cost_callback"] = self.add_costs
+
+        report = await generate_report(**report_params)
         return report
 
     async def __get_context_by_urls(self, urls):
@@ -235,6 +232,38 @@ class GPTResearcher:
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
         return await self.__get_similar_content_by_query(self.query, scraped_sites)
 
+    async def __get_context_by_vectorstore(self, query, filter: Optional[dict] = None):
+        """
+            Generates the context for the research task by searching the vectorstore
+        Returns:
+            context: List of context
+        """
+        context = []
+        # Generate Sub-Queries including original query
+        sub_queries = await self.__get_sub_queries(query)
+        # If this is not part of a sub researcher, add original query to research for better results
+        if self.report_type != "subtopic_report":
+            sub_queries.append(query)
+
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "subqueries",
+                f"🗂️  I will conduct my research based on the following queries: {sub_queries}...",
+                self.websocket,
+                True,
+                sub_queries,
+            )
+
+        # Using asyncio.gather to process the sub_queries asynchronously
+        context = await asyncio.gather(
+            *[
+                self.__process_sub_query_with_vectorstore(sub_query, filter)
+                for sub_query in sub_queries
+            ]
+        )
+        return context
+
     async def __get_context_by_search(self, query, scraped_data: list = []):
         """
            Generates the context for the research task by searching the query and scraping the results
@@ -243,15 +272,7 @@ class GPTResearcher:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await get_sub_queries(
-            query=query,
-            agent_role_prompt=self.role,
-            cfg=self.cfg,
-            parent_query=self.parent_query,
-            report_type=self.report_type,
-            cost_callback=self.add_costs,
-        )
-
+        sub_queries = await self.__get_sub_queries(query)
         # If this is not part of a sub researcher, add original query to research for better results
         if self.report_type != "subtopic_report":
             sub_queries.append(query)
@@ -274,6 +295,38 @@ class GPTResearcher:
             ]
         )
         return context
+
+    async def __process_sub_query_with_vectorstore(self, sub_query: str, filter: Optional[dict] = None):
+        """Takes in a sub query and gathers context from the user provided vector store
+
+        Args:
+            sub_query (str): The sub-query generated from the original query
+
+        Returns:
+            str: The context gathered from search
+        """
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "running_subquery_with_vectorstore_research",
+                f"\n🔍 Running research for '{sub_query}'...",
+                self.websocket,
+            )
+
+        content = await self.__get_similar_content_by_query_with_vectorstore(sub_query, filter)
+
+        if content and self.verbose:
+            await stream_output(
+                "logs", "subquery_context_window", f"📃 {content}", self.websocket
+            )
+        elif self.verbose:
+            await stream_output(
+                "logs",
+                "subquery_context_not_found",
+                f"🤷 No content found for '{sub_query}'...",
+                self.websocket,
+            )
+        return content
 
     async def __process_sub_query(self, sub_query: str, scraped_data: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context.
@@ -380,6 +433,22 @@ class GPTResearcher:
 
         return scraped_content_results
 
+    async def __get_similar_content_by_query_with_vectorstore(self, query, filter):
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "fetching_query_content",
+                f"📚 Getting relevant content based on query: {query}...",
+                self.websocket,
+            )  
+
+        # Summarize data fetched from vector store
+        vectorstore_compressor = VectorstoreCompressor(self.vector_store, filter)
+
+        return await vectorstore_compressor.async_get_context(
+            query=query, max_results=8
+        )
+
     async def __get_similar_content_by_query(self, query, pages):
         if self.verbose:
             await stream_output(
@@ -413,6 +482,40 @@ class GPTResearcher:
     def set_verbose(self, verbose: bool):
         self.verbose = verbose
 
+    async def write_report_conclusion(self, report_body: str) -> str:
+        """
+        Writes the conclusion of the report based on the research conducted.
+
+        Args:
+            report_body (str): The body of the report.
+
+        Returns:
+            str: The conclusion of the report.
+        """
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "writing_conclusion",
+                f"🙇️ Concluding report for research task: {self.query}...",
+                self.websocket,
+            )
+
+        conclusion = await write_conclusion(
+            report=report_body,
+            agent_role_prompt=self.role,
+            cfg=self.cfg,
+        )
+
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "report_conclusion",
+                f"✍️ Writing final conclusion: {conclusion}...",
+                self.websocket,
+            )
+
+        return conclusion
+
     def add_costs(self, cost: int) -> None:
         if not isinstance(cost, float) and not isinstance(cost, int):
             raise ValueError("Cost must be an integer or float")
@@ -423,6 +526,13 @@ class GPTResearcher:
     # DETAILED REPORT
 
     async def write_introduction(self):
+        if self.verbose:
+            await stream_output(
+                "logs",
+                "generating_conclusion",
+                f"🤔 Generating subtopics...",
+                self.websocket,
+            )
         # Construct Report Introduction from main topic research
         introduction = await get_report_introduction(
             self.query,
@@ -529,6 +639,17 @@ class GPTResearcher:
         )
         return await written_content_compressor.async_get_context(
             query=query, max_results=max_results, cost_callback=self.add_costs
+        )
+
+    async def __get_sub_queries(self, query):
+        # Generate Sub-Queries including original query
+        return await get_sub_queries(
+            query=query,
+            agent_role_prompt=self.role,
+            cfg=self.cfg,
+            parent_query=self.parent_query,
+            report_type=self.report_type,
+            cost_callback=self.add_costs,
         )
     
     async def get_similar_written_contents_by_draft_section_titles(

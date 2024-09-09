@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportType
+from backend.report_type import DetailedReport
 
 # =============================================================================
 # CLI
@@ -72,13 +73,22 @@ async def main(args):
     Conduct research on the given query, generate the report, and write
     it as a markdown file to the output directory.
     """
-    researcher = GPTResearcher(
-        query=args.query,
-        report_type=args.report_type)
+    if args.report_type == 'detailed_report':
+        detailed_report = DetailedReport(
+            query=args.query,
+            report_type="research_report",
+            report_source="web_search",
+        )
 
-    await researcher.conduct_research()
+        report = await detailed_report.run()
+    else:
+        researcher = GPTResearcher(
+            query=args.query,
+            report_type=args.report_type)
 
-    report = await researcher.write_report()
+        await researcher.conduct_research()
+
+        report = await researcher.write_report()
 
     # Write the report to a file
     artifact_filepath = f"outputs/{uuid4()}.md"

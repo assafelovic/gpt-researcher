@@ -28,6 +28,7 @@ websockets
 unstructured
 json_repair
 json5
+loguru
 
 # uncomment for testing
 # pytest
