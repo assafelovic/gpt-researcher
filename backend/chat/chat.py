@@ -9,8 +9,8 @@ from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 
 from langchain_community.vectorstores import InMemoryVectorStore
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.tools import Tool, tool
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.tools import Tool, tool
 
 class ChatAgentWithMemory:
     def __init__(
@@ -28,7 +28,7 @@ class ChatAgentWithMemory:
 
     def create_agent(self):
         documents = self._process_document(self.report)
-        provider = get_llm(self.config.llm_provider, model=self.config.smart_llm_model, temperature=self.config.temperature, max_tokens=self.config.smart_token_limit, **self.config.llm_kwargs).llm
+        provider = get_llm(self.config.llm_provider, model=self.config.fast_llm_model, temperature=self.config.temperature, max_tokens=self.config.fast_token_limit, **self.config.llm_kwargs).llm
         self.chat_config = {"configurable": {"thread_id": str(uuid.uuid4())}}
         self.embedding = Memory(self.config.embedding_provider, self.headers).get_embeddings()
         vector_store = InMemoryVectorStore(self.embedding)
@@ -60,6 +60,5 @@ class ChatAgentWithMemory:
         inputs = {"messages": [("user", message)]}
         response = await self.graph.ainvoke(inputs, config=self.chat_config)
         ai_message = (response["messages"][-1].content)
-        print(ai_message)
         if self.websocket is not None:
             await self.websocket.send_json({"type": "chat", "content": ai_message})
