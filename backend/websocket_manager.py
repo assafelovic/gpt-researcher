@@ -5,6 +5,8 @@ from typing import Dict, List
 from fastapi import WebSocket
 
 from backend.report_type import BasicReport, DetailedReport
+from backend.chat import ChatAgentWithMemory
+
 from gpt_researcher.utils.enum import ReportType, Tone
 from multi_agents.main import run_research_task
 from gpt_researcher.master.actions import stream_output  # Import stream_output
@@ -17,6 +19,7 @@ class WebSocketManager:
         self.active_connections: List[WebSocket] = []
         self.sender_tasks: Dict[WebSocket, asyncio.Task] = {}
         self.message_queues: Dict[WebSocket, asyncio.Queue] = {}
+        self.chat_agent = None
 
     async def start_sender(self, websocket: WebSocket):
         """Start the sender task."""
@@ -58,8 +61,13 @@ class WebSocketManager:
         """Start streaming the output."""
         tone = Tone[tone]
         report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers)
+        config_path = ""
+        self.chat_agent = ChatAgentWithMemory(report, websocket, config_path, headers)
         return report
 
+    async def chat(self, message, websocket):
+        if self.chat_agent is not None:
+            await self.chat_agent.chat(message)
 
 async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers=None):
     """Run the agent."""

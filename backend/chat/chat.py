@@ -38,13 +38,13 @@ class ChatAgentWithMemory:
     
     def vector_store_tool(self, vector_store) -> Tool:
         @tool 
-        def retrieve_info_tool(query):
+        def retrieve_info(query):
             """
-            Consult the report for relevant contexts
+            Consult the report for relevant contexts whenever you don't know something
             """
             retriever = vector_store.as_retriever(k = 4)
             return retriever.invoke(query)
-        return retrieve_info_tool
+        return retrieve_info
         
     def _process_document(self, report):
         text_splitter = RecursiveCharacterTextSplitter(
@@ -58,6 +58,8 @@ class ChatAgentWithMemory:
 
     async def chat(self, message):
         inputs = {"messages": [("user", message)]}
-        res = await self.graph.ainvoke(inputs, config=self.chat_config)
-        print(res)
-        return res
+        response = await self.graph.ainvoke(inputs, config=self.chat_config)
+        ai_message = (response["messages"][-1].content)
+        print(ai_message)
+        if self.websocket is not None:
+            await self.websocket.send_json({"type": "chat", "content": ai_message})
