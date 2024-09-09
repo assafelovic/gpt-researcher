@@ -7,7 +7,7 @@ let responseCallback = null;
 
 async function initializeWebSocket() {
   if (!socket) {
-    const host = 'localhost:8000';
+    const host = 'gpt-researcher:8000';
     const ws_uri = `ws://${host}/ws`;
 
     socket = new WebSocket(ws_uri);
