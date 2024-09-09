@@ -48,6 +48,7 @@ services:
       dockerfile: Dockerfile.dev
     environment:
       - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
     volumes:
       - ./docs/discord-bot:/app
     ports:

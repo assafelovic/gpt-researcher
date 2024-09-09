@@ -4,12 +4,9 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "@replit/database": "^2.0.0",
-    "discord": "^0.8.2",
-    "discord.js": "^12.5.1",
+    "discord.js": "^14.16.1",
     "dotenv": "^16.4.5",
     "express": "^4.17.1",
-    "node-fetch": "^2.6.1",
     "nodemon": "^3.1.4",
     "ws": "^8.18.0"
   },
