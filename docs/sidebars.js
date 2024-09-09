@@ -21,6 +21,7 @@
         'gpt-researcher/introduction',
         'gpt-researcher/getting-started',
         'gpt-researcher/pip-package',
+        'gpt-researcher/frontend',
          'gpt-researcher/example',
         'gpt-researcher/troubleshooting',
       ],
@@ -29,19 +30,20 @@
       type: 'category',
       label: 'Customization',
       collapsible: true,
-      collapsed: false,
+      collapsed: true,
       items: [
         'gpt-researcher/config',
         'gpt-researcher/tailored-research',
         'gpt-researcher/retrievers',
         'gpt-researcher/llms',
+        'gpt-researcher/vector-stores',
         ]
     },
     {
       type: 'category',
       label: 'Multi-Agent Frameworks',
       collapsible: true,
-      collapsed: false,
+      collapsed: true,
       items: [
         'gpt-researcher/langgraph',
         ]

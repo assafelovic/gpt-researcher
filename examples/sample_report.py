@@ -8,16 +8,17 @@ async def main():
     """
     # Query
     query = "What happened in the latest burning man floods?"
-
-    # Report Type
-    report_type = "research_report"
-
     # Initialize the researcher
-    researcher = GPTResearcher(query=query, report_type=report_type, config_path=None)
-    # Conduct research on the given query
-    await researcher.conduct_research()
+    researcher = GPTResearcher(query=query)
+
+    # Conduct research on the given query. Returns context for the report
+    research_context = await researcher.conduct_research()
+
     # Write the report
-    report = await researcher.write_report()
+    # FYI: You can pass ext_context (str) = "..." to write_report
+    # to use it without conducting a research first, using your own context
+    # In this case we're simply passing the already conducted research context
+    report = await researcher.write_report(ext_context=researcher.context)
     
     return report
 

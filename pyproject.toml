@@ -21,7 +21,7 @@ fastapi = ">=0.104.1"
 python-multipart = ">=0.0.6"
 markdown = ">=3.5.1"
 langchain = "^0.2"
-langgraph = ">=0.0.29,<0.1"
+langgraph = ">=0.0.29,<0.3"
 langchain_community = "^0.2"
 langchain-openai = "^0.1"
 tavily-python = ">=0.2.8"
@@ -36,7 +36,7 @@ mistune = "^3.0.2"
 htmldocx = "^0.0.6"
 python-docx = "^1.1.0"
 lxml = { version = ">=4.9.2", extras = ["html_clean"] }
-unstructured = "^0.13.0"
+unstructured = ">=0.13,<0.16"
 tiktoken = ">=0.7.0"
 
 [build-system]

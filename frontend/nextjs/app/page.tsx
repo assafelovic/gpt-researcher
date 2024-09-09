@@ -200,8 +200,9 @@ export default function Home() {
     let currentReportGroup = null;
     let finalReportGroup = null;
     let sourceBlockEncountered = false;
+    let lastSubqueriesIndex = -1;
   
-    data.forEach((item) => {
+    data.forEach((item, index) => {
       const { type, content, metadata, output, link } = item;
   
       if (type === 'report') {
@@ -234,10 +235,26 @@ export default function Home() {
             currentSourceGroup = null;
           }
           groupedData.push(item);
+          lastSubqueriesIndex = groupedData.length - 1;
+        } else if (type === 'sourceBlock') {
+          currentSourceGroup = item;
+          if (lastSubqueriesIndex !== -1) {
+            groupedData.splice(lastSubqueriesIndex + 1, 0, currentSourceGroup);
+            lastSubqueriesIndex = -1;
+          } else {
+            groupedData.push(currentSourceGroup);
+          }
+          sourceBlockEncountered = true;
+          currentSourceGroup = null;
         } else if (content === 'added_source_url') {
           if (!currentSourceGroup) {
             currentSourceGroup = { type: 'sourceBlock', items: [] };
-            groupedData.push(currentSourceGroup);
+            if (lastSubqueriesIndex !== -1) {
+              groupedData.splice(lastSubqueriesIndex + 1, 0, currentSourceGroup);
+              lastSubqueriesIndex = -1;
+            } else {
+              groupedData.push(currentSourceGroup);
+            }
             sourceBlockEncountered = true;
           }
           const hostname = new URL(metadata).hostname.replace('www.', '');

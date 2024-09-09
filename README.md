@@ -24,7 +24,8 @@
 
 [English](https://github.com/assafelovic/gpt-researcher/blob/master/README.md) |
 [中文](https://github.com/assafelovic/gpt-researcher/blob/master/README-zh_CN.md) |
-[日本語](https://github.com/assafelovic/gpt-researcher/blob/master/README-ja_JP.md)
+[日本語](https://github.com/assafelovic/gpt-researcher/blob/master/README-ja_JP.md) |
+[한국어](https://github.com/assafelovic/gpt-researcher/blob/master/README-ko_KR.md)
 </div>
 
 **GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks.** 
@@ -46,7 +47,7 @@ https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 
 ## Architecture
 The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. <br /> <br /> 
-The agents leverage both `gpt-4o-mini` and `gpt-4o` (128K context) to complete a research task. We optimize for costs using each only when necessary. **The average research task takes around 3 minutes to complete, and costs ~$0.005.**
+The agents leverage both `gpt-4o-mini` and `gpt-4o` (128K context) to complete a research task. We optimize for costs using each only when necessary. **The average research task takes around 2 minutes to complete, and costs ~$0.005.**
 
 <div align="center">
 <img align="center" height="600" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527">
@@ -70,9 +71,9 @@ More specifically:
 - 📝 Generate research, outlines, resources and lessons reports with local documents and web sources
 - 📜 Can generate long and detailed research reports (over 2K words)
 - 🌐 Aggregates over 20 web sources per research to form objective and factual conclusions
-- 🖥️ Includes an easy-to-use web interface (HTML/CSS/JS)
+- 🖥️ Includes both lightweight (HTML/CSS/JS) and production ready (NextJS + Tailwind) UX/UI
 - 🔍 Scrapes web sources with javascript support
-- 📂 Keeps track and context of visited and used web sources
+- 📂 Keeps track and context and memory throughout the research process
 - 📄 Export research reports to PDF, Word and more...
 
 ## 📖 Documentation
@@ -193,6 +194,21 @@ An average run generates a 5-6 page research report in multiple formats such as 
 
 Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our [documentation](https://docs.gptr.dev/docs/gpt-researcher/langgraph) for more information.
 
+## 🖥️ Frontend Applications
+
+GPT-Researcher now features an enhanced frontend to improve the user experience and streamline the research process. The frontend offers:
+
+- An intuitive interface for inputting research queries
+- Real-time progress tracking of research tasks
+- Interactive display of research findings
+- Customizable settings for tailored research experiences
+
+Two deployment options are available:
+1. A lightweight static frontend served by FastAPI
+2. A feature-rich NextJS application for advanced functionality
+
+For detailed setup instructions and more information about the frontend features, please visit our [documentation page](https://docs.gptr.dev/docs/gpt-researcher/frontend).
+
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md) if you're interested.
 
@@ -209,7 +225,7 @@ Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-road
 This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the Apache 2 license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
 
 Our view on unbiased research claims:
-1. The main goal of GPT Researcher is to reduce incorrect and biased facts. How? We assume that the more sites we scrape the less chances of incorrect data. By scraping over 20 sites per research, and choosing the most frequent information, the chances that they are all wrong is extremely low.
+1. The main goal of GPT Researcher is to reduce incorrect and biased facts. How? We assume that the more sites we scrape the less chances of incorrect data. By scraping multiple sites per research, and choosing the most frequent information, the chances that they are all wrong is extremely low.
 2. We do not aim to eliminate biases; we aim to reduce it as much as possible. **We are here as a community to figure out the most effective human/llm interactions.**
 3. In research, people also tend towards biases as most have already opinions on the topics they research about. This tool scrapes many opinions and will evenly explain diverse views that a biased person would never have read.
 
