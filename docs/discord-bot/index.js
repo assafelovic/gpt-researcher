@@ -44,9 +44,9 @@ client.on(Events.InteractionCreate, async interaction => {
 			.setStyle(TextInputStyle.Paragraph)
       .setPlaceholder("What are you exploring / trying to code today?");
 
-		const relevantFilesInput = new TextInputBuilder()
-			.setCustomId('relevantFilesInput')
-			.setLabel("List some of the relevant file names (optional)")
+		const relevantFileNamesInput = new TextInputBuilder()
+			.setCustomId('relevantFileNamesInput')
+			.setLabel("Relevant file names (optional)")
 			.setStyle(TextInputStyle.Paragraph)
       .setPlaceholder("Whatever guidance you can provide will be helpful")
       .setRequired(false);
@@ -67,7 +67,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
 		// so you need one action row per text input.
 		const firstActionRow = new ActionRowBuilder().addComponents(queryInput);
-		const secondActionRow = new ActionRowBuilder().addComponents(relevantFilesInput);
+		const secondActionRow = new ActionRowBuilder().addComponents(relevantFileNamesInput);
     const thirdActionRow = new ActionRowBuilder().addComponents(repoNameInput)
     const fourthActionRow = new ActionRowBuilder().addComponents(branchNameInput)
 
@@ -83,22 +83,21 @@ client.on(Events.InteractionCreate, async interaction => {
 	if (!interaction.isModalSubmit()) return;
 	if (interaction.customId === 'myModal') {
     const query = interaction.fields.getTextInputValue('queryInput');
-	  const relevantFiles = interaction.fields.getTextInputValue('relevantFilesInput');
-		await interaction.reply({ content: `
-      Your query is: ${query}
-      Your relevantFiles are: ${relevantFiles}  
-    ` });
+	  const relevantFileNames = interaction.fields.getTextInputValue('relevantFileNamesInput');
+    
+    const repoName = interaction.fields.getTextInputValue('repoNameInput');
+    const branchName = interaction.fields.getTextInputValue('branchNameInput');
+
+    await runDevTeam({interaction, query, relevantFileNames, repoName, branchName});
 	}
 });
 
-client.on("message", async msg => {
-  if (msg.author.bot) return;
-
-  msg.channel.send('Looking through the code to investigate your query... give me a minute or so');
+async function runDevTeam({interaction, query, relevantFileNames, repoName, branchName}) {
+  await interaction.reply({ content: "Looking through the code to investigate your query... give me a minute or so" });
 
   try {
     // Await the response from GPTR via WebSocket
-    let gptrResponse = await sendWebhookMessage(msg.content);
+    let gptrResponse = await sendWebhookMessage(query);
 
     // Check if the response is valid
     if (gptrResponse && gptrResponse.rubber_ducker_thoughts) {
@@ -107,18 +106,18 @@ client.on("message", async msg => {
 
       // Send each chunk of Rubber Ducker Thoughts
       for (const chunk of rubberDuckerChunks) {
-        await msg.channel.send(chunk);
+        await interaction.followUp({ content: chunk });
       }
 
       return true;
     } else {
-      return msg.channel.send("Invalid response received from GPTR.");
+      return interaction.followUp({ content: "Invalid response received from GPTR." });
     }
   } catch (error) {
     console.error("Error handling message:", error);
-    return msg.channel.send("There was an error processing your request.");
+    return interaction.followUp({ content: "There was an error processing your request." });
   }
-});
+}
 
 keepAlive();
 client.login(process.env.DISCORD_BOT_TOKEN);
