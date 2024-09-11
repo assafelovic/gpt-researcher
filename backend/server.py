@@ -35,6 +35,7 @@ class ConfigRequest(BaseModel):
     GOOGLE_API_KEY: str = ''
     GOOGLE_CX_KEY: str = ''
     BING_API_KEY: str = ''
+    SEARCHAPI_API_KEY: str = ''
     SERPAPI_API_KEY: str = ''
     SERPER_API_KEY: str = ''
     SEARX_URL: str = ''
@@ -138,6 +139,7 @@ async def get_config(
     google_api_key: str = Header(None),
     google_cx_key: str = Header(None),
     bing_api_key: str = Header(None),
+    searchapi_api_key: str = Header(None),
     serpapi_api_key: str = Header(None),
     serper_api_key: str = Header(None),
     searx_url: str = Header(None)
@@ -149,6 +151,7 @@ async def get_config(
         "GOOGLE_API_KEY": google_api_key if google_api_key else os.getenv("GOOGLE_API_KEY", ""),
         "GOOGLE_CX_KEY": google_cx_key if google_cx_key else os.getenv("GOOGLE_CX_KEY", ""),
         "BING_API_KEY": bing_api_key if bing_api_key else os.getenv("BING_API_KEY", ""),
+        "SEARCHAPI_API_KEY": searchapi_api_key if searchapi_api_key else os.getenv("SEARCHAPI_API_KEY", ""),
         "SERPAPI_API_KEY": serpapi_api_key if serpapi_api_key else os.getenv("SERPAPI_API_KEY", ""),
         "SERPER_API_KEY": serper_api_key if serper_api_key else os.getenv("SERPER_API_KEY", ""),
         "SEARX_URL": searx_url if searx_url else os.getenv("SEARX_URL", ""),
@@ -171,6 +174,7 @@ async def set_config(config: ConfigRequest):
     os.environ["GOOGLE_API_KEY"] = config.GOOGLE_API_KEY
     os.environ["GOOGLE_CX_KEY"] = config.GOOGLE_CX_KEY
     os.environ["BING_API_KEY"] = config.BING_API_KEY
+    os.environ["SEARCHAPI_API_KEY"] = config.SEARCHAPI_API_KEY
     os.environ["SERPAPI_API_KEY"] = config.SERPAPI_API_KEY
     os.environ["SERPER_API_KEY"] = config.SERPER_API_KEY
     os.environ["SEARX_URL"] = config.SEARX_URL

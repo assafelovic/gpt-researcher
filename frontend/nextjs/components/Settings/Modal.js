@@ -18,6 +18,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
     GOOGLE_API_KEY: '',
     GOOGLE_CX_KEY: '',
     BING_API_KEY: '',
+    SEARCHAPI_API_KEY: '',
     SERPAPI_API_KEY: '',
     SERPER_API_KEY: '',
     SEARX_URL: '',
@@ -78,6 +79,13 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
           <div className="form-group">
             <label className="form-group-label">BING_API_KEY</label>
             <input type="text" name="BING_API_KEY" value={apiVariables.BING_API_KEY} onChange={handleInputChange} />
+          </div>
+        );
+      case 'searchapi':
+        return (
+          <div className="form-group">
+            <label className="form-group-label">SEARCHAPI_API_KEY</label>
+            <input type="text" name="SEARCHAPI_API_KEY" value={apiVariables.SEARCHAPI_API_KEY} onChange={handleInputChange} />
           </div>
         );
       case 'serpapi':
@@ -145,6 +153,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
                             <option value="tavily">Tavily</option>
                             <option value="google">Google</option>
                             <option value="searx">Searx</option>
+                            <option value="searchapi">SearchApi</option>
                             <option value="serpapi">SerpApi</option>
                             <option value="googleSerp">GoogleSerp</option>
                             <option value="duckduckgo">DuckDuckGo</option>
