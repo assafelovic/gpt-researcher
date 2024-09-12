@@ -45,7 +45,7 @@ services:
   discord-bot:
     build:
       context: ./docs/discord-bot
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     environment:
       - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
       - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
