@@ -19,6 +19,7 @@ const InputArea: FC<TInputAreaProps> = ({
   disabled,
   reset,
 }) => {
+  const placeholder = handleSecondary ? "Follow up questions..." : "What would you like to research next?"
   return (
     <form
       className="mx-auto flex h-[66px] w-full items-center justify-between rounded-lg border bg-white px-3 shadow-[2px_2px_38px_0px_rgba(0,0,0,0.25),0px_-2px_4px_0px_rgba(0,0,0,0.25)_inset,1px_2px_4px_0px_rgba(0,0,0,0.25)_inset]"
@@ -61,7 +62,7 @@ const InputArea: FC<TInputAreaProps> = ({
       }
       <input
         type="text"
-        placeholder="Follow up questions..."
+        placeholder={placeholder}
         className="focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal] text-[#1B1B16]/30 text-black outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
         disabled={disabled}
         value={promptValue}
