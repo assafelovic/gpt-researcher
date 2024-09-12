@@ -20,9 +20,7 @@ async function initializeWebSocket() {
       const data = JSON.parse(event.data);
       console.log('WebSocket data received:', data);
 
-      if (data.content === 'dev_team_result' 
-          && data.output.rubber_ducker_thoughts != undefined
-          && data.output.tech_lead_review != undefined) {
+      if (data.content === 'dev_team_result') {
         if (responseCallback) {
           responseCallback(data.output);
           responseCallback = null; // Clear callback after use
@@ -55,8 +53,8 @@ async function sendWebhookMessage({query, relevantFileNames, repoName, branchNam
       report_source: 'web',
       tone: 'Objective',
       headers: {},
-      repo_name: repoName ? repoName : 'assafelovic/gpt-researcher',
-      branch_name: branchName ? branchName : 'master'
+      repo_name: typeof repoName === 'undefined' || repoName === '' ? 'assafelovic/gpt-researcher' : repoName,
+      branch_name: typeof branchName === 'undefined' || branchName === '' ? 'master' : branchName
     };
 
     const payload = "start " + JSON.stringify(data);

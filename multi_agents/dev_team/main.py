@@ -18,26 +18,33 @@ async def trigger_dev_team_flow(repo_name, query, branch_name, websocket=None, s
     if websocket and stream_output:
         await stream_output("logs", "dev_team_progress", "Starting dev team flow...", websocket)
 
-    result = await run_dev_team_flow(repo_name=repo_name, 
-                                     query=query,
-                                     branch_name=branch_name,
-                                     websocket=websocket,
-                                     stream_output=stream_output)
-    
-    print("result in trigger dev team flow", result)
+    try:
+        result = await run_dev_team_flow(repo_name=repo_name, 
+                                        query=query,
+                                        branch_name=branch_name,
+                                        websocket=websocket,
+                                        stream_output=stream_output)
+        
+        print("result in trigger dev team flow", result)
 
-    # Remove the FAISS object from the result dictionary
-    if isinstance(result, dict):
-        result = {k: v for k, v in result.items() if k != 'vector_store'}
-    
-    if websocket and stream_output:
-        try:
-            await stream_output("logs", "dev_team_result", result, websocket)
-        except Exception as e:
-            print(f"Error sending result over WebSocket: {e}")
-            # You might want to send an error message to the client here
-    
-    return result
+        # Remove the FAISS object from the result dictionary
+        if isinstance(result, dict):
+            result = {k: v for k, v in result.items() if k != 'vector_store'}
+        
+        if websocket and stream_output:
+            try:
+                await stream_output("logs", "dev_team_result", result, websocket)
+            except Exception as e:
+                print(f"Error sending result over WebSocket: {e}")
+                # You might want to send an error message to the client here
+        
+        return result
+    except Exception as e:
+        if websocket and stream_output:
+            try:
+                await stream_output("logs", "dev_team_result", result, websocket)
+            except Exception as e:
+                print(f"Error sending result over WebSocket: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())

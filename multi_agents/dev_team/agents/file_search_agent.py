@@ -2,7 +2,7 @@ from .utils.llms import call_model
 import os
 sample_json = """
 {
-  "relevant_file_names": ["README.md", "docs/docs/gpt-researcher/frontend.md", "backend/server.py", "backend/websocket_manager.py", "backend/utils.py", "dev_team/agents/utils/llms.py"],
+  "relevant_file_names": ["README.md", "docs/docs/gpt-researcher/frontend.md", "backend/server.py", "backend/websocket_manager.py", "backend/utils.py"],
 }
 """
 class FileSearchAgent:
@@ -13,6 +13,8 @@ class FileSearchAgent:
             {"role": "user", "content": f"""
         
                 Here is the repo's directory structure: {state.get("github_data")}
+
+                If the user asks for a file which is not in the directory structure, you should not return it in the response.
 
                 You MUST return nothing but a JSON in the following format (without json markdown): {sample_json}
             """

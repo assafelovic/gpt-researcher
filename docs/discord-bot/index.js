@@ -97,9 +97,14 @@ client.on(Events.InteractionCreate, async interaction => {
         autoArchiveDuration: 60,
         reason: 'Discussion thread for the query',
       });
-      await runDevTeam({ interaction, query, relevantFileNames, repoName, branchName, thread });
+      
+      await interaction.deferUpdate()
+        .then(runDevTeam({ interaction, query, relevantFileNames, repoName, branchName, thread }))
+        .catch(console.error);
     } else {
-      await runDevTeam({ interaction, query, relevantFileNames, repoName, branchName });
+      await interaction.deferUpdate()
+        .then(runDevTeam({ interaction, query, relevantFileNames, repoName, branchName }))
+        .catch(console.error);
     }
   }
 });
@@ -124,7 +129,19 @@ async function runDevTeam({ interaction, query, relevantFileNames, repoName, bra
     // Check if the response is valid
     if (gptrResponse && gptrResponse.rubber_ducker_thoughts) {
       // Combine and split the messages into chunks
-      const rubberDuckerChunks = splitMessage(JSON.parse(jsonrepair(gptrResponse.rubber_ducker_thoughts)).thoughts);
+      let rubberDuckerChunks = '';
+
+      try {
+        console.log('Original rubber_ducker_thoughts:', gptrResponse.rubber_ducker_thoughts);
+
+        // Attempt to repair and parse the JSON
+        const repairedJson = jsonrepair(gptrResponse.rubber_ducker_thoughts);
+        rubberDuckerChunks = splitMessage(JSON.parse(repairedJson).thoughts);
+      } catch (error) {
+        console.error('Error splitting messages:', error);
+        // Fallback in case of error
+        rubberDuckerChunks = splitMessage(typeof gptrResponse === 'object' ? JSON.stringify(gptrResponse) : gptrResponse);
+      }
 
       // Send each chunk of Rubber Ducker Thoughts
       for (const chunk of rubberDuckerChunks) {
@@ -133,6 +150,10 @@ async function runDevTeam({ interaction, query, relevantFileNames, repoName, bra
         } else {
           await thread.send(chunk);
         }
+      }
+
+      if(!thread){
+        await interaction.update();
       }
 
       return true;
