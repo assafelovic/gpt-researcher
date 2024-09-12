@@ -1,14 +1,16 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, ActionRowBuilder, Events, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
-const keepAlive = require("./server");
+const { Client, GatewayIntentBits, ActionRowBuilder, Events, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType } = require('discord.js');
+const keepAlive = require('./server');
 const { sendWebhookMessage } = require('./gptr-webhook');
+const e = require('express');
 
 // Define the intents your bot needs
 const client = new Client({
   intents: [
-      GatewayIntentBits.Guilds,
-      GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.MessageContent
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.DirectMessages
   ],
 });
 
@@ -20,80 +22,93 @@ function splitMessage(message, chunkSize = 1500) {
   return chunks;
 }
 
-client.on("ready", () => {
+client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
+client.on('messageCreate', async message => {
+  if (message.author.bot) return;
+  await message.reply('please use the /ask command to launch a report');
+});
+
 client.on(Events.InteractionCreate, async interaction => {
-	if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand()) return;
 
-  if(interaction.commandName === 'ping') {
-    await interaction.reply('Pong!');
-  }
+  if (interaction.commandName === 'ask') {
+    // Create the modal
+    const modal = new ModalBuilder()
+      .setCustomId('myModal')
+      .setTitle('Ask the AI Dev Team');
 
-	if (interaction.commandName === 'ask') {
-		// Create the modal
-		const modal = new ModalBuilder()
-			.setCustomId('myModal')
-			.setTitle('Ask the AI Dev Team');
+    // Add components to modal
+    const queryInput = new TextInputBuilder()
+      .setCustomId('queryInput')
+      .setLabel('Your question')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('What are you exploring / trying to code today?');
 
-		// Add components to modal
-		const queryInput = new TextInputBuilder()
-			.setCustomId('queryInput')
-			.setLabel("Your question")
-			.setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder("What are you exploring / trying to code today?");
-
-		const relevantFileNamesInput = new TextInputBuilder()
-			.setCustomId('relevantFileNamesInput')
-			.setLabel("Relevant file names (optional)")
-			.setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder("Whatever guidance you can provide will be helpful")
+    const relevantFileNamesInput = new TextInputBuilder()
+      .setCustomId('relevantFileNamesInput')
+      .setLabel('Relevant file names (optional)')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('Whatever guidance you can provide will be helpful')
       .setRequired(false);
 
     const repoNameInput = new TextInputBuilder()
-			.setCustomId('repoNameInput')
-			.setLabel("Repo name (optional)")
+      .setCustomId('repoNameInput')
+      .setLabel('Repo name (optional)')
       .setStyle(TextInputStyle.Short)
-      .setPlaceholder("assafelovic/gpt-researcher")
-      .setRequired(false)
+      .setPlaceholder('assafelovic/gpt-researcher')
+      .setRequired(false);
 
     const branchNameInput = new TextInputBuilder()
-			.setCustomId('branchNameInput')
-			.setLabel("Branch name (optional)")
+      .setCustomId('branchNameInput')
+      .setLabel('Branch name (optional)')
       .setStyle(TextInputStyle.Short)
-      .setPlaceholder("master")
-      .setRequired(false)
+      .setPlaceholder('master')
+      .setRequired(false);
 
-		// so you need one action row per text input.
-		const firstActionRow = new ActionRowBuilder().addComponents(queryInput);
-		const secondActionRow = new ActionRowBuilder().addComponents(relevantFileNamesInput);
-    const thirdActionRow = new ActionRowBuilder().addComponents(repoNameInput)
-    const fourthActionRow = new ActionRowBuilder().addComponents(branchNameInput)
+    // so you need one action row per text input.
+    const firstActionRow = new ActionRowBuilder().addComponents(queryInput);
+    const secondActionRow = new ActionRowBuilder().addComponents(relevantFileNamesInput);
+    const thirdActionRow = new ActionRowBuilder().addComponents(repoNameInput);
+    const fourthActionRow = new ActionRowBuilder().addComponents(branchNameInput);
 
-		// Add inputs to the modal
-		modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow);
+    // Add inputs to the modal
+    modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow);
 
-		// Show the modal to the user
-		await interaction.showModal(modal);
-	}
+    // Show the modal to the user
+    await interaction.showModal(modal);
+  }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
-	if (!interaction.isModalSubmit()) return;
-	if (interaction.customId === 'myModal') {
+  if (!interaction.isModalSubmit()) return;
+  if (interaction.customId === 'myModal') {
     const query = interaction.fields.getTextInputValue('queryInput');
-	  const relevantFileNames = interaction.fields.getTextInputValue('relevantFileNamesInput');
-    
+    const relevantFileNames = interaction.fields.getTextInputValue('relevantFileNamesInput');
     const repoName = interaction.fields.getTextInputValue('repoNameInput');
     const branchName = interaction.fields.getTextInputValue('branchNameInput');
 
-    await runDevTeam({interaction, query, relevantFileNames, repoName, branchName});
-	}
+    if (interaction?.channel?.type === ChannelType.GuildText) {
+      const thread = await interaction.channel.threads.create({
+        name: `Discussion: ${query.slice(0, 20)}...`,
+        autoArchiveDuration: 60,
+        reason: 'Discussion thread for the query',
+      });
+      await runDevTeam({ interaction, query, relevantFileNames, repoName, branchName, thread });
+    } else {
+      await runDevTeam({ interaction, query, relevantFileNames, repoName, branchName });
+    }
+  }
 });
 
-async function runDevTeam({interaction, query, relevantFileNames, repoName, branchName}) {
-  await interaction.reply({ content:`user query: ${query} \n\n Looking through the code to investigate your query... give me a minute or so`});
+async function runDevTeam({ interaction, query, relevantFileNames, repoName, branchName, thread }) {
+  if(!thread){
+    await interaction.reply({ content:`user query: ${query} \n\n Looking through the code to investigate your query... give me a minute or so`});
+  } else {
+    await thread.send(`user query: ${query} \n\n Looking through the code to investigate your query... give me a minute or so`);
+  }
 
   try {
     // Await the response from GPTR via WebSocket
@@ -106,16 +121,28 @@ async function runDevTeam({interaction, query, relevantFileNames, repoName, bran
 
       // Send each chunk of Rubber Ducker Thoughts
       for (const chunk of rubberDuckerChunks) {
-        await interaction.followUp({ content: chunk });
+        if(!thread){
+          await interaction.followUp({ content: chunk });
+        } else {
+          await thread.send(chunk);
+        }
       }
 
       return true;
     } else {
-      return interaction.followUp({ content: "Invalid response received from GPTR." });
+      if(!thread){
+        return await interaction.followUp({ content: 'Invalid response received from GPTR.' });
+      } else {
+        return await thread.send('Invalid response received from GPTR.');
+      }
     }
   } catch (error) {
-    console.error("Error handling message:", error);
-    return interaction.followUp({ content: "There was an error processing your request." });
+    console.error({ content: 'Error handling message:', error });
+    if(!thread){
+        return await interaction.followUp({ content: 'There was an error processing your request.'})
+    } else {
+        return await thread.send('There was an error processing your request.');
+    }
   }
 }
 
