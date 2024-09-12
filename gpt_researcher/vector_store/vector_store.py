@@ -19,7 +19,6 @@ class VectorStoreWrapper:
         Load the documents into vector_store
         Translate to langchain doc type, split to chunks then load
         """
-        print(documents)
         langchain_documents = self._create_langchain_documents(documents)
         splitted_documents = self._split_documents(langchain_documents)
         self.vector_store.add_documents(splitted_documents)
