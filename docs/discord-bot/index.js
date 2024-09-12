@@ -153,10 +153,6 @@ async function runDevTeam({ interaction, query, relevantFileNames, repoName, bra
         }
       }
 
-      if(!thread){
-        await interaction.update();
-      }
-
       return true;
     } else {
       if(!thread){
