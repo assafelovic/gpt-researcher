@@ -7,6 +7,7 @@
     "discord.js": "^14.16.1",
     "dotenv": "^16.4.5",
     "express": "^4.17.1",
+    "jsonrepair": "^3.8.0",
     "nodemon": "^3.1.4",
     "ws": "^8.18.0"
   },

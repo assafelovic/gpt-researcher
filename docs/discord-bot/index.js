@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, ActionRowBuilder, Events, ModalBuilder, TextI
 const keepAlive = require('./server');
 const { sendWebhookMessage } = require('./gptr-webhook');
 const e = require('express');
+const { jsonrepair } = require('jsonrepair')
 
 // Define the intents your bot needs
 const client = new Client({
@@ -51,7 +52,7 @@ client.on(Events.InteractionCreate, async interaction => {
       .setCustomId('relevantFileNamesInput')
       .setLabel('Relevant file names (optional)')
       .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Whatever guidance you can provide will be helpful')
+      .setPlaceholder('Where would you like us to look / how would you like this implemented?')
       .setRequired(false);
 
     const repoNameInput = new TextInputBuilder()
@@ -92,7 +93,7 @@ client.on(Events.InteractionCreate, async interaction => {
 
     if (interaction?.channel?.type === ChannelType.GuildText) {
       const thread = await interaction.channel.threads.create({
-        name: `Discussion: ${query.slice(0, 20)}...`,
+        name: `Discussion: ${query.slice(0, 30)}...`,
         autoArchiveDuration: 60,
         reason: 'Discussion thread for the query',
       });
@@ -123,7 +124,7 @@ async function runDevTeam({ interaction, query, relevantFileNames, repoName, bra
     // Check if the response is valid
     if (gptrResponse && gptrResponse.rubber_ducker_thoughts) {
       // Combine and split the messages into chunks
-      const rubberDuckerChunks = splitMessage(JSON.parse(gptrResponse.rubber_ducker_thoughts).thoughts);
+      const rubberDuckerChunks = splitMessage(JSON.parse(jsonrepair(gptrResponse.rubber_ducker_thoughts)).thoughts);
 
       // Send each chunk of Rubber Ducker Thoughts
       for (const chunk of rubberDuckerChunks) {
