@@ -8,7 +8,7 @@ sample_json = """
 """
 class TechLeadAgent:
     async def review_and_compose(self, state):
-        github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name='elishakay/gpt-researcher', branch_name="devs", vector_store=state.get("vector_store"))
+        github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name=state.get("repo_name"), branch_name=state.get("branch_name"), vector_store=state.get("vector_store"))
 
         file_names_to_search = state.get("relevant_file_names")
 

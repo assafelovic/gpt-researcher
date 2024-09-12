@@ -3,9 +3,9 @@ from langgraph.graph import StateGraph, END
 from multi_agents.dev_team.agents import GithubAgent, RepoAnalyzerAgent, WebSearchAgent, FileSearchAgent, RubberDuckerAgent, TechLeadAgent
 
 
-async def run_dev_team_flow(repo_name: str, query: str, branch_name: str, websocket=None, stream_output=None):
+async def run_dev_team_flow(query: str, repo_name: str, branch_name: str, websocket=None, stream_output=None):
     flow = DevTeamFlow(github_token=os.environ.get("GITHUB_TOKEN"), repo_name=repo_name, branch_name=branch_name)
-    response = await flow.run_flow(query)
+    response = await flow.run_flow(query, repo_name, branch_name)
     return response
 
 from typing import TypedDict, Annotated
@@ -13,6 +13,8 @@ from langgraph.graph import StateGraph, END
 
 class AgentState(TypedDict):
     query: str
+    repo_name: str
+    branch_name: str
     github_data: dict
     repo_analysis: str
     web_search_results: list
@@ -53,7 +55,7 @@ class DevTeamFlow:
 
         return workflow
 
-    async def run_flow(self, query):
+    async def run_flow(self, query, repo_name, branch_name):
         # vector_store = self.github_agent.get_vector_store()
         # self.repo_analyzer_agent = RepoAnalyzerAgent(vector_store)
 
@@ -62,6 +64,8 @@ class DevTeamFlow:
 
         initial_state = AgentState(
             query=query,
+            repo_name=repo_name,
+            branch_name=branch_name,
             model="gpt-4o",
             github_data={},
             repo_analysis="",

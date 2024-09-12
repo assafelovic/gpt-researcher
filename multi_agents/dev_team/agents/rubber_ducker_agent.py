@@ -45,7 +45,7 @@ Properly escape any necessary characters within strings (e.g., newline character
 """
 class RubberDuckerAgent:
     async def think_aloud(self, state):
-        github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name='elishakay/gpt-researcher', branch_name="devs", vector_store=state.get("vector_store"))
+        github_agent = GithubAgent(github_token=os.environ.get("GITHUB_TOKEN"), repo_name=state.get("repo_name"), branch_name=state.get("branch_name"), vector_store=state.get("vector_store"))
 
         file_names_to_search = state.get("relevant_file_names")
 
