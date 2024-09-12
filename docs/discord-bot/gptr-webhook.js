@@ -43,14 +43,14 @@ async function initializeWebSocket() {
   }
 }
 
-async function sendWebhookMessage(message) {
+async function sendWebhookMessage({query, relevantFileNames, repoName, branchName}) {
   return new Promise((resolve, reject) => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       initializeWebSocket();
     }
 
     const data = {
-      task: message,
+      task: `${query}. The relevant files names are: ${relevantFileNames}`,
       report_type: 'dev_team',
       report_source: 'web',
       tone: 'Objective',

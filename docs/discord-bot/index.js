@@ -105,14 +105,14 @@ client.on(Events.InteractionCreate, async interaction => {
 
 async function runDevTeam({ interaction, query, relevantFileNames, repoName, branchName, thread }) {
   if(!thread){
-    await interaction.reply({ content:`user query: ${query} \n\n Looking through the code to investigate your query... give me a minute or so`});
+    await interaction.reply({ content:`user query: ${query}. ${relevantFileNames ? '\n\n the relevant file names are: ' + relevantFileNames : ''} \n\n Looking through the code to investigate your query... give me a minute or so`});
   } else {
     await thread.send(`user query: ${query} \n\n Looking through the code to investigate your query... give me a minute or so`);
   }
 
   try {
     // Await the response from GPTR via WebSocket
-    let gptrResponse = await sendWebhookMessage(query);
+    let gptrResponse = await sendWebhookMessage({query, relevantFileNames, repoName, branchName});
 
     // Check if the response is valid
     if (gptrResponse && gptrResponse.rubber_ducker_thoughts) {
