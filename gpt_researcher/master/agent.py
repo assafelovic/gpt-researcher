@@ -10,7 +10,7 @@ from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
 from gpt_researcher.master.actions import *
 from gpt_researcher.memory import Memory
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
-
+from gpt_researcher.vector_store import VectorStoreWrapper
 
 class GPTResearcher:
     """
@@ -68,7 +68,7 @@ class GPTResearcher:
         self.context = context
         self.source_urls = source_urls
         self.documents = documents
-        self.vector_store = vector_store
+        self.vector_store = VectorStoreWrapper(vector_store) if vector_store else None
         self.vector_store_filter = vector_store_filter
         self.memory = Memory(self.cfg.embedding_provider, self.headers)
         self.visited_urls: set[str] = visited_urls
@@ -130,11 +130,15 @@ class GPTResearcher:
 
         elif self.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
+            if self.vector_store:
+                self.vector_store.load(document_data)
             self.context = await self.__get_context_by_search(self.query, document_data)
 
         # Hybrid search including both local documents and web sources
         elif self.report_source == ReportSource.Hybrid.value:
             document_data = await DocumentLoader(self.cfg.doc_path).load()
+            if self.vector_store:
+                self.vector_store.load(document_data)
             docs_context = await self.__get_context_by_search(self.query, document_data)
             web_context = await self.__get_context_by_search(self.query)
             self.context = f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"
@@ -143,6 +147,8 @@ class GPTResearcher:
             langchain_documents_data = await LangChainDocumentLoader(
                 self.documents
             ).load()
+            if self.vector_store:
+                self.vector_store.load(langchain_documents_data)
             self.context = await self.__get_context_by_search(
                 self.query, langchain_documents_data
             )
@@ -230,6 +236,9 @@ class GPTResearcher:
             )
 
         scraped_sites = scrape_urls(new_search_urls, self.cfg)
+        if self.vector_store:
+            self.vector_store.load(scraped_sites)
+
         return await self.__get_similar_content_by_query(self.query, scraped_sites)
 
     async def __get_context_by_vectorstore(self, query, filter: Optional[dict] = None):
@@ -430,6 +439,9 @@ class GPTResearcher:
         scraped_content_results = await asyncio.to_thread(
             scrape_urls, new_search_urls, self.cfg
         )
+
+        if self.vector_store:
+            self.vector_store.load(scraped_content_results)
 
         return scraped_content_results
 
