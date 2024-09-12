@@ -2,5 +2,6 @@ FROM node:18.17.0-alpine
 WORKDIR /app
 COPY ./package.json ./
 RUN npm install --legacy-peer-deps
+RUN npm install -g nodemon
 COPY . .
-CMD ["npm", "run", "dev"]
+CMD ["nodemon", "--legacy-watch", "index.js"]

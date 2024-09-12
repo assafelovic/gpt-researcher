@@ -81,6 +81,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 tone = json_data.get("tone")
                 headers = json_data.get("headers", {})
                 repo_name = json_data.get("repo_name")
+                print("repo_name in server.py", repo_name, flush=True)
+                branch_name = json_data.get("branch_name")
                 filename = f"task_{int(time.time())}_{task}"
                 sanitized_filename = sanitize_filename(
                     filename
@@ -88,7 +90,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 report_source = json_data.get("report_source")
                 if task and report_type:
                     report = await manager.start_streaming(
-                        task, report_type, report_source, source_urls, tone, websocket, headers, repo_name
+                        task, report_type, report_source, source_urls, tone, websocket, headers, repo_name, branch_name 
                     )
                     # Ensure report is a string
                     if not isinstance(report, str):

@@ -55,7 +55,8 @@ async function sendWebhookMessage({query, relevantFileNames, repoName, branchNam
       report_source: 'web',
       tone: 'Objective',
       headers: {},
-      repo_name: 'elishakay/gpt-researcher'
+      repo_name: repoName ? repoName : 'assafelovic/gpt-researcher',
+      branch_name: branchName ? branchName : 'master'
     };
 
     const payload = "start " + JSON.stringify(data);

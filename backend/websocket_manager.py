@@ -54,14 +54,14 @@ class WebSocketManager:
             del self.message_queues[websocket]
 
 
-    async def start_streaming(self, task, report_type, report_source, source_urls, tone, websocket, repo_name, headers=None):
+    async def start_streaming(self, task, report_type, report_source, source_urls, tone, websocket, headers, repo_name, branch_name,):
         """Start streaming the output."""
         tone = Tone[tone]
-        report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers, repo_name)
+        report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers, repo_name, branch_name)
         return report
 
 
-async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, repo_name, headers=None):
+async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers, repo_name, branch_name):
     """Run the agent."""
 
     print(
@@ -93,8 +93,8 @@ async def run_agent(task, report_type, report_source, source_urls, tone: Tone, w
         # Trigger the dev_team process
         report = await trigger_dev_team_flow(
             repo_name=repo_name,
+            branch_name=branch_name,
             query=task,
-            branch_name="devs",
             websocket=websocket,
             stream_output=stream_output
         )
