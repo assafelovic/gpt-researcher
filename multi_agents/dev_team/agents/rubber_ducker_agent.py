@@ -33,7 +33,10 @@ class RubberDuckerAgent:
             Think out loud about the game plan for answering the user's question. 
             Explain your reasoning step by step.
 
-            If it sounds like the user is asking for a feature, or a bug fix, please provide the relevant file names to edit with the relevant code to edit or add within those files.
+            If it sounds like the user is asking for a feature, 
+            or a bug fix, 
+            please provide the relevant file names to edit with the relevant code to edit or add within those files 
+            - both in plain markdown format - to make it easier to read (not as an object)
 
             You MUST return nothing but a JSON in the following format.
             Respond in the following JSON format: {sample_json}

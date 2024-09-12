@@ -25,7 +25,7 @@ async def trigger_dev_team_flow(repo_name, query, branch_name, websocket=None, s
                                         websocket=websocket,
                                         stream_output=stream_output)
         
-        print("result in trigger dev team flow", result)
+        # print("result in trigger dev team flow", result)
 
         # Remove the FAISS object from the result dictionary
         if isinstance(result, dict):
