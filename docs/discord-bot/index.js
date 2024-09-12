@@ -130,17 +130,18 @@ async function runDevTeam({ interaction, query, relevantFileNames, repoName, bra
     if (gptrResponse && gptrResponse.rubber_ducker_thoughts) {
       // Combine and split the messages into chunks
       let rubberDuckerChunks = '';
+      let theGuidance = gptrResponse.rubber_ducker_thoughts;
 
       try {
-        console.log('Original rubber_ducker_thoughts:', gptrResponse.rubber_ducker_thoughts);
+        console.log('Original rubber_ducker_thoughts:', theGuidance);
 
         // Attempt to repair and parse the JSON
-        const repairedJson = jsonrepair(gptrResponse.rubber_ducker_thoughts);
+        const repairedJson = jsonrepair(theGuidance);
         rubberDuckerChunks = splitMessage(JSON.parse(repairedJson).thoughts);
       } catch (error) {
         console.error('Error splitting messages:', error);
         // Fallback in case of error
-        rubberDuckerChunks = splitMessage(typeof gptrResponse === 'object' ? JSON.stringify(gptrResponse) : gptrResponse);
+        rubberDuckerChunks = splitMessage(typeof theGuidance === 'object' ? JSON.stringify(theGuidance) : theGuidance);
       }
 
       // Send each chunk of Rubber Ducker Thoughts
