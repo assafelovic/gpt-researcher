@@ -61,13 +61,17 @@ class WebSocketManager:
         """Start streaming the output."""
         tone = Tone[tone]
         report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers)
-        config_path = ""
-        self.chat_agent = ChatAgentWithMemory(report, websocket, config_path, headers)
         return report
 
-    async def chat(self, message, websocket):
-        if self.chat_agent is not None:
-            await self.chat_agent.chat(message)
+    async def chat(self, message, report, websocket, headers = None):
+        """Chat with the agent based message diff"""
+        if self.chat_agent and self.chat_agent.get_context() == report:
+            await self.chat_agent.chat(message, websocket)
+        else:
+            #Create a new chat Agent when we have a new report
+            config_path = ""
+            self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
+            await self.chat_agent.chat(message, websocket)
 
 async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers=None):
     """Run the agent."""

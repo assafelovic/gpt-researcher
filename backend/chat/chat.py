@@ -16,27 +16,31 @@ class ChatAgentWithMemory:
     def __init__(
         self,
         report: str,
-        websocket: WebSocket,
         config_path,
-        headers, 
+        headers,
+        vector_store = None
     ):
         self.report = report
-        self.websocket = websocket
         self.headers = headers
         self.config = Config(config_path)
+        self.vector_store = vector_store
         self.graph = self.create_agent()
 
     def create_agent(self):
-        documents = self._process_document(self.report)
-        provider = get_llm(self.config.llm_provider, model=self.config.fast_llm_model, temperature=self.config.temperature, max_tokens=self.config.fast_token_limit, **self.config.llm_kwargs).llm
-        self.chat_config = {"configurable": {"thread_id": str(uuid.uuid4())}}
-        self.embedding = Memory(self.config.embedding_provider, self.headers).get_embeddings()
-        vector_store = InMemoryVectorStore(self.embedding)
-        vector_store.add_texts(documents)
-        graph = create_react_agent(provider, tools=[self.vector_store_tool(vector_store)], checkpointer=MemorySaver())
+        """Create React Agent Graph"""
+        #If not vector store, split and talk to the report
+        if not self.vector_store:
+            documents = self._process_document(self.report)
+            provider = get_llm(self.config.llm_provider, model=self.config.fast_llm_model, temperature=self.config.temperature, max_tokens=self.config.fast_token_limit, **self.config.llm_kwargs).llm
+            self.chat_config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+            self.embedding = Memory(self.config.embedding_provider, self.headers).get_embeddings()
+            self.vector_store = InMemoryVectorStore(self.embedding)
+            self.vector_store.add_texts(documents)
+        graph = create_react_agent(provider, tools=[self.vector_store_tool(self.vector_store)], checkpointer=MemorySaver())
         return graph
     
     def vector_store_tool(self, vector_store) -> Tool:
+        """Create Vector Store Tool"""
         @tool 
         def retrieve_info(query):
             """
@@ -47,6 +51,7 @@ class ChatAgentWithMemory:
         return retrieve_info
         
     def _process_document(self, report):
+        """Split Report into Chunks"""
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1024,
             chunk_overlap=20,
@@ -56,9 +61,14 @@ class ChatAgentWithMemory:
         documents = text_splitter.split_text(report)
         return documents
 
-    async def chat(self, message):
+    async def chat(self, message, websocket):
+        """Chat with React Agent"""
         inputs = {"messages": [("user", message)]}
         response = await self.graph.ainvoke(inputs, config=self.chat_config)
-        ai_message = (response["messages"][-1].content)
-        if self.websocket is not None:
-            await self.websocket.send_json({"type": "chat", "content": ai_message})
+        ai_message = response["messages"][-1].content
+        if websocket is not None:
+            await websocket.send_json({"type": "chat", "content": ai_message})
+
+    def get_context(self):
+        """return the current context of the chat"""
+        return self.report
