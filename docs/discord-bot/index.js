@@ -104,10 +104,12 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 async function runDevTeam({ interaction, query, relevantFileNames, repoName, branchName, thread }) {
+  const queryToDisplay = `**user query**: ${query}. ${relevantFileNames ? '\n\n**relevant file names**: ' + relevantFileNames : ''} \n\nLooking through the code to investigate your query... give me a minute or so`
+
   if(!thread){
-    await interaction.reply({ content:`user query: ${query}. ${relevantFileNames ? '\n\n the relevant file names are: ' + relevantFileNames : ''} \n\n Looking through the code to investigate your query... give me a minute or so`});
+    await interaction.reply({ content: queryToDisplay});
   } else {
-    await thread.send(`user query: ${query} \n\n Looking through the code to investigate your query... give me a minute or so`);
+    await thread.send(queryToDisplay);
   }
 
   try {
