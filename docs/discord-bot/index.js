@@ -93,7 +93,7 @@ client.on(Events.InteractionCreate, async interaction => {
 });
 
 async function runDevTeam({interaction, query, relevantFileNames, repoName, branchName}) {
-  await interaction.reply({ content: "Looking through the code to investigate your query... give me a minute or so" });
+  await interaction.reply({ content:`user query: ${query} \n\n Looking through the code to investigate your query... give me a minute or so`});
 
   try {
     // Await the response from GPTR via WebSocket

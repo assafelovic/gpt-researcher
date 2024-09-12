@@ -53,5 +53,5 @@ services:
       - ./docs/discord-bot:/app
     ports:
       - 3001:3000
-    profiles: ["discord"]
+    # profiles: ["discord"]
     restart: always

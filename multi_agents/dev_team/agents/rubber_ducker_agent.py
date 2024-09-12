@@ -51,7 +51,7 @@ class RubberDuckerAgent:
 
         # Fetch the matching documents
         matching_docs = await github_agent.search_by_file_name(file_names_to_search)
-        print("matching_docs: ", matching_docs,flush=True)
+        # print("matching_docs: ", matching_docs,flush=True)
 
         prompt = [
             {"role": "system", "content": "You are a rubber duck debugging assistant."},
