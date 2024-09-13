@@ -1,6 +1,6 @@
 # Frontend Application
 
-This frontend project aims to enhance the user experience of GPT-Researcher, providing an intuitive and efficient interface for automated research. It offers two deployment options to suit different needs and environments.
+This frontend project aims to enhance the user experience of GPT Researcher, providing an intuitive and efficient interface for automated research. It offers two deployment options to suit different needs and environments.
 
 View a Product Tutorial here: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
 
@@ -34,8 +34,8 @@ docker compose up --build
 ```
 
 > **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
- - the Python server running on localhost:8000<br>
- - the React app running on localhost:3000<br>
+ - the Python server running on localhost:8000
+ - the React app running on localhost:3000
 
 Visit localhost:3000 on any browser and enjoy researching!
 

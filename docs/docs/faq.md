@@ -1,4 +1,4 @@
-# Frequently Asked Questions
+# FAQ
 
 ### How do I get started?
 It really depends on what you're aiming for. 
