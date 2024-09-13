@@ -111,13 +111,19 @@ class GenericLLMProvider:
                 response += content
                 paragraph += content
                 if "\n" in paragraph:
-                    if websocket is not None:
-                        await websocket.send_json({"type": "report", "output": paragraph})
-                    else:
-                        print(f"{Fore.GREEN}{paragraph}{Style.RESET_ALL}")
+                    await self._send_output(paragraph, websocket)
                     paragraph = ""
 
+        if paragraph:
+            await self._send_output(paragraph, websocket)
+
         return response
+
+    async def _send_output(self, content, websocket=None):
+        if websocket is not None:
+            await websocket.send_json({"type": "report", "output": content})
+        else:
+            print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
 
 
 
