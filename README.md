@@ -106,7 +106,7 @@ export TAVILY_API_KEY={Your Tavily API Key here}
 
 For a more permanent setup, create a `.env` file in the current `gpt-researcher` directory and input the env vars (without `export`).
 
-- The default LLM is [GPT](https://platform.openai.com/docs/guides/gpt), but you can use other LLMs such as `claude`, `ollama3`, `gemini`, `mistral` and more. To learn how to change the LLM provider, see the [LLMs documentation](https://docs.gptr.dev/docs/gpt-researcher/llms) page. Please note: this project is optimized for OpenAI GPT models.
+- The default LLM is [GPT](https://platform.openai.com/docs/guides/gpt), but you can use other LLMs such as `claude`, `ollama3`, `gemini`, `mistral` and more. To learn how to change the LLM provider, see the [LLMs documentation](https://docs.gptr.dev/docs/gpt-researcher/llms/llms) page. Please note: this project is optimized for OpenAI GPT models.
 - The default retriever is [Tavily](https://app.tavily.com), but you can refer to other retrievers such as `duckduckgo`, `google`, `bing`, `serper`, `searx`, `arxiv`, `exa` and more. To learn how to change the search provider, see the [retrievers documentation](https://docs.gptr.dev/docs/gpt-researcher/search-engines/retrievers) page.
 
 ### Quickstart
@@ -127,7 +127,7 @@ python -m uvicorn main:app --reload
 
 <br />
 
-**To learn how to get started with [Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#poetry) or a [virtual environment](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#virtual-environment) check out the [documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) page.**
+**To learn how to get started with [Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#poetry) or a [virtual environment](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#virtual-environment) check out the [documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started) page.**
 
 ### Run as PIP package
 ```bash
@@ -213,7 +213,7 @@ Two deployment options are available:
 1. A lightweight static frontend served by FastAPI
 2. A feature-rich NextJS application for advanced functionality
 
-For detailed setup instructions and more information about the frontend features, please visit our [documentation page](https://docs.gptr.dev/docs/gpt-researcher/frontend).
+For detailed setup instructions and more information about the frontend features, please visit our [documentation page](https://docs.gptr.dev/docs/gpt-researcher/frontend/frontend).
 
 ## 🚀 Contributing
 We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md) if you're interested.
