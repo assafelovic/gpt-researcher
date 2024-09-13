@@ -13,7 +13,7 @@ Choose a model from [Ollama's Library of LLM's](https://ollama.com/library?sort=
 
 Paste the model name & size into the Web UI:
 
-<img width="1511" alt="Screen Shot 2024-08-27 at 23 26 28" src="https://github.com/user-attachments/assets/32abd048-745c-4232-9f1f-6af265cff250">
+<img width="1511" alt="Screen Shot 2024-08-27 at 23 26 28" src="https://github.com/user-attachments/assets/32abd048-745c-4232-9f1f-6af265cff250"></img>
 
 For our example, let's choose to download the `qwen2:1.5b` model.
 
@@ -112,9 +112,7 @@ Go to your service -> Security -> at last Nginx -> in that find the below code:
 
 ```bash
 auth_basic           "Authentication"; 
-
 auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
 ```
 
 Comment these both these lines out and click the button "Update & Restart" to reflect the changes.
-

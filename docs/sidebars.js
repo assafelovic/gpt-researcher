@@ -28,7 +28,7 @@
       type: 'category',
       label: 'GPT Researcher',
       collapsible: true,
-      collapsed: false,
+      collapsed: true,
       items: [
         'gpt-researcher/gptr/pip-package',
         'gpt-researcher/gptr/example',
@@ -42,7 +42,7 @@
       type: 'category',
       label: 'Frontend',
       collapsible: true,
-      collapsed: false,
+      collapsed: true,
       items: [
         'gpt-researcher/frontend/frontend',
         'gpt-researcher/frontend/playing-with-webhooks',
@@ -52,7 +52,7 @@
       type: 'category',
       label: 'Custom Context',
       collapsible: true,
-      collapsed: false,
+      collapsed: true,
       items: [
         'gpt-researcher/context/tailored-research',
         'gpt-researcher/context/local-docs',
@@ -62,9 +62,9 @@
     },
     {
       type: 'category',
-      label: 'Large Language Models',
+      label: 'LLM Providers',
       collapsible: true,
-      collapsed: false,
+      collapsed: true,
       items: [
         'gpt-researcher/llms/llms',
         'gpt-researcher/llms/running-with-ollama'
