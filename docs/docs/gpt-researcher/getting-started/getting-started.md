@@ -1,4 +1,5 @@
 # Getting Started
+
 > **Step 0** - Install Python 3.11 or later. [See here](https://www.tutorialsteacher.com/python/install-python) for a step-by-step guide.
 
 > **Step 1** - Download the project and navigate to its directory
@@ -101,22 +102,3 @@ python -m uvicorn main:app --reload
 <br />
 
 
-## Try it with Docker
-
-> **Step 1** - Install Docker
-
-Follow instructions at https://docs.docker.com/engine/install/
-
-> **Step 2** - Create .env file with your OpenAI Key or simply export it
-
-```bash
-$ export OPENAI_API_KEY={Your API Key here}
-```
-
-> **Step 3** - Run the application
-
-```bash
-$ docker-compose up
-```
-
-> **Step 4** - Go to http://localhost:8000 on any browser and enjoy researching!
