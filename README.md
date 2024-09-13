@@ -77,7 +77,7 @@ More specifically:
 
 ## 📖 Documentation
 
-Please see [here](https://docs.gptr.dev/docs/gpt-researcher/getting-started) for full documentation on:
+Please see [here](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started) for full documentation on:
 
 - Getting started (installation, setting up the environment, simple examples)
 - Customization and configuration

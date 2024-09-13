@@ -78,7 +78,7 @@ https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 
 ## 📖 문서
 
-전체 문서(설치, 환경 설정, 간단한 예시)를 보려면 [여기](https://docs.gptr.dev/docs/gpt-researcher/getting-started)를 참조하세요.
+전체 문서(설치, 환경 설정, 간단한 예시)를 보려면 [여기](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)를 참조하세요.
 
 - 시작하기 (설치, 환경 설정, 간단한 예시)
 - 맞춤 설정 및 구성
@@ -107,7 +107,7 @@ export TAVILY_API_KEY={Tavily API 키 입력}
 
 더 영구적인 설정을 원한다면, 현재의 `gpt-researcher` 디렉토리에 `.env` 파일을 생성하고 환경 변수를 입력하세요 (export 없이).
 
-- 기본 LLM은 [GPT](https://platform.openai.com/docs/guides/gpt)이지만, `claude`, `ollama3`, `gemini`, `mistral` 등 다른 LLM도 사용할 수 있습니다. LLM 제공자를 변경하는 방법은 [LLMs 문서](https://docs.gptr.dev/docs/gpt-researcher/llms)를 참조하세요. 이 프로젝트는 OpenAI GPT 모델에 최적화되어 있습니다.
+- 기본 LLM은 [GPT](https://platform.openai.com/docs/guides/gpt)이지만, `claude`, `ollama3`, `gemini`, `mistral` 등 다른 LLM도 사용할 수 있습니다. LLM 제공자를 변경하는 방법은 [LLMs 문서](https://docs.gptr.dev/docs/gpt-researcher/llms/llms)를 참조하세요. 이 프로젝트는 OpenAI GPT 모델에 최적화되어 있습니다.
 - 기본 검색기는 [Tavily](https://app.tavily.com)이지만, `duckduckgo`, `google`, `bing`, `serper`, `searx`, `arxiv`, `exa` 등의 검색기를 사용할 수 있습니다. 검색 제공자를 변경하는 방법은 [검색기 문서](https://docs.gptr.dev/docs/gpt-researcher/retrievers)를 참조하세요.
 
 ### 빠른 시작
@@ -128,7 +128,7 @@ python -m uvicorn main:app --reload
 
 <br />
 
-**[Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#poetry) 또는 [가상 환경](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#virtual-environment)에 대해 배우고 싶다면, [문서](https://docs.gptr.dev/docs/gpt-researcher/getting-started)를 참조하세요.**
+**[Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#poetry) 또는 [가상 환경](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#virtual-environment)에 대해 배우고 싶다면, [문서](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)를 참조하세요.**
 
 ### PIP 패키지로 실행하기
 ```bash
@@ -190,7 +190,7 @@ LangGraph를 사용하면 여러 에이전트의 전문 기술을 활용하여 �
 
 평균 실행은 5-6 페이지 분량의 연구 보고서를 PDF, Docx, Markdown 형식으로 생성합니다.
 
-[여기](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents)에서 확인하거나 [문서](https://docs.gptr.dev/docs/gpt-researcher/multi_agents)에서 자세한 내용을 참조하세요.
+[여기](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents)에서 확인하거나 [문서](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph)에서 자세한 내용을 참조하세요.
 
 ## 🖥️ 프론트엔드 애플리케이션
 
@@ -205,7 +205,7 @@ GPT-Researcher는 사용자 경험을 개선하고 연구 프로세스를 간소
 1. FastAPI로 제공되는 경량 정적 프론트엔드
 2. 고급 기능을 제공하는 NextJS 애플리케이션
 
-프론트엔드 기능에 대한 자세한 설치 방법 및 정보를 원하시면 [문서 페이지](https://docs.gptr.dev/docs/gpt-researcher/frontend)를 참조하세요.
+프론트엔드 기능에 대한 자세한 설치 방법 및 정보를 원하시면 [문서 페이지](https://docs.gptr.dev/docs/gpt-researcher/frontend/frontend)를 참조하세요.
 
 ## 🚀 기여하기
 우리는 기여를 적극 환영합니다! 관심이 있다면 [기여 가이드](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md)를 확인해 주세요.
