@@ -128,7 +128,7 @@ python -m uvicorn main:app --reload
 
 <br />
 
-**[Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started#poetry) 또는 [가상 환경](https://docs.gptr.dev/docs/gpt-researcher/getting-started#virtual-environment)에 대해 배우고 싶다면, [문서](https://docs.gptr.dev/docs/gpt-researcher/getting-started)를 참조하세요.**
+**[Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#poetry) 또는 [가상 환경](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#virtual-environment)에 대해 배우고 싶다면, [문서](https://docs.gptr.dev/docs/gpt-researcher/getting-started)를 참조하세요.**
 
 ### PIP 패키지로 실행하기
 ```bash
@@ -148,11 +148,11 @@ report = await researcher.write_report()
 ...
 ```
 
-**더 많은 예제와 구성 옵션은 [PIP 문서](https://docs.gptr.dev/docs/gpt-researcher/pip-package)를 참조하세요.**
+**더 많은 예제와 구성 옵션은 [PIP 문서](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package)를 참조하세요.**
 
 ## Docker로 실행
 
-> **1단계** - [Docker 설치](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker)
+> **1단계** - [Docker 설치](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
 
 > **2단계** - `.env.example` 파일을 복사하고 API 키를 추가한 후, 파일을 `.env`로 저장하세요.
 
@@ -180,7 +180,7 @@ export DOC_PATH="./my-docs"
 
 2단계:
  - 프론트엔드 앱을 localhost:8000에서 실행 중이라면, "Report Source" 드롭다운 옵션에서 "My Documents"를 선택하세요.
- - GPT Researcher를 [PIP 패키지](https://docs.tavily.com/docs/gpt-researcher/pip-package)로 실행 중이라면, `report_source` 인수를 "documents"로 설정하여 `GPTResearcher` 클래스를 인스턴스화하세요. [코드 예제](https://docs.tavily.com/docs/gpt-researcher/tailored-research)를 참조하세요.
+ - GPT Researcher를 [PIP 패키지](https://docs.tavily.com/docs/gpt-researcher/pip-package)로 실행 중이라면, `report_source` 인수를 "local"로 설정하여 `GPTResearcher` 클래스를 인스턴스화하세요. [코드 예제](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research)를 참조하세요.
 
 ## 👪 다중 에이전트 어시스턴트
 
@@ -190,7 +190,7 @@ LangGraph를 사용하면 여러 에이전트의 전문 기술을 활용하여 �
 
 평균 실행은 5-6 페이지 분량의 연구 보고서를 PDF, Docx, Markdown 형식으로 생성합니다.
 
-[여기](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents)에서 확인하거나 [문서](https://docs.gptr.dev/docs/gpt-researcher/langgraph)에서 자세한 내용을 참조하세요.
+[여기](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents)에서 확인하거나 [문서](https://docs.gptr.dev/docs/gpt-researcher/multi_agents)에서 자세한 내용을 참조하세요.
 
 ## 🖥️ 프론트엔드 애플리케이션
 

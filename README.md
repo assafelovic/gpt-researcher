@@ -17,7 +17,7 @@
 <!--[![License](https://img.shields.io/github/license/assafelovic/gpt-researcher?color=FF5A5F)](https://github.com/assafelovic/gpt-researcher/blob/main/LICENSE)-->
 [![PyPI version](https://img.shields.io/pypi/v/gpt-researcher?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/gpt-researcher)
 ![GitHub Release](https://img.shields.io/github/v/release/assafelovic/gpt-researcher?style=flat&logo=github)
-[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/examples/pip-run.ipynb)
+[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/docs/docs/examples/pip-run.ipynb)
 [![Docker Image Version](https://img.shields.io/docker/v/elestio/gpt-researcher/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/gpt-researcher)
 [![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
 <!--[![Twitter](https://img.shields.io/badge/Twitter-000000?style=flat-square&logo=x&logoColor=white)](https://twitter.com/assaf_elovic)-->
@@ -108,7 +108,7 @@ export TAVILY_API_KEY={Your Tavily API Key here}
 For a more permanent setup, create a `.env` file in the current `gpt-researcher` directory and input the env vars (without `export`).
 
 - The default LLM is [GPT](https://platform.openai.com/docs/guides/gpt), but you can use other LLMs such as `claude`, `ollama3`, `gemini`, `mistral` and more. To learn how to change the LLM provider, see the [LLMs documentation](https://docs.gptr.dev/docs/gpt-researcher/llms) page. Please note: this project is optimized for OpenAI GPT models.
-- The default retriever is [Tavily](https://app.tavily.com), but you can refer to other retrievers such as `duckduckgo`, `google`, `bing`, `serper`, `searx`, `arxiv`, `exa` and more. To learn how to change the search provider, see the [retrievers documentation](https://docs.gptr.dev/docs/gpt-researcher/retrievers) page.
+- The default retriever is [Tavily](https://app.tavily.com), but you can refer to other retrievers such as `duckduckgo`, `google`, `bing`, `serper`, `searx`, `arxiv`, `exa` and more. To learn how to change the search provider, see the [retrievers documentation](https://docs.gptr.dev/docs/gpt-researcher/search-engines/retrievers) page.
 
 ### Quickstart
 
@@ -128,7 +128,7 @@ python -m uvicorn main:app --reload
 
 <br />
 
-**To learn how to get started with [Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started#poetry) or a [virtual environment](https://docs.gptr.dev/docs/gpt-researcher/getting-started#virtual-environment) check out the [documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) page.**
+**To learn how to get started with [Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#poetry) or a [virtual environment](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#virtual-environment) check out the [documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) page.**
 
 ### Run as PIP package
 ```bash
@@ -148,20 +148,26 @@ report = await researcher.write_report()
 ...
 ```
 
-**For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/pip-package) page.**
+**For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package) page.**
 
 
 ## Run with Docker
 
-> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker)
+> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
 
 > **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
 
 > **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
 
 ```bash
-$ docker-compose up --build
+docker-compose up --build
 ```
+
+If that doesn't work, try running it without the dash:
+```bash
+docker compose up --build
+```
+
 
 > **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
  - the Python server running on localhost:8000<br>
@@ -183,7 +189,8 @@ export DOC_PATH="./my-docs"
 
 Step 2: 
  - If you're running the frontend app on localhost:8000, simply select "My Documents" from the the "Report Source" Dropdown Options.
- - If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/docs/gpt-researcher/pip-package), pass the `report_source` argument as "documents" when you instantiate the `GPTResearcher` class [code sample here](https://docs.tavily.com/docs/gpt-researcher/tailored-research).
+ - If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/docs/gpt-researcher/pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
+
 
 ## 👪 Multi-Agent Assistant
 As AI evolves from prompt engineering and RAG to multi-agent systems, we're excited to introduce our new multi-agent assistant built with [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/).
@@ -192,7 +199,7 @@ By using LangGraph, the research process can be significantly improved in depth 
 
 An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 
-Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our [documentation](https://docs.gptr.dev/docs/gpt-researcher/langgraph) for more information.
+Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our [documentation](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) for more information.
 
 ## 🖥️ Frontend Applications
 
