@@ -46,7 +46,7 @@ if __name__ == "__main__":
 ```
 
 ### Customize the configuration (optional)
-This will override the default settings with your custom configuration. You can find all available configuration options in the [GPT Researcher documentation](https://docs.gptr.dev/docs/gpt-researcher/config).
+This will override the default settings with your custom configuration. You can find all available configuration options in the [GPT Researcher documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/config).
 
 
 #### Using a Custom JSON Configuration
