@@ -17,8 +17,8 @@ def get_formatted_logger():
 
     # Create a formatter using Uvicorn's DefaultFormatter
     formatter = DefaultFormatter(
-        "%(levelprefix)s [%(asctime)s] - %(message)s",
-        datefmt="%d-%m-%y-%H:%M:%S"
+        "%(levelprefix)s [%(asctime)s] %(message)s",
+        datefmt="%H:%M:%S"
     )
 
     # Set the formatter for the handler
