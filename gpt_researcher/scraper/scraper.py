@@ -8,6 +8,7 @@ from gpt_researcher.scraper import (
     BeautifulSoupScraper,
     PyMuPDFScraper,
     WebBaseLoaderScraper,
+    BrowserScraper
 )
 
 
@@ -75,6 +76,7 @@ class Scraper:
             "arxiv": ArxivScraper,
             "bs": BeautifulSoupScraper,
             "web_base_loader": WebBaseLoaderScraper,
+            "browser": BrowserScraper,
         }
 
         scraper_key = None
