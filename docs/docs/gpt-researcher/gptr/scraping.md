@@ -11,7 +11,7 @@ You can choose your preferred scraping method by setting the `SCRAPER` environme
    export SCRAPER="bs"
    ```
 
-2. For Selenium (dynamic scraping):
+2. For Selenium (dynamic browser scraping):
    ```
    export SCRAPER="browser"
    ```
@@ -37,7 +37,7 @@ Limitations:
 - Cannot handle dynamic content loaded by JavaScript
 - May miss content that requires user interaction to display
 
-### Selenium (Dynamic Scraping)
+### Selenium (Browser Scraping)
 
 When `SCRAPER="browser"`, GPT Researcher uses Selenium for dynamic scraping. This method:
 
@@ -54,6 +54,7 @@ Benefits:
 Limitations:
 - Slower than static scraping
 - Requires more system resources
+- Requires additional setup (Selenium and WebDriver installation)
 
 ## Additional Setup for Selenium
 
