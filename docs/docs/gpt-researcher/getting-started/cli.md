@@ -1,4 +1,4 @@
-# GPT Researcher CLI
+# Run with CLI
 
 This command-line interface (CLI) tool allows you to generate research reports using the GPTResearcher class. It provides an easy way to conduct research on various topics and generate different types of reports.
 
