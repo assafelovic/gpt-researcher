@@ -1,5 +1,5 @@
-from langchain.document_loaders import PyMuPDFLoader
-from langchain.retrievers import ArxivRetriever
+from langchain_community.document_loaders import PyMuPDFLoader
+from langchain_community.retrievers import ArxivRetriever
 
 
 def scrape_pdf_with_pymupdf(url) -> str:
