@@ -44,7 +44,6 @@ def generate_report_prompt(
     total_words=1000,
     tone=None,
 ):
-    print(f"context : {context}")
     """Generates the report prompt for the given question and research summary.
     Args: question (str): The question to generate the report prompt for
             research_summary (str): The research summary to generate the report prompt for
