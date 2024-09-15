@@ -25,10 +25,27 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
+// Cooldown object to store the last message time for each channel
+const cooldowns = {};
+
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
-  await message.reply('please use the /ask command to launch a report');
+  // in order, help forum, general channel, gptr-allstars
+  let channelsAllowed = ['1284846869557547050','1127851779573420053','1284039270646153267']
+  const channelId = message.channel.id;
+
+  if (!channelsAllowed.includes(channelId)) return
+  
+  console.log(`Channel Data: ${message.channel.id}`);
+  const now = Date.now();
+  const cooldownAmount = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+  if (!cooldowns[channelId] || (now - cooldowns[channelId]) > cooldownAmount) {
+    await message.reply('please use the /ask command to launch a report');
+    cooldowns[channelId] = now;
+  }
 });
+
 
 client.on(Events.InteractionCreate, async interaction => {
   if (interaction.isChatInputCommand()) {
