@@ -1,4 +1,4 @@
-from .utils.llms import call_model
+from multi_agents.agents.utils.llms import call_model
 import os
 sample_json = """
 {

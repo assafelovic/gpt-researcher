@@ -1,4 +1,4 @@
-from .utils.llms import call_model
+from multi_agents.agents.utils.llms import call_model
 from multi_agents.dev_team.agents import GithubAgent
 import os
 discord_markdown_guide = """
