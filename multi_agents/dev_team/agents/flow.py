@@ -2,7 +2,6 @@ import os
 from langgraph.graph import StateGraph, END
 from multi_agents.dev_team.agents import GithubAgent, RepoAnalyzerAgent, WebSearchAgent, FileSearchAgent, RubberDuckerAgent, TechLeadAgent
 
-
 async def run_dev_team_flow(query: str, repo_name: str, branch_name: str, websocket=None, stream_output=None):
     flow = DevTeamFlow(github_token=os.environ.get("GITHUB_TOKEN"), repo_name=repo_name, branch_name=branch_name)
     response = await flow.run_flow(query, repo_name, branch_name)
@@ -38,27 +37,23 @@ class DevTeamFlow:
         workflow = StateGraph(AgentState)
 
         workflow.add_node("fetch_github", self.github_agent.fetch_repo_data)
-        # workflow.add_node("analyze_repo", self.repo_analyzer_agent.analyze_repo)
-        # workflow.add_node("web_search", self.web_search_agent.search_web)
+        workflow.add_node("analyze_repo", self.repo_analyzer_agent.analyze_repo)
+         # workflow.add_node("web_search", self.web_search_agent.search_web)
         workflow.add_node("fetch_files", self.file_search_agent.find_relevant_files)
         workflow.add_node("rubber_duck", self.rubber_ducker_agent.think_aloud)
         # workflow.add_node("tech_lead", self.tech_lead_agent.review_and_compose)
 
+        workflow.set_entry_point("fetch_github")
         workflow.add_edge('fetch_github', 'fetch_files')
-        workflow.add_edge('fetch_files', 'rubber_duck')
-        # workflow.add_edge('analyze_repo', 'rubber_duck')
+        workflow.add_edge('fetch_files', 'analyze_repo')
+        workflow.add_edge('analyze_repo', 'rubber_duck')
         # workflow.add_edge('web_search', 'rubber_duck')
         # workflow.add_edge('rubber_duck', 'tech_lead')
-
-        workflow.set_entry_point("fetch_github")
         workflow.add_edge('rubber_duck', END)
 
         return workflow
 
     async def run_flow(self, query, repo_name, branch_name):
-        # vector_store = self.github_agent.get_vector_store()
-        # self.repo_analyzer_agent = RepoAnalyzerAgent(vector_store)
-
         workflow = self.init_flow()
         chain = workflow.compile()
 
@@ -68,6 +63,7 @@ class DevTeamFlow:
             branch_name=branch_name,
             model="gpt-4o",
             github_data={},
+            vector_store={},
             repo_analysis="",
             web_search_results=[],
             relevant_file_names=[],
