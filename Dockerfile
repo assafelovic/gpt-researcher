@@ -1,4 +1,4 @@
-FROM python:3.11.4-slim-bullseye as install-browser
+FROM python:3.11.4-slim-bullseye AS install-browser
 
 RUN apt-get update \
     && apt-get satisfy -y \
@@ -18,7 +18,7 @@ RUN apt-get update \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-FROM install-browser as gpt-researcher-install
+FROM install-browser AS gpt-researcher-install
 
 ENV PIP_ROOT_USER_ACTION=ignore
 
