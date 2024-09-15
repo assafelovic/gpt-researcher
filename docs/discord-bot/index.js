@@ -120,8 +120,9 @@ async function runDevTeam({ interaction, query, relevantFileNames, repoName, bra
       try {
         console.log('Original rubber_ducker_thoughts:', theGuidance);
 
-        const repairedJson = jsonrepair(theGuidance);
-        rubberDuckerChunks = splitMessage(JSON.parse(repairedJson).thoughts);
+        // const repairedJson = jsonrepair(theGuidance);
+        // rubberDuckerChunks = splitMessage(JSON.parse(repairedJson).thoughts);
+        rubberDuckerChunks = splitMessage(theGuidance)
       } catch (error) {
         console.error('Error splitting messages:', error);
         rubberDuckerChunks = splitMessage(typeof theGuidance === 'object' ? JSON.stringify(theGuidance) : theGuidance);
