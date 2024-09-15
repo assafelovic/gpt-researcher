@@ -308,7 +308,7 @@ export default function Home() {
       } else if (data.type === 'langgraphButton') {
         const uniqueKey = `langgraphButton-${index}`;
         return (
-          <div></div>
+          <div key={uniqueKey}></div>
           // <div key={uniqueKey} className="flex justify-center py-4">
           //   <a
           //     href={data.link}
