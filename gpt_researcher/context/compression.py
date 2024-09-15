@@ -15,7 +15,7 @@ from gpt_researcher.memory.embeddings import OPENAI_EMBEDDING_MODEL
 
 
 class VectorstoreCompressor:
-    def __init__(self, vector_store, max_results=5, filter: Optional[dict] = None, **kwargs):
+    def __init__(self, vector_store, max_results=7, filter: Optional[dict] = None, **kwargs):
         self.vector_store = vector_store
         self.max_results = max_results
         self.filter = filter

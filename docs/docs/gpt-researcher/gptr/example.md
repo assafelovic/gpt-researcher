@@ -6,28 +6,25 @@ If you're interested in using GPT Researcher as a standalone agent, you can easi
 from gpt_researcher import GPTResearcher
 import asyncio
 
-# It is best to define global constants at the top of your script
-QUERY = "What happened in the latest burning man floods?"
-REPORT_TYPE = "research_report"
-
-async def fetch_report(query, report_type):
+async def fetch_report(query):
     """
     Fetch a research report based on the provided query and report type.
     """
-    researcher = GPTResearcher(query=query, report_type=report_type, config_path=None)
+    researcher = GPTResearcher(query=query)
     await researcher.conduct_research()
     report = await researcher.write_report()
     return report
 
-async def generate_research_report():
+async def generate_research_report(query):
     """
     This is a sample script that executes an async main function to run a research report.
     """
-    report = await fetch_report(QUERY, REPORT_TYPE)
+    report = await fetch_report(query)
     print(report)
 
 if __name__ == "__main__":
-    asyncio.run(generate_research_report())
+    QUERY = "What happened in the latest burning man floods?"
+    asyncio.run(generate_research_report(query=QUERY))
 ```
 
 You can further enhance this example to use the returned report as context for generating valuable content such as news article, marketing content, email templates, newsletters, etc.

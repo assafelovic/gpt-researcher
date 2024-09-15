@@ -1,8 +1,8 @@
 import asyncio
 import json
+import logging
 import re
 from typing import Dict, List
-
 import json_repair
 import markdown
 
@@ -10,7 +10,9 @@ from gpt_researcher.master.prompts import *
 from gpt_researcher.scraper.scraper import Scraper
 from gpt_researcher.utils.enum import Tone
 from gpt_researcher.utils.llm import *
+from gpt_researcher.utils.logger import get_formatted_logger
 
+logger = get_formatted_logger()
 
 def get_retriever(retriever):
     """
@@ -249,7 +251,7 @@ def scrape_urls(urls, cfg=None):
     user_agent = (
         cfg.user_agent
         if cfg
-        else "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
+        else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     )
     try:
         content = Scraper(urls, user_agent, cfg.scraper).run()
@@ -257,66 +259,6 @@ def scrape_urls(urls, cfg=None):
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
     return content
 
-
-# Deprecated: Instead of summaries using ContextualRetriever embedding.
-# This exists in case we decide to modify in the future
-async def summarize(
-    query,
-    content,
-    agent_role_prompt,
-    cfg,
-    websocket=None,
-    cost_callback: callable = None,
-):
-    """
-    Asynchronously summarizes a list of URLs.
-
-    Args:
-        query (str): The search query.
-        content (list): List of dictionaries with 'url' and 'raw_content'.
-        agent_role_prompt (str): The role prompt for the agent.
-        cfg (object): Configuration object.
-
-    Returns:
-        list: A list of dictionaries with 'url' and 'summary'.
-    """
-
-    # Function to handle each summarization task for a chunk
-    async def handle_task(url, chunk):
-        summary = await summarize_url(
-            query, chunk, agent_role_prompt, cfg, cost_callback
-        )
-        if summary:
-            await stream_output(
-                "logs", "url_summary_coming_up", f"🌐 Summarizing url: {url}", websocket
-            )
-            await stream_output("logs", "url_summary", f"📃 {summary}", websocket)
-        return url, summary
-
-    # Function to split raw content into chunks of 10,000 words
-    def chunk_content(raw_content, chunk_size=10000):
-        words = raw_content.split()
-        for i in range(0, len(words), chunk_size):
-            yield " ".join(words[i : i + chunk_size])
-
-    # Process each item one by one, but process chunks in parallel
-    concatenated_summaries = []
-    for item in content:
-        url = item["url"]
-        raw_content = item["raw_content"]
-
-        # Create tasks for all chunks of the current URL
-        chunk_tasks = [handle_task(url, chunk) for chunk in chunk_content(raw_content)]
-
-        # Run chunk tasks concurrently
-        chunk_summaries = await asyncio.gather(*chunk_tasks)
-
-        # Aggregate and concatenate summaries for the current URL
-        summaries = [summary for _, summary in chunk_summaries if summary]
-        concatenated_summary = " ".join(summaries)
-        concatenated_summaries.append({"url": url, "summary": concatenated_summary})
-
-    return concatenated_summaries
 
 async def write_conclusion(
     report, agent_role_prompt, cfg, cost_callback: callable = None
@@ -472,7 +414,7 @@ async def generate_report(
 
 
 async def stream_output(
-    type, content, output, websocket=None, logging=True, metadata=None
+    type, content, output, websocket=None, output_log=True, metadata=None
 ):
     """
     Streams output to the websocket
@@ -484,12 +426,12 @@ async def stream_output(
     Returns:
         None
     """
-    if not websocket or logging:
+    if not websocket or output_log:
         try:
-            print(output)
+            logger.info(output)
         except UnicodeEncodeError:
             # Option 1: Replace problematic characters with a placeholder
-            print(output.encode('cp1252', errors='replace').decode('cp1252'))
+            logger.error(output.encode('cp1252', errors='replace').decode('cp1252'))
 
     if websocket:
         await websocket.send_json(
