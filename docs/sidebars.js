@@ -30,7 +30,7 @@
       type: 'category',
       label: 'Customization',
       collapsible: true,
-      collapsed: false,
+      collapsed: true,
       items: [
         'gpt-researcher/config',
         'gpt-researcher/tailored-research',
@@ -43,7 +43,7 @@
       type: 'category',
       label: 'Multi-Agent Frameworks',
       collapsible: true,
-      collapsed: false,
+      collapsed: true,
       items: [
         'gpt-researcher/langgraph',
         ]
