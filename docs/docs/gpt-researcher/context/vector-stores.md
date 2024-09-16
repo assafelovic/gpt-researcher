@@ -1,4 +1,5 @@
 # Vector Stores
+
 The GPT Researcher package allows you to integrate with existing langchain vector stores that have been populated.
 For a complete list of supported langchain vector stores, please refer to this [link](https://python.langchain.com/v0.2/docs/integrations/vectorstores/).
 
