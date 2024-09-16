@@ -276,7 +276,7 @@ async def write_conclusion(
                 },
             ],
             temperature=0.35,
-            llm_provider=cfg.llm_provider,
+            llm_provider=cfg.fast_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
         )

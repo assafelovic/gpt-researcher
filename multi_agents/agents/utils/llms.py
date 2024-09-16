@@ -27,7 +27,7 @@ async def call_model(
             model=model,
             messages=lc_messages,
             temperature=0,
-            llm_provider=cfg.llm_provider,
+            llm_provider=cfg.fast_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             # cost_callback=cost_callback,
         )
