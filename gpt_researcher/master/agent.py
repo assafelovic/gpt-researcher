@@ -324,6 +324,8 @@ class GPTResearcher:
 
         content = await self.__get_similar_content_by_query_with_vectorstore(sub_query, filter)
 
+        print("Content of __get_similar_content_by_query_with_vectorstore", content)
+
         if content and self.verbose:
             await stream_output(
                 "logs", "subquery_context_window", f"📃 {content}", self.websocket

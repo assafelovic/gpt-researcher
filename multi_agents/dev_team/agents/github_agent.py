@@ -1,3 +1,4 @@
+import asyncio
 import os
 from github import Github
 from langchain_core.documents import Document
@@ -16,7 +17,7 @@ class GithubAgent:
 
     async def fetch_repo_data(self, state=None):
         repo = self.github.get_repo(self.repo_name)
-        contents = repo.get_contents("", ref=self.branch_name)
+        contents = self.repo.get_contents("", ref=self.branch_name)
         directory_structure = self.log_directory_structure(contents)
         vector_store = await self.save_to_vector_store(contents)
         return {
@@ -42,14 +43,33 @@ class GithubAgent:
 
     async def save_to_vector_store(self, contents):
         documents = []
-        for content in contents:
-            if content.type == "file":
-                file_content = self.repo.get_contents(content.path, ref=self.branch_name).decoded_content.decode()
-                doc = Document(page_content=file_content, metadata={"source": content.name})
-                documents.append(doc)
-
-        self.vector_store = await self.vector_agent.save_to_vector_store(documents)
-        return self.vector_store
+        try:
+            tasks = []
+            for content in contents:
+                if content.type == "file":
+                    file_path = content.path
+                    file_name = content.name
+                    file_extension = file_path.split('.')[-1] if '.' in file_path else 'unknown'
+                    file_content = self.repo.get_contents(file_path, ref=self.branch_name).decoded_content.decode()
+                    
+                    metadata = {
+                        "source": file_path,
+                        "title": file_name,
+                        "extension": file_extension,
+                        "file_path": file_path
+                    }
+                    
+                    doc = Document(
+                        page_content=file_content,
+                        metadata=metadata
+                    )
+                    documents.append(doc)
+            
+            self.vector_store = await self.vector_agent.save_to_vector_store(documents)
+            return self.vector_store
+        except Exception as e:
+            print(f"Error saving to vector store: {e}")
+            return None
 
     def get_vector_store(self):
         return self.vector_store
