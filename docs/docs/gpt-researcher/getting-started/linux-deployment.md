@@ -12,7 +12,7 @@ The default Ubuntu droplet option on [DigitalOcean](https://m.do.co/c/1a2af257ef
 
 Here's a screenshot of the recommended Ubuntu machine specifications:
 
-![Ubuntu Server Specifications](https://cdn.discordapp.com/attachments/1129340110916288553/1262372662299070504/Screen_Shot_2024-07-15_at_14.32.01.png?ex=66cf0c28&is=66cdbaa8&hm=c1798d9c37de585dc7df8558e92545144e31a2407d8a181cac7e8c16059fdcd6&)
+![Ubuntu Server Specifications](https://github.com/user-attachments/assets/035865c0-d1a2-4990-b7fb-544c229d5198)
 
 ## Deployment Steps
 
