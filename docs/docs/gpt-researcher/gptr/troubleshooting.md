@@ -1,4 +1,5 @@
 # Troubleshooting
+
 We're constantly working to provide a more stable version. If you're running into any issues, please first check out the resolved issues or ask us via our [Discord community](https://discord.gg/QgZXvJAccX).
 
 ### model: gpt-4 does not exist

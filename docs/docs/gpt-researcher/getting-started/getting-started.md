@@ -1,4 +1,5 @@
 # Getting Started
+
 > **Step 0** - Install Python 3.11 or later. [See here](https://www.tutorialsteacher.com/python/install-python) for a step-by-step guide.
 
 > **Step 1** - Download the project and navigate to its directory
@@ -19,7 +20,7 @@ export TAVILY_API_KEY={Your Tavily API Key here}
 
 For a more permanent setup, create a `.env` file in the current `gpt-researcher` directory and input the env vars (without `export`).
 
-- For LLM provider, we recommend **[OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources). To learn how to change the LLM model, please refer to the [documentation](https://docs.gptr.dev/docs/gpt-researcher/llms) page. 
+- For LLM provider, we recommend **[OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources). To learn how to change the LLM model, please refer to the [documentation](https://docs.gptr.dev/docs/gpt-researcher/llms/llms) page. 
 - For web search API, we recommend **[Tavily Search API](https://app.tavily.com)**, but you can also refer to other search APIs of your choice by changing the search provider in config/config.py to `duckduckgo`, `google`, `bing`, `serper`, `searx` and more. Then add the corresponding env API key.
 
 ## Quickstart
@@ -101,22 +102,3 @@ python -m uvicorn main:app --reload
 <br />
 
 
-## Try it with Docker
-
-> **Step 1** - Install Docker
-
-Follow instructions at https://docs.docker.com/engine/install/
-
-> **Step 2** - Create .env file with your OpenAI Key or simply export it
-
-```bash
-$ export OPENAI_API_KEY={Your API Key here}
-```
-
-> **Step 3** - Run the application
-
-```bash
-$ docker-compose up
-```
-
-> **Step 4** - Go to http://localhost:8000 on any browser and enjoy researching!

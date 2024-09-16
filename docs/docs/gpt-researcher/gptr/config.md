@@ -46,6 +46,35 @@ export RETRIEVER=bing
 export REPORT_FORMAT=IEEE
 ```
 Please note that you might need to export additional env vars and obtain API keys for other supported search retrievers and LLM providers. Please follow your console logs for further assistance.
-To learn more about additional LLM support you can check out the docs [here](/docs/gpt-researcher/llms).
+To learn more about additional LLM support you can check out the docs [here](/docs/gpt-researcher/llms/llms).
 
 You can also include your own external JSON file `config.json` by adding the path in the `config_file` param.
+
+## Example: Azure OpenAI Configuration
+
+If you are not using OpenAI's models, but other model providers, besides the general configuration above, also additional environment variables are required.
+Check the [langchain documentation](https://python.langchain.com/v0.2/docs/integrations/platforms/) about your model for the exact configuration of the API keys and endpoints.
+
+Here is an example for [Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models) configuration:
+
+```bash
+
+EMBEDDING_PROVIDER="azureopenai"
+
+OPENAI_API_VERSION="2024-05-01-preview" # or whatever you are using
+AZURE_OPENAI_ENDPOINT="https://CHANGEMEN.openai.azure.com/" # change to the name of your deployment
+AZURE_OPENAI_API_KEY="CHANGEME" # change to your API key
+
+LLM_PROVIDER="azure_openai"
+AZURE_EMBEDDING_MODEL="text-embedding-ada-002" # change to the deployment of your embedding model
+
+FAST_LLM_MODEL="gpt-4o-mini" # change to the name of your deployment (not model-name)
+FAST_TOKEN_LIMIT=4000
+
+SMART_LLM_MODEL="gpt-4o" # change to the name of your deployment (not model-name)
+SMART_TOKEN_LIMIT=4000
+
+RETRIEVER="bing" # if you are using Bing as your search engine (which is likely if you use Azure)
+BING_API_KEY="CHANGEME"
+
+```

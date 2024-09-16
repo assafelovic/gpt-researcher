@@ -40,7 +40,7 @@ class Config:
         self.report_format = os.getenv("REPORT_FORMAT", "APA")
         self.max_iterations = int(os.getenv("MAX_ITERATIONS", 3))
         self.agent_role = os.getenv("AGENT_ROLE", None)
-        self.scraper = os.getenv("SCRAPER", "bs")
+        self.scraper = os.getenv("SCRAPER", "bs")  # Change to "browser" to use Selenium. Requires selenium.
         self.max_subtopics = os.getenv("MAX_SUBTOPICS", 3)
         self.report_source = os.getenv("REPORT_SOURCE", None)
         self.doc_path = os.getenv("DOC_PATH", "")

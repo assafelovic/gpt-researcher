@@ -1,4 +1,5 @@
 # LangGraph
+
 [LangGraph](https://python.langchain.com/docs/langgraph) is a library for building stateful, multi-actor applications with LLMs. 
 This example uses Langgraph to automate the process of an in depth research on any given topic.
 
@@ -119,7 +120,7 @@ It comes with loads of added features, such as:
 
 ### Run the NextJS React App with Docker
 
-> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker)
+> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
 
 > **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
 

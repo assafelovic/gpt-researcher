@@ -1,12 +1,12 @@
 # Introduction
 
 [![Official Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white)](https://gptr.dev)
-[![Discord Follow](https://dcbadge.vercel.app/api/server/SK3KKuSD?style=for-the-badge)](https://discord.gg/SK3KKuSD)
+[![Discord Follow](https://dcbadge.vercel.app/api/server/QgZXvJAccX?style=for-the-badge&theme=clean-inverted)](https://discord.gg/QgZXvJAccX)
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/assafelovic/gpt-researcher?style=social)](https://github.com/assafelovic/gpt-researcher)
 [![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
 [![PyPI version](https://badge.fury.io/py/gpt-researcher.svg)](https://badge.fury.io/py/gpt-researcher)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/examples/pip-run.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/docs/docs/examples/pip-run.ipynb)
 
 **[GPT Researcher](https://gptr.dev) is an autonomous agent designed for comprehensive online research on a variety of tasks.** 
 
@@ -54,4 +54,4 @@ More specifically:
 - 📂 Keeps track and context of visited and used web sources
 - 📄 Export research reports to PDF, Word and more...
 
-Let's get started [here](/docs/gpt-researcher/getting-started/)!
+Let's get started [here](/docs/gpt-researcher/getting-started/getting-started)!
