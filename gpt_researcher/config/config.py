@@ -14,13 +14,35 @@ class Config:
         self.retrievers = self.parse_retrievers(os.getenv("RETRIEVER", "tavily"))
         self.embedding_provider = os.getenv("EMBEDDING_PROVIDER", "openai")
         self.similarity_threshold = int(os.getenv("SIMILARITY_THRESHOLD", 0.42))
-        self.llm_provider = os.getenv("LLM_PROVIDER", "openai")
-        self.smart_llm_provider = os.getenv("SMART_LLM_PROVIDER", self.llm_provider)
-        self.fast_llm_provider = os.getenv("FAST_LLM_PROVIDER", self.llm_provider)
+
+        _llm_provider = os.getenv("LLM_PROVIDER")
+        _fast_llm_model = os.getenv("FAST_LLM_MODEL")
+        _smart_llm_model = os.getenv("SMART_LLM_MODEL")
+        if (
+            _llm_provider is not None
+            or _fast_llm_model is not None
+            or _smart_llm_model is not None
+        ):
+            raise DeprecationWarning(
+                "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL were deprecated and "
+                "will be removed in soon. Use FAST_LLM_NAME and SMART_LLM_NAME instead."
+            )
+
+        self.fast_llm_provider, self.fast_llm_model = self.parse_llm_name(
+            os.getenv("FAST_LLM_NAME")
+        )
+        self.smart_llm_provider, self.smart_llm_model = self.parse_llm_name(
+            os.getenv("SMART_LLM_NAME")
+        )
+
+        self.fast_llm_provider = self.fast_llm_provider or _llm_provider or "openai"
+        self.fast_llm_model = self.fast_llm_model or _fast_llm_model or "gpt-4o-mini"
+        self.smart_llm_provider = self.smart_llm_provider or _llm_provider or "openai"
+        self.smart_llm_model = (
+            self.smart_llm_model or _smart_llm_model or "gpt-4o-2024-08-06"
+        )
+
         self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", None)
-        self.llm_model = os.getenv("DEFAULT_LLM_MODEL", "gpt-4o-mini")
-        self.fast_llm_model = os.getenv("FAST_LLM_MODEL", "gpt-4o-mini")
-        self.smart_llm_model = os.getenv("SMART_LLM_MODEL", "gpt-4o-2024-08-06")
         self.fast_token_limit = int(os.getenv("FAST_TOKEN_LIMIT", 2000))
         self.smart_token_limit = int(os.getenv("SMART_TOKEN_LIMIT", 4000))
         self.browse_chunk_max_length = int(os.getenv("BROWSE_CHUNK_MAX_LENGTH", 8192))
@@ -77,6 +99,19 @@ class Config:
                 f"Valid options are: {', '.join(VALID_RETRIEVERS)}."
             )
         return retrievers
+
+    @staticmethod
+    def parse_llm_name(llm_name_str: str | None) -> tuple[str | None, str | None]:
+        """Parse llm_name string into (llm_provider, llm_model)."""
+        if llm_name_str is None:
+            return None, None
+        try:
+            return llm_name_str.split(":", 1)
+        except ValueError:
+            raise ValueError(
+                "Set LLM_NAME = '<llm_provider>:<llm_model_name>' "
+                "Eg 'openai:gpt-4o-mini'"
+            )
 
     def validate_doc_path(self):
         """Ensure that the folder exists at the doc path"""
