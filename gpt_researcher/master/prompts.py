@@ -29,7 +29,8 @@ def generate_search_queries_prompt(
         task = question
 
     return (
-        f'Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"'
+        f'Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"\n'
+        f"Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.\n"
         f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"].\n'
         f"The response should contain ONLY the list."
     )
@@ -70,13 +71,14 @@ Information: "{context}"
 ---
 Using the above information, answer the following query or task: "{question}" in a detailed report --
 The report should focus on the answer to the query, should be well structured, informative, 
-in-depth, and comprehensive, with facts and numbers if available and a minimum of {total_words} words.
+in-depth, and comprehensive, with facts and numbers if available and a total of up to {total_words} words.
 You should strive to write the report as long as you can using all relevant and necessary information provided.
 
 Please follow all of the following guidelines in your report:
 - You MUST determine your own concrete and valid opinion based on the given information. Do NOT defer to general and meaningless conclusions.
 - You MUST write the report with markdown syntax and {report_format} format.
-- Use an unbiased and journalistic tone.
+- You MUST prioritize the relevance, reliability, and significance of the sources you use. Choose trusted sources over less reliable ones.
+- You must also prioritize new articles over older articles if the source can be trusted.
 - Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
 - Don't forget to add a reference list at the end of the report in {report_format} format and full url links without hyperlinks.
 - {reference_prompt}
