@@ -12,7 +12,7 @@ The default Ubuntu droplet option on [DigitalOcean](https://m.do.co/c/1a2af257ef
 
 Here's a screenshot of the recommended Ubuntu machine specifications:
 
-![Ubuntu Server Specifications](https://cdn.discordapp.com/attachments/1129340110916288553/1262372662299070504/Screen_Shot_2024-07-15_at_14.32.01.png?ex=66cf0c28&is=66cdbaa8&hm=c1798d9c37de585dc7df8558e92545144e31a2407d8a181cac7e8c16059fdcd6&)
+![Ubuntu Server Specifications](https://github.com/user-attachments/assets/035865c0-d1a2-4990-b7fb-544c229d5198)
 
 ## Deployment Steps
 
@@ -91,7 +91,7 @@ http {
            proxy_cache_bypass $http_upgrade;
        }
 
-       location ~ ^/(ws|upload|files|outputs) {
+       location ~ ^/(ws|upload|files|outputs|getConfig) {
            proxy_pass http://localhost:8000;
            proxy_http_version 1.1;
            proxy_set_header Upgrade $http_upgrade;
@@ -99,6 +99,47 @@ http {
            proxy_set_header Host $host;
        }
    }
+}
+```
+
+And if you're using SSL:
+
+```nginx
+server {
+    server_name name.example;
+    
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+    
+    location ~ ^/(ws|upload|files|outputs|getConfig) {
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+    }
+    
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/name.example/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/name.example/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+}
+
+server {
+    if ($host = name.example) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+    
+    listen 80;
+    server_name name.example;
+    return 404; # managed by Certbot
 }
 ```
 
