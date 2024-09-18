@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, ActionRowBuilder, Events, ModalBuilder, TextI
 const keepAlive = require('./server');
 const { sendWebhookMessage } = require('./gptr-webhook');
 const { jsonrepair } = require('jsonrepair');
+const { EmbedBuilder } = require('discord.js');
 
 const client = new Client({
   intents: [
@@ -30,18 +31,26 @@ const cooldowns = {};
 
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
-  // in order, help forum, general channel, gptr-allstars
-  let channelsAllowed = ['1284846869557547050','1127851779573420053','1284039270646153267']
-  const channelId = message.channel.id;
-
-  if (!channelsAllowed.includes(channelId)) return
-  
+  // only share the /ask guide when a new message is posted in the help forum -  limit to every 30 minutes per post
   console.log(`Channel Data: ${message.channel.id}`);
+  console.log(`Message Channel Data: ${console.log(JSON.stringify(message.channel, null, 2))}`);
+  
+  const channelId = message.channel.id;
+  const channelParentId = message.channel.parentId;
+  //return if its not posted in the help forum
+  if(channelParentId != '1129339320562626580') return
+  
   const now = Date.now();
   const cooldownAmount = 30 * 60 * 1000; // 30 minutes in milliseconds
 
   if (!cooldowns[channelId] || (now - cooldowns[channelId]) > cooldownAmount) {
-    await message.reply('please use the /ask command to launch a report');
+    // await message.reply('please use the /ask command to launch a report by typing `/ask` into the chatbox & hitting ENTER.');
+
+    const exampleEmbed = new EmbedBuilder()
+      .setTitle('please use the /ask command to launch a report by typing `/ask` into the chatbox & hitting ENTER.')
+      .setImage('https://media.discordapp.net/attachments/1127851779573420053/1285577932353568902/ask.webp?ex=66eb6fff&is=66ea1e7f&hm=32bc8335ed4c09c15a8541c058bbd513cf2ce757221a116d9c248c39a12d75df&=&format=webp&width=1740&height=704');
+    
+    message.channel.send({ embeds: [exampleEmbed] });
     cooldowns[channelId] = now;
   }
 });
