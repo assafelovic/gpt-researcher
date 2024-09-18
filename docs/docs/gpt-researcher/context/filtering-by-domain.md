@@ -6,6 +6,7 @@ For example, set in the query param you pass the GPTResearcher class instance: `
 
 > **Step 1** -  Set these environment variables with a .env file in the root folder
 
+```bash
 TAVILY_API_KEY=
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_API_KEY=
@@ -14,6 +15,7 @@ DOC_PATH=./my-docs
 RETRIEVER=google
 GOOGLE_API_KEY=
 GOOGLE_CX_KEY=
+```
 
 > **Step 2** -  from the root project run:
 
