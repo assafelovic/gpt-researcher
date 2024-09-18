@@ -4,6 +4,12 @@ from github import Github
 from langchain_core.documents import Document
 import base64
 from .vector_agent import VectorAgent
+import warnings
+warnings.filterwarnings("ignore")
+from langchain_community.document_loaders.generic import GenericLoader
+from langchain_community.document_loaders.parsers import LanguageParser
+from langchain_core.documents import Document
+from langchain_text_splitters import Language
 
 class GithubAgent:
     def __init__(self, github_token, repo_name, vector_store=None, branch_name=None):
@@ -50,21 +56,34 @@ class GithubAgent:
                     file_path = content.path
                     file_name = content.name
                     file_extension = file_path.split('.')[-1] if '.' in file_path else 'unknown'
-                    file_content = self.repo.get_contents(file_path, ref=self.branch_name).decoded_content.decode()
                     
-                    metadata = {
-                        "source": file_path,
-                        "title": file_name,
-                        "extension": file_extension,
-                        "file_path": file_path
-                    }
-                    
-                    doc = Document(
-                        page_content=file_content,
-                        metadata=metadata
-                    )
-                    documents.append(doc)
-            
+                    # Check if it's a code file by extension
+                    if file_extension in ['py', 'js']:
+                        file_content = self.repo.get_contents(file_path, ref=self.branch_name).decoded_content.decode()
+                        
+                        # Use LanguageParser to parse the content
+                        loader = GenericLoader.from_filesystem(
+                            os.path.dirname(file_path), 
+                            glob=file_name, 
+                            suffixes=[f".{file_extension}"], 
+                            parser=LanguageParser()
+                        )
+                        docs = loader.load()
+
+                        # Extract metadata for each document
+                        for doc in docs:
+                            metadata = {
+                                "source": file_path,
+                                "title": file_name,
+                                "extension": file_extension,
+                                "file_path": file_path
+                            }
+                            document = Document(
+                                page_content=doc.page_content,
+                                metadata=metadata
+                            )
+                            documents.append(document)
+
             self.vector_store = await self.vector_agent.save_to_vector_store(documents)
             return self.vector_store
         except Exception as e:
