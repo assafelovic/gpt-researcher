@@ -64,8 +64,16 @@ class DetailedReport:
         self.global_urls = self.main_task_assistant.visited_urls
 
     async def _get_all_subtopics(self) -> List[Dict]:
-        subtopics = await self.main_task_assistant.get_subtopics()
-        return subtopics.dict().get("subtopics", [])
+            # Assuming this method returns a list of dictionaries
+        subtopics_list = await self.main_task_assistant.get_subtopics()
+        
+        # If subtopics_list is a list of dictionaries
+        all_subtopics = []
+        for subtopic in subtopics_list:
+            if isinstance(subtopic, dict):
+                all_subtopics.extend(subtopic.get("subtopics", []))
+        
+        return all_subtopics
 
     async def _generate_subtopic_reports(self, subtopics: List[Dict]) -> tuple:
         subtopic_reports = []
