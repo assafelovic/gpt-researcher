@@ -71,7 +71,7 @@ Information: "{context}"
 ---
 Using the above information, answer the following query or task: "{question}" in a detailed report --
 The report should focus on the answer to the query, should be well structured, informative, 
-in-depth, and comprehensive, with facts and numbers if available and a total of up to {total_words} words.
+in-depth, and comprehensive, with facts and numbers if available and at least {total_words} words.
 You should strive to write the report as long as you can using all relevant and necessary information provided.
 
 Please follow all of the following guidelines in your report:
