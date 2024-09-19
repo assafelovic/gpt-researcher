@@ -84,6 +84,7 @@ class Config:
             "duckduckgo",
             "exa",
             "google",
+            "searchapi",
             "searx",
             "semantic_scholar",
             "serpapi",

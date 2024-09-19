@@ -26,6 +26,7 @@ Thanks to our community, we have integrated the following web search engines:
 - [Tavily](https://app.tavily.com) - Default
 - [Bing](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) - Env: `RETRIEVER=bing`
 - [Google](https://developers.google.com/custom-search/v1/overview) - Env: `RETRIEVER=google`
+- [SearchApi](https://www.searchapi.io/) - Env: `RETRIEVER=searchapi`
 - [Serp API](https://serpapi.com/) - Env: `RETRIEVER=serpapi`
 - [Serper](https://serper.dev/) - Env: `RETRIEVER=serper`
 - [Searx](https://searx.github.io/searx/) - Env: `RETRIEVER=searx`
