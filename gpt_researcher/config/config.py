@@ -24,8 +24,8 @@ class Config:
             or _smart_llm_model is not None
         ):
             raise DeprecationWarning(
-                "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL were deprecated and "
-                "will be removed in soon. Use FAST_LLM_NAME and SMART_LLM_NAME instead."
+                "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
+                "will be removed soon. Use FAST_LLM_NAME and SMART_LLM_NAME instead."
             )
 
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm_name(
@@ -42,7 +42,6 @@ class Config:
             self.smart_llm_model or _smart_llm_model or "gpt-4o-2024-08-06"
         )
 
-        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", None)
         self.fast_token_limit = int(os.getenv("FAST_TOKEN_LIMIT", 2000))
         self.smart_token_limit = int(os.getenv("SMART_TOKEN_LIMIT", 4000))
         self.browse_chunk_max_length = int(os.getenv("BROWSE_CHUNK_MAX_LENGTH", 8192))
