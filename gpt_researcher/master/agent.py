@@ -464,7 +464,7 @@ class GPTResearcher:
         )
         # Run Tasks
         return await context_compressor.async_get_context(
-            query=query, max_results=8, cost_callback=self.add_costs
+            query=query, max_results=10, cost_callback=self.add_costs
         )
 
     ########################################################################################
