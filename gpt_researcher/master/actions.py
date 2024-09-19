@@ -33,6 +33,10 @@ def get_retriever(retriever):
             from gpt_researcher.retrievers import SearxSearch
 
             retriever = SearxSearch
+        case "searchapi":
+            from gpt_researcher.retrievers import SearchApiSearch
+
+            retriever = SearchApiSearch
         case "serpapi":
             from gpt_researcher.retrievers import SerpApiSearch
 

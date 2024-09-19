@@ -108,7 +108,7 @@ export TAVILY_API_KEY={Tavily API 키 입력}
 더 영구적인 설정을 원한다면, 현재의 `gpt-researcher` 디렉토리에 `.env` 파일을 생성하고 환경 변수를 입력하세요 (export 없이).
 
 - 기본 LLM은 [GPT](https://platform.openai.com/docs/guides/gpt)이지만, `claude`, `ollama3`, `gemini`, `mistral` 등 다른 LLM도 사용할 수 있습니다. LLM 제공자를 변경하는 방법은 [LLMs 문서](https://docs.gptr.dev/docs/gpt-researcher/llms/llms)를 참조하세요. 이 프로젝트는 OpenAI GPT 모델에 최적화되어 있습니다.
-- 기본 검색기는 [Tavily](https://app.tavily.com)이지만, `duckduckgo`, `google`, `bing`, `serper`, `searx`, `arxiv`, `exa` 등의 검색기를 사용할 수 있습니다. 검색 제공자를 변경하는 방법은 [검색기 문서](https://docs.gptr.dev/docs/gpt-researcher/retrievers)를 참조하세요.
+- 기본 검색기는 [Tavily](https://app.tavily.com)이지만, `duckduckgo`, `google`, `bing`, `searchapi`, `serper`, `searx`, `arxiv`, `exa` 등의 검색기를 사용할 수 있습니다. 검색 제공자를 변경하는 방법은 [검색기 문서](https://docs.gptr.dev/docs/gpt-researcher/retrievers)를 참조하세요.
 
 ### 빠른 시작
 
