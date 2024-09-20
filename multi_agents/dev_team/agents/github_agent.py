@@ -56,7 +56,12 @@ class GithubAgent:
             if not file_name.endswith('/'):
                 try:
                     content = self.repo.get_contents(file_name, ref=self.branch_name)
-                    decoded_content = base64.b64decode(content.content).decode(errors='ignore')
+                    try:
+                        decoded_content = base64.b64decode(content.content).decode()
+                    except Exception as e:
+                        print(f"Error decoding content: {e}")
+                        print("the problematic file_name is", file_name)
+                        continue
                     print("file_name", file_name)
                     print("content", decoded_content)
 
@@ -91,7 +96,12 @@ class GithubAgent:
         relevant_files = []
         for file_name in file_names:
             content = self.repo.get_contents(file_name, ref=self.branch_name)
-            decoded_content = base64.b64decode(content.content).decode(errors='ignore')
+            try:
+                decoded_content = base64.b64decode(content.content).decode()
+            except Exception as e:
+                print(f"Error decoding content: {e}")
+                print("the problematic file_name is", file_name)
+                continue
             relevant_files.append({
                 "file_name": file_name,
                 "content": decoded_content
