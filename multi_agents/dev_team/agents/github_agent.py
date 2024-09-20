@@ -10,6 +10,7 @@ from langchain_community.document_loaders.generic import GenericLoader
 from langchain_community.document_loaders.parsers import LanguageParser
 from langchain_core.documents import Document
 from langchain_text_splitters import Language
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 class GithubAgent:
     def __init__(self, github_token, repo_name, vector_store=None, branch_name=None):
@@ -25,7 +26,7 @@ class GithubAgent:
         repo = self.github.get_repo(self.repo_name)
         contents = self.repo.get_contents("", ref=self.branch_name)
         directory_structure = self.log_directory_structure(contents)
-        vector_store = await self.save_to_vector_store(contents)
+        vector_store = await self.save_to_vector_store(directory_structure)
         return {
             "github_data": directory_structure,
             "vector_store": vector_store,
@@ -47,48 +48,41 @@ class GithubAgent:
                 structure.append(f"{path}{content.name}")
         return structure
 
-    async def save_to_vector_store(self, contents):
+    async def save_to_vector_store(self, directory_structure):
         documents = []
-        try:
-            tasks = []
-            for content in contents:
-                if content.type == "file":
-                    file_path = content.path
-                    file_name = content.name
-                    file_extension = file_path.split('.')[-1] if '.' in file_path else 'unknown'
+        splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=30)
+
+        for file_name in directory_structure:
+            if not file_name.endswith('/'):
+                try:
+                    content = self.repo.get_contents(file_name, ref=self.branch_name)
+                    decoded_content = base64.b64decode(content.content).decode(errors='ignore')
+                    print("file_name", file_name)
+                    print("content", decoded_content)
+
+                    # Split each document into smaller chunks
+                    chunks = splitter.split_text(decoded_content)
                     
-                    # Check if it's a code file by extension
-                    if file_extension in ['py', 'js']:
-                        file_content = self.repo.get_contents(file_path, ref=self.branch_name).decoded_content.decode()
-                        
-                        # Use LanguageParser to parse the content
-                        loader = GenericLoader.from_filesystem(
-                            os.path.dirname(file_path), 
-                            glob=file_name, 
-                            suffixes=[f".{file_extension}"], 
-                            parser=LanguageParser()
+                    # Extract metadata for each chunk
+                    for chunk in chunks:
+                        metadata = {
+                            "source": file_name,
+                            "title": file_name,
+                            "extension": os.path.splitext(file_name)[1],
+                            "file_path": file_name
+                        }
+                        document = Document(
+                            page_content=chunk,
+                            metadata=metadata
                         )
-                        docs = loader.load()
+                        documents.append(document)
 
-                        # Extract metadata for each document
-                        for doc in docs:
-                            metadata = {
-                                "source": file_path,
-                                "title": file_name,
-                                "extension": file_extension,
-                                "file_path": file_path
-                            }
-                            document = Document(
-                                page_content=doc.page_content,
-                                metadata=metadata
-                            )
-                            documents.append(document)
+                except Exception as e:
+                    print(f"Error saving to vector store: {e}")
+                    return None
 
-            self.vector_store = await self.vector_agent.save_to_vector_store(documents)
-            return self.vector_store
-        except Exception as e:
-            print(f"Error saving to vector store: {e}")
-            return None
+        self.vector_store = await self.vector_agent.save_to_vector_store(documents)
+        return self.vector_store
 
     def get_vector_store(self):
         return self.vector_store
@@ -97,7 +91,7 @@ class GithubAgent:
         relevant_files = []
         for file_name in file_names:
             content = self.repo.get_contents(file_name, ref=self.branch_name)
-            decoded_content = base64.b64decode(content.content).decode()
+            decoded_content = base64.b64decode(content.content).decode(errors='ignore')
             relevant_files.append({
                 "file_name": file_name,
                 "content": decoded_content
