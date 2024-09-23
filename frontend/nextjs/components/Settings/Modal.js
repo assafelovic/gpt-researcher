@@ -13,7 +13,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
     LANGCHAIN_TRACING_V2: 'true',
     LANGCHAIN_API_KEY: '',
     OPENAI_API_KEY: '',
-    DOC_PATH: '',
+    DOC_PATH: './my-docs',
     RETRIEVER: 'tavily', // Set default retriever to Tavily
     GOOGLE_API_KEY: '',
     GOOGLE_CX_KEY: '',

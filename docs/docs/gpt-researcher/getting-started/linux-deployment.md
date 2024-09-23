@@ -91,7 +91,7 @@ http {
            proxy_cache_bypass $http_upgrade;
        }
 
-       location ~ ^/(ws|upload|files|outputs|getConfig) {
+       location ~ ^/(ws|upload|files|outputs|getConfig|setConfig) {
            proxy_pass http://localhost:8000;
            proxy_http_version 1.1;
            proxy_set_header Upgrade $http_upgrade;
@@ -117,7 +117,7 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
     
-    location ~ ^/(ws|upload|files|outputs|getConfig) {
+    location ~ ^/(ws|upload|files|outputs|getConfig|setConfig) {
         proxy_pass http://localhost:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
