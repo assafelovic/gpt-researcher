@@ -155,7 +155,7 @@ async def get_config(
         "SERPER_API_KEY": serper_api_key if serper_api_key else os.getenv("SERPER_API_KEY", ""),
         "SEARX_URL": searx_url if searx_url else os.getenv("SEARX_URL", ""),
         "LANGCHAIN_TRACING_V2": os.getenv("LANGCHAIN_TRACING_V2", "true"),
-        "DOC_PATH": os.getenv("DOC_PATH", ""),
+        "DOC_PATH": os.getenv("DOC_PATH", "./my-docs"),
         "RETRIEVER": os.getenv("RETRIEVER", ""),
         "EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "")
     }
