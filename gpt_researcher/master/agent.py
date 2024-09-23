@@ -129,6 +129,7 @@ class GPTResearcher:
             self.context = await self.__get_context_by_urls(self.source_urls)
 
         elif self.report_source == ReportSource.Local.value:
+            logger.info(f"Loading documents from {self.cfg.doc_path}")
             document_data = await DocumentLoader(self.cfg.doc_path).load()
             self.context = await self.__get_context_by_search(self.query, document_data)
 

@@ -41,7 +41,7 @@ class Config:
         self.scraper = os.getenv("SCRAPER", "bs")  # Change to "browser" to use Selenium. Requires selenium.
         self.max_subtopics = os.getenv("MAX_SUBTOPICS", 3)
         self.report_source = os.getenv("REPORT_SOURCE", None)
-        self.doc_path = os.getenv("DOC_PATH", "")
+        self.doc_path = os.getenv("DOC_PATH", "./my-docs")
         self.llm_kwargs = {}
 
         self.load_config_file()
