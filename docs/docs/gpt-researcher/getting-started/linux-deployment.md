@@ -81,6 +81,8 @@ http {
    server {
        listen 80;
        server_name name.example;
+       
+       client_max_body_size 64M;
 
        location / {
            proxy_pass http://localhost:3000;
@@ -107,6 +109,8 @@ And if you're using SSL:
 ```nginx
 server {
     server_name name.example;
+    
+    client_max_body_size 64M;
     
     location / {
         proxy_pass http://localhost:3000;
