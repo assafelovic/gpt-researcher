@@ -16,6 +16,7 @@ It comes with loads of added features, such as:
  - stability fixes
  - and more coming soon!
 
+
 ### Run the NextJS React App with Docker
 
 > **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
@@ -38,6 +39,17 @@ docker compose up --build
  - the React app running on localhost:3000
 
 Visit localhost:3000 on any browser and enjoy researching!
+
+
+### Run the NextJS React App with NPM
+
+```bash
+cd frontend
+nvm install 18.17.0
+nvm use v18.17.0
+npm install --legacy-peer-deps
+npm run dev
+```
 
 
 ## Other Options: 1: Static Frontend (FastAPI)

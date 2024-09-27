@@ -33,6 +33,7 @@ export default function ResearchForm({ chatBoxSettings, setChatBoxSettings }) {
                     <option value="multi_agents">Multi Agents Report</option>
                     <option value="research_report">Summary - Short and fast (~2 min)</option>
                     <option value="detailed_report">Detailed - In depth and longer (~5 min)</option>
+                    <option value="coding_report">AI Dev Team</option>
                 </select>
             </div>
             <div className="form-group">
