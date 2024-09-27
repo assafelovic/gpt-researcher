@@ -8,7 +8,7 @@ def sanitize_filename(filename: str) -> str:
     This function ensures that the filename is compatible with all 
     operating systems by removing or replacing characters that are 
     not allowed in Windows file paths. Specifically, it replaces 
-    the following characters: < > : " / \ | ? *
+    the following characters: < > : " / \\ | ? *
 
     Parameters:
     filename (str): The original filename to be sanitized.
