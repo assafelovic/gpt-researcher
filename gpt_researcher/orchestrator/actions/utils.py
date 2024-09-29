@@ -1,4 +1,3 @@
-import asyncio
 from typing import Dict, Any, Callable
 from fastapi import WebSocket
 from gpt_researcher.utils.logger import get_formatted_logger
@@ -21,7 +20,7 @@ async def stream_output(
     """
     if not websocket or output_log:
         try:
-            logger.info(output)
+            logger.info(f"{output}")
         except UnicodeEncodeError:
             # Option 1: Replace problematic characters with a placeholder
             logger.error(output.encode(

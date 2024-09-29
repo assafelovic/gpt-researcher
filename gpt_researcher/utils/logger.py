@@ -7,27 +7,35 @@ import click
 
 TRACE_LOG_LEVEL = 5
 
+
 def get_formatted_logger():
+    """Return a formatted logger."""
     logger = logging.getLogger("scraper")
     # Set the logging level
     logger.setLevel(logging.INFO)
 
-    # Create a handler
-    handler = logging.StreamHandler()
+    # Check if the logger already has handlers to avoid duplicates
+    if not logger.handlers:
+        # Create a handler
+        handler = logging.StreamHandler()
 
-    # Create a formatter using Uvicorn's DefaultFormatter
-    formatter = DefaultFormatter(
-        "%(levelprefix)s [%(asctime)s] %(message)s",
-        datefmt="%H:%M:%S"
-    )
+        # Create a formatter using DefaultFormatter
+        formatter = DefaultFormatter(
+            "%(levelprefix)s [%(asctime)s] %(message)s",
+            datefmt="%H:%M:%S"
+        )
 
-    # Set the formatter for the handler
-    handler.setFormatter(formatter)
+        # Set the formatter for the handler
+        handler.setFormatter(formatter)
 
-    # Add the handler to the logger
-    logger.addHandler(handler)
+        # Add the handler to the logger
+        logger.addHandler(handler)
+
+    # Disable propagation to prevent duplicate logging from parent loggers
+    logger.propagate = False
 
     return logger
+
 
 class ColourizedFormatter(logging.Formatter):
     """
