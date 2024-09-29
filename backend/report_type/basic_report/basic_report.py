@@ -38,10 +38,6 @@ class BasicReport:
             headers=self.headers
         )
 
-        # Run research
         await researcher.conduct_research()
-
-        # and generate report
         report = await researcher.write_report()
-
         return report
