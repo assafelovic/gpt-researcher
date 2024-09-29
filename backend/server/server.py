@@ -13,7 +13,7 @@ from backend.server.server_utils import generate_report_files
 from backend.server.websocket_manager import WebSocketManager
 from multi_agents.main import run_research_task
 from gpt_researcher.document.document import DocumentLoader
-from gpt_researcher.master.actions import stream_output
+from gpt_researcher.orchestrator.actions import stream_output
 from backend.server.server_utils import (
     sanitize_filename, handle_start_command, handle_human_feedback,
     generate_report_files, send_file_paths, get_config_dict,
@@ -22,10 +22,13 @@ from backend.server.server_utils import (
 )
 
 # Models
+
+
 class ResearchRequest(BaseModel):
     task: str
     report_type: str
     agent: str
+
 
 class ConfigRequest(BaseModel):
     ANTHROPIC_API_KEY: str
@@ -42,6 +45,7 @@ class ConfigRequest(BaseModel):
     SERPAPI_API_KEY: str = ''
     SERPER_API_KEY: str = ''
     SEARX_URL: str = ''
+
 
 # App initialization
 app = FastAPI()
@@ -67,6 +71,8 @@ app.add_middleware(
 DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 
 # Startup event
+
+
 @app.on_event("startup")
 def startup_event():
     os.makedirs("outputs", exist_ok=True)
@@ -74,9 +80,12 @@ def startup_event():
     os.makedirs(DOC_PATH, exist_ok=True)
 
 # Routes
+
+
 @app.get("/")
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "report": None})
+
 
 @app.get("/getConfig")
 async def get_config(
@@ -97,28 +106,34 @@ async def get_config(
         searchapi_api_key, serpapi_api_key, serper_api_key, searx_url
     )
 
+
 @app.get("/files/")
 async def list_files():
     files = os.listdir(DOC_PATH)
     print(f"Files in {DOC_PATH}: {files}")
     return {"files": files}
 
+
 @app.post("/api/multi_agents")
 async def run_multi_agents():
     return await execute_multi_agents(manager)
+
 
 @app.post("/setConfig")
 async def set_config(config: ConfigRequest):
     update_environment_variables(config.dict())
     return {"message": "Config updated successfully"}
 
+
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
     return await handle_file_upload(file, DOC_PATH)
 
+
 @app.delete("/files/{filename}")
 async def delete_file(filename: str):
     return await handle_file_deletion(filename, DOC_PATH)
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

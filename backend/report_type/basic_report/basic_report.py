@@ -1,7 +1,8 @@
 from fastapi import WebSocket
 
-from gpt_researcher.master.agent import GPTResearcher
+from gpt_researcher.orchestrator.agent import GPTResearcher
 from gpt_researcher.utils.enum import Tone
+
 
 class BasicReport:
     def __init__(
