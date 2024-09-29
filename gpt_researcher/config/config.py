@@ -1,79 +1,86 @@
-# config file
 import json
 import os
+from typing import Dict, Any, List
+from gpt_researcher.config.configurations.default_config import DEFAULT_CONFIG
 
 
 class Config:
     """Config class for GPT Researcher."""
 
-    def __init__(self, config_file: str = None):
-        """Initialize the config class."""
-        self.config_file = (
-            os.path.expanduser(config_file) if config_file else os.getenv("CONFIG_FILE")
-        )
-        self.retrievers = self.parse_retrievers(os.getenv("RETRIEVER", "tavily"))
-        self.embedding_provider = os.getenv("EMBEDDING_PROVIDER", "openai")
-        self.similarity_threshold = int(os.getenv("SIMILARITY_THRESHOLD", 0.42))
-        self.llm_provider = os.getenv("LLM_PROVIDER", "openai")
-        self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", None)
-        self.llm_model = os.getenv("DEFAULT_LLM_MODEL", "gpt-4o-mini")
-        self.fast_llm_model = os.getenv("FAST_LLM_MODEL", "gpt-4o-mini")
-        self.smart_llm_model = os.getenv("SMART_LLM_MODEL", "gpt-4o-2024-08-06")
-        self.fast_token_limit = int(os.getenv("FAST_TOKEN_LIMIT", 2000))
-        self.smart_token_limit = int(os.getenv("SMART_TOKEN_LIMIT", 4000))
-        self.browse_chunk_max_length = int(os.getenv("BROWSE_CHUNK_MAX_LENGTH", 8192))
-        self.summary_token_limit = int(os.getenv("SUMMARY_TOKEN_LIMIT", 700))
-        self.temperature = float(os.getenv("TEMPERATURE", 0.4))
-        self.llm_temperature = float(os.getenv("LLM_TEMPERATURE", 0.55))
-        self.user_agent = os.getenv(
-            "USER_AGENT",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
-        )
-        self.max_search_results_per_query = int(
-            os.getenv("MAX_SEARCH_RESULTS_PER_QUERY", 5)
-        )
-        self.memory_backend = os.getenv("MEMORY_BACKEND", "local")
-        self.total_words = int(os.getenv("TOTAL_WORDS", 900))
-        self.report_format = os.getenv("REPORT_FORMAT", "APA")
-        self.max_iterations = int(os.getenv("MAX_ITERATIONS", 3))
-        self.agent_role = os.getenv("AGENT_ROLE", None)
-        self.scraper = os.getenv("SCRAPER", "bs")  # Change to "browser" to use Selenium. Requires selenium.
-        self.max_subtopics = os.getenv("MAX_SUBTOPICS", 3)
-        self.report_source = os.getenv("REPORT_SOURCE", None)
-        self.doc_path = os.getenv("DOC_PATH", "./my-docs")
-        self.llm_kwargs = {}
+    CONFIG_DIR = os.path.join(os.path.dirname(__file__), "configurations")
 
-        self.load_config_file()
-        if not hasattr(self, "llm_kwargs"):
-            self.llm_kwargs = {}
+    def __init__(self, config_name: str = "default"):
+        """Initialize the config class."""
+        self.config_name = config_name
+        self.llm_kwargs: Dict[str, Any] = {}
+        self.config_file = None  # Initialize config_file attribute
+
+        # Load the specified configuration
+        config_to_use = self.load_config(config_name)
+
+        # Set attributes based on the loaded config
+        for key, value in config_to_use.items():
+            setattr(self, key.lower(), os.getenv(key, value))
+
+        self.valid_retrievers = config_to_use['VALID_RETRIEVERS']
+        try:
+            self.retrievers = self.parse_retrievers(config_to_use['RETRIEVER'])
+        except ValueError as e:
+            print(f"Warning: {str(e)}. Using default retrievers.")
+            self.retrievers = list(self.valid_retrievers.values())
+
+        self.doc_path = config_to_use['DOC_PATH']
 
         if self.doc_path:
-            self.validate_doc_path()
+            try:
+                self.validate_doc_path()
+            except Exception as e:
+                print(
+                    f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
+                self.doc_path = DEFAULT_CONFIG['DOC_PATH']
 
-    def parse_retrievers(self, retriever_str: str):
+        # Load additional config file if specified
+        self.load_config_file()
+
+    @classmethod
+    def load_config(cls, config_name: str) -> Dict[str, Any]:
+        """Load a configuration by name."""
+        if config_name == "default":
+            return DEFAULT_CONFIG
+
+        config_path = os.path.join(cls.CONFIG_DIR, f"{config_name}.json")
+        if not os.path.exists(config_path):
+            print(
+                f"Warning: Configuration '{config_name}' not found. Using default configuration.")
+            return DEFAULT_CONFIG
+
+        with open(config_path, "r") as f:
+            custom_config = json.load(f)
+
+        # Merge with default config to ensure all keys are present
+        merged_config = DEFAULT_CONFIG.copy()
+        merged_config.update(custom_config)
+        return merged_config
+
+    @classmethod
+    def list_available_configs(cls) -> List[str]:
+        """List all available configuration names."""
+        configs = ["default"]
+        for file in os.listdir(cls.CONFIG_DIR):
+            if file.endswith(".json"):
+                configs.append(file[:-5])  # Remove .json extension
+        return configs
+
+    def parse_retrievers(self, retriever_str: str) -> List[str]:
         """Parse the retriever string into a list of retrievers and validate them."""
-        VALID_RETRIEVERS = [
-            "arxiv",
-            "bing",
-            "custom",
-            "duckduckgo",
-            "exa",
-            "google",
-            "searchapi",
-            "searx",
-            "semantic_scholar",
-            "serpapi",
-            "serper",
-            "tavily",
-            "pubmed_central",
-        ]
-        retrievers = [retriever.strip() for retriever in retriever_str.split(",")]
-        invalid_retrievers = [r for r in retrievers if r not in VALID_RETRIEVERS]
+        retrievers = [retriever.strip()
+                      for retriever in retriever_str.split(",")]
+        invalid_retrievers = [
+            r for r in retrievers if r not in self.valid_retrievers.values()]
         if invalid_retrievers:
             raise ValueError(
                 f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. "
-                f"Valid options are: {', '.join(VALID_RETRIEVERS)}."
+                f"Valid options are: {', '.join(self.valid_retrievers.values())}."
             )
         return retrievers
 
