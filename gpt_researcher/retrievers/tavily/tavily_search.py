@@ -67,7 +67,7 @@ class TavilySearch():
             "include_answer": include_answer,
             "include_raw_content": include_raw_content,
             "max_results": max_results,
-            "include_domains": ["cnn.com", "apnews.com", "foxnews.com"],
+            "include_domains": include_domains,
             "exclude_domains": exclude_domains,
             "include_images": include_images,
             "api_key": self.api_key,
