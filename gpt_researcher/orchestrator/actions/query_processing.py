@@ -4,7 +4,8 @@ import json_repair
 from typing import List, Dict, Any
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.llm import create_chat_completion
-from gpt_researcher.master.prompts import auto_agent_instructions, generate_search_queries_prompt
+from gpt_researcher.orchestrator.prompts import auto_agent_instructions, generate_search_queries_prompt
+
 
 async def choose_agent(
     query, cfg, parent_query=None, cost_callback: callable = None, headers=None
@@ -45,6 +46,7 @@ async def choose_agent(
         print("⚠️ Error in reading JSON, attempting to repair JSON")
         return await handle_json_error(response)
 
+
 async def handle_json_error(response):
     try:
         agent_dict = json_repair.loads(response)
@@ -66,6 +68,7 @@ async def handle_json_error(response):
         "You are an AI critical thinker research assistant. Your sole purpose is to write well written, "
         "critically acclaimed, objective and structured reports on given text."
     )
+
 
 def extract_json_with_regex(response):
     json_match = re.search(r"{.*?}", response, re.DOTALL)
