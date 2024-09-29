@@ -7,9 +7,9 @@ from typing import Set
 from gpt_researcher.config import Config
 from gpt_researcher.context.compression import ContextCompressor, WrittenContentCompressor, VectorstoreCompressor
 from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
-from gpt_researcher.master.actions import get_retrievers, choose_agent, stream_output, get_sub_queries, scrape_urls, write_conclusion, get_report_introduction, generate_draft_section_titles, generate_report
+from gpt_researcher.orchestrator.actions import get_retrievers, choose_agent, stream_output, get_sub_queries, scrape_urls, write_conclusion, get_report_introduction, generate_draft_section_titles, generate_report
 from gpt_researcher.memory import Memory
-from gpt_researcher.master.prompts import get_prompt_by_report_type
+from gpt_researcher.orchestrator.prompts import get_prompt_by_report_type
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 
 
@@ -78,7 +78,8 @@ class GPTResearcher:
         self.headers = headers or {}
         # Ensure tone is an instance of Tone enum
         if isinstance(tone, dict):
-            print(f"Invalid tone format: {tone}. Setting to default Tone.Objective.")
+            print(
+                f"Invalid tone format: {tone}. Setting to default Tone.Objective.")
             self.tone = Tone.Objective
         elif isinstance(tone, str):
             self.tone = Tone[tone]
@@ -442,10 +443,11 @@ class GPTResearcher:
                 "fetching_query_content",
                 f"📚 Getting relevant content based on query: {query}...",
                 self.websocket,
-            )  
+            )
 
         # Summarize data fetched from vector store
-        vectorstore_compressor = VectorstoreCompressor(self.vector_store, filter)
+        vectorstore_compressor = VectorstoreCompressor(
+            self.vector_store, filter)
 
         return await vectorstore_compressor.async_get_context(
             query=query, max_results=8
@@ -606,13 +608,13 @@ class GPTResearcher:
         )
 
         return draft_section_titles
-    
+
     async def __get_similar_written_contents_by_query(self,
-            query: str,
-            written_contents: List[Dict],
-            similarity_threshold: float = 0.5,
-            max_results: int = 10
-        ) -> List[str]:
+                                                      query: str,
+                                                      written_contents: List[Dict],
+                                                      similarity_threshold: float = 0.5,
+                                                      max_results: int = 10
+                                                      ) -> List[str]:
         """
         Asynchronously retrieves similar written contents based on a given query.
 
@@ -653,34 +655,34 @@ class GPTResearcher:
             report_type=self.report_type,
             cost_callback=self.add_costs,
         )
-    
+
     async def get_similar_written_contents_by_draft_section_titles(
-        self, 
-        current_subtopic: str, 
+        self,
+        current_subtopic: str,
         draft_section_titles: List[str],
         written_contents: List[Dict],
         max_results: int = 10
     ) -> List[str]:
         """
         Retrieve similar written contents based on current subtopic and draft section titles.
-        
+
         Args:
         current_subtopic (str): The current subtopic.
         draft_section_titles (List[str]): List of draft section titles.
         written_contents (List[Dict]): List of written contents to search through.
         max_results (int): Maximum number of results to return. Defaults to 10.
-        
+
         Returns:
         List[str]: List of relevant written contents.
         """
         all_queries = [current_subtopic] + draft_section_titles
-        
+
         async def process_query(query: str) -> Set[str]:
             return set(await self.__get_similar_written_contents_by_query(query, written_contents))
 
         # Run all queries in parallel
         results = await asyncio.gather(*[process_query(query) for query in all_queries])
-        
+
         # Combine all results
         relevant_contents = set().union(*results)
 

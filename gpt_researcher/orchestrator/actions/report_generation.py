@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.logger import get_formatted_logger
-from gpt_researcher.master.prompts import (
+from gpt_researcher.orchestrator.prompts import (
     generate_report_introduction,
     generate_report_prompt,
     generate_report_conclusion,
@@ -13,12 +13,13 @@ from gpt_researcher.utils.enum import Tone
 
 logger = get_formatted_logger()
 
+
 async def get_report_introduction(
     query: str,
     context: str,
     role: str,
     config: Config,
-    websocket = None,
+    websocket=None,
     cost_callback: callable = None
 ) -> str:
     """
@@ -40,7 +41,8 @@ async def get_report_introduction(
             model=config.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{role}"},
-                {"role": "user", "content": generate_report_introduction(query, context)},
+                {"role": "user", "content": generate_report_introduction(
+                    query, context)},
             ],
             temperature=0.25,
             llm_provider=config.llm_provider,
@@ -55,12 +57,13 @@ async def get_report_introduction(
         logger.error(f"Error in generating report introduction: {e}")
     return ""
 
+
 async def write_conclusion(
     query: str,
     context: str,
     role: str,
     config: Config,
-    websocket = None,
+    websocket=None,
     cost_callback: callable = None
 ) -> str:
     """
@@ -82,7 +85,8 @@ async def write_conclusion(
             model=config.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{role}"},
-                {"role": "user", "content": generate_conclusion(query, context)},
+                {"role": "user", "content": generate_conclusion(
+                    query, context)},
             ],
             temperature=0.25,
             llm_provider=config.llm_provider,
@@ -97,12 +101,13 @@ async def write_conclusion(
         logger.error(f"Error in writing conclusion: {e}")
     return ""
 
+
 async def summarize_url(
     url: str,
     content: str,
     role: str,
     config: Config,
-    websocket = None,
+    websocket=None,
     cost_callback: callable = None
 ) -> str:
     """
@@ -139,12 +144,13 @@ async def summarize_url(
         logger.error(f"Error in summarizing URL: {e}")
     return ""
 
+
 async def generate_draft_section_titles(
     query: str,
     context: str,
     role: str,
     config: Config,
-    websocket = None,
+    websocket=None,
     cost_callback: callable = None
 ) -> List[str]:
     """
@@ -166,7 +172,8 @@ async def generate_draft_section_titles(
             model=config.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{role}"},
-                {"role": "user", "content": generate_draft_section_titles(query, context)},
+                {"role": "user", "content": generate_draft_section_titles(
+                    query, context)},
             ],
             temperature=0.25,
             llm_provider=config.llm_provider,
@@ -180,6 +187,7 @@ async def generate_draft_section_titles(
     except Exception as e:
         logger.error(f"Error in generating draft section titles: {e}")
     return []
+
 
 async def generate_report(
     query: str,
