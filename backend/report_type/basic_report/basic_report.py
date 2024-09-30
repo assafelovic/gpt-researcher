@@ -1,7 +1,8 @@
 from fastapi import WebSocket
 
-from gpt_researcher.master.agent import GPTResearcher
+from gpt_researcher.orchestrator.agent import GPTResearcher
 from gpt_researcher.utils.enum import Tone
+
 
 class BasicReport:
     def __init__(
@@ -37,10 +38,6 @@ class BasicReport:
             headers=self.headers
         )
 
-        # Run research
         await researcher.conduct_research()
-
-        # and generate report
         report = await researcher.write_report()
-
         return report
