@@ -226,6 +226,12 @@ export default function Home() {
         groupedData.push({ type: 'langgraphButton', link });
       } else if (type === 'question') {
         groupedData.push({ type: 'question', content });
+      } else if (type === 'accordionBlock') {
+        if (!currentAccordionGroup) {
+          currentAccordionGroup = { type: 'accordionBlock', items: [] };
+          groupedData.push(currentAccordionGroup);
+        }
+        currentAccordionGroup.items.push(item);
       } else {
         if (currentReportGroup) {
           currentReportGroup = null;
@@ -291,7 +297,7 @@ export default function Home() {
 
   const renderComponentsInOrder = () => {
     const groupedData = preprocessOrderedData(orderedData);
-    console.log('orderedData in renderComponentsInOrder: ', groupedData)
+    console.log('orderedData in renderComponentsInOrder: ', groupedData);
 
     const leftComponents: React.ReactNode[] = [];
     const rightComponents: React.ReactNode[] = [];
@@ -312,6 +318,7 @@ export default function Home() {
           text: item.output,
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
+        // Use the LogMessage component to render accordion-style logs
         leftComponents.push(<LogMessage key={uniqueKey} logs={logs} />);
       } else if (data.content === 'subqueries') {
         leftComponents.push(
@@ -344,7 +351,11 @@ export default function Home() {
       <Header />
       <main className="flex-grow flex overflow-hidden">
         {/* Left side - Input components and Sources */}
-        <div className="w-1/2 flex flex-col">
+        <div
+          className={`flex flex-col transition-all duration-500 ${
+            showResult ? 'flex-1' : 'flex-[2]'
+          }`}
+        >
           <div className={`transition-all duration-500 ease-in-out ${
             showResult ? 'translate-y-0 opacity-100' : 'translate-y-1/2 opacity-0'
           }`}>
@@ -370,7 +381,11 @@ export default function Home() {
         </div>
 
         {/* Right side - Output components */}
-        <div className="w-1/2 flex flex-col">
+        <div
+          className={`flex flex-col transition-all duration-500 ${
+            showResult ? 'flex-1 opacity-100' : 'flex-0 opacity-0 overflow-hidden'
+          }`}
+        >
           {/* Scrollable container for right components */}
           <div className="flex-grow overflow-y-auto bg-gray-100 rounded-lg shadow-inner p-4">
             {showResult && (
