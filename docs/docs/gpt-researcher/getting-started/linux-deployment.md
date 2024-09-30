@@ -81,6 +81,8 @@ http {
    server {
        listen 80;
        server_name name.example;
+       
+       client_max_body_size 64M;
 
        location / {
            proxy_pass http://localhost:3000;
@@ -91,7 +93,7 @@ http {
            proxy_cache_bypass $http_upgrade;
        }
 
-       location ~ ^/(ws|upload|files|outputs|getConfig) {
+       location ~ ^/(ws|upload|files|outputs|getConfig|setConfig) {
            proxy_pass http://localhost:8000;
            proxy_http_version 1.1;
            proxy_set_header Upgrade $http_upgrade;
@@ -108,6 +110,8 @@ And if you're using SSL:
 server {
     server_name name.example;
     
+    client_max_body_size 64M;
+    
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -117,7 +121,7 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
     
-    location ~ ^/(ws|upload|files|outputs|getConfig) {
+    location ~ ^/(ws|upload|files|outputs|getConfig|setConfig) {
         proxy_pass http://localhost:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
