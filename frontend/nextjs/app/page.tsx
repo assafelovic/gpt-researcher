@@ -36,6 +36,7 @@ export default function Home() {
   const [showHumanFeedback, setShowHumanFeedback] = useState(false);
   const [questionForHuman, setQuestionForHuman] = useState(false);
   const [hasOutput, setHasOutput] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -126,6 +127,7 @@ export default function Home() {
   };
 
   const handleDisplayResult = async (newQuestion?: string) => {
+    setIsTransitioning(true);
     newQuestion = newQuestion || promptValue;
 
     setShowResult(true);
@@ -173,6 +175,10 @@ export default function Home() {
       startResearch(chatBoxSettings);
       setHasOutput(true); // Set hasOutput to true when the research starts
     }
+    // Wait for the transition to complete
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 500); // Adjust this value to match your transition duration
   };
 
   const reset = () => {
@@ -336,44 +342,42 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-grow px-4 pb-4 pt-10 flex">
+      <main className="flex-grow flex overflow-hidden">
         {/* Left side - Input components and Sources */}
-        <div className="w-1/2 pr-4 flex flex-col">
-          {!showResult ? (
+        <div className="w-1/2 flex flex-col">
+          <div className={`transition-all duration-500 ease-in-out ${
+            showResult ? 'translate-y-0 opacity-100' : 'translate-y-1/2 opacity-0'
+          }`}>
+            <InputArea
+              promptValue={promptValue}
+              setPromptValue={setPromptValue}
+              handleDisplayResult={handleDisplayResult}
+              disabled={loading}
+              reset={reset}
+            />
+          </div>
+          {!showResult && !isTransitioning && (
             <Hero
               promptValue={promptValue}
               setPromptValue={setPromptValue}
               handleDisplayResult={handleDisplayResult}
             />
-          ) : (
-            <>
-              <div className="mb-4">
-                <InputArea
-                  promptValue={promptValue}
-                  setPromptValue={setPromptValue}
-                  handleDisplayResult={handleDisplayResult}
-                  disabled={loading}
-                  reset={reset}
-                />
-              </div>
-              {/* Render left side components */}
-              <div className="mt-4 overflow-y-auto flex-grow">
-                {renderComponentsInOrder().leftComponents}
-              </div>
-            </>
           )}
+          {/* Scrollable container for left components */}
+          <div className="flex-grow overflow-y-auto">
+            {renderComponentsInOrder().leftComponents}
+          </div>
         </div>
 
         {/* Right side - Output components */}
-        <div className="w-1/2 pl-4 flex flex-col">
-          <div className="flex-grow overflow-hidden">
-            <div className="h-full overflow-y-auto bg-gray-100 rounded-lg shadow-inner p-4">
-              {showResult && (
-                <div className="space-y-4">
-                  {renderComponentsInOrder().rightComponents}
-                </div>
-              )}
-            </div>
+        <div className="w-1/2 flex flex-col">
+          {/* Scrollable container for right components */}
+          <div className="flex-grow overflow-y-auto bg-gray-100 rounded-lg shadow-inner p-4">
+            {showResult && (
+              <div className="space-y-4">
+                {renderComponentsInOrder().rightComponents}
+              </div>
+            )}
           </div>
           {showHumanFeedback && (
             <HumanFeedback

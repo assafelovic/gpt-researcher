@@ -40,12 +40,11 @@
 }
 
 .settings body {
-  font-family: 'Montserrat', sans-serif;
-  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+  color: #333;
   line-height: 1.6;
-  background-size: 200% 200%;
-  background-image: linear-gradient(45deg, #151A2D, #2D284D, #151A2D);
-  animation: gradientBG 10s ease infinite;
+  background-color: #f5f5f7;
+  animation: none;
 }
 
 .settings .landing {
@@ -71,58 +70,111 @@
 }
 
 .settings .container {
-  max-width: 900px;
-  margin: auto;
-  padding: 20px;
-  background-color: rgba(255, 255, 255, 0.1);
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
   border-radius: 12px;
-  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.1);
-  transition: all .3s ease-in-out;
-  max-height: 80vh; /* Fixed maximum height */
-  overflow-y: auto; /* Enable scrolling if content overflows */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .settings .container:hover {
-  transform: scale(1.01);
-  box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.2);
+  transform: none;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 .settings input, 
 .settings select, 
 .settings #output, 
 .settings #reportContainer {
-  background-color: rgba(0, 0, 0, 0.5); /* Darker background color */
-  border: none;
-  color: #fff; /* White text color */
-  transition: all .3s ease-in-out;
+  background-color: #f0f0f0;
+  border: 1px solid #e0e0e0;
+  color: #333;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease-in-out;
 }
 
 .settings input:hover, 
 .settings input:focus, 
 .settings select:hover, 
 .settings select:focus {
-  background-color: #333; /* Darker hover/focus background color */
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease-in-out;
+  background-color: #ffffff;
+  border-color: #0071e3;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
 }
 
 .settings .btn-primary {
-  background: linear-gradient(to right, #0062cc, #007bff);
+  background: #0071e3;
   border: none;
-  transition: all .3s ease-in-out;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease-in-out;
 }
 
 .settings .btn-secondary {
-  background: linear-gradient(to right, #6c757d, #6c757d);
+  background: #6e6e73;
   border: none;
-  transition: all .3s ease-in-out;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease-in-out;
 }
 
 .settings .btn:hover {
-  opacity: 0.8;
-  transform: scale(1.1);
-  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.settings .agent_response {
+  background-color: #f7f7f8;
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #10a37f;
+}
+
+.settings #output {
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+  background-color: #f7f7f8;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.settings #reportContainer {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  color: #333;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.settings .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.settings .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.settings .form-group input,
+.settings .form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background-color: #f0f0f0;
+  color: #333;
+  transition: all 0.3s ease-in-out;
 }
 
 .settings .agent_question {
@@ -148,32 +200,6 @@
   padding: 10px;
 }
 
-.settings .agent_response {
-  background-color: #747d8c;
-  margin: 10px;
-  padding: 10px;
-  border-radius: 12px;
-}
-
-.settings #output {
-  height: 150px; /* Adjusted height */
-  font-family: 'Times New Roman', Times, "Courier New", serif;
-  overflow: auto;
-  padding: 10px;
-  margin-bottom: 10px;
-  margin-top: 10px;
-}
-
-.settings #reportContainer {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #fff;
-  transition: all .3s ease-in-out;
-  padding: 10px;
-  border-radius: 12px;
-}
-
-/* refactoring inline css */
 .settings .sayGoodbye {
   background-image: linear-gradient(to right, #9867F0, #ED4E50);
   -webkit-background-clip: text;

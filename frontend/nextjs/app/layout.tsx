@@ -42,11 +42,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <head>
         <PlausibleProvider domain="localhost:3000" />
       </head>
-      <body className={`${inter.className} min-h-screen flex flex-col bg-white text-gray-900`}>
+      <body className={`${inter.className} h-full flex flex-col bg-white text-gray-900`}>
         {children}
       </body>
     </html>
