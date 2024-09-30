@@ -135,4 +135,6 @@ class DetailedReport:
         conclusion = await self.main_task_assistant.write_report_conclusion(report_body)
         conclusion_with_references = add_references(
             conclusion, self.main_task_assistant.visited_urls)
-        return f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
+        report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
+        print("******************** REPORT: ", report)
+        return report

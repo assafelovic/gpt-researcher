@@ -7,6 +7,8 @@ from gpt_researcher.orchestrator.prompts import (
     generate_subtopics_prompt,
     generate_draft_titles_prompt,
 )
+
+from gpt_researcher.utils.llm import construct_subtopics
 from gpt_researcher.orchestrator.actions import stream_output, generate_report
 
 
@@ -89,7 +91,7 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        conclusion = await generate_report_conclusion(report_content)
+        conclusion = generate_report_conclusion(report_content)
 
         if self.researcher.verbose:
             await stream_output(
@@ -111,7 +113,7 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        introduction = await generate_report_introduction(
+        introduction = generate_report_introduction(
             question=self.researcher.query,
             research_summary=self.researcher.context
         )
@@ -136,14 +138,19 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        subtopics_prompt = generate_subtopics_prompt().format(
+        # subtopics_prompt = generate_subtopics_prompt().format(
+        #     task=self.researcher.query,
+        #     data=self.researcher.context,
+        #     subtopics=self.researcher.subtopics,
+        #     max_subtopics=self.researcher.max_subtopics,
+        #     format_instructions="Return the subtopics as a list of strings."
+        # )
+        subtopics = await construct_subtopics(
             task=self.researcher.query,
             data=self.researcher.context,
+            config=self.researcher.cfg,
             subtopics=self.researcher.subtopics,
-            max_subtopics=self.researcher.max_subtopics,
-            format_instructions="Return the subtopics as a list of strings."
         )
-        subtopics = await self.researcher.llm.generate(subtopics_prompt)
 
         if self.researcher.verbose:
             await stream_output(
@@ -171,7 +178,7 @@ class ReportGenerator:
             context=self.researcher.context,
             max_subsections=5  # You might want to make this configurable
         )
-        draft_sections = await self.researcher.llm.generate(draft_titles_prompt)
+        draft_sections = await self.researcher.llm.agenerate(draft_titles_prompt)
 
         if self.researcher.verbose:
             await stream_output(
