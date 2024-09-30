@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Modal from './Settings/Modal';
 
-const Footer = ({ setChatBoxSettings, chatBoxSettings }) => {
+const Footer = ({ setChatBoxSettings, chatBoxSettings }: { setChatBoxSettings: React.Dispatch<React.SetStateAction<any>>, chatBoxSettings: any }) => {
   return (
     <footer className="bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200">
       <div className="container mx-auto px-4 py-6 flex items-center justify-between">
@@ -22,7 +22,7 @@ const Footer = ({ setChatBoxSettings, chatBoxSettings }) => {
   );
 };
 
-const SocialLink = ({ href, icon, alt }) => (
+const SocialLink = ({ href, icon, alt }: { href: string; icon: string; alt: string }) => (
   <Link href={href} target="_blank" className="transition-transform hover:scale-110">
     <Image src={icon} alt={alt} width={24} height={24} className="opacity-70 hover:opacity-100" />
   </Link>

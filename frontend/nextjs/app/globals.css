@@ -18,6 +18,7 @@ body {
   background-size: 200% 200%;
   background-image: linear-gradient(45deg, #151A2D, #111827, #151A2D);
   animation: gradientBG 10s ease infinite;
+  margin: 0 !important;
 }
 
 .landing {
@@ -86,17 +87,11 @@ body {
   }
 }
 
-body {
-  margin: 0px !important;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.fade-in {
-  animation: fadeIn 0.5s ease-in-out;
+@layer components {
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(to right, #9867F0, #ED4E50);
+  }
 }
 
 body.light-mode {

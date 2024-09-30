@@ -7,7 +7,7 @@ import html from 'remark-html';
 
 
 export default function Answer({ answer }: { answer: string }) {
-  async function markdownToHtml(markdown) {
+  async function markdownToHtml(markdown: string) {
     try {
       const result = await remark().use(html).process(markdown);
       console.log('Markdown to HTML conversion result:', result.toString());
@@ -38,6 +38,7 @@ export default function Answer({ answer }: { answer: string }) {
                 className="cursor-pointer"
               /> */}
               <button
+                aria-label="Copy answer to clipboard"
                 onClick={() => {
                   navigator.clipboard.writeText(answer.trim());
                   toast("Answer copied to clipboard", {

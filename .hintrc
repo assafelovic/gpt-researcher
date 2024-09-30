@@ -1,0 +1,16 @@
+{
+  "extends": [
+    "development"
+  ],
+  "hints": {
+    "axe/structure": [
+      "default",
+      {
+        "list": "off"
+      }
+    ],
+    "axe/aria": "off",
+    "typescript-config/consistent-casing": "off",
+    "compat-api/css": "off"
+  }
+}

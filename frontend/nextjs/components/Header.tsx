@@ -31,7 +31,7 @@ const Header = () => {
   );
 };
 
-const NavItem = ({ href, children }) => (
+const NavItem = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <li>
     <Link
       href={href}

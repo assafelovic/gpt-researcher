@@ -4,30 +4,31 @@ import { useState } from 'react';
 
 const plainTextFields = ['task', 'sections', 'headers', 'sources', 'research_data'];
 
-const Accordion = ({ logs }) => {
+const Accordion = ({ logs }: { logs: any[] }) => {
   console.log('logs in Accordion', logs);
 
-  const getLogHeaderText = (log) => {
-  const regex = /📃 Source: (https?:\/\/[^\s]+)/;
-  const match = log.text.match(regex);
-  let sourceUrl = '';
-
-  if (match) {
-    sourceUrl = match[1];
-  }
-
-  return log.header === 'differences'
-    ? 'The following fields on the Langgraph were updated: ' + Object.keys(JSON.parse(log.text).data).join(', ')
-    : `📄 Retrieved relevant content from the source: ${sourceUrl}`;
-};
-
-  const renderLogContent = (log) => {
+  const getLogHeaderText = (log: { text?: string; header: string }) => {
     if (log.header === 'differences') {
+      return 'The following fields on the Langgraph were updated: ' + Object.keys(JSON.parse(log.text || '{}').data).join(', ');
+    } else {
+      const regex = /📃 Source: (https?:\/\/[^\s]+)/;
+      const match = log.text?.match(regex);
+      let sourceUrl = match ? match[1] : '';
+      return `📄 Retrieved relevant content from the source: ${sourceUrl}`;
+    }
+  };
+
+  const renderLogContent = (log: { 
+    header: string; 
+    processedData?: Array<{ field: string; isMarkdown: boolean; htmlContent: string | object }>;
+    text?: string;
+  }) => {
+    if (log.header === 'differences' && log.processedData) {
       return log.processedData.map((data, index) => (
         <div key={index} className="mb-4">
           <h3 className="font-semibold text-lg text-body-color dark:text-dark-6">{data.field}:</h3>
           {data.isMarkdown ? (
-            <div className="markdown-content" dangerouslySetInnerHTML={{ __html: data.htmlContent }} />
+            <div className="markdown-content" dangerouslySetInnerHTML={{ __html: typeof data.htmlContent === 'string' ? data.htmlContent : '' }} />
           ) : (
             <p className="text-body-color dark:text-dark-6">{typeof data.htmlContent === 'object' ? JSON.stringify(data.htmlContent) : data.htmlContent}</p>
           )}
@@ -86,13 +87,13 @@ const Accordion = ({ logs }) => {
         </div>
       ));
     } else {
-      return <p className="mb-2 text-body-color dark:text-dark-6">{log.text}</p>;
+      return <p className="mb-2 text-body-color dark:text-dark-6">{log.text || 'No content available'}</p>;
     }
   };
 
-  const [openIndex, setOpenIndex] = useState(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-  const handleToggle = (index) => {
+  const handleToggle = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 

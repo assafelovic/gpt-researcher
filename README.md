@@ -110,7 +110,7 @@ For a more permanent setup, create a `.env` file in the current `gpt-researcher`
 - The default retriever is [Tavily](https://app.tavily.com), but you can refer to other retrievers such as `duckduckgo`, `google`, `bing`, `searchapi`, `serper`, `searx`, `arxiv`, `exa` and more. To learn how to change the search provider, see the [retrievers documentation](https://docs.gptr.dev/docs/gpt-researcher/search-engines/retrievers) page.
 
 ### Quickstart
-
+. docker build -t nextjs-app .
 > **Step 1** - Install dependencies
 
 ```bash

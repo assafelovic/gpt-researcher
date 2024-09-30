@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react';
 import { remark } from 'remark';
 import html from 'remark-html';
 
-const LogMessage = ({ logs }) => {
-  const [processedLogs, setProcessedLogs] = useState([]);
+const LogMessage = ({ logs }: { logs: any[] }) => {
+  const [processedLogs, setProcessedLogs] = useState<any[]>([]);
 
   useEffect(() => {
     const processLogs = async () => {
@@ -59,7 +59,7 @@ const LogMessage = ({ logs }) => {
   );
 };
 
-const markdownToHtml = async (markdown) => {
+const markdownToHtml = async (markdown: string): Promise<string> => {
   try {
     const result = await remark().use(html).process(markdown);
     return result.toString();
