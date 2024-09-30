@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface HumanFeedbackProps {
+  questionForHuman: string | boolean;
   websocket: WebSocket | null;
   onFeedbackSubmit: (feedback: string | null) => void;
 }

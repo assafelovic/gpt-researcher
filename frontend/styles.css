@@ -170,3 +170,15 @@ footer {
     outline: none;
     flex-grow: 1;
 }
+
+.landing-description {
+    font-size: 20px;
+}
+
+.small-text {
+    font-size: 0.7rem;
+}
+
+.margin-right-10 {
+    margin-right: 10px;
+}

@@ -30,9 +30,9 @@ export default function Home() {
   const [sources, setSources] = useState<{ name: string; url: string }[]>([]);
   const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
 
-  const [socket, setSocket] = useState(null);
-  const [orderedData, setOrderedData] = useState([]);
-  const heartbeatInterval = useRef(null);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [orderedData, setOrderedData] = useState<any[]>([]);
+  const heartbeatInterval = useRef<number | null>(null);
   const [showHumanFeedback, setShowHumanFeedback] = useState(false);
   const [questionForHuman, setQuestionForHuman] = useState(false);
   const [hasOutput, setHasOutput] = useState(false);
@@ -44,7 +44,12 @@ export default function Home() {
     }
   }, [orderedData]);
 
-  const startResearch = (chatBoxSettings) => {
+  const startResearch = (chatBoxSettings: {
+    task?: string;
+    report_type: string;
+    report_source: string;
+    tone: string;
+  }) => {
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
     const headers = {
@@ -69,7 +74,7 @@ export default function Home() {
         const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
 
         const newSocket = new WebSocket(ws_uri);
-        setSocket(newSocket);
+        setSocket(newSocket as WebSocket);
 
         newSocket.onmessage = (event) => {
           const data = JSON.parse(event.data);
@@ -106,7 +111,7 @@ export default function Home() {
         };
 
         newSocket.onclose = () => {
-          clearInterval(heartbeatInterval.current);
+          clearInterval(heartbeatInterval.current as number);
           setSocket(null);
         };
       }
@@ -198,16 +203,16 @@ export default function Home() {
     }
   };
 
-  const preprocessOrderedData = (data) => {
-    const groupedData = [];
-    let currentAccordionGroup = null;
-    let currentSourceGroup = null;
-    let currentReportGroup = null;
-    let finalReportGroup = null;
+  const preprocessOrderedData = (data: any[]): any[] => {
+    const groupedData: any[] = [];
+    let currentAccordionGroup: any = null;
+    let currentSourceGroup: any = null;
+    let currentReportGroup: any = null;
+    let finalReportGroup: any = null;
     let sourceBlockEncountered = false;
     let lastSubqueriesIndex = -1;
   
-    data.forEach((item, index) => {
+    data.forEach((item: any, index: number) => {
       const { type, content, metadata, output, link } = item;
   
       if (type === 'report') {
@@ -311,7 +316,7 @@ export default function Home() {
       const uniqueKey = `${data.type}-${index}`;
 
       if (data.type === 'sourceBlock') {
-        leftComponents.push(<Sources key={uniqueKey} sources={data.items} isLoading={false} />);
+        leftComponents.push(<Sources key={uniqueKey} sources={data.items} />);
       } else if (data.type === 'accordionBlock') {
         const logs = data.items.map((item: any, subIndex: number) => ({
           header: item.content,
