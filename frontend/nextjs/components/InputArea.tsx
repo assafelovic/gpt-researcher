@@ -19,7 +19,7 @@ const InputArea: FC<TInputAreaProps> = ({
 }) => {
   return (
     <form
-      className="mx-auto flex h-[66px] w-full items-center justify-between rounded-lg border bg-white px-3 shadow-[2px_2px_38px_0px_rgba(0,0,0,0.25),0px_-2px_4px_0px_rgba(0,0,0,0.25)_inset,1px_2px_4px_0px_rgba(0,0,0,0.25)_inset]"
+      className="mx-auto flex h-14 w-full max-w-md items-center rounded-full border border-gray-300 bg-gray-100 px-4 shadow-sm"
       onSubmit={(e) => {
         e.preventDefault();
         if (reset) reset();
@@ -29,7 +29,7 @@ const InputArea: FC<TInputAreaProps> = ({
       <input
         type="text"
         placeholder="What would you like me to research next?"
-        className="focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal] text-[#1B1B16]/30 text-black outline-none focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-xl"
+        className="flex-1 bg-transparent pl-2 text-base text-gray-800 placeholder-gray-500 focus:outline-none"
         disabled={disabled}
         value={promptValue}
         required
@@ -38,7 +38,7 @@ const InputArea: FC<TInputAreaProps> = ({
       <button
         disabled={disabled}
         type="submit"
-        className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-[linear-gradient(154deg,#1B1B16_23.37%,#565646_91.91%)] disabled:pointer-events-none disabled:opacity-75"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
       >
         {disabled && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -46,14 +46,14 @@ const InputArea: FC<TInputAreaProps> = ({
           </div>
         )}
 
-        <Image
-          unoptimized
-          src={"/img/arrow-narrow-right.svg"}
-          alt="search"
-          width={24}
-          height={24}
-          className={disabled ? "invisible" : ""}
-        />
+        {!disabled && (
+          <Image
+            src="/img/arrow-narrow-right.svg"
+            alt="search"
+            width={24}
+            height={24}
+          />
+        )}
       </button>
     </form>
   );

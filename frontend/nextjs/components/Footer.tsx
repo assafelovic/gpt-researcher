@@ -2,44 +2,30 @@ import Image from "next/image";
 import Link from "next/link";
 import Modal from './Settings/Modal';
 
-const Footer = ({ setChatBoxSettings, chatBoxSettings}) => {
-  
+const Footer = ({ setChatBoxSettings, chatBoxSettings }) => {
   return (
-    <>
-      <div className="container flex min-h-[72px] items-center justify-between border-t border-[#D2D2D2] px-4 pb-3 pt-5 lg:min-h-[72px] lg:px-0 lg:py-5">
+    <footer className="bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200">
+      <div className="container mx-auto px-4 py-6 flex items-center justify-between">
         <Modal setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
-        <div className="text-sm text-gray-500">
-            © {new Date().getFullYear()} GPT Researcher. All rights reserved.
+        
+        <div className="text-sm text-gray-500 font-light">
+          © {new Date().getFullYear()} GPT Researcher. All rights reserved.
         </div>
-        <div className="flex items-center gap-3">
-          <Link href={"https://github.com/assafelovic/gpt-researcher"} target="_blank">
-            <Image
-              src={"/img/github.svg"}
-              alt="github"
-              width={30}
-              height={30}
-            />{" "}
-          </Link>
-          <Link href={"https://discord.gg/QgZXvJAccX"} target="_blank">
-              <Image
-                src={"/img/discord.svg"}
-                alt="discord"
-                width={30}
-                height={30}
-              />{" "}
-          </Link>
-          <Link href={"https://hub.docker.com/r/gptresearcher/gpt-researcher"} target="_blank">
-              <Image
-                src={"/img/docker.svg"}
-                alt="docker"
-                width={30}
-                height={30}
-              />{" "}
-          </Link>
+        
+        <div className="flex items-center space-x-4">
+          <SocialLink href="https://github.com/assafelovic/gpt-researcher" icon="/img/github.svg" alt="GitHub" />
+          <SocialLink href="https://discord.gg/QgZXvJAccX" icon="/img/discord.svg" alt="Discord" />
+          <SocialLink href="https://hub.docker.com/r/gptresearcher/gpt-researcher" icon="/img/docker.svg" alt="Docker" />
         </div>
       </div>
-    </>
+    </footer>
   );
 };
+
+const SocialLink = ({ href, icon, alt }) => (
+  <Link href={href} target="_blank" className="transition-transform hover:scale-110">
+    <Image src={icon} alt={alt} width={24} height={24} className="opacity-70 hover:opacity-100" />
+  </Link>
+);
 
 export default Footer;

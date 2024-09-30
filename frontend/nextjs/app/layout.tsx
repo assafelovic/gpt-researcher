@@ -46,11 +46,10 @@ export default function RootLayout({
       <head>
         <PlausibleProvider domain="localhost:3000" />
       </head>
-      <body
-        className={`${inter.className} flex min-h-screen flex-col justify-between`}
-      >
+      <body className={`${inter.className} min-h-screen flex flex-col bg-white text-gray-900`}>
         {children}
       </body>
     </html>
   );
 }
+

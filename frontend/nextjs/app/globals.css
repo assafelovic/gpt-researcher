@@ -89,3 +89,22 @@ body {
 body {
   margin: 0px !important;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+body.light-mode {
+  background-color: #f0f0f0;
+  color: #121212;
+}
+
+body.dark-mode {
+  background-color: #121212;
+  color: #f0f0f0;
+}

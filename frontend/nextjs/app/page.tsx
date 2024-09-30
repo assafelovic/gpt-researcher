@@ -35,7 +35,7 @@ export default function Home() {
   const heartbeatInterval = useRef(null);
   const [showHumanFeedback, setShowHumanFeedback] = useState(false);
   const [questionForHuman, setQuestionForHuman] = useState(false);
-  
+  const [hasOutput, setHasOutput] = useState(false);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -133,6 +133,7 @@ export default function Home() {
     setQuestion(newQuestion);
     setPromptValue("");
     setAnswer(""); // Reset answer for new query
+    setHasOutput(false); // Reset hasOutput
 
     // Add the new question to orderedData
     setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: newQuestion }]);
@@ -145,7 +146,6 @@ export default function Home() {
     const langgraphHostUrl = apiVariables.LANGGRAPH_HOST_URL;
 
     if (report_type === 'multi_agents' && langgraphHostUrl) {
-
       let { streamResponse, host, thread_id } = await startLanggraphResearch(newQuestion, report_source, langgraphHostUrl);
 
       const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
@@ -161,19 +161,17 @@ export default function Home() {
         if (chunk.data.report != null && chunk.data.report != "Full report content here") {
           setOrderedData((prevOrder) => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
           setLoading(false);
+          setHasOutput(true); // Set hasOutput to true when the first output is generated
         } else if (previousChunk) {
           const differences = findDifferences(previousChunk, chunk);
           setOrderedData((prevOrder) => [...prevOrder, { type: 'differences', content: 'differences', output: JSON.stringify(differences) }]);
+          setHasOutput(true); // Set hasOutput to true when the first output is generated
         }
         previousChunk = chunk;
       }
     } else {
       startResearch(chatBoxSettings);
-
-      // await Promise.all([
-      //   handleSourcesAndAnswer(newQuestion),
-      //   handleSimilarQuestions(newQuestion),
-      // ]);
+      setHasOutput(true); // Set hasOutput to true when the research starts
     }
   };
 
@@ -289,104 +287,104 @@ export default function Home() {
     const groupedData = preprocessOrderedData(orderedData);
     console.log('orderedData in renderComponentsInOrder: ', groupedData)
 
-    return groupedData.map((data, index) => {
-      if (data.type === 'accordionBlock') {
-        const uniqueKey = `accordionBlock-${index}`;
-        const logs = data.items.map((item, subIndex) => ({
+    const leftComponents: React.ReactNode[] = [];
+    const rightComponents: React.ReactNode[] = [];
+
+    // Add the Question component at the beginning of leftComponents
+    if (question) {
+      leftComponents.push(<Question key="question" question={question} />);
+    }
+
+    groupedData.forEach((data, index) => {
+      const uniqueKey = `${data.type}-${index}`;
+
+      if (data.type === 'sourceBlock') {
+        leftComponents.push(<Sources key={uniqueKey} sources={data.items} isLoading={false} />);
+      } else if (data.type === 'accordionBlock') {
+        const logs = data.items.map((item: any, subIndex: number) => ({
           header: item.content,
           text: item.output,
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
-
-        return <LogMessage key={uniqueKey} logs={logs} />;
-
-      } else if (data.type === 'sourceBlock') {
-        const uniqueKey = `sourceBlock-${index}`;
-        return <Sources key={uniqueKey} sources={data.items} isLoading={false} />;
-      } else if (data.type === 'reportBlock') {
-        const uniqueKey = `reportBlock-${index}`;
-        return <Answer key={uniqueKey} answer={data.content} />;
-      } else if (data.type === 'langgraphButton') {
-        const uniqueKey = `langgraphButton-${index}`;
-        return (
-          <div key={uniqueKey}></div>
-          // <div key={uniqueKey} className="flex justify-center py-4">
-          //   <a
-          //     href={data.link}
-          //     target="_blank"
-          //     rel="noopener noreferrer"
-          //     className="px-4 py-2 text-white bg-[#0DB7ED] rounded"
-          //   >
-          //     View the full Langgraph logs here
-          //   </a>
-          // </div>
+        leftComponents.push(<LogMessage key={uniqueKey} logs={logs} />);
+      } else if (data.content === 'subqueries') {
+        leftComponents.push(
+          <SubQuestions
+            key={uniqueKey}
+            metadata={data.metadata}
+            handleClickSuggestion={handleClickSuggestion}
+          />
         );
-      } else if (data.type === 'question') {
-        const uniqueKey = `question-${index}`;
-        return <Question key={uniqueKey} question={data.content} />;
       } else {
-        const { type, content, metadata, output } = data;
-        const uniqueKey = `${type}-${content}-${index}`;
-
-        if (content === 'subqueries') {
-          return (
-            <SubQuestions
-              key={uniqueKey}
-              metadata={data.metadata}
-              handleClickSuggestion={handleClickSuggestion}
-            />
-          );
-        } else if (type === 'path') {
-          return <AccessReport key={uniqueKey} accessData={output} report={answer} />;
-        } else {
-          return null;
+        let component: React.ReactNode = null;
+        if (data.type === 'reportBlock') {
+          component = <Answer key={uniqueKey} answer={data.content} />;
+        } else if (data.type === 'langgraphButton') {
+          component = <div key={uniqueKey}></div>;
+        } else if (data.type === 'path') {
+          component = <AccessReport key={uniqueKey} accessData={data.output} report={answer} />;
+        }
+        if (component) {
+          rightComponents.push(component);
         }
       }
     });
+
+    return { leftComponents, rightComponents };
   };
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="h-full px-4 pb-4 pt-10">
-        {!showResult && (
-          <Hero
-            promptValue={promptValue}
-            setPromptValue={setPromptValue}
-            handleDisplayResult={handleDisplayResult}
-          />
-        )}
-
-        {showResult && (
-          <div className="flex h-full min-h-[68vh] w-full grow flex-col justify-between">
-            <div className="container w-full space-y-2">
-              <div className="container space-y-2">
-                {renderComponentsInOrder()}
-              </div>
-
-              {showHumanFeedback && (
-                <HumanFeedback
-                  questionForHuman={questionForHuman}
-                  websocket={socket}
-                  onFeedbackSubmit={handleFeedbackSubmit}
+      <main className="flex-grow px-4 pb-4 pt-10 flex">
+        {/* Left side - Input components and Sources */}
+        <div className="w-1/2 pr-4 flex flex-col">
+          {!showResult ? (
+            <Hero
+              promptValue={promptValue}
+              setPromptValue={setPromptValue}
+              handleDisplayResult={handleDisplayResult}
+            />
+          ) : (
+            <>
+              <div className="mb-4">
+                <InputArea
+                  promptValue={promptValue}
+                  setPromptValue={setPromptValue}
+                  handleDisplayResult={handleDisplayResult}
+                  disabled={loading}
+                  reset={reset}
                 />
-              )}
+              </div>
+              {/* Render left side components */}
+              <div className="mt-4 overflow-y-auto flex-grow">
+                {renderComponentsInOrder().leftComponents}
+              </div>
+            </>
+          )}
+        </div>
 
-              <div className="pt-1 sm:pt-2" ref={chatContainerRef}></div>
-            </div>
-            <div id="input-area" className="container px-4 lg:px-0">
-              <InputArea
-                promptValue={promptValue}
-                setPromptValue={setPromptValue}
-                handleDisplayResult={handleDisplayResult}
-                disabled={loading}
-                reset={reset}
-              />
+        {/* Right side - Output components */}
+        <div className="w-1/2 pl-4 flex flex-col">
+          <div className="flex-grow overflow-hidden">
+            <div className="h-full overflow-y-auto bg-gray-100 rounded-lg shadow-inner p-4">
+              {showResult && (
+                <div className="space-y-4">
+                  {renderComponentsInOrder().rightComponents}
+                </div>
+              )}
             </div>
           </div>
-        )}
+          {showHumanFeedback && (
+            <HumanFeedback
+              questionForHuman={questionForHuman}
+              websocket={socket}
+              onFeedbackSubmit={handleFeedbackSubmit}
+            />
+          )}
+        </div>
       </main>
       <Footer setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
-    </>
+    </div>
   );
 }
