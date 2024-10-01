@@ -64,11 +64,8 @@ class WebSocketManager:
 
 async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers=None):
     """Run the agent."""
-    # measure time
     start_time = datetime.datetime.now()
-    # add customized JSON config file path here
     config_path = ""
-    # Instead of running the agent directly run it through the different report type classes
     if report_type == "multi_agents":
         report = await run_research_task(query=task, websocket=websocket, stream_output=stream_output, tone=tone, headers=headers)
         report = report.get("report", "")
