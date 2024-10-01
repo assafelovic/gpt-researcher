@@ -179,7 +179,7 @@ async def generate_draft_section_titles(
             temperature=0.25,
             llm_provider=config.llm_provider,
             stream=True,
-            websocket=websocket,
+            websocket=None,
             max_tokens=config.smart_token_limit,
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,

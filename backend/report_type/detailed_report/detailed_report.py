@@ -139,10 +139,7 @@ class DetailedReport:
     async def _construct_detailed_report(self, introduction: str, report_body: str) -> str:
         toc = table_of_contents(report_body)
         conclusion = await self.main_task_assistant.write_report_conclusion(report_body)
-        print(
-            "******************************** CONCLUSION ********************************\n")
         conclusion_with_references = add_references(
             conclusion, self.main_task_assistant.visited_urls)
-        print(conclusion_with_references)
         report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
         return report
