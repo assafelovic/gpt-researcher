@@ -6,34 +6,38 @@ import shutil
 from typing import Dict, List
 from fastapi.responses import JSONResponse
 from gpt_researcher.document.document import DocumentLoader
-from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md  # Add this import
+# Add this import
+from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 
 
 def sanitize_filename(filename: str) -> str:
     return re.sub(r"[^\w\s-]", "", filename).strip()
 
+
 async def handle_start_command(websocket, data: str, manager):
     json_data = json.loads(data[6:])
-    task, report_type, source_urls, tone, headers, report_source = extract_command_data(json_data)
-    
+    task, report_type, source_urls, tone, headers, report_source = extract_command_data(
+        json_data)
+
     if not task or not report_type:
         print("Error: Missing task or report_type")
         return
 
     sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
-    
+
     report = await manager.start_streaming(
         task, report_type, report_source, source_urls, tone, websocket, headers
     )
     report = str(report)
-
     file_paths = await generate_report_files(report, sanitized_filename)
     await send_file_paths(websocket, file_paths)
+
 
 async def handle_human_feedback(data: str):
     feedback_data = json.loads(data[14:])  # Remove "human_feedback" prefix
     print(f"Received human feedback: {feedback_data}")
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
+
 
 async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
     pdf_path = await write_md_to_pdf(report, filename)
@@ -41,8 +45,10 @@ async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
     md_path = await write_text_to_md(report, filename)
     return {"pdf": pdf_path, "docx": docx_path, "md": md_path}
 
+
 async def send_file_paths(websocket, file_paths: Dict[str, str]):
     await websocket.send_json({"type": "path", "output": file_paths})
+
 
 def get_config_dict(
     langchain_api_key: str, openai_api_key: str, tavily_api_key: str,
@@ -66,9 +72,11 @@ def get_config_dict(
         "EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "")
     }
 
+
 def update_environment_variables(config: Dict[str, str]):
     for key, value in config.items():
         os.environ[key] = value
+
 
 async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
     file_path = os.path.join(DOC_PATH, file.filename)
@@ -81,6 +89,7 @@ async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
 
     return {"filename": file.filename, "path": file_path}
 
+
 async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
     file_path = os.path.join(DOC_PATH, filename)
     if os.path.exists(file_path):
@@ -91,6 +100,7 @@ async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
         print(f"File not found: {file_path}")
         return JSONResponse(status_code=404, content={"message": "File not found"})
 
+
 async def execute_multi_agents(manager) -> Dict[str, str]:
     websocket = manager.active_connections[0] if manager.active_connections else None
     if websocket:
@@ -98,6 +108,7 @@ async def execute_multi_agents(manager) -> Dict[str, str]:
         return {"report": report}
     else:
         return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
+
 
 async def handle_websocket_communication(websocket, manager):
     while True:
@@ -108,6 +119,7 @@ async def handle_websocket_communication(websocket, manager):
             await handle_human_feedback(data)
         else:
             print("Error: Unknown command or not enough parameters provided.")
+
 
 def extract_command_data(json_data: Dict) -> tuple:
     return (

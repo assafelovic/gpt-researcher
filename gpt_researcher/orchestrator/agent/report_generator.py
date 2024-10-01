@@ -9,7 +9,7 @@ from gpt_researcher.orchestrator.prompts import (
 )
 
 from gpt_researcher.utils.llm import construct_subtopics
-from gpt_researcher.orchestrator.actions import stream_output, generate_report
+from gpt_researcher.orchestrator.actions import stream_output, generate_report, generate_draft_section_titles
 
 
 class ReportGenerator:
@@ -138,13 +138,6 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        # subtopics_prompt = generate_subtopics_prompt().format(
-        #     task=self.researcher.query,
-        #     data=self.researcher.context,
-        #     subtopics=self.researcher.subtopics,
-        #     max_subtopics=self.researcher.max_subtopics,
-        #     format_instructions="Return the subtopics as a list of strings."
-        # )
         subtopics = await construct_subtopics(
             task=self.researcher.query,
             data=self.researcher.context,
@@ -162,7 +155,7 @@ class ReportGenerator:
 
         return subtopics
 
-    async def get_draft_section_titles(self):
+    async def get_draft_section_titles(self, current_subtopic: str):
         """Generate draft section titles for the report."""
         if self.researcher.verbose:
             await stream_output(
@@ -172,13 +165,15 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        draft_titles_prompt = generate_draft_titles_prompt(
-            current_subtopic=self.researcher.query,
-            main_topic=self.researcher.query,
+        draft_section_titles = await generate_draft_section_titles(
+            query=self.researcher.query,
+            current_subtopic=current_subtopic,
             context=self.researcher.context,
-            max_subsections=5  # You might want to make this configurable
+            role=self.researcher.cfg.agent_role or self.researcher.role,
+            websocket=self.researcher.websocket,
+            config=self.researcher.cfg,
+            cost_callback=self.researcher.add_costs,
         )
-        draft_sections = await self.researcher.llm.agenerate(draft_titles_prompt)
 
         if self.researcher.verbose:
             await stream_output(
@@ -188,4 +183,4 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        return draft_sections
+        return draft_section_titles

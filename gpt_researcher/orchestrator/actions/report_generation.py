@@ -5,7 +5,7 @@ from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.orchestrator.prompts import (
     generate_report_introduction,
-    generate_report_prompt,
+    generate_draft_titles_prompt,
     generate_report_conclusion,
     get_prompt_by_report_type,
 )
@@ -85,7 +85,7 @@ async def write_conclusion(
             model=config.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{role}"},
-                {"role": "user", "content": generate_conclusion(
+                {"role": "user", "content": generate_report_conclusion(
                     query, context)},
             ],
             temperature=0.25,
@@ -147,6 +147,7 @@ async def summarize_url(
 
 async def generate_draft_section_titles(
     query: str,
+    current_subtopic: str,
     context: str,
     role: str,
     config: Config,
@@ -172,8 +173,8 @@ async def generate_draft_section_titles(
             model=config.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{role}"},
-                {"role": "user", "content": generate_draft_section_titles(
-                    query, context)},
+                {"role": "user", "content": generate_draft_titles_prompt(
+                    current_subtopic, query, context)},
             ],
             temperature=0.25,
             llm_provider=config.llm_provider,
