@@ -5,6 +5,8 @@ from typing import Dict, List
 from fastapi import WebSocket
 
 from backend.report_type import BasicReport, DetailedReport
+from backend.chat import ChatAgentWithMemory
+
 from gpt_researcher.utils.enum import ReportType, Tone
 from multi_agents.main import run_research_task
 from gpt_researcher.master.actions import stream_output  # Import stream_output
@@ -17,6 +19,7 @@ class WebSocketManager:
         self.active_connections: List[WebSocket] = []
         self.sender_tasks: Dict[WebSocket, asyncio.Task] = {}
         self.message_queues: Dict[WebSocket, asyncio.Queue] = {}
+        self.chat_agent = None
 
     async def start_sender(self, websocket: WebSocket):
         """Start the sender task."""
@@ -60,6 +63,15 @@ class WebSocketManager:
         report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers, repo_name, branch_name)
         return report
 
+    async def chat(self, message, report, websocket, headers = None):
+        """Chat with the agent based message diff"""
+        if self.chat_agent and self.chat_agent.get_context() == report:
+            await self.chat_agent.chat(message, websocket)
+        else:
+            #Create a new chat Agent when we have a new report
+            config_path = ""
+            self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
+            await self.chat_agent.chat(message, websocket)
 
 async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers, repo_name, branch_name):
     """Run the agent."""
