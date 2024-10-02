@@ -134,7 +134,7 @@ def generate_custom_report_prompt(
 
 
 def generate_outline_report_prompt(
-    question, context, report_source: str, report_format="apa",tone=None,  total_words=1000
+    question, context, report_source: str, report_format="apa", tone=None,  total_words=1000
 ):
     """Generates the outline report prompt for the given question and research summary.
     Args: question (str): The question to generate the outline report prompt for
@@ -337,6 +337,7 @@ Provide the draft headers in a list format using markdown syntax, for example:
 - Focus solely on creating headers, not content.
 """
 
+
 def generate_report_introduction(question: str, research_summary: str = "") -> str:
     return f"""{research_summary}\n 
 Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
@@ -347,7 +348,17 @@ Using the above latest information, Prepare a detailed report introduction on th
 Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 """
 
+
 def generate_report_conclusion(report_content: str) -> str:
+    """
+    Generate a concise conclusion summarizing the main findings and implications of a research report.
+
+    Args:
+        report_content (str): The content of the research report.
+
+    Returns:
+        str: A concise conclusion summarizing the report's main findings and implications.
+    """
     prompt = f"""
     Based on the following research report, please write a concise conclusion that summarizes the main findings and their implications:
 

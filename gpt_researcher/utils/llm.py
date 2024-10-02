@@ -72,6 +72,18 @@ async def create_chat_completion(
 
 
 async def construct_subtopics(task: str, data: str, config, subtopics: list = []) -> list:
+    """
+    Construct subtopics based on the given task and data.
+
+    Args:
+        task (str): The main task or topic.
+        data (str): Additional data for context.
+        config: Configuration settings.
+        subtopics (list, optional): Existing subtopics. Defaults to [].
+
+    Returns:
+        list: A list of constructed subtopics.
+    """
     try:
         parser = PydanticOutputParser(pydantic_object=Subtopics)
 

@@ -3,6 +3,7 @@ from typing import Optional, List, Dict, Any, Set
 from gpt_researcher.config import Config
 from gpt_researcher.memory import Memory
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
+from gpt_researcher.llm_provider import GenericLLMProvider
 from gpt_researcher.orchestrator.agent.research_conductor import ResearchConductor
 from gpt_researcher.orchestrator.agent.report_scraper import ReportScraper
 from gpt_researcher.orchestrator.agent.report_generator import ReportGenerator
@@ -32,12 +33,16 @@ class GPTResearcher:
         verbose: bool = True,
         context=[],
         headers: dict = None,
+        max_subtopics: int = 5,  # Add this line
     ):
         self.query = query
         self.report_type = report_type
         self.cfg = Config(config_path)
-        self.report_source = self.cfg.report_source or report_source
-        self.report_format = report_format  # Add this line
+        self.llm = GenericLLMProvider(self.cfg)
+        self.report_source = getattr(
+            self.cfg, 'report_source', None) or report_source
+        self.report_format = report_format
+        self.max_subtopics = max_subtopics
         self.tone = tone if isinstance(tone, Tone) else Tone.Objective
         self.source_urls = source_urls
         self.documents = documents
@@ -52,10 +57,10 @@ class GPTResearcher:
         self.verbose = verbose
         self.context = context
         self.headers = headers or {}
-
         self.research_costs = 0.0
         self.retrievers = get_retrievers(self.headers, self.cfg)
-        self.memory = Memory(self.cfg.embedding_provider, self.headers)
+        self.memory = Memory(
+            getattr(self.cfg, 'embedding_provider', None), self.headers)
 
         # Initialize components
         self.research_conductor = ResearchConductor(self)
@@ -92,8 +97,8 @@ class GPTResearcher:
     async def get_subtopics(self):
         return await self.report_generator.get_subtopics()
 
-    async def get_draft_section_titles(self):
-        return await self.report_generator.get_draft_section_titles()
+    async def get_draft_section_titles(self, current_subtopic: str):
+        return await self.report_generator.get_draft_section_titles(current_subtopic)
 
     async def get_similar_written_contents_by_draft_section_titles(
         self,
