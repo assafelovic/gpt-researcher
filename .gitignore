@@ -38,7 +38,7 @@ docs/build
 .langgraph-data/
 .next/
 package-lock.json
-# .github_repo_index/
+.github_repo_index/
 
 #Vim swp files
 *.swp
