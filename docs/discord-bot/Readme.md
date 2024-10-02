@@ -4,6 +4,7 @@ Add a .env file in the root of the project and add the following:
 
 ```
 DISCORD_BOT_TOKEN=
+DISCORD_CLIENT_ID=
 ```
 
 You can fetch the token from the Discord Developer Portal.
