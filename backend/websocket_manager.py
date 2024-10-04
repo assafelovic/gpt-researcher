@@ -60,25 +60,24 @@ class WebSocketManager:
     async def start_streaming(self, task, report_type, report_source, source_urls, tone, websocket, headers=None):
         """Start streaming the output."""
         tone = Tone[tone]
-        report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers)
+        # add customized JSON config file path here
+        config_path = ""
+        report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers = headers, config_path = config_path)
+        #Create new Chat Agent whenever a new report is written
+        self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
         return report
 
-    async def chat(self, message, report, websocket, headers = None):
+    async def chat(self, message, websocket):
         """Chat with the agent based message diff"""
-        if self.chat_agent and self.chat_agent.get_context() == report:
+        if self.chat_agent:
             await self.chat_agent.chat(message, websocket)
         else:
-            #Create a new chat Agent when we have a new report
-            config_path = ""
-            self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
-            await self.chat_agent.chat(message, websocket)
+            await websocket.send_json({"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"})
 
-async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers=None):
+async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers=None, config_path=""):
     """Run the agent."""
     # measure time
     start_time = datetime.datetime.now()
-    # add customized JSON config file path here
-    config_path = ""
     # Instead of running the agent directly run it through the different report type classes
     if report_type == "multi_agents":
         report = await run_research_task(query=task, websocket=websocket, stream_output=stream_output, tone=tone, headers=headers)

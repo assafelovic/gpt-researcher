@@ -71,7 +71,6 @@ def sanitize_filename(filename):
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
-        report = None
         while True:
             data = await websocket.receive_text()
             if data.startswith("start"):
@@ -119,10 +118,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     # You can add logic here to forward the feedback to the appropriate agent or update the research state
                 else:
                     print("Error: not enough parameters provided.")
-            elif data.startswith("chat") and report:
+            elif data.startswith("chat"):
                 json_data = json.loads(data[4:])
-                headers = json_data.get("headers", {})
-                await manager.chat(json_data.get("message"), report, websocket, headers)
+                await manager.chat(json_data.get("message"), websocket)
 
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
