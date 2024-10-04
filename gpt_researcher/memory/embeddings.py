@@ -46,7 +46,10 @@ class Memory:
             case "huggingface":
                 from langchain.embeddings import HuggingFaceEmbeddings
 
-                _embeddings = HuggingFaceEmbeddings()
+                # Specifying the Hugging Face embedding model all-MiniLM-L6-v2
+                _embeddings = HuggingFaceEmbeddings(
+                    model_name="sentence-transformers/all-MiniLM-L6-v2"
+                )
 
             case _:
                 raise Exception("Embedding provider not found.")
