@@ -3,6 +3,7 @@ from typing import Any
 from colorama import Fore, Style, init
 import os
 
+
 class GenericLLMProvider:
 
     def __init__(self, llm):
@@ -48,7 +49,7 @@ class GenericLLMProvider:
         elif provider == "ollama":
             _check_pkg("langchain_community")
             from langchain_community.chat_models import ChatOllama
-            
+
             llm = ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
         elif provider == "together":
             _check_pkg("langchain_together")
@@ -81,6 +82,27 @@ class GenericLLMProvider:
                 model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
                 kwargs = {"model_id": model_id, **kwargs}
             llm = ChatBedrock(**kwargs)
+        elif provider == "watsonxai":
+            """
+            Valid parameters are: ['decoding_method', 'length_penalty', 'temperature', 'top_p', 'top_k', 'random_seed', 'repetition_penalty', 'min_new_tokens', 'max_new_tokens', 'stop_sequences', ' time_limit', 'truncate_input_tokens', 'return_options', 'prompt_variables']
+            """
+            _check_pkg("langchain_ibm")
+            from langchain_ibm import WatsonxLLM
+
+            if "max_tokens" in kwargs:
+                kwargs["max_new_tokens"] = kwargs.pop("max_tokens")
+
+            if "min_tokens" in kwargs:
+                kwargs["min_new_tokens"] = kwargs.pop("min_tokens")
+
+            if "model" in kwargs or "model_name" in kwargs:
+                model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
+                kwargs = {"model_id": model_id, "params": kwargs}
+
+            wx_url = os.environ.get("WATSONX_URL")
+            wx_project_id = os.environ.get("WATSONX_PROJECT_ID")
+
+            llm = WatsonxLLM(url=wx_url, project_id=wx_project_id, **kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
@@ -89,11 +111,13 @@ class GenericLLMProvider:
             )
         return cls(llm)
 
-
     async def get_chat_response(self, messages, stream, websocket=None):
         if not stream:
             # Getting output from the model chain using ainvoke for asynchronous invoking
             output = await self.llm.ainvoke(messages)
+
+            if type(output) is str:
+                return output
 
             return output.content
 
@@ -106,7 +130,11 @@ class GenericLLMProvider:
 
         # Streaming the response using the chain astream method from langchain
         async for chunk in self.llm.astream(messages):
-            content = chunk.content
+
+            if type(chunk) is str:
+                content = chunk
+            else:
+                content = chunk.content
             if content is not None:
                 response += content
                 paragraph += content
@@ -126,7 +154,6 @@ class GenericLLMProvider:
             print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
 
 
-
 _SUPPORTED_PROVIDERS = {
     "openai",
     "anthropic",
@@ -141,7 +168,9 @@ _SUPPORTED_PROVIDERS = {
     "huggingface",
     "groq",
     "bedrock",
+    "watsonxai",
 }
+
 
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
