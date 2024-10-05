@@ -5,7 +5,7 @@ from gpt_researcher import GPTResearcher
 
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS, InMemoryVectorStore
 from langchain_core.documents import Document
 
 
@@ -98,6 +98,17 @@ Notes
 [6] Start by erring on the small side. If you're inexperienced you'll inevitably err on one side or the other, and if you err on the side of making the goal too broad, you won't get anywhere. Whereas if you err on the small side you'll at least be moving forward. Then, once you're moving, you expand the goal.
 """
 
+
+def load_document():
+    document = [Document(page_content=essay)]
+    text_splitter = CharacterTextSplitter(chunk_size=200, chunk_overlap=30, separator="\n")
+    return text_splitter.split_documents(documents=document)
+
+
+def create_vectorstore(documents: List[Document]):
+    embeddings = OpenAIEmbeddings()
+    return FAISS.from_documents(documents, embeddings)
+
 @pytest.mark.asyncio
 async def test_gpt_researcher_with_vector_store():
     docs = load_document()
@@ -127,13 +138,99 @@ async def test_gpt_researcher_with_vector_store():
 
     assert report is not None
 
+@pytest.mark.asyncio
+async def test_store_in_vector_store_web():
+    vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
+    query = "Which one is the best LLM"
 
-def load_document():
-    document = [Document(page_content=essay)]
-    text_splitter = CharacterTextSplitter(chunk_size=200, chunk_overlap=30, separator="\n")
-    return text_splitter.split_documents(documents=document)
+    researcher = GPTResearcher(
+        query=query,
+        report_type="research_report",
+        report_source="web",
+        vector_store=vector_store,
+    )
+
+    await researcher.conduct_research()
+
+    related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
+
+    assert len(related_contexts) == 2
+    # Add more assertions as needed to verify the results
 
 
-def create_vectorstore(documents: List[Document]):
-    embeddings = OpenAIEmbeddings()
-    return FAISS.from_documents(documents, embeddings)
+@pytest.mark.asyncio
+async def test_store_in_vector_store_urls():
+    vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
+    query = "Who won the world cup in 2022"
+
+    researcher = GPTResearcher(
+        query=query,
+        report_type="research_report",
+        vector_store=vector_store,
+        source_urls=["https://en.wikipedia.org/wiki/FIFA_World_Cup"]
+    )
+
+    await researcher.conduct_research()
+
+    related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
+
+    assert len(related_contexts) == 2
+
+
+@pytest.mark.asyncio
+async def test_store_in_vector_store_langchain_docs():
+    vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
+    docs = load_document()
+    query = "What does successful people tend to do?"
+
+    researcher = GPTResearcher(
+        query=query,
+        report_type="research_report",
+        vector_store=vector_store,
+        report_source="langchain_documents",
+        documents=docs
+    )
+
+    await researcher.conduct_research()
+
+    related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
+
+    assert len(related_contexts) == 2
+
+@pytest.mark.asyncio
+async def test_store_in_vector_store_locals():
+    vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
+    query = "What is transformer?"
+
+    researcher = GPTResearcher(
+        query=query,
+        report_type="research_report",
+        vector_store=vector_store,
+        report_source="local",
+        config_path= "test_local"
+    )
+
+    await researcher.conduct_research()
+
+    related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
+
+    assert len(related_contexts) == 2
+
+@pytest.mark.asyncio
+async def test_store_in_vector_store_hybrids():
+    vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
+    query = "What is transformer?"
+    
+    researcher = GPTResearcher(
+        query=query,
+        report_type="research_report",
+        vector_store=vector_store,
+        report_source="hybrid",
+        config_path= "test_local"
+    )
+    
+    await researcher.conduct_research()
+    
+    related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
+    
+    assert len(related_contexts) == 2
