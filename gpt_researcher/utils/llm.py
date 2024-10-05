@@ -23,7 +23,7 @@ async def create_chat_completion(
         messages: list,  # type: ignore
         model: Optional[str] = None,
         temperature: float = 0.4,
-        max_tokens: Optional[int] = 4000,
+        max_tokens: Optional[int] = 8000,
         llm_provider: Optional[str] = None,
         stream: Optional[bool] = False,
         websocket: Any | None = None,
@@ -46,9 +46,9 @@ async def create_chat_completion(
     # validate input
     if model is None:
         raise ValueError("Model cannot be None")
-    if max_tokens is not None and max_tokens > 8001:
+    if max_tokens is not None and max_tokens > 16001:
         raise ValueError(
-            f"Max tokens cannot be more than 8001, but got {max_tokens}")
+            f"Max tokens cannot be more than 16,000, but got {max_tokens}")
 
     # Get the provider from supported providers
     provider = get_llm(llm_provider, model=model, temperature=temperature,
