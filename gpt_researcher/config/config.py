@@ -21,7 +21,10 @@ class Config:
 
         # Set attributes based on the loaded config
         for key, value in config_to_use.items():
-            setattr(self, key.lower(), os.getenv(key, value))
+            env_value = os.getenv(key)
+            if env_value is not None:
+                value = self.convert_env_value(key, env_value, value)
+            setattr(self, key.lower(), value)
 
         self.valid_retrievers = config_to_use['VALID_RETRIEVERS']
         try:
@@ -137,3 +140,17 @@ class Config:
             config = json.load(f)
         for key, value in config.items():
             setattr(self, key.lower(), value)
+
+    @staticmethod
+    def convert_env_value(key: str, env_value: str, default_value: Any) -> Any:
+        """Convert environment variable to the appropriate type based on the default value."""
+        if isinstance(default_value, bool):
+            return env_value.lower() in ('true', '1', 'yes', 'on')
+        elif isinstance(default_value, int):
+            return int(env_value)
+        elif isinstance(default_value, float):
+            return float(env_value)
+        elif isinstance(default_value, (list, dict)):
+            return json.loads(env_value)
+        else:
+            return env_value
