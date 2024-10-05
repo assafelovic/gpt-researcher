@@ -28,13 +28,13 @@ If you deploy ollama locally, a .env like so, should enable powering GPT-Researc
 OPENAI_API_KEY="123"
 OPENAI_API_BASE="http://127.0.0.1:11434/v1"
 OLLAMA_BASE_URL="http://127.0.0.1:11434/"
-FAST_LLM_NAME=ollama:qwen2:1.5b
-SMART_LLM_NAME=ollama:qwen2:1.5b
+FAST_LLM=ollama:qwen2:1.5b
+SMART_LLM=ollama:qwen2:1.5b
 OLLAMA_EMBEDDING_MODEL=all-minilm:22m
 EMBEDDING_PROVIDER=ollama
 ```
 
-Replace `FAST_LLM_NAME` & `SMART_LLM_NAME` with the model you downloaded from the Elestio Web UI in the previous step.
+Replace `FAST_LLM` & `SMART_LLM` with the model you downloaded from the Elestio Web UI in the previous step.
 
 
 ## Run LLM Test Script for GPTR
@@ -95,8 +95,8 @@ Here's an example .env file that will enable powering GPT-Researcher with Elesti
 OPENAI_API_KEY="123"
 OPENAI_API_BASE="https://<your_custom_elestio_project>.vm.elestio.app:57987/v1"
 OLLAMA_BASE_URL="https://<your_custom_elestio_project>.vm.elestio.app:57987/"
-FAST_LLM_NAME=openai:qwen2:1.5b
-SMART_LLM_NAME=openai:qwen2:1.5b
+FAST_LLM=openai:qwen2:1.5b
+SMART_LLM=openai:qwen2:1.5b
 OLLAMA_EMBEDDING_MODEL=all-minilm:22m
 EMBEDDING_PROVIDER=ollama
 ```
