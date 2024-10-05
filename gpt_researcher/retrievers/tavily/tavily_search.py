@@ -11,6 +11,7 @@ class TavilySearch():
     """
     Tavily API Retriever
     """
+
     def __init__(self, query, headers=None, topic="general"):
         """
         Initializes the TavilySearch object
@@ -37,7 +38,8 @@ class TavilySearch():
             try:
                 api_key = os.environ["TAVILY_API_KEY"]
             except KeyError:
-                raise Exception("Tavily API key not found. Please set the TAVILY_API_KEY environment variable.")
+                raise Exception(
+                    "Tavily API key not found. Please set the TAVILY_API_KEY environment variable.")
         return api_key
 
     def _search(self,
@@ -72,12 +74,14 @@ class TavilySearch():
             "use_cache": use_cache,
         }
 
-        response = requests.post(self.base_url, data=json.dumps(data), headers=self.headers, timeout=100)
+        response = requests.post(self.base_url, data=json.dumps(
+            data), headers=self.headers, timeout=100)
 
         if response.status_code == 200:
             return response.json()
         else:
-            response.raise_for_status()  # Raises a HTTPError if the HTTP request returned an unsuccessful status code
+            # Raises a HTTPError if the HTTP request returned an unsuccessful status code
+            response.raise_for_status()
 
     def search(self, max_results=7):
         """
@@ -87,13 +91,16 @@ class TavilySearch():
         """
         try:
             # Search the query
-            results = self._search(self.query, search_depth="basic", max_results=max_results, topic=self.topic)
+            results = self._search(
+                self.query, search_depth="basic", max_results=max_results, topic=self.topic)
             sources = results.get("results", [])
             if not sources:
                 raise Exception("No results found with Tavily API search.")
             # Return the results
-            search_response = [{"href": obj["url"], "body": obj["content"]} for obj in sources]
+            search_response = [{"href": obj["url"],
+                                "body": obj["content"]} for obj in sources]
         except Exception as e:
-            print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
+            print(
+                f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
         return search_response

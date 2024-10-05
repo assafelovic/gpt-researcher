@@ -12,8 +12,8 @@ Before you begin, ensure you have the following:
 
 - Python 3.10 or higher installed on your system
 - pip (Python package installer)
-- An OpenAI API key (you can also choose other supported [LLMs](../gpt-researcher/llms.md))
-- A Tavily API key (you can also choose other supported [Retrievers](../gpt-researcher/retrievers.md))
+- An OpenAI API key (you can also choose other supported [LLMs](../gpt-researcher/llms/llms.md))
+- A Tavily API key (you can also choose other supported [Retrievers](../gpt-researcher/search-engines/retrievers.md))
 
 ## Installation
 
@@ -86,7 +86,7 @@ The output will be a comprehensive research report that combines insights from b
 A: The duration varies based on the complexity of the query and the amount of data to process. It can range from 1-5 minutes for very comprehensive research.
 
 **Q: Can I use GPT Researcher with other language models?**
-A: Currently, GPT Researcher is optimized for OpenAI's models. Support for other models can be found [here](../gpt-researcher/llms.md).
+A: Currently, GPT Researcher is optimized for OpenAI's models. Support for other models can be found [here](../gpt-researcher/llms/llms.md).
 
 **Q: How does GPT Researcher handle conflicting information between local and web sources?**
 A: The system attempts to reconcile differences by providing context and noting discrepancies in the final report. It prioritizes more recent or authoritative sources when conflicts arise.

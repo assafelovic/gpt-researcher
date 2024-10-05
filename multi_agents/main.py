@@ -24,7 +24,7 @@ def open_task():
         task = json.load(f)
 
     if not task:
-        raise Exception("No task provided. Please include a task.json file in the multi_agents directory.")
+        raise Exception("No task found. Please ensure a valid task.json file is present in the multi_agents directory and contains the necessary task information.")
 
     return task
 

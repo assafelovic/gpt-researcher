@@ -36,18 +36,31 @@ class BeautifulSoupScraper:
         except Exception as e:
             print("Error! : " + str(e))
             return ""
-        
-    def get_content_from_url(self, soup):
-        """Get the text from the soup
 
-        Args:
-            soup (BeautifulSoup): The soup to get the text from
+    def get_content_from_url(self, soup: BeautifulSoup) -> str:
+        """Get the relevant text from the soup with improved filtering"""
+        text_elements = []
+        tags = ["h1", "h2", "h3", "h4", "h5", "p", "li", "div", "span"]
 
-        Returns:
-            str: The text from the soup
-        """
-        text = ""
-        tags = ["p", "h1", "h2", "h3", "h4", "h5"]
-        for element in soup.find_all(tags):  # Find all the <p> elements
-            text += element.text + "\n"
-        return text
+        for element in soup.find_all(tags):
+            # Skip empty elements
+            if not element.text.strip():
+                continue
+
+            # Skip elements with very short text (likely buttons or links)
+            if len(element.text.split()) < 3:
+                continue
+
+            # Check if the element is likely to be navigation or a menu
+            parent_classes = element.parent.get('class', [])
+            if any(cls in ['nav', 'menu', 'sidebar', 'footer'] for cls in parent_classes):
+                continue
+
+            # Remove excess whitespace and join lines
+            cleaned_text = ' '.join(element.text.split())
+
+            # Add the cleaned text to our list of elements
+            text_elements.append(cleaned_text)
+
+        # Join all text elements with newlines
+        return '\n\n'.join(text_elements)
