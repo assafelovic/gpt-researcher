@@ -54,6 +54,7 @@ export default function Home() {
       'google_api_key': apiVariables.GOOGLE_API_KEY,
       'google_cx_key': apiVariables.GOOGLE_CX_KEY,
       'bing_api_key': apiVariables.BING_API_KEY,
+      'searchapi_api_key': apiVariables.SEARCHAPI_API_KEY,
       'serpapi_api_key': apiVariables.SERPAPI_API_KEY,
       'serper_api_key': apiVariables.SERPER_API_KEY,
       'searx_url': apiVariables.SEARX_URL
@@ -308,7 +309,7 @@ export default function Home() {
       } else if (data.type === 'langgraphButton') {
         const uniqueKey = `langgraphButton-${index}`;
         return (
-          <div></div>
+          <div key={uniqueKey}></div>
           // <div key={uniqueKey} className="flex justify-center py-4">
           //   <a
           //     href={data.link}

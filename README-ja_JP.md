@@ -59,7 +59,7 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 
 ## 📖 ドキュメント
 
-完全なドキュメントについては、[こちら](https://docs.gptr.dev/docs/gpt-researcher/getting-started)を参照してください：
+完全なドキュメントについては、[こちら](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)を参照してください：
 
 - 入門（インストール、環境設定、簡単な例）
 - 操作例（デモ、統合、dockerサポート）
@@ -96,7 +96,7 @@ $ export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 - **LLMには、[OpenAI GPT](https://platform.openai.com/docs/guides/gpt) を使用することをお勧めします**が、[Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai) がサポートする他の LLM モデル（オープンソースを含む）を使用することもできます。llm モデルとプロバイダーを config/config.py で変更するだけです。[このガイド](https://python.langchain.com/docs/integrations/llms/) に従って、LLM を Langchain と統合する方法を学んでください。
-- **検索エンジンには、[Tavily Search API](https://app.tavily.com)（LLM 用に最適化されています）を使用することをお勧めします**が、他の検索エンジンを選択することもできます。config/config.py で検索プロバイダーを「duckduckgo」、「googleAPI」、「googleSerp」、「searx」に変更するだけです。次に、config.py ファイルに対応する env API キーを追加します。
+- **検索エンジンには、[Tavily Search API](https://app.tavily.com)（LLM 用に最適化されています）を使用することをお勧めします**が、他の検索エンジンを選択することもできます。config/config.py で検索プロバイダーを「duckduckgo」、「googleAPI」、「googleSerp」、「searchapi」、「searx」に変更するだけです。次に、config.py ファイルに対応する env API キーを追加します。
 - **最適なパフォーマンスを得るために、[OpenAI GPT](https://platform.openai.com/docs/guides/gpt) モデルと [Tavily Search API](https://app.tavily.com) を使用することを強くお勧めします。**
 <br />
 

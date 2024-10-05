@@ -1,7 +1,7 @@
 import importlib
 from typing import Any
 from colorama import Fore, Style, init
-
+import os
 
 class GenericLLMProvider:
 
@@ -48,8 +48,8 @@ class GenericLLMProvider:
         elif provider == "ollama":
             _check_pkg("langchain_community")
             from langchain_community.chat_models import ChatOllama
-
-            llm = ChatOllama(**kwargs)
+            
+            llm = ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
         elif provider == "together":
             _check_pkg("langchain_together")
             from langchain_together import ChatTogether

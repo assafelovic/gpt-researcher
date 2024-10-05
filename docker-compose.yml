@@ -1,4 +1,3 @@
-version: '3'
 services:
   gpt-researcher:
     pull_policy: build
