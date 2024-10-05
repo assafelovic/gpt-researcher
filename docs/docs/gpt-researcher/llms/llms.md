@@ -4,7 +4,7 @@ As described in the [introduction](/docs/gpt-researcher/gptr/config), the defaul
 With that said, GPT Researcher supports various open/closed source LLMs, and you can easily switch between them by adding the `LLM_PROVIDER` env variable and corresponding configuration params.
 Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq` and `bedrock`.
 
-Using any model will require updating the `SMART_LLM` and `FAST_LLM∂` env vars. You might also need to include the LLM provider API Key.
+Using any model will require updating the `SMART_LLM` and `FAST_LLM` env vars. You might also need to include the LLM provider API Key.
 To learn more about support customization options see [here](/gpt-researcher/config).
 
 **Please note**: GPT Researcher is optimized and heavily tested on GPT models. Some other models might run intro context limit errors, and unexpected responses.
