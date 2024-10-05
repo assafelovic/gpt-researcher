@@ -58,8 +58,8 @@ a. Create a JSON file (e.g., `your_config.json`) with your desired settings:
 ```json
 {
   "retrievers": ["google"],
-  "fast_llm_name": "cohere:command",
-  "smart_llm_name": "cohere:command-nightly",
+  "fast_llm": "cohere:command",
+  "smart_llm": "cohere:command-nightly",
   "max_iterations": 3,
   "max_subtopics": 1
 }
@@ -77,8 +77,8 @@ Alternatively, you can set up the same configuration using environment variables
 
 ```
 RETRIEVERS=google
-FAST_LLM_NAME=cohere:command
-SMART_LLM_NAME=cohere:command-nightly
+FAST_LLM=cohere:command
+SMART_LLM=cohere:command-nightly
 MAX_ITERATIONS=3
 MAX_SUBTOPICS=1
 ```

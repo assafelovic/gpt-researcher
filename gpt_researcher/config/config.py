@@ -32,7 +32,7 @@ class Config:
 
         _deprecation_warning = (
             "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
-            "will be removed soon. Use FAST_LLM_NAME and SMART_LLM_NAME instead."
+            "will be removed soon. Use FAST_LLM and SMART_LLM instead."
         )
         try:
             if self.llm_provider is not None:
@@ -50,8 +50,8 @@ class Config:
         except AttributeError:
             self.smart_llm_model = None
 
-        _fast_llm_provider, _fast_llm_model = self.parse_llm_name(self.fast_llm_name)
-        _smart_llm_provider, _smart_llm_model = self.parse_llm_name(self.smart_llm_name)
+        _fast_llm_provider, _fast_llm_model = self.parse_llm(self.fast_llm)
+        _smart_llm_provider, _smart_llm_model = self.parse_llm(self.smart_llm)
         self.fast_llm_provider = self.llm_provider or _fast_llm_provider
         self.fast_llm_model = self.fast_llm_model or _fast_llm_model
         self.smart_llm_provider = self.llm_provider or _smart_llm_provider
@@ -113,15 +113,15 @@ class Config:
         return retrievers
 
     @staticmethod
-    def parse_llm_name(llm_name_str: str | None) -> tuple[str | None, str | None]:
-        """Parse llm_name string into (llm_provider, llm_model)."""
-        if llm_name_str is None:
+    def parse_llm(llm_str: str | None) -> tuple[str | None, str | None]:
+        """Parse llm string into (llm_provider, llm_model)."""
+        if llm_str is None:
             return None, None
         try:
-            return llm_name_str.split(":", 1)
+            return llm_str.split(":", 1)
         except ValueError:
             raise ValueError(
-                "Set LLM_NAME = '<llm_provider>:<llm_model_name>' "
+                "Set SMART_LLM or FAST_LLM = '<llm_provider>:<llm_model_name>' "
                 "Eg 'openai:gpt-4o-mini'"
             )
 
