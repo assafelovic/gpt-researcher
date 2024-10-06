@@ -38,6 +38,9 @@ async def handle_human_feedback(data: str):
     print(f"Received human feedback: {feedback_data}")
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
 
+async def handle_chat(websocket, data: str, manager):
+    json_data = json.loads(data[4:])
+    await manager.chat(json_data.get("message"), websocket)
 
 async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
     pdf_path = await write_md_to_pdf(report, filename)
@@ -117,6 +120,8 @@ async def handle_websocket_communication(websocket, manager):
             await handle_start_command(websocket, data, manager)
         elif data.startswith("human_feedback"):
             await handle_human_feedback(data)
+        elif data.startswith("chat"):
+            await handle_chat(websocket, data, manager)
         else:
             print("Error: Unknown command or not enough parameters provided.")
 
