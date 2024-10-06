@@ -42,11 +42,16 @@ class ResearchConductor:
 
         elif self.researcher.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
+            if self.researcher.vector_store:
+                self.researcher.vector_store.load(document_data)
+
             self.researcher.context = await self.__get_context_by_search(self.researcher.query, document_data)
 
         # Hybrid search including both local documents and web sources
         elif self.researcher.report_source == ReportSource.Hybrid.value:
             document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
+            if self.researcher.vector_store:
+                self.researcher.vector_store.load(document_data)
             docs_context = await self.__get_context_by_search(self.researcher.query, document_data)
             web_context = await self.__get_context_by_search(self.researcher.query)
             self.researcher.context = f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"
@@ -55,6 +60,8 @@ class ResearchConductor:
             langchain_documents_data = await LangChainDocumentLoader(
                 self.researcher.documents
             ).load()
+            if self.researcher.vector_store:
+                self.researcher.vector_store.load(langchain_documents_data)
             self.researcher.context = await self.__get_context_by_search(
                 self.researcher.query, langchain_documents_data
             )
@@ -89,6 +96,10 @@ class ResearchConductor:
             )
 
         scraped_sites = scrape_urls(new_search_urls, self.researcher.cfg)
+
+        if self.researcher.vector_store:
+            self.researcher.vector_store.load(scraped_sites)
+
         return await self.researcher.context_manager.get_similar_content_by_query(self.researcher.query, scraped_sites)
 
     async def __get_context_by_vectorstore(self, query, filter: Optional[dict] = None):
@@ -289,6 +300,9 @@ class ResearchConductor:
         scraped_content_results = await asyncio.to_thread(
             scrape_urls, new_search_urls, self.researcher.cfg
         )
+
+        if self.researcher.vector_store:
+            self.researcher.vector_store.load(scraped_content_results)
 
         return scraped_content_results
 
