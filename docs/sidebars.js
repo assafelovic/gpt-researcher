@@ -19,6 +19,7 @@
       collapsed: false,
       items: [
         'gpt-researcher/getting-started/introduction',
+        'gpt-researcher/getting-started/how-to-choose',
         'gpt-researcher/getting-started/getting-started',
         'gpt-researcher/getting-started/cli',
         'gpt-researcher/getting-started/getting-started-with-docker',

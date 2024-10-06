@@ -1,7 +1,8 @@
 import json
 import os
-from typing import Dict, Any, List, Union
-from gpt_researcher.config.configurations.default_config import DEFAULT_CONFIG
+from typing import Dict, Any, List, Union, Type, get_origin, get_args
+from .configurations.default_config import DEFAULT_CONFIG
+from .configurations.base_config import BaseConfig
 
 
 class Config:
@@ -22,7 +23,7 @@ class Config:
         for key, value in config_to_use.items():
             env_value = os.getenv(key)
             if env_value is not None:
-                value = self.convert_env_value(key, env_value, value)
+                value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
             setattr(self, key.lower(), value)
 
         self.valid_retrievers = config_to_use['VALID_RETRIEVERS']
@@ -101,15 +102,33 @@ class Config:
             setattr(self, key.lower(), value)
 
     @staticmethod
-    def convert_env_value(key: str, env_value: str, default_value: Any) -> Any:
-        """Convert environment variable to the appropriate type based on the default value."""
-        if isinstance(default_value, bool):
+    def convert_env_value(key: str, env_value: str, type_hint: Type) -> Any:
+        """Convert environment variable to the appropriate type based on the type hint."""
+        origin = get_origin(type_hint)
+        args = get_args(type_hint)
+
+        if origin is Union:
+            # Handle Union types (e.g., Union[str, None])
+            for arg in args:
+                if arg is type(None):
+                    if env_value.lower() in ('none', 'null', ''):
+                        return None
+                else:
+                    try:
+                        return Config.convert_env_value(key, env_value, arg)
+                    except ValueError:
+                        continue
+            raise ValueError(f"Cannot convert {env_value} to any of {args}")
+
+        if type_hint is bool:
             return env_value.lower() in ('true', '1', 'yes', 'on')
-        elif isinstance(default_value, int):
+        elif type_hint is int:
             return int(env_value)
-        elif isinstance(default_value, float):
+        elif type_hint is float:
             return float(env_value)
-        elif isinstance(default_value, (list, dict)):
+        elif type_hint in (str, Any):
+            return env_value
+        elif origin is list or origin is List:
             return json.loads(env_value)
         else:
-            return env_value
+            raise ValueError(f"Unsupported type {type_hint} for key {key}")
