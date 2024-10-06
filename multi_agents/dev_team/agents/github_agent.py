@@ -12,6 +12,9 @@ from langchain_core.documents import Document
 from langchain_text_splitters import Language
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+from datetime import datetime
+from uuid import uuid4
+
 class GithubAgent:
     def __init__(self, github_token, repo_name, vector_store=None, branch_name=None):
         self.github = Github(github_token)
@@ -51,6 +54,7 @@ class GithubAgent:
     async def save_to_vector_store(self, directory_structure):
         documents = []
         splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=30)
+        run_timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S')
 
         for file_name in directory_structure:
             if not file_name.endswith('/'):
@@ -69,8 +73,9 @@ class GithubAgent:
                     chunks = splitter.split_text(decoded_content)
                     
                     # Extract metadata for each chunk
-                    for chunk in chunks:
+                    for index, chunk in enumerate(chunks):
                         metadata = {
+                            "id": f"{run_timestamp}_{uuid4()}",  # Generate a unique UUID for each document
                             "source": file_name,
                             "title": file_name,
                             "extension": os.path.splitext(file_name)[1],

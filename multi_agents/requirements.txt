@@ -11,3 +11,6 @@ openai
 colorama
 langchain-openai
 faiss-cpu
+langchain_postgres
+sqlalchemy[asyncio]
+psycopg[async]

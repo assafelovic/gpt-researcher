@@ -9,6 +9,8 @@ PGVECTOR_CONNECTION_STRING=
 GITHUB_TOKEN=
 ```
 
+The PGVECTOR_CONNECTION_STRING should contain `+psycopg` in the connection string. For example: `postgresql+psycopg://...`.
+
 The `GITHUB_TOKEN` env var is your Github  Personal Access Token. To generate your Github  Personal Access Token:
 
 
