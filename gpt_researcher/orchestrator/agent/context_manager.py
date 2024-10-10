@@ -39,20 +39,36 @@ class ContextManager:
             )
 
         scraped_sites = await self.researcher.scraper.scrape_urls(new_search_urls)
+        
+        if self.researcher.vector_store:
+            self.researcher.vector_store.load(scraped_sites)
+        
+
         return await self.get_similar_content_by_query(self.researcher.query, scraped_sites)
 
     async def __get_context_from_local_documents(self):
         document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
+        if self.researcher.vector_store:
+            self.researcher.vector_store.load(document_data)
+
         return await self.__get_context_by_search(self.researcher.query, document_data)
 
     async def __get_hybrid_context(self):
         document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
+        if self.researcher.vector_store:
+            self.researcher.vector_store.load(document_data)
+
         docs_context = await self.__get_context_by_search(self.researcher.query, document_data)
         web_context = await self.__get_context_by_search(self.researcher.query)
         return f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"
 
     async def __get_context_from_langchain_documents(self):
         langchain_documents_data = await LangChainDocumentLoader(self.researcher.documents).load()
+        
+        if self.researcher.vector_store:
+            self.researcher.vector_store.load(langchain_documents_data)
+        
+
         return await self.__get_context_by_search(self.researcher.query, langchain_documents_data)
 
     async def __get_context_by_vectorstore(self, query, filter: Optional[dict] = None):
@@ -130,6 +146,10 @@ class ContextManager:
 
         if not scraped_data:
             scraped_data = await self.researcher.scraper.scrape_data_by_query(sub_query)
+
+        if self.researcher.vector_store:
+            self.researcher.vector_store.load(scraped_data)
+
 
         content = await self.get_similar_content_by_query(sub_query, scraped_data)
 

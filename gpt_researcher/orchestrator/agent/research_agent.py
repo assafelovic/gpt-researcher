@@ -9,6 +9,7 @@ from gpt_researcher.orchestrator.agent.report_scraper import ReportScraper
 from gpt_researcher.orchestrator.agent.report_generator import ReportGenerator
 from gpt_researcher.orchestrator.agent.context_manager import ContextManager
 from gpt_researcher.orchestrator.actions import get_retrievers, choose_agent
+from gpt_researcher.vector_store import VectorStoreWrapper
 
 
 class GPTResearcher:
@@ -46,7 +47,7 @@ class GPTResearcher:
         self.tone = tone if isinstance(tone, Tone) else Tone.Objective
         self.source_urls = source_urls
         self.documents = documents
-        self.vector_store = vector_store
+        self.vector_store = VectorStoreWrapper(vector_store) if vector_store else None
         self.vector_store_filter = vector_store_filter
         self.websocket = websocket
         self.agent = agent
