@@ -2,9 +2,9 @@
 
 As described in the [introduction](/docs/gpt-researcher/gptr/config), the default LLM is OpenAI due to its superior performance and speed. 
 With that said, GPT Researcher supports various open/closed source LLMs, and you can easily switch between them by adding the `LLM_PROVIDER` env variable and corresponding configuration params.
-Current supported LLMs are `openai`, `google` (gemini), `azure_openai`, `ollama`, `anthropic`, `mistral`, `huggingface` and `groq`.
+Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq` and `bedrock`.
 
-Using any model will require at least updating the `LLM_PROVIDER` param and passing the LLM provider API Key. You might also need to update the `SMART_LLM_MODEL` and `FAST_LLM_MODEL` env vars.
+Using any model will require updating the `SMART_LLM` and `FAST_LLM` env vars. You might also need to include the LLM provider API Key.
 To learn more about support customization options see [here](/gpt-researcher/config).
 
 **Please note**: GPT Researcher is optimized and heavily tested on GPT models. Some other models might run intro context limit errors, and unexpected responses.
@@ -17,18 +17,15 @@ Create a local OpenAI API using [llama.cpp Server](https://github.com/ggerganov/
 
 ### Custom OpenAI API LLM
 ```bash
-# use a custom OpenAI API LLM provider
-LLM_PROVIDER="openai"
-
 # set the custom OpenAI API url
 OPENAI_BASE_URL="http://localhost:1234/v1"
 # set the custom OpenAI API key
 OPENAI_API_KEY="Your Key"
 
 # specify the custom OpenAI API llm model  
-FAST_LLM_MODEL="gpt-4o-mini"
+FAST_LLM="openai:gpt-4o-mini"
 # specify the custom OpenAI API llm model  
-SMART_LLM_MODEL="gpt-4o"
+SMART_LLM="openai:gpt-4o"
 
 ```
 ### Custom OpenAI API Embedding
@@ -52,13 +49,12 @@ See also the documentation in the Langchain [Azure OpenAI](https://api.python.la
 On Azure OpenAI you will need to create deployments for each model you want to use. Please also specify the model names/deployment names in your `.env` file:
 
 ```bash
-EMBEDDING_PROVIDER="azure_openai"
-AZURE_OPENAI_API_KEY="Your key"
-AZURE_OPENAI_ENDPOINT="https://<your-endpoint>.openai.azure.com/"
-OPENAI_API_VERSION="2024-05-01-preview"
-FAST_LLM_MODEL="gpt-4o-mini"
-DEFAULT_LLM_MODEL="gpt-4o-mini"
-SMART_LLM_MODEL="gpt-4o"
+EMBEDDING_PROVIDER=azure_openai
+AZURE_OPENAI_API_KEY=[Your Key]
+AZURE_OPENAI_ENDPOINT=https://<your-endpoint>.openai.azure.com/
+OPENAI_API_VERSION=2024-05-01-preview
+FAST_LLM=openai:gpt-4o-mini
+SMART_LLM=openai:gpt-4o
 ```
 
 
@@ -69,15 +65,13 @@ To use [Ollama](http://www.ollama.com) you can set the following environment var
 
 ```bash
 # Use ollama for both, LLM and EMBEDDING provider
-LLM_PROVIDER=ollama
-
 # Ollama endpoint to use
 OLLAMA_BASE_URL=http://localhost:11434
 
 # Specify one of the LLM models supported by Ollama
-FAST_LLM_MODEL=llama3
+FAST_LLM=ollama:llama3
 # Specify one of the LLM models supported by Ollama 
-SMART_LLM_MODEL=llama3 
+SMART_LLM=ollama:llama3 
 # The temperature to use, defaults to 0.55
 TEMPERATURE=0.55
 ```
@@ -106,15 +100,12 @@ And finally, you will need to configure the GPT-Researcher Provider and Model va
 
 ```bash
 # To use Groq set the llm provider to groq
-LLM_PROVIDER=groq
 GROQ_API_KEY=[Your Key]
 
 # Set one of the LLM models supported by Groq
-FAST_LLM_MODEL=Mixtral-8x7b-32768
-
+FAST_LLM=groq:Mixtral-8x7b-32768
 # Set one of the LLM models supported by Groq
-SMART_LLM_MODEL=Mixtral-8x7b-32768 
-
+SMART_LLM=groq:Mixtral-8x7b-32768 
 # The temperature to use defaults to 0.55
 TEMPERATURE=0.55
 ```
@@ -128,60 +119,73 @@ __NOTE:__ As of the writing of this Doc (May 2024), the available Language Model
 
 ## Anthropic
 [Anthropic](https://www.anthropic.com/) is an AI safety and research company, and is the creator of Claude. This page covers all integrations between Anthropic models and LangChain.
-
 ```bash
-LLM_PROVIDER=anthropic
 ANTHROPIC_API_KEY=[Your key]
+FAST_LLM=anthropic:claude-2.1
+SMART_LLM=anthropic:claude-3-opus-20240229
 ```
 
-You can then define the fast and smart LLM models for example:
-```bash
-FAST_LLM_MODEL=claude-2.1
-SMART_LLM_MODEL=claude-3-opus-20240229
-```
-
-You can then define the fast and smart LLM models for example:
-```bash
-FAST_LLM_MODEL=claude-2.1
-SMART_LLM_MODEL=claude-3-opus-20240229
-```
-
-## Mistral
+## Mistral AI
 Sign up for a [Mistral API key](https://console.mistral.ai/users/api-keys/). 
 Then update the corresponding env vars, for example:
 ```bash
-LLM_PROVIDER=mistral
 ANTHROPIC_API_KEY=[Your key]
-FAST_LLM_MODEL=open-mistral-7b
-SMART_LLM_MODEL=mistral-large-latest
+FAST_LLM=mistralai:open-mistral-7b
+SMART_LLM=mistralai:mistral-large-latest
 ```
 
 ## Together AI
 [Together AI](https://www.together.ai/) offers an API to query [50+ leading open-source models](https://docs.together.ai/docs/inference-models) in a couple lines of code.
 Then update corresponding env vars, for example:
 ```bash
-LLM_PROVIDER=together
 TOGETHER_API_KEY=[Your key]
-FAST_LLM_MODEL=meta-llama/Llama-3-8b-chat-hf
-SMART_LLM_MODEL=meta-llama/Llama-3-70b-chat-hf
+FAST_LLM=together:meta-llama/Llama-3-8b-chat-hf
+SMART_LLM=together:meta-llama/Llama-3-70b-chat-hf
 ```
 
 ## HuggingFace
 This integration requires a bit of extra work. Follow [this guide](https://python.langchain.com/v0.1/docs/integrations/chat/huggingface/) to learn more.
 After you've followed the tutorial above, update the env vars:
-
 ```bash
-LLM_PROVIDER=huggingface
 HUGGINGFACE_API_KEY=[Your key]
-FAST_LLM_MODEL=HuggingFaceH4/zephyr-7b-beta
-SMART_LLM_MODEL=HuggingFaceH4/zephyr-7b-beta
+FAST_LLM=huggingface:HuggingFaceH4/zephyr-7b-beta
+SMART_LLM=huggingface:HuggingFaceH4/zephyr-7b-beta
 ```
 
 ## Google Gemini
 Sign up [here](https://ai.google.dev/gemini-api/docs/api-key) for obtaining a Google Gemini API Key and update the following env vars:
-
-Please make sure to update fast and smart models to corresponding valid Gemini models.
 ```bash
-LLM_PROVIDER=google
-GEMINI_API_KEY=[Your key]
+GOOGLE_API_KEY=[Your key]
+FAST_LLM=google_genai:gemini-1.5-flash
+SMART_LLM=google_genai:gemini-1.5-pro
+```
+
+## Google VertexAI
+
+```bash
+FAST_LLM=google_vertexai:gemini-1.5-flash-001
+SMART_LLM=google_vertexai:gemini-1.5-pro-001
+```
+
+## Cohere
+
+```bash
+COHERE_API_KEY=[Your key]
+FAST_LLM=cohere:command
+SMART_LLM=cohere:command-nightly
+```
+
+## Fireworks
+
+```bash
+FIREWORKS_API_KEY=[Your key]
+FAST_LLM=fireworks:accounts/fireworks/models/mixtral-8x7b-instruct
+SMART_LLM=fireworks:accounts/fireworks/models/mixtral-8x7b-instruct
+```
+
+## Bedrock
+
+```bash
+FAST_LLM=bedrock:anthropic.claude-3-sonnet-20240229-v1:0
+SMART_LLM=bedrock:anthropic.claude-3-sonnet-20240229-v1:0
 ```

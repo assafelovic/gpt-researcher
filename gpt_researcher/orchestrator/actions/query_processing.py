@@ -34,7 +34,7 @@ async def choose_agent(
                 {"role": "user", "content": f"task: {query}"},
             ],
             temperature=0.15,
-            llm_provider=cfg.llm_provider,
+            llm_provider=cfg.smart_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
         )
@@ -115,7 +115,7 @@ async def get_sub_queries(
             },
         ],
         temperature=0.1,
-        llm_provider=cfg.llm_provider,
+        llm_provider=cfg.smart_llm_provider,
         llm_kwargs=cfg.llm_kwargs,
         cost_callback=cost_callback,
     )
