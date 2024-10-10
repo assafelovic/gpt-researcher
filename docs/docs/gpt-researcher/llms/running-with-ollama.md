@@ -28,14 +28,13 @@ If you deploy ollama locally, a .env like so, should enable powering GPT-Researc
 OPENAI_API_KEY="123"
 OPENAI_API_BASE="http://127.0.0.1:11434/v1"
 OLLAMA_BASE_URL="http://127.0.0.1:11434/"
-FAST_LLM_MODEL=qwen2:1.5b
-SMART_LLM_MODEL=qwen2:1.5b
+FAST_LLM=ollama:qwen2:1.5b
+SMART_LLM=ollama:qwen2:1.5b
 OLLAMA_EMBEDDING_MODEL=all-minilm:22m
-LLM_PROVIDER=openai
 EMBEDDING_PROVIDER=ollama
 ```
 
-Replace FAST_LLM_MODEL & SMART_LLM_MODEL with the model you downloaded from the Elestio Web UI in the previous step.
+Replace `FAST_LLM` & `SMART_LLM` with the model you downloaded from the Elestio Web UI in the previous step.
 
 
 ## Run LLM Test Script for GPTR
@@ -51,16 +50,14 @@ logging.basicConfig(level=logging.DEBUG)
 from gpt_researcher.llm_provider.generic import GenericLLMProvider
 from gpt_researcher.utils.llm import get_llm
 
-# Set up environment variables
-os.environ["LLM_PROVIDER"] = "ollama"
-os.environ["OLLAMA_BASE_URL"] = "https://ollama-ug3qr-u21899.vm.elestio.app:57987"
-os.environ["FAST_LLM_MODEL"] = "llama3.1"
+OLLAMA_BASE_URL = "https://ollama-ug3qr-u21899.vm.elestio.app:57987"
+LLM_MODEL = "llama3.1"
 
 # Create the GenericLLMProvider instance
 llm_provider = get_llm(
     "ollama",
-    base_url=os.environ["OLLAMA_BASE_URL"],
-    model=os.environ["FAST_LLM_MODEL"],
+    base_url=OLLAMA_BASE_URL,
+    model=LLM_MODEL,
     temperature=0.7,
     max_tokens=2000,
     verify_ssl=False  # Add this line
@@ -81,7 +78,7 @@ asyncio.run(test_ollama())
     
 ```
 
-Replace `OLLAMA_BASE_URL` with the URL of your Ollama instance, and `FAST_LLM_MODEL` with the model you downloaded from the Ollama Web UI.
+Replace `OLLAMA_BASE_URL` with the URL of your Ollama instance, and `LLM_MODEL` with the model you downloaded from the Ollama Web UI.
 
 Run the script to test the connection with your custom LLM.
 
@@ -98,10 +95,9 @@ Here's an example .env file that will enable powering GPT-Researcher with Elesti
 OPENAI_API_KEY="123"
 OPENAI_API_BASE="https://<your_custom_elestio_project>.vm.elestio.app:57987/v1"
 OLLAMA_BASE_URL="https://<your_custom_elestio_project>.vm.elestio.app:57987/"
-FAST_LLM_MODEL=qwen2:1.5b
-SMART_LLM_MODEL=qwen2:1.5b
+FAST_LLM=openai:qwen2:1.5b
+SMART_LLM=openai:qwen2:1.5b
 OLLAMA_EMBEDDING_MODEL=all-minilm:22m
-LLM_PROVIDER=openai
 EMBEDDING_PROVIDER=ollama
 ```
 

@@ -98,8 +98,13 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
 
         temperature = config.temperature
         # temperature = 0 # Note: temperature throughout the code base is currently set to Zero
-        provider = get_llm(config.llm_provider, model=config.smart_llm_model,
-                           temperature=temperature, max_tokens=config.smart_token_limit, **config.llm_kwargs)
+        provider = get_llm(
+            config.smart_llm_provider,
+            model=config.smart_llm_model,
+            temperature=temperature,
+            max_tokens=config.smart_token_limit,
+            **config.llm_kwargs,
+        )
         model = provider.llm
 
         chain = prompt | model | parser
