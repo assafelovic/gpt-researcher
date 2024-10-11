@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.logger import get_formatted_logger
-from gpt_researcher.orchestrator.prompts import (
+from gpt_researcher.master.prompts import (
     generate_report_introduction,
     generate_draft_titles_prompt,
     generate_report_conclusion,

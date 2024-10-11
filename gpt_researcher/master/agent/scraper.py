@@ -1,6 +1,6 @@
 import asyncio
 from typing import List, Dict
-from gpt_researcher.orchestrator.actions import scrape_urls
+from gpt_researcher.master.actions import scrape_urls
 
 
 class ReportScraper:

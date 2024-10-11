@@ -4,7 +4,7 @@ import json_repair
 from typing import List, Dict, Any
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.llm import create_chat_completion
-from gpt_researcher.orchestrator.prompts import auto_agent_instructions, generate_search_queries_prompt
+from gpt_researcher.master.prompts import auto_agent_instructions, generate_search_queries_prompt
 
 
 async def choose_agent(

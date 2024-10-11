@@ -4,7 +4,7 @@ from typing import List, Dict, Optional, Set
 from gpt_researcher.context.compression import ContextCompressor, WrittenContentCompressor, VectorstoreCompressor
 from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
 from gpt_researcher.utils.enum import ReportSource
-from gpt_researcher.orchestrator.actions.utils import stream_output
+from gpt_researcher.master.actions.utils import stream_output
 
 
 class ContextManager:
@@ -215,7 +215,7 @@ class ContextManager:
         )
 
     async def __get_sub_queries(self, query):
-        from gpt_researcher.orchestrator.actions import get_sub_queries
+        from gpt_researcher.master.actions import get_sub_queries
         return await get_sub_queries(
             query=query,
             agent_role_prompt=self.researcher.role,

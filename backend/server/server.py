@@ -13,7 +13,7 @@ from backend.server.server_utils import generate_report_files
 from backend.server.websocket_manager import WebSocketManager
 from multi_agents.main import run_research_task
 from gpt_researcher.document.document import DocumentLoader
-from gpt_researcher.orchestrator.actions import stream_output
+from gpt_researcher.master.actions import stream_output
 from backend.server.server_utils import (
     sanitize_filename, handle_start_command, handle_human_feedback,
     generate_report_files, send_file_paths, get_config_dict,
