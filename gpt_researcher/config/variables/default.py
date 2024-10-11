@@ -1,5 +1,5 @@
-from gpt_researcher.config.configurations.retrievers_config import RetrieversConfig, VALID_RETRIEVERS
-from gpt_researcher.config.configurations.base_config import BaseConfig
+from gpt_researcher.config.variables.retrievers import RetrieversConfig, VALID_RETRIEVERS
+from gpt_researcher.config.variables.base import BaseConfig
 
 
 class DefaultConfig(BaseConfig):
