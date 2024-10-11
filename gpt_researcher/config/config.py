@@ -2,14 +2,14 @@ import json
 import os
 import warnings
 from typing import Dict, Any, List, Union, Type, get_origin, get_args
-from .configurations.default_config import DEFAULT_CONFIG
-from .configurations.base_config import BaseConfig
+from .variables.default import DEFAULT_CONFIG
+from .variables.base import BaseConfig
 
 
 class Config:
     """Config class for GPT Researcher."""
 
-    CONFIG_DIR = os.path.join(os.path.dirname(__file__), "configurations")
+    CONFIG_DIR = os.path.join(os.path.dirname(__file__), "variables")
 
     def __init__(self, config_name: str = "default"):
         """Initialize the config class."""
