@@ -244,18 +244,18 @@ def generate_subtopic_report_prompt(
     tone: Tone = Tone.Objective,
 ) -> str:
     return f"""
-"Context":
+Context:
 "{context}"
 
-"Main Topic and Subtopic":
+Main Topic and Subtopic:
 Using the latest information available, construct a detailed report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
 You must limit the number of subsections to a maximum of {max_subsections}.
 
-"Content Focus":
+Content Focus:
 - The report should focus on answering the question, be well-structured, informative, in-depth, and include facts and numbers if available.
 - Use markdown syntax and follow the {report_format.upper()} format.
 
-"IMPORTANT:Content and Sections Uniqueness":
+IMPORTANT:Content and Sections Uniqueness:
 - This part of the instructions is crucial to ensure the content is unique and does not overlap with existing reports.
 - Carefully review the existing headers and existing written contents provided below before writing any new subsections.
 - Prevent any content that is already covered in the existing written contents.
@@ -301,6 +301,8 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if
 - You MUST mention the difference between the existing content and the new content in the report if you are adding the similar or same subsections wherever necessary.
 - The report should have a minimum length of {total_words} words.
 - Use an {tone.value} tone throughout the report.
+
+Do NOT add a conclusion section.
 """
 
 
@@ -349,7 +351,7 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
 """
 
 
-def generate_report_conclusion(report_content: str) -> str:
+def generate_report_conclusion(query: str, report_content: str) -> str:
     """
     Generate a concise conclusion summarizing the main findings and implications of a research report.
 
@@ -360,9 +362,11 @@ def generate_report_conclusion(report_content: str) -> str:
         str: A concise conclusion summarizing the report's main findings and implications.
     """
     prompt = f"""
-    Based on the following research report, please write a concise conclusion that summarizes the main findings and their implications:
-
-    {report_content}
+    Based on the research report below and research task, please write a concise conclusion that summarizes the main findings and their implications:
+    
+    Research task: {query}
+    
+    Research Report: {report_content}
 
     Your conclusion should:
     1. Recap the main points of the research
