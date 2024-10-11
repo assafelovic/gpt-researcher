@@ -14,10 +14,10 @@ from gpt_researcher.utils.enum import Tone
 logger = get_formatted_logger()
 
 
-async def get_report_introduction(
+async def write_report_introduction(
     query: str,
     context: str,
-    role: str,
+    agent_role_prompt: str,
     config: Config,
     websocket=None,
     cost_callback: callable = None
@@ -40,7 +40,7 @@ async def get_report_introduction(
         introduction = await create_chat_completion(
             model=config.smart_llm_model,
             messages=[
-                {"role": "system", "content": f"{role}"},
+                {"role": "system", "content": f"{agent_role_prompt}"},
                 {"role": "user", "content": generate_report_introduction(
                     query, context)},
             ],
@@ -61,7 +61,7 @@ async def get_report_introduction(
 async def write_conclusion(
     query: str,
     context: str,
-    role: str,
+    agent_role_prompt: str,
     config: Config,
     websocket=None,
     cost_callback: callable = None
@@ -84,9 +84,8 @@ async def write_conclusion(
         conclusion = await create_chat_completion(
             model=config.smart_llm_model,
             messages=[
-                {"role": "system", "content": f"{role}"},
-                {"role": "user", "content": generate_report_conclusion(
-                    query, context)},
+                {"role": "system", "content": f"{agent_role_prompt}"},
+                {"role": "user", "content": generate_report_conclusion(query, context)},
             ],
             temperature=0.25,
             llm_provider=config.smart_llm_provider,
@@ -247,6 +246,6 @@ async def generate_report(
             cost_callback=cost_callback,
         )
     except Exception as e:
-        print(f"{Fore.RED}Error in generate_report: {e}{Style.RESET_ALL}")
+        print(f"Error in generate_report: {e}")
 
     return report

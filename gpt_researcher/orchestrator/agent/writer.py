@@ -1,15 +1,13 @@
 from typing import Dict, Optional
 
-from gpt_researcher.orchestrator.prompts import (
-    get_report_by_type,
-    generate_report_conclusion,
-    generate_report_introduction,
-    generate_subtopics_prompt,
-    generate_draft_titles_prompt,
-)
-
 from gpt_researcher.utils.llm import construct_subtopics
-from gpt_researcher.orchestrator.actions import stream_output, generate_report, generate_draft_section_titles
+from gpt_researcher.orchestrator.actions import (
+    stream_output,
+    generate_report,
+    generate_draft_section_titles,
+    write_report_introduction,
+    write_conclusion
+)
 
 
 class ReportGenerator:
@@ -17,6 +15,16 @@ class ReportGenerator:
 
     def __init__(self, researcher):
         self.researcher = researcher
+        self.research_params = {
+            "query": self.researcher.query,
+            "agent_role_prompt": self.researcher.cfg.agent_role or self.researcher.role,
+            "report_type": self.researcher.report_type,
+            "report_source": self.researcher.report_source,
+            "tone": self.researcher.tone,
+            "websocket": self.researcher.websocket,
+            "cfg": self.researcher.cfg,
+            "headers": self.researcher.headers,
+        }
 
     async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None) -> str:
         """
@@ -39,17 +47,8 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        report_params = {
-            "query": self.researcher.query,
-            "context": context,
-            "agent_role_prompt": self.researcher.cfg.agent_role or self.researcher.role,
-            "report_type": self.researcher.report_type,
-            "report_source": self.researcher.report_source,
-            "tone": self.researcher.tone,
-            "websocket": self.researcher.websocket,
-            "cfg": self.researcher.cfg,
-            "headers": self.researcher.headers,
-        }
+        report_params = self.research_params.copy()
+        report_params["context"] = context
 
         if self.researcher.report_type == "subtopic_report":
             report_params.update({
@@ -91,7 +90,14 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        conclusion = generate_report_conclusion(report_content)
+        conclusion = await write_conclusion(
+            query=self.researcher.query,
+            context=report_content,
+            config=self.researcher.cfg,
+            agent_role_prompt=self.researcher.cfg.agent_role or self.researcher.role,
+            cost_callback=self.researcher.add_costs,
+            websocket=self.researcher.websocket,
+        )
 
         if self.researcher.verbose:
             await stream_output(
@@ -113,9 +119,13 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        introduction = generate_report_introduction(
-            question=self.researcher.query,
-            research_summary=self.researcher.context
+        introduction = await write_report_introduction(
+            query=self.researcher.query,
+            context=self.researcher.context,
+            agent_role_prompt=self.researcher.cfg.agent_role or self.researcher.role,
+            config=self.researcher.cfg,
+            websocket=self.researcher.websocket,
+            cost_callback=self.researcher.add_costs,
         )
 
         if self.researcher.verbose:

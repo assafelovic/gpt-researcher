@@ -1,8 +1,8 @@
 from .context_manager import ContextManager
-from .research_agent import GPTResearcher
-from .research_conductor import ResearchConductor
-from .report_scraper import ReportScraper
-from .report_generator import ReportGenerator
+from .master import GPTResearcher
+from .researcher import ResearchConductor
+from .scraper import ReportScraper
+from .writer import ReportGenerator
 
 __all__ = [
     'GPTResearcher',
