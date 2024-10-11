@@ -4,9 +4,9 @@ from gpt_researcher.config import Config
 from gpt_researcher.memory import Memory
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.llm_provider import GenericLLMProvider
-from gpt_researcher.orchestrator.agent.research_conductor import ResearchConductor
-from gpt_researcher.orchestrator.agent.report_scraper import ReportScraper
-from gpt_researcher.orchestrator.agent.report_generator import ReportGenerator
+from gpt_researcher.orchestrator.agent.researcher import ResearchConductor
+from gpt_researcher.orchestrator.agent.scraper import ReportScraper
+from gpt_researcher.orchestrator.agent.writer import ReportGenerator
 from gpt_researcher.orchestrator.agent.context_manager import ContextManager
 from gpt_researcher.orchestrator.actions import get_retrievers, choose_agent
 from gpt_researcher.vector_store import VectorStoreWrapper
