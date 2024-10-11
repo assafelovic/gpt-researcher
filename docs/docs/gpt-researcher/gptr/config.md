@@ -1,11 +1,11 @@
-# Introduction
+# Configuration
 
 The config.py enables you to customize GPT Researcher to your specific needs and preferences.
 
 Thanks to our amazing community and contributions, GPT Researcher supports multiple LLMs and Retrievers.
 In addition, GPT Researcher can be tailored to various report formats (such as APA), word count, research iterations depth, etc.
 
-GPT Researcher defaults to our recommended suite of integrations: [OpenAI](https://platform.openai.com/docs/overview) for LLM calls and [Tavily API](https://app.tavily.com) for retrieving realtime online information.
+GPT Researcher defaults to our recommended suite of integrations: [OpenAI](https://platform.openai.com/docs/overview) for LLM calls and [Tavily API](https://app.tavily.com) for retrieving real-time web information.
 
 As seen below, OpenAI still stands as the superior LLM. We assume it will stay this way for some time, and that prices will only continue to decrease, while performance and speed increase over time.
 
