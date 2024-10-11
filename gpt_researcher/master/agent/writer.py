@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 
 from gpt_researcher.utils.llm import construct_subtopics
-from gpt_researcher.orchestrator.actions import (
+from gpt_researcher.master.actions import (
     stream_output,
     generate_report,
     generate_draft_section_titles,

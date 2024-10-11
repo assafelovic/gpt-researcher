@@ -2,16 +2,16 @@ import asyncio
 from typing import List, Dict, Set, Optional
 from fastapi import WebSocket
 
-from gpt_researcher.orchestrator.actions import (
+from gpt_researcher.master.actions import (
     add_references,
     extract_headers,
     extract_sections,
     table_of_contents,
 )
-from gpt_researcher.orchestrator.agent import GPTResearcher
+from gpt_researcher.master.agent import GPTResearcher
 from gpt_researcher.utils.enum import Tone
 from gpt_researcher.utils.validators import Subtopics
-from gpt_researcher.orchestrator.actions.markdown_processing import extract_headers
+from gpt_researcher.master.actions.markdown_processing import extract_headers
 
 
 class DetailedReport:
