@@ -100,6 +100,8 @@ This version is recommended for local, experimental, and educational use. We're 
 | Complexity | Low | Medium | High |
 | Best for | Developers | End-users | Researchers/Experimenters |
 
+Please note that all options have been optimized and refined for production use.
+
 ## Deep Dive
 
 To learn more about each of the options, check out these docs and code snippets:
