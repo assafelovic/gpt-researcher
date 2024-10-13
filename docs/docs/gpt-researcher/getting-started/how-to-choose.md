@@ -12,7 +12,7 @@ We envision a future where AI agents collaborate to complete complex tasks, with
 
 GPT Researcher offers multiple ways to leverage its capabilities:
 
-<img src="https://github.com/user-attachments/assets/305fa3b9-60fa-42b6-a4b0-84740ab6c665" alt="Logo" width="80">
+<img src="https://github.com/user-attachments/assets/305fa3b9-60fa-42b6-a4b0-84740ab6c665" alt="Logo" width="400">
 
 1. **GPT Researcher PIP agent**: Ideal for integrating GPT Researcher into your existing projects and workflows.
 2. **Backend**: A backend service to interact with the frontend user interfaces, offering advanced features like detailed reports.
