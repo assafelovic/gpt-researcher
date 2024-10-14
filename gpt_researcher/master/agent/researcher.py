@@ -2,10 +2,10 @@ import asyncio
 import random
 from typing import Dict, Optional
 
-from gpt_researcher.master.actions.utils import stream_output
-from gpt_researcher.master.actions import get_sub_queries, scrape_urls
-from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
-from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
+from ..actions.utils import stream_output
+from ..actions import get_sub_queries, scrape_urls
+from ...document import DocumentLoader, LangChainDocumentLoader
+from ...utils.enum import ReportSource, ReportType, Tone
 
 
 class ResearchConductor:
