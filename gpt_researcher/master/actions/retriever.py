@@ -1,5 +1,5 @@
 from typing import List, Type
-from gpt_researcher.config.config import Config
+from ...config.config import Config
 
 def get_retriever(retriever):
     """
