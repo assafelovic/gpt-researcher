@@ -4,10 +4,11 @@ import { Toaster, toast } from "react-hot-toast";
 import { useEffect, useState } from 'react';
 import { remark } from 'remark';
 import html from 'remark-html';
+import { Compatible } from "vfile";
 
 
 export default function Answer({ answer }: { answer: string }) {
-  async function markdownToHtml(markdown) {
+  async function markdownToHtml(markdown: Compatible | undefined) {
     try {
       const result = await remark().use(html).process(markdown);
       console.log('Markdown to HTML conversion result:', result.toString());

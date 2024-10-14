@@ -34,7 +34,7 @@ const Hero: FC<THeroProps> = ({
                 Hours of Research
               </span>
             </h1>
-            <h2 className="text-xl font-light text-center mb-4 ml-[20vw] mr-[20vw] mb-10 text-gray-300">
+            <h2 className="text-xl font-light text-center ml-[20vw] mr-[20vw] mb-10 text-gray-300">
               Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research
             </h2>
         </div>
