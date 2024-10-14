@@ -1,15 +1,15 @@
 from typing import Optional, List, Dict, Any, Set
 
-from gpt_researcher.config import Config
-from gpt_researcher.memory import Memory
-from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
-from gpt_researcher.llm_provider import GenericLLMProvider
-from gpt_researcher.master.agent.researcher import ResearchConductor
-from gpt_researcher.master.agent.scraper import ReportScraper
-from gpt_researcher.master.agent.writer import ReportGenerator
-from gpt_researcher.master.agent.context_manager import ContextManager
-from gpt_researcher.master.actions import get_retrievers, choose_agent
-from gpt_researcher.vector_store import VectorStoreWrapper
+from ...config import Config
+from ...memory import Memory
+from ...utils.enum import ReportSource, ReportType, Tone
+from ...llm_provider import GenericLLMProvider
+from ..agent.researcher import ResearchConductor
+from ..agent.scraper import ReportScraper
+from ..agent.writer import ReportGenerator
+from ..agent.context_manager import ContextManager
+from ..actions import get_retrievers, choose_agent
+from ...vector_store import VectorStoreWrapper
 
 
 class GPTResearcher:

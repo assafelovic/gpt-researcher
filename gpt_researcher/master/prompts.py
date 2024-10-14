@@ -1,7 +1,7 @@
 import warnings
 from datetime import date, datetime, timezone
 
-from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
+from ..utils.enum import ReportSource, ReportType, Tone
 
 
 def generate_search_queries_prompt(

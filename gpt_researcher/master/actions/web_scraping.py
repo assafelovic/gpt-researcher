@@ -1,8 +1,8 @@
 import asyncio
 from typing import List, Dict, Any
-from gpt_researcher.scraper.scraper import Scraper
-from gpt_researcher.config.config import Config
-from gpt_researcher.utils.logger import get_formatted_logger
+from ...scraper.scraper import Scraper
+from ...config.config import Config
+from ...utils.logger import get_formatted_logger
 
 logger = get_formatted_logger()
 
