@@ -1,30 +1,49 @@
-// multi_agents/gpt_researcher_nextjs/components/Task/LogMessage.tsx
-
+// LogMessage.tsx
 import Accordion from './Accordion';
 import { useEffect, useState } from 'react';
 import { remark } from 'remark';
 import html from 'remark-html';
 
-const LogMessage = ({ logs }) => {
-  const [processedLogs, setProcessedLogs] = useState([]);
+type ProcessedData = {
+  field: string;
+  htmlContent: string;
+  isMarkdown: boolean;
+};
+
+type Log = {
+  header: string;
+  text: string;
+  processedData?: ProcessedData[];
+};
+
+interface LogMessageProps {
+  logs: Log[];
+}
+
+const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
+  const [processedLogs, setProcessedLogs] = useState<Log[]>([]);
 
   useEffect(() => {
     const processLogs = async () => {
-      const newLogs = await Promise.all(logs.map(async (log) => {
-        if (log.header === 'differences') {
-          const data = JSON.parse(log.text).data;
-          const processedData = await Promise.all(Object.keys(data).map(async (field) => {
-            const fieldValue = data[field].after || data[field].before;
-            if (!plainTextFields.includes(field)) {
-              const htmlContent = await markdownToHtml(fieldValue);
-              return { field, htmlContent, isMarkdown: true };
-            }
-            return { field, htmlContent: fieldValue, isMarkdown: false };
-          }));
-          return { ...log, processedData };
-        }
-        return log;
-      }));
+      const newLogs = await Promise.all(
+        logs.map(async (log) => {
+          if (log.header === 'differences') {
+            const data = JSON.parse(log.text).data;
+            const processedData = await Promise.all(
+              Object.keys(data).map(async (field) => {
+                const fieldValue = data[field].after || data[field].before;
+                if (!plainTextFields.includes(field)) {
+                  const htmlContent = await markdownToHtml(fieldValue);
+                  return { field, htmlContent, isMarkdown: true };
+                }
+                return { field, htmlContent: fieldValue, isMarkdown: false };
+              })
+            );
+            return { ...log, processedData };
+          }
+          return log;
+        })
+      );
       setProcessedLogs(newLogs);
     };
 
@@ -42,13 +61,13 @@ const LogMessage = ({ logs }) => {
               } else {
                 return (
                   <div
-                      key={index}
-                      className="mb-4 w-full max-w-4xl mx-auto rounded-lg p-4 bg-gray-800 shadow-md"
-                    >
-                      <p className="py-3 text-base leading-relaxed text-white dark:text-white">
-                        {log.text}
-                      </p>
-                    </div>
+                    key={index}
+                    className="mb-4 w-full max-w-4xl mx-auto rounded-lg p-4 bg-gray-800 shadow-md"
+                  >
+                    <p className="py-3 text-base leading-relaxed text-white dark:text-white">
+                      {log.text}
+                    </p>
+                  </div>
                 );
               }
             })}
@@ -59,7 +78,7 @@ const LogMessage = ({ logs }) => {
   );
 };
 
-const markdownToHtml = async (markdown) => {
+const markdownToHtml = async (markdown: string): Promise<string> => {
   try {
     const result = await remark().use(html).process(markdown);
     return result.toString();

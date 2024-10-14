@@ -1,6 +1,6 @@
-export default function AgentLogs({agentLogs}){  
-  const renderAgentLogs = (agentLogs)=>{
-    return agentLogs && agentLogs.map((agentLog, index)=>{
+export default function AgentLogs({agentLogs}:any){  
+  const renderAgentLogs = (agentLogs:any)=>{
+    return agentLogs && agentLogs.map((agentLog:any, index:number)=>{
       return (<div key={index} className="agent_response">{agentLog.output}</div>)
     })
   }

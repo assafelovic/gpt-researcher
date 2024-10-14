@@ -4,12 +4,22 @@ import Report from '../Task/Report';
 import AgentLogs from '../Task/AgentLogs';
 import AccessReport from '../Task/AccessReport';
 
-export default function ChatBox({ chatBoxSettings, setChatBoxSettings }) {
+interface ChatBoxSettings {
+  report_source: string;
+  report_type: string;
+  tone: string;
+}
 
-  const [agentLogs, setAgentLogs] = useState([]);
+interface ChatBoxProps {
+  chatBoxSettings: ChatBoxSettings;
+  setChatBoxSettings: React.Dispatch<React.SetStateAction<ChatBoxSettings>>;
+}
+export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBoxProps) {
+
+  const [agentLogs, setAgentLogs] = useState<any[]>([]);
   const [report, setReport] = useState("");
   const [accessData, setAccessData] = useState({});
-  const [socket, setSocket] = useState(null);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -43,6 +53,7 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }) {
         <ResearchForm 
           chatBoxSettings={chatBoxSettings} 
           setChatBoxSettings={setChatBoxSettings} 
+          defaultReportType="multi_agents"
         />
 
         {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs} /> : ''}
