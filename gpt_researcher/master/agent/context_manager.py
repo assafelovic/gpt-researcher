@@ -1,10 +1,10 @@
 import asyncio
 from typing import List, Dict, Optional, Set
 
-from gpt_researcher.context.compression import ContextCompressor, WrittenContentCompressor, VectorstoreCompressor
-from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
-from gpt_researcher.utils.enum import ReportSource
-from gpt_researcher.master.actions.utils import stream_output
+from ...context.compression import ContextCompressor, WrittenContentCompressor, VectorstoreCompressor
+from ...document import DocumentLoader, LangChainDocumentLoader
+from ...utils.enum import ReportSource
+from ..actions.utils import stream_output
 
 
 class ContextManager:
