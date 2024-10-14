@@ -26,7 +26,7 @@
 
 # 🔎 GPT Researcher
 
-**GPT Researcher is an autonomous agent designed for comprehensive web and local research on a variety of tasks.** 
+**GPT Researcher is an autonomous agent designed for comprehensive web and local research on any given task.** 
 
 The agent can produce detailed, factual and unbiased research reports, with customization options for focusing on relevant resources and outlines. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses issues of misinformation, speed, determinism and reliability, offering a more stable performance and increased speed through parallelized agent work, as opposed to synchronous operations.
 
