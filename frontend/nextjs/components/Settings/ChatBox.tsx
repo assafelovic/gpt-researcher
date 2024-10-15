@@ -52,8 +52,7 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBox
       <main className="container" id="form">
         <ResearchForm 
           chatBoxSettings={chatBoxSettings} 
-          setChatBoxSettings={setChatBoxSettings} 
-          defaultReportType="multi_agents"
+          setChatBoxSettings={setChatBoxSettings}
         />
 
         {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs} /> : ''}

@@ -72,8 +72,8 @@ export default function ResearchForm({
           className="form-control"
           required
         >
-          <option value="multi_agents">Multi Agents Report</option>
           <option value="research_report">Summary - Short and fast (~2 min)</option>
+          <option value="multi_agents">Multi Agents Report</option>
           <option value="detailed_report">Detailed - In depth and longer (~5 min)</option>
         </select>
       </div>
@@ -95,7 +95,6 @@ export default function ResearchForm({
       {report_source === 'local' || report_source === 'hybrid' ? <FileUpload /> : null}
       {/* ToneSelector for changing the tone */}
       <ToneSelector tone={tone} onToneChange={onToneChange} />
-      <button type="submit" className="mt-4 btn btn-primary">Submit</button> {/* Submit button */}
     </form>
   );
 }
