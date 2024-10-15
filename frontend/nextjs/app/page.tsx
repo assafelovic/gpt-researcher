@@ -281,7 +281,15 @@ export default function Home() {
             }
             sourceBlockEncountered = true;
           }
-          const hostname = new URL(metadata).hostname.replace('www.', '');
+          let hostname = "";
+          try {
+            if (typeof metadata === 'string') {
+              hostname = new URL(metadata).hostname.replace('www.', '');
+            }
+          } catch (e) {
+            console.error(`Invalid URL: ${metadata}`, e);
+            hostname = "unknown"; // Default or fallback value
+          }
           currentSourceGroup.items.push({ name: hostname, url: metadata });
         } else if (type !== 'path' && content !== '') {
           if (sourceBlockEncountered) {
