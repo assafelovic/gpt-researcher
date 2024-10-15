@@ -116,14 +116,6 @@ export default function ResearchForm({
       {/* ToneSelector for changing the tone */}
       <ToneSelector tone={tone} onToneChange={onToneChange} />
 
-      <button
-        type="submit"
-        className="btn btn-primary mt-4 rounded-[3px] px-4 py-2 text-white"
-      >
-        Submit
-      </button>{" "}
-      {/* Submit button */}
-
     </form>
   );
 }
