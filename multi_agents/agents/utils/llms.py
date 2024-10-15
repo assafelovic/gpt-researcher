@@ -3,7 +3,6 @@ import json_repair
 from langchain_community.adapters.openai import convert_openai_messages
 
 from gpt_researcher.config.config import Config
-from gpt_researcher.master.actions.query_processing import handle_json_error
 from gpt_researcher.utils.llm import create_chat_completion
 
 from loguru import logger
