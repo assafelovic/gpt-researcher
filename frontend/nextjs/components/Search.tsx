@@ -7,9 +7,9 @@ import AccessReport from './Task/AccessReport';
 const Search = () => {
   // State for chatBoxSettings
   const [chatBoxSettings, setChatBoxSettings] = useState({
-    report_type: 'multi_agents',
-    report_source: 'web',
-    tone: 'neutral',
+    report_type: '',
+    report_source: '',
+    tone: '',
   });
 
   const [task, setTask] = useState<string>('');
@@ -63,7 +63,6 @@ const Search = () => {
       {/* Pass chatBoxSettings and setChatBoxSettings to ResearchForm */}
       <ResearchForm
         onFormSubmit={handleFormSubmit}
-        defaultReportType="multi_agents"
         chatBoxSettings={chatBoxSettings}
         setChatBoxSettings={setChatBoxSettings}
       />
