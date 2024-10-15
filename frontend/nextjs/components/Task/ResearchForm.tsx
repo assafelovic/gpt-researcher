@@ -82,6 +82,7 @@ export default function ResearchForm({
           className="form-control"
           required
         >
+
           <option value="multi_agents">Multi Agents Report</option>
           <option value="research_report">
             Summary - Short and fast (~2 min)
@@ -89,6 +90,7 @@ export default function ResearchForm({
           <option value="detailed_report">
             Detailed - In depth and longer (~5 min)
           </option>
+
         </select>
       </div>
       <div className="form-group">
@@ -113,6 +115,7 @@ export default function ResearchForm({
       ) : null}
       {/* ToneSelector for changing the tone */}
       <ToneSelector tone={tone} onToneChange={onToneChange} />
+
       <button
         type="submit"
         className="btn btn-primary mt-4 rounded-[3px] px-4 py-2 text-white"
@@ -120,6 +123,7 @@ export default function ResearchForm({
         Submit
       </button>{" "}
       {/* Submit button */}
+
     </form>
   );
 }
