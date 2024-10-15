@@ -9,7 +9,9 @@ PGVECTOR_CONNECTION_STRING=
 GITHUB_TOKEN=
 ```
 
-The PGVECTOR_CONNECTION_STRING should contain `+psycopg` in the connection string. For example: `postgresql+psycopg://...`.
+For asyncronous [Langchain Vector Stores](https://python.langchain.com/v0.2/docs/integrations/vectorstores/pgvector/), the PGVECTOR_CONNECTION_STRING should contain the string `+psycopg`, for example: `postgresql+psycopg://...`. 
+
+This is currently appended within the python script itself, so you can set your postgres connection string as usual: `postgresql://...` in the env file for the asyncronous PGVector tasks.
 
 The `GITHUB_TOKEN` env var is your Github  Personal Access Token. To generate your Github  Personal Access Token:
 
