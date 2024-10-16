@@ -1,18 +1,25 @@
 import {getHost} from '../../helpers/getHost'
 
-export default function AccessReport({ accessData, report }) {
+interface AccessReportProps {
+  accessData: any; 
+  report: any;
+}
 
+const AccessReport: React.FC<AccessReportProps> = ({ accessData, report }) => {
   const host = getHost();
 
-  function copyToClipboard(text) {
-    if ('clipboard' in navigator) {
-      navigator.clipboard.writeText(report);
-    } else {
-      document.execCommand('copy', true, report);
-    }
-  }
 
-  const getReportLink = (dataType) => {
+  const copyToClipboard = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(report).catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+    } else {
+      console.warn('Clipboard API is not available');
+    }
+  };
+
+  const getReportLink = (dataType:string) => {
     return `${host}/${accessData[dataType]}`;
   };
 
@@ -33,3 +40,5 @@ export default function AccessReport({ accessData, report }) {
     </div>
   );
 }
+
+export default AccessReport;

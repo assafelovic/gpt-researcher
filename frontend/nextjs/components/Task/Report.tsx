@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Report({report}) {
+export default function Report({report}:any) {
 
     return (
         <div>

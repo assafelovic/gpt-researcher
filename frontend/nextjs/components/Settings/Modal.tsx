@@ -4,7 +4,17 @@ import ChatBox from './ChatBox';
 import axios from 'axios';
 import { getHost } from '../../helpers/getHost';
 
-export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
+interface ChatBoxSettings {
+  report_source: string;
+  report_type: string;
+  tone: string;
+}
+
+interface ChatBoxProps {
+  chatBoxSettings: ChatBoxSettings;
+  setChatBoxSettings: React.Dispatch<React.SetStateAction<ChatBoxSettings>>;
+}
+export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxProps) {
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState('search');
   const [apiVariables, setApiVariables] = useState({
@@ -47,7 +57,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }) {
     setShowModal(false);
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: { target: { name: any; value: any; }; }) => {
     const { name, value } = e.target;
     setApiVariables(prevState => ({
       ...prevState,

@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 
-export default function ToneSelector({ tone, onToneChange }) {
+interface ToneSelectorProps {
+  tone: string;
+  onToneChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+}
+export default function ToneSelector({ tone, onToneChange }: ToneSelectorProps) {
   return (
     <div className="form-group">
       <label htmlFor="tone" className="agent_question">Tone </label>
