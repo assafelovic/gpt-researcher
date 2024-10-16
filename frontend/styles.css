@@ -18,9 +18,7 @@ body {
     font-family: 'Montserrat', sans-serif;
     color: #fff;
     line-height: 1.6;
-    background-size: 200% 200%;
-    background-image: linear-gradient(45deg, #151A2D, #2D284D, #151A2D);
-    animation: gradientBG 10s ease infinite;
+    background-color: #1e272e;
 }
 
 .landing {
@@ -101,7 +99,7 @@ footer {
     left: 0;
     bottom: 0;
     width: 100%;
-    background: linear-gradient(to right, #151A2D, #111827);
+    background-color: #1e272e;
     color: white;
     text-align: center;
     padding: 10px 0;
