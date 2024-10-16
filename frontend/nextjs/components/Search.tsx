@@ -1,20 +1,22 @@
-// Search.js
 import React, { useState, useEffect } from 'react';
 import ResearchForm from './Task/ResearchForm';
 import Report from './Task/Report';
 import AgentLogs from './Task/AgentLogs';
 import AccessReport from './Task/AccessReport';
-import InputArea from './InputArea';
-
 
 const Search = () => {
-  const [task, setTask] = useState('');
-  const [reportType, setReportType] = useState('');
-  const [reportSource, setReportSource] = useState('');
-  const [agentLogs, setAgentLogs] = useState([]);
-  const [report, setReport] = useState('');
-  const [accessData, setAccessData] = useState('');
-  const [socket, setSocket] = useState(null);
+  // State for chatBoxSettings
+  const [chatBoxSettings, setChatBoxSettings] = useState({
+    report_type: '',
+    report_source: '',
+    tone: '',
+  });
+
+  const [task, setTask] = useState<string>('');
+  const [agentLogs, setAgentLogs] = useState<any[]>([]);
+  const [report, setReport] = useState<string>('');
+  const [accessData, setAccessData] = useState<string>('');
+  const [socket, setSocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -22,7 +24,7 @@ const Search = () => {
       let { host } = window.location;
       host = host.includes('localhost') ? 'localhost:8000' : host;
       const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
-      
+
       const newSocket = new WebSocket(ws_uri);
       setSocket(newSocket);
 
@@ -41,23 +43,32 @@ const Search = () => {
     }
   }, []);
 
-  const handleFormSubmit = (task, reportType, reportSource) => {
+  const handleFormSubmit = (task: string, reportType: string, reportSource: string) => {
     setTask(task);
-    setReportType(reportType);
-    setReportSource(reportSource);
-    // Send data to WebSocket server if needed
-    let data = "start " + JSON.stringify({ task: task.value, report_type: reportType.value, report_source: reportSource.value });
-    socket.send(data);
+
+    // Update reportType and reportSource in the settings
+    setChatBoxSettings((prev) => ({
+      ...prev,
+      report_type: reportType,
+      report_source: reportSource,
+    }));
+
+    // Sending data to WebSocket server
+    const data = JSON.stringify({ task, report_type: reportType, report_source: reportSource });
+    if (socket) socket.send(`start ${data}`);
   };
 
   return (
     <div>
-      
-      <ResearchForm onFormSubmit={handleFormSubmit} defaultReportType="multi_agents"/>
-      
+      {/* Pass chatBoxSettings and setChatBoxSettings to ResearchForm */}
+      <ResearchForm
+        onFormSubmit={handleFormSubmit}
+        chatBoxSettings={chatBoxSettings}
+        setChatBoxSettings={setChatBoxSettings}
+      />
       <AgentLogs agentLogs={agentLogs} />
       <Report report={report} />
-      <AccessReport accessData={accessData} />
+      <AccessReport accessData={accessData} report={undefined} />
     </div>
   );
 };
