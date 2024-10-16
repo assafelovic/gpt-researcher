@@ -1,7 +1,9 @@
 from langchain_community.vectorstores import FAISS
 import os
 
-OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL","text-embedding-3-small")
+OPENAI_EMBEDDING_MODEL = os.environ.get(
+    "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
+)
 
 
 class Memory:
@@ -35,7 +37,7 @@ class Memory:
                 _embeddings = OpenAIEmbeddings(
                     openai_api_key=headers.get("openai_api_key")
                     or os.environ.get("OPENAI_API_KEY"),
-                    model=OPENAI_EMBEDDING_MODEL
+                    model=OPENAI_EMBEDDING_MODEL,
                 )
             case "azure_openai":
                 from langchain_openai import AzureOpenAIEmbeddings
@@ -49,6 +51,16 @@ class Memory:
                 # Specifying the Hugging Face embedding model all-MiniLM-L6-v2
                 _embeddings = HuggingFaceEmbeddings(
                     model_name="sentence-transformers/all-MiniLM-L6-v2"
+                )
+
+            case "watsonxai":
+                from langchain_ibm import WatsonxEmbeddings
+
+                _embeddings = WatsonxEmbeddings(
+                    url=os.environ["WATSONX_URL"],
+                    apikey=os.environ["WATSONX_APIKEY"],
+                    project_id=os.environ["WATSONX_PROJECT_ID"],
+                    model_id=os.environ["WATSONX_EMBEDDING_MODEL"],
                 )
 
             case _:
