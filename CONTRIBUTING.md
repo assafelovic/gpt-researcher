@@ -1,5 +1,5 @@
 # Contributing to GPT Researcher
-First off, we'd like to welcome and thank you for your interest and effort in contributing to our open source project ❤️. Contributions of all forms are welcome, from new features and bug fixes, to documentation and more. 
+First off, we'd like to welcome you, and thank you for your interest and effort in contributing to our open-source project ❤️. Contributions of all forms are welcome, from new features and bug fixes, to documentation and more. 
 
 We are on a mission to build the #1 AI agent for comprehensive, unbiased, and factual research online. And we need your support to achieve this grand vision. 
 
