@@ -24,7 +24,7 @@ DEFAULT_CONFIG: DefaultConfig = {
     "MEMORY_BACKEND": "local",
     "TOTAL_WORDS": 900,
     "REPORT_FORMAT": "APA",
-    "MAX_ITERATIONS": 3,
+    "MAX_ITERATIONS": 4,
     "AGENT_ROLE": None,
     "SCRAPER": "bs",
     "MAX_SUBTOPICS": 3,
