@@ -5,7 +5,7 @@ from ...context.compression import ContextCompressor, WrittenContentCompressor, 
 from ...document import DocumentLoader, LangChainDocumentLoader
 from ...utils.enum import ReportSource
 from ..actions.utils import stream_output
-from ..actions import get_sub_queries
+from ..actions.query_processing import get_sub_queries
 
 
 class ContextManager:
@@ -215,7 +215,7 @@ class ContextManager:
             query=query, max_results=10, cost_callback=self.researcher.add_costs
         )
 
-    async def __get_sub_queries(self, query):
+    async def get_sub_queries(self, query):
         await stream_output(
             "logs",
             "planning_research",
