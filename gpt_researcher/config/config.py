@@ -44,7 +44,7 @@ class Config:
         if os.getenv("EMBEDDING_PROVIDER") is not None:
             warnings.warn(
                 "EMBEDDING_PROVIDER is deprecated and will be removed soon. Use EMBEDDING instead.",
-                DeprecationWarning,
+                FutureWarning,
                 stacklevel=2,
             )
             self.embedding_provider = (
@@ -74,7 +74,7 @@ class Config:
             "will be removed soon. Use FAST_LLM and SMART_LLM instead."
         )
         if os.getenv("LLM_PROVIDER") is not None:
-            warnings.warn(_deprecation_warning, DeprecationWarning, stacklevel=2)
+            warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
             self.fast_llm_provider = (
                 os.environ["LLM_PROVIDER"] or self.fast_llm_provider
             )
@@ -82,10 +82,10 @@ class Config:
                 os.environ["LLM_PROVIDER"] or self.smart_llm_provider
             )
         if os.getenv("FAST_LLM_MODEL") is not None:
-            warnings.warn(_deprecation_warning, DeprecationWarning, stacklevel=2)
+            warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
             self.fast_llm_model = os.environ["FAST_LLM_MODEL"] or self.fast_llm_model
         if os.getenv("SMART_LLM_MODEL") is not None:
-            warnings.warn(_deprecation_warning, DeprecationWarning, stacklevel=2)
+            warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
             self.smart_llm_model = os.environ["SMART_LLM_MODEL"] or self.smart_llm_model
 
         self.doc_path = config_to_use["DOC_PATH"]
@@ -98,9 +98,6 @@ class Config:
                     f"Warning: Error validating doc_path: {str(e)}. Using default doc_path."
                 )
                 self.doc_path = DEFAULT_CONFIG["DOC_PATH"]
-
-        # Load additional config file if specified
-        # self.load_config_file()
 
     @classmethod
     def load_config(cls, config_path: str | None) -> Dict[str, Any]:
