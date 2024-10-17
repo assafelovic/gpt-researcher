@@ -111,7 +111,7 @@ class ResearchConductor:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await self.researcher.context_manager.get_sub_queries(query)
+        sub_queries = await self.get_sub_queries(query)
         # If this is not part of a sub researcher, add original query to research for better results
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
@@ -143,7 +143,7 @@ class ResearchConductor:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await self.researcher.context_manager.get_sub_queries(query)
+        sub_queries = await self.get_sub_queries(query)
         # If this is not part of a sub researcher, add original query to research for better results
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
@@ -306,3 +306,21 @@ class ResearchConductor:
             self.researcher.vector_store.load(scraped_content_results)
 
         return scraped_content_results
+
+    async def get_sub_queries(self, query):
+        await stream_output(
+            "logs",
+            "planning_research",
+            f"🌐 Browsing the web and planning research for query: {query}...",
+            self.researcher.websocket,
+        )
+
+        return await get_sub_queries(
+            query=query,
+            retriever=self.researcher.retrievers[0],
+            agent_role_prompt=self.researcher.role,
+            cfg=self.researcher.cfg,
+            parent_query=self.researcher.parent_query,
+            report_type=self.researcher.report_type,
+            cost_callback=self.researcher.add_costs,
+        )
