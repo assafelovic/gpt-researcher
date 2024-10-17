@@ -5,6 +5,7 @@ from ...context.compression import ContextCompressor, WrittenContentCompressor, 
 from ...document import DocumentLoader, LangChainDocumentLoader
 from ...utils.enum import ReportSource
 from ..actions.utils import stream_output
+from ..actions import get_sub_queries
 
 
 class ContextManager:
@@ -215,9 +216,16 @@ class ContextManager:
         )
 
     async def __get_sub_queries(self, query):
-        from gpt_researcher.master.actions import get_sub_queries
+        await stream_output(
+            "logs",
+            "planning_research",
+            f"🌐 Browsing the web and planning research for query: {query}...",
+            self.researcher.websocket,
+        )
+
         return await get_sub_queries(
             query=query,
+            retriever=self.researcher.retrievers[0],
             agent_role_prompt=self.researcher.role,
             cfg=self.researcher.cfg,
             parent_query=self.researcher.parent_query,

@@ -307,6 +307,13 @@ class ResearchConductor:
         return scraped_content_results
 
     async def __get_sub_queries(self, query):
+        await stream_output(
+            "logs",
+            "planning_research",
+            f"🌐 Browsing the web and planning research for query: {query}...",
+            self.researcher.websocket,
+        )
+
         # Generate Sub-Queries including original query
         return await get_sub_queries(
             query=query,
