@@ -310,6 +310,7 @@ class ResearchConductor:
         # Generate Sub-Queries including original query
         return await get_sub_queries(
             query=query,
+            retriever=self.researcher.retrievers[0],
             agent_role_prompt=self.researcher.role,
             cfg=self.researcher.cfg,
             parent_query=self.researcher.parent_query,
