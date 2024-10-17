@@ -3,6 +3,7 @@ import re
 import json_repair
 from ...utils.llm import create_chat_completion
 from ..prompts import auto_agent_instructions, generate_search_queries_prompt
+from typing import Any
 
 
 async def choose_agent(
@@ -77,6 +78,7 @@ def extract_json_with_regex(response):
 
 async def get_sub_queries(
     query: str,
+    retriever: Any,
     agent_role_prompt: str,
     cfg,
     parent_query: str,
@@ -97,6 +99,9 @@ async def get_sub_queries(
         sub_queries: List of sub queries
 
     """
+    search_retriever = retriever(query)
+    search_results = search_retriever.search()
+
     max_research_iterations = cfg.max_iterations if cfg.max_iterations else 1
     response = await create_chat_completion(
         model=cfg.smart_llm_model,
@@ -109,6 +114,7 @@ async def get_sub_queries(
                     parent_query,
                     report_type,
                     max_iterations=max_research_iterations,
+                    context=search_results
                 ),
             },
         ],

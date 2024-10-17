@@ -9,6 +9,7 @@ def generate_search_queries_prompt(
     parent_query: str,
     report_type: str,
     max_iterations: int = 3,
+    context: str = ""
 ):
     """Generates the search queries prompt for the given question.
     Args:
@@ -16,6 +17,7 @@ def generate_search_queries_prompt(
         parent_query (str): The main question (only relevant for detailed reports)
         report_type (str): The report type
         max_iterations (int): The maximum number of search queries to generate
+        context (str): Context for better understanding of the task with realtime web information
 
     Returns: str: The search queries prompt for the given question
     """
@@ -28,12 +30,22 @@ def generate_search_queries_prompt(
     else:
         task = question
 
-    return (
-        f'Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"\n'
-        f"Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.\n"
-        f'You must respond with a list of strings in the following format: ["query 1", "query 2", "query 3"].\n'
-        f"The response should contain ONLY the list."
-    )
+    context_prompt = f"""
+Context: {context}
+
+Use this context to inform and refine your search queries. The context provides real-time web information that can help you generate more specific and relevant queries. Consider any current events, recent developments, or specific details mentioned in the context that could enhance the search queries.
+""" if context else ""
+
+    dynamic_example = ", ".join([f'"query {i+1}"' for i in range(max_iterations)])
+
+    return f"""Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"
+
+Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
+
+{context_prompt}
+You must respond with a list of strings in the following format: [{dynamic_example}].
+The response should contain ONLY the list.
+"""
 
 
 def generate_report_prompt(
@@ -404,3 +416,4 @@ def get_prompt_by_report_type(report_type):
         )
         prompt_by_type = report_type_mapping.get(default_report_type)
     return prompt_by_type
+
