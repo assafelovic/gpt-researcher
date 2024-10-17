@@ -89,15 +89,15 @@ async def get_sub_queries(
     Gets the sub queries
     Args:
         query: original query
+        retriever: retriever instance
         agent_role_prompt: agent role prompt
         cfg: Config
-        parent_query:
-        report_type:
-        cost_callback:
+        parent_query: parent query
+        report_type: report type
+        cost_callback: callback for cost calculation
 
     Returns:
         sub_queries: List of sub queries
-
     """
     search_retriever = retriever(query)
     search_results = search_retriever.search()
