@@ -68,7 +68,7 @@ query = """
     Summarize the essay into 3 or 4 succinct sections.
     Make sure to include key points regarding wealth creation.
 
-    Include some recommendations for entrepeneurs in the conclusion.
+    Include some recommendations for entrepreneurs in the conclusion.
 """
 
 
@@ -145,7 +145,7 @@ researcher = GPTResearcher(
     vector_store=vector_store, 
 )
 
-# Conduct research, the context will be chunked and store in the vector_store
+# Conduct research, the context will be chunked and stored in the vector_store
 await researcher.conduct_research()
 
 # Query the 5 most relevant context in our vector store
