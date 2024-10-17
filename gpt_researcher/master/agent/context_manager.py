@@ -5,7 +5,6 @@ from ...context.compression import ContextCompressor, WrittenContentCompressor, 
 from ...document import DocumentLoader, LangChainDocumentLoader
 from ...utils.enum import ReportSource
 from ..actions.utils import stream_output
-from ..actions.query_processing import get_sub_queries
 
 
 class ContextManager:
@@ -213,24 +212,6 @@ class ContextManager:
         )
         return await context_compressor.async_get_context(
             query=query, max_results=10, cost_callback=self.researcher.add_costs
-        )
-
-    async def get_sub_queries(self, query):
-        await stream_output(
-            "logs",
-            "planning_research",
-            f"🌐 Browsing the web and planning research for query: {query}...",
-            self.researcher.websocket,
-        )
-
-        return await get_sub_queries(
-            query=query,
-            retriever=self.researcher.retrievers[0],
-            agent_role_prompt=self.researcher.role,
-            cfg=self.researcher.cfg,
-            parent_query=self.researcher.parent_query,
-            report_type=self.researcher.report_type,
-            cost_callback=self.researcher.add_costs,
         )
 
     async def get_similar_written_contents_by_draft_section_titles(
