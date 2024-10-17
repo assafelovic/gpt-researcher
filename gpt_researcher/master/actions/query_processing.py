@@ -99,6 +99,7 @@ async def get_sub_queries(
     Returns:
         sub_queries: List of sub queries
     """
+    # Get web search results prior to generating subqueries for improved context around real time data tasks
     search_retriever = retriever(query)
     search_results = search_retriever.search()
 

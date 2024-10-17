@@ -73,7 +73,7 @@ class ContextManager:
         return await self.__get_context_by_search(self.researcher.query, langchain_documents_data)
 
     async def __get_context_by_vectorstore(self, query, filter: Optional[dict] = None):
-        sub_queries = await self.__get_sub_queries(query)
+        sub_queries = await self.researcher.get_sub_queries(query)
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
 
@@ -93,7 +93,7 @@ class ContextManager:
         return context
 
     async def __get_context_by_search(self, query, scraped_data: list = []):
-        sub_queries = await self.__get_sub_queries(query)
+        sub_queries = await self.researcher.get_sub_queries(query)
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
 
