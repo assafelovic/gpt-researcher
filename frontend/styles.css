@@ -105,6 +105,11 @@ footer {
     padding: 10px 0;
 }
 
+footer p {
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
 .margin-div {
     margin-top: 20px;
     margin-bottom: 20px;
@@ -167,4 +172,14 @@ footer {
     border: none;
     outline: none;
     flex-grow: 1;
+}
+
+a {
+    color: #ffffff;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
 }
