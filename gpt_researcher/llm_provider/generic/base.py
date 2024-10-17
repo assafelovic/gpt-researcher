@@ -3,6 +3,23 @@ from typing import Any
 from colorama import Fore, Style, init
 import os
 
+_SUPPORTED_PROVIDERS = {
+    "openai",
+    "anthropic",
+    "azure_openai",
+    "cohere",
+    "google_vertexai",
+    "google_genai",
+    "fireworks",
+    "ollama",
+    "together",
+    "mistralai",
+    "huggingface",
+    "groq",
+    "bedrock",
+}
+
+
 class GenericLLMProvider:
 
     def __init__(self, llm):
@@ -24,6 +41,13 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import AzureChatOpenAI
 
+            if "model" in kwargs or "model_name" in kwargs:
+                azure_deployment = kwargs.pop("model", None) or kwargs.pop("model_name", None)
+                kwargs = {
+                    "azure_deployment": azure_deployment,
+                    "api_version": os.getenv("OPENAI_API_VERSION"),
+                    **kwargs,
+                }
             llm = AzureChatOpenAI(**kwargs)
         elif provider == "cohere":
             _check_pkg("langchain_cohere")
@@ -84,8 +108,7 @@ class GenericLLMProvider:
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
-                f"Unsupported {provider=}.\n\nSupported model providers are: "
-                f"{supported}"
+                f"Unsupported {provider}.\n\nSupported model providers are: {supported}"
             )
         return cls(llm)
 
@@ -125,23 +148,6 @@ class GenericLLMProvider:
         else:
             print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
 
-
-
-_SUPPORTED_PROVIDERS = {
-    "openai",
-    "anthropic",
-    "azure_openai",
-    "cohere",
-    "google_vertexai",
-    "google_genai",
-    "fireworks",
-    "ollama",
-    "together",
-    "mistralai",
-    "huggingface",
-    "groq",
-    "bedrock",
-}
 
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
