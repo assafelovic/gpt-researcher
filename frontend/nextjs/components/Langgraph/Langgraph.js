@@ -2,13 +2,17 @@ import { Client } from "@langchain/langgraph-sdk";
 import { task } from '../../config/task';
 
 export async function startLanggraphResearch(newQuestion, report_source, langgraphHostUrl) {
+    // Retrieve apiVariables from localStorage
+    const storedConfig = localStorage.getItem('apiVariables');
+    const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
+
     // Update the task query with the new question
     task.task.query = newQuestion;
     task.task.source = report_source;
     const host = langgraphHostUrl;
     
-    // Add your Langgraph Cloud Authentication token here
-    const authToken = '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';
+    // Use apiVariables.LANGCHAIN_API_KEY instead of hardcoded authToken
+    const authToken = apiVariables.LANGCHAIN_API_KEY;
 
     const client = new Client({
         apiUrl: host,
