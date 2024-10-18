@@ -11,7 +11,7 @@ class BrowserManager:
     def __init__(self, researcher):
         self.researcher = researcher
 
-    async def scrape_urls(self, urls: List[str]) -> List[Dict]:
+    async def browse_urls(self, urls: List[str]) -> List[Dict]:
         """
         Scrape content from a list of URLs.
 
