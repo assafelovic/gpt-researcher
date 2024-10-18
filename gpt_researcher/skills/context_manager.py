@@ -1,7 +1,7 @@
 import asyncio
 from typing import List, Dict, Optional, Set
 
-from gpt_researcher.context.compression import ContextCompressor, WrittenContentCompressor, VectorstoreCompressor
+from ..context.compression import ContextCompressor, WrittenContentCompressor, VectorstoreCompressor
 from ..actions.utils import stream_output
 
 
