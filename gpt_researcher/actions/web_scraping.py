@@ -1,7 +1,6 @@
-import asyncio
 from typing import List, Dict, Any
 from colorama import Fore, Style
-from gpt_researcher.scraper.scraper import Scraper
+from gpt_researcher.skills.scraper.scraper import Scraper
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.logger import get_formatted_logger
 

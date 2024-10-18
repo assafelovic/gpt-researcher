@@ -3,7 +3,7 @@ from functools import partial
 
 import requests
 
-from gpt_researcher.scraper import (
+from . import (
     ArxivScraper,
     BeautifulSoupScraper,
     PyMuPDFScraper,
