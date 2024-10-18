@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
+from ..utils import get_relevant_images, extract_title
 
 class BeautifulSoupScraper:
 
@@ -31,11 +33,17 @@ class BeautifulSoupScraper:
             lines = (line.strip() for line in raw_content.splitlines())
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             content = "\n".join(chunk for chunk in chunks if chunk)
-            return content
+
+            image_urls = get_relevant_images(soup, self.link)
+            
+            # Extract the title using the utility function
+            title = extract_title(soup)
+
+            return content, image_urls, title
 
         except Exception as e:
             print("Error! : " + str(e))
-            return ""
+            return "", [], ""
 
     def get_content_from_url(self, soup: BeautifulSoup) -> str:
         """Get the relevant text from the soup with improved filtering"""
@@ -64,3 +72,28 @@ class BeautifulSoupScraper:
 
         # Join all text elements with newlines
         return '\n\n'.join(text_elements)
+
+    def get_relevant_images(self, soup: BeautifulSoup) -> list:
+        """Extract relevant images from the page"""
+        image_urls = []
+        main_content = soup.find('main') or soup.find('article') or soup.find('body')
+
+        if main_content:
+            # Look for images in the main content area
+            images = main_content.find_all('img', src=True)
+            for img in images:
+                # Check for common header image classes or IDs
+                if any(cls in img.get('class', []) for cls in ['header', 'featured', 'hero', 'thumbnail']):
+                    image_urls.append(urljoin(self.link, img['src']))
+                # Check for images with certain dimensions (assuming header images are larger)
+                elif img.get('width') and img.get('height'):
+                    if int(img['width']) >= 600 and int(img['height']) >= 300:
+                        image_urls.append(urljoin(self.link, img['src']))
+
+        # If no images found in main content, look for the first large image on the page
+        if not image_urls:
+            first_large_image = soup.find('img', src=True, width=lambda x: x and int(x) >= 600)
+            if first_large_image:
+                image_urls.append(urljoin(self.link, first_large_image['src']))
+
+        return image_urls[:3]  # Limit to top 3 most relevant images

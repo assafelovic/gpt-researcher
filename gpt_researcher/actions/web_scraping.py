@@ -1,8 +1,8 @@
-import asyncio
 from typing import List, Dict, Any
-from ...scraper.scraper import Scraper
-from ...config.config import Config
-from ...utils.logger import get_formatted_logger
+from colorama import Fore, Style
+from ..skills.scraper.scraper import Scraper
+from ..config.config import Config
+from ..utils.logger import get_formatted_logger
 
 logger = get_formatted_logger()
 
@@ -28,6 +28,7 @@ def scrape_urls(urls, cfg=None):
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
     return content
+
 async def filter_urls(urls: List[str], config: Config) -> List[str]:
     """
     Filter URLs based on configuration settings.

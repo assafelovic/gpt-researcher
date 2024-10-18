@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from ...utils.llm import construct_subtopics
+from ..utils.llm import construct_subtopics
 from ..actions import (
     stream_output,
     generate_report,

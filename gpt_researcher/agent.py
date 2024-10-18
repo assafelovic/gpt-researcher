@@ -1,17 +1,25 @@
 from typing import Optional, List, Dict, Any, Set
 
-from ...config import Config
-from ...memory import Memory
-from ...utils.enum import ReportSource, ReportType, Tone
-from ...llm_provider import GenericLLMProvider
-from ..actions import get_retrievers, choose_agent
-from ...vector_store import VectorStoreWrapper
+from .config import Config
+from .memory import Memory
+from .utils.enum import ReportSource, ReportType, Tone
+from .llm_provider import GenericLLMProvider
+from .vector_store import VectorStoreWrapper
 
-# Research agents
-from .researcher import ResearchConductor
-from .scraper import ReportScraper
-from .writer import ReportGenerator
-from .context_manager import ContextManager
+# Research skills
+from .skills.researcher import ResearchConductor
+from .skills.writer import ReportGenerator
+from .skills.context_manager import ContextManager
+from .skills.browser import BrowserManager
+
+from .actions import (
+    add_references,
+    extract_headers,
+    extract_sections,
+    table_of_contents,
+    get_retrievers,
+    choose_agent
+)
 
 
 class GPTResearcher:
@@ -48,6 +56,7 @@ class GPTResearcher:
         self.max_subtopics = max_subtopics
         self.tone = tone if isinstance(tone, Tone) else Tone.Objective
         self.source_urls = source_urls
+        self.research_sources = [] # The list of scraped sources including title, content and images
         self.documents = documents
         self.vector_store = VectorStoreWrapper(vector_store) if vector_store else None
         self.vector_store_filter = vector_store_filter
@@ -66,10 +75,10 @@ class GPTResearcher:
             getattr(self.cfg, 'embedding_provider', None), self.headers)
 
         # Initialize components
-        self.research_conductor = ResearchConductor(self)
-        self.report_generator = ReportGenerator(self)
-        self.scraper = ReportScraper(self)
-        self.context_manager = ContextManager(self)
+        self.research_conductor: ResearchConductor = ResearchConductor(self)
+        self.report_generator: ReportGenerator = ReportGenerator(self)
+        self.context_manager: ContextManager = ContextManager(self)
+        self.scraper_manager: BrowserManager = BrowserManager(self)
 
     async def conduct_research(self):
         if not (self.agent and self.role):
@@ -118,6 +127,18 @@ class GPTResearcher:
         )
 
     # Utility methods
+    def add_references(self, report_markdown: str, visited_urls: set) -> str:
+        return add_references(report_markdown, visited_urls)
+
+    def extract_headers(self, markdown_text: str) -> List[Dict]:
+        return extract_headers(markdown_text)
+
+    def extract_sections(self, markdown_text: str) -> List[Dict]:
+        return extract_sections(markdown_text)
+
+    def table_of_contents(self, markdown_text: str) -> str:
+        return table_of_contents(markdown_text)
+
     def get_source_urls(self) -> list:
         return list(self.visited_urls)
 

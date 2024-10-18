@@ -115,7 +115,7 @@ class EditorAgent:
                    sections: ['section header 1', 'section header 2', 'section header 3' ...]}}'."""
 
     def _initialize_agents(self) -> Dict[str, any]:
-        """Initialize the research, reviewer, and reviser agents."""
+        """Initialize the research, reviewer, and reviser skills."""
         return {
             "research": ResearchAgent(self.websocket, self.stream_output, self.headers),
             "reviewer": ReviewerAgent(self.websocket, self.stream_output, self.headers),

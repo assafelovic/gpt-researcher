@@ -3,22 +3,16 @@ import os
 from typing import Dict, List
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile, Header
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-from backend.server.server_utils import generate_report_files
 from backend.server.websocket_manager import WebSocketManager
-from multi_agents.main import run_research_task
-from gpt_researcher.document.document import DocumentLoader
-from gpt_researcher.master.actions import stream_output
 from backend.server.server_utils import (
-    sanitize_filename, handle_start_command, handle_human_feedback,
-    generate_report_files, send_file_paths, get_config_dict,
+    get_config_dict,
     update_environment_variables, handle_file_upload, handle_file_deletion,
-    execute_multi_agents, handle_websocket_communication, extract_command_data
+    execute_multi_agents, handle_websocket_communication
 )
 
 # Models

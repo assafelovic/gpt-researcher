@@ -1,15 +1,15 @@
 import asyncio
 from typing import List, Dict, Any
-from ...config.config import Config
-from ...utils.llm import create_chat_completion
-from ...utils.logger import get_formatted_logger
+from ..config.config import Config
+from ..utils.llm import create_chat_completion
+from ..utils.logger import get_formatted_logger
 from ..prompts import (
     generate_report_introduction,
     generate_draft_titles_prompt,
     generate_report_conclusion,
     get_prompt_by_report_type,
 )
-from ...utils.enum import Tone
+from ..utils.enum import Tone
 
 logger = get_formatted_logger()
 

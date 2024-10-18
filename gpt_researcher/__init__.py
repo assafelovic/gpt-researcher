@@ -1,4 +1,3 @@
-from .master import GPTResearcher
-from .config import Config
+from .agent import GPTResearcher
 
-__all__ = ['GPTResearcher', 'Config']
+__all__ = ['GPTResearcher']

@@ -14,7 +14,11 @@ from bs4 import BeautifulSoup
 from .processing.scrape_skills import (scrape_pdf_with_pymupdf,
                                        scrape_pdf_with_arxiv)
 
+from urllib.parse import urljoin
+
 FILE_DIR = Path(__file__).parent.parent
+
+from ..utils import get_relevant_images, extract_title
 
 
 class BrowserScraper:
@@ -31,10 +35,10 @@ class BrowserScraper:
         self._import_selenium()  # Import only if used to avoid unnecessary dependencies
         self.cookie_filename = f"{self._generate_random_string(8)}.pkl"
 
-    def scrape(self) -> str:
+    def scrape(self) -> tuple:
         if not self.url:
             print("URL not specified")
-            return "A URL was not specified, cancelling request to browse website."
+            return "A URL was not specified, cancelling request to browse website.", [], ""
 
         try:
             self.setup_driver()
@@ -42,16 +46,15 @@ class BrowserScraper:
             self._load_saved_cookies()
             self._add_header()
 
-            text = self.scrape_text_with_selenium()
-            return text
+            text, image_urls, title = self.scrape_text_with_selenium()
+            return text, image_urls, title
         except Exception as e:
             print(f"An error occurred during scraping: {str(e)}")
             print("Full stack trace:")
             print(traceback.format_exc())
-            return f"An error occurred: {str(e)}\n\nStack trace:\n{traceback.format_exc()}"
+            return f"An error occurred: {str(e)}\n\nStack trace:\n{traceback.format_exc()}", [], ""
         finally:
             if self.driver:
-                # print("Closing browser...")
                 self.driver.quit()
             self._cleanup_cookie_file()
 
@@ -182,7 +185,7 @@ class BrowserScraper:
             print("Full stack trace:")
             print(traceback.format_exc())
 
-    def scrape_text_with_selenium(self) -> str:
+    def scrape_text_with_selenium(self) -> tuple:
         self.driver.get(self.url)
 
         try:
@@ -192,17 +195,18 @@ class BrowserScraper:
         except TimeoutException as e:
             print("Timed out waiting for page to load")
             print(f"Full stack trace:\n{traceback.format_exc()}")
-            return "Page load timed out"
+            return "Page load timed out", [], ""
 
         self._scroll_to_bottom()
 
         if self.url.endswith(".pdf"):
             text = scrape_pdf_with_pymupdf(self.url)
+            return text, [], ""
         elif "arxiv" in self.url:
             doc_num = self.url.split("/")[-1]
             text = scrape_pdf_with_arxiv(doc_num)
+            return text, [], ""
         else:
-            # print("Extracting page content...")
             page_source = self.driver.execute_script("return document.body.outerHTML;")
             soup = BeautifulSoup(page_source, "html.parser")
 
@@ -210,12 +214,13 @@ class BrowserScraper:
                 script.extract()
 
             text = self.get_text(soup)
+            image_urls = get_relevant_images(soup, self.url)
+            title = extract_title(soup)
 
         lines = (line.strip() for line in text.splitlines())
         chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
         text = "\n".join(chunk for chunk in chunks if chunk)
-        # print("Content extracted successfully.")
-        return text
+        return text, image_urls, title
 
     def get_text(self, soup: BeautifulSoup) -> str:
         """Get the relevant text from the soup with improved filtering"""
@@ -265,4 +270,3 @@ class BrowserScraper:
     def _add_header(self) -> None:
         """Add a header to the website"""
         self.driver.execute_script(open(f"{FILE_DIR}/browser/js/overlay.js", "r").read())
-
