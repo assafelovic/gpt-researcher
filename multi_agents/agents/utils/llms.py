@@ -3,7 +3,6 @@ import json_repair
 from langchain_community.adapters.openai import convert_openai_messages
 
 from gpt_researcher.config.config import Config
-from gpt_researcher.orchestrator.actions.query_processing import handle_json_error
 from gpt_researcher.utils.llm import create_chat_completion
 
 from loguru import logger
@@ -27,7 +26,7 @@ async def call_model(
             model=model,
             messages=lc_messages,
             temperature=0,
-            llm_provider=cfg.llm_provider,
+            llm_provider=cfg.smart_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             # cost_callback=cost_callback,
         )

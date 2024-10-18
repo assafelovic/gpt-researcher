@@ -2,7 +2,18 @@ import Image from "next/image";
 import Link from "next/link";
 import Modal from './Settings/Modal';
 
-const Footer = ({ setChatBoxSettings, chatBoxSettings}) => {
+interface ChatBoxSettings {
+  report_source: string;
+  report_type: string;
+  tone: string;
+}
+
+interface ChatBoxProps {
+  chatBoxSettings: ChatBoxSettings;
+  setChatBoxSettings: React.Dispatch<React.SetStateAction<ChatBoxSettings>>;
+}
+
+const Footer = ({ setChatBoxSettings, chatBoxSettings}: ChatBoxProps) => {
   
   return (
     <>

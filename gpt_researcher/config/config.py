@@ -1,50 +1,79 @@
 import json
 import os
+import warnings
 from typing import Dict, Any, List, Union, Type, get_origin, get_args
-from .configurations.default_config import DEFAULT_CONFIG
-from .configurations.base_config import BaseConfig
+from .variables.default import DEFAULT_CONFIG
+from .variables.base import BaseConfig
+from ..retrievers.utils import get_all_retriever_names
 
 
 class Config:
     """Config class for GPT Researcher."""
 
-    CONFIG_DIR = os.path.join(os.path.dirname(__file__), "configurations")
+    CONFIG_DIR = os.path.join(os.path.dirname(__file__), "variables")
 
     def __init__(self, config_name: str = "default"):
         """Initialize the config class."""
         self.config_name = config_name
         self.llm_kwargs: Dict[str, Any] = {}
-        self.config_file = None  # Initialize config_file attribute
+        self.config_file = None
 
-        # Load the specified configuration
         config_to_use = self.load_config(config_name)
+        self._set_attributes(config_to_use)
+        self._handle_deprecated_attributes()
+        self._set_llm_attributes()
+        self._set_doc_path(config_to_use)
+        self.load_config_file()
 
-        # Set attributes based on the loaded config
-        for key, value in config_to_use.items():
+    def _set_attributes(self, config: Dict[str, Any]) -> None:
+        for key, value in config.items():
             env_value = os.getenv(key)
             if env_value is not None:
                 value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
             setattr(self, key.lower(), value)
 
-        self.valid_retrievers = config_to_use['VALID_RETRIEVERS']
         try:
-            self.retrievers = self.parse_retrievers(config_to_use['RETRIEVER'])
+            self.retrievers = self.parse_retrievers(os.environ["RETRIEVER"])
         except ValueError as e:
-            print(f"Warning: {str(e)}. Using default retrievers.")
-            self.retrievers = list(self.valid_retrievers.values())
+            print(f"Warning: {str(e)}. Error with including retrievers")
 
-        self.doc_path = config_to_use['DOC_PATH']
+    def _handle_deprecated_attributes(self) -> None:
+        _deprecation_warning = (
+            "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
+            "will be removed soon. Use FAST_LLM and SMART_LLM instead."
+        )
+        try:
+            if self.llm_provider is not None:
+                warnings.warn(_deprecation_warning, DeprecationWarning, stacklevel=2)
+        except AttributeError:
+            self.llm_provider = None
+        try:
+            if self.fast_llm_model is not None:
+                warnings.warn(_deprecation_warning, DeprecationWarning, stacklevel=2)
+        except AttributeError:
+            self.fast_llm_model = None
+        try:
+            if self.smart_llm_model is not None:
+                warnings.warn(_deprecation_warning, DeprecationWarning, stacklevel=2)
+        except AttributeError:
+            self.smart_llm_model = None
 
+    def _set_llm_attributes(self) -> None:
+        _fast_llm_provider, _fast_llm_model = self.parse_llm(self.fast_llm)
+        _smart_llm_provider, _smart_llm_model = self.parse_llm(self.smart_llm)
+        self.fast_llm_provider = self.llm_provider or _fast_llm_provider
+        self.fast_llm_model = self.fast_llm_model or _fast_llm_model
+        self.smart_llm_provider = self.llm_provider or _smart_llm_provider
+        self.smart_llm_model = self.smart_llm_model or _smart_llm_model
+
+    def _set_doc_path(self, config: Dict[str, Any]) -> None:
+        self.doc_path = config['DOC_PATH']
         if self.doc_path:
             try:
                 self.validate_doc_path()
             except Exception as e:
-                print(
-                    f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
+                print(f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
                 self.doc_path = DEFAULT_CONFIG['DOC_PATH']
-
-        # Load additional config file if specified
-        self.load_config_file()
 
     @classmethod
     def load_config(cls, config_name: str) -> Dict[str, Any]:
@@ -54,8 +83,9 @@ class Config:
 
         config_path = os.path.join(cls.CONFIG_DIR, f"{config_name}.json")
         if not os.path.exists(config_path):
-            print(
-                f"Warning: Configuration '{config_name}' not found. Using default configuration.")
+            if config_name:
+                print(
+                    f"Warning: Configuration '{config_name}' not found. Using default configuration.")
             return DEFAULT_CONFIG
 
         with open(config_path, "r") as f:
@@ -79,14 +109,27 @@ class Config:
         """Parse the retriever string into a list of retrievers and validate them."""
         retrievers = [retriever.strip()
                       for retriever in retriever_str.split(",")]
-        invalid_retrievers = [
-            r for r in retrievers if r not in self.valid_retrievers.values()]
+        valid_retrievers = get_all_retriever_names() or []
+        invalid_retrievers = [r for r in retrievers if r not in valid_retrievers]
         if invalid_retrievers:
             raise ValueError(
                 f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. "
-                f"Valid options are: {', '.join(self.valid_retrievers.values())}."
+                f"Valid options are: {', '.join(valid_retrievers)}."
             )
         return retrievers
+
+    @staticmethod
+    def parse_llm(llm_str: str | None) -> tuple[str | None, str | None]:
+        """Parse llm string into (llm_provider, llm_model)."""
+        if llm_str is None:
+            return None, None
+        try:
+            return llm_str.split(":", 1)
+        except ValueError:
+            raise ValueError(
+                "Set SMART_LLM or FAST_LLM = '<llm_provider>:<llm_model_name>' "
+                "Eg 'openai:gpt-4o-mini'"
+            )
 
     def validate_doc_path(self):
         """Ensure that the folder exists at the doc path"""

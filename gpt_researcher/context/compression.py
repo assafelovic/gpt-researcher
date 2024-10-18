@@ -10,9 +10,9 @@ from langchain.retrievers.document_compressors import (
     EmbeddingsFilter,
 )
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from gpt_researcher.vector_store import VectorStoreWrapper
-from gpt_researcher.utils.costs import estimate_embedding_cost
-from gpt_researcher.memory.embeddings import OPENAI_EMBEDDING_MODEL
+from ..vector_store import VectorStoreWrapper
+from ..utils.costs import estimate_embedding_cost
+from ..memory.embeddings import OPENAI_EMBEDDING_MODEL
 
 
 class VectorstoreCompressor:

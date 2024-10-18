@@ -11,22 +11,20 @@
 [![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=0891b2)](https://gptr.dev)
 [![Documentation](https://img.shields.io/badge/Documentation-DOCS-f472b6?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
 [![Discord Follow](https://img.shields.io/discord/1127851779011391548?style=for-the-badge&logo=discord&label=Chat%20on%20Discord)](https://discord.gg/QgZXvJAccX)
-<!--[![Discord Follow](https://img.shields.io/discord/1127851779011391548?style=for-the-badge&logo=discord&logoColor=white&color=7e61ab)](https://discord.gg/cPhHPZ6Z)-->
 
-<!--[![Github License](https://img.shields.io/pypi/l/gpt-researcher?logoColor=white&logo=github&color=FF5A5F&style=for-the-badge)](https://opensource.org/licenses/MIT)-->
-<!--[![License](https://img.shields.io/github/license/assafelovic/gpt-researcher?color=FF5A5F)](https://github.com/assafelovic/gpt-researcher/blob/main/LICENSE)-->
 [![PyPI version](https://img.shields.io/pypi/v/gpt-researcher?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/gpt-researcher)
 ![GitHub Release](https://img.shields.io/github/v/release/assafelovic/gpt-researcher?style=flat&logo=github)
-[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/examples/pip-run.ipynb)
+[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/docs/docs/examples/pip-run.ipynb)
 [![Docker Image Version](https://img.shields.io/docker/v/elestio/gpt-researcher/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/gpt-researcher)
 [![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
-<!--[![Twitter](https://img.shields.io/badge/Twitter-000000?style=flat-square&logo=x&logoColor=white)](https://twitter.com/assaf_elovic)-->
 
 [English](README.md) |
 [中文](README-zh_CN.md) |
 [日本語](README-ja_JP.md) |
 [한국어](README-ko_KR.md)
 </div>
+
+# 🔎 GPT Researcher
 
 **GPT Researcher는 다양한 작업을 대해 포괄적인 온라인 연구를 수행하도록 설계된 자율 에이전트입니다.**
 
