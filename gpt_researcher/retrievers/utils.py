@@ -1,6 +1,22 @@
 import importlib.util
 import os
 
+VALID_RETRIEVERS = [
+    "arxiv",
+    "bing",
+    "custom",
+    "duckduckgo",
+    "exa",
+    "google",
+    "searchapi",
+    "searx",
+    "semantic_scholar",
+    "serpapi",
+    "serper",
+    "tavily",
+    "pubmed_central",
+]
+
 
 def check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
@@ -12,11 +28,15 @@ def check_pkg(pkg: str) -> None:
 
 # Get a list of all retriever names to be used as validators for supported retrievers
 def get_all_retriever_names() -> list:
-    current_dir = os.path.dirname(__file__)
+    try:
+        current_dir = os.path.dirname(__file__)
 
-    all_items = os.listdir(current_dir)
+        all_items = os.listdir(current_dir)
+
+        # Filter out only the directories, excluding __pycache__
+        retrievers = [item for item in all_items if os.path.isdir(os.path.join(current_dir, item))]
+    except Exception as e:
+        print(f"Error in get_all_retriever_names: {e}")
+        retrievers = VALID_RETRIEVERS
     
-    # Filter out only the directories, excluding __pycache__
-    directories = [item for item in all_items if os.path.isdir(os.path.join(current_dir, item))]
-    
-    return directories
+    return retrievers
