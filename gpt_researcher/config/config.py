@@ -4,6 +4,7 @@ import warnings
 from typing import Dict, Any, List, Union, Type, get_origin, get_args
 from .variables.default import DEFAULT_CONFIG
 from .variables.base import BaseConfig
+from ..retrievers.utils import get_all_retriever_names
 
 
 class Config:
@@ -27,12 +28,10 @@ class Config:
                 value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
             setattr(self, key.lower(), value)
 
-        self.valid_retrievers = config_to_use['VALID_RETRIEVERS']
         try:
-            self.retrievers = self.parse_retrievers(config_to_use['RETRIEVER'])
+            self.retrievers = self.parse_retrievers(os.environ["RETRIEVER"])
         except ValueError as e:
-            print(f"Warning: {str(e)}. Using default retrievers.")
-            self.retrievers = list(self.valid_retrievers.values())
+            print(f"Warning: {str(e)}. Error with including retrievers")
 
         _deprecation_warning = (
             "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
@@ -82,8 +81,9 @@ class Config:
 
         config_path = os.path.join(cls.CONFIG_DIR, f"{config_name}.json")
         if not os.path.exists(config_path):
-            print(
-                f"Warning: Configuration '{config_name}' not found. Using default configuration.")
+            if config_name:
+                print(
+                    f"Warning: Configuration '{config_name}' not found. Using default configuration.")
             return DEFAULT_CONFIG
 
         with open(config_path, "r") as f:
@@ -107,12 +107,12 @@ class Config:
         """Parse the retriever string into a list of retrievers and validate them."""
         retrievers = [retriever.strip()
                       for retriever in retriever_str.split(",")]
-        invalid_retrievers = [
-            r for r in retrievers if r not in self.valid_retrievers.values()]
+        valid_retrievers = get_all_retriever_names() or []
+        invalid_retrievers = [r for r in retrievers if r not in valid_retrievers]
         if invalid_retrievers:
             raise ValueError(
                 f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. "
-                f"Valid options are: {', '.join(self.valid_retrievers.values())}."
+                f"Valid options are: {', '.join(valid_retrievers)}."
             )
         return retrievers
 
