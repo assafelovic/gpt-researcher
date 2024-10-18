@@ -95,7 +95,7 @@ class ResearchConductor:
                 self.researcher.websocket,
             )
 
-        scraped_content = self.researcher.scraper_manager.scrape_urls(new_search_urls)
+        scraped_content = self.researcher.scraper_manager.browse_urls(new_search_urls)
 
         if self.researcher.vector_store:
             self.researcher.vector_store.load(scraped_content)
@@ -297,7 +297,7 @@ class ResearchConductor:
             )
 
         # Scrape the new URLs
-        scraped_content = await self.researcher.scraper_manager.scrape_urls(new_search_urls)
+        scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
 
         if self.researcher.vector_store:
             self.researcher.vector_store.load(scraped_content)
