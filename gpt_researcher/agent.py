@@ -1,17 +1,25 @@
 from typing import Optional, List, Dict, Any, Set
 
-from ...config import Config
-from ...memory import Memory
-from ...utils.enum import ReportSource, ReportType, Tone
-from ...llm_provider import GenericLLMProvider
-from ..actions import get_retrievers, choose_agent
-from ...vector_store import VectorStoreWrapper
+from .config import Config
+from .memory import Memory
+from .utils.enum import ReportSource, ReportType, Tone
+from .llm_provider import GenericLLMProvider
+from .vector_store import VectorStoreWrapper
 
-# Research agents
-from .researcher import ResearchConductor
-from .scraper import ReportScraper
-from .writer import ReportGenerator
-from .context_manager import ContextManager
+# Research skills
+from .skills.researcher import ResearchConductor
+from .skills.scraper import ReportScraper
+from .skills.writer import ReportGenerator
+from .skills.context_manager import ContextManager
+
+from .actions import (
+    add_references,
+    extract_headers,
+    extract_sections,
+    table_of_contents,
+    get_retrievers,
+    choose_agent
+)
 
 
 class GPTResearcher:
@@ -118,6 +126,18 @@ class GPTResearcher:
         )
 
     # Utility methods
+    def add_references(self, report_markdown: str, visited_urls: set) -> str:
+        return add_references(report_markdown, visited_urls)
+
+    def extract_headers(self, markdown_text: str) -> List[Dict]:
+        return extract_headers(markdown_text)
+
+    def extract_sections(self, markdown_text: str) -> List[Dict]:
+        return extract_sections(markdown_text)
+
+    def table_of_contents(self, markdown_text: str) -> str:
+        return table_of_contents(markdown_text)
+
     def get_source_urls(self) -> list:
         return list(self.visited_urls)
 

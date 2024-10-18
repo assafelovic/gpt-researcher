@@ -5,8 +5,8 @@ from typing import Dict, Optional
 from ..actions.utils import stream_output
 from ..actions import scrape_urls
 from ..actions.query_processing import get_sub_queries
-from ...document import DocumentLoader, LangChainDocumentLoader
-from ...utils.enum import ReportSource, ReportType, Tone
+from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader
+from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 
 
 class ResearchConductor:
