@@ -16,13 +16,17 @@ class Config:
         """Initialize the config class."""
         self.config_name = config_name
         self.llm_kwargs: Dict[str, Any] = {}
-        self.config_file = None  # Initialize config_file attribute
+        self.config_file = None
 
-        # Load the specified configuration
         config_to_use = self.load_config(config_name)
+        self._set_attributes(config_to_use)
+        self._handle_deprecated_attributes()
+        self._set_llm_attributes()
+        self._set_doc_path(config_to_use)
+        self.load_config_file()
 
-        # Set attributes based on the loaded config
-        for key, value in config_to_use.items():
+    def _set_attributes(self, config: Dict[str, Any]) -> None:
+        for key, value in config.items():
             env_value = os.getenv(key)
             if env_value is not None:
                 value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
@@ -33,6 +37,7 @@ class Config:
         except ValueError as e:
             print(f"Warning: {str(e)}. Error with including retrievers")
 
+    def _handle_deprecated_attributes(self) -> None:
         _deprecation_warning = (
             "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
             "will be removed soon. Use FAST_LLM and SMART_LLM instead."
@@ -53,6 +58,7 @@ class Config:
         except AttributeError:
             self.smart_llm_model = None
 
+    def _set_llm_attributes(self) -> None:
         _fast_llm_provider, _fast_llm_model = self.parse_llm(self.fast_llm)
         _smart_llm_provider, _smart_llm_model = self.parse_llm(self.smart_llm)
         self.fast_llm_provider = self.llm_provider or _fast_llm_provider
@@ -60,18 +66,14 @@ class Config:
         self.smart_llm_provider = self.llm_provider or _smart_llm_provider
         self.smart_llm_model = self.smart_llm_model or _smart_llm_model
 
-        self.doc_path = config_to_use['DOC_PATH']
-
+    def _set_doc_path(self, config: Dict[str, Any]) -> None:
+        self.doc_path = config['DOC_PATH']
         if self.doc_path:
             try:
                 self.validate_doc_path()
             except Exception as e:
-                print(
-                    f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
+                print(f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
                 self.doc_path = DEFAULT_CONFIG['DOC_PATH']
-
-        # Load additional config file if specified
-        self.load_config_file()
 
     @classmethod
     def load_config(cls, config_name: str) -> Dict[str, Any]:
