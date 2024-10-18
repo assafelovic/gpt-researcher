@@ -34,18 +34,18 @@ The agent can produce detailed, factual and unbiased research reports, with cust
 
 ## Why GPT Researcher?
 
-- To form objective conclusions for manual research tasks can take time, sometimes weeks to find the right resources and information.
+- Forming objective conclusions for manual research tasks can take time, sometimes weeks, to find the right resources and information
 - Current LLMs are trained on past and outdated information, with heavy risks of hallucinations, making them almost irrelevant for research tasks.
-- Current LLMs are limited to short token outputs which are not sufficient for long detailed research reports (2k+ words).
-- Services that enable web search such as ChatGPT or Perplexity, only consider limited sources and content that in some cases result in misinformation and shallow results.
+- Current LLMs are limited to short token outputs, which are insufficient for long, detailed research reports (over 2,000 words).
+- Services that enable web searches, such as ChatGPT or Perplexity, only consider limited sources and content, which in some cases results in misinformation and shallow results.
 - Using only a selection of web sources can create bias in determining the right conclusions for research tasks.
 
 ## Demo
 https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 
 ## Architecture
-The main idea is to run "planner" and "execution" agents, whereas the planner generates questions to research, and the execution agents seek the most related information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. <br /> <br /> 
-The agents leverage both `gpt-4o-mini` and `gpt-4o` (128K context) to complete a research task. We optimize for costs using each only when necessary. **The average research task takes around 2 minutes to complete, and costs ~$0.005.**
+The main idea is to run 'planner' and 'execution' agents, where the planner generates questions for research, and the execution agents seek the most relevant information based on each generated research question. Finally, the planner filters and aggregates all related information and creates a research report. <br /> <br /> 
+The agents leverage both `gpt-4o-mini` and `gpt-4o` (128K context) to complete a research task. We optimize for costs using each only when necessary. **The average research task takes about 2 minutes to complete and costs approximately $0.005.**
 
 <div align="center">
 <img align="center" height="600" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527">
