@@ -1,12 +1,6 @@
-from .retrievers import RetrieversConfig, VALID_RETRIEVERS
 from .base import BaseConfig
 
-
-class DefaultConfig(BaseConfig):
-    VALID_RETRIEVERS: RetrieversConfig
-
-
-DEFAULT_CONFIG: DefaultConfig = {
+DEFAULT_CONFIG: BaseConfig = {
     "RETRIEVER": "tavily",
     "EMBEDDING_PROVIDER": "openai",
     "SIMILARITY_THRESHOLD": 0.42,
@@ -29,6 +23,5 @@ DEFAULT_CONFIG: DefaultConfig = {
     "SCRAPER": "bs",
     "MAX_SUBTOPICS": 3,
     "REPORT_SOURCE": None,
-    "DOC_PATH": "./my-docs",
-    "VALID_RETRIEVERS": VALID_RETRIEVERS
+    "DOC_PATH": "./my-docs"
 }
