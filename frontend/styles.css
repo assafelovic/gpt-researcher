@@ -174,10 +174,10 @@ footer p {
     flex-grow: 1;
 }
 
-a {
+footer a {
     color: #ffffff;
     font-weight: bold;
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 a:hover {
