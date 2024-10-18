@@ -32,3 +32,7 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
     except Exception as e:
         logging.error(f"Error in get_relevant_images: {e}")
         return []
+
+def extract_title(soup: BeautifulSoup) -> str:
+    """Extract the title from the BeautifulSoup object"""
+    return soup.title.string if soup.title else ""

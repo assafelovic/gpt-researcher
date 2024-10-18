@@ -18,7 +18,7 @@ from urllib.parse import urljoin
 
 FILE_DIR = Path(__file__).parent.parent
 
-from ..utils import get_relevant_images
+from ..utils import get_relevant_images, extract_title
 
 
 class BrowserScraper:
@@ -38,7 +38,7 @@ class BrowserScraper:
     def scrape(self) -> tuple:
         if not self.url:
             print("URL not specified")
-            return "A URL was not specified, cancelling request to browse website.", []
+            return "A URL was not specified, cancelling request to browse website.", [], ""
 
         try:
             self.setup_driver()
@@ -46,13 +46,13 @@ class BrowserScraper:
             self._load_saved_cookies()
             self._add_header()
 
-            text, image_urls = self.scrape_text_with_selenium()
-            return text, image_urls
+            text, image_urls, title = self.scrape_text_with_selenium()
+            return text, image_urls, title
         except Exception as e:
             print(f"An error occurred during scraping: {str(e)}")
             print("Full stack trace:")
             print(traceback.format_exc())
-            return f"An error occurred: {str(e)}\n\nStack trace:\n{traceback.format_exc()}", []
+            return f"An error occurred: {str(e)}\n\nStack trace:\n{traceback.format_exc()}", [], ""
         finally:
             if self.driver:
                 self.driver.quit()
@@ -195,17 +195,17 @@ class BrowserScraper:
         except TimeoutException as e:
             print("Timed out waiting for page to load")
             print(f"Full stack trace:\n{traceback.format_exc()}")
-            return "Page load timed out", []
+            return "Page load timed out", [], ""
 
         self._scroll_to_bottom()
 
         if self.url.endswith(".pdf"):
             text = scrape_pdf_with_pymupdf(self.url)
-            return text, []
+            return text, [], ""
         elif "arxiv" in self.url:
             doc_num = self.url.split("/")[-1]
             text = scrape_pdf_with_arxiv(doc_num)
-            return text, []
+            return text, [], ""
         else:
             page_source = self.driver.execute_script("return document.body.outerHTML;")
             soup = BeautifulSoup(page_source, "html.parser")
@@ -215,11 +215,12 @@ class BrowserScraper:
 
             text = self.get_text(soup)
             image_urls = get_relevant_images(soup, self.url)
+            title = extract_title(soup)
 
         lines = (line.strip() for line in text.splitlines())
         chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
         text = "\n".join(chunk for chunk in chunks if chunk)
-        return text, image_urls
+        return text, image_urls, title
 
     def get_text(self, soup: BeautifulSoup) -> str:
         """Get the relevant text from the soup with improved filtering"""
