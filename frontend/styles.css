@@ -177,7 +177,7 @@ footer p {
 a {
     color: #ffffff;
     font-weight: bold;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 a:hover {
