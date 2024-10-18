@@ -8,11 +8,10 @@ class DefaultConfig(BaseConfig):
 
 DEFAULT_CONFIG: DefaultConfig = {
     "RETRIEVER": "tavily",
-    "EMBEDDING_PROVIDER": "openai",
+    "EMBEDDING": "openai:text-embedding-3-large",
     "SIMILARITY_THRESHOLD": 0.42,
     "FAST_LLM": "openai:gpt-4o-mini",
     "SMART_LLM": "openai:gpt-4o-2024-08-06",
-    "OLLAMA_BASE_URL": None,
     "FAST_TOKEN_LIMIT": 2000,
     "SMART_TOKEN_LIMIT": 4000,
     "BROWSE_CHUNK_MAX_LENGTH": 8192,
