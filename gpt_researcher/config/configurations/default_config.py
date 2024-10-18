@@ -7,7 +7,7 @@ class DefaultConfig(BaseConfig):
 
 
 DEFAULT_CONFIG: DefaultConfig = {
-    "RETRIEVER": "tavily,arxiv,semantic_scholar",
+    "RETRIEVER": "tavily, arxiv, semantic_scholar, pubmed_central",
     "EMBEDDING_PROVIDER": "openai",
     "SIMILARITY_THRESHOLD": 0.42,
     "LLM_PROVIDER": "openai",
@@ -29,7 +29,7 @@ DEFAULT_CONFIG: DefaultConfig = {
     "MAX_ITERATIONS": 3,
     "AGENT_ROLE": None,
     "SCRAPER": "bs",
-    "MAX_SUBTOPICS": 3,
+    "MAX_SUBTOPICS": 5,
     "REPORT_SOURCE": None,
     "DOC_PATH": "./my-docs",
     "VALID_RETRIEVERS": VALID_RETRIEVERS
