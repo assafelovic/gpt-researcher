@@ -8,7 +8,6 @@ from .vector_store import VectorStoreWrapper
 
 # Research skills
 from .skills.researcher import ResearchConductor
-from .skills.scraper import ReportScraper
 from .skills.writer import ReportGenerator
 from .skills.context_manager import ContextManager
 
@@ -74,10 +73,9 @@ class GPTResearcher:
             getattr(self.cfg, 'embedding_provider', None), self.headers)
 
         # Initialize components
-        self.research_conductor = ResearchConductor(self)
-        self.report_generator = ReportGenerator(self)
-        self.scraper = ReportScraper(self)
-        self.context_manager = ContextManager(self)
+        self.research_conductor: ResearchConductor = ResearchConductor(self)
+        self.report_generator: ReportGenerator = ReportGenerator(self)
+        self.context_manager: ContextManager = ContextManager(self)
 
     async def conduct_research(self):
         if not (self.agent and self.role):
