@@ -48,10 +48,9 @@
                     style="background-image:linear-gradient(to right, #9867F0, #ED4E50); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hours
                     of Research</span>
             </h1>
-            <p class="max-w-5xl mx-auto text-gray-600 mt-8" style="font-size:20px">
-                Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research. GPT Researcher
-                takes care of everything from accurate source gathering to organization of research results - all in one
-                platform designed to make your research process a breeze.
+            <p class="max-w-6xl mx-auto text-gray-600 mt-8" style="font-size:20px">
+                Say Hello to <b>GPT Researcher</b>, your AI mate for rapid insights and comprehensive research. <br>
+                GPT Researcher takes care of everything from accurate source gathering and organization of research results to generation of customized reports with citations.
             </p>
             <a href="#form" class="btn btn-primary">Get Started</a>
         </div>
@@ -136,6 +135,9 @@
                 will be generated to provide the most precise and relevant research results.</p>
             <div id="output"></div>
         </div>
+        <div class="images_div">
+            <div id="selectedImagesContainer" style="display: none;"></div>
+        </div>
         <div class="margin-div">
             <h2>Research Report</h2>
             <div id="reportContainer"></div>
@@ -154,6 +156,7 @@
 
     <footer>
         <p>
+            <a target="_blank" href="https://gptr.dev">Homepage</a> |
             <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GitHub</a> |
             <a target="_blank" href="https://discord.gg/spBgZmm3Xe">Discord</a>
         </p>
@@ -187,13 +190,15 @@
         const tagsInput = document.getElementById('tags-input');
         const input = document.getElementById('custom_source');
 
-        input.addEventListener('keypress', function (e) {
+        if (input) {
+            input.addEventListener('keypress', function (e) {
             if ((e.key === 'Enter' || e.key === ",") && input.value !== '') {
                 e.preventDefault();
                 GPTResearcher.addTag(input.value);
                 input.value = '';
             }
         });
+        }
 
 </script>
 </body>

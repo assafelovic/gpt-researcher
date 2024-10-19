@@ -32,10 +32,13 @@ class Config:
                 value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
             setattr(self, key.lower(), value)
 
+        # Handle RETRIEVER with default value
+        retriever_env = os.environ.get("RETRIEVER", "tavily")
         try:
-            self.retrievers = self.parse_retrievers(self.retriever)
+            self.retrievers = self.parse_retrievers(retriever_env)
         except ValueError as e:
-            print(f"Warning: {str(e)}. Error with including retrievers")
+            print(f"Warning: {str(e)}. Defaulting to 'tavily' retriever.")
+            self.retrievers = ["tavily"]
 
     def _set_embedding_attributes(self) -> None:
         self.embedding_provider, self.embedding_model = self.parse_embedding(
