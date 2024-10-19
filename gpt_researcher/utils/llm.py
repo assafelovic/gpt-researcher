@@ -9,7 +9,7 @@ from colorama import Fore, Style
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 
-from gpt_researcher.master.prompts import generate_subtopics_prompt
+from ..prompts import generate_subtopics_prompt
 from .costs import estimate_llm_cost
 from .validators import Subtopics
 

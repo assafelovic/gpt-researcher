@@ -3,7 +3,7 @@ from functools import partial
 
 import requests
 
-from gpt_researcher.scraper import (
+from . import (
     ArxivScraper,
     BeautifulSoupScraper,
     PyMuPDFScraper,
@@ -32,27 +32,26 @@ class Scraper:
         """
         Extracts the content from the links
         """
-        partial_extract = partial(self.extract_data_from_link, session=self.session)
+        partial_extract = partial(self.extract_data_from_url, session=self.session)
         with ThreadPoolExecutor(max_workers=20) as executor:
             contents = executor.map(partial_extract, self.urls)
         res = [content for content in contents if content["raw_content"] is not None]
         return res
 
-    def extract_data_from_link(self, link, session):
+    def extract_data_from_url(self, link, session):
         """
         Extracts the data from the link
         """
-        content = ""
         try:
             Scraper = self.get_scraper(link)
             scraper = Scraper(link, session)
-            content = scraper.scrape()
+            content, image_urls, title = scraper.scrape()
 
             if len(content) < 100:
-                return {"url": link, "raw_content": None}
-            return {"url": link, "raw_content": content}
+                return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+            return {"url": link, "raw_content": content, "image_urls": image_urls, "title": title}
         except Exception as e:
-            return {"url": link, "raw_content": None}
+            return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
 
     def get_scraper(self, link):
         """

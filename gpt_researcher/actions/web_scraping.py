@@ -1,12 +1,12 @@
-import asyncio
-from typing import List, Dict, Any
-from ...scraper.scraper import Scraper
-from ...config.config import Config
-from ...utils.logger import get_formatted_logger
+from typing import List, Dict, Any, Tuple
+from colorama import Fore, Style
+from ..scraper import Scraper
+from ..config.config import Config
+from ..utils.logger import get_formatted_logger
 
 logger = get_formatted_logger()
 
-def scrape_urls(urls, cfg=None):
+def scrape_urls(urls, cfg=None) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Scrapes the urls
     Args:
@@ -14,20 +14,28 @@ def scrape_urls(urls, cfg=None):
         cfg: Config (optional)
 
     Returns:
-        text: str
+        Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]: Tuple containing scraped content and images
 
     """
-    content = []
+    scraped_data = []
+    images = []
     user_agent = (
         cfg.user_agent
         if cfg
         else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     )
+
     try:
-        content = Scraper(urls, user_agent, cfg.scraper).run()
+        scraper = Scraper(urls, user_agent, cfg.scraper)
+        scraped_data = scraper.run()
+        for item in scraped_data:
+            if 'image_urls' in item:
+                images.extend([{'url': img_url} for img_url in item['image_urls']])
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
-    return content
+
+    return scraped_data, images
+
 async def filter_urls(urls: List[str], config: Config) -> List[str]:
     """
     Filter URLs based on configuration settings.
