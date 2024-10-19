@@ -32,10 +32,13 @@ class Config:
                 value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
             setattr(self, key.lower(), value)
 
+        # Handle RETRIEVER with default value
+        retriever_env = os.environ.get("RETRIEVER", "tavily")
         try:
-            self.retrievers = self.parse_retrievers(os.environ["RETRIEVER"])
+            self.retrievers = self.parse_retrievers(retriever_env)
         except ValueError as e:
-            print(f"Warning: {str(e)}. Error with including retrievers")
+            print(f"Warning: {str(e)}. Defaulting to 'tavily' retriever.")
+            self.retrievers = ["tavily"]
 
     def _handle_deprecated_attributes(self) -> None:
         _deprecation_warning = (

@@ -1,6 +1,6 @@
 from typing import Dict, Any, Callable
 from fastapi import WebSocket
-from ...utils.logger import get_formatted_logger
+from ..utils.logger import get_formatted_logger
 
 logger = get_formatted_logger()
 
