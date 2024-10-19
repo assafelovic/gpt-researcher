@@ -1,27 +1,36 @@
+import nest_asyncio  # required for notebooks
+
+nest_asyncio.apply()
+
 from gpt_researcher import GPTResearcher
 import asyncio
 
 
-async def main():
-    """
-    This is a sample script that shows how to run a research report.
-    """
-    # Query
-    query = "What happened in the latest burning man floods?"
-    # Initialize the researcher
-    researcher = GPTResearcher(query=query)
+async def get_report(query: str, report_type: str):
+    researcher = GPTResearcher(query, report_type)
+    research_result = await researcher.conduct_research()
+    report = await researcher.write_report()
 
-    # Conduct research on the given query. Returns context for the report
-    research_context = await researcher.conduct_research()
+    # Get additional information
+    research_context = researcher.get_research_context()
+    research_costs = researcher.get_costs()
+    research_images = researcher.get_research_images()
+    research_sources = researcher.get_research_sources()
 
-    # Write the report
-    # FYI: You can pass ext_context (str) = "..." to write_report
-    # to use it without conducting a research first, using your own context
-    # In this case we're simply passing the already conducted research context
-    report = await researcher.write_report(ext_context=researcher.context)
-    
-    return report
+    return report, research_context, research_costs, research_images, research_sources
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    query = "Should I invest in Nvidia?"
+    report_type = "research_report"
+
+    report, context, costs, images, sources = asyncio.run(get_report(query, report_type))
+
+    print("Report:")
+    print(report)
+    print("\nResearch Costs:")
+    print(costs)
+    print("\nResearch Images:")
+    print(images)
+    print("\nResearch Sources:")
+    print(sources)
