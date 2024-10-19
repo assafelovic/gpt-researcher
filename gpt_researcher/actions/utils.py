@@ -18,7 +18,7 @@ async def stream_output(
     Returns:
         None
     """
-    if not websocket or output_log:
+    if (not websocket or output_log) and type != "images":
         try:
             logger.info(f"{output}")
         except UnicodeEncodeError:
