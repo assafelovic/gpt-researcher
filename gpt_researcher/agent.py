@@ -1,4 +1,5 @@
 from typing import Optional, List, Dict, Any, Set
+import json
 
 from .config import Config
 from .memory import Memory
@@ -131,8 +132,14 @@ class GPTResearcher:
     def get_research_images(self) -> List[Dict[str, Any]]:
         return self.research_images
 
+    def add_research_images(self, images: List[Dict[str, Any]]) -> None:
+        self.research_images.extend(images)
+
     def get_research_sources(self) -> List[Dict[str, Any]]:
         return self.research_sources
+
+    def add_research_sources(self, sources: List[Dict[str, Any]]) -> None:
+        self.research_sources.extend(sources)
 
     def add_references(self, report_markdown: str, visited_urls: set) -> str:
         return add_references(report_markdown, visited_urls)
