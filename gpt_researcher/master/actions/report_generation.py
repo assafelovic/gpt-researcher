@@ -135,6 +135,7 @@ async def summarize_url(
             stream=True,
             websocket=websocket,
             max_tokens=config.smart_token_limit,
+            max_tokens=config.summary_token_limit,
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,
         )
