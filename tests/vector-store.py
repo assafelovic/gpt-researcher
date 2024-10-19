@@ -119,7 +119,7 @@ async def test_gpt_researcher_with_vector_store():
         Make sure to include key points regarding the differences between
         persistance vs obstinate.
 
-        Include some recommendations for entrepeneurs in the conclusion.
+        Include some recommendations for entrepreneurs in the conclusion.
         Recommend some ways to increase persistance in a healthy way.
     """
 
