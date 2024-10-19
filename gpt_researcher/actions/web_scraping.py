@@ -1,7 +1,6 @@
-import asyncio
 from typing import List, Dict, Any, Tuple
 from colorama import Fore, Style
-from ..skills.scraper import Scraper
+from ..scraper import Scraper
 from ..config.config import Config
 from ..utils.logger import get_formatted_logger
 

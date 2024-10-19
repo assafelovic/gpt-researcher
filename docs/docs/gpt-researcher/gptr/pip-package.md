@@ -27,55 +27,65 @@ export TAVILY_API_KEY={Your Tavily API Key here}
 
 3. **Start using GPT Researcher in your own codebase**
 
-## Example Usage 📝
+## Example Usage
 
 ```python
 from gpt_researcher import GPTResearcher
 import asyncio
 
-
-from gpt_researcher import GPTResearcher
-import asyncio
-
-
-async def get_report(query: str, report_type: str) -> str:
+async def get_report(query: str, report_type: str):
     researcher = GPTResearcher(query, report_type)
     research_result = await researcher.conduct_research()
     report = await researcher.write_report()
-    return report
+    
+    # Get additional information
+    research_context = researcher.get_research_context()
+    research_costs = researcher.get_costs()
+    research_images = researcher.get_research_images()
+    research_sources = researcher.get_research_sources()
+    
+    return report, research_context, research_costs, research_images, research_sources
 
 if __name__ == "__main__":
     query = "what team may win the NBA finals?"
     report_type = "research_report"
 
-    report = asyncio.run(get_report(query, report_type))
+    report, context, costs, images, sources = asyncio.run(get_report(query, report_type))
+    
+    print("Report:")
     print(report)
+    print("\nResearch Costs:")
+    print(costs)
+    print("\nNumber of Research Images:")
+    print(len(images))
+    print("\nNumber of Research Sources:")
+    print(len(sources))
 ```
 
-## Specific Examples 🌐
+## Specific Examples
 
-### Example 1: Research Report 📚
+### Example 1: Research Report
 
 ```python
 query = "Latest developments in renewable energy technologies"
 report_type = "research_report"
 ```
 
-### Example 2: Resource Report 📋
+### Example 2: Resource Report
 
 ```python
 query = "List of top AI conferences in 2023"
 report_type = "resource_report"
 ```
 
-### Example 3: Outline Report 📝
+### Example 3: Outline Report
 
 ```python
 query = "Outline for an article on the impact of AI in education"
 report_type = "outline_report"
 ```
 
-## Integration with Web Frameworks 🌍
+## Integration with Web Frameworks
 
 ### FastAPI Example
 
@@ -91,7 +101,19 @@ async def get_report(query: str, report_type: str) -> dict:
     researcher = GPTResearcher(query, report_type)
     research_result = await researcher.conduct_research()
     report = await researcher.write_report()
-    return {"report": report}
+    
+    source_urls = researcher.get_source_urls()
+    research_costs = researcher.get_costs()
+    research_images = researcher.get_research_images()
+    research_sources = researcher.get_research_sources()
+    
+    return {
+        "report": report,
+        "source_urls": source_urls,
+        "research_costs": research_costs,
+        "num_images": len(research_images),
+        "num_sources": len(research_sources)
+    }
 
 # Run the server
 # uvicorn main:app --reload
@@ -106,7 +128,7 @@ pip install 'flask[async]'
 ```
 
 ```python
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from gpt_researcher import GPTResearcher
 
 app = Flask(__name__)
@@ -117,11 +139,24 @@ async def get_report(report_type):
     researcher = GPTResearcher(query, report_type)
     research_result = await researcher.conduct_research()
     report = await researcher.write_report()
-    return report
+    
+    source_urls = researcher.get_source_urls()
+    research_costs = researcher.get_costs()
+    research_images = researcher.get_research_images()
+    research_sources = researcher.get_research_sources()
+    
+    return jsonify({
+        "report": report,
+        "source_urls": source_urls,
+        "research_costs": research_costs,
+        "num_images": len(research_images),
+        "num_sources": len(research_sources)
+    })
 
 # Run the server
 # flask run
 ```
+
 **Run the server**
 
 ```bash
@@ -134,10 +169,8 @@ flask run
 curl -X GET "http://localhost:5000/report/research_report?query=what team may win the nba finals?"
 ```
 
-**Note**: The above code snippets are just examples. You can customize them as per your requirements.
-
 ## Getters and Setters
-If you're interested in getting more details about the research, you can use the following getters:
+GPT Researcher provides several methods to retrieve additional information about the research process:
 
 ### Get Research Sources
 Sources are the URLs that were used to gather information for the research.
@@ -157,6 +190,18 @@ Costs are the number of tokens consumed during the research process.
 research_costs = researcher.get_costs()
 ```
 
+### Get Research Images
+Retrieves a list of images found during the research process.
+```python
+research_images = researcher.get_research_images()
+```
+
+### Get Research Sources
+Retrieves a list of research sources, including title, content, and images.
+```python
+research_sources = researcher.get_research_sources()
+```
+
 ### Set Verbose
 You can set the verbose mode to get more detailed logs.
 ```python
@@ -168,3 +213,60 @@ You can also add costs to the research process if you want to track the costs fr
 ```python
 researcher.add_costs(0.22)
 ```
+
+## Advanced Usage
+
+### Customizing the Research Process
+
+You can customize various aspects of the research process by passing additional parameters when initializing the GPTResearcher:
+
+```python
+researcher = GPTResearcher(
+    query="Your research query",
+    report_type="research_report",
+    report_format="APA",
+    tone="formal and objective",
+    max_subtopics=5,
+    verbose=True
+)
+```
+
+### Handling Research Results
+
+After conducting research, you can process the results in various ways:
+
+```python
+# Conduct research
+research_result = await researcher.conduct_research()
+
+# Generate a report
+report = await researcher.write_report()
+
+# Generate a conclusion
+conclusion = await researcher.write_report_conclusion(report)
+
+# Get subtopics
+subtopics = await researcher.get_subtopics()
+
+# Get draft section titles for a subtopic
+draft_titles = await researcher.get_draft_section_titles("Subtopic name")
+```
+
+### Working with Research Context
+
+You can use the research context for further processing or analysis:
+
+```python
+# Get the full research context
+context = researcher.get_research_context()
+
+# Get similar written contents based on draft section titles
+similar_contents = await researcher.get_similar_written_contents_by_draft_section_titles(
+    current_subtopic="Subtopic name",
+    draft_section_titles=["Title 1", "Title 2"],
+    written_contents=some_written_contents,
+    max_results=10
+)
+```
+
+This comprehensive documentation should help users understand and utilize the full capabilities of the GPT Researcher package.
