@@ -31,9 +31,13 @@ export default function ImagesCarousel({ images }) {
     };
 
     useEffect(() => {
-        const filteredImages = images.filter((img) => img !== 'https://gptr.dev/_ipx/w_3840,q_75/%2F_next%2Fstatic%2Fmedia%2Fbg-pattern.5aa07776.webp?url=%2F_next%2Fstatic%2Fmedia%2Fbg-pattern.5aa07776.webp&w=3840&q=75');
+        const imagesToHide = ['https://gptr.dev/_ipx/w_3840,q_75/%2F_next%2Fstatic%2Fmedia%2Fbg-pattern.5aa07776.webp?url=%2F_next%2Fstatic%2Fmedia%2Fbg-pattern.5aa07776.webp&w=3840&q=75',"https://tavily.com/_ipx/w_3840,q_75/%2F_next%2Fstatic%2Fmedia%2Fbg-pattern.5aa07776.webp?url=%2F_next%2Fstatic%2Fmedia%2Fbg-pattern.5aa07776.webp&w=3840&q=75"]
+        const filteredImages = images.filter((img) => !imagesToHide.includes(img));
         setValidImages(filteredImages);
     }, [images]);
+
+    // Hide the entire component if there are no valid images
+    if (validImages.length === 0) return null;
 
     return (
         <div id="default-carousel" className="relative w-full" data-carousel="slide">
