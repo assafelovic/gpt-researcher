@@ -130,7 +130,7 @@ class ResearchAgent:
   
         return report
 </code></pre><p>As you can see above, we’ve created an instance of the Research agent. Now let’s assume we’ve done the same for each of the team’s agent. After creating all of the agents, we’d initialize the graph with LangGraph:</p><pre><code class="language-python">def init_research_team(self):
-    # Initialize agents
+    # Initialize skills
     editor_agent = EditorAgent(self.task)
     research_agent = ResearchAgent()
     writer_agent = WriterAgent()

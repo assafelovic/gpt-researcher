@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([[1624],{8778:s=>{s.exports=JSON.parse('{"allTagsPath":"/blog/tags","slug":"/blog/tags/multi-skills","name":"multi-skills","count":1,"permalink":"/blog/tags/multi-skills"}')}}]);
