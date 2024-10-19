@@ -1,5 +1,4 @@
 from typing import Dict, Any, Callable
-from fastapi import WebSocket
 from ..utils.logger import get_formatted_logger
 
 logger = get_formatted_logger()
@@ -33,7 +32,7 @@ async def stream_output(
         )
 
 
-async def safe_send_json(websocket: WebSocket, data: Dict[str, Any]) -> None:
+async def safe_send_json(websocket: Any, data: Dict[str, Any]) -> None:
     """
     Safely send JSON data through a WebSocket connection.
 
@@ -102,7 +101,7 @@ async def update_cost(
     prompt_tokens: int,
     completion_tokens: int,
     model: str,
-    websocket: WebSocket
+    websocket: Any
 ) -> None:
     """
     Update and send the cost information through the WebSocket.
@@ -130,7 +129,7 @@ async def update_cost(
     })
 
 
-def create_cost_callback(websocket: WebSocket) -> Callable:
+def create_cost_callback(websocket: Any) -> Callable:
     """
     Create a callback function for updating costs.
 
