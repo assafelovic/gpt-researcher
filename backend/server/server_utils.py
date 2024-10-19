@@ -3,7 +3,7 @@ import os
 import re
 import time
 import shutil
-from typing import Dict, List
+from typing import Dict, List, Any
 from fastapi.responses import JSONResponse
 from gpt_researcher.document.document import DocumentLoader
 # Add this import
@@ -101,7 +101,7 @@ async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
         return JSONResponse(status_code=404, content={"message": "File not found"})
 
 
-async def execute_multi_agents(manager) -> Dict[str, str]:
+async def execute_multi_agents(manager) -> Any:
     websocket = manager.active_connections[0] if manager.active_connections else None
     if websocket:
         report = await run_research_task("Is AI in a hype cycle?", websocket, stream_output)

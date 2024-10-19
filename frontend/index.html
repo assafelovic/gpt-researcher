@@ -136,6 +136,9 @@
                 will be generated to provide the most precise and relevant research results.</p>
             <div id="output"></div>
         </div>
+        <div class="images_div">
+            <div id="selectedImagesContainer" style="display: none;"></div>
+        </div>
         <div class="margin-div">
             <h2>Research Report</h2>
             <div id="reportContainer"></div>
@@ -187,13 +190,15 @@
         const tagsInput = document.getElementById('tags-input');
         const input = document.getElementById('custom_source');
 
-        input.addEventListener('keypress', function (e) {
+        if (input) {
+            input.addEventListener('keypress', function (e) {
             if ((e.key === 'Enter' || e.key === ",") && input.value !== '') {
                 e.preventDefault();
                 GPTResearcher.addTag(input.value);
                 input.value = '';
             }
         });
+        }
 
 </script>
 </body>
