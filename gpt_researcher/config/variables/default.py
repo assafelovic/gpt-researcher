@@ -1,12 +1,6 @@
-from .retrievers import RetrieversConfig, VALID_RETRIEVERS
 from .base import BaseConfig
 
-
-class DefaultConfig(BaseConfig):
-    VALID_RETRIEVERS: RetrieversConfig
-
-
-DEFAULT_CONFIG: DefaultConfig = {
+DEFAULT_CONFIG: BaseConfig = {
     "RETRIEVER": "tavily",
     "EMBEDDING": "openai:text-embedding-3-large",
     "SIMILARITY_THRESHOLD": 0.42,
@@ -23,11 +17,10 @@ DEFAULT_CONFIG: DefaultConfig = {
     "MEMORY_BACKEND": "local",
     "TOTAL_WORDS": 900,
     "REPORT_FORMAT": "APA",
-    "MAX_ITERATIONS": 3,
+    "MAX_ITERATIONS": 4,
     "AGENT_ROLE": None,
     "SCRAPER": "bs",
     "MAX_SUBTOPICS": 3,
     "REPORT_SOURCE": None,
-    "DOC_PATH": "./my-docs",
-    "VALID_RETRIEVERS": VALID_RETRIEVERS
+    "DOC_PATH": "./my-docs"
 }
