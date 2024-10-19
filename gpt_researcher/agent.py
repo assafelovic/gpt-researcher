@@ -27,7 +27,7 @@ class GPTResearcher:
         self,
         query: str,
         report_type: str = ReportType.ResearchReport.value,
-        report_format: str = "markdown",  # Add this line
+        report_format: str = "markdown",
         report_source: str = ReportSource.Web.value,
         tone: Tone = Tone.Objective,
         source_urls=None,
@@ -44,7 +44,7 @@ class GPTResearcher:
         verbose: bool = True,
         context=[],
         headers: dict = None,
-        max_subtopics: int = 5,  # Add this line
+        max_subtopics: int = 5,
     ):
         self.query = query
         self.report_type = report_type
@@ -56,7 +56,8 @@ class GPTResearcher:
         self.max_subtopics = max_subtopics
         self.tone = tone if isinstance(tone, Tone) else Tone.Objective
         self.source_urls = source_urls
-        self.research_sources = [] # The list of scraped sources including title, content and images
+        self.research_sources = []  # The list of scraped sources including title, content and images
+        self.research_images = []  # The list of selected research images
         self.documents = documents
         self.vector_store = VectorStoreWrapper(vector_store) if vector_store else None
         self.vector_store_filter = vector_store_filter
@@ -127,6 +128,12 @@ class GPTResearcher:
         )
 
     # Utility methods
+    def get_research_images(self) -> List[Dict[str, Any]]:
+        return self.research_images
+
+    def get_research_sources(self) -> List[Dict[str, Any]]:
+        return self.research_sources
+
     def add_references(self, report_markdown: str, visited_urls: set) -> str:
         return add_references(report_markdown, visited_urls)
 
