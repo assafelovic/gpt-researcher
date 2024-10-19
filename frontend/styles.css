@@ -38,7 +38,8 @@ body {
 .landing p {
     font-size: 1.5rem;
     font-weight: 400;
-    max-width: 500px;
+    max-width: 1000px;
+    padding: 0 25px 0 25px;
     margin: auto auto 2rem auto;
 }
 
