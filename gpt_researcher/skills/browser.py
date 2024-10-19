@@ -84,21 +84,3 @@ class BrowserManager:
                     break
 
         return unique_images
-
-    def get_research_sources(self) -> List[Dict]:
-        """
-        Get the list of research sources.
-
-        Returns:
-            List[Dict]: List of research sources.
-        """
-        return self.research_sources
-
-    def get_research_images(self) -> List[str]:
-        """
-        Get the list of selected research image URLs.
-
-        Returns:
-            List[str]: List of selected research image URLs.
-        """
-        return self.research_images
