@@ -65,7 +65,7 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
                     images={log.metadata}
                   />
                 )
-              } else {
+              } else if(log.header !== "selected_images") {
                 return (
                   <div
                     key={index}
