@@ -21,6 +21,11 @@ const GPTResearcher = (() => {
   const startResearch = () => {
     document.getElementById('output').innerHTML = ''
     document.getElementById('reportContainer').innerHTML = ''
+
+    const imageContainer = document.getElementById('selectedImagesContainer')
+    imageContainer.innerHTML = ''
+    imageContainer.style.display = 'none'
+
     updateState('in_progress')
 
     addAgentResponse({
