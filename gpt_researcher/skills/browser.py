@@ -11,8 +11,6 @@ class BrowserManager:
 
     def __init__(self, researcher):
         self.researcher = researcher
-        self.research_sources = []
-        self.research_images = []
 
     async def browse_urls(self, urls: List[str]) -> List[Dict]:
         """
@@ -33,9 +31,9 @@ class BrowserManager:
             )
 
         scraped_content, images = scrape_urls(urls, self.researcher.cfg)
-        self.research_sources.extend(scraped_content)
+        self.researcher.add_research_sources(scraped_content)
         new_images = self.select_top_images(images, k=2)  # Select top 2 images
-        self.research_images.extend(new_images)
+        self.researcher.add_research_images(new_images)
 
         if self.researcher.verbose:
             await stream_output(
@@ -73,10 +71,12 @@ class BrowserManager:
         # Remove duplicates based on image URL
         unique_images = []
         image_hashes = set()
+        current_research_images = self.researcher.get_research_images()
 
         for img in images:
             img_hash = hashlib.md5(img['url'].encode()).hexdigest()
-            if img_hash not in image_hashes and img_hash not in {hashlib.md5(existing_img.encode()).hexdigest() for existing_img in self.research_images}:
+            if img_hash not in image_hashes and img_hash not in {hashlib.md5(existing_img.encode()).hexdigest()
+                                                                 for existing_img in current_research_images}:
                 image_hashes.add(img_hash)
                 unique_images.append(img['url'])
 
