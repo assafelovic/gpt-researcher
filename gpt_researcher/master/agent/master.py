@@ -4,12 +4,14 @@ from ...config import Config
 from ...memory import Memory
 from ...utils.enum import ReportSource, ReportType, Tone
 from ...llm_provider import GenericLLMProvider
-from ..agent.researcher import ResearchConductor
-from ..agent.scraper import ReportScraper
-from ..agent.writer import ReportGenerator
-from ..agent.context_manager import ContextManager
 from ..actions import get_retrievers, choose_agent
 from ...vector_store import VectorStoreWrapper
+
+# Research agents
+from .researcher import ResearchConductor
+from .scraper import ReportScraper
+from .writer import ReportGenerator
+from .context_manager import ContextManager
 
 
 class GPTResearcher:

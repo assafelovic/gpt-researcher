@@ -4,6 +4,7 @@ import warnings
 from typing import Dict, Any, List, Union, Type, get_origin, get_args
 from .variables.default import DEFAULT_CONFIG
 from .variables.base import BaseConfig
+from ..retrievers.utils import get_all_retriever_names
 
 
 class Config:
@@ -14,33 +15,38 @@ class Config:
     def __init__(self, config_path: str | None = None):
         """Initialize the config class."""
         self.config_path = config_path
-
-        # Load the specified configuration
-        config_to_use = self.load_config(config_path)
-
-        # Set attributes based on the loaded config
         self.llm_kwargs: Dict[str, Any] = {}
         self.embedding_kwargs: Dict[str, Any] = {}
-        for key, value in config_to_use.items():
+
+        config_to_use = self.load_config(config_path)
+        self._set_attributes(config_to_use)
+        self._set_embedding_attributes()
+        self._set_llm_attributes()
+        self._handle_deprecated_attributes()
+        self._set_doc_path(config_to_use)
+
+    def _set_attributes(self, config: Dict[str, Any]) -> None:
+        for key, value in config.items():
             env_value = os.getenv(key)
             if env_value is not None:
-                value = self.convert_env_value(
-                    key, env_value, BaseConfig.__annotations__[key]
-                )
+                value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
             setattr(self, key.lower(), value)
 
-        self.valid_retrievers = config_to_use["VALID_RETRIEVERS"]
         try:
-            self.retrievers = self.parse_retrievers(config_to_use["RETRIEVER"])
+            self.retrievers = self.parse_retrievers(self.retriever)
         except ValueError as e:
-            print(f"Warning: {str(e)}. Using default retrievers.")
-            self.retrievers = list(self.valid_retrievers.values())
+            print(f"Warning: {str(e)}. Error with including retrievers")
 
+    def _set_embedding_attributes(self) -> None:
         self.embedding_provider, self.embedding_model = self.parse_embedding(
             self.embedding
         )
 
-        # TODO: to be deprecated
+    def _set_llm_attributes(self) -> None:
+        self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
+        self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
+
+    def _handle_deprecated_attributes(self) -> None:
         if os.getenv("EMBEDDING_PROVIDER") is not None:
             warnings.warn(
                 "EMBEDDING_PROVIDER is deprecated and will be removed soon. Use EMBEDDING instead.",
@@ -65,10 +71,6 @@ class Config:
                 case _:
                     raise Exception("Embedding provider not found.")
 
-        self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
-        self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
-
-        # TODO: to be deprecated
         _deprecation_warning = (
             "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
             "will be removed soon. Use FAST_LLM and SMART_LLM instead."
@@ -87,17 +89,15 @@ class Config:
         if os.getenv("SMART_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
             self.smart_llm_model = os.environ["SMART_LLM_MODEL"] or self.smart_llm_model
-
-        self.doc_path = config_to_use["DOC_PATH"]
-
+        
+    def _set_doc_path(self, config: Dict[str, Any]) -> None:
+        self.doc_path = config['DOC_PATH']
         if self.doc_path:
             try:
                 self.validate_doc_path()
             except Exception as e:
-                print(
-                    f"Warning: Error validating doc_path: {str(e)}. Using default doc_path."
-                )
-                self.doc_path = DEFAULT_CONFIG["DOC_PATH"]
+                print(f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
+                self.doc_path = DEFAULT_CONFIG['DOC_PATH']
 
     @classmethod
     def load_config(cls, config_path: str | None) -> Dict[str, Any]:
@@ -131,14 +131,14 @@ class Config:
 
     def parse_retrievers(self, retriever_str: str) -> List[str]:
         """Parse the retriever string into a list of retrievers and validate them."""
-        retrievers = [retriever.strip() for retriever in retriever_str.split(",")]
-        invalid_retrievers = [
-            r for r in retrievers if r not in self.valid_retrievers.values()
-        ]
+        retrievers = [retriever.strip()
+                      for retriever in retriever_str.split(",")]
+        valid_retrievers = get_all_retriever_names() or []
+        invalid_retrievers = [r for r in retrievers if r not in valid_retrievers]
         if invalid_retrievers:
             raise ValueError(
                 f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. "
-                f"Valid options are: {', '.join(self.valid_retrievers.values())}."
+                f"Valid options are: {', '.join(valid_retrievers)}."
             )
         return retrievers
 

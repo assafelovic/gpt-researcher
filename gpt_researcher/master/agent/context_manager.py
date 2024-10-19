@@ -72,7 +72,7 @@ class ContextManager:
         return await self.__get_context_by_search(self.researcher.query, langchain_documents_data)
 
     async def __get_context_by_vectorstore(self, query, filter: Optional[dict] = None):
-        sub_queries = await self.__get_sub_queries(query)
+        sub_queries = await self.researcher.research_conductor.get_sub_queries(query)
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
 
@@ -92,7 +92,7 @@ class ContextManager:
         return context
 
     async def __get_context_by_search(self, query, scraped_data: list = []):
-        sub_queries = await self.__get_sub_queries(query)
+        sub_queries = await self.researcher.research_conductor.get_sub_queries(query)
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
 
@@ -212,17 +212,6 @@ class ContextManager:
         )
         return await context_compressor.async_get_context(
             query=query, max_results=10, cost_callback=self.researcher.add_costs
-        )
-
-    async def __get_sub_queries(self, query):
-        from gpt_researcher.master.actions import get_sub_queries
-        return await get_sub_queries(
-            query=query,
-            agent_role_prompt=self.researcher.role,
-            cfg=self.researcher.cfg,
-            parent_query=self.researcher.parent_query,
-            report_type=self.researcher.report_type,
-            cost_callback=self.researcher.add_costs,
         )
 
     async def get_similar_written_contents_by_draft_section_titles(
