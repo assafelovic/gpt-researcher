@@ -47,6 +47,8 @@ class BrowserManager:
                 "scraping_images",
                 f"🖼️ Selected {len(new_images)} new images from {len(images)} total images",
                 self.researcher.websocket,
+                True,
+                new_images
             )
             await stream_output(
                 "logs",
