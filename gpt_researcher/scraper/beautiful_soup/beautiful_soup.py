@@ -1,5 +1,7 @@
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
+from ..utils import get_relevant_images, extract_title
 
 class BeautifulSoupScraper:
 
@@ -31,11 +33,17 @@ class BeautifulSoupScraper:
             lines = (line.strip() for line in raw_content.splitlines())
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             content = "\n".join(chunk for chunk in chunks if chunk)
-            return content
+
+            image_urls = get_relevant_images(soup, self.link)
+            
+            # Extract the title using the utility function
+            title = extract_title(soup)
+
+            return content, image_urls, title
 
         except Exception as e:
             print("Error! : " + str(e))
-            return ""
+            return "", [], ""
 
     def get_content_from_url(self, soup: BeautifulSoup) -> str:
         """Get the relevant text from the soup with improved filtering"""

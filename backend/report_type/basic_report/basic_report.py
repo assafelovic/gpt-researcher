@@ -1,7 +1,7 @@
 from fastapi import WebSocket
+from typing import Any
 
-from gpt_researcher.master.agent import GPTResearcher
-from gpt_researcher.utils.enum import Tone
+from gpt_researcher import GPTResearcher
 
 
 class BasicReport:
@@ -11,7 +11,7 @@ class BasicReport:
         report_type: str,
         report_source: str,
         source_urls,
-        tone: Tone,
+        tone: Any,
         config_path: str,
         websocket: WebSocket,
         headers=None

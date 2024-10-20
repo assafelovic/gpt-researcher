@@ -326,6 +326,7 @@ export default function Home() {
         const logs = data.items.map((item:any, subIndex:any) => ({
           header: item.content,
           text: item.output,
+          metadata: item.metadata,
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
 

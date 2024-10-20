@@ -44,7 +44,7 @@ class Memory:
                     deployment=os.environ["AZURE_EMBEDDING_MODEL"], chunk_size=16
                 )
             case "huggingface":
-                from langchain.embeddings import HuggingFaceEmbeddings
+                from langchain_huggingface import HuggingFaceEmbeddings
 
                 # Specifying the Hugging Face embedding model all-MiniLM-L6-v2
                 _embeddings = HuggingFaceEmbeddings(
