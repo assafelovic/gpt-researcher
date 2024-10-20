@@ -1,6 +1,7 @@
 from typing import Dict, Optional
+import json
 
-from ...utils.llm import construct_subtopics
+from ..utils.llm import construct_subtopics
 from ..actions import (
     stream_output,
     generate_report,
@@ -38,6 +39,15 @@ class ReportGenerator:
         Returns:
             str: The generated report.
         """
+        # send the selected images prior to writing report
+        if self.researcher.research_images:
+            await stream_output(
+                "images",
+                "selected_images",
+                json.dumps(self.researcher.research_images),
+                self.researcher.websocket,
+            )
+
         context = ext_context or self.researcher.context
         if self.researcher.verbose:
             await stream_output(

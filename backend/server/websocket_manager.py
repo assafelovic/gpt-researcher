@@ -7,7 +7,7 @@ from fastapi import WebSocket
 from backend.report_type import BasicReport, DetailedReport
 from gpt_researcher.utils.enum import ReportType, Tone
 from multi_agents.main import run_research_task
-from gpt_researcher.master.actions import stream_output  # Import stream_output
+from gpt_researcher.actions import stream_output  # Import stream_output
 
 
 class WebSocketManager:

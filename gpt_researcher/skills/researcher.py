@@ -1,12 +1,12 @@
 import asyncio
 import random
+import json
 from typing import Dict, Optional
 
 from ..actions.utils import stream_output
-from ..actions import scrape_urls
 from ..actions.query_processing import get_sub_queries
-from ...document import DocumentLoader, LangChainDocumentLoader
-from ...utils.enum import ReportSource, ReportType, Tone
+from ..document import DocumentLoader, LangChainDocumentLoader
+from ..utils.enum import ReportSource, ReportType, Tone
 
 
 class ResearchConductor:
@@ -96,12 +96,12 @@ class ResearchConductor:
                 self.researcher.websocket,
             )
 
-        scraped_sites = scrape_urls(new_search_urls, self.researcher.cfg)
+        scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
 
         if self.researcher.vector_store:
-            self.researcher.vector_store.load(scraped_sites)
+            self.researcher.vector_store.load(scraped_content)
 
-        return await self.researcher.context_manager.get_similar_content_by_query(self.researcher.query, scraped_sites)
+        return await self.researcher.context_manager.get_similar_content_by_query(self.researcher.query, scraped_content)
 
     async def __get_context_by_vectorstore(self, query, filter: Optional[dict] = None):
         """
@@ -298,14 +298,12 @@ class ResearchConductor:
             )
 
         # Scrape the new URLs
-        scraped_content_results = await asyncio.to_thread(
-            scrape_urls, new_search_urls, self.researcher.cfg
-        )
+        scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
 
         if self.researcher.vector_store:
-            self.researcher.vector_store.load(scraped_content_results)
+            self.researcher.vector_store.load(scraped_content)
 
-        return scraped_content_results
+        return scraped_content
 
     async def get_sub_queries(self, query):
         await stream_output(
