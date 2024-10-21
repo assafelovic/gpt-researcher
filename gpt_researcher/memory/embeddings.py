@@ -1,58 +1,63 @@
-from langchain_community.vectorstores import FAISS
 import os
+from typing import Any
 
-OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL","text-embedding-3-small")
+OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+
+_SUPPORTED_PROVIDERS = {
+    "openai",
+    "azure_openai",
+    "ollama",
+    "huggingface",
+    "custom",
+}
 
 
 class Memory:
-    def __init__(self, embedding_provider, headers=None, **kwargs):
+    def __init__(self, embedding_provider: str, model: str, **embdding_kwargs: Any):
         _embeddings = None
-        headers = headers or {}
         match embedding_provider:
             case "ollama":
                 from langchain_community.embeddings import OllamaEmbeddings
 
                 _embeddings = OllamaEmbeddings(
-                    model=os.environ["OLLAMA_EMBEDDING_MODEL"],
+                    model=model,
                     base_url=os.environ["OLLAMA_BASE_URL"],
+                    **embdding_kwargs,
                 )
             case "custom":
                 from langchain_openai import OpenAIEmbeddings
 
                 _embeddings = OpenAIEmbeddings(
-                    model=os.environ.get("OPENAI_EMBEDDING_MODEL", "custom"),
-                    openai_api_key=headers.get(
-                        "openai_api_key", os.environ.get("OPENAI_API_KEY", "custom")
-                    ),
-                    openai_api_base=os.environ.get(
+                    model=model,
+                    openai_api_key=os.getenv("OPENAI_API_KEY", "custom"),
+                    openai_api_base=os.getenv(
                         "OPENAI_BASE_URL", "http://localhost:1234/v1"
                     ),  # default for lmstudio
                     check_embedding_ctx_length=False,
+                    **embdding_kwargs,
                 )  # quick fix for lmstudio
             case "openai":
                 from langchain_openai import OpenAIEmbeddings
 
-                _embeddings = OpenAIEmbeddings(
-                    openai_api_key=headers.get("openai_api_key")
-                    or os.environ.get("OPENAI_API_KEY"),
-                    model=OPENAI_EMBEDDING_MODEL
-                )
+                _embeddings = OpenAIEmbeddings(model=model, **embdding_kwargs)
             case "azure_openai":
                 from langchain_openai import AzureOpenAIEmbeddings
 
                 _embeddings = AzureOpenAIEmbeddings(
-                    deployment=os.environ["AZURE_EMBEDDING_MODEL"], chunk_size=16
+                    model=model,
+                    azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+                    openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
+                    openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+                    **embdding_kwargs,
                 )
             case "huggingface":
                 from langchain_huggingface import HuggingFaceEmbeddings
 
-                # Specifying the Hugging Face embedding model all-MiniLM-L6-v2
-                _embeddings = HuggingFaceEmbeddings(
-                    model_name="sentence-transformers/all-MiniLM-L6-v2"
-                )
+                # Specifying the Hugging Face embedding model sentence-transformers/all-MiniLM-L6-v2
+                _embeddings = HuggingFaceEmbeddings(model_name=model, **embdding_kwargs)
 
             case _:
-                raise Exception("Embedding provider not found.")
+                raise Exception("Embedding not found.")
 
         self._embeddings = _embeddings
 

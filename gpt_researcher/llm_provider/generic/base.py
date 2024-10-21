@@ -3,6 +3,23 @@ from typing import Any
 from colorama import Fore, Style, init
 import os
 
+_SUPPORTED_PROVIDERS = {
+    "openai",
+    "anthropic",
+    "azure_openai",
+    "cohere",
+    "google_vertexai",
+    "google_genai",
+    "fireworks",
+    "ollama",
+    "together",
+    "mistralai",
+    "huggingface",
+    "groq",
+    "bedrock",
+}
+
+
 class GenericLLMProvider:
 
     def __init__(self, llm):
@@ -88,8 +105,7 @@ class GenericLLMProvider:
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
-                f"Unsupported {provider=}.\n\nSupported model providers are: "
-                f"{supported}"
+                f"Unsupported {provider}.\n\nSupported model providers are: {supported}"
             )
         return cls(llm)
 
@@ -129,23 +145,6 @@ class GenericLLMProvider:
         else:
             print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
 
-
-
-_SUPPORTED_PROVIDERS = {
-    "openai",
-    "anthropic",
-    "azure_openai",
-    "cohere",
-    "google_vertexai",
-    "google_genai",
-    "fireworks",
-    "ollama",
-    "together",
-    "mistralai",
-    "huggingface",
-    "groq",
-    "bedrock",
-}
 
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
