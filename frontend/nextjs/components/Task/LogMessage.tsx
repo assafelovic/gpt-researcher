@@ -3,6 +3,7 @@ import Accordion from './Accordion';
 import { useEffect, useState } from 'react';
 import { remark } from 'remark';
 import html from 'remark-html';
+import ImagesCarousel from './ImagesCarousel';
 
 type ProcessedData = {
   field: string;
@@ -58,7 +59,13 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
             {processedLogs.map((log, index) => {
               if (log.header === 'subquery_context_window' || log.header === 'differences') {
                 return <Accordion key={index} logs={[log]} />;
-              } else {
+              } else if(log.header === 'scraping_images') {
+                return (
+                  <ImagesCarousel
+                    images={log.metadata}
+                  />
+                )
+              } else if(log.header !== "selected_images") {
                 return (
                   <div
                     key={index}
