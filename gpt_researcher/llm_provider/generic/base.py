@@ -24,6 +24,10 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import AzureChatOpenAI
 
+            if "model" in kwargs:
+                model_name = kwargs.get("model", None)
+                kwargs = {"azure_deployment": model_name, **kwargs}
+
             llm = AzureChatOpenAI(**kwargs)
         elif provider == "cohere":
             _check_pkg("langchain_cohere")
