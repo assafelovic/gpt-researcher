@@ -1,4 +1,4 @@
-<div align="center">
+<div align="center" id="top">
 <!--<h1 style="display: flex; align-items: center; gap: 10px;">
   <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/a45bac7c-092c-42e5-8eb6-69acbf20dde5" alt="Logo" width="25">
   GPT Researcher
@@ -244,4 +244,9 @@ Our view on unbiased research claims:
     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date" />
   </picture>
 </a>
+</p>
+
+
+<p align="right">
+  <a href="#top">⬆️ Back to Top</a>
 </p>
