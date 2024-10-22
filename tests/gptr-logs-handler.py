@@ -20,7 +20,6 @@ async def run():
     report_source = "online"  # Could specify source like 'online', 'books', etc.
     tone = "informative"  # Tone of the report ('informative', 'casual', etc.)
     config_path = None  # Path to a config file, if needed
-    headers = {"Authorization": "Bearer YOUR_API_TOKEN"}  # Any necessary headers for API calls
     
     # Initialize researcher with a custom WebSocket
     custom_websocket = CustomWebSocket()
@@ -31,8 +30,7 @@ async def run():
         report_source=report_source,
         tone=tone,
         config_path=config_path,
-        websocket=custom_websocket,
-        headers=headers
+        websocket=custom_websocket
     )
 
     await researcher.conduct_research()  # Conduct the research
