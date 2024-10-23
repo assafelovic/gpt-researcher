@@ -8,6 +8,7 @@ class BaseConfig(TypedDict):
     SIMILARITY_THRESHOLD: float
     FAST_LLM: str
     SMART_LLM: str
+    STRATEGIC_LLM: str
     FAST_TOKEN_LIMIT: int
     SMART_TOKEN_LIMIT: int
     BROWSE_CHUNK_MAX_LENGTH: int

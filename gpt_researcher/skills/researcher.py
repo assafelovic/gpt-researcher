@@ -4,7 +4,7 @@ import json
 from typing import Dict, Optional
 
 from ..actions.utils import stream_output
-from ..actions.query_processing import get_sub_queries
+from ..actions.query_processing import plan_research_outline, get_search_results
 from ..document import DocumentLoader, LangChainDocumentLoader
 from ..utils.enum import ReportSource, ReportType, Tone
 
@@ -111,7 +111,7 @@ class ResearchConductor:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await self.get_sub_queries(query)
+        sub_queries = await self.plan_research(query)
         # If this is not part of a sub researcher, add original query to research for better results
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
@@ -143,7 +143,7 @@ class ResearchConductor:
         """
         context = []
         # Generate Sub-Queries including original query
-        sub_queries = await self.get_sub_queries(query)
+        sub_queries = await self.plan_research(query)
         # If this is not part of a sub researcher, add original query to research for better results
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
@@ -305,17 +305,26 @@ class ResearchConductor:
 
         return scraped_content
 
-    async def get_sub_queries(self, query):
+    async def plan_research(self, query):
         await stream_output(
             "logs",
             "planning_research",
-            f"🌐 Browsing the web and planning research for query: {query}...",
+            f"🌐 Browsing the web to learn more about the task: {query}...",
             self.researcher.websocket,
         )
 
-        return await get_sub_queries(
+        search_results = await get_search_results(query, self.researcher.retrievers[0])
+
+        await stream_output(
+            "logs",
+            "planning_research",
+            f"🤔 Planning the research strategy and subtasks...",
+            self.researcher.websocket,
+        )
+
+        return await plan_research_outline(
             query=query,
-            retriever=self.researcher.retrievers[0],
+            search_results=search_results,
             agent_role_prompt=self.researcher.role,
             cfg=self.researcher.cfg,
             parent_query=self.researcher.parent_query,

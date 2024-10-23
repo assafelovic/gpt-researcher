@@ -9,9 +9,9 @@ pydantic
 fastapi
 python-multipart
 markdown
-langchain>=0.2,<0.3
-langchain_community>=0.2,<0.3
-langchain-openai>=0.1,<0.2
+langchain>=0.2,<0.4
+langchain_community>=0.2,<0.4
+langchain-openai>=0.1,<0.4
 langgraph
 tiktoken
 gpt-researcher
