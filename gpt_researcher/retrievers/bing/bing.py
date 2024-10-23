@@ -31,7 +31,7 @@ class BingSearch():
             raise Exception("Bing API key not found. Please set the BING_API_KEY environment variable.")
         return api_key
 
-    def search(self, max_results=7):
+    def search(self, max_results=7) -> list[dict[str]]:
         """
         Searches the query
         Returns:
