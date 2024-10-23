@@ -1,7 +1,8 @@
 import warnings
 from datetime import date, datetime, timezone
 
-from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
+from .utils.enum import ReportSource, ReportType, Tone
+from typing import List, Dict, Any
 
 
 def generate_search_queries_prompt(
@@ -9,7 +10,7 @@ def generate_search_queries_prompt(
     parent_query: str,
     report_type: str,
     max_iterations: int = 3,
-    context: str = ""
+    context: List[Dict[str, Any]] = [],
 ):
     """Generates the search queries prompt for the given question.
     Args:
@@ -31,6 +32,7 @@ def generate_search_queries_prompt(
         task = question
 
     context_prompt = f"""
+You are a seasoned research assistant tasked with generating search queries to find relevant information for the following task: "{task}".
 Context: {context}
 
 Use this context to inform and refine your search queries. The context provides real-time web information that can help you generate more specific and relevant queries. Consider any current events, recent developments, or specific details mentioned in the context that could enhance the search queries.
