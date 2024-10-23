@@ -10,6 +10,8 @@ class BingSearch():
     """
     Bing Search Retriever
     """
+    logger = logging.getLogger(__name__)
+
     def __init__(self, query):
         """
         Initializes the BingSearch object
@@ -62,14 +64,16 @@ class BingSearch():
 
         # Preprocess the results
         if resp is None:
-            return
+            return []
         try:
             search_results = json.loads(resp.text)
             results = search_results["webPages"]["value"]
-        except Exception:
-            return
+        except Exception as e:
+            logger.error(f"Error parsing Bing search results: {e}. Resulting in empty response.")
+            return []
         if search_results is None:
-            return
+            logger.warning(f"No search results found for query: {self.query}")
+            return []
         search_results = []
 
         # Normalize the results to match the format of the other search APIs
