@@ -74,7 +74,8 @@ class GPTResearcher:
         self.research_costs = 0.0
         self.retrievers = get_retrievers(self.headers, self.cfg)
         self.memory = Memory(
-            getattr(self.cfg, 'embedding_provider', None), self.headers)
+            self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
+        )
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
