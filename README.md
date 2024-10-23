@@ -67,6 +67,7 @@ More specifically:
 
 ## Features
 - 📝 Generate research, outlines, resources and lessons reports with local documents and web sources
+- 🖼️ Supports smart article image scraping and filtering
 - 📜 Can generate long and detailed research reports (over 2K words)
 - 🌐 Aggregates over 20 web sources per research to form objective and factual conclusions
 - 🖥️ Includes both lightweight (HTML/CSS/JS) and production ready (NextJS + Tailwind) UX/UI
