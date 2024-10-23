@@ -130,8 +130,8 @@ class GPTResearcher:
         )
 
     # Utility methods
-    def get_research_images(self) -> List[Dict[str, Any]]:
-        return self.research_images
+    def get_research_images(self, top_k=10) -> List[Dict[str, Any]]:
+        return self.research_images[:top_k]
 
     def add_research_images(self, images: List[Dict[str, Any]]) -> None:
         self.research_images.extend(images)
