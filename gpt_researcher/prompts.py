@@ -1,7 +1,8 @@
 import warnings
 from datetime import date, datetime, timezone
 
-from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
+from .utils.enum import ReportSource, ReportType, Tone
+from typing import List, Dict, Any
 
 
 def generate_search_queries_prompt(
@@ -9,7 +10,7 @@ def generate_search_queries_prompt(
     parent_query: str,
     report_type: str,
     max_iterations: int = 3,
-    context: str = ""
+    context: List[Dict[str, Any]] = [],
 ):
     """Generates the search queries prompt for the given question.
     Args:
