@@ -1,4 +1,4 @@
-# Handling Streaming Logs
+# Handling Logs
 
 Here is a snippet of code to help you handle the streaming logs of your Research tasks.
 
