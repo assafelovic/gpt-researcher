@@ -4,7 +4,7 @@ import json
 from typing import Dict, Optional
 
 from ..actions.utils import stream_output
-from ..actions.query_processing import plan_research_outline
+from ..actions.query_processing import plan_research_outline, get_search_results
 from ..document import DocumentLoader, LangChainDocumentLoader
 from ..utils.enum import ReportSource, ReportType, Tone
 
@@ -309,13 +309,22 @@ class ResearchConductor:
         await stream_output(
             "logs",
             "planning_research",
-            f"🌐 Browsing the web and planning research for query: {query}...",
+            f"🌐 Browsing the web to learn more about the task: {query}...",
+            self.researcher.websocket,
+        )
+
+        search_results = await get_search_results(query, self.researcher.retrievers[0])
+
+        await stream_output(
+            "logs",
+            "planning_research",
+            f"🤔 Planning the research strategy and subtasks...",
             self.researcher.websocket,
         )
 
         return await plan_research_outline(
             query=query,
-            retriever=self.researcher.retrievers[0],
+            search_results=search_results,
             agent_role_prompt=self.researcher.role,
             cfg=self.researcher.cfg,
             parent_query=self.researcher.parent_query,
