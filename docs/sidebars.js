@@ -82,6 +82,7 @@
       collapsed: true,
       items: [
         'gpt-researcher/search-engines/retrievers',
+        'gpt-researcher/search-engines/test-your-retriever'
         ]
     },
     {
