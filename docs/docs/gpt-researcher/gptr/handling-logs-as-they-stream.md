@@ -1,6 +1,6 @@
-# Handling logs of the GPTR Research Task
+# Handling Streaming Logs
 
-Here is a snippet of code to help you:
+Here is a snippet of code to help you handle the streaming logs of your Research tasks.
 
 ```python
 from typing import Dict, Any
@@ -47,3 +47,18 @@ async def run():
 if __name__ == "__main__":
     asyncio.run(run())
 ```
+
+The data from the research process will be logged and stored in the `CustomLogsHandler` instance. You can customize the logging behavior as needed for your application.
+
+Here's a sample of the output:
+
+```
+{
+    "type": "logs",
+    "content": "added_source_url",
+    "output": "✅ Added source url to research: https://www.npr.org/2023/09/28/1202110410/how-rumors-and-conspiracy-theories-got-in-the-way-of-mauis-fire-recovery\n",
+    "metadata": "https://www.npr.org/2023/09/28/1202110410/how-rumors-and-conspiracy-theories-got-in-the-way-of-mauis-fire-recovery"
+}
+```
+
+The `metadata` field will include whatever metadata is relevant to the log entry. Let the script above run to completion for the full logs output of a given research task.
