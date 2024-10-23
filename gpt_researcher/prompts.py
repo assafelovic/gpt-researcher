@@ -31,6 +31,7 @@ def generate_search_queries_prompt(
         task = question
 
     context_prompt = f"""
+You are a seasoned research assistant tasked with generating search queries to find relevant information for the following task: "{task}".
 Context: {context}
 
 Use this context to inform and refine your search queries. The context provides real-time web information that can help you generate more specific and relevant queries. Consider any current events, recent developments, or specific details mentioned in the context that could enhance the search queries.

@@ -48,6 +48,7 @@ class Config:
     def _set_llm_attributes(self) -> None:
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
+        self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
 
     def _handle_deprecated_attributes(self) -> None:
         if os.getenv("EMBEDDING_PROVIDER") is not None:
@@ -109,7 +110,7 @@ class Config:
             return DEFAULT_CONFIG
 
         # config_path = os.path.join(cls.CONFIG_DIR, config_path)
-        if not os.path.exists(config_path):
+        if not os.path.exists(config_path) and config_path:
             print(f"Warning: Configuration not found at '{config_path}'. Using default configuration.")
             if not config_path.endswith(".json"):
                 print(f"Do you mean '{config_path}.json'?")
