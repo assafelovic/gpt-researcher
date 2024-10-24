@@ -40,11 +40,12 @@ class ReportGenerator:
             str: The generated report.
         """
         # send the selected images prior to writing report
-        if self.researcher.research_images:
+        research_images = self.researcher.get_research_images()
+        if research_images:
             await stream_output(
                 "images",
                 "selected_images",
-                json.dumps(self.researcher.research_images),
+                json.dumps(research_images),
                 self.researcher.websocket,
             )
 

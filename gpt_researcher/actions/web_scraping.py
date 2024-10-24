@@ -30,7 +30,7 @@ def scrape_urls(urls, cfg=None) -> Tuple[List[Dict[str, Any]], List[Dict[str, An
         scraped_data = scraper.run()
         for item in scraped_data:
             if 'image_urls' in item:
-                images.extend([{'url': img_url} for img_url in item['image_urls']])
+                images.extend([img for img in item['image_urls']])
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
 

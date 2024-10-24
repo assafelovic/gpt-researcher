@@ -36,6 +36,7 @@
         'gpt-researcher/gptr/example',
         'gpt-researcher/gptr/config',
         'gpt-researcher/gptr/scraping',
+        'gpt-researcher/gptr/handling-logs-as-they-stream',
         'gpt-researcher/gptr/querying-the-backend',
         'gpt-researcher/gptr/automated-tests',
         'gpt-researcher/gptr/troubleshooting',
@@ -70,7 +71,8 @@
       collapsed: true,
       items: [
         'gpt-researcher/llms/llms',
-        'gpt-researcher/llms/running-with-ollama'
+        'gpt-researcher/llms/running-with-ollama',
+        'gpt-researcher/llms/testing-your-llm'
       ]
     },
     {
@@ -80,6 +82,7 @@
       collapsed: true,
       items: [
         'gpt-researcher/search-engines/retrievers',
+        'gpt-researcher/search-engines/test-your-retriever'
         ]
     },
     {
