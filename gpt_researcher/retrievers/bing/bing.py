@@ -4,6 +4,7 @@
 import os
 import requests
 import json
+import logging
 
 
 class BingSearch():
@@ -30,7 +31,8 @@ class BingSearch():
         try:
             api_key = os.environ["BING_API_KEY"]
         except:
-            raise Exception("Bing API key not found. Please set the BING_API_KEY environment variable.")
+            raise Exception(
+                "Bing API key not found. Please set the BING_API_KEY environment variable.")
         return api_key
 
     def search(self, max_results=7) -> list[dict[str]]:
@@ -42,16 +44,15 @@ class BingSearch():
         print("Searching with query {0}...".format(self.query))
         """Useful for general internet search queries using the Bing API."""
 
-
         # Search the query
         url = "https://api.bing.microsoft.com/v7.0/search"
 
         headers = {
-        'Ocp-Apim-Subscription-Key': self.api_key,
-        'Content-Type': 'application/json'
+            'Ocp-Apim-Subscription-Key': self.api_key,
+            'Content-Type': 'application/json'
         }
         params = {
-            "responseFilter" : "Webpages",
+            "responseFilter": "Webpages",
             "q": self.query,
             "count": max_results,
             "setLang": "en-GB",
@@ -59,7 +60,7 @@ class BingSearch():
             "textFormat": "HTML",
             "safeSearch": "Strict"
         }
-        
+
         resp = requests.get(url, headers=headers, params=params)
 
         # Preprocess the results
@@ -69,7 +70,8 @@ class BingSearch():
             search_results = json.loads(resp.text)
             results = search_results["webPages"]["value"]
         except Exception as e:
-            logger.error(f"Error parsing Bing search results: {e}. Resulting in empty response.")
+            logger.error(
+                f"Error parsing Bing search results: {e}. Resulting in empty response.")
             return []
         if search_results is None:
             logger.warning(f"No search results found for query: {self.query}")
