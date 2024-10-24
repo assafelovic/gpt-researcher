@@ -3,6 +3,7 @@ import os
 import re
 import time
 import shutil
+import boto3
 from typing import Dict, List, Any
 from fastapi.responses import JSONResponse
 from gpt_researcher.document.document import DocumentLoader
