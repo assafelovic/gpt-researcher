@@ -11,7 +11,7 @@ from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 
 
 def sanitize_filename(filename: str) -> str:
-    return re.sub(r"[^\w\s-]", "", filename).strip()
+    return re.sub(r"[^\w\s-]", "", filename.replace(" ","")).strip()
 
 
 async def handle_start_command(websocket, data: str, manager):
@@ -43,6 +43,8 @@ async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
     pdf_path = await write_md_to_pdf(report, filename)
     docx_path = await write_md_to_word(report, filename)
     md_path = await write_text_to_md(report, filename)
+    svc = boto3.client('s3', endpoint_url='https://fly.storage.tigris.dev')
+    response = svc.upload_file(md_path, "morning-wood-5868", md_path)  
     return {"pdf": pdf_path, "docx": docx_path, "md": md_path}
 
 
