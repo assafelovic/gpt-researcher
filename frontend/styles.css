@@ -15,7 +15,7 @@ html {
 }
 
 body {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Marcellus', serif;
     color: #fff;
     line-height: 1.6;
     background-color: #1e272e;
@@ -45,7 +45,7 @@ body {
 
 .container {
     padding: 20px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(50, 62, 136, 1);
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     transition: all .3s ease-in-out;
@@ -138,10 +138,10 @@ footer p {
 }
 
 #reportContainer {
-    font-family: 'Georgia', 'Times New Roman', Times, "Courier New", serif;
+    font-family: 'Marcellus', serif;
     font-size: 18px !important;
     background-color: rgba(255, 255, 255, 0.1);
-    font-family: 'Times New Roman', Times, "Courier New", serif;
+    font-family: 'Inter', sans-serif;
     border: none;
     color: #fff;
     transition: all .3s ease-in-out;
@@ -189,74 +189,65 @@ a:hover {
     text-decoration: underline;
 }
 
-/* Add or modify these styles at the end of the file */
+/* Add these styles at the end of the file */
 #selectedImagesContainer {
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 15px;
     margin-bottom: 20px;
-    color: #fff;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
+    color: #fff;  /* Ensure text is visible */
 }
 
 #selectedImagesContainer h3 {
-    width: 100%;
     margin-top: 0;
     margin-bottom: 10px;
-    color: #fff;
-}
-
-#selectedImagesContainer img {
-    width: 150px;
-    height: 150px;
-    object-fit: cover;
-    cursor: pointer;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border-radius: 8px;
-}
-
-#selectedImagesContainer img:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    color: #fff;  /* Ensure header is visible */
 }
 
 .image-dialog {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
 .image-dialog img {
-    max-width: 90%;
-    max-height: 80%;
-    object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  max-width: 90%;
+  max-height: 80%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .image-dialog button {
-    margin-top: 20px;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
 }
 
 .image-dialog button:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
+}
+
+#selectedImagesContainer img {
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#selectedImagesContainer img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
