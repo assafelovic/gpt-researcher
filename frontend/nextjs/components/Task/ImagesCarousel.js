@@ -130,7 +130,7 @@ export default function ImagesCarousel({ images }) {
             {/* Render the modal when it's open */}
             {selectedImage && (
                 <ImageModal
-                    imageSrc={selectedImage}
+                    imageSrc={validImages[activeIndex]}
                     isOpen={isModalOpen}
                     onClose={closeModal}
                     onNext={nextSlide}
