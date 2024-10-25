@@ -12,9 +12,11 @@ html {
   scroll-behavior: smooth;
 }
 
-main {
+.log-message {
   word-wrap: break-word; /* For handling long URLs or text */
-  overflow-wrap: break-word;
+  overflow-wrap: break-word; /* For handling overflow in modern browsers */
+  overflow-x: hidden; /* Hide horizontal overflow */
+  word-break: break-word; /* Break long words if needed */
 }
 
 body {

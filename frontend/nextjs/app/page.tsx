@@ -407,7 +407,7 @@ export default function Home() {
         {showResult && (
           <div className="flex h-full min-h-[68vh] w-full grow flex-col justify-between">
             <div className="container w-full space-y-2">
-              <div className="container space-y-2">
+              <div className="container space-y-2 task-components">
                 {renderComponentsInOrder()}
               </div>
 
