@@ -59,13 +59,13 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
             {processedLogs.map((log, index) => {
               if (log.header === 'subquery_context_window' || log.header === 'differences') {
                 return <Accordion key={index} logs={[log]} />;
-              } else if(log.header === 'scraping_images') {
+              } else if(log.header === "selected_images") {
                 return (
                   <ImagesCarousel
                     images={log.metadata}
                   />
                 )
-              } else if(log.header !== "selected_images") {
+              } else if(log.header !== 'scraping_images') {
                 return (
                   <div
                     key={index}
