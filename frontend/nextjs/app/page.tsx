@@ -332,11 +332,9 @@ export default function Home() {
         }));
 
         return (
-          <section className="relative z-20 overflow-hidden pb-12 pt-20 lg:pb-[20px] lg:pt-[20px]">
-            <div className="container mx-auto">
+           <div className="container mx-auto">
               <LogMessage key={uniqueKey} logs={logs} />
             </div>
-          </section>
         )
 
       } else if (data.type === 'sourceBlock') {
