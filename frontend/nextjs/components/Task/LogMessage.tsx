@@ -52,9 +52,6 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
   }, [logs]);
 
   return (
-    <section className="relative z-20 overflow-hidden pb-12 pt-20 lg:pb-[20px] lg:pt-[20px]">
-      <div className="container mx-auto">
-        <div className="-mx-4 flex flex-wrap justify-center">
           <div className="w-full px-4">
             {processedLogs.map((log, index) => {
               if (log.header === 'subquery_context_window' || log.header === 'differences') {
@@ -79,9 +76,6 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
               }
             })}
           </div>
-        </div>
-      </div>
-    </section>
   );
 };
 
