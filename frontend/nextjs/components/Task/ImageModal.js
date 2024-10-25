@@ -1,11 +1,11 @@
 import React from 'react';
 
-export default function ImageModal({ imageSrc, isOpen, onClose }) {
+export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }) {
     if (!isOpen) return null;
 
     const handleClose = (e) => {
         if (e.target === e.currentTarget) {
-            onClose();
+                onClose();
         }
     };
 
@@ -39,6 +39,12 @@ export default function ImageModal({ imageSrc, isOpen, onClose }) {
                     alt="Full view"
                     className="max-h-[80vh] max-w-full object-contain"
                 />
+                <button onClick={onPrev} className="absolute left-0 p-2 text-white">
+                    Prev
+                </button>
+                <button onClick={onNext} className="absolute right-0 p-2 text-white">
+                    Next
+                </button>
             </div>
         </div>
     );
