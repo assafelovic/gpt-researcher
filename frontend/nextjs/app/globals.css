@@ -12,6 +12,11 @@ html {
   scroll-behavior: smooth;
 }
 
+main {
+  word-wrap: break-word; /* For handling long URLs or text */
+  overflow-wrap: break-word;
+}
+
 body {
   font-family: 'Montserrat', sans-serif;
   line-height: 1.6;
