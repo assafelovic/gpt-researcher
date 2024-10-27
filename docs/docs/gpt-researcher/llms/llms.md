@@ -53,8 +53,8 @@ EMBEDDING_PROVIDER=azure_openai
 AZURE_OPENAI_API_KEY=[Your Key]
 AZURE_OPENAI_ENDPOINT=https://<your-endpoint>.openai.azure.com/
 OPENAI_API_VERSION=2024-05-01-preview
-FAST_LLM=openai:gpt-4o-mini # note that the deplyment name must be the same as the model name
-SMART_LLM=openai:gpt-4o # note that the deplyment name must be the same as the model name
+FAST_LLM=azure_openai:gpt-4o-mini # note that the deplyment name must be the same as the model name
+SMART_LLM=azure_openai:gpt-4o # note that the deplyment name must be the same as the model name
 
 AZURE_EMBEDDING_MODEL=text-embedding-3-small # must be in the same region/resource as the models used
 
