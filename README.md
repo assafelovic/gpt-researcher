@@ -1,4 +1,4 @@
-<div align="center">
+<div align="center" id="top">
 <!--<h1 style="display: flex; align-items: center; gap: 10px;">
   <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/a45bac7c-092c-42e5-8eb6-69acbf20dde5" alt="Logo" width="25">
   GPT Researcher
@@ -67,6 +67,7 @@ More specifically:
 
 ## Features
 - 📝 Generate research, outlines, resources and lessons reports with local documents and web sources
+- 🖼️ Supports smart article image scraping and filtering
 - 📜 Can generate long and detailed research reports (over 2K words)
 - 🌐 Aggregates over 20 web sources per research to form objective and factual conclusions
 - 🖥️ Includes both lightweight (HTML/CSS/JS) and production ready (NextJS + Tailwind) UX/UI
@@ -244,4 +245,9 @@ Our view on unbiased research claims:
     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date" />
   </picture>
 </a>
+</p>
+
+
+<p align="right">
+  <a href="#top">⬆️ Back to Top</a>
 </p>

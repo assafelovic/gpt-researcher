@@ -19,9 +19,10 @@ You can also include your own external JSON file `config.json` by adding the pat
 Below is a list of current supported options:
 
 - **`RETRIEVER`**: Web search engine used for retrieving sources. Defaults to `tavily`. Options: `duckduckgo`, `bing`, `google`, `searchapi`, `serper`, `searx`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
-- **`EMBEDDING_PROVIDER`**: Provider for embedding model. Defaults to `openai`. Options: `ollama`, `huggingface`, `azure_openai`, `custom`.
+- **`EMBEDDING`**: Embedding model. Defaults to `openai:text-embedding-3-small`. Options: `ollama`, `huggingface`, `azure_openai`, `custom`.
 - **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `openai:gpt-4o-mini`.
 - **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-4o`.
+- **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `openai:o1-preview`.
 - **`FAST_TOKEN_LIMIT`**: Maximum token limit for fast LLM responses. Defaults to `2000`.
 - **`SMART_TOKEN_LIMIT`**: Maximum token limit for smart LLM responses. Defaults to `4000`.
 - **`BROWSE_CHUNK_MAX_LENGTH`**: Maximum length of text chunks to browse in web sources. Defaults to `8192`.
@@ -60,10 +61,9 @@ Here is an example for [Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai
 
 OPENAI_API_VERSION="2024-05-01-preview" # or whatever you are using
 AZURE_OPENAI_ENDPOINT="https://CHANGEMEN.openai.azure.com/" # change to the name of your deployment
-AZURE_OPENAI_API_KEY="CHANGEME" # change to your API key
+AZURE_OPENAI_API_KEY="[Your Key]" # change to your API key
 
-EMBEDDING_PROVIDER="azureopenai"
-AZURE_EMBEDDING_MODEL="text-embedding-ada-002" # change to the deployment of your embedding model
+EMBEDDING="azure_openai:text-embedding-ada-002" # change to the deployment of your embedding model
 
 FAST_LLM="azure_openai:gpt-4o-mini" # change to the name of your deployment (not model-name)
 FAST_TOKEN_LIMIT=4000
@@ -72,6 +72,6 @@ SMART_LLM="azure_openai:gpt-4o" # change to the name of your deployment (not mod
 SMART_TOKEN_LIMIT=4000
 
 RETRIEVER="bing" # if you are using Bing as your search engine (which is likely if you use Azure)
-BING_API_KEY="CHANGEME"
+BING_API_KEY="[Your Key]"
 
 ```

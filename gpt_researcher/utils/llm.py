@@ -22,7 +22,7 @@ def get_llm(llm_provider, **kwargs):
 async def create_chat_completion(
         messages: list,  # type: ignore
         model: Optional[str] = None,
-        temperature: float = 0.4,
+        temperature: Optional[float] = 0.4,
         max_tokens: Optional[int] = 4000,
         llm_provider: Optional[str] = None,
         stream: Optional[bool] = False,
