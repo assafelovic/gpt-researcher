@@ -50,8 +50,8 @@ EMBEDDING="azure_openai:text-embedding-ada-002"
 AZURE_OPENAI_API_KEY=[Your Key]
 AZURE_OPENAI_ENDPOINT=https://<your-endpoint>.openai.azure.com/
 OPENAI_API_VERSION=2024-05-01-preview
-FAST_LLM=openai:gpt-4o-mini # note that the deployment name must be the same as the model name
-SMART_LLM=openai:gpt-4o # note that the deployment name must be the same as the model name
+FAST_LLM=azure_openai:gpt-4o-mini # note that the deployment name must be the same as the model name
+SMART_LLM=azure_openai:gpt-4o # note that the deployment name must be the same as the model name
 ```
 
 
