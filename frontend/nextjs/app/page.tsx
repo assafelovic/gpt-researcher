@@ -319,6 +319,7 @@ export default function Home() {
   const renderComponentsInOrder = () => {
     const groupedData = preprocessOrderedData(orderedData);
     console.log('orderedData in renderComponentsInOrder: ', groupedData)
+    let statusReports = ["agent_generated","starting_research","planning_research"]
 
     return groupedData.map((data, index) => {
       if (data.type === 'accordionBlock') {
@@ -330,7 +331,11 @@ export default function Home() {
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
 
-        return <LogMessage key={uniqueKey} logs={logs} />;
+        return (
+           <div className="container mx-auto">
+              <LogMessage key={uniqueKey} logs={logs} />
+            </div>
+        )
 
       } else if (data.type === 'sourceBlock') {
         const uniqueKey = `sourceBlock-${index}`;
@@ -370,6 +375,16 @@ export default function Home() {
           );
         } else if (type === 'path') {
           return <AccessReport key={uniqueKey} accessData={output} report={answer} />;
+        } else if (statusReports.includes(data.content)) {
+          const uniqueKey = `accordionBlock-${index}`;
+          const logs = [{
+            header: data.content,
+            text: data.output,
+            metadata: data.metadata,
+            key: `${data.type}-${data.content}`,
+          }]
+
+          return <LogMessage key={uniqueKey} logs={logs} />;
         } else {
           return null;
         }
@@ -392,7 +407,7 @@ export default function Home() {
         {showResult && (
           <div className="flex h-full min-h-[68vh] w-full grow flex-col justify-between">
             <div className="container w-full space-y-2">
-              <div className="container space-y-2">
+              <div className="container space-y-2 task-components">
                 {renderComponentsInOrder()}
               </div>
 
