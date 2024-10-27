@@ -66,7 +66,7 @@ export default function Answer({ answer }: { answer: string }) {
           )}
         </div>
         <div className="flex flex-wrap content-center items-center gap-[15px]">
-          <div className="w-full whitespace-pre-wrap text-base font-light leading-[152.5%] text-white">
+          <div className="w-full whitespace-pre-wrap text-base font-light leading-[152.5%] text-white log-message">
             {answer ? (
               <div className="answer-container">
                 <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
