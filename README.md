@@ -39,7 +39,7 @@ https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 
 ## Architecture
 
-The core idea is to utilize 'planner' and 'execution' agents. The planner generates research questions, while the execution agents gather relevant information. The planner then aggregates all findings into a comprehensive report.
+The core idea is to utilize 'planner' and 'execution' agents. The planner generates research questions, while the execution agents gather relevant information. The publisher then aggregates all findings into a comprehensive report.
 
 <div align="center">
 <img align="center" height="600" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527">
