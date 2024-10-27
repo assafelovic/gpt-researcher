@@ -52,26 +52,23 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
   }, [logs]);
 
   return (
-    <section className="relative z-20 overflow-hidden pb-12 pt-20 lg:pb-[20px] lg:pt-[20px]">
-      <div className="container mx-auto">
-        <div className="-mx-4 flex flex-wrap justify-center">
-          <div className="w-full px-4">
+          <div className="w-full px-4 log-message">
             {processedLogs.map((log, index) => {
               if (log.header === 'subquery_context_window' || log.header === 'differences') {
                 return <Accordion key={index} logs={[log]} />;
-              } else if(log.header === 'scraping_images') {
+              } else if(log.header === "selected_images") {
                 return (
                   <ImagesCarousel
                     images={log.metadata}
                   />
                 )
-              } else if(log.header !== "selected_images") {
+              } else if(log.header !== 'scraping_images') {
                 return (
                   <div
                     key={index}
-                    className="mb-4 w-full max-w-4xl mx-auto rounded-lg p-4 bg-gray-800 shadow-md"
+                    className="mb-4 w-full max-w-4xl mx-auto rounded-lg p-4 bg-gray-800 shadow-md log-message"
                   >
-                    <p className="py-3 text-base leading-relaxed text-white dark:text-white">
+                    <p className="py-3 text-base leading-relaxed text-white dark:text-white log-message">
                       {log.text}
                     </p>
                   </div>
@@ -79,9 +76,6 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
               }
             })}
           </div>
-        </div>
-      </div>
-    </section>
   );
 };
 

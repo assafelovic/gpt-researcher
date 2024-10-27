@@ -47,6 +47,8 @@ class ReportGenerator:
                 "selected_images",
                 json.dumps(research_images),
                 self.researcher.websocket,
+                True,
+                research_images
             )
 
         context = ext_context or self.researcher.context
