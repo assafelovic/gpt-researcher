@@ -1,9 +1,8 @@
-from typing import List, Dict, Optional, Set
-import hashlib
-import re
+from typing import List, Dict
 
 from ..actions.utils import stream_output
 from ..actions.web_scraping import scrape_urls
+from ..scraper.utils import get_image_hash  # Add this import
 
 
 class BrowserManager:
@@ -61,25 +60,26 @@ class BrowserManager:
 
     def select_top_images(self, images: List[Dict], k: int = 2) -> List[str]:
         """
-        Select top k images and remove duplicates.
+        Select most relevant images and remove duplicates based on image content.
 
         Args:
-            images (List[Dict]): List of image dictionaries with 'url' keys.
-            k (int): Number of top images to select.
+            images (List[Dict]): List of image dictionaries with 'url' and 'score' keys.
+            k (int): Number of top images to select if no high-score images are found.
 
         Returns:
-            List[str]: List of selected top image URLs.
+            List[str]: List of selected image URLs.
         """
-        # Remove duplicates based on image URL
         unique_images = []
-        image_hashes = set()
+        seen_hashes = set()
         current_research_images = self.researcher.get_research_images()
 
-        for img in images:
-            img_hash = hashlib.md5(img['url'].encode()).hexdigest()
-            if img_hash not in image_hashes and img_hash not in {hashlib.md5(existing_img.encode()).hexdigest()
-                                                                 for existing_img in current_research_images}:
-                image_hashes.add(img_hash)
+        # First, select all score 2 and 3 images
+        high_score_images = [img for img in images if img['score'] >= 2]
+
+        for img in high_score_images + images:  # Process high-score images first, then all images
+            img_hash = get_image_hash(img['url'])
+            if img_hash and img_hash not in seen_hashes and img['url'] not in current_research_images:
+                seen_hashes.add(img_hash)
                 unique_images.append(img['url'])
 
                 if len(unique_images) == k:

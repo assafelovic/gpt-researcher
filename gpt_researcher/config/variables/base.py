@@ -4,11 +4,11 @@ from typing_extensions import TypedDict
 
 class BaseConfig(TypedDict):
     RETRIEVER: str
-    EMBEDDING_PROVIDER: str
+    EMBEDDING: str
     SIMILARITY_THRESHOLD: float
-    OLLAMA_BASE_URL: Union[str, None]
     FAST_LLM: str
     SMART_LLM: str
+    STRATEGIC_LLM: str
     FAST_TOKEN_LIMIT: int
     SMART_TOKEN_LIMIT: int
     BROWSE_CHUNK_MAX_LENGTH: int
