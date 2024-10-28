@@ -35,7 +35,7 @@ class SearxSearch():
                 "You can find public instances at https://searx.space/"
             )
 
-    def search(self, max_results: int = 7) -> List[Dict[str, str]]:
+    def search(self, max_results: int = 10) -> List[Dict[str, str]]:
         """
         Searches the query using SearxNG API
         Args:
@@ -46,12 +46,10 @@ class SearxSearch():
         search_url = urljoin(self.base_url, "search")
         
         params = {
-            'q': self.query,
-            'format': 'json',
-            'pageno': 1,
-            'categories': 'general',
-            'engines': 'google,bing,duckduckgo',  # TODO: Add environment variable to customize the engines
-            'results': max_results
+            # The search query. 
+            'q': self.query, 
+            # Output format of results. Format needs to be activated in searxng config.
+            'format': 'json'
         }
 
         try:
