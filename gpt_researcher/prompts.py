@@ -72,6 +72,31 @@ Every url should be hyperlinked: [url website](url)
 Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report: 
 
 eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
+
+# SPECIAL INSTRUCTIONS FOR PMC 
+PubMed Central (PMC) references (i.e., those with https://www.ncbi.nlm.nih.gov/pmc URLs) are different and must only use information included in the Information Source and Title. Example:
+
+Source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11305834/\nTitle: Calcium plays an essential role in early-stage dendrite injury detection and regeneration - PMC\nContent: While our study ... 
+
+should result in a reference:
+
+## CORRECT EXAMPLE
+Calcium plays an essential role in early-stage dendrite injury detection and regeneration. [PMC11305834](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11305834)
+
+## INCORRECT EXAMPLE; This adds unnecessary information 
+Calcium plays an essential role in early-stage dendrite injury detection and regeneration. (n.d.). PubMed Central (PMC). https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11305834
+
+Do NOT refer to specific authors in cases where the Source includes a NLM PMC URL. 
+
+Hyperlinks in the report for PMC references must take the form: 
+
+## CORRECT EXAMPLE
+Excessive calcium intake can lead to the formation of kidney stones, [PMC11305834](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11305834).
+
+## INCORRECT EXAMPLE; titles in the links too long
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11305834
+
+Calcium plays an essential role in early-stage dendrite injury detection and regeneration, [Calcium plays an essential role in early-stage dendrite injury detection and regeneration](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11305834).
 """
     else:
         reference_prompt = f"""
