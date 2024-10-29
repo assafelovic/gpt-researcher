@@ -38,7 +38,6 @@ class ContextManager:
         vectorstore_compressor = VectorstoreCompressor(self.researcher.vector_store, filter)
         return await vectorstore_compressor.async_get_context(query=query, max_results=8)
     
-    
     async def get_similar_written_contents_by_draft_section_titles(
         self,
         current_subtopic: str,
@@ -84,18 +83,4 @@ class ContextManager:
         )
         return await written_content_compressor.async_get_context(
             query=query, max_results=max_results, cost_callback=self.researcher.add_costs
-        )
-
-    async def get_similar_content_by_query_with_vectorstore(self, query, filter):
-        if self.researcher.verbose:
-            await stream_output(
-                "logs",
-                "fetching_query_content",
-                f"📚 Getting relevant content based on query: {query}...",
-                self.researcher.websocket,
-            )
-        vectorstore_compressor = VectorstoreCompressor(
-            self.researcher.vector_store, filter)
-        return await vectorstore_compressor.async_get_context(
-            query=query, max_results=8
         )
