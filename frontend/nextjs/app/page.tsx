@@ -395,7 +395,7 @@ export default function Home() {
   return (
     <>
       <Header />
-      <main className="h-full px-4 pb-4 pt-10">
+      <main className="h-full px-4 pb-4">
         {!showResult && (
           <Hero
             promptValue={promptValue}
