@@ -17,7 +17,7 @@ class Memory:
         _embeddings = None
         match embedding_provider:
             case "ollama":
-                from langchain_community.embeddings import OllamaEmbeddings
+                from langchain_ollama import OllamaEmbeddings
 
                 _embeddings = OllamaEmbeddings(
                     model=model,
