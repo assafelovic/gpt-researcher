@@ -21,7 +21,7 @@ const Hero: FC<THeroProps> = ({
     <div>
       <div className="flex flex-col items-center justify-center sm:mt-12 mt-8">
         <div className="landing flex flex-col items-center">
-          <h1 className="text-4xl font-extrabold text-center lg:text-7xl mb-6 lg:mb-10">
+          <h1 className="text-4xl font-extrabold text-center lg:text-7xl">
             Say Goodbye to <br />
             <span
               style={{
@@ -39,7 +39,7 @@ const Hero: FC<THeroProps> = ({
         </div>
 
         {/* Input section */}
-        <div className="w-full max-w-[708px] pb-6 mt-20">
+        <div className="w-full max-w-[708px] pb-6">
           <InputArea
             promptValue={promptValue}
             setPromptValue={setPromptValue}
