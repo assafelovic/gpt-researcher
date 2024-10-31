@@ -14,6 +14,7 @@ from backend.server.server_utils import (
     update_environment_variables, handle_file_upload, handle_file_deletion,
     execute_multi_agents, handle_websocket_communication
 )
+from backend.server.database import init_db, save_research, get_all_research, get_research_by_id
 
 # Models
 
@@ -72,6 +73,7 @@ def startup_event():
     os.makedirs("outputs", exist_ok=True)
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
     os.makedirs(DOC_PATH, exist_ok=True)
+    init_db()  # Initialize the database
 
 # Routes
 
@@ -127,6 +129,20 @@ async def upload_file(file: UploadFile = File(...)):
 @app.delete("/files/{filename}")
 async def delete_file(filename: str):
     return await handle_file_deletion(filename, DOC_PATH)
+
+
+@app.get("/history")
+async def history_page(request: Request):
+    research_history = get_all_research()
+    return templates.TemplateResponse("history.html", {"request": request, "history": research_history})
+
+
+@app.get("/history/{research_id}")
+async def get_research(research_id: int):
+    research = get_research_by_id(research_id)
+    if research:
+        return {"id": research[0], "title": research[1], "content": research[2], "created_at": research[3]}
+    return {"error": "Research not found"}, 404
 
 
 @app.websocket("/ws")

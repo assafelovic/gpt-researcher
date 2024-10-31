@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from gpt_researcher.document.document import DocumentLoader
 # Add this import
 from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
+from backend.server.database import save_research
 
 
 def sanitize_filename(filename: str) -> str:
@@ -29,6 +30,10 @@ async def handle_start_command(websocket, data: str, manager):
         task, report_type, report_source, source_urls, tone, websocket, headers
     )
     report = str(report)
+    
+    # Save to SQLite database
+    save_research(title=task, content=report)
+
     file_paths = await generate_report_files(report, sanitized_filename)
     await send_file_paths(websocket, file_paths)
 

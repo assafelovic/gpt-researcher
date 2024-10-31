@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Research History - GPT Researcher</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="./static/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/site/styles.css" />
+    <style>
+        .history-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .history-item:hover {
+            background-color: #f5f5f5;
+        }
+        .history-meta {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .history-list {
+            margin: 2rem 0;
+        }
+        .modal-content {
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        .modal-body {
+            color: #212529;
+        }
+        #modalContent {
+            color: #212529;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="font-size: 32px; font-weight: bold; text-align: center; margin: 20px 0;">Research History</h1>
+    <main class="container">
+
+        <div class="text-center mb-4">
+            <a href="/" class="btn btn-primary">New Research</a>
+        </div>
+        <div class="history-list">
+            {% for item in history %}
+            <div class="history-item">
+                <h3>{{ item[1] }}</h3>
+                <div class="history-meta">
+                    ID: {{ item[0] }} | Date: {{ item[3] }}
+                </div>
+                <a href="#" class="btn btn-sm btn-secondary mt-2" 
+                   onclick="showContent('{{ item[0] }}')">View Report</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        
+
+        
+    </main>
+
+    <!-- Add required scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Update the modal structure -->
+    <div class="modal fade" id="contentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Research Report</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalContent" class="margin-div"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function showContent(id) {
+            const response = await fetch(`/history/${id}`);
+            const data = await response.json();
+            
+            const converter = new showdown.Converter();
+            const html = converter.makeHtml(data.content);
+            
+            document.getElementById('modalContent').innerHTML = html;
+            $('#contentModal').modal('show');
+        }
+    </script>
+
+    <footer>
+        <p>
+            <a target="_blank" href="https://gptr.dev">Homepage</a> |
+            <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GitHub</a> |
+            <a target="_blank" href="https://discord.gg/spBgZmm3Xe">Discord</a>
+        </p>
+        <p>GPT Researcher &copy; 2024</p>
+    </footer>
+</body>
+</html>
