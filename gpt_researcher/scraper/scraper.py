@@ -49,6 +49,7 @@ class Scraper:
 
             if len(content) < 100:
                 return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+            
             return {"url": link, "raw_content": content, "image_urls": image_urls, "title": title}
         except Exception as e:
             return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
