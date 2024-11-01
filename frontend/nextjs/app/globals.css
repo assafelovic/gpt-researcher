@@ -12,6 +12,10 @@ html {
   scroll-behavior: smooth;
 }
 
+textarea {
+  transition: height 0.2s ease-in-out;
+}
+
 .log-message {
   word-wrap: break-word; /* For handling long URLs or text */
   overflow-wrap: break-word; /* For handling overflow in modern browsers */
