@@ -26,7 +26,7 @@ export default function Answer({ answer }: { answer: string }) {
   }, [answer]);
   
   return (
-    <div className="container flex h-auto w-full shrink-0 gap-4 bg-gray-800 shadow-md rounded-lg border border-solid border-[#C2C2C2] p-5">
+    <div className="container flex h-auto w-full shrink-0 gap-4 bg-gray-900 shadow-md rounded-lg border border-solid border-[#C2C2C2] p-5">
       <div className="w-full">
         <div className="flex items-center justify-between pb-3">
           {answer && (
@@ -82,7 +82,7 @@ export default function Answer({ answer }: { answer: string }) {
                     padding: 0;
                     /* Override existing styles for headings */
                     h1, h2, h3, h4, h5, h6 {
-                      font-size: 18px; font-weight: 400; padding: 0;
+                      font-size: 22px; font-weight: 400; padding: 0;
                       line-height: 1.2;
                     }
                     /* Optionally add more specific styling */
@@ -108,17 +108,17 @@ export default function Answer({ answer }: { answer: string }) {
                     ul {
                       list-style-type: none;
                       padding-left: 0;
-                      margin-bottom: 1em;
+                      margin-bottom: 0.2em;
                     }
                     ul > li {
-                      margin-bottom: 0.5em;
+                      margin-bottom: 0.2em;
                     }
                     ul > li > ul {
                       margin-left: 1em;
                       list-style-type: disc;
                     }
                     ul > li > ul > li {
-                      margin-bottom: 0.3em;
+                      margin-bottom: 0.2em;
                     }
                     ul > li > ul > li > ul {
                       margin-left: 1em;
