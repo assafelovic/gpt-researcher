@@ -33,7 +33,7 @@ const InputArea: FC<TInputAreaProps> = ({
   reset,
 }) => {
   const placeholder = handleSecondary
-    ? "Follow up questions..."
+    ? "Have any follow up questions?"
     : "What would you like to research next?";
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -83,37 +83,6 @@ const InputArea: FC<TInputAreaProps> = ({
         resetHeight();
       }}
     >
-      {handleSecondary && (
-        <div
-          role="button"
-          aria-disabled={disabled}
-          className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-[linear-gradient(154deg,#1B1B16_23.37%,#565646_91.91%)] disabled:pointer-events-none disabled:opacity-75"
-          onClick={(e) => {
-            if (!disabled) {
-              e.preventDefault();
-              if (reset) reset();
-              handleSecondary(promptValue);
-              setPromptValue(''); // Clear prompt value
-              resetHeight();
-            }
-          }}
-        >
-          {disabled && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <TypeAnimation />
-            </div>
-          )}
-
-          <Image
-            unoptimized
-            src={"/img/search.svg"}
-            alt="search"
-            width={24}
-            height={24}
-            className={disabled ? "invisible" : ""}
-          />
-        </div>
-      )}
 
       <textarea
         placeholder={placeholder}
