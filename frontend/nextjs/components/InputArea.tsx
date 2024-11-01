@@ -1,7 +1,6 @@
 import Image from "next/image";
-import { FC } from "react";
+import { FC, useRef } from "react";
 import TypeAnimation from "./TypeAnimation";
-import { useRef } from "react";
 
 type TInputAreaProps = {
   promptValue: string;
@@ -15,33 +14,34 @@ type TInputAreaProps = {
 const InputArea: FC<TInputAreaProps> = ({
   promptValue,
   setPromptValue,
-  handleSubmit: handleSubmit,
-  handleSecondary: handleSecondary,
+  handleSubmit,
+  handleSecondary,
   disabled,
   reset,
 }) => {
-  const placeholder = handleSecondary ? "Follow up questions..." : "What would you like to research next?"
+  const placeholder = handleSecondary
+    ? "Follow up questions..."
+    : "What would you like to research next?";
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const resetHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.setProperty('height', '3em', 'important');
+      textareaRef.current.style.height = '3em'; // Reset to base height
     }
   };
-  
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
       if (e.shiftKey) {
-        // Allow new line on Shift+Enter
-        return;
+        return; // Allow new line on Shift+Enter
       } else {
-        // Submit form on Enter
         e.preventDefault();
         if (!disabled) {
           if (reset) reset();
           handleSubmit(promptValue);
-          resetHeight()
+          setPromptValue(''); // Clear prompt value
+          resetHeight(); // Reset height after submit
         }
       }
     }
@@ -54,24 +54,24 @@ const InputArea: FC<TInputAreaProps> = ({
         e.preventDefault();
         if (reset) reset();
         handleSubmit(promptValue);
+        setPromptValue(''); // Clear prompt value
         resetHeight();
       }}
     >
-      {
-        handleSecondary &&
+      {handleSecondary && (
         <div
-          role="button" 
+          role="button"
           aria-disabled={disabled}
           className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-[linear-gradient(154deg,#1B1B16_23.37%,#565646_91.91%)] disabled:pointer-events-none disabled:opacity-75"
-          onClick={(e) =>{
-            if (!disabled){
+          onClick={(e) => {
+            if (!disabled) {
               e.preventDefault();
               if (reset) reset();
               handleSecondary(promptValue);
-              resetHeight()
-              }
+              setPromptValue(''); // Clear prompt value
+              resetHeight();
             }
-          }
+          }}
         >
           {disabled && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -88,11 +88,12 @@ const InputArea: FC<TInputAreaProps> = ({
             className={disabled ? "invisible" : ""}
           />
         </div>
-      }
+      )}
 
       <textarea
         placeholder={placeholder}
-        className="h-auto focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal] 
+        ref={textareaRef}
+        className="focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal] 
         text-[#1B1B16]/30 text-black outline-none focus-visible:ring-0 focus-visible:ring-offset-0 
         sm:text-xl min-h-[3em] resize-none overflow-hidden"
         disabled={disabled}
@@ -101,8 +102,8 @@ const InputArea: FC<TInputAreaProps> = ({
         rows={2}
         onKeyDown={handleKeyDown}
         onChange={(e) => {
-          // Auto-adjust height
-          e.target.style.height = `${e.target.scrollHeight}px`;
+          // e.target.style.height = 'auto'; // Reset height to auto to allow shrinking
+          e.target.style.height = `${e.target.scrollHeight}px`; // Adjust height
           setPromptValue(e.target.value);
         }}
       />

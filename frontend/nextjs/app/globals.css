@@ -13,7 +13,9 @@ html {
 }
 
 textarea {
-  transition: height 0.2s ease-in-out;
+  max-height: 300px; /* Set an appropriate max height */
+  overflow-y: auto;  /* Enable internal scrolling */
+  /* transition: height 0.2s ease-in-out; */
 }
 
 .log-message {
