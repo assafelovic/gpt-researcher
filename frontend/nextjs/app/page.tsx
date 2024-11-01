@@ -414,7 +414,7 @@ export default function Home() {
   return (
     <>
       <Header />
-      <main className="h-full px-4 pb-[72px]">
+      <main className="min-h-[calc(100vh-64px)]">
         {!showResult && (
           <Hero
             promptValue={promptValue}
