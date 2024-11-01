@@ -1,4 +1,6 @@
-export const createWebSocket = (onMessage: (data: any) => void, onOpen?: () => void) => {
+import { Data } from '../types/data';
+
+export const createWebSocket = (onMessage: (data: Data) => void, onOpen?: () => void) => {
   if (typeof window === 'undefined') return null;
 
   const { protocol, pathname, host } = window.location;
@@ -8,7 +10,7 @@ export const createWebSocket = (onMessage: (data: any) => void, onOpen?: () => v
   const socket = new WebSocket(ws_uri);
   
   socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
+    const data = JSON.parse(event.data) as Data;
     onMessage(data);
   };
 

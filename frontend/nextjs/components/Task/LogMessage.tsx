@@ -3,7 +3,7 @@ import Accordion from './Accordion';
 import { useEffect, useState } from 'react';
 import { remark } from 'remark';
 import html from 'remark-html';
-import ImagesCarousel from './ImagesGrid';
+import ImagesCarousel from './ImagesCarousel';
 
 type ProcessedData = {
   field: string;

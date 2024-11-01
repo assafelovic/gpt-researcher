@@ -18,36 +18,18 @@ import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
 import HumanFeedback from "@/components/HumanFeedback";
 import LoadingDots from "@/components/LoadingDots";
-
-interface BaseData {
-  type: string;
-}
-
-interface BasicData extends BaseData {
-  type: 'basic';
-  content: string;
-}
-
-interface LanggraphButtonData extends BaseData {
-  type: 'langgraphButton';
-  link: string;
-}
-
-interface DifferencesData extends BaseData {
-  type: 'differences';
-  content: string;
-  output: string;
-}
-
-type Data = BasicData | LanggraphButtonData | DifferencesData;
-
+import { Data, ChatBoxSettings, QuestionData } from '../types/data';
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
   const [showResult, setShowResult] = useState(false);
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState({ report_source: 'web', report_type: 'research_report', tone: 'Objective' });
+  const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({ 
+    report_source: 'web', 
+    report_type: 'research_report', 
+    tone: 'Objective' 
+  });
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const [question, setQuestion] = useState("");
@@ -57,7 +39,7 @@ export default function Home() {
   const [orderedData, setOrderedData] = useState<Data[]>([]);
   const heartbeatInterval = useRef<number>();
   const [showHumanFeedback, setShowHumanFeedback] = useState(false);
-  const [questionForHuman, setQuestionForHuman] = useState(false);
+  const [questionForHuman, setQuestionForHuman] = useState<true | false>(false);
   
 
   useEffect(() => {
@@ -150,25 +132,31 @@ export default function Home() {
     setShowHumanFeedback(false);
   };
 
-  const handleChat = async (message : string) =>{
-    if(socket){
+  const handleChat = async (message: string) => {
+    if (socket) {
       setShowResult(true);
       setQuestion(message);
       setLoading(true);
       setPromptValue("");
-      setAnswer(""); // Reset answer for new query
-      setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: message }]);
-      const data : string =  "chat" + JSON.stringify({"message": message});
-      socket.send(data)
-    } 
-  }
+      setAnswer("");
+
+      const questionData: QuestionData = { 
+        type: 'question', 
+        content: message 
+      };
+      setOrderedData(prevOrder => [...prevOrder, questionData]);
+      
+      const data = `chat${JSON.stringify({ message })}`;
+      socket.send(data);
+    }
+  };
 
   const handleDisplayResult = async (newQuestion: string) => {
     setShowResult(true);
     setLoading(true);
     setQuestion(newQuestion);
     setPromptValue("");
-    setAnswer(""); // Reset answer for new query
+    setAnswer("");
 
     // Add the new question to orderedData
     setOrderedData((prevOrder:any) => [...prevOrder, { type: 'question', content: newQuestion }]);

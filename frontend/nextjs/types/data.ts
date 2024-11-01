@@ -23,7 +23,12 @@ export interface QuestionData extends BaseData {
   content: string;
 }
 
-export type Data = BasicData | LanggraphButtonData | DifferencesData | QuestionData;
+export interface ChatData extends BaseData {
+  type: 'chat';
+  content: string;
+}
+
+export type Data = BasicData | LanggraphButtonData | DifferencesData | QuestionData | ChatData;
 
 export interface ChatBoxSettings {
   report_source: string;
