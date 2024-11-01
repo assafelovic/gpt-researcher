@@ -12,9 +12,9 @@ type TInputAreaProps = {
 };
 
 // Debounce function to limit the rate at which a function can fire
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
+function debounce(func: Function, wait: number) {
+  let timeout: NodeJS.Timeout | undefined;
+  return function executedFunction(...args: any[]) {
     const later = () => {
       clearTimeout(timeout);
       func(...args);
