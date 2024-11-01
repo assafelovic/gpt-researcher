@@ -70,8 +70,6 @@ class WebSocketManager:
 
     async def chat(self, message, websocket):
         """Chat with the agent based message diff"""
-        print("Chat message: ", message)
-        print("Chat agent: ", self.chat_agent)
         if self.chat_agent:
             await self.chat_agent.chat(message, websocket)
         else:
