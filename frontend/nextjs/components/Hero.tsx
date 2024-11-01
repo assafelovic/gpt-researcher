@@ -19,7 +19,7 @@ const Hero: FC<THeroProps> = ({
 
   return (
     <div>
-      <div className="flex flex-col items-center justify-center sm:mt-12 mt-8">
+      <div className="flex flex-col items-center justify-center">
         <div className="landing flex flex-col items-center">
           <h1 className="text-4xl font-extrabold text-center lg:text-7xl">
             Say Goodbye to <br />
