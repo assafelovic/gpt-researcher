@@ -10,6 +10,7 @@ import Sources from "@/components/ResearchBlocks/Sources";
 import Question from "@/components/ResearchBlocks/Question";
 import SubQuestions from "@/components/ResearchBlocks/SubQuestions";
 import OrderedLogs from "@/components/ResearchBlocks/OrderedLogs";
+import ImagesAlbum from "@/components/ResearchBlocks/ImagesAlbum";
 import { useRef, useState, useEffect } from "react";
 
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
@@ -204,19 +205,21 @@ export default function Home() {
   };
 
   const preprocessOrderedData = (data:any) => {
-
     const groupedData: any[] = [];
     let currentAccordionGroup:any = null;
     let currentSourceGroup:any = null;
     let currentReportGroup:any = null;
     let finalReportGroup:any = null;
+    let currentImagesGroup:any = null;
     let sourceBlockEncountered = false;
     let lastSubqueriesIndex = -1;
-  
+
     data.forEach((item:any, index:any) => {
       const { type, content, metadata, output, link } = item;
-  
-      if (type === 'report') {
+
+      if (content === 'selected_images') {
+        groupedData.push({ type: 'imagesBlock', metadata });
+      } else if (type === 'report') {
         if (!currentReportGroup) {
           currentReportGroup = { type: 'reportBlock', content: '' };
           groupedData.push(currentReportGroup);
@@ -335,29 +338,65 @@ export default function Home() {
 
   const renderComponentsInOrder = () => {
     const groupedData = preprocessOrderedData(orderedData);
-    console.log('orderedData in renderComponentsInOrder: ', groupedData);
     
-    return groupedData.map((data, index) => {
-      if (data.type === 'sourceBlock') {
-        return <Sources key={`sourceBlock-${index}`} sources={data.items}/>;
-      } else if (data.type === 'reportBlock') {
-        return <Answer key={`reportBlock-${index}`} answer={data.content} />;
-      } else if (data.type === 'langgraphButton') {
+    // Separate components into categories
+    const imageComponents = groupedData
+      .filter(data => data.type === 'imagesBlock')
+      .map((data, index) => (
+        <div key={`images-${index}`} className="container h-auto w-full shrink-0 rounded-lg border border-solid border-[#C2C2C2] bg-gray-800 shadow-md p-5">
+          <div className="flex items-start gap-4 pb-3 lg:pb-3.5">
+            <Image src="/img/image.svg" alt="images" width={24} height={24} />
+            <h3 className="text-base font-bold uppercase leading-[152.5%] text-white">
+              Selected Images:
+            </h3>
+          </div>
+          <div className="overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
+            <ImagesAlbum images={data.metadata} />
+          </div>
+        </div>
+      ));
+
+    const reportComponents = groupedData
+      .filter(data => data.type === 'reportBlock')
+      .map((data, index) => (
+        <Answer key={`reportBlock-${index}`} answer={data.content} />
+      ));
+
+    const otherComponents = groupedData
+      .map((data, index) => {
+        if (data.type === 'sourceBlock') {
+          return <Sources key={`sourceBlock-${index}`} sources={data.items}/>;
+        } else if (data.type === 'question') {
+          return <Question key={`question-${index}`} question={data.content} />;
+        } else if (data.type === 'chat') {
+          return <Answer key={`chat-${index}`} answer={data.content} />;
+        } else if (data.content === 'subqueries') {
+          return (
+            <SubQuestions
+              key={`subqueries-${index}`}
+              metadata={data.metadata}
+              handleClickSuggestion={handleClickSuggestion}
+            />
+          );
+        }
         return null;
-      } else if (data.type === 'question') {
-        return <Question key={`question-${index}`} question={data.content} />;
-      } else if (data.type === 'chat') {
-        return <Answer key={`chat-${index}`} answer={data.content} />;
-      } else if (data.content === 'subqueries') {
-        return (
-          <SubQuestions
-            key={`subqueries-${index}`}
-            metadata={data.metadata}
-            handleClickSuggestion={handleClickSuggestion}
-          />
-        );
-      }
-    }).filter(Boolean);
+      }).filter(Boolean);
+
+    return (
+      <>
+        {/* Show initial components */}
+        {otherComponents}
+        
+        {/* Show logs section */}
+        {orderedData.length > 0 && <OrderedLogs logs={allLogs} />}
+        
+        {/* Show images if they exist */}
+        {imageComponents}
+        
+        {/* Show the report components last */}
+        {reportComponents}
+      </>
+    );
   };
 
   return (
@@ -376,19 +415,7 @@ export default function Home() {
           <div className="flex h-full w-full grow flex-col justify-between">
             <div className="container w-full space-y-2">
               <div className="container space-y-2 task-components">
-                {renderComponentsInOrder().filter(component => 
-                  !component?.props?.answer || component?.props?.answer?.length < 100
-                )}
-                
-                {/* Replace logs section with new component */}
-                {orderedData.length > 0 && (
-                  <OrderedLogs logs={allLogs} />
-                )}
-
-                {/* Show the final answer last */}
-                {renderComponentsInOrder().filter(component => 
-                  component?.props?.answer && component?.props?.answer?.length >= 100
-                )}
+                {renderComponentsInOrder()}
               </div>
 
               {showHumanFeedback && (
