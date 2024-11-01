@@ -15,6 +15,7 @@ type Log = {
   header: string;
   text: string;
   processedData?: ProcessedData[];
+  metadata?: any;
 };
 
 interface LogMessageProps {
