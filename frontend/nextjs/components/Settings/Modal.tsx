@@ -132,7 +132,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
         type="button"
         onClick={() => setShowModal(true)}
       >
-        Settings
+        Preferences
       </button>
       {showModal ? (
         <>
