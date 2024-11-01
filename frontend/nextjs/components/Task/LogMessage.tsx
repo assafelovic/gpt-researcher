@@ -52,7 +52,7 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
   }, [logs]);
 
   return (
-          <div className="w-full px-4 log-message">
+          <div className="w-full log-message">
             {processedLogs.map((log, index) => {
               if (log.header === 'subquery_context_window' || log.header === 'differences') {
                 return <Accordion key={index} logs={[log]} />;
@@ -66,7 +66,7 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
                 return (
                   <div
                     key={index}
-                    className="mb-4 w-full max-w-4xl mx-auto rounded-lg p-4 bg-gray-800 shadow-md log-message"
+                    className="w-full max-w-4xl mx-auto rounded-lg pt-2 mt-3 pb-2 px-4 bg-gray-800 shadow-md log-message"
                   >
                     <p className="py-3 text-base leading-relaxed text-white dark:text-white log-message">
                       {log.text}
