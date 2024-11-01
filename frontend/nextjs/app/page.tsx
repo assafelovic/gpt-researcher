@@ -9,10 +9,8 @@ import InputArea from "@/components/ResearchBlocks/InputArea";
 import Sources from "@/components/ResearchBlocks/Sources";
 import Question from "@/components/ResearchBlocks/Question";
 import SubQuestions from "@/components/ResearchBlocks/SubQuestions";
+import OrderedLogs from "@/components/ResearchBlocks/OrderedLogs";
 import { useRef, useState, useEffect } from "react";
-import AccessReport from '../components/Task/AccessReport';
-import Accordion from '../components/Task/Accordion';
-import LogMessage from '../components/ResearchBlocks/LogMessage';
 
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
@@ -378,24 +376,13 @@ export default function Home() {
           <div className="flex h-full w-full grow flex-col justify-between">
             <div className="container w-full space-y-2">
               <div className="container space-y-2 task-components">
-                {/* Show everything except the final answer first */}
                 {renderComponentsInOrder().filter(component => 
                   !component?.props?.answer || component?.props?.answer?.length < 100
                 )}
                 
-                {/* Show logs */}
+                {/* Replace logs section with new component */}
                 {orderedData.length > 0 && (
-                  <div className="container h-auto w-full shrink-0 rounded-lg border border-solid border-[#C2C2C2] bg-gray-800 shadow-md p-5">
-                    <div className="flex items-start gap-4 pb-3 lg:pb-3.5">
-                      <Image src="/img/white-books.svg" alt="logs" width={24} height={24} />
-                      <h3 className="text-base font-bold uppercase leading-[152.5%] text-white">
-                        logs:
-                      </h3>
-                    </div>
-                    <div className="overflow-y-auto min-h-[200px] max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
-                      <LogMessage logs={allLogs} />
-                    </div>
-                  </div>
+                  <OrderedLogs logs={allLogs} />
                 )}
 
                 {/* Show the final answer last */}
