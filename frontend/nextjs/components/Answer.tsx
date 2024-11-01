@@ -102,13 +102,17 @@ export default function Answer({ answer }: { answer: string }) {
                       font-size: 1.2em;
                       color: white;
                     }
-                    /* Add more styles as needed */
+                    p {
+                      font-size: 18px;
+                      line-height: 1.5;
+                    }
 
                     /* Table of Contents Styling */
                     ul {
                       list-style-type: none;
                       padding-left: 0;
                       margin-bottom: 0.2em;
+                      font-size: 18px;
                     }
                     ul > li {
                       margin-bottom: 0.2em;
