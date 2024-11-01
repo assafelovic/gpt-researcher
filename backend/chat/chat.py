@@ -84,6 +84,12 @@ class ChatAgentWithMemory:
 
     async def chat(self, message, websocket):
         """Chat with React Agent"""
+        message = f"""
+         This is a chat message between the user and you: GPT Researcher - the leading research agent. 
+         The chat is about a research reports that you created. Answer based on the given context and report.
+         Report: {self.report}
+         User Message: {message}
+        """
         inputs = {"messages": [("user", message)]}
         response = await self.graph.ainvoke(inputs, config=self.chat_config)
         ai_message = response["messages"][-1].content

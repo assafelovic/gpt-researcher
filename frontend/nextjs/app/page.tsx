@@ -89,9 +89,7 @@ export default function Home() {
 
             if (data.type === 'report') {
               setAnswer((prev:any) => prev + data.output);
-            } else if (data.type === 'path') {
-              setLoading(false);
-            } else if (data.type === 'chat'){
+            } else if (data.type === 'path' || data.type === 'chat') {
               setLoading(false);
             }
           }
