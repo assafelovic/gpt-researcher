@@ -114,14 +114,21 @@ export default function Answer({ answer }: { answer: string }) {
                     }
 
                     /* Table of Contents Styling */
-                    ul {
+                    ul, ol {
                       list-style-type: none;
                       padding-left: 0;
                       margin-bottom: 0.2em;
                       font-size: 18px;
                     }
+                    
+                    ol > li {
+                      padding: 0;
+                      margin: 0;
+                      line-height: 0;
+                    }
                     ul > li {
                       margin-bottom: 0.2em;
+                      line-height: 0.5em;
                     }
                     ul > li > ul {
                       margin-left: 1em;
