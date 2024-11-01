@@ -34,7 +34,7 @@ EMBEDDING="openai:text-embedding-3-small"
 
 Create a local OpenAI API using [llama.cpp Server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md#quick-start).
 
-For custom LLM, specify "openai:<your-llm>"
+For custom LLM, specify "openai:{your-llm}"
 ```bash
 # set the custom OpenAI API url
 OPENAI_BASE_URL="http://localhost:1234/v1"
