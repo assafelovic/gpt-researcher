@@ -1,18 +1,18 @@
 "use client";
 
-import Answer from "@/components/Answer";
+import Answer from "@/components/ResearchBlocks/Answer";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import InputArea from "@/components/InputArea";
+import InputArea from "@/components/ResearchBlocks/InputArea";
 
-import Sources from "@/components/Sources";
-import Question from "@/components/Question";
-import SubQuestions from "@/components/SubQuestions";
+import Sources from "@/components/ResearchBlocks/Sources";
+import Question from "@/components/ResearchBlocks/Question";
+import SubQuestions from "@/components/ResearchBlocks/SubQuestions";
 import { useRef, useState, useEffect } from "react";
 import AccessReport from '../components/Task/AccessReport';
 import Accordion from '../components/Task/Accordion';
-import LogMessage from '../components/Task/LogMessage';
+import LogMessage from '../components/ResearchBlocks/LogMessage';
 
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
