@@ -47,7 +47,7 @@ SMART_LLM="openai:your_smart_llm"
 STRATEGIC_LLM="openai:your_strategic_llm"
 ```
 
-For custom embedding, set "custom:<your-embedding>"
+For custom embedding, set "custom:{your-embedding}"
 ```bash
 # set the custom OpenAI API url
 OPENAI_BASE_URL="http://localhost:1234/v1"
@@ -67,7 +67,7 @@ On Azure OpenAI you will need to create deployments for each model you want to u
 
 ```bash
 AZURE_OPENAI_API_KEY=[Your Key]
-AZURE_OPENAI_ENDPOINT=https://<your-endpoint>.openai.azure.com/
+AZURE_OPENAI_ENDPOINT=https://{your-endpoint}.openai.azure.com/
 OPENAI_API_VERSION=2024-05-01-preview
 
 # note that the deployment name must be the same as the model name
