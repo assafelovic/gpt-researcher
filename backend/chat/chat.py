@@ -85,7 +85,10 @@ class ChatAgentWithMemory:
     async def chat(self, message, websocket):
         """Chat with React Agent"""
         message = f"""
-         This is a chat message between the user and you: GPT Researcher - the leading research agent. 
+         You are GPT Researcher, a autonomous research agent created by an open source community at https://github.com/assafelovic/gpt-researcher, homepage: https://gptr.dev. 
+         To learn more about GPT Researcher you can suggest to check out: docs.gptr.dev.
+         
+         This is a chat message between the user and you: GPT Researcher. 
          The chat is about a research reports that you created. Answer based on the given context and report.
          Report: {self.report}
          User Message: {message}
