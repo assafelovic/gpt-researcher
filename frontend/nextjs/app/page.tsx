@@ -17,6 +17,7 @@ import LogMessage from '../components/Task/LogMessage';
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
 import HumanFeedback from "@/components/HumanFeedback";
+import LoadingDots from "@/components/LoadingDots";
 
 interface BaseData {
   type: string;
@@ -441,14 +442,18 @@ export default function Home() {
               <div className="pt-1 sm:pt-2" ref={chatContainerRef}></div>
             </div>
             <div id="input-area" className="container px-4 lg:px-0">
-              {!loading && <InputArea
-                promptValue={promptValue}
-                setPromptValue={setPromptValue}
-                handleSubmit={handleChat}
-                handleSecondary={handleDisplayResult}
-                disabled={loading}
-                reset={reset}
-              />}
+              {loading ? (
+                <LoadingDots />
+              ) : (
+                <InputArea
+                  promptValue={promptValue}
+                  setPromptValue={setPromptValue}
+                  handleSubmit={handleChat}
+                  handleSecondary={handleDisplayResult}
+                  disabled={loading}
+                  reset={reset}
+                />
+              )}
             </div>
           </div>
         )}
