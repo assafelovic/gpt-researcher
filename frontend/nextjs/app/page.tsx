@@ -5,20 +5,17 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import InputArea from "@/components/InputArea";
-
 import Sources from "@/components/Sources";
 import Question from "@/components/Question";
 import SubQuestions from "@/components/SubQuestions";
 import { useRef, useState, useEffect } from "react";
 import AccessReport from '../components/Task/AccessReport';
-import Accordion from '../components/Task/Accordion';
 import LogMessage from '../components/Task/LogMessage';
-
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
 import HumanFeedback from "@/components/HumanFeedback";
 import LoadingDots from "@/components/LoadingDots";
-import { Data, ChatBoxSettings, QuestionData } from '../types/data';
+import { Data, ChatBoxSettings, QuestionData, WebSocketMessage, AccordionGroup, SourceGroup, ReportGroup } from '../types/data';
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
@@ -31,16 +28,11 @@ export default function Home() {
     tone: 'Objective' 
   });
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  const [question, setQuestion] = useState("");
-  const [sources, setSources] = useState<{ name: string; url: string }[]>([]);
-  const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [orderedData, setOrderedData] = useState<Data[]>([]);
   const heartbeatInterval = useRef<number>();
   const [showHumanFeedback, setShowHumanFeedback] = useState(false);
-  const [questionForHuman, setQuestionForHuman] = useState<true | false>(false);
-  
+  const [questionForHuman, setQuestionForHuman] = useState<boolean>(false);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -48,7 +40,44 @@ export default function Home() {
     }
   }, [orderedData]);
 
-  const startResearch = (chatBoxSettings:any) => {
+  const initializeWebSocket = (message: string) => {
+    if (typeof window === 'undefined') return;
+
+    const { protocol, pathname, host } = window.location;
+    const wsHost = host.includes('localhost') ? 'localhost:8000' : host;
+    const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${wsHost}${pathname}ws`;
+
+    const newSocket = new WebSocket(ws_uri);
+    setSocket(newSocket);
+
+    newSocket.onopen = () => newSocket.send(message);
+    newSocket.onmessage = handleWebSocketMessage;
+    newSocket.onclose = () => {
+      clearInterval(heartbeatInterval.current);
+      setSocket(null);
+    };
+  };
+
+  const handleWebSocketMessage = (event: MessageEvent) => {
+    const data: WebSocketMessage = JSON.parse(event.data);
+    console.log('websocket data caught in frontend: ', data);
+
+    if (data.type === 'human_feedback' && data.content === 'request') {
+      setQuestionForHuman(data.output);
+      setShowHumanFeedback(true);
+    } else {
+      const contentAndType = `${data.content}-${data.type}`;
+      setOrderedData(prevOrder => [...prevOrder, { ...data, contentAndType }]);
+
+      if (data.type === 'report') {
+        setAnswer(prev => prev + (data.output || ''));
+      } else if (data.type === 'path' || data.type === 'chat') {
+        setLoading(false);
+      }
+    }
+  };
+
+  const startResearch = (settings: ChatBoxSettings) => {
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
     const headers = {
@@ -65,60 +94,17 @@ export default function Home() {
       'searx_url': apiVariables.SEARX_URL
     };
 
+    const { task, report_type, report_source, tone } = settings;
+    const message = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
+
     if (!socket) {
-      if (typeof window !== 'undefined') {
-        const { protocol, pathname } = window.location;
-        let { host } = window.location;
-        host = host.includes('localhost') ? 'localhost:8000' : host;
-        const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
-
-        const newSocket = new WebSocket(ws_uri);
-        setSocket(newSocket);
-
-        newSocket.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          console.log('websocket data caught in frontend: ', data);
-
-          if (data.type === 'human_feedback' && data.content === 'request') {
-            console.log('triggered human feedback condition')
-            setQuestionForHuman(data.output)
-            setShowHumanFeedback(true);
-          } else {
-            const contentAndType = `${data.content}-${data.type}`;
-            setOrderedData((prevOrder) => [...prevOrder, { ...data, contentAndType }]);
-
-            if (data.type === 'report') {
-              setAnswer((prev:any) => prev + data.output);
-            } else if (data.type === 'path') {
-              setLoading(false);
-            } else if (data.type === 'chat'){
-              setLoading(false);
-            }
-          }
-          
-        };
-
-        newSocket.onopen = () => {
-          const { task, report_type, report_source, tone } = chatBoxSettings;
-          let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
-          newSocket.send(data);
-        };
-
-        newSocket.onclose = () => {
-          clearInterval(heartbeatInterval.current);
-          setSocket(null);
-        };
-      }
+      initializeWebSocket(message);
     } else {
-      const { task, report_type, report_source, tone } = chatBoxSettings;
-      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
-      socket.send(data);
+      socket.send(message);
     }
   };
 
-  // Add this function to handle feedback submission
   const handleFeedbackSubmit = (feedback: string | null) => {
-    console.log('user feedback is passed to handleFeedbackSubmit: ', feedback);
     if (socket) {
       socket.send(JSON.stringify({ type: 'human_feedback', content: feedback }));
     }
@@ -128,74 +114,65 @@ export default function Home() {
   const handleChat = async (message: string) => {
     if (socket) {
       setShowResult(true);
-      setQuestion(message);
       setLoading(true);
       setPromptValue("");
       setAnswer("");
 
-      const questionData: QuestionData = { 
-        type: 'question', 
-        content: message 
-      };
+      const questionData: QuestionData = { type: 'question', content: message };
       setOrderedData(prevOrder => [...prevOrder, questionData]);
       
-      const data = `chat${JSON.stringify({ message })}`;
-      socket.send(data);
+      socket.send(`chat${JSON.stringify({ message })}`);
     }
   };
 
   const handleDisplayResult = async (newQuestion: string) => {
     setShowResult(true);
     setLoading(true);
-    setQuestion(newQuestion);
     setPromptValue("");
     setAnswer("");
 
-    // Add the new question to orderedData
-    setOrderedData((prevOrder:any) => [...prevOrder, { type: 'question', content: newQuestion }]);
+    setOrderedData(prevOrder => [...prevOrder, { type: 'question', content: newQuestion }]);
 
-    const { report_type, report_source, tone } = chatBoxSettings;
-
-    // Retrieve LANGGRAPH_HOST_URL from local storage or state
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
     const langgraphHostUrl = apiVariables.LANGGRAPH_HOST_URL;
 
-    if (report_type === 'multi_agents' && langgraphHostUrl) {
-
-      let { streamResponse, host, thread_id } = await startLanggraphResearch(newQuestion, report_source, langgraphHostUrl);
-
-      const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
-
-      console.log('langsmith-gui-link in page.tsx', langsmithGuiLink);
-      // Add the Langgraph button to orderedData
-      setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphButton', link: langsmithGuiLink }]);
-
-      let previousChunk = null;
-
-      for await (const chunk of streamResponse) {
-        console.log(chunk);
-        if (chunk.data.report != null && chunk.data.report != "Full report content here") {
-          setOrderedData((prevOrder) => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
-          setLoading(false);
-        } else if (previousChunk) {
-          const differences = findDifferences(previousChunk, chunk);
-          setOrderedData((prevOrder) => [...prevOrder, { type: 'differences', content: 'differences', output: JSON.stringify(differences) }]);
-        }
-        previousChunk = chunk;
-      }
+    if (chatBoxSettings.report_type === 'multi_agents' && langgraphHostUrl) {
+      await handleLanggraphResearch(newQuestion, langgraphHostUrl);
     } else {
-      startResearch(chatBoxSettings);
+      startResearch({ ...chatBoxSettings, task: newQuestion });
+    }
+  };
+
+  const handleLanggraphResearch = async (question: string, hostUrl: string) => {
+    const { streamResponse, host, thread_id } = await startLanggraphResearch(
+      question, 
+      chatBoxSettings.report_source, 
+      hostUrl
+    );
+
+    const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
+    setOrderedData(prevOrder => [...prevOrder, { type: 'langgraphButton', link: langsmithGuiLink }]);
+
+    let previousChunk = null;
+
+    for await (const chunk of streamResponse) {
+      if (chunk.data.report != null && chunk.data.report != "Full report content here") {
+        setOrderedData(prevOrder => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
+        setLoading(false);
+      } else if (previousChunk) {
+        const differences = findDifferences(previousChunk, chunk);
+        setOrderedData(prevOrder => [...prevOrder, { type: 'differences', content: 'differences', output: JSON.stringify(differences) }]);
+      }
+      previousChunk = chunk;
     }
   };
 
   const reset = () => {
     setShowResult(false);
     setPromptValue("");
-    setQuestion("");
     setAnswer("");
-    setSources([]);
-    setSimilarQuestions([]);
+    setOrderedData([]);
   };
 
   const handleClickSuggestion = (value: string) => {
@@ -206,43 +183,43 @@ export default function Home() {
     }
   };
 
-  const preprocessOrderedData = (data:any) => {
-
-    const groupedData: any[] = [];
-    let currentAccordionGroup:any = null;
-    let currentSourceGroup:any = null;
-    let currentReportGroup:any = null;
-    let finalReportGroup:any = null;
+  const preprocessOrderedData = (data: Data[]) => {
+    const groupedData: Data[] = [];
+    let currentAccordionGroup: AccordionGroup | null = null;
+    let currentSourceGroup: SourceGroup | null = null;
+    let currentReportGroup: ReportGroup | null = null;
+    let finalReportGroup: ReportGroup | null = null;
     let sourceBlockEncountered = false;
     let lastSubqueriesIndex = -1;
-  
-    data.forEach((item:any, index:any) => {
+
+    data.forEach((item) => {
       const { type, content, metadata, output, link } = item;
-  
+
       if (type === 'report') {
         if (!currentReportGroup) {
           currentReportGroup = { type: 'reportBlock', content: '' };
           groupedData.push(currentReportGroup);
         }
-        currentReportGroup.content += output;
+        currentReportGroup.content += output || '';
       } else if (type === 'logs' && content === 'research_report') {
         if (!finalReportGroup) {
           finalReportGroup = { type: 'reportBlock', content: '' };
           groupedData.push(finalReportGroup);
         }
-        finalReportGroup.content += output.report;
-      } else if (type === 'langgraphButton') {
+        if (output && typeof output === 'object' && 'report' in output) {
+          finalReportGroup.content += output.report || '';
+        }
+      } else if (type === 'langgraphButton' && link) {
         groupedData.push({ type: 'langgraphButton', link });
-      } else if (type === 'question') {
+      } else if (type === 'question' && content) {
         groupedData.push({ type: 'question', content });
-      } else if (type == 'chat'){
-        groupedData.push({ type: 'chat', content: content });
-      }
-      else {
+      } else if (type === 'chat' && content) {
+        groupedData.push({ type: 'chat', content });
+      } else {
         if (currentReportGroup) {
           currentReportGroup = null;
         }
-  
+
         if (content === 'subqueries') {
           if (currentAccordionGroup) {
             currentAccordionGroup = null;
@@ -254,7 +231,7 @@ export default function Home() {
           groupedData.push(item);
           lastSubqueriesIndex = groupedData.length - 1;
         } else if (type === 'sourceBlock') {
-          currentSourceGroup = item;
+          currentSourceGroup = item as SourceGroup;
           if (lastSubqueriesIndex !== -1) {
             groupedData.splice(lastSubqueriesIndex + 1, 0, currentSourceGroup);
             lastSubqueriesIndex = -1;
@@ -276,12 +253,10 @@ export default function Home() {
           }
           let hostname = "";
           try {
-            if (typeof metadata === 'string') {
-              hostname = new URL(metadata).hostname.replace('www.', '');
-            }
+            hostname = typeof metadata === 'string' ? new URL(metadata).hostname.replace('www.', '') : "unknown";
           } catch (e) {
             console.error(`Invalid URL: ${metadata}`, e);
-            hostname = "unknown"; // Default or fallback value
+            hostname = "unknown";
           }
           currentSourceGroup.items.push({ name: hostname, url: metadata });
         } else if (type !== 'path' && content !== '') {
@@ -290,7 +265,12 @@ export default function Home() {
               currentAccordionGroup = { type: 'accordionBlock', items: [] };
               groupedData.push(currentAccordionGroup);
             }
-            currentAccordionGroup.items.push(item);
+            currentAccordionGroup.items.push({
+              content: item.content || '',
+              output: item.output || '',
+              metadata: item.metadata,
+              type: item.type
+            });
           } else {
             groupedData.push(item);
           }
@@ -305,85 +285,63 @@ export default function Home() {
         }
       }
     });
-  
+
     return groupedData;
   };
 
   const renderComponentsInOrder = () => {
     const groupedData = preprocessOrderedData(orderedData);
-    console.log('orderedData in renderComponentsInOrder: ', groupedData)
-    let statusReports = ["agent_generated","starting_research","planning_research"]
+    const statusReports = ["agent_generated", "starting_research", "planning_research"];
 
     return groupedData.map((data, index) => {
-      if (data.type === 'accordionBlock') {
-        const uniqueKey = `accordionBlock-${index}`;
-        const logs = data.items.map((item:any, subIndex:any) => ({
-          header: item.content,
-          text: item.output,
-          metadata: item.metadata,
-          key: `${item.type}-${item.content}-${subIndex}`,
-        }));
+      const key = `${data.type}-${index}`;
 
-        return (
-           <div className="container mx-auto">
-              <LogMessage key={uniqueKey} logs={logs} />
-            </div>
-        )
+      switch (data.type) {
+        case 'accordionBlock':
+          const logs = data.items?.map((item, subIndex) => ({
+            header: item.content || '',
+            text: item.output || '',
+            metadata: item.metadata,
+            key: `${item.type}-${item.content}-${subIndex}`,
+          }));
+          return <LogMessage key={key} logs={logs || []} />;
 
-      } else if (data.type === 'sourceBlock') {
-        const uniqueKey = `sourceBlock-${index}`;
-        return <Sources key={uniqueKey} sources={data.items}/>;
-      } else if (data.type === 'reportBlock') {
-        const uniqueKey = `reportBlock-${index}`;
-        return <Answer key={uniqueKey} answer={data.content} />;
-      } else if (data.type === 'langgraphButton') {
-        const uniqueKey = `langgraphButton-${index}`;
-        return (
-          <div key={uniqueKey}></div>
-          // <div key={uniqueKey} className="flex justify-center py-4">
-          //   <a
-          //     href={data.link}
-          //     target="_blank"
-          //     rel="noopener noreferrer"
-          //     className="px-4 py-2 text-white bg-[#0DB7ED] rounded"
-          //   >
-          //     View the full Langgraph logs here
-          //   </a>
-          // </div>
-        );
-      } else if (data.type === 'question') {
-        const uniqueKey = `question-${index}`;
-        return <Question key={uniqueKey} question={data.content} />;
-      } else if (data.type === 'chat'){
-        const uniqueKey = `chat-${index}`;
-        return <Answer key={uniqueKey} answer={data.content} />;
-      } else {
-        const { type, content, metadata, output } = data;
-        const uniqueKey = `${type}-${content}-${index}`;
+        case 'sourceBlock':
+          return <Sources key={key} sources={data.items || []} />;
 
-        if (content === 'subqueries') {
-          return (
-            <SubQuestions
-              key={uniqueKey}
-              metadata={data.metadata}
-              handleClickSuggestion={handleClickSuggestion}
-            />
-          );
-        } else if (type === 'path') {
-          return <AccessReport key={uniqueKey} accessData={output} report={answer} />;
-        } else if (statusReports.includes(data.content)) {
-          const uniqueKey = `accordionBlock-${index}`;
-          const logs = [{
-            header: data.content,
-            text: data.output,
-            metadata: data.metadata,
-            key: `${data.type}-${data.content}`,
-          }]
+        case 'reportBlock':
+          return <Answer key={key} answer={data.content || ''} />;
 
-          return <LogMessage key={uniqueKey} logs={logs} />;
-        } else {
+        case 'langgraphButton':
+          return <div key={key}></div>;
+
+        case 'question':
+          return <Question key={key} question={data.content || ''} />;
+
+        case 'chat':
+          return <Answer key={key} answer={data.content || ''} />;
+
+        default:
+          if (data.content === 'subqueries') {
+            return (
+              <SubQuestions
+                key={key}
+                metadata={data.metadata}
+                handleClickSuggestion={handleClickSuggestion}
+              />
+            );
+          } else if (data.type === 'path') {
+            return <AccessReport key={key} accessData={data.output} report={answer} />;
+          } else if (statusReports.includes(data.content || '')) {
+            const logs = [{
+              header: data.content || '',
+              text: data.output || '',
+              metadata: data.metadata,
+              key: `${data.type}-${data.content}`,
+            }];
+            return <LogMessage key={key} logs={logs} />;
+          }
           return null;
-        }
       }
     });
   };
@@ -392,15 +350,13 @@ export default function Home() {
     <>
       <Header />
       <main className="min-h-[calc(100vh-64px)]">
-        {!showResult && (
+        {!showResult ? (
           <Hero
             promptValue={promptValue}
             setPromptValue={setPromptValue}
             handleDisplayResult={handleDisplayResult}
           />
-        )}
-
-        {showResult && (
+        ) : (
           <div className="flex h-full w-full grow flex-col justify-between">
             <div className="container w-full space-y-2">
               <div className="container space-y-2 task-components">
