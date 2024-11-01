@@ -3,7 +3,7 @@ import Accordion from '../Task/Accordion';
 import { useEffect, useState } from 'react';
 import { remark } from 'remark';
 import html from 'remark-html';
-import ImagesCarousel from '../Task/ImagesCarousel';
+import ImagesAlbum from './ImagesAlbum';
 import Image from "next/image";
 
 type ProcessedData = {
@@ -67,7 +67,7 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
           return <Accordion key={index} logs={[log]} />;
         } else if(log.header === "selected_images") {
           return (
-            <ImagesCarousel
+            <ImagesAlbum
               key={index}
               images={log.metadata}
             />
