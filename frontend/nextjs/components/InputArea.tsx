@@ -61,7 +61,7 @@ const InputArea: FC<TInputAreaProps> = ({
   };
 
   // Debounced version of the height adjustment function
-  const adjustHeight = debounce((target) => {
+  const adjustHeight = debounce((target: HTMLTextAreaElement) => {
     target.style.height = 'auto'; // Reset height to auto to allow shrinking
     target.style.height = `${target.scrollHeight}px`; // Adjust height
   }, 100); // Adjust the delay as needed

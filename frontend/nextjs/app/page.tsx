@@ -325,9 +325,7 @@ export default function Home() {
         }));
 
         return (
-           <div className="container mx-auto">
-              <LogMessage key={uniqueKey} logs={logs} />
-            </div>
+          <LogMessage key={uniqueKey} logs={logs} />
         )
 
       } else if (data.type === 'sourceBlock') {
