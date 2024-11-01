@@ -91,8 +91,6 @@ export default function Home() {
               setAnswer((prev:any) => prev + data.output);
             } else if (data.type === 'path') {
               setLoading(false);
-              // newSocket.close(); We do not want to close the connection since we are chatting
-              // setSocket(null);
             } else if (data.type === 'chat'){
               setLoading(false);
             }
@@ -104,11 +102,6 @@ export default function Home() {
           const { task, report_type, report_source, tone } = chatBoxSettings;
           let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
           newSocket.send(data);
-
-          // Start sending heartbeat messages every 30 seconds
-          // heartbeatInterval.current = setInterval(() => {
-          //   newSocket.send(JSON.stringify({ type: 'ping' }));
-          // }, 30000);
         };
 
         newSocket.onclose = () => {
@@ -193,11 +186,6 @@ export default function Home() {
       }
     } else {
       startResearch(chatBoxSettings);
-
-      // await Promise.all([
-      //   handleSourcesAndAnswer(newQuestion),
-      //   handleSimilarQuestions(newQuestion),
-      // ]);
     }
   };
 
