@@ -441,14 +441,14 @@ export default function Home() {
               <div className="pt-1 sm:pt-2" ref={chatContainerRef}></div>
             </div>
             <div id="input-area" className="container px-4 lg:px-0">
-              <InputArea
+              {!loading && <InputArea
                 promptValue={promptValue}
                 setPromptValue={setPromptValue}
                 handleSubmit={handleChat}
                 handleSecondary={handleDisplayResult}
                 disabled={loading}
                 reset={reset}
-              />
+              />}
             </div>
           </div>
         )}
