@@ -29,13 +29,6 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 # Stage 3: Final stage with non-root user and app
 FROM gpt-researcher-install AS gpt-researcher
 
-# Use environment variables for API keys (defaults can be overridden at runtime)
-ARG OPENAI_API_KEY
-ARG TAVILY_API_KEY
-
-ENV OPENAI_API_KEY=${OPENAI_API_KEY}
-ENV TAVILY_API_KEY=${TAVILY_API_KEY}
-
 # Create a non-root user for security
 RUN useradd -ms /bin/bash gpt-researcher && \
     chown -R gpt-researcher:gpt-researcher /usr/src/app

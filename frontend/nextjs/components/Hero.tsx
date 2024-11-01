@@ -5,7 +5,7 @@ import InputArea from "./InputArea";
 type THeroProps = {
   promptValue: string;
   setPromptValue: React.Dispatch<React.SetStateAction<string>>;
-  handleDisplayResult: () => void;
+  handleDisplayResult: (query : string) => void;
 };
 
 const Hero: FC<THeroProps> = ({
@@ -43,7 +43,7 @@ const Hero: FC<THeroProps> = ({
           <InputArea
             promptValue={promptValue}
             setPromptValue={setPromptValue}
-            handleDisplayResult={handleDisplayResult}
+            handleSubmit={handleDisplayResult}
           />
         </div>
 
