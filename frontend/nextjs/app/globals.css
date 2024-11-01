@@ -12,6 +12,12 @@ html {
   scroll-behavior: smooth;
 }
 
+textarea {
+  max-height: 300px; /* Set an appropriate max height */
+  overflow-y: auto;  /* Enable internal scrolling */
+  /* transition: height 0.2s ease-in-out; */
+}
+
 .log-message {
   word-wrap: break-word; /* For handling long URLs or text */
   overflow-wrap: break-word; /* For handling overflow in modern browsers */
