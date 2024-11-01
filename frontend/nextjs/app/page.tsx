@@ -9,8 +9,8 @@ import InputArea from "@/components/ResearchBlocks/InputArea";
 import Sources from "@/components/ResearchBlocks/Sources";
 import Question from "@/components/ResearchBlocks/Question";
 import SubQuestions from "@/components/ResearchBlocks/SubQuestions";
-import OrderedLogs from "@/components/ResearchBlocks/OrderedLogs";
-import ImagesAlbum from "@/components/ResearchBlocks/ImagesAlbum";
+import LogsSection from "@/components/ResearchBlocks/LogsSection";
+import ImageSection from "@/components/ResearchBlocks/ImageSection";
 import { useRef, useState, useEffect } from "react";
 
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
@@ -343,17 +343,7 @@ export default function Home() {
     const imageComponents = groupedData
       .filter(data => data.type === 'imagesBlock')
       .map((data, index) => (
-        <div key={`images-${index}`} className="container h-auto w-full shrink-0 rounded-lg border border-solid border-[#C2C2C2] bg-gray-800 shadow-md p-5">
-          <div className="flex items-start gap-4 pb-3 lg:pb-3.5">
-            <Image src="/img/image.svg" alt="images" width={24} height={24} />
-            <h3 className="text-base font-bold uppercase leading-[152.5%] text-white">
-              Selected Images:
-            </h3>
-          </div>
-          <div className="overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
-            <ImagesAlbum images={data.metadata} />
-          </div>
-        </div>
+        <ImageSection key={`images-${index}`} metadata={data.metadata} />
       ));
 
     const reportComponents = groupedData
@@ -388,7 +378,7 @@ export default function Home() {
         {otherComponents}
         
         {/* Show logs section */}
-        {orderedData.length > 0 && <OrderedLogs logs={allLogs} />}
+        {orderedData.length > 0 && <LogsSection logs={allLogs} />}
         
         {/* Show images if they exist */}
         {imageComponents}
