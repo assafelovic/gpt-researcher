@@ -40,6 +40,7 @@ async def handle_human_feedback(data: str):
 
 async def handle_chat(websocket, data: str, manager):
     json_data = json.loads(data[4:])
+    print(f"Received chat message: {json_data.get('message')}")
     await manager.chat(json_data.get("message"), websocket)
 
 async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
