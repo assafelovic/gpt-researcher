@@ -31,7 +31,7 @@ class BrowserManager:
 
         scraped_content, images = scrape_urls(urls, self.researcher.cfg)
         self.researcher.add_research_sources(scraped_content)
-        new_images = self.select_top_images(images, k=2)  # Select top 2 images
+        new_images = self.select_top_images(images, k=4)  # Select top 2 images
         self.researcher.add_research_images(new_images)
 
         if self.researcher.verbose:

@@ -17,7 +17,7 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
                 score = 0
                 # Check for relevant classes
                 if any(cls in img.get('class', []) for cls in ['header', 'featured', 'hero', 'thumbnail', 'main', 'content']):
-                    score = 3  # Higher score
+                    score = 4  # Higher score
                 # Check for size attributes
                 elif img.get('width') and img.get('height'):
                     width = parse_dimension(img['width'])
@@ -56,7 +56,8 @@ def parse_dimension(value: str) -> int:
         value = value[:-2]  # Remove 'px' suffix
     try:
         return int(value)  # Convert to float first to handle decimal values
-    except ValueError:
+    except ValueError as e:
+        print(f"Error parsing dimension value {value}: {e}")
         return None
 
 def extract_title(soup: BeautifulSoup) -> str:
