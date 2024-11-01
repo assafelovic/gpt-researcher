@@ -108,8 +108,10 @@ export default function Home() {
               setAnswer((prev:any) => prev + data.output);
             } else if (data.type === 'path') {
               setLoading(false);
-              newSocket.close();
-              setSocket(null);
+              // newSocket.close(); We do not want to close the connection since we are chatting
+              // setSocket(null);
+            } else if (data.type === 'chat'){
+              setLoading(false);
             }
           }
           
@@ -147,9 +149,20 @@ export default function Home() {
     setShowHumanFeedback(false);
   };
 
-  const handleDisplayResult = async (newQuestion?: string) => {
-    newQuestion = newQuestion || promptValue;
+  const handleChat = async (message : string) =>{
+    if(socket){
+      setShowResult(true);
+      setQuestion(message);
+      setLoading(true);
+      setPromptValue("");
+      setAnswer(""); // Reset answer for new query
+      setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: message }]);
+      const data : string =  "chat" + JSON.stringify({"message": message});
+      socket.send(data)
+    } 
+  }
 
+  const handleDisplayResult = async (newQuestion: string) => {
     setShowResult(true);
     setLoading(true);
     setQuestion(newQuestion);
@@ -245,7 +258,10 @@ export default function Home() {
         groupedData.push({ type: 'langgraphButton', link });
       } else if (type === 'question') {
         groupedData.push({ type: 'question', content });
-      } else {
+      } else if (type == 'chat'){
+        groupedData.push({ type: 'chat', content: content });
+      }
+      else {
         if (currentReportGroup) {
           currentReportGroup = null;
         }
@@ -361,6 +377,9 @@ export default function Home() {
       } else if (data.type === 'question') {
         const uniqueKey = `question-${index}`;
         return <Question key={uniqueKey} question={data.content} />;
+      } else if (data.type === 'chat'){
+        const uniqueKey = `chat-${index}`;
+        return <Answer key={uniqueKey} answer={data.content} />;
       } else {
         const { type, content, metadata, output } = data;
         const uniqueKey = `${type}-${content}-${index}`;
@@ -425,7 +444,8 @@ export default function Home() {
               <InputArea
                 promptValue={promptValue}
                 setPromptValue={setPromptValue}
-                handleDisplayResult={handleDisplayResult}
+                handleSubmit={handleChat}
+                handleSecondary={handleDisplayResult}
                 disabled={loading}
                 reset={reset}
               />
