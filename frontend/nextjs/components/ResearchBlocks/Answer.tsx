@@ -106,6 +106,12 @@ export default function Answer({ answer }: { answer: string }) {
                       font-size: 18px;
                       line-height: 1.5;
                     }
+                    a {
+                      color: rgb(168 85 247 / var(--tw-bg-opacity));
+                      text-decoration: underline;
+                      font-weight: 500;
+                      target: _blank;
+                    }
 
                     /* Table of Contents Styling */
                     ul {
