@@ -24,10 +24,12 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
                     height = parse_dimension(img['height'])
                     if width and height:
                         if width >= 2000 and height >= 1000:
-                            score = 2  # Medium score (very large images)
+                            score = 3  # Medium score (very large images)
                         elif width >= 1600 or height >= 800:
-                            score = 1  # Lower score
-                        elif width >= 800 or height >= 400:
+                            score = 2  # Lower score
+                        elif width >= 800 or height >= 500:
+                            score = 1  # Lowest score
+                        elif width >= 600 or height >= 300:
                             score = 0  # Lowest score
                         else:
                             continue  # Skip small images
