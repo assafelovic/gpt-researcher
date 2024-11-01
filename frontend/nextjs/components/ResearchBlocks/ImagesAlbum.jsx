@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import ImageModal from './ImageModal'; // Import the ImageModal component
+import ImageModal from './ImageModal';
 
-export default function ImagesGrid({ images }) {
+export default function ImagesAlbum({ images }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -40,18 +40,20 @@ export default function ImagesGrid({ images }) {
         setValidImages(filteredImages);
     }, [images]);
 
-    // Hide the entire component if there are no valid images
     if (validImages.length === 0) return null;
 
     return (
-        <div className="w-full mt-5 mb-5">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="w-full h-full min-h-[200px] max-h-[400px]">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-4">
                 {validImages.map((image, index) => (
-                    <div key={index} className="relative aspect-square">
+                    <div 
+                        key={index} 
+                        className="relative aspect-square bg-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                    >
                         <img
                             src={image}
                             alt={`Image ${index + 1}`}
-                            className="absolute inset-0 w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            className="absolute inset-0 w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity duration-300"
                             onClick={() => openModal(image, index)}
                             onError={() => handleImageError(image)}
                         />
