@@ -11,6 +11,7 @@ import Question from "@/components/ResearchBlocks/Question";
 import SubQuestions from "@/components/ResearchBlocks/SubQuestions";
 import LogsSection from "@/components/ResearchBlocks/LogsSection";
 import ImageSection from "@/components/ResearchBlocks/ImageSection";
+import AccessReport from "@/components/Task/AccessReport";
 import { useRef, useState, useEffect } from "react";
 
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
@@ -385,6 +386,8 @@ export default function Home() {
         
         {/* Show the report components last */}
         {reportComponents}
+
+        {<AccessReport accessData={orderedData} report={answer} />}
       </>
     );
   };
