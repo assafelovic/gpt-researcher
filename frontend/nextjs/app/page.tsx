@@ -19,6 +19,7 @@ import findDifferences from '../helpers/findDifferences';
 import HumanFeedback from "@/components/HumanFeedback";
 import LoadingDots from "@/components/LoadingDots";
 import { Data, ChatBoxSettings, QuestionData } from '../types/data';
+import Image from "next/image";
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
@@ -40,7 +41,7 @@ export default function Home() {
   const heartbeatInterval = useRef<number>();
   const [showHumanFeedback, setShowHumanFeedback] = useState(false);
   const [questionForHuman, setQuestionForHuman] = useState<true | false>(false);
-  
+  const [allLogs, setAllLogs] = useState<any[]>([]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -307,81 +308,58 @@ export default function Home() {
     return groupedData;
   };
 
-  const renderComponentsInOrder = () => {
+  // Remove logs processing from renderComponentsInOrder and add this useEffect
+  useEffect(() => {
     const groupedData = preprocessOrderedData(orderedData);
-    console.log('orderedData in renderComponentsInOrder: ', groupedData)
-    let statusReports = ["agent_generated","starting_research","planning_research"]
-
-    return groupedData.map((data, index) => {
+    const statusReports = ["agent_generated", "starting_research", "planning_research"];
+    
+    const newLogs: any[] = [];
+    groupedData.forEach((data) => {
       if (data.type === 'accordionBlock') {
-        const uniqueKey = `accordionBlock-${index}`;
         const logs = data.items.map((item:any, subIndex:any) => ({
           header: item.content,
           text: item.output,
           metadata: item.metadata,
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
-
-        return (
-          <LogMessage key={uniqueKey} logs={logs} />
-        )
-
-      } else if (data.type === 'sourceBlock') {
-        const uniqueKey = `sourceBlock-${index}`;
-        return <Sources key={uniqueKey} sources={data.items}/>;
-      } else if (data.type === 'reportBlock') {
-        const uniqueKey = `reportBlock-${index}`;
-        return <Answer key={uniqueKey} answer={data.content} />;
-      } else if (data.type === 'langgraphButton') {
-        const uniqueKey = `langgraphButton-${index}`;
-        return (
-          <div key={uniqueKey}></div>
-          // <div key={uniqueKey} className="flex justify-center py-4">
-          //   <a
-          //     href={data.link}
-          //     target="_blank"
-          //     rel="noopener noreferrer"
-          //     className="px-4 py-2 text-white bg-[#0DB7ED] rounded"
-          //   >
-          //     View the full Langgraph logs here
-          //   </a>
-          // </div>
-        );
-      } else if (data.type === 'question') {
-        const uniqueKey = `question-${index}`;
-        return <Question key={uniqueKey} question={data.content} />;
-      } else if (data.type === 'chat'){
-        const uniqueKey = `chat-${index}`;
-        return <Answer key={uniqueKey} answer={data.content} />;
-      } else {
-        const { type, content, metadata, output } = data;
-        const uniqueKey = `${type}-${content}-${index}`;
-
-        if (content === 'subqueries') {
-          return (
-            <SubQuestions
-              key={uniqueKey}
-              metadata={data.metadata}
-              handleClickSuggestion={handleClickSuggestion}
-            />
-          );
-        } else if (type === 'path') {
-          return <AccessReport key={uniqueKey} accessData={output} report={answer} />;
-        } else if (statusReports.includes(data.content)) {
-          const uniqueKey = `accordionBlock-${index}`;
-          const logs = [{
-            header: data.content,
-            text: data.output,
-            metadata: data.metadata,
-            key: `${data.type}-${data.content}`,
-          }]
-
-          return <LogMessage key={uniqueKey} logs={logs} />;
-        } else {
-          return null;
-        }
+        newLogs.push(...logs);
+      } else if (statusReports.includes(data.content)) {
+        newLogs.push({
+          header: data.content,
+          text: data.output,
+          metadata: data.metadata,
+          key: `${data.type}-${data.content}`,
+        });
       }
     });
+    setAllLogs(newLogs);
+  }, [orderedData]); // Only run when orderedData changes
+
+  const renderComponentsInOrder = () => {
+    const groupedData = preprocessOrderedData(orderedData);
+    console.log('orderedData in renderComponentsInOrder: ', groupedData);
+    
+    return groupedData.map((data, index) => {
+      if (data.type === 'sourceBlock') {
+        return <Sources key={`sourceBlock-${index}`} sources={data.items}/>;
+      } else if (data.type === 'reportBlock') {
+        return <Answer key={`reportBlock-${index}`} answer={data.content} />;
+      } else if (data.type === 'langgraphButton') {
+        return null;
+      } else if (data.type === 'question') {
+        return <Question key={`question-${index}`} question={data.content} />;
+      } else if (data.type === 'chat') {
+        return <Answer key={`chat-${index}`} answer={data.content} />;
+      } else if (data.content === 'subqueries') {
+        return (
+          <SubQuestions
+            key={`subqueries-${index}`}
+            metadata={data.metadata}
+            handleClickSuggestion={handleClickSuggestion}
+          />
+        );
+      }
+    }).filter(Boolean);
   };
 
   return (
@@ -400,7 +378,30 @@ export default function Home() {
           <div className="flex h-full w-full grow flex-col justify-between">
             <div className="container w-full space-y-2">
               <div className="container space-y-2 task-components">
-                {renderComponentsInOrder()}
+                {/* Show everything except the final answer first */}
+                {renderComponentsInOrder().filter(component => 
+                  !component?.props?.answer || component?.props?.answer?.length < 100
+                )}
+                
+                {/* Show logs */}
+                {orderedData.length > 0 && (
+                  <div className="container h-auto w-full shrink-0 rounded-lg border border-solid border-[#C2C2C2] bg-gray-800 shadow-md p-5">
+                    <div className="flex items-start gap-4 pb-3 lg:pb-3.5">
+                      <Image src="/img/white-books.svg" alt="logs" width={24} height={24} />
+                      <h3 className="text-base font-bold uppercase leading-[152.5%] text-white">
+                        logs:
+                      </h3>
+                    </div>
+                    <div className="overflow-y-auto min-h-[200px] max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
+                      <LogMessage logs={allLogs} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Show the final answer last */}
+                {renderComponentsInOrder().filter(component => 
+                  component?.props?.answer && component?.props?.answer?.length >= 100
+                )}
               </div>
 
               {showHumanFeedback && (

@@ -102,3 +102,21 @@ body {
 body {
   margin: 0px !important;
 }
+
+/* Add these styles for the scrollbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+  background-color: #4B5563;
+  border-radius: 6px;
+}
+
+.scrollbar-track-gray-300::-webkit-scrollbar-track {
+  background-color: #D1D5DB;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
