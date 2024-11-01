@@ -11,6 +11,19 @@ type TInputAreaProps = {
   reset?: () => void;
 };
 
+// Debounce function to limit the rate at which a function can fire
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 const InputArea: FC<TInputAreaProps> = ({
   promptValue,
   setPromptValue,
@@ -45,6 +58,18 @@ const InputArea: FC<TInputAreaProps> = ({
         }
       }
     }
+  };
+
+  // Debounced version of the height adjustment function
+  const adjustHeight = debounce((target) => {
+    target.style.height = 'auto'; // Reset height to auto to allow shrinking
+    target.style.height = `${target.scrollHeight}px`; // Adjust height
+  }, 100); // Adjust the delay as needed
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const target = e.target;
+    adjustHeight(target); // Use debounced function
+    setPromptValue(target.value);
   };
 
   return (
@@ -95,17 +120,13 @@ const InputArea: FC<TInputAreaProps> = ({
         ref={textareaRef}
         className="focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal] 
         text-[#1B1B16]/30 text-black outline-none focus-visible:ring-0 focus-visible:ring-offset-0 
-        sm:text-xl min-h-[3em] resize-none overflow-hidden"
+        sm:text-xl min-h-[3em] resize-none"
         disabled={disabled}
         value={promptValue}
         required
         rows={2}
         onKeyDown={handleKeyDown}
-        onChange={(e) => {
-          // e.target.style.height = 'auto'; // Reset height to auto to allow shrinking
-          e.target.style.height = `${e.target.scrollHeight}px`; // Adjust height
-          setPromptValue(e.target.value);
-        }}
+        onChange={handleTextareaChange}
       />
       <button
         disabled={disabled}
