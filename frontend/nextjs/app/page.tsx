@@ -4,11 +4,11 @@ import Answer from "@/components/ResearchBlocks/Answer";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import InputArea from "@/components/ResearchBlocks/InputArea";
+import InputArea from "@/components/ResearchBlocks/elements/InputArea";
 
 import Sources from "@/components/ResearchBlocks/Sources";
 import Question from "@/components/ResearchBlocks/Question";
-import SubQuestions from "@/components/ResearchBlocks/SubQuestions";
+import SubQuestions from "@/components/ResearchBlocks/elements/SubQuestions";
 import LogsSection from "@/components/ResearchBlocks/LogsSection";
 import ImageSection from "@/components/ResearchBlocks/ImageSection";
 import AccessReport from "@/components/Task/AccessReport";

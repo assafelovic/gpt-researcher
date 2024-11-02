@@ -1,9 +1,9 @@
 // LogMessage.tsx
-import Accordion from '../Task/Accordion';
+import Accordion from '../../Task/Accordion';
 import { useEffect, useState } from 'react';
 import { remark } from 'remark';
 import html from 'remark-html';
-import ImagesAlbum from './ImagesAlbum';
+import ImagesAlbum from '../../Images/ImagesAlbum';
 import Image from "next/image";
 
 type ProcessedData = {

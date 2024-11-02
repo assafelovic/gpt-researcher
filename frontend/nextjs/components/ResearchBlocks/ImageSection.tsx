@@ -1,5 +1,5 @@
 import Image from "next/image";
-import ImagesAlbum from './ImagesAlbum';
+import ImagesAlbum from '../Images/ImagesAlbum';
 
 interface ImageSectionProps {
   metadata: any;

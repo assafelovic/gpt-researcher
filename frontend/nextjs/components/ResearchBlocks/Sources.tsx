@@ -1,5 +1,5 @@
 import Image from "next/image";
-import SourceCard from "./SourceCard";
+import SourceCard from "./elements/SourceCard";
 
 export default function Sources({
   sources,

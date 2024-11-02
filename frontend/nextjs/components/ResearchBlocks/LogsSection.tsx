@@ -1,5 +1,5 @@
 import Image from "next/image";
-import LogMessage from './LogMessage';
+import LogMessage from './elements/LogMessage';
 
 interface Log {
   header: string;
