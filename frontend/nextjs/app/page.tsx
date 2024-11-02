@@ -31,6 +31,7 @@ export default function Home() {
   const [questionForHuman, setQuestionForHuman] = useState<true | false>(false);
   const [allLogs, setAllLogs] = useState<any[]>([]);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [isStopped, setIsStopped] = useState(false);
 
   const { socket, initializeWebSocket } = useWebSocket(
     setOrderedData,
@@ -110,11 +111,60 @@ export default function Home() {
     }
   };
 
+  /**
+   * Handles stopping the current research
+   * - Closes WebSocket connection
+   * - Stops loading state
+   * - Marks research as stopped
+   * - Preserves current results
+   */
+  const handleStopResearch = () => {
+    if (socket) {
+      socket.close();
+    }
+    setLoading(false);
+    setIsStopped(true);
+  };
+
+  /**
+   * Handles starting a new research
+   * - Clears all previous research data and states
+   * - Resets UI to initial state
+   * - Closes any existing WebSocket connections
+   */
+  const handleStartNewResearch = () => {
+    // Reset UI states
+    setShowResult(false);
+    setPromptValue("");
+    setIsStopped(false);
+    
+    // Clear previous research data
+    setQuestion("");
+    setAnswer("");
+    setOrderedData([]);
+    setAllLogs([]);
+    
+    // Reset feedback states
+    setShowHumanFeedback(false);
+    setQuestionForHuman(false);
+    
+    // Clean up connections
+    if (socket) {
+      socket.close();
+    }
+    setLoading(false);
+  };
+
+  /**
+   * Processes ordered data into logs for display
+   * Updates whenever orderedData changes
+   */
   useEffect(() => {
     const groupedData = preprocessOrderedData(orderedData);
     const statusReports = ["agent_generated", "starting_research", "planning_research"];
     
     const newLogs = groupedData.reduce((acc: any[], data) => {
+      // Process accordion blocks (grouped data)
       if (data.type === 'accordionBlock') {
         const logs = data.items.map((item: any, subIndex: any) => ({
           header: item.content,
@@ -123,7 +173,9 @@ export default function Home() {
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
         return [...acc, ...logs];
-      } else if (statusReports.includes(data.content)) {
+      } 
+      // Process status reports
+      else if (statusReports.includes(data.content)) {
         return [...acc, {
           header: data.content,
           text: data.output,
@@ -139,7 +191,13 @@ export default function Home() {
 
   return (
     <>
-      <Header />
+      <Header 
+        loading={loading}
+        isStopped={isStopped}
+        showResult={showResult}
+        onStop={handleStopResearch}
+        onNewResearch={handleStartNewResearch}
+      />
       <main className="min-h-[100vh] pt-[120px]">
         {!showResult && (
           <Hero
@@ -182,6 +240,7 @@ export default function Home() {
                   handleSecondary={handleDisplayResult}
                   disabled={loading}
                   reset={reset}
+                  isStopped={isStopped}
                 />
               )}
             </div>

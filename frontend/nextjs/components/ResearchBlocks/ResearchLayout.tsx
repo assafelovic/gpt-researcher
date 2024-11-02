@@ -5,7 +5,7 @@ import Question from './Question';
 import SubQuestions from './elements/SubQuestions';
 import LogsSection from './LogsSection';
 import ImageSection from './ImageSection';
-import AccessReport from '../Task/AccessReport';
+import AccessReport from './AccessReport';
 
 interface ResearchResultsProps {
   groupedData: any[];
