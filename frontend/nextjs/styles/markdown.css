@@ -39,9 +39,6 @@
   }
 
   li {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    grid-gap: 0.5em;
     padding: 0;
     
     > ul, > ol {
@@ -54,8 +51,7 @@
     }
 
     /* Add a pseudo-element for the marker */
-    &::before {
-      content: '•'; /* For unordered lists */
+    &::before { /* For unordered lists */
       justify-self: end;
     }
 
@@ -64,15 +60,6 @@
       margin: 0;
       padding: 0;
       grid-column: 2;
-    }
-  }
-
-  /* Handle ordered lists */
-  ol > li {
-    counter-increment: list;
-    
-    &::before {
-      content: counter(list) '.'; /* For ordered lists */
     }
   }
 
