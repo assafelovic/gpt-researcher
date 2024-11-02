@@ -1,11 +1,10 @@
 import Image from "next/image";
 import { Toaster, toast } from "react-hot-toast";
-
 import { useEffect, useState } from 'react';
 import { remark } from 'remark';
 import html from 'remark-html';
 import { Compatible } from "vfile";
-
+import '@/styles/markdown.css';
 
 export default function Answer({ answer }: { answer: string }) {
   async function markdownToHtml(markdown: Compatible | undefined) {
@@ -31,13 +30,6 @@ export default function Answer({ answer }: { answer: string }) {
           <div className="flex items-center justify-between pb-3">
             {answer && (
               <div className="flex items-center gap-3">
-                {/* <Image
-                  src="/img/link.svg"
-                  alt="footer"
-                  width={20}
-                  height={20}
-                  className="cursor-pointer"
-                /> */}
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(answer.trim());
@@ -46,7 +38,6 @@ export default function Answer({ answer }: { answer: string }) {
                     });
                   }}
                 >
-
                   <Image
                     src="/img/copy-white.svg"
                     alt="footer"
@@ -55,100 +46,13 @@ export default function Answer({ answer }: { answer: string }) {
                     className="cursor-pointer text-white"
                   />
                 </button>
-                {/* <Image
-                  src="/img/share.svg"
-                  alt="footer"
-                  width={20}
-                  height={20}
-                  className="cursor-pointer"
-                /> */}
               </div>
             )}
           </div>
           <div className="flex flex-wrap content-center items-center gap-[15px]">
             <div className="w-full whitespace-pre-wrap text-base font-light leading-[152.5%] text-white log-message">
               {answer ? (
-                <div className="answer-container">
-                  <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
-                  <style jsx>{`
-                  .answer-container {
-                      font-family: Georgia, 'Times New Roman', Times, serif;
-                      
-                    }
-
-                    .markdown-content {
-                      /* Reset margins and paddings */
-                      margin: 0;
-                      padding: 0;
-                      /* Override existing styles for headings */
-                      h1, h2, h3, h4, h5, h6 {
-                        font-size: 22px; font-weight: 400; padding: 0;
-                        line-height: 1.2;
-                      }
-                      /* Optionally add more specific styling */
-                      h1 {
-                        font-size: 2.5em;
-                        color: white;
-                      }
-                      h2 {
-                        font-size: 2em;
-                        color: white;
-                      }
-                      h3 {
-                        font-size: 1.5em;
-                        color: white;
-                      }
-                      h4 {
-                        font-size: 1.2em;
-                        color: white;
-                      }
-                      p {
-                        font-size: 18px;
-                        line-height: 1.5;
-                      }
-                      a {
-                        color: rgb(168 85 247 / var(--tw-bg-opacity));
-                        text-decoration: underline;
-                        font-weight: 500;
-                        target: _blank;
-                      }
-
-                      /* Table of Contents Styling */
-                      ul, ol {
-                        list-style-type: none;
-                        margin-bottom: 0.2em;
-                        font-size: 18px;
-                      }
-                      
-                      ol > li {
-                        padding: 0;
-                        margin: 0;
-                      }
-                      ol > li > p {
-                        padding: 0;
-                        margin: 0;
-                      }
-                      ul > li {
-                        padding: 0;
-                        margin: 0;
-                      }
-                      ul > li > ul {
-                        margin-left: 1em;
-                        list-style-type: disc;
-                      }
-                      ul > li > ul > li {
-                        margin-bottom: 0.2em;
-                      }
-                      ul > li > ul > li > ul {
-                        margin-left: 1em;
-                        list-style-type: circle;
-                      }
-                      ul > li > ul > li > ul > li {
-                        margin-bottom: 0.2em;
-                      }
-                    }
-                  `}</style>
-                </div>
+                <div className="markdown-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
               ) : (
                 <div className="flex w-full flex-col gap-2">
                   <div className="h-6 w-full animate-pulse rounded-md bg-gray-300" />
