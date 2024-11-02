@@ -65,8 +65,8 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
           handleClickSuggestion={handleClickSuggestion}
         />
       )}
-      {sourceComponents}
       {orderedData.length > 0 && <LogsSection logs={allLogs} />}
+      {sourceComponents}
       {imageComponents}
       {initialReport && <Answer answer={initialReport.content} />}
       {pathData && <AccessReport accessData={pathData.output} report={answer} />}
