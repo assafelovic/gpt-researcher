@@ -353,6 +353,9 @@ export default function Home() {
         <Answer key={`reportBlock-${index}`} answer={data.content} />
       ));
 
+    // Find path data for AccessReport
+    const pathData = groupedData.find(data => data.type === 'path');
+
     const otherComponents = groupedData
       .map((data, index) => {
         if (data.type === 'sourceBlock') {
@@ -383,11 +386,12 @@ export default function Home() {
         
         {/* Show images if they exist */}
         {imageComponents}
-        
-        {/* Show the report components last */}
+
+        {/* Show the report components */}
         {reportComponents}
 
-        {<AccessReport accessData={orderedData} report={answer} />}
+        {/* Show AccessReport after all Answer components */}
+        {pathData && <AccessReport accessData={pathData.output} report={answer} />}
       </>
     );
   };

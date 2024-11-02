@@ -14,7 +14,7 @@ export default function Sources({
           sources{" "}
         </h3>
       </div>
-      <div className="overflow-y-auto max-h-[350px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
+      <div className="overflow-y-auto max-h-[250px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
         <div className="flex w-full max-w-[890px] flex-wrap content-center items-center gap-[15px] pb-2">
           {sources.length > 0 ? (
             sources.map((source) => (
