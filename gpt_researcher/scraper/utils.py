@@ -29,7 +29,7 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
                             score = 2  # Lower score
                         elif width >= 800 or height >= 500:
                             score = 1  # Lowest score
-                        elif width >= 400 or height >= 200:
+                        elif width >= 500 or height >= 300:
                             score = 0  # Lowest score
                         else:
                             continue  # Skip small images

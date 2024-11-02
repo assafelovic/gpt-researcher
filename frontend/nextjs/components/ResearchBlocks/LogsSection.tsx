@@ -1,5 +1,6 @@
 import Image from "next/image";
 import LogMessage from './elements/LogMessage';
+import { useEffect, useRef } from 'react';
 
 interface Log {
   header: string;
@@ -13,6 +14,15 @@ interface OrderedLogsProps {
 }
 
 const LogsSection = ({ logs }: OrderedLogsProps) => {
+  const logsContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Scroll to bottom whenever logs change
+    if (logsContainerRef.current) {
+      logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
+    }
+  }, [logs]); // Dependency on logs array ensures this runs when new logs are added
+
   return (
     <div className="container h-auto w-full shrink-0 rounded-lg border border-solid border-[#C2C2C2] bg-gray-800 shadow-md p-5">
       <div className="flex items-start gap-4 pb-3 lg:pb-3.5">
@@ -21,7 +31,10 @@ const LogsSection = ({ logs }: OrderedLogsProps) => {
           Agent Work
         </h3>
       </div>
-      <div className="overflow-y-auto min-h-[200px] max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">
+      <div 
+        ref={logsContainerRef}
+        className="overflow-y-auto min-h-[200px] max-h-[500px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300"
+      >
         <LogMessage logs={logs} />
       </div>
     </div>
