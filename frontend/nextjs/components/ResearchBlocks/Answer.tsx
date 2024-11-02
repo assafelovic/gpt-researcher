@@ -125,6 +125,10 @@ export default function Answer({ answer }: { answer: string }) {
                       padding: 0;
                       margin: 0;
                     }
+                    ol > li > p {
+                      padding: 0;
+                      margin: 0;
+                    }
                     ul > li {
                       margin-bottom: 0.2em;
                       line-height: 1.2em;
