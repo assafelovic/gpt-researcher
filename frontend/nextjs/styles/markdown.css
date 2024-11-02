@@ -26,7 +26,7 @@
 
   /* Lists */
   ul, ol {
-    margin: 0 0 0 2em;
+    margin: 0 0 0 1em;
     padding: 0;
   }
 
@@ -39,15 +39,40 @@
   }
 
   li {
-    display: list-item;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-gap: 0.5em;
+    padding: 0;
     
     > ul, > ol {
       margin: 0 0 0 1.5em;
     }
 
-    /* Add this new rule to handle paragraphs within list items */
+    /* Remove the marker styling since we're using grid */
+    &::marker {
+      display: none;
+    }
+
+    /* Add a pseudo-element for the marker */
+    &::before {
+      content: '•'; /* For unordered lists */
+      justify-self: end;
+    }
+
+    /* Updated list item paragraph styling */
     > p {
       margin: 0;
+      padding: 0;
+      grid-column: 2;
+    }
+  }
+
+  /* Handle ordered lists */
+  ol > li {
+    counter-increment: list;
+    
+    &::before {
+      content: counter(list) '.'; /* For ordered lists */
     }
   }
 
