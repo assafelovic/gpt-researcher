@@ -43,12 +43,6 @@ export default function Home() {
   const [questionForHuman, setQuestionForHuman] = useState<true | false>(false);
   const [allLogs, setAllLogs] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [orderedData]);
-
   const startResearch = (chatBoxSettings:any) => {
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
@@ -218,14 +212,16 @@ export default function Home() {
     data.forEach((item:any, index:any) => {
       const { type, content, metadata, output, link } = item;
 
-      if (content === 'selected_images') {
-        groupedData.push({ type: 'imagesBlock', metadata });
+      if (type === 'question') {
+        groupedData.push({ type: 'question', content });
       } else if (type === 'report') {
         if (!currentReportGroup) {
           currentReportGroup = { type: 'reportBlock', content: '' };
           groupedData.push(currentReportGroup);
         }
         currentReportGroup.content += output;
+      } else if (content === 'selected_images') {
+        groupedData.push({ type: 'imagesBlock', metadata });
       } else if (type === 'logs' && content === 'research_report') {
         if (!finalReportGroup) {
           finalReportGroup = { type: 'reportBlock', content: '' };
@@ -234,8 +230,6 @@ export default function Home() {
         finalReportGroup.content += output.report;
       } else if (type === 'langgraphButton') {
         groupedData.push({ type: 'langgraphButton', link });
-      } else if (type === 'question') {
-        groupedData.push({ type: 'question', content });
       } else if (type == 'chat'){
         groupedData.push({ type: 'chat', content: content });
       }
@@ -340,58 +334,76 @@ export default function Home() {
   const renderComponentsInOrder = () => {
     const groupedData = preprocessOrderedData(orderedData);
     
-    // Separate components into categories
+    // Find path data for AccessReport
+    const pathData = groupedData.find(data => data.type === 'path');
+
+    // Get the initial question (first question in the data)
+    const initialQuestion = groupedData
+      .find(data => data.type === 'question');
+
+    // Remove initial question from subsequent chat interactions
+    const chatComponents = groupedData
+      .filter(data => {
+        if (data.type === 'question' && data === initialQuestion) {
+          return false;
+        }
+        return (data.type === 'question' || data.type === 'chat');
+      })
+      .map((data, index) => {
+        if (data.type === 'question') {
+          return <Question key={`question-${index}`} question={data.content} />;
+        } else {
+          return <Answer key={`chat-${index}`} answer={data.content} />;
+        }
+      });
+
+    // Rest of the component separations remain the same
+    const sourceComponents = groupedData
+      .filter(data => data.type === 'sourceBlock')
+      .map((data, index) => (
+        <Sources key={`sourceBlock-${index}`} sources={data.items}/>
+      ));
+
     const imageComponents = groupedData
       .filter(data => data.type === 'imagesBlock')
       .map((data, index) => (
         <ImageSection key={`images-${index}`} metadata={data.metadata} />
       ));
 
-    const reportComponents = groupedData
-      .filter(data => data.type === 'reportBlock')
-      .map((data, index) => (
-        <Answer key={`reportBlock-${index}`} answer={data.content} />
-      ));
+    const initialReport = groupedData
+      .find(data => data.type === 'reportBlock');
 
-    // Find path data for AccessReport
-    const pathData = groupedData.find(data => data.type === 'path');
-
-    const otherComponents = groupedData
-      .map((data, index) => {
-        if (data.type === 'sourceBlock') {
-          return <Sources key={`sourceBlock-${index}`} sources={data.items}/>;
-        } else if (data.type === 'question') {
-          return <Question key={`question-${index}`} question={data.content} />;
-        } else if (data.type === 'chat') {
-          return <Answer key={`chat-${index}`} answer={data.content} />;
-        } else if (data.content === 'subqueries') {
-          return (
-            <SubQuestions
-              key={`subqueries-${index}`}
-              metadata={data.metadata}
-              handleClickSuggestion={handleClickSuggestion}
-            />
-          );
-        }
-        return null;
-      }).filter(Boolean);
+    const subqueriesComponent = groupedData
+      .find(data => data.content === 'subqueries');
 
     return (
       <>
-        {/* Show initial components */}
-        {otherComponents}
-        
-        {/* Show logs section */}
+        {/* Initial question */}
+        {initialQuestion && <Question question={initialQuestion.content} />}
+
+        {/* Subqueries if they exist */}
+        {subqueriesComponent && (
+          <SubQuestions
+            metadata={subqueriesComponent.metadata}
+            handleClickSuggestion={handleClickSuggestion}
+          />
+        )}
+
+        {/* 0. Agent work logs */}
         {orderedData.length > 0 && <LogsSection logs={allLogs} />}
-        
-        {/* Show images if they exist */}
+
+        {/* 1. Sources */}
+        {sourceComponents}
+
+        {/* 2. Images */}
         {imageComponents}
 
-        {/* Show the report components */}
-        {reportComponents}
-
-        {/* Show AccessReport after all Answer components */}
+        {/* 3. Initial Answer Report */}
+        {initialReport && <Answer answer={initialReport.content} />}
         {pathData && <AccessReport accessData={pathData.output} report={answer} />}
+
+        {/* 4. All subsequent chat interactions */}
+        {chatComponents}
       </>
     );
   };
