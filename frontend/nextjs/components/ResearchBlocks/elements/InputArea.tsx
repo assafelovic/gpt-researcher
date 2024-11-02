@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { FC, useRef } from "react";
-import TypeAnimation from "./TypeAnimation";
+import TypeAnimation from "../../TypeAnimation";
 
 type TInputAreaProps = {
   promptValue: string;
@@ -9,12 +9,13 @@ type TInputAreaProps = {
   handleSecondary?: (query: string) => void;
   disabled?: boolean;
   reset?: () => void;
+  isStopped?: boolean;
 };
 
 // Debounce function to limit the rate at which a function can fire
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
+function debounce(func: Function, wait: number) {
+  let timeout: NodeJS.Timeout | undefined;
+  return function executedFunction(...args: any[]) {
     const later = () => {
       clearTimeout(timeout);
       func(...args);
@@ -31,9 +32,15 @@ const InputArea: FC<TInputAreaProps> = ({
   handleSecondary,
   disabled,
   reset,
+  isStopped,
 }) => {
+  // Only show input if not stopped
+  if (isStopped) {
+    return null;
+  }
+
   const placeholder = handleSecondary
-    ? "Follow up questions..."
+    ? "Any questions about this report?"
     : "What would you like to research next?";
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -61,7 +68,7 @@ const InputArea: FC<TInputAreaProps> = ({
   };
 
   // Debounced version of the height adjustment function
-  const adjustHeight = debounce((target) => {
+  const adjustHeight = debounce((target: HTMLTextAreaElement) => {
     target.style.height = 'auto'; // Reset height to auto to allow shrinking
     target.style.height = `${target.scrollHeight}px`; // Adjust height
   }, 100); // Adjust the delay as needed
@@ -83,37 +90,6 @@ const InputArea: FC<TInputAreaProps> = ({
         resetHeight();
       }}
     >
-      {handleSecondary && (
-        <div
-          role="button"
-          aria-disabled={disabled}
-          className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-[linear-gradient(154deg,#1B1B16_23.37%,#565646_91.91%)] disabled:pointer-events-none disabled:opacity-75"
-          onClick={(e) => {
-            if (!disabled) {
-              e.preventDefault();
-              if (reset) reset();
-              handleSecondary(promptValue);
-              setPromptValue(''); // Clear prompt value
-              resetHeight();
-            }
-          }}
-        >
-          {disabled && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <TypeAnimation />
-            </div>
-          )}
-
-          <Image
-            unoptimized
-            src={"/img/search.svg"}
-            alt="search"
-            width={24}
-            height={24}
-            className={disabled ? "invisible" : ""}
-          />
-        </div>
-      )}
 
       <textarea
         placeholder={placeholder}

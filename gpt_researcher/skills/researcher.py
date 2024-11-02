@@ -318,7 +318,7 @@ class ResearchConductor:
         await stream_output(
             "logs",
             "planning_research",
-            f"🤔 Planning the research strategy and subtasks...",
+            f"🤔 Planning the research strategy and subtasks (this may take a minute)...",
             self.researcher.websocket,
         )
 
