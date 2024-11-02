@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { FC, useRef } from "react";
-import TypeAnimation from "../TypeAnimation";
+import TypeAnimation from "../../TypeAnimation";
 
 type TInputAreaProps = {
   promptValue: string;
