@@ -1,25 +1,19 @@
 "use client";
 
-import Answer from "@/components/ResearchBlocks/Answer";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import Hero from "@/components/Hero";
-import InputArea from "@/components/ResearchBlocks/elements/InputArea";
-
-import Sources from "@/components/ResearchBlocks/Sources";
-import Question from "@/components/ResearchBlocks/Question";
-import SubQuestions from "@/components/ResearchBlocks/elements/SubQuestions";
-import LogsSection from "@/components/ResearchBlocks/LogsSection";
-import ImageSection from "@/components/ResearchBlocks/ImageSection";
-import AccessReport from "@/components/Task/AccessReport";
 import { useRef, useState, useEffect } from "react";
-
+import { useWebSocket } from '@/hooks/useWebSocket';
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
+import { Data, ChatBoxSettings, QuestionData } from '../types/data';
+import { preprocessOrderedData } from '../utils/dataProcessing';
+import { ResearchResults } from '../components/ResearchResults';
+
+import Header from "@/components/Header";
+import Hero from "@/components/Hero";
+import Footer from "@/components/Footer";
+import InputArea from "@/components/ResearchBlocks/elements/InputArea";
 import HumanFeedback from "@/components/HumanFeedback";
 import LoadingDots from "@/components/LoadingDots";
-import { Data, ChatBoxSettings, QuestionData } from '../types/data';
-import Image from "next/image";
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
@@ -31,87 +25,22 @@ export default function Home() {
     report_type: 'research_report', 
     tone: 'Objective' 
   });
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-
   const [question, setQuestion] = useState("");
-  const [sources, setSources] = useState<{ name: string; url: string }[]>([]);
-  const [similarQuestions, setSimilarQuestions] = useState<string[]>([]);
-  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [orderedData, setOrderedData] = useState<Data[]>([]);
-  const heartbeatInterval = useRef<number>();
   const [showHumanFeedback, setShowHumanFeedback] = useState(false);
   const [questionForHuman, setQuestionForHuman] = useState<true | false>(false);
   const [allLogs, setAllLogs] = useState<any[]>([]);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const startResearch = (chatBoxSettings:any) => {
-    const storedConfig = localStorage.getItem('apiVariables');
-    const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
-    const headers = {
-      'retriever': apiVariables.RETRIEVER,
-      'langchain_api_key': apiVariables.LANGCHAIN_API_KEY,
-      'openai_api_key': apiVariables.OPENAI_API_KEY,
-      'tavily_api_key': apiVariables.TAVILY_API_KEY,
-      'google_api_key': apiVariables.GOOGLE_API_KEY,
-      'google_cx_key': apiVariables.GOOGLE_CX_KEY,
-      'bing_api_key': apiVariables.BING_API_KEY,
-      'searchapi_api_key': apiVariables.SEARCHAPI_API_KEY,
-      'serpapi_api_key': apiVariables.SERPAPI_API_KEY,
-      'serper_api_key': apiVariables.SERPER_API_KEY,
-      'searx_url': apiVariables.SEARX_URL
-    };
+  const { socket, initializeWebSocket } = useWebSocket(
+    setOrderedData,
+    setAnswer,
+    setLoading,
+    setShowHumanFeedback,
+    setQuestionForHuman
+  );
 
-    if (!socket) {
-      if (typeof window !== 'undefined') {
-        const { protocol, pathname } = window.location;
-        let { host } = window.location;
-        host = host.includes('localhost') ? 'localhost:8000' : host;
-        const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
-
-        const newSocket = new WebSocket(ws_uri);
-        setSocket(newSocket);
-
-        newSocket.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          console.log('websocket data caught in frontend: ', data);
-
-          if (data.type === 'human_feedback' && data.content === 'request') {
-            console.log('triggered human feedback condition')
-            setQuestionForHuman(data.output)
-            setShowHumanFeedback(true);
-          } else {
-            const contentAndType = `${data.content}-${data.type}`;
-            setOrderedData((prevOrder) => [...prevOrder, { ...data, contentAndType }]);
-
-            if (data.type === 'report') {
-              setAnswer((prev:any) => prev + data.output);
-            } else if (data.type === 'path' || data.type === 'chat') {
-              setLoading(false);
-            }
-          }
-          
-        };
-
-        newSocket.onopen = () => {
-          const { task, report_type, report_source, tone } = chatBoxSettings;
-          let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
-          newSocket.send(data);
-        };
-
-        newSocket.onclose = () => {
-          clearInterval(heartbeatInterval.current);
-          setSocket(null);
-        };
-      }
-    } else {
-      const { task, report_type, report_source, tone } = chatBoxSettings;
-      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
-      socket.send(data);
-    }
-  };
-
-  // Add this function to handle feedback submission
   const handleFeedbackSubmit = (feedback: string | null) => {
-    console.log('user feedback is passed to handleFeedbackSubmit: ', feedback);
     if (socket) {
       socket.send(JSON.stringify({ type: 'human_feedback', content: feedback }));
     }
@@ -126,14 +55,10 @@ export default function Home() {
       setPromptValue("");
       setAnswer("");
 
-      const questionData: QuestionData = { 
-        type: 'question', 
-        content: message 
-      };
+      const questionData: QuestionData = { type: 'question', content: message };
       setOrderedData(prevOrder => [...prevOrder, questionData]);
       
-      const data = `chat${JSON.stringify({ message })}`;
-      socket.send(data);
+      socket.send(`chat${JSON.stringify({ message })}`);
     }
   };
 
@@ -143,31 +68,19 @@ export default function Home() {
     setQuestion(newQuestion);
     setPromptValue("");
     setAnswer("");
+    setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: newQuestion }]);
 
-    // Add the new question to orderedData
-    setOrderedData((prevOrder:any) => [...prevOrder, { type: 'question', content: newQuestion }]);
-
-    const { report_type, report_source, tone } = chatBoxSettings;
-
-    // Retrieve LANGGRAPH_HOST_URL from local storage or state
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
     const langgraphHostUrl = apiVariables.LANGGRAPH_HOST_URL;
 
-    if (report_type === 'multi_agents' && langgraphHostUrl) {
-
-      let { streamResponse, host, thread_id } = await startLanggraphResearch(newQuestion, report_source, langgraphHostUrl);
-
+    if (chatBoxSettings.report_type === 'multi_agents' && langgraphHostUrl) {
+      let { streamResponse, host, thread_id } = await startLanggraphResearch(newQuestion, chatBoxSettings.report_source, langgraphHostUrl);
       const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
-
-      console.log('langsmith-gui-link in page.tsx', langsmithGuiLink);
-      // Add the Langgraph button to orderedData
       setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphButton', link: langsmithGuiLink }]);
 
       let previousChunk = null;
-
       for await (const chunk of streamResponse) {
-        console.log(chunk);
         if (chunk.data.report != null && chunk.data.report != "Full report content here") {
           setOrderedData((prevOrder) => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
           setLoading(false);
@@ -178,7 +91,7 @@ export default function Home() {
         previousChunk = chunk;
       }
     } else {
-      startResearch(chatBoxSettings);
+      initializeWebSocket(newQuestion, chatBoxSettings);
     }
   };
 
@@ -187,8 +100,6 @@ export default function Home() {
     setPromptValue("");
     setQuestion("");
     setAnswer("");
-    setSources([]);
-    setSimilarQuestions([]);
   };
 
   const handleClickSuggestion = (value: string) => {
@@ -199,214 +110,32 @@ export default function Home() {
     }
   };
 
-  const preprocessOrderedData = (data:any) => {
-    const groupedData: any[] = [];
-    let currentAccordionGroup:any = null;
-    let currentSourceGroup:any = null;
-    let currentReportGroup:any = null;
-    let finalReportGroup:any = null;
-    let currentImagesGroup:any = null;
-    let sourceBlockEncountered = false;
-    let lastSubqueriesIndex = -1;
-
-    data.forEach((item:any, index:any) => {
-      const { type, content, metadata, output, link } = item;
-
-      if (type === 'question') {
-        groupedData.push({ type: 'question', content });
-      } else if (type === 'report') {
-        if (!currentReportGroup) {
-          currentReportGroup = { type: 'reportBlock', content: '' };
-          groupedData.push(currentReportGroup);
-        }
-        currentReportGroup.content += output;
-      } else if (content === 'selected_images') {
-        groupedData.push({ type: 'imagesBlock', metadata });
-      } else if (type === 'logs' && content === 'research_report') {
-        if (!finalReportGroup) {
-          finalReportGroup = { type: 'reportBlock', content: '' };
-          groupedData.push(finalReportGroup);
-        }
-        finalReportGroup.content += output.report;
-      } else if (type === 'langgraphButton') {
-        groupedData.push({ type: 'langgraphButton', link });
-      } else if (type == 'chat'){
-        groupedData.push({ type: 'chat', content: content });
-      }
-      else {
-        if (currentReportGroup) {
-          currentReportGroup = null;
-        }
-  
-        if (content === 'subqueries') {
-          if (currentAccordionGroup) {
-            currentAccordionGroup = null;
-          }
-          if (currentSourceGroup) {
-            groupedData.push(currentSourceGroup);
-            currentSourceGroup = null;
-          }
-          groupedData.push(item);
-          lastSubqueriesIndex = groupedData.length - 1;
-        } else if (type === 'sourceBlock') {
-          currentSourceGroup = item;
-          if (lastSubqueriesIndex !== -1) {
-            groupedData.splice(lastSubqueriesIndex + 1, 0, currentSourceGroup);
-            lastSubqueriesIndex = -1;
-          } else {
-            groupedData.push(currentSourceGroup);
-          }
-          sourceBlockEncountered = true;
-          currentSourceGroup = null;
-        } else if (content === 'added_source_url') {
-          if (!currentSourceGroup) {
-            currentSourceGroup = { type: 'sourceBlock', items: [] };
-            if (lastSubqueriesIndex !== -1) {
-              groupedData.splice(lastSubqueriesIndex + 1, 0, currentSourceGroup);
-              lastSubqueriesIndex = -1;
-            } else {
-              groupedData.push(currentSourceGroup);
-            }
-            sourceBlockEncountered = true;
-          }
-          let hostname = "";
-          try {
-            if (typeof metadata === 'string') {
-              hostname = new URL(metadata).hostname.replace('www.', '');
-            }
-          } catch (e) {
-            console.error(`Invalid URL: ${metadata}`, e);
-            hostname = "unknown"; // Default or fallback value
-          }
-          currentSourceGroup.items.push({ name: hostname, url: metadata });
-        } else if (type !== 'path' && content !== '') {
-          if (sourceBlockEncountered) {
-            if (!currentAccordionGroup) {
-              currentAccordionGroup = { type: 'accordionBlock', items: [] };
-              groupedData.push(currentAccordionGroup);
-            }
-            currentAccordionGroup.items.push(item);
-          } else {
-            groupedData.push(item);
-          }
-        } else {
-          if (currentAccordionGroup) {
-            currentAccordionGroup = null;
-          }
-          if (currentSourceGroup) {
-            currentSourceGroup = null;
-          }
-          groupedData.push(item);
-        }
-      }
-    });
-  
-    return groupedData;
-  };
-
-  // Remove logs processing from renderComponentsInOrder and add this useEffect
   useEffect(() => {
     const groupedData = preprocessOrderedData(orderedData);
     const statusReports = ["agent_generated", "starting_research", "planning_research"];
     
-    const newLogs: any[] = [];
-    groupedData.forEach((data) => {
+    const newLogs = groupedData.reduce((acc: any[], data) => {
       if (data.type === 'accordionBlock') {
-        const logs = data.items.map((item:any, subIndex:any) => ({
+        const logs = data.items.map((item: any, subIndex: any) => ({
           header: item.content,
           text: item.output,
           metadata: item.metadata,
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
-        newLogs.push(...logs);
+        return [...acc, ...logs];
       } else if (statusReports.includes(data.content)) {
-        newLogs.push({
+        return [...acc, {
           header: data.content,
           text: data.output,
           metadata: data.metadata,
           key: `${data.type}-${data.content}`,
-        });
+        }];
       }
-    });
-    setAllLogs(newLogs);
-  }, [orderedData]); // Only run when orderedData changes
-
-  const renderComponentsInOrder = () => {
-    const groupedData = preprocessOrderedData(orderedData);
+      return acc;
+    }, []);
     
-    // Find path data for AccessReport
-    const pathData = groupedData.find(data => data.type === 'path');
-
-    // Get the initial question (first question in the data)
-    const initialQuestion = groupedData
-      .find(data => data.type === 'question');
-
-    // Remove initial question from subsequent chat interactions
-    const chatComponents = groupedData
-      .filter(data => {
-        if (data.type === 'question' && data === initialQuestion) {
-          return false;
-        }
-        return (data.type === 'question' || data.type === 'chat');
-      })
-      .map((data, index) => {
-        if (data.type === 'question') {
-          return <Question key={`question-${index}`} question={data.content} />;
-        } else {
-          return <Answer key={`chat-${index}`} answer={data.content} />;
-        }
-      });
-
-    // Rest of the component separations remain the same
-    const sourceComponents = groupedData
-      .filter(data => data.type === 'sourceBlock')
-      .map((data, index) => (
-        <Sources key={`sourceBlock-${index}`} sources={data.items}/>
-      ));
-
-    const imageComponents = groupedData
-      .filter(data => data.type === 'imagesBlock')
-      .map((data, index) => (
-        <ImageSection key={`images-${index}`} metadata={data.metadata} />
-      ));
-
-    const initialReport = groupedData
-      .find(data => data.type === 'reportBlock');
-
-    const subqueriesComponent = groupedData
-      .find(data => data.content === 'subqueries');
-
-    return (
-      <>
-        {/* Initial question */}
-        {initialQuestion && <Question question={initialQuestion.content} />}
-
-        {/* Subqueries if they exist */}
-        {subqueriesComponent && (
-          <SubQuestions
-            metadata={subqueriesComponent.metadata}
-            handleClickSuggestion={handleClickSuggestion}
-          />
-        )}
-
-        {/* 1. Sources */}
-        {sourceComponents}
-
-        {/* 0. Agent work logs */}
-        {orderedData.length > 0 && <LogsSection logs={allLogs} />}
-
-        {/* 2. Images */}
-        {imageComponents}
-
-        {/* 3. Initial Answer Report */}
-        {initialReport && <Answer answer={initialReport.content} />}
-        {pathData && <AccessReport accessData={pathData.output} report={answer} />}
-
-        {/* 4. All subsequent chat interactions */}
-        {chatComponents}
-      </>
-    );
-  };
+    setAllLogs(newLogs);
+  }, [orderedData]);
 
   return (
     <>
@@ -424,7 +153,12 @@ export default function Home() {
           <div className="flex h-full w-full grow flex-col justify-between">
             <div className="container w-full space-y-2">
               <div className="container space-y-2 task-components">
-                {renderComponentsInOrder()}
+                <ResearchResults
+                  orderedData={orderedData}
+                  answer={answer}
+                  allLogs={allLogs}
+                  handleClickSuggestion={handleClickSuggestion}
+                />
               </div>
 
               {showHumanFeedback && (
