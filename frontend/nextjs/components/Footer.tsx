@@ -17,9 +17,9 @@ const Footer = ({ setChatBoxSettings, chatBoxSettings}: ChatBoxProps) => {
   
   return (
     <>
-      <div className="container flex min-h-[72px] items-center justify-between border-t border-[#D2D2D2] px-4 pb-3 pt-5 lg:min-h-[72px] lg:px-0 lg:py-5">
+      <div className="container flex min-h-[72px] mt-2 items-center justify-between border-t border-[#D2D2D2] px-4 pb-3 pt-5 lg:min-h-[72px] lg:px-0 lg:py-5">
         <Modal setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-gray-300">
             © {new Date().getFullYear()} GPT Researcher. All rights reserved.
         </div>
         <div className="flex items-center gap-3">
