@@ -9,6 +9,7 @@ type TInputAreaProps = {
   handleSecondary?: (query: string) => void;
   disabled?: boolean;
   reset?: () => void;
+  isStopped?: boolean;
 };
 
 // Debounce function to limit the rate at which a function can fire
@@ -31,7 +32,13 @@ const InputArea: FC<TInputAreaProps> = ({
   handleSecondary,
   disabled,
   reset,
+  isStopped,
 }) => {
+  // Only show input if not stopped
+  if (isStopped) {
+    return null;
+  }
+
   const placeholder = handleSecondary
     ? "Any questions about this report?"
     : "What would you like to research next?";

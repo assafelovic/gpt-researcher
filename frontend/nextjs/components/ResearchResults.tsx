@@ -5,7 +5,7 @@ import Sources from './ResearchBlocks/Sources';
 import ImageSection from './ResearchBlocks/ImageSection';
 import SubQuestions from './ResearchBlocks/elements/SubQuestions';
 import LogsSection from './ResearchBlocks/LogsSection';
-import AccessReport from './Task/AccessReport';
+import AccessReport from './ResearchBlocks/AccessReport';
 import { preprocessOrderedData } from '../utils/dataProcessing';
 import { Data } from '../types/data';
 
