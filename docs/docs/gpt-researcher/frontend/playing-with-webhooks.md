@@ -20,4 +20,4 @@ Click into the WS request & go to the "Headers" tab
 
 ![image](https://github.com/user-attachments/assets/dbd58c1d-3506-411a-852b-e1b133b6f5c8)
 
-For debugging, have a look at the <a href="https://github.com/assafelovic/gpt-researcher/blob/master/frontend/nextjs/helpers/getHost.js">getHost function.</a>
+For debugging, have a look at the <a href="https://github.com/assafelovic/gpt-researcher/blob/master/frontend/nextjs/helpers/getHost.ts">getHost function.</a>
