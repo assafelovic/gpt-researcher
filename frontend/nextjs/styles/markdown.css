@@ -44,6 +44,11 @@
     > ul, > ol {
       margin: 0 0 0 1.5em;
     }
+
+    /* Add this new rule to handle paragraphs within list items */
+    > p {
+      margin: 0;
+    }
   }
 
   /* Numbered lists specific styling */
