@@ -16,7 +16,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
     "MAX_SEARCH_RESULTS_PER_QUERY": 5,
     "MEMORY_BACKEND": "local",
-    "TOTAL_WORDS": 1200,
+    "TOTAL_WORDS": 1000,
     "REPORT_FORMAT": "APA",
     "MAX_ITERATIONS": 4,
     "AGENT_ROLE": None,

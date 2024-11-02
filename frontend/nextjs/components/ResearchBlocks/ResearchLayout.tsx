@@ -20,6 +20,12 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
   answer,
   handleClickSuggestion,
 }) => {
+  const sourcesComponents = groupedData
+    .filter(data => data.type === 'sourceBlock')
+    .map((data, index) => (
+      <Sources key={`sourceBlock-${index}`} sources={data.items}/>
+    ));
+
   const imageComponents = groupedData
     .filter(data => data.type === 'imagesBlock')
     .map((data, index) => (
@@ -36,9 +42,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
 
   const otherComponents = groupedData
     .map((data, index) => {
-      if (data.type === 'sourceBlock') {
-        return <Sources key={`sourceBlock-${index}`} sources={data.items}/>;
-      } else if (data.type === 'question') {
+      if (data.type === 'question') {
         return <Question key={`question-${index}`} question={data.content} />;
       } else if (data.type === 'chat') {
         return <Answer key={`chat-${index}`} answer={data.content} />;
@@ -58,6 +62,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
     <>
       {otherComponents}
       {groupedData.length > 0 && <LogsSection logs={allLogs} />}
+      {sourcesComponents}
       {imageComponents}
       {reportComponents}
       {pathData && <AccessReport accessData={pathData.output} report={answer} />}
