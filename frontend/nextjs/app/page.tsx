@@ -389,11 +389,11 @@ export default function Home() {
           />
         )}
 
-        {/* 0. Agent work logs */}
-        {orderedData.length > 0 && <LogsSection logs={allLogs} />}
-
         {/* 1. Sources */}
         {sourceComponents}
+
+        {/* 0. Agent work logs */}
+        {orderedData.length > 0 && <LogsSection logs={allLogs} />}
 
         {/* 2. Images */}
         {imageComponents}
