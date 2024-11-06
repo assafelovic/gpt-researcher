@@ -55,7 +55,7 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
 
         heartbeatInterval.current = window.setInterval(() => {
           socket?.send('ping');
-        }, 3000); // Send ping every 30 seconds
+        }, 3000); // Send ping every 3 seconds
       };
 
       newSocket.onclose = () => {
