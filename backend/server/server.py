@@ -81,26 +81,6 @@ async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "report": None})
 
 
-@app.get("/getConfig")
-async def get_config(
-    langchain_api_key: str = Header(None),
-    openai_api_key: str = Header(None),
-    tavily_api_key: str = Header(None),
-    google_api_key: str = Header(None),
-    google_cx_key: str = Header(None),
-    bing_api_key: str = Header(None),
-    searchapi_api_key: str = Header(None),
-    serpapi_api_key: str = Header(None),
-    serper_api_key: str = Header(None),
-    searx_url: str = Header(None)
-):
-    return get_config_dict(
-        langchain_api_key, openai_api_key, tavily_api_key,
-        google_api_key, google_cx_key, bing_api_key,
-        searchapi_api_key, serpapi_api_key, serper_api_key, searx_url
-    )
-
-
 @app.get("/files/")
 async def list_files():
     files = os.listdir(DOC_PATH)
@@ -111,12 +91,6 @@ async def list_files():
 @app.post("/api/multi_agents")
 async def run_multi_agents():
     return await execute_multi_agents(manager)
-
-
-@app.post("/setConfig")
-async def set_config(config: ConfigRequest):
-    update_environment_variables(config.dict())
-    return {"message": "Config updated successfully"}
 
 
 @app.post("/upload/")

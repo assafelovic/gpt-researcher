@@ -1,13 +1,16 @@
 import { Data } from '../types/data';
+import { consolidateSourceAndImageBlocks } from './consolidateBlocks';
 
 export const preprocessOrderedData = (data: Data[]) => {
-  const groupedData: any[] = [];
+  let groupedData: any[] = [];
   let currentAccordionGroup: any = null;
   let currentSourceGroup: any = null;
   let currentReportGroup: any = null;
   let finalReportGroup: any = null;
   let sourceBlockEncountered = false;
   let lastSubqueriesIndex = -1;
+  const seenUrls = new Set<string>();
+  console.log('websocket data before its processed',data)
 
   data.forEach((item: any) => {
     const { type, content, metadata, output, link } = item;
@@ -15,6 +18,7 @@ export const preprocessOrderedData = (data: Data[]) => {
     if (type === 'question') {
       groupedData.push({ type: 'question', content });
     } else if (type === 'report') {
+      // Start a new report group if we don't have one
       if (!currentReportGroup) {
         currentReportGroup = { type: 'reportBlock', content: '' };
         groupedData.push(currentReportGroup);
@@ -60,23 +64,24 @@ export const preprocessOrderedData = (data: Data[]) => {
       } else if (content === 'added_source_url') {
         if (!currentSourceGroup) {
           currentSourceGroup = { type: 'sourceBlock', items: [] };
-          if (lastSubqueriesIndex !== -1) {
-            groupedData.splice(lastSubqueriesIndex + 1, 0, currentSourceGroup);
-            lastSubqueriesIndex = -1;
-          } else {
-            groupedData.push(currentSourceGroup);
+        }
+
+        if (!seenUrls.has(metadata)) {
+          seenUrls.add(metadata);
+          let hostname = "";
+          try {
+            if (typeof metadata === 'string') {
+              hostname = new URL(metadata).hostname.replace('www.', '');
+            }
+          } catch (e) {
+            hostname = "unknown";
           }
+          currentSourceGroup.items.push({ name: hostname, url: metadata });
+        }
+      
+        if (currentSourceGroup.items.length > 0) {
           sourceBlockEncountered = true;
         }
-        let hostname = "";
-        try {
-          if (typeof metadata === 'string') {
-            hostname = new URL(metadata).hostname.replace('www.', '');
-          }
-        } catch (e) {
-          hostname = "unknown";
-        }
-        currentSourceGroup.items.push({ name: hostname, url: metadata });
       } else if (type !== 'path' && content !== '') {
         if (sourceBlockEncountered) {
           if (!currentAccordionGroup) {
@@ -94,10 +99,21 @@ export const preprocessOrderedData = (data: Data[]) => {
         if (currentSourceGroup) {
           currentSourceGroup = null;
         }
+        if (currentReportGroup) {
+          // Find and remove the previous reportBlock
+          const reportBlockIndex = groupedData.findIndex(
+            item => item === currentReportGroup
+          );
+          if (reportBlockIndex !== -1) {
+            groupedData.splice(reportBlockIndex, 1);
+          }
+          currentReportGroup = null;  // Reset the current report group
+        }
         groupedData.push(item);
       }
     }
   });
 
+  groupedData = consolidateSourceAndImageBlocks(groupedData);
   return groupedData;
 }; 
