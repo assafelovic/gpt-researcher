@@ -1,7 +1,7 @@
 import { Data } from '../types/data';
 
 export const preprocessOrderedData = (data: Data[]) => {
-  const groupedData: any[] = [];
+  let groupedData: any[] = [];
   let currentAccordionGroup: any = null;
   let currentSourceGroup: any = null;
   let currentReportGroup: any = null;
@@ -9,12 +9,15 @@ export const preprocessOrderedData = (data: Data[]) => {
   let sourceBlockEncountered = false;
   let lastSubqueriesIndex = -1;
 
+  console.log('websocket data before its processed',data)
+
   data.forEach((item: any) => {
     const { type, content, metadata, output, link } = item;
 
     if (type === 'question') {
       groupedData.push({ type: 'question', content });
     } else if (type === 'report') {
+      // Start a new report group if we don't have one
       if (!currentReportGroup) {
         currentReportGroup = { type: 'reportBlock', content: '' };
         groupedData.push(currentReportGroup);
@@ -93,6 +96,16 @@ export const preprocessOrderedData = (data: Data[]) => {
         }
         if (currentSourceGroup) {
           currentSourceGroup = null;
+        }
+        if (currentReportGroup) {
+          // Find and remove the previous reportBlock
+          const reportBlockIndex = groupedData.findIndex(
+            item => item === currentReportGroup
+          );
+          if (reportBlockIndex !== -1) {
+            groupedData.splice(reportBlockIndex, 1);
+          }
+          currentReportGroup = null;  // Reset the current report group
         }
         groupedData.push(item);
       }
