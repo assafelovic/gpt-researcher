@@ -20,7 +20,6 @@ interface AccordionProps {
 const plainTextFields = ['task', 'sections', 'headers', 'sources', 'research_data'];
 
 const Accordion: React.FC<AccordionProps> = ({ logs }) => {
-  console.log('logs in Accordion', logs);
 
   const getLogHeaderText = (log: Log): string => {
     const regex = /📃 Source: (https?:\/\/[^\s]+)/;
