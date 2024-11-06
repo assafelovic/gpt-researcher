@@ -10,7 +10,6 @@ export default function Answer({ answer }: { answer: string }) {
   async function markdownToHtml(markdown: Compatible | undefined) {
     try {
       const result = await remark().use(html).process(markdown);
-      console.log('Markdown to HTML conversion result:', result.toString());
       return result.toString();
     } catch (error) {
       console.error('Error converting Markdown to HTML:', error);

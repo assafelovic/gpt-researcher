@@ -54,6 +54,9 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
     ));
 
   const initialReport = groupedData.find(data => data.type === 'reportBlock');
+  const finalReport = groupedData
+    .filter(data => data.type === 'reportBlock')
+    .pop();
   const subqueriesComponent = groupedData.find(data => data.content === 'subqueries');
 
   return (
@@ -68,7 +71,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
       {orderedData.length > 0 && <LogsSection logs={allLogs} />}
       {sourceComponents}
       {imageComponents}
-      {initialReport && <Answer answer={initialReport.content} />}
+      {finalReport && <Answer answer={finalReport.content} />}
       {pathData && <AccessReport accessData={pathData.output} report={answer} />}
       {chatComponents}
     </>
