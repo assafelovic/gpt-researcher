@@ -8,7 +8,7 @@ export const preprocessOrderedData = (data: Data[]) => {
   let finalReportGroup: any = null;
   let sourceBlockEncountered = false;
   let lastSubqueriesIndex = -1;
-
+  const seenUrls = new Set<string>();
   console.log('websocket data before its processed',data)
 
   data.forEach((item: any) => {
@@ -63,23 +63,24 @@ export const preprocessOrderedData = (data: Data[]) => {
       } else if (content === 'added_source_url') {
         if (!currentSourceGroup) {
           currentSourceGroup = { type: 'sourceBlock', items: [] };
-          if (lastSubqueriesIndex !== -1) {
-            groupedData.splice(lastSubqueriesIndex + 1, 0, currentSourceGroup);
-            lastSubqueriesIndex = -1;
-          } else {
-            groupedData.push(currentSourceGroup);
+        }
+
+        if (!seenUrls.has(metadata)) {
+          seenUrls.add(metadata);
+          let hostname = "";
+          try {
+            if (typeof metadata === 'string') {
+              hostname = new URL(metadata).hostname.replace('www.', '');
+            }
+          } catch (e) {
+            hostname = "unknown";
           }
+          currentSourceGroup.items.push({ name: hostname, url: metadata });
+        }
+      
+        if (currentSourceGroup.items.length > 0) {
           sourceBlockEncountered = true;
         }
-        let hostname = "";
-        try {
-          if (typeof metadata === 'string') {
-            hostname = new URL(metadata).hostname.replace('www.', '');
-          }
-        } catch (e) {
-          hostname = "unknown";
-        }
-        currentSourceGroup.items.push({ name: hostname, url: metadata });
       } else if (type !== 'path' && content !== '') {
         if (sourceBlockEncountered) {
           if (!currentAccordionGroup) {
