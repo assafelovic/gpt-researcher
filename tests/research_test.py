@@ -14,11 +14,11 @@ Default is False, i.e., no additional research will be conducted on newer source
 
 #### Test case 1 (original test case as control from https://docs.gptr.dev/docs/gpt-researcher/tailored-research)
 
-from gpt_researcher.master.agent import GPTResearcher  # Ensure this path is correct
+from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 import asyncio
 
 async def get_report(query: str, report_type: str, sources: list) -> str:
-    researcher = GPTResearcher(query=query, report_type=report_type, source_urls=sources)
+    researcher = GPTResearcher(query=query, report_type=report_type, source_urls=sources, add_additional_sources=False)
     await researcher.conduct_research()
     report = await researcher.write_report()
     return report, researcher
