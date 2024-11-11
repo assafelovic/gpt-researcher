@@ -67,9 +67,9 @@ class Config:
                 case "custom":
                     self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "custom")
                 case "openai":
-                    self.embedding_model = "text-embedding-3-small"
+                    self.embedding_model = "text-embedding-3-large"
                 case "azure_openai":
-                    self.embedding_model = os.environ["AZURE_EMBEDDING_MODEL"]
+                    self.embedding_model = "text-embedding-3-large"
                 case "huggingface":
                     self.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
                 case _:
