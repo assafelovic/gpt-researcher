@@ -25,7 +25,7 @@ async def get_report(query: str, report_type: str, sources: list) -> str:
 
 if __name__ == "__main__":
     query = "Research the latest advancements in AI and provide a detailed report in APA format including sources."
-    report_type = "research_report"
+    report_type = "sources"
     sources = ["https://en.wikipedia.org/wiki/Artificial_intelligence", "https://www.ibm.com/watson/ai"]  # query is related
 
     report, researcher = asyncio.run(get_report(query, report_type, sources))
