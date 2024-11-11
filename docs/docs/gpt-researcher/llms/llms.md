@@ -65,6 +65,9 @@ See also the documentation in the Langchain [Azure OpenAI](https://api.python.la
 
 On Azure OpenAI you will need to create deployments for each model you want to use. Please also specify the model names/deployment names in your `.env` file:
 
+Required Embedding Model:
+To ensure optimal performance, GPT Researcher requires the text-embedding-3-large model. Please deploy this specific model to your Azure Endpoint.
+
 ```bash
 AZURE_OPENAI_API_KEY=[Your Key]
 AZURE_OPENAI_ENDPOINT=https://{your-endpoint}.openai.azure.com/
@@ -75,7 +78,7 @@ FAST_LLM=azure_openai:gpt-4o-mini
 SMART_LLM=azure_openai:gpt-4o
 STRATEGIC_LLM=azure_openai:o1-preview
 
-EMBEDDING="azure_openai:text-embedding-ada-002"
+
 ```
 
 
