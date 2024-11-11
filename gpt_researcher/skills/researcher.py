@@ -38,8 +38,8 @@ class ResearchConductor:
             await stream_output("logs", "agent_generated", self.researcher.agent, self.researcher.websocket)
 
         # If specified, the researcher will use the given urls as the context for the research.
-        if self.source_urls:
-            self.context = await self.__get_context_by_urls(self.source_urls)
+        if self.researcher.source_urls:
+            self.context = await self.__get_context_by_urls(self.researcher.source_urls)
             if len(self.context) == 0 and self.verbose:
                 # Could not find any relevant resources in source_urls to answer the query or sub-query. Will answer using model's inherent knowledge
                 await stream_output(
@@ -49,8 +49,8 @@ class ResearchConductor:
                     self.websocket,
                 )
             # If add_additional_sources parameter is set, more resources can be gathered to create additional context using default web search
-            if self.add_additional_sources:
-                additional_research = await self.__get_context_by_search(self.query)
+            if self.researcher.add_additional_sources:
+                additional_research = await self.__get_context_by_search(self.researcher.query)
                 self.context += ' '.join(additional_research)
 
         elif self.researcher.report_source == ReportSource.Local.value:
