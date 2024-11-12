@@ -21,10 +21,6 @@ class ResearchConductor:
         """
         # Reset visited_urls and source_urls at the start of each research task
         self.researcher.visited_urls.clear()
-        # Due to deprecation of report_type in favor of report_source,
-        # we need to clear source_urls if report_source is not static
-        if self.researcher.report_source != "static" and self.researcher.report_type != "sources":
-            self.researcher.source_urls = []
 
         if self.researcher.verbose:
             await stream_output(
@@ -40,7 +36,7 @@ class ResearchConductor:
         # If specified, the researcher will use the given urls as the context for the research.
         if self.researcher.source_urls:
             self.context = await self.__get_context_by_urls(self.researcher.source_urls)
-            if len(self.context) == 0 and self.verbose:
+            if self.context and len(self.context) == 0 and self.verbose:
                 # Could not find any relevant resources in source_urls to answer the query or sub-query. Will answer using model's inherent knowledge
                 await stream_output(
                     "logs",

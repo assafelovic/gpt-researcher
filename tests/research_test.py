@@ -16,17 +16,37 @@ Default is False, i.e., no additional research will be conducted on newer source
 
 from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 import asyncio
+import logging
+from typing import List, Dict, Any
+
+class CustomLogsHandler:
+    """A custom Logs handler class to handle JSON data."""
+    def __init__(self):
+        self.logs: List[Dict[str, Any]] = []  # Initialize logs to store data
+        logging.basicConfig(level=logging.INFO)  # Set up logging configuration
+
+    async def send_json(self, data: Dict[str, Any]) -> None:
+        """Send JSON data and log it, with error handling."""
+        try:
+            self.logs.append(data)  # Append data to logs
+            logging.info(f"My custom Log: {data}")  # Use logging instead of print
+        except Exception as e:
+            logging.error(f"Error logging data: {e}")  # Log any errors
 
 async def get_report(query: str, report_type: str, sources: list) -> str:
-    researcher = GPTResearcher(query=query, report_type=report_type, source_urls=sources, add_additional_sources=False)
+    custom_logs_handler = CustomLogsHandler()
+    researcher = GPTResearcher(query=query, 
+                               report_type=report_type, 
+                               add_additional_sources=False,
+                               websocket=custom_logs_handler)
     await researcher.conduct_research()
     report = await researcher.write_report()
     return report, researcher
 
 if __name__ == "__main__":
-    query = "Research the latest advancements in AI and provide a detailed report in APA format including sources."
-    report_type = "sources"
-    sources = ["https://en.wikipedia.org/wiki/Artificial_intelligence", "https://www.ibm.com/watson/ai"]  # query is related
+    query = "Write an analysis on paul graham"
+    report_type = "research_report"
+    sources = ["https://www.paulgraham.com/when.html", "https://www.paulgraham.com/noob.html"]  # query is related
 
     report, researcher = asyncio.run(get_report(query, report_type, sources))
     print(report)
