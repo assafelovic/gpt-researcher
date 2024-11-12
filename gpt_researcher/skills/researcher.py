@@ -44,8 +44,8 @@ class ResearchConductor:
                     f"🧐 I was unable to find relevant context in the provided sources...",
                     self.websocket,
                 )
-            # If add_additional_sources parameter is set, more resources can be gathered to create additional context using default web search
-            if self.researcher.add_additional_sources:
+            # If complement_source_urls parameter is set, more resources can be gathered to create additional context using default web search
+            if self.researcher.complement_source_urls:
                 additional_research = await self.__get_context_by_search(self.researcher.query)
                 self.context += ' '.join(additional_research)
 

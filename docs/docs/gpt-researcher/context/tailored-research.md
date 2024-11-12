@@ -6,7 +6,7 @@ The GPT Researcher package allows you to tailor the research to your needs such 
 
 You can specify the sources you want the GPT Researcher to research on by providing a list of URLs. The GPT Researcher will then conduct research on the provided sources via `source_urls`. 
 
-If you want GPT Researcher to perform additional research outside of the URLs you provided, i.e., conduct research on various other websites that it finds suitable for the query/sub-query, you can set the parameter `add_additional_sources` as `True`. Default value of `False` will only scour the websites you provide via `source_urls`.
+If you want GPT Researcher to perform additional research outside of the URLs you provided, i.e., conduct research on various other websites that it finds suitable for the query/sub-query, you can set the parameter `complement_source_urls` as `True`. Default value of `False` will only scour the websites you provide via `source_urls`.
 
 
 ```python
@@ -14,7 +14,7 @@ from gpt_researcher import GPTResearcher
 import asyncio
 
 async def get_report(query: str, report_type: str, sources: list) -> str:
-    researcher = GPTResearcher(query=query, report_type=report_type, source_urls=sources, add_additional_sources=False)
+    researcher = GPTResearcher(query=query, report_type=report_type, source_urls=sources, complement_source_urls=False)
     await researcher.conduct_research()
     report = await researcher.write_report()
     return report
