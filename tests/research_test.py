@@ -1,8 +1,8 @@
 """
-Hi! The following test cases are for the new parameter `add_additional_sources` and fix on the functional error with `source_urls` in GPTResearcher class.
+Hi! The following test cases are for the new parameter `complement_source_urls` and fix on the functional error with `source_urls` in GPTResearcher class.
 
 The source_urls parameter was resetting each time in conduct_research function causing gptr to forget the given links. Now, that has been fixed and a new parameter is introduced.
-This parameter named will `add_additional_sources` allow GPTR to research on sources other than the provided sources via source_urls if set to True. 
+This parameter named will `complement_source_urls` allow GPTR to research on sources other than the provided sources via source_urls if set to True. 
 Default is False, i.e., no additional research will be conducted on newer sources.
 """
 
@@ -37,7 +37,7 @@ async def get_report(query: str, report_type: str, sources: list) -> str:
     custom_logs_handler = CustomLogsHandler()
     researcher = GPTResearcher(query=query, 
                                report_type=report_type, 
-                               add_additional_sources=False,
+                               complement_source_urls=False,
                                websocket=custom_logs_handler)
     await researcher.conduct_research()
     report = await researcher.write_report()
@@ -78,13 +78,13 @@ if __name__ == "__main__":
 
 
 
-#### Test case 3 (Suggested solution - add_additional_sources parameter allows GPTR to scour more of the web and not restrict to source_urls)
+#### Test case 3 (Suggested solution - complement_source_urls parameter allows GPTR to scour more of the web and not restrict to source_urls)
 
 # from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 # import asyncio
 
 # async def get_report(query: str, report_type: str, sources: list) -> str:
-#     researcher = GPTResearcher(query=query, report_type=report_type, source_urls=sources, add_additional_sources=True)
+#     researcher = GPTResearcher(query=query, report_type=report_type, source_urls=sources, complement_source_urls=True)
 #     await researcher.conduct_research()
 #     report = await researcher.write_report()
 #     return report, researcher
@@ -97,17 +97,17 @@ if __name__ == "__main__":
 #     report, researcher = asyncio.run(get_report(query, report_type, sources))
 #     print(report)
 
-#     print(f"\nLength of the context = {len(researcher.get_research_context())}") # Must say Non-zero value because the query is UNRELATED to the contents of the page, but the add_additional_sources is set which should make gptr do default web search to gather contexts
+#     print(f"\nLength of the context = {len(researcher.get_research_context())}") # Must say Non-zero value because the query is UNRELATED to the contents of the page, but the complement_source_urls is set which should make gptr do default web search to gather contexts
     
 
 
-# #### Test case 4 (Furthermore, GPTR will create more context in addition to source_urls if the add_additional_sources parameter is set allowing for a larger research scope)
+# #### Test case 4 (Furthermore, GPTR will create more context in addition to source_urls if the complement_source_urls parameter is set allowing for a larger research scope)
 
 # from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 # import asyncio
 
 # async def get_report(query: str, report_type: str, sources: list) -> str:
-#     researcher = GPTResearcher(query=query, report_type=report_type, source_urls=sources, add_additional_sources=True)
+#     researcher = GPTResearcher(query=query, report_type=report_type, source_urls=sources, complement_source_urls=True)
 #     await researcher.conduct_research()
 #     report = await researcher.write_report()
 #     return report, researcher
@@ -120,4 +120,4 @@ if __name__ == "__main__":
 #     report, researcher = asyncio.run(get_report(query, report_type, sources))
 #     print(report)
 
-#     print(f"\nLength of the context = {len(researcher.get_research_context())}") # Must say Non-zero value because the query is related to the contents of the page, and additionally the add_additional_sources is set which should make gptr do default web search to gather more contexts!
+#     print(f"\nLength of the context = {len(researcher.get_research_context())}") # Must say Non-zero value because the query is related to the contents of the page, and additionally the complement_source_urls is set which should make gptr do default web search to gather more contexts!
