@@ -1,7 +1,7 @@
 import os
 import asyncio
 import pytest
-from gpt_researcher import GPTResearcher
+from gpt_researcher.agent import GPTResearcher
 
 # Define the report types to test
 report_types = [
