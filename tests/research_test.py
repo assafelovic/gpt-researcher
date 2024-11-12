@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
 #### Test case 2 (Illustrating the problem, i.e., source_urls are not scoured. Hence, no relevant context)
 
-# from gpt_researcher.master.agent import GPTResearcher  # Ensure this path is correct
+# from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 # import asyncio
 
 # async def get_report(query: str, report_type: str, sources: list) -> str:
@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
 #### Test case 3 (Suggested solution - add_additional_sources parameter allows GPTR to scour more of the web and not restrict to source_urls)
 
-# from gpt_researcher.master.agent import GPTResearcher  # Ensure this path is correct
+# from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 # import asyncio
 
 # async def get_report(query: str, report_type: str, sources: list) -> str:
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
 # #### Test case 4 (Furthermore, GPTR will create more context in addition to source_urls if the add_additional_sources parameter is set allowing for a larger research scope)
 
-# from gpt_researcher.master.agent import GPTResearcher  # Ensure this path is correct
+# from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 # import asyncio
 
 # async def get_report(query: str, report_type: str, sources: list) -> str:
