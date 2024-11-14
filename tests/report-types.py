@@ -1,7 +1,23 @@
 import os
 import asyncio
 import pytest
-from gpt_researcher import GPTResearcher
+from gpt_researcher.agent import GPTResearcher
+import logging
+from typing import List, Dict, Any
+
+class CustomLogsHandler:
+    """A custom Logs handler class to handle JSON data."""
+    def __init__(self):
+        self.logs: List[Dict[str, Any]] = []  # Initialize logs to store data
+        logging.basicConfig(level=logging.INFO)  # Set up logging configuration
+
+    async def send_json(self, data: Dict[str, Any]) -> None:
+        """Send JSON data and log it, with error handling."""
+        try:
+            self.logs.append(data)  # Append data to logs
+            logging.info(f"My custom Log: {data}")  # Use logging instead of print
+        except Exception as e:
+            logging.error(f"Error logging data: {e}")  # Log any errors
 
 # Define the report types to test
 report_types = [
@@ -22,9 +38,10 @@ async def test_gpt_researcher(report_type):
     # Ensure the output directory exists
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-        
+    
+    custom_logs_handler = CustomLogsHandler()
     # Create an instance of GPTResearcher
-    researcher = GPTResearcher(query=query, report_type=report_type)
+    researcher = GPTResearcher(query=query, report_type=report_type, websocket=custom_logs_handler)
     
     # Conduct research and write the report
     await researcher.conduct_research()

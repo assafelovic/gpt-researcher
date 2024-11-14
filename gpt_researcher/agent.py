@@ -32,6 +32,7 @@ class GPTResearcher:
         report_source: str = ReportSource.Web.value,
         tone: Tone = Tone.Objective,
         source_urls=None,
+        complement_source_urls=False,
         documents=None,
         vector_store=None,
         vector_store_filter=None,
@@ -57,6 +58,7 @@ class GPTResearcher:
         self.max_subtopics = max_subtopics
         self.tone = tone if isinstance(tone, Tone) else Tone.Objective
         self.source_urls = source_urls
+        self.complement_source_urls: bool = complement_source_urls
         self.research_sources = []  # The list of scraped sources including title, content and images
         self.research_images = []  # The list of selected research images
         self.documents = documents
