@@ -48,6 +48,7 @@ class ResearchConductor:
         """
         # Reset visited_urls and source_urls at the start of each research task
         self.researcher.visited_urls.clear()
+        research_data = []
 
         if self.researcher.verbose:
             await stream_output(
@@ -60,10 +61,11 @@ class ResearchConductor:
         if self.researcher.verbose:
             await stream_output("logs", "agent_generated", self.researcher.agent, self.researcher.websocket)
 
-        # If specified, the researcher will use the given urls as the context for the research.
+        # Research for relevant sources based on source types below
         if self.researcher.source_urls:
-            self.context = await self._get_context_by_urls(self.researcher.source_urls)
-            if self.context and len(self.context) == 0 and self.verbose:
+            # If specified, the researcher will use the given urls as the context for the research.
+            research_data = await self._get_context_by_urls(self.researcher.source_urls)
+            if research_data and len(research_data) == 0 and self.verbose:
                 # Could not find any relevant resources in source_urls to answer the query or sub-query. Will answer using model's inherent knowledge
                 await stream_output(
                     "logs",
@@ -74,14 +76,14 @@ class ResearchConductor:
             # If complement_source_urls parameter is set, more resources can be gathered to create additional context using default web search
             if self.researcher.complement_source_urls:
                 additional_research = await self._get_context_by_web_search(self.researcher.query)
-                self.context += ' '.join(additional_research)
+                research_data += ' '.join(additional_research)
 
         elif self.researcher.report_source == ReportSource.Local.value:
             document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(document_data)
 
-            self.researcher.context = await self._get_context_by_web_search(self.researcher.query, document_data)
+            research_data = await self._get_context_by_web_search(self.researcher.query, document_data)
 
         # Hybrid search including both local documents and web sources
         elif self.researcher.report_source == ReportSource.Hybrid.value:
@@ -90,7 +92,7 @@ class ResearchConductor:
                 self.researcher.vector_store.load(document_data)
             docs_context = await self._get_context_by_web_search(self.researcher.query, document_data)
             web_context = await self._get_context_by_web_search(self.researcher.query)
-            self.researcher.context = f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"
+            research_data = f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"
 
         elif self.researcher.report_source == ReportSource.LangChainDocuments.value:
             langchain_documents_data = await LangChainDocumentLoader(
@@ -98,15 +100,18 @@ class ResearchConductor:
             ).load()
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(langchain_documents_data)
-            self.researcher.context = await self._get_context_by_web_search(
+            research_data = await self._get_context_by_web_search(
                 self.researcher.query, langchain_documents_data
             )
 
         elif self.researcher.report_source == ReportSource.LangChainVectorStore.value:
-            self.researcher.context = await self._get_context_by_vectorstore(self.researcher.query, self.researcher.vector_store_filter)
+            research_data = await self._get_context_by_vectorstore(self.researcher.query, self.researcher.vector_store_filter)
         # Default web based research
         elif self.researcher.report_source == ReportSource.Web.value:
-            self.researcher.context = await self._get_context_by_web_search(self.researcher.query)
+            research_data = await self._get_context_by_web_search(self.researcher.query)
+
+        # Rank and curate the sources based on the research data
+        self.researcher.context = await self.researcher.source_curator.curate_sources(research_data)
 
         if self.researcher.verbose:
             await stream_output(
@@ -176,7 +181,6 @@ class ResearchConductor:
         Returns:
             context: List of context
         """
-        context = []
         # Generate Sub-Queries including original query
         sub_queries = await self.plan_research(query)
         # If this is not part of a sub researcher, add original query to research for better results

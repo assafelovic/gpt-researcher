@@ -2,34 +2,28 @@ from typing import Dict, Optional, List
 import json
 from ..config.config import Config
 from ..utils.llm import create_chat_completion
-from ..prompts import rank_sources as rank_sources_prompt
+from ..prompts import curate_sources as rank_sources_prompt
 from ..actions import stream_output
 
 
-class SourceRanker:
-    """Ranks sources based on their relevance, credibility and reliability."""
+class SourceCurator:
+    """Ranks sources and curates data based on their relevance, credibility and reliability."""
 
     def __init__(self, researcher):
         self.researcher = researcher
 
-    async def rank_sources(
+    async def curate_sources(
         self,
-        query: str,
         source_data: List,
-        agent_role_prompt: str = "",
-        max_results: int = 5,
-    ) -> str:
+        max_results: int = 10,
+    ) -> List:
         """
         Rank sources based on research data and guidelines.
         
         Args:
             query: The research query/task
             source_data: List of source documents to rank
-            agent_role_prompt: Optional role prompt for the agent
             max_results: Maximum number of top sources to return
-            websocket: Optional websocket for streaming output
-            cost_callback: Optional callback for tracking costs
-            config: Configuration object
             
         Returns:
             str: Ranked list of source URLs with reasoning
@@ -37,44 +31,46 @@ class SourceRanker:
         if self.researcher.verbose:
             await stream_output(
                 "logs",
-                "ranking_sources", 
-                f"⚖️ Evaluating source credibility and relevance for '{self.researcher.query}'...",
+                "research_plan",
+                f"⚖️ Evaluating and curating source credibility and relevance of potential sources...",
                 self.researcher.websocket,
             )
 
+        response = ""
         try:
-            ranked_source_urls = await create_chat_completion(
+            response = await create_chat_completion(
                 model=self.researcher.cfg.smart_llm_model,
                 messages=[
-                    {"role": "system", "content": f"{agent_role_prompt}"},
+                    {"role": "system", "content": f"{self.researcher.role}"},
                     {"role": "user", "content": rank_sources_prompt(
-                        query, source_data, max_results)},
+                        self.researcher.query, source_data, max_results)},
                 ],
-                temperature=self.researcher.cfg.temperature,
+                temperature=0.2,
                 llm_provider=self.researcher.cfg.smart_llm_provider,
                 stream=True,
-                websocket=self.researcher.websocket,
-                max_tokens=self.researcher.cfg.smart_token_limit,
                 llm_kwargs=self.researcher.cfg.llm_kwargs,
                 cost_callback=self.researcher.add_costs,
             )
 
+            curated_sources = json.loads(response)
+
             if self.researcher.verbose:
                 await stream_output(
                     "logs",
-                    "ranking_complete",
-                    f"🏅 Verified and ranked top {max_results} most reliable sources",
+                    "research_plan",
+                    f"🏅 Verified and ranked top {len(curated_sources)} most reliable sources",
                     self.researcher.websocket,
                 )
 
-            return ranked_source_urls
+            return curated_sources
 
         except Exception as e:
+            print(f"Error in curate_sources from LLM response: {response}")
             if self.researcher.verbose:
                 await stream_output(
                     "logs", 
-                    "ranking_error",
+                    "research_plan",
                     f"🚫 Source verification failed: {str(e)}",
                     self.researcher.websocket,
                 )
-            raise
+            return source_data
