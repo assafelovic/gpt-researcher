@@ -102,6 +102,24 @@ Please do your best, this is very important to my career.
 Assume that the current date is {date.today()}.
 """
 
+def rank_sources(query, sources, max_results=5):
+    return f"""
+        Your current task is to review a list of documents and select the most relevant, trusted, and reliable sources 
+        related to the following research task: {query}.\n
+        
+        Please follow these guidelines:
+        1. Evaluate each source based on its relevance to the query, credibility, and reliability.
+        2. Consider factors such as the author's expertise, the publication's reputation, 
+            and the recency of the information.
+        3. Rank the sources in order of their overall quality and relevance, with 1 being the highest rank.
+        4. Provide a brief reason for each ranking.
+        5. Select up to {max_results} of the best sources.
+    
+        Here is the list of documents gathered for your review:\n{sources}\n\n
+        
+        Respond with a ranked list of the best sources, including their URLs and ranks.
+    """
+
 
 def generate_resource_report_prompt(
     question, context, report_source: str, report_format="apa", tone=None, total_words=1000
