@@ -12,7 +12,7 @@ from .skills.researcher import ResearchConductor
 from .skills.writer import ReportGenerator
 from .skills.context_manager import ContextManager
 from .skills.browser import BrowserManager
-from .skills.ranker import SourceRanker
+from .skills.curator import SourceCurator
 
 from .actions import (
     add_references,
@@ -85,7 +85,7 @@ class GPTResearcher:
         self.report_generator: ReportGenerator = ReportGenerator(self)
         self.context_manager: ContextManager = ContextManager(self)
         self.scraper_manager: BrowserManager = BrowserManager(self)
-        self.source_ranker: SourceRanker = SourceRanker(self)
+        self.source_curator: SourceCurator = SourceCurator(self)
 
     async def conduct_research(self):
         if not (self.agent and self.role):

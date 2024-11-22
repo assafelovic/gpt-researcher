@@ -102,23 +102,33 @@ Please do your best, this is very important to my career.
 Assume that the current date is {date.today()}.
 """
 
-def rank_sources(query, sources, max_results=5):
-    return f"""
-        Your current task is to review a list of documents and select the most relevant, trusted, and reliable sources 
-        related to the following research task: {query}.\n
-        
-        Please follow these guidelines:
-        1. Evaluate each source based on its relevance to the query, credibility, and reliability.
-        2. Consider factors such as the author's expertise, the publication's reputation, 
-            and the recency of the information.
-        3. Rank the sources in order of their overall quality and relevance, with 1 being the highest rank.
-        4. Provide a brief reason for each ranking.
-        5. Select up to {max_results} of the best sources.
-    
-        Here is the list of documents gathered for your review:\n{sources}\n\n
-        
-        Respond with a ranked list of the best sources, including their URLs and ranks.
-    """
+def curate_sources(query, sources, max_results=10):
+    return f"""Your goal is to evaluate and refine the provided sources for the research task: "{query}"
+The final curated list will be used as context for creating a research report, so optimize for 
+relevance, credibility, and quality, while keeping as much information as possible.
+
+EVALUATION GUIDELINES:
+1. Assess each source based on:
+   - Relevance to the research query
+   - Credibility of the source (author expertise, publication reputation)
+   - Currency of information (prefer recent sources unless historical context is needed)
+   - Quality and depth of content
+   - Objectivity and lack of bias
+
+2. Source Selection:
+   - Select up to {max_results} of the highest quality sources
+   - Ensure selected sources complement each other without excessive overlap
+   - Prioritize primary sources over secondary when available
+   - Include a diverse range of perspectives when appropriate
+   - Remove sources that are irrelevant or contain garbage scraped content
+
+SOURCES LIST TO EVALUATE:
+{sources}
+
+You must return your response in the EXACT sources JSON list format as the original sources.
+Please keep all original information as possible, while only removing irrelevant or low-quality sources from the list.
+The response must not contain any markdown format or additional text (like ```json), just the JSON list!
+"""
 
 
 def generate_resource_report_prompt(
