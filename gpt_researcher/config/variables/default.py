@@ -3,7 +3,7 @@ from .base import BaseConfig
 DEFAULT_CONFIG: BaseConfig = {
     "RETRIEVER": "tavily",
     "EMBEDDING": "openai:text-embedding-3-small",
-    "SIMILARITY_THRESHOLD": 0.28,
+    "SIMILARITY_THRESHOLD": 0.38,
     "FAST_LLM": "openai:gpt-4o-mini",
     "SMART_LLM": "openai:gpt-4o-2024-08-06",
     "STRATEGIC_LLM": "openai:o1-preview",
