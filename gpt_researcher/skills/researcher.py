@@ -202,38 +202,6 @@ class ResearchConductor:
         )
         return context
 
-    async def _process_sub_query_with_vectorstore(self, sub_query: str, filter: Optional[dict] = None):
-        """Takes in a sub query and gathers context from the user provided vector store
-
-        Args:
-            sub_query (str): The sub-query generated from the original query
-
-        Returns:
-            str: The context gathered from search
-        """
-        if self.researcher.verbose:
-            await stream_output(
-                "logs",
-                "running_subquery_with_vectorstore_research",
-                f"\n🔍 Running research for '{sub_query}'...",
-                self.researcher.websocket,
-            )
-
-        content = await self.researcher.context_manager.get_similar_content_by_query_with_vectorstore(sub_query, filter)
-
-        if content and self.researcher.verbose:
-            await stream_output(
-                "logs", "subquery_context_window", f"📃 {content}", self.researcher.websocket
-            )
-        elif self.researcher.verbose:
-            await stream_output(
-                "logs",
-                "subquery_context_not_found",
-                f"🤷 No content found for '{sub_query}'...",
-                self.researcher.websocket,
-            )
-        return content
-
     async def _process_sub_query(self, sub_query: str, scraped_data: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context.
 
@@ -256,6 +224,38 @@ class ResearchConductor:
             scraped_data = await self._scrape_data_by_urls(sub_query)
 
         content = await self.researcher.context_manager.get_similar_content_by_query(sub_query, scraped_data)
+
+        if content and self.researcher.verbose:
+            await stream_output(
+                "logs", "subquery_context_window", f"📃 {content}", self.researcher.websocket
+            )
+        elif self.researcher.verbose:
+            await stream_output(
+                "logs",
+                "subquery_context_not_found",
+                f"🤷 No content found for '{sub_query}'...",
+                self.researcher.websocket,
+            )
+        return content
+
+    async def _process_sub_query_with_vectorstore(self, sub_query: str, filter: Optional[dict] = None):
+        """Takes in a sub query and gathers context from the user provided vector store
+
+        Args:
+            sub_query (str): The sub-query generated from the original query
+
+        Returns:
+            str: The context gathered from search
+        """
+        if self.researcher.verbose:
+            await stream_output(
+                "logs",
+                "running_subquery_with_vectorstore_research",
+                f"\n🔍 Running research for '{sub_query}'...",
+                self.researcher.websocket,
+            )
+
+        content = await self.researcher.context_manager.get_similar_content_by_query_with_vectorstore(sub_query, filter)
 
         if content and self.researcher.verbose:
             await stream_output(
