@@ -22,6 +22,6 @@ DEFAULT_CONFIG: BaseConfig = {
     "AGENT_ROLE": None,
     "SCRAPER": "bs",
     "MAX_SUBTOPICS": 3,
-    "REPORT_SOURCE": None,
+    "REPORT_SOURCE": "web",
     "DOC_PATH": "./my-docs"
 }

@@ -26,7 +26,7 @@
 
   /* Lists */
   ul, ol {
-    margin: 0 0 0 1em;
+    margin: 0 0 1em 1em;
     padding: 0;
   }
 
@@ -40,50 +40,39 @@
 
   li {
     padding: 0;
+    margin: 0.5em 0;
+    display: list-item;
     
     > ul, > ol {
-      margin: 0 0 0 1.5em;
+      margin: 0.5em 0 0.5em 1.5em;
     }
 
-    /* Remove the marker styling since we're using grid */
-    &::marker {
-      display: none;
-    }
-
-    /* Add a pseudo-element for the marker */
-    &::before { /* For unordered lists */
-      justify-self: end;
-    }
-
-    /* Updated list item paragraph styling */
     > p {
       margin: 0;
       padding: 0;
-      grid-column: 2;
+      display: inline-block;
+      vertical-align: top;
     }
   }
 
   /* Numbered lists specific styling */
   ol {
-    counter-reset: item;
     list-style-position: outside;
     
     > li {
-      counter-increment: item;
-      
       &::marker {
         color: white;
       }
     }
   }
 
-  /* Nested lists with proper numbering */
+  /* Simplify nested list styling */
   ol ol {
-    counter-reset: subitem;
-    
-    > li {
-      counter-increment: subitem;
-    }
+    list-style-type: lower-alpha;
+  }
+
+  ol ol ol {
+    list-style-type: lower-roman;
   }
 
   /* Links */
