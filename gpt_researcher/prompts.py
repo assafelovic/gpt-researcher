@@ -103,32 +103,41 @@ Assume that the current date is {date.today()}.
 """
 
 def curate_sources(query, sources, max_results=10):
-    return f"""Your goal is to evaluate and refine the provided scraped content for the research task: "{query}"
-The final curated list will be used as context for creating a research report, so optimize for 
-relevance, credibility, and quality, while keeping as much original information as possible.
+    return f"""Your goal is to evaluate and curate the provided scraped content for the research task: "{query}" 
+    while prioritizing the inclusion of relevant and high-quality information, especially sources containing statistics, numbers, or concrete data.
+
+The final curated list will be used as context for creating a research report, so prioritize:
+- Retaining as much original information as possible, with extra emphasis on sources featuring quantitative data or unique insights
+- Including a wide range of perspectives and insights
+- Filtering out only clearly irrelevant or unusable content
 
 EVALUATION GUIDELINES:
 1. Assess each source based on:
-   - Relevance to the research query
-   - Credibility of the source (author expertise, publication reputation)
-   - Currency of information (prefer recent sources unless historical context is needed)
-   - Quality and depth of content
-   - Objectivity and lack of bias
+   - **Relevance**: Include sources directly or partially connected to the research query. Err on the side of inclusion.
+   - **Credibility**: Favor authoritative sources but retain others unless clearly untrustworthy.
+   - **Currency**: Prefer recent information unless older data is essential or valuable.
+   - **Objectivity**: Retain sources with bias if they provide a unique or complementary perspective.
+   - **Quantitative Value**: Give higher priority to sources with statistics, numbers, or other concrete data.
 
 2. Source Selection:
-   - Select up to {max_results} of the highest quality sources
-   - Ensure selected sources complement each other without excessive overlap
-   - Prioritize primary sources over secondary when available
-   - Include a diverse range of perspectives when appropriate
-   - Remove sources that are irrelevant or contain garbage scraped content
+   - Include as many relevant sources as possible, up to {max_results}, focusing on broad coverage and diversity.
+   - Prioritize sources with statistics, numerical data, or verifiable facts.
+   - Overlapping content is acceptable if it adds depth, especially when data is involved.
+   - Exclude sources only if they are entirely irrelevant, severely outdated, or unusable due to poor content quality.
+
+3. Content Retention:
+   - DO NOT rewrite, summarize, or condense any source content.
+   - Retain all usable information, cleaning up only clear garbage or formatting issues.
+   - Keep marginally relevant or incomplete sources if they contain valuable data or insights.
 
 SOURCES LIST TO EVALUATE:
 {sources}
 
 You MUST return your response in the EXACT sources JSON list format as the original sources.
-You MUST keep all original information and sources, do not rewrite or summarize any of them!
 The response MUST not contain any markdown format or additional text (like ```json), just the JSON list!
 """
+
+
 
 
 def generate_resource_report_prompt(

@@ -54,7 +54,7 @@ class ResearchConductor:
             await stream_output(
                 "logs",
                 "starting_research",
-                f"🔎 Starting the research task for '{self.researcher.query}'...",
+                f"🔍 Starting the research task for '{self.researcher.query}'...",
                 self.researcher.websocket,
             )
 
