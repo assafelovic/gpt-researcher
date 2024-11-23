@@ -20,70 +20,55 @@
 
   /* Paragraphs and spacing */
   p {
-    font-size: 18px;
+    margin: 0;
     line-height: 1.6;
   }
 
   /* Lists */
   ul, ol {
-    margin: 0 0 0 1em;
+    margin: 0;
     padding: 0;
-  }
-
-  ul {
-    list-style-type: disc;
-  }
-
-  ol {
-    list-style-type: decimal;
+    list-style: none;
   }
 
   li {
-    padding: 0;
-    
-    > ul, > ol {
-      margin: 0 0 0 1.5em;
-    }
-
-    /* Remove the marker styling since we're using grid */
-    &::marker {
-      display: none;
-    }
-
-    /* Add a pseudo-element for the marker */
-    &::before { /* For unordered lists */
-      justify-self: end;
-    }
-
-    /* Updated list item paragraph styling */
-    > p {
-      margin: 0;
-      padding: 0;
-      grid-column: 2;
-    }
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1.5em auto;
+    align-items: start;
+    gap: 0.5em;
   }
 
-  /* Numbered lists specific styling */
+  /* Unordered lists */
+  ul > li::before {
+    content: "•";
+    justify-self: end;
+  }
+
+  /* Ordered lists */
   ol {
-    counter-reset: item;
-    list-style-position: outside;
-    
-    > li {
-      counter-increment: item;
-      
-      &::marker {
-        color: white;
-      }
-    }
+    counter-reset: list-counter;
   }
 
-  /* Nested lists with proper numbering */
-  ol ol {
-    counter-reset: subitem;
-    
-    > li {
-      counter-increment: subitem;
-    }
+  ol > li::before {
+    counter-increment: list-counter;
+    content: counter(list-counter) ".";
+    justify-self: end;
+  }
+
+  /* Nested lists */
+  li > ul,
+  li > ol {
+    margin: 0.5em 0;
+    grid-column: 2;
+  }
+
+  ol ol > li::before {
+    content: counter(list-counter, lower-alpha) ".";
+  }
+
+  ol ol ol > li::before {
+    content: counter(list-counter, lower-roman) ".";
   }
 
   /* Links */
