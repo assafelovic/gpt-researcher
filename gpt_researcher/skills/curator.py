@@ -28,12 +28,12 @@ class SourceCurator:
         Returns:
             str: Ranked list of source URLs with reasoning
         """
-        #print(f"\n\nCurating {len(source_data)} sources: {source_data}")
+        print(f"\n\nCurating {len(source_data)} sources: {source_data}")
         if self.researcher.verbose:
             await stream_output(
                 "logs",
                 "research_plan",
-                f"⚖️ Evaluating and curating source credibility and relevance of potential sources...",
+                f"⚖️ Evaluating and curating sources by credibility and relevance...",
                 self.researcher.websocket,
             )
 
@@ -54,7 +54,7 @@ class SourceCurator:
             )
 
             curated_sources = json.loads(response)
-            #print(f"\n\nFinal Curated sources {len(source_data)} sources: {curated_sources}")
+            print(f"\n\nFinal Curated sources {len(source_data)} sources: {curated_sources}")
 
             if self.researcher.verbose:
                 await stream_output(
