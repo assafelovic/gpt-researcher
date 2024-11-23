@@ -20,59 +20,55 @@
 
   /* Paragraphs and spacing */
   p {
-    font-size: 18px;
+    margin: 0;
     line-height: 1.6;
   }
 
   /* Lists */
   ul, ol {
-    margin: 0 0 1em 1em;
+    margin: 0 0 1em 0;
     padding: 0;
-  }
-
-  ul {
-    list-style-type: disc;
-  }
-
-  ol {
-    list-style-type: decimal;
+    list-style: none;
   }
 
   li {
-    padding: 0;
     margin: 0.5em 0;
-    display: list-item;
-    
-    > ul, > ol {
-      margin: 0.5em 0 0.5em 1.5em;
-    }
-
-    > p {
-      margin: 0;
-      padding: 0;
-      display: inline-block;
-      vertical-align: top;
-    }
+    display: grid;
+    grid-template-columns: 1.5em auto;
+    align-items: start;
+    gap: 0.5em;
   }
 
-  /* Numbered lists specific styling */
+  /* Unordered lists */
+  ul > li::before {
+    content: "•";
+    justify-self: end;
+  }
+
+  /* Ordered lists */
   ol {
-    list-style-position: outside;
-    
-    > li {
-      &::marker {
-        color: white;
-      }
-    }
+    counter-reset: list-counter;
   }
 
-  /* Simplify nested list styling */
-  ol ol {
-    list-style-type: lower-alpha;
+  ol > li::before {
+    counter-increment: list-counter;
+    content: counter(list-counter) ".";
+    justify-self: end;
   }
 
-  ol ol ol {
-    list-style-type: lower-roman;
+  /* Nested lists */
+  li > ul,
+  li > ol {
+    margin: 0.5em 0;
+    grid-column: 2;
+  }
+
+  ol ol > li::before {
+    content: counter(list-counter, lower-alpha) ".";
+  }
+
+  ol ol ol > li::before {
+    content: counter(list-counter, lower-roman) ".";
   }
 
   /* Links */

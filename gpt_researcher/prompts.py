@@ -103,9 +103,9 @@ Assume that the current date is {date.today()}.
 """
 
 def curate_sources(query, sources, max_results=10):
-    return f"""Your goal is to evaluate and refine the provided sources for the research task: "{query}"
+    return f"""Your goal is to evaluate and refine the provided scraped content for the research task: "{query}"
 The final curated list will be used as context for creating a research report, so optimize for 
-relevance, credibility, and quality, while keeping as much information as possible.
+relevance, credibility, and quality, while keeping as much original information as possible.
 
 EVALUATION GUIDELINES:
 1. Assess each source based on:
@@ -125,9 +125,9 @@ EVALUATION GUIDELINES:
 SOURCES LIST TO EVALUATE:
 {sources}
 
-You must return your response in the EXACT sources JSON list format as the original sources.
-Please keep all original information as possible, while only removing irrelevant or low-quality sources from the list.
-The response must not contain any markdown format or additional text (like ```json), just the JSON list!
+You MUST return your response in the EXACT sources JSON list format as the original sources.
+You MUST keep all original information and sources, do not rewrite or summarize any of them!
+The response MUST not contain any markdown format or additional text (like ```json), just the JSON list!
 """
 
 

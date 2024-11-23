@@ -28,6 +28,7 @@ class SourceCurator:
         Returns:
             str: Ranked list of source URLs with reasoning
         """
+        #print(f"\n\nCurating {len(source_data)} sources: {source_data}")
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -46,13 +47,14 @@ class SourceCurator:
                         self.researcher.query, source_data, max_results)},
                 ],
                 temperature=0.2,
+                max_tokens=8000,
                 llm_provider=self.researcher.cfg.smart_llm_provider,
-                stream=True,
                 llm_kwargs=self.researcher.cfg.llm_kwargs,
                 cost_callback=self.researcher.add_costs,
             )
 
             curated_sources = json.loads(response)
+            #print(f"\n\nFinal Curated sources {len(source_data)} sources: {curated_sources}")
 
             if self.researcher.verbose:
                 await stream_output(
