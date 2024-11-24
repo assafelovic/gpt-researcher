@@ -65,7 +65,7 @@ export const preprocessOrderedData = (data: Data[]) => {
         if (!currentSourceGroup) {
           currentSourceGroup = { type: 'sourceBlock', items: [] };
         }
-
+      
         if (!seenUrls.has(metadata)) {
           seenUrls.add(metadata);
           let hostname = "";
@@ -79,7 +79,9 @@ export const preprocessOrderedData = (data: Data[]) => {
           currentSourceGroup.items.push({ name: hostname, url: metadata });
         }
       
-        if (currentSourceGroup.items.length > 0) {
+        // Add this block to ensure the source group is added to groupedData
+        if (currentSourceGroup.items.length > 0 && !groupedData.includes(currentSourceGroup)) {
+          groupedData.push(currentSourceGroup);
           sourceBlockEncountered = true;
         }
       } else if (type !== 'path' && content !== '') {
