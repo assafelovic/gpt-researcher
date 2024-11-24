@@ -44,28 +44,25 @@
 
   /* Ordered lists */
   ol {
-    counter-reset: list-counter;
+    margin: 0;
+    padding: 0 0 0 2em; /* Add left padding for numbers */
+    list-style-position: outside;
   }
 
-  ol > li::before {
-    counter-increment: list-counter;
-    content: counter(list-counter) ".";
-    justify-self: end;
+  li {
+    margin: 0.5em 0; /* Add some vertical spacing between items */
+    display: block; /* Change from grid to block */
   }
 
-  /* Nested lists */
-  li > ul,
-  li > ol {
-    margin: 0.5em 0;
-    grid-column: 2;
+  /* Fix paragraph spacing inside list items */
+  li p {
+    margin: 0; /* Remove default paragraph margins */
+    display: inline; /* Make paragraph inline with the number */
   }
 
-  ol ol > li::before {
-    content: counter(list-counter, lower-alpha) ".";
-  }
-
-  ol ol ol > li::before {
-    content: counter(list-counter, lower-roman) ".";
+  /* If you want to preserve some spacing between paragraphs within a list item */
+  li p + p {
+    margin-top: 0.5em;
   }
 
   /* Links */
