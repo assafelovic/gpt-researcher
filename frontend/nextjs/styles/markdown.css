@@ -27,22 +27,19 @@
   /* Lists */
   ul, ol {
     margin: 0;
-    padding: 0;
-    list-style: none;
+    padding: 0 0 0 2em; /* Add left padding for the bullet points */
+    list-style-position: outside; /* Keep bullets outside */
   }
 
   li {
-    margin: 0;
-    display: grid;
-    grid-template-columns: 1.5em auto;
-    align-items: start;
-    gap: 0.5em;
+    margin: 0.5em 0; /* Add some vertical spacing between items */
+    display: block; /* Change from grid to block */
+    padding-left: 0.5em; /* Add a little padding after the bullet */
   }
 
-  /* Unordered lists */
+  /* Remove the custom bullet styling since we'll use native bullets */
   ul > li::before {
-    content: "•";
-    justify-self: end;
+    content: none;
   }
 
   /* Ordered lists */
