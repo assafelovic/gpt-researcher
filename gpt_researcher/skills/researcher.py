@@ -111,7 +111,9 @@ class ResearchConductor:
             research_data = await self._get_context_by_web_search(self.researcher.query)
 
         # Rank and curate the sources based on the research data
-        self.researcher.context = await self.researcher.source_curator.curate_sources(research_data)
+        self.researcher.context = research_data
+        if self.researcher.cfg.curate_sources:
+            self.researcher.context = await self.researcher.source_curator.curate_sources(research_data)
 
         if self.researcher.verbose:
             await stream_output(
