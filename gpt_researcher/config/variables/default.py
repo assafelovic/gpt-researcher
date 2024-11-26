@@ -5,7 +5,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "EMBEDDING": "openai:text-embedding-3-small",
     "SIMILARITY_THRESHOLD": 0.42,
     "FAST_LLM": "openai:gpt-4o-mini",
-    "SMART_LLM": "openai:gpt-4o-2024-08-06",
+    "SMART_LLM": "openai:gpt-4o-2024-11-20",
     "STRATEGIC_LLM": "openai:gpt-4o", # Can be used with gpt-o1
     "FAST_TOKEN_LIMIT": 2000,
     "SMART_TOKEN_LIMIT": 4000,
