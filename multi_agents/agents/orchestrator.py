@@ -4,7 +4,7 @@ import datetime
 from langgraph.graph import StateGraph, END
 # from langgraph.checkpoint.memory import MemorySaver
 from .utils.views import print_agent_output
-from ..memory.research import ResearchState
+from multi_agents.memory.research import ResearchState
 from .utils.utils import sanitize_filename
 
 # Import agent classes
