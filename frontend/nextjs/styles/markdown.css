@@ -20,70 +20,49 @@
 
   /* Paragraphs and spacing */
   p {
-    font-size: 18px;
+    margin: 0;
     line-height: 1.6;
   }
 
   /* Lists */
   ul, ol {
-    margin: 0 0 0 1em;
-    padding: 0;
-  }
-
-  ul {
-    list-style-type: disc;
-  }
-
-  ol {
-    list-style-type: decimal;
+    margin: 0;
+    padding: 0 0 0 2em; /* Add left padding for the bullet points */
+    list-style-position: outside; /* Keep bullets outside */
   }
 
   li {
-    padding: 0;
-    
-    > ul, > ol {
-      margin: 0 0 0 1.5em;
-    }
-
-    /* Remove the marker styling since we're using grid */
-    &::marker {
-      display: none;
-    }
-
-    /* Add a pseudo-element for the marker */
-    &::before { /* For unordered lists */
-      justify-self: end;
-    }
-
-    /* Updated list item paragraph styling */
-    > p {
-      margin: 0;
-      padding: 0;
-      grid-column: 2;
-    }
+    margin: 0.5em 0; /* Add some vertical spacing between items */
+    display: block; /* Change from grid to block */
+    padding-left: 0.5em; /* Add a little padding after the bullet */
   }
 
-  /* Numbered lists specific styling */
+  /* Remove the custom bullet styling since we'll use native bullets */
+  ul > li::before {
+    content: none;
+  }
+
+  /* Ordered lists */
   ol {
-    counter-reset: item;
+    margin: 0;
+    padding: 0 0 0 2em; /* Add left padding for numbers */
     list-style-position: outside;
-    
-    > li {
-      counter-increment: item;
-      
-      &::marker {
-        color: white;
-      }
-    }
   }
 
-  /* Nested lists with proper numbering */
-  ol ol {
-    counter-reset: subitem;
-    
-    > li {
-      counter-increment: subitem;
-    }
+  li {
+    margin: 0.5em 0; /* Add some vertical spacing between items */
+    display: block; /* Change from grid to block */
+  }
+
+  /* Fix paragraph spacing inside list items */
+  li p {
+    margin: 0; /* Remove default paragraph margins */
+    display: inline; /* Make paragraph inline with the number */
+  }
+
+  /* If you want to preserve some spacing between paragraphs within a list item */
+  li p + p {
+    margin-top: 0.5em;
   }
 
   /* Links */
