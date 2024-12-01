@@ -38,7 +38,7 @@ class MathWorkflow:
         workflow = StateGraph(ResearchStateMath)
 
         # Add nodes for each agent
-        workflow.add_node("parser", agents["parser"].parse_problem)
+        workflow.add_node("parser", self._parse_problem_with_mode(agents["parser"]))
         workflow.add_node("solver", agents["solver"].solve_problem)
         workflow.add_node("formatter", agents["formatter"].validate_solution)
         workflow.add_node("explainer", agents["explainer"].run)
@@ -59,6 +59,28 @@ class MathWorkflow:
         workflow.set_entry_point("parser")
         workflow.set_finish_point("explainer")  # Explicitly set "explainer" as the finish point
         return workflow
+
+    def _parse_problem_with_mode(self, parser_agent):
+        """Determine whether to parse a problem with text or image support."""
+        async def parse(state):
+            task = state.get("task", {})
+            image_path = task.get("image_path")
+            if image_path:  # If an image is provided
+                return await parser_agent.parse_problem({
+                    "task": {
+                        "problem": task.get("problem"),
+                        "model": task.get("model"),
+                        "image_path": image_path,
+                    }
+                })
+            else:  # Text-only problem
+                return await parser_agent.parse_problem({
+                    "task": {
+                        "problem": task.get("problem"),
+                        "model": task.get("model"),
+                    }
+                })
+        return parse
 
     async def run_workflow(self):
         """Run the entire workflow."""
@@ -90,7 +112,8 @@ async def main():
 
 ①この三角錐の体積を求めなさい。""",
         "model": "gpt-4o",  # Model used for LLMs
-        "verbose": True
+        "verbose": True,
+        "image_path": "/path/to/image.png",  # Optional: Add path to the image if needed
     }
 
     # Initialize and run the workflow
@@ -99,7 +122,6 @@ async def main():
     # Print the result
     print("Final Result:", result)
     print(json.dumps(result, indent=4, ensure_ascii=False))
-
 
 
 # Run the main function in an asyncio event loop
