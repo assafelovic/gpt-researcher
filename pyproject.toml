@@ -39,7 +39,7 @@ lxml = { version = ">=4.9.2", extras = ["html_clean"] }
 unstructured = ">=0.13,<0.16"
 tiktoken = ">=0.7.0"
 json-repair = "^0.29.8"
-json5 = "^0.9.25"
+json5 = "^0.10.0"
 loguru = "^0.7.2"
 websockets = "^13.1"
 
