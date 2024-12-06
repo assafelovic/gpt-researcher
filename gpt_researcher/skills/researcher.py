@@ -324,27 +324,40 @@ class ResearchConductor:
 
     async def _scrape_data_by_urls(self, sub_query):
         """
-        Runs a sub-query across multiple retrievers and scrapes the resulting URLs.
-
-        Args:
-            sub_query (str): The sub-query to search for.
-
-        Returns:
-            list: A list of scraped content results.
+        Runs a sub-query across multiple retrievers and handles both URL-based and direct content retrievers.
         """
-        new_search_urls = await self._search_relevant_source_urls(sub_query)
-
-        # Log the research process if verbose mode is on
-        if self.researcher.verbose:
-            await stream_output(
-                "logs",
-                "researching",
-                f"🤔 Researching for relevant information across multiple sources...\n",
-                self.researcher.websocket,
+        scraped_content = []
+        
+        # Search across all retrievers
+        for retriever_class in self.researcher.retrievers:
+            # Instantiate the retriever
+            retriever = retriever_class(sub_query, self.researcher.headers)
+            
+            # Get search results
+            search_results = await asyncio.to_thread(
+                retriever.search, 
+                max_results=self.researcher.cfg.max_search_results_per_query
             )
-
-        # Scrape the new URLs
-        scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
+            
+            if hasattr(retriever, 'requires_scraping') and not retriever.requires_scraping:
+                # For content retrievers, add results directly
+                scraped_content.extend(search_results)
+            else:
+                # For URL-based retrievers, get URLs and scrape
+                search_urls = [url.get("href") for url in search_results]
+                new_search_urls = await self._get_new_urls(search_urls)
+                
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "researching",
+                        f"🤔 Researching URLs from {retriever_class.__name__}...\n",
+                        self.researcher.websocket,
+                    )
+                
+                # Scrape the new URLs
+                url_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
+                scraped_content.extend(url_content)
 
         if self.researcher.vector_store:
             self.researcher.vector_store.load(scraped_content)
