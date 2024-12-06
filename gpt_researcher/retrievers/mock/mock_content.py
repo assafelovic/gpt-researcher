@@ -12,13 +12,17 @@ class MockContentRetriever(BaseRetriever):
         """Returns mock research content directly"""
         mock_data = [
             {
-                "body": "Mock research paper about AI advances in 2024. This paper discusses...",
+                "source": "mock_database_1",
+                "raw_content": "Mock research paper about AI advances in 2024. This paper discusses...",
                 "title": "AI Advances 2024",
+                "image_urls": [],
                 "metadata": {"author": "Mock Researcher", "year": 2024}
             },
             {
-                "body": "Study on climate change impacts in urban areas. The findings suggest...", 
+                "source": "mock_database_2",
+                "raw_content": "Study on climate change impacts in urban areas. The findings suggest...", 
                 "title": "Climate Change Urban Impact",
+                "image_urls": [],
                 "metadata": {"author": "Mock Scientist", "year": 2024}
             }
         ]

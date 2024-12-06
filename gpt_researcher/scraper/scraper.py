@@ -48,11 +48,11 @@ class Scraper:
             content, image_urls, title = scraper.scrape()
 
             if len(content) < 100:
-                return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+                return {"source": link, "raw_content": None, "image_urls": [], "title": ""}
             
-            return {"url": link, "raw_content": content, "image_urls": image_urls, "title": title}
+            return {"source": link, "raw_content": content, "image_urls": image_urls, "title": title}
         except Exception as e:
-            return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+            return {"source": link, "raw_content": None, "image_urls": [], "title": ""}
 
     def get_scraper(self, link):
         """

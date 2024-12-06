@@ -300,21 +300,40 @@ class ResearchConductor:
         return new_urls
 
     async def _search_relevant_source_urls(self, query):
+        """
+        This method is now only used by URL-based retrievers
+        """
         new_search_urls = []
 
         # Iterate through all retrievers
         for retriever_class in self.researcher.retrievers:
-            # Instantiate the retriever with the sub-query
-            retriever = retriever_class(query)
+            try:
+                # Instantiate the retriever with the sub-query
+                retriever = retriever_class(query, self.researcher.headers)
+                
+                # Skip non-URL retrievers
+                if hasattr(retriever, 'requires_scraping') and not retriever.requires_scraping:
+                    continue
 
-            # Perform the search using the current retriever
-            search_results = await asyncio.to_thread(
-                retriever.search, max_results=self.researcher.cfg.max_search_results_per_query
-            )
+                # Perform the search using the current retriever
+                search_results = await asyncio.to_thread(
+                    retriever.search, 
+                    max_results=self.researcher.cfg.max_search_results_per_query
+                )
 
-            # Collect new URLs from search results
-            search_urls = [url.get("href") for url in search_results]
-            new_search_urls.extend(search_urls)
+                # Collect new URLs from search results
+                search_urls = [result.get("href") for result in search_results if result.get("href")]
+                new_search_urls.extend(search_urls)
+                
+            except Exception as e:
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "error",
+                        f"Error with retriever {retriever_class.__name__}: {str(e)}\n",
+                        self.researcher.websocket,
+                    )
+                continue
 
         # Get unique URLs
         new_search_urls = await self._get_new_urls(new_search_urls)
@@ -330,34 +349,50 @@ class ResearchConductor:
         
         # Search across all retrievers
         for retriever_class in self.researcher.retrievers:
-            # Instantiate the retriever
-            retriever = retriever_class(sub_query, self.researcher.headers)
-            
-            # Get search results
-            search_results = await asyncio.to_thread(
-                retriever.search, 
-                max_results=self.researcher.cfg.max_search_results_per_query
-            )
-            
-            if hasattr(retriever, 'requires_scraping') and not retriever.requires_scraping:
-                # For content retrievers, add results directly
-                scraped_content.extend(search_results)
-            else:
-                # For URL-based retrievers, get URLs and scrape
-                search_urls = [url.get("href") for url in search_results]
-                new_search_urls = await self._get_new_urls(search_urls)
+            try:
+                # Instantiate the retriever
+                retriever = retriever_class(sub_query, self.researcher.headers)
                 
+                # Get search results
+                search_results = await asyncio.to_thread(
+                    retriever.search, 
+                    max_results=self.researcher.cfg.max_search_results_per_query
+                )
+                
+                if hasattr(retriever, 'requires_scraping') and not retriever.requires_scraping:
+                    # For content retrievers, results are already in the correct format
+                    scraped_content.extend(search_results)
+                else:
+                    # For URL-based retrievers, get URLs and scrape
+                    search_urls = [result.get("href") for result in search_results if result.get("href")]
+                    new_search_urls = await self._get_new_urls(search_urls)
+                    
+                    if self.researcher.verbose:
+                        await stream_output(
+                            "logs",
+                            "researching",
+                            f"🤔 Researching URLs from {retriever_class.__name__}...\n",
+                            self.researcher.websocket,
+                        )
+                    
+                    if new_search_urls:
+                        # Scrape the new URLs
+                        url_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
+                        # Update 'url' to 'source' in scraped content
+                        for content in url_content:
+                            if 'url' in content:
+                                content['source'] = content.pop('url')
+                        scraped_content.extend(url_content)
+                    
+            except Exception as e:
                 if self.researcher.verbose:
                     await stream_output(
                         "logs",
-                        "researching",
-                        f"🤔 Researching URLs from {retriever_class.__name__}...\n",
+                        "error",
+                        f"Error with retriever {retriever_class.__name__}: {str(e)}\n",
                         self.researcher.websocket,
                     )
-                
-                # Scrape the new URLs
-                url_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
-                scraped_content.extend(url_content)
+                continue
 
         if self.researcher.vector_store:
             self.researcher.vector_store.load(scraped_content)

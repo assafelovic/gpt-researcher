@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 class BaseRetriever(ABC):
     """Base class for all retrievers"""
@@ -19,7 +19,15 @@ class BaseRetriever(ABC):
         Search method that all retrievers must implement
         
         Returns:
-            For requires_scraping=True: List of dicts with 'href' key containing URLs
-            For requires_scraping=False: List of dicts with 'body' key containing content
+            For requires_scraping=True: 
+                List[Dict] with keys:
+                - 'href': str (URL to be scraped)
+                
+            For requires_scraping=False:
+                List[Dict] with keys:
+                - 'source': str (identifier of the content source)
+                - 'raw_content': str (the actual content)
+                - 'title': str (title of the content)
+                - 'image_urls': List[str] (optional, list of related image URLs)
         """
         pass 
