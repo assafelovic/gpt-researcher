@@ -18,16 +18,24 @@ class BaseRetriever(ABC):
         """
         Search method that all retrievers must implement
         
+        Args:
+            max_results: Maximum number of results to return
+            
         Returns:
             For requires_scraping=True: 
-                List[Dict] with keys:
-                - 'href': str (URL to be scraped)
+                List[Dict] with required keys:
+                - 'source': str (URL to be scraped)
+                Optional keys:
+                - 'title': str (if available before scraping)
+                - 'snippet': str (if available before scraping)
                 
             For requires_scraping=False:
-                List[Dict] with keys:
+                List[Dict] with required keys:
                 - 'source': str (identifier of the content source)
                 - 'raw_content': str (the actual content)
                 - 'title': str (title of the content)
-                - 'image_urls': List[str] (optional, list of related image URLs)
+                Optional keys:
+                - 'image_urls': List[str] (related image URLs)
+                - 'metadata': Dict (any additional metadata)
         """
         pass 

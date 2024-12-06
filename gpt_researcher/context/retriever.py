@@ -20,7 +20,7 @@ class SearchAPIRetriever(BaseRetriever):
                 page_content=page.get("raw_content", ""),
                 metadata={
                     "title": page.get("title", ""),
-                    "source": page.get("url", ""),
+                    "source": page.get("source", ""),
                 },
             )
             for page in self.pages
@@ -39,7 +39,8 @@ class SectionRetriever(BaseRetriever):
     [
         {
             "section_title": "Example Title",
-            "written_content": "Example content"
+            "written_content": "Example content",
+            "source": "Source identifier"
         },
         ...
     ]
@@ -54,9 +55,10 @@ class SectionRetriever(BaseRetriever):
                 page_content=page.get("written_content", ""),
                 metadata={
                     "section_title": page.get("section_title", ""),
+                    "source": page.get("source", ""),
                 },
             )
-            for page in self.sections  # Changed 'self.pages' to 'self.sections'
+            for page in self.sections
         ]
 
         return docs

@@ -127,18 +127,18 @@ class ResearchConductor:
 
     async def _get_context_by_urls(self, urls):
         """
-        Scrapes and compresses the context from the given urls
+        Scrapes and compresses the context from the given sources
         """
-        new_search_urls = await self._get_new_urls(urls)
+        new_sources = await self._get_new_sources(urls)
         if self.researcher.verbose:
             await stream_output(
                 "logs",
                 "source_urls",
-                f"🗂️ I will conduct my research based on the following urls: {new_search_urls}...",
+                f"🗂️ I will conduct my research based on the following sources: {new_sources}...",
                 self.researcher.websocket,
             )
 
-        scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
+        scraped_content = await self.researcher.scraper_manager.browse_urls(new_sources)
 
         if self.researcher.vector_store:
             self.researcher.vector_store.load(scraped_content)
@@ -149,7 +149,7 @@ class ResearchConductor:
         """
         Generates the context for the research task by searching the vectorstore
         Returns:
-            context: List of context
+            context: List of context with source information
         """
         context = []
         # Generate Sub-Queries including original query
@@ -363,26 +363,22 @@ class ResearchConductor:
                     # For content retrievers, results are already in the correct format
                     scraped_content.extend(search_results)
                 else:
-                    # For URL-based retrievers, get URLs and scrape
-                    search_urls = [result.get("href") for result in search_results if result.get("href")]
-                    new_search_urls = await self._get_new_urls(search_urls)
+                    # For URL-based retrievers, get sources and scrape
+                    sources = [result.get("source") for result in search_results if result.get("source")]
+                    new_sources = await self._get_new_sources(sources)
                     
                     if self.researcher.verbose:
                         await stream_output(
                             "logs",
                             "researching",
-                            f"🤔 Researching URLs from {retriever_class.__name__}...\n",
+                            f"🤔 Researching sources from {retriever_class.__name__}...\n",
                             self.researcher.websocket,
                         )
                     
-                    if new_search_urls:
-                        # Scrape the new URLs
-                        url_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
-                        # Update 'url' to 'source' in scraped content
-                        for content in url_content:
-                            if 'url' in content:
-                                content['source'] = content.pop('url')
-                        scraped_content.extend(url_content)
+                    if new_sources:
+                        # Scrape the new sources
+                        source_content = await self.researcher.scraper_manager.browse_urls(new_sources)
+                        scraped_content.extend(source_content)
                     
             except Exception as e:
                 if self.researcher.verbose:
@@ -398,3 +394,25 @@ class ResearchConductor:
             self.researcher.vector_store.load(scraped_content)
 
         return scraped_content
+
+    async def _get_new_sources(self, sources):
+        """Gets the new sources that haven't been visited yet.
+        Args: sources (list[str]): The sources to check
+        Returns: list[str]: The new unvisited sources
+        """
+        new_sources = []
+        for source in sources:
+            if source not in self.researcher.visited_urls:
+                self.researcher.visited_urls.add(source)
+                new_sources.append(source)
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "added_source",
+                        f"✅ Added source to research: {source}\n",
+                        self.researcher.websocket,
+                        True,
+                        source,
+                    )
+
+        return new_sources
