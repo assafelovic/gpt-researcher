@@ -84,4 +84,4 @@ class GoogleSearch:
             }
             search_results.append(search_result)
 
-        return search_results
+        return search_results[:max_results]
