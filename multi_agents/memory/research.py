@@ -18,4 +18,11 @@ class ResearchState(TypedDict):
     sources: List[str]
     report: str
 
+class ResearchStateMath(TypedDict):
+    task: dict  # タスク情報（問題の詳細、使用するモデルなど）
+    parsed_problem: dict  # ParserAgent による問題の解析結果
+    solution_plan: dict  # PlannerAgent による解法の計画
+    solutions: List[dict]  # SolverAgent による解法の詳細と結果
+    explanations: List[dict]  # ExplainerAgent による解法の説明
+
 
