@@ -100,7 +100,7 @@ class GenericLLMProvider:
 
             if "model" in kwargs or "model_name" in kwargs:
                 model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
-                kwargs = {"model_id": model_id, **kwargs}
+                kwargs = {"model_id": model_id, "model_kwargs": kwargs}
             llm = ChatBedrock(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
