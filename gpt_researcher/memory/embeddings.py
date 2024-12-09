@@ -18,6 +18,7 @@ _SUPPORTED_PROVIDERS = {
     "huggingface",
     "nomic",
     "voyageai",
+    "dashscope",
     "custom",
 }
 
@@ -102,6 +103,10 @@ class Memory:
                     model=model,
                     **embdding_kwargs,
                 )
+            case "dashscope":
+                from langchain_community.embeddings import DashScopeEmbeddings
+
+                _embeddings = DashScopeEmbeddings(model=model, **embdding_kwargs)
             case _:
                 raise Exception("Embedding not found.")
 
