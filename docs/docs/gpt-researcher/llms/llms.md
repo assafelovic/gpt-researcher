@@ -240,6 +240,15 @@ STRATEGIC_LLM="bedrock:anthropic.claude-3-sonnet-20240229-v1:0"
 ```
 
 
+## xAI
+
+```bash
+FAST_LLM="xai:grok-beta"
+SMART_LLM="xai:grok-beta"
+STRATEGIC_LLM="xai:grok-beta"
+```
+
+
 ## Other Embedding Models
 
 ### Nomic
