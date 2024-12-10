@@ -17,6 +17,7 @@ _SUPPORTED_PROVIDERS = {
     "huggingface",
     "groq",
     "bedrock",
+    "xai",
 }
 
 
@@ -102,6 +103,11 @@ class GenericLLMProvider:
                 model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
                 kwargs = {"model_id": model_id, **kwargs}
             llm = ChatBedrock(**kwargs)
+        elif provider == "xai":
+            _check_pkg("langchain_xai")
+            from langchain_xai import ChatXAI
+
+            llm = ChatXAI(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
