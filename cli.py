@@ -12,6 +12,7 @@ import asyncio
 import argparse
 from argparse import RawTextHelpFormatter
 from uuid import uuid4
+import os
 
 from dotenv import load_dotenv
 
@@ -92,6 +93,7 @@ async def main(args):
 
     # Write the report to a file
     artifact_filepath = f"outputs/{uuid4()}.md"
+    os.makedirs("outputs", exist_ok=True)
     with open(artifact_filepath, "w") as f:
         f.write(report)
 
