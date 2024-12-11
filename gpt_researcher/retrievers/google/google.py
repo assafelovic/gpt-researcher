@@ -77,11 +77,14 @@ class GoogleSearch:
             # skip youtube results
             if "youtube.com" in result["link"]:
                 continue
-            search_result = {
-                "title": result["title"],
-                "href": result["link"],
-                "body": result["snippet"],
-            }
+            try:
+                search_result = {
+                    "title": result["title"],
+                    "href": result["link"],
+                    "body": result["snippet"],
+                }
+            except:
+                continue
             search_results.append(search_result)
 
         return search_results[:max_results]
