@@ -17,6 +17,7 @@ _SUPPORTED_PROVIDERS = {
     "huggingface",
     "groq",
     "bedrock",
+    "dashscope"
     "xai",
 }
 
@@ -103,6 +104,11 @@ class GenericLLMProvider:
                 model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
                 kwargs = {"model_id": model_id, **kwargs}
             llm = ChatBedrock(**kwargs)
+        elif provider == "dashscope":
+            _check_pkg("langchain_dashscope")
+            from langchain_dashscope import ChatDashScope
+
+            llm = ChatDashScope(**kwargs)
         elif provider == "xai":
             _check_pkg("langchain_xai")
             from langchain_xai import ChatXAI
