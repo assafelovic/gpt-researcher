@@ -18,6 +18,7 @@ _SUPPORTED_PROVIDERS = {
     "groq",
     "bedrock",
     "dashscope"
+    "xai",
 }
 
 
@@ -108,6 +109,11 @@ class GenericLLMProvider:
             from langchain_dashscope import ChatDashScope
 
             llm = ChatDashScope(**kwargs)
+        elif provider == "xai":
+            _check_pkg("langchain_xai")
+            from langchain_xai import ChatXAI
+
+            llm = ChatXAI(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(

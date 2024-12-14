@@ -33,7 +33,7 @@ class Config:
             setattr(self, key.lower(), value)
 
         # Handle RETRIEVER with default value
-        retriever_env = os.environ.get("RETRIEVER", "tavily")
+        retriever_env = os.environ.get("RETRIEVER", config.get("RETRIEVER", "tavily"))
         try:
             self.retrievers = self.parse_retrievers(retriever_env)
         except ValueError as e:
