@@ -17,7 +17,7 @@ _SUPPORTED_PROVIDERS = {
     "huggingface",
     "groq",
     "bedrock",
-    "dashscope"
+    "dashscope",
     "xai",
 }
 
