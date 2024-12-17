@@ -104,12 +104,30 @@ const GPTResearcher = (() => {
   }
 
   const updateDownloadLink = (data) => {
-    const pdf_path = data.output.pdf
-    const docx_path = data.output.docx
-    const md_path = data.output.md;
-    document.getElementById('downloadLink').setAttribute('href', pdf_path);
-    document.getElementById('downloadLinkWord').setAttribute('href', docx_path);
-    document.getElementById("downloadLinkMd").setAttribute("href", md_path);
+    if (!data.output) {
+        console.error('No output data received');
+        return;
+    }
+    
+    const { pdf, docx, md, json } = data.output;
+    console.log('Received paths:', { pdf, docx, md, json });
+    
+    // Helper function to safely update link
+    const updateLink = (id, path) => {
+        const element = document.getElementById(id);
+        if (element && path) {
+            console.log(`Setting ${id} href to:`, path);
+            element.setAttribute('href', path);
+            element.classList.remove('disabled');
+        } else {
+            console.warn(`Either element ${id} not found or path not provided`);
+        }
+    };
+
+    updateLink('downloadLink', pdf);
+    updateLink('downloadLinkWord', docx);
+    updateLink('downloadLinkMd', md);
+    updateLink('downloadLinkJson', json);
   }
 
   const updateScroll = () => {

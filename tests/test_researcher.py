@@ -1,0 +1,63 @@
+import pytest
+import asyncio
+from pathlib import Path
+import sys
+import logging
+
+# Add the project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.append(str(project_root))
+
+# Configure basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@pytest.mark.asyncio
+async def test_researcher():
+    try:
+        # Import here to catch any import errors
+        from src.researcher import Researcher
+        logger.info("Successfully imported Researcher class")
+        
+        # Create a researcher instance
+        researcher = Researcher(
+            query="What is the current state of quantum computing?",
+            report_type="research_report"
+        )
+        logger.info("Created Researcher instance")
+        
+        # Run the research
+        report = await researcher.research()
+        logger.info("Research completed successfully!")
+        logger.info(f"Report length: {len(report)}")
+        
+        # Basic assertions
+        assert report is not None
+        assert len(report) > 0
+        
+        # Check if logs were created
+        logs_dir = Path(project_root) / "logs"
+        log_files = list(logs_dir.glob("research_*.log"))
+        json_files = list(logs_dir.glob("research_*.json"))
+        
+        assert len(log_files) > 0, "No log files were created"
+        assert len(json_files) > 0, "No JSON files were created"
+        
+        logger.info(f"\nFound {len(log_files)} log files:")
+        for log_file in log_files:
+            logger.info(f"- {log_file.name}")
+            
+        logger.info(f"\nFound {len(json_files)} JSON files:")
+        for json_file in json_files:
+            logger.info(f"- {json_file.name}")
+            
+    except ImportError as e:
+        logger.error(f"Import error: {e}")
+        logger.error("Make sure gpt_researcher is installed and in your PYTHONPATH")
+        raise
+    except Exception as e:
+        logger.error(f"Error during research: {e}")
+        raise
+
+if __name__ == "__main__":
+    pytest.main([__file__]) 

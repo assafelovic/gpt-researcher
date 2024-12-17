@@ -2,25 +2,7 @@ import logging
 from typing import List, Dict, Any
 import asyncio
 from gpt_researcher import GPTResearcher
-
-class CustomLogsHandler:
-    """A custom Logs handler class to handle JSON data."""
-    def __init__(self):
-        self.logs: List[Dict[str, Any]] = []  # Initialize logs to store data
-        logging.basicConfig(level=logging.INFO)  # Set up logging configuration
-
-    async def send_json(self, data: Dict[str, Any]) -> None:
-        """Send JSON data and log it, with error handling."""
-        try:
-            self.logs.append(data)  # Append data to logs
-            logging.info(f"My custom Log: {data}")  # Use logging instead of print
-        except Exception as e:
-            logging.error(f"Error logging data: {e}")  # Log any errors
-
-    def clear_logs(self) -> None:
-        """Clear the logs."""
-        self.logs.clear()  # Clear the logs list
-        logging.info("Logs cleared.")  # Log the clearing action
+from src.logs_handler import CustomLogsHandler  # Update import
 
 async def run() -> None:
     """Run the research process and generate a report."""
@@ -30,7 +12,7 @@ async def run() -> None:
     tone = "informative"
     config_path = None
 
-    custom_logs_handler = CustomLogsHandler()
+    custom_logs_handler = CustomLogsHandler(query=query)  # Pass query parameter
 
     researcher = GPTResearcher(
         query=query,
