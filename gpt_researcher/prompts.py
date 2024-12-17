@@ -57,6 +57,7 @@ def generate_report_prompt(
     report_format="apa",
     total_words=1000,
     tone=None,
+    language="english",
 ):
     """Generates the report prompt for the given question and research summary.
     Args: question (str): The question to generate the report prompt for
@@ -98,6 +99,7 @@ Please follow all of the following guidelines in your report:
 - {reference_prompt}
 - {tone_prompt}
 
+You MUST write the report in the following language: {language}.
 Please do your best, this is very important to my career.
 Assume that the current date is {date.today()}.
 """
@@ -113,18 +115,16 @@ The final curated list will be used as context for creating a research report, s
 
 EVALUATION GUIDELINES:
 1. Assess each source based on:
-   - **Relevance**: Include sources directly or partially connected to the research query. Err on the side of inclusion.
-   - **Credibility**: Favor authoritative sources but retain others unless clearly untrustworthy.
-   - **Currency**: Prefer recent information unless older data is essential or valuable.
-   - **Objectivity**: Retain sources with bias if they provide a unique or complementary perspective.
-   - **Quantitative Value**: Give higher priority to sources with statistics, numbers, or other concrete data.
-
+   - Relevance: Include sources directly or partially connected to the research query. Err on the side of inclusion.
+   - Credibility: Favor authoritative sources but retain others unless clearly untrustworthy.
+   - Currency: Prefer recent information unless older data is essential or valuable.
+   - Objectivity: Retain sources with bias if they provide a unique or complementary perspective.
+   - Quantitative Value: Give higher priority to sources with statistics, numbers, or other concrete data.
 2. Source Selection:
    - Include as many relevant sources as possible, up to {max_results}, focusing on broad coverage and diversity.
    - Prioritize sources with statistics, numerical data, or verifiable facts.
    - Overlapping content is acceptable if it adds depth, especially when data is involved.
    - Exclude sources only if they are entirely irrelevant, severely outdated, or unusable due to poor content quality.
-
 3. Content Retention:
    - DO NOT rewrite, summarize, or condense any source content.
    - Retain all usable information, cleaning up only clear garbage or formatting issues.
