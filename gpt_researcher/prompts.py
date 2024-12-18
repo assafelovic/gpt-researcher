@@ -293,6 +293,7 @@ def generate_subtopic_report_prompt(
     max_subsections=5,
     total_words=800,
     tone: Tone = Tone.Objective,
+    language: str = "english",
 ) -> str:
     return f"""
 Context:
@@ -346,6 +347,7 @@ IMPORTANT:Content and Sections Uniqueness:
 Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 
 "IMPORTANT!":
+- Write the report in {language}.
 - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
 - Must NOT have any introduction, conclusion, summary or reference section.
 - You MUST include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
