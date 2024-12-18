@@ -44,19 +44,3 @@ package-lock.json
 
 # Log files
 logs/
-*.log
-*_log.txt
-heroku_logs.txt
-memory_profiling_log.txt
-server_log.txt
-
-# Add to existing .gitignore
-*.json
-*.pdf
-*.md
-!README.md
-!CONTRIBUTING.md
-!CODE_OF_CONDUCT.md
-
-# Backup directories
-data_backup/
