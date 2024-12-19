@@ -46,3 +46,10 @@ websockets = "^13.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+addopts = "-v"
+testpaths = ["tests"]
+python_files = "test_*.py"
+asyncio_fixture_loop_scope = "function"
