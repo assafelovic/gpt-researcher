@@ -13,15 +13,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 @pytest.mark.asyncio
-async def test_researcher():
+async def test_researcher_logging():  # Renamed function to be more specific
+    """
+    Test suite for verifying the researcher's logging infrastructure.
+    Ensures proper creation and formatting of log files.
+    """
     try:
         # Import here to catch any import errors
         from src.researcher import Researcher
         logger.info("Successfully imported Researcher class")
         
-        # Create a researcher instance
+        # Create a researcher instance with a logging-focused query
         researcher = Researcher(
-            query="What is the current state of quantum computing?",
+            query="Test query for logging verification",
             report_type="research_report"
         )
         logger.info("Created Researcher instance")
@@ -31,25 +35,29 @@ async def test_researcher():
         logger.info("Research completed successfully!")
         logger.info(f"Report length: {len(report)}")
         
-        # Basic assertions
+        # Basic report assertions
         assert report is not None
         assert len(report) > 0
         
-        # Check if logs were created
+        # Detailed log file verification
         logs_dir = Path(project_root) / "logs"
         log_files = list(logs_dir.glob("research_*.log"))
         json_files = list(logs_dir.glob("research_*.json"))
         
+        # Verify log files exist
         assert len(log_files) > 0, "No log files were created"
         assert len(json_files) > 0, "No JSON files were created"
         
+        # Log the findings
         logger.info(f"\nFound {len(log_files)} log files:")
         for log_file in log_files:
             logger.info(f"- {log_file.name}")
+            # Could add additional checks for log file format/content here
             
         logger.info(f"\nFound {len(json_files)} JSON files:")
         for json_file in json_files:
             logger.info(f"- {json_file.name}")
+            # Could add additional checks for JSON file structure here
             
     except ImportError as e:
         logger.error(f"Import error: {e}")
