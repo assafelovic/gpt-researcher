@@ -88,9 +88,6 @@ DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 # Startup event
 
 
-from psutil import Process
-import logging
-
 @app.on_event("startup")
 def startup_event():
     os.makedirs("outputs", exist_ok=True)
@@ -102,11 +99,6 @@ def startup_event():
     research_logger.json_handler = json_handler  # Store the JSON handler on the logger
     research_logger.info(f"Research log file: {log_file}")
     research_logger.info(f"Research JSON file: {json_file}")
-    
-    # Log memory usage
-    process = Process()
-    mem_info = process.memory_info()
-    research_logger.info(f"Memory usage at startup: {mem_info.rss / 1024 ** 2:.2f} MB")
 
 # Routes
 
@@ -123,10 +115,7 @@ async def list_files():
     return {"files": files}
 
 
-from memory_profiler import profile
-
 @app.post("/api/multi_agents")
-@profile
 async def run_multi_agents():
     return await execute_multi_agents(manager)
 
@@ -141,15 +130,10 @@ async def delete_file(filename: str):
     return await handle_file_deletion(filename, DOC_PATH)
 
 
-from psutil import Process
-
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    process = Process()
     await manager.connect(websocket)
     try:
-        mem_info = process.memory_info()
-        print(f"Memory usage during WebSocket connection: {mem_info.rss / 1024 ** 2:.2f} MB")
         await handle_websocket_communication(websocket, manager)
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
