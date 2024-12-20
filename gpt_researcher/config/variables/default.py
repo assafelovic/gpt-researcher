@@ -9,6 +9,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "STRATEGIC_LLM": "openai:gpt-4o", # Can be used with gpt-o1
     "FAST_TOKEN_LIMIT": 2000,
     "SMART_TOKEN_LIMIT": 4000,
+    "STRATEGIC_TOKEN_LIMIT": 4000,
     "BROWSE_CHUNK_MAX_LENGTH": 8192,
     "CURATE_SOURCES": False,
     "SUMMARY_TOKEN_LIMIT": 700,
