@@ -179,7 +179,7 @@ def generate_resource_report_prompt(
 
 
 def generate_custom_report_prompt(
-    query_prompt, context, report_source: str, report_format="apa", tone=None, total_words=1000
+    query_prompt, context, report_source: str, report_format="apa", tone=None, total_words=1000, language: str = "english"
 ):
     return f'"{context}"\n\n{query_prompt}'
 
