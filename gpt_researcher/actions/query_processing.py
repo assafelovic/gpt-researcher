@@ -62,6 +62,18 @@ async def generate_sub_queries(
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
         )
+    except ValidationError as e:
+        logger.warning(f"ValidationError with strategic LLM: {e}. Retrying with max_tokens={cfg.strategic_token_limit}")
+        response = await create_chat_completion(
+            model=cfg.strategic_llm_model,
+            messages=[{"role": "user", "content": gen_queries_prompt}],
+            temperature=1,
+            llm_provider=cfg.strategic_llm_provider,
+            max_tokens=cfg.strategic_token_limit,
+            llm_kwargs=cfg.llm_kwargs,
+            cost_callback=cost_callback,
+        )
+        logger.warning(f"Retrying with max_tokens={cfg.strategic_token_limit} successful.")
     except Exception as e:
         logger.warning(f"Error with strategic LLM: {e}. Falling back to smart LLM.")
         response = await create_chat_completion(
