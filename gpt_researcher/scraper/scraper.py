@@ -17,42 +17,42 @@ class Scraper:
     Scraper class to extract the content from the links
     """
 
-    def __init__(self, urls, user_agent, scraper):
+    def __init__(self, sources, user_agent, scraper):
         """
         Initialize the Scraper class.
         Args:
-            urls:
+            sources: List of source URLs to scrape
         """
-        self.urls = urls
+        self.sources = sources
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": user_agent})
         self.scraper = scraper
 
     def run(self):
         """
-        Extracts the content from the links
+        Extracts the content from the sources
         """
-        partial_extract = partial(self.extract_data_from_url, session=self.session)
+        partial_extract = partial(self.extract_data_from_source, session=self.session)
         with ThreadPoolExecutor(max_workers=20) as executor:
-            contents = executor.map(partial_extract, self.urls)
+            contents = executor.map(partial_extract, self.sources)
         res = [content for content in contents if content["raw_content"] is not None]
         return res
 
-    def extract_data_from_url(self, link, session):
+    def extract_data_from_source(self, source, session):
         """
-        Extracts the data from the link
+        Extracts the data from the source
         """
         try:
-            Scraper = self.get_scraper(link)
-            scraper = Scraper(link, session)
+            Scraper = self.get_scraper(source)
+            scraper = Scraper(source, session)
             content, image_urls, title = scraper.scrape()
 
             if len(content) < 100:
-                return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+                return {"source": source, "raw_content": None, "image_urls": [], "title": ""}
             
-            return {"url": link, "raw_content": content, "image_urls": image_urls, "title": title}
+            return {"source": source, "raw_content": content, "image_urls": image_urls, "title": title}
         except Exception as e:
-            return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+            return {"source": source, "raw_content": None, "image_urls": [], "title": ""}
 
     def get_scraper(self, link):
         """
