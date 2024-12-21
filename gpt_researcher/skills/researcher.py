@@ -94,6 +94,34 @@ class ResearchConductor:
             research_data = await self._get_context_by_web_search(self.researcher.query)
 
         # ... rest of the conditions ...
+        elif self.researcher.report_source == ReportSource.Local.value:
+            document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
+            if self.researcher.vector_store:
+                self.researcher.vector_store.load(document_data)
+
+            research_data = await self._get_context_by_web_search(self.researcher.query, document_data)
+
+        # Hybrid search including both local documents and web sources
+        elif self.researcher.report_source == ReportSource.Hybrid.value:
+            document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
+            if self.researcher.vector_store:
+                self.researcher.vector_store.load(document_data)
+            docs_context = await self._get_context_by_web_search(self.researcher.query, document_data)
+            web_context = await self._get_context_by_web_search(self.researcher.query)
+            research_data = f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"
+
+        elif self.researcher.report_source == ReportSource.LangChainDocuments.value:
+            langchain_documents_data = await LangChainDocumentLoader(
+                self.researcher.documents
+            ).load()
+            if self.researcher.vector_store:
+                self.researcher.vector_store.load(langchain_documents_data)
+            research_data = await self._get_context_by_web_search(
+                self.researcher.query, langchain_documents_data
+            )
+
+        elif self.researcher.report_source == ReportSource.LangChainVectorStore.value:
+            research_data = await self._get_context_by_vectorstore(self.researcher.query, self.researcher.vector_store_filter)
 
         # Rank and curate the sources
         self.researcher.context = research_data
