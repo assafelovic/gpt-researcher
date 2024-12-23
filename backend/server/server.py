@@ -15,25 +15,6 @@ from backend.server.server_utils import (
     execute_multi_agents, handle_websocket_communication
 )
 
-from gpt_researcher.utils.logging_config import setup_research_logging
-
-import logging
-
-# Get logger instance
-logger = logging.getLogger(__name__)
-
-# Don't override parent logger settings
-logger.propagate = True
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("server_log.txt"),  # Log to file
-        logging.StreamHandler()  # Also print to console
-    ]
-)
-
 
 # Models
 
@@ -94,11 +75,6 @@ def startup_event():
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
     os.makedirs(DOC_PATH, exist_ok=True)
     
-    # Setup research logging
-    log_file, json_file, research_logger, json_handler = setup_research_logging()  # Unpack all 4 values
-    research_logger.json_handler = json_handler  # Store the JSON handler on the logger
-    research_logger.info(f"Research log file: {log_file}")
-    research_logger.info(f"Research JSON file: {json_file}")
 
 # Routes
 
