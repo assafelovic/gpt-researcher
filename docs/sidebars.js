@@ -50,6 +50,7 @@
       items: [
         'gpt-researcher/frontend/frontend',
         'gpt-researcher/frontend/playing-with-webhooks',
+        'gpt-researcher/frontend/logs',
       ],
     },
     {
