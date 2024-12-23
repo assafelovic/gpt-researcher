@@ -32,12 +32,17 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBox
 
       newSocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
+        
         if (data.type === 'logs') {
           setAgentLogs((prevLogs) => [...prevLogs, data]);
         } else if (data.type === 'report') {
           setReport((prevReport) => prevReport + data.output);
         } else if (data.type === 'path') {
-          setAccessData(data);
+          setAccessData({
+            pdf: `outputs/${data.output.pdf}`,
+            docx: `outputs/${data.output.docx}`,
+            json: `outputs/${data.output.json}`
+          });
         }
       };
 
@@ -58,7 +63,13 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBox
         {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs} /> : ''}
         <div className="margin-div">
           {report ? <Report report={report} /> : ''}
-          {/* {Object.keys(accessData).length != 0 ? <AccessReport accessData={accessData} report={report} /> : ''} */}
+          {Object.keys(accessData).length > 0 && 
+            <AccessReport 
+              accessData={accessData} 
+              chatBoxSettings={chatBoxSettings} 
+              report={report}
+            />
+          }
         </div>
       </main>
     </div>
