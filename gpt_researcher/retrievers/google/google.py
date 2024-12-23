@@ -8,7 +8,7 @@ import json
 
 class GoogleSearch:
     """
-    Tavily API Retriever
+    Google API Retriever
     """
     def __init__(self, query, headers=None):
         """
@@ -59,6 +59,9 @@ class GoogleSearch:
         print("Searching with query {0}...".format(self.query))
         url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={self.query}&start=1"
         resp = requests.get(url)
+
+        if resp.status_code < 200 or resp.status_code >= 300:
+            print("Google search: unexpected response status: ", resp.status_code)
 
         if resp is None:
             return
