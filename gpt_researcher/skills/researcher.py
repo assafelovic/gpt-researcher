@@ -5,7 +5,7 @@ from typing import Dict, Optional
 
 from ..actions.utils import stream_output
 from ..actions.query_processing import plan_research_outline, get_search_results
-from ..document import DocumentLoader, LangChainDocumentLoader
+from ..document import DocumentLoader, OnlineDocumentLoader, LangChainDocumentLoader
 from ..utils.enum import ReportSource, ReportType, Tone
 
 
@@ -87,7 +87,10 @@ class ResearchConductor:
 
         # Hybrid search including both local documents and web sources
         elif self.researcher.report_source == ReportSource.Hybrid.value:
-            document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
+            if self.researcher.document_urls:
+                document_data = await OnlineDocumentLoader(self.researcher.document_urls).load()
+            else:
+                document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(document_data)
             docs_context = await self._get_context_by_web_search(self.researcher.query, document_data)
