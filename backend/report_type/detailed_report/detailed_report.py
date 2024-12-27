@@ -12,6 +12,7 @@ class DetailedReport:
         report_type: str,
         report_source: str,
         source_urls: List[str] = [],
+        document_urls: List[str] = [],
         config_path: str = None,
         tone: Any = "",
         websocket: WebSocket = None,
@@ -22,6 +23,7 @@ class DetailedReport:
         self.report_type = report_type
         self.report_source = report_source
         self.source_urls = source_urls
+        self.document_urls = document_urls
         self.config_path = config_path
         self.tone = tone
         self.websocket = websocket
@@ -33,6 +35,7 @@ class DetailedReport:
             report_type="research_report",
             report_source=self.report_source,
             source_urls=self.source_urls,
+            document_urls=self.document_urls,
             config_path=self.config_path,
             tone=self.tone,
             websocket=self.websocket,
