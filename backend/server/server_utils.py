@@ -144,8 +144,7 @@ async def handle_start_command(websocket, data: str, manager):
         document_urls,
         tone, 
         websocket,
-        headers,
-        logs_handler
+        headers
     )
     report = str(report)
     file_paths = await generate_report_files(report, sanitized_filename)
