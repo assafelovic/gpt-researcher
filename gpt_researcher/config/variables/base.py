@@ -11,6 +11,7 @@ class BaseConfig(TypedDict):
     STRATEGIC_LLM: str
     FAST_TOKEN_LIMIT: int
     SMART_TOKEN_LIMIT: int
+    STRATEGIC_TOKEN_LIMIT: int
     BROWSE_CHUNK_MAX_LENGTH: int
     SUMMARY_TOKEN_LIMIT: int
     TEMPERATURE: float
@@ -22,6 +23,7 @@ class BaseConfig(TypedDict):
     REPORT_FORMAT: str
     CURATE_SOURCES: bool
     MAX_ITERATIONS: int
+    LANGUAGE: str
     AGENT_ROLE: Union[str, None]
     SCRAPER: str
     MAX_SUBTOPICS: int

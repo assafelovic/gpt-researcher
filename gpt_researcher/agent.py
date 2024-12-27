@@ -49,6 +49,7 @@ class GPTResearcher:
         context=[],
         headers: dict = None,
         max_subtopics: int = 5,
+        log_handler=None,
     ):
         self.query = query
         self.report_type = report_type
@@ -81,6 +82,7 @@ class GPTResearcher:
         self.memory = Memory(
             self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
         )
+        self.log_handler = log_handler
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
@@ -89,8 +91,36 @@ class GPTResearcher:
         self.scraper_manager: BrowserManager = BrowserManager(self)
         self.source_curator: SourceCurator = SourceCurator(self)
 
+    async def _log_event(self, event_type: str, **kwargs):
+        """Helper method to handle logging events"""
+        if self.log_handler:
+            try:
+                if event_type == "tool":
+                    await self.log_handler.on_tool_start(kwargs.get('tool_name', ''), **kwargs)
+                elif event_type == "action":
+                    await self.log_handler.on_agent_action(kwargs.get('action', ''), **kwargs)
+                elif event_type == "research":
+                    await self.log_handler.on_research_step(kwargs.get('step', ''), kwargs.get('details', {}))
+                
+                # Add direct logging as backup
+                import logging
+                research_logger = logging.getLogger('research')
+                research_logger.info(f"{event_type}: {json.dumps(kwargs, default=str)}")
+                
+            except Exception as e:
+                import logging
+                logging.getLogger('research').error(f"Error in _log_event: {e}", exc_info=True)
+
     async def conduct_research(self):
+        await self._log_event("research", step="start", details={
+            "query": self.query,
+            "report_type": self.report_type,
+            "agent": self.agent,
+            "role": self.role
+        })
+
         if not (self.agent and self.role):
+            await self._log_event("action", action="choose_agent")
             self.agent, self.role = await choose_agent(
                 query=self.query,
                 cfg=self.cfg,
@@ -98,22 +128,50 @@ class GPTResearcher:
                 cost_callback=self.add_costs,
                 headers=self.headers,
             )
+            await self._log_event("action", action="agent_selected", details={
+                "agent": self.agent,
+                "role": self.role
+            })
 
+        await self._log_event("research", step="conducting_research", details={
+            "agent": self.agent,
+            "role": self.role
+        })
         self.context = await self.research_conductor.conduct_research()
+        
+        await self._log_event("research", step="research_completed", details={
+            "context_length": len(self.context)
+        })
         return self.context
 
     async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None) -> str:
-        return await self.report_generator.write_report(
+        await self._log_event("research", step="writing_report", details={
+            "existing_headers": existing_headers,
+            "context_source": "external" if ext_context else "internal"
+        })
+        
+        report = await self.report_generator.write_report(
             existing_headers,
             relevant_written_contents,
             ext_context or self.context
         )
+        
+        await self._log_event("research", step="report_completed", details={
+            "report_length": len(report)
+        })
+        return report
 
     async def write_report_conclusion(self, report_body: str) -> str:
-        return await self.report_generator.write_report_conclusion(report_body)
+        await self._log_event("research", step="writing_conclusion")
+        conclusion = await self.report_generator.write_report_conclusion(report_body)
+        await self._log_event("research", step="conclusion_completed")
+        return conclusion
 
     async def write_introduction(self):
-        return await self.report_generator.write_introduction()
+        await self._log_event("research", step="writing_introduction")
+        intro = await self.report_generator.write_introduction()
+        await self._log_event("research", step="introduction_completed")
+        return intro
 
     async def get_subtopics(self):
         return await self.report_generator.get_subtopics()
@@ -176,3 +234,8 @@ class GPTResearcher:
         if not isinstance(cost, (float, int)):
             raise ValueError("Cost must be an integer or float")
         self.research_costs += cost
+        if self.log_handler:
+            self._log_event("research", step="cost_update", details={
+                "cost": cost,
+                "total_cost": self.research_costs
+            })

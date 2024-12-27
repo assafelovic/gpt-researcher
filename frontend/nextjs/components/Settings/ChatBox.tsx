@@ -14,6 +14,18 @@ interface ChatBoxProps {
   chatBoxSettings: ChatBoxSettings;
   setChatBoxSettings: React.Dispatch<React.SetStateAction<ChatBoxSettings>>;
 }
+
+interface OutputData {
+  pdf?: string;
+  docx?: string;
+  json?: string;
+}
+
+interface WebSocketMessage {
+  type: 'logs' | 'report' | 'path';
+  output: string | OutputData;
+}
+
 export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBoxProps) {
 
   const [agentLogs, setAgentLogs] = useState<any[]>([]);
@@ -31,13 +43,19 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBox
       setSocket(newSocket);
 
       newSocket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data) as WebSocketMessage;
+        
         if (data.type === 'logs') {
-          setAgentLogs((prevLogs) => [...prevLogs, data]);
+          setAgentLogs((prevLogs: any[]) => [...prevLogs, data]);
         } else if (data.type === 'report') {
-          setReport((prevReport) => prevReport + data.output);
+          setReport((prevReport: string) => prevReport + (data.output as string));
         } else if (data.type === 'path') {
-          setAccessData(data);
+          const output = data.output as OutputData;
+          setAccessData({
+            ...(output.pdf && { pdf: `outputs/${output.pdf}` }),
+            ...(output.docx && { docx: `outputs/${output.docx}` }),
+            ...(output.json && { json: `outputs/${output.json}` })
+          });
         }
       };
 
@@ -58,7 +76,13 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBox
         {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs} /> : ''}
         <div className="margin-div">
           {report ? <Report report={report} /> : ''}
-          {/* {Object.keys(accessData).length != 0 ? <AccessReport accessData={accessData} report={report} /> : ''} */}
+          {Object.keys(accessData).length > 0 && 
+            <AccessReport 
+              accessData={accessData} 
+              chatBoxSettings={chatBoxSettings} 
+              report={report}
+            />
+          }
         </div>
       </main>
     </div>
