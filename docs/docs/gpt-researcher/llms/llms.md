@@ -5,7 +5,7 @@ With that said, GPT Researcher supports various open/closed source LLMs and embe
 
 Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq` and `bedrock`.
 
-Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `nomic` and `voyageai`.
+Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `nomic` ,`voyageai` and `bedrock`.
 
 To learn more about support customization options see [here](/gpt-researcher/config).
 
@@ -237,6 +237,8 @@ EMBEDDING="fireworks:nomic-ai/nomic-embed-text-v1.5"
 FAST_LLM="bedrock:anthropic.claude-3-sonnet-20240229-v1:0"
 SMART_LLM="bedrock:anthropic.claude-3-sonnet-20240229-v1:0"
 STRATEGIC_LLM="bedrock:anthropic.claude-3-sonnet-20240229-v1:0"
+
+EMBEDDING="bedrock:amazon.titan-embed-text-v2:0"
 ```
 
 
