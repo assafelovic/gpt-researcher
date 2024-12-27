@@ -117,7 +117,7 @@ def sanitize_filename(filename: str) -> str:
 
 async def handle_start_command(websocket, data: str, manager):
     json_data = json.loads(data[6:])
-    task, report_type, source_urls, tone, headers, report_source = extract_command_data(
+    task, report_type, source_urls, document_urls, tone, headers, report_source = extract_command_data(
         json_data)
 
     if not task or not report_type:
@@ -141,9 +141,11 @@ async def handle_start_command(websocket, data: str, manager):
         report_type, 
         report_source, 
         source_urls, 
+        document_urls,
         tone, 
-        logs_handler,
-        headers
+        websocket,
+        headers,
+        logs_handler
     )
     report = str(report)
     file_paths = await generate_report_files(report, sanitized_filename)
@@ -251,6 +253,7 @@ def extract_command_data(json_data: Dict) -> tuple:
         json_data.get("task"),
         json_data.get("report_type"),
         json_data.get("source_urls"),
+        json_data.get("document_urls"),
         json_data.get("tone"),
         json_data.get("headers", {}),
         json_data.get("report_source")
