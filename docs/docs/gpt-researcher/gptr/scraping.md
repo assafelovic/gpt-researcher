@@ -1,6 +1,6 @@
 # Scraping Options
 
-GPT Researcher now offers two methods for web scraping: static scraping with BeautifulSoup and dynamic scraping with Selenium. This document explains how to switch between these methods and the benefits of each approach.
+GPT Researcher now offers various methods for web scraping: static scraping with BeautifulSoup, dynamic scraping with Selenium, and High scale scraping with Tavily Extract. This document explains how to switch between these methods and the benefits of each approach.
 
 ## Configuring Scraping Method
 
