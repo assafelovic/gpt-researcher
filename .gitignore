@@ -45,3 +45,5 @@ package-lock.json
 # Log files
 logs/
 *.orig
+
+.history
