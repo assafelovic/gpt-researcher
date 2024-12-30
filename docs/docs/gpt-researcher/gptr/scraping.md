@@ -17,6 +17,7 @@ You can choose your preferred scraping method by setting the `SCRAPER` environme
    ```
 
 3. For **production** use cases, you can set the Scraper to `tavily_extract`. [Tavily](https://tavily.com) allows you to scrape sites at scale without the hassle of setting up proxies, managing cookies, or dealing with CAPTCHAs. Please note that you need to have a Tavily account and [API key](https://app.tavily.com) to use this option. To learn more about Tavily Extract [see here](https://docs.tavily.com/docs/python-sdk/tavily-extract/getting-started).
+    Make sure to first install the pip package `tavily-python`. Then:
    ```
    export SCRAPER="tavily_extract"
    ```
@@ -80,7 +81,11 @@ Benefits:
 Setup:
 1. Create a Tavily account at [app.tavily.com](https://app.tavily.com)
 2. Get your API key from the dashboard
-3. Set your Tavily API key:
+3. Install the Tavily Python SDK:
+   ```bash
+   pip install tavily-python
+   ```
+4. Set your Tavily API key:
    ```bash
    export TAVILY_API_KEY="your-api-key"
    ```
