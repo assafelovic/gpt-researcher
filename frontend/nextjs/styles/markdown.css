@@ -36,6 +36,11 @@
     line-height: 1.6;
   }
 
+  li {
+    margin: 0;
+    padding-left: 0.5em;
+  }
+
   ul li {
     list-style-type: disc;
   }
