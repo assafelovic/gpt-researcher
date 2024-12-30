@@ -25,23 +25,18 @@
   }
 
   /* Lists */
-  li {
-    margin: 0.5em 0; /* Add some vertical spacing between items */
-    display: block; /* Change from grid to block */
-    padding-left: 0.5em; /* Add a little padding after the bullet */
-  }
-
-  /* Ordered lists */
-  ol {
+  ul, ol {
     margin: 0;
-    padding: 0 0 0 2em; /* Add left padding for numbers */
-    list-style-position: outside;
+    padding-left: 2em;
+    line-height: 1.6;
   }
 
-  /* Fix paragraph spacing inside list items */
-  li p {
-    margin: 0; /* Remove default paragraph margins */
-    display: inline; /* Make paragraph inline with the number */
+  ul li {
+    list-style-type: disc;
+  }
+
+  ol li {
+    list-style-type: decimal;
   }
 
   /* Links */
