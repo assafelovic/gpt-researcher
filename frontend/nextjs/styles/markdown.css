@@ -24,6 +24,11 @@
     line-height: 1.6;
   }
 
+  /* Text formatting */
+  strong {
+    font-weight: 600;
+  }
+
   /* Lists */
   ul, ol {
     margin: 0;
