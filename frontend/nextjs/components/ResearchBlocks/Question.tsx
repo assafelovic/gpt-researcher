@@ -6,7 +6,7 @@ interface QuestionProps {
 
 const Question: React.FC<QuestionProps> = ({ question }) => {
   return (
-    <div className="container w-full flex flex-col sm:flex-row items-start gap-3 pt-2 mb-2">
+    <div className="container w-full flex flex-col sm:flex-row items-start gap-3 pt-5 mb-2">
       <div className="flex items-center gap-2 sm:gap-4">
         <Image
           src={"/img/message-question-circle.svg"}
