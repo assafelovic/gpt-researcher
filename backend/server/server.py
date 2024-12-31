@@ -41,6 +41,7 @@ class ConfigRequest(BaseModel):
     SERPER_API_KEY: str = ''
     SEARX_URL: str = ''
     XAI_API_KEY: str
+    DEEPSEEK_API_KEY: str
 
 
 # App initialization
