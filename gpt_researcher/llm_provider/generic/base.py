@@ -19,6 +19,7 @@ _SUPPORTED_PROVIDERS = {
     "bedrock",
     "dashscope",
     "xai",
+    "deepseek",
 }
 
 
@@ -114,6 +115,14 @@ class GenericLLMProvider:
             from langchain_xai import ChatXAI
 
             llm = ChatXAI(**kwargs)
+        elif provider == "deepseek":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(openai_api_base='https://api.deepseek.com',
+                     openai_api_key=os.environ["DEEPSEEK_API_KEY"],
+                     **kwargs
+                )
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
