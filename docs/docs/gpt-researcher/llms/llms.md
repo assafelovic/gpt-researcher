@@ -251,6 +251,15 @@ STRATEGIC_LLM="xai:grok-beta"
 ```
 
 
+## DeepSeek
+```bash
+DEEPSEEK_API_KEY=[Your key]
+FAST_LLM="deepseek:deepseek-chat"
+SMART_LLM="deepseek:deepseek-chat"
+STRATEGIC_LLM="deepseek:deepseek-chat"
+```
+
+
 ## Other Embedding Models
 
 ### Nomic
