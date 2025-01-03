@@ -1,0 +1,15 @@
+{
+    "RETRIEVER": "tavily",
+    "FAST_LLM": "google_genai:gemini-pro",
+    "SMART_LLM": "google_genai:gemini-pro",
+    "STRATEGIC_LLM": "google_genai:gemini-pro",
+    "EMBEDDING": "google_genai:embedding-001",
+    "MAX_ITERATIONS": 3,
+    "MAX_SUBTOPICS": 5,
+    "LANGUAGE": "english",
+    "TEMPERATURE": 0.35,
+    "LLM_TEMPERATURE": 0.35,
+    "FAST_LLM_TEMPERATURE": 0.35,
+    "SMART_LLM_TEMPERATURE": 0.35,
+    "STRATEGIC_LLM_TEMPERATURE": 0.35
+} 
