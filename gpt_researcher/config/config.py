@@ -5,6 +5,7 @@ from typing import Dict, Any, List, Union, Type, get_origin, get_args
 from .variables.default import DEFAULT_CONFIG
 from .variables.base import BaseConfig
 from ..retrievers.utils import get_all_retriever_names
+import logging
 
 
 class Config:
@@ -14,9 +15,11 @@ class Config:
 
     def __init__(self, config_path: str | None = None):
         """Initialize the config class."""
+        self.logger = logging.getLogger('research')
         self.config_path = config_path
         self.llm_kwargs: Dict[str, Any] = {}
         self.embedding_kwargs: Dict[str, Any] = {}
+        self._temperature_values = {}  # Store temperature values here
 
         config_to_use = self.load_config(config_path)
         self._set_attributes(config_to_use)
@@ -26,11 +29,20 @@ class Config:
         self._set_doc_path(config_to_use)
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
+        self.logger.info(f"Loading config with keys: {list(config.keys())}")
+        
         for key, value in config.items():
             env_value = os.getenv(key)
             if env_value is not None:
+                self.logger.info(f"Overriding {key} with env value")
                 value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
-            setattr(self, key.lower(), value)
+            
+            # Store temperature values separately
+            if key.endswith('_TEMPERATURE'):
+                self.logger.info(f"Setting temperature value {key}={value}")
+                self._temperature_values[key] = value
+            else:
+                setattr(self, key.lower(), value)
 
         # Handle RETRIEVER with default value
         retriever_env = os.environ.get("RETRIEVER", config.get("RETRIEVER", "tavily"))
@@ -197,6 +209,18 @@ class Config:
         origin = get_origin(type_hint)
         args = get_args(type_hint)
 
+        # Add temperature validation
+        if key.endswith('_TEMPERATURE'):
+            try:
+                value = float(env_value)
+                if not 0 <= value <= 1:
+                    raise ValueError(f"Temperature must be between 0 and 1, got {value}")
+                return value
+            except ValueError as e:
+                if "between 0 and 1" in str(e):
+                    raise
+                raise ValueError(f"Temperature must be a valid float, got {env_value}")
+
         if origin is Union:
             # Handle Union types (e.g., Union[str, None])
             for arg in args:
@@ -222,3 +246,23 @@ class Config:
             return json.loads(env_value)
         else:
             raise ValueError(f"Unsupported type {type_hint} for key {key}")
+
+    @property
+    def llm_temperature(self):
+        """Get the default LLM temperature"""
+        return self._temperature_values.get('LLM_TEMPERATURE', 0.55)
+            
+    @property
+    def fast_llm_temperature(self):
+        """Get temperature for fast LLM"""
+        return self._temperature_values.get('FAST_LLM_TEMPERATURE', self.llm_temperature)
+            
+    @property
+    def smart_llm_temperature(self):
+        """Get temperature for smart LLM"""
+        return self._temperature_values.get('SMART_LLM_TEMPERATURE', self.llm_temperature)
+            
+    @property
+    def strategic_llm_temperature(self):
+        """Get temperature for strategic LLM"""
+        return self._temperature_values.get('STRATEGIC_LLM_TEMPERATURE', self.llm_temperature)

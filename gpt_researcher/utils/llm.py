@@ -58,7 +58,12 @@ async def create_chat_completion(
     # create response
     for _ in range(10):  # maximum of 10 attempts
         response = await provider.get_chat_response(
-            messages, stream, websocket
+            messages, 
+            stream, 
+            websocket,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **(llm_kwargs or {})
         )
 
         if cost_callback:

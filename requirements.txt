@@ -30,6 +30,8 @@ unstructured
 json_repair
 json5
 loguru
+google-generativeai>=0.3.0
+langchain_google_genai
 
 # uncomment for testing
 # pytest

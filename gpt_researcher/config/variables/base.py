@@ -29,3 +29,6 @@ class BaseConfig(TypedDict):
     MAX_SUBTOPICS: int
     REPORT_SOURCE: Union[str, None]
     DOC_PATH: str
+    FAST_LLM_TEMPERATURE: float
+    SMART_LLM_TEMPERATURE: float
+    STRATEGIC_LLM_TEMPERATURE: float

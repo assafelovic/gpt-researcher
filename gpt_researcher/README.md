@@ -43,44 +43,91 @@ if __name__ == "__main__":
     report = asyncio.run(get_report(query, report_type))
     print(report)
 
+### Configuration Options
+
+GPT Researcher can be configured in multiple ways:
+
+1. **Environment Variable for Config Path** (Recommended)
+```bash
+# In your .env file
+CONFIG_PATH=configs/my_custom_config.json
 ```
 
-### Customize the configuration (optional)
-This will override the default settings with your custom configuration. You can find all available configuration options in the [GPT Researcher documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/config).
+This will override the default settings with your custom configuration. You can find all available configuration options in the [GPT Researcher 
+documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/config).
 
-
-#### Using a Custom JSON Configuration
-
-If you want to modify the default configuration of GPT Researcher, you can create a custom JSON configuration file. This allows you to tailor the researcher's behavior to your specific needs. Here's how to do it:
-
-a. Create a JSON file (e.g., `your_config.json`) with your desired settings:
+2. **Direct JSON Configuration File**
+Create a JSON file in the `configs` directory (e.g., `configs/my_custom_config.json`) with your settings:
 
 ```json
 {
-  "retrievers": ["google"],
-  "fast_llm": "cohere:command",
-  "smart_llm": "cohere:command-nightly",
-  "max_iterations": 3,
-  "max_subtopics": 1
+    "RETRIEVER": "tavily",
+    "FAST_LLM": "google_genai:gemini-pro",
+    "SMART_LLM": "google_genai:gemini-pro",
+    // ... other configuration options
+    "MAX_ITERATIONS": 3,
+    "MAX_SUBTOPICS": 5
 }
 ```
 
-b. When initializing the GPTResearcher, pass the path to your custom configuration file:
-
-```python
-researcher = GPTResearcher(query, report_type, config_path="your_config.json")
-```
-
-#### Using Environment Variables
-
-Alternatively, you can set up the same configuration using environment variables instead of a JSON file. Here's how the example from Part 1 would look in your `.env` file:
-
-```
+3. **Individual Environment Variables**
+```bash
 RETRIEVERS=google
 FAST_LLM=cohere:command
 SMART_LLM=cohere:command-nightly
-MAX_ITERATIONS=3
-MAX_SUBTOPICS=1
+# ... other environment variables
 ```
 
-Simply add these lines to your `.env` file, and GPT Researcher will use the environment variables to configure its behavior. This approach provides flexibility when deploying in different environments.
+#### Configuration Priority
+1. Environment variable `CONFIG_PATH` pointing to a JSON file
+2. Individual environment variables
+3. Default configuration
+
+A sample configuration file is provided at `configs/sample_config.json` with all available options. You can copy this file and modify it for your needs:
+
+```bash
+cp configs/sample_config.json configs/my_custom_config.json
+```
+
+
+## Configuration Usage Examples
+
+### Quick Initialization
+You can quickly initialize GPT Researcher with a custom configuration:
+
+```python
+from gpt_researcher import GPTResearcher
+
+researcher = GPTResearcher(
+    query="What are the latest developments in quantum computing?",
+    report_type="research_report",
+    config_path="configs/my_custom_config.json"
+)
+```
+
+### Complete Script Example
+For a full implementation including async handling:
+
+```python
+from gpt_researcher import GPTResearcher
+import asyncio
+
+async def get_report(query: str, report_type: str) -> str:
+    researcher = GPTResearcher(
+        query=query, 
+        report_type=report_type,
+        config_path="configs/my_custom_config.json"
+    )
+    await researcher.conduct_research()
+    report = await researcher.write_report()
+    return report
+
+if __name__ == "__main__":
+    query = "What are the latest developments in quantum computing?"
+    report_type = "research_report"
+    
+    report = asyncio.run(get_report(query, report_type))
+    print(report)
+```
+
+Both methods will use your custom configuration file while maintaining all the default settings for any values not explicitly defined in your config.
