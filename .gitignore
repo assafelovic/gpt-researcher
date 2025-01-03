@@ -45,3 +45,7 @@ package-lock.json
 # Log files
 logs/
 *.orig
+
+#Ignore configs except for the sameple file
+configs/*
+!configs/sample_config.json

@@ -48,8 +48,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-asyncio_mode = "strict"
-addopts = "-v"
-testpaths = ["tests"]
-python_files = "test_*.py"
-asyncio_fixture_loop_scope = "function"
+asyncio_mode = "auto"
+markers = [
+    "asyncio: mark test as async",
+]

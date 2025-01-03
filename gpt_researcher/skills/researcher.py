@@ -9,6 +9,7 @@ from ..actions.query_processing import plan_research_outline, get_search_results
 from ..document import DocumentLoader, OnlineDocumentLoader, LangChainDocumentLoader
 from ..utils.enum import ReportSource, ReportType, Tone
 from ..utils.logging_config import get_json_handler, get_research_logger
+from ..utils.llm import get_llm
 
 
 class ResearchConductor:
@@ -16,6 +17,27 @@ class ResearchConductor:
 
     def __init__(self, researcher):
         self.researcher = researcher
+        self.cfg = researcher.cfg
+        
+        # Initialize LLMs with correct temperatures
+        self.fast_llm = get_llm(
+            self.cfg.fast_llm_provider,
+            model=self.cfg.fast_llm_model,
+            temperature=self.cfg.fast_llm_temperature
+        )
+        
+        self.smart_llm = get_llm(
+            self.cfg.smart_llm_provider,
+            model=self.cfg.smart_llm_model,
+            temperature=self.cfg.smart_llm_temperature
+        )
+        
+        self.strategic_llm = get_llm(
+            self.cfg.strategic_llm_provider,
+            model=self.cfg.strategic_llm_model,
+            temperature=self.cfg.strategic_llm_temperature
+        )
+
         self.logger = logging.getLogger('research')
         self.json_handler = get_json_handler()
 

@@ -131,11 +131,10 @@ class GenericLLMProvider:
         return cls(llm)
 
 
-    async def get_chat_response(self, messages, stream, websocket=None):
+    async def get_chat_response(self, messages, stream, websocket=None, **kwargs):
         if not stream:
             # Getting output from the model chain using ainvoke for asynchronous invoking
-            output = await self.llm.ainvoke(messages)
-
+            output = await self.llm.ainvoke(messages, **kwargs)
             return output.content
 
         else:
