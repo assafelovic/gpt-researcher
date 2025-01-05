@@ -58,12 +58,12 @@ class WebSocketManager:
             del self.sender_tasks[websocket]
             del self.message_queues[websocket]
 
-    async def start_streaming(self, task, report_type, report_source, source_urls, tone, websocket, headers=None):
+    async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None):
         """Start streaming the output."""
         tone = Tone[tone]
         # add customized JSON config file path here
         config_path = "default"
-        report = await run_agent(task, report_type, report_source, source_urls, tone, websocket, headers = headers, config_path = config_path)
+        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers = headers, config_path = config_path)
         #Create new Chat Agent whenever a new report is written
         self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
         return report
@@ -75,7 +75,7 @@ class WebSocketManager:
         else:
             await websocket.send_json({"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"})
 
-async def run_agent(task, report_type, report_source, source_urls, tone: Tone, websocket, headers=None, config_path=""):
+async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, headers=None, config_path=""):
     """Run the agent."""
     start_time = datetime.datetime.now()
     # Instead of running the agent directly run it through the different report type classes
@@ -88,6 +88,7 @@ async def run_agent(task, report_type, report_source, source_urls, tone: Tone, w
             report_type=report_type,
             report_source=report_source,
             source_urls=source_urls,
+            document_urls=document_urls,
             tone=tone,
             config_path=config_path,
             websocket=websocket,
@@ -100,6 +101,7 @@ async def run_agent(task, report_type, report_source, source_urls, tone: Tone, w
             report_type=report_type,
             report_source=report_source,
             source_urls=source_urls,
+            document_urls=document_urls,
             tone=tone,
             config_path=config_path,
             websocket=websocket,

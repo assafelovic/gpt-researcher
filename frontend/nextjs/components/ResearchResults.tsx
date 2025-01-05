@@ -63,6 +63,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
 
   return (
     <>
+      {orderedData.length > 0 && <LogsSection logs={allLogs} />}
       {initialQuestion && <Question question={initialQuestion.content} />}
       {subqueriesComponent && (
         <SubQuestions
@@ -70,7 +71,6 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
           handleClickSuggestion={handleClickSuggestion}
         />
       )}
-      {orderedData.length > 0 && <LogsSection logs={allLogs} />}
       {sourceComponents}
       {imageComponents}
       {finalReport && <Answer answer={finalReport.content} />}

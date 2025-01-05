@@ -20,6 +20,7 @@ _SUPPORTED_PROVIDERS = {
     "voyageai",
     "dashscope",
     "custom",
+    "bedrock",
 }
 
 
@@ -107,6 +108,10 @@ class Memory:
                 from langchain_community.embeddings import DashScopeEmbeddings
 
                 _embeddings = DashScopeEmbeddings(model=model, **embdding_kwargs)
+            case "bedrock":
+                from langchain_aws.embeddings import BedrockEmbeddings
+
+                _embeddings = BedrockEmbeddings(model_id=model, **embdding_kwargs)
             case _:
                 raise Exception("Embedding not found.")
 

@@ -15,6 +15,7 @@ from backend.server.server_utils import (
     execute_multi_agents, handle_websocket_communication
 )
 
+
 from gpt_researcher.utils.logging_config import setup_research_logging
 
 import logging
@@ -32,7 +33,6 @@ logging.basicConfig(
         logging.StreamHandler()  # Only log to console
     ]
 )
-
 
 # Models
 
@@ -59,6 +59,7 @@ class ConfigRequest(BaseModel):
     SERPER_API_KEY: str = ''
     SEARX_URL: str = ''
     XAI_API_KEY: str
+    DEEPSEEK_API_KEY: str
 
 
 # App initialization
@@ -93,11 +94,6 @@ def startup_event():
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
     os.makedirs(DOC_PATH, exist_ok=True)
     
-    # Setup research logging
-    log_file, json_file, research_logger, json_handler = setup_research_logging()  # Unpack all 4 values
-    research_logger.json_handler = json_handler  # Store the JSON handler on the logger
-    research_logger.info(f"Research log file: {log_file}")
-    research_logger.info(f"Research JSON file: {json_file}")
 
 # Routes
 

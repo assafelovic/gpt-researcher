@@ -24,45 +24,29 @@
     line-height: 1.6;
   }
 
+  /* Text formatting */
+  strong, b {
+    font-weight: 600;
+  }
+
   /* Lists */
   ul, ol {
     margin: 0;
-    padding: 0 0 0 2em; /* Add left padding for the bullet points */
-    list-style-position: outside; /* Keep bullets outside */
+    padding-left: 2em;
+    line-height: 1.6;
   }
 
   li {
-    margin: 0.5em 0; /* Add some vertical spacing between items */
-    display: block; /* Change from grid to block */
-    padding-left: 0.5em; /* Add a little padding after the bullet */
-  }
-
-  /* Remove the custom bullet styling since we'll use native bullets */
-  ul > li::before {
-    content: none;
-  }
-
-  /* Ordered lists */
-  ol {
     margin: 0;
-    padding: 0 0 0 2em; /* Add left padding for numbers */
-    list-style-position: outside;
+    padding-left: 0.5em;
   }
 
-  li {
-    margin: 0.5em 0; /* Add some vertical spacing between items */
-    display: block; /* Change from grid to block */
+  ul li {
+    list-style-type: disc;
   }
 
-  /* Fix paragraph spacing inside list items */
-  li p {
-    margin: 0; /* Remove default paragraph margins */
-    display: inline; /* Make paragraph inline with the number */
-  }
-
-  /* If you want to preserve some spacing between paragraphs within a list item */
-  li p + p {
-    margin-top: 0.5em;
+  ol li {
+    list-style-type: decimal;
   }
 
   /* Links */
@@ -122,6 +106,6 @@
   hr {
     border: 0;
     border-top: 1px solid #444;
-    margin: 2em 0;
+    margin: 1em 0;
   }
 } 
