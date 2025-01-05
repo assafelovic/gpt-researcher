@@ -141,7 +141,7 @@ The response MUST not contain any markdown format or additional text (like ```js
 
 
 def generate_resource_report_prompt(
-    question, context, report_source: str, report_format="apa", tone=None, total_words=1000
+    question, context, report_source: str, report_format="apa", tone=None, total_words=1000, language=None
 ):
     """Generates the resource report prompt for the given question and research summary.
 
