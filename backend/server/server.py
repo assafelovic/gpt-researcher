@@ -16,6 +16,24 @@ from backend.server.server_utils import (
 )
 
 
+from gpt_researcher.utils.logging_config import setup_research_logging
+
+import logging
+
+# Get logger instance
+logger = logging.getLogger(__name__)
+
+# Don't override parent logger settings
+logger.propagate = True
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler()  # Only log to console
+    ]
+)
+
 # Models
 
 
