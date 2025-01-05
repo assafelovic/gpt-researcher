@@ -20,6 +20,7 @@ _SUPPORTED_PROVIDERS = {
     "dashscope",
     "xai",
     "deepseek",
+    "litellm",
 }
 
 
@@ -123,6 +124,11 @@ class GenericLLMProvider:
                      openai_api_key=os.environ["DEEPSEEK_API_KEY"],
                      **kwargs
                 )
+        elif provider == "litellm":
+            _check_pkg("langchain_community")
+            from langchain_community.chat_models.litellm import ChatLiteLLM
+
+            llm = ChatLiteLLM(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
