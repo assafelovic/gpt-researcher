@@ -12,6 +12,12 @@ html {
   scroll-behavior: smooth;
 }
 
+textarea {
+  max-height: 300px; /* Set an appropriate max height */
+  overflow-y: auto;  /* Enable internal scrolling */
+  /* transition: height 0.2s ease-in-out; */
+}
+
 .log-message {
   word-wrap: break-word; /* For handling long URLs or text */
   overflow-wrap: break-word; /* For handling overflow in modern browsers */
@@ -23,8 +29,8 @@ body {
   font-family: 'Montserrat', sans-serif;
   line-height: 1.6;
   background-size: 200% 200%;
-  background-image: linear-gradient(45deg, #151A2D, #111827, #151A2D);
-  animation: gradientBG 10s ease infinite;
+  background-image: linear-gradient(170deg, #151A2D, #036f73, #151A2D);
+  /*animation: gradientBG 10s ease infinite;*/
 }
 
 .landing {
@@ -95,4 +101,22 @@ body {
 
 body {
   margin: 0px !important;
+}
+
+/* Add these styles for the scrollbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+  background-color: #4B5563;
+  border-radius: 6px;
+}
+
+.scrollbar-track-gray-300::-webkit-scrollbar-track {
+  background-color: #D1D5DB;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
 }

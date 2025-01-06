@@ -57,6 +57,7 @@ def generate_report_prompt(
     report_format="apa",
     total_words=1000,
     tone=None,
+    language="english",
 ):
     """Generates the report prompt for the given question and research summary.
     Args: question (str): The question to generate the report prompt for
@@ -98,13 +99,49 @@ Please follow all of the following guidelines in your report:
 - {reference_prompt}
 - {tone_prompt}
 
+You MUST write the report in the following language: {language}.
 Please do your best, this is very important to my career.
 Assume that the current date is {date.today()}.
 """
 
+def curate_sources(query, sources, max_results=10):
+    return f"""Your goal is to evaluate and curate the provided scraped content for the research task: "{query}" 
+    while prioritizing the inclusion of relevant and high-quality information, especially sources containing statistics, numbers, or concrete data.
+
+The final curated list will be used as context for creating a research report, so prioritize:
+- Retaining as much original information as possible, with extra emphasis on sources featuring quantitative data or unique insights
+- Including a wide range of perspectives and insights
+- Filtering out only clearly irrelevant or unusable content
+
+EVALUATION GUIDELINES:
+1. Assess each source based on:
+   - Relevance: Include sources directly or partially connected to the research query. Err on the side of inclusion.
+   - Credibility: Favor authoritative sources but retain others unless clearly untrustworthy.
+   - Currency: Prefer recent information unless older data is essential or valuable.
+   - Objectivity: Retain sources with bias if they provide a unique or complementary perspective.
+   - Quantitative Value: Give higher priority to sources with statistics, numbers, or other concrete data.
+2. Source Selection:
+   - Include as many relevant sources as possible, up to {max_results}, focusing on broad coverage and diversity.
+   - Prioritize sources with statistics, numerical data, or verifiable facts.
+   - Overlapping content is acceptable if it adds depth, especially when data is involved.
+   - Exclude sources only if they are entirely irrelevant, severely outdated, or unusable due to poor content quality.
+3. Content Retention:
+   - DO NOT rewrite, summarize, or condense any source content.
+   - Retain all usable information, cleaning up only clear garbage or formatting issues.
+   - Keep marginally relevant or incomplete sources if they contain valuable data or insights.
+
+SOURCES LIST TO EVALUATE:
+{sources}
+
+You MUST return your response in the EXACT sources JSON list format as the original sources.
+The response MUST not contain any markdown format or additional text (like ```json), just the JSON list!
+"""
+
+
+
 
 def generate_resource_report_prompt(
-    question, context, report_source: str, report_format="apa", tone=None, total_words=1000
+    question, context, report_source: str, report_format="apa", tone=None, total_words=1000, language=None
 ):
     """Generates the resource report prompt for the given question and research summary.
 
@@ -142,7 +179,7 @@ def generate_resource_report_prompt(
 
 
 def generate_custom_report_prompt(
-    query_prompt, context, report_source: str, report_format="apa", tone=None, total_words=1000
+    query_prompt, context, report_source: str, report_format="apa", tone=None, total_words=1000, language: str = "english"
 ):
     return f'"{context}"\n\n{query_prompt}'
 
@@ -256,6 +293,7 @@ def generate_subtopic_report_prompt(
     max_subsections=5,
     total_words=800,
     tone: Tone = Tone.Objective,
+    language: str = "english",
 ) -> str:
     return f"""
 Context:
@@ -309,6 +347,7 @@ IMPORTANT:Content and Sections Uniqueness:
 Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 
 "IMPORTANT!":
+- You MUST write the report in the following language: {language}.
 - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
 - Must NOT have any introduction, conclusion, summary or reference section.
 - You MUST include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.

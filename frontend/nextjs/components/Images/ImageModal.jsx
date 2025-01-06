@@ -48,41 +48,34 @@ export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 overflow-auto"
+            className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 overflow-auto"
             onClick={handleClose}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
         >
-            <div className="relative m-4 max-w-full">
+            <div className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center">
                 <button
-                    className="absolute top-0 right-0 p-2 text-white"
-                    onClick={onClose}
+                    onClick={onPrev}
+                    className="absolute left-4 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
                 >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={2}
-                        stroke="currentColor"
-                        className="w-6 h-6"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M6 18L18 6M6 6l12 12"
-                        />
-                    </svg>
+                    ←
                 </button>
                 <img
                     src={imageSrc}
-                    alt="Full view"
-                    className="max-h-[80vh] max-w-full object-contain"
+                    alt="Modal view"
+                    className="max-h-[90vh] max-w-[90vw] object-contain"
                 />
-                <button onClick={onPrev} className="absolute left-0 p-2 text-white">
-                    Prev
+                <button
+                    onClick={onNext}
+                    className="absolute right-4 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+                >
+                    →
                 </button>
-                <button onClick={onNext} className="absolute right-0 p-2 text-white">
-                    Next
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
+                >
+                    ×
                 </button>
             </div>
         </div>

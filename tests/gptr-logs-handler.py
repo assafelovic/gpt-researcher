@@ -1,28 +1,18 @@
-from typing import Dict, Any
+import logging
+from typing import List, Dict, Any
 import asyncio
 from gpt_researcher import GPTResearcher
+from src.logs_handler import CustomLogsHandler  # Update import
 
-class CustomLogsHandler:
-    """A custom Logs handler class to handle JSON data."""
-    def __init__(self):
-        self.logs = []  # Initialize logs to store data
-
-    async def send_json(self, data: Dict[str, Any]) -> None:
-        """Send JSON data and log it."""
-        self.logs.append(data)  # Append data to logs
-        print(f"My custom Log: {data}")  # For demonstration, print the log
-
-async def run():
-    # Define the necessary parameters with sample values
-
+async def run() -> None:
+    """Run the research process and generate a report."""
     query = "What happened in the latest burning man floods?"
-    report_type = "research_report"  # Type of report to generate
-    report_source = "online"  # Could specify source like 'online', 'books', etc.
-    tone = "informative"  # Tone of the report ('informative', 'casual', etc.)
-    config_path = None  # Path to a config file, if needed
+    report_type = "research_report"
+    report_source = "online"
+    tone = "informative"
+    config_path = None
 
-    # Initialize researcher with a custom WebSocket
-    custom_logs_handler = CustomLogsHandler()
+    custom_logs_handler = CustomLogsHandler(query=query)  # Pass query parameter
 
     researcher = GPTResearcher(
         query=query,
@@ -35,6 +25,7 @@ async def run():
 
     await researcher.conduct_research()  # Conduct the research
     report = await researcher.write_report()  # Write the research report
+    logging.info("Report generated successfully.")  # Log report generation
 
     return report
 

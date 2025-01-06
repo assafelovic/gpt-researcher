@@ -1,6 +1,6 @@
 # Scraping Options
 
-GPT Researcher now offers two methods for web scraping: static scraping with BeautifulSoup and dynamic scraping with Selenium. This document explains how to switch between these methods and the benefits of each approach.
+GPT Researcher now offers various methods for web scraping: static scraping with BeautifulSoup, dynamic scraping with Selenium, and High scale scraping with Tavily Extract. This document explains how to switch between these methods and the benefits of each approach.
 
 ## Configuring Scraping Method
 
@@ -14,6 +14,12 @@ You can choose your preferred scraping method by setting the `SCRAPER` environme
 2. For Selenium (dynamic browser scraping):
    ```
    export SCRAPER="browser"
+   ```
+
+3. For **production** use cases, you can set the Scraper to `tavily_extract`. [Tavily](https://tavily.com) allows you to scrape sites at scale without the hassle of setting up proxies, managing cookies, or dealing with CAPTCHAs. Please note that you need to have a Tavily account and [API key](https://app.tavily.com) to use this option. To learn more about Tavily Extract [see here](https://docs.tavily.com/docs/python-sdk/tavily-extract/getting-started).
+    Make sure to first install the pip package `tavily-python`. Then:
+   ```
+   export SCRAPER="tavily_extract"
    ```
 
 Note: If not set, GPT Researcher will default to BeautifulSoup for scraping.
@@ -55,6 +61,40 @@ Limitations:
 - Slower than static scraping
 - Requires more system resources
 - Requires additional setup (Selenium and WebDriver installation)
+
+### Tavily Extract (Recommended for Production)
+
+When `SCRAPER="tavily_extract"`, GPT Researcher uses Tavily's Extract API for web scraping. This method:
+
+- Uses Tavily's robust infrastructure to handle web scraping at scale
+- Automatically handles CAPTCHAs, JavaScript rendering, and anti-bot measures
+- Provides clean, structured content extraction
+
+Benefits:
+- Production-ready and highly reliable
+- No need to manage proxies or handle rate limiting
+- Excellent success rate on most websites
+- Handles both static and dynamic content
+- Built-in content cleaning and formatting
+- Fast response times through Tavily's distributed infrastructure
+
+Setup:
+1. Create a Tavily account at [app.tavily.com](https://app.tavily.com)
+2. Get your API key from the dashboard
+3. Install the Tavily Python SDK:
+   ```bash
+   pip install tavily-python
+   ```
+4. Set your Tavily API key:
+   ```bash
+   export TAVILY_API_KEY="your-api-key"
+   ```
+
+Usage Considerations:
+- Requires a Tavily API key and account
+- API calls are metered based on your Tavily plan
+- Best for production environments where reliability is crucial
+- Ideal for businesses and applications that need consistent scraping results
 
 ## Additional Setup for Selenium
 

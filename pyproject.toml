@@ -38,7 +38,18 @@ python-docx = "^1.1.0"
 lxml = { version = ">=4.9.2", extras = ["html_clean"] }
 unstructured = ">=0.13,<0.16"
 tiktoken = ">=0.7.0"
+json-repair = "^0.29.8"
+json5 = "^0.9.25"
+loguru = "^0.7.2"
+websockets = "^13.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+addopts = "-v"
+testpaths = ["tests"]
+python_files = "test_*.py"
+asyncio_fixture_loop_scope = "function"

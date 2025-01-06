@@ -1,7 +1,9 @@
 import os
 import asyncio
 import pytest
-from gpt_researcher import GPTResearcher
+from gpt_researcher.agent import GPTResearcher
+from src.logs_handler import CustomLogsHandler  # Update import
+from typing import List, Dict, Any
 
 # Define the report types to test
 report_types = [
@@ -22,9 +24,10 @@ async def test_gpt_researcher(report_type):
     # Ensure the output directory exists
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-        
+    
+    custom_logs_handler = CustomLogsHandler(query=query)
     # Create an instance of GPTResearcher
-    researcher = GPTResearcher(query=query, report_type=report_type)
+    researcher = GPTResearcher(query=query, report_type=report_type, websocket=custom_logs_handler)
     
     # Conduct research and write the report
     await researcher.conduct_research()

@@ -17,6 +17,10 @@ _SUPPORTED_PROVIDERS = {
     "huggingface",
     "groq",
     "bedrock",
+    "dashscope",
+    "xai",
+    "deepseek",
+    "litellm",
 }
 
 
@@ -68,7 +72,7 @@ class GenericLLMProvider:
             llm = ChatFireworks(**kwargs)
         elif provider == "ollama":
             _check_pkg("langchain_community")
-            from langchain_community.chat_models import ChatOllama
+            from langchain_ollama import ChatOllama
             
             llm = ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
         elif provider == "together":
@@ -100,8 +104,31 @@ class GenericLLMProvider:
 
             if "model" in kwargs or "model_name" in kwargs:
                 model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
-                kwargs = {"model_id": model_id, **kwargs}
+                kwargs = {"model_id": model_id, "model_kwargs": kwargs}
             llm = ChatBedrock(**kwargs)
+        elif provider == "dashscope":
+            _check_pkg("langchain_dashscope")
+            from langchain_dashscope import ChatDashScope
+
+            llm = ChatDashScope(**kwargs)
+        elif provider == "xai":
+            _check_pkg("langchain_xai")
+            from langchain_xai import ChatXAI
+
+            llm = ChatXAI(**kwargs)
+        elif provider == "deepseek":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(openai_api_base='https://api.deepseek.com',
+                     openai_api_key=os.environ["DEEPSEEK_API_KEY"],
+                     **kwargs
+                )
+        elif provider == "litellm":
+            _check_pkg("langchain_community")
+            from langchain_community.chat_models.litellm import ChatLiteLLM
+
+            llm = ChatLiteLLM(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(

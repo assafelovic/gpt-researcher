@@ -8,7 +8,7 @@ import json
 
 class GoogleSearch:
     """
-    Tavily API Retriever
+    Google API Retriever
     """
     def __init__(self, query, headers=None):
         """
@@ -60,6 +60,9 @@ class GoogleSearch:
         url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={self.query}&start=1"
         resp = requests.get(url)
 
+        if resp.status_code < 200 or resp.status_code >= 300:
+            print("Google search: unexpected response status: ", resp.status_code)
+
         if resp is None:
             return
         try:
@@ -77,11 +80,14 @@ class GoogleSearch:
             # skip youtube results
             if "youtube.com" in result["link"]:
                 continue
-            search_result = {
-                "title": result["title"],
-                "href": result["link"],
-                "body": result["snippet"],
-            }
+            try:
+                search_result = {
+                    "title": result["title"],
+                    "href": result["link"],
+                    "body": result["snippet"],
+                }
+            except:
+                continue
             search_results.append(search_result)
 
-        return search_results
+        return search_results[:max_results]
