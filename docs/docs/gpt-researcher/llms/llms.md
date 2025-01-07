@@ -3,7 +3,7 @@
 As described in the [introduction](/docs/gpt-researcher/gptr/config), the default LLM and embedding is OpenAI due to its superior performance and speed. 
 With that said, GPT Researcher supports various open/closed source LLMs and embeddings, and you can easily switch between them by updating the `SMART_LLM`, `FAST_LLM` and `EMBEDDING` env variables. You might also need to include the provider API key and corresponding configuration params.
 
-Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq` and `bedrock`.
+Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq`, `bedrock` and `litellm`.
 
 Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `nomic` ,`voyageai` and `bedrock`.
 
@@ -242,12 +242,30 @@ EMBEDDING="bedrock:amazon.titan-embed-text-v2:0"
 ```
 
 
+## LiteLLM
+
+```bash
+FAST_LLM="litellm:perplexity/pplx-7b-chat"
+SMART_LLM="litellm:perplexity/pplx-70b-chat"
+STRATEGIC_LLM="litellm:perplexity/pplx-70b-chat"
+```
+
+
 ## xAI
 
 ```bash
 FAST_LLM="xai:grok-beta"
 SMART_LLM="xai:grok-beta"
 STRATEGIC_LLM="xai:grok-beta"
+```
+
+
+## DeepSeek
+```bash
+DEEPSEEK_API_KEY=[Your key]
+FAST_LLM="deepseek:deepseek-chat"
+SMART_LLM="deepseek:deepseek-chat"
+STRATEGIC_LLM="deepseek:deepseek-chat"
 ```
 
 

@@ -47,3 +47,5 @@ logs/
 *.orig
 
 .history
+*.log
+server_log.txt
