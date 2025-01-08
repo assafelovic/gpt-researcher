@@ -8,6 +8,8 @@ services:
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
       LOGGING_LEVEL: INFO
+    volumes:
+      - ./outputs:/usr/src/app/outputs
     restart: always
     ports:
       - 8000:8000
@@ -24,6 +26,7 @@ services:
     volumes:
       - /app/node_modules
       - ./frontend/nextjs:/app
+      - ./outputs:/app/outputs
     restart: always
     ports:
       - 3000:3000
