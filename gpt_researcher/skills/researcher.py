@@ -95,7 +95,9 @@ class ResearchConductor:
 
         # ... rest of the conditions ...
         elif self.researcher.report_source == ReportSource.Local.value:
+            self.logger.info("Using local search")
             document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
+            self.logger.info(f"Loaded {len(document_data)} documents")
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(document_data)
 
