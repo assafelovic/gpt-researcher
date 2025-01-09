@@ -47,3 +47,6 @@ logs/
 *.orig
 *.log
 server_log.txt
+
+# db files
+*.db

@@ -7,6 +7,7 @@ from typing import Dict, List, Any
 from fastapi.responses import JSONResponse, FileResponse
 from gpt_researcher.document.document import DocumentLoader
 from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
+from backend.server.database import save_research
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
@@ -147,6 +148,10 @@ async def handle_start_command(websocket, data: str, manager):
         headers
     )
     report = str(report)
+    
+    # Save to SQLite database
+    save_research(title=task, content=report)
+
     file_paths = await generate_report_files(report, sanitized_filename)
     # Add JSON log path to file_paths
     file_paths["json"] = os.path.relpath(logs_handler.log_file)
