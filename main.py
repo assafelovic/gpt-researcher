@@ -18,6 +18,11 @@ logging.basicConfig(
     ]
 )
 
+# Suppress verbose fontTools logging
+logging.getLogger('fontTools').setLevel(logging.WARNING)
+logging.getLogger('fontTools.subset').setLevel(logging.WARNING)
+logging.getLogger('fontTools.ttLib').setLevel(logging.WARNING)
+
 # Create logger instance
 logger = logging.getLogger(__name__)
 
