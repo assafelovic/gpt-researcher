@@ -147,6 +147,9 @@ Your primary goal is to help with:
 - `npm run build`: Build for production
 - `npm run test`: Run test suite
 - `python -m pytest`: Run Python tests
+- `python -m uvicorn backend.server.server:app --host=0.0.0.0 --port=8000`: Start FastAPI server
+- `python -m uvicorn backend.server.server:app --reload`: Start FastAPI server with auto-reload for development
+- `python main.py`: Run the main application directly
 - `docker-compose up`: Start all services
 - `docker-compose run gpt-researcher-tests`: Run test suite in container
 
