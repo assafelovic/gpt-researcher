@@ -10,6 +10,7 @@ from backend.chat import ChatAgentWithMemory
 from gpt_researcher.utils.enum import ReportType, Tone
 from multi_agents.main import run_research_task
 from gpt_researcher.actions import stream_output  # Import stream_output
+from backend.server.server_utils import CustomLogsHandler
 
 
 class WebSocketManager:
@@ -78,10 +79,21 @@ class WebSocketManager:
 async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, headers=None, config_path=""):
     """Run the agent."""
     start_time = datetime.datetime.now()
-    # Instead of running the agent directly run it through the different report type classes
+    
+    # Create logs handler for this research task
+    logs_handler = CustomLogsHandler(websocket, task)
+    
+    # Initialize researcher based on report type
     if report_type == "multi_agents":
-        report = await run_research_task(query=task, websocket=websocket, stream_output=stream_output, tone=tone, headers=headers)
+        report = await run_research_task(
+            query=task, 
+            websocket=logs_handler,  # Use logs_handler instead of raw websocket
+            stream_output=stream_output, 
+            tone=tone, 
+            headers=headers
+        )
         report = report.get("report", "")
+        
     elif report_type == ReportType.DetailedReport.value:
         researcher = DetailedReport(
             query=task,
@@ -91,10 +103,11 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
             document_urls=document_urls,
             tone=tone,
             config_path=config_path,
-            websocket=websocket,
+            websocket=logs_handler,  # Use logs_handler instead of raw websocket
             headers=headers
         )
         report = await researcher.run()
+        
     else:
         researcher = BasicReport(
             query=task,
@@ -104,15 +117,9 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
             document_urls=document_urls,
             tone=tone,
             config_path=config_path,
-            websocket=websocket,
+            websocket=logs_handler,  # Use logs_handler instead of raw websocket
             headers=headers
         )
         report = await researcher.run()
-
-    # measure time
-    end_time = datetime.datetime.now()
-    await websocket.send_json(
-        {"type": "logs", "output": f"\nTotal run time: {end_time - start_time}\n"}
-    )
 
     return report

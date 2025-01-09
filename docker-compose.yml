@@ -7,6 +7,9 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+      LOGGING_LEVEL: INFO
+    volumes:
+      - ./outputs:/usr/src/app/outputs
     restart: always
     ports:
       - 8000:8000
@@ -15,13 +18,15 @@ services:
     image: gptresearcher/gptr-nextjs
     stdin_open: true
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      CHOKIDAR_USEPOLLING: true
+      LOGGING_LEVEL: INFO
     build:
       dockerfile: Dockerfile.dev
       context: frontend/nextjs
     volumes:
       - /app/node_modules
       - ./frontend/nextjs:/app
+      - ./outputs:/app/outputs
     restart: always
     ports:
       - 3000:3000
@@ -33,6 +38,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+      LOGGING_LEVEL: INFO
     profiles: ["test"]
     command: >
       /bin/sh -c "
