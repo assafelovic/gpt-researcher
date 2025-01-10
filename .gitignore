@@ -47,3 +47,7 @@ logs/
 *.orig
 *.log
 server_log.txt
+
+#Cursor Rules
+.cursorrules
+CURSOR_RULES.md
