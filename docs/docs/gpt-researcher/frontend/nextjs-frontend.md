@@ -66,7 +66,7 @@ A lightweight solution using FastAPI to serve static files.
 <iframe height="400" width="700" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/dd6cf08f-b31e-40c6-9907-1915f52a7110" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
 
-## Yet Another Option: Running NextJS Frontend via CLI
+## Running NextJS Frontend via CLI
 
 A more robust solution with enhanced features and performance.
 
@@ -104,21 +104,3 @@ Note: Requires backend server on `localhost:8000` as detailed in option 1.
 #### Demo
 <iframe height="400" width="700" src="https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-## Choosing an Option
-
-- Static Frontend: Quick setup, lightweight deployment.
-- NextJS Frontend: Feature-rich, scalable, better performance and SEO.
-
-For production, NextJS is recommended.
-
-## Frontend Features
-
-Our frontend enhances GPT-Researcher by providing:
-
-1. Intuitive Research Interface: Streamlined input for research queries.
-2. Real-time Progress Tracking: Visual feedback on ongoing research tasks.
-3. Interactive Results Display: Easy-to-navigate presentation of findings.
-4. Customizable Settings: Adjust research parameters to suit specific needs.
-5. Responsive Design: Optimal experience across various devices.
-
-These features aim to make the research process more efficient and user-friendly, complementing GPT-Researcher's powerful agent capabilities.

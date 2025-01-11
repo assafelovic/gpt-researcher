@@ -29,9 +29,18 @@ https://discord.com/oauth2/authorize?client_id=1281438963034361856&permissions=1
 Finally, if you created your own custom bot, copy-paste the token into your .env file you created above.
 
 
-### Running the bot
+## Running the bot via Docker
 
 ```bash
+docker compose --profile discord run --rm discord-bot
+```
+
+## Running the bot via CLI
+
+```bash
+# install dependencies
+npm install
+
 # run the bot
 npm run dev
 ```
