@@ -1,9 +1,8 @@
 // gptr-webhook.js
-
 const WebSocket = require('ws');
 
 let socket = null;
-let responseCallback = null;
+const responseCallbacks = new Map(); // Using Map for multiple callbacks
 
 async function initializeWebSocket() {
   if (!socket) {
@@ -20,13 +19,20 @@ async function initializeWebSocket() {
       const data = JSON.parse(event.data);
       console.log('WebSocket data received:', data);
 
-      if (data.content === 'dev_team_result') {
-        if (responseCallback) {
-          responseCallback(data.output);
-          responseCallback = null; // Clear callback after use
+      // Get the callback for this request
+      const callback = responseCallbacks.get('current');
+      
+      if (data.type === 'report') {
+        // Send progress updates
+        if (callback && callback.onProgress) {
+          callback.onProgress(data.output);
         }
-      } else {
-        console.log('Received data:', data);
+      } else if (data.content === 'dev_team_result') {
+        // Send final result
+        if (callback && callback.onComplete) {
+          callback.onComplete(data.output);
+          responseCallbacks.delete('current'); // Clean up after completion
+        }
       }
     };
 
@@ -59,9 +65,15 @@ async function sendWebhookMessage({query, relevantFileNames, repoName, branchNam
 
     const payload = "start " + JSON.stringify(data);
 
-    responseCallback = (response) => {
-      resolve(response); // Resolve the promise with the WebSocket response
-    };
+    // Store both progress and completion callbacks
+    responseCallbacks.set('current', {
+      onProgress: (progressData) => {
+        resolve({ type: 'progress', data: progressData });
+      },
+      onComplete: (finalData) => {
+        resolve({ type: 'complete', data: finalData });
+      }
+    });
 
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(payload);
