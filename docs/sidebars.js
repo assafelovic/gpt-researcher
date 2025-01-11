@@ -40,6 +40,7 @@
         'gpt-researcher/gptr/querying-the-backend',
         'gpt-researcher/gptr/automated-tests',
         'gpt-researcher/gptr/troubleshooting',
+        'gpt-researcher/frontend/logs'
       ],
     },
     {
@@ -48,9 +49,11 @@
       collapsible: true,
       collapsed: true,
       items: [
-        'gpt-researcher/frontend/frontend',
-        'gpt-researcher/frontend/playing-with-webhooks',
-        'gpt-researcher/frontend/logs',
+        'gpt-researcher/frontend/introduction',
+        'gpt-researcher/frontend/nextjs-frontend',
+        'gpt-researcher/frontend/vanilla-js-frontend',
+        'gpt-researcher/frontend/discord-bot',
+        'gpt-researcher/frontend/debugging-websockets'
       ],
     },
     {
@@ -63,6 +66,7 @@
         'gpt-researcher/context/local-docs',
         'gpt-researcher/context/filtering-by-domain',
         'gpt-researcher/context/vector-stores',
+        'gpt-researcher/context/data-ingestion'
         ]
     },
     {

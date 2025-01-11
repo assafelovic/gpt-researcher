@@ -46,3 +46,18 @@ services:
       python -m pytest tests/report-types.py &&
       python -m pytest tests/vector-store.py
       "
+  
+  discord-bot:
+    build:
+      context: ./docs/discord-bot
+      dockerfile: Dockerfile.dev
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+    volumes:
+      - ./docs/discord-bot:/app
+      - /app/node_modules
+    ports:
+      - 3001:3000
+    profiles: ["discord"]
+    restart: always
