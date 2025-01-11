@@ -26,7 +26,16 @@ Finally you can invite your bot via the generated invite URL. In the case of the
 https://discord.com/oauth2/authorize?client_id=1281438963034361856&permissions=1689934339898432&integration_type=0&scope=bot
 
 <br>
-Finally, if you created your own custom bot, copy-paste the token into your .env file you created above.
+If you created your own custom bot, copy-paste the token into your .env file you created above.
+
+
+## Deploying the bot commands
+
+```bash
+node deploy-commands.js
+```
+
+In our case, this will make the "ask" and "ping" commands available to users of the bot.
 
 
 ## Running the bot via Docker
