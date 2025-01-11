@@ -41,7 +41,6 @@ In this example, we're using a Postgres VectorStore to embed data of a Github Br
 
 Note that when you create the Langchain Documents, you should include as metadata the `source` and `title` fields in order for GPTR to leverage your Documents seamlessly. In the example below, we're splitting the documents list into chunks of 100 & then inserting 1 chunk at a time into the vector store.
 
-
 ## Step 1: Transform your content into Langchain Documents
 
 ```python

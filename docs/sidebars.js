@@ -63,6 +63,7 @@
         'gpt-researcher/context/local-docs',
         'gpt-researcher/context/filtering-by-domain',
         'gpt-researcher/context/vector-stores',
+        'gpt-researcher/context/data-ingestion'
         ]
     },
     {
