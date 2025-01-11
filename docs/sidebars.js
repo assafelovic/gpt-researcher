@@ -40,6 +40,7 @@
         'gpt-researcher/gptr/querying-the-backend',
         'gpt-researcher/gptr/automated-tests',
         'gpt-researcher/gptr/troubleshooting',
+        'gpt-researcher/frontend/logs'
       ],
     },
     {
@@ -52,8 +53,7 @@
         'gpt-researcher/frontend/nextjs-frontend',
         'gpt-researcher/frontend/vanilla-js-frontend',
         'gpt-researcher/frontend/discord-bot',
-        'gpt-researcher/frontend/debugging-websockets',
-        'gpt-researcher/frontend/logs',
+        'gpt-researcher/frontend/debugging-websockets'
       ],
     },
     {

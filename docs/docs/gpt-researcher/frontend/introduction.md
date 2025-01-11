@@ -1,4 +1,4 @@
-# Frontend Introduction
+# Intro to the Frontends
 
 The frontends enhance GPT-Researcher by providing:
 
