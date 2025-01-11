@@ -47,15 +47,15 @@ async function initializeWebSocket() {
   }
 }
 
-async function sendWebhookMessage({query, relevantFileNames, repoName, branchName}) {
+async function sendWebhookMessage({query, moreContext}) {
   return new Promise((resolve, reject) => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       initializeWebSocket();
     }
 
     const data = {
-      task: `${query}. The relevant files names are: ${relevantFileNames}`,
-      report_type: 'dev_team',
+      task: `${query}. Additional context: ${moreContext}`,
+      report_type: 'research_report',
       report_source: 'web',
       tone: 'Objective',
       headers: {},

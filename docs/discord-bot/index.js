@@ -61,50 +61,32 @@ client.on(Events.InteractionCreate, async interaction => {
     if (interaction.commandName === 'ask') {
       const modal = new ModalBuilder()
         .setCustomId('myModal')
-        .setTitle('Ask the AI Dev Team');
+        .setTitle('Ask the AI Researcher');
 
       const queryInput = new TextInputBuilder()
         .setCustomId('queryInput')
         .setLabel('Your question')
         .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('What are you exploring / trying to code today?');
+        .setPlaceholder('What are you exploring today / what tickles your mind?');
 
-      const relevantFileNamesInput = new TextInputBuilder()
-        .setCustomId('relevantFileNamesInput')
-        .setLabel('Relevant file names (optional)')
+      const moreContextInput = new TextInputBuilder()
+        .setCustomId('moreContextInput')
+        .setLabel('Additional context (optional)')
         .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Where would you like us to look / how would you like this implemented?')
-        .setRequired(false);
-
-      const repoNameInput = new TextInputBuilder()
-        .setCustomId('repoNameInput')
-        .setLabel('Repo name (optional)')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('assafelovic/gpt-researcher')
-        .setRequired(false);
-
-      const branchNameInput = new TextInputBuilder()
-        .setCustomId('branchNameInput')
-        .setLabel('Branch name (optional)')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('master')
+        .setPlaceholder('Any additional context or details that would help us understand your question better?')
         .setRequired(false);
 
       const firstActionRow = new ActionRowBuilder().addComponents(queryInput);
-      const secondActionRow = new ActionRowBuilder().addComponents(relevantFileNamesInput);
-      const thirdActionRow = new ActionRowBuilder().addComponents(repoNameInput);
-      const fourthActionRow = new ActionRowBuilder().addComponents(branchNameInput);
+      const secondActionRow = new ActionRowBuilder().addComponents(moreContextInput);
 
-      modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow);
+      modal.addComponents(firstActionRow, secondActionRow);
 
       await interaction.showModal(modal);
     }
   } else if (interaction.isModalSubmit()) {
     if (interaction.customId === 'myModal') {
       const query = interaction.fields.getTextInputValue('queryInput');
-      const relevantFileNames = interaction.fields.getTextInputValue('relevantFileNamesInput');
-      const repoName = interaction.fields.getTextInputValue('repoNameInput');
-      const branchName = interaction.fields.getTextInputValue('branchNameInput');
+      const moreContext = interaction.fields.getTextInputValue('moreContextInput');
 
       let thread;
       if (interaction?.channel?.type === ChannelType.GuildText) {
@@ -117,18 +99,16 @@ client.on(Events.InteractionCreate, async interaction => {
 
       await interaction.deferUpdate();
 
-      runDevTeam({ interaction, query, relevantFileNames, repoName, branchName, thread })
+      runDevTeam({ interaction, query, moreContext, thread })
         .catch(console.error);
     }
   }
 });
 
-async function runDevTeam({ interaction, query, relevantFileNames, repoName, branchName, thread }) {
+async function runDevTeam({ interaction, query, moreContext, thread }) {
   const queryToDisplay = `**user query**: ${query}. 
-                          ${relevantFileNames ? '\n**relevant file names**: ' + relevantFileNames : ''} 
-                          ${repoName ? '\n**repo name**: ' + repoName : ''}
-                          ${branchName ? '\n**branch name**: ' + branchName : ''}
-                          \nLooking through the code to investigate your query... give me a minute or so`;
+                          ${moreContext ? '\n**more context**: ' + moreContext : ''} 
+                          \nBrowsing the web to investigate your query... give me a minute or so`;
 
   if (!thread) {
     await interaction.followUp({ content: queryToDisplay });
@@ -138,7 +118,7 @@ async function runDevTeam({ interaction, query, relevantFileNames, repoName, bra
 
   try {
     while (true) {
-      const response = await sendWebhookMessage({ query, relevantFileNames, repoName, branchName });
+      const response = await sendWebhookMessage({ query, moreContext });
       
       if (response.type === 'progress') {
         // Handle progress updates
