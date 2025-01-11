@@ -137,39 +137,45 @@ async function runDevTeam({ interaction, query, relevantFileNames, repoName, bra
   }
 
   try {
-    let gptrResponse = await sendWebhookMessage({ query, relevantFileNames, repoName, branchName });
-
-    if (gptrResponse && gptrResponse.rubber_ducker_thoughts) {
-      let rubberDuckerChunks = '';
-      let theGuidance = gptrResponse.rubber_ducker_thoughts;
-
-      try {
-        console.log('Original rubber_ducker_thoughts:', theGuidance);
-
-        // const repairedJson = jsonrepair(theGuidance);
-        // rubberDuckerChunks = splitMessage(JSON.parse(repairedJson).thoughts);
-        rubberDuckerChunks = splitMessage(theGuidance)
-      } catch (error) {
-        console.error('Error splitting messages:', error);
-        rubberDuckerChunks = splitMessage(typeof theGuidance === 'object' ? JSON.stringify(theGuidance) : theGuidance);
-      }
-
-      for (const chunk of rubberDuckerChunks) {
-        if (!thread) {
-          await interaction.followUp({ content: chunk });
-        } else {
-          await thread.send(chunk);
+    while (true) {
+      const response = await sendWebhookMessage({ query, relevantFileNames, repoName, branchName });
+      
+      if (response.type === 'progress') {
+        // Handle progress updates
+        const progressChunks = splitMessage(response.data);
+        for (const chunk of progressChunks) {
+          if (!thread) {
+            await interaction.followUp({ content: chunk });
+          } else {
+            await thread.send(chunk);
+          }
         }
-      }
+      } else if (response.type === 'complete') {
+        // Handle final result
+        if (response.data && response.data.rubber_ducker_thoughts) {
+          let rubberDuckerChunks = '';
+          let theGuidance = response.data.rubber_ducker_thoughts;
 
-      return true;
-    } else {
-      if (!thread) {
-        return await interaction.followUp({ content: 'Invalid response received from GPTR.' });
-      } else {
-        return await thread.send('Invalid response received from GPTR.');
+          try {
+            rubberDuckerChunks = splitMessage(theGuidance);
+          } catch (error) {
+            console.error('Error splitting messages:', error);
+            rubberDuckerChunks = splitMessage(typeof theGuidance === 'object' ? JSON.stringify(theGuidance) : theGuidance);
+          }
+
+          for (const chunk of rubberDuckerChunks) {
+            if (!thread) {
+              await interaction.followUp({ content: chunk });
+            } else {
+              await thread.send(chunk);
+            }
+          }
+        }
+        break; // Exit the loop when we get the final result
       }
     }
+
+    return true;
   } catch (error) {
     console.error({ content: 'Error handling message:', error });
     if (!thread) {
