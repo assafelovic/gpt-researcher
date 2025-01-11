@@ -1,4 +1,4 @@
-## Setting up the Discord Bot
+## Discord Bot
 
 Add a .env file in the root of the project and add the following:
 
