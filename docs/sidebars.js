@@ -40,7 +40,7 @@
         'gpt-researcher/gptr/querying-the-backend',
         'gpt-researcher/gptr/automated-tests',
         'gpt-researcher/gptr/troubleshooting',
-        'gpt-researcher/frontend/logs'
+        'gpt-researcher/gptr/logs'
       ],
     },
     {
