@@ -1,5 +1,14 @@
 # Discord Bot
 
+## Intro
+
+You can either use the official GPTR Discord bot or create your own custom bot.
+
+To add the official GPTR Discord bot, simply [click here to invite GPTR to your Discord server](https://discord.com/oauth2/authorize?client_id=1281438963034361856&permissions=1689934339898432&integration_type=0&scope=bot).
+
+
+## To create your own discord bot with GPTR functionality
+
 Add a .env file in the root of the project and add the following:
 
 ```
@@ -19,10 +28,7 @@ You can fetch the token from the Discord Developer Portal by following these ste
 
 ![Bot Permissions](./img/bot-permissions.png)
 
-6. Use the generated invite URL to add your bot to your server. For the gptr-bot, use:
-   https://discord.com/oauth2/authorize?client_id=1281438963034361856&permissions=1689934339898432&integration_type=0&scope=bot
-
-7. Copy your bot's token and paste it into the `.env` file you created earlier
+6. Copy your bot's token and paste it into the `.env` file you created earlier
 
 
 ## Deploying the bot commands
