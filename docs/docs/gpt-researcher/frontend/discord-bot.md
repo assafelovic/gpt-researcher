@@ -2,7 +2,7 @@
 
 ## Intro
 
-You can either use the official GPTR Discord bot or create your own custom bot.
+You can either leverage the official GPTR Discord bot or create your own custom bot.
 
 To add the official GPTR Discord bot, simply [click here to invite GPTR to your Discord server](https://discord.com/oauth2/authorize?client_id=1281438963034361856&permissions=1689934339898432&integration_type=0&scope=bot).
 
