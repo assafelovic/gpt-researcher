@@ -75,9 +75,9 @@
       collapsible: true,
       collapsed: true,
       items: [
-        'gpt-researcher/logs/all-about-logs',
-        'gpt-researcher/logs/simple-logs-example',
-        'gpt-researcher/logs/langsmith-logs'
+        'gpt-researcher/handling-logs/all-about-logs',
+        'gpt-researcher/handling-logs/simple-logs-example',
+        'gpt-researcher/handling-logs/langsmith-logs'
         ]
     },
     {
