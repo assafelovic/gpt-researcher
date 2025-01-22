@@ -9,8 +9,8 @@ services:
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
       LOGGING_LEVEL: INFO
     volumes:
-      - gpt_researcher_outputs:/usr/src/app/outputs
-      - ./logs:/usr/src/app/logs 
+      - ${PWD}/outputs:/usr/src/app/outputs:rw
+      - ${PWD}/logs:/usr/src/app/logs:rw
     user: root
     restart: always
     ports:
@@ -64,6 +64,3 @@ services:
       - 3001:3000
     profiles: ["discord"]
     restart: always
-
-volumes:
-  gpt_researcher_outputs:
