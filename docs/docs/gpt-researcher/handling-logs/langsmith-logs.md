@@ -25,3 +25,4 @@ This can be helpful for:
 - Quality assurance debugging - where can the input or output of our AI flows use improvement
 - Cost analysis - where are we spending the most on LLM calls
 - Error analysis - where are we getting the most errors
+- Optimizing speed - which parts of the flow are taking the most time
