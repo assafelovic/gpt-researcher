@@ -71,6 +71,17 @@
     },
     {
       type: 'category',
+      label: 'Handling Logs',
+      collapsible: true,
+      collapsed: true,
+      items: [
+        'gpt-researcher/logs/all-about-logs',
+        'gpt-researcher/logs/simple-logs-example',
+        'gpt-researcher/logs/langsmith-logs'
+        ]
+    },
+    {
+      type: 'category',
       label: 'LLM Providers',
       collapsible: true,
       collapsed: true,
