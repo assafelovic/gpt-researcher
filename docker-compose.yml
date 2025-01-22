@@ -10,6 +10,7 @@ services:
       LOGGING_LEVEL: INFO
     volumes:
       - gpt_researcher_outputs:/usr/src/app/outputs
+      - ./logs:/usr/src/app/logs 
     user: root
     restart: always
     ports:
