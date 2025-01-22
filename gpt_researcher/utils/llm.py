@@ -56,7 +56,7 @@ async def create_chat_completion(
 
     response = ""
     # create response
-    for _ in range(10):  # maximum of 10 attempts
+    for _ in range(3):  # maximum of 10 attempts
         response = await provider.get_chat_response(
             messages, stream, websocket
         )

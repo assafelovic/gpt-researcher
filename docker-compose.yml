@@ -14,6 +14,7 @@ services:
     restart: always
     ports:
       - 8000:8000
+      
   gptr-nextjs:
     pull_policy: build
     image: gptresearcher/gptr-nextjs
@@ -62,7 +63,6 @@ services:
       - 3001:3000
     profiles: ["discord"]
     restart: always
-
 
 volumes:
   gpt_researcher_outputs:
