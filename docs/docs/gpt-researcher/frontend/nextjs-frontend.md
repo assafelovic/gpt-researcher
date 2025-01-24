@@ -2,7 +2,10 @@
 
 This frontend project aims to enhance the user experience of GPT Researcher, providing an intuitive and efficient interface for automated research. It offers two deployment options to suit different needs and environments.
 
-View a Product Tutorial here: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
+#### Demo
+<iframe height="400" width="700" src="https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+View an in-depthProduct Tutorial here: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
 
 
 ## NextJS Frontend App
@@ -74,6 +77,11 @@ A more robust solution with enhanced features and performance.
 
 Note: Requires backend server on `localhost:8000` as detailed in option 1.
 
-#### Demo
-<iframe height="400" width="700" src="https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
+### Adding Google Analytics
+
+To add Google Analytics to your NextJS frontend, simply add the following to your `.env` file:
+
+```
+NEXT_PUBLIC_GA_MEASUREMENT_ID="G-G2YVXKHJNZ"
+```
