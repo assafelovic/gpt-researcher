@@ -23,6 +23,7 @@ services:
     environment:
       CHOKIDAR_USEPOLLING: true
       LOGGING_LEVEL: INFO
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID}
     build:
       dockerfile: Dockerfile.dev
       context: frontend/nextjs

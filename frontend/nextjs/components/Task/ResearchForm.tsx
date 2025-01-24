@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import FileUpload from "../Settings/FileUpload";
 import ToneSelector from "../Settings/ToneSelector";
+import { useAnalytics } from "../../hooks/useAnalytics";
 
 interface ChatBoxSettings {
   report_type: string;
@@ -25,6 +26,7 @@ export default function ResearchForm({
   onFormSubmit,
   defaultReportType,
 }: ResearchFormProps) {
+  const { trackResearchQuery } = useAnalytics();
   const [task, setTask] = useState(""); // You can use this to capture any specific task data if needed
 
   // Destructure necessary fields from chatBoxSettings
@@ -49,7 +51,8 @@ export default function ResearchForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onFormSubmit) {
-      onFormSubmit(task, report_type, report_source); // Trigger the onFormSubmit prop when form is submitted
+        onFormSubmit(task, report_type, report_source); // Trigger the onFormSubmit prop when form is submitted
+      trackResearchQuery({ query: task, report_type, report_source });
     } else {
       console.warn("onFormSubmit is not defined");
     }
