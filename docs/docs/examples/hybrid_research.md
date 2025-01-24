@@ -2,9 +2,9 @@
 
 ## Introduction
 
-GPT Researcher can combine web search capabilities with local document analysis to provide comprehensive, context-aware research results. 
+Content Spells AI Researcher can combine web search capabilities with local document analysis to provide comprehensive, context-aware research results. 
 
-This guide will walk you through the process of setting up and running hybrid research using GPT Researcher.
+This guide will walk you through the process of setting up and running hybrid research using Content Spells AI Researcher.
 
 ## Prerequisites
 
@@ -113,13 +113,13 @@ The output will be a comprehensive research report that combines insights from b
 **Q: How long does a typical research session take?**
 A: The duration varies based on the complexity of the query and the amount of data to process. It can range from 1-5 minutes for very comprehensive research.
 
-**Q: Can I use GPT Researcher with other language models?**
-A: Currently, GPT Researcher is optimized for OpenAI's models. Support for other models can be found [here](../gpt-researcher/llms/llms.md).
+**Q: Can I use Content Spells AI Researcher with other language models?**
+A: Currently, Content Spells AI Researcher is optimized for OpenAI's models. Support for other models can be found [here](../gpt-researcher/llms/llms.md).
 
-**Q: How does GPT Researcher handle conflicting information between local and web sources?**
+**Q: How does Content Spells AI Researcher handle conflicting information between local and web sources?**
 A: The system attempts to reconcile differences by providing context and noting discrepancies in the final report. It prioritizes more recent or authoritative sources when conflicts arise.
 
 **Q: Is my local data sent to external servers during the research process?**
 A: No, your local documents are processed on your machine. Only the generated queries and synthesized information (not raw data) are sent to external services for web research.
 
-For more information and updates, please visit the [GPT Researcher GitHub repository](https://github.com/assafelovic/gpt-researcher).
+For more information and updates, please visit the [Content Spells AI Researcher GitHub repository](https://github.com/assafelovic/gpt-researcher).

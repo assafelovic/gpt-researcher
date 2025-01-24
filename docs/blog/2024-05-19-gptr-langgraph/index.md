@@ -5,16 +5,16 @@ authors: [assafe]
 tags: [multi-skills, gpt-researcher, langchain, langgraph]
 ---
 ![Header](./blog-langgraph.jpeg)
-# Introducing the GPT Researcher Multi-Agent Assistant
+# Introducing the Content Spells AI Researcher Multi-Agent Assistant
 ### Learn how to build an autonomous research assistant using LangGraph with a team of specialized AI agents
 
-It has only been a year since the initial release of GPT Researcher, but methods for building, testing, and deploying AI agents have already evolved significantly. That’s just the nature and speed of the current AI progress. What started as simple zero-shot or few-shot prompting, has quickly evolved to agent function calling, RAG and now finally agentic workflows (aka “flow engineering”).
+It has only been a year since the initial release of Content Spells AI Researcher, but methods for building, testing, and deploying AI agents have already evolved significantly. That’s just the nature and speed of the current AI progress. What started as simple zero-shot or few-shot prompting, has quickly evolved to agent function calling, RAG and now finally agentic workflows (aka “flow engineering”).
 
 Andrew Ng has [recently stated](https://www.deeplearning.ai/the-batch/how-agents-can-improve-llm-performance/), “I think AI agent workflows will drive massive AI progress this year — perhaps even more than the next generation of foundation models. This is an important trend, and I urge everyone who works in AI to pay attention to it.”
 
 In this article you will learn why multi-agent workflows are the current best standard and how to build the optimal autonomous research multi-agent assistant using LangGraph.
 
-To skip this tutorial, feel free to check out the Github repo of [GPT Researcher x LangGraph](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents).
+To skip this tutorial, feel free to check out the Github repo of [Content Spells AI Researcher x LangGraph](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents).
 
 ## Introducing LangGraph
 LangGraph is an extension of LangChain aimed at creating agent and multi-agent flows. It adds in the ability to create cyclical flows and comes with memory built in — both important attributes for creating agents.
@@ -26,13 +26,13 @@ Enough with the smalltalk, let’s start building!
 ## Building the Ultimate Autonomous Research Agent
 By leveraging LangGraph, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. Having every agent focus and specialize only a specific skill, allows for better separation of concerns, customizability, and further development at scale as the project grows.
 
-Inspired by the recent STORM paper, this example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication. This example will also leverage the leading autonomous research agent GPT Researcher.
+Inspired by the recent STORM paper, this example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication. This example will also leverage the leading autonomous research agent Content Spells AI Researcher.
 
 ### The Research Agent Team
 The research team consists of seven LLM agents:
 
 * **Chief Editor** — Oversees the research process and manages the team. This is the “master” agent that coordinates the other agents using LangGraph. This agent acts as the main LangGraph interface.
-* **GPT Researcher** — A specialized autonomous agent that conducts in depth research on a given topic.
+* **Content Spells AI Researcher** — A specialized autonomous agent that conducts in depth research on a given topic.
 * **Editor** — Responsible for planning the research outline and structure.
 * **Reviewer** — Validates the correctness of the research results given a set of criteria.
 * **Reviser** — Revises the research results based on the feedback from the reviewer.
@@ -49,7 +49,7 @@ More specifically the process is as follows:
 * **Browser (gpt-researcher)** — Browses the internet for initial research based on the given research task. This step is crucial for LLMs to plan the research process based on up to date and relevant information, and not rely solely on pre-trained data for a given task or topic.
 * **Editor** — Plans the report outline and structure based on the initial research. The Editor is also responsible for triggering the parallel research tasks based on the planned outline.
 * For each outline topic (in parallel):
-  * **Researcher (gpt-researcher)** — Runs an in depth research on the subtopics and writes a draft. This agent leverages the GPT Researcher Python package under the hood, for optimized, in depth and factual research report.
+  * **Researcher (gpt-researcher)** — Runs an in depth research on the subtopics and writes a draft. This agent leverages the Content Spells AI Researcher Python package under the hood, for optimized, in depth and factual research report.
   * **Reviewer** — Validates the correctness of the draft given a set of guidelines and provides feedback to the reviser (if any).
   * **Reviser** — Revises the draft until it is satisfactory based on the reviewer feedback.
 * **Writer** — Compiles and writes the final report including an introduction, conclusion and references section from the given research findings.
@@ -90,7 +90,7 @@ workflow = StateGraph(ResearchState)
 ```
 
 Initializing the graph with LangGraph
-As stated above, one of the great things about multi-agent development is building each agent to have specialized and scoped skills. Let’s take an example of the Researcher agent using GPT Researcher python package:
+As stated above, one of the great things about multi-agent development is building each agent to have specialized and scoped skills. Let’s take an example of the Researcher agent using Content Spells AI Researcher python package:
 
 ```python
 from gpt_researcher import GPTResearcher
@@ -209,7 +209,7 @@ The task object is pretty self explanatory, however please notice that follow_gu
 
 Running the assistant will result in a final research report in formats such as Markdown, PDF and Docx.
 
-To download and run the example check out the GPT Researcher x LangGraph [open source page](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents).
+To download and run the example check out the Content Spells AI Researcher x LangGraph [open source page](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents).
 
 ## What’s Next?
 Going forward, there are super exciting things to think about. Human in the loop is key for optimized AI experiences. Having a human help the assistant revise and focus on just the right research plan, topics and outline, would enhance the overall quality and experience. Also generally, aiming for relying on human intervention throughout the AI flow ensures correctness, sense of control and deterministic results. Happy to see that LangGraph already supports this out of the box as seen here.
@@ -218,6 +218,6 @@ In addition, having support for research about both web and local data would be 
 
 Lastly, more efforts can be done to improve the quality of retrieved sources and making sure the final report is built in the optimal storyline.
 
-A step forward in LangGraph and multi-agent collaboration in a whole would be where assistants can plan and generate graphs dynamically based on given tasks. This vision would allow assistants to choose only a subset of agents for a given task and plan their strategy based on the graph fundamentals as presented in this article and open a whole new world of possibilities. Given the pace of innovation in the AI space, it won’t be long before a new disruptive version of GPT Researcher is launched. Looking forward to what the future brings!
+A step forward in LangGraph and multi-agent collaboration in a whole would be where assistants can plan and generate graphs dynamically based on given tasks. This vision would allow assistants to choose only a subset of agents for a given task and plan their strategy based on the graph fundamentals as presented in this article and open a whole new world of possibilities. Given the pace of innovation in the AI space, it won’t be long before a new disruptive version of Content Spells AI Researcher is launched. Looking forward to what the future brings!
 
 To keep track of this project’s ongoing progress and updates please join our Discord community. And as always, if you have any feedback or further questions, please comment below!

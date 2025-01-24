@@ -5,11 +5,11 @@ authors: [assafe]
 tags: [hybrid-research, gpt-researcher, langchain, langgraph, tavily]
 image: https://miro.medium.com/v2/resize:fit:1400/1*NgVIlZVSePqrK5EkB1wu4Q.png
 ---
-![Hyrbrid Research with GPT Researcher](https://miro.medium.com/v2/resize:fit:1400/1*MaauY1ecsD05nL8JqW0Zdg.jpeg)
+![Hyrbrid Research with Content Spells AI Researcher](https://miro.medium.com/v2/resize:fit:1400/1*MaauY1ecsD05nL8JqW0Zdg.jpeg)
 
 Over the past few years, we've seen an explosion of new AI tools designed to disrupt research. Some, like [ChatPDF](https://www.chatpdf.com/) and [Consensus](https://consensus.app), focus on extracting insights from documents. Others, such as [Perplexity](https://www.perplexity.ai/), excel at scouring the web for information. But here's the thing: none of these tools combine both web and local document search within a single contextual research pipeline.
 
-This is why I'm excited to introduce the latest advancements of **[GPT Researcher](https://gptr.dev)** — now able to conduct hybrid research on any given task and documents.
+This is why I'm excited to introduce the latest advancements of **[Content Spells AI Researcher](https://gptr.dev)** — now able to conduct hybrid research on any given task and documents.
 
 Web driven research often lacks specific context, risks information overload, and may include outdated or unreliable data. On the flip side, local driven research is limited to historical data and existing knowledge, potentially creating organizational echo chambers and missing out on crucial market trends or competitor moves. Both approaches, when used in isolation, can lead to incomplete or biased insights, hampering your ability to make fully informed decisions.
 
@@ -43,13 +43,13 @@ These are just a few examples for business use cases that can leverage hybrid re
 
 ## Building the Hybrid Research Assistant
 
-Before we dive into the details, it's worth noting that GPT Researcher has the capability to conduct hybrid research out of the box! However, to truly appreciate how this works and to give you a deeper understanding of the process, we're going to take a look under the hood.
+Before we dive into the details, it's worth noting that Content Spells AI Researcher has the capability to conduct hybrid research out of the box! However, to truly appreciate how this works and to give you a deeper understanding of the process, we're going to take a look under the hood.
 
-![GPT Researcher hybrid research](./gptr-hybrid.png)
+![Content Spells AI Researcher hybrid research](./gptr-hybrid.png)
 
-GPT Researcher conducts web research based on an auto-generated plan from local documents, as seen in the architecture above. It then retrieves relevant information from both local and web data for the final research report.
+Content Spells AI Researcher conducts web research based on an auto-generated plan from local documents, as seen in the architecture above. It then retrieves relevant information from both local and web data for the final research report.
 
-We'll explore how local documents are processed using LangChain, which is a key component of GPT Researcher's document handling. Then, we'll show you how to leverage GPT Researcher to conduct hybrid research, combining the advantages of web search with your local document knowledge base.
+We'll explore how local documents are processed using LangChain, which is a key component of Content Spells AI Researcher's document handling. Then, we'll show you how to leverage Content Spells AI Researcher to conduct hybrid research, combining the advantages of web search with your local document knowledge base.
 
 ### Processing Local Documents with Langchain
 
@@ -112,21 +112,21 @@ for doc in relevant_docs:
     print(doc.page_content)
 ```
 
-### Conducting Web Research with GPT Researcher
+### Conducting Web Research with Content Spells AI Researcher
 
-Now that we've learned how to work with local documents, let's take a quick look at how GPT Researcher works under the hood:
+Now that we've learned how to work with local documents, let's take a quick look at how Content Spells AI Researcher works under the hood:
 
-![GPT Researcher Architecture](https://miro.medium.com/v2/resize:fit:1400/1*yFtT43N0GxL0TMKvjtYjug.png)
+![Content Spells AI Researcher Architecture](https://miro.medium.com/v2/resize:fit:1400/1*yFtT43N0GxL0TMKvjtYjug.png)
 
-As seen above, GPT Researcher creates a research plan based on the given task by generating potential research queries that can collectively provide an objective and broad overview of the topic. Once these queries are generated, GPT Researcher uses a search engine like Tavily to find relevant results. Each scraped result is then saved in a vector database. Finally, the top k chunks most related to the research task are retrieved to generate a final research report.
+As seen above, Content Spells AI Researcher creates a research plan based on the given task by generating potential research queries that can collectively provide an objective and broad overview of the topic. Once these queries are generated, Content Spells AI Researcher uses a search engine like Tavily to find relevant results. Each scraped result is then saved in a vector database. Finally, the top k chunks most related to the research task are retrieved to generate a final research report.
 
-GPT Researcher supports hybrid research, which involves an additional step of chunking local documents (implemented using Langchain) before retrieving the most related information. After numerous evaluations conducted by the community, we've found that hybrid research improved the correctness of final results by over 40%!
+Content Spells AI Researcher supports hybrid research, which involves an additional step of chunking local documents (implemented using Langchain) before retrieving the most related information. After numerous evaluations conducted by the community, we've found that hybrid research improved the correctness of final results by over 40%!
 
-### Running the Hybrid Research with GPT Researcher
+### Running the Hybrid Research with Content Spells AI Researcher
 
-Now that you have a better understanding of how hybrid research works, let's demonstrate how easy this can be achieved with GPT Researcher.
+Now that you have a better understanding of how hybrid research works, let's demonstrate how easy this can be achieved with Content Spells AI Researcher.
 
-#### Step 1: Install GPT Researcher with PIP
+#### Step 1: Install Content Spells AI Researcher with PIP
 
 ```bash
 pip install gpt-researcher
@@ -134,18 +134,18 @@ pip install gpt-researcher
 
 #### Step 2: Setting up the environment
 
-We will run GPT Researcher with OpenAI as the LLM vendor and Tavily as the search engine. You'll need to obtain API keys for both before moving forward. Then, export the environment variables in your CLI as follows:
+We will run Content Spells AI Researcher with OpenAI as the LLM vendor and Tavily as the search engine. You'll need to obtain API keys for both before moving forward. Then, export the environment variables in your CLI as follows:
 
 ```bash
 export OPENAI_API_KEY={your-openai-key}
 export TAVILY_API_KEY={your-tavily-key}
 ```
 
-#### Step 3: Initialize GPT Researcher with hybrid research configuration
+#### Step 3: Initialize Content Spells AI Researcher with hybrid research configuration
 
-GPT Researcher can be easily initialized with params that signal it to run a hybrid research. You can conduct many forms of research, head to the documentation page to learn more.
+Content Spells AI Researcher can be easily initialized with params that signal it to run a hybrid research. You can conduct many forms of research, head to the documentation page to learn more.
 
-To get GPT Researcher to run a hybrid research, you need to include all relevant files in my-docs directory (create it if it doesn't exist), and set the instance report_source to "hybrid" as seen below. Once the report source is set to hybrid, GPT Researcher will look for existing documents in the my-docs directory and include them in the research. If no documents exist, it will ignore it.
+To get Content Spells AI Researcher to run a hybrid research, you need to include all relevant files in my-docs directory (create it if it doesn't exist), and set the instance report_source to "hybrid" as seen below. Once the report source is set to hybrid, Content Spells AI Researcher will look for existing documents in the my-docs directory and include them in the research. If no documents exist, it will ignore it.
 
 ```python
 from gpt_researcher import GPTResearcher
@@ -173,10 +173,10 @@ As seen above, we can run the research on the following example:
 
 After various community evaluations we've found that the results of this research improve quality and correctness of research by over 40% and remove hallucinations by 50%. Moreover as stated above, local information helps the LLM improve planning reasoning allowing it to make better decisions and researching more relevant web sources.
 
-But wait, there's more! GPT Researcher also includes a sleek front-end app using NextJS and Tailwind. To learn how to get it running check out the documentation page. You can easily use drag and drop for documents to run hybrid research.
+But wait, there's more! Content Spells AI Researcher also includes a sleek front-end app using NextJS and Tailwind. To learn how to get it running check out the documentation page. You can easily use drag and drop for documents to run hybrid research.
 
 ## Conclusion
 
-Hybrid research represents a significant advancement in data gathering and decision making. By leveraging tools like [GPT Researcher](https://gptr.dev), teams can now conduct more comprehensive, context-aware, and actionable research. This approach addresses the limitations of using web or local sources in isolation, offering benefits such as grounded context, enhanced accuracy, reduced bias, improved planning and reasoning, and customized insights.
+Hybrid research represents a significant advancement in data gathering and decision making. By leveraging tools like [Content Spells AI Researcher](https://gptr.dev), teams can now conduct more comprehensive, context-aware, and actionable research. This approach addresses the limitations of using web or local sources in isolation, offering benefits such as grounded context, enhanced accuracy, reduced bias, improved planning and reasoning, and customized insights.
 
 The automation of hybrid research can enable teams to make faster, more data-driven decisions, ultimately enhancing productivity and offering a competitive advantage in analyzing an expanding pool of unstructured and dynamic information.

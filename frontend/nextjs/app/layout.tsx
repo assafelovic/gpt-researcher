@@ -5,35 +5,27 @@ import "./globals.css";
 
 const inter = Lexend({ subsets: ["latin"] });
 
-let title = "GPT Researcher";
-let description =
-  "LLM based autonomous agent that conducts local and web research on any topic and generates a comprehensive report with citations.";
-let url = "https://github.com/assafelovic/gpt-researcher";
+let title = "Content Spells AI Researcher";
+
 let ogimage = "/favicon.ico";
-let sitename = "GPT Researcher";
+let sitename = "Content Spells AI Researcher";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(url),
+  metadataBase: new URL("https://localhost:3000"),
   title,
-  description,
+
   icons: {
     icon: "/favicon.ico",
   },
   openGraph: {
     images: [ogimage],
     title,
-    description,
-    url: url,
+
     siteName: sitename,
     locale: "en_US",
     type: "website",
   },
-  twitter: {
-    card: "summary_large_image",
-    images: [ogimage],
-    title,
-    description,
-  },
+
 };
 
 export default function RootLayout({

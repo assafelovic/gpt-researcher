@@ -1,6 +1,6 @@
 # NextJS Frontend
 
-This frontend project aims to enhance the user experience of GPT Researcher, providing an intuitive and efficient interface for automated research. It offers two deployment options to suit different needs and environments.
+This frontend project aims to enhance the user experience of Content Spells AI Researcher, providing an intuitive and efficient interface for automated research. It offers two deployment options to suit different needs and environments.
 
 View a Product Tutorial here: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
 

@@ -28,7 +28,7 @@
     },
     {
       type: 'category',
-      label: 'GPT Researcher',
+      label: 'Content Spells AI Researcher',
       collapsible: true,
       collapsed: true,
       items: [

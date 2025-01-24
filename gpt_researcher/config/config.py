@@ -8,7 +8,7 @@ from ..retrievers.utils import get_all_retriever_names
 
 
 class Config:
-    """Config class for GPT Researcher."""
+    """Config class for Content Spells AI Researcher."""
 
     CONFIG_DIR = os.path.join(os.path.dirname(__file__), "variables")
 

@@ -1,7 +1,7 @@
 # Configure LLM
 
 As described in the [introduction](/docs/gpt-researcher/gptr/config), the default LLM and embedding is OpenAI due to its superior performance and speed. 
-With that said, GPT Researcher supports various open/closed source LLMs and embeddings, and you can easily switch between them by updating the `SMART_LLM`, `FAST_LLM` and `EMBEDDING` env variables. You might also need to include the provider API key and corresponding configuration params.
+With that said, Content Spells AI Researcher supports various open/closed source LLMs and embeddings, and you can easily switch between them by updating the `SMART_LLM`, `FAST_LLM` and `EMBEDDING` env variables. You might also need to include the provider API key and corresponding configuration params.
 
 Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq`, `bedrock` and `litellm`.
 
@@ -9,7 +9,7 @@ Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_ver
 
 To learn more about support customization options see [here](/gpt-researcher/config).
 
-**Please note**: GPT Researcher is optimized and heavily tested on GPT models. Some other models might run into context limit errors, and unexpected responses.
+**Please note**: Content Spells AI Researcher is optimized and heavily tested on GPT models. Some other models might run into context limit errors, and unexpected responses.
 Please provide any feedback in our [Discord community](https://discord.gg/DUmbTebB) channel, so we can better improve the experience and performance.
 
 Below you can find examples for how to configure the various supported LLMs.
@@ -75,7 +75,7 @@ Please then specify the model names/deployment names in your `.env` file.
 
 - Ypur endpoint can have any valid name.
 - A model's deployment name *must be the same* as the model name.
-- You need to deploy an *Embedding Model*: To ensure optimal performance, GPT Researcher requires the 'text-embedding-3-large' model. Please deploy this specific model to your Azure Endpoint.
+- You need to deploy an *Embedding Model*: To ensure optimal performance, Content Spells AI Researcher requires the 'text-embedding-3-large' model. Please deploy this specific model to your Azure Endpoint.
 
 **Recommended**:
 
@@ -99,7 +99,7 @@ EMBEDDING="azure_openai:text-embedding-3-large"
 
 ## Ollama
 
-GPT Researcher supports both Ollama LLMs and embeddings. You can choose each or both.
+Content Spells AI Researcher supports both Ollama LLMs and embeddings. You can choose each or both.
 To use [Ollama](http://www.ollama.com) you can set the following environment variables
 
 ```bash

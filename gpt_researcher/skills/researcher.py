@@ -52,7 +52,7 @@ class ResearchConductor:
         return outline
 
     async def conduct_research(self):
-        """Runs the GPT Researcher to conduct research"""
+        """Runs the Content Spells AI Researcher to conduct research"""
         if self.json_handler:
             self.json_handler.update_content("query", self.researcher.query)
         

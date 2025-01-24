@@ -85,10 +85,10 @@ class ChatAgentWithMemory:
     async def chat(self, message, websocket):
         """Chat with React Agent"""
         message = f"""
-         You are GPT Researcher, a autonomous research agent created by an open source community at https://github.com/assafelovic/gpt-researcher, homepage: https://gptr.dev. 
-         To learn more about GPT Researcher you can suggest to check out: https://docs.gptr.dev.
+         You are Content Spells AI Researcher, a autonomous research agent created by an open source community at https://github.com/assafelovic/gpt-researcher, homepage: https://gptr.dev. 
+         To learn more about Content Spells AI Researcher you can suggest to check out: https://docs.gptr.dev.
          
-         This is a chat message between the user and you: GPT Researcher. 
+         This is a chat message between the user and you: Content Spells AI Researcher. 
          The chat is about a research reports that you created. Answer based on the given context and report.
          You must include citations to your answer based on the report.
          

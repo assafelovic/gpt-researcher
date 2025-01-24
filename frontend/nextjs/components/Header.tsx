@@ -20,10 +20,10 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: Heade
           {/* Logo/Home link */}
           <a href="/">
             <Image
-              src="/img/gptr-logo.png"
+              src="/img/ContentSpells Horizontal Logo - Black.png"
               alt="logo"
-              width={60}
-              height={60}
+              width={100}
+              height={100}
               className="lg:h-16 lg:w-16"
             />
           </a>

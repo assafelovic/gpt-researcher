@@ -33,7 +33,7 @@ If the above solutions don't work, you can try the following:
 `brew install python@3.11`
 - Install the required libraries:
 `brew install pango glib gobject-introspection`
-- Install the required GPT Researcher Python packages:
+- Install the required Content Spells AI Researcher Python packages:
 `pip3.11 install -r requirements.txt`
 - Run the app with Python 3.11 (using brew):
 `python3.11 -m uvicorn main:app --reload`

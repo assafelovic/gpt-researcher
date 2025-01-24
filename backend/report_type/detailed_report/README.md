@@ -4,7 +4,7 @@ Introducing long and detailed reports, with a completely new architecture inspir
 
 In this method we do the following:
 
-1. Trigger Initial GPT Researcher report based on task
+1. Trigger Initial Content Spells AI Researcher report based on task
 2. Generate subtopics from research summary
 3. For each subtopic the headers of the subtopic report are extracted and accumulated
 4. For each subtopic a report is generated making sure that any information about the headers accumulated until now are not re-generated.

@@ -1,12 +1,12 @@
 # Tailored Research
 
-The GPT Researcher package allows you to tailor the research to your needs such as researching on specific sources (URLs) or local documents, and even specify the agent prompt instruction upon which the research is conducted.
+The Content Spells AI Researcher package allows you to tailor the research to your needs such as researching on specific sources (URLs) or local documents, and even specify the agent prompt instruction upon which the research is conducted.
 
 ### Research on Specific Sources 📚
 
-You can specify the sources you want the GPT Researcher to research on by providing a list of URLs. The GPT Researcher will then conduct research on the provided sources via `source_urls`. 
+You can specify the sources you want the Content Spells AI Researcher to research on by providing a list of URLs. The Content Spells AI Researcher will then conduct research on the provided sources via `source_urls`. 
 
-If you want GPT Researcher to perform additional research outside of the URLs you provided, i.e., conduct research on various other websites that it finds suitable for the query/sub-query, you can set the parameter `complement_source_urls` as `True`. Default value of `False` will only scour the websites you provide via `source_urls`.
+If you want Content Spells AI Researcher to perform additional research outside of the URLs you provided, i.e., conduct research on various other websites that it finds suitable for the query/sub-query, you can set the parameter `complement_source_urls` as `True`. Default value of `False` will only scour the websites you provide via `source_urls`.
 
 
 ```python
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 ```
 
 ### Research on Local Documents 📄
-You can instruct the GPT Researcher to research on local documents by providing the path to those documents. Currently supported file formats are: PDF, plain text, CSV, Excel, Markdown, PowerPoint, and Word documents.
+You can instruct the Content Spells AI Researcher to research on local documents by providing the path to those documents. Currently supported file formats are: PDF, plain text, CSV, Excel, Markdown, PowerPoint, and Word documents.
 
 *Step 1*: Add the env variable `DOC_PATH` pointing to the folder where your documents are located.
 
@@ -67,7 +67,7 @@ export DOC_PATH="./my-docs"
 
 *Step 2*: When you create an instance of the `GPTResearcher` class, pass the `report_source` argument as `"local"`.
 
-GPT Researcher will then conduct research on the provided documents.
+Content Spells AI Researcher will then conduct research on the provided documents.
 
 ```python
 from gpt_researcher import GPTResearcher
@@ -88,7 +88,7 @@ if __name__ == "__main__":
 ```
 
 ### Hybrid Research 🔄
-You can combine the above methods to conduct hybrid research. For example, you can instruct the GPT Researcher to research on both web sources and local documents.
+You can combine the above methods to conduct hybrid research. For example, you can instruct the Content Spells AI Researcher to research on both web sources and local documents.
 Simply provide the sources and set the `report_source` argument as `"hybrid"` and watch the magic happen.
 
 Please note! You should set the proper retrievers for the web sources and doc path for local documents for this to work.
@@ -96,7 +96,7 @@ To learn more about retrievers check out the [Retrievers](https://docs.gptr.dev/
 
 
 ### Research on LangChain Documents 🦜️🔗
-You can instruct the GPT Researcher to research on a list of langchain document instances.
+You can instruct the Content Spells AI Researcher to research on a list of langchain document instances.
 
 For example:
 

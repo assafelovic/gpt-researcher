@@ -1,11 +1,11 @@
 # Configuration
 
-The config.py enables you to customize GPT Researcher to your specific needs and preferences.
+The config.py enables you to customize Content Spells AI Researcher to your specific needs and preferences.
 
-Thanks to our amazing community and contributions, GPT Researcher supports multiple LLMs and Retrievers.
-In addition, GPT Researcher can be tailored to various report formats (such as APA), word count, research iterations depth, etc.
+Thanks to our amazing community and contributions, Content Spells AI Researcher supports multiple LLMs and Retrievers.
+In addition, Content Spells AI Researcher can be tailored to various report formats (such as APA), word count, research iterations depth, etc.
 
-GPT Researcher defaults to our recommended suite of integrations: [OpenAI](https://platform.openai.com/docs/overview) for LLM calls and [Tavily API](https://app.tavily.com) for retrieving real-time web information.
+Content Spells AI Researcher defaults to our recommended suite of integrations: [OpenAI](https://platform.openai.com/docs/overview) for LLM calls and [Tavily API](https://app.tavily.com) for retrieving real-time web information.
 
 As seen below, OpenAI still stands as the superior LLM. We assume it will stay this way for some time, and that prices will only continue to decrease, while performance and speed increase over time.
 
@@ -13,7 +13,7 @@ As seen below, OpenAI still stands as the superior LLM. We assume it will stay t
 <img align="center" height="350" src="/img/leaderboard.png" />
 </div>
 
-The default config.py file can be found in `/gpt_researcher/config/`. It supports various options for customizing GPT Researcher to your needs.
+The default config.py file can be found in `/gpt_researcher/config/`. It supports various options for customizing Content Spells AI Researcher to your needs.
 You can also include your own external JSON file `config.json` by adding the path in the `config_file` param. **Please follow the config.py file for additional future support**.
 
 Below is a list of current supported options:

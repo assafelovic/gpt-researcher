@@ -24,7 +24,7 @@ class VectorStoreWrapper:
         self.vector_store.add_documents(splitted_documents)
     
     def _create_langchain_documents(self, data: List[Dict[str, str]]) -> List[Document]:
-        """Convert GPT Researcher Document to Langchain Document"""
+        """Convert Content Spells AI Researcher Document to Langchain Document"""
         return [Document(page_content=item["raw_content"], metadata={"source": item["url"]}) for item in data]
 
     def _split_documents(self, documents: List[Document], chunk_size: int = 1000, chunk_overlap: int = 200) -> List[Document]:

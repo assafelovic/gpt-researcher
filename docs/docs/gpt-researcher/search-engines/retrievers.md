@@ -5,7 +5,7 @@ You can specify your preferred web search or use any custom retriever of your ch
 
 ## Web Search Engines
 
-GPT Researcher defaults to using the [Tavily](https://app.tavily.com) search engine for retrieving search results.
+Content Spells AI Researcher defaults to using the [Tavily](https://app.tavily.com) search engine for retrieving search results.
 But you can also use other search engines by specifying the `RETRIEVER` env var. Please note that each search engine has its own API Key requirements and usage limits.
 
 For example:

@@ -1,6 +1,6 @@
 ---
 slug: building-gpt-researcher
-title: How we built GPT Researcher
+title: How we built Content Spells AI Researcher
 authors: [assafe]
 tags: [gpt-researcher, autonomous-agent, opensource, github]
 ---
@@ -11,7 +11,7 @@ But the problem with AutoGPT was that it usually ran into never-ending loops, re
 
 Nonetheless, the information and context gathered during the research task were lost (such as keeping track of sources), and sometimes hallucinated.
 
-The passion for leveraging AI for online research and the limitations I found put me on a mission to try and solve it while sharing my work with the world. This is when I created [GPT Researcher](https://github.com/assafelovic/gpt-researcher) — an open source autonomous agent for online comprehensive research.
+The passion for leveraging AI for online research and the limitations I found put me on a mission to try and solve it while sharing my work with the world. This is when I created [Content Spells AI Researcher](https://github.com/assafelovic/gpt-researcher) — an open source autonomous agent for online comprehensive research.
 
 In this article, we will share the steps that guided me toward the proposed solution.
 
@@ -68,7 +68,7 @@ The prompt is as follows:
 The results are quite impressive, with some minor hallucinations in very few samples, but it’s fair to assume that as GPT improves over time, results will only get better.
 
 ### The final architecture
-Now that we’ve reviewed the necessary steps of GPT Researcher, let’s break down the final architecture, as shown below:
+Now that we’ve reviewed the necessary steps of Content Spells AI Researcher, let’s break down the final architecture, as shown below:
 
 <div align="center">
 <img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png"/>
@@ -85,4 +85,4 @@ The future of online research automation is heading toward a major disruption. A
 
 Imagine if an AI can eventually understand and analyze any form of online content — videos, images, graphs, tables, reviews, text, audio. And imagine if it could support and analyze hundreds of thousands of words of aggregated information within a single prompt. Even imagine that AI can eventually improve in reasoning and analysis, making it much more suitable for reaching new and innovative research conclusions. And that it can do all that in minutes, if not seconds.
 
-It’s all a matter of time and what [GPT Researcher](https://github.com/assafelovic/gpt-researcher) is all about.
+It’s all a matter of time and what [Content Spells AI Researcher](https://github.com/assafelovic/gpt-researcher) is all about.

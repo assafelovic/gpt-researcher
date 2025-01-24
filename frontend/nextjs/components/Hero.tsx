@@ -22,19 +22,20 @@ const Hero: FC<THeroProps> = ({
       <div className="flex flex-col items-center justify-center">
         <div className="landing flex flex-col items-center">
           <h1 className="text-4xl font-extrabold text-center lg:text-7xl">
-            Say Goodbye to <br />
+            Transform Your Research with <br />
             <span
               style={{
-                backgroundImage: 'linear-gradient(to right, #9867F0, #ED4E50)',
+                backgroundImage: 'linear-gradient(to right, #9867F0, #ED4E50)', 
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
+                textShadow: '0 2px 4px rgba(0,0,0,0.1)'
               }}
             >
-              Hours of Research
+              AI-Powered Insights
             </span>
           </h1>
-          <h2 className="text-xl font-light text-center px-4 mb-10 text-gray-300">
-            Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research
+          <h2 className="text-xl md:text-2xl font-light text-center px-4 mb-10 text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Unlock powerful research capabilities with Content Spells AI Researcher - your intelligent companion for generating comprehensive insights and in-depth analysis in minutes
           </h2>
         </div>
 
@@ -47,7 +48,7 @@ const Hero: FC<THeroProps> = ({
           />
         </div>
 
-        {/* Suggestions section */}
+        {/* Suggestions section
         <div className="flex flex-wrap items-center justify-center gap-2.5 pb-[30px] lg:flex-nowrap lg:justify-normal">
           {suggestions.map((item) => (
             <div
@@ -67,34 +68,11 @@ const Hero: FC<THeroProps> = ({
               </span>
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
     </div>
   );
 };
 
-type suggestionType = {
-  id: number;
-  name: string;
-  icon: string;
-};
-
-const suggestions: suggestionType[] = [
-  {
-    id: 1,
-    name: "Stock analysis on ",
-    icon: "/img/stock2.svg",
-  },
-  {
-    id: 2,
-    name: "Help me plan an adventure to ",
-    icon: "/img/hiker.svg",
-  },
-  {
-    id: 3,
-    name: "What are the latest news on ",
-    icon: "/img/news.svg",
-  },
-];
 
 export default Hero;
