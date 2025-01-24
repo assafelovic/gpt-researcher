@@ -5,7 +5,7 @@ This frontend project aims to enhance the user experience of GPT Researcher, pro
 #### Demo
 <iframe height="400" width="700" src="https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-View an in-depthProduct Tutorial here: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
+View an in-depth Product Tutorial here: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
 
 
 ## NextJS Frontend App
