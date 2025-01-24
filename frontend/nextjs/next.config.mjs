@@ -5,6 +5,9 @@ const nextConfig = {
       {
         hostname: 'www.google.com',
       },
+      {
+        hostname: 'www.google-analytics.com',
+      }
     ],
   },
 };

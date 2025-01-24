@@ -40,14 +40,14 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
     if (storedConfig) {
       setApiVariables(JSON.parse(storedConfig));
     } else {
-      axios.get(`${getHost()}/getConfig`)
-        .then(response => {
-          setApiVariables(response.data);
-          localStorage.setItem('apiVariables', JSON.stringify(response.data));
-        })
-        .catch(error => {
-          console.error('Error fetching config:', error);
-        });
+      // axios.get(`${getHost()}/getConfig`)
+      //   .then(response => {
+      //     setApiVariables(response.data);
+      //     localStorage.setItem('apiVariables', JSON.stringify(response.data));
+      //   })
+      //   .catch(error => {
+      //     console.error('Error fetching config:', error);
+      //   });
     }
   }, [showModal]);
 
