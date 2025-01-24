@@ -31,7 +31,7 @@ You can fetch the token from the Discord Developer Portal by following these ste
 6. Copy your bot's token and paste it into the `.env` file you created earlier
 
 
-## Deploying the bot commands
+### Deploying the bot commands
 
 ```bash
 node deploy-commands.js
@@ -40,13 +40,13 @@ node deploy-commands.js
 In our case, this will make the "ask" and "ping" commands available to users of the bot.
 
 
-## Running the bot via Docker
+### Running the bot via Docker
 
 ```bash
 docker compose --profile discord run --rm discord-bot
 ```
 
-## Running the bot via CLI
+### Running the bot via CLI
 
 ```bash
 # install dependencies
