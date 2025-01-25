@@ -1,4 +1,13 @@
-## Discord Bot
+# Discord Bot
+
+## Intro
+
+You can either leverage the official GPTR Discord bot or create your own custom bot.
+
+To add the official GPTR Discord bot, simply [click here to invite GPTR to your Discord server](https://discord.com/oauth2/authorize?client_id=1281438963034361856&permissions=1689934339898432&integration_type=0&scope=bot).
+
+
+## To create your own discord bot with GPTR functionality
 
 Add a .env file in the root of the project and add the following:
 
@@ -6,30 +15,23 @@ Add a .env file in the root of the project and add the following:
 DISCORD_BOT_TOKEN=
 DISCORD_CLIENT_ID=
 ```
+You can fetch the token from the Discord Developer Portal by following these steps:
 
-You can fetch the token from the Discord Developer Portal.
+1. Go to https://discord.com/developers/applications/
+2. Click the "New Application" button and give your bot a name
+3. Navigate to the OAuth2 tab to generate an invite URL for your bot
+4. Under "Scopes", select "bot"
 
-Go to: https://discord.com/developers/applications/
+![OAuth2 URL Generator](./img/oath2-url-generator.png)
 
-Click the "New Application" button and give your bot a name.
+5. Select the appropriate bot permissions
 
-Within the Oath2 tab, you can generate a URL to invite your bot to your server.
-First Select the "bot" scope.
-<img src="./img/oath2-url-generator.png"></img>
+![Bot Permissions](./img/bot-permissions.png)
 
-Next, give your bot the proper permissions.
-
-<img src="./img/bot-permissions.png"></img>
-
-Finally you can invite your bot via the generated invite URL. In the case of the gptr-bot, here is the invite URL to open in your browser:
-
-https://discord.com/oauth2/authorize?client_id=1281438963034361856&permissions=1689934339898432&integration_type=0&scope=bot
-
-<br></br>
-If you created your own custom bot, copy-paste the token into your .env file you created above.
+6. Copy your bot's token and paste it into the `.env` file you created earlier
 
 
-## Deploying the bot commands
+### Deploying the bot commands
 
 ```bash
 node deploy-commands.js
@@ -38,13 +40,13 @@ node deploy-commands.js
 In our case, this will make the "ask" and "ping" commands available to users of the bot.
 
 
-## Running the bot via Docker
+### Running the bot via Docker
 
 ```bash
 docker compose --profile discord run --rm discord-bot
 ```
 
-## Running the bot via CLI
+### Running the bot via CLI
 
 ```bash
 # install dependencies
