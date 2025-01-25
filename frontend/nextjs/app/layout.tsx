@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lexend } from "next/font/google";
 import PlausibleProvider from "next-plausible";
+import { GoogleAnalytics } from '@next/third-parties/google'
 import "./globals.css";
 
 const inter = Lexend({ subsets: ["latin"] });
@@ -41,10 +42,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <html lang="en">
       <head>
         <PlausibleProvider domain="localhost:3000" />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />
       </head>
       <body
         className={`${inter.className} flex min-h-screen flex-col justify-between`}
