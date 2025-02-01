@@ -33,6 +33,7 @@
       collapsed: true,
       items: [
         'gpt-researcher/gptr/pip-package',
+        'gpt-researcher/gptr/npm-package',
         'gpt-researcher/gptr/example',
         'gpt-researcher/gptr/config',
         'gpt-researcher/gptr/scraping',
@@ -51,7 +52,6 @@
         'gpt-researcher/frontend/nextjs-frontend',
         'gpt-researcher/frontend/vanilla-js-frontend',
         'gpt-researcher/frontend/discord-bot',
-        'gpt-researcher/frontend/npm-package',
         'gpt-researcher/frontend/visualizing-websockets'
       ],
     },
