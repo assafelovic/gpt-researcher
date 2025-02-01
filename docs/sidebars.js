@@ -51,6 +51,7 @@
         'gpt-researcher/frontend/nextjs-frontend',
         'gpt-researcher/frontend/vanilla-js-frontend',
         'gpt-researcher/frontend/discord-bot',
+        'gpt-researcher/frontend/npm-package',
         'gpt-researcher/frontend/visualizing-websockets'
       ],
     },
