@@ -1,3 +1,5 @@
+# Running with Azure
+
 ## Example: Azure OpenAI Configuration
 
 If you are not using OpenAI's models, but other model providers, besides the general configuration above, also additional environment variables are required.
