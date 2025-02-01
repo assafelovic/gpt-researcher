@@ -42,6 +42,18 @@ docker compose up --build
 
 Visit localhost:3000 on any browser and enjoy researching!
 
+If, for some reason, you don't want to run the GPTR API Server on localhost:8000, no problem! You can set the `NEXT_PUBLIC_GPTR_API_URL` environment variable in your `.env` file to the URL of your GPTR API Server.
+
+For example:
+```
+NEXT_PUBLIC_GPTR_API_URL=https://gptr.app
+```
+
+Or: 
+```
+NEXT_PUBLIC_GPTR_API_URL=http://localhost:7000
+```
+
 ## Running NextJS Frontend via CLI
 
 A more robust solution with enhanced features and performance.
