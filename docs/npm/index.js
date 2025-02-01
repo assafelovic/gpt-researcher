@@ -22,7 +22,7 @@ class GPTResearcherWebhook {
         const data = JSON.parse(event.data);
         
         // Handle logs with custom listener if provided
-        if (data.type === 'logs' && this.logListener) {
+        if (this.logListener) {
           this.logListener(data);
         } else {
           console.log('WebSocket data received:', data);
@@ -30,16 +30,6 @@ class GPTResearcherWebhook {
 
         const callback = this.responseCallbacks.get('current');
         
-        if (data.type === 'report') {
-          if (callback && callback.onProgress) {
-            callback.onProgress(data.output);
-          }
-        } else if (data.content === 'dev_team_result') {
-          if (callback && callback.onComplete) {
-            callback.onComplete(data.output);
-            this.responseCallbacks.delete('current');
-          }
-        }
       };
 
       this.socket.onclose = () => {
