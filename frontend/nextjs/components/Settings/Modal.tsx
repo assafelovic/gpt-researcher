@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import './App.css';
 import ChatBox from './ChatBox';
-import axios from 'axios';
-import { getHost } from '../../helpers/getHost';
 
 interface ChatBoxSettings {
   report_source: string;
