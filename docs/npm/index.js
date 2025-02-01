@@ -1,15 +1,37 @@
+// index.js
 const WebSocket = require('ws');
 
 class GPTResearcherWebhook {
   constructor(options = {}) {
-    this.host = options.host || 'gpt-researcher:8000';
+    this.customHost = options.host;
     this.socket = null;
     this.responseCallbacks = new Map();
   }
 
+  getHost() {
+    if (this.customHost) return this.customHost;
+    
+    if (typeof window !== 'undefined') {
+      const { host, protocol } = window.location;
+      const fullHost = host.includes('localhost') ? 
+        'http://localhost:8000' : 
+        `${protocol}//${host}`;
+        
+      return fullHost;
+    }
+    
+    return 'http://localhost:8000'; // Default fallback
+  }
+
+  getWebSocketURI() {
+    const fullHost = this.getHost();
+    const host = fullHost.replace('http://', '').replace('https://', '');
+    return `${fullHost.includes('https') ? 'wss:' : 'ws:'}//${host}/ws`;
+  }
+
   async initializeWebSocket() {
     if (!this.socket) {
-      const ws_uri = `ws://${this.host}/ws`;
+      const ws_uri = this.getWebSocketURI();
       this.socket = new WebSocket(ws_uri);
 
       this.socket.onopen = () => {
