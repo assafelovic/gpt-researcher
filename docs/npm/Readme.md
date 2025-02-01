@@ -68,3 +68,81 @@ async function advancedResearch() {
 
 advancedResearch();
 ```
+
+## Usage with Log Listener
+
+```javascript
+const GPTResearcherWebhook = require('gpt-researcher');
+
+// Create a custom log listener
+const logListener = (logData) => {
+  const { type, content, output, metadata } = logData;
+  
+  switch (content) {
+    case 'added_source_url':
+      console.log('New source added:', metadata);
+      break;
+    case 'scraping_content':
+      console.log('Scraping progress:', output);
+      break;
+    case 'researching':
+      console.log('Research status:', output);
+      break;
+    // ... handle other log types as needed
+    default:
+      console.log('Log received:', logData);
+  }
+};
+
+// Initialize webhook with custom log listener
+const researcher = new GPTResearcherWebhook({
+  host: 'gpt-researcher:8000', // optional
+  logListener: logListener     // add your custom listener
+});
+
+// Example usage
+async function runResearch() {
+  try {
+    const response = await researcher.sendMessage({
+      query: 'What are the latest developments in AI?',
+      moreContext: 'Focus on 2024'
+    });
+    
+    if (response.type === 'progress') {
+      console.log('Progress update:', response.data);
+    } else if (response.type === 'complete') {
+      console.log('Research complete:', response.data);
+    }
+  } catch (error) {
+    console.error('Research error:', error);
+  }
+}
+
+runResearch();
+```
+
+
+Log Data Structure
+
+The `logListener` function receives log data with this structure:
+
+```javascript
+{
+  type: 'logs',
+  content: string,    // e.g., 'added_source_url', 'researching', 'scraping_content'
+  output: string,     // Human-readable output message
+  metadata: any       // Additional data (URLs, counts, etc.)
+}
+```
+
+Common log content types:
+
+```javascript
+'added_source_url': New source URL added
+'researching': Research status updates
+'scraping_urls': Starting URL scraping
+'scraping_content': Content scraping progress
+'scraping_images': Image processing updates
+'scraping_complete': Scraping completion
+'fetching_query_content': Query processing
+```

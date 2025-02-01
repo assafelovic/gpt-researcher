@@ -3,35 +3,15 @@ const WebSocket = require('ws');
 
 class GPTResearcherWebhook {
   constructor(options = {}) {
-    this.customHost = options.host;
+    this.host = options.host || 'gpt-researcher:8000';
     this.socket = null;
     this.responseCallbacks = new Map();
-  }
-
-  getHost() {
-    if (this.customHost) return this.customHost;
-    
-    if (typeof window !== 'undefined') {
-      const { host, protocol } = window.location;
-      const fullHost = host.includes('localhost') ? 
-        'http://localhost:8000' : 
-        `${protocol}//${host}`;
-        
-      return fullHost;
-    }
-    
-    return 'http://localhost:8000'; // Default fallback
-  }
-
-  getWebSocketURI() {
-    const fullHost = this.getHost();
-    const host = fullHost.replace('http://', '').replace('https://', '');
-    return `${fullHost.includes('https') ? 'wss:' : 'ws:'}//${host}/ws`;
+    this.logListener = options.logListener; // Add this line
   }
 
   async initializeWebSocket() {
     if (!this.socket) {
-      const ws_uri = this.getWebSocketURI();
+      const ws_uri = `ws://${this.host}/ws`;
       this.socket = new WebSocket(ws_uri);
 
       this.socket.onopen = () => {
@@ -40,7 +20,13 @@ class GPTResearcherWebhook {
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log('WebSocket data received:', data);
+        
+        // Handle logs with custom listener if provided
+        if (data.type === 'logs' && this.logListener) {
+          this.logListener(data);
+        } else {
+          console.log('WebSocket data received:', data);
+        }
 
         const callback = this.responseCallbacks.get('current');
         
