@@ -96,7 +96,7 @@ const logListener = (logData) => {
 
 // Initialize webhook with custom log listener
 const researcher = new GPTResearcherWebhook({
-  host: 'gpt-researcher:8000', // optional
+  host: 'localhost:8000', // optional
   logListener: logListener     // add your custom listener
 });
 
