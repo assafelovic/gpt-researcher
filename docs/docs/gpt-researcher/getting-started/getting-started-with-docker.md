@@ -26,3 +26,13 @@ docker compose up --build
 
 Visit localhost:3000 on any browser and enjoy researching!
 
+
+## Running with the Docker CLI
+
+If you want to run the Docker container without using docker-compose, you can use the following command:
+
+```bash
+docker run -it --name gpt-researcher -p 8000:8000 --env-file .env  -v /absolute/path/to/gptr_docs:/my-docs  gpt-researcher
+```
+
+This will run the Docker container and mount the `/gptr_docs` directory to the container's `/my-docs` directory for analysis by the GPTR API Server.
