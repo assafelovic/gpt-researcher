@@ -24,12 +24,12 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
     };
 
     if (!socket && typeof window !== 'undefined') {
-      const { protocol, pathname } = window.location;
+      const { protocol } = window.location;
       
       const fullHost = getHost()
       const host = fullHost.replace('http://', '').replace('https://', '')
 
-      const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
+      const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}/ws`;
 
       const newSocket = new WebSocket(ws_uri);
       setSocket(newSocket);
