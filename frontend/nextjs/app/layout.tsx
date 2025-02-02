@@ -51,6 +51,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${inter.className} flex min-h-screen flex-col justify-between`}
+        suppressHydrationWarning
       >
         {children}
       </body>

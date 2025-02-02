@@ -145,13 +145,11 @@ If that doesn't work, try running it without the dash:
 docker compose up --build
 ```
 
-
 > **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
  - the Python server running on localhost:8000<br>
  - the React app running on localhost:3000<br>
 
 Visit localhost:3000 on any browser and enjoy researching!
-
 
 
 ## 📄 Research on Local Documents
