@@ -9,6 +9,7 @@ services:
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
       LOGGING_LEVEL: INFO
     volumes:
+      - ${PWD}/my-docs:/usr/src/app/my-docs:rw
       - ${PWD}/outputs:/usr/src/app/outputs:rw
       - ${PWD}/logs:/usr/src/app/logs:rw
     user: root
@@ -24,6 +25,7 @@ services:
       CHOKIDAR_USEPOLLING: true
       LOGGING_LEVEL: INFO
       NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID}
+      NEXT_PUBLIC_GPTR_API_URL: ${NEXT_PUBLIC_GPTR_API_URL}
     build:
       dockerfile: Dockerfile.dev
       context: frontend/nextjs

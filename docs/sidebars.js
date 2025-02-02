@@ -33,6 +33,7 @@
       collapsed: true,
       items: [
         'gpt-researcher/gptr/pip-package',
+        'gpt-researcher/gptr/npm-package',
         'gpt-researcher/gptr/example',
         'gpt-researcher/gptr/config',
         'gpt-researcher/gptr/scraping',

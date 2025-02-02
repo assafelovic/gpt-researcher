@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Data, ChatBoxSettings, QuestionData } from '../types/data';
+import { getHost } from '../helpers/getHost';
 
 export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction<Data[]>>, setAnswer: React.Dispatch<React.SetStateAction<string>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, setShowHumanFeedback: React.Dispatch<React.SetStateAction<boolean>>, setQuestionForHuman: React.Dispatch<React.SetStateAction<boolean | true>>) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -23,10 +24,10 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
     };
 
     if (!socket && typeof window !== 'undefined') {
-      const { protocol, pathname } = window.location;
-      let { host } = window.location;
-      host = host.includes('localhost') ? 'localhost:8000' : host;
-      const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
+      const fullHost = getHost()
+      const host = fullHost.replace('http://', '').replace('https://', '')
+
+      const ws_uri = `${fullHost.includes('https') ? 'wss:' : 'ws:'}//${host}/ws`;
 
       const newSocket = new WebSocket(ws_uri);
       setSocket(newSocket);
