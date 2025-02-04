@@ -42,7 +42,10 @@ async def write_report_introduction(
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
                 {"role": "user", "content": generate_report_introduction(
-                    query, context)},
+                    question=query,
+                    research_summary=context,
+                    language=config.language
+                )},
             ],
             temperature=0.25,
             llm_provider=config.smart_llm_provider,
@@ -85,7 +88,9 @@ async def write_conclusion(
             model=config.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": generate_report_conclusion(query, context)},
+                {"role": "user", "content": generate_report_conclusion(query=query,
+                                                                       report_content=context,
+                                                                       language=config.language)},
             ],
             temperature=0.25,
             llm_provider=config.smart_llm_provider,
