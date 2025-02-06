@@ -185,7 +185,7 @@ def generate_custom_report_prompt(
 
 
 def generate_outline_report_prompt(
-    question, context, report_source: str, report_format="apa", tone=None,  total_words=1000
+    question, context, report_source: str, report_format="apa", tone=None,  total_words=1000, language: str = "english"
 ):
     """Generates the outline report prompt for the given question and research summary.
     Args: question (str): The question to generate the outline report prompt for
