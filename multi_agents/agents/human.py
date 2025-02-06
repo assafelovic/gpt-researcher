@@ -25,7 +25,8 @@ class HumanAgent:
                         f"Any feedback on this plan of topics to research? {layout}? If not, please reply with 'no'.",
                         self.websocket,
                     )
-                    response = await self.websocket.receive_text()
+                    # because websocket is wrapped inside a CustomLogsHandler in websocket_manager
+                    response = await self.websocket.websocket.receive_text()
                     print(f"Received response: {response}", flush=True)
                     response_data = json.loads(response)
                     if response_data.get("type") == "human_feedback":
