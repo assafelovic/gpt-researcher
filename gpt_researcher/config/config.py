@@ -72,6 +72,8 @@ class Config:
                     self.embedding_model = "text-embedding-3-large"
                 case "huggingface":
                     self.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
+                case "google_genai":
+                    self.embedding_model = "text-embedding-004"
                 case _:
                     raise Exception("Embedding provider not found.")
 
