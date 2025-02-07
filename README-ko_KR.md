@@ -178,7 +178,7 @@ export DOC_PATH="./my-docs"
 
 2단계:
  - 프론트엔드 앱을 localhost:8000에서 실행 중이라면, "Report Source" 드롭다운 옵션에서 "My Documents"를 선택하세요.
- - GPT Researcher를 [PIP 패키지](https://docs.tavily.com/docs/gpt-researcher/pip-package)로 실행 중이라면, `report_source` 인수를 "local"로 설정하여 `GPTResearcher` 클래스를 인스턴스화하세요. [코드 예제](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research)를 참조하세요.
+ - GPT Researcher를 [PIP 패키지](https://docs.tavily.com/guides/gpt-researcher/gpt-researcher#pip-package)로 실행 중이라면, `report_source` 인수를 "local"로 설정하여 `GPTResearcher` 클래스를 인스턴스화하세요. [코드 예제](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research)를 참조하세요.
 
 ## 👪 다중 에이전트 어시스턴트
 
@@ -203,7 +203,7 @@ GPT-Researcher는 사용자 경험을 개선하고 연구 프로세스를 간소
 1. FastAPI로 제공되는 경량 정적 프론트엔드
 2. 고급 기능을 제공하는 NextJS 애플리케이션
 
-프론트엔드 기능에 대한 자세한 설치 방법 및 정보를 원하시면 [문서 페이지](https://docs.gptr.dev/docs/gpt-researcher/frontend/frontend)를 참조하세요.
+프론트엔드 기능에 대한 자세한 설치 방법 및 정보를 원하시면 [문서 페이지](https://docs.gptr.dev/docs/gpt-researcher/frontend/introduction)를 참조하세요.
 
 ## 🚀 기여하기
 우리는 기여를 적극 환영합니다! 관심이 있다면 [기여 가이드](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md)를 확인해 주세요.
