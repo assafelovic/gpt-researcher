@@ -35,6 +35,7 @@ class GPTResearcher:
         source_urls=None,
         document_urls=None,
         complement_source_urls=False,
+        query_domains: List[str] = [],
         documents=None,
         vector_store=None,
         vector_store_filter=None,
@@ -62,6 +63,7 @@ class GPTResearcher:
         self.source_urls = source_urls
         self.document_urls = document_urls
         self.complement_source_urls: bool = complement_source_urls
+        self.query_domains = query_domains
         self.research_sources = []  # The list of scraped sources including title, content and images
         self.research_images = []  # The list of selected research images
         self.documents = documents
