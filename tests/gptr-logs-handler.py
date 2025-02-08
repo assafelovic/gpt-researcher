@@ -2,7 +2,7 @@ import logging
 from typing import List, Dict, Any
 import asyncio
 from gpt_researcher import GPTResearcher
-from src.logs_handler import CustomLogsHandler  # Update import
+from backend.server.server_utils import CustomLogsHandler  # Update import
 
 async def run() -> None:
     """Run the research process and generate a report."""
@@ -12,7 +12,7 @@ async def run() -> None:
     tone = "informative"
     config_path = None
 
-    custom_logs_handler = CustomLogsHandler(query=query)  # Pass query parameter
+    custom_logs_handler = CustomLogsHandler(None, query)  # Pass query parameter
 
     researcher = GPTResearcher(
         query=query,
