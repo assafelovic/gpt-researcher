@@ -7,7 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def get_search_results(query: str, retriever: Any) -> List[Dict[str, Any]]:
+async def get_search_results(query: str, retriever: Any, query_domains: List[str] = None) -> List[Dict[str, Any]]:
     """
     Get web search results for a given query.
     
@@ -18,7 +18,7 @@ async def get_search_results(query: str, retriever: Any) -> List[Dict[str, Any]]
     Returns:
         A list of search results
     """
-    search_retriever = retriever(query)
+    search_retriever = retriever(query, query_domains=query_domains)
     return search_retriever.search()
 
 async def generate_sub_queries(

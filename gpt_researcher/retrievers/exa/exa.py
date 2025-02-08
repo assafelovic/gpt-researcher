@@ -7,7 +7,7 @@ class ExaSearch:
     Exa API Retriever
     """
 
-    def __init__(self, query):
+    def __init__(self, query, query_domains=None):
         """
         Initializes the ExaSearch object.
         Args:

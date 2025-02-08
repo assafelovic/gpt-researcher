@@ -9,7 +9,7 @@ class PubMedCentralSearch:
     PubMed Central API Retriever
     """
 
-    def __init__(self, query):
+    def __init__(self, query, query_domains=None):
         """
         Initializes the PubMedCentralSearch object.
         Args:

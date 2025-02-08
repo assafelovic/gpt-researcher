@@ -12,13 +12,14 @@ class BingSearch():
     Bing Search Retriever
     """
 
-    def __init__(self, query):
+    def __init__(self, query, query_domains=None):
         """
         Initializes the BingSearch object
         Args:
             query:
         """
         self.query = query
+        self.query_domains = query_domains or None
         self.api_key = self.get_api_key()
         self.logger = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ class BingSearch():
             'Ocp-Apim-Subscription-Key': self.api_key,
             'Content-Type': 'application/json'
         }
+        # TODO: Add support for query domains
         params = {
             "responseFilter": "Webpages",
             "q": self.query,
