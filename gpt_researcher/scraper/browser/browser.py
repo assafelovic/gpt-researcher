@@ -217,13 +217,17 @@ class BrowserScraper:
             return text, [], ""
         else:
             page_source = self.driver.execute_script("return document.body.outerHTML;")
+            page_head_source = self.driver.execute_script(
+                "return document.head.outerHTML;"
+            )
             soup = BeautifulSoup(page_source, "lxml")
 
             soup = self.clean_soup(soup)
 
             text = self.get_text(soup)
             image_urls = get_relevant_images(soup, self.url)
-            title = extract_title(soup)
+            page_head_soup = BeautifulSoup(page_head_source, "lxml")
+            title = extract_title(page_head_soup)
 
         return text, image_urls, title
 
