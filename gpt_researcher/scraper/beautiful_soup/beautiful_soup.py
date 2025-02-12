@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-from ..utils import get_relevant_images, extract_title
+from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
 
 class BeautifulSoupScraper:
 
@@ -26,13 +26,9 @@ class BeautifulSoupScraper:
                 response.content, "lxml", from_encoding=response.encoding
             )
 
-            for script_or_style in soup(["script", "style"]):
-                script_or_style.extract()
+            soup = clean_soup(soup)
 
-            raw_content = self.get_content_from_url(soup)
-            lines = (line.strip() for line in raw_content.splitlines())
-            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-            content = "\n".join(chunk for chunk in chunks if chunk)
+            content = get_text_from_soup(soup)
 
             image_urls = get_relevant_images(soup, self.link)
             
@@ -44,31 +40,3 @@ class BeautifulSoupScraper:
         except Exception as e:
             print("Error! : " + str(e))
             return "", [], ""
-
-    def get_content_from_url(self, soup: BeautifulSoup) -> str:
-        """Get the relevant text from the soup with improved filtering"""
-        text_elements = []
-        tags = ["h1", "h2", "h3", "h4", "h5", "p", "li", "div", "span"]
-
-        for element in soup.find_all(tags):
-            # Skip empty elements
-            if not element.text.strip():
-                continue
-
-            # Skip elements with very short text (likely buttons or links)
-            if len(element.text.split()) < 3:
-                continue
-
-            # Check if the element is likely to be navigation or a menu
-            parent_classes = element.parent.get('class', [])
-            if any(cls in ['nav', 'menu', 'sidebar', 'footer'] for cls in parent_classes):
-                continue
-
-            # Remove excess whitespace and join lines
-            cleaned_text = ' '.join(element.text.split())
-
-            # Add the cleaned text to our list of elements
-            text_elements.append(cleaned_text)
-
-        # Join all text elements with newlines
-        return '\n\n'.join(text_elements)
