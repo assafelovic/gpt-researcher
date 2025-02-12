@@ -11,6 +11,7 @@ python-multipart
 markdown
 langchain
 langchain_community
+langchain-google-genai
 langchain-openai
 langchain-ollama
 langgraph
