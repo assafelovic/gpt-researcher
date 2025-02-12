@@ -96,7 +96,6 @@ class BrowserScraper:
         options.add_argument(f"user-agent={self.user_agent}")
         if self.headless:
             options.add_argument("--headless")
-
         options.add_argument("--enable-javascript")
 
         try:
@@ -151,9 +150,7 @@ class BrowserScraper:
             return
 
         for cookie in cookies:
-            self.driver.add_cookie(
-                {"name": cookie.name, "value": cookie.value, "domain": cookie.domain}
-            )
+            self.driver.add_cookie({'name': cookie.name, 'value': cookie.value, 'domain': cookie.domain})
 
     def _cleanup_cookie_file(self):
         """Remove the cookie file"""
@@ -275,9 +272,7 @@ class BrowserScraper:
         """Scroll to the bottom of the page to load all content"""
         last_height = self.driver.execute_script("return document.body.scrollHeight")
         while True:
-            self.driver.execute_script(
-                "window.scrollTo(0, document.body.scrollHeight);"
-            )
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)  # Wait for content to load
             new_height = self.driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height:
