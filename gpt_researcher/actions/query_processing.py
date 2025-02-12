@@ -60,6 +60,7 @@ async def generate_sub_queries(
             llm_provider=cfg.strategic_llm_provider,
             max_tokens=None,
             llm_kwargs=cfg.llm_kwargs,
+            reasoning_effort="high",
             cost_callback=cost_callback,
         )
     except Exception as e:
