@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import traceback
 import pickle
 from pathlib import Path
@@ -10,7 +9,6 @@ import random
 import string
 import os
 
-import bs4
 from bs4 import BeautifulSoup
 from typing import Iterable, cast
 
@@ -19,10 +17,9 @@ from .processing.scrape_skills import (scrape_pdf_with_pymupdf,
 
 from urllib.parse import urljoin
 
+from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
+
 FILE_DIR = Path(__file__).parent.parent
-
-from ..utils import get_relevant_images, extract_title
-
 
 class BrowserScraper:
     def __init__(self, url: str, session=None):
@@ -219,54 +216,14 @@ class BrowserScraper:
             )
             soup = BeautifulSoup(page_source, "lxml")
 
-            soup = self.clean_soup(soup)
+            soup = clean_soup(soup)
 
-            text = self.get_text(soup)
+            text = get_text_from_soup(soup)
             image_urls = get_relevant_images(soup, self.url)
             page_head_soup = BeautifulSoup(page_head_source, "lxml")
             title = extract_title(page_head_soup)
 
         return text, image_urls, title
-
-    def clean_soup(self, soup: BeautifulSoup) -> BeautifulSoup:
-        """Clean the soup by removing unwanted tags"""
-        for tag in soup.find_all(
-            [
-                "script",
-                "style",
-                "footer",
-                "header",
-                "nav",
-                "menu",
-                "sidebar",
-                "svg",
-            ]
-        ):
-            tag.decompose()
-
-        disallowed_class_set = {"nav", "menu", "sidebar", "footer"}
-
-        # clean tags with certain classes
-        def does_tag_have_disallowed_class(elem) -> bool:
-            if not isinstance(elem, bs4.Tag):
-                return False
-
-            return any(
-                cls_name in disallowed_class_set
-                for cls_name in cast(Iterable[str], elem.get("class", []))
-            )
-
-        for tag in soup.find_all(does_tag_have_disallowed_class):
-            tag.decompose()
-
-        return soup
-
-    def get_text(self, soup: BeautifulSoup) -> str:
-        """Get the relevant text from the soup with improved filtering"""
-        text = soup.get_text(strip=True, separator="\n")
-        # Remove excess whitespace
-        text = re.sub(r"\s{2,}", " ", text)
-        return text
 
     def _scroll_to_bottom(self):
         """Scroll to the bottom of the page to load all content"""
