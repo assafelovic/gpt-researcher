@@ -219,7 +219,7 @@ class BrowserScraper:
 
             text = get_text_from_soup(soup)
             image_urls = get_relevant_images(soup, self.url)
-            title = extract_title(page_source)
+            title = extract_title(soup)
 
         return text, image_urls, title
 
