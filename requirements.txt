@@ -13,6 +13,7 @@ langchain
 langchain_community
 langchain-openai
 langchain-ollama
+langchain-voyageai
 langgraph
 tiktoken
 gpt-researcher
@@ -30,7 +31,6 @@ unstructured
 json_repair
 json5
 loguru
-
 # uncomment for testing
 # pytest
 # pytest-asyncio
