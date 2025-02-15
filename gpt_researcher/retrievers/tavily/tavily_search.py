@@ -48,7 +48,7 @@ class TavilySearch():
                 search_depth: Literal["basic", "advanced"] = "basic",
                 topic: str = "general",
                 days: int = 2,
-                max_results: int = 5,
+                max_results: int = 10,
                 include_domains: Sequence[str] = None,
                 exclude_domains: Sequence[str] = None,
                 include_answer: bool = False,
@@ -84,7 +84,7 @@ class TavilySearch():
             # Raises a HTTPError if the HTTP request returned an unsuccessful status code
             response.raise_for_status()
 
-    def search(self, max_results=7):
+    def search(self, max_results=10):
         """
         Searches the query
         Returns:
