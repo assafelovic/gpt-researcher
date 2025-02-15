@@ -72,6 +72,7 @@ class GenericLLMProvider:
             llm = ChatFireworks(**kwargs)
         elif provider == "ollama":
             _check_pkg("langchain_community")
+            _check_pkg("langchain_ollama")
             from langchain_ollama import ChatOllama
             
             llm = ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
