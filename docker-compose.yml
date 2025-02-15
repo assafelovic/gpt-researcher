@@ -22,7 +22,7 @@ services:
     image: gptresearcher/gptr-nextjs
     stdin_open: true
     environment:
-      CHOKIDAR_USEPOLLING: true
+      CHOKIDAR_USEPOLLING: "true"
       LOGGING_LEVEL: INFO
       NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID}
       NEXT_PUBLIC_GPTR_API_URL: ${NEXT_PUBLIC_GPTR_API_URL}
