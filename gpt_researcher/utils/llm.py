@@ -54,14 +54,15 @@ async def create_chat_completion(
     # Get the provider from supported providers
     kwargs = {
         'model': model,
-        'max_tokens': max_tokens,
         **(llm_kwargs or {})
     }
 
-    if 'o3' in model:
+    if 'o3' in model or 'o1' in model:
+        print(f"Using reasoning models {model}")
         kwargs['reasoning_effort'] = reasoning_effort
     else:
         kwargs['temperature'] = temperature
+        kwargs['max_tokens'] = max_tokens
 
     print(f"\n🤖 Calling {llm_provider} with model {model}...\n")
     provider = get_llm(llm_provider, **kwargs)
@@ -108,16 +109,14 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
         print(f"\n🤖 Calling {config.smart_llm_model}...\n")
         kwargs = {
             'model': config.smart_llm_model,
-            'max_tokens': config.smart_token_limit,
             **(config.llm_kwargs or {})
         }
 
-        temperature = config.temperature
-        # temperature = 0 # Note: temperature throughout the code base is currently set to Zero
-        if 'o3' in config.smart_llm_model:
+        if 'o3' in config.smart_llm_model or 'o1' in config.smart_llm_model:
             kwargs['reasoning_effort'] = "high"
         else:
             kwargs['temperature'] = temperature
+            kwargs['max_tokens'] = config.smart_token_limit
 
         print(f"\n🤖 Calling {config.smart_llm_provider} with model {config.smart_llm_model}...\n")
         provider = get_llm(config.smart_llm_provider, **kwargs)
