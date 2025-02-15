@@ -1,3 +1,4 @@
+import os
 import random
 import traceback
 from bs4 import BeautifulSoup
@@ -25,9 +26,11 @@ class NoDriverScraper:
                 "",
             )
 
-        browser = await nodriver.start(headless=True)
+        browser = await nodriver.start(headless=False)
         try:
             page = await browser.get(self.url)
+            await page.wait()
+            await page.sleep(random.random() + 3)
             await page.wait()
 
             async def scroll_to_bottom():
