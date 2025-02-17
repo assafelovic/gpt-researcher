@@ -49,7 +49,6 @@ class NoDriverScraper:
                 while True:
                     scroll_percent = random.randrange(50, 100)
                     total_scroll_percent += scroll_percent
-                    await page.bring_to_front()
                     await page.scroll_down(scroll_percent)
                     await page.wait()
                     await page.sleep(random.uniform(0.1, 0.5))
