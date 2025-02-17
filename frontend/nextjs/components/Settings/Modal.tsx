@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import './App.css';
 import ChatBox from './ChatBox';
+import { CloseIcon } from '@chakra-ui/icons'
 
 interface ChatBoxSettings {
   report_source: string;
@@ -12,25 +13,25 @@ interface ChatBoxProps {
   chatBoxSettings: ChatBoxSettings;
   setChatBoxSettings: React.Dispatch<React.SetStateAction<ChatBoxSettings>>;
 }
+
+interface Domain {
+  value: string;
+}
+
 export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxProps) {
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState('search');
+  const [domains, setDomains] = useState<Domain[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('domainFilters');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+  const [newDomain, setNewDomain] = useState('');
+  
   const [apiVariables, setApiVariables] = useState({
-    ANTHROPIC_API_KEY: '',
-    TAVILY_API_KEY: '',
-    LANGCHAIN_TRACING_V2: 'true',
-    LANGCHAIN_API_KEY: '',
-    OPENAI_API_KEY: '',
     DOC_PATH: './my-docs',
-    RETRIEVER: 'tavily', // Set default retriever to Tavily
-    GOOGLE_API_KEY: '',
-    GOOGLE_CX_KEY: '',
-    BING_API_KEY: '',
-    SEARCHAPI_API_KEY: '',
-    SERPAPI_API_KEY: '',
-    SERPER_API_KEY: '',
-    SEARX_URL: '',
-    LANGGRAPH_HOST_URL: ''
   });
 
   useEffect(() => {
@@ -58,60 +59,20 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
     }));
   };
 
-  const renderConditionalInputs = () => {
-    switch (apiVariables.RETRIEVER) {
-      case 'google':
-        return (
-          <>
-            <div className="form-group">
-              <label className="form-group-label">GOOGLE_API_KEY</label>
-              <input type="text" name="GOOGLE_API_KEY" value={apiVariables.GOOGLE_API_KEY} onChange={handleInputChange} />
-            </div>
-            <div className="form-group">
-              <label className="form-group-label">GOOGLE_CX_KEY</label>
-              <input type="text" name="GOOGLE_CX_KEY" value={apiVariables.GOOGLE_CX_KEY} onChange={handleInputChange} />
-            </div>
-          </>
-        );
-      case 'bing':
-        return (
-          <div className="form-group">
-            <label className="form-group-label">BING_API_KEY</label>
-            <input type="text" name="BING_API_KEY" value={apiVariables.BING_API_KEY} onChange={handleInputChange} />
-          </div>
-        );
-      case 'searchapi':
-        return (
-          <div className="form-group">
-            <label className="form-group-label">SEARCHAPI_API_KEY</label>
-            <input type="text" name="SEARCHAPI_API_KEY" value={apiVariables.SEARCHAPI_API_KEY} onChange={handleInputChange} />
-          </div>
-        );
-      case 'serpapi':
-        return (
-          <div className="form-group">
-            <label className="form-group-label">SERPAPI_API_KEY</label>
-            <input type="text" name="SERPAPI_API_KEY" value={apiVariables.SERPAPI_API_KEY} onChange={handleInputChange} />
-          </div>
-        );
-      case 'googleSerp':
-        return (
-          <div className="form-group">
-            <label className="form-group-label">SERPER_API_KEY</label>
-            <input type="text" name="SERPER_API_KEY" value={apiVariables.SERPER_API_KEY} onChange={handleInputChange} />
-          </div>
-        );
-      case 'searx':
-        return (
-          <div className="form-group">
-            <label className="form-group-label">SEARX_URL</label>
-            <input type="text" name="SEARX_URL" value={apiVariables.SEARX_URL} onChange={handleInputChange} />
-          </div>
-        );
-      // Add cases for other retrievers if needed
-      default:
-        return null;
+  useEffect(() => {
+    localStorage.setItem('domainFilters', JSON.stringify(domains));
+  }, [domains]);
+
+  const handleAddDomain = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newDomain.trim()) {
+      setDomains([...domains, { value: newDomain.trim() }]);
+      setNewDomain('');
     }
+  };
+
+  const handleRemoveDomain = (domainToRemove: string) => {
+    setDomains(domains.filter(domain => domain.value !== domainToRemove));
   };
 
   return (
@@ -125,15 +86,15 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
       </button>
       {showModal ? (
         <>
-          <div
-            className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none"
-          >
+          <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
             <div className="relative w-auto my-6 mx-auto max-w-3xl">
               <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
                 <div className="relative p-6 flex-auto">
                   <div className="tabs">
                     <button onClick={() => setActiveTab('search')} className={`tab-button ${activeTab === 'search' ? 'active' : ''}`}>Search Settings</button>
-                    </div>
+                    <button onClick={() => setActiveTab('domains')} className={`tab-button ${activeTab === 'domains' ? 'active' : ''}`}>Domain Filters</button>
+                  </div>
+
                   {activeTab === 'search' && (
                     <div className="App">
                       <header className="App-header">
@@ -141,60 +102,43 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
                       </header>
                     </div>
                   )}
-                  {activeTab === 'api' && (
-                    <main className="container" id="form">
-                      <form method="POST" className="report_settings">
-                        <div className="form-group">
-                          <label className="form-group-label">Search Engine</label>
-                          <select name="RETRIEVER" value={apiVariables.RETRIEVER} onChange={handleInputChange}>
-                            <option value="" disabled>Select Retriever</option>
-                            <option value="tavily">Tavily</option>
-                            <option value="google">Google</option>
-                            <option value="searx">Searx</option>
-                            <option value="searchapi">SearchApi</option>
-                            <option value="serpapi">SerpApi</option>
-                            <option value="googleSerp">GoogleSerp</option>
-                            <option value="duckduckgo">DuckDuckGo</option>
-                            <option value="bing">Bing</option>
-                          </select>
-                        </div>
-                        {renderConditionalInputs()}
-
-                        <div className="form-group">
-                          <label className="form-group-label">OPENAI_API_KEY</label>
-                          <input type="text" name="OPENAI_API_KEY" value={apiVariables.OPENAI_API_KEY} onChange={handleInputChange} />
-                        </div>
-
-                        <div className="form-group">
-                          <label className="form-group-label">DOC_PATH</label>
-                          <input type="text" name="DOC_PATH" value={apiVariables.DOC_PATH} onChange={handleInputChange} />
-                        </div>
-
-                        <div className="form-group">
-                          <label className="form-group-label">TAVILY_API_KEY</label>
-                          <input type="text" name="TAVILY_API_KEY" value={apiVariables.TAVILY_API_KEY} onChange={handleInputChange} />
-                        </div>
-
-                        <div className="form-group">
-                          <label className="form-group-label">LANGCHAIN_API_KEY</label>
-                          <input type="text" name="LANGCHAIN_API_KEY" value={apiVariables.LANGCHAIN_API_KEY} onChange={handleInputChange} />
-                        </div>
-
-                        {apiVariables.LANGCHAIN_API_KEY && (
-                          <>
-                            <div className="form-group">
-                              <label className="form-group-label">LANGGRAPH_HOST_URL</label>
-                              <input type="text" name="LANGGRAPH_HOST_URL" value={apiVariables.LANGGRAPH_HOST_URL} onChange={handleInputChange} />
-                            </div>
-
-                            <div className="form-group">
-                              <label className="form-group-label">ANTHROPIC_API_KEY</label>
-                              <input type="text" name="ANTHROPIC_API_KEY" value={apiVariables.ANTHROPIC_API_KEY} onChange={handleInputChange} />
-                            </div>
-                          </>
-                        )}
+                  
+                  {activeTab === 'domains' && (
+                    <div className="mt-4">
+                      <form onSubmit={handleAddDomain} className="flex gap-2 mb-4">
+                        <input
+                          type="text"
+                          value={newDomain}
+                          onChange={(e) => setNewDomain(e.target.value)}
+                          placeholder="Enter domain (e.g., example.com)"
+                          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                        <button
+                          type="submit"
+                          className="inline-flex justify-center rounded-md border border-transparent bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        >
+                          Add Domain
+                        </button>
                       </form>
-                    </main>
+
+                      <div className="flex flex-wrap gap-2">
+                        {domains.map((domain, index) => (
+                          <div
+                            key={index}
+                            className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-sm"
+                          >
+                            <span className="text-purple-700">{domain.value}</span>
+                            <button
+                              onClick={() => handleRemoveDomain(domain.value)}
+                              className="ml-2 text-purple-400 hover:text-purple-600"
+                            >
+                              <CloseIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
                   )}
                 </div>
                 <div className="flex items-center justify-end p-3">
