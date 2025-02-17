@@ -3,7 +3,7 @@ import random
 import traceback
 from bs4 import BeautifulSoup
 from typing import cast
-import nodriver
+import zendriver
 import asyncio
 
 from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
@@ -26,11 +26,11 @@ class NoDriverScraper:
                 "",
             )
 
-        browser = await nodriver.start(headless=False)
+        browser = await zendriver.start(headless=False)
         try:
             page = await browser.get(self.url)
             await page.wait()
-            await page.sleep(random.random() + 3)
+            await page.sleep(random.uniform(3.3, 3.9))
             await page.wait()
 
             async def scroll_to_bottom():
@@ -42,7 +42,7 @@ class NoDriverScraper:
                     await page.bring_to_front()
                     await page.scroll_down(scroll_percent)
                     await page.wait()
-                    await page.sleep(random.random() * 0.5)
+                    await page.sleep(random.uniform(0.1, 0.5))
 
                     if total_scroll_percent >= max_scroll_percent:
                         break
@@ -77,4 +77,4 @@ class NoDriverScraper:
             )
         finally:
             if browser:
-                browser.stop()
+                await browser.stop()
