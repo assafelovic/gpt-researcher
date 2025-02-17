@@ -112,6 +112,7 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
             **(config.llm_kwargs or {})
         }
 
+        temperature = config.temperature
         if 'o3' in config.smart_llm_model or 'o1' in config.smart_llm_model:
             kwargs['reasoning_effort'] = "high"
         else:
