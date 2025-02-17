@@ -50,13 +50,20 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
       };
 
       newSocket.onopen = () => {
-        const { report_type, report_source, tone } = chatBoxSettings;
-        let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
+        const { report_type, report_source, tone, domains } = chatBoxSettings;
+        let data = "start " + JSON.stringify({ 
+          task: promptValue, 
+          report_type, 
+          report_source, 
+          tone, 
+          headers,
+          query_domains: domains?.map(d => d.value) || [] // Add this line
+        });
         newSocket.send(data);
-
+      
         heartbeatInterval.current = window.setInterval(() => {
           socket?.send('ping');
-        }, 3000); // Send ping every 3 seconds
+        }, 3000);
       };
 
       newSocket.onclose = () => {

@@ -7,6 +7,7 @@ interface ChatBoxSettings {
   report_source: string;
   report_type: string;
   tone: string;
+  domains?: Domain[];
 }
 
 interface ChatBoxProps {
@@ -20,7 +21,7 @@ interface Domain {
 
 export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxProps) {
   const [showModal, setShowModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('search');
+  const [activeTab, setActiveTab] = useState('report_settings');
   const [domains, setDomains] = useState<Domain[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('domainFilters');
@@ -42,7 +43,10 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
   }, [showModal]);
 
   const handleSaveChanges = () => {
-    setChatBoxSettings(chatBoxSettings);
+    setChatBoxSettings({
+      ...chatBoxSettings,
+      domains: domains
+    });
     localStorage.setItem('apiVariables', JSON.stringify(apiVariables));
     setShowModal(false);
   };
@@ -91,11 +95,11 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
               <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
                 <div className="relative p-6 flex-auto">
                   <div className="tabs">
-                    <button onClick={() => setActiveTab('search')} className={`tab-button ${activeTab === 'search' ? 'active' : ''}`}>Search Settings</button>
-                    <button onClick={() => setActiveTab('domains')} className={`tab-button ${activeTab === 'domains' ? 'active' : ''}`}>Domain Filters</button>
+                    <button onClick={() => setActiveTab('report_settings')} className={`tab-button ${activeTab === 'report_settings' ? 'active' : ''}`}>Report Settings</button>
+                    <button onClick={() => setActiveTab('context')} className={`tab-button ${activeTab === 'context' ? 'active' : ''}`}>Context</button>
                   </div>
 
-                  {activeTab === 'search' && (
+                  {activeTab === 'report_settings' && (
                     <div className="App">
                       <header className="App-header">
                         <ChatBox setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
@@ -103,7 +107,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
                     </div>
                   )}
                   
-                  {activeTab === 'domains' && (
+                  {activeTab === 'context' && (
                     <div className="mt-4">
                       <form onSubmit={handleAddDomain} className="flex gap-2 mb-4">
                         <input
