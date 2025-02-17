@@ -1,4 +1,3 @@
-import os
 import random
 import traceback
 from bs4 import BeautifulSoup
@@ -15,7 +14,16 @@ class NoDriverScraper:
         self.session = session
 
     def scrape(self) -> tuple:
-        return asyncio.get_event_loop().run_until_complete(self.scrape_async())
+
+        def get_or_create_event_loop():
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            return loop
+
+        return get_or_create_event_loop().run_until_complete(self.scrape_async())
 
     async def scrape_async(self) -> tuple:
         if not self.url:
@@ -26,11 +34,13 @@ class NoDriverScraper:
                 "",
             )
 
-        browser = await zendriver.start(headless=False)
+        browser: zendriver.Browser | None = None
+        page: zendriver.Tab | None = None
         try:
+            browser = await zendriver.start(headless=False)
             page = await browser.get(self.url)
             await page.wait()
-            await page.sleep(random.uniform(3.3, 3.9))
+            await page.sleep(random.uniform(2.5, 3.3))
             await page.wait()
 
             async def scroll_to_bottom():
@@ -48,17 +58,16 @@ class NoDriverScraper:
                         break
 
                     if cast(
-                        float,
-                        await page.evaluate("window.innerHeight + window.scrollY"),
-                    ) >= cast(
-                        float,
-                        await page.evaluate("document.scrollingElement.scrollHeight"),
+                        bool,
+                        await page.evaluate(
+                            "window.innerHeight + window.scrollY >= document.scrollingElement.scrollHeight"
+                        ),
                     ):
                         break
 
             await scroll_to_bottom()
             html = await page.get_content()
-            await page.close()
+
             soup = BeautifulSoup(html, "lxml")
             clean_soup(soup)
             text = get_text_from_soup(soup)
