@@ -10,16 +10,16 @@ import string
 import os
 
 from bs4 import BeautifulSoup
+from typing import Iterable, cast
 
 from .processing.scrape_skills import (scrape_pdf_with_pymupdf,
                                        scrape_pdf_with_arxiv)
 
 from urllib.parse import urljoin
 
+from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
+
 FILE_DIR = Path(__file__).parent.parent
-
-from ..utils import get_relevant_images, extract_title
-
 
 class BrowserScraper:
     def __init__(self, url: str, session=None):
@@ -133,7 +133,9 @@ class BrowserScraper:
         try:
             import browser_cookie3
         except ImportError:
-            print("browser_cookie3 is not installed. Please install it using: pip install browser_cookie3")
+            print(
+                "browser_cookie3 is not installed. Please install it using: pip install browser_cookie3"
+            )
             return
 
         if self.selenium_web_browser == "chrome":
@@ -160,14 +162,15 @@ class BrowserScraper:
 
     def _generate_random_string(self, length):
         """Generate a random string of specified length"""
-        return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+        return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
     def _get_domain(self):
         """Extract domain from URL"""
         from urllib.parse import urlparse
+
         """Get domain from URL, removing 'www' if present"""
         domain = urlparse(self.url).netloc
-        return domain[4:] if domain.startswith('www.') else domain
+        return domain[4:] if domain.startswith("www.") else domain
 
     def _visit_google_and_save_cookies(self):
         """Visit Google and save cookies before navigating to the target URL"""
@@ -207,48 +210,18 @@ class BrowserScraper:
             text = scrape_pdf_with_arxiv(doc_num)
             return text, [], ""
         else:
-            page_source = self.driver.execute_script("return document.body.outerHTML;")
-            soup = BeautifulSoup(page_source, "html.parser")
+            page_source = self.driver.execute_script(
+                "return document.documentElement.outerHTML;"
+            )
+            soup = BeautifulSoup(page_source, "lxml")
 
-            for script in soup(["script", "style"]):
-                script.extract()
+            soup = clean_soup(soup)
 
-            text = self.get_text(soup)
+            text = get_text_from_soup(soup)
             image_urls = get_relevant_images(soup, self.url)
             title = extract_title(soup)
 
-        lines = (line.strip() for line in text.splitlines())
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-        text = "\n".join(chunk for chunk in chunks if chunk)
         return text, image_urls, title
-
-    def get_text(self, soup: BeautifulSoup) -> str:
-        """Get the relevant text from the soup with improved filtering"""
-        text_elements = []
-        tags = ["h1", "h2", "h3", "h4", "h5", "p", "li", "div", "span"]
-
-        for element in soup.find_all(tags):
-            # Skip empty elements
-            if not element.text.strip():
-                continue
-
-            # Skip elements with very short text (likely buttons or links)
-            if len(element.text.split()) < 3:
-                continue
-
-            # Check if the element is likely to be navigation or a menu
-            parent_classes = element.parent.get('class', [])
-            if any(cls in ['nav', 'menu', 'sidebar', 'footer'] for cls in parent_classes):
-                continue
-
-            # Remove excess whitespace and join lines
-            cleaned_text = ' '.join(element.text.split())
-
-            # Add the cleaned text to our list of elements
-            text_elements.append(cleaned_text)
-
-        # Join all text elements with newlines
-        return '\n\n'.join(text_elements)
 
     def _scroll_to_bottom(self):
         """Scroll to the bottom of the page to load all content"""

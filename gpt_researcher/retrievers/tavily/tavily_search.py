@@ -50,6 +50,7 @@ class TavilySearch:
         return api_key
 
     def _search(
+      
         self,
         query: str,
         search_depth: Literal["basic", "advanced"] = "basic",
@@ -92,7 +93,7 @@ class TavilySearch:
             # Raises a HTTPError if the HTTP request returned an unsuccessful status code
             response.raise_for_status()
 
-    def search(self, max_results=7):
+    def search(self, max_results=10):
         """
         Searches the query
         Returns:

@@ -8,7 +8,7 @@ Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this exa
 
 An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 
-Please note: This example uses the OpenAI API only for optimized performance.
+Please note: Multi-agents are utilizing the same configuration of models like GPT-Researcher does. However, only the SMART_LLM is used for the time being. Please refer to the [LLM config pages](https://docs.gptr.dev/docs/gpt-researcher/llms/llms).
 
 ## The Multi Agent Team
 The research team is made up of 8 agents:
@@ -51,11 +51,8 @@ More specifically (as seen in the architecture diagram) the process is as follow
     ```bash
     pip install -r requirements.txt
     ```
-3. Update env variables
-   ```bash
-   export OPENAI_API_KEY={Your OpenAI API Key here}
-   export TAVILY_API_KEY={Your Tavily API Key here}
-   ```
+3. Update env variables, see the [GPT-Researcher docs](https://docs.gptr.dev/docs/gpt-researcher/llms/llms) for more details.
+
 2. Run the application:
     ```bash
     python main.py

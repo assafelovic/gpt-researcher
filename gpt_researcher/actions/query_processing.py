@@ -48,7 +48,7 @@ async def generate_sub_queries(
         query,
         parent_query,
         report_type,
-        max_iterations=cfg.max_iterations or 1,
+        max_iterations=cfg.max_iterations or 3,
         context=context
     )
 
@@ -60,6 +60,7 @@ async def generate_sub_queries(
             llm_provider=cfg.strategic_llm_provider,
             max_tokens=None,
             llm_kwargs=cfg.llm_kwargs,
+            reasoning_effort="high",
             cost_callback=cost_callback,
         )
     except Exception as e:
