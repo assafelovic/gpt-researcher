@@ -1,9 +1,8 @@
-import os
 import random
 import traceback
 from bs4 import BeautifulSoup
 from typing import cast
-import nodriver
+import zendriver
 import asyncio
 
 from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
@@ -15,7 +14,16 @@ class NoDriverScraper:
         self.session = session
 
     def scrape(self) -> tuple:
-        return asyncio.get_event_loop().run_until_complete(self.scrape_async())
+
+        def get_or_create_event_loop():
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            return loop
+
+        return get_or_create_event_loop().run_until_complete(self.scrape_async())
 
     async def scrape_async(self) -> tuple:
         if not self.url:
@@ -26,11 +34,13 @@ class NoDriverScraper:
                 "",
             )
 
-        browser = await nodriver.start(headless=False)
+        browser: zendriver.Browser | None = None
+        page: zendriver.Tab | None = None
         try:
+            browser = await zendriver.start(headless=False)
             page = await browser.get(self.url)
             await page.wait()
-            await page.sleep(random.random() + 3)
+            await page.sleep(random.uniform(2.5, 3.3))
             await page.wait()
 
             async def scroll_to_bottom():
@@ -42,23 +52,21 @@ class NoDriverScraper:
                     await page.bring_to_front()
                     await page.scroll_down(scroll_percent)
                     await page.wait()
-                    await page.sleep(random.random() * 0.5)
+                    await page.sleep(random.uniform(0.1, 0.5))
 
                     if total_scroll_percent >= max_scroll_percent:
                         break
 
                     if cast(
-                        float,
-                        await page.evaluate("window.innerHeight + window.scrollY"),
-                    ) >= cast(
-                        float,
-                        await page.evaluate("document.scrollingElement.scrollHeight"),
+                        bool,
+                        await page.evaluate(
+                            "window.innerHeight + window.scrollY >= document.scrollingElement.scrollHeight"
+                        ),
                     ):
                         break
 
             await scroll_to_bottom()
             html = await page.get_content()
-            await page.close()
             soup = BeautifulSoup(html, "lxml")
             clean_soup(soup)
             text = get_text_from_soup(soup)
@@ -77,4 +85,4 @@ class NoDriverScraper:
             )
         finally:
             if browser:
-                browser.stop()
+                await browser.stop()
