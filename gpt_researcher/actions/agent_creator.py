@@ -50,7 +50,7 @@ async def handle_json_error(response):
             return agent_dict["server"], agent_dict["agent_role_prompt"]
     except Exception as e:
         print(f"⚠️ Error in reading JSON and failed to repair with json_repair: {e}")
-        print(f"LLM Response: `{response}`"})
+        print(f"LLM Response: `{response}`")
 
     json_string = extract_json_with_regex(response)
     if json_string:
