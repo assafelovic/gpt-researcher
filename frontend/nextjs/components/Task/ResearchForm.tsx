@@ -49,7 +49,7 @@ export default function ResearchForm({
   });
   
   useEffect(() => {
-    // Update chatBoxSettings whenever domains change
+    localStorage.setItem('domainFilters', JSON.stringify(domains));
     setChatBoxSettings(prev => ({
       ...prev,
       domains: domains
