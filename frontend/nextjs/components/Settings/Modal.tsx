@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import './App.css';
 import ChatBox from './ChatBox';
-import { CloseIcon } from '@chakra-ui/icons'
 
 interface ChatBoxSettings {
   report_source: string;
@@ -22,14 +21,6 @@ interface Domain {
 export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxProps) {
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState('report_settings');
-  const [domains, setDomains] = useState<Domain[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('domainFilters');
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
-  const [newDomain, setNewDomain] = useState('');
   
   const [apiVariables, setApiVariables] = useState({
     DOC_PATH: './my-docs',
@@ -44,8 +35,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
 
   const handleSaveChanges = () => {
     setChatBoxSettings({
-      ...chatBoxSettings,
-      domains: domains
+      ...chatBoxSettings
     });
     localStorage.setItem('apiVariables', JSON.stringify(apiVariables));
     setShowModal(false);
@@ -61,22 +51,6 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
       ...apiVariables,
       [name]: value
     }));
-  };
-
-  useEffect(() => {
-    localStorage.setItem('domainFilters', JSON.stringify(domains));
-  }, [domains]);
-
-  const handleAddDomain = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newDomain.trim()) {
-      setDomains([...domains, { value: newDomain.trim() }]);
-      setNewDomain('');
-    }
-  };
-
-  const handleRemoveDomain = (domainToRemove: string) => {
-    setDomains(domains.filter(domain => domain.value !== domainToRemove));
   };
 
   return (
@@ -107,43 +81,6 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
                     </div>
                   )}
                   
-                  {activeTab === 'context' && (
-                    <div className="mt-4">
-                      <form onSubmit={handleAddDomain} className="flex gap-2 mb-4">
-                        <input
-                          type="text"
-                          value={newDomain}
-                          onChange={(e) => setNewDomain(e.target.value)}
-                          placeholder="Enter domain (e.g., example.com)"
-                          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                        <button
-                          type="submit"
-                          className="inline-flex justify-center rounded-md border border-transparent bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        >
-                          Add Domain
-                        </button>
-                      </form>
-
-                      <div className="flex flex-wrap gap-2">
-                        {domains.map((domain, index) => (
-                          <div
-                            key={index}
-                            className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-sm"
-                          >
-                            <span className="text-purple-700">{domain.value}</span>
-                            <button
-                              onClick={() => handleRemoveDomain(domain.value)}
-                              className="ml-2 text-purple-400 hover:text-purple-600"
-                            >
-                              <CloseIcon className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                  )}
                 </div>
                 <div className="flex items-center justify-end p-3">
                   <button
