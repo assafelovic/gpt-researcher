@@ -1,6 +1,6 @@
 import asyncio
 import os
-
+from typing import List, Union
 from langchain_community.document_loaders import (
     PyMuPDFLoader, 
     TextLoader, 
@@ -14,17 +14,36 @@ from langchain_community.document_loaders import (
 
 class DocumentLoader:
 
-    def __init__(self, path):
+    def __init__(self, path: Union[str, List[str]]):
         self.path = path
 
     async def load(self) -> list:
         tasks = []
-        for root, dirs, files in os.walk(self.path):
-            for file in files:
-                file_path = os.path.join(root, file)
-                file_name, file_extension_with_dot = os.path.splitext(file_path)
-                file_extension = file_extension_with_dot.strip(".")
-                tasks.append(self._load_document(file_path, file_extension))
+        if isinstance(self.path, list):
+            for file_path in self.path:
+                if os.path.isfile(file_path):  # Ensure it's a valid file
+                    filename = os.path.basename(file_path)
+                    file_name, file_extension_with_dot = os.path.splitext(filename)
+                    file_extension = file_extension_with_dot.strip(".").lower()
+                    tasks.append(self._load_document(file_path, file_extension))
+                    
+        elif isinstance(self.path, (str, bytes, os.PathLike)):
+            for root, dirs, files in os.walk(self.path):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    file_name, file_extension_with_dot = os.path.splitext(file)
+                    file_extension = file_extension_with_dot.strip(".").lower()
+                    tasks.append(self._load_document(file_path, file_extension))
+                    
+        else:
+            raise ValueError("Invalid type for path. Expected str, bytes, os.PathLike, or list thereof.")
+
+        # for root, dirs, files in os.walk(self.path):
+        #     for file in files:
+        #         file_path = os.path.join(root, file)
+        #         file_name, file_extension_with_dot = os.path.splitext(file_path)
+        #         file_extension = file_extension_with_dot.strip(".")
+        #         tasks.append(self._load_document(file_path, file_extension))
 
         docs = []
         for pages in await asyncio.gather(*tasks):
