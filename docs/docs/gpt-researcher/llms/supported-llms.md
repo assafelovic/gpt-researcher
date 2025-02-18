@@ -23,3 +23,5 @@ The following LLMs are supported by GPTR. Please note that you'll need to instal
 The GPTR LLM Module is built on top of the [Langchain LLM Module](https://python.langchain.com/v0.2/docs/integrations/llms/).
 
 If you'd like to add a new LLM into GPTR, you can start with the [langchain documentation](https://python.langchain.com/v0.2/docs/integrations/platforms/) and then look into integrating it into the GPTR LLM Module.
+
+Please note that you'll need to install the relevant langchain package for each LLM.
