@@ -33,7 +33,12 @@ class NoDriverScraper:
     async def get_browser(cls) -> Browser:
 
         async def create_browser():
-            return cls.Browser(await zendriver.start(headless=False))
+            headless = True
+            if headless:
+                driver = await zendriver.start(headless=True, expert=True)
+            else:
+                driver = await zendriver.start(headless=False)
+            return cls.Browser(driver)
 
         if cls.browser_task is None:
             cls.browser_task = asyncio.create_task(create_browser())
