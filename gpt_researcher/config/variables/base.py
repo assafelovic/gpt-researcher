@@ -26,6 +26,7 @@ class BaseConfig(TypedDict):
     AGENT_ROLE: Union[str, None]
     SCRAPER: str
     MAX_WORKERS: int
+    MAX_HTTP_SESSIONS: int
     MAX_SUBTOPICS: int
     REPORT_SOURCE: Union[str, None]
     DOC_PATH: str
