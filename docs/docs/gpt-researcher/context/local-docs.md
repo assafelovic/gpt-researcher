@@ -1,4 +1,4 @@
-# Research on Local Documents
+# Local Documents
 
 ## Just Local Docs
 
