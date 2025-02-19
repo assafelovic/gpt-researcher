@@ -40,7 +40,6 @@ async def choose_agent(
         return agent_dict["server"], agent_dict["agent_role_prompt"]
 
     except Exception as e:
-        print("⚠️ Error in reading JSON, attempting to repair JSON")
         return await handle_json_error(response)
 
 
@@ -50,7 +49,8 @@ async def handle_json_error(response):
         if agent_dict.get("server") and agent_dict.get("agent_role_prompt"):
             return agent_dict["server"], agent_dict["agent_role_prompt"]
     except Exception as e:
-        print(f"Error using json_repair: {e}")
+        print(f"⚠️ Error in reading JSON and failed to repair with json_repair: {e}")
+        print(f"⚠️ LLM Response: `{response}`")
 
     json_string = extract_json_with_regex(response)
     if json_string:
