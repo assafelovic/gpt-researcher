@@ -99,7 +99,7 @@ class Scraper:
             self.logger.info(f"\n=== Using {scraper_name} ===")
 
             # Get content
-            if scraper.has_attribute("scrape_async"):
+            if hasattr(scraper, "scrape_async"):
                 content, image_urls, title = await scraper.scrape_async()
             else:
                 if threadpool:
