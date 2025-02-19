@@ -116,7 +116,7 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
         if 'o3' in config.smart_llm_model or 'o1' in config.smart_llm_model:
             kwargs['reasoning_effort'] = "high"
         else:
-            kwargs['temperature'] = temperature
+            kwargs['temperature'] = config.temperature
             kwargs['max_tokens'] = config.smart_token_limit
 
         print(f"\n🤖 Calling {config.smart_llm_provider} with model {config.smart_llm_model}...\n")
