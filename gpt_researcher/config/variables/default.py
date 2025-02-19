@@ -5,8 +5,8 @@ DEFAULT_CONFIG: BaseConfig = {
     "EMBEDDING": "openai:text-embedding-3-small",
     "SIMILARITY_THRESHOLD": 0.42,
     "FAST_LLM": "openai:gpt-4o-mini",
-    "SMART_LLM": "openai:gpt-4o-2024-11-20", # Has support for long responses (2k+ words).
-    "STRATEGIC_LLM": "openai:gpt-4o", # Can be used with gpt-o1 or gpt-o3
+    "SMART_LLM": "openai:gpt-4o-2024-11-20",  # Has support for long responses (2k+ words).
+    "STRATEGIC_LLM": "openai:gpt-4o",  # Can be used with gpt-o1 or gpt-o3
     "FAST_TOKEN_LIMIT": 2000,
     "SMART_TOKEN_LIMIT": 4000,
     "STRATEGIC_TOKEN_LIMIT": 4000,
@@ -22,8 +22,9 @@ DEFAULT_CONFIG: BaseConfig = {
     "MAX_ITERATIONS": 4,
     "AGENT_ROLE": None,
     "SCRAPER": "bs",
+    "MAX_WORKERS": 20,
     "MAX_SUBTOPICS": 3,
     "LANGUAGE": "english",
     "REPORT_SOURCE": "web",
-    "DOC_PATH": "./my-docs"
+    "DOC_PATH": "./my-docs",
 }

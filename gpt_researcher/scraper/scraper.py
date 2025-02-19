@@ -26,7 +26,7 @@ class Scraper:
     Scraper class to extract the content from the links
     """
 
-    def __init__(self, urls, user_agent, scraper):
+    def __init__(self, urls, user_agent, scraper, max_workers=20):
         """
         Initialize the Scraper class.
         Args:
@@ -39,7 +39,7 @@ class Scraper:
         if self.scraper == "tavily_extract":
             self._check_pkg(self.scraper)
         self.logger = logging.getLogger(__name__)
-        self.max_workers = int(os.getenv("MAX_WORKERS", 20))
+        self.max_workers = max_workers
 
     async def run(self):
         """
