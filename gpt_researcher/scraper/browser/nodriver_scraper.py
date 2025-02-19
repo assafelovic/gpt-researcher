@@ -174,10 +174,10 @@ class NoDriverScraper:
             title = extract_title(soup)
 
             if not title or not text or len(text) < 200:
-                logs_dir = Path("logs")
-                logs_dir.mkdir(exist_ok=True)
+                screenshot_dir = Path("logs/screenshots")
+                screenshot_dir.mkdir(exist_ok=True)
                 screenshot_path = (
-                    logs_dir
+                    screenshot_dir
                     / f"screenshot-error-{NoDriverScraper.get_domain(self.url)}.jpeg"
                 )
                 await page.save_screenshot(screenshot_path)
