@@ -9,21 +9,45 @@ from ..utils import get_relevant_images, extract_title, get_text_from_soup, clea
 
 
 class NoDriverScraper:
+    browser_task: asyncio.Task["Browser"] | None = None
+
+    class Browser:
+        def __init__(self, driver: zendriver.Browser):
+            self.driver = driver
+            self.page_count = 0
+            self.has_blank_page = True
+
+        async def get(self, url: str) -> zendriver.Tab:
+            new_window = True
+            if self.has_blank_page:
+                new_window = False
+                self.has_blank_page = False
+            self.page_count += 1
+            return await self.driver.get(url, new_window=new_window)
+
+        async def close_page(self, page: zendriver.Tab):
+            self.page_count -= 1
+            await page.close()
+
+    @classmethod
+    async def get_browser(cls) -> Browser:
+
+        async def create_browser():
+            return cls.Browser(await zendriver.start(headless=False))
+
+        if cls.browser_task is None:
+            cls.browser_task = asyncio.create_task(create_browser())
+        return await cls.browser_task
+
+    @classmethod
+    async def stop_browser_if_necessary(cls, browser: Browser):
+        if browser and browser.page_count == 0:
+            cls.browser_task = None
+            await browser.driver.stop()
+
     def __init__(self, url: str, session=None):
         self.url = url
         self.session = session
-
-    def scrape(self) -> tuple:
-
-        def get_or_create_event_loop():
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            return loop
-
-        return get_or_create_event_loop().run_until_complete(self.scrape_async())
 
     async def scrape_async(self) -> tuple:
         if not self.url:
@@ -34,10 +58,10 @@ class NoDriverScraper:
                 "",
             )
 
-        browser: zendriver.Browser | None = None
+        browser: NoDriverScraper.Browser | None = None
         page: zendriver.Tab | None = None
         try:
-            browser = await zendriver.start(headless=False)
+            browser = await self.get_browser()
             page = await browser.get(self.url)
             await page.wait()
             await page.sleep(random.uniform(2.5, 3.3))
@@ -83,5 +107,7 @@ class NoDriverScraper:
                 "",
             )
         finally:
+            if page and browser:
+                await browser.close_page(page)
             if browser:
-                await browser.stop()
+                await self.stop_browser_if_necessary(browser)
