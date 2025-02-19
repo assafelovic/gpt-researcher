@@ -1,5 +1,7 @@
 import random
+import time
 import traceback
+from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from typing import cast
 import zendriver
@@ -11,23 +13,57 @@ from ..utils import get_relevant_images, extract_title, get_text_from_soup, clea
 class NoDriverScraper:
     browser_task: asyncio.Task["Browser"] | None = None
 
+    @staticmethod
+    def get_domain(url: str) -> str:
+        domain = urlparse(url).netloc
+        parts = domain.split(".")
+        if len(parts) > 2:
+            domain = ".".join(parts[-2:])
+        return domain
+
     class Browser:
         def __init__(self, driver: zendriver.Browser):
             self.driver = driver
-            self.page_count = 0
+            self.processing_count = 0
             self.has_blank_page = True
+            self.allowed_requests_times = {}
 
         async def get(self, url: str) -> zendriver.Tab:
-            new_window = True
-            if self.has_blank_page:
-                new_window = False
+            self.processing_count += 1
+            try:
+                await self.rate_limit_for_domain(url)
+
+                new_window = not self.has_blank_page
                 self.has_blank_page = False
-            self.page_count += 1
-            return await self.driver.get(url, new_window=new_window)
+                return await self.driver.get(url, new_window=new_window)
+            except Exception as e:
+                self.processing_count -= 1
+                raise e
 
         async def close_page(self, page: zendriver.Tab):
-            self.page_count -= 1
-            await page.close()
+            try:
+                await page.close()
+            finally:
+                self.processing_count -= 1
+
+        async def rate_limit_for_domain(self, url: str):
+            min_delay = 1
+            domain = NoDriverScraper.get_domain(url)
+            now = time.monotonic()
+
+            # Get the next valid request time, defaulting to now
+            allowed_request_time = self.allowed_requests_times.get(domain, now)
+
+            scheduled_request_time = max(now, allowed_request_time)
+
+            # Update the next allowed request time
+            self.allowed_requests_times[domain] = (
+                scheduled_request_time + min_delay + random.uniform(0, 0.33)
+            )
+
+            sleep_time = scheduled_request_time - now
+            if sleep_time > 0:
+                await asyncio.sleep(sleep_time)
 
     @classmethod
     async def get_browser(cls) -> Browser:
@@ -46,7 +82,7 @@ class NoDriverScraper:
 
     @classmethod
     async def stop_browser_if_necessary(cls, browser: Browser):
-        if browser and browser.page_count == 0:
+        if browser and browser.processing_count == 0:
             cls.browser_task = None
             await browser.driver.stop()
 
