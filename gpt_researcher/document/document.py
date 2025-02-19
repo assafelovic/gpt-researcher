@@ -2,14 +2,15 @@ import asyncio
 import os
 
 from langchain_community.document_loaders import (
-    PyMuPDFLoader, 
-    TextLoader, 
-    UnstructuredCSVLoader, 
+    PyMuPDFLoader,
+    TextLoader,
+    UnstructuredCSVLoader,
     UnstructuredExcelLoader,
-    UnstructuredMarkdownLoader, 
+    UnstructuredMarkdownLoader,
     UnstructuredPowerPointLoader,
     UnstructuredWordDocumentLoader
 )
+from langchain_community.document_loaders import BSHTMLLoader
 
 
 class DocumentLoader:
@@ -52,12 +53,18 @@ class DocumentLoader:
                 "csv": UnstructuredCSVLoader(file_path, mode="elements"),
                 "xls": UnstructuredExcelLoader(file_path, mode="elements"),
                 "xlsx": UnstructuredExcelLoader(file_path, mode="elements"),
-                "md": UnstructuredMarkdownLoader(file_path)
+                "md": UnstructuredMarkdownLoader(file_path),
+                "html": BSHTMLLoader(file_path),
+                "htm": BSHTMLLoader(file_path)
             }
 
             loader = loader_dict.get(file_extension, None)
             if loader:
-                ret_data = loader.load()
+                try:
+                    ret_data = loader.load()
+                except Exception as e:
+                    print(f"Failed to load HTML document : {file_path}")
+                    print(e)
 
         except Exception as e:
             print(f"Failed to load document : {file_path}")
