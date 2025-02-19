@@ -70,7 +70,6 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
                 <div className="relative p-6 flex-auto">
                   <div className="tabs">
                     <button onClick={() => setActiveTab('report_settings')} className={`tab-button ${activeTab === 'report_settings' ? 'active' : ''}`}>Report Settings</button>
-                    <button onClick={() => setActiveTab('context')} className={`tab-button ${activeTab === 'context' ? 'active' : ''}`}>Context</button>
                   </div>
 
                   {activeTab === 'report_settings' && (

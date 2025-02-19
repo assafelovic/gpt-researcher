@@ -157,7 +157,7 @@ export default function ResearchForm({
               type="text"
               value={newDomain}
               onChange={(e) => setNewDomain(e.target.value)}
-              placeholder="Enter domain (e.g., example.com)"
+              placeholder="Filter by domain (e.g., techcrunch.com)"
               className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -179,7 +179,7 @@ export default function ResearchForm({
             {domains.map((domain, index) => (
               <div
                 key={index}
-                className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-sm"
+                className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-sm mb-3"
               >
                 <span className="text-purple-700">{domain.value}</span>
                 <button
