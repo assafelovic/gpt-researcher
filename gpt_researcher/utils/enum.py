@@ -13,6 +13,7 @@ class ReportType(Enum):
 class ReportSource(Enum):
     Web = "web"
     Local = "local"
+    Azure = "azure"
     LangChainDocuments = "langchain_documents"
     LangChainVectorStore = "langchain_vectorstore"
     Static = "static"
