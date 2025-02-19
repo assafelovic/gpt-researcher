@@ -63,6 +63,7 @@
       items: [
         'gpt-researcher/context/tailored-research',
         'gpt-researcher/context/local-docs',
+        'gpt-researcher/context/azure-storage',
         'gpt-researcher/context/filtering-by-domain',
         'gpt-researcher/context/vector-stores',
         'gpt-researcher/context/data-ingestion'
