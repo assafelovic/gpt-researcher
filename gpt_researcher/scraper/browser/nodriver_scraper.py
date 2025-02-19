@@ -3,7 +3,7 @@ import time
 import traceback
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from typing import cast
+from typing import cast, Tuple, List, Optional
 import zendriver
 import asyncio
 
@@ -11,7 +11,7 @@ from ..utils import get_relevant_images, extract_title, get_text_from_soup, clea
 
 
 class NoDriverScraper:
-    browser_task: asyncio.Task["Browser"] | None = None
+    browser_task: Optional[asyncio.Task["NoDriverScraper.Browser"]] = None
 
     @staticmethod
     def get_domain(url: str) -> str:
@@ -46,27 +46,31 @@ class NoDriverScraper:
             finally:
                 self.processing_count -= 1
 
-        async def rate_limit_for_domain(self, url: str):
-            min_delay = 1
-            domain = NoDriverScraper.get_domain(url)
-            now = time.monotonic()
+        async def rate_limit_for_domain(self, url: str) -> None:
+            try:
+                min_delay = 1
+                domain = NoDriverScraper.get_domain(url)
+                now = time.monotonic()
 
-            # Get the next valid request time, defaulting to now
-            allowed_request_time = self.allowed_requests_times.get(domain, now)
+                # Get the next valid request time, defaulting to now
+                allowed_request_time = self.allowed_requests_times.get(domain, now)
 
-            scheduled_request_time = max(now, allowed_request_time)
+                scheduled_request_time = max(now, allowed_request_time)
 
-            # Update the next allowed request time
-            self.allowed_requests_times[domain] = (
-                scheduled_request_time + min_delay + random.uniform(0, 0.33)
-            )
+                # Update the next allowed request time
+                self.allowed_requests_times[domain] = (
+                    scheduled_request_time + min_delay + random.uniform(0, 0.33)
+                )
 
-            sleep_time = scheduled_request_time - now
-            if sleep_time > 0:
-                await asyncio.sleep(sleep_time)
+                sleep_time = scheduled_request_time - now
+                if sleep_time > 0:
+                    await asyncio.sleep(sleep_time)
+            except Exception as e:
+                # Log error but don't block the request
+                print(f"Rate limiting error for {url}: {str(e)}")
 
     @classmethod
-    async def get_browser(cls) -> Browser:
+    async def get_browser(cls) -> "NoDriverScraper.Browser":
 
         async def create_browser():
             headless = True
@@ -76,13 +80,21 @@ class NoDriverScraper:
                 driver = await zendriver.start(headless=False)
             return cls.Browser(driver)
 
-        if cls.browser_task:
-            browser = await cls.browser_task
-            if not browser.driver.stopped:
-                return browser
+        try:
+            if cls.browser_task:
+                browser = await cls.browser_task
+                if not browser.driver.stopped:
+                    return browser
+                # Clear stopped browser
+                cls.browser_task = None
 
-        cls.browser_task = asyncio.create_task(create_browser())
-        return await cls.browser_task
+            # Create new browser
+            cls.browser_task = asyncio.create_task(create_browser())
+            return await cls.browser_task
+        except Exception as e:
+            # Clear task on error
+            cls.browser_task = None
+            raise
 
     @classmethod
     async def stop_browser_if_necessary(cls, browser: Browser):
@@ -94,17 +106,17 @@ class NoDriverScraper:
         self.url = url
         self.session = session
 
-    async def scrape_async(self) -> tuple:
+    async def scrape_async(self) -> Tuple[str, List[str], str]:
+        """Returns tuple of (text, image_urls, title)"""
         if not self.url:
-            print("URL not specified")
             return (
                 "A URL was not specified, cancelling request to browse website.",
                 [],
                 "",
             )
 
-        browser: NoDriverScraper.Browser | None = None
-        page: zendriver.Tab | None = None
+        browser: Optional[NoDriverScraper.Browser] = None
+        page: Optional[zendriver.Tab] = None
         try:
             browser = await self.get_browser()
             page = await browser.get(self.url)
