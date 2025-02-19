@@ -40,6 +40,8 @@ class NoDriverScraper:
             self.has_blank_page = True
             self.allowed_requests_times = {}
             self.domain_semaphores: Dict[str, asyncio.Semaphore] = {}
+            self.tab_mode = True
+            self.max_scroll_percent = 10000
 
         async def get(self, url: str) -> zendriver.Tab:
             self.processing_count += 1
@@ -47,10 +49,36 @@ class NoDriverScraper:
                 async with self.rate_limit_for_domain(url):
                     new_window = not self.has_blank_page
                     self.has_blank_page = False
-                    return await self.driver.get(url, new_window=new_window)
+                    if self.tab_mode:
+                        return await self.driver.get(url, new_tab=new_window)
+                    else:
+                        return await self.driver.get(url, new_window=new_window)
             except Exception as e:
                 self.processing_count -= 1
                 raise e
+
+        async def scroll_page_to_bottom(self, page: zendriver.Tab):
+            total_scroll_percent = 0
+            while True:
+                # in tab mode, we need to bring the tab to front before scrolling to load the page content properly
+                if self.tab_mode:
+                    await page.bring_to_front()
+                scroll_percent = random.randrange(46, 97)
+                total_scroll_percent += scroll_percent
+                await page.scroll_down(scroll_percent)
+                await page.wait()
+                await page.sleep(random.uniform(0.23, 0.56))
+
+                if total_scroll_percent >= self.max_scroll_percent:
+                    break
+
+                if cast(
+                    bool,
+                    await page.evaluate(
+                        "window.innerHeight + window.scrollY >= document.scrollingElement.scrollHeight"
+                    ),
+                ):
+                    break
 
         async def close_page(self, page: zendriver.Tab):
             try:
@@ -119,7 +147,6 @@ class NoDriverScraper:
     def __init__(self, url: str, session: Optional[requests.Session] = None):
         self.url = url
         self.session = session
-        self.max_scroll_percent = 10000
 
     async def scrape_async(self) -> Tuple[str, List[str], str]:
         """Returns tuple of (text, image_urls, title)"""
@@ -139,27 +166,7 @@ class NoDriverScraper:
             await page.sleep(random.uniform(2.5, 3.3))
             await page.wait()
 
-            async def scroll_to_bottom():
-                total_scroll_percent = 0
-                while True:
-                    scroll_percent = random.randrange(46, 97)
-                    total_scroll_percent += scroll_percent
-                    await page.scroll_down(scroll_percent)
-                    await page.wait()
-                    await page.sleep(random.uniform(0.23, 0.56))
-
-                    if total_scroll_percent >= self.max_scroll_percent:
-                        break
-
-                    if cast(
-                        bool,
-                        await page.evaluate(
-                            "window.innerHeight + window.scrollY >= document.scrollingElement.scrollHeight"
-                        ),
-                    ):
-                        break
-
-            await scroll_to_bottom()
+            await browser.scroll_page_to_bottom(page)
             html = await page.get_content()
             soup = BeautifulSoup(html, "lxml")
             clean_soup(soup)
