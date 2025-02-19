@@ -74,7 +74,7 @@ class NoDriverScraper:
 
             async def scroll_to_bottom():
                 total_scroll_percent = 0
-                max_scroll_percent = 10000  # 100 pages
+                max_scroll_percent = 1500
                 while True:
                     scroll_percent = random.randrange(50, 100)
                     total_scroll_percent += scroll_percent
