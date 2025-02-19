@@ -6,7 +6,10 @@ from ..utils.logger import get_formatted_logger
 
 logger = get_formatted_logger()
 
-def scrape_urls(urls, cfg=None) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+
+async def scrape_urls(
+    urls, cfg=None
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Scrapes the urls
     Args:
@@ -27,7 +30,7 @@ def scrape_urls(urls, cfg=None) -> Tuple[List[Dict[str, Any]], List[Dict[str, An
 
     try:
         scraper = Scraper(urls, user_agent, cfg.scraper)
-        scraped_data = scraper.run()
+        scraped_data = await scraper.run()
         for item in scraped_data:
             if 'image_urls' in item:
                 images.extend([img for img in item['image_urls']])
@@ -35,6 +38,7 @@ def scrape_urls(urls, cfg=None) -> Tuple[List[Dict[str, Any]], List[Dict[str, An
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
 
     return scraped_data, images
+
 
 async def filter_urls(urls: List[str], config: Config) -> List[str]:
     """

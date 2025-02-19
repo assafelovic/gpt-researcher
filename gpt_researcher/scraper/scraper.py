@@ -1,5 +1,7 @@
+import asyncio
 from concurrent.futures.thread import ThreadPoolExecutor
 from functools import partial
+import os
 from colorama import Fore, init
 
 import requests
@@ -37,14 +39,24 @@ class Scraper:
         if self.scraper == "tavily_extract":
             self._check_pkg(self.scraper)
         self.logger = logging.getLogger(__name__)
+        self.max_workers = int(os.getenv("MAX_WORKERS", 20))
 
-    def run(self):
+    async def run(self):
         """
         Extracts the content from the links
         """
-        partial_extract = partial(self.extract_data_from_url, session=self.session)
-        with ThreadPoolExecutor(max_workers=20) as executor:
-            contents = executor.map(partial_extract, self.urls)
+        semaphore = asyncio.Semaphore(self.max_workers)
+
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+
+            async def sem_extract(url):
+                async with semaphore:
+                    return await self.extract_data_from_url(
+                        url, self.session, threadpool=executor
+                    )
+
+            contents = await asyncio.gather(*(sem_extract(url) for url in self.urls))
+
         res = [content for content in contents if content["raw_content"] is not None]
         return res
 
@@ -72,7 +84,9 @@ class Scraper:
                                f"`pip install -U {pkg_inst_name}`"
                 )
 
-    def extract_data_from_url(self, link, session):
+    async def extract_data_from_url(
+        self, link, session, threadpool: ThreadPoolExecutor | None = None
+    ):
         """
         Extracts the data from the link with logging
         """
@@ -85,7 +99,19 @@ class Scraper:
             self.logger.info(f"\n=== Using {scraper_name} ===")
 
             # Get content
-            content, image_urls, title = scraper.scrape()
+            if scraper.has_attribute("scrape_async"):
+                content, image_urls, title = await scraper.scrape_async()
+            else:
+                if threadpool:
+                    (
+                        content,
+                        image_urls,
+                        title,
+                    ) = await asyncio.get_running_loop().run_in_executor(
+                        threadpool, scraper.scrape
+                    )
+                else:
+                    content, image_urls, title = await asyncio.to_thread(scraper.scrape)
 
             if len(content) < 100:
                 self.logger.warning(f"Content too short or empty for {link}")
