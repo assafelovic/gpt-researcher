@@ -52,14 +52,19 @@ class GoogleSearch:
 
     def search(self, max_results=7):
         """
-        Searches the query
+        Searches the query using Google Custom Search API, optionally restricting to specific domains
         Returns:
-
+            list: List of search results with title, href and body
         """
-        """Useful for general internet search queries using the Google API."""
-        print("Searching with query {0}...".format(self.query))
-        # TODO: Add support for query domains
-        url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={self.query}&start=1"
+        # Build query with domain restrictions if specified
+        search_query = self.query
+        if self.query_domains and len(self.query_domains) > 0:
+            domain_query = " OR ".join([f"site:{domain}" for domain in self.query_domains])
+            search_query = f"({domain_query}) {self.query}"
+
+        print("Searching with query {0}...".format(search_query))
+
+        url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={search_query}&start=1"
         resp = requests.get(url)
 
         if resp.status_code < 200 or resp.status_code >= 300:
