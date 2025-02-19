@@ -105,6 +105,7 @@ class NoDriverScraper:
     def __init__(self, url: str, session=None):
         self.url = url
         self.session = session
+        self.max_scroll_percent = 10000
 
     async def scrape_async(self) -> Tuple[str, List[str], str]:
         """Returns tuple of (text, image_urls, title)"""
@@ -126,7 +127,6 @@ class NoDriverScraper:
 
             async def scroll_to_bottom():
                 total_scroll_percent = 0
-                max_scroll_percent = 1500
                 while True:
                     scroll_percent = random.randrange(50, 100)
                     total_scroll_percent += scroll_percent
@@ -134,7 +134,7 @@ class NoDriverScraper:
                     await page.wait()
                     await page.sleep(random.uniform(0.1, 0.5))
 
-                    if total_scroll_percent >= max_scroll_percent:
+                    if total_scroll_percent >= self.max_scroll_percent:
                         break
 
                     if cast(
