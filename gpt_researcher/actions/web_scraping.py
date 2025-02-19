@@ -1,5 +1,7 @@
 from typing import List, Dict, Any, Tuple
 from colorama import Fore, Style
+
+from gpt_researcher.utils.workers import WorkerPool
 from ..scraper import Scraper
 from ..config.config import Config
 from ..utils.logger import get_formatted_logger
@@ -8,7 +10,7 @@ logger = get_formatted_logger()
 
 
 async def scrape_urls(
-    urls, cfg=None
+    urls, cfg: Config, worker_pool: WorkerPool
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Scrapes the urls
@@ -29,7 +31,7 @@ async def scrape_urls(
     )
 
     try:
-        scraper = Scraper(urls, user_agent, cfg.scraper, max_workers=cfg.max_workers)
+        scraper = Scraper(urls, user_agent, cfg.scraper, worker_pool=worker_pool)
         scraped_data = await scraper.run()
         for item in scraped_data:
             if 'image_urls' in item:

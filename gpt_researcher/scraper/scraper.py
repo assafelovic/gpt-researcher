@@ -1,7 +1,4 @@
 import asyncio
-from concurrent.futures.thread import ThreadPoolExecutor
-from functools import partial
-import os
 from colorama import Fore, init
 
 import requests
@@ -9,6 +6,8 @@ import subprocess
 import sys
 import importlib
 import logging
+
+from gpt_researcher.utils.workers import WorkerPool
 
 from . import (
     ArxivScraper,
@@ -26,7 +25,7 @@ class Scraper:
     Scraper class to extract the content from the links
     """
 
-    def __init__(self, urls, user_agent, scraper, max_workers=20):
+    def __init__(self, urls, user_agent, scraper, worker_pool: WorkerPool):
         """
         Initialize the Scraper class.
         Args:
@@ -39,23 +38,15 @@ class Scraper:
         if self.scraper == "tavily_extract":
             self._check_pkg(self.scraper)
         self.logger = logging.getLogger(__name__)
-        self.max_workers = max_workers
+        self.worker_pool = worker_pool
 
     async def run(self):
         """
         Extracts the content from the links
         """
-        semaphore = asyncio.Semaphore(self.max_workers)
-
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-
-            async def sem_extract(url):
-                async with semaphore:
-                    return await self.extract_data_from_url(
-                        url, self.session, threadpool=executor
-                    )
-
-            contents = await asyncio.gather(*(sem_extract(url) for url in self.urls))
+        contents = await asyncio.gather(
+            *(self.extract_data_from_url(url, self.session) for url in self.urls)
+        )
 
         res = [content for content in contents if content["raw_content"] is not None]
         return res
@@ -84,60 +75,68 @@ class Scraper:
                                f"`pip install -U {pkg_inst_name}`"
                 )
 
-    async def extract_data_from_url(
-        self, link, session, threadpool: ThreadPoolExecutor | None = None
-    ):
+    async def extract_data_from_url(self, link, session):
         """
         Extracts the data from the link with logging
         """
-        try:
-            Scraper = self.get_scraper(link)
-            scraper = Scraper(link, session)
+        async with self.worker_pool.throttle():
+            try:
+                Scraper = self.get_scraper(link)
+                scraper = Scraper(link, session)
 
-            # Get scraper name
-            scraper_name = scraper.__class__.__name__
-            self.logger.info(f"\n=== Using {scraper_name} ===")
+                # Get scraper name
+                scraper_name = scraper.__class__.__name__
+                self.logger.info(f"\n=== Using {scraper_name} ===")
 
-            # Get content
-            if hasattr(scraper, "scrape_async"):
-                content, image_urls, title = await scraper.scrape_async()
-            else:
-                if threadpool:
+                # Get content
+                if hasattr(scraper, "scrape_async"):
+                    content, image_urls, title = await scraper.scrape_async()
+                else:
                     (
                         content,
                         image_urls,
                         title,
                     ) = await asyncio.get_running_loop().run_in_executor(
-                        threadpool, scraper.scrape
+                        self.worker_pool.executor, scraper.scrape
                     )
-                else:
-                    content, image_urls, title = await asyncio.to_thread(scraper.scrape)
 
-            if len(content) < 100:
-                self.logger.warning(f"Content too short or empty for {link}")
-                return {"url": link, "raw_content": None, "image_urls": [], "title": title}
+                if len(content) < 100:
+                    self.logger.warning(f"Content too short or empty for {link}")
+                    return {
+                        "url": link,
+                        "raw_content": None,
+                        "image_urls": [],
+                        "title": title,
+                    }
 
-            # Log results
-            self.logger.info(f"\nTitle: {title}")
-            self.logger.info(f"Content length: {len(content) if content else 0} characters")
-            self.logger.info(f"Number of images: {len(image_urls)}")
-            self.logger.info(f"URL: {link}")
-            self.logger.info("=" * 50)
+                # Log results
+                self.logger.info(f"\nTitle: {title}")
+                self.logger.info(
+                    f"Content length: {len(content) if content else 0} characters"
+                )
+                self.logger.info(f"Number of images: {len(image_urls)}")
+                self.logger.info(f"URL: {link}")
+                self.logger.info("=" * 50)
 
-            if not content or len(content) < 100:
-                self.logger.warning(f"Content too short or empty for {link}")
-                return {"url": link, "raw_content": None, "image_urls": [], "title": title}
+                if not content or len(content) < 100:
+                    self.logger.warning(f"Content too short or empty for {link}")
+                    return {
+                        "url": link,
+                        "raw_content": None,
+                        "image_urls": [],
+                        "title": title,
+                    }
 
-            return {
-                "url": link,
-                "raw_content": content,
-                "image_urls": image_urls,
-                "title": title
-            }
+                return {
+                    "url": link,
+                    "raw_content": content,
+                    "image_urls": image_urls,
+                    "title": title,
+                }
 
-        except Exception as e:
-            self.logger.error(f"Error processing {link}: {str(e)}")
-            return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+            except Exception as e:
+                self.logger.error(f"Error processing {link}: {str(e)}")
+                return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
 
     def get_scraper(self, link):
         """
