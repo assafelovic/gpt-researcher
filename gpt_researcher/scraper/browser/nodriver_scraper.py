@@ -111,11 +111,10 @@ class NoDriverScraper:
 
     @classmethod
     async def get_browser(
-        cls, session: requests.Session | None
+        cls, session: requests.Session | None, headless: bool = True
     ) -> "NoDriverScraper.Browser":
 
         async def create_browser():
-            headless = False
             if headless:
                 driver = await zendriver.start(headless=True, expert=True)
             else:
