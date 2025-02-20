@@ -174,7 +174,7 @@ class NoDriverScraper:
             image_urls = get_relevant_images(soup, self.url)
             title = extract_title(soup)
 
-            if not title or not text or len(text) < 200:
+            if not text or len(text) < 200:
                 screenshot_dir = Path("logs/screenshots")
                 screenshot_dir.mkdir(exist_ok=True)
                 screenshot_path = (
