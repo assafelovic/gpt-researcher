@@ -162,10 +162,8 @@ class NoDriverScraper:
         try:
             browser = await self.get_browser(session=self.session)
             page = await browser.get(self.url)
-            await page.wait_for_ready_state("complete")
             await page.wait()
             await page.sleep(random.uniform(2.5, 3.3))
-            await page.wait_for_ready_state("complete")
             await page.wait()
 
             await browser.scroll_page_to_bottom(page)
@@ -187,7 +185,7 @@ class NoDriverScraper:
                 self.logger.warning(
                     f"Failed to scrape content/title from {self.url}. Title: {title}, Text length: {len(text)},\n"
                     f"excerpt: {text[:min(200,len(text))]}.\n"
-                    f"check screenshot at [{screenshot_path.absolute}] for more details."
+                    f"check screenshot at [{screenshot_path}] for more details."
                 )
 
             return text, image_urls, title
