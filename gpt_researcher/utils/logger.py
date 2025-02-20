@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import sys
 from copy import copy
@@ -8,9 +10,9 @@ import click
 TRACE_LOG_LEVEL = 5
 
 
-def get_formatted_logger():
+def get_formatted_logger() -> logging.Logger:
     """Return a formatted logger."""
-    logger = logging.getLogger("scraper")
+    logger: logging.Logger = logging.getLogger("scraper")
     # Set the logging level
     logger.setLevel(logging.INFO)
 
@@ -21,8 +23,7 @@ def get_formatted_logger():
 
         # Create a formatter using DefaultFormatter
         formatter = DefaultFormatter(
-            "%(levelprefix)s [%(asctime)s] %(message)s",
-            datefmt="%H:%M:%S"
+            "%(levelprefix)s [%(asctime)s] %(message)s", datefmt="%H:%M:%S"
         )
 
         # Set the formatter for the handler
@@ -38,8 +39,7 @@ def get_formatted_logger():
 
 
 class ColourizedFormatter(logging.Formatter):
-    """
-    A custom log formatter class that:
+    """A custom log formatter class that:
 
     * Outputs the LOG_LEVEL with an appropriate color.
     * If a log call includes an `extras={"color_message": ...}` it will be used

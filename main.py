@@ -1,6 +1,9 @@
-from dotenv import load_dotenv
+from __future__ import annotations
+
 import logging
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # Create logs directory if it doesn't exist
 logs_dir = Path("logs")
@@ -9,13 +12,13 @@ logs_dir.mkdir(exist_ok=True)
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         # File handler for general application logs
-        logging.FileHandler('logs/app.log'),
+        logging.FileHandler("logs/app.log"),
         # Stream handler for console output
-        logging.StreamHandler()
-    ]
+        logging.StreamHandler(),
+    ],
 )
 
 # Create logger instance
@@ -23,10 +26,10 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-from backend.server.server import app
+from backend.server.server import app  # noqa: E402
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     logger.info("Starting server...")
     uvicorn.run(app, host="0.0.0.0", port=8000)

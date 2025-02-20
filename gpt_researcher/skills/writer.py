@@ -1,35 +1,48 @@
-from typing import Dict, Optional
-import json
+from __future__ import annotations
 
-from ..utils.llm import construct_subtopics
-from ..actions import (
-    stream_output,
-    generate_report,
+import json
+from typing import TYPE_CHECKING, Any
+
+from gpt_researcher.actions import (
     generate_draft_section_titles,
+    generate_report,
+    stream_output,
+    write_conclusion,
     write_report_introduction,
-    write_conclusion
 )
+from gpt_researcher.utils.llm import construct_subtopics
+from gpt_researcher.utils.schemas import Subtopics
+
+if TYPE_CHECKING:
+    from gpt_researcher import GPTResearcher
 
 
 class ReportGenerator:
     """Generates reports based on research data."""
 
-    def __init__(self, researcher):
-        self.researcher = researcher
-        self.research_params = {
+    def __init__(
+        self,
+        researcher: GPTResearcher,
+    ):
+        self.researcher: GPTResearcher = researcher
+        self.research_params: dict[str, Any] = {
             "query": self.researcher.query,
-            "agent_role_prompt": self.researcher.cfg.agent_role or self.researcher.role,
-            "report_type": self.researcher.report_type,
-            "report_source": self.researcher.report_source,
-            "tone": self.researcher.tone,
+            "agent_role_prompt": (self.researcher.research_config.AGENT_ROLE or "").strip(),
+            "report_type": self.researcher.research_config.REPORT_TYPE,
+            "report_source": self.researcher.research_config.REPORT_SOURCE,
+            "tone": self.researcher.research_config.TONE,
             "websocket": self.researcher.websocket,
-            "cfg": self.researcher.cfg,
+            "research_config": self.researcher.research_config,
             "headers": self.researcher.headers,
         }
 
-    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None) -> str:
-        """
-        Write a report based on existing headers and relevant contents.
+    async def write_report(
+        self,
+        existing_headers: list[dict[str, Any]] | None = None,
+        relevant_written_contents: list[str] | None = None,
+        ext_context: str | None = None,
+    ) -> str:
+        """Write a report based on existing headers and relevant contents.
 
         Args:
             existing_headers (list): List of existing headers.
@@ -39,8 +52,18 @@ class ReportGenerator:
         Returns:
             str: The generated report.
         """
+        existing_headers = [] if existing_headers is None else existing_headers
+        relevant_written_contents = (
+            [] if relevant_written_contents is None else relevant_written_contents
+        )
+        ext_context = (
+            "\n".join(self.researcher.context)
+            if ext_context is None or not ext_context.strip()
+            else ext_context
+        )
+
         # send the selected images prior to writing report
-        research_images = self.researcher.get_research_images()
+        research_images: list[dict[str, Any]] = self.researcher.get_research_images()
         if research_images:
             await stream_output(
                 "images",
@@ -48,10 +71,9 @@ class ReportGenerator:
                 json.dumps(research_images),
                 self.researcher.websocket,
                 True,
-                research_images
+                metadata={"images": research_images},
             )
 
-        context = ext_context or self.researcher.context
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -60,16 +82,18 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        report_params = self.research_params.copy()
-        report_params["context"] = context
+        report_params: dict[str, Any] = self.research_params.copy()
+        report_params["context"] = ext_context
 
         if self.researcher.report_type == "subtopic_report":
-            report_params.update({
-                "main_topic": self.researcher.parent_query,
-                "existing_headers": existing_headers,
-                "relevant_written_contents": relevant_written_contents,
-                "cost_callback": self.researcher.add_costs,
-            })
+            report_params.update(
+                {
+                    "main_topic": self.researcher.parent_query,
+                    "existing_headers": existing_headers,
+                    "relevant_written_contents": relevant_written_contents,
+                    "cost_callback": self.researcher.add_costs,
+                }
+            )
         else:
             report_params["cost_callback"] = self.researcher.add_costs
 
@@ -85,9 +109,11 @@ class ReportGenerator:
 
         return report
 
-    async def write_report_conclusion(self, report_content: str) -> str:
-        """
-        Write the conclusion for the report.
+    async def write_report_conclusion(
+        self,
+        report_content: str,
+    ) -> str:
+        """Write the conclusion for the report.
 
         Args:
             report_content (str): The content of the report.
@@ -101,13 +127,17 @@ class ReportGenerator:
                 "writing_conclusion",
                 f"✍️ Writing conclusion for '{self.researcher.query}'...",
                 self.researcher.websocket,
+                True,
+                {"report_content": report_content},
             )
 
-        conclusion = await write_conclusion(
+        conclusion: str = await write_conclusion(
             query=self.researcher.query,
             context=report_content,
-            config=self.researcher.cfg,
-            agent_role_prompt=self.researcher.cfg.agent_role or self.researcher.role,
+            cfg=self.researcher.research_config,
+            agent_role_prompt=(
+                self.researcher.research_config.AGENT_ROLE or self.researcher.agent_role or ""
+            ).strip(),
             cost_callback=self.researcher.add_costs,
             websocket=self.researcher.websocket,
         )
@@ -118,11 +148,13 @@ class ReportGenerator:
                 "conclusion_written",
                 f"📝 Conclusion written for '{self.researcher.query}'",
                 self.researcher.websocket,
+                True,
+                {"report_content": report_content},
             )
 
         return conclusion
 
-    async def write_introduction(self):
+    async def write_introduction(self) -> str:
         """Write the introduction section of the report."""
         if self.researcher.verbose:
             await stream_output(
@@ -132,11 +164,13 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        introduction = await write_report_introduction(
+        introduction: str = await write_report_introduction(
             query=self.researcher.query,
-            context=self.researcher.context,
-            agent_role_prompt=self.researcher.cfg.agent_role or self.researcher.role,
-            config=self.researcher.cfg,
+            context="\n".join(self.researcher.context),
+            agent_role_prompt=(
+                self.researcher.research_config.AGENT_ROLE or self.researcher.agent_role or ""
+            ).strip(),
+            cfg=self.researcher.research_config,
             websocket=self.researcher.websocket,
             cost_callback=self.researcher.add_costs,
         )
@@ -151,7 +185,7 @@ class ReportGenerator:
 
         return introduction
 
-    async def get_subtopics(self):
+    async def get_subtopics(self) -> list[str] | Subtopics:
         """Retrieve subtopics for the research."""
         if self.researcher.verbose:
             await stream_output(
@@ -161,10 +195,10 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        subtopics = await construct_subtopics(
+        subtopics: list[str] | Subtopics = await construct_subtopics(
             task=self.researcher.query,
-            data=self.researcher.context,
-            config=self.researcher.cfg,
+            data="\n".join(self.researcher.context),
+            config=self.researcher.research_config,
             subtopics=self.researcher.subtopics,
         )
 
@@ -178,7 +212,10 @@ class ReportGenerator:
 
         return subtopics
 
-    async def get_draft_section_titles(self, current_subtopic: str):
+    async def get_draft_section_titles(
+        self,
+        current_subtopic: str,
+    ) -> list[str]:
         """Generate draft section titles for the report."""
         if self.researcher.verbose:
             await stream_output(
@@ -188,13 +225,15 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        draft_section_titles = await generate_draft_section_titles(
+        draft_section_titles: list[str] = await generate_draft_section_titles(
             query=self.researcher.query,
             current_subtopic=current_subtopic,
-            context=self.researcher.context,
-            role=self.researcher.cfg.agent_role or self.researcher.role,
+            context="\n".join(self.researcher.context),
+            role=(
+                self.researcher.research_config.AGENT_ROLE or self.researcher.agent_role or ""
+            ).strip(),
             websocket=self.researcher.websocket,
-            config=self.researcher.cfg,
+            config=self.researcher.research_config,
             cost_callback=self.researcher.add_costs,
         )
 

@@ -1,11 +1,12 @@
+from __future__ import annotations
 
-from .beautiful_soup.beautiful_soup import BeautifulSoupScraper
-from .web_base_loader.web_base_loader import WebBaseLoaderScraper
 from .arxiv.arxiv import ArxivScraper
-from .pymupdf.pymupdf import PyMuPDFScraper
+from .beautiful_soup.beautiful_soup import BeautifulSoupScraper
 from .browser.browser import BrowserScraper
-from .tavily_extract.tavily_extract import TavilyExtract
+from .pymupdf.pymupdf import PyMuPDFScraper
 from .scraper import Scraper
+from .tavily_extract.tavily_extract import TavilyExtract
+from .web_base_loader.web_base_loader import WebBaseLoaderScraper
 
 __all__ = [
     "BeautifulSoupScraper",
@@ -14,5 +15,5 @@ __all__ = [
     "PyMuPDFScraper",
     "BrowserScraper",
     "TavilyExtract",
-    "Scraper"
+    "Scraper",
 ]

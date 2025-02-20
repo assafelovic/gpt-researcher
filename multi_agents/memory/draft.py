@@ -1,5 +1,6 @@
-from typing import TypedDict, List, Annotated
-import operator
+from __future__ import annotations
+
+from typing import TypedDict
 
 
 class DraftState(TypedDict):

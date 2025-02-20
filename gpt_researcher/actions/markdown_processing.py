@@ -1,22 +1,30 @@
-import re
-import markdown
-from typing import List, Dict
+from __future__ import annotations
 
-def extract_headers(markdown_text: str) -> List[Dict]:
-    """
-    Extract headers from markdown text.
+import logging
+import re
+from typing import Any
+
+import markdown
+
+logger = logging.getLogger(__name__)
+
+
+def extract_headers(
+    markdown_text: str,
+) -> list[dict[str, Any]]:
+    """Extract headers from markdown text.
 
     Args:
         markdown_text (str): The markdown text to process.
 
     Returns:
-        List[Dict]: A list of dictionaries representing the header structure.
+        list[dict[str, Any]]: A list of dictionaries representing the header structure.
     """
-    headers = []
-    parsed_md = markdown.markdown(markdown_text)
-    lines = parsed_md.split("\n")
+    headers: list[dict[str, Any]] = []
+    parsed_md: str = markdown.markdown(markdown_text)
+    lines: list[str] = parsed_md.split("\n")
 
-    stack = []
+    stack: list[dict[str, Any]] = []
     for line in lines:
         if line.startswith("<h") and len(line) > 2 and line[2].isdigit():
             level = int(line[2])
@@ -30,7 +38,8 @@ def extract_headers(markdown_text: str) -> List[Dict]:
                 "text": header_text,
             }
             if stack:
-                stack[-1].setdefault("children", []).append(header)
+                children: list[dict[str, Any]] = stack[-1].setdefault("children", [])
+                children.append(header)
             else:
                 headers.append(header)
 
@@ -38,36 +47,42 @@ def extract_headers(markdown_text: str) -> List[Dict]:
 
     return headers
 
-def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
-    """
-    Extract all written sections from subtopic report.
+
+def extract_sections(
+    markdown_text: str,
+) -> list[dict[str, str]]:
+    """Extract all written sections from subtopic report.
 
     Args:
         markdown_text (str): Subtopic report text.
 
     Returns:
-        List[Dict[str, str]]: List of sections, each section is a dictionary containing
+        list[dict[str, str]]: List of sections, each section is a dictionary containing
         'section_title' and 'written_content'.
     """
-    sections = []
-    parsed_md = markdown.markdown(markdown_text)
-    
-    pattern = r'<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)'
-    matches = re.findall(pattern, parsed_md, re.DOTALL)
-    
+    sections: list[dict[str, str]] = []
+    parsed_md: str = markdown.markdown(markdown_text)
+
+    pattern: str = r"<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)"
+    matches: list[tuple[str, str]] = re.findall(pattern, parsed_md, re.DOTALL)
+
     for title, content in matches:
-        clean_content = re.sub(r'<.*?>', '', content).strip()
+        clean_content = re.sub(r"<.*?>", "", content).strip()
         if clean_content:
-            sections.append({
-                "section_title": title.strip(),
-                "written_content": clean_content
-            })
-    
+            sections.append(
+                {
+                    "section_title": title.strip(),
+                    "written_content": clean_content,
+                }
+            )
+
     return sections
 
-def table_of_contents(markdown_text: str) -> str:
-    """
-    Generate a table of contents for the given markdown text.
+
+def table_of_contents(
+    markdown_text: str,
+) -> str:
+    """Generate a table of contents for the given markdown text.
 
     Args:
         markdown_text (str): The markdown text to process.
@@ -75,8 +90,12 @@ def table_of_contents(markdown_text: str) -> str:
     Returns:
         str: The generated table of contents.
     """
-    def generate_table_of_contents(headers, indent_level=0):
-        toc = ""
+
+    def generate_table_of_contents(
+        headers: list[dict[str, Any]],
+        indent_level: int = 0,
+    ) -> str:
+        toc: str = ""
         for header in headers:
             toc += " " * (indent_level * 4) + "- " + header["text"] + "\n"
             if "children" in header:
@@ -84,16 +103,20 @@ def table_of_contents(markdown_text: str) -> str:
         return toc
 
     try:
-        headers = extract_headers(markdown_text)
-        toc = "## Table of Contents\n\n" + generate_table_of_contents(headers)
-        return toc
+        headers: list[dict[str, Any]] = extract_headers(markdown_text)
+        toc: str = "## Table of Contents\n\n" + generate_table_of_contents(headers)
     except Exception as e:
-        print("table_of_contents Exception : ", e)
+        logger.exception("table_of_contents Exception : ", e)
         return markdown_text
+    else:
+        return toc
 
-def add_references(report_markdown: str, visited_urls: set) -> str:
-    """
-    Add references to the markdown report.
+
+def add_references(
+    report_markdown: str,
+    visited_urls: set[str],
+) -> str:
+    """Add references to the markdown report.
 
     Args:
         report_markdown (str): The existing markdown report.
@@ -103,10 +126,13 @@ def add_references(report_markdown: str, visited_urls: set) -> str:
         str: The updated markdown report with added references.
     """
     try:
-        url_markdown = "\n\n\n## References\n\n"
+        url_markdown: str = "\n\n\n## References\n\n"
         url_markdown += "".join(f"- [{url}]({url})\n" for url in visited_urls)
         updated_markdown_report = report_markdown + url_markdown
-        return updated_markdown_report
     except Exception as e:
-        print(f"Encountered exception in adding source urls : {e}")
+        logger.exception(
+            f"Encountered exception in adding source urls : {e.__class__.__name__}: {e}"
+        )
         return report_markdown
+    else:
+        return updated_markdown_report

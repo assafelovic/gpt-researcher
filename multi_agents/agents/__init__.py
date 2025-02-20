@@ -1,13 +1,15 @@
-from .researcher import ResearchAgent
-from .writer import WriterAgent
-from .publisher import PublisherAgent
-from .reviser import ReviserAgent
-from .reviewer import ReviewerAgent
+from __future__ import annotations
+
 from .editor import EditorAgent
 from .human import HumanAgent
 
 # Below import should remain last since it imports all of the above
 from .orchestrator import ChiefEditorAgent
+from .publisher import PublisherAgent
+from .researcher import ResearchAgent
+from .reviewer import ReviewerAgent
+from .reviser import ReviserAgent
+from .writer import WriterAgent
 
 __all__ = [
     "ChiefEditorAgent",
@@ -17,5 +19,5 @@ __all__ = [
     "PublisherAgent",
     "ReviserAgent",
     "ReviewerAgent",
-    "HumanAgent"
+    "HumanAgent",
 ]

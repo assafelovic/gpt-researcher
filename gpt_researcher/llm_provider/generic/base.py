@@ -1,36 +1,144 @@
-import importlib
-from typing import Any
-from colorama import Fore, Style, init
+from __future__ import annotations
+
+import importlib.util
+import logging
 import os
+import sys
+
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, cast
+
+import litellm
+
+from colorama import Fore, Style, init
+from langchain_core.messages import BaseMessage
+from litellm.exceptions import BadRequestError, ContextWindowExceededError
+from pydantic import SecretStr
+
+if TYPE_CHECKING:
+    from fastapi import WebSocket
+    from langchain_core.language_models import BaseChatModel
+    from typing_extensions import Self
+
+
+logger = logging.getLogger(__name__)
+litellm.set_verbose = True  # pyright: ignore[reportPrivateImportUsage]
+
 
 _SUPPORTED_PROVIDERS = {
-    "openai",
     "anthropic",
     "azure_openai",
-    "cohere",
-    "google_vertexai",
-    "google_genai",
-    "fireworks",
-    "ollama",
-    "together",
-    "mistralai",
-    "huggingface",
-    "groq",
     "bedrock",
+    "cohere",
     "dashscope",
-    "xai",
     "deepseek",
+    "fireworks",
+    "google_genai",
+    "google_vertexai",
+    "groq",
+    "huggingface",
     "litellm",
+    "mistralai",
+    "ollama",
+    "openai",
+    "together",
+    "xai",
 }
 
 
 class GenericLLMProvider:
-
-    def __init__(self, llm):
-        self.llm = llm
+    def __init__(
+        self,
+        llm: BaseChatModel,
+    ):
+        self.llm: BaseChatModel = llm
+        self.fallback_models: list[BaseChatModel] = []
+        print(f"Using model '{self.llm.name}' with fallbacks '{self.fallback_models!r}'", file=sys.__stdout__)
 
     @classmethod
-    def from_provider(cls, provider: str, **kwargs: Any):
+    async def create_chat_completion(
+        cls,
+        messages: list,  # type: ignore
+        model: str | None = None,
+        temperature: float | None = 0.4,
+        max_tokens: int | None = 16000,
+        llm_provider: str | None = None,
+        stream: bool | None = False,
+        websocket: Any | None = None,
+        llm_kwargs: dict[str, Any] | None = None,
+        cost_callback: Callable[[Any], None] | None = None,
+    ) -> str:
+        """Create a chat completion using the specified LLM provider.
+
+        Args:
+            messages (list[dict[str, str]]): The messages to send to the chat completion
+            model (str, optional): The model to use. Defaults to None.
+            temperature (float, optional): The temperature to use. Defaults to 0.4.
+            max_tokens (int, optional): The max tokens to use. Defaults to 16000.
+            stream (bool, optional): Whether to stream the response. Defaults to False.
+            llm_provider (str, optional): The LLM Provider to use.
+            websocket (WebSocket): The websocket used in the current request,
+            cost_callback: Callback function for updating cost
+
+        Returns:
+            str: The response from the chat completion.
+
+        Raises:
+            ValueError: If model is None or max_tokens > 16000
+            RuntimeError: If provider fails to get response
+        """
+        # validate input
+        if model is None:
+            raise ValueError("Model cannot be None")
+        if max_tokens is not None and max_tokens > 16001:
+            raise ValueError(f"Max tokens cannot be more than 16,000, but got {max_tokens}")
+
+        # Get the provider from supported providers
+        assert llm_provider is not None
+        provider = cls.from_provider(
+            llm_provider,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **(llm_kwargs or {}),
+        )
+
+        response = ""
+        # create response
+        response = await provider.get_chat_response(
+            messages,
+            bool(stream),
+            websocket,
+        )
+
+        if cost_callback:
+            from gpt_researcher.utils.costs import estimate_llm_cost
+
+            llm_costs = estimate_llm_cost(
+                str(messages),
+                response,
+            )
+            cost_callback(llm_costs)
+
+        if not response:
+            logger.error(f"Failed to get response from {llm_provider} API")
+            raise RuntimeError(f"Failed to get response from {llm_provider} API")
+
+        return response
+
+    @classmethod
+    def from_provider(
+        cls,
+        provider: str,
+        **kwargs: Any,
+    ) -> Self:
+        return cls(cls._get_base_chat_model(provider, **kwargs))
+
+    @classmethod
+    def _get_base_chat_model(
+        cls,
+        provider: str,
+        **kwargs: Any,
+    ) -> BaseChatModel:
         if provider == "openai":
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
@@ -73,7 +181,7 @@ class GenericLLMProvider:
         elif provider == "ollama":
             _check_pkg("langchain_community")
             from langchain_ollama import ChatOllama
-            
+
             llm = ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
         elif provider == "together":
             _check_pkg("langchain_together")
@@ -90,7 +198,7 @@ class GenericLLMProvider:
             from langchain_huggingface import ChatHuggingFace
 
             if "model" in kwargs or "model_name" in kwargs:
-                model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
+                model_id = kwargs.pop("model", kwargs.pop("model_name", None))
                 kwargs = {"model_id": model_id, **kwargs}
             llm = ChatHuggingFace(**kwargs)
         elif provider == "groq":
@@ -104,7 +212,10 @@ class GenericLLMProvider:
 
             if "model" in kwargs or "model_name" in kwargs:
                 model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
-                kwargs = {"model_id": model_id, "model_kwargs": kwargs}
+                kwargs = {
+                    "model_id": model_id,
+                    "model_kwargs": kwargs,
+                }
             llm = ChatBedrock(**kwargs)
         elif provider == "dashscope":
             _check_pkg("langchain_dashscope")
@@ -120,66 +231,129 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
-            llm = ChatOpenAI(openai_api_base='https://api.deepseek.com',
-                     openai_api_key=os.environ["DEEPSEEK_API_KEY"],
-                     **kwargs
-                )
+            llm = ChatOpenAI(
+                base_url="https://api.deepseek.com",
+                api_key=SecretStr(os.environ["DEEPSEEK_API_KEY"]),
+                **kwargs,
+            )
         elif provider == "litellm":
             _check_pkg("langchain_community")
             from langchain_community.chat_models.litellm import ChatLiteLLM
 
+            print(repr(kwargs))
             llm = ChatLiteLLM(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
-                f"Unsupported {provider}.\n\nSupported model providers are: {supported}"
+                f"Unsupported provider: '{provider}'.\nSupported model providers are:\n[{supported}]\n"
             )
-        return cls(llm)
+        return llm
 
+    def _convert_to_base_messages(self, messages: list[dict[str, str]]) -> list[BaseMessage]:
+        """Convert dict messages to BaseMessage objects."""
+        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-    async def get_chat_response(self, messages, stream, websocket=None):
-        if not stream:
-            # Getting output from the model chain using ainvoke for asynchronous invoking
-            output = await self.llm.ainvoke(messages)
+        converted = []
+        for msg in messages:
+            role = msg["role"]
+            content = msg["content"]
+            if role == "system":
+                converted.append(SystemMessage(content=content))
+            elif role == "assistant":
+                converted.append(AIMessage(content=content))
+            else:  # user or default
+                converted.append(HumanMessage(content=content))
+        return converted
 
-            return output.content
+    async def get_chat_response(
+        self,
+        messages: list[dict[str, str]] | list[BaseMessage],
+        stream: bool,
+        websocket: WebSocket | None = None,
+        max_retries: int = 10
+    ) -> str:
+        """Get chat response with fallback support.
+        
+        Args:
+            messages: List of message dicts or BaseMessage objects
+            stream: Whether to stream the response
+            websocket: Optional websocket for streaming
+            max_retries: Maximum number of retries per model
+            
+        Returns:
+            The response text
+        """
+        current_model: BaseChatModel = self.llm
+        for model in (current_model, *self.fallback_models):
+            retries = 0
+            while retries < max_retries:
+                try:
+                    if stream:
+                        msgs: list[dict[str, Any]] = cast(List[Dict[str, Any]], messages)
+                        return await self.stream_response(msgs, websocket)
+                    else:
+                        response: BaseMessage = await model.ainvoke(messages)
+                        return "\n".join(" ".join(entry) for entry in response)
+                except ContextWindowExceededError:
+                    logger.warning("Context window exceeded, trying fallback models...", exc_info=True)
+                    break  # Move to the next model
+                except BadRequestError as e:
+                    logger.exception(f"Bad request error with model '{model}': {e}, retrying {retries}/{max_retries}")
+                except Exception as e:
+                    logger.exception(f"Error with model '{model}': {e.__class__.__name__}: {e}, retrying {retries}/{max_retries}")
+                    retries += 1
+                    if retries == max_retries:
+                        if self.fallback_models and model == self.fallback_models[-1]:  # Last model in tuple
+                            raise ValueError(f"All models failed. Last error: {e.__class__.__name__}: {e}")
+                        break  # Move to the next model
+                    continue
+        raise ValueError("All models failed to generate a response")
 
-        else:
-            return await self.stream_response(messages, websocket)
-
-    async def stream_response(self, messages, websocket=None):
-        paragraph = ""
-        response = ""
+    async def stream_response(
+        self,
+        messages: list[dict[str, str]],
+        websocket: WebSocket | None = None,
+    ) -> str:
+        paragraph: str = ""
+        response: str = ""
 
         # Streaming the response using the chain astream method from langchain
         async for chunk in self.llm.astream(messages):
-            content = chunk.content
-            if content is not None:
-                response += content
-                paragraph += content
-                if "\n" in paragraph:
-                    await self._send_output(paragraph, websocket)
-                    paragraph = ""
+            parsed_chunk: str = "\n".join(" ".join(entry) for entry in chunk)
+            response += parsed_chunk
+            paragraph += parsed_chunk
+            if "\n" in paragraph:
+                await self._send_output(paragraph, websocket)
+                paragraph = ""
 
-        if paragraph:
+        if (paragraph or "").strip():
             await self._send_output(paragraph, websocket)
 
         return response
 
-    async def _send_output(self, content, websocket=None):
+    async def _send_output(
+        self,
+        content: str,
+        websocket: WebSocket | None = None,
+    ):
+        """Helper to send output to websocket or console."""
         if websocket is not None:
-            await websocket.send_json({"type": "report", "output": content})
-        else:
-            print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
+            await websocket.send_json(
+                {
+                    "type": "report",
+                    "output": content.strip(),
+                }
+            )
+        logger.debug(f"{Fore.GREEN}{content.strip()}{Style.RESET_ALL}")
 
 
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
-        pkg_kebab = pkg.replace("_", "-")
+        pkg_kebab: str = pkg.replace("_", "-")
         # Import colorama and initialize it
         init(autoreset=True)
         # Use Fore.RED to color the error message
         raise ImportError(
-            Fore.RED + f"Unable to import {pkg_kebab}. Please install with "
-            f"`pip install -U {pkg_kebab}`"
+            Fore.RED
+            + f"Unable to import {pkg_kebab}. Please install with `pip install -U {pkg_kebab}`"
         )

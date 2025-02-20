@@ -1,4 +1,7 @@
-from .compression import ContextCompressor
-from .retriever import SearchAPIRetriever
+from __future__ import annotations
 
-__all__ = ['ContextCompressor', 'SearchAPIRetriever']
+from .compression import ContextCompressor
+
+# from .retriever import SearchAPIRetriever
+
+__all__ = ["ContextCompressor"]

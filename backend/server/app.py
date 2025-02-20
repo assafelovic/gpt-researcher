@@ -1,10 +1,13 @@
+from __future__ import annotations
+
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import logging
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+app: FastAPI = FastAPI()
 
 # Add CORS middleware
 app.add_middleware(

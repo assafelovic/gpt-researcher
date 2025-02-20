@@ -1,59 +1,165 @@
-from typing import Dict, List
+from __future__ import annotations
 
+import logging
+
+from typing import Any, ClassVar
+
+import httpx
 import requests
 
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
+from langchain_core.documents import Document
+from langchain_core.retrievers import BaseRetriever
 
-class SemanticScholarSearch:
-    """
-    Semantic Scholar API Retriever
-    """
+logger = logging.getLogger(__name__)
 
-    BASE_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
-    VALID_SORT_CRITERIA = ["relevance", "citationCount", "publicationDate"]
 
-    def __init__(self, query: str, sort: str = "relevance"):
+class SemanticScholarSearch(BaseRetriever):
+    """Semantic Scholar Search Retriever that implements LangChain's BaseRetriever interface."""
+
+    BASE_URL: ClassVar[str] = "https://api.semanticscholar.org/graph/v1/paper/search"
+    VALID_SORT_CRITERIA: ClassVar[list[str]] = ["relevance", "citationCount", "publicationDate"]
+
+    def __init__(
+        self,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        """Initialize the Semantic Scholar retriever.
+
+        Args:
+            headers: Optional dictionary containing API configuration.
+                    Currently unused as Semantic Scholar has a free API.
         """
-        Initialize the SemanticScholarSearch class with a query and sort criterion.
+        super().__init__()
+        self.headers = headers or {}
 
-        :param query: Search query string
-        :param sort: Sort criterion ('relevance', 'citationCount', 'publicationDate')
-        """
-        self.query = query
-        assert sort in self.VALID_SORT_CRITERIA, "Invalid sort criterion"
-        self.sort = sort.lower()
+    def _get_relevant_documents(
+        self,
+        query: str,
+        *,
+        run_manager: CallbackManagerForRetrieverRun,
+        max_results: int = 20,
+        sort: str = "relevance",
+    ) -> list[Document]:
+        """Get documents relevant to a query using Semantic Scholar API.
 
-    def search(self, max_results: int = 20) -> List[Dict[str, str]]:
-        """
-        Perform the search on Semantic Scholar and return results.
+        Args:
+            query: The search query string.
+            run_manager: Callback manager for the retriever run.
+            max_results: Maximum number of results to return. Defaults to 20.
+            sort: Sort criterion ('relevance', 'citationCount', 'publicationDate').
+                 Defaults to 'relevance'.
 
-        :param max_results: Maximum number of results to retrieve
-        :return: List of dictionaries containing title, href, and body of each paper
+        Returns:
+            List of relevant documents.
+
+        Raises:
+            ValueError: If sort criterion is invalid.
         """
-        params = {
-            "query": self.query,
+        if sort.lower() not in self.VALID_SORT_CRITERIA:
+            raise ValueError(f"Invalid sort criterion. Must be one of {self.VALID_SORT_CRITERIA}")
+
+        logger.info(f"Searching with query {query}...")
+
+        params: dict[str, Any] = {
+            "query": query,
             "limit": max_results,
             "fields": "title,abstract,url,venue,year,authors,isOpenAccess,openAccessPdf",
-            "sort": self.sort,
+            "sort": sort.lower(),
         }
 
         try:
             response = requests.get(self.BASE_URL, params=params)
             response.raise_for_status()
-        except requests.RequestException as e:
-            print(f"An error occurred while accessing Semantic Scholar API: {e}")
+            results = response.json().get("data", [])
+        except Exception as e:
+            logger.exception(f"An error occurred while accessing Semantic Scholar API: {e.__class__.__name__}: {e}")
             return []
 
-        results = response.json().get("data", [])
-        search_result = []
+        documents: list[Document] = []
 
+        # Convert search results to Document objects
         for result in results:
+            # Only include open access papers with PDF links
             if result.get("isOpenAccess") and result.get("openAccessPdf"):
-                search_result.append(
-                    {
+                # Create Document object with metadata
+                doc = Document(
+                    page_content=result.get("abstract", "Abstract not available"),
+                    metadata={
                         "title": result.get("title", "No Title"),
-                        "href": result["openAccessPdf"].get("url", "No URL"),
+                        "source": result["openAccessPdf"].get("url", "No URL"),
                         "body": result.get("abstract", "Abstract not available"),
-                    }
+                        "year": result.get("year"),
+                        "venue": result.get("venue"),
+                        "authors": [author.get("name") for author in result.get("authors", [])],
+                    },
                 )
+                documents.append(doc)
 
-        return search_result
+        return documents
+
+    async def _aget_relevant_documents(
+        self,
+        query: str,
+        *,
+        run_manager: CallbackManagerForRetrieverRun,
+        max_results: int = 20,
+        sort: str = "relevance",
+    ) -> list[Document]:
+        """Asynchronously get documents relevant to a query using Semantic Scholar API.
+
+        Args:
+            query: The search query string.
+            run_manager: Callback manager for the retriever run.
+            max_results: Maximum number of results to return. Defaults to 20.
+            sort: Sort criterion ('relevance', 'citationCount', 'publicationDate').
+                 Defaults to 'relevance'.
+
+        Returns:
+            List of relevant documents.
+
+        Raises:
+            ValueError: If sort criterion is invalid.
+        """
+        if sort.lower() not in self.VALID_SORT_CRITERIA:
+            raise ValueError(f"Invalid sort criterion. Must be one of {self.VALID_SORT_CRITERIA}")
+
+        logger.info(f"Searching with query {query}...")
+
+        params: dict[str, Any] = {
+            "query": query,
+            "limit": max_results,
+            "fields": "title,abstract,url,venue,year,authors,isOpenAccess,openAccessPdf",
+            "sort": sort.lower(),
+        }
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(self.BASE_URL, params=params, timeout=10.0)
+                response.raise_for_status()
+                results = response.json().get("data", [])
+        except Exception as e:
+            logger.exception(f"An error occurred while accessing Semantic Scholar API: {e.__class__.__name__}: {e}")
+            return []
+
+        documents: list[Document] = []
+
+        # Convert search results to Document objects
+        for result in results:
+            # Only include open access papers with PDF links
+            if result.get("isOpenAccess") and result.get("openAccessPdf"):
+                # Create Document object with metadata
+                doc = Document(
+                    page_content=result.get("abstract", "Abstract not available"),
+                    metadata={
+                        "title": result.get("title", "No Title"),
+                        "source": result["openAccessPdf"].get("url", "No URL"),
+                        "body": result.get("abstract", "Abstract not available"),
+                        "year": result.get("year"),
+                        "venue": result.get("venue"),
+                        "authors": [author.get("name") for author in result.get("authors", [])],
+                    },
+                )
+                documents.append(doc)
+
+        return documents

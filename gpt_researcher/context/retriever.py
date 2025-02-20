@@ -1,20 +1,25 @@
-import os
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
 
-from langchain.callbacks.manager import CallbackManagerForRetrieverRun
+from typing import TYPE_CHECKING, Any, ClassVar
+
 from langchain.schema import Document
 from langchain.schema.retriever import BaseRetriever
+
+if TYPE_CHECKING:
+    from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 
 
 class SearchAPIRetriever(BaseRetriever):
     """Search API retriever."""
-    pages: List[Dict] = []
+
+    pages: ClassVar[list[dict[str, Any]]] = []
 
     def _get_relevant_documents(
-        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
-    ) -> List[Document]:
-
+        self,
+        query: str,
+        *,
+        run_manager: CallbackManagerForRetrieverRun,
+    ) -> list[Document]:
         docs = [
             Document(
                 page_content=page.get("raw_content", ""),
@@ -28,12 +33,14 @@ class SearchAPIRetriever(BaseRetriever):
 
         return docs
 
+
 class SectionRetriever(BaseRetriever):
-    """
-    SectionRetriever:
+    """SectionRetriever:
+
     This class is used to retrieve sections while avoiding redundant subtopics.
     """
-    sections: List[Dict] = []
+
+    sections: ClassVar[list[dict[str, Any]]] = []
     """
     sections example:
     [
@@ -44,11 +51,13 @@ class SectionRetriever(BaseRetriever):
         ...
     ]
     """
-    
-    def _get_relevant_documents(
-        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
-    ) -> List[Document]:
 
+    def _get_relevant_documents(
+        self,
+        query: str,
+        *,
+        run_manager: CallbackManagerForRetrieverRun,
+    ) -> list[Document]:
         docs = [
             Document(
                 page_content=page.get("written_content", ""),
@@ -56,7 +65,7 @@ class SectionRetriever(BaseRetriever):
                     "section_title": page.get("section_title", ""),
                 },
             )
-            for page in self.sections  # Changed 'self.pages' to 'self.sections'
+            for page in self.sections
         ]
 
         return docs

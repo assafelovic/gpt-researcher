@@ -1,25 +1,37 @@
-from typing import List, Dict
+from __future__ import annotations
 
-from ..actions.utils import stream_output
-from ..actions.web_scraping import scrape_urls
-from ..scraper.utils import get_image_hash  # Add this import
+from typing import TYPE_CHECKING, Any
+
+from gpt_researcher.actions.utils import stream_output
+from gpt_researcher.actions.web_scraping import scrape_urls
+from gpt_researcher.scraper.utils import get_image_hash
+
+if TYPE_CHECKING:
+    from gpt_researcher.agent import GPTResearcher
 
 
 class BrowserManager:
     """Manages context for the researcher agent."""
 
-    def __init__(self, researcher):
-        self.researcher = researcher
+    def __init__(
+        self,
+        researcher: GPTResearcher,
+    ):
+        self.researcher: GPTResearcher = researcher
 
-    async def browse_urls(self, urls: List[str]) -> List[Dict]:
-        """
-        Scrape content from a list of URLs.
+    async def browse_urls(
+        self,
+        urls: list[str],
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        """Scrape content from a list of URLs.
 
         Args:
-            urls (List[str]): List of URLs to scrape.
+        ----
+            urls (list[str]): List of URLs to scrape.
 
         Returns:
-            List[Dict]: List of scraped content results.
+        -------
+            tuple[list[dict[str, Any]], list[dict[str, Any]]]: Tuple containing the scraped content and images.
         """
         if self.researcher.verbose:
             await stream_output(
@@ -29,10 +41,14 @@ class BrowserManager:
                 self.researcher.websocket,
             )
 
-        scraped_content, images = scrape_urls(urls, self.researcher.cfg)
-        self.researcher.add_research_sources(scraped_content)
-        new_images = self.select_top_images(images, k=4)  # Select top 2 images
-        self.researcher.add_research_images(new_images)
+        scraped_content: tuple[list[dict[str, Any]], list[dict[str, Any]]] = scrape_urls(
+            urls, self.researcher.research_config
+        )
+        self.researcher.add_research_sources(scraped_content[0])
+        images: list[dict[str, Any]] = self.select_top_images(
+            scraped_content[1], k=4
+        )  # Select top 2 images
+        self.researcher.add_research_images(images)
 
         if self.researcher.verbose:
             await stream_output(
@@ -44,43 +60,49 @@ class BrowserManager:
             await stream_output(
                 "logs",
                 "scraping_images",
-                f"🖼️ Selected {len(new_images)} new images from {len(images)} total images",
+                f"🖼️ Selected {len(images)} new images from {len(images)} total images",
                 self.researcher.websocket,
-                True,
-                new_images
+                metadata={"images": images},
             )
             await stream_output(
                 "logs",
                 "scraping_complete",
-                f"🌐 Scraping complete",
+                "🌐 Scraping complete",
                 self.researcher.websocket,
             )
 
         return scraped_content
 
-    def select_top_images(self, images: List[Dict], k: int = 2) -> List[str]:
-        """
-        Select most relevant images and remove duplicates based on image content.
+    def select_top_images(
+        self,
+        images: list[dict[str, Any]],
+        k: int = 2,
+    ) -> list[dict[str, Any]]:
+        """Select most relevant images and remove duplicates based on image content.
 
         Args:
-            images (List[Dict]): List of image dictionaries with 'url' and 'score' keys.
+            images (list[dict[str, Any]]): List of image dictionaries with 'url' and 'score' keys.
             k (int): Number of top images to select if no high-score images are found.
 
         Returns:
-            List[str]: List of selected image URLs.
+            List[dict[str, Any]]: List of selected image dictionaries.
         """
-        unique_images = []
-        seen_hashes = set()
-        current_research_images = self.researcher.get_research_images()
+        unique_images: list[dict[str, Any]] = []
+        seen_hashes: set[str] = set()
+        current_research_images: list[dict[str, Any]] = self.researcher.get_research_images()
 
         # First, select all score 2 and 3 images
-        high_score_images = [img for img in images if img['score'] >= 2]
+        high_score_images: list[dict[str, Any]] = [img for img in images if img["score"] >= 2]
 
         for img in high_score_images + images:  # Process high-score images first, then all images
-            img_hash = get_image_hash(img['url'])
-            if img_hash and img_hash not in seen_hashes and img['url'] not in current_research_images:
+            img_hash: str | None = get_image_hash(img["url"])
+            if (
+                img_hash
+                and img_hash not in seen_hashes
+                and img["url"] not in current_research_images  # TODO: case sensitive??
+            ):
                 seen_hashes.add(img_hash)
-                unique_images.append(img['url'])
+                unique_images.append(img)
 
                 if len(unique_images) == k:
                     break

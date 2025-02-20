@@ -1,7 +1,13 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import Any, Mapping
+
 import json5 as json
-from .utils.views import print_agent_output
-from .utils.llms import call_model
+from fastapi import WebSocket
+
+from multi_agents.agents.utils.llms import call_model
+from multi_agents.agents.utils.views import print_agent_output
 
 sample_json = """
 {
@@ -14,12 +20,20 @@ sample_json = """
 
 
 class WriterAgent:
-    def __init__(self, websocket=None, stream_output=None, headers=None):
-        self.websocket = websocket
-        self.stream_output = stream_output
-        self.headers = headers
+    def __init__(
+        self,
+        websocket: WebSocket | None = None,
+        stream_output: Any | None = None,
+        headers: dict[str, Any] | None = None,
+    ):
+        self.websocket: WebSocket | None = websocket
+        self.stream_output: Any | None = stream_output
+        self.headers: dict[str, Any] | None = headers
 
-    def get_headers(self, research_state: dict):
+    def get_headers(
+        self,
+        research_state: dict[str, Any],
+    ) -> dict[str, Any]:
         return {
             "title": research_state.get("title"),
             "date": "Date",
@@ -29,14 +43,22 @@ class WriterAgent:
             "references": "References",
         }
 
-    async def write_sections(self, research_state: dict):
+    async def write_sections(
+        self,
+        research_state: dict[str, Any],
+    ) -> list[str] | tuple[str, list[dict[str, Any]]]:
         query = research_state.get("title")
         data = research_state.get("research_data")
+
         task = research_state.get("task")
+        if not task:
+            raise ValueError(f"Task is required, got {task!r}")
+        if not isinstance(task, dict):
+            raise ValueError(f"Task is in unexpected format, got {task!r}")
         follow_guidelines = task.get("follow_guidelines")
         guidelines = task.get("guidelines")
 
-        prompt = [
+        prompt: list[dict[str, Any]] = [
             {
                 "role": "system",
                 "content": "You are a research writer. Your sole purpose is to write a well-written "
@@ -47,7 +69,7 @@ class WriterAgent:
                 "role": "user",
                 "content": f"Today's date is {datetime.now().strftime('%d/%m/%Y')}\n."
                 f"Query or Topic: {query}\n"
-                f"Research data: {str(data)}\n"
+                f"Research data: {data}\n"
                 f"Your task is to write an in depth, well written and detailed "
                 f"introduction and conclusion to the research report based on the provided research data. "
                 f"Do not include headers in the results.\n"
@@ -59,18 +81,27 @@ class WriterAgent:
             },
         ]
 
+        model = task.get("model")
+        if not model:
+            raise ValueError(f"Model is required, got {model!r}")
+        if not isinstance(model, str):
+            raise ValueError(f"Model is in unexpected format, got {model!r}")
         response = await call_model(
             prompt,
-            task.get("model"),
+            model,
             response_format="json",
         )
         return response
 
-    async def revise_headers(self, task: dict, headers: dict):
-        prompt = [
+    async def revise_headers(
+        self,
+        task: dict[str, Any],
+        headers: dict[str, Any],
+    ) -> dict[str, Any]:
+        prompt: list[dict[str, Any]] = [
             {
                 "role": "system",
-                "content": """You are a research writer. 
+                "content": """You are a research writer.
 Your sole purpose is to revise the headers data based on the given guidelines.""",
             },
             {
@@ -78,51 +109,72 @@ Your sole purpose is to revise the headers data based on the given guidelines.""
                 "content": f"""Your task is to revise the given headers JSON based on the guidelines given.
 You are to follow the guidelines but the values should be in simple strings, ignoring all markdown syntax.
 You must return nothing but a JSON in the same format as given in headers data.
-Guidelines: {task.get("guidelines")}\n
+Guidelines: {task["guidelines"]}\n
 Headers Data: {headers}\n
 """,
             },
         ]
 
+        model = task.get("model")
+        if not model:
+            raise ValueError(f"Model is required, got {model!r}")
+        if not isinstance(model, str):
+            raise ValueError(f"Model is in unexpected format, got {model!r}")
         response = await call_model(
             prompt,
-            task.get("model"),
+            model,
             response_format="json",
         )
         return {"headers": response}
 
-    async def run(self, research_state: dict):
+    async def run(
+        self,
+        research_state: dict[str, Any],
+    ) -> dict[str, Any]:
         if self.websocket and self.stream_output:
             await self.stream_output(
                 "logs",
                 "writing_report",
-                f"Writing final research report based on research data...",
+                "Writing final research report based on research data...",
                 self.websocket,
             )
         else:
             print_agent_output(
-                f"Writing final research report based on research data...",
+                "Writing final research report based on research data...",
                 agent="WRITER",
             )
 
-        research_layout_content = await self.write_sections(research_state)
+        research_layout_content: (
+            list[str] | tuple[str, list[dict[str, Any]]]
+        ) = await self.write_sections(research_state)
+        task: dict[str, Any] = research_state.get("task", {})
+        if not task:
+            raise ValueError(f"Task is required, got {task!r}")
+        if not isinstance(task, dict):
+            raise ValueError(f"Task is in unexpected format, got {task!r}")
 
-        if research_state.get("task").get("verbose"):
+        if task.get("verbose"):
             if self.websocket and self.stream_output:
-                research_layout_content_str = json.dumps(
-                    research_layout_content, indent=2
-                )
+                research_layout_content_str = json.dumps(research_layout_content, indent=2)
                 await self.stream_output(
                     "logs",
                     "research_layout_content",
                     research_layout_content_str,
                     self.websocket,
                 )
-            else:
-                print_agent_output(research_layout_content, agent="WRITER")
+            elif isinstance(research_layout_content, tuple):
+                print_agent_output(research_layout_content[0], agent="WRITER")
+            elif isinstance(research_layout_content, list):
+                for item in research_layout_content:
+                    print_agent_output(item, agent="WRITER")
 
         headers = self.get_headers(research_state)
-        if research_state.get("task").get("follow_guidelines"):
+        task = research_state.get("task", {})
+        if not task:
+            raise ValueError(f"Task is required, got {task!r}")
+        if not isinstance(task, dict):
+            raise ValueError(f"Task is in unexpected format, got {task!r}")
+        if task.get("follow_guidelines"):
             if self.websocket and self.stream_output:
                 await self.stream_output(
                     "logs",
@@ -131,12 +183,17 @@ Headers Data: {headers}\n
                     self.websocket,
                 )
             else:
-                print_agent_output(
-                    "Rewriting layout based on guidelines...", agent="WRITER"
-                )
-            headers = await self.revise_headers(
-                task=research_state.get("task"), headers=headers
-            )
+                print_agent_output("Rewriting layout based on guidelines...", agent="WRITER")
+            task = research_state.get("task", {})
+            if not task:
+                raise ValueError(f"Task is required, got {task!r}")
+            if not isinstance(task, dict):
+                raise ValueError(f"Task is in unexpected format, got {task!r}")
+            headers = await self.revise_headers(task=task, headers=headers)
             headers = headers.get("headers")
 
+        if not isinstance(research_layout_content, Mapping):
+            raise ValueError(
+                f"Research layout content is in unexpected format, got {research_layout_content!r}"
+            )
         return {**research_layout_content, "headers": headers}

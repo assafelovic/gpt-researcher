@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@langchain/core": "^0.3.33",
+    "lucide-svelte": "^0.474.0",
+    "sonner": "^1.7.2"
+  }
+}

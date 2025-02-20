@@ -1,24 +1,42 @@
-from gpt_researcher.config.config import Config
-from gpt_researcher.utils.llm import create_chat_completion
+from __future__ import annotations
+
 import asyncio
+import logging
+import traceback
+
 from dotenv import load_dotenv
+from gpt_researcher.config.config import Config
+from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
+from litellm.utils import get_max_tokens
+
 load_dotenv()
+
+
+logger = logging.getLogger(__name__)
+
 
 async def main():
     cfg = Config()
 
     try:
-        report = await create_chat_completion(
-            model=cfg.smart_llm_model,
-            messages = [{"role": "user", "content": "sup?"}],
+        provider = GenericLLMProvider.from_provider(
+            cfg.SMART_LLM_PROVIDER,
+            model=cfg.SMART_LLM_MODEL,
             temperature=0.35,
-            llm_provider=cfg.smart_llm_provider,
-            stream=True,
-            max_tokens=cfg.smart_token_limit,
-            llm_kwargs=cfg.llm_kwargs
+            max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL),  # type: ignore[attr-defined]
+            **cfg.llm_kwargs,
         )
+        response = await provider.get_chat_response(
+            messages=[{"role": "user", "content": "sup?"}],
+            stream=True,
+        )
+        print(response)
+        logger.info(response)
     except Exception as e:
-        print(f"Error in calling LLM: {e}")
+        logger.exception(f"Error in calling LLM: {e.__class__.__name__}: {e}")
+        traceback.print_exc()
+
 
 # Run the async function
 asyncio.run(main())
+logger.info("Done")

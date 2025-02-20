@@ -1,76 +1,165 @@
-# SerpApi Retriever
+from __future__ import annotations
 
-# libraries
+import logging
 import os
-import requests
 import urllib.parse
 
+import httpx
+import requests
 
-class SerpApiSearch():
-    """
-    SerpApi Retriever
-    """
-    def __init__(self, query):
-        """
-        Initializes the SerpApiSearch object
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
+from langchain_core.documents import Document
+from langchain_core.retrievers import BaseRetriever
+
+logger = logging.getLogger(__name__)
+
+
+class SerpApiSearch(BaseRetriever):
+    """SerpAPI Search Retriever that implements LangChain's BaseRetriever interface."""
+
+    def __init__(
+        self,
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        """Initialize the SerpAPI retriever.
+
         Args:
-            query:
+            headers: Optional dictionary containing API keys. If not provided,
+                    will attempt to load from environment variables.
         """
-        self.query = query
-        self.api_key = self.get_api_key()
+        super().__init__()
+        self.headers: dict[str, str] = headers or {}
+        self.api_key: str = self.headers.get("serpapi_api_key") or self.get_api_key()
 
-    def get_api_key(self):
-        """
-        Gets the SerpApi API key
+    def get_api_key(self) -> str:
+        """Gets the SerpAPI key from environment variables.
+
         Returns:
+            str: The SerpAPI key.
 
+        Raises:
+            Exception: If API key is not found in environment variables.
         """
         try:
             api_key = os.environ["SERPAPI_API_KEY"]
-        except:
-            raise Exception("SerpApi API key not found. Please set the SERPAPI_API_KEY environment variable. "
-                            "You can get a key at https://serpapi.com/")
+        except KeyError:
+            raise Exception("SerpAPI key not found. Please set the SERPAPI_API_KEY environment variable. You can get a key at https://serpapi.com/")
         return api_key
 
-    def search(self, max_results=7):
-        """
-        Searches the query
+    def _get_relevant_documents(
+        self,
+        query: str,
+        *,
+        run_manager: CallbackManagerForRetrieverRun,
+        max_results: int = 7,
+    ) -> list[Document]:
+        """Get documents relevant to a query using SerpAPI Search.
+
+        Args:
+            query: The search query string.
+            run_manager: Callback manager for the retriever run.
+            max_results: Maximum number of results to return. Defaults to 7.
+
         Returns:
-
+            List of relevant documents.
         """
-        print("SerpApiSearch: Searching with query {0}...".format(self.query))
-        """Useful for general internet search queries using SerpApi."""
-
+        logger.info(f"Searching with query {query}...")
 
         url = "https://serpapi.com/search.json"
-        params = {
-            "q": self.query,
-            "api_key": self.api_key
-        }
+        params: dict[str, str] = {"q": query, "api_key": self.api_key}
         encoded_url = url + "?" + urllib.parse.urlencode(params)
-        search_response = []
+
         try:
             response = requests.get(encoded_url, timeout=10)
-            if response.status_code == 200:
-                search_results = response.json()
-                if search_results:
-                    results = search_results["organic_results"]
-                    results_processed = 0
-                    for result in results:
-                        # skip youtube results
-                        if "youtube.com" in result["link"]:
-                            continue
-                        if results_processed >= max_results:
-                            break
-                        search_result = {
-                            "title": result["title"],
-                            "href": result["link"],
-                            "body": result["snippet"],
-                        }
-                        search_response.append(search_result)
-                        results_processed += 1
+            response.raise_for_status()
+            search_results = response.json()
         except Exception as e:
-            print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
-            search_response = []
+            logger.exception(f"Failed fetching sources. Resulting in empty response. {e.__class__.__name__}: {e}")
+            return []
 
-        return search_response
+        if not search_results or "organic_results" not in search_results:
+            return []
+
+        documents: list[Document] = []
+        results_processed = 0
+
+        # Convert search results to Document objects
+        for result in search_results["organic_results"]:
+            # Skip YouTube results
+            if "youtube.com" in result["link"]:
+                continue
+
+            if results_processed >= max_results:
+                break
+
+            # Create Document object with metadata
+            doc = Document(
+                page_content=result["snippet"],
+                metadata={
+                    "title": result["title"],
+                    "source": result["link"],
+                },
+            )
+            documents.append(doc)
+            results_processed += 1
+
+        return documents
+
+    async def _aget_relevant_documents(
+        self,
+        query: str,
+        *,
+        run_manager: CallbackManagerForRetrieverRun,
+        max_results: int = 7,
+    ) -> list[Document]:
+        """Asynchronously get documents relevant to a query using SerpAPI Search.
+
+        Args:
+            query: The search query string.
+            run_manager: Callback manager for the retriever run.
+            max_results: Maximum number of results to return. Defaults to 7.
+
+        Returns:
+            List of relevant documents.
+        """
+        logger.info(f"Searching with query {query}...")
+
+        url = "https://serpapi.com/search.json"
+        params: dict[str, str] = {"q": query, "api_key": self.api_key}
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, params=params, timeout=10.0)
+                response.raise_for_status()
+                search_results = response.json()
+        except Exception as e:
+            logger.exception(f"Failed fetching sources. Resulting in empty response. {e.__class__.__name__}: {e}")
+            return []
+
+        if not search_results or "organic_results" not in search_results:
+            return []
+
+        documents: list[Document] = []
+        results_processed = 0
+
+        # Convert search results to Document objects
+        for result in search_results["organic_results"]:
+            # Skip YouTube results
+            if "youtube.com" in result["link"]:
+                continue
+
+            if results_processed >= max_results:
+                break
+
+            # Create Document object with metadata
+            doc = Document(
+                page_content=result["snippet"],
+                metadata={
+                    "title": result["title"],
+                    "source": result["link"],
+                },
+            )
+            documents.append(doc)
+            results_processed += 1
+
+        return documents

@@ -1,7 +1,6 @@
-from .basic_report.basic_report import BasicReport
-from .detailed_report.detailed_report import DetailedReport
+from __future__ import annotations
 
-__all__ = [
-    "BasicReport",
-    "DetailedReport"
-]
+from backend.report_type.basic_report.basic_report import BasicReporter
+from backend.report_type.detailed_report.detailed_report import DetailedReporter
+
+__all__ = ["BasicReporter", "DetailedReporter"]

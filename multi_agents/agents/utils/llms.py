@@ -1,49 +1,68 @@
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING, Any
+
 import json5 as json
 import json_repair
+from gpt_researcher.config.config import Config
+from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from langchain_community.adapters.openai import convert_openai_messages
 
-from gpt_researcher.config.config import Config
-from gpt_researcher.utils.llm import create_chat_completion
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-from loguru import logger
+logger = logging.getLogger(__name__)
 
 
 async def call_model(
     prompt: list,
     model: str,
-    response_format: str = None,
-):
+    response_format: str | None = None,
+    cost_callback: Callable[[float], None] | None = None,
+) -> list[str] | tuple[str, list[dict[str, Any]]]:
+    """Call an LLM model with the given prompt.
 
-    optional_params = {}
-    if response_format == "json":
-        optional_params = {"response_format": {"type": "json_object"}}
+    Args:
+        prompt: The prompt to send
+        model: The model to use
+        response_format: Optional response format
+        cost_callback: Optional callback for cost tracking
 
+    Returns:
+        The model's response
+    """
     cfg = Config()
     lc_messages = convert_openai_messages(prompt)
 
     try:
-        response = await create_chat_completion(
+        provider = GenericLLMProvider.from_provider(
+            cfg.SMART_LLM_PROVIDER,
             model=model,
-            messages=lc_messages,
             temperature=0,
-            llm_provider=cfg.smart_llm_provider,
-            llm_kwargs=cfg.llm_kwargs,
-            # cost_callback=cost_callback,
+            **cfg.llm_kwargs,
+        )
+        response: str = await provider.get_chat_response(
+            messages=lc_messages,
+            stream=False,
         )
 
         if response_format == "json":
             try:
-                cleaned_json_string = response.strip("```json\n")
-                return json.loads(cleaned_json_string)
+                result = json.loads(response.strip("```json\n"))
+                assert isinstance(result, list)
+                return result
             except Exception as e:
-                print("⚠️ Error in reading JSON, attempting to repair JSON")
-                logger.error(
-                    f"Error in reading JSON, attempting to repair reponse: {response}"
+                logger.warning("⚠️ Error in reading JSON, attempting to repair JSON")
+                logger.exception(
+                    f"Error in reading JSON: {e.__class__.__name__}: {e}. Attempting to repair reponse: {response}"
                 )
-                return json_repair.loads(response)
+                result = json_repair.loads(response)
+                assert isinstance(result, list)
+                return result
         else:
-            return response
+            return [response]
 
     except Exception as e:
-        print("⚠️ Error in calling model")
-        logger.error(f"Error in calling model: {e}")
+        logger.exception(f"Error in calling model: {e.__class__.__name__}: {e}")
+        return []

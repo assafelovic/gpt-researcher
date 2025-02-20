@@ -1,224 +1,306 @@
+from __future__ import annotations
+
 import json
+import locale
+import logging
 import os
-import warnings
-from typing import Dict, Any, List, Union, Type, get_origin, get_args
-from .variables.default import DEFAULT_CONFIG
-from .variables.base import BaseConfig
-from ..retrievers.utils import get_all_retriever_names
+
+from pathlib import Path
+from typing import Any, Dict, List, Union, cast, get_args, get_origin
+
+from gpt_researcher.retrievers.utils import get_all_retriever_names
+from gpt_researcher.utils.schemas import (
+    OutputFileType,
+    ReportFormat,
+    ReportSource,
+    ReportType,
+    SupportedLanguages,
+    Tone,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class Config:
     """Config class for GPT Researcher."""
 
-    CONFIG_DIR = os.path.join(os.path.dirname(__file__), "variables")
+    AGENT_ROLE: str = os.environ.get("AGENT_ROLE", "")
+    CONFIG_DIR: str = os.path.join(os.path.dirname(__file__), "variables")
+    CURATE_SOURCES: bool = bool(os.environ.get("CURATE_SOURCES", False))
+    DOC_PATH: str = os.environ.get("DOC_PATH", str(Path.home().absolute()))
+    EMBEDDING: str = os.environ.get("EMBEDDING", "openai:text-embedding-3-small")
+    EMBEDDING_KWARGS: dict[str, Any] = json.loads(os.environ.get("EMBEDDING_KWARGS", "{}"))
+    EMBEDDING_MODEL: str = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
+    EMBEDDING_PROVIDER: str = os.environ.get("EMBEDDING_PROVIDER", "openai")
+    FAST_LLM: str = os.environ.get("FAST_LLM", "groq:mixtral-8x7b-32768")
+    FAST_LLM_MODEL: str = os.environ.get("FAST_LLM_MODEL", "mixtral-8x7b-32768")
+    FAST_LLM_PROVIDER: str = os.environ.get("FAST_LLM_PROVIDER", "groq")
+    LANGUAGE: SupportedLanguages = SupportedLanguages(
+        os.environ.get(
+            "LANGUAGE",
+            (locale.getdefaultlocale()[0] or "en").split("_")[0],
+        )
+    )
+    MAX_ITERATIONS: int = int(os.environ.get("MAX_ITERATIONS", 4))
+    MAX_SEARCH_RESULTS_PER_QUERY: int = int(os.environ.get("MAX_SEARCH_RESULTS_PER_QUERY", 5))
+    MAX_SUBTOPICS: int = int(os.environ.get("MAX_SUBTOPICS", 3))
+    MEMORY_BACKEND: ReportSource = ReportSource(os.environ.get("MEMORY_BACKEND", "local").lower())
+    OUTPUT_FORMAT: OutputFileType = OutputFileType(
+        os.environ.get(
+            "OUTPUT_FORMAT",
+            "markdown",
+        )
+    )
+    REPORT_FORMAT: ReportFormat = ReportFormat(os.environ.get("REPORT_FORMAT", "APA"))
+    REPORT_SOURCE: ReportSource = ReportSource(os.environ.get("REPORT_SOURCE", "web"))
+    REPORT_TYPE: ReportType = ReportType(os.environ.get("REPORT_TYPE", "research_report"))
+    RETRIEVER: str = os.environ.get("RETRIEVER", "tavily")
+    SCRAPER: str = os.environ.get("SCRAPER", "bs")
+    SIMILARITY_THRESHOLD: float = float(os.environ.get("SIMILARITY_THRESHOLD", 0.42))
+    SMART_LLM: str = os.environ.get("SMART_LLM", "litellm:gemini-2.0-flash-exp")
+    SMART_LLM_MODEL: str = os.environ.get("SMART_LLM_MODEL", "gemini-2.0-flash-exp")
+    SMART_LLM_PROVIDER: str = os.environ.get("SMART_LLM_PROVIDER", "litellm")
+    STRATEGIC_LLM: str = os.environ.get("STRATEGIC_LLM", "litellm:gemini-2.0-flash-thinking-exp")
+    STRATEGIC_LLM_MODEL: str = os.environ.get(
+        "STRATEGIC_LLM_MODEL",
+        "gemini-2.0-flash-thinking-exp",
+    )
+    STRATEGIC_LLM_PROVIDER: str = os.environ.get("STRATEGIC_LLM_PROVIDER", "litellm")
+    TEMPERATURE: float = float(os.environ.get("TEMPERATURE", 0.4))
+    TONE: Tone = Tone.__members__.get(os.environ.get("TONE", "Objective").upper(), Tone.Objective)
+    TOTAL_WORDS: int = int(os.environ.get("TOTAL_WORDS", 1000))
+    USER_AGENT: str = os.environ.get(
+        "USER_AGENT",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
+    )  # "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+    VERBOSE: bool = bool(os.environ.get("VERBOSE", True))
 
-    def __init__(self, config_path: str | None = None):
+    def __init__(
+        self,
+        config: os.PathLike | str | None = None,
+        **kwargs: Any,
+    ):
         """Initialize the config class."""
-        self.config_path = config_path
-        self.llm_kwargs: Dict[str, Any] = {}
-        self.embedding_kwargs: Dict[str, Any] = {}
+        self.config_path: Path | None = None
+        if config is not None:
+            self.config_path = Path(os.path.normpath(config)).expanduser().absolute()
+        self.llm_kwargs: dict[str, Any] = {}
 
-        config_to_use = self.load_config(config_path)
-        self._set_attributes(config_to_use)
-        self._set_embedding_attributes()
-        self._set_llm_attributes()
-        self._handle_deprecated_attributes()
+        config_to_use: dict[str, Any] = self.default_config_dict() if config == "default" or config is None else self._create_config_dict(config)
+        config_to_use.update(kwargs)  # type: ignore
+        for key, value in config_to_use.items():
+            setattr(self, key, value)
+        try:
+            self.retrievers: list[str] = self.parse_retrievers(self.RETRIEVER)
+        except ValueError as e:
+            logger.warning(
+                f"{e.__class__.__name__}: {e}. Defaulting to 'tavily' retriever.",
+                exc_info=True,
+            )
+            self.retrievers = ["tavily"]
+        self._setup_llms()
         self._set_doc_path(config_to_use)
 
-    def _set_attributes(self, config: Dict[str, Any]) -> None:
-        for key, value in config.items():
-            env_value = os.getenv(key)
-            if env_value is not None:
-                value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
-            setattr(self, key.lower(), value)
-
-        # Handle RETRIEVER with default value
-        retriever_env = os.environ.get("RETRIEVER", config.get("RETRIEVER", "tavily"))
-        try:
-            self.retrievers = self.parse_retrievers(retriever_env)
-        except ValueError as e:
-            print(f"Warning: {str(e)}. Defaulting to 'tavily' retriever.")
-            self.retrievers = ["tavily"]
-
-    def _set_embedding_attributes(self) -> None:
-        self.embedding_provider, self.embedding_model = self.parse_embedding(
-            self.embedding
-        )
-
-    def _set_llm_attributes(self) -> None:
-        self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
-        self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
-        self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
-
-    def _handle_deprecated_attributes(self) -> None:
-        if os.getenv("EMBEDDING_PROVIDER") is not None:
-            warnings.warn(
-                "EMBEDDING_PROVIDER is deprecated and will be removed soon. Use EMBEDDING instead.",
-                FutureWarning,
-                stacklevel=2,
-            )
-            self.embedding_provider = (
-                os.environ["EMBEDDING_PROVIDER"] or self.embedding_provider
-            )
-
-            match os.environ["EMBEDDING_PROVIDER"]:
-                case "ollama":
-                    self.embedding_model = os.environ["OLLAMA_EMBEDDING_MODEL"]
-                case "custom":
-                    self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "custom")
-                case "openai":
-                    self.embedding_model = "text-embedding-3-large"
-                case "azure_openai":
-                    self.embedding_model = "text-embedding-3-large"
-                case "huggingface":
-                    self.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
-                case _:
-                    raise Exception("Embedding provider not found.")
-
-        _deprecation_warning = (
-            "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
-            "will be removed soon. Use FAST_LLM and SMART_LLM instead."
-        )
-        if os.getenv("LLM_PROVIDER") is not None:
-            warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.fast_llm_provider = (
-                os.environ["LLM_PROVIDER"] or self.fast_llm_provider
-            )
-            self.smart_llm_provider = (
-                os.environ["LLM_PROVIDER"] or self.smart_llm_provider
-            )
-        if os.getenv("FAST_LLM_MODEL") is not None:
-            warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.fast_llm_model = os.environ["FAST_LLM_MODEL"] or self.fast_llm_model
-        if os.getenv("SMART_LLM_MODEL") is not None:
-            warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.smart_llm_model = os.environ["SMART_LLM_MODEL"] or self.smart_llm_model
-        
-    def _set_doc_path(self, config: Dict[str, Any]) -> None:
-        self.doc_path = config['DOC_PATH']
-        if self.doc_path:
-            try:
-                self.validate_doc_path()
-            except Exception as e:
-                print(f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
-                self.doc_path = DEFAULT_CONFIG['DOC_PATH']
+    @classmethod
+    def from_path(
+        cls,
+        config_path: os.PathLike | str | None,
+    ) -> Config:
+        """Load a configuration from a path."""
+        config_dict = cls._create_config_dict(config_path)
+        return cls(config_path, **config_dict)
 
     @classmethod
-    def load_config(cls, config_path: str | None) -> Dict[str, Any]:
+    def from_config(
+        cls,
+        config: dict[str, Any],
+    ) -> Config:
+        """Load a configuration from a dictionary."""
+        config_dict = cls._create_config_dict(config)
+        return cls(None, **config_dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return the config as a dictionary."""
+        return {k: v for k, v in self.__dict__.items() if not k.startswith("_") and k.upper() == k}
+
+    @classmethod
+    def default_config_dict(cls) -> dict[str, Any]:
+        """Return the default config as a dictionary."""
+        return {k: v for k, v in cls.__dict__.items() if k == k.upper() and not k.startswith("_")}
+
+    @classmethod
+    def _create_config_dict(
+        cls,
+        config: os.PathLike | str | dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Parse a config from a path or dict."""
+        if config is None or config == "default":
+            return cls.default_config_dict()
+        if isinstance(config, str) and not config.strip():
+            return cls.default_config_dict()
+
+        if isinstance(config, dict):
+            config_dict = config
+        elif isinstance(config, (os.PathLike, str)):
+            config_path_obj: Path = Path(os.path.expandvars(os.path.normpath(config))).absolute()
+            if not config_path_obj.exists():
+                config_path_obj = Path.home().joinpath(".gpt_researcher", f"{config_path_obj.stem}.json")
+                if not config_path_obj.exists():
+                    logger.warning(f"Warning: Configuration not found at '{config_path_obj}'. Using default configuration.")
+                    if not config_path_obj.suffix.casefold().endswith(".json"):
+                        logger.warning(f"Did you mean: '{config_path_obj.with_suffix('.json')}'?")
+                    return cls.default_config_dict()
+            try:
+                config_dict: dict[str, Any] = json.loads(config_path_obj.read_text())
+            except Exception as e:
+                logger.exception(f"Error loading config from {config_path_obj}: {e.__class__.__name__}: {e}")
+                logger.warning("Using default configuration.")
+                return cls.default_config_dict()
+        else:
+            raise ValueError(f"Invalid config type: {config.__class__.__name__}, expected path-like or dict.")
+
+        config_dict.update(cls.default_config_dict())  # type: ignore[arg-type]
+        return config_dict
+
+    def __setattr__(self, key: str, value: Any):
+        upper_key = key.upper()
+        if upper_key not in Config.__annotations__:
+            super().__setattr__(key, value)
+            return
+        env_value = os.environ.get(key)
+        if env_value is None:
+            super().__setattr__(key, value)
+            return
+        value = self.convert_env_value(
+            key,
+            env_value,
+            Config.__annotations__[upper_key],
+        )
+        os.environ[upper_key] = str(value)
+
+    def _setup_llms(self):
+        embedding_provider = os.environ.get("EMBEDDING_PROVIDER")
+        if embedding_provider is None:
+            # Inline parse_embedding logic
+            if self.EMBEDDING is None:
+                msg = "Set EMBEDDING = '<embedding_provider>:<embedding_model>' Eg 'openai:text-embedding-3-large'"
+                raise ValueError(msg)
+            try:
+                self.EMBEDDING_PROVIDER, self.EMBEDDING_MODEL = self.EMBEDDING.split(":", 1)
+            except ValueError:
+                msg = "Set EMBEDDING = '<embedding_provider>:<embedding_model>' Eg 'openai:text-embedding-3-large'"
+                raise ValueError(msg)
+
+        # FAST_LLM
+        try:
+            self.FAST_LLM_PROVIDER, self.FAST_LLM_MODEL = self.FAST_LLM.split(":", 1)
+        except ValueError:
+            logger.error("FAST_LLM not setup correctly. Format: '<llm_provider>:<llm_model>' e.g. 'openai:gpt-4o-mini'")
+            self.FAST_LLM_PROVIDER = self.__class__.FAST_LLM_PROVIDER
+            self.FAST_LLM_MODEL = self.__class__.FAST_LLM_MODEL
+
+        # SMART_LLM
+        try:
+            self.SMART_LLM_PROVIDER, self.SMART_LLM_MODEL = self.STRATEGIC_LLM.split(":", 1)
+        except ValueError:
+            logger.error("STRATEGIC_LLM not setup correctly. Format: '<llm_provider>:<llm_model>' e.g. 'openai:gpt-4o-mini'")
+            self.SMART_LLM_PROVIDER = self.__class__.SMART_LLM_PROVIDER
+            self.SMART_LLM_MODEL = self.__class__.SMART_LLM_MODEL
+
+        # STRATEGIC_LLM
+        try:
+            self.STRATEGIC_LLM_PROVIDER, self.STRATEGIC_LLM_MODEL = self.STRATEGIC_LLM.split(":", 1)
+        except ValueError:
+            logger.error("STRATEGIC_LLM not setup correctly. Format: '<llm_provider>:<llm_model>' e.g. 'openai:gpt-4o-mini'")
+            self.STRATEGIC_LLM_PROVIDER = self.__class__.STRATEGIC_LLM_PROVIDER
+            self.STRATEGIC_LLM_MODEL = self.__class__.STRATEGIC_LLM_MODEL
+
+    def _set_doc_path(
+        self,
+        config: dict[str, Any],
+    ):
+        self.DOC_PATH = config.get("DOC_PATH", self.DOC_PATH)
+        if not self.DOC_PATH or not self.DOC_PATH.strip():
+            return
+        try:
+            os.makedirs(self.DOC_PATH, exist_ok=True)
+        except Exception as e:
+            logger.warning(
+                f"Warning: Error validating doc_path: {e.__class__.__name__}: {e}. Using default doc_path.",
+                exc_info=True,
+            )
+            self.DOC_PATH = config.get("DOC_PATH", str(Path.home().absolute()))
+
+    @classmethod
+    def load_config(
+        cls,
+        config_path: os.PathLike | str | None,
+    ) -> dict[str, Any]:
         """Load a configuration by name."""
         if config_path is None:
-            return DEFAULT_CONFIG
-
-        # config_path = os.path.join(cls.CONFIG_DIR, config_path)
-        if not os.path.exists(config_path):
-            if config_path and config_path != "default":
-                print(f"Warning: Configuration not found at '{config_path}'. Using default configuration.")
-                if not config_path.endswith(".json"):
-                    print(f"Do you mean '{config_path}.json'?")
-            return DEFAULT_CONFIG
-
-        with open(config_path, "r") as f:
-            custom_config = json.load(f)
+            config_dict = cls.default_config_dict()
+        else:
+            config_dict = cls._create_config_dict(config_path)
 
         # Merge with default config to ensure all keys are present
-        merged_config = DEFAULT_CONFIG.copy()
-        merged_config.update(custom_config)
+        merged_config: dict[str, Any] = cast(dict, cls.default_config_dict().copy())
+        merged_config.update(config_dict)
         return merged_config
 
     @classmethod
-    def list_available_configs(cls) -> List[str]:
+    def list_available_configs(cls) -> list[str]:
         """List all available configuration names."""
         configs = ["default"]
-        for file in os.listdir(cls.CONFIG_DIR):
-            if file.endswith(".json"):
-                configs.append(file[:-5])  # Remove .json extension
+        for file in Path(os.path.expandvars(os.path.normpath(cls.CONFIG_DIR))).absolute().iterdir():
+            if file.suffix.casefold() == ".json":
+                configs.append(file.stem)  # Remove .json extension
         return configs
 
-    def parse_retrievers(self, retriever_str: str) -> List[str]:
+    def parse_retrievers(
+        self,
+        retriever_str: str,
+    ) -> list[str]:
         """Parse the retriever string into a list of retrievers and validate them."""
-        retrievers = [retriever.strip()
-                      for retriever in retriever_str.split(",")]
-        valid_retrievers = get_all_retriever_names() or []
+        retrievers = [retriever.strip() for retriever in retriever_str.split(",")]
+        valid_retrievers = get_all_retriever_names()
         invalid_retrievers = [r for r in retrievers if r not in valid_retrievers]
         if invalid_retrievers:
-            raise ValueError(
-                f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. "
-                f"Valid options are: {', '.join(valid_retrievers)}."
-            )
+            raise ValueError(f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. Valid options are: {', '.join(valid_retrievers)}.")
         return retrievers
 
-    @staticmethod
-    def parse_llm(llm_str: str | None) -> tuple[str | None, str | None]:
-        """Parse llm string into (llm_provider, llm_model)."""
-        from gpt_researcher.llm_provider.generic.base import _SUPPORTED_PROVIDERS
-
-        if llm_str is None:
-            return None, None
-        try:
-            llm_provider, llm_model = llm_str.split(":", 1)
-            assert llm_provider in _SUPPORTED_PROVIDERS, (
-                f"Unsupported {llm_provider}.\nSupported llm providers are: "
-                + ", ".join(_SUPPORTED_PROVIDERS)
-            )
-            return llm_provider, llm_model
-        except ValueError:
-            raise ValueError(
-                "Set SMART_LLM or FAST_LLM = '<llm_provider>:<llm_model>' "
-                "Eg 'openai:gpt-4o-mini'"
-            )
-
-    @staticmethod
-    def parse_embedding(embedding_str: str | None) -> tuple[str | None, str | None]:
-        """Parse embedding string into (embedding_provider, embedding_model)."""
-        from gpt_researcher.memory.embeddings import _SUPPORTED_PROVIDERS
-
-        if embedding_str is None:
-            return None, None
-        try:
-            embedding_provider, embedding_model = embedding_str.split(":", 1)
-            assert embedding_provider in _SUPPORTED_PROVIDERS, (
-                f"Unsupported {embedding_provider}.\nSupported embedding providers are: "
-                + ", ".join(_SUPPORTED_PROVIDERS)
-            )
-            return embedding_provider, embedding_model
-        except ValueError:
-            raise ValueError(
-                "Set EMBEDDING = '<embedding_provider>:<embedding_model>' "
-                "Eg 'openai:text-embedding-3-large'"
-            )
-
-    def validate_doc_path(self):
-        """Ensure that the folder exists at the doc path"""
-        os.makedirs(self.doc_path, exist_ok=True)
-
-    @staticmethod
-    def convert_env_value(key: str, env_value: str, type_hint: Type) -> Any:
+    @classmethod
+    def convert_env_value(
+        cls,
+        key: str,
+        env_value: str,
+        type_hint: type | str,
+    ) -> Any:
         """Convert environment variable to the appropriate type based on the type hint."""
-        origin = get_origin(type_hint)
-        args = get_args(type_hint)
+        origin: Any = get_origin(type_hint)
+        args: tuple[Any, ...] = get_args(type_hint)
 
-        if origin is Union:
+        if origin in (Union, "Union"):
             # Handle Union types (e.g., Union[str, None])
             for arg in args:
-                if arg is type(None):
-                    if env_value.lower() in ("none", "null", ""):
+                if arg in (None.__class__.__name__, None.__class__):
+                    if env_value.casefold() in ("none", "null", "", None):
                         return None
                 else:
                     try:
-                        return Config.convert_env_value(key, env_value, arg)
+                        return cls.convert_env_value(key, env_value, arg)
                     except ValueError:
                         continue
-            raise ValueError(f"Cannot convert {env_value} to any of {args}")
+            raise ValueError(f"Cannot convert env value `{env_value}` to any of arg types `{args}` for key '{key}'")
 
-        if type_hint is bool:
-            return env_value.lower() in ("true", "1", "yes", "on")
-        elif type_hint is int:
+        if type_hint in (bool, "bool"):
+            return env_value.casefold() in ("true", "1", "yes", "on", "y")
+        elif type_hint in (int, "int"):
             return int(env_value)
-        elif type_hint is float:
+        elif type_hint in (float, "float"):
             return float(env_value)
-        elif type_hint in (str, Any):
+        elif type_hint in (str, Any, "str"):
             return env_value
-        elif origin is list or origin is List:
+        elif origin in {list, List, dict, Dict, "list", "dict", "List", "Dict"}:
             return json.loads(env_value)
         else:
-            raise ValueError(f"Unsupported type {type_hint} for key {key}")
+            raise ValueError(f"Unsupported type '{type_hint}' for key '{key}'")

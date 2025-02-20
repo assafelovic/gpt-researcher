@@ -1,43 +1,50 @@
+from __future__ import annotations
+
+import logging
 import os
-import requests
 import tempfile
 from urllib.parse import urlparse
+
+import requests
 from langchain_community.document_loaders import PyMuPDFLoader
+
+logger = logging.getLogger(__name__)
 
 
 class PyMuPDFScraper:
-
-    def __init__(self, link, session=None):
-        """
-        Initialize the scraper with a link and an optional session.
+    def __init__(
+        self,
+        link: str,
+        session: requests.Session | None = None,
+    ):
+        """Initialize the scraper with a link and an optional session.
 
         Args:
-          link (str): The URL or local file path of the PDF document.
-          session (requests.Session, optional): An optional session for making HTTP requests.
+            link (str): The URL or local file path of the PDF document.
+            session (requests.Session, optional): An optional session for making HTTP requests.
         """
-        self.link = link
-        self.session = session
+        self.link: str = link
+        self.session: requests.Session | None = session
 
     def is_url(self) -> bool:
-        """
-        Check if the provided `link` is a valid URL.
+        """Check if the provided `link` is a valid URL.
 
         Returns:
-          bool: True if the link is a valid URL, False otherwise.
+            bool: True if the link is a valid URL, False otherwise.
         """
         try:
             result = urlparse(self.link)
-            return all([result.scheme, result.netloc])  # Check for valid scheme and network location
+            return all(
+                [result.scheme, result.netloc]
+            )  # Check for valid scheme and network location
         except Exception:
             return False
 
-    def scrape(self) -> str:
-        """
-        The `scrape` function uses PyMuPDFLoader to load a document from the provided link (either URL or local file)
-        and returns the document as a string.
+    def scrape(self) -> str | None:
+        """Scrape a document from the provided link (either URL or local file)
 
         Returns:
-          str: A string representation of the loaded document.
+            str: A string representation of the scraped document.
         """
         try:
             if self.is_url():
@@ -60,6 +67,8 @@ class PyMuPDFScraper:
             return str(doc)
 
         except requests.exceptions.Timeout:
-            print(f"Download timed out. Please check the link : {self.link}")
+            logger.exception(f"Download timed out. Please check the link : {self.link}")
         except Exception as e:
-            print(f"Error loading PDF : {self.link} {e}")
+            logger.exception(f"Error loading PDF : {self.link} {e.__class__.__name__}: {e}")
+
+        return None

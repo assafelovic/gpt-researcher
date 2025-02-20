@@ -1,25 +1,37 @@
-import aiofiles
-import urllib
-import mistune
+from __future__ import annotations
 
-async def write_to_file(filename: str, text: str) -> None:
+import logging
+import urllib.parse
+
+import aiofiles
+import mistune
+from fpdf import FPDF
+from markdown_it import MarkdownIt
+
+logger = logging.getLogger(__name__)
+
+
+async def write_to_file(
+    filename: str,
+    text: str,
+) -> None:
     """Asynchronously write text to a file in UTF-8 encoding.
 
     Args:
         filename (str): The filename to write to.
         text (str): The text to write.
     """
-    # Ensure text is a string
-    if not isinstance(text, str):
-        text = str(text)
-
     # Convert text to UTF-8, replacing any problematic characters
-    text_utf8 = text.encode('utf-8', errors='replace').decode('utf-8')
+    text_utf8 = str(text).encode("utf-8", errors="replace").decode("utf-8")
 
-    async with aiofiles.open(filename, "w", encoding='utf-8') as file:
+    async with aiofiles.open(filename, "w", encoding="utf-8") as file:
         await file.write(text_utf8)
 
-async def write_text_to_md(text: str, filename: str = "") -> str:
+
+async def write_text_to_md(
+    text: str,
+    filename: str = "",
+) -> str:
     """Writes text to a Markdown file and returns the file path.
 
     Args:
@@ -32,33 +44,56 @@ async def write_text_to_md(text: str, filename: str = "") -> str:
     await write_to_file(file_path, text)
     return urllib.parse.quote(file_path)
 
-async def write_md_to_pdf(text: str, filename: str = "") -> str:
+
+async def write_md_to_pdf(
+    text: str,
+    filename: str = "",
+) -> str:
     """Converts Markdown text to a PDF file and returns the file path.
 
     Args:
-        text (str): Markdown text to convert.
+        text (str): Markdown text to convert
+        filename (str): Base filename to use
 
     Returns:
-        str: The encoded file path of the generated PDF.
+        str: The encoded file path of the generated PDF
     """
     file_path = f"outputs/{filename[:60]}.pdf"
 
     try:
-        from md2pdf.core import md2pdf
-        md2pdf(file_path,
-               md_content=text,
-               # md_file_path=f"{file_path}.md",
-               css_file_path="./frontend/pdf_styles.css",
-               base_url=None)
-        print(f"Report written to {file_path}")
+        # Convert markdown to HTML
+        md = MarkdownIt()
+        html = md.render(text)
+
+        # Apply CSS styles
+        css_file_path = "./frontend/pdf_styles.css"
+        with open(css_file_path) as css_file:
+            css = css_file.read()
+
+        # Create PDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("helvetica", size=11)
+
+        # Add CSS styles to the PDF
+        pdf.write_html(f"<style>{css}</style>{html}")
+
+        # Save PDF
+        pdf.output(file_path)
+
+        logger.debug(f"Report written to {file_path}")
+
     except Exception as e:
-        print(f"Error in converting Markdown to PDF: {e}")
+        logger.exception(f"Error in converting Markdown to PDF: {e}")
         return ""
 
-    encoded_file_path = urllib.parse.quote(file_path)
-    return encoded_file_path
+    return urllib.parse.quote(file_path)
 
-async def write_md_to_word(text: str, filename: str = "") -> str:
+
+async def write_md_to_word(
+    text: str,
+    filename: str = "",
+) -> str:
     """Converts Markdown text to a DOCX file and returns the file path.
 
     Args:
@@ -72,6 +107,7 @@ async def write_md_to_word(text: str, filename: str = "") -> str:
     try:
         from docx import Document
         from htmldocx import HtmlToDocx
+
         # Convert report markdown to HTML
         html = mistune.html(text)
         # Create a document object
@@ -82,11 +118,10 @@ async def write_md_to_word(text: str, filename: str = "") -> str:
         # Saving the docx document to file_path
         doc.save(file_path)
 
-        print(f"Report written to {file_path}")
+        logger.debug(f"Report written to {file_path}")
 
-        encoded_file_path = urllib.parse.quote(file_path)
-        return encoded_file_path
+        return urllib.parse.quote(file_path)
 
     except Exception as e:
-        print(f"Error in converting Markdown to DOCX: {e}")
+        logger.exception(f"Error in converting Markdown to DOCX: {e}")
         return ""

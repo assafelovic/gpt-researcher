@@ -1,18 +1,16 @@
 # multi_agents/__init__.py
+from __future__ import annotations
 
-from .agents import (
-    ResearchAgent,
-    WriterAgent,
-    PublisherAgent,
-    ReviserAgent,
-    ReviewerAgent,
+from multi_agents.agents import (
+    ChiefEditorAgent,
     EditorAgent,
-    ChiefEditorAgent
+    PublisherAgent,
+    ResearchAgent,
+    ReviewerAgent,
+    ReviserAgent,
+    WriterAgent,
 )
-from .memory import (
-    DraftState,
-    ResearchState
-)
+from multi_agents.memory import DraftState, ResearchState
 
 __all__ = [
     "ResearchAgent",
@@ -23,5 +21,5 @@ __all__ = [
     "EditorAgent",
     "ChiefEditorAgent",
     "DraftState",
-    "ResearchState"
+    "ResearchState",
 ]

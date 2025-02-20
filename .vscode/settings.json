@@ -1,8 +1,32 @@
 {
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.autoImportCompletions": true,
-    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.diagnosticMode": "openFilesOnly",
     "python.analysis.diagnosticSeverityOverrides": {
-        "reportPrivateImportUsage": "warning"
+        "reportPrivateImportUsage": "warning",
+        "reportUnusedImport": "warning",
+    },
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}",
+        "${workspaceFolder}/multi_agents",
+        "${workspaceFolder}/backend",
+        "${workspaceFolder}/gpt_researcher",
+        "${workspaceFolder}/frontend",
+        "${workspaceFolder}/llm_fallbacks",
+    ],
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.importFormat": "absolute",
+    "python.analysis.logLevel": "Trace",
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "*test*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true,
+    "files.associations": {
+        "*.yaml": "home-assistant"
     },
 }

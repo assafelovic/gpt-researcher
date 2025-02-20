@@ -1,12 +1,13 @@
-from typing import TypedDict, List, Annotated
-import operator
+from __future__ import annotations
+
+from typing import TypedDict
 
 
 class ResearchState(TypedDict):
     task: dict
     initial_research: str
-    sections: List[str]
-    research_data: List[dict]
+    sections: list[str]
+    research_data: list[dict]
     # Report layout
     title: str
     headers: dict
@@ -14,7 +15,5 @@ class ResearchState(TypedDict):
     table_of_contents: str
     introduction: str
     conclusion: str
-    sources: List[str]
+    sources: list[str]
     report: str
-
-

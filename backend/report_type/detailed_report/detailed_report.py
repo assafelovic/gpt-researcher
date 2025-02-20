@@ -1,51 +1,65 @@
-import asyncio
-from typing import List, Dict, Set, Optional, Any
-from fastapi import WebSocket
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from gpt_researcher import GPTResearcher
+from gpt_researcher.utils.schemas import ReportSource, ReportType, Subtopics, Tone
+
+if TYPE_CHECKING:
+    import os
+
+    from fastapi import WebSocket
 
 
-class DetailedReport:
+class DetailedReporter:
+    logger: ClassVar[logging.Logger] = logging.getLogger(__name__)
+
     def __init__(
         self,
         query: str,
         report_type: str,
         report_source: str,
-        source_urls: List[str] = [],
-        document_urls: List[str] = [],
-        config_path: str = None,
-        tone: Any = "",
-        websocket: WebSocket = None,
-        subtopics: List[Dict] = [],
-        headers: Optional[Dict] = None
+        source_urls: list[str] | None = None,
+        document_urls: list[str] | None = None,
+        config_path: os.PathLike | str | None = None,
+        tone: str | Tone = "",
+        websocket: WebSocket | None = None,
+        subtopics: list[dict[str, Any]] | None = None,
+        headers: dict[str, Any] | None = None,
     ):
-        self.query = query
-        self.report_type = report_type
-        self.report_source = report_source
-        self.source_urls = source_urls
-        self.document_urls = document_urls
-        self.config_path = config_path
-        self.tone = tone
-        self.websocket = websocket
-        self.subtopics = subtopics
-        self.headers = headers or {}
+        self.query: str = query
+        self.report_type: ReportType = (
+            ReportType.__members__[report_type] if isinstance(report_type, str) else report_type
+        )
+        self.report_source = (
+            ReportSource.__members__[report_source]
+            if isinstance(report_source, str)
+            else report_source
+        )
+        self.source_urls: list[str] = [] if source_urls is None else source_urls
+        self.document_urls: list[str] = [] if document_urls is None else document_urls
+        self.config_path: os.PathLike | str | None = config_path
+        self.tone: Tone | None = Tone.__members__[tone] if isinstance(tone, str) else tone
+        self.websocket: WebSocket | None = websocket
+        self.subtopics: list[dict[str, Any]] = [] if subtopics is None else subtopics
+        self.headers: dict[str, Any] = {} if headers is None else headers
 
-        self.gpt_researcher = GPTResearcher(
+        self.gpt_researcher: GPTResearcher = GPTResearcher(
             query=self.query,
-            report_type="research_report",
+            config=self.config_path,
+            report_type=self.report_type,
             report_source=self.report_source,
             source_urls=self.source_urls,
             document_urls=self.document_urls,
-            config_path=self.config_path,
             tone=self.tone,
             websocket=self.websocket,
-            headers=self.headers
+            headers=self.headers,
         )
-        self.existing_headers: List[Dict] = []
-        self.global_context: List[str] = []
-        self.global_written_sections: List[str] = []
-        self.global_urls: Set[str] = set(
-            self.source_urls) if self.source_urls else set()
+        self.existing_headers: list[dict[str, Any]] = []
+        self.global_context: list[str] = []
+        self.global_written_sections: list[str] = []
+        self.global_urls: set[str] = set(self.source_urls) if self.source_urls else set()
 
     async def run(self) -> str:
         await self._initial_research()
@@ -56,84 +70,126 @@ class DetailedReport:
         report = await self._construct_detailed_report(report_introduction, report_body)
         return report
 
-    async def _initial_research(self) -> None:
+    async def _initial_research(self):
         await self.gpt_researcher.conduct_research()
-        self.global_context = self.gpt_researcher.context
-        self.global_urls = self.gpt_researcher.visited_urls
+        self.global_context = list(set(self.gpt_researcher.context))
+        self.global_urls = set(self.gpt_researcher.visited_urls)
 
-    async def _get_all_subtopics(self) -> List[Dict]:
-        subtopics_data = await self.gpt_researcher.get_subtopics()
+    async def _get_all_subtopics(self) -> list[dict[str, Any]]:
+        subtopics_data: list[str] | Subtopics = await self.gpt_researcher.get_subtopics()
 
-        all_subtopics = []
-        if subtopics_data and subtopics_data.subtopics:
+        all_subtopics: list[dict[str, Any]] = []
+        if isinstance(subtopics_data, Subtopics):
             for subtopic in subtopics_data.subtopics:
                 all_subtopics.append({"task": subtopic.task})
+        elif isinstance(subtopics_data, list):
+            for subtopic in subtopics_data:
+                all_subtopics.append({"task": subtopic})
         else:
-            print(f"Unexpected subtopics data format: {subtopics_data}")
+            self.logger.warning(f"Unexpected subtopics data format: {subtopics_data}")
+            return []
 
         return all_subtopics
 
-    async def _generate_subtopic_reports(self, subtopics: List[Dict]) -> tuple:
-        subtopic_reports = []
+    async def _generate_subtopic_reports(
+        self,
+        subtopics: list[dict[str, Any]],
+    ) -> tuple[list[dict[str, Any]], str]:
+        subtopic_reports: list[dict[str, Any]] = []
         subtopics_report_body = ""
 
         for subtopic in subtopics:
-            result = await self._get_subtopic_report(subtopic)
+            result: dict[str, str] = await self._get_subtopic_report(subtopic)
             if result["report"]:
                 subtopic_reports.append(result)
                 subtopics_report_body += f"\n\n\n{result['report']}"
 
         return subtopic_reports, subtopics_report_body
 
-    async def _get_subtopic_report(self, subtopic: Dict) -> Dict[str, str]:
-        current_subtopic_task = subtopic.get("task")
+    async def _get_subtopic_report(
+        self,
+        subtopic: dict[str, Any],
+    ) -> dict[str, Any]:
+        current_subtopic_task: str | None = subtopic.get("task", "")
+        if current_subtopic_task is None:
+            raise ValueError("Subtopic task is required")
+
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
-            report_type="subtopic_report",
+            report_type=ReportType.SubtopicReport,
             report_source=self.report_source,
             websocket=self.websocket,
             headers=self.headers,
             parent_query=self.query,
-            subtopics=self.subtopics,
+            subtopics=[
+                repr(subtopic) if isinstance(subtopic, dict) else subtopic
+                for subtopic in self.subtopics
+            ],
             visited_urls=self.global_urls,
-            agent=self.gpt_researcher.agent,
-            role=self.gpt_researcher.role,
+            agent_role=self.gpt_researcher.agent_role,
             tone=self.tone,
+            context=list(set(self.global_context)),
         )
 
-        subtopic_assistant.context = list(set(self.global_context))
         await subtopic_assistant.conduct_research()
 
-        draft_section_titles = await subtopic_assistant.get_draft_section_titles(current_subtopic_task)
+        draft_section_titles: str | list[str] = await subtopic_assistant.get_draft_section_titles(
+            current_subtopic_task
+        )
 
         if not isinstance(draft_section_titles, str):
             draft_section_titles = str(draft_section_titles)
 
-        parse_draft_section_titles = self.gpt_researcher.extract_headers(draft_section_titles)
-        parse_draft_section_titles_text = [header.get(
-            "text", "") for header in parse_draft_section_titles]
+        parse_draft_section_titles: list[dict[str, Any]] = self.gpt_researcher.extract_headers(
+            draft_section_titles
+        )
+        parse_draft_section_titles_text: list[str] = [
+            header.get("text", "") for header in parse_draft_section_titles
+        ]
 
-        relevant_contents = await subtopic_assistant.get_similar_written_contents_by_draft_section_titles(
-            current_subtopic_task, parse_draft_section_titles_text, self.global_written_sections
+        relevant_contents: list[
+            str
+        ] = await subtopic_assistant.get_similar_written_contents_by_draft_section_titles(
+            current_subtopic_task,
+            parse_draft_section_titles_text,
+            self.global_written_sections,
         )
 
-        subtopic_report = await subtopic_assistant.write_report(self.existing_headers, relevant_contents)
+        subtopic_report: str = await subtopic_assistant.write_report(
+            self.existing_headers,
+            relevant_contents,
+        )
 
-        self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
+        self.global_written_sections.extend(
+            [
+                section.get("content", "")
+                for section in self.gpt_researcher.extract_sections(subtopic_report)
+            ]
+        )
         self.global_context = list(set(subtopic_assistant.context))
         self.global_urls.update(subtopic_assistant.visited_urls)
 
-        self.existing_headers.append({
-            "subtopic task": current_subtopic_task,
-            "headers": self.gpt_researcher.extract_headers(subtopic_report),
-        })
+        self.existing_headers.append(
+            {
+                "subtopic task": current_subtopic_task,
+                "headers": self.gpt_researcher.extract_headers(subtopic_report),
+            }
+        )
 
-        return {"topic": subtopic, "report": subtopic_report}
+        return {
+            "topic": subtopic,
+            "report": subtopic_report,
+        }
 
-    async def _construct_detailed_report(self, introduction: str, report_body: str) -> str:
-        toc = self.gpt_researcher.table_of_contents(report_body)
-        conclusion = await self.gpt_researcher.write_report_conclusion(report_body)
-        conclusion_with_references = self.gpt_researcher.add_references(
-            conclusion, self.gpt_researcher.visited_urls)
-        report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
+    async def _construct_detailed_report(
+        self,
+        introduction: str,
+        report_body: str,
+    ) -> str:
+        toc: str = self.gpt_researcher.table_of_contents(report_body)
+        conclusion: str = await self.gpt_researcher.write_report_conclusion(report_body)
+        conclusion_with_references: str = self.gpt_researcher.add_references(
+            conclusion, self.gpt_researcher.visited_urls
+        )
+        report: str = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
         return report
