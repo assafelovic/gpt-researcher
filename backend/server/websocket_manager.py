@@ -59,12 +59,12 @@ class WebSocketManager:
             del self.sender_tasks[websocket]
             del self.message_queues[websocket]
 
-    async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None):
+    async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[]):
         """Start streaming the output."""
         tone = Tone[tone]
         # add customized JSON config file path here
         config_path = "default"
-        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers = headers, config_path = config_path)
+        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers = headers, query_domains = query_domains, config_path = config_path)
         #Create new Chat Agent whenever a new report is written
         self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
         return report
@@ -76,10 +76,8 @@ class WebSocketManager:
         else:
             await websocket.send_json({"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"})
 
-async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, headers=None, config_path=""):
-    """Run the agent."""
-    start_time = datetime.datetime.now()
-    
+async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, headers=None, query_domains=[], config_path=""):
+    """Run the agent."""    
     # Create logs handler for this research task
     logs_handler = CustomLogsHandler(websocket, task)
     
@@ -97,6 +95,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
     elif report_type == ReportType.DetailedReport.value:
         researcher = DetailedReport(
             query=task,
+            query_domains=query_domains,
             report_type=report_type,
             report_source=report_source,
             source_urls=source_urls,
@@ -111,6 +110,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
     else:
         researcher = BasicReport(
             query=task,
+            query_domains=query_domains,
             report_type=report_type,
             report_source=report_source,
             source_urls=source_urls,

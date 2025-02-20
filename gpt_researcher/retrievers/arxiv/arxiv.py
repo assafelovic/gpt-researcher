@@ -5,7 +5,7 @@ class ArxivSearch:
     """
     Arxiv API Retriever
     """
-    def __init__(self, query, sort='Relevance'):
+    def __init__(self, query, sort='Relevance', query_domains=None):
         self.arxiv = arxiv
         self.query = query
         assert sort in ['Relevance', 'SubmittedDate'], "Invalid sort criterion"

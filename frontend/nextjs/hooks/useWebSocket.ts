@@ -9,19 +9,6 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
   const initializeWebSocket = (promptValue: string, chatBoxSettings: ChatBoxSettings) => {
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
-    const headers = {
-      'retriever': apiVariables.RETRIEVER,
-      'langchain_api_key': apiVariables.LANGCHAIN_API_KEY,
-      'openai_api_key': apiVariables.OPENAI_API_KEY,
-      'tavily_api_key': apiVariables.TAVILY_API_KEY,
-      'google_api_key': apiVariables.GOOGLE_API_KEY,
-      'google_cx_key': apiVariables.GOOGLE_CX_KEY,
-      'bing_api_key': apiVariables.BING_API_KEY,
-      'searchapi_api_key': apiVariables.SEARCHAPI_API_KEY,
-      'serpapi_api_key': apiVariables.SERPAPI_API_KEY,
-      'serper_api_key': apiVariables.SERPER_API_KEY,
-      'searx_url': apiVariables.SEARX_URL
-    };
 
     if (!socket && typeof window !== 'undefined') {
       const fullHost = getHost()
@@ -50,13 +37,19 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
       };
 
       newSocket.onopen = () => {
-        const { report_type, report_source, tone } = chatBoxSettings;
-        let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
+        const { report_type, report_source, tone, domains } = chatBoxSettings;
+        let data = "start " + JSON.stringify({ 
+          task: promptValue, 
+          report_type, 
+          report_source, 
+          tone,
+          query_domains: domains?.map(d => d.value) || [] // Add this line
+        });
         newSocket.send(data);
-
+      
         heartbeatInterval.current = window.setInterval(() => {
           socket?.send('ping');
-        }, 3000); // Send ping every 3 seconds
+        }, 3000);
       };
 
       newSocket.onclose = () => {
@@ -67,7 +60,7 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
       };
     } else if (socket) {
       const { report_type, report_source, tone } = chatBoxSettings;
-      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
+      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone });
       socket.send(data);
     }
   };
