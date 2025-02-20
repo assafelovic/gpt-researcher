@@ -147,6 +147,7 @@ class NoDriverScraper:
     def __init__(self, url: str, session: Optional[requests.Session] = None):
         self.url = url
         self.session = session
+        self.debug = False
 
     async def scrape_async(self) -> Tuple[str, List[str], str]:
         """Returns tuple of (text, image_urls, title)"""
@@ -174,19 +175,22 @@ class NoDriverScraper:
             image_urls = get_relevant_images(soup, self.url)
             title = extract_title(soup)
 
-            if not text or len(text) < 200:
-                screenshot_dir = Path("logs/screenshots")
-                screenshot_dir.mkdir(exist_ok=True)
-                screenshot_path = (
-                    screenshot_dir
-                    / f"screenshot-error-{NoDriverScraper.get_domain(self.url)}.jpeg"
-                )
-                await page.save_screenshot(screenshot_path)
+            if len(text) < 200:
                 self.logger.warning(
-                    f"Failed to scrape content/title from {self.url}. Title: {title}, Text length: {len(text)},\n"
-                    f"excerpt: {text[:min(200,len(text))]}.\n"
-                    f"check screenshot at [{screenshot_path}] for more details."
+                    f"Content is too short from {self.url}. Title: {title}, Text length: {len(text)},\n"
+                    f"excerpt: {text}."
                 )
+                if self.debug:
+                    screenshot_dir = Path("logs/screenshots")
+                    screenshot_dir.mkdir(exist_ok=True)
+                    screenshot_path = (
+                        screenshot_dir
+                        / f"screenshot-error-{NoDriverScraper.get_domain(self.url)}.jpeg"
+                    )
+                    await page.save_screenshot(screenshot_path)
+                    self.logger.warning(
+                        f"check screenshot at [{screenshot_path}] for more details."
+                    )
 
             return text, image_urls, title
         except Exception as e:
