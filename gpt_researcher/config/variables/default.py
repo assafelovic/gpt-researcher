@@ -22,7 +22,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "MAX_ITERATIONS": 4,
     "AGENT_ROLE": None,
     "SCRAPER": "bs",
-    "MAX_WORKERS": 20,
+    "MAX_WORKERS": 15,
     "MAX_HTTP_SESSIONS": 3,
     "MAX_SUBTOPICS": 3,
     "LANGUAGE": "english",
