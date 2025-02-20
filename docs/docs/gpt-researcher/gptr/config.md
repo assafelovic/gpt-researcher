@@ -37,7 +37,7 @@ Below is a list of current supported options:
 - **`AGENT_ROLE`**: Role of the agent. This might be used to customize the behavior of the agent based on its assigned roles. No default value.
 - **`MAX_SUBTOPICS`**: Maximum number of subtopics to generate or consider. Defaults to `3`.
 - **`SCRAPER`**: Web scraper to use for gathering information. Defaults to `bs` (BeautifulSoup). You can also use [newspaper](https://github.com/codelucas/newspaper).
-- **`MAX_WORKERS`**: Maximum number of concurrent scraper workers. Defaults to `20`.
+- **`MAX_WORKERS`**: Maximum number of concurrent scraper workers. Defaults to `15`.
 - **`MAX_HTTP_SESSIONS`**: Maximum number of concurrent http sessions or user agents. Defaults to `3`.
 - **`DOC_PATH`**: Path to read and research local documents. Defaults to an empty string indicating no path specified.
 - **`USER_AGENT`**: Custom User-Agent string for web crawling and web requests.
