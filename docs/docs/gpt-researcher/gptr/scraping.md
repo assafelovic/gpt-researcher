@@ -67,6 +67,15 @@ Limitations:
 - Requires more system resources
 - Requires additional setup (Selenium and WebDriver installation)
 
+### NoDriver (Browser Scraping)
+
+Alternative to Selenium for potentially better performance.
+
+Setup:
+```bash
+pip install zendriver
+```
+
 ### Tavily Extract (Recommended for Production)
 
 When `SCRAPER="tavily_extract"`, GPT Researcher uses Tavily's Extract API for web scraping. This method:
