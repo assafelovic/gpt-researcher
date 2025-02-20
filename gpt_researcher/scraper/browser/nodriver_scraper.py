@@ -41,7 +41,7 @@ class NoDriverScraper:
             self.allowed_requests_times = {}
             self.domain_semaphores: Dict[str, asyncio.Semaphore] = {}
             self.tab_mode = True
-            self.max_scroll_percent = 10000
+            self.max_scroll_percent = 1000
 
         async def get(self, url: str) -> zendriver.Tab:
             self.processing_count += 1
