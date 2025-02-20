@@ -111,14 +111,15 @@ class NoDriverScraper:
 
     @classmethod
     async def get_browser(
-        cls, session: requests.Session | None, headless: bool = True
+        cls, session: requests.Session | None, headless: bool = False
     ) -> "NoDriverScraper.Browser":
 
         async def create_browser():
-            if headless:
-                driver = await zendriver.start(headless=True, expert=True)
-            else:
-                driver = await zendriver.start(headless=False)
+            config = zendriver.Config(
+                headless=headless,
+                browser_connection_timeout=3,
+            )
+            driver = await zendriver.start(config)
             return cls.Browser(driver, session)
 
         try:
@@ -161,8 +162,10 @@ class NoDriverScraper:
         try:
             browser = await self.get_browser(session=self.session)
             page = await browser.get(self.url)
+            await page.wait_for_ready_state("complete")
             await page.wait()
             await page.sleep(random.uniform(2.5, 3.3))
+            await page.wait_for_ready_state("complete")
             await page.wait()
 
             await browser.scroll_page_to_bottom(page)
