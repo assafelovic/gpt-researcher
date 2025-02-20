@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 class TestWebSocket(WebSocket):
     def __init__(self):
         self.events = []
+        self.scope = {}
         
     async def accept(self):
         pass

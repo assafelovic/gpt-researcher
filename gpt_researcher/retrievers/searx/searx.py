@@ -9,13 +9,14 @@ class SearxSearch():
     """
     SearxNG API Retriever
     """
-    def __init__(self, query: str):
+    def __init__(self, query: str, query_domains=None):
         """
         Initializes the SearxSearch object
         Args:
             query: Search query string
         """
         self.query = query
+        self.query_domains = query_domains or None
         self.base_url = self.get_searxng_url()
 
     def get_searxng_url(self) -> str:
@@ -44,7 +45,7 @@ class SearxSearch():
             List of dictionaries containing search results
         """
         search_url = urljoin(self.base_url, "search")
-        
+        # TODO: Add support for query domains
         params = {
             # The search query. 
             'q': self.query, 
