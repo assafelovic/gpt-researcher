@@ -140,7 +140,7 @@ class NoDriverScraper:
 
     @classmethod
     async def stop_browser_if_necessary(cls, browser: Browser):
-        if browser and browser.processing_count == 0:
+        if browser and browser.processing_count <= 0:
             cls.browser_tasks.pop(browser.session, None)
             await browser.driver.stop()
 
