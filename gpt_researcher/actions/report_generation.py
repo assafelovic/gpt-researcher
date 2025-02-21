@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from litellm.utils import get_max_tokens
 
@@ -83,7 +83,7 @@ async def write_report_introduction(
         introduction = await provider.get_chat_response(
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": generate_report_introduction(query, context)},
+                {"role": "user", "content": generate_report_introduction(query, context, cfg.LANGUAGE)},
             ],
             stream=True,
             websocket=websocket,  # pyright: ignore[reportArgumentType]
@@ -93,7 +93,7 @@ async def write_report_introduction(
             from gpt_researcher.utils.costs import estimate_llm_cost
 
             llm_costs = estimate_llm_cost(
-                generate_report_introduction(query, context),
+                generate_report_introduction(query, context, cfg.LANGUAGE),
                 introduction,
             )
             cost_callback(llm_costs)
@@ -128,7 +128,7 @@ async def write_conclusion(
         str: The generated conclusion.
     """
     try:
-        provider = _get_llm(
+        provider: GenericLLMProvider = _get_llm(
             cfg,
             model=cfg.SMART_LLM_MODEL,
             temperature=0.25,
@@ -137,7 +137,7 @@ async def write_conclusion(
         conclusion: str = await provider.get_chat_response(
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": generate_report_conclusion(query, context)},
+                {"role": "user", "content": generate_report_conclusion(query, context, cfg.LANGUAGE)},
             ],
             stream=True,
             websocket=websocket,  # pyright: ignore[reportArgumentType]
@@ -146,8 +146,8 @@ async def write_conclusion(
         if cost_callback:
             from gpt_researcher.utils.costs import estimate_llm_cost
 
-            llm_costs = estimate_llm_cost(
-                generate_report_conclusion(query, context),
+            llm_costs: float = estimate_llm_cost(
+                generate_report_conclusion(query, context, cfg.LANGUAGE),
                 conclusion,
             )
             cost_callback(llm_costs)
@@ -180,7 +180,7 @@ async def summarize_url(
         str: The summarized content.
     """
     try:
-        provider = _get_llm(
+        provider: GenericLLMProvider = _get_llm(
             config,
             model=config.SMART_LLM_MODEL,
             temperature=0.25,
@@ -198,10 +198,10 @@ async def summarize_url(
             websocket=websocket,
         )
 
-        if cost_callback:
+        if cost_callback is not None:
             from gpt_researcher.utils.costs import estimate_llm_cost
 
-            llm_costs = estimate_llm_cost(
+            llm_costs: float = estimate_llm_cost(
                 f"Summarize the following content from {url}:\n\n{content}",
                 summary,
             )
@@ -236,7 +236,7 @@ async def generate_draft_section_titles(
         List[str]: A list of generated section titles.
     """
     try:
-        provider = _get_llm(
+        provider: GenericLLMProvider = _get_llm(
             config,
             model=config.SMART_LLM_MODEL,
             temperature=0.25,
@@ -244,7 +244,10 @@ async def generate_draft_section_titles(
         )
         section_titles: str = await provider.get_chat_response(
             messages=[
-                {"role": "system", "content": f"{role}"},
+                {
+                    "role": "system",
+                    "content": f"{role}",
+                },
                 {
                     "role": "user",
                     "content": generate_draft_titles_prompt(
@@ -258,10 +261,10 @@ async def generate_draft_section_titles(
             websocket=websocket,  # pyright: ignore[reportArgumentType]
         )
 
-        if cost_callback:
+        if cost_callback is not None:
             from gpt_researcher.utils.costs import estimate_llm_cost
 
-            llm_costs = estimate_llm_cost(
+            llm_costs: float = estimate_llm_cost(
                 generate_draft_titles_prompt(current_subtopic, query, context),
                 section_titles,
             )
@@ -275,7 +278,7 @@ async def generate_draft_section_titles(
 
 async def generate_report(
     query: str,
-    context,
+    context: Any,
     agent_role_prompt: str,
     report_type: ReportType,
     tone: Tone,
@@ -287,12 +290,12 @@ async def generate_report(
     relevant_written_contents: list[str] | None = None,
     cost_callback: Callable[[float], None] | None = None,
     headers: list[str] | None = None,
-):
+) -> str:
     """Generates the final report.
 
     Args:
         query (str):
-        context (str):
+        context (Any):
         agent_role_prompt (str):
         report_type (ReportType):
         websocket (WebSocket | None):
@@ -307,45 +310,48 @@ async def generate_report(
         report (str): The final report
 
     """
-    cfg = Config() if research_config is None else research_config
+    cfg: Config = Config() if research_config is None else research_config
     existing_headers = [] if existing_headers is None else existing_headers
     relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
     headers = [] if headers is None else headers
 
     generate_prompt: Callable[..., str] | None = get_prompt_by_report_type(report_type)
-    report = ""
+    if generate_prompt is None:
+        raise ValueError(f"Report type '{report_type}' not supported")
+
+    report: str = ""
 
     if report_type == ReportType.SubtopicReport:
-        report_prompt = generate_prompt(
+        report_prompt: str = generate_prompt(
             query,
             existing_headers,
             relevant_written_contents,
             main_topic,
             context,
-            report_format=cfg.REPORT_FORMAT,  # type: ignore[attr-defined]
+            report_format=cfg.REPORT_FORMAT,
             tone=tone,
-            total_words=cfg.TOTAL_WORDS,  # type: ignore[attr-defined]
-            language=cfg.LANGUAGE,  # type: ignore[attr-defined]
+            total_words=cfg.TOTAL_WORDS,
+            language=cfg.LANGUAGE,
         )
     else:
         report_prompt = generate_prompt(
             query,
             context,
             report_source,
-            report_format=cfg.REPORT_FORMAT,  # type: ignore[attr-defined]
+            report_format=cfg.REPORT_FORMAT,
             tone=tone,
-            total_words=cfg.TOTAL_WORDS,  # type: ignore[attr-defined]
-            language=cfg.LANGUAGE,  # type: ignore[attr-defined]
+            total_words=cfg.TOTAL_WORDS,
+            language=cfg.LANGUAGE,
         )
-    content = report_prompt
+    content: str = report_prompt
     report = content  # Default to original content if all attempts fail
 
     try:
-        provider = _get_llm(
+        provider: GenericLLMProvider = _get_llm(
             cfg,
             model=cfg.SMART_LLM_MODEL,
             temperature=0.35,
-            max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL),  # type: ignore[attr-defined]
+            max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL),
         )
         report = await provider.get_chat_response(
             messages=[
@@ -362,21 +368,21 @@ async def generate_report(
             websocket=websocket,
         )
 
-        if cost_callback:
+        if cost_callback is not None:
             from gpt_researcher.utils.costs import estimate_llm_cost
 
-            llm_costs = estimate_llm_cost(content, report)
+            llm_costs: float = estimate_llm_cost(content, report)
             cost_callback(llm_costs)
 
     except Exception as first_error:
         logger.exception(f"Error in generate_report: {first_error.__class__.__name__}: {first_error}")
         try:
             # Try again with combined prompt
-            provider = _get_llm(
+            provider: GenericLLMProvider = _get_llm(
                 cfg,
                 model=cfg.SMART_LLM_MODEL,
                 temperature=0.35,
-                max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL),  # type: ignore[attr-defined]
+                max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL),
             )
             report = await provider.get_chat_response(
                 messages=[
@@ -389,7 +395,7 @@ async def generate_report(
                 websocket=websocket,
             )
 
-            if cost_callback:
+            if cost_callback is not None:
                 from gpt_researcher.utils.costs import estimate_llm_cost
 
                 llm_costs = estimate_llm_cost(

@@ -20,7 +20,7 @@
 
 # 🔎 GPT Researcher
 
-**GPT Researcher is an autonomous agent designed for comprehensive web and local research on any given task.** 
+**GPT Researcher is an open deep research agent designed for both web and local research on any given task.**
 
 The agent produces detailed, factual, and unbiased research reports with citations. GPT Researcher provides a full suite of customization options to create tailor made and domain specific research agents. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses misinformation, speed, determinism, and reliability by offering stable performance and increased speed through parallelized agent work.
 
@@ -35,7 +35,7 @@ The agent produces detailed, factual, and unbiased research reports with citatio
 - Selective web sources can introduce bias into research tasks.
 
 ## Demo
-https://github.com/user-attachments/assets/2cc38f6a-9f66-4644-9e69-a46c40e296d4
+<https://github.com/user-attachments/assets/2cc38f6a-9f66-4644-9e69-a46c40e296d4>
 
 ## Architecture
 
@@ -46,16 +46,17 @@ The core idea is to utilize 'planner' and 'execution' agents. The planner genera
 </div>
 
 Steps:
-* Create a task-specific agent based on a research query.
-* Generate questions that collectively form an objective opinion on the task.
-* Use a crawler agent for gathering information for each question.
-* Summarize and source-track each resource.
-* Filter and aggregate summaries into a final research report.
+- Create a task-specific agent based on a research query.
+- Generate questions that collectively form an objective opinion on the task.
+- Use a crawler agent for gathering information for each question.
+- Summarize and source-track each resource.
+- Filter and aggregate summaries into a final research report.
 
 ## Tutorials
- - [How it Works](https://docs.gptr.dev/blog/building-gpt-researcher)
- - [How to Install](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
- - [Live Demo](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
+
+- [How it Works](https://docs.gptr.dev/blog/building-gpt-researcher)
+- [How to Install](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
+- [Live Demo](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
 ## Features
 
@@ -71,6 +72,7 @@ Steps:
 ## 📖 Documentation
 
 See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started) for:
+
 - Installation and setup guides
 - Configuration and customization options
 - How-To examples
@@ -107,11 +109,14 @@ Visit [http://localhost:8000](http://localhost:8000) to start.
 For other setups (e.g., Poetry or virtual environments), check the [Getting Started page](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started).
 
 ## Run as PIP package
+
 ```bash
 pip install gpt-researcher
 
 ```
-### Example Usage:
+
+### Example Usage
+
 ```python
 ...
 from gpt_researcher import GPTResearcher
@@ -127,7 +132,6 @@ report = await researcher.write_report()
 
 **For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package) page.**
 
-
 ## Run with Docker
 
 > **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
@@ -141,18 +145,17 @@ docker-compose up --build
 ```
 
 If that doesn't work, try running it without the dash:
+
 ```bash
 docker compose up --build
 ```
 
-
 > **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
- - the Python server running on localhost:8000<br>
- - the React app running on localhost:3000<br>
+
+- the Python server running on localhost:8000<br>
+- the React app running on localhost:3000<br>
 
 Visit localhost:3000 on any browser and enjoy researching!
-
-
 
 ## 📄 Research on Local Documents
 
@@ -164,12 +167,13 @@ Step 1: Add the env variable `DOC_PATH` pointing to the folder where your docume
 export DOC_PATH="./my-docs"
 ```
 
-Step 2: 
- - If you're running the frontend app on localhost:8000, simply select "My Documents" from the "Report Source" Dropdown Options.
- - If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/docs/gpt-researcher/pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
+Step 2:
 
+- If you're running the frontend app on localhost:8000, simply select "My Documents" from the "Report Source" Dropdown Options.
+- If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/guides/gpt-researcher/gpt-researcher#pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
 
 ## 👪 Multi-Agent Assistant
+
 As AI evolves from prompt engineering and RAG to multi-agent systems, we're excited to introduce our new multi-agent assistant built with [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/).
 
 By using LangGraph, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this project showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
@@ -188,27 +192,32 @@ GPT-Researcher now features an enhanced frontend to improve the user experience 
 - Customizable settings for tailored research experiences
 
 Two deployment options are available:
+
 1. A lightweight static frontend served by FastAPI
 2. A feature-rich NextJS application for advanced functionality
 
-For detailed setup instructions and more information about the frontend features, please visit our [documentation page](https://docs.gptr.dev/docs/gpt-researcher/frontend/frontend).
+For detailed setup instructions and more information about the frontend features, please visit our [documentation page](https://docs.gptr.dev/docs/gpt-researcher/frontend/introduction).
 
 ## 🚀 Contributing
+
 We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md) if you're interested.
 
 Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/QgZXvJAccX) if you're interested in joining our mission.
 <a href="https://github.com/assafelovic/gpt-researcher/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=assafelovic/gpt-researcher" />
 </a>
+
 ## ✉️ Support / Contact us
+
 - [Community Discord](https://discord.gg/spBgZmm3Xe)
-- Author Email: assaf.elovic@gmail.com
+- Author Email: <assaf.elovic@gmail.com>
 
 ## 🛡 Disclaimer
 
 This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the Apache 2 license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
 
 Our view on unbiased research claims:
+
 1. The main goal of GPT Researcher is to reduce incorrect and biased facts. How? We assume that the more sites we scrape the less chances of incorrect data. By scraping multiple sites per research, and choosing the most frequent information, the chances that they are all wrong is extremely low.
 2. We do not aim to eliminate biases; we aim to reduce it as much as possible. **We are here as a community to figure out the most effective human/llm interactions.**
 3. In research, people also tend towards biases as most have already opinions on the topics they research about. This tool scrapes many opinions and will evenly explain diverse views that a biased person would never have read.
@@ -224,7 +233,6 @@ Our view on unbiased research claims:
   </picture>
 </a>
 </p>
-
 
 <p align="right">
   <a href="#top">⬆️ Back to Top</a>

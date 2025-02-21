@@ -10,13 +10,19 @@ import requests
 class PubMedCentralSearch:
     """PubMed Central API Retriever."""
 
-    def __init__(self, query: str):
+    def __init__(
+        self,
+        query: str,
+        query_domains: list[str] | None = None,
+    ):
         """Initializes the PubMedCentralSearch object.
 
         Args:
             query: The search query.
+            query_domains: The domains to search for.
         """
         self.query: str = query
+        self.query_domains: list[str] | None = query_domains
         self.api_key: str = self._retrieve_api_key()
 
     def _retrieve_api_key(self) -> str:
@@ -26,17 +32,47 @@ class PubMedCentralSearch:
             The API key.
 
         Raises:
-            Exception: If the API key is not found.
+            ValueError: If the API key is not found.
         """
         try:
             api_key = os.environ["NCBI_API_KEY"]
         except KeyError:
-            raise Exception(
-                "NCBI API key not found. Please set the NCBI_API_KEY environment variable. You can obtain your key from https://www.ncbi.nlm.nih.gov/account/"
+            raise ValueError(
+                "NCBI API key not found. Please set the NCBI_API_KEY environment variable. "
+                "You can obtain your key from https://www.ncbi.nlm.nih.gov/account/"
             )
         return api_key
 
-    def search(self, max_results: int = 10) -> list[dict[str, Any]]:
+    def fetch(
+        self,
+        ids: list[str],
+    ) -> str:
+        """Fetches the full text content for given article IDs.
+
+        Args:
+            ids: List of article IDs.
+
+        Returns:
+            XML content of the articles.
+        """
+        base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+        params: dict[str, Any] = {
+            "db": "pmc",
+            "id": ",".join(ids),
+            "retmode": "xml",
+            "api_key": self.api_key,
+        }
+        response: requests.Response = requests.get(base_url, params=params)
+
+        if response.status_code != 200:
+            raise ValueError(f"Failed to retrieve data: {response.status_code} - {response.text}")
+
+        return response.text
+
+    def search(
+        self,
+        max_results: int = 10,
+    ) -> list[dict[str, Any]]:
         """Searches the query using the PubMed Central API.
 
         Args:
@@ -81,30 +117,10 @@ class PubMedCentralSearch:
 
         return search_response
 
-    def fetch(self, ids: list[str]) -> str:
-        """Fetches the full text content for given article IDs.
-
-        Args:
-            ids: List of article IDs.
-
-        Returns:
-            XML content of the articles.
-        """
-        base_url: str = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-        params: dict[str, Any] = {
-            "db": "pmc",
-            "id": ",".join(ids),
-            "retmode": "xml",
-            "api_key": self.api_key,
-        }
-        response: requests.Response = requests.get(base_url, params=params)
-
-        if response.status_code != 200:
-            raise Exception(f"Failed to retrieve data: {response.status_code} - {response.text}")
-
-        return response.text
-
-    def has_body_content(self, xml_content: str) -> bool:
+    def has_body_content(
+        self,
+        xml_content: str,
+    ) -> bool:
         """Checks if the XML content has a body section.
 
         Args:
@@ -154,7 +170,7 @@ class PubMedCentralSearch:
         if article is None:
             return None
 
-        title = article.findtext(".//title-group/article-title", default="", namespaces=ns)
+        title: str = article.findtext(".//title-group/article-title", default="", namespaces=ns)
 
         abstract: ET.Element | None = article.find(".//abstract", namespaces=ns)
         abstract_text: str = "".join(abstract.itertext()).strip() if abstract is not None else ""

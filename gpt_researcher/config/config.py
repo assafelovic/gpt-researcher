@@ -6,19 +6,12 @@ import logging
 import os
 
 from pathlib import Path
-from typing import Any, Dict, List, Union, cast, get_args, get_origin
+from typing import Any, Dict, List, Union, get_args, get_origin
 
 from gpt_researcher.retrievers.utils import get_all_retriever_names
-from gpt_researcher.utils.schemas import (
-    OutputFileType,
-    ReportFormat,
-    ReportSource,
-    ReportType,
-    SupportedLanguages,
-    Tone,
-)
+from gpt_researcher.utils.enum import OutputFileType, ReportFormat, ReportSource, ReportType, SupportedLanguages, Tone
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -35,6 +28,7 @@ class Config:
     FAST_LLM: str = os.environ.get("FAST_LLM", "groq:mixtral-8x7b-32768")
     FAST_LLM_MODEL: str = os.environ.get("FAST_LLM_MODEL", "mixtral-8x7b-32768")
     FAST_LLM_PROVIDER: str = os.environ.get("FAST_LLM_PROVIDER", "groq")
+    FAST_TOKEN_LIMIT: int = int(os.environ.get("FAST_TOKEN_LIMIT", 32768))
     LANGUAGE: SupportedLanguages = SupportedLanguages(
         os.environ.get(
             "LANGUAGE",
@@ -54,18 +48,21 @@ class Config:
     REPORT_FORMAT: ReportFormat = ReportFormat(os.environ.get("REPORT_FORMAT", "APA"))
     REPORT_SOURCE: ReportSource = ReportSource(os.environ.get("REPORT_SOURCE", "web"))
     REPORT_TYPE: ReportType = ReportType(os.environ.get("REPORT_TYPE", "research_report"))
+    RESEARCH_PLANNER: str = os.environ.get("RESEARCH_PLANNER", "outline")
     RETRIEVER: str = os.environ.get("RETRIEVER", "tavily")
     SCRAPER: str = os.environ.get("SCRAPER", "bs")
     SIMILARITY_THRESHOLD: float = float(os.environ.get("SIMILARITY_THRESHOLD", 0.42))
     SMART_LLM: str = os.environ.get("SMART_LLM", "litellm:gemini-2.0-flash-exp")
     SMART_LLM_MODEL: str = os.environ.get("SMART_LLM_MODEL", "gemini-2.0-flash-exp")
     SMART_LLM_PROVIDER: str = os.environ.get("SMART_LLM_PROVIDER", "litellm")
+    SMART_TOKEN_LIMIT: int = int(os.environ.get("SMART_TOKEN_LIMIT", 4096))
     STRATEGIC_LLM: str = os.environ.get("STRATEGIC_LLM", "litellm:gemini-2.0-flash-thinking-exp")
     STRATEGIC_LLM_MODEL: str = os.environ.get(
         "STRATEGIC_LLM_MODEL",
         "gemini-2.0-flash-thinking-exp",
     )
     STRATEGIC_LLM_PROVIDER: str = os.environ.get("STRATEGIC_LLM_PROVIDER", "litellm")
+    STRATEGIC_TOKEN_LIMIT: int = int(os.environ.get("STRATEGIC_TOKEN_LIMIT", 4096))
     TEMPERATURE: float = float(os.environ.get("TEMPERATURE", 0.4))
     TONE: Tone = Tone.__members__.get(os.environ.get("TONE", "Objective").upper(), Tone.Objective)
     TOTAL_WORDS: int = int(os.environ.get("TOTAL_WORDS", 1000))
@@ -85,6 +82,7 @@ class Config:
         if config is not None:
             self.config_path = Path(os.path.normpath(config)).expanduser().absolute()
         self.llm_kwargs: dict[str, Any] = {}
+        self.embedding_kwargs: dict[str, Any] = {}
 
         config_to_use: dict[str, Any] = self.default_config_dict() if config == "default" or config is None else self._create_config_dict(config)
         config_to_use.update(kwargs)  # type: ignore
@@ -107,7 +105,7 @@ class Config:
         config_path: os.PathLike | str | None,
     ) -> Config:
         """Load a configuration from a path."""
-        config_dict = cls._create_config_dict(config_path)
+        config_dict: dict[str, Any] = cls._create_config_dict(config_path)
         return cls(config_path, **config_dict)
 
     @classmethod
@@ -116,7 +114,7 @@ class Config:
         config: dict[str, Any],
     ) -> Config:
         """Load a configuration from a dictionary."""
-        config_dict = cls._create_config_dict(config)
+        config_dict: dict[str, Any] = cls._create_config_dict(config)
         return cls(None, **config_dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -153,7 +151,7 @@ class Config:
             try:
                 config_dict: dict[str, Any] = json.loads(config_path_obj.read_text())
             except Exception as e:
-                logger.exception(f"Error loading config from {config_path_obj}: {e.__class__.__name__}: {e}")
+                logger.exception(f"Error loading config from path '{config_path_obj}': {e.__class__.__name__}: {e}")
                 logger.warning("Using default configuration.")
                 return cls.default_config_dict()
         else:
@@ -167,7 +165,7 @@ class Config:
         if upper_key not in Config.__annotations__:
             super().__setattr__(key, value)
             return
-        env_value = os.environ.get(key)
+        env_value: str | None = os.environ.get(key)
         if env_value is None:
             super().__setattr__(key, value)
             return
@@ -178,8 +176,8 @@ class Config:
         )
         os.environ[upper_key] = str(value)
 
-    def _setup_llms(self):
-        embedding_provider = os.environ.get("EMBEDDING_PROVIDER")
+    def _setup_llms(self) -> None:
+        embedding_provider: str | None = os.environ.get("EMBEDDING_PROVIDER")
         if embedding_provider is None:
             # Inline parse_embedding logic
             if self.EMBEDDING is None:
@@ -238,19 +236,19 @@ class Config:
     ) -> dict[str, Any]:
         """Load a configuration by name."""
         if config_path is None:
-            config_dict = cls.default_config_dict()
+            config_dict: dict[str, Any] = cls.default_config_dict()
         else:
             config_dict = cls._create_config_dict(config_path)
 
         # Merge with default config to ensure all keys are present
-        merged_config: dict[str, Any] = cast(dict, cls.default_config_dict().copy())
+        merged_config: dict[str, Any] = cls.default_config_dict().copy()
         merged_config.update(config_dict)
         return merged_config
 
     @classmethod
     def list_available_configs(cls) -> list[str]:
         """List all available configuration names."""
-        configs = ["default"]
+        configs: list[str] = ["default"]
         for file in Path(os.path.expandvars(os.path.normpath(cls.CONFIG_DIR))).absolute().iterdir():
             if file.suffix.casefold() == ".json":
                 configs.append(file.stem)  # Remove .json extension
@@ -261,9 +259,9 @@ class Config:
         retriever_str: str,
     ) -> list[str]:
         """Parse the retriever string into a list of retrievers and validate them."""
-        retrievers = [retriever.strip() for retriever in retriever_str.split(",")]
-        valid_retrievers = get_all_retriever_names()
-        invalid_retrievers = [r for r in retrievers if r not in valid_retrievers]
+        retrievers: list[str] = [retriever.strip() for retriever in retriever_str.split(",")]
+        valid_retrievers: list[str] = get_all_retriever_names()
+        invalid_retrievers: list[str] = [r for r in retrievers if r not in valid_retrievers]
         if invalid_retrievers:
             raise ValueError(f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. Valid options are: {', '.join(valid_retrievers)}.")
         return retrievers

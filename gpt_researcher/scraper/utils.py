@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import re
+
 from typing import TYPE_CHECKING, Any
 from urllib.parse import parse_qs, urljoin, urlparse
 
@@ -24,19 +25,16 @@ def get_relevant_images(
         all_images: list[Any] = soup.find_all("img", src=True)
 
         for img in all_images:
-            img_src = urljoin(url, img["src"])
+            img_src: str = urljoin(url, img["src"])
             if img_src.startswith(("http://", "https://")):
                 score = 0
                 # Check for relevant classes
-                if any(
-                    cls in img.get("class", [])
-                    for cls in ["header", "featured", "hero", "thumbnail", "main", "content"]
-                ):
+                if any(cls in img.get("class", []) for cls in ["header", "featured", "hero", "thumbnail", "main", "content"]):
                     score = 4  # Higher score
                 # Check for size attributes
                 elif img.get("width") and img.get("height"):
-                    width = parse_dimension(img["width"])
-                    height = parse_dimension(img["height"])
+                    width: int | None = parse_dimension(img["width"])
+                    height: int | None = parse_dimension(img["height"])
                     if width and height:
                         if width >= 2000 and height >= 1000:
                             score = 3  # Medium score (very large images)
@@ -46,8 +44,7 @@ def get_relevant_images(
                             score = 1  # Lower score
                         elif width >= 500 or height >= 300:
                             score = 0  # Lowest score
-                        elif width >= 500 or height >= 300:
-                            score = -1  # Negative score, below the threshold
+                        # Added condition to skip images below a certain size, keeping original logic
                         else:
                             continue  # Skip small images
 
@@ -58,28 +55,24 @@ def get_relevant_images(
         return []
     else:
         # Sort images by score (highest first)
-        sorted_images = sorted(image_urls, key=lambda x: x["score"], reverse=True)
+        sorted_images: list[dict[str, Any]] = sorted(image_urls, key=lambda x: x["score"], reverse=True)
 
         # Select all images with score 3 and 2, then add score 1 images up to a total of 10
-        high_score_images: list[dict[str, Any]] = [
-            img for img in sorted_images if img["score"] in [3, 2]
-        ]
+        high_score_images: list[dict[str, Any]] = [img for img in sorted_images if img["score"] in [3, 2]]
         low_score_images: list[dict[str, Any]] = [img for img in sorted_images if img["score"] == 1]
 
-        result: list[dict[str, Any]] = (
-            high_score_images + low_score_images[: max(0, 10 - len(high_score_images))]
-        )
+        result: list[dict[str, Any]] = high_score_images + low_score_images[: max(0, 10 - len(high_score_images))]
         return result[:10]  # Ensure we don't return more than 10 images in total
 
 
-def parse_dimension(value: str) -> int:
+def parse_dimension(value: str) -> int | None:
     """Parse dimension value, handling px units, percentages, and relative units.
 
     Args:
         value: A string representing the dimension value
 
     Returns:
-        The parsed dimension value in pixels (or 0 if parsing failed)
+        The parsed dimension value in pixels (or None if parsing failed)
     """
 
     # Remove whitespace
@@ -90,7 +83,11 @@ def parse_dimension(value: str) -> int:
         # Calculate pixel value relative to parent size (assuming 1000px for simplicity)
         # Replace this calculation with your actual parent size if needed
         parent_size = 1000
-        return int(float(value[:-1]) / 100 * parent_size)
+        try:
+            return int(float(value[:-1]) / 100 * parent_size)
+        except ValueError:
+            logging.warning(f"Error parsing percentage dimension value {value}")
+            return None
 
     # Handle relative units (simplified example)
     relative_unit_pattern: re.Pattern[str] = re.compile(r"(\d+(\.\d+)?)\s*(em|vw|vh)")
@@ -98,8 +95,13 @@ def parse_dimension(value: str) -> int:
     if match:
         # Resolve relative unit to pixel value (simplified example)
         # Replace this calculation with your actual logic if needed
-        pixel_value = float(match.group(1)) * (16 if match.group(3) == "em" else 10)
-        return int(pixel_value)
+        try:
+            pixel_value: float = float(match.group(1)) * (16 if match.group(3) == "em" else 10)
+        except ValueError:
+            logging.warning(f"Error parsing relative unit dimension value {value}")
+            return None
+        else:
+            return int(pixel_value)
 
     # Handle simple numeric values
     try:
@@ -110,12 +112,13 @@ def parse_dimension(value: str) -> int:
         return int(float(value))
     except ValueError:
         # Fallback to default value if parsing failed
-        return 0
+        logging.warning(f"Error parsing dimension value {value}")
+        return None
 
 
 def extract_title(soup: BeautifulSoup) -> str | None:
     """Extract the title from the BeautifulSoup object."""
-    return None if soup.title is None else soup.title.string
+    return None if soup.title is None else str(soup.title.string).strip()
 
 
 def get_image_hash(image_url: str) -> str | None:
@@ -138,3 +141,46 @@ def get_image_hash(image_url: str) -> str | None:
     except Exception as e:
         logging.error(f"Error calculating image hash for {image_url}: {e}")
         return None
+
+
+def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
+    """Clean the soup by removing unwanted tags."""
+    for tag in soup.find_all(
+        [
+            "script",
+            "style",
+            "footer",
+            "header",
+            "nav",
+            "menu",
+            "sidebar",
+            "svg",
+        ]
+    ):
+        tag.decompose()
+
+    disallowed_class_set: set[str] = {"nav", "menu", "sidebar", "footer"}
+
+    # clean tags with certain classes
+    from bs4 import Tag
+
+    def does_tag_have_disallowed_class(elem: Any) -> bool:
+        if not isinstance(elem, Tag):  # Corrected type check
+            return False
+
+        return any(cls_name in disallowed_class_set for cls_name in elem.get("class", []))
+
+    for tag in soup.find_all(does_tag_have_disallowed_class):
+        if not isinstance(tag, Tag):
+            continue
+        tag.decompose()
+
+    return soup
+
+
+def get_text_from_soup(soup: BeautifulSoup) -> str:
+    """Get the relevant text from the soup with improved filtering."""
+    text = soup.get_text(strip=True, separator="\n")
+    # Remove excess whitespace
+    text = re.sub(r"\s{2,}", " ", text)
+    return text

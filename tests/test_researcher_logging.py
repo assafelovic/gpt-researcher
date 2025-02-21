@@ -1,24 +1,25 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
+
+import pytest
 import sys
 from pathlib import Path
 
-import pytest
-
 # Add the project root to Python path
-project_root = Path(__file__).parent.parent
+project_root: Path = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
 # Configure basic logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @pytest.mark.asyncio
-async def test_researcher_logging():  # Renamed function to be more specific
-    """
-    Test suite for verifying the researcher's logging infrastructure.
+async def test_researcher_logging() -> None:  # Renamed function to be more specific
+    """Test suite for verifying the researcher's logging infrastructure.
+
     Ensures proper creation and formatting of log files.
     """
     try:
@@ -28,19 +29,17 @@ async def test_researcher_logging():  # Renamed function to be more specific
         logger.info("Successfully imported Researcher class")
 
         # Create a researcher instance with a logging-focused query
-        researcher = Researcher(
-            query="Test query for logging verification", report_type="research_report"
-        )
+        researcher = Researcher(query="Test query for logging verification", report_type="research_report")
         logger.info("Created Researcher instance")
 
         # Run the research
-        report = await researcher.research()
+        report: dict[str, Any] = await researcher.research()
         logger.info("Research completed successfully!")
         logger.info(f"Report length: {len(report)}")
 
         # Basic report assertions
-        assert report is not None
-        assert len(report) > 0
+        assert report is not None, "Report is None"
+        assert len(report) > 0, "Report is empty"
 
         # Detailed log file verification
         logs_dir = Path(project_root) / "logs"
@@ -63,11 +62,11 @@ async def test_researcher_logging():  # Renamed function to be more specific
             # Could add additional checks for JSON file structure here
 
     except ImportError as e:
-        logger.error(f"Import error: {e}")
+        logger.error(f"Import error: {e.__class__.__name__}: {e}")
         logger.error("Make sure gpt_researcher is installed and in your PYTHONPATH")
         raise
     except Exception as e:
-        logger.error(f"Error during research: {e}")
+        logger.error(f"Error during research: {e.__class__.__name__}: {e}")
         raise
 
 

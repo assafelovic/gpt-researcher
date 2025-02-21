@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import json
 import logging
+
+# Bing Search Retriever
+# libraries
 import os
+
+from typing import Any
 
 import httpx
 import requests
@@ -19,8 +24,9 @@ class BingSearch(BaseRetriever):
 
     def __init__(
         self,
-        headers: dict[str, str] | None = None,
-    ) -> None:
+        query: str,
+        query_domains: list[str] | None = None,
+    ):
         """Initialize the BingSearch retriever.
 
         Args:
@@ -28,8 +34,68 @@ class BingSearch(BaseRetriever):
                     will attempt to load from environment variables.
         """
         super().__init__()
-        self.headers: dict[str, str] = headers or {}
-        self.api_key: str = self.headers.get("bing_api_key") or self.get_api_key()
+        self.query: str = query
+        self.query_domains: list[str] | None = query_domains or None
+        self.api_key: str = self.get_api_key()
+        self.logger: logging.Logger = logging.getLogger(__name__)
+
+    def search(
+        self,
+        max_results: int = 7,
+    ) -> list[dict[str, Any]]:
+        """
+        Searches the query
+        Returns:
+            list[dict[str, Any]]: A list of dictionaries containing the search results.
+        """
+        print("Searching with query {0}...".format(self.query))
+        """Useful for general internet search queries using the Bing API."""
+
+        # Search the query
+        url = "https://api.bing.microsoft.com/v7.0/search"
+
+        headers: dict[str, str] = {"Ocp-Apim-Subscription-Key": self.api_key, "Content-Type": "application/json"}
+        # TODO: Add support for query domains
+        params: dict[str, Any] = {
+            "count": max_results,
+            "q": self.query,
+            "responseFilter": "Webpages",
+            "safeSearch": "Strict",
+            "setLang": "en-GB",
+            "textDecorations": False,
+            "textFormat": "HTML",
+        }
+
+        resp: requests.Response = requests.get(url, headers=headers, params=params)
+
+        # Preprocess the results
+        if resp is None:
+            return []
+        try:
+            search_results: dict[str, Any] = json.loads(resp.text)
+            results: list[dict[str, Any]] = search_results["webPages"]["value"]
+        except Exception as e:
+            self.logger.error(f"Error parsing Bing search results: {e}. Resulting in empty response.")
+            return []
+        if search_results is None:
+            self.logger.warning(f"No search results found for query: {self.query}")
+            return []
+        search_results_list: list[dict[str, Any]] = []
+
+        # Normalize the results to match the format of the other search APIs
+        for result in results:
+            # skip youtube results
+            if "youtube.com" in result["url"]:
+                continue
+            search_result: dict[str, Any] = {
+                "title": result["name"],
+                "href": result["url"],
+                "body": result["snippet"],
+            }
+            search_results_list.append(search_result)
+
+        return search_results_list
+
 
     def get_api_key(self) -> str:
         """Gets the Bing API key from environment variables.
@@ -65,12 +131,12 @@ class BingSearch(BaseRetriever):
         """
         logger.info(f"Searching with query {query}...")
 
-        url = "https://api.bing.microsoft.com/v7.0/search"
-        headers = {
+        url: str = "https://api.bing.microsoft.com/v7.0/search"
+        headers: dict[str, str] = {
             "Ocp-Apim-Subscription-Key": self.api_key,
             "Content-Type": "application/json",
         }
-        params = {
+        params: dict[str, Any] = {
             "responseFilter": "Webpages",
             "q": query,
             "count": max_results,
@@ -80,15 +146,15 @@ class BingSearch(BaseRetriever):
             "safeSearch": "Strict",
         }
 
-        resp = requests.get(url, headers=headers, params=params)
+        resp: requests.Response = requests.get(url, headers=headers, params=params)
 
         if resp.status_code < 200 or resp.status_code >= 300:
             logger.warning("Bing search: unexpected response status: ", resp.status_code)
             return []
 
         try:
-            search_results = json.loads(resp.text)
-            results = search_results["webPages"]["value"]
+            search_results: dict[str, Any] = json.loads(resp.text)
+            results: list[dict[str, Any]] = search_results["webPages"]["value"]
         except Exception as e:
             logger.exception(f"Error parsing Bing search results: {e}. Resulting in empty response.")
             return []
@@ -130,12 +196,12 @@ class BingSearch(BaseRetriever):
         """
         logger.info(f"Searching with query {query}...")
 
-        url = "https://api.bing.microsoft.com/v7.0/search"
-        headers = {
+        url: str = "https://api.bing.microsoft.com/v7.0/search"
+        headers: dict[str, str] = {
             "Ocp-Apim-Subscription-Key": self.api_key,
             "Content-Type": "application/json",
         }
-        params = {
+        params: dict[str, Any] = {
             "responseFilter": "Webpages",
             "q": query,
             "count": max_results,
@@ -146,15 +212,15 @@ class BingSearch(BaseRetriever):
         }
 
         async with httpx.AsyncClient() as client:
-            resp = await client.get(url, headers=headers, params=params)
+            resp: httpx.Response = await client.get(url, headers=headers, params=params)
 
         if resp.status_code < 200 or resp.status_code >= 300:
             logger.warning("Bing search: unexpected response status: ", resp.status_code)
             return []
 
         try:
-            search_results = resp.json()
-            results = search_results["webPages"]["value"]
+            search_results: dict[str, Any] = resp.json()
+            results: list[dict[str, Any]] = search_results["webPages"]["value"]
         except Exception as e:
             logger.exception(f"Error parsing Bing search results: {e}. Resulting in empty response.")
             return []

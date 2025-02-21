@@ -1,4 +1,5 @@
 
+.cursorrules
 .docusaurus
 .DS_Store
 .env
@@ -18,18 +19,30 @@
 **/__pycache__/
 **/.history
 **/.history/
-litellm_documentation
+# Log files
+# Other Environments
+#Cursor Rules
+#Ignore env containing secrets
+#Ignore generated outputs
+#Ignore my local docs
+#Ignore mypy cache
+#Ignore pycache
+#Ignore Virtual Env
+#Vim swp files
 all_models.json
 build
+CURSOR_RULES.md
 dist/
 docs/build
 env.bak/
 env/
+ENV/
 gpt_researcher_desktop/resources/extra_themes
 gpt_researcher_desktop/widgets/theme_dialog.py
 gpt_researcher.egg-info/
 litellm_config_free.yaml
 litellm_config.yaml
+litellm_documentation
 logs/
 my-docs/
 node_modules

@@ -5,7 +5,6 @@
 </h1>-->
 <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
 
-
 ####
 
 [![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=0891b2)](https://gptr.dev)
@@ -41,11 +40,12 @@
 - 웹 소스만을 사용하면 연구 작업에서 올바른 결론을 도출할 때 편향이 발생할 수 있습니다.
 
 ## 데모
-https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
+<https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3>
 
 ## 아키텍처
+
 주요 아이디어는 "플래너"와 "실행" 에이전트를 실행하는 것으로, 플래너는 연구할 질문을 생성하고, 실행 에이전트는 생성된 각 연구 질문에 따라 가장 관련성 높은 정보를 찾습니다. 마지막으로 플래너는 모든 관련 정보를 필터링하고 집계하여 연구 보고서를 작성합니다.
-<br /> <br /> 
+<br /> <br />
 에이전트는 `gpt-4o-mini`와 `gpt-4o`(128K 컨텍스트)를 활용하여 연구 작업을 완료합니다. 필요에 따라 각각을 사용하여 비용을 최적화합니다. **평균 연구 작업은 약 2분이 소요되며, 비용은 약 $0.005입니다.**.
 
 <div align="center">
@@ -53,19 +53,20 @@ https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 </div>
 
 구체적으로:
-* 연구 쿼리 또는 작업을 기반으로 도메인별 에이전트를 생성합니다.
-* 주어진 작업에 대해 객관적인 의견을 형성할 수 있는 일련의 연구 질문을 생성합니다.
-* 각 연구 질문에 대해 크롤러 에이전트를 실행하여 작업과 관련된 정보를 온라인 리소스에서 수집합니다.
-* 수집된 각 리소스에서 관련 정보를 요약하고 출처를 기록합니다.
-* 마지막으로, 요약된 모든 정보를 필터링하고 집계하여 최종 연구 보고서를 생성합니다.
+- 연구 쿼리 또는 작업을 기반으로 도메인별 에이전트를 생성합니다.
+- 주어진 작업에 대해 객관적인 의견을 형성할 수 있는 일련의 연구 질문을 생성합니다.
+- 각 연구 질문에 대해 크롤러 에이전트를 실행하여 작업과 관련된 정보를 온라인 리소스에서 수집합니다.
+- 수집된 각 리소스에서 관련 정보를 요약하고 출처를 기록합니다.
+- 마지막으로, 요약된 모든 정보를 필터링하고 집계하여 최종 연구 보고서를 생성합니다.
 
 ## 튜토리얼
- - [동작원리](https://docs.gptr.dev/blog/building-gpt-researcher)
- - [설치방법](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
- - [라이브 데모](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
+- [동작원리](https://docs.gptr.dev/blog/building-gpt-researcher)
+- [설치방법](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
+- [라이브 데모](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
 ## 기능
+
 - 📝 로컬 문서 및 웹 소스를 사용하여 연구, 개요, 리소스 및 학습 보고서 생성
 - 📜 2,000단어 이상의 길고 상세한 연구 보고서 생성 가능
 - 🌐 연구당 20개 이상의 웹 소스를 집계하여 객관적이고 사실에 기반한 결론 도출
@@ -84,7 +85,9 @@ https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 - 참고자료 (전체 API 문서)
 
 ## ⚙️ 시작하기
+
 ### 설치
+>
 > **1단계** - Python 3.11 또는 그 이상의 버전을 설치하세요. [여기](https://www.tutorialsteacher.com/python/install-python)를 참조하여 단계별 가이드를 확인하세요.
 
 > **2단계** - 프로젝트를 다운로드하고 해당 디렉토리로 이동하세요.
@@ -122,13 +125,14 @@ pip install -r requirements.txt
 python -m uvicorn main:app --reload
 ```
 
-> **3단계** - 브라우저에서 http://localhost:8000 으로 이동하여 연구를 시작하세요!
+> **3단계** - 브라우저에서 <http://localhost:8000> 으로 이동하여 연구를 시작하세요!
 
 <br />
 
 **[Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#poetry) 또는 [가상 환경](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#virtual-environment)에 대해 배우고 싶다면, [문서](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)를 참조하세요.**
 
 ### PIP 패키지로 실행하기
+
 ```bash
 pip install gpt-researcher
 ```
@@ -157,12 +161,13 @@ report = await researcher.write_report()
 > **3단계** - docker-compose 파일에서 실행하고 싶지 않은 서비스를 주석 처리하세요.
 
 ```bash
-$ docker-compose up --build
+docker-compose up --build
 ```
 
 > **4단계** - docker-compose 파일에서 아무 것도 주석 처리하지 않았다면, 기본적으로 두 가지 프로세스가 시작됩니다:
- - localhost:8000에서 실행 중인 Python 서버<br>
- - localhost:3000에서 실행 중인 React 앱<br>
+
+- localhost:8000에서 실행 중인 Python 서버<br>
+- localhost:3000에서 실행 중인 React 앱<br>
 
 브라우저에서 localhost:3000으로 이동하여 연구를 시작하세요!
 
@@ -177,8 +182,9 @@ export DOC_PATH="./my-docs"
 ```
 
 2단계:
- - 프론트엔드 앱을 localhost:8000에서 실행 중이라면, "Report Source" 드롭다운 옵션에서 "My Documents"를 선택하세요.
- - GPT Researcher를 [PIP 패키지](https://docs.tavily.com/docs/gpt-researcher/pip-package)로 실행 중이라면, `report_source` 인수를 "local"로 설정하여 `GPTResearcher` 클래스를 인스턴스화하세요. [코드 예제](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research)를 참조하세요.
+
+- 프론트엔드 앱을 localhost:8000에서 실행 중이라면, "Report Source" 드롭다운 옵션에서 "My Documents"를 선택하세요.
+- GPT Researcher를 [PIP 패키지](https://docs.tavily.com/guides/gpt-researcher/gpt-researcher#pip-package)로 실행 중이라면, `report_source` 인수를 "local"로 설정하여 `GPTResearcher` 클래스를 인스턴스화하세요. [코드 예제](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research)를 참조하세요.
 
 ## 👪 다중 에이전트 어시스턴트
 
@@ -200,12 +206,14 @@ GPT-Researcher는 사용자 경험을 개선하고 연구 프로세스를 간소
 - 맞춤형 연구 경험을 위한 설정 가능
 
 두 가지 배포 옵션이 있습니다:
+
 1. FastAPI로 제공되는 경량 정적 프론트엔드
 2. 고급 기능을 제공하는 NextJS 애플리케이션
 
-프론트엔드 기능에 대한 자세한 설치 방법 및 정보를 원하시면 [문서 페이지](https://docs.gptr.dev/docs/gpt-researcher/frontend/frontend)를 참조하세요.
+프론트엔드 기능에 대한 자세한 설치 방법 및 정보를 원하시면 [문서 페이지](https://docs.gptr.dev/docs/gpt-researcher/frontend/introduction)를 참조하세요.
 
 ## 🚀 기여하기
+
 우리는 기여를 적극 환영합니다! 관심이 있다면 [기여 가이드](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md)를 확인해 주세요.
 
 [로드맵](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) 페이지를 확인하고, 우리 [Discord 커뮤니티](https://discord.gg/QgZXvJAccX)에 가입하여 우리의 목표에 함께 참여해 주세요.
@@ -214,20 +222,21 @@ GPT-Researcher는 사용자 경험을 개선하고 연구 프로세스를 간소
 </a>
 
 ## ✉️ 지원 / 문의
+
 - [커뮤니티 Discord](https://discord.gg/spBgZmm3Xe)
-- 저자 이메일: assaf.elovic@gmail.com
+- 저자 이메일: <assaf.elovic@gmail.com>
 
 ## 🛡️ 면책 조항
 
 이 프로젝트인 GPT Researcher는 실험적인 응용 프로그램이며, 명시적이거나 묵시적인 보증 없이 "있는 그대로" 제공됩니다. 우리는 이 코드를 학술적 목적으로 Apache 2 라이선스 하에 공유하고 있습니다. 여기에 있는 것은 학술적 조언이 아니며, 학술 또는 연구 논문에 사용하는 것을 권장하지 않습니다.
 
 편향되지 않은 연구 주장에 대한 우리의 견해:
+
 1. GPT Researcher의 주요 목표는 잘못된 정보와 편향된 사실을 줄이는 것입니다. 그 방법은 무엇일까요? 우리는 더 많은 사이트를 스크래핑할수록 잘못된 데이터의 가능성이 줄어든다고 가정합니다. 여러 사이트에서 정보를 스크래핑하고 가장 빈번한 정보를 선택하면, 모든 정보가 틀릴 확률은 매우 낮습니다.
 2. 우리는 편향을 완전히 제거하려고 하지는 않지만, 가능한 한 줄이는 것을 목표로 합니다. **우리는 인간과 LLM의 가장 효과적인 상호작용을 찾기 위한 커뮤니티입니다.**
 3. 연구에서 사람들도 이미 자신이 연구하는 주제에 대해 의견을 가지고 있기 때문에 편향되는 경향이 있습니다. 이 도구는 많은 의견을 스크래핑하며, 편향된 사람이라면 결코 읽지 않았을 다양한 견해를 고르게 설명합니다.
 
 **GPT-4 모델을 사용할 경우, 토큰 사용량 때문에 비용이 많이 들 수 있습니다.** 이 프로젝트를 사용하는 경우, 자신의 토큰 사용량 및 관련 비용을 모니터링하고 관리하는 것은 본인의 책임입니다. OpenAI API 사용량을 정기적으로 확인하고, 예상치 못한 비용을 방지하기 위해 필요한 한도를 설정하거나 알림을 설정하는 것이 좋습니다.
-
 
 ---
 

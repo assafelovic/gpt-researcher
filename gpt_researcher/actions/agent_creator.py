@@ -14,7 +14,7 @@ from gpt_researcher.utils.llm import create_chat_completion
 if TYPE_CHECKING:
     from gpt_researcher.config import Config
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 async def choose_agent(
@@ -22,7 +22,8 @@ async def choose_agent(
     cfg: Config,
     parent_query: str | None = None,
     cost_callback: Callable[[float], None] | None = None,
-):
+    headers: dict[str, str] | None = None,
+) -> tuple[Any, Any] | tuple[str, str]:
     """Chooses the agent automatically.
 
     Args:
@@ -56,12 +57,13 @@ async def choose_agent(
             llm_provider=cfg.SMART_LLM_PROVIDER,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
+            headers=headers,
         )
 
         if response is None:
             raise ValueError("Response is None")
 
-        agent_dict = json.loads(response)
+        agent_dict: dict[str, Any] = json.loads(response)
         return agent_dict["server"], agent_dict["agent_role_prompt"]
 
     except Exception as e:
@@ -102,7 +104,7 @@ async def handle_json_error(
 def extract_json_with_regex(
     response: str,
 ) -> str | None:
-    json_match = re.search(r"{.*?}", response, re.DOTALL)
+    json_match: re.Match[str] | None = re.search(r"{.*?}", response, re.DOTALL)
     if json_match:
         return json_match.group(0)
     return None

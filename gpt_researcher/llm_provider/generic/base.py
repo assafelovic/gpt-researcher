@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import logging
 import os
@@ -20,11 +21,11 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 litellm.set_verbose = True  # pyright: ignore[reportPrivateImportUsage]
 
 
-_SUPPORTED_PROVIDERS = {
+_SUPPORTED_PROVIDERS: set[str] = {
     "anthropic",
     "azure_openai",
     "bedrock",
@@ -48,11 +49,14 @@ _SUPPORTED_PROVIDERS = {
 class GenericLLMProvider:
     def __init__(
         self,
-        llm: BaseChatModel,
+        llm: BaseChatModel | str,
     ):
-        self.llm: BaseChatModel = llm
+        self.llm: BaseChatModel = llm if isinstance(llm, BaseChatModel) else self._get_base_chat_model(llm)
         self.fallback_models: list[BaseChatModel] = []
-        print(f"Using model '{self.llm.name}' with fallbacks '{self.fallback_models!r}'", file=sys.__stdout__)
+        print(
+            f"Using model '{self.llm}' with fallbacks '{self.fallback_models!r}'",
+            file=sys.__stdout__,
+        )
 
     @classmethod
     async def create_chat_completion(
@@ -94,7 +98,7 @@ class GenericLLMProvider:
 
         # Get the provider from supported providers
         assert llm_provider is not None
-        provider = cls.from_provider(
+        provider: Self = cls.from_provider(
             llm_provider,
             model=model,
             temperature=temperature,
@@ -102,7 +106,7 @@ class GenericLLMProvider:
             **(llm_kwargs or {}),
         )
 
-        response = ""
+        response: str = ""
         # create response
         response = await provider.get_chat_response(
             messages,
@@ -244,19 +248,17 @@ class GenericLLMProvider:
             llm = ChatLiteLLM(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
-            raise ValueError(
-                f"Unsupported provider: '{provider}'.\nSupported model providers are:\n[{supported}]\n"
-            )
+            raise ValueError(f"Unsupported provider: '{provider}'.\nSupported model providers are:\n[{supported}]\n")
         return llm
 
     def _convert_to_base_messages(self, messages: list[dict[str, str]]) -> list[BaseMessage]:
         """Convert dict messages to BaseMessage objects."""
         from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
-        converted = []
+        converted: list[BaseMessage] = []
         for msg in messages:
-            role = msg["role"]
-            content = msg["content"]
+            role: str = msg["role"]
+            content: str = msg["content"]
             if role == "system":
                 converted.append(SystemMessage(content=content))
             elif role == "assistant":
@@ -270,19 +272,21 @@ class GenericLLMProvider:
         messages: list[dict[str, str]] | list[BaseMessage],
         stream: bool,
         websocket: WebSocket | None = None,
-        max_retries: int = 10
+        max_retries: int = 10,
+        headers: dict[str, str] | None = None,
     ) -> str:
         """Get chat response with fallback support.
-        
+
         Args:
             messages: List of message dicts or BaseMessage objects
             stream: Whether to stream the response
             websocket: Optional websocket for streaming
             max_retries: Maximum number of retries per model
-            
+
         Returns:
             The response text
         """
+        headers = {} if headers is None else headers
         current_model: BaseChatModel = self.llm
         for model in (current_model, *self.fallback_models):
             retries = 0
@@ -290,10 +294,9 @@ class GenericLLMProvider:
                 try:
                     if stream:
                         msgs: list[dict[str, Any]] = cast(List[Dict[str, Any]], messages)
-                        return await self.stream_response(msgs, websocket)
-                    else:
-                        response: BaseMessage = await model.ainvoke(messages)
-                        return "\n".join(" ".join(entry) for entry in response)
+                        return await self.stream_response(msgs, websocket, headers)
+                    response: BaseMessage = await model.ainvoke(messages, headers=headers)
+                    return "\n".join(" ".join(entry) for entry in response)
                 except ContextWindowExceededError:
                     logger.warning("Context window exceeded, trying fallback models...", exc_info=True)
                     break  # Move to the next model
@@ -308,28 +311,6 @@ class GenericLLMProvider:
                         break  # Move to the next model
                     continue
         raise ValueError("All models failed to generate a response")
-
-    async def stream_response(
-        self,
-        messages: list[dict[str, str]],
-        websocket: WebSocket | None = None,
-    ) -> str:
-        paragraph: str = ""
-        response: str = ""
-
-        # Streaming the response using the chain astream method from langchain
-        async for chunk in self.llm.astream(messages):
-            parsed_chunk: str = "\n".join(" ".join(entry) for entry in chunk)
-            response += parsed_chunk
-            paragraph += parsed_chunk
-            if "\n" in paragraph:
-                await self._send_output(paragraph, websocket)
-                paragraph = ""
-
-        if (paragraph or "").strip():
-            await self._send_output(paragraph, websocket)
-
-        return response
 
     async def _send_output(
         self,
@@ -349,11 +330,8 @@ class GenericLLMProvider:
 
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
-        pkg_kebab: str = pkg.replace("_", "-")
+        pkg_kebab = pkg.replace("_", "-")
         # Import colorama and initialize it
         init(autoreset=True)
         # Use Fore.RED to color the error message
-        raise ImportError(
-            Fore.RED
-            + f"Unable to import {pkg_kebab}. Please install with `pip install -U {pkg_kebab}`"
-        )
+        raise ImportError(Fore.RED + f"Unable to import {pkg_kebab}. Please install with `pip install -U {pkg_kebab}`")

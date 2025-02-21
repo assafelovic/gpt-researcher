@@ -1,20 +1,17 @@
 # Tavily API Retriever
-
-# libraries
 from __future__ import annotations
 
 import json
 import logging
 import os
-from typing import TYPE_CHECKING
+
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Sequence
 
 import requests
 
 if TYPE_CHECKING:
     from logging import Logger
     from typing import Any, ClassVar, Literal, Sequence
-
-    from requests import Response
 
 
 class TavilySearch:
@@ -27,29 +24,40 @@ class TavilySearch:
         query: str,
         headers: dict[str, Any] | None = None,
         topic: str = "general",
+        query_domains: list[str] | None = None,
     ):
-        """Initializes the TavilySearch object."""
+        """
+        Initializes the TavilySearch object.
+
+        Args:
+            query (str): The search query string.
+            headers (dict, optional): Additional headers to include in the request. Defaults to None.
+            topic (str, optional): The topic for the search. Defaults to "general".
+            query_domains (list, optional): List of domains to include in the search. Defaults to None.
+        """
         self.query: str = query
-        self.headers: dict[str, Any] = headers or {}
+        self.headers: dict[str, str] = headers or {}
         self.topic: str = topic
         self.base_url: str = "https://api.tavily.com/search"
         self.api_key: str = self.get_api_key()
-        self.headers: dict[str, Any] = {"Content-Type": "application/json"}
+        self.headers: dict[str, str] = {
+            "Content-Type": "application/json",
+        }
+        self.query_domains: list[str] | None = query_domains or None
 
     def get_api_key(self) -> str:
-        """Gets the Tavily API key.
-
-        Returns:
-            str: The Tavily API key.
         """
-        api_key: str = self.headers.get("tavily_api_key", "")
+        Gets the Tavily API key
+        Returns:
+            str: The Tavily API Key
+        """
+        api_key: str | None = self.headers.get("tavily_api_key")
         if not api_key:
             try:
                 api_key = os.environ["TAVILY_API_KEY"]
             except KeyError:
-                raise Exception(
-                    "Tavily API key not found. Please set the TAVILY_API_KEY environment variable."
-                )
+                print("Tavily API key not found, set to blank. If you need a retriver, please set the TAVILY_API_KEY environment variable.")
+                return ""
         return api_key
 
     def _search(
@@ -58,15 +66,17 @@ class TavilySearch:
         search_depth: Literal["basic", "advanced"] = "basic",
         topic: str = "general",
         days: int = 2,
-        max_results: int = 5,
+        max_results: int = 10,
         include_domains: Sequence[str] | None = None,
         exclude_domains: Sequence[str] | None = None,
         include_answer: bool = False,
         include_raw_content: bool = False,
         include_images: bool = False,
         use_cache: bool = True,
-    ) -> dict[str, Any] | None:
-        """Internal search method to send the request to the API."""
+    ) -> dict[str, Any]:
+        """
+        Internal search method to send the request to the API.
+        """
 
         data: dict[str, Any] = {
             "query": query,
@@ -83,7 +93,7 @@ class TavilySearch:
             "use_cache": use_cache,
         }
 
-        response: Response = requests.post(
+        response: requests.Response = requests.post(
             self.base_url,
             data=json.dumps(data),
             headers=self.headers,
@@ -96,30 +106,30 @@ class TavilySearch:
             # Raises a HTTPError if the HTTP request returned an unsuccessful status code
             response.raise_for_status()
 
-    def search(self, max_results=7):
-        """
-        Searches the query
-        Returns:
+    def search(
+        self,
+        max_results: int = 10,
+    ) -> list[dict[str, Any]]:
+        """Searches the query.
 
+        Returns:
+            list[dict[str, Any]]: The search results.
         """
         try:
             # Search the query
-            results: dict[str, Any] | None = self._search(
+            results: dict[str, Any] = self._search(
                 self.query,
                 search_depth="basic",
                 max_results=max_results,
                 topic=self.topic,
+                include_domains=self.query_domains,
             )
-            if results is None:
-                raise Exception("No results found with Tavily API search.")
             sources: list[dict[str, Any]] = results.get("results", [])
             if not sources:
                 raise Exception("No results found with Tavily API search.")
             # Return the results
-            search_response: list[dict[str, Any]] = [
-                {"href": obj["url"], "body": obj["content"]} for obj in sources
-            ]
-        except Exception as e:
+            search_response: list[dict[str, Any]] = [{"href": obj["url"], "body": obj["content"]} for obj in sources]
+        except Exception:
             self.logger.exception("Failed fetching sources. Resulting in empty response.")
-            search_response: list[dict[str, Any]] = []
+            search_response = []
         return search_response

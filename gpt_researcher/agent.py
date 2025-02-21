@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+
 from typing import TYPE_CHECKING, Any, ClassVar, Coroutine
 
 from langchain_core.documents import Document
@@ -16,6 +17,7 @@ from gpt_researcher.actions.markdown_processing import (
 )
 from gpt_researcher.actions.retriever import get_retrievers
 from gpt_researcher.config import Config
+from gpt_researcher.llm_provider import GenericLLMProvider
 from gpt_researcher.memory import Memory
 from gpt_researcher.skills.browser import BrowserManager
 from gpt_researcher.skills.context_manager import ContextManager
@@ -23,11 +25,13 @@ from gpt_researcher.skills.curator import SourceCurator
 from gpt_researcher.skills.researcher import ResearchConductor
 from gpt_researcher.skills.writer import ReportGenerator
 from gpt_researcher.utils.schemas import (
+    Subtopics,
+)
+from gpt_researcher.utils.enum import (
+    OutputFileType,
     ReportFormat,
     ReportSource,
-    OutputFileType,
     ReportType,
-    Subtopics,
     Tone,
 )
 from gpt_researcher.vector_store import VectorStoreWrapper
@@ -50,7 +54,7 @@ class GPTResearcher:
         report_type: ReportType | str | None = ReportType.ResearchReport.value,
         report_format: ReportFormat | str | None = ReportFormat.APA.value,
         output_file_type: OutputFileType = OutputFileType.MARKDOWN,
-        report_source: ReportSource | str | None = ReportSource.WEB.value,
+        report_source: ReportSource | str | None = ReportSource.Web.value,
         tone: Tone | str | None = None,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
@@ -71,27 +75,23 @@ class GPTResearcher:
         log_handler: LogHandler | None = None,
         research_images: list[dict[str, Any]] | None = None,
         research_sources: list[dict[str, Any]] | None = None,
+        query_domains: list[str] = [],
+        config_path: os.PathLike | str | None = None,
     ):
         self.query: str = query
-        self.research_config: Config = Config()
+        self.cfg: Config = Config()
         if config is None:
-            ...
+            self.cfg = Config(config_path)  # For backwards compatibility
         elif isinstance(config, dict):
-            self.research_config = Config.from_config(config)
+            self.cfg = Config.from_config(config)
         elif isinstance(config, (str, os.PathLike)):
-            self.research_config = Config.from_path(config)
+            self.cfg = Config.from_path(config)
         else:
-            raise ValueError(f"Invalid research_config type: {config.__class__.__name__}")
+            raise ValueError(f"Invalid config type: `{config.__class__.__name__}`")
 
-        self.report_type = (
-            ReportType.OutlineReport if report_type is None else ReportType(report_type)
-        )
-        self.report_source = (
-            ReportSource.WEB if report_source is None else ReportSource(report_source)
-        )
-        self.report_format = (
-            ReportFormat.APA if report_format is None else ReportFormat(report_format)
-        )
+        self.report_type = ReportType.OutlineReport if report_type is None else ReportType(report_type)
+        self.report_source = ReportSource.Web if report_source is None else ReportSource(report_source)
+        self.report_format = ReportFormat.APA if report_format is None else ReportFormat(report_format)
         self.output_format = output_file_type
         self.max_subtopics = max_subtopics
         self.tone = (
@@ -106,12 +106,9 @@ class GPTResearcher:
         self.source_urls: list[str] = [] if source_urls is None else source_urls
         self.document_urls: list[str] = [] if document_urls is None else document_urls
         self.complement_source_urls: bool = complement_source_urls
-        self.research_images: list[dict[str, Any]] = (
-            [] if research_images is None else research_images
-        )
-        self.research_sources: list[dict[str, Any]] = (
-            [] if research_sources is None else research_sources
-        )
+        self.query_domains: list[str] = query_domains
+        self.research_images: list[dict[str, Any]] = [] if research_images is None else research_images
+        self.research_sources: list[dict[str, Any]] = [] if research_sources is None else research_sources
         self.documents: list[dict[str, Any]] = []
         if documents is not None:
             for document in documents:
@@ -120,7 +117,9 @@ class GPTResearcher:
                 else:
                     self.documents.append(document)
         self.vector_store: VectorStoreWrapper | None = (
-            None if vector_store is None else VectorStoreWrapper(vector_store)
+            None
+            if vector_store is None
+            else VectorStoreWrapper(vector_store)
         )
         self.vector_store_filter: dict[str, Any] | None = vector_store_filter
         self.websocket: CustomLogsHandler | WebSocket | None = websocket
@@ -134,14 +133,16 @@ class GPTResearcher:
         self.headers: dict[str, str] = {} if headers is None else headers
         self.research_costs: float = 0.0
         self.retrievers: list[type[BaseRetriever]] = get_retrievers(
-            self.headers, self.research_config
+            self.headers,
+            self.cfg,
         )
         self.memory: Memory = Memory(
-            self.research_config.EMBEDDING_PROVIDER,
-            self.research_config.EMBEDDING_MODEL,
-            **self.research_config.EMBEDDING_KWARGS,
+            self.cfg.EMBEDDING_PROVIDER,
+            self.cfg.EMBEDDING_MODEL,
+            **self.cfg.EMBEDDING_KWARGS,
         )
         self.log_handler: LogHandler | None = log_handler
+        self.llm: GenericLLMProvider = GenericLLMProvider(self.smart_llm)  # For backwards compatibility
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
@@ -163,9 +164,7 @@ class GPTResearcher:
                 elif event_type == "action":
                     await self.log_handler.on_agent_action(kwargs.get("action", ""), **kwargs)
                 elif event_type == "research":
-                    await self.log_handler.on_research_step(
-                        kwargs.get("step", ""), kwargs.get("details", {})
-                    )
+                    await self.log_handler.on_research_step(kwargs.get("step", ""), kwargs.get("details", {}))
                 elif event_type == "logs":
                     await self.log_handler.on_logs(
                         kwargs.get("content", ""),
@@ -178,7 +177,7 @@ class GPTResearcher:
                 # Add direct logging as backup
                 import logging
 
-                research_logger = logging.getLogger("research")
+                research_logger: logging.Logger = logging.getLogger("research")
                 research_logger.info(f"{event_type}: {json.dumps(kwargs, default=str)}")
 
             except Exception as e:
@@ -189,8 +188,8 @@ class GPTResearcher:
     async def conduct_research(self) -> list[str]:
         research_details: dict[str, Any] = {
             "query": self.query,
-            "report_type": self.report_type,
             "agent": self.agent,
+            "report_type": self.report_type,
             "role": self.agent_role,
         }
         log_event_result: Coroutine[Any, Any, Any] | None = self._log_event(
@@ -205,9 +204,10 @@ class GPTResearcher:
             await self._log_event("action", action="choose_agent")
             self.agent, self.agent_role = await choose_agent(
                 query=self.query,
-                cfg=self.research_config,
+                cfg=self.cfg,
                 parent_query=self.parent_query,
                 cost_callback=self.add_costs,
+                headers=self.headers,  # Pass headers to choose_agent?
             )
             await self._log_event(
                 "action",
@@ -220,7 +220,7 @@ class GPTResearcher:
             step="conducting_research",
             details={"agent": self.agent, "role": self.agent_role},
         )
-        research_result = await self.research_conductor.conduct_research()
+        research_result: str | list[str] = await self.research_conductor.conduct_research()
         self.context = [research_result] if isinstance(research_result, str) else research_result
 
         await self._log_event(
@@ -240,9 +240,7 @@ class GPTResearcher:
         ext_context: list[str] | None = None,
     ) -> str:
         existing_headers = [] if existing_headers is None else existing_headers
-        relevant_written_contents = (
-            [] if relevant_written_contents is None else relevant_written_contents
-        )
+        relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
         ext_context = [] if ext_context is None else ext_context
 
         await self._log_event(
@@ -254,7 +252,7 @@ class GPTResearcher:
             },
         )
 
-        report = await self.report_generator.write_report(
+        report: str = await self.report_generator.write_report(
             existing_headers=existing_headers,
             relevant_written_contents=relevant_written_contents,
             ext_context="\n".join(ext_context or self.context) if ext_context else "",
@@ -380,7 +378,7 @@ class GPTResearcher:
         self.research_costs += cost
         if self.log_handler is None:
             return
-        _ = self._log_event(
+        _: Coroutine[Any, Any, None] = self._log_event(
             "research",
             step="cost_update",
             details={"cost": cost, "total_cost": self.research_costs},
@@ -388,75 +386,83 @@ class GPTResearcher:
 
     @property
     def max_subtopics(self) -> int:
-        return self.research_config.MAX_SUBTOPICS
+        return self.cfg.MAX_SUBTOPICS
 
     @max_subtopics.setter
     def max_subtopics(self, value: int):
-        self.research_config.MAX_SUBTOPICS = value
+        self.cfg.MAX_SUBTOPICS = value
 
     @property
     def agent(self) -> str:
-        return self.research_config.AGENT_ROLE
+        return self.cfg.AGENT_ROLE
 
     @agent.setter
     def agent(self, value: str):
-        self.research_config.AGENT_ROLE = value
+        self.cfg.AGENT_ROLE = value
 
     @property
     def verbose(self) -> bool:
-        return self.research_config.VERBOSE
+        return self.cfg.VERBOSE
 
     @verbose.setter
     def verbose(self, value: bool):
-        self.research_config.VERBOSE = value
+        self.cfg.VERBOSE = value
 
     @property
     def tone(self) -> Tone:
-        return self.research_config.TONE
+        return self.cfg.TONE
 
     @tone.setter
     def tone(self, value: Tone | str):
-        self.research_config.TONE = (
-            value if isinstance(value, Tone) else Tone.__members__[value.capitalize()]
+        self.cfg.TONE = (
+            value
+            if isinstance(value, Tone)
+            else Tone.__members__[value.capitalize()]
         )
 
     @property
     def report_type(self) -> ReportType:
-        return self.research_config.REPORT_TYPE
+        return self.cfg.REPORT_TYPE
 
     @report_type.setter
     def report_type(self, value: ReportType | str):
-        self.research_config.REPORT_TYPE = (
-            value if isinstance(value, ReportType) else ReportType.__members__[value]
+        self.cfg.REPORT_TYPE = (
+            value
+            if isinstance(value, ReportType)
+            else ReportType.__members__[value]
         )
 
     @property
     def report_format(self) -> ReportFormat:
-        return self.research_config.REPORT_FORMAT
+        return self.cfg.REPORT_FORMAT
 
     @report_format.setter
     def report_format(self, value: ReportFormat | str):
-        self.research_config.REPORT_FORMAT = (
-            value if isinstance(value, ReportFormat) else ReportFormat.__members__[value]
+        self.cfg.REPORT_FORMAT = (
+            value
+            if isinstance(value, ReportFormat)
+            else ReportFormat.__members__[value]
         )
 
     @property
     def report_source(self) -> ReportSource:
-        return self.research_config.REPORT_SOURCE
+        return self.cfg.REPORT_SOURCE
 
     @report_source.setter
     def report_source(self, value: ReportSource | str):
-        self.research_config.REPORT_SOURCE = (
-            value if isinstance(value, ReportSource) else ReportSource.__members__[value]
+        self.cfg.REPORT_SOURCE = (
+            value
+            if isinstance(value, ReportSource)
+            else ReportSource.__members__[value]
         )
 
     @property
     def output_format(self) -> OutputFileType:
-        return self.research_config.OUTPUT_FORMAT
+        return self.cfg.OUTPUT_FORMAT
 
     @output_format.setter
     def output_format(self, value: OutputFileType | str):
-        self.research_config.OUTPUT_FORMAT = (
+        self.cfg.OUTPUT_FORMAT = (
             value
             if isinstance(value, OutputFileType)
             else OutputFileType.__members__[value.upper()]
@@ -464,16 +470,24 @@ class GPTResearcher:
 
     @property
     def curate_sources(self) -> bool:
-        return self.research_config.CURATE_SOURCES
+        return self.cfg.CURATE_SOURCES
 
     @curate_sources.setter
     def curate_sources(self, value: bool):
-        self.research_config.CURATE_SOURCES = value
+        self.cfg.CURATE_SOURCES = value
 
     @property
     def agent_role(self) -> str:
-        return self.research_config.AGENT_ROLE
+        return self.cfg.AGENT_ROLE
 
     @agent_role.setter
     def agent_role(self, value: str):
-        self.research_config.AGENT_ROLE = value
+        self.cfg.AGENT_ROLE = value
+
+    @property
+    def smart_llm(self) -> str:
+        return self.cfg.SMART_LLM
+
+    @smart_llm.setter
+    def smart_llm(self, value: str):
+        self.cfg.SMART_LLM = value

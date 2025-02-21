@@ -2,23 +2,26 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import random
 
 from typing import TYPE_CHECKING, Any, Callable
 
 import json_repair
 
+from backend.server.logging_config import JSONResearchHandler, get_json_handler
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from litellm.utils import get_max_tokens
 
-from gpt_researcher.actions import stream_output
+from gpt_researcher.actions.query_processing import get_search_results, plan_research_outline
+from gpt_researcher.actions.utils import stream_output
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher.document.langchain_document import LangChainDocumentLoader
 from gpt_researcher.document.online_document import OnlineDocumentLoader
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from gpt_researcher.prompts import generate_search_queries_prompt
-from gpt_researcher.utils.schemas import ReportSource, ReportType
+from gpt_researcher.utils.enum import ReportSource, ReportType
 
 if TYPE_CHECKING:
     from gpt_researcher.agent import GPTResearcher
@@ -26,16 +29,20 @@ if TYPE_CHECKING:
     from gpt_researcher.utils.logging_config import JSONResearchHandler
 
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ResearchConductor:
     """Manages and coordinates the research process."""
 
-    def __init__(self, researcher: GPTResearcher):
+    def __init__(
+        self,
+        researcher: GPTResearcher,
+    ):
         self.researcher: GPTResearcher = researcher
         self.logger: logging.Logger = logging.getLogger("research")
-        self.json_handler: JSONResearchHandler | None = getattr(self.logger, "json_handler", None)
+        # Prefer get_json_handler if available, otherwise fallback to attribute
+        self.json_handler: JSONResearchHandler | None = getattr(self.logger, "json_handler", get_json_handler())
         self.llm_provider: GenericLLMProvider | None = None
 
     def _get_llm(
@@ -43,27 +50,48 @@ class ResearchConductor:
         model: str,
         provider: str,
         temperature: float,
+        **llm_kwargs: Any,
     ) -> GenericLLMProvider:
         """Get or create an LLM provider instance.
 
         Args:
-            model: The model to use
-            provider: The LLM provider to use
-            temperature: The temperature to use for generation
+        ----
+            model (str): The model to use
+            provider (str): The LLM provider to use
+            temperature (float): The temperature to use for generation
 
         Returns:
-            The LLM provider instance
+        -------
+            (GenericLLMProvider): The LLM provider instance
         """
         if self.llm_provider is None:
             self.llm_provider = GenericLLMProvider.from_provider(
                 provider,
                 model=model,
                 temperature=temperature,
+                **llm_kwargs,
             )
         return self.llm_provider
 
-    async def plan_research(self, query: str) -> list[str]:
+    async def plan_research(
+        self,
+        query: str,
+        query_domains: list[str] | None = None,
+    ) -> list[str]:
+        """Plans the research by generating sub-queries or an outline.
+
+        Args:
+        ----
+            query (str): The main research query.
+            query_domains (list[str] | None): Optional list of domains to focus the search on.
+
+        Returns:
+        -------
+            (list[str]): A list of sub-queries and/or an outline for the research.
+        """
         self.logger.info(f"Planning research for query: {query}")
+        if query_domains:
+            self.logger.info(f"Query domains: {query_domains}")
 
         await stream_output(
             "logs",
@@ -71,10 +99,11 @@ class ResearchConductor:
             f"🌐 Browsing the web to learn more about the task: {query}...",
             self.researcher.websocket,
         )
-
+        # Always use the first retriever for initial search results
         search_results: list[dict[str, Any]] = await get_search_results(
             query,
             self.researcher.retrievers[0],
+            query_domains,
         )
         self.logger.info(f"Initial search results obtained: {len(search_results)} results")
 
@@ -85,25 +114,42 @@ class ResearchConductor:
             self.researcher.websocket,
         )
 
-        outline = await generate_sub_queries(
-            query=query,
-            context=search_results,
-            research_config=self.researcher.research_config,
-            parent_query=self.researcher.parent_query,
-            report_type=self.researcher.report_type,
-            cost_callback=self.researcher.add_costs,
-        )
-        self.logger.info(f"Research outline planned: {outline}")
+        # Use plan_research_outline or generate_sub_queries based on configuration
+        if self.researcher.cfg.RESEARCH_PLANNER == "outline":
+            outline: list[str] = await plan_research_outline(
+                query=query,
+                search_results=search_results,
+                agent_role_prompt=self.researcher.agent_role,
+                cfg=self.researcher.cfg,
+                parent_query=self.researcher.parent_query,
+                report_type=self.researcher.report_type,
+                cost_callback=self.researcher.add_costs,
+            )
+        else:  # Default to sub-queries
+            outline = await generate_sub_queries(
+                query=query,
+                context=search_results,
+                cfg=self.researcher.cfg,
+                parent_query=self.researcher.parent_query,
+                report_type=self.researcher.report_type,
+                cost_callback=self.researcher.add_costs,
+            )
+        self.logger.info(f"Research outline/plan: {outline}")
         return outline
 
     async def conduct_research(self) -> list[str]:
-        """Runs the GPT Researcher to conduct research."""
+        """Runs the GPT Researcher to conduct research.
+
+        Returns:
+        -------
+            (list[str]): A list of research data accumulated during the research.
+        """
         if self.json_handler is not None:
             self.json_handler.update_content("query", self.researcher.query)
 
         self.logger.info(f"Starting research for query: {self.researcher.query}")
 
-        # Reset visited_urls and source_urls at the start of each research task
+        # Reset visited_urls at the start of each research task
         self.researcher.visited_urls.clear()
         research_data: list[str] = []
 
@@ -126,7 +172,7 @@ class ResearchConductor:
         # Research for relevant sources based on source types below
         if self.researcher.source_urls:
             self.logger.info("Using provided source URLs")
-            research_data = [await self._get_context_by_urls(self.researcher.source_urls)]
+            research_data.append(await self._get_context_by_urls(self.researcher.source_urls))
             if research_data[0] and len(research_data[0]) == 0 and self.researcher.verbose:
                 await stream_output(
                     "logs",
@@ -136,15 +182,25 @@ class ResearchConductor:
                 )
             if self.researcher.complement_source_urls:
                 self.logger.info("Complementing with web search")
-                additional_research = await self._get_context_by_web_search(self.researcher.query)
-                research_data += " ".join(additional_research)
+                additional_research: list[str] = [
+                    await self._get_context_by_web_search(
+                        self.researcher.query,
+                        query_domains=self.researcher.query_domains,
+                    )
+                ]
+                research_data.extend(additional_research)
 
-        elif self.researcher.research_config.REPORT_SOURCE == ReportSource.WEB.value:
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Web:
             self.logger.info("Using web search")
-            research_data = [await self._get_context_by_web_search(self.researcher.query)]
+            research_data = [
+                await self._get_context_by_web_search(
+                    self.researcher.query,
+                    query_domains=self.researcher.query_domains,
+                )
+            ]
 
-        elif self.researcher.research_config.REPORT_SOURCE == ReportSource.LOCAL.value:
-            document_data = await DocumentLoader(self.researcher.research_config.DOC_PATH).load()
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Local:
+            document_data: list[dict[str, Any]] = await DocumentLoader(self.researcher.cfg.DOC_PATH).load()
             if self.researcher.vector_store is not None:
                 self.researcher.vector_store.load(document_data)
 
@@ -152,46 +208,70 @@ class ResearchConductor:
                 await self._get_context_by_web_search(
                     self.researcher.query,
                     document_data,
+                    query_domains=self.researcher.query_domains,
                 )
             ]
 
         # Hybrid search including both local documents and web sources
-        elif self.researcher.research_config.REPORT_SOURCE == ReportSource.HYBRID.value:
-            if self.researcher.document_urls:
-                document_data = await OnlineDocumentLoader(self.researcher.document_urls).load()
-            else:
-                document_data = await DocumentLoader(self.researcher.research_config.DOC_PATH).load()
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Hybrid:
+            document_data: list[dict[str, Any]] = (
+                await OnlineDocumentLoader(self.researcher.document_urls).load()
+                if self.researcher.document_urls
+                else await DocumentLoader(self.researcher.cfg.DOC_PATH).load()
+            )
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(document_data)
-            docs_context = await self._get_context_by_web_search(
+            docs_context: str = await self._get_context_by_web_search(
                 self.researcher.query,
                 document_data,
+                query_domains=self.researcher.query_domains,
             )
-            web_context = await self._get_context_by_web_search(self.researcher.query)
+            web_context: str = await self._get_context_by_web_search(
+                self.researcher.query,
+                query_domains=self.researcher.query_domains,
+            )
             research_data = [f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"]
 
-        elif self.researcher.research_config.REPORT_SOURCE == ReportSource.LANGCHAIN_DOCUMENTS.value:
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.LangChainDocuments:
             self.logger.info("Using LangChain documents")
-            lang_docs = [Document(**doc) for doc in self.researcher.documents]
-            langchain_documents_data = await LangChainDocumentLoader(lang_docs).load()
+            lang_docs: list[Document] = [Document(**doc) for doc in self.researcher.documents]
+            langchain_documents_data: list[dict[str, Any]] = await LangChainDocumentLoader(lang_docs).load()
             if self.researcher.vector_store is not None:
                 self.researcher.vector_store.load(langchain_documents_data)
             research_data = [
                 await self._get_context_by_web_search(
                     self.researcher.query,
                     langchain_documents_data,
+                    query_domains=self.researcher.query_domains,
                 )
             ]
 
-        elif self.researcher.research_config.OUTPUT_FORMAT == ReportSource.LANGCHAIN_VECTOR_STORE.value:
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.LangChainVectorStore:
             research_data = await self._get_context_by_vectorstore(
                 self.researcher.query,
                 self.researcher.vector_store_filter,
             )
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Azure:
+            from gpt_researcher.document.azure_document_loader import AzureDocumentLoader
 
-        # Rank and curate the sources
+            self.logger.info("Using Azure Document Loader")
+            azure_loader = AzureDocumentLoader(
+                container_name=os.getenv("AZURE_CONTAINER_NAME"),
+                connection_string=os.getenv("AZURE_CONNECTION_STRING"),
+            )
+            azure_files: list[Any] = await azure_loader.load()
+            document_data: list[dict[str, Any]] = await DocumentLoader(azure_files).load()  # Reuse existing loader
+            research_data = [await self._get_context_by_web_search(self.researcher.query, document_data)]
+
+        else:
+            raise ValueError(f"Invalid report source: {self.researcher.cfg.REPORT_SOURCE}")
+
+        # Ensure research_data is a list before extending context
+        if isinstance(research_data, str):
+            research_data = [research_data]
         self.researcher.context.extend(research_data)
-        if self.researcher.research_config.CURATE_SOURCES:
+
+        if self.researcher.cfg.CURATE_SOURCES:
             self.logger.info("Curating sources")
             self.researcher.context = await self.researcher.source_curator.curate_sources(research_data)
 
@@ -199,21 +279,30 @@ class ResearchConductor:
             await stream_output(
                 "logs",
                 "research_step_finalized",
-                f"Finalized research step.\n💸 Total Research Costs: ${self.researcher.get_costs()}",
+                f"Finalized research step.{os.linesep}💸 Total Research Costs: ${self.researcher.get_costs()}",
                 self.researcher.websocket,
             )
             if self.json_handler is not None:
                 self.json_handler.update_content("costs", self.researcher.get_costs())
                 self.json_handler.update_content("context", self.researcher.context)
 
-        self.logger.info(f"Research completed. Context size: {len(str(self.researcher.context))}")
+        self.logger.info(f"RESEARCH COMPLETED! Total Context Length: {len(str(self.researcher.context))}")
         return self.researcher.context
 
     async def _get_context_by_urls(
         self,
         urls: list[str],
     ) -> str:
-        """Scrapes and compresses the context from the given urls."""
+        """Scrapes and compresses the context from the given urls.
+
+        Args:
+        ----
+            urls (list[str]): List of URLs to scrape.
+
+        Returns:
+        -------
+            context (str): Context string.
+        """
         self.logger.info(f"Getting context from URLs: {urls}")
 
         new_search_urls: list[str] = await self._get_new_urls(set(urls))
@@ -233,8 +322,6 @@ class ResearchConductor:
         self.logger.info(f"Generated context length: {len(context)}")
         return context
 
-    # Add logging to other methods similarly...
-
     async def _get_context_by_vectorstore(
         self,
         query: str,
@@ -243,13 +330,15 @@ class ResearchConductor:
         """Generates the context for the research task by searching the vectorstore.
 
         Args:
-            query: The query to search for.
-            filter: The filter to apply to the vectorstore.
+        ----
+            query (str): The query to search for.
+            filter (dict[str, Any] | None): The filter to apply to the vectorstore.
 
         Returns:
-            context: List of context.
+        -------
+            context (list[str]): List of context.
         """
-        context: list[str] = []
+        self.logger.info(f"Starting vectorstore search for query: {query}")
         # Generate Sub-Queries including original query
         sub_queries: list[str] = await self.plan_research(query)
         # If this is not part of a sub researcher, add original query to research for better results
@@ -267,7 +356,7 @@ class ResearchConductor:
             )
 
         # Using asyncio.gather to process the sub_queries asynchronously
-        context = await asyncio.gather(
+        context_list: list[str] = await asyncio.gather(
             *[
                 self._process_sub_query_with_vectorstore(
                     sub_query,
@@ -276,27 +365,32 @@ class ResearchConductor:
                 for sub_query in sub_queries
             ]
         )
-        return context
+        self.logger.info(f"Gathered context from {len(context_list)} sub-queries using vectorstore")
+        return context_list
 
     async def _get_context_by_web_search(
         self,
         query: str,
         scraped_data: list[dict[str, Any]] | None = None,
+        query_domains: list[str] | None = None,
     ) -> str:
         """Generates the context for the research task by searching the query and scraping the results.
 
         Args:
-            query: The query to search for.
-            scraped_data: List of scraped data.
+        ----
+            query (str): The query to search for.
+            scraped_data (list[dict[str, Any]]): List of scraped data (can be from documents).
+            query_domains (list[str] | None): Optional list of domains to focus the search on.
 
         Returns:
-            context: List of context.
+        -------
+            context (str): Context string.
         """
-        scraped_data = [] if scraped_data is None else scraped_data
+        scraped_data = scraped_data if scraped_data is not None else []
         self.logger.info(f"Starting web search for query: {query}")
 
         # Generate Sub-Queries including original query
-        sub_queries: list[str] = await self.plan_research(query)
+        sub_queries: list[str] = await self.plan_research(query, query_domains)
         self.logger.info(f"Generated sub-queries: {sub_queries}")
 
         # If this is not part of a sub researcher, add original query to research for better results
@@ -315,25 +409,35 @@ class ResearchConductor:
 
         # Using asyncio.gather to process the sub_queries asynchronously
         try:
-            context = await asyncio.gather(*[self._process_sub_query(sub_query, scraped_data) for sub_query in sub_queries])
+            context: list[str] = await asyncio.gather(*[self._process_sub_query(sub_query, scraped_data, query_domains) for sub_query in sub_queries])
             self.logger.info(f"Gathered context from {len(context)} sub-queries")
             # Filter out empty results and join the context
-            context = [c for c in context if c.strip()]
-            if context:
-                combined_context = " ".join(context)
-                self.logger.info(f"Combined context size: {len(combined_context)}")
-                return combined_context
+            context_str: str = " ".join(c for c in context if c.strip())
+            self.logger.info(f"Combined context size: {len(context_str)}")
+            return context_str
         except Exception as e:
-            self.logger.exception(f"Error during web search: {e.__class__.__name__}: {e}")
-        return ""
+            self.logger.exception(f"Error during web search: {type(e).__name__}: {e}")
+            return ""
 
     async def _process_sub_query(
         self,
         sub_query: str,
         scraped_data: list[dict[str, Any]] | None = None,
+        query_domains: list[str] | None = None,
     ) -> str:
-        """Takes in a sub query and scrapes urls based on it and gathers context."""
-        scraped_data = [] if scraped_data is None else scraped_data
+        """Takes in a sub query and scrapes urls based on it and gathers context.
+
+        Args:
+        ----
+            sub_query (str): The sub-query to process.
+            scraped_data (list[dict[str, Any]] | None): Optional list of scraped data.
+            query_domains (list[str] | None): Optional list of domains to focus the search on.
+
+        Returns:
+        -------
+            (str): The processed sub-query.
+        """
+        scraped_data = scraped_data if scraped_data is not None else []
         if self.json_handler is not None:
             self.json_handler.log_event(
                 "sub_query",
@@ -353,14 +457,14 @@ class ResearchConductor:
 
         try:
             if not scraped_data:
-                scraped_data = await self._scrape_data_by_urls(sub_query)
+                scraped_data = await self._scrape_data_by_urls(sub_query, query_domains)
                 self.logger.info(f"Scraped data size: {len(scraped_data)}")
 
-            content = await self.researcher.context_manager.get_similar_content_by_query(
+            content: str = await self.researcher.context_manager.get_similar_content_by_query(
                 sub_query,
                 scraped_data,
             )
-            self.logger.info(f"Content found for sub-query: {len(str(content)) if content else 0} chars")
+            self.logger.info(f"Content found for sub-query was {len(content)} chars")
 
             if content and content.strip():
                 await stream_output(
@@ -386,7 +490,7 @@ class ResearchConductor:
                 )
             return content
         except Exception as e:
-            self.logger.exception(f"Error processing sub-query {sub_query}: {e.__class__.__name__}: {e}")
+            self.logger.exception(f"Error processing sub-query {sub_query}! {e.__class__.__name__}: {e}")
             return ""
 
     async def _process_sub_query_with_vectorstore(
@@ -394,15 +498,18 @@ class ResearchConductor:
         sub_query: str,
         sub_filter: dict[str, Any] | None = None,
     ) -> str:
-        """Takes in a sub query and gathers context from the user provided vector store.
+        """Processes a sub-query using a vector store.
 
         Args:
-            sub_query (str): The sub-query generated from the original query
+        ----
+            sub_query (str): The sub-query to process.
+            sub_filter (dict[str, Any] | None): Optional filter to apply to the vector store.
 
         Returns:
-            str: The context gathered from search
+        -------
+            (str): The processed sub-query.
         """
-        sub_filter = {} if sub_filter is None else sub_filter
+        sub_filter = sub_filter if sub_filter is not None else {}
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -416,7 +523,7 @@ class ResearchConductor:
             sub_filter,
         )
 
-        self.logger.debug(f"Content found for sub-query: {len(str(content)) if content else 0} chars")
+        self.logger.debug(f"Content found for sub-query: {len(content) if content else 0} chars")
         if not self.researcher.verbose:
             return content
 
@@ -440,14 +547,7 @@ class ResearchConductor:
         self,
         url_set_input: set[str],
     ) -> list[str]:
-        """Gets the new urls from the given url set.
-
-        Args:
-            url_set_input (set[str]): The url set to get the new urls from
-
-        Returns:
-            list[str]: The new urls from the given url set.
-        """
+        """Gets the new urls from the given url set, avoiding duplicates."""
 
         new_urls: list[str] = []
         for url in url_set_input:
@@ -471,48 +571,104 @@ class ResearchConductor:
     async def _search_relevant_source_urls(
         self,
         query: str,
+        query_domains: list[str] | None = None,
     ) -> list[str]:
-        """For non-langchain retrievers, search for relevant source urls."""
+        """Searches for relevant source URLs using available retrievers."""
         new_search_urls: set[str] = set()
 
         # Iterate through all retrievers
         for retriever_class in self.researcher.retrievers:
             if not issubclass(retriever_class, BaseRetriever):
+                self.logger.warning(f"Skipping non-Langchain retriever: {retriever_class.__name__}")
                 continue
 
-            # Instantiate the retriever with the sub-query
-            retriever: BaseRetriever = retriever_class(query)  # type: ignore
-
-            # Perform the search using the current retriever
-            search_results: list[Document] | None = await retriever.aget_relevant_documents(query, max_results=self.researcher.research_config.MAX_SEARCH_RESULTS_PER_QUERY)
-            if search_results is None:
+            # Instantiate the retriever
+            try:
+                retriever: BaseRetriever = retriever_class(
+                    query=query,  # type: ignore[arg-type]
+                    query_domains=query_domains,  # type: ignore[arg-type]
+                )
+            except TypeError as e:
+                self.logger.error(f"Error instantiating retriever {retriever_class.__name__}: {e}")
                 continue
 
-            # Collect new URLs from search results
-            search_urls: list[str] = [str(webpage.metadata.get("source", webpage.metadata.get("href", ""))) for webpage in search_results]
-            new_search_urls.update(search_urls)
+            # Perform the search and collect URLs
+            try:
+                search_results: list[Document] | None = await retriever.aget_relevant_documents(
+                    query,
+                    max_results=self.researcher.cfg.MAX_SEARCH_RESULTS_PER_QUERY,
+                )
+                if search_results:
+                    search_urls: list[str] = [str(webpage.metadata.get("source", webpage.metadata.get("href", ""))).strip() for webpage in search_results]
+                    new_search_urls.update(search_urls)
 
-        # Get unique URLs
+            except Exception as e:
+                self.logger.error(f"Error during search with {retriever_class.__name__}: {e.__class__.__name__}: {e}")
+                continue
+
+        # Get unique and new URLs
         new_search_urls_list: list[str] = await self._get_new_urls(new_search_urls)
         random.shuffle(new_search_urls_list)
-
         return new_search_urls_list
+
+    async def _search_relevant_source_urls_legacy(
+        self,
+        query: str,
+        query_domains: list[str] | None = None,
+    ) -> list[str]:
+        """Legacy method for searching relevant source URLs (for non-Langchain retrievers).
+
+        Args:
+        ----
+            query (str): The query to search for.
+            query_domains (list[str] | None): Optional list of domains to focus the search on.
+
+        Returns:
+        -------
+            (list[str]): A list of URLs.
+        """
+        new_search_urls: list[str] = []
+
+        for retriever_class in self.researcher.retrievers:
+            try:
+                retriever = retriever_class(query, query_domains=query_domains)  # type: ignore
+
+                search_results = await asyncio.to_thread(
+                    retriever.search,  # type: ignore[attr-defined]
+                    max_results=self.researcher.cfg.MAX_SEARCH_RESULTS_PER_QUERY,
+                )
+
+                for url in search_results:
+                    href = str(url.get("href", "") or "").strip()
+                    if href:
+                        new_search_urls.append(href)
+
+            except Exception as e:
+                self.logger.error(f"Error with legacy retriever {retriever_class.__name__}: {e}")
+                continue
+
+        unique_new_urls: list[str] = await self._get_new_urls(set(new_search_urls))
+        random.shuffle(unique_new_urls)
+        return unique_new_urls
 
     async def _scrape_data_by_urls(
         self,
         sub_query: str,
+        query_domains: list[str] | None = None,
     ) -> list[dict[str, Any]]:
-        """Runs a sub-query across multiple retrievers and scrapes the resulting URLs.
+        """Scrapes data from URLs found by searching a sub-query.
 
         Args:
+        ----
             sub_query (str): The sub-query to search for.
+            query_domains (list[str] | None): Optional list of domains to focus the search on.
 
         Returns:
-            list: A list of scraped content results.
+        -------
+            (list[dict[str, Any]]): A list of dictionaries containing the scraped data.
         """
-        new_search_urls: list[str] = await self._search_relevant_source_urls(sub_query)
+        new_search_urls: list[str] = await self._search_relevant_source_urls(sub_query, query_domains)
 
-        # Log the research process if verbose mode is on
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -521,7 +677,6 @@ class ResearchConductor:
                 self.researcher.websocket,
             )
 
-        # Scrape the new URLs
         scraped_content: tuple[list[dict[str, Any]], list[dict[str, Any]]] = await self.researcher.scraper_manager.browse_urls(new_search_urls)
 
         if self.researcher.vector_store is not None:
@@ -530,34 +685,40 @@ class ResearchConductor:
         return scraped_content[0]
 
 
-async def get_search_results(
+async def get_search_results_new(
     query: str,
-    retriever: type,
+    retriever: type[BaseRetriever],
+    query_domains: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Get web search results for a given query.
+    """Get web search results for a given query using a Langchain retriever.
 
     Args:
-        query: The search query
-        retriever: The retriever class to instantiate
+    ----
+        query (str): The query to search for.
+        retriever (type[BaseRetriever]): The retriever to use.
+        query_domains (list[str] | None): Optional list of domains to focus the search on.
 
     Returns:
-        A list of search results
+    -------
+        (list[dict[str, Any]]): A list of dictionaries containing the search results.
     """
-    # Instantiate the retriever with the query
-    retriever_instance: BaseRetriever = retriever(query)
-
-    # Get documents using Langchain's retriever interface
-    documents: list[Document] = await retriever_instance.aget_relevant_documents(query)
-
-    # Convert Langchain documents to the expected format
-    return [
-        {
-            "href": doc.metadata.get("source", ""),
-            "title": doc.metadata.get("title", ""),
-            "raw_content": doc.page_content,
-        }
-        for doc in documents
-    ]
+    try:
+        retriever_instance: BaseRetriever = retriever(
+            query=query,  # type: ignore[arg-type]
+            query_domains=query_domains,  # type: ignore[arg-type]
+        )
+        documents: list[Document] = await retriever_instance.aget_relevant_documents(query)
+        return [
+            {
+                "href": doc.metadata.get("source", ""),
+                "title": doc.metadata.get("title", ""),
+                "raw_content": doc.page_content,
+            }
+            for doc in documents
+        ]
+    except Exception as e:
+        logger.error(f"Error getting search results with retriever {retriever.__name__}: {type(e).__name__}: {e}")
+        return []  # Return an empty list on error
 
 
 async def generate_sub_queries(
@@ -565,92 +726,98 @@ async def generate_sub_queries(
     parent_query: str,
     report_type: ReportType,
     context: list[dict[str, Any]],
-    research_config: Config,
+    cfg: Config,
     cost_callback: Callable[[float], None] | None = None,
 ) -> list[str]:
     """Generate sub-queries using the specified LLM model.
 
     Args:
-        query: The original query
-        parent_query: The parent query
-        report_type: The type of report
-        max_iterations: Maximum number of research iterations
-        context: Search results context
-        cfg: Configuration object
-        cost_callback: Callback for cost calculation
+    ----
+        query (str): The main research query.
+        parent_query (str): The parent query.
+        report_type (ReportType): The type of report to generate.
+        context (list[dict[str, Any]]): The context to use for the research.
+        cfg (Config): The configuration to use for the research.
 
     Returns:
-        A list of sub-queries
+    -------
+        (list[str]): A list of sub-queries.
     """
     llm_queries_prompt: str = generate_search_queries_prompt(
         query,
         parent_query,
         report_type,
-        max_iterations=research_config.MAX_ITERATIONS or 1,
+        max_iterations=cfg.MAX_ITERATIONS or 1,
         context=context,
     )
 
-    strategic_token_limit = get_max_tokens(research_config.STRATEGIC_LLM_MODEL)  # pyright: ignore[reportArgumentType]
+    strategic_token_limit: int | None = get_max_tokens(cfg.STRATEGIC_LLM_MODEL)
     try:
-        provider = GenericLLMProvider.from_provider(
-            research_config.STRATEGIC_LLM_PROVIDER,
-            model=research_config.STRATEGIC_LLM_MODEL,
-            temperature=research_config.TEMPERATURE,
+        provider: GenericLLMProvider = GenericLLMProvider.from_provider(
+            cfg.STRATEGIC_LLM_PROVIDER,
+            model=cfg.STRATEGIC_LLM_MODEL,
+            temperature=cfg.TEMPERATURE,
             max_tokens=strategic_token_limit,
-            **research_config.llm_kwargs,
+            **cfg.llm_kwargs,
         )
-        response = await provider.get_chat_response(
+        response: str = await provider.get_chat_response(
             messages=[{"role": "user", "content": llm_queries_prompt}],
             stream=False,
         )
     except Exception as e:
-        logger.warning(f"Error with strategic LLM: {e.__class__.__name__}: {e}. Retrying with max_tokens={strategic_token_limit}.")
+        logger.warning(f"Error with strategic LLM ({cfg.STRATEGIC_LLM_MODEL}): {e.__class__.__name__}: {e}. Retrying with adjusted max_tokens.")
         logger.warning("See https://github.com/assafelovic/gpt-researcher/issues/1022")
         try:
-            # Retry with same provider but different max_tokens
+            # Retry with the *same* provider, but adjusted max_tokens
             provider = GenericLLMProvider.from_provider(
-                research_config.STRATEGIC_LLM_PROVIDER,
-                model=research_config.STRATEGIC_LLM_MODEL,
-                temperature=research_config.TEMPERATURE,
-                max_tokens=strategic_token_limit,
-                **research_config.llm_kwargs,
+                cfg.STRATEGIC_LLM_PROVIDER,
+                model=cfg.STRATEGIC_LLM_MODEL,
+                temperature=cfg.TEMPERATURE,
+                max_tokens=strategic_token_limit,  # Keep original limit
+                **cfg.llm_kwargs,
             )
-            response = await provider.get_chat_response(
-                messages=[{"role": "user", "content": llm_queries_prompt}],
-                stream=False,
-            )
-            logger.warning(f"Retrying with max_tokens={strategic_token_limit} successful.")
-        except Exception as e:
-            logger.warning(f"Retrying with max_tokens={strategic_token_limit} failed.")
-            logger.warning(f"Error with strategic LLM: {e.__class__.__name__}: {e}. Falling back to smart LLM.")
+            response = await provider.get_chat_response(messages=[{"role": "user", "content": llm_queries_prompt}], stream=False)
+            logger.warning("Retry with adjusted max_tokens successful.")
+
+        except Exception as e2:
+            logger.warning(f"Retry with adjusted max_tokens failed: {e2.__class__.__name__}: {e2}. Falling back to smart LLM.")
             # Fall back to smart LLM
-            provider = GenericLLMProvider.from_provider(
-                research_config.SMART_LLM_PROVIDER,
-                model=research_config.SMART_LLM_MODEL,
-                temperature=research_config.TEMPERATURE,
-                max_tokens=strategic_token_limit,
-                **research_config.llm_kwargs,
-            )
-            response = await provider.get_chat_response(
-                messages=[{"role": "user", "content": llm_queries_prompt}],
-                stream=False,
-            )
-            logger.warning("Retrying with smart LLM successful.")
+            try:
+                provider = GenericLLMProvider.from_provider(
+                    cfg.SMART_LLM_PROVIDER,
+                    model=cfg.SMART_LLM_MODEL,
+                    temperature=cfg.TEMPERATURE,
+                    max_tokens=strategic_token_limit,
+                    **cfg.llm_kwargs,
+                )
+                response = await provider.get_chat_response(messages=[{"role": "user", "content": llm_queries_prompt}], stream=False)
+                logger.warning("Fallback to smart LLM successful.")
+            except Exception as e3:
+                logger.exception(f"Fallback to smart LLM also failed: {e3.__class__.__name__}: {e3}. Returning empty list.")
+                return []
 
     if cost_callback:
         from gpt_researcher.utils.costs import estimate_llm_cost
-        llm_costs = estimate_llm_cost(llm_queries_prompt, response)
-        cost_callback(llm_costs)
 
-    result = json_repair.loads(response)
+        cost_callback(estimate_llm_cost(llm_queries_prompt, response))
+
+    try:
+        result: dict[str, Any] | list[Any] | str | float | int | bool | None | tuple[dict[str, Any] | list[Any] | str | float | int | bool | None, list[dict[str, str]]] = (
+            json_repair.loads(response)
+        )
+    except (TypeError, ValueError) as e:
+        logger.exception(f"Failed to parse JSON response: {e.__class__.__name__}: {e}. Response: {response}")
+        return []
+
     if isinstance(result, float):
-        raise TypeError("Result is a float somehow")
+        logger.exception(f"Unexpected float result: {result}")
+        return []
     if isinstance(result, dict):
         return result.get("queries", [])
-    if isinstance(result, str):
-        return [result]
-    if isinstance(result, int):
-        return [str(result)]
+    if isinstance(result, (str, int)):
+        return [str(result)]  # Convert to string and wrap in a list
     if isinstance(result, list):
-        return [item for sublist in result for item in sublist]
+        # Flatten list of lists
+        return [item for sublist in result for item in (sublist if isinstance(sublist, list) else [sublist])]
+    logger.exception(f"Unexpected result type: `{result.__class__.__name__}`. Result: `{result!r}`")
     return []

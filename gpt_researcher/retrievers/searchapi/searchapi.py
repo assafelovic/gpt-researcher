@@ -1,6 +1,3 @@
-# SearchApi Retriever
-
-# libraries
 from __future__ import annotations
 
 import logging
@@ -16,19 +13,20 @@ class SearchApiSearch:
     def __init__(
         self,
         query: str,
+        query_domains: list[str] | None = None,
     ):
-        """
-        Initializes the SearchApiSearch object.
+        """Initializes the SearchApiSearch object.
 
         Args:
-            query: The query to search for.
+            query (str): The query to search for.
+            query_domains (list[str] | None): The domains to search for.
         """
         self.query: str = query
+        self.query_domains: list[str] = [] if query_domains is None else query_domains
         self.api_key: str = self.get_api_key()
 
     def get_api_key(self) -> str:
-        """
-        Gets the SearchApi API key.
+        """Gets the SearchApi API key.
 
         Returns:
             str: The SearchApi API key.
@@ -45,8 +43,7 @@ class SearchApiSearch:
         self,
         max_results: int = 7,
     ) -> list[dict[str, str]]:
-        """
-        Searches the query.
+        """Searches the query.
 
         Useful for general internet search queries using SearchApi.
 
@@ -55,7 +52,7 @@ class SearchApiSearch:
         """
         logging.info(f"SearchApiSearch: Searching with query {self.query}...")
 
-        url = "https://www.searchapi.io/api/v1/search"
+        url: str = "https://www.searchapi.io/api/v1/search"
         params: dict[str, str] = {
             "q": self.query,
             "engine": "google",

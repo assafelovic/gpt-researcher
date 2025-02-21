@@ -7,21 +7,32 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+      LOGGING_LEVEL: INFO
+    volumes:
+      - ${PWD}/my-docs:/usr/src/app/my-docs:rw
+      - ${PWD}/outputs:/usr/src/app/outputs:rw
+      - ${PWD}/logs:/usr/src/app/logs:rw
+    user: root
     restart: always
     ports:
       - 8000:8000
+      
   gptr-nextjs:
     pull_policy: build
     image: gptresearcher/gptr-nextjs
     stdin_open: true
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      CHOKIDAR_USEPOLLING: "true"
+      LOGGING_LEVEL: INFO
+      NEXT_PUBLIC_GA_MEASUREMENT_ID: ${NEXT_PUBLIC_GA_MEASUREMENT_ID}
+      NEXT_PUBLIC_GPTR_API_URL: ${NEXT_PUBLIC_GPTR_API_URL}
     build:
       dockerfile: Dockerfile.dev
       context: frontend/nextjs
     volumes:
       - /app/node_modules
       - ./frontend/nextjs:/app
+      - ./outputs:/app/outputs
     restart: always
     ports:
       - 3000:3000
@@ -33,6 +44,7 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
+      LOGGING_LEVEL: INFO
     profiles: ["test"]
     command: >
       /bin/sh -c "
@@ -40,3 +52,18 @@ services:
       python -m pytest tests/report-types.py &&
       python -m pytest tests/vector-store.py
       "
+  
+  discord-bot:
+    build:
+      context: ./docs/discord-bot
+      dockerfile: Dockerfile.dev
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+    volumes:
+      - ./docs/discord-bot:/app
+      - /app/node_modules
+    ports:
+      - 3001:3000
+    profiles: ["discord"]
+    restart: always

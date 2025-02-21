@@ -5,13 +5,10 @@ import sys
 from pathlib import Path
 
 # Add the project root to Python path
-project_root = Path(__file__).parent.parent
-print(f"Project root: {project_root}")
+project_root: Path = Path(__file__).parent.parent
 sys.path.append(str(project_root))
-try:
-    from backend.server.server_utils import CustomLogsHandler  # noqa: E402
-except ImportError:
-    print(f"Wrong project name: {project_root}")
+
+from backend.server.server_utils import CustomLogsHandler
 
 
 def test_logs_creation():
@@ -37,7 +34,7 @@ def test_logs_creation():
         print(f"✓ Created test file: {test_file}")
 
         # Initialize the handler
-        handler = CustomLogsHandler(websocket=None)  # pyright: ignore[reportArgumentType]
+        handler = CustomLogsHandler()
         print("✓ CustomLogsHandler initialized")
 
         # Test JSON logging

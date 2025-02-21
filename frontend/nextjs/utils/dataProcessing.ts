@@ -10,7 +10,7 @@ export const preprocessOrderedData = (data: Data[]) => {
   let sourceBlockEncountered = false;
   let lastSubqueriesIndex = -1;
   const seenUrls = new Set<string>();
-  console.log('websocket data before its processed',data)
+  // console.log('websocket data before its processed',data)
 
   data.forEach((item: any) => {
     const { type, content, metadata, output, link } = item;

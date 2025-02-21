@@ -1,8 +1,11 @@
-# Frontend Application
+# NextJS Frontend
 
 This frontend project aims to enhance the user experience of GPT Researcher, providing an intuitive and efficient interface for automated research. It offers two deployment options to suit different needs and environments.
 
-View a Product Tutorial here: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
+#### Demo
+<iframe height="400" width="700" src="https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
+View an in-depth Product Tutorial here: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
 
 
 ## NextJS Frontend App
@@ -39,34 +42,19 @@ docker compose up --build
 
 Visit localhost:3000 on any browser and enjoy researching!
 
+If, for some reason, you don't want to run the GPTR API Server on localhost:8000, no problem! You can set the `NEXT_PUBLIC_GPTR_API_URL` environment variable in your `.env` file to the URL of your GPTR API Server.
 
-## Other Options: 1: Static Frontend (FastAPI)
+For example:
+```
+NEXT_PUBLIC_GPTR_API_URL=https://gptr.app
+```
 
-A lightweight solution using FastAPI to serve static files.
+Or: 
+```
+NEXT_PUBLIC_GPTR_API_URL=http://localhost:7000
+```
 
-#### Prerequisites
-- Python 3.11+
-- pip
-
-#### Setup and Running
-
-1. Install required packages:
-   ```
-   pip install -r requirements.txt
-   ```
-
-2. Start the server:
-   ```
-   python -m uvicorn main:app
-   ```
-
-3. Access at `http://localhost:8000`
-
-#### Demo
-<iframe height="400" width="700" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/dd6cf08f-b31e-40c6-9907-1915f52a7110" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-
-
-## Yet Another Option: Running NextJS Frontend via CLI
+## Running NextJS Frontend via CLI
 
 A more robust solution with enhanced features and performance.
 
@@ -101,24 +89,11 @@ A more robust solution with enhanced features and performance.
 
 Note: Requires backend server on `localhost:8000` as detailed in option 1.
 
-#### Demo
-<iframe height="400" width="700" src="https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-## Choosing an Option
+### Adding Google Analytics
 
-- Static Frontend: Quick setup, lightweight deployment.
-- NextJS Frontend: Feature-rich, scalable, better performance and SEO.
+To add Google Analytics to your NextJS frontend, simply add the following to your `.env` file:
 
-For production, NextJS is recommended.
-
-## Frontend Features
-
-Our frontend enhances GPT-Researcher by providing:
-
-1. Intuitive Research Interface: Streamlined input for research queries.
-2. Real-time Progress Tracking: Visual feedback on ongoing research tasks.
-3. Interactive Results Display: Easy-to-navigate presentation of findings.
-4. Customizable Settings: Adjust research parameters to suit specific needs.
-5. Responsive Design: Optimal experience across various devices.
-
-These features aim to make the research process more efficient and user-friendly, complementing GPT-Researcher's powerful agent capabilities.
+```
+NEXT_PUBLIC_GA_MEASUREMENT_ID="G-G2YVXKHJNZ"
+```

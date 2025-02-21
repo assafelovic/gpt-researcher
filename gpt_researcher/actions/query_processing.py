@@ -6,13 +6,14 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import json_repair
 
-from litellm.utils import get_max_tokens
-
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from gpt_researcher.prompts import generate_search_queries_prompt
-from gpt_researcher.utils.schemas import ReportType
+from gpt_researcher.utils.llm import create_chat_completion
+from utils.enum import ReportType
 
 if TYPE_CHECKING:
+    from json_repair.json_parser import JSONReturnType
+
     from gpt_researcher.config import Config
 
 
@@ -42,14 +43,16 @@ def _get_llm(
     )
 
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 async def get_search_results(
     query: str,
     retriever: Any,
+    query_domains: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Get web search results for a given query.
+    """
+    Get web search results for a given query.
 
     Args:
         query: The search query
@@ -58,24 +61,25 @@ async def get_search_results(
     Returns:
         A list of search results
     """
-    search_retriever = retriever(query)
+    search_retriever = retriever(query, query_domains=query_domains)
     return search_retriever.search()
 
 
 async def generate_sub_queries(
     query: str,
     parent_query: str,
-    report_type: ReportType,
+    report_type: str | ReportType,
     context: list[dict[str, Any]],
     cfg: Config,
     cost_callback: Callable[[float], None] | None = None,
 ) -> list[str]:
-    """Generate sub-queries using the specified LLM model.
+    """
+    Generate sub-queries using the specified LLM model.
 
     Args:
         query: The original query
         parent_query: The parent query
-        report_type: The type of report
+        report_type (str | ReportType): The type of report
         max_iterations: Maximum number of research iterations
         context: Search results context
         cfg: Configuration object
@@ -84,69 +88,95 @@ async def generate_sub_queries(
     Returns:
         A list of sub-queries
     """
-    gen_queries_prompt = generate_search_queries_prompt(
+    gen_queries_prompt: str = generate_search_queries_prompt(
         query,
         parent_query,
         report_type,
-        max_iterations=cfg.MAX_ITERATIONS or 1,
+        max_iterations=cfg.MAX_ITERATIONS or 3,
         context=context,
     )
 
     try:
-        # Try with strategic LLM first
-        provider = _get_llm(
-            cfg,
-            model=cfg.STRATEGIC_LLM_MODEL,
-            temperature=1.0,
-        )
-        response = await provider.get_chat_response(
+        response = await create_chat_completion(
+            model=cfg.STRATEGIC_LLM,
             messages=[{"role": "user", "content": gen_queries_prompt}],
-            stream=False,
+            temperature=1,
+            llm_provider=cfg.STRATEGIC_LLM_PROVIDER,
+            max_tokens=None,
+            llm_kwargs=cfg.llm_kwargs,
+            reasoning_effort="high",
+            cost_callback=cost_callback,
         )
     except Exception as e:
-        # If that fails, try with max tokens limit
-        smart_token_limit = get_max_tokens(cfg.SMART_LLM_MODEL or "")
-        logger.warning(
-            f"Error with strategic LLM: {e.__class__.__name__}: {e}. Retrying with max_tokens={smart_token_limit}.",
-            exc_info=True,
-        )
+        logger.warning(f"Error with strategic LLM: {e}. Retrying with max_tokens={cfg.STRATEGIC_TOKEN_LIMIT}.")
         logger.warning("See https://github.com/assafelovic/gpt-researcher/issues/1022")
         try:
-            # Retry strategic LLM with token limit
-            provider = _get_llm(
-                cfg,
-                model=cfg.STRATEGIC_LLM_MODEL,
-                temperature=1.0,
-                max_tokens=smart_token_limit,
-            )
-            response = await provider.get_chat_response(
+            response = await create_chat_completion(
+                model=cfg.STRATEGIC_LLM,
                 messages=[{"role": "user", "content": gen_queries_prompt}],
-                stream=False,
+                temperature=1,
+                llm_provider=cfg.STRATEGIC_LLM_PROVIDER,
+                max_tokens=cfg.STRATEGIC_TOKEN_LIMIT,
+                llm_kwargs=cfg.llm_kwargs,
+                cost_callback=cost_callback,
             )
-            logger.warning(f"Retrying with max_tokens={smart_token_limit} successful.")
+            logger.warning(f"Retrying with max_tokens={cfg.STRATEGIC_TOKEN_LIMIT} successful.")
         except Exception as e:
-            # If that fails too, fall back to smart LLM
-            logger.warning(f"Retrying with max_tokens={smart_token_limit} failed.")
-            logger.warning(
-                f"Error with strategic LLM: {e.__class__.__name__}: {e}. Falling back to smart LLM.",
-                exc_info=True,
-            )
-            provider = _get_llm(
-                cfg,
-                model=cfg.SMART_LLM_MODEL,
+            logger.warning(f"Retrying with max_tokens={cfg.STRATEGIC_TOKEN_LIMIT} failed.")
+            logger.warning(f"Error with strategic LLM: {e}. Falling back to smart LLM.")
+            response = await create_chat_completion(
+                model=cfg.SMART_LLM,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": gen_queries_prompt,
+                    },
+                ],
                 temperature=cfg.TEMPERATURE,
-                max_tokens=smart_token_limit,
-            )
-            response = await provider.get_chat_response(
-                messages=[{"role": "user", "content": gen_queries_prompt}],
-                stream=False,
+                max_tokens=cfg.SMART_TOKEN_LIMIT,
+                llm_provider=cfg.SMART_LLM_PROVIDER,
+                llm_kwargs=cfg.llm_kwargs,
+                cost_callback=cost_callback,
             )
 
-    if cost_callback:
-        from gpt_researcher.utils.costs import estimate_llm_cost
-        llm_costs = estimate_llm_cost(gen_queries_prompt, response)
-        cost_callback(llm_costs)
+    result: JSONReturnType | tuple[JSONReturnType, list[dict[str, str]]] = json_repair.loads(response)
+    assert isinstance(result, list), f"Expected list, got {result.__class__.__name__}"
 
-    result = json_repair.loads(response)
-    assert not isinstance(result, (int, float, str, dict, tuple, type(None)))
     return result
+
+
+async def plan_research_outline(
+    query: str,
+    search_results: list[dict[str, Any]],
+    agent_role_prompt: str,
+    cfg: Config,
+    parent_query: str,
+    report_type: str | ReportType,
+    cost_callback: Callable[[float], None] | None = None,
+) -> list[str]:
+    """
+    Plan the research outline by generating sub-queries.
+
+    Args:
+        query (str): Original query
+        retriever (list[dict[str, Any]]): Retriever instance
+        agent_role_prompt (str): Agent role prompt
+        cfg (Config): Configuration object
+        parent_query (str): Parent query
+        report_type (str): Report type
+        cost_callback (Callable[[float], None] | None): Callback for cost calculation
+
+    Returns:
+        A list of sub-queries
+    """
+
+    sub_queries: list[str] = await generate_sub_queries(
+        query,
+        parent_query,
+        report_type,
+        search_results,
+        cfg,
+        cost_callback,
+    )
+
+    return sub_queries

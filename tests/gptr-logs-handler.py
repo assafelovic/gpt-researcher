@@ -1,23 +1,27 @@
+from __future__ import annotations
+
 import asyncio
 import logging
 
 from gpt_researcher import GPTResearcher
-from backend.server.server_utils import CustomLogsHandler  # Update import
+from backend.server.server_utils import CustomLogsHandler
+from utils.schemas import Tone
 
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 async def run() -> str:
     """Run the research process and generate a report."""
-    query = "What happened in the latest burning man floods?"
-    report_type = "research_report"
-    report_source = "online"
-    tone = "informative"
+    query: str = "What happened in the latest burning man floods?"
+    report_type: str = "research_report"
+    report_source: str = "online"
+    tone: Tone = Tone.Informative
     # config_path = ...  # Path to the configuration file
 
     custom_logs_handler = CustomLogsHandler(
-        task=query, websocket=None  # pyright: ignore[reportArgumentType]
+        task=query,
+        websocket=None,  # pyright: ignore[reportArgumentType]
     )  # Pass query parameter  # pyright: ignore[reportArgumentType]
 
     researcher = GPTResearcher(
@@ -30,7 +34,7 @@ async def run() -> str:
     )
 
     await researcher.conduct_research()  # Conduct the research
-    report = await researcher.write_report()  # Write the research report
+    report: str = await researcher.write_report()  # Write the research report
     logger.info("Report generated successfully.")  # Log report generation
 
     return report

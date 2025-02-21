@@ -2,15 +2,20 @@ from __future__ import annotations
 
 import logging
 import os
+import urllib
 import urllib.parse
 import uuid
 
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import aiofiles
 import mistune
 
-logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from docx.document import Document
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 async def write_to_file_async(
@@ -32,6 +37,61 @@ async def write_to_file_async(
     logger.info(f"Report written to '{file_path}'")
 
 
+async def write_md_to_word(
+    text: str,
+    path: str,
+) -> str:
+    """Converts Markdown text to a DOCX file and returns the file path.
+
+    Args:
+        text (str): Markdown text to convert.
+
+    Returns:
+        str: The encoded file path of the generated DOCX.
+    """
+    task = uuid.uuid4().hex
+    file_path = f"{path}/{task}.docx"
+
+    try:
+        from docx import Document
+        from htmldocx import HtmlToDocx
+
+        # Convert report markdown to HTML
+        html: str | list[dict[str, Any]] = mistune.html(text)
+        # Create a document object
+        doc: Document = Document()
+        # Convert the html generated from the report to document format
+        HtmlToDocx().add_html_to_document(html, doc)
+
+        # Saving the docx document to file_path
+        doc.save(file_path)
+
+        print(f"Report written to {file_path}")
+
+        return urllib.parse.quote(f"{file_path}.docx")
+
+    except Exception as e:
+        print(f"Error in converting Markdown to DOCX: {e}")
+        return ""
+
+
+async def write_to_file(
+    filename: str,
+    text: str,
+) -> None:
+    """Asynchronously write text to a file in UTF-8 encoding.
+
+    Args:
+        filename (str): The filename to write to.
+        text (str): The text to write.
+    """
+    # Convert text to UTF-8, replacing any problematic characters
+    text_utf8 = text.encode("utf-8", errors="replace").decode("utf-8")
+
+    async with aiofiles.open(filename, "w", encoding="utf-8") as file:
+        await file.write(text_utf8)
+
+
 async def write_text_to_md(
     text: str,
     path: os.PathLike | str,
@@ -47,7 +107,7 @@ async def write_text_to_md(
     task = uuid.uuid4().hex
     file_path = Path(os.path.normpath(path), task).with_suffix(".md").absolute()
     await write_to_file_async(file_path, text)
-    logger.info(f"Report written to '{file_path}'")
+    logger.info(f"Markdown report written to '{file_path}'")
     return urllib.parse.quote(str(file_path))
 
 
@@ -79,46 +139,8 @@ async def write_md_to_pdf(
             base_url=None,
         )
     except Exception as e:
-        logger.exception(f"Error in converting Markdown to PDF: {e.__class__.__name__}: {e}")
+        logger.exception(f"Error occurred while converting Markdown to PDF: {e.__class__.__name__}: {e}")
         return text
     else:
-        logger.info(f"Report written to '{pdf_file_path}'")
+        logger.info(f"PDF report written to '{pdf_file_path}'")
         return urllib.parse.quote(str(pdf_file_path))
-
-
-async def write_md_to_word(
-    text: str,
-    path: os.PathLike | str,
-) -> str:
-    """Converts Markdown text to a DOCX file and returns the file path.
-
-    Args:
-        text (str): Markdown text to convert.
-
-    Returns:
-        str: The encoded file path of the generated DOCX.
-    """
-    task = uuid.uuid4().hex
-    md_file_path = Path(os.path.expandvars(os.path.normpath(path)), task).absolute()
-    docx_file_path = md_file_path.with_suffix(".docx")
-
-    try:
-        from docx import Document
-        from htmldocx import HtmlToDocx
-
-        # Convert report markdown to HTML
-        html = mistune.html(text)
-        # Create a document object
-        doc = Document()
-        # Convert the html generated from the report to document format
-        HtmlToDocx().add_html_to_document(html, doc)
-
-        # Saving the docx document to file_path
-        doc.save(docx_file_path.open(mode="wb"))
-
-    except Exception as e:
-        logger.exception(f"Error in converting Markdown to DOCX: {e.__class__.__name__}: {e}")
-        return ""
-    else:
-        logger.info(f"Report written to '{docx_file_path}'")
-        return urllib.parse.quote(str(docx_file_path))

@@ -2,23 +2,14 @@ from __future__ import annotations
 
 from setuptools import find_packages, setup
 
-LATEST_VERSION = "0.10.10"
+LATEST_VERSION = "0.11.0"
 
-exclude_packages = [
-    "selenium",
-    "webdriver",
-    "fastapi",
-    "fastapi.*",
-    "uvicorn",
-    "jinja2",
-    "gpt-researcher",
-    "langgraph",
-]
+exclude_packages = ["selenium", "webdriver", "fastapi", "fastapi.*", "uvicorn", "jinja2", "gpt-researcher", "langgraph"]
 
-with open("README.md", encoding="utf-8") as f:
+with open(r"README.md", "r", encoding="utf-8") as f:
     long_description = f.read()
 
-with open("requirements.txt") as f:
+with open("requirements.txt", "r") as f:
     reqs = [line.strip() for line in f if not any(pkg in line for pkg in exclude_packages)]
 
 setup(

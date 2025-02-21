@@ -10,16 +10,12 @@ Default is False, i.e., no additional research will be conducted on newer source
 ## Please uncomment the test case to run and comment the rest.
 ## Thanks!
 
+
 #### Test case 1 (original test case as control from https://docs.gptr.dev/docs/gpt-researcher/tailored-research)
-from __future__ import annotations
 
-import asyncio
-import logging
-
-from backend.server.server_utils import CustomLogsHandler  # Update import
 from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
-
-logger = logging.getLogger(__name__)
+import asyncio
+from backend.server.server_utils import CustomLogsHandler  # Update import
 
 
 async def get_report(
@@ -27,34 +23,27 @@ async def get_report(
     report_type: str,
     sources: list,
 ) -> tuple[str, GPTResearcher]:
-    custom_logs_handler = CustomLogsHandler(
-        task=query, websocket=None  # pyright: ignore[reportArgumentType]
-    )  # Pass query parameter  # pyright: ignore[reportArgumentType]
-    researcher: GPTResearcher = GPTResearcher(
+    custom_logs_handler = CustomLogsHandler(None, query)  # Pass query parameter
+    researcher = GPTResearcher(
         query=query,
         report_type=report_type,
         complement_source_urls=False,
         websocket=custom_logs_handler,
     )
-    await researcher.conduct_research()
+    _research_result: str | list[str] = await researcher.conduct_research()
     report: str = await researcher.write_report()
     return report, researcher
 
 
 if __name__ == "__main__":
-    query: str = "Write an analysis on paul graham"
-    report_type: str = "research_report"
-    sources: list[str] = [
-        "https://www.paulgraham.com/when.html",
-        "https://www.paulgraham.com/noob.html",
-    ]  # query is related
+    query = "Write an analysis on paul graham"
+    report_type = "research_report"
+    sources: list[str] = ["https://www.paulgraham.com/when.html", "https://www.paulgraham.com/noob.html"]  # query is related
 
-    report: str
-    researcher: GPTResearcher
     report, researcher = asyncio.run(get_report(query, report_type, sources))
-    logger.debug(report)
-
-    logger.debug(
+    print(f"report: '{report}'")
+    print(f"researcher.visited_urls: '{researcher.visited_urls}'")
+    print(
         f"\nLength of the context = {len(researcher.get_research_context())}"
     )  # Must say Non-zero value because the query is related to the contents of the page, so there will be relevant context present
 

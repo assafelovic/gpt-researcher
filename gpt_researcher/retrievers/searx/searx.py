@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+
+from typing import Any
 from urllib.parse import urljoin
 
 import requests
@@ -13,43 +15,45 @@ class SearxSearch:
     def __init__(
         self,
         query: str,
+        query_domains: list[str] | None = None,
     ):
-        """
-        Initializes the SearxSearch object
+        """Initializes the SearxSearch object.
+
         Args:
-            query: Search query string.
+            query (str): Search query string.
+            query_domains (list[str] | None): List of domains to search.
         """
         self.query: str = query
         self.base_url: str = self.get_searxng_url()
+        self.query_domains: list[str] = [] if query_domains is None else query_domains
 
     def get_searxng_url(self) -> str:
-        """
-        Gets the SearxNG instance URL from environment variables
+        """Gets the SearxNG instance URL from environment variables.
+
         Returns:
             str: Base URL of SearxNG instance.
         """
         try:
-            base_url = os.environ["SEARX_URL"]
+            base_url: str = os.environ["SEARX_URL"]
             if not base_url.endswith("/"):
                 base_url += "/"
             return base_url
         except KeyError:
-            raise Exception(
-                "SearxNG URL not found. Please set the SEARX_URL environment variable. You can find public instances at https://searx.space/"
-            )
+            raise Exception("SearxNG URL not found. Please set the SEARX_URL environment variable. You can find public instances at https://searx.space/")
 
     def search(
         self,
         max_results: int = 10,
     ) -> list[dict[str, str]]:
-        """
-        Searches the query using SearxNG API
+        """Searches the query using SearxNG API.
+
         Args:
-            max_results: Maximum number of results to return
+            max_results (int): Maximum number of results to return.
+
         Returns:
-            List of dictionaries containing search results.
+            list[dict[str, str]]: List of dictionaries containing search results.
         """
-        search_url = urljoin(self.base_url, "search")
+        search_url: str = urljoin(self.base_url, "search")
 
         params: dict[str, str] = {
             # The search query.
@@ -59,17 +63,22 @@ class SearxSearch:
         }
 
         try:
-            response = requests.get(
-                search_url, params=params, headers={"Accept": "application/json"}
+            response: requests.Response = requests.get(
+                search_url,
+                params=params,
+                headers={"Accept": "application/json"},
             )
             response.raise_for_status()
-            results = response.json()
+            results: dict[str, Any] = response.json()
 
             # Normalize results to match the expected format
             search_response: list[dict[str, str]] = []
             for result in results.get("results", [])[:max_results]:
                 search_response.append(
-                    {"href": result.get("url", ""), "body": result.get("content", "")}
+                    {
+                        "href": result.get("url", ""),
+                        "body": result.get("content", ""),
+                    }
                 )
 
             return search_response

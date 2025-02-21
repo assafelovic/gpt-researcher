@@ -1,48 +1,50 @@
 from __future__ import annotations
 
-import os
-
 import pytest
 from gpt_researcher.agent import GPTResearcher
 from backend.server.server_utils import CustomLogsHandler  # Update import
+from unittest.mock import AsyncMock
 
-# Define the report types to test
-report_types = ["research_report", "subtopic_report"]
 
-# Define a common query and sources for testing
-query = "What are the latest advancements in AI?"
-# sources = ["https://en.wikipedia.org/wiki/Artificial_intelligence", "https://www.ibm.com/watson/ai"]
-
-# Define the output directory
-output_dir = "./outputs"
+OUTPUT_DIR = "./outputs"  # Define the output directory
+REPORT_TYPES: list[str] = ["research_report", "subtopic_report"]  # Define the report types to test
+QUERY = "what is gpt-researcher"  # Define a common query and sources for testing
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("report_type", report_types)
-async def test_gpt_researcher(report_type):
-    # Ensure the output directory exists
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    custom_logs_handler = CustomLogsHandler(websocket=None)  # pyright: ignore[reportArgumentType]
+@pytest.mark.parametrize("report_type", REPORT_TYPES)
+async def test_gpt_researcher(report_type: str) -> None:
+    mock_websocket = AsyncMock()
+    custom_logs_handler = CustomLogsHandler(mock_websocket, QUERY)
     # Create an instance of GPTResearcher
-    researcher = GPTResearcher(query=query, report_type=report_type, websocket=custom_logs_handler)
+    researcher = GPTResearcher(
+        query=QUERY,
+        query_domains=["github.com"],
+        report_type=report_type,
+        websocket=custom_logs_handler,
+    )
 
     # Conduct research and write the report
-    await researcher.conduct_research()
-    report = await researcher.write_report()
+    _research_result: str | list[str] = await researcher.conduct_research()
+    report: str = await researcher.write_report()
 
-    # Define the expected output filenames
-    pdf_filename = os.path.join(output_dir, f"{report_type}.pdf")
-    docx_filename = os.path.join(output_dir, f"{report_type}.docx")
+    print("--------------------------------")
+    print(f"Report type: '{report_type}'")
+    print(f"_research_result: '{_research_result}'")
+    print(f"researcher.visited_urls: '{researcher.visited_urls}'")
+    print(f"report: '{report}'")
+    print("--------------------------------")
 
-    # Check if the PDF and DOCX files are created
-    # assert os.path.exists(pdf_filename), f"PDF file not found for report type: {report_type}"
-    # assert os.path.exists(docx_filename), f"DOCX file not found for report type: {report_type}"
+    # Check if the report contains part of the query
+    assert "gpt-researcher" in report, f"Report should contain 'gpt-researcher'"
 
-    # Clean up the generated files (optional)
-    # os.remove(pdf_filename)
-    # os.remove(docx_filename)
+    # test if at least one url starts with "github.com" as it was limited to this domain
+    matching_urls: list[str] = [
+        url
+        for url in researcher.visited_urls
+        if str(url).casefold().startswith("https://github.com")
+    ]
+    assert len(matching_urls) > 0, "At least one url should start with 'github.com'"
 
 
 if __name__ == "__main__":

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import logging
+
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from gpt_researcher import GPTResearcher
-from gpt_researcher.utils.schemas import ReportSource, ReportType, Subtopics, Tone
+from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
+from gpt_researcher.utils.schemas import Subtopics
 
 if TYPE_CHECKING:
     import os
@@ -18,8 +20,8 @@ class DetailedReporter:
     def __init__(
         self,
         query: str,
-        report_type: str,
-        report_source: str,
+        report_type: str | ReportType,
+        report_source: str | ReportSource,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
         config_path: os.PathLike | str | None = None,
@@ -27,34 +29,31 @@ class DetailedReporter:
         websocket: WebSocket | None = None,
         subtopics: list[dict[str, Any]] | None = None,
         headers: dict[str, Any] | None = None,
+        query_domains: list[str] | None = None,
     ):
         self.query: str = query
-        self.report_type: ReportType = (
-            ReportType.__members__[report_type] if isinstance(report_type, str) else report_type
-        )
-        self.report_source = (
-            ReportSource.__members__[report_source]
-            if isinstance(report_source, str)
-            else report_source
-        )
+        self.report_type: ReportType = ReportType.__members__[report_type.lower().title()] if isinstance(report_type, str) else report_type
+        self.report_source: ReportSource = ReportSource.__members__[report_source.lower().capitalize()] if isinstance(report_source, str) else report_source
         self.source_urls: list[str] = [] if source_urls is None else source_urls
         self.document_urls: list[str] = [] if document_urls is None else document_urls
         self.config_path: os.PathLike | str | None = config_path
-        self.tone: Tone | None = Tone.__members__[tone] if isinstance(tone, str) else tone
+        self.tone: Tone | None = Tone.__members__[tone.lower().capitalize()] if isinstance(tone, str) else tone
         self.websocket: WebSocket | None = websocket
         self.subtopics: list[dict[str, Any]] = [] if subtopics is None else subtopics
         self.headers: dict[str, Any] = {} if headers is None else headers
+        self.query_domains: list[str] = [] if query_domains is None else query_domains
 
         self.gpt_researcher: GPTResearcher = GPTResearcher(
             query=self.query,
-            config=self.config_path,
-            report_type=self.report_type,
-            report_source=self.report_source,
+            config_path=self.config_path,
+            report_type=self.report_type.value,
+            report_source=self.report_source.value,
             source_urls=self.source_urls,
             document_urls=self.document_urls,
             tone=self.tone,
             websocket=self.websocket,
             headers=self.headers,
+            query_domains=self.query_domains,
         )
         self.existing_headers: list[dict[str, Any]] = []
         self.global_context: list[str] = []
@@ -63,7 +62,7 @@ class DetailedReporter:
 
     async def run(self) -> str:
         await self._initial_research()
-        subtopics = await self._get_all_subtopics()
+        subtopics: list[dict[str, Any]] = await self._get_all_subtopics()
         report_introduction = await self.gpt_researcher.write_introduction()
         _, report_body = await self._generate_subtopic_reports(subtopics)
         self.gpt_researcher.visited_urls.update(self.global_urls)
@@ -96,13 +95,15 @@ class DetailedReporter:
         subtopics: list[dict[str, Any]],
     ) -> tuple[list[dict[str, Any]], str]:
         subtopic_reports: list[dict[str, Any]] = []
-        subtopics_report_body = ""
+        subtopics_report_body: str = ""
 
         for subtopic in subtopics:
             result: dict[str, str] = await self._get_subtopic_report(subtopic)
-            if result["report"]:
+            if result:
                 subtopic_reports.append(result)
-                subtopics_report_body += f"\n\n\n{result['report']}"
+            report: str = str(result.get("report", "") or "").strip()
+            if report:
+                subtopics_report_body += f"\n\n\n{report}"
 
         return subtopic_reports, subtopics_report_body
 
@@ -116,40 +117,30 @@ class DetailedReporter:
 
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
-            report_type=ReportType.SubtopicReport,
-            report_source=self.report_source,
+            report_type=ReportType.SubtopicReport.value,
+            report_source=self.report_source.value,
             websocket=self.websocket,
             headers=self.headers,
             parent_query=self.query,
-            subtopics=[
-                repr(subtopic) if isinstance(subtopic, dict) else subtopic
-                for subtopic in self.subtopics
-            ],
+            subtopics=[repr(subtopic) if isinstance(subtopic, dict) else subtopic for subtopic in self.subtopics],
             visited_urls=self.global_urls,
-            agent_role=self.gpt_researcher.agent_role,
-            tone=self.tone,
+            agent_role=self.gpt_researcher.agent,
+            tone=self.tone if isinstance(self.tone, Tone) else Tone(self.tone),
             context=list(set(self.global_context)),
+            query_domains=self.query_domains,
         )
 
-        await subtopic_assistant.conduct_research()
+        _research_result: str | list[str] = await subtopic_assistant.conduct_research()
 
-        draft_section_titles: str | list[str] = await subtopic_assistant.get_draft_section_titles(
-            current_subtopic_task
-        )
+        draft_section_titles: str | list[str] = await subtopic_assistant.get_draft_section_titles(current_subtopic_task)
 
         if not isinstance(draft_section_titles, str):
             draft_section_titles = str(draft_section_titles)
 
-        parse_draft_section_titles: list[dict[str, Any]] = self.gpt_researcher.extract_headers(
-            draft_section_titles
-        )
-        parse_draft_section_titles_text: list[str] = [
-            header.get("text", "") for header in parse_draft_section_titles
-        ]
+        parse_draft_section_titles: list[dict[str, Any]] = self.gpt_researcher.extract_headers(draft_section_titles)
+        parse_draft_section_titles_text: list[str] = [header.get("text", "") for header in parse_draft_section_titles]
 
-        relevant_contents: list[
-            str
-        ] = await subtopic_assistant.get_similar_written_contents_by_draft_section_titles(
+        relevant_contents: list[str] = await subtopic_assistant.get_similar_written_contents_by_draft_section_titles(
             current_subtopic_task,
             parse_draft_section_titles_text,
             self.global_written_sections,
@@ -176,10 +167,7 @@ class DetailedReporter:
             }
         )
 
-        return {
-            "topic": subtopic,
-            "report": subtopic_report,
-        }
+        return {"topic": subtopic, "report": subtopic_report}
 
     async def _construct_detailed_report(
         self,
@@ -188,8 +176,6 @@ class DetailedReporter:
     ) -> str:
         toc: str = self.gpt_researcher.table_of_contents(report_body)
         conclusion: str = await self.gpt_researcher.write_report_conclusion(report_body)
-        conclusion_with_references: str = self.gpt_researcher.add_references(
-            conclusion, self.gpt_researcher.visited_urls
-        )
+        conclusion_with_references: str = self.gpt_researcher.add_references(conclusion, self.gpt_researcher.visited_urls)
         report: str = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
         return report

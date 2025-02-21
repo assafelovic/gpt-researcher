@@ -75,6 +75,14 @@ const GPTResearcher = (() => {
         source_urls = source_urls.slice(0, source_urls.length - 1)
       }
 
+      const query_domains_str = document.querySelector('input[name="query_domains"]').value
+      let query_domains = []
+      if (query_domains_str) {
+        query_domains = query_domains_str.split(',')
+          .map((domain) => domain.trim())
+          .filter((domain) => domain.length > 0);
+      }
+
       const requestData = {
         task: task,
         report_type: report_type,
@@ -82,6 +90,7 @@ const GPTResearcher = (() => {
         source_urls: source_urls,
         tone: tone,
         agent: agent,
+        query_domains: query_domains,
       }
 
       socket.send(`start ${JSON.stringify(requestData)}`)

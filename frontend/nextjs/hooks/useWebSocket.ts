@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Data, ChatBoxSettings, QuestionData } from '../types/data';
+import { getHost } from '../helpers/getHost';
 
 export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction<Data[]>>, setAnswer: React.Dispatch<React.SetStateAction<string>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, setShowHumanFeedback: React.Dispatch<React.SetStateAction<boolean>>, setQuestionForHuman: React.Dispatch<React.SetStateAction<boolean | true>>) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -8,25 +9,12 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
   const initializeWebSocket = (promptValue: string, chatBoxSettings: ChatBoxSettings) => {
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
-    const headers = {
-      'retriever': apiVariables.RETRIEVER,
-      'langchain_api_key': apiVariables.LANGCHAIN_API_KEY,
-      'openai_api_key': apiVariables.OPENAI_API_KEY,
-      'tavily_api_key': apiVariables.TAVILY_API_KEY,
-      'google_api_key': apiVariables.GOOGLE_API_KEY,
-      'google_cx_key': apiVariables.GOOGLE_CX_KEY,
-      'bing_api_key': apiVariables.BING_API_KEY,
-      'searchapi_api_key': apiVariables.SEARCHAPI_API_KEY,
-      'serpapi_api_key': apiVariables.SERPAPI_API_KEY,
-      'serper_api_key': apiVariables.SERPER_API_KEY,
-      'searx_url': apiVariables.SEARX_URL
-    };
 
     if (!socket && typeof window !== 'undefined') {
-      const { protocol, pathname } = window.location;
-      let { host } = window.location;
-      host = host.includes('localhost') ? 'localhost:8000' : host;
-      const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}${pathname}ws`;
+      const fullHost = getHost()
+      const host = fullHost.replace('http://', '').replace('https://', '')
+
+      const ws_uri = `${fullHost.includes('https') ? 'wss:' : 'ws:'}//${host}/ws`;
 
       const newSocket = new WebSocket(ws_uri);
       setSocket(newSocket);
@@ -49,13 +37,19 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
       };
 
       newSocket.onopen = () => {
-        const { report_type, report_source, tone } = chatBoxSettings;
-        let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
+        const { report_type, report_source, tone, domains } = chatBoxSettings;
+        let data = "start " + JSON.stringify({ 
+          task: promptValue, 
+          report_type, 
+          report_source, 
+          tone,
+          query_domains: domains?.map(d => d.value) || [] // Add this line
+        });
         newSocket.send(data);
-
+      
         heartbeatInterval.current = window.setInterval(() => {
           socket?.send('ping');
-        }, 3000); // Send ping every 3 seconds
+        }, 3000);
       };
 
       newSocket.onclose = () => {
@@ -66,7 +60,7 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
       };
     } else if (socket) {
       const { report_type, report_source, tone } = chatBoxSettings;
-      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone, headers });
+      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone });
       socket.send(data);
     }
   };

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+
 from logging import getLogger
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
@@ -17,14 +18,11 @@ class HumanAgent:
     def __init__(
         self,
         websocket: WebSocket | None = None,
-        stream_output: Callable[[str, str, str, WebSocket], Coroutine[Any, Any, None]]
-        | None = None,
+        stream_output: Callable[[str, str, str, WebSocket], Coroutine[Any, Any, None]] | None = None,
         headers: dict[str, Any] | None = None,
     ):
         self.websocket: WebSocket | None = websocket
-        self.stream_output: (
-            Callable[[str, str, str, WebSocket], Coroutine[Any, Any, None]] | None
-        ) = stream_output
+        self.stream_output: Callable[[str, str, str, WebSocket], Coroutine[Any, Any, None]] | None = stream_output
         self.headers: dict[str, Any] | None = headers
 
     async def review_plan(
@@ -48,7 +46,7 @@ class HumanAgent:
                         f"Any feedback on this plan of topics to research? {layout}? If not, please reply with 'no'.",
                         self.websocket,
                     )
-                    response = await self.websocket.receive_text()
+                    response: str = await self.websocket.receive_text()
                     logger.info(f"Received response: {response}")
                     response_data: dict[str, Any] = json.loads(response)
                     if response_data.get("type") == "human_feedback":
@@ -61,12 +59,10 @@ class HumanAgent:
                     logger.error(f"Error receiving human feedback: {e}")
             # Otherwise, prompt the user for feedback in the console
             else:
-                user_feedback = input(
-                    f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> "
-                )
+                user_feedback = input(f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> ")
 
-        if user_feedback and "no" in user_feedback.strip().lower():
-            user_feedback = None
+        if user_feedback and "no" in user_feedback.strip().casefold():
+            user_feedback: str | None = None
 
         logger.info(f"User feedback before return: {user_feedback}")
 
