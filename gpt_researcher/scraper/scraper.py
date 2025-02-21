@@ -14,7 +14,8 @@ from . import (
     PyMuPDFScraper,
     WebBaseLoaderScraper,
     BrowserScraper,
-    TavilyExtract
+    TavilyExtract,
+    FireCrawl
 )
 
 
@@ -34,6 +35,8 @@ class Scraper:
         self.session.headers.update({"User-Agent": user_agent})
         self.scraper = scraper
         if self.scraper == "tavily_extract":
+            self._check_pkg(self.scraper)
+        if self.scraper == "firecrawl":
             self._check_pkg(self.scraper)
         self.logger = logging.getLogger(__name__)
 
@@ -56,6 +59,8 @@ class Scraper:
         pkg_map = {
             "tavily_extract": {"package_installation_name": "tavily-python",
                                "import_name": "tavily"},
+            "firecrawl": {"package_installation_name": "firecrawl-py",
+                         "import_name": "firecrawl"}
         }
         pkg = pkg_map[scrapper_name]
         if not importlib.util.find_spec(pkg["import_name"]):
@@ -78,36 +83,36 @@ class Scraper:
         try:
             Scraper = self.get_scraper(link)
             scraper = Scraper(link, session)
-            
+
             # Get scraper name
             scraper_name = scraper.__class__.__name__
             self.logger.info(f"\n=== Using {scraper_name} ===")
-            
+
             # Get content
             content, image_urls, title = scraper.scrape()
 
             if len(content) < 100:
                 self.logger.warning(f"Content too short or empty for {link}")
                 return {"url": link, "raw_content": None, "image_urls": [], "title": title}
-            
+
             # Log results
             self.logger.info(f"\nTitle: {title}")
             self.logger.info(f"Content length: {len(content) if content else 0} characters")
             self.logger.info(f"Number of images: {len(image_urls)}")
             self.logger.info(f"URL: {link}")
             self.logger.info("=" * 50)
-            
+
             if not content or len(content) < 100:
                 self.logger.warning(f"Content too short or empty for {link}")
                 return {"url": link, "raw_content": None, "image_urls": [], "title": title}
-            
+
             return {
                 "url": link,
                 "raw_content": content,
                 "image_urls": image_urls,
                 "title": title
             }
-            
+
         except Exception as e:
             self.logger.error(f"Error processing {link}: {str(e)}")
             return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
@@ -135,7 +140,8 @@ class Scraper:
             "bs": BeautifulSoupScraper,
             "web_base_loader": WebBaseLoaderScraper,
             "browser": BrowserScraper,
-            "tavily_extract": TavilyExtract
+            "tavily_extract": TavilyExtract,
+            "firecrawl": FireCrawl
         }
 
         scraper_key = None
