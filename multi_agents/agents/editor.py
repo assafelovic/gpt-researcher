@@ -4,15 +4,15 @@ import asyncio
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
-from gpt_researcher.utils.schemas import Tone
-from langgraph.graph import END, StateGraph
-
+from gpt_researcher.utils.enum import Tone
 from multi_agents.agents.researcher import ResearchAgent
 from multi_agents.agents.reviewer import ReviewerAgent
 from multi_agents.agents.reviser import ReviserAgent
 from multi_agents.agents.utils.llms import call_model
 from multi_agents.agents.utils.views import print_agent_output
 from multi_agents.memory.draft import DraftState
+
+from langgraph.graph import END, StateGraph
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
@@ -147,16 +147,16 @@ class EditorAgent:
         )
 
         return f"""Today's date is {today}
-                   Research summary report: '{initial_research}'
-                   {feedback_instruction}
-                   \nYour task is to generate an outline of sections headers for the research project
-                   based on the research summary report above.
-                   You must generate a maximum of {max_sections} section headers.
-                   You must focus ONLY on related research topics for subheaders and do NOT include introduction, conclusion and references.
-                   You must return nothing but a JSON with the fields 'title' (str) and
-                   'sections' (maximum {max_sections} section headers) with the following structure:
-                   '{{title: string research title, date: today's date,
-                   sections: ['section header 1', 'section header 2', 'section header 3' ...]}}'."""
+                    Research summary report: '{initial_research}'
+                    {feedback_instruction}
+                    \nYour task is to generate an outline of sections headers for the research project
+                    based on the research summary report above.
+                    You must generate a maximum of {max_sections} section headers.
+                    You must focus ONLY on related research topics for subheaders and do NOT include introduction, conclusion and references.
+                    You must return nothing but a JSON with the fields 'title' (str) and
+                    'sections' (maximum {max_sections} section headers) with the following structure:
+                    '{{title: string research title, date: today's date,
+                    sections: ['section header 1', 'section header 2', 'section header 3' ...]}}'."""
 
     def _initialize_agents(self) -> dict[str, Any]:
         """Initialize the research, reviewer, and reviser skills."""

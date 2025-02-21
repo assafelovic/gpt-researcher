@@ -24,9 +24,7 @@ from gpt_researcher.skills.context_manager import ContextManager
 from gpt_researcher.skills.curator import SourceCurator
 from gpt_researcher.skills.researcher import ResearchConductor
 from gpt_researcher.skills.writer import ReportGenerator
-from gpt_researcher.utils.schemas import (
-    Subtopics,
-)
+from gpt_researcher.utils.schemas import Subtopics
 from gpt_researcher.utils.enum import (
     OutputFileType,
     ReportFormat,

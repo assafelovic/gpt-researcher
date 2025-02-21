@@ -25,9 +25,9 @@ class SourceCurator:
         """Get or create an LLM provider instance."""
         if self.llm_provider is None:
             self.llm_provider = GenericLLMProvider.from_provider(
-                self.researcher.research_config.SMART_LLM_PROVIDER,
-                model=self.researcher.research_config.SMART_LLM_MODEL,
-                temperature=self.researcher.research_config.TEMPERATURE,
+                self.researcher.cfg.SMART_LLM_PROVIDER,
+                model=self.researcher.cfg.SMART_LLM_MODEL,
+                temperature=self.researcher.cfg.TEMPERATURE,
             )
         return self.llm_provider
 

@@ -1,32 +1,31 @@
 from __future__ import annotations
 
-from logging import getLogger
+import os
+
+from logging import Logger, getLogger
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
-from gpt_researcher import GPTResearcher
-from gpt_researcher.utils.schemas import ReportSource, Tone
+from gpt_researcher.utils.enum import ReportSource, Tone
 
 from multi_agents.agents.utils.views import print_agent_output
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
 
-logger = getLogger(__name__)
+
+logger: Logger = getLogger(__name__)
 
 
 class ResearchAgent:
     def __init__(
         self,
         websocket: WebSocket | None = None,
-        stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, Any]]
-        | None = None,
+        stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, Any]] | None = None,
         tone: Tone | str | None = Tone.Objective,
         headers: dict[str, Any] | None = None,
     ):
         self.websocket: WebSocket | None = websocket
-        self.stream_output: (
-            Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, Any]] | None
-        ) = stream_output
+        self.stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, Any]] | None = stream_output
         self.headers: dict[str, Any] = {} if headers is None else headers
         self.tone: Tone = Tone.Objective
         if isinstance(tone, str):
@@ -40,12 +39,15 @@ class ResearchAgent:
         research_report: str = "research_report",
         parent_query: str = "",
         verbose: bool = True,
-        source: ReportSource | str = ReportSource.WEB,
+        source: ReportSource | str = ReportSource.Web,
         tone: Tone | str | None = Tone.Objective,
         headers: dict[str, Any] | None = None,
-    ):
+    ) -> str:
         if headers:
             self.headers.update(headers)
+
+        from gpt_researcher.agent import GPTResearcher
+
         researcher = GPTResearcher(
             query=query,
             report_type=research_report,
@@ -57,7 +59,7 @@ class ResearchAgent:
             headers=self.headers,
         )
         await researcher.conduct_research()
-        report = await researcher.write_report()
+        report: str = await researcher.write_report()
         logger.info(f"Research report: {report}")
 
         return report
@@ -67,28 +69,25 @@ class ResearchAgent:
         parent_query: str,
         subtopic: str,
         verbose: bool = True,
-        source: ReportSource | str = ReportSource.WEB,
+        source: ReportSource | str = ReportSource.Web,
         headers: dict[str, Any] | None = None,
-    ):
+    ) -> dict[str, str]:
         try:
-            report = await self.research(
+            report: str = await self.research(
                 parent_query=parent_query,
                 query=subtopic,
                 research_report="subtopic_report",
                 verbose=verbose,
                 source=source,
-                tone=self.tone.value,
+                tone=self.tone,
                 headers=headers,
             )
 
         except Exception as e:
             logger.error(f"Error in researching topic {subtopic}: {e}")
-            report = None
+            report = ""
 
-        return {
-            "subtopic": subtopic,
-            "report": report,
-        }
+        return {"subtopic": subtopic, "report": report}
 
     async def run_initial_research(
         self,
@@ -96,19 +95,19 @@ class ResearchAgent:
     ) -> dict[str, Any]:
         task: dict[str, Any] = research_state.get("task", {})
         query: str = task.get("query", "")
-        source: ReportSource = task.get("source", ReportSource.WEB)
+        source: ReportSource = task.get("source", ReportSource.Web)
         verbose: bool = task.get("verbose", True)
 
         if self.websocket is not None and self.stream_output is not None:
             await self.stream_output(
                 "logs",
                 "initial_research",
-                f"Running initial research on the following query: {query}",
+                f"Running initial research on the following query:{os.linesep * 2}```{os.linesep}{query}{os.linesep}```",
                 self.websocket,
             )
         else:
             print_agent_output(
-                f"Running initial research on the following query: {query}",
+                f"Running initial research on the following query:{os.linesep * 2}```{os.linesep}{query}{os.linesep}```",
                 agent="RESEARCHER",
             )
         return {
@@ -125,7 +124,7 @@ class ResearchAgent:
     async def run_depth_research(
         self,
         draft_state: dict[str, Any],
-    ):
+    ) -> dict[str, dict[str, Any]]:
         task: dict[str, Any] = draft_state.get("task", {})
         task = {} if task is None else task
 
@@ -135,11 +134,11 @@ class ResearchAgent:
         parent_query: str | None = task.get("query", "")
         parent_query = "" if parent_query is None else str(parent_query).strip()
 
-        source = task.get("source", "web")
-        source = ReportSource.WEB if source is None else ReportSource.__members__[source]
+        source: str | None = task.get("source", "web")
+        report_source: ReportSource = ReportSource.Web if source is None else ReportSource.__members__[source.lower().capitalize()]
 
-        verbose = task.get("verbose", True)
-        verbose = True if verbose is None else bool(verbose)
+        v = task.get("verbose", True)
+        verbose: bool = True if v is None else bool(v)
 
         if self.websocket is not None and self.stream_output is not None:
             await self.stream_output(
@@ -153,11 +152,12 @@ class ResearchAgent:
                 f"Running in depth research on the following report topic: {topic}",
                 agent="RESEARCHER",
             )
+
         research_draft: dict[str, Any] = await self.run_subtopic_research(
             parent_query=parent_query,
             subtopic=topic,
             verbose=verbose,
-            source=source,
+            source=report_source,
             headers=self.headers,
         )
         return {"draft": research_draft}

@@ -11,7 +11,7 @@ from gpt_researcher.actions import (
     write_report_introduction,
 )
 from gpt_researcher.utils.llm import construct_subtopics
-from gpt_researcher.utils.schemas import Subtopics
+from gpt_researcher.utils.validators import Subtopics
 
 if TYPE_CHECKING:
     from gpt_researcher import GPTResearcher
@@ -27,12 +27,12 @@ class ReportGenerator:
         self.researcher: GPTResearcher = researcher
         self.research_params: dict[str, Any] = {
             "query": self.researcher.query,
-            "agent_role_prompt": (self.researcher.research_config.AGENT_ROLE or "").strip(),
-            "report_type": self.researcher.research_config.REPORT_TYPE,
-            "report_source": self.researcher.research_config.REPORT_SOURCE,
-            "tone": self.researcher.research_config.TONE,
+            "agent_role_prompt": (self.researcher.cfg.AGENT_ROLE or "").strip(),
+            "report_type": self.researcher.cfg.REPORT_TYPE,
+            "report_source": self.researcher.cfg.REPORT_SOURCE,
+            "tone": self.researcher.cfg.TONE,
             "websocket": self.researcher.websocket,
-            "research_config": self.researcher.research_config,
+            "research_config": self.researcher.cfg,
             "headers": self.researcher.headers,
         }
 
@@ -45,12 +45,14 @@ class ReportGenerator:
         """Write a report based on existing headers and relevant contents.
 
         Args:
-            existing_headers (list): List of existing headers.
-            relevant_written_contents (list): List of relevant written contents.
-            ext_context (Optional): External context, if any.
+        ----
+            existing_headers (list[dict[str, Any]]): List of existing headers.
+            relevant_written_contents (list[str]): List of relevant written contents.
+            ext_context (str | None): External context, if any.
 
         Returns:
-            str: The generated report.
+        -------
+            (str): The generated report.
         """
         existing_headers = [] if existing_headers is None else existing_headers
         relevant_written_contents = (
@@ -78,7 +80,7 @@ class ReportGenerator:
             await stream_output(
                 "logs",
                 "writing_report",
-                f"✍️ Writing report for '{self.researcher.query}'...",
+                f"✍️ Writing report for '{self.researcher.query}' ✍️...",
                 self.researcher.websocket,
             )
 
@@ -116,10 +118,12 @@ class ReportGenerator:
         """Write the conclusion for the report.
 
         Args:
+        ----
             report_content (str): The content of the report.
 
         Returns:
-            str: The generated conclusion.
+        -------
+            (str): The generated conclusion to the entire report.
         """
         if self.researcher.verbose:
             await stream_output(
@@ -134,9 +138,9 @@ class ReportGenerator:
         conclusion: str = await write_conclusion(
             query=self.researcher.query,
             context=report_content,
-            cfg=self.researcher.research_config,
+            cfg=self.researcher.cfg,
             agent_role_prompt=(
-                self.researcher.research_config.AGENT_ROLE or self.researcher.agent_role or ""
+                self.researcher.cfg.AGENT_ROLE or self.researcher.agent_role or ""
             ).strip(),
             cost_callback=self.researcher.add_costs,
             websocket=self.researcher.websocket,
@@ -168,9 +172,11 @@ class ReportGenerator:
             query=self.researcher.query,
             context="\n".join(self.researcher.context),
             agent_role_prompt=(
-                self.researcher.research_config.AGENT_ROLE or self.researcher.agent_role or ""
+                self.researcher.cfg.AGENT_ROLE
+                or self.researcher.agent_role
+                or ""
             ).strip(),
-            cfg=self.researcher.research_config,
+            cfg=self.researcher.cfg,
             websocket=self.researcher.websocket,
             cost_callback=self.researcher.add_costs,
         )
@@ -179,7 +185,7 @@ class ReportGenerator:
             await stream_output(
                 "logs",
                 "introduction_written",
-                f"📝 Introduction written for '{self.researcher.query}'",
+                f"📝 Introduction written for '{self.researcher.query}' 📝",
                 self.researcher.websocket,
             )
 
@@ -198,7 +204,7 @@ class ReportGenerator:
         subtopics: list[str] | Subtopics = await construct_subtopics(
             task=self.researcher.query,
             data="\n".join(self.researcher.context),
-            config=self.researcher.research_config,
+            config=self.researcher.cfg,
             subtopics=self.researcher.subtopics,
         )
 
@@ -230,10 +236,12 @@ class ReportGenerator:
             current_subtopic=current_subtopic,
             context="\n".join(self.researcher.context),
             role=(
-                self.researcher.research_config.AGENT_ROLE or self.researcher.agent_role or ""
+                self.researcher.cfg.AGENT_ROLE
+                or self.researcher.agent_role
+                or ""
             ).strip(),
             websocket=self.researcher.websocket,
-            config=self.researcher.research_config,
+            config=self.researcher.cfg,
             cost_callback=self.researcher.add_costs,
         )
 
@@ -241,7 +249,7 @@ class ReportGenerator:
             await stream_output(
                 "logs",
                 "draft_sections_generated",
-                f"🗂️ Draft section titles generated for '{self.researcher.query}'",
+                f"🗂️ Draft section titles generated for '{self.researcher.query}' 🗂️",
                 self.researcher.websocket,
             )
 

@@ -19,16 +19,6 @@
 **/__pycache__/
 **/.history
 **/.history/
-# Log files
-# Other Environments
-#Cursor Rules
-#Ignore env containing secrets
-#Ignore generated outputs
-#Ignore my local docs
-#Ignore mypy cache
-#Ignore pycache
-#Ignore Virtual Env
-#Vim swp files
 all_models.json
 build
 CURSOR_RULES.md
@@ -37,6 +27,7 @@ docs/build
 env.bak/
 env/
 ENV/
+free_models.json
 gpt_researcher_desktop/resources/extra_themes
 gpt_researcher_desktop/widgets/theme_dialog.py
 gpt_researcher.egg-info/

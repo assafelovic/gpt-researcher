@@ -5,7 +5,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, cast
 
-from gpt_researcher.utils.schemas import Tone
+from gpt_researcher.utils.enum import Tone
 from langgraph.graph import END, StateGraph
 
 # Import agent classes

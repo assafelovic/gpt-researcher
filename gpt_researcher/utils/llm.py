@@ -8,11 +8,10 @@ from typing import TYPE_CHECKING, Any, Callable
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.language_models.chat_models import BaseChatModel
-from llm_provider.generic.base import GenericLLMProvider  # noqa: F811
 
+from gpt_researcher.llm_provider.generic.base import GenericLLMProvider  # noqa: F811
 from gpt_researcher.prompts import generate_subtopics_prompt
 from gpt_researcher.utils.costs import estimate_llm_cost
-from gpt_researcher.utils.schemas import Subtopics
 from gpt_researcher.utils.validators import Subtopics
 
 if TYPE_CHECKING:

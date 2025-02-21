@@ -23,7 +23,7 @@ class BrowserManager:
         self,
         urls: list[str],
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        """Scrape content from a list of URLs.
+        """Scrape content that exists on each URL from the given list.
 
         Args:
         ----
@@ -31,7 +31,7 @@ class BrowserManager:
 
         Returns:
         -------
-            tuple[list[dict[str, Any]], list[dict[str, Any]]]: Tuple containing the scraped content and images.
+            tuple[list[dict[str, Any]], list[dict[str, Any]]]: Tuple containing the scraped text data and images.
         """
         if self.researcher.verbose:
             await stream_output(
@@ -41,20 +41,24 @@ class BrowserManager:
                 self.researcher.websocket,
             )
 
-        scraped_content: tuple[list[dict[str, Any]], list[dict[str, Any]]] = scrape_urls(
-            urls, self.researcher.research_config
+        text_data: list[dict[str, Any]]
+        scraped_images: list[dict[str, Any]]
+        text_data, scraped_images = scrape_urls(
+            urls,
+            self.researcher.cfg,
         )
-        self.researcher.add_research_sources(scraped_content[0])
+        self.researcher.add_research_sources(text_data)
         images: list[dict[str, Any]] = self.select_top_images(
-            scraped_content[1], k=4
-        )  # Select top 2 images
+            scraped_images,
+            k=4,  # Select top 4 images
+        )
         self.researcher.add_research_images(images)
 
         if self.researcher.verbose:
             await stream_output(
                 "logs",
                 "scraping_content",
-                f"📄 Scraped {len(scraped_content)} pages of content",
+                f"📄 Scraped {len(text_data)} pages of text and {len(images)} images",
                 self.researcher.websocket,
             )
             await stream_output(
@@ -71,7 +75,7 @@ class BrowserManager:
                 self.researcher.websocket,
             )
 
-        return scraped_content
+        return text_data, images
 
     def select_top_images(
         self,
@@ -97,9 +101,7 @@ class BrowserManager:
         for img in high_score_images + images:  # Process high-score images first, then all images
             img_hash: str | None = get_image_hash(img["url"])
             if (
-                img_hash
-                and img_hash not in seen_hashes
-                and img["url"] not in current_research_images  # TODO: case sensitive??
+                img_hash and img_hash not in seen_hashes and img["url"] not in current_research_images  # TODO: case sensitive??
             ):
                 seen_hashes.add(img_hash)
                 unique_images.append(img)

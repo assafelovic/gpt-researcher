@@ -8,11 +8,11 @@
     },
     "python.analysis.extraPaths": [
         "${workspaceFolder}",
-        "${workspaceFolder}/multi_agents",
         "${workspaceFolder}/backend",
         "${workspaceFolder}/gpt_researcher",
-        "${workspaceFolder}/frontend",
         "${workspaceFolder}/llm_fallbacks",
+        "${workspaceFolder}/multi_agents",
+        "${workspaceFolder}/tests",
     ],
     "python.analysis.autoSearchPaths": true,
     "python.analysis.importFormat": "absolute",
@@ -20,7 +20,7 @@
     "python.testing.unittestArgs": [
         "-v",
         "-s",
-        "./tests",
+        "${workspaceFolder}/tests",
         "-p",
         "*test*.py"
     ],

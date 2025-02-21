@@ -6,19 +6,16 @@ import logging
 import os
 import sys
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, cast
+from typing import Any, Callable, Dict, List, cast
 
 import litellm
 
+from fastapi import WebSocket
 from colorama import Fore, Style, init
-from langchain_core.messages import BaseMessage
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import BaseMessage  # keep out of type checking block because of pydantic's nonsense.
 from litellm.exceptions import BadRequestError, ContextWindowExceededError
 from pydantic import SecretStr
-
-if TYPE_CHECKING:
-    from fastapi import WebSocket
-    from langchain_core.language_models import BaseChatModel
-    from typing_extensions import Self
 
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -98,7 +95,7 @@ class GenericLLMProvider:
 
         # Get the provider from supported providers
         assert llm_provider is not None
-        provider: Self = cls.from_provider(
+        provider = cls.from_provider(
             llm_provider,
             model=model,
             temperature=temperature,
@@ -134,7 +131,7 @@ class GenericLLMProvider:
         cls,
         provider: str,
         **kwargs: Any,
-    ) -> Self:
+    ):
         return cls(cls._get_base_chat_model(provider, **kwargs))
 
     @classmethod

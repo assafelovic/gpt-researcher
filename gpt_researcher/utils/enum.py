@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 
 
@@ -23,28 +25,92 @@ class ReportSource(Enum):
 class Tone(Enum):
     Objective = "Objective (impartial and unbiased presentation of facts and findings)"
     Formal = "Formal (adheres to academic standards with sophisticated language and structure)"
-    Analytical = (
-        "Analytical (critical evaluation and detailed examination of data and theories)"
-    )
-    Persuasive = (
-        "Persuasive (convincing the audience of a particular viewpoint or argument)"
-    )
-    Informative = (
-        "Informative (providing clear and comprehensive information on a topic)"
-    )
+    Analytical = "Analytical (critical evaluation and detailed examination of data and theories)"
+    Persuasive = "Persuasive (convincing the audience of a particular viewpoint or argument)"
+    Informative = "Informative (providing clear and comprehensive information on a topic)"
     Explanatory = "Explanatory (clarifying complex concepts and processes)"
-    Descriptive = (
-        "Descriptive (detailed depiction of phenomena, experiments, or case studies)"
-    )
+    Descriptive = "Descriptive (detailed depiction of phenomena, experiments, or case studies)"
     Critical = "Critical (judging the validity and relevance of the research and its conclusions)"
     Comparative = "Comparative (juxtaposing different theories, data, or methods to highlight differences and similarities)"
     Speculative = "Speculative (exploring hypotheses and potential implications or future research directions)"
     Reflective = "Reflective (considering the research process and personal insights or experiences)"
-    Narrative = (
-        "Narrative (telling a story to illustrate research findings or methodologies)"
-    )
+    Narrative = "Narrative (telling a story to illustrate research findings or methodologies)"
     Humorous = "Humorous (light-hearted and engaging, usually to make the content more relatable)"
     Optimistic = "Optimistic (highlighting positive findings and potential benefits)"
-    Pessimistic = (
-        "Pessimistic (focusing on limitations, challenges, or negative outcomes)"
-    )
+    Pessimistic = "Pessimistic (focusing on limitations, challenges, or negative outcomes)"
+
+
+class OutputFileType(Enum):
+    ASCIIDOC = "adoc"
+    CBZ = "cbz"
+    CSS = "css"
+    CSV = "csv"
+    DOC = "doc"
+    DOCX = "docx"
+    EMAIL = "email"
+    EPUB = "epub"
+    FB2 = "fb2"
+    HTML = "html"
+    HTTP = "http"
+    IMAGE = "image"
+    JSON = "json"
+    JSONLD = "jsonld"
+    LATEX = "tex"
+    MARKDOWN = "markdown"
+    MHTML = "mhtml"
+    MOBI = "mobi"
+    NDJSON = "ndjson"
+    ODT = "odt"
+    ORG = "org"
+    OTF = "otf"
+    PAGES = "pages"
+    PDF = "pdf"
+    PPT = "ppt"
+    PPTX = "pptx"
+    PUB = "pub"
+    RST = "rst"
+    RTF = "rtf"
+    TOML = "toml"
+    TSV = "tsv"
+    TTF = "ttf"
+    TXT = "txt"
+    VSX = "vsx"
+    WOFF = "woff"
+    WOFF2 = "woff2"
+    XLS = "xls"
+    XLSX = "xlsx"
+    XML = "xml"
+    XPS = "xps"
+    YAML = "yaml"
+
+
+class SupportedLanguages(Enum):
+    ENGLISH = "en"
+    SPANISH = "es"
+    FRENCH = "fr"
+    GERMAN = "de"
+    ITALIAN = "it"
+
+
+class ReportFormat(Enum):
+    APA = "APA"
+    MLA = "MLA"
+    CHICAGO = "Chicago"
+    HARVARD = "Harvard"
+    IEEE = "IEEE"
+    AMA = "AMA"
+    CSE = "CSE"
+    ASA = "ASA"
+    AIP = "AIP"
+    APSA = "APSA"
+    BLUEBOOK = "Bluebook"
+    CHICAGO17 = "Chicago17"
+    MLA8 = "MLA8"
+    MLA9 = "MLA9"
+    NLM = "NLM"
+    OSCOLA = "OSCOLA"
+    IEEETRAN = "IEEEtran"
+    AAG = "AAG"
+    SBL = "SBL"
+    TURABIAN = "Turabian"
+    VANCOUVER = "Vancouver"

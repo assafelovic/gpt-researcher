@@ -9,7 +9,7 @@ import json_repair
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from gpt_researcher.prompts import generate_search_queries_prompt
 from gpt_researcher.utils.llm import create_chat_completion
-from utils.enum import ReportType
+from gpt_researcher.utils.enum import ReportType
 
 if TYPE_CHECKING:
     from json_repair.json_parser import JSONReturnType

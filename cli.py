@@ -22,7 +22,7 @@ from uuid import uuid4
 from backend.report_type import DetailedReporter
 from dotenv import load_dotenv
 from gpt_researcher import GPTResearcher
-from gpt_researcher.utils.schemas import ReportType, Tone
+from gpt_researcher.utils.enum import ReportType, Tone
 
 if TYPE_CHECKING:
     from argparse import Namespace

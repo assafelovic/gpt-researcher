@@ -3,10 +3,9 @@ from __future__ import annotations
 import importlib.util
 
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
 
-from litellm import BaseModel, Field
+from gpt_researcher.utils.validators import BaseModel, Field
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -25,119 +24,6 @@ if TYPE_CHECKING:
     class OnlineResearchDocument(ResearchDocument):
         url: str
         source_type: Literal["online"]
-
-
-class ReportType(Enum):
-    ResearchReport = "research_report"
-    ResourceReport = "resource_report"
-    OutlineReport = "outline_report"
-    CustomReport = "custom_report"
-    DetailedReport = "detailed_report"
-    SubtopicReport = "subtopic_report"
-    MultiAgents = "multi_agents"
-
-
-class ReportFormat(Enum):
-    APA = "APA"
-    MLA = "MLA"
-    CHICAGO = "Chicago"
-    HARVARD = "Harvard"
-    IEEE = "IEEE"
-    AMA = "AMA"
-    CSE = "CSE"
-    ASA = "ASA"
-    AIP = "AIP"
-    APSA = "APSA"
-    BLUEBOOK = "Bluebook"
-    CHICAGO17 = "Chicago17"
-    MLA8 = "MLA8"
-    MLA9 = "MLA9"
-    NLM = "NLM"
-    OSCOLA = "OSCOLA"
-    IEEETRAN = "IEEEtran"
-    AAG = "AAG"
-    SBL = "SBL"
-    TURABIAN = "Turabian"
-    VANCOUVER = "Vancouver"
-
-
-class OutputFileType(Enum):
-    ASCIIDOC = "adoc"
-    CBZ = "cbz"
-    CSS = "css"
-    CSV = "csv"
-    DOC = "doc"
-    DOCX = "docx"
-    EMAIL = "email"
-    EPUB = "epub"
-    FB2 = "fb2"
-    HTML = "html"
-    HTTP = "http"
-    IMAGE = "image"
-    JSON = "json"
-    JSONLD = "jsonld"
-    LATEX = "tex"
-    MARKDOWN = "markdown"
-    MHTML = "mhtml"
-    MOBI = "mobi"
-    NDJSON = "ndjson"
-    ODT = "odt"
-    ORG = "org"
-    OTF = "otf"
-    PAGES = "pages"
-    PDF = "pdf"
-    PPT = "ppt"
-    PPTX = "pptx"
-    PUB = "pub"
-    RST = "rst"
-    RTF = "rtf"
-    TOML = "toml"
-    TSV = "tsv"
-    TTF = "ttf"
-    TXT = "txt"
-    VSX = "vsx"
-    WOFF = "woff"
-    WOFF2 = "woff2"
-    XLS = "xls"
-    XLSX = "xlsx"
-    XML = "xml"
-    XPS = "xps"
-    YAML = "yaml"
-
-
-class ReportSource(Enum):
-    HYBRID = "hybrid"
-    LANGCHAIN_DOCUMENTS = "langchain_documents"
-    LANGCHAIN_VECTOR_STORE = "langchain_vectorstore"
-    LOCAL = "local"
-    STATIC = "static"
-    WEB = "web"
-
-
-class Tone(Enum):
-    Objective = "Objective (impartial and unbiased presentation of facts and findings)"
-    Analytical = "Analytical (critical evaluation and detailed examination of data and theories)"
-    Comparative = "Comparative (juxtaposing different theories, data, or methods to highlight differences and similarities)"
-    Critical = "Critical (judging the validity and relevance of the research and its conclusions)"
-    Descriptive = "Descriptive (detailed depiction of phenomena, experiments, or case studies)"
-    Explanatory = "Explanatory (clarifying complex concepts and processes)"
-    Format = "Formal (adheres to academic standards with sophisticated language and structure)"
-    Humorous = "Humorous (light-hearted and engaging, usually to make the content more relatable)"
-    Informative = "Informative (providing clear and comprehensive information on a topic)"
-    Narrative = "Narrative (telling a story to illustrate research findings or methodologies)"
-    Optimistic = "Optimistic (highlighting positive findings and potential benefits)"
-    Persuasive = "Persuasive (convincing the audience of a particular viewpoint or argument)"
-    Pessimistic = "Pessimistic (focusing on limitations, challenges, or negative outcomes)"
-    Reflective = "Reflective (considering the research process and personal insights or experiences)"
-    Speculative = "Speculative (exploring hypotheses and potential implications or future research directions)"
-
-
-class SupportedLanguages(Enum):
-    ENGLISH = "en"
-    SPANISH = "es"
-    FRENCH = "fr"
-    GERMAN = "de"
-    ITALIAN = "it"
 
 
 T = TypeVar("T")

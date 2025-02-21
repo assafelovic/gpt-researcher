@@ -13,15 +13,13 @@ from gpt_researcher.prompts import (
     get_prompt_by_report_type,
 )
 from gpt_researcher.utils.logger import get_formatted_logger
-from gpt_researcher.utils.schemas import ReportType
+from gpt_researcher.utils.enum import ReportType, Tone
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from backend.server.server_utils import CustomLogsHandler
     from fastapi.websockets import WebSocket
-
-    from gpt_researcher.utils.schemas import Tone
 
 logger = get_formatted_logger()
 
