@@ -1,50 +1,35 @@
 from typing import List, Dict, Any, Optional, Set
-from fastapi import WebSocket
 import asyncio
 import logging
-from gpt_researcher import GPTResearcher
-from gpt_researcher.utils.llm import create_chat_completion
-from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
+from ..utils.llm import create_chat_completion
+from ..utils.enum import ReportType, ReportSource, Tone
 
 logger = logging.getLogger(__name__)
 
-# Constants for models
-GPT4_MODEL = "gpt-4o"  # For standard tasks
-O3_MINI_MODEL = "o3-mini"  # For reasoning tasks
-LLM_PROVIDER = "openai"
-
 class ResearchProgress:
     def __init__(self, total_depth: int, total_breadth: int):
-        self.current_depth = total_depth
+        self.current_depth = total_depth  # Start from total and decrement
         self.total_depth = total_depth
-        self.current_breadth = total_breadth
+        self.current_breadth = total_breadth  # Start from total and update with actual results
         self.total_breadth = total_breadth
         self.current_query: Optional[str] = None
         self.total_queries = 0
         self.completed_queries = 0
 
-class DeepResearch:
-    def __init__(
-        self,
-        query: str,
-        breadth: int = 4,
-        depth: int = 2,
-        websocket: Optional[WebSocket] = None,
-        tone: Tone = Tone.Objective,
-        config_path: Optional[str] = None,
-        headers: Optional[Dict] = None,
-        concurrency_limit: int = 2  # Match TypeScript version
-    ):
-        self.query = query
-        self.breadth = breadth
-        self.depth = depth
-        self.websocket = websocket
-        self.tone = tone
-        self.config_path = config_path
-        self.headers = headers or {}
-        self.visited_urls: Set[str] = set()
-        self.learnings: List[str] = []
-        self.concurrency_limit = concurrency_limit
+class DeepResearchSkill:
+    def __init__(self, agent):
+        self.agent = agent
+        self.breadth = getattr(agent.cfg, 'deep_research_breadth', 4)
+        self.depth = getattr(agent.cfg, 'deep_research_depth', 2)
+        self.concurrency_limit = getattr(agent.cfg, 'deep_research_concurrency', 2)
+        self.websocket = agent.websocket
+        self.tone = agent.tone
+        self.config_path = agent.cfg.config_path if hasattr(agent.cfg, 'config_path') else None
+        self.headers = agent.headers or {}
+        self.visited_urls = agent.visited_urls
+        self.learnings = []
+        self.research_sources = []  # Track all research sources
+        self.context = []  # Track all context
 
     async def generate_feedback(self, query: str, num_questions: int = 3) -> List[str]:
         """Generate follow-up questions to clarify research direction"""
@@ -55,14 +40,12 @@ class DeepResearch:
         
         response = await create_chat_completion(
             messages=messages,
-            llm_provider=LLM_PROVIDER,
-            model=O3_MINI_MODEL,  # Using reasoning model for better question generation
-            temperature=0.7,
-            max_tokens=500,
-            reasoning_effort="high"
+            llm_provider=self.agent.cfg.fast_llm_provider,
+            model=self.agent.cfg.fast_llm_model,
+            temperature=0.4,
+            max_tokens=1000
         )
         
-        # Parse questions from response
         questions = [q.replace('Question:', '').strip() 
                     for q in response.split('\n') 
                     if q.strip().startswith('Question:')]
@@ -77,13 +60,11 @@ class DeepResearch:
         
         response = await create_chat_completion(
             messages=messages,
-            llm_provider=LLM_PROVIDER,
-            model=GPT4_MODEL,  # Using GPT-4 for general task
-            temperature=0.7,
-            max_tokens=1000
+            llm_provider=self.agent.cfg.strategic_llm_provider,
+            model=self.agent.cfg.strategic_llm_model,
+            temperature=0.4
         )
         
-        # Parse queries and goals from response
         lines = response.split('\n')
         queries = []
         current_query = {}
@@ -111,14 +92,12 @@ class DeepResearch:
         
         response = await create_chat_completion(
             messages=messages,
-            llm_provider=LLM_PROVIDER,
-            model=O3_MINI_MODEL,  # Using reasoning model for analysis
-            temperature=0.7,
-            max_tokens=1000,
-            reasoning_effort="high"
+            llm_provider=self.agent.cfg.fast_llm_provider,
+            model=self.agent.cfg.fast_llm_model,
+            temperature=0.4,
+            max_tokens=1000
         )
         
-        # Parse learnings and questions with citations
         lines = response.split('\n')
         learnings = []
         questions = []
@@ -127,7 +106,6 @@ class DeepResearch:
         for line in lines:
             line = line.strip()
             if line.startswith('Learning'):
-                # Extract URL if present in square brackets
                 import re
                 url_match = re.search(r'\[(.*?)\]:', line)
                 if url_match:
@@ -136,7 +114,15 @@ class DeepResearch:
                     learnings.append(learning)
                     citations[learning] = url
                 else:
-                    learnings.append(line.replace('Learning:', '').strip())
+                    # Try to find URL in the line itself
+                    url_match = re.search(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', line)
+                    if url_match:
+                        url = url_match.group(0)
+                        learning = line.replace(url, '').replace('Learning:', '').strip()
+                        learnings.append(learning)
+                        citations[learning] = url
+                    else:
+                        learnings.append(line.replace('Learning:', '').strip())
             elif line.startswith('Question:'):
                 questions.append(line.replace('Question:', '').strip())
                 
@@ -176,6 +162,8 @@ class DeepResearch:
         all_learnings = learnings.copy()
         all_citations = citations.copy()
         all_visited_urls = visited_urls.copy()
+        all_context = []
+        all_sources = []
         
         # Process queries with concurrency limit
         semaphore = asyncio.Semaphore(self.concurrency_limit)
@@ -187,7 +175,7 @@ class DeepResearch:
                     if on_progress:
                         on_progress(progress)
                         
-                    # Initialize researcher for this query
+                    from .. import GPTResearcher
                     researcher = GPTResearcher(
                         query=serp_query['query'],
                         report_type=ReportType.ResearchReport.value,
@@ -195,17 +183,18 @@ class DeepResearch:
                         tone=self.tone,
                         websocket=self.websocket,
                         config_path=self.config_path,
-                        headers=self.headers
+                        headers=self.headers,
+                        visited_urls=self.visited_urls
                     )
                     
                     # Conduct research
-                    await researcher.conduct_research()
+                    context = await researcher.conduct_research()
                     
-                    # Get results
-                    context = researcher.context
-                    visited = set(researcher.visited_urls)
+                    # Get results and visited URLs
+                    visited = researcher.visited_urls
+                    sources = researcher.research_sources
                     
-                    # Process results
+                    # Process results to extract learnings and citations
                     results = await self.process_serp_result(
                         query=serp_query['query'],
                         context=context
@@ -218,10 +207,12 @@ class DeepResearch:
                     
                     return {
                         'learnings': results['learnings'],
-                        'visited_urls': visited,
+                        'visited_urls': list(visited),
                         'followUpQuestions': results['followUpQuestions'],
                         'researchGoal': serp_query['researchGoal'],
-                        'citations': results['citations']
+                        'citations': results['citations'],
+                        'context': context if context else "",
+                        'sources': sources if sources else []
                     }
                     
                 except Exception as e:
@@ -233,16 +224,26 @@ class DeepResearch:
         results = await asyncio.gather(*tasks)
         results = [r for r in results if r is not None]  # Filter out failed queries
         
+        # Update breadth progress based on successful queries
+        progress.current_breadth = len(results)
+        if on_progress:
+            on_progress(progress)
+        
         # Collect all results
         for result in results:
             all_learnings.extend(result['learnings'])
-            all_visited_urls.update(set(result['visited_urls']))
+            all_visited_urls.update(result['visited_urls'])
             all_citations.update(result['citations'])
+            if result['context']:
+                all_context.append(result['context'])
+            if result['sources']:
+                all_sources.extend(result['sources'])
             
             # Continue deeper if needed
             if depth > 1:
                 new_breadth = max(2, breadth // 2)
                 new_depth = depth - 1
+                progress.current_depth = new_depth
                 
                 # Create next query from research goal and follow-up questions
                 next_query = f"""
@@ -262,47 +263,41 @@ class DeepResearch:
                 )
                 
                 all_learnings = deeper_results['learnings']
-                all_visited_urls = set(deeper_results['visited_urls'])
+                all_visited_urls.update(deeper_results['visited_urls'])
                 all_citations.update(deeper_results['citations'])
-                
+                if deeper_results.get('context'):
+                    all_context.extend(deeper_results['context'])
+                if deeper_results.get('sources'):
+                    all_sources.extend(deeper_results['sources'])
+        
+        # Update class tracking
+        self.context.extend(all_context)
+        self.research_sources.extend(all_sources)
+        
         return {
             'learnings': list(set(all_learnings)),
             'visited_urls': list(all_visited_urls),
-            'citations': all_citations
+            'citations': all_citations,
+            'context': all_context,
+            'sources': all_sources
         }
 
     async def run(self, on_progress=None) -> str:
         """Run the deep research process and generate final report"""
-        # Get initial feedback
-        follow_up_questions = await self.generate_feedback(self.query)
-        
-        # Collect answers (this would normally come from user interaction)
+        follow_up_questions = await self.generate_feedback(self.agent.query)
         answers = ["Automatically proceeding with research"] * len(follow_up_questions)
         
-        # Combine query and Q&A
         combined_query = f"""
-        Initial Query: {self.query}
+        Initial Query: {self.agent.query}
         Follow-up Questions and Answers:
         {' '.join([f'Q: {q}\nA: {a}' for q, a in zip(follow_up_questions, answers)])}
         """
         
-        # Run deep research
         results = await self.deep_research(
             query=combined_query,
             breadth=self.breadth,
             depth=self.depth,
             on_progress=on_progress
-        )
-        
-        # Generate final report
-        researcher = GPTResearcher(
-            query=self.query,
-            report_type=ReportType.DetailedReport.value,
-            report_source=ReportSource.Web.value,
-            tone=self.tone,
-            websocket=self.websocket,
-            config_path=self.config_path,
-            headers=self.headers
         )
         
         # Prepare context with citations
@@ -314,10 +309,17 @@ class DeepResearch:
             else:
                 context_with_citations.append(learning)
         
-        # Set enhanced context for final report
-        researcher.context = "\n".join(context_with_citations)
-        researcher.visited_urls = set(results['visited_urls'])
+        # Add all research context
+        if results.get('context'):
+            context_with_citations.extend(results['context'])
         
-        # Generate report
-        report = await researcher.write_report()
-        return report 
+        # Set enhanced context and visited URLs
+        self.agent.context = "\n".join(context_with_citations)
+        self.agent.visited_urls = results['visited_urls']
+        
+        # Set research sources
+        if results.get('sources'):
+            self.agent.research_sources = results['sources']
+        
+        # Return the context - don't generate report here as it will be done by the main agent
+        return self.agent.context 
