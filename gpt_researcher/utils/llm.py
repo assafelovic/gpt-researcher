@@ -58,7 +58,6 @@ async def create_chat_completion(
     }
 
     if 'o3' in model or 'o1' in model:
-        print(f"Using reasoning models {model}")
         kwargs['reasoning_effort'] = reasoning_effort
     else:
         kwargs['temperature'] = temperature
