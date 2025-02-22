@@ -18,5 +18,6 @@ class ArxivScraper:
         """
         query = self.link.split("/")[-1]
         retriever = ArxivRetriever(load_max_docs=2, doc_content_chars_max=None)
-        docs = retriever.invoke(query=query)
-        return docs[0].page_content
+        docs = retriever.invoke(query)
+        # returns content, image_urls, title
+        return docs[0].page_content, [], docs[0].metadata["Title"]
