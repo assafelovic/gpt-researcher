@@ -15,7 +15,8 @@ Deep Research employs a fascinating tree-like exploration pattern:
 Think of it as deploying a team of AI researchers, each following their own research path while collaborating to build a comprehensive understanding of your topic.
 
 ## Process Flow
-
+<img src="https://github.com/user-attachments/assets/eba2d94b-bef3-4f8d-bbc0-f15bd0a40968" alt="Logo" width="568"></img>
+<br></br>
 
 ## Quick Start
 
