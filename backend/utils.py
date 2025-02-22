@@ -6,6 +6,7 @@ import urllib.parse
 import aiofiles
 import mistune
 from fpdf import FPDF
+from fpdf.errors import FPDFUnicodeEncodingException
 from markdown_it import MarkdownIt
 
 logger = logging.getLogger(__name__)
@@ -52,10 +53,12 @@ async def write_md_to_pdf(
     """Converts Markdown text to a PDF file and returns the file path.
 
     Args:
+    ----
         text (str): Markdown text to convert
         filename (str): Base filename to use
 
     Returns:
+    -------
         str: The encoded file path of the generated PDF
     """
     file_path = f"outputs/{filename[:60]}.pdf"
@@ -76,12 +79,18 @@ async def write_md_to_pdf(
         pdf.set_font("helvetica", size=11)
 
         # Add CSS styles to the PDF
-        pdf.write_html(f"<style>{css}</style>{html}")
+        try:
+           pdf.write_html(f"<style>{css}</style>{html}")
+        except FPDFUnicodeEncodingException:
+            logger.warning("FPDFUnicodeEncodingException: Removing unicode characters due to FPDF limitations.")
+            pdf.add_page()
+            pdf.set_font("helvetica", size=11)
+            pdf.write_html(f"<style>{css}</style>{html}".encode("ascii", errors="replace").decode("ascii"))
 
         # Save PDF
         pdf.output(file_path)
 
-        logger.debug(f"Report written to {file_path}")
+        logger.debug(f"Report written to '{file_path}' with styles from '{css_file_path}'")
 
     except Exception as e:
         logger.exception(f"Error in converting Markdown to PDF: {e}")

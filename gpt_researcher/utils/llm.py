@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.language_models.chat_models import BaseChatModel
+from litellm.utils import get_max_tokens
 
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider  # noqa: F811
 from gpt_researcher.prompts import generate_subtopics_prompt
@@ -20,6 +21,35 @@ if TYPE_CHECKING:
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+
+def get_llm_params(
+    model: str | None,
+    temperature: float = 0.35,
+    include_max_tokens: bool = True,
+) -> dict[str, Any]:
+    """Get LLM parameters for the given model.
+    
+    Args:
+    ----
+        model (str): The model name.
+        temperature (float): The temperature for the model.
+        include_max_tokens (bool): Whether to include max tokens.
+
+    Returns:
+    -------
+        dict[str, Any]: A dictionary of LLM parameters.
+    """
+    params: dict[str, Any] = {
+        "model": model,
+        "temperature": temperature,
+    }
+    if model and include_max_tokens:
+        try:
+            max_tokens = get_max_tokens(model)
+            params["max_tokens"] = max_tokens
+        except Exception as e:
+            logger.error(f"Error in get_max_tokens: {e.__class__.__name__}: {e}")
+    return params
 
 def get_llm(
     llm_provider: str,
@@ -154,7 +184,7 @@ async def construct_subtopics(
             **config.llm_kwargs,
             headers=headers,
         )
-        model: BaseChatModel = provider.llm
+        model: BaseChatModel = provider.current_model
         chain = prompt | model | parser
         output: Subtopics = await chain.ainvoke(
             {

@@ -99,12 +99,17 @@ class ResearchConductor:
             f"🌐 Browsing the web to learn more about the task: {query}...",
             self.researcher.websocket,
         )
-        # Always use the first retriever for initial search results
-        search_results: list[dict[str, Any]] = await get_search_results(
-            query,
-            self.researcher.retrievers[0],
-            query_domains,
-        )
+        search_results: list[dict[str, Any]] = []
+        for retriever_entry in self.researcher.retrievers:
+            try:
+                await get_search_results_new(
+                    query,
+                    retriever_entry,
+                    query_domains,
+                )
+                break
+            except Exception as e:
+                self.logger.exception(f"Error with retriever {retriever_entry.__name__}: {e}")
         self.logger.info(f"Initial search results obtained: {len(search_results)} results")
 
         await stream_output(

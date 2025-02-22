@@ -51,9 +51,11 @@ def get_litellm_models(
     """Get all available LiteLLM models and their specifications.
 
     Args:
+    ----
         test_prepend_provider: Prepends litellm's 'litellm_provider' to the model name. Only useful for testing.
 
     Returns:
+    -------
         dict[str, Any]: Dictionary where keys are model names and values are their specifications
     """
     if CACHED_LITELLM_MODELS:
@@ -194,10 +196,12 @@ def sort_models_by_cost_and_limits(
     """Sort models by cost (primary) and token limits (secondary).
 
     Args:
+    ----
         models: Dictionary of model specifications. If None, will call get_litellm_models()
         free_only: If True, only return models with zero cost
 
     Returns:
+    -------
         list of tuples mapping model names to their original specifications, sorted by cost and token limits
     """
 

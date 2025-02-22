@@ -65,11 +65,21 @@ class Config:
     STRATEGIC_TOKEN_LIMIT: int = int(os.environ.get("STRATEGIC_TOKEN_LIMIT", 4096))
     TEMPERATURE: float = float(os.environ.get("TEMPERATURE", 0.4))
     TONE: Tone = Tone.__members__.get(os.environ.get("TONE", "Objective").upper(), Tone.Objective)
+    # FALLBACK_MODELS is a list of free LLM fallback model identifiers.
+    # Users can specify this as a JSON-encoded list (e.g., '["model1", "model2"]') or as a comma-separated string (e.g., "model1, model2").
+    FALLBACK_MODELS: list[str] = (
+        lambda value: json.loads(value)
+        if value.lstrip().startswith("[") and value.rstrip().endswith("]")
+        else value.split(",")
+        if "," in value
+        else [item.strip() for item in value.split(",") if item.strip()]
+    )(str(os.environ.get("FALLBACK_MODELS", "") or "").strip())
     TOTAL_WORDS: int = int(os.environ.get("TOTAL_WORDS", 1000))
     USER_AGENT: str = os.environ.get(
         "USER_AGENT",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
-    )  # "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+    )  # alternatively: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+    USE_FALLBACKS: bool = True
     VERBOSE: bool = bool(os.environ.get("VERBOSE", True))
 
     def __init__(

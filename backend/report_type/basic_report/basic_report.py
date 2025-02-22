@@ -6,11 +6,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from gpt_researcher import GPTResearcher
-from server.server_utils import CustomLogsHandler
+from backend.server.server_utils import CustomLogsHandler
+from gpt_researcher.utils.enum import ReportSource, Tone, ReportType
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
-    from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 
 
 class BasicReporter:
@@ -28,11 +28,11 @@ class BasicReporter:
         query_domains: list | None = None,
     ):
         self.query: str = query
-        self.report_type: ReportType = ReportType(report_type.title()) if isinstance(report_type, str) else report_type
-        self.report_source: ReportSource = ReportSource(report_source.title()) if isinstance(report_source, str) else report_source
+        self.report_type: ReportType = ReportType(report_type) if isinstance(report_type, str) else report_type
+        self.report_source: ReportSource = ReportSource(report_source) if isinstance(report_source, str) else report_source
         self.source_urls: list[str] = source_urls
         self.document_urls: list[str] = document_urls
-        self.tone: Tone | None = Tone.Objective if tone is None else tone
+        self.tone: Tone = Tone.Objective if tone is None else tone
         self.config_path: Path = Path(os.path.normpath(config_path)).absolute()
         self.websocket: WebSocket | CustomLogsHandler = websocket
         self.headers: dict[str, Any] = {} if headers is None else headers

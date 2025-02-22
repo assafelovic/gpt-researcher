@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 if TYPE_CHECKING:
     from fastapi import WebSocket as ServerWebSocket
-    from server.server_utils import CustomLogsHandler
+    from backend.server.server_utils import CustomLogsHandler
 
 logger: logging.Logger = logging.getLogger(__name__)
 

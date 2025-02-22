@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
-from gpt_researcher.utils.schemas import Subtopics
+from gpt_researcher.utils.validators import Subtopics
 
 if TYPE_CHECKING:
     import os

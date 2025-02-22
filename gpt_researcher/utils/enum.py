@@ -10,6 +10,7 @@ class ReportType(Enum):
     CustomReport = "custom_report"
     DetailedReport = "detailed_report"
     SubtopicReport = "subtopic_report"
+    MultiAgents = "multi_agents"
 
 
 class ReportSource(Enum):

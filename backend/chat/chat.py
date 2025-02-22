@@ -15,7 +15,6 @@ from langchain_core.vectorstores.base import VectorStoreRetriever
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import create_react_agent
-from litellm.utils import get_max_tokens
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
@@ -62,13 +61,14 @@ class ChatAgentWithMemory:
             f"embedding_model is not a str, was instead {type(self.config.EMBEDDING_MODEL).__name__}"
         )
         # Initialize LLM
+        from gpt_researcher.utils.llm import get_llm_params
+        params = get_llm_params(self.config.SMART_LLM_MODEL, temperature=0.35)
+
         provider: BaseChatModel = get_llm(
             llm_provider=self.config.SMART_LLM_PROVIDER,
-            model=self.config.SMART_LLM_MODEL,
-            temperature=0.35,
-            max_tokens=get_max_tokens(self.config.SMART_LLM_MODEL),
+            **params,
             **self.config.llm_kwargs,
-        ).llm
+        ).current_model
 
         # If vector_store is not initialized, process documents and add to vector_store
         assert self.config.EMBEDDING_PROVIDER is not None, "embedding_provider is not set"

@@ -4,10 +4,11 @@ import json
 import logging
 import os
 
-from typing import TYPE_CHECKING, Any, ClassVar, Coroutine
+from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Literal
 
 from langchain_core.documents import Document
 
+from llm_fallbacks.config import FREE_MODELS, LiteLLMBaseModelSpec
 from gpt_researcher.actions.agent_creator import choose_agent
 from gpt_researcher.actions.markdown_processing import (
     add_references,
@@ -24,7 +25,7 @@ from gpt_researcher.skills.context_manager import ContextManager
 from gpt_researcher.skills.curator import SourceCurator
 from gpt_researcher.skills.researcher import ResearchConductor
 from gpt_researcher.skills.writer import ReportGenerator
-from gpt_researcher.utils.schemas import Subtopics
+from gpt_researcher.utils.validators import Subtopics
 from gpt_researcher.utils.enum import (
     OutputFileType,
     ReportFormat,
@@ -121,10 +122,10 @@ class GPTResearcher:
         )
         self.vector_store_filter: dict[str, Any] | None = vector_store_filter
         self.websocket: CustomLogsHandler | WebSocket | None = websocket
-        self.agent_role = agent_role if agent_role else ""
         self.parent_query: str = parent_query
         self.subtopics: list[str] = [] if subtopics is None else subtopics
         self.visited_urls: set[str] = set() if visited_urls is None else visited_urls
+        self.agent_role = agent_role if agent_role else ""
         self.verbose = verbose
 
         self.context: list[str] = [] if context is None else context
@@ -140,7 +141,22 @@ class GPTResearcher:
             **self.cfg.EMBEDDING_KWARGS,
         )
         self.log_handler: LogHandler | None = log_handler
-        self.llm: GenericLLMProvider = GenericLLMProvider(self.smart_llm)  # For backwards compatibility
+        self.fallback_models: dict[Literal["SMART", "FAST", "STRATEGIC"] | str, list[tuple[str, LiteLLMBaseModelSpec]]] = {
+            "SMART": [],
+            "FAST": [],
+            "STRATEGIC": [],
+        }
+        for model_type in ["SMART", "FAST", "STRATEGIC"]:
+            for model in FREE_MODELS:
+                if model in self.INCOMPATIBLE_MODELS[model_type]:
+                    logging.getLogger().debug(f"Skipping incompatible model: {model} for model type '{model_type}'")
+                    continue
+                self.fallback_models[model_type].append(model)
+        self.llm: GenericLLMProvider = GenericLLMProvider.from_provider(
+            self.smart_llm,
+            use_fallbacks=self.cfg.USE_FALLBACKS,
+            fallback_models=self.fallback_models["SMART"],
+        )
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
@@ -489,3 +505,10 @@ class GPTResearcher:
     @smart_llm.setter
     def smart_llm(self, value: str):
         self.cfg.SMART_LLM = value
+
+    # TODO: utilize regex patterns to blacklist certain models.
+    INCOMPATIBLE_MODELS: dict[str, list[str]] = {
+        "SMART": [],
+        "FAST": [],
+        "STRATEGIC": [],
+    }

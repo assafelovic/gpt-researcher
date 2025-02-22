@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import json
 import logging
 import os
-from pathlib import Path
-import uuid
 
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, Iterable
@@ -115,40 +112,29 @@ if TYPE_CHECKING:
         disable_adding_master_key_hash_to_db: bool  # Disable master key hash storage
         disable_master_key_return: bool  # Disable master key return
         disable_reset_budget: bool  # Disable budget reset
-        disable_retry_on_max_parallel_request_limit_error: (
-            bool  # Disable retries on parallel request limit
-        )
+        disable_retry_on_max_parallel_request_limit_error: bool  # Disable retries on parallel request limit
         disable_spend_logs: bool  # Disable spend logging
         enable_jwt_auth: bool  # Enable JWT authentication
         enforce_user_param: bool  # Enforce user parameter
         global_max_parallel_requests: int  # Global maximum parallel requests
         health_check_interval: int  # Health check interval
         infer_model_from_keys: bool  # Infer model from keys
-        key_management_settings: list[
-            dict[str, Any]
-        ]  # Settings for key management system (e.g. AWS KMS, Azure Key Vault). Doc on key management: https://docs.litellm.ai/docs/secret
+        key_management_settings: list[dict[str, Any]]  # Settings for key management system (e.g. AWS KMS, Azure Key Vault). Doc on key management: https://docs.litellm.ai/docs/secret
         key_management_system: str  # Key management system
         master_key: str  # Master key
         max_parallel_requests: int  # Maximum parallel requests
         proxy_batch_write_at: int  # Batch write spend updates every n seconds
-        use_client_credentials_pass_through_routes: (
-            bool  # Use client credentials for pass-through routes
-        )
+        use_client_credentials_pass_through_routes: bool  # Use client credentials for pass-through routes
 
     class LiteLLMBaseModelSpec(TypedDict, total=False):
-        cache_creation_input_audio_token_cost: (
-            float  # cost per input audio token for cache creation
-        )
+        cache_creation_input_audio_token_cost: float  # cost per input audio token for cache creation
+
         cache_creation_input_token_cost: float  # cost per input token for cache creation
         cache_read_input_token_cost: float  # cost per input token for cache read
-        input_cost_per_audio_per_second_above_128k_tokens: (
-            float  # cost per input audio per second above 128k tokens
-        )
+        input_cost_per_audio_per_second_above_128k_tokens: float  # cost per input audio per second above 128k tokens
         input_cost_per_audio_per_second: float  # cost per input audio per second
         input_cost_per_audio_token: float  # cost per input audio token
-        input_cost_per_character_above_128k_tokens: (
-            float  # cost per input character above 128k tokens
-        )
+        input_cost_per_character_above_128k_tokens: float  # cost per input character above 128k tokens
         input_cost_per_character: float  # cost per input character
         input_cost_per_image_above_128k_tokens: float  # cost per input image above 128k tokens
         input_cost_per_image: float  # cost per input image
@@ -161,21 +147,15 @@ if TYPE_CHECKING:
         input_cost_per_token_batches: float  # cost per input token for batches
         input_cost_per_token_cache_hit: float  # cost per input token for cache hits
         input_cost_per_token: float  # cost per input token
-        input_cost_per_video_per_second_above_128k_tokens: (
-            float  # cost per video per second above 128k tokens
-        )
+        input_cost_per_video_per_second_above_128k_tokens: float  # cost per video per second above 128k tokens
         input_cost_per_video_per_second: float  # cost per video per second
         input_dbu_cost_per_token: float  # cost per input DBU token
         litellm_provider: str  # one of https://docs.litellm.ai/docs/providers
         max_audio_length_hours: float  # maximum length of audio in hours
         max_audio_per_prompt: int  # maximum number of audio per prompt
         max_images_per_prompt: int  # maximum number of images per prompt
-        max_input_tokens: (
-            int  # max input tokens, if the provider specifies it. if not default to max_tokens
-        )
-        max_output_tokens: (
-            int  # max output tokens, if the provider specifies it. if not default to max_tokens
-        )
+        max_input_tokens: int  # max input tokens, if the provider specifies it. if not default to max_tokens
+        max_output_tokens: int  # max output tokens, if the provider specifies it. if not default to max_tokens
         max_pdf_size_mb: int  # maximum PDF size in MB
         max_query_tokens: int  # maximum number of tokens for queries
         max_tokens: int  # LEGACY parameter. set to max_output_tokens if provider specifies it. IF not set to max_input_tokens, if provider specifies it.
@@ -184,9 +164,7 @@ if TYPE_CHECKING:
         metadata: dict[NotesKey, str]  # metadata associated with the model
         mode: ModelModes  # mode of the model.
         output_cost_per_audio_token: float  # cost per output audio token
-        output_cost_per_character_above_128k_tokens: (
-            float  # cost per output character above 128k tokens
-        )
+        output_cost_per_character_above_128k_tokens: float  # cost per output character above 128k tokens
         output_cost_per_character: float  # cost per output character
         output_cost_per_image: float  # cost per output image
         output_cost_per_pixel: float  # cost per output pixel
@@ -194,9 +172,7 @@ if TYPE_CHECKING:
         output_cost_per_token_above_128k_tokens: float  # cost per output token above 128k tokens
         output_cost_per_token_batches: float  # cost per output token for batches
         output_cost_per_token: float  # cost per output token
-        output_dbu_cost_per_token: (
-            float  # cost per output DBU token. Sometimes typo'd to output_db_cost_per_token
-        )
+        output_dbu_cost_per_token: float  # cost per output DBU token. Sometimes typo'd to output_db_cost_per_token
         output_vector_size: int  # size of the output vector for embeddings
         rpd: int  # requests per day
         rpm: int  # requests per minute
@@ -241,7 +217,7 @@ else:
 
 
 class BaseProviderConfig:
-    litellm_models: ClassVar[Dict[str, LiteLLMBaseModelSpec]] = get_litellm_models()
+    ALL_KNOWN_MODELS: ClassVar[Dict[str, LiteLLMBaseModelSpec]] = get_litellm_models()
     FREE_COSTS: ClassVar[LiteLLMBaseModelSpec] = {
         "cache_creation_input_token_cost": 0.0,
         "cache_read_input_token_cost": 0.0,
@@ -352,8 +328,8 @@ class CustomProviderConfig(BaseProviderConfig):
                 else f"{self.provider_name}/{model_name}"
             )
             try:
-                key = model_key if model_key in self.litellm_models else model_name
-                entry = self.litellm_models.setdefault(key, model_spec.copy())
+                key = model_key if model_key in self.ALL_KNOWN_MODELS else model_name
+                entry = self.ALL_KNOWN_MODELS.setdefault(key, model_spec.copy())
                 self.model_specs.setdefault(model_name, entry.copy()).update(model_spec)
                 entry.update(model_spec)
             except Exception:
@@ -553,253 +529,21 @@ if "CUSTOM_PROVIDERS" not in globals():
         ),
     ]
 
-if "FREE_MODELS" not in globals():
+if "FREE_MODELS" not in globals():  # don't waste time and energy redefining these anytime config.py is imported.
     all_configs: Dict[str, LiteLLMBaseModelSpec] = {
         model_name: config
         for provider in CUSTOM_PROVIDERS
         for model_name, config in provider.model_specs.items()
     }
     all_configs.update(
-        {model_name: config for model_name, config in BaseProviderConfig.litellm_models.items()}
+        {
+            model_name: config
+            for model_name, config in BaseProviderConfig.ALL_KNOWN_MODELS.items()
+            if model_name not in all_configs
+        }
     )
     ALL_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(all_configs)
     FREE_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
-        all_configs, free_only=True
+        all_configs,
+        free_only=True,
     )
-
-
-def to_litellm_config_yaml(
-    providers: list[CustomProviderConfig],
-    free_only: bool = False,
-    online_only: bool = False,
-    exhaustive_config: bool = True,  # TODO: fix this.
-) -> LiteLLMYAMLConfig:
-    """Convert the provider config to a LiteLLM YAML config format."""
-    # Create base config with all possible settings
-    config: LiteLLMYAMLConfig = {
-        "cache": {
-            "host": "localhost",
-            "mode": "default_off",
-            "namespace": "litellm.caching.caching",
-            "port": 6379,
-            "supported_call_types": [
-                "acompletion",
-                "atext_completion",
-                "aembedding",
-                "atranscription",
-            ],
-            "ttl": 600,
-            "type": "redis",
-        },
-        "general_settings": {
-            "master_key": f"sk-{uuid.uuid4().hex}",
-            "alerting": ["slack", "email"],
-            "proxy_batch_write_at": 60,  # Batch write spend updates every 60s
-            "database_connection_pool_limit": 10,  # limit the number of database connections to = MAX Number of DB Connections/Number of instances of litellm proxy (Around 10-20 is good number)
-            "alerting_threshold": 0,
-            "allow_requests_on_db_unavailable": True,
-            "allowed_routes": [],
-            "background_health_checks": True,
-            "database_url": f"postgresql://postgres:{os.environ.get('POSTGRES_PASSWORD')}@localhost:5432/postgres",
-            "disable_adding_master_key_hash_to_db": False,
-            "disable_master_key_return": False,
-            "disable_reset_budget": False,
-            "disable_retry_on_max_parallel_request_limit_error": False,
-            "disable_spend_logs": False,
-            "enable_jwt_auth": False,
-            "enforce_user_param": False,
-            "global_max_parallel_requests": 0,
-            "health_check_interval": 300,
-            "infer_model_from_keys": True,
-            "max_parallel_requests": 0,
-            "use_client_credentials_pass_through_routes": False,
-        },
-        "litellm_settings": {
-            "callbacks": ["otel"],
-            "content_policy_fallbacks": [],
-            "context_window_fallbacks": [],
-            "default_fallbacks": [],
-            "failure_callback": ["sentry"],
-            "force_ipv4": True,
-            "json_logs": True,
-            "redact_user_api_key_info": True,
-            "request_timeout": 600,
-            "service_callbacks": ["datadog", "prometheus"],
-            "set_verbose": False,
-            "turn_off_message_logging": False,
-        },
-        "model_list": [],
-        "router_settings": {
-            "allowed_fails": 3,
-            "allowed_fails_policy": {
-                "BadRequestErrorAllowedFails": 1000,
-                "AuthenticationErrorAllowedFails": 10,
-                "TimeoutErrorAllowedFails": 12,
-                "RateLimitErrorAllowedFails": 10000,
-                "ContentPolicyViolationErrorAllowedFails": 15,
-                "InternalServerErrorAllowedFails": 20,
-            },
-            "cooldown_time": 30,
-            "disable_cooldowns": False,
-            "enable_pre_call_checks": True,
-            "enable_tag_filtering": True,
-            "fallbacks": [],
-            "retry_policy": {
-                "AuthenticationErrorRetries": 3,
-                "TimeoutErrorRetries": 3,
-                "RateLimitErrorRetries": 3,
-                "ContentPolicyViolationErrorRetries": 4,
-                "InternalServerErrorRetries": 4,
-            },
-            "routing_strategy": "simple-shuffle",
-        },
-    }
-
-    for p in providers:
-        for model_name, model_spec in (p.free_models if free_only else p.model_specs).items():
-            is_free = calculate_cost_per_token(model_spec) == 0.0
-            is_local = (
-                model_name.casefold().startswith("ollama/")
-                or model_name.casefold().startswith("vllm/")
-                or model_name.casefold().startswith("xinference/")
-                or model_name.casefold().startswith("lmstudio/")
-                or "127.0.0.1" in p.base_url
-                or "localhost" in p.base_url
-                or "0.0.0.0" in p.base_url
-            )
-            if free_only and (not is_free or is_local):
-                continue
-
-            key_name = model_name if "/" in model_name else f"{p.provider_name}/{model_name}"
-            model_entry = {
-                "model_name": key_name,
-                "litellm_params": {
-                    "model": (key_name if key_name.startswith("openai/") else f"openai/{key_name}"),
-                    "api_base": p.base_url,
-                    **{"api_key": f"os.environ/{p.api_env_key_name}"},
-                    **({} if p.api_version is None else {"api_version": p.api_version}),
-                    **{k: v for k, v in model_spec.items()},
-                },
-            }
-            config["model_list"].append(model_entry)  # pyright: ignore[reportArgumentType]
-
-            # Determine suitable fallbacks based on mode and cost
-            suitable_fallbacks: list[str] = []
-            total_fallbacks_found = 0
-            total_fallbacks_required = 25
-            for k, v in FREE_MODELS:
-                k_name = (
-                    k
-                    if k.startswith(f"{v.get('litellm_provider')}/") and k not in suitable_fallbacks
-                    else f"{v.get('litellm_provider')}/{k}"
-                )
-                if k.casefold() == model_name.casefold():  # Avoid self-referential fallbacks
-                    continue
-                if (
-                    v.get("mode") is not None
-                    and model_spec.get("mode") is not None
-                    and v.get("mode") != model_spec.get("mode")
-                ):
-                    continue
-                if (
-                    v.get("supports_vision") is not None
-                    and model_spec.get("supports_vision") is not None
-                    and v.get("supports_vision") != model_spec.get("supports_vision")
-                ):
-                    continue
-                if (
-                    v.get("supports_embedding_image_input") is not None
-                    and model_spec.get("supports_embedding_image_input") is not None
-                    and v.get("supports_embedding_image_input")
-                    != model_spec.get("supports_embedding_image_input")
-                ):
-                    continue
-                if (
-                    v.get("supports_audio_input") is not None
-                    and model_spec.get("supports_audio_input") is not None
-                    and v.get("supports_audio_input") != model_spec.get("supports_audio_input")
-                ):
-                    continue
-                if (
-                    v.get("supports_audio_output") is not None
-                    and model_spec.get("supports_audio_output") is not None
-                    and v.get("supports_audio_output") != model_spec.get("supports_audio_output")
-                ):
-                    continue
-                if model_spec.get("mode") is not None and model_spec.get("mode") != "chat":
-                    total_fallbacks_required = 125
-                if online_only and (
-                    k.casefold().startswith("ollama/")
-                    or k.casefold().startswith("vllm/")
-                    or k.casefold().startswith("xinference/")
-                    or k.casefold().startswith("lmstudio/")
-                    or "127.0.0.1" in p.base_url
-                    or "localhost" in p.base_url
-                    or "0.0.0.0" in p.base_url
-                ):
-                    continue
-                suitable_fallbacks.append(k_name)
-                total_fallbacks_found += 1
-                if total_fallbacks_found >= total_fallbacks_required:
-                    break
-
-            if suitable_fallbacks:
-                fallback_list = config["router_settings"].setdefault("fallbacks", [])
-                fallback_entry = {model_name: suitable_fallbacks}
-                fallback_list.append(fallback_entry)
-
-    return config
-
-
-if __name__ == "__main__":
-    print("Saving custom_providers.json")
-    Path("custom_providers.json").absolute().write_text(
-        json.dumps(
-            [provider.to_dict() for provider in CUSTOM_PROVIDERS],
-            indent=4,
-            ensure_ascii=True,
-        ),
-    )
-    print("Saving all_models.json")
-    Path("all_models.json").absolute().write_text(
-        json.dumps(
-            {model: spec for model, spec in ALL_MODELS},
-            indent=4,
-            ensure_ascii=True,
-        ),
-    )
-    print("Saving free_models.json")
-    Path("free_models.json").absolute().write_text(
-        json.dumps(
-            {model: spec for model, spec in FREE_MODELS},
-            indent=4,
-            ensure_ascii=True,
-        ),
-    )
-
-    # Generate and save LiteLLM config files
-    try:
-        import yaml
-
-        print("Saving litellm_config_free.yaml")
-        Path("litellm_config_free.yaml").write_text(
-            yaml.dump(
-                to_litellm_config_yaml(CUSTOM_PROVIDERS, free_only=True),
-                sort_keys=False,
-                allow_unicode=True,
-            ),
-            errors="replace",
-            encoding="utf-8",
-        )
-        print("Saving litellm_config.yaml")
-        Path("litellm_config.yaml").write_text(
-            yaml.dump(
-                to_litellm_config_yaml(CUSTOM_PROVIDERS, free_only=False),
-                sort_keys=False,
-                allow_unicode=True,
-            ),
-            errors="replace",
-            encoding="utf-8",
-        )
-    except ImportError as e:
-        logger.warning(f"Failed to generate YAML configs: {e.__class__.__name__}: {e}")

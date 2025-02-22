@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+
+from typing import TYPE_CHECKING, Any, List, cast
 
 import json5 as json
 import json_repair
+
 from gpt_researcher.config.config import Config
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from langchain_community.adapters.openai import convert_openai_messages
@@ -45,18 +47,17 @@ async def call_model(
         response: str = await provider.get_chat_response(
             messages=lc_messages,
             stream=False,
+            cost_callback=cost_callback,
         )
 
         if response_format == "json":
             try:
                 result = json.loads(response.strip("```json\n"))
                 assert isinstance(result, list)
-                return result
+                return cast(List[str], result)
             except Exception as e:
-                logger.warning("⚠️ Error in reading JSON, attempting to repair JSON")
-                logger.exception(
-                    f"Error in reading JSON: {e.__class__.__name__}: {e}. Attempting to repair reponse: {response}"
-                )
+                logger.warning("⚠️ Error in reading JSON, attempting to repair JSON ⚠️")
+                logger.exception(f"Error in reading JSON: {e.__class__.__name__}: {e}. Attempting to repair reponse: {response}")
                 result = json_repair.loads(response)
                 assert isinstance(result, list)
                 return result

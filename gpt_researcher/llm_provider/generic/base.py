@@ -8,18 +8,15 @@ import sys
 
 from typing import Any, Callable, Dict, List, cast
 
-import litellm
-
-from fastapi import WebSocket
 from colorama import Fore, Style, init
+from fastapi import WebSocket
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage  # keep out of type checking block because of pydantic's nonsense.
 from litellm.exceptions import BadRequestError, ContextWindowExceededError
 from pydantic import SecretStr
 
-
 logger: logging.Logger = logging.getLogger(__name__)
-litellm.set_verbose = True  # pyright: ignore[reportPrivateImportUsage]
+os.environ["LITELLM_LOG"] = "DEBUG"  # pyright: ignore[reportPrivateImportUsage]
 
 
 _SUPPORTED_PROVIDERS: set[str] = {
@@ -47,13 +44,25 @@ class GenericLLMProvider:
     def __init__(
         self,
         llm: BaseChatModel | str,
+        use_fallbacks: bool = False,
+        fallback_models: list[BaseChatModel] | None = None,
+        **kwargs: Any,
     ):
-        self.llm: BaseChatModel = llm if isinstance(llm, BaseChatModel) else self._get_base_chat_model(llm)
-        self.fallback_models: list[BaseChatModel] = []
+        self.current_model: BaseChatModel = self._get_base_model(llm, **kwargs)
+        self.use_fallbacks: bool = use_fallbacks
+        self.fallback_models: list[BaseChatModel] = [] if fallback_models is None else fallback_models
+        self.fallback_models.insert(0, self.current_model)
         print(
-            f"Using model '{self.llm}' with fallbacks '{self.fallback_models!r}'",
+            Fore.GREEN + Style.BRIGHT + "Using LLM provider: " + Style.RESET_ALL + f"{self.current_model}",
             file=sys.__stdout__,
         )
+        print(
+            Fore.GREEN + Style.BRIGHT + "Using fallbacks: " + Style.RESET_ALL + f"{self.fallback_models}",
+            f"Using model '{self.current_model}' with fallbacks '{self.fallback_models!r}'",
+            file=sys.__stdout__,
+        )
+
+        self._initialized_fallbacks: bool = False
 
     @classmethod
     async def create_chat_completion(
@@ -71,19 +80,22 @@ class GenericLLMProvider:
         """Create a chat completion using the specified LLM provider.
 
         Args:
-            messages (list[dict[str, str]]): The messages to send to the chat completion
-            model (str, optional): The model to use. Defaults to None.
-            temperature (float, optional): The temperature to use. Defaults to 0.4.
-            max_tokens (int, optional): The max tokens to use. Defaults to 16000.
-            stream (bool, optional): Whether to stream the response. Defaults to False.
-            llm_provider (str, optional): The LLM Provider to use.
-            websocket (WebSocket): The websocket used in the current request,
-            cost_callback: Callback function for updating cost
+        ----
+            messages (list[dict[str | str]]): The messages to send to the chat completion
+            model (str | None): The model to use. Defaults to None.
+            temperature (float | None): The temperature to use. Defaults to 0.4.
+            max_tokens (int | None): The max tokens to use. Defaults to 16000.
+            stream (bool | None): Whether to stream the response. Defaults to False.
+            llm_provider (str | None): The LLM Provider to use.
+            websocket (WebSocket | None): The websocket used in the current request,
+            cost_callback (Callable[[Any], None] | None): Callback function for updating cost
 
         Returns:
+        -------
             str: The response from the chat completion.
 
         Raises:
+        ------
             ValueError: If model is None or max_tokens > 16000
             RuntimeError: If provider fails to get response
         """
@@ -111,7 +123,7 @@ class GenericLLMProvider:
             websocket,
         )
 
-        if cost_callback:
+        if cost_callback is not None:
             from gpt_researcher.utils.costs import estimate_llm_cost
 
             llm_costs = estimate_llm_cost(
@@ -120,7 +132,7 @@ class GenericLLMProvider:
             )
             cost_callback(llm_costs)
 
-        if not response:
+        if not response.strip():
             logger.error(f"Failed to get response from {llm_provider} API")
             raise RuntimeError(f"Failed to get response from {llm_provider} API")
 
@@ -129,17 +141,28 @@ class GenericLLMProvider:
     @classmethod
     def from_provider(
         cls,
-        provider: str,
+        provider: str | BaseChatModel,
+        use_fallbacks: bool = False,
+        fallback_models: list[BaseChatModel] | None = None,
         **kwargs: Any,
-    ):
-        return cls(cls._get_base_chat_model(provider, **kwargs))
+    ) -> GenericLLMProvider:
+        # Deprecated; use the constructor directly
+        return cls(provider, use_fallbacks, fallback_models, **kwargs)
 
     @classmethod
-    def _get_base_chat_model(
+    def _get_base_model(
         cls,
-        provider: str,
+        provider: str | BaseChatModel,
         **kwargs: Any,
     ) -> BaseChatModel:
+        if isinstance(provider, BaseChatModel):
+            return provider
+        provider, model = provider.split(":", 2) if ":" in provider else (provider, None)
+        if "model" not in kwargs and model is not None:
+            kwargs["model"] = model
+        else:
+            model = kwargs.get("model", None)
+            kwargs["model"] = model.split(":", 2)[1] if ":" in model else model
         if provider == "openai":
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
@@ -244,11 +267,21 @@ class GenericLLMProvider:
             print(repr(kwargs))
             llm = ChatLiteLLM(**kwargs)
         else:
+            # Check if provider was provided with the model name. e.g. openai:gpt-4o or anthropic:claude-sonnet-3.5
+            if ":" in provider:
+                return cls._get_base_model(provider.split(":")[0], **kwargs)
+            # checks litellm's providers.
+            if "/" in provider:
+                return cls._get_base_model(provider.split("/")[0], **kwargs)
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(f"Unsupported provider: '{provider}'.\nSupported model providers are:\n[{supported}]\n")
+
         return llm
 
-    def _convert_to_base_messages(self, messages: list[dict[str, str]]) -> list[BaseMessage]:
+    def _convert_to_base_messages(
+        self,
+        messages: list[dict[str, str]],
+    ) -> list[BaseMessage]:
         """Convert dict messages to BaseMessage objects."""
         from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
@@ -264,50 +297,155 @@ class GenericLLMProvider:
                 converted.append(HumanMessage(content=content))
         return converted
 
+    @classmethod
+    def _convert_entry_to_str(
+        cls,
+        entry: BaseMessage | str | str | dict,
+    ) -> str:
+        result = ""
+        if isinstance(entry, str):
+            result += entry
+        elif isinstance(entry, dict):
+            assert not isinstance(entry, tuple)  # model.ainvoke/BaseMessage are statically typed incorrectly, this line helps static type checkers.
+            result += entry["content"]
+        elif isinstance(entry, tuple):
+            result += " ".join(entry)
+        elif isinstance(entry, BaseMessage):
+            result += (
+                cls._convert_to_str(entry.content)
+                if isinstance(entry.content, list)  # No idea why these static typings are so haywire.
+                else cls._convert_entry_to_str(entry.content)
+            )
+        else:
+            raise ValueError(f"Unexpected response type: {entry.__class__.__name__}: repr: {entry!r}")
+        return result
+
+    @classmethod
+    def _convert_to_str(
+        cls,
+        msg: BaseMessage | str | dict | list,
+    ) -> str:
+        result: str = ""
+        if not isinstance(msg, list):
+            return cls._convert_entry_to_str(msg)
+        for entry in msg:
+            result += cls._convert_entry_to_str(entry) + "\n"
+        return result.strip("\n")
+
     async def get_chat_response(
         self,
         messages: list[dict[str, str]] | list[BaseMessage],
         stream: bool,
         websocket: WebSocket | None = None,
-        max_retries: int = 10,
+        max_retries: int = 1,
+        cost_callback: Callable[[float], None] | None = None,
         headers: dict[str, str] | None = None,
     ) -> str:
         """Get chat response with fallback support.
 
         Args:
-            messages: List of message dicts or BaseMessage objects
-            stream: Whether to stream the response
-            websocket: Optional websocket for streaming
-            max_retries: Maximum number of retries per model
+        ----
+            messages (list[dict[str, str]] | list[BaseMessage]): List of message dictionaries (with 'role' and 'content' keys), or BaseMessage objects
+            stream (bool): Whether to stream the response
+            websocket (WebSocket | None): Optional websocket for streaming
+            max_retries (int): Maximum number of retries per model
 
         Returns:
-            The response text
+        -------
+            (str): The response text.
         """
         headers = {} if headers is None else headers
-        current_model: BaseChatModel = self.llm
-        for model in (current_model, *self.fallback_models):
+
+        # Initialize fallback models if needed and not already initialized
+        if self.use_fallbacks and not self._initialized_fallbacks:
+            try:
+                from llm_fallbacks.config import FREE_MODELS
+
+                current_model_name: str = str(self.current_model.name).lower() if str(self.current_model.name or "").strip() else str(self.current_model).lower()
+                self.fallback_models = []
+
+                for model_name, model_spec in FREE_MODELS:
+                    if model_name.lower() == current_model_name:
+                        continue
+                    try:
+                        fallback_provider = GenericLLMProvider.from_provider(model_name)
+                        self.fallback_models.append(fallback_provider.current_model)
+                    except Exception as e:
+                        logger.warning(f"Failed to initialize fallback model {model_name}: {e.__class__.__name__}: {e}")
+                self._initialized_fallbacks = True
+            except Exception as e:
+                logger.exception(f"Failed to initialize fallback models: {e.__class__.__name__}: {e}")
+                self._initialized_fallbacks = True  # Don't try again even if failed
+
+        for model in self.fallback_models:
             retries = 0
             while retries < max_retries:
                 try:
                     if stream:
                         msgs: list[dict[str, Any]] = cast(List[Dict[str, Any]], messages)
-                        return await self.stream_response(msgs, websocket, headers)
-                    response: BaseMessage = await model.ainvoke(messages, headers=headers)
-                    return "\n".join(" ".join(entry) for entry in response)
+                        return await self.stream_response(msgs, websocket)
+                    response: BaseMessage = await self.from_provider(model).current_model.ainvoke(messages, headers=headers)
+                    result: str = self._convert_to_str(response)
+                    logger.debug(f"Response: {result}")
+                    if cost_callback is not None:
+                        from gpt_researcher.utils.costs import estimate_llm_cost
+
+                        cost_callback(estimate_llm_cost(self._convert_to_str(messages), result))
+                    return result
                 except ContextWindowExceededError:
                     logger.warning("Context window exceeded, trying fallback models...", exc_info=True)
                     break  # Move to the next model
                 except BadRequestError as e:
                     logger.exception(f"Bad request error with model '{model}': {e}, retrying {retries}/{max_retries}")
                 except Exception as e:
-                    logger.exception(f"Error with model '{model}': {e.__class__.__name__}: {e}, retrying {retries}/{max_retries}")
+                    err_str = str(e).lower()
+                    if "rate limit" in err_str or "too many requests" in err_str:
+                        logger.exception(f"Rate limit error with model '{model}': {e}, retrying {retries}/{max_retries}")
+                    else:
+                        logger.exception(f"Error with model '{model}': {e.__class__.__name__}: {e}, retrying {retries}/{max_retries}")
                     retries += 1
                     if retries == max_retries:
-                        if self.fallback_models and model == self.fallback_models[-1]:  # Last model in tuple
+                        if self.fallback_models and model == self.fallback_models[-1]:
                             raise ValueError(f"All models failed. Last error: {e.__class__.__name__}: {e}")
-                        break  # Move to the next model
+                        self.current_model = self.fallback_models[self.fallback_models.index(self.current_model) + 1]
+                        break
                     continue
         raise ValueError("All models failed to generate a response")
+
+    async def stream_response(
+        self,
+        messages: list[dict[str, str]],
+        websocket: WebSocket | None = None,
+    ) -> str:
+        paragraph: str = ""
+        response: str = ""
+
+        # Streaming the response using the chain astream method from langchain
+        async for chunk in self.current_model.astream(messages):
+            lines = []
+            for entry in chunk:
+                if isinstance(entry, dict) and not isinstance(entry, tuple):
+                    contents = entry["contents"]
+                    if isinstance(contents, list):
+                        for content in contents:
+                            lines.append(str(content))
+                    elif isinstance(entry, tuple):
+                        content = str(entry[1])
+                    content = str(entry.get("contents", entry.get("content", entry)))
+                else:
+                    content = str(entry)
+                lines.append(content)
+            parsed_chunk: str = "\n".join(" ".join(lines))
+            response += parsed_chunk
+            paragraph += parsed_chunk
+            if "\n" in paragraph:
+                await self._send_output(paragraph, websocket)
+                paragraph = ""
+
+        if (paragraph or "").strip():
+            await self._send_output(paragraph, websocket)
+
+        return response
 
     async def _send_output(
         self,
@@ -332,3 +470,4 @@ def _check_pkg(pkg: str) -> None:
         init(autoreset=True)
         # Use Fore.RED to color the error message
         raise ImportError(Fore.RED + f"Unable to import {pkg_kebab}. Please install with `pip install -U {pkg_kebab}`")
+

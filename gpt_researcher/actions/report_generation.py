@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from litellm.utils import get_max_tokens
-
 from gpt_researcher.config.config import Config
+from gpt_researcher.utils.llm import get_llm_params
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from gpt_researcher.prompts import (
     generate_draft_titles_prompt,
@@ -71,12 +70,13 @@ async def write_report_introduction(
     Returns:
         str: The generated introduction.
     """
+    from gpt_researcher.utils.llm import get_llm_params
+    params = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.25)
+
     try:
         provider = _get_llm(
             cfg,
-            model=cfg.SMART_LLM_MODEL,
-            temperature=0.25,
-            max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL) if cfg.SMART_LLM_MODEL else 4096,
+            **params,
         )
         introduction = await provider.get_chat_response(
             messages=[
@@ -87,7 +87,7 @@ async def write_report_introduction(
             websocket=websocket,  # pyright: ignore[reportArgumentType]
         )
 
-        if cost_callback:
+        if cost_callback is not None:
             from gpt_researcher.utils.costs import estimate_llm_cost
 
             llm_costs = estimate_llm_cost(
@@ -125,12 +125,12 @@ async def write_conclusion(
     Returns:
         str: The generated conclusion.
     """
+    params = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.25)
+
     try:
         provider: GenericLLMProvider = _get_llm(
             cfg,
-            model=cfg.SMART_LLM_MODEL,
-            temperature=0.25,
-            max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL) if cfg.SMART_LLM_MODEL else 4096,
+            **params,
         )
         conclusion: str = await provider.get_chat_response(
             messages=[
@@ -177,12 +177,12 @@ async def summarize_url(
     Returns:
         str: The summarized content.
     """
+    params = get_llm_params(config.SMART_LLM_MODEL, temperature=0.25)
+
     try:
         provider: GenericLLMProvider = _get_llm(
             config,
-            model=config.SMART_LLM_MODEL,
-            temperature=0.25,
-            max_tokens=get_max_tokens(config.SMART_LLM_MODEL) if config.SMART_LLM_MODEL else 4096,
+            **params,
         )
         summary: str = await provider.get_chat_response(
             messages=[
@@ -231,14 +231,14 @@ async def generate_draft_section_titles(
         cost_callback (callable, optional): Callback for calculating LLM costs.
 
     Returns:
-        List[str]: A list of generated section titles.
+        list[str]: A list of generated section titles.
     """
+    params = get_llm_params(config.SMART_LLM_MODEL, temperature=0.25)
+
     try:
         provider: GenericLLMProvider = _get_llm(
             config,
-            model=config.SMART_LLM_MODEL,
-            temperature=0.25,
-            max_tokens=get_max_tokens(config.SMART_LLM_MODEL) if config.SMART_LLM_MODEL else 4096,
+            **params,
         )
         section_titles: str = await provider.get_chat_response(
             messages=[
@@ -342,14 +342,14 @@ async def generate_report(
             language=cfg.LANGUAGE,
         )
     content: str = report_prompt
-    report = content  # Default to original content if all attempts fail
+    from gpt_researcher.utils.llm import get_llm_params
+    params = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.35)
 
     try:
+        # Get LLM parameters with error handling for max_tokens
         provider: GenericLLMProvider = _get_llm(
             cfg,
-            model=cfg.SMART_LLM_MODEL,
-            temperature=0.35,
-            max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL),
+            **params,
         )
         report = await provider.get_chat_response(
             messages=[
@@ -378,9 +378,7 @@ async def generate_report(
             # Try again with combined prompt
             provider: GenericLLMProvider = _get_llm(
                 cfg,
-                model=cfg.SMART_LLM_MODEL,
-                temperature=0.35,
-                max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL),
+                **params,
             )
             report = await provider.get_chat_response(
                 messages=[
@@ -406,6 +404,6 @@ async def generate_report(
             logger.exception(
                 f"Error in generate_report fallback: {second_error.__class__.__name__}: {second_error}. Additionally, an attempt to output the existing content failed."
             )
-            # report is already set to content as default
+            report = content
 
     return report

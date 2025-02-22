@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -8,19 +10,27 @@ if TYPE_CHECKING:
     from gpt_researcher.config.config import Config
 
 
+logger = logging.getLogger(__name__)
+
+
 def get_retriever(
     retriever: str | type[BaseRetriever] | None = None,
 ) -> type[BaseRetriever]:
     """Gets the retriever.
 
     Args:
-        retriever: retriever name.
+    ----
+        retriever (str | type[BaseRetriever] | None) : retriever name.
 
     Returns:
-        retriever: Retriever class
+    -------
+        retriever (BaseRetriever): Retriever class
     """
+    # TODO(th3w1zard1): currently static typed as a BaseRetriever, however this is intended for the future
+    # The goal is to migrate GPT Researcher's retrievers to use LangChain's BaseModel ABC.
+    # This will also allow for more flexibility in the future, and improving new contributors' experience overall if they're already familiar with LangChain.
     retriever = get_langchain_retriever(retriever)
-    if retriever is not None:
+    if retriever is not None and not isinstance(retriever, str):
         return retriever
 
     if retriever == "bing":
@@ -30,27 +40,31 @@ def get_retriever(
     if retriever == "custom":
         from gpt_researcher.retrievers import CustomRetriever
 
-        return CustomRetriever
+        return CustomRetriever  # type: ignore[return-value]
     if retriever == "duckduckgo":
         from gpt_researcher.retrievers import Duckduckgo
 
-        return Duckduckgo
+        return Duckduckgo  # type: ignore[return-value]
+    if retriever == "exa":
+        from gpt_researcher.retrievers import ExaSearch
+
+        return ExaSearch  # type: ignore[return-value]
     if retriever == "google":
         from gpt_researcher.retrievers import GoogleSearch
 
-        return GoogleSearch
+        return GoogleSearch  # type: ignore[return-value]
     if retriever == "searchapi":
         from gpt_researcher.retrievers import SearchApiSearch
 
-        return SearchApiSearch
+        return SearchApiSearch  # type: ignore[return-value]
     if retriever == "searx":
         from gpt_researcher.retrievers import SearxSearch
 
-        return SearxSearch
+        return SearxSearch  # type: ignore[return-value]
     if retriever == "semantic_scholar":
         from gpt_researcher.retrievers import SemanticScholarSearch
 
-        return SemanticScholarSearch
+        return SemanticScholarSearch  # type: ignore[return-value]
     if retriever is None:
         return get_default_retriever()
     raise ValueError(f"Retriever {retriever} not found")
@@ -58,7 +72,10 @@ def get_retriever(
 
 def get_langchain_retriever(
     retriever: str | type[BaseRetriever] | None = None,
-) -> type[BaseRetriever] | None:
+) -> str | type[BaseRetriever] | None:
+    if isinstance(retriever, type) and issubclass(retriever, BaseRetriever):
+        return retriever
+
     if retriever == "arcee":
         from langchain_community.retrievers import ArceeRetriever
 
@@ -119,10 +136,6 @@ def get_langchain_retriever(
         from langchain_community.retrievers import EmbedchainRetriever
 
         return EmbedchainRetriever
-    if retriever == "exa":
-        from gpt_researcher.retrievers import ExaSearch
-
-        return ExaSearch
     if retriever == "google_cloud_documentai_warehouse":
         from langchain_community.retrievers import GoogleDocumentAIWarehouseRetriever
 
@@ -236,20 +249,24 @@ def get_langchain_retriever(
 
         return ZillizRetriever
 
+    logger.warning(f"Retriever '{retriever}' not found in langchain's library.")
+    return None
+
 
 def get_retrievers(
     headers: dict,
     research_config: Config,
 ) -> list[type[BaseRetriever]]:
-    """
-    Determine which retriever(s) to use based on headers, config, or default.
+    """Determine which retriever(s) to use based on headers, config, or default.
 
     Args:
+    ----
         headers (dict): The headers dictionary
         research_config (Config): The configuration object
 
     Returns:
-        list: A list of fully initialized retrievers to be used for searching.
+    -------
+        retrievers (list): A list of retriever classes to be used for searching.
     """
     # Check headers first for multiple retrievers
     if headers.get("retrievers"):

@@ -425,6 +425,7 @@ Provide the draft headers in a list format using markdown syntax, for example:
 def generate_report_introduction(
     question: str,
     research_summary: str = "",
+    language: SupportedLanguages = SupportedLanguages.ENGLISH,
 ) -> str:
     return f"""{research_summary}\n
 Using the above latest reference information, prepare a detailed report introduction on the topic -- {question}.
@@ -433,12 +434,14 @@ Using the above latest reference information, prepare a detailed report introduc
 - Your introduction will be preceded with an H1 heading with a suitable topic for the entire report.
 - You must include authentic hyperlinks with correct and valid markdown syntax ([url website](url)) appropriately for the relevant sentences.
 Assume that the current date is {datetime.now(timezone.utc).strftime("%B %d, %Y")} if required.
+Write the report in the following language: {language.value}.
 """
 
 
 def generate_report_conclusion(
     query: str,
     report_content: str,
+    language: SupportedLanguages = SupportedLanguages.ENGLISH,
 ) -> str:
     """Generate a concise conclusion summarizing the main findings and implications of a research report.
 
@@ -466,7 +469,8 @@ def generate_report_conclusion(
 
     If there is no "## Conclusion" section title written at the end of the report, please add it to the top of your conclusion.
     You must include authentic hyperlinks with correct and valid markdown syntax ([url website](url)) appropriately for any and all sentences relevant to the URL.
-
+    Write the conclusion in the following language: {language.value}.
+    
     Write the conclusion now:
     """
 

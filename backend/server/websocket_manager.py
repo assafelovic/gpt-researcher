@@ -137,7 +137,7 @@ async def run_agent(
     config_path: str = "",
 ) -> str:
     """Run the agent."""
-    report_type = ReportType(report_type.title()) if isinstance(report_type, str) else report_type
+    report_type = ReportType(report_type) if isinstance(report_type, str) else report_type
     # Create logs handler for this research task
     logs_handler = CustomLogsHandler(websocket, task)
 
