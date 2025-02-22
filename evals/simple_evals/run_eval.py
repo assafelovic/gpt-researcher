@@ -149,21 +149,28 @@ async def main(num_examples: int):
                 print(f"NOT_ATTEMPTED: {not_attempted}")
                 
                 # Calculate accuracy and F1
-                metrics["accuracy_given_attempted"] = (
-                    metrics["correct_rate"] / metrics["answer_rate"]   
-                    if metrics["answer_rate"] > 0
+                metrics["accuracy"] = (
+                    correct / (correct + incorrect)  # Accuracy among attempted answers
+                    if (correct + incorrect) > 0
                     else 0
                 )
+                
+                # Precision = correct / attempted
+                precision = correct / (correct + incorrect) if (correct + incorrect) > 0 else 0
+                
+                # Recall = correct / total
+                recall = correct / successful if successful > 0 else 0
+                
+                # F1 = 2 * (precision * recall) / (precision + recall)
                 metrics["f1"] = (
-                    2 * metrics["accuracy_given_attempted"] * metrics["correct_rate"]
-                    / (metrics["accuracy_given_attempted"] + metrics["correct_rate"])
-                    if (metrics["accuracy_given_attempted"] + metrics["correct_rate"]) > 0
+                    2 * (precision * recall) / (precision + recall)
+                    if (precision + recall) > 0
                     else 0
                 )
                 
                 print(json.dumps(metrics, indent=2))
                 print("========================")
-                print(f"Accuracy Given Attempted: {metrics['accuracy_given_attempted']:.3f}")
+                print(f"Accuracy: {metrics['accuracy']:.3f}")
                 print(f"F1 Score: {metrics['f1']:.3f}")
                 
                 # Print cost metrics
