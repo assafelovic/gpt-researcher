@@ -1,12 +1,22 @@
 import asyncio
 import os
 import argparse
+from typing import Callable, List, TypeVar
+from tqdm import tqdm
 from dotenv import load_dotenv
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from evals.simple_evals.simpleqa_eval import SimpleQAEval
 from langchain_openai import ChatOpenAI
 import json
+
+# Type variables for generic function
+T = TypeVar('T')
+R = TypeVar('R')
+
+def map_with_progress(fn: Callable[[T], R], items: List[T]) -> List[R]:
+    """Map function over items with progress bar."""
+    return [fn(item) for item in tqdm(items)]
 
 # Load environment variables from .env file
 load_dotenv()
@@ -19,10 +29,9 @@ for var in required_env_vars:
 
 async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
     """Run a single evaluation query and return results"""
-    print("\n=== Evaluation Process ===")
-    print(f"Query: {query}")
+    print(f"\nEvaluating query: {query}")
     
-    # Run the researcher
+    # Run the researcher and get report
     researcher = GPTResearcher(
         query=query,
         report_type=ReportType.ResearchReport.value,
@@ -31,27 +40,18 @@ async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
         tone=Tone.Objective,
         verbose=True
     )
-    
-    # Conduct research and get report
     context = await researcher.conduct_research()
     report = await researcher.write_report()
     
-    print("\n=== Research Report ===")
-    print(f"Report preview: {report[:500]}...")  # First 500 chars
-    
-    # Get the correct answer from the evaluator's examples
+    # Get the correct answer and evaluate
     example = next(ex for ex in evaluator.examples if ex['problem'] == query)
-    correct_answer = example['answer']  # This is the gold target from CSV
+    correct_answer = example['answer']
     
-    # Evaluate the report using SimpleQAEval
     eval_result = evaluator.evaluate_example({
         "problem": query,
-        "answer": correct_answer,  # Pass the CSV answer as gold target
-        "predicted": report  # Pass the research report as predicted answer
+        "answer": correct_answer,
+        "predicted": report
     })
-    
-    print("\n=== Evaluation Result ===")
-    print(f"Raw eval result: {eval_result}")
     
     result = {
         'query': query,
@@ -63,8 +63,12 @@ async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
         'evaluation_grade': eval_result["metrics"]["grade"]
     }
     
-    print("\n=== Final Result ===")
-    print(json.dumps(result, indent=2))
+    # Print just the essential info
+    print(f"✓ Completed research and evaluation")
+    print(f"  - Sources found: {len(result['sources'])}")
+    print(f"  - Evaluation grade: {result['evaluation_grade']}")
+    print(f"  - Cost: ${result['cost']:.4f}")
+    
     return result
 
 async def main(num_examples: int):
@@ -136,6 +140,13 @@ async def main(num_examples: int):
                     "not_attempted_rate": not_attempted / successful,
                     "answer_rate": (correct + incorrect) / successful,
                 }
+                
+                # Debug output
+                print("\nDebug counts:")
+                print(f"Total successful: {successful}")
+                print(f"CORRECT: {correct}")
+                print(f"INCORRECT: {incorrect}")
+                print(f"NOT_ATTEMPTED: {not_attempted}")
                 
                 # Calculate accuracy and F1
                 metrics["accuracy_given_attempted"] = (
