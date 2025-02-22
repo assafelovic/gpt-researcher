@@ -40,8 +40,8 @@ class DeepResearchSkill:
         
         response = await create_chat_completion(
             messages=messages,
-            llm_provider=self.agent.cfg.fast_llm_provider,
-            model=self.agent.cfg.fast_llm_model,
+            llm_provider=self.agent.cfg.smart_llm_provider,
+            model=self.agent.cfg.smart_llm_model,
             temperature=0.4,
             max_tokens=1000
         )
@@ -62,6 +62,7 @@ class DeepResearchSkill:
             messages=messages,
             llm_provider=self.agent.cfg.strategic_llm_provider,
             model=self.agent.cfg.strategic_llm_model,
+            reasoning_effort="medium",
             temperature=0.4
         )
         
@@ -92,9 +93,10 @@ class DeepResearchSkill:
         
         response = await create_chat_completion(
             messages=messages,
-            llm_provider=self.agent.cfg.fast_llm_provider,
-            model=self.agent.cfg.fast_llm_model,
+            llm_provider=self.agent.cfg.strategic_llm_provider,
+            model=self.agent.cfg.strategic_llm_model,
             temperature=0.4,
+            reasoning_effort="high",
             max_tokens=1000
         )
         

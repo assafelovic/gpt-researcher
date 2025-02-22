@@ -76,35 +76,9 @@ class ResearchProgress:
     total_queries: int       # Total queries to process
 ```
 
-## Advanced Usage
+## Error Handling
 
-### Custom Research Flow
-
-```python
-researcher = GPTResearcher(
-    query="your query",
-    report_type="deep",
-    tone=Tone.Objective,
-    headers={"User-Agent": "your-agent"},  # Custom headers for web requests
-    verbose=True  # Enable detailed logging
-)
-
-# Get raw research context
-context = await researcher.conduct_research()
-
-# Access research sources
-sources = researcher.get_research_sources()
-
-# Get visited URLs
-urls = researcher.get_source_urls()
-
-# Generate formatted report
-report = await researcher.write_report()
-```
-
-### Error Handling
-
-The deep research system is designed to be resilient:
+The deep research workflow is designed to be resilient:
 
 - Failed queries are automatically skipped
 - Research continues even if some branches fail
@@ -121,7 +95,7 @@ The deep research system is designed to be resilient:
 
 ## Limitations
 
-- Usage of reasoning LLM models such as `o3-mini`. This means that permissions for reasoning are required and the overall run will be significantly slower.
+- Usage of reasoning LLM models such as `o3-mini`
 - Deep research may take longer than standard research
 - Higher API usage and costs due to multiple concurrent queries
 - May require more system resources for parallel processing

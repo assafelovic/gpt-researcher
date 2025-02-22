@@ -15,7 +15,7 @@ async def main():
     
     # Initialize researcher with deep research type
     researcher = GPTResearcher(
-        query="Who is assaf elovic?",
+        query="What are the reasons for the recent rise in the price of Bitcoin?",
         report_type="deep",  # This will trigger deep research
         tone=Tone.Objective,
     )
