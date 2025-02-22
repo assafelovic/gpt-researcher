@@ -1,6 +1,8 @@
 from typing import List, Dict, Any, Optional, Set
 import asyncio
 import logging
+import time
+from datetime import datetime, timedelta
 from ..utils.llm import create_chat_completion
 from ..utils.enum import ReportType, ReportSource, Tone
 
@@ -8,9 +10,9 @@ logger = logging.getLogger(__name__)
 
 class ResearchProgress:
     def __init__(self, total_depth: int, total_breadth: int):
-        self.current_depth = total_depth  # Start from total and decrement
+        self.current_depth = 1  # Start from 1 and increment up to total_depth
         self.total_depth = total_depth
-        self.current_breadth = total_breadth  # Start from total and update with actual results
+        self.current_breadth = 0  # Start from 0 and count up to total_breadth as queries complete
         self.total_breadth = total_breadth
         self.current_query: Optional[str] = None
         self.total_queries = 0
@@ -204,6 +206,7 @@ class DeepResearchSkill:
                     
                     # Update progress
                     progress.completed_queries += 1
+                    progress.current_breadth += 1  # Increment breadth as queries complete
                     if on_progress:
                         on_progress(progress)
                     
@@ -245,7 +248,7 @@ class DeepResearchSkill:
             if depth > 1:
                 new_breadth = max(2, breadth // 2)
                 new_depth = depth - 1
-                progress.current_depth = new_depth
+                progress.current_depth += 1  # Increment depth as we go deeper
                 
                 # Create next query from research goal and follow-up questions
                 next_query = f"""
@@ -286,6 +289,8 @@ class DeepResearchSkill:
 
     async def run(self, on_progress=None) -> str:
         """Run the deep research process and generate final report"""
+        start_time = time.time()
+        
         follow_up_questions = await self.generate_feedback(self.agent.query)
         answers = ["Automatically proceeding with research"] * len(follow_up_questions)
         
@@ -322,6 +327,11 @@ class DeepResearchSkill:
         # Set research sources
         if results.get('sources'):
             self.agent.research_sources = results['sources']
+
+        # Log total execution time
+        end_time = time.time()
+        execution_time = timedelta(seconds=end_time - start_time)
+        logger.info(f"Total research execution time: {execution_time}")
         
         # Return the context - don't generate report here as it will be done by the main agent
         return self.agent.context 
