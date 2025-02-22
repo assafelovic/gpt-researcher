@@ -49,9 +49,26 @@ Deep Research behavior can be customized through several parameters:
 
 - `deep_research_breadth`: Number of parallel research paths at each level (default: 4)
 - `deep_research_depth`: How many levels deep to explore (default: 2)
-- `deep_research_concurrency`: Maximum number of concurrent research operations (default: 2)
+- `deep_research_concurrency`: Maximum number of concurrent research operations (default: 4)
+- `total_words`: Total words in the generated report (recommended: 2000)
 
-You can configure these in your config file, pass as environment variables or pass them directly:
+You can configure these parameters in multiple ways:
+
+1. **Environment Variables**:
+```bash
+export DEEP_RESEARCH_BREADTH=4
+export DEEP_RESEARCH_DEPTH=2
+export DEEP_RESEARCH_CONCURRENCY=4
+export TOTAL_WORDS=2000
+```
+
+2. **Config File**:
+```yaml
+deep_research_breadth: 4
+deep_research_depth: 2
+deep_research_concurrency: 4
+total_words: 2500
+```
 
 ```python
 researcher = GPTResearcher(
