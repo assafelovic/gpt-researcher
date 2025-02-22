@@ -70,6 +70,9 @@ def calculate_cost(
         "gpt-3.5-turbo": 0.002,
         "gpt-4": 0.03,
         "gpt-4-32k": 0.06,
+        "gpt-4o": 0.00001,
+        "gpt-4o-mini": 0.000001,
+        "o3-mini": 0.0000005,
         # Add more models and their costs as needed
     }
 
@@ -77,7 +80,7 @@ def calculate_cost(
     if model not in costs:
         logger.warning(
             f"Unknown model: {model}. Cost calculation may be inaccurate.")
-        return 0.0
+        return 0.0001 # Default avg cost if model is unknown
 
     cost_per_1k = costs[model]
     total_tokens = prompt_tokens + completion_tokens
