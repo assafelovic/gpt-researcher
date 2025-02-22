@@ -1,6 +1,6 @@
 # Deep Research with GPT Researcher 🚀
 
-With the latest "Deep Research" trend in the AI community, we're excited to implement our own Open source deep research capability! Introducing GPT Researcher's Deep Research feature - an advanced recursive research system that explores topics with unprecedented depth and breadth.
+With the latest "Deep Research" trend in the AI community, we're excited to implement our own Open source deep research capability! Introducing GPT Researcher's Deep Research - an advanced recursive research system that explores topics with unprecedented depth and breadth.
 
 ## How It Works
 
@@ -14,7 +14,62 @@ Deep Research employs a fascinating tree-like exploration pattern:
 
 Think of it as deploying a team of AI researchers, each following their own research path while collaborating to build a comprehensive understanding of your topic.
 
-## Quick Start 🏃‍♂️
+## Process Flow
+
+```mermaid
+graph TD
+    A[User Query] --> B[Initialize Deep Research]
+    B --> C[Generate Initial Search Queries]
+    C --> D[Concurrent Research Execution]
+    
+    %% Depth Level 1
+    D --> E1[Research Path 1]
+    D --> E2[Research Path 2]
+    D --> E3[Research Path 3]
+    D --> E4[Research Path 4]
+    
+    %% Processing Results
+    E1 --> F1[Extract Learnings]
+    E2 --> F2[Extract Learnings]
+    E3 --> F3[Extract Learnings]
+    E4 --> F4[Extract Learnings]
+    
+    %% Recursive Depth
+    F1 --> G1[Generate Follow-up Queries]
+    F2 --> G2[Generate Follow-up Queries]
+    F3 --> G3[Generate Follow-up Queries]
+    F4 --> G4[Generate Follow-up Queries]
+    
+    %% Depth Level 2
+    G1 --> H1[Deeper Research]
+    G2 --> H2[Deeper Research]
+    G3 --> H3[Deeper Research]
+    G4 --> H4[Deeper Research]
+    
+    %% Aggregation
+    H1 --> I[Aggregate Results]
+    H2 --> I
+    H3 --> I
+    H4 --> I
+    
+    %% Final Steps
+    I --> J[Synthesize Context]
+    J --> K[Generate Report]
+    
+    %% Progress Tracking
+    B --> L[Progress Tracking]
+    L --> M[Depth Progress]
+    L --> N[Breadth Progress]
+    L --> O[Query Progress]
+    
+    %% Styling
+    classDef process fill:#f9f,stroke:#333,stroke-width:2px
+    classDef tracking fill:#bbf,stroke:#333,stroke-width:2px
+    class A,B,C,D,I,J,K process
+    class L,M,N,O tracking
+```
+
+## Quick Start
 
 ```python
 from gpt_researcher import GPTResearcher
@@ -28,16 +83,8 @@ async def main():
         report_type="deep",  # This triggers deep research modd
     )
     
-    # Optional: Track progress
-    def on_progress(progress):
-        print(f"Depth: {progress.current_depth}/{progress.total_depth}")
-        print(f"Breadth: {progress.current_breadth}/{progress.total_breadth}")
-        print(f"Queries: {progress.completed_queries}/{progress.total_queries}")
-        if progress.current_query:
-            print(f"Current query: {progress.current_query}")
-    
     # Run research
-    context = await researcher.conduct_research(on_progress=on_progress)
+    research_data = await researcher.conduct_research()
     
     # Generate report
     report = await researcher.write_report()
@@ -47,7 +94,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## Configuration ⚙️
+## Configuration
 
 Deep Research behavior can be customized through several parameters:
 
@@ -80,7 +127,7 @@ class ResearchProgress:
     total_queries: int       # Total queries to process
 ```
 
-## Advanced Usage 🔧
+## Advanced Usage
 
 ### Custom Research Flow
 
@@ -129,12 +176,5 @@ The deep research system is designed to be resilient:
 - Deep research may take longer than standard research
 - Higher API usage and costs due to multiple concurrent queries
 - May require more system resources for parallel processing
-
-## Tips for Success
-
-1. **Clear Queries**: Start with well-defined research questions
-2. **Resource Planning**: Account for increased API usage
-3. **Progress Monitoring**: Use the progress callback for visibility
-4. **Iterative Refinement**: Adjust parameters based on results
 
 Happy researching! 🎉 
