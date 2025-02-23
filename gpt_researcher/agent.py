@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 
 class GPTResearcher:
-    logger: ClassVar[logging.Logger] = logging.getLogger(__name__)
+    logger: ClassVar[logging.Logger] = logging.getLogger("gpt_researcher")
 
     def __init__(
         self,
@@ -74,19 +74,11 @@ class GPTResearcher:
         log_handler: LogHandler | None = None,
         research_images: list[dict[str, Any]] | None = None,
         research_sources: list[dict[str, Any]] | None = None,
-        query_domains: list[str] = [],
+        query_domains: list[str] | None = None,
         config_path: os.PathLike | str | None = None,
     ):
         self.query: str = query
-        self.cfg: Config = Config()
-        if config is None:
-            self.cfg = Config(config_path)  # For backwards compatibility
-        elif isinstance(config, dict):
-            self.cfg = Config.from_config(config)
-        elif isinstance(config, (str, os.PathLike)):
-            self.cfg = Config.from_path(config)
-        else:
-            raise ValueError(f"Invalid config type: `{config.__class__.__name__}`")
+        self.cfg: Config = Config(config_path)  # For backwards compatibility
 
         self.report_type = ReportType.OutlineReport if report_type is None else ReportType(report_type)
         self.report_source = ReportSource.Web if report_source is None else ReportSource(report_source)
@@ -105,7 +97,7 @@ class GPTResearcher:
         self.source_urls: list[str] = [] if source_urls is None else source_urls
         self.document_urls: list[str] = [] if document_urls is None else document_urls
         self.complement_source_urls: bool = complement_source_urls
-        self.query_domains: list[str] = query_domains
+        self.query_domains: list[str] = [] if query_domains is None else query_domains
         self.research_images: list[dict[str, Any]] = [] if research_images is None else research_images
         self.research_sources: list[dict[str, Any]] = [] if research_sources is None else research_sources
         self.documents: list[dict[str, Any]] = []
@@ -152,7 +144,7 @@ class GPTResearcher:
                     logging.getLogger().debug(f"Skipping incompatible model: {model} for model type '{model_type}'")
                     continue
                 self.fallback_models[model_type].append(model)
-        self.llm: GenericLLMProvider = GenericLLMProvider.from_provider(
+        self.llm: GenericLLMProvider = GenericLLMProvider(
             self.smart_llm,
             use_fallbacks=self.cfg.USE_FALLBACKS,
             fallback_models=self.fallback_models["SMART"],

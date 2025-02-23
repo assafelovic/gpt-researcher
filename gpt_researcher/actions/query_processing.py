@@ -36,7 +36,7 @@ def _get_llm(
     Returns:
         The LLM provider instance
     """
-    return GenericLLMProvider.from_provider(
+    return GenericLLMProvider(
         cfg.STRATEGIC_LLM_PROVIDER if model == cfg.STRATEGIC_LLM_MODEL else cfg.SMART_LLM_PROVIDER,
         model=model or cfg.SMART_LLM_MODEL,
         temperature=temperature or cfg.TEMPERATURE,
@@ -120,7 +120,7 @@ async def generate_sub_queries(
             cost_callback=cost_callback,
         )
     except Exception as e:
-        logger.warning(f"Error with strategic LLM: {e.__class__.__name__}: {e}. Retrying with max_tokens={cfg.STRATEGIC_TOKEN_LIMIT}.")
+        logger.warning(f"Error with strategic LLM: {e.__class__.__name__}: {e}. Retrying with max_tokens={cfg.STRATEGIC_TOKEN_LIMIT}.", exc_info=True)
         logger.warning("See https://github.com/assafelovic/gpt-researcher/issues/1022")
         try:
             response = await create_chat_completion(
@@ -140,7 +140,7 @@ async def generate_sub_queries(
             logger.warning(f"Retrying with max_tokens={cfg.STRATEGIC_TOKEN_LIMIT} successful.")
         except Exception as e:
             logger.warning(f"Retrying with max_tokens={cfg.STRATEGIC_TOKEN_LIMIT} failed.")
-            logger.warning(f"Error with strategic LLM: {e}. Falling back to smart LLM.")
+            logger.warning(f"Error with strategic LLM: {e}. Falling back to smart LLM.", exc_info=True)
             response = await create_chat_completion(
                 model=cfg.SMART_LLM,
                 messages=[

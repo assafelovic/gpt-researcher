@@ -65,7 +65,7 @@ class ResearchConductor:
             (GenericLLMProvider): The LLM provider instance
         """
         if self.llm_provider is None:
-            self.llm_provider = GenericLLMProvider.from_provider(
+            self.llm_provider = GenericLLMProvider(
                 provider,
                 model=model,
                 temperature=temperature,
@@ -758,7 +758,7 @@ async def generate_sub_queries(
 
     strategic_token_limit: int | None = get_max_tokens(cfg.STRATEGIC_LLM_MODEL)
     try:
-        provider: GenericLLMProvider = GenericLLMProvider.from_provider(
+        provider: GenericLLMProvider = GenericLLMProvider(
             cfg.STRATEGIC_LLM_PROVIDER,
             model=cfg.STRATEGIC_LLM_MODEL,
             temperature=cfg.TEMPERATURE,
@@ -774,7 +774,7 @@ async def generate_sub_queries(
         logger.warning("See https://github.com/assafelovic/gpt-researcher/issues/1022")
         try:
             # Retry with the *same* provider, but adjusted max_tokens
-            provider = GenericLLMProvider.from_provider(
+            provider = GenericLLMProvider(
                 cfg.STRATEGIC_LLM_PROVIDER,
                 model=cfg.STRATEGIC_LLM_MODEL,
                 temperature=cfg.TEMPERATURE,
@@ -788,7 +788,7 @@ async def generate_sub_queries(
             logger.warning(f"Retry with adjusted max_tokens failed: {e2.__class__.__name__}: {e2}. Falling back to smart LLM.")
             # Fall back to smart LLM
             try:
-                provider = GenericLLMProvider.from_provider(
+                provider = GenericLLMProvider(
                     cfg.SMART_LLM_PROVIDER,
                     model=cfg.SMART_LLM_MODEL,
                     temperature=cfg.TEMPERATURE,

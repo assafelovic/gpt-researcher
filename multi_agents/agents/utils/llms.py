@@ -38,7 +38,7 @@ async def call_model(
     lc_messages = convert_openai_messages(prompt)
 
     try:
-        provider = GenericLLMProvider.from_provider(
+        provider = GenericLLMProvider(
             cfg.SMART_LLM_PROVIDER,
             model=model,
             temperature=0,

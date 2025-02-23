@@ -19,7 +19,7 @@ async def main():
     cfg = Config()
 
     try:
-        provider = GenericLLMProvider.from_provider(
+        provider = GenericLLMProvider(
             cfg.SMART_LLM_PROVIDER,
             model=cfg.SMART_LLM_MODEL,
             temperature=0.35,

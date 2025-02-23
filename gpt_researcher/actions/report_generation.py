@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from logging import Logger
 from typing import TYPE_CHECKING, Any
 
 from gpt_researcher.config.config import Config
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from backend.server.server_utils import CustomLogsHandler
     from fastapi.websockets import WebSocket
 
-logger = get_formatted_logger()
+logger: Logger = get_formatted_logger()
 
 
 def _get_llm(
@@ -40,7 +41,7 @@ def _get_llm(
     Returns:
         The LLM provider instance
     """
-    return GenericLLMProvider.from_provider(
+    return GenericLLMProvider(
         cfg.STRATEGIC_LLM_PROVIDER if model == cfg.STRATEGIC_LLM_MODEL else cfg.SMART_LLM_PROVIDER,
         model=model or cfg.SMART_LLM_MODEL,
         temperature=temperature or cfg.TEMPERATURE,
@@ -70,18 +71,23 @@ async def write_report_introduction(
     Returns:
         str: The generated introduction.
     """
-    from gpt_researcher.utils.llm import get_llm_params
-    params = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.25)
+    params: dict[str, Any] = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.25)
 
     try:
-        provider = _get_llm(
+        provider: GenericLLMProvider = _get_llm(
             cfg,
             **params,
         )
-        introduction = await provider.get_chat_response(
+        introduction: str = await provider.get_chat_response(
             messages=[
-                {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": generate_report_introduction(query, context, cfg.LANGUAGE)},
+                {
+                    "role": "system",
+                    "content": f"{agent_role_prompt}",
+                },
+                {
+                    "role": "user",
+                    "content": generate_report_introduction(query, context, cfg.LANGUAGE),
+                },
             ],
             stream=True,
             websocket=websocket,  # pyright: ignore[reportArgumentType]
@@ -125,7 +131,7 @@ async def write_conclusion(
     Returns:
         str: The generated conclusion.
     """
-    params = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.25)
+    params: dict[str, Any] = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.25)
 
     try:
         provider: GenericLLMProvider = _get_llm(
@@ -134,8 +140,14 @@ async def write_conclusion(
         )
         conclusion: str = await provider.get_chat_response(
             messages=[
-                {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": generate_report_conclusion(query, context, cfg.LANGUAGE)},
+                {
+                    "role": "system",
+                    "content": f"{agent_role_prompt}",
+                },
+                {
+                    "role": "user",
+                    "content": generate_report_conclusion(query, context, cfg.LANGUAGE),
+                },
             ],
             stream=True,
             websocket=websocket,  # pyright: ignore[reportArgumentType]
@@ -177,7 +189,7 @@ async def summarize_url(
     Returns:
         str: The summarized content.
     """
-    params = get_llm_params(config.SMART_LLM_MODEL, temperature=0.25)
+    params: dict[str, Any] = get_llm_params(config.SMART_LLM_MODEL, temperature=0.25)
 
     try:
         provider: GenericLLMProvider = _get_llm(
@@ -233,7 +245,7 @@ async def generate_draft_section_titles(
     Returns:
         list[str]: A list of generated section titles.
     """
-    params = get_llm_params(config.SMART_LLM_MODEL, temperature=0.25)
+    params: dict[str, Any] = get_llm_params(config.SMART_LLM_MODEL, temperature=0.25)
 
     try:
         provider: GenericLLMProvider = _get_llm(
@@ -263,7 +275,11 @@ async def generate_draft_section_titles(
             from gpt_researcher.utils.costs import estimate_llm_cost
 
             llm_costs: float = estimate_llm_cost(
-                generate_draft_titles_prompt(current_subtopic, query, context),
+                generate_draft_titles_prompt(
+                    current_subtopic,
+                    query,
+                    context,
+                ),
                 section_titles,
             )
             cost_callback(llm_costs)
@@ -313,10 +329,7 @@ async def generate_report(
     relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
     headers = [] if headers is None else headers
 
-    generate_prompt: Callable[..., str] | None = get_prompt_by_report_type(report_type)
-    if generate_prompt is None:
-        raise ValueError(f"Report type '{report_type}' not supported")
-
+    generate_prompt: Callable[..., str] = get_prompt_by_report_type(report_type)
     report: str = ""
 
     if report_type == ReportType.SubtopicReport:
@@ -342,8 +355,7 @@ async def generate_report(
             language=cfg.LANGUAGE,
         )
     content: str = report_prompt
-    from gpt_researcher.utils.llm import get_llm_params
-    params = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.35)
+    params: dict[str, Any] = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.35)
 
     try:
         # Get LLM parameters with error handling for max_tokens

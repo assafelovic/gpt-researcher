@@ -77,6 +77,9 @@ def parse_dimension(value: str) -> int | None:
 
     # Remove whitespace
     value = value.strip().casefold()
+    
+    if value == "auto":
+        return None
 
     # Handle percentage values
     if value.endswith("%"):

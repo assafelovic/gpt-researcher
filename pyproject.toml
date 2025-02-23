@@ -3,7 +3,7 @@ name = "gpt-researcher"
 version = "0.8.5"
 description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
 authors = ["Assaf Elovic <assaf.elovic@gmail.com>"]
-license = "MIT"
+license = "GPL-3.0-or-later"
 readme = "README.md"
 
 [tool.poetry.dependencies]

@@ -55,10 +55,16 @@ class BrowserManager:
         self.researcher.add_research_images(images)
 
         if self.researcher.verbose:
+            total_text_length: int = sum(len(page["text"]) for page in text_data)
+            num_pages: int = len(text_data)
+            average_text_length: float = (
+                total_text_length / num_pages if num_pages > 0 else 0
+            )
             await stream_output(
                 "logs",
                 "scraping_content",
-                f"📄 Scraped {len(text_data)} pages of text and {len(images)} images",
+                f"📄 Scraped {len(text_data)} pages of text and {len(images)} images"
+                f" with an average of {average_text_length:.2f} characters per page.",
                 self.researcher.websocket,
             )
             await stream_output(

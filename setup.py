@@ -23,9 +23,9 @@ setup(
     url="https://github.com/assafelovic/gpt-researcher",
     author="Assaf Elovic",
     author_email="assaf.elovic@gmail.com",
-    license="MIT",
+    license="GPL-3.0-or-later",
     classifiers=[
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GPL-3.0-or-later",
         "Intended Audience :: Developers",
         "Intended Audience :: Education",
         "Intended Audience :: Science/Research",

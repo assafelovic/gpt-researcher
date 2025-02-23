@@ -16,7 +16,7 @@ async def main():
     temperature = 0.7
     max_tokens = 1000
 
-    llm = GenericLLMProvider.from_provider(
+    llm = GenericLLMProvider(
         llm_provider,
         model=model,
         temperature=temperature,

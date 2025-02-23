@@ -57,7 +57,7 @@ def get_llm(
 ) -> GenericLLMProvider:
     from gpt_researcher.llm_provider import GenericLLMProvider
 
-    return GenericLLMProvider.from_provider(llm_provider, **kwargs)
+    return GenericLLMProvider(llm_provider, **kwargs)
 
 
 async def create_chat_completion(
@@ -177,7 +177,7 @@ async def construct_subtopics(
 
         temperature: float = config.TEMPERATURE
         assert config.SMART_LLM_PROVIDER is not None
-        provider: GenericLLMProvider = GenericLLMProvider.from_provider(
+        provider: GenericLLMProvider = GenericLLMProvider(
             config.SMART_LLM_PROVIDER,
             model=config.SMART_LLM_MODEL,
             temperature=temperature,
