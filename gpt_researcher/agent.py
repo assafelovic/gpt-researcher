@@ -13,6 +13,7 @@ from .skills.writer import ReportGenerator
 from .skills.context_manager import ContextManager
 from .skills.browser import BrowserManager
 from .skills.curator import SourceCurator
+from .skills.deep_research import DeepResearchSkill
 
 from .actions import (
     add_references,
@@ -91,6 +92,9 @@ class GPTResearcher:
         self.context_manager: ContextManager = ContextManager(self)
         self.scraper_manager: BrowserManager = BrowserManager(self)
         self.source_curator: SourceCurator = SourceCurator(self)
+        self.deep_researcher: Optional[DeepResearchSkill] = None
+        if report_type == ReportType.DeepResearch.value:
+            self.deep_researcher = DeepResearchSkill(self)
 
     async def _log_event(self, event_type: str, **kwargs):
         """Helper method to handle logging events"""
@@ -112,13 +116,17 @@ class GPTResearcher:
                 import logging
                 logging.getLogger('research').error(f"Error in _log_event: {e}", exc_info=True)
 
-    async def conduct_research(self):
+    async def conduct_research(self, on_progress=None):
         await self._log_event("research", step="start", details={
             "query": self.query,
             "report_type": self.report_type,
             "agent": self.agent,
             "role": self.role
         })
+
+        # Handle deep research separately
+        if self.report_type == ReportType.DeepResearch.value and self.deep_researcher:
+            return await self._handle_deep_research(on_progress)
 
         if not (self.agent and self.role):
             await self._log_event("action", action="choose_agent")
@@ -143,6 +151,36 @@ class GPTResearcher:
         await self._log_event("research", step="research_completed", details={
             "context_length": len(self.context)
         })
+        return self.context
+
+    async def _handle_deep_research(self, on_progress=None):
+        """Handle deep research execution and logging."""
+        # Log deep research configuration
+        await self._log_event("research", step="deep_research_initialize", details={
+            "type": "deep_research",
+            "breadth": self.deep_researcher.breadth,
+            "depth": self.deep_researcher.depth,
+            "concurrency": self.deep_researcher.concurrency_limit
+        })
+
+        # Log deep research start
+        await self._log_event("research", step="deep_research_start", details={
+            "query": self.query,
+            "breadth": self.deep_researcher.breadth,
+            "depth": self.deep_researcher.depth,
+            "concurrency": self.deep_researcher.concurrency_limit
+        })
+
+        # Run deep research and get context
+        self.context = await self.deep_researcher.run(on_progress=on_progress)
+
+        # Log deep research completion
+        await self._log_event("research", step="deep_research_complete", details={
+            "context_length": len(self.context),
+            "visited_urls": len(self.visited_urls)
+        })
+
+        # Return the research context
         return self.context
 
     async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None) -> str:

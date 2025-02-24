@@ -177,7 +177,6 @@ class ResearchConductor:
         context = await self.researcher.context_manager.get_similar_content_by_query(
             self.researcher.query, scraped_content
         )
-        self.logger.info(f"Generated context length: {len(context)}")
         return context
 
     # Add logging to other methods similarly...
