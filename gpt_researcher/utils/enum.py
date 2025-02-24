@@ -8,6 +8,7 @@ class ReportType(Enum):
     CustomReport = "custom_report"
     DetailedReport = "detailed_report"
     SubtopicReport = "subtopic_report"
+    DeepResearch = "deep"
 
 
 class ReportSource(Enum):

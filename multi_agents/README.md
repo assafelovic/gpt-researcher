@@ -47,7 +47,7 @@ More specifically (as seen in the architecture diagram) the process is as follow
 - Publisher - Publishes the final report to multi formats such as PDF, Docx, Markdown, etc.
 
 ## How to run
-1. Install required packages:
+1. Install required packages found in this root folder including `langgraph`:
     ```bash
     pip install -r requirements.txt
     ```
