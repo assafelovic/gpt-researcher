@@ -68,6 +68,18 @@ Steps:
 - 📂 Maintains memory and context throughout research.
 - 📄 Export reports to PDF, Word, and other formats.
 
+## ✨ Deep Research
+
+GPT Researcher now includes Deep Research - an advanced recursive research workflow that explores topics with agentic depth and breadth. This feature employs a tree-like exploration pattern, diving deeper into subtopics while maintaining a comprehensive view of the research subject.
+
+- 🌳 Tree-like exploration with configurable depth and breadth
+- ⚡️ Concurrent processing for faster results
+- 🤝 Smart context management across research branches
+- ⏱️ Takes ~5 minutes per deep research
+- 💰 Costs ~$0.4 per research (using `o3-mini` on "high" reasoning effort)
+
+[Learn more about Deep Research](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research) in our documentation.
+
 ## 📖 Documentation
 
 See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started) for:
