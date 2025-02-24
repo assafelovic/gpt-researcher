@@ -202,15 +202,75 @@ def generate_outline_report_prompt(
     )
 
 
-def get_report_by_type(report_type: str):
-    report_type_mapping = {
-        ReportType.ResearchReport.value: generate_report_prompt,
-        ReportType.ResourceReport.value: generate_resource_report_prompt,
-        ReportType.OutlineReport.value: generate_outline_report_prompt,
-        ReportType.CustomReport.value: generate_custom_report_prompt,
-        ReportType.SubtopicReport.value: generate_subtopic_report_prompt,
-    }
-    return report_type_mapping[report_type]
+def generate_deep_research_prompt(
+    question: str,
+    context: str,
+    report_source: str,
+    report_format="apa",
+    tone=None,
+    total_words=2000,
+    language: str = "english"
+):
+    """Generates the deep research report prompt, specialized for handling hierarchical research results.
+    Args:
+        question (str): The research question
+        context (str): The research context containing learnings with citations
+        report_source (str): Source of the research (web, etc.)
+        report_format (str): Report formatting style
+        tone: The tone to use in writing
+        total_words (int): Minimum word count
+        language (str): Output language
+    Returns:
+        str: The deep research report prompt
+    """
+    reference_prompt = ""
+    if report_source == ReportSource.Web.value:
+        reference_prompt = f"""
+You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
+Every url should be hyperlinked: [url website](url)
+Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report: 
+
+eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
+"""
+    else:
+        reference_prompt = f"""
+You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
+"""
+
+    tone_prompt = f"Write the report in a {tone.value} tone." if tone else ""
+    
+    return f"""
+Using the following hierarchically researched information and citations:
+
+"{context}"
+
+Write a comprehensive research report answering the query: "{question}"
+
+The report should:
+1. Synthesize information from multiple levels of research depth
+2. Integrate findings from various research branches
+3. Present a coherent narrative that builds from foundational to advanced insights
+4. Maintain proper citation of sources throughout
+5. Be well-structured with clear sections and subsections
+6. Have a minimum length of {total_words} words
+7. Follow {report_format} format with markdown syntax
+
+Additional requirements:
+- Prioritize insights that emerged from deeper levels of research
+- Highlight connections between different research branches
+- Include relevant statistics, data, and concrete examples
+- You MUST determine your own concrete and valid opinion based on the given information. Do NOT defer to general and meaningless conclusions.
+- You MUST prioritize the relevance, reliability, and significance of the sources you use. Choose trusted sources over less reliable ones.
+- You must also prioritize new articles over older articles if the source can be trusted.
+- Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+- {tone_prompt}
+- Write in {language}
+
+{reference_prompt}
+
+Please write a thorough, well-researched report that synthesizes all the gathered information into a cohesive whole.
+Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')}.
+"""
 
 
 def auto_agent_instructions():
@@ -447,6 +507,7 @@ report_type_mapping = {
     ReportType.OutlineReport.value: generate_outline_report_prompt,
     ReportType.CustomReport.value: generate_custom_report_prompt,
     ReportType.SubtopicReport.value: generate_subtopic_report_prompt,
+    ReportType.DeepResearch.value: generate_deep_research_prompt,
 }
 
 
