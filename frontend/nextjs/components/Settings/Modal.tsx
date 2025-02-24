@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import './App.css';
 import ChatBox from './ChatBox';
-
-interface ChatBoxSettings {
-  report_source: string;
-  report_type: string;
-  tone: string;
-  domains?: Domain[];
-}
+import { ChatBoxSettings } from '@/types/data';
 
 interface ChatBoxProps {
   chatBoxSettings: ChatBoxSettings;
@@ -18,7 +12,7 @@ interface Domain {
   value: string;
 }
 
-export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxProps) {
+const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) => {
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState('report_settings');
   
@@ -98,4 +92,6 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
       ) : null}
     </div>
   );
-}
+};
+
+export default Modal;

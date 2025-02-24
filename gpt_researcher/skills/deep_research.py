@@ -293,102 +293,50 @@ class DeepResearchSkill:
             'sources': all_sources
         }
 
-    def _build_research_query(self, initial_query: str, follow_up_questions: List[str]) -> str:
-        """Build the research query combining initial query and follow-up questions if they exist.
-
-        Args:
-            initial_query: The initial query from the user
-            follow_up_questions: List of follow-up questions, can be empty
-
-        Returns:
-            str: Formatted query string combining initial query and follow-up Q&A if they exist
-
-        Example:
-            >>> _build_research_query("What is Python?", ["How is it used?"])
-            "Initial Query: What is Python?
-            Follow-up Questions and Answers:
-            Q: How is it used?
-            A: Automatically proceeding with research"
-        """
-        if not initial_query:
-            raise ValueError("Initial query cannot be empty")
-
-        # Define templates as constants for better maintainability
-        BASE_TEMPLATE = "Initial Query: {query}"
-        FOLLOWUP_TEMPLATE = "\nFollow-up Questions and Answers:\n{qa_section}"
-        DEFAULT_ANSWER = "Automatically proceeding with research"
-
-        # Handle base case
-        if not follow_up_questions:
-            return BASE_TEMPLATE.format(query=initial_query.strip())
-
-        # Build Q&A pairs
-        qa_pairs: List[str] = [
-            f"Q: {question.strip()}\nA: {DEFAULT_ANSWER}"
-            for question in follow_up_questions
-            if question.strip()  # Skip empty questions
-        ]
-
-        # Only add follow-up section if we have valid questions
-        if qa_pairs:
-            return BASE_TEMPLATE.format(query=initial_query.strip()) + \
-                FOLLOWUP_TEMPLATE.format(qa_section='\n'.join(qa_pairs))
-
-        return BASE_TEMPLATE.format(query=initial_query.strip())
-
     async def run(self, on_progress=None) -> str:
-        """Run the deep research process and generate final report.
-
-        Args:
-            on_progress: Optional callback function to report research progress
-
-        Returns:
-            str: The research context with citations
-
-        Raises:
-            ValueError: If the agent query is empty
-        """
-        if not self.agent.query:
-            raise ValueError("Research query cannot be empty")
-
+        """Run the deep research process and generate final report"""
         start_time = time.time()
 
-        try:
-            follow_up_questions = await self.generate_feedback(self.agent.query)
-            combined_query = self._build_research_query(self.agent.query, follow_up_questions)
+        follow_up_questions = await self.generate_feedback(self.agent.query)
+        answers = ["Automatically proceeding with research"] * len(follow_up_questions)
 
-            results = await self.deep_research(
-                query=combined_query,
-                breadth=self.breadth,
-                depth=self.depth,
-                on_progress=on_progress
-            )
+        qa_pairs = [f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers)]
+        combined_query = f"""
+            Initial Query: {self.agent.query}\nFollow-up Questions and Answers:\n
+            """ + "\n".join(qa_pairs)
 
-            # Prepare context with citations
-            context_with_citations = []
-            for learning in results['learnings']:
-                citation = results['citations'].get(learning, '')
-                if citation:
-                    context_with_citations.append(f"{learning} [Source: {citation}]")
-                else:
-                    context_with_citations.append(learning)
+        results = await self.deep_research(
+            query=combined_query,
+            breadth=self.breadth,
+            depth=self.depth,
+            on_progress=on_progress
+        )
 
-            # Add all research context
-            if results.get('context'):
-                context_with_citations.extend(results['context'])
+        # Prepare context with citations
+        context_with_citations = []
+        for learning in results['learnings']:
+            citation = results['citations'].get(learning, '')
+            if citation:
+                context_with_citations.append(f"{learning} [Source: {citation}]")
+            else:
+                context_with_citations.append(learning)
 
-            # Update agent state
-            self.agent.context = "\n".join(context_with_citations)
-            self.agent.visited_urls = results['visited_urls']
-            if results.get('sources'):
-                self.agent.research_sources = results['sources']
+        # Add all research context
+        if results.get('context'):
+            context_with_citations.extend(results['context'])
 
-            # Log execution time
-            execution_time = timedelta(seconds=time.time() - start_time)
-            logger.info(f"Total research execution time: {execution_time}")
+        # Set enhanced context and visited URLs
+        self.agent.context = "\n".join(context_with_citations)
+        self.agent.visited_urls = results['visited_urls']
 
-            return self.agent.context
+        # Set research sources
+        if results.get('sources'):
+            self.agent.research_sources = results['sources']
 
-        except Exception as e:
-            logger.error(f"Error during research process: {str(e)}")
-            raise
+        # Log total execution time
+        end_time = time.time()
+        execution_time = timedelta(seconds=end_time - start_time)
+        logger.info(f"Total research execution time: {execution_time}")
+
+        # Return the context - don't generate report here as it will be done by the main agent
+        return self.agent.context
