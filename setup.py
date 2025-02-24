@@ -40,6 +40,7 @@ setup(
         "Programming Language :: Python :: 3.12",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
+    python_requires='>=3.11',
     install_requires=reqs,
 
 
