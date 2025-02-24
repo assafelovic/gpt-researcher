@@ -2,7 +2,13 @@ import { useRef, useState } from 'react';
 import { Data, ChatBoxSettings, QuestionData } from '../types/data';
 import { getHost } from '../helpers/getHost';
 
-export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction<Data[]>>, setAnswer: React.Dispatch<React.SetStateAction<string>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, setShowHumanFeedback: React.Dispatch<React.SetStateAction<boolean>>, setQuestionForHuman: React.Dispatch<React.SetStateAction<boolean | true>>) => {
+export const useWebSocket = (
+  setOrderedData: React.Dispatch<React.SetStateAction<Data[]>>,
+  setAnswer: React.Dispatch<React.SetStateAction<string>>, 
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  setShowHumanFeedback: React.Dispatch<React.SetStateAction<boolean>>,
+  setQuestionForHuman: React.Dispatch<React.SetStateAction<boolean | true>>
+) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const heartbeatInterval = useRef<number>();
 
@@ -11,9 +17,9 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
 
     if (!socket && typeof window !== 'undefined') {
-      const fullHost = getHost()
-      const host = fullHost.replace('http://', '').replace('https://', '')
-
+      const fullHost = getHost();
+      const host = fullHost.replace('http://', '').replace('https://', '');
+      
       const ws_uri = `${fullHost.includes('https') ? 'wss:' : 'ws:'}//${host}/ws`;
 
       const newSocket = new WebSocket(ws_uri);
@@ -29,7 +35,7 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
           setOrderedData((prevOrder) => [...prevOrder, { ...data, contentAndType }]);
 
           if (data.type === 'report') {
-            setAnswer((prev: any) => prev + data.output);
+            setAnswer((prev: string) => prev + data.output);
           } else if (data.type === 'path' || data.type === 'chat') {
             setLoading(false);
           }
@@ -37,18 +43,20 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
       };
 
       newSocket.onopen = () => {
-        const { report_type, report_source, tone, domains } = chatBoxSettings;
+        const { report_type, report_source, tone, query_domains } = chatBoxSettings;
         let data = "start " + JSON.stringify({ 
-          task: promptValue, 
+          task: promptValue,
           report_type, 
           report_source, 
           tone,
-          query_domains: domains?.map(d => d.value) || [] // Add this line
+          query_domains
         });
         newSocket.send(data);
-      
+
         heartbeatInterval.current = window.setInterval(() => {
-          socket?.send('ping');
+          if (newSocket.readyState === WebSocket.OPEN) {
+            newSocket.send('ping');
+          }
         }, 3000);
       };
 
@@ -60,7 +68,12 @@ export const useWebSocket = (setOrderedData: React.Dispatch<React.SetStateAction
       };
     } else if (socket) {
       const { report_type, report_source, tone } = chatBoxSettings;
-      let data = "start " + JSON.stringify({ task: promptValue, report_type, report_source, tone });
+      let data = "start " + JSON.stringify({ 
+        task: promptValue, 
+        report_type, 
+        report_source, 
+        tone 
+      });
       socket.send(data);
     }
   };

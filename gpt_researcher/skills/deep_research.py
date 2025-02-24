@@ -296,8 +296,8 @@ class DeepResearchSkill:
         
         qa_pairs = [f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers)]
         combined_query = f"""
-        Initial Query: {self.agent.query}\nFollow-up Questions and Answers:\n
-        """ + "\n".join(qa_pairs)
+            Initial Query: {self.agent.query}\nFollow-up Questions and Answers:\n
+            """ + "\n".join(qa_pairs)
 
         results = await self.deep_research(
             query=combined_query,
