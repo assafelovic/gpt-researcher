@@ -12,7 +12,6 @@ markdown
 langchain
 langchain_community
 langchain-openai
-langchain-ollama
 langgraph
 tiktoken
 gpt-researcher
