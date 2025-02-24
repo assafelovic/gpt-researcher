@@ -16,10 +16,15 @@ You can choose your preferred scraping method by setting the `SCRAPER` environme
    export SCRAPER="browser"
    ```
 
-3. For **production** use cases, you can set the Scraper to `tavily_extract`. [Tavily](https://tavily.com) allows you to scrape sites at scale without the hassle of setting up proxies, managing cookies, or dealing with CAPTCHAs. Please note that you need to have a Tavily account and [API key](https://app.tavily.com) to use this option. To learn more about Tavily Extract [see here](https://docs.tavily.com/docs/python-sdk/tavily-extract/getting-started).
+3. For **production** use cases, you can set the Scraper to `tavily_extract` or `firecrawl`. [Tavily](https://tavily.com) allows you to scrape sites at scale without the hassle of setting up proxies, managing cookies, or dealing with CAPTCHAs. Please note that you need to have a Tavily account and [API key](https://app.tavily.com) to use this option. To learn more about Tavily Extract [see here](https://docs.tavily.com/docs/python-sdk/tavily-extract/getting-started).
     Make sure to first install the pip package `tavily-python`. Then:
    ```
    export SCRAPER="tavily_extract"
+   ```
+   [FireCrawl](https://firecrawl.dev) is also allows you to scrape sites at scale. FireCrawl also provides open source code to self hosted server which provided better scrape quality compared to BeautifulSoup by passing markdown version of the scraped sites to LLMs. You will needs to have FireCrawl account (official service) to get API key or you needs self host URL and API key (if you set for your self host server) to use this option.
+   Make sure to install the pip package `firecrawl-py`. Then:
+   ```bash
+   export SCRAPER="firecrawl"
    ```
 
 Note: If not set, GPT Researcher will default to BeautifulSoup for scraping.
@@ -95,6 +100,56 @@ Usage Considerations:
 - API calls are metered based on your Tavily plan
 - Best for production environments where reliability is crucial
 - Ideal for businesses and applications that need consistent scraping results
+
+### FireCrawl (Recommended for Production)
+When `SCRAPER="firecrawl"`, GPT Researcher uses FireCrawl Scrape API for web scraping in markdown format. This method:
+
+- Uses FireCrawl's robust infrastructure to handle web scraping at scale
+- Or uses self-hosted FireCrawl server.
+- Automatically handles CAPTCHAs, JavaScript rendering, and anti-bot measures
+- Provides clean, structured content extraction in markdown format.
+
+Benefits:
+- Production-ready and highly reliable
+- No need to manage proxies or handle rate limiting
+- Excellent success rate on most websites
+- Handles both static and dynamic content
+- Built-in content cleaning and formatting
+- Fast response times through FireCrawl's distributed infrastructure
+- Ease of setup with FireCrawl self-hosted
+
+Setup (official service by FireCrawl):
+1. Create a FireCrawl account at [firecrawl.dev/app](https://www.firecrawl.dev/app)
+2. Get your API key from the dashboard
+3. Install the FireCrawl Python SDK:
+   ```bash
+   pip install firecrawl-py
+   ```
+4. Set your FireCrawl API key:
+   ```bash
+   export FIRECRAWL_API_KEY=<your-firecrawl-api>
+   ```
+Setup (with self-hosted server):
+1. Host your FireCrawl. Read their [self-hosted guidelines](https://docs.firecrawl.dev/contributing/self-host) or [run locally guidelines](https://docs.firecrawl.dev/contributing/guide)
+2. Get your server URL and API key (if you set it).
+3. Install the FireCrawl Python SDK:
+   ```bash
+   pip install firecrawl-py
+   ```
+4. Set your FireCrawl API key:
+   ```bash
+   export FIRECRAWL_API_KEY=<your-firecrawl-api>
+   ```
+
+Note: `FIRECRAWL_API_KEY` can be empty if you not setup authentication for your self host server (`FIRECRAWL_API_KEY=""`).
+There will be some difference between their cloud service and open source service. To understand differences between FireCrawl option read [here](https://docs.firecrawl.dev/contributing/open-source-or-cloud).
+
+Usage Considerations:
+- Requires a FireCrawl API key and account or self-hosted server
+- API calls are metered based on your FireCrawl plan (it can be basically free with self-hosted FireCrawl method)
+- Best for production environments where reliability is crucial (for their cloud service)
+- Ideal for businesses and applications that need consistent scraping results
+- Need robust scraping option for personal use
 
 ## Additional Setup for Selenium
 
