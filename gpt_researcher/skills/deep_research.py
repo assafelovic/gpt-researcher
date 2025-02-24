@@ -294,12 +294,11 @@ class DeepResearchSkill:
         follow_up_questions = await self.generate_feedback(self.agent.query)
         answers = ["Automatically proceeding with research"] * len(follow_up_questions)
         
+        qa_pairs = [f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers)]
         combined_query = f"""
-        Initial Query: {self.agent.query}
-        Follow-up Questions and Answers:
-        {' '.join([f'Q: {q}\nA: {a}' for q, a in zip(follow_up_questions, answers)])}
-        """
-        
+        Initial Query: {self.agent.query}\nFollow-up Questions and Answers:\n
+        """ + "\n".join(qa_pairs)
+
         results = await self.deep_research(
             query=combined_query,
             breadth=self.breadth,
