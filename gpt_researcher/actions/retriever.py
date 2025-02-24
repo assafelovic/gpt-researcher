@@ -14,60 +14,59 @@ def get_retriever(retriever: str):
         case "google":
             from gpt_researcher.retrievers import GoogleSearch
 
-            retriever = GoogleSearch
+            return GoogleSearch
         case "searx":
             from gpt_researcher.retrievers import SearxSearch
 
-            retriever = SearxSearch
+            return SearxSearch
         case "searchapi":
             from gpt_researcher.retrievers import SearchApiSearch
 
-            retriever = SearchApiSearch
+            return SearchApiSearch
         case "serpapi":
             from gpt_researcher.retrievers import SerpApiSearch
 
-            retriever = SerpApiSearch
+            return SerpApiSearch
         case "serper":
             from gpt_researcher.retrievers import SerperSearch
 
-            retriever = SerperSearch
+            return SerperSearch
         case "duckduckgo":
             from gpt_researcher.retrievers import Duckduckgo
 
-            retriever = Duckduckgo
+            return Duckduckgo
         case "bing":
             from gpt_researcher.retrievers import BingSearch
 
-            retriever = BingSearch
+            return BingSearch
         case "arxiv":
             from gpt_researcher.retrievers import ArxivSearch
 
-            retriever = ArxivSearch
+            return ArxivSearch
         case "tavily":
             from gpt_researcher.retrievers import TavilySearch
 
-            retriever = TavilySearch
+            return TavilySearch
         case "exa":
             from gpt_researcher.retrievers import ExaSearch
 
-            retriever = ExaSearch
+            return ExaSearch
         case "semantic_scholar":
             from gpt_researcher.retrievers import SemanticScholarSearch
 
-            retriever = SemanticScholarSearch
+            return SemanticScholarSearch
         case "pubmed_central":
             from gpt_researcher.retrievers import PubMedCentralSearch
 
-            retriever = PubMedCentralSearch
+            return PubMedCentralSearch
         case "custom":
             from gpt_researcher.retrievers import CustomRetriever
 
-            retriever = CustomRetriever
+            return CustomRetriever
 
         case _:
-            retriever = None
+            return None
 
-    return retriever
 
 def get_retrievers(headers: dict[str, str], cfg: Config):
     """
