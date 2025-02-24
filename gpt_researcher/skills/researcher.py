@@ -1,14 +1,12 @@
 import asyncio
 import random
-import json
-from typing import Dict, Optional
 import logging
 import os
 from ..actions.utils import stream_output
 from ..actions.query_processing import plan_research_outline, get_search_results
 from ..document import DocumentLoader, OnlineDocumentLoader, LangChainDocumentLoader
-from ..utils.enum import ReportSource, ReportType, Tone
-from ..utils.logging_config import get_json_handler, get_research_logger
+from ..utils.enum import ReportSource
+from ..utils.logging_config import get_json_handler
 
 
 class ResearchConductor:
@@ -71,9 +69,12 @@ class ResearchConductor:
                 f"🔍 Starting the research task for '{self.researcher.query}'...",
                 self.researcher.websocket,
             )
-
-        if self.researcher.verbose:
-            await stream_output("logs", "agent_generated", self.researcher.agent, self.researcher.websocket)
+            await stream_output(
+                "logs",
+                "agent_generated",
+                self.researcher.agent,
+                self.researcher.websocket
+            )
 
         # Research for relevant sources based on source types below
         if self.researcher.source_urls:
@@ -181,7 +182,7 @@ class ResearchConductor:
 
     # Add logging to other methods similarly...
 
-    async def _get_context_by_vectorstore(self, query, filter: Optional[dict] = None):
+    async def _get_context_by_vectorstore(self, query, filter: dict | None = None):
         """
         Generates the context for the research task by searching the vectorstore
         Returns:
@@ -214,7 +215,7 @@ class ResearchConductor:
         )
         return context
 
-    async def _get_context_by_web_search(self, query, scraped_data: list = [], query_domains: list = []):
+    async def _get_context_by_web_search(self, query, scraped_data: list | None = None, query_domains: list | None = None):
         """
         Generates the context for the research task by searching the query and scraping the results
         Returns:
@@ -222,6 +223,11 @@ class ResearchConductor:
         """
         self.logger.info(f"Starting web search for query: {query}")
         
+        if scraped_data is None:
+            scraped_data = []
+        if query_domains is None:
+            query_domains = []
+
         # Generate Sub-Queries including original query
         sub_queries = await self.plan_research(query, query_domains)
         self.logger.info(f"Generated sub-queries: {sub_queries}")
@@ -306,7 +312,7 @@ class ResearchConductor:
             self.logger.error(f"Error processing sub-query {sub_query}: {e}", exc_info=True)
             return ""
 
-    async def _process_sub_query_with_vectorstore(self, sub_query: str, filter: Optional[dict] = None):
+    async def _process_sub_query_with_vectorstore(self, sub_query: str, filter: dict | None = None):
         """Takes in a sub query and gathers context from the user provided vector store
 
         Args:
@@ -361,8 +367,10 @@ class ResearchConductor:
 
         return new_urls
 
-    async def _search_relevant_source_urls(self, query, query_domains: list = []):
+    async def _search_relevant_source_urls(self, query, query_domains: list | None = None):
         new_search_urls = []
+        if query_domains is None:
+            query_domains = []
 
         # Iterate through all retrievers
         for retriever_class in self.researcher.retrievers:
@@ -384,7 +392,7 @@ class ResearchConductor:
 
         return new_search_urls
 
-    async def _scrape_data_by_urls(self, sub_query, query_domains: list = []):
+    async def _scrape_data_by_urls(self, sub_query, query_domains: list | None = None):
         """
         Runs a sub-query across multiple retrievers and scrapes the resulting URLs.
 
@@ -394,6 +402,9 @@ class ResearchConductor:
         Returns:
             list: A list of scraped content results.
         """
+        if query_domains is None:
+            query_domains = []
+
         new_search_urls = await self._search_relevant_source_urls(sub_query, query_domains)
 
         # Log the research process if verbose mode is on
