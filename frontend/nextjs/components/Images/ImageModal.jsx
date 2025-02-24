@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
 
 export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }) {
-    if (!isOpen) return null;
-
-    // Set up keyboard event listeners
     useEffect(() => {
+        if (!isOpen) return;
+        
         const handleKeyDown = (e) => {
             if (e.key === 'ArrowLeft') {
                 onPrev();
@@ -17,7 +16,9 @@ export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [onClose, onNext, onPrev]);
+    }, [isOpen, onClose, onNext, onPrev]);
+
+    if (!isOpen) return null;
 
     // Swipe detection for mobile
     let touchStartX = 0;

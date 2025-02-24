@@ -3,17 +3,7 @@ import FileUpload from "../Settings/FileUpload";
 import ToneSelector from "../Settings/ToneSelector";
 import { useAnalytics } from "../../hooks/useAnalytics";
 import { CloseIcon } from '@chakra-ui/icons';
-
-interface ChatBoxSettings {
-  report_type: string;
-  report_source: string;
-  tone: string;
-  domains: Domain[];
-}
-
-interface Domain {
-  value: string;
-}
+import { ChatBoxSettings, Domain } from '@/types/data';
 
 interface ResearchFormProps {
   chatBoxSettings: ChatBoxSettings;
@@ -24,14 +14,12 @@ interface ResearchFormProps {
     reportSource: string,
     domains: Domain[]
   ) => void;
-  defaultReportType: string;
 }
 
 export default function ResearchForm({
   chatBoxSettings,
   setChatBoxSettings,
   onFormSubmit,
-  defaultReportType,
 }: ResearchFormProps) {
   const { trackResearchQuery } = useAnalytics();
   const [task, setTask] = useState("");
@@ -54,7 +42,7 @@ export default function ResearchForm({
       ...prev,
       domains: domains
     }));
-  }, [domains]);
+  }, [domains, setChatBoxSettings]);
 
   const handleAddDomain = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,16 +83,6 @@ export default function ResearchForm({
       onFormSubmit(task, report_type, report_source, domains);
     }
   };
-
-  useEffect(() => {
-    // Set default report type only if report_type is empty (initial mount)
-    if (!chatBoxSettings.report_type) {
-      setChatBoxSettings((prevSettings) => ({
-        ...prevSettings,
-        report_type: defaultReportType,
-      }));
-    }
-  }, [defaultReportType, setChatBoxSettings, chatBoxSettings.report_type]);
 
   return (
     <form
