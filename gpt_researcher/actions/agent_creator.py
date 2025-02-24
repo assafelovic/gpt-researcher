@@ -11,7 +11,7 @@ async def choose_agent(
     Chooses the agent automatically
     Args:
         parent_query: In some cases the research is conducted on a subtopic from the main query.
-        The parent query allows the agent to know the main context for better reasoning.
+            The parent query allows the agent to know the main context for better reasoning.
         query: original query
         cfg: Config
         cost_callback: callback for calculating llm costs
