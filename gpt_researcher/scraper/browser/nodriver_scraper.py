@@ -165,7 +165,7 @@ class NoDriverScraper:
             page = await browser.get(self.url)
             await page.wait(2)
             await page.sleep(random.uniform(1, 2.3))
-            await page.wait(3)
+            await page.wait(random.uniform(2, 3))
 
             await browser.scroll_page_to_bottom(page)
             html = await page.get_content()
