@@ -30,42 +30,57 @@ class WebSocketManager:
             return
 
         while True:
-            message = await queue.get()
-            if websocket in self.active_connections:
-                try:
+            try:
+                message = await queue.get()
+                if message is None:  # Shutdown signal
+                    break
+                    
+                if websocket in self.active_connections:
                     if message == "ping":
                         await websocket.send_text("pong")
                     else:
                         await websocket.send_text(message)
-                except:
+                else:
                     break
-            else:
+            except Exception as e:
+                print(f"Error in sender task: {e}")
                 break
 
     async def connect(self, websocket: WebSocket):
         """Connect a websocket."""
-        await websocket.accept()
-        self.active_connections.append(websocket)
-        self.message_queues[websocket] = asyncio.Queue()
-        self.sender_tasks[websocket] = asyncio.create_task(
-            self.start_sender(websocket))
+        try:
+            await websocket.accept()
+            self.active_connections.append(websocket)
+            self.message_queues[websocket] = asyncio.Queue()
+            self.sender_tasks[websocket] = asyncio.create_task(
+                self.start_sender(websocket))
+        except Exception as e:
+            print(f"Error connecting websocket: {e}")
+            if websocket in self.active_connections:
+                await self.disconnect(websocket)
 
     async def disconnect(self, websocket: WebSocket):
         """Disconnect a websocket."""
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
-            self.sender_tasks[websocket].cancel()
-            await self.message_queues[websocket].put(None)
-            del self.sender_tasks[websocket]
-            del self.message_queues[websocket]
+            if websocket in self.sender_tasks:
+                self.sender_tasks[websocket].cancel()
+                await self.message_queues[websocket].put(None)
+                del self.sender_tasks[websocket]
+            if websocket in self.message_queues:
+                del self.message_queues[websocket]
+            try:
+                await websocket.close()
+            except:
+                pass  # Connection might already be closed
 
     async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[]):
         """Start streaming the output."""
         tone = Tone[tone]
         # add customized JSON config file path here
         config_path = "default"
-        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers = headers, query_domains = query_domains, config_path = config_path)
-        #Create new Chat Agent whenever a new report is written
+        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=headers, query_domains=query_domains, config_path=config_path)
+        # Create new Chat Agent whenever a new report is written
         self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
         return report
 
