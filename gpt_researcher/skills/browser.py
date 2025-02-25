@@ -13,9 +13,9 @@ class BrowserManager:
 
     def __init__(self, researcher):
         self.researcher = researcher
-        max_sessions = researcher.cfg.max_http_sessions
+        max_sessions = researcher.cfg.max_scraper_http_sessions
         # max workers need to at least match max sessions
-        max_workers = max(researcher.cfg.max_workers, max_sessions)
+        max_workers = max(researcher.cfg.max_scraper_workers, max_sessions)
         self.worker_pool = WorkerPool(max_workers)
         self.session_semaphore = asyncio.Semaphore(max_sessions)
 
