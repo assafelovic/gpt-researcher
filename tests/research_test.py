@@ -18,10 +18,10 @@ from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 import asyncio
 import logging
 from typing import List, Dict, Any
-from src.logs_handler import CustomLogsHandler  # Update import
+from backend.server.server_utils import CustomLogsHandler  # Update import
 
 async def get_report(query: str, report_type: str, sources: list) -> str:
-    custom_logs_handler = CustomLogsHandler(query=query)  # Pass query parameter
+    custom_logs_handler = CustomLogsHandler(None, query)  # Pass query parameter
     researcher = GPTResearcher(query=query, 
                                report_type=report_type, 
                                complement_source_urls=False,

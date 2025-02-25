@@ -9,6 +9,8 @@ Follow instructions at https://www.docker.com/products/docker-desktop/
 
 This mainly includes cloning the '.env.example' file, adding your API Keys to the cloned file and saving the file as '.env'
 
+In `requirements.txt` add the relevant langchain packages for the LLM your choose (langchain-google-genai, langchain-deepseek, langchain_mistralai for example)
+
 > **Step 3** - Within root, run with Docker.
 
 ```bash

@@ -8,11 +8,13 @@ class ReportType(Enum):
     CustomReport = "custom_report"
     DetailedReport = "detailed_report"
     SubtopicReport = "subtopic_report"
+    DeepResearch = "deep"
 
 
 class ReportSource(Enum):
     Web = "web"
     Local = "local"
+    Azure = "azure"
     LangChainDocuments = "langchain_documents"
     LangChainVectorStore = "langchain_vectorstore"
     Static = "static"

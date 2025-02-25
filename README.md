@@ -20,7 +20,7 @@
 
 # 🔎 GPT Researcher
 
-**GPT Researcher is an autonomous agent designed for comprehensive web and local research on any given task.** 
+**GPT Researcher is an open deep research agent designed for both web and local research on any given task.** 
 
 The agent produces detailed, factual, and unbiased research reports with citations. GPT Researcher provides a full suite of customization options to create tailor made and domain specific research agents. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses misinformation, speed, determinism, and reliability by offering stable performance and increased speed through parallelized agent work.
 
@@ -67,6 +67,18 @@ Steps:
 - 🔍 JavaScript-enabled web scraping.
 - 📂 Maintains memory and context throughout research.
 - 📄 Export reports to PDF, Word, and other formats.
+
+## ✨ Deep Research
+
+GPT Researcher now includes Deep Research - an advanced recursive research workflow that explores topics with agentic depth and breadth. This feature employs a tree-like exploration pattern, diving deeper into subtopics while maintaining a comprehensive view of the research subject.
+
+- 🌳 Tree-like exploration with configurable depth and breadth
+- ⚡️ Concurrent processing for faster results
+- 🤝 Smart context management across research branches
+- ⏱️ Takes ~5 minutes per deep research
+- 💰 Costs ~$0.4 per research (using `o3-mini` on "high" reasoning effort)
+
+[Learn more about Deep Research](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research) in our documentation.
 
 ## 📖 Documentation
 

@@ -11,7 +11,7 @@ class SemanticScholarSearch:
     BASE_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
     VALID_SORT_CRITERIA = ["relevance", "citationCount", "publicationDate"]
 
-    def __init__(self, query: str, sort: str = "relevance"):
+    def __init__(self, query: str, sort: str = "relevance", query_domains=None):
         """
         Initialize the SemanticScholarSearch class with a query and sort criterion.
 

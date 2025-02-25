@@ -20,7 +20,7 @@ async def test_researcher_logging():  # Renamed function to be more specific
     """
     try:
         # Import here to catch any import errors
-        from src.researcher import Researcher
+        from backend.server.server_utils import Researcher
         logger.info("Successfully imported Researcher class")
         
         # Create a researcher instance with a logging-focused query
