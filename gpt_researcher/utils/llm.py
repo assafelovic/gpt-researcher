@@ -58,13 +58,11 @@ async def create_chat_completion(
     }
 
     if 'o3' in model or 'o1' in model:
-        print(f"Using reasoning models {model}")
         kwargs['reasoning_effort'] = reasoning_effort
     else:
         kwargs['temperature'] = temperature
         kwargs['max_tokens'] = max_tokens
 
-    print(f"\n🤖 Calling {llm_provider} with model {model}...\n")
     provider = get_llm(llm_provider, **kwargs)
     response = ""
     # create response
@@ -106,19 +104,18 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
                 "format_instructions": parser.get_format_instructions()},
         )
 
-        print(f"\n🤖 Calling {config.smart_llm_model}...\n")
         kwargs = {
             'model': config.smart_llm_model,
             **(config.llm_kwargs or {})
         }
 
+        temperature = config.temperature
         if 'o3' in config.smart_llm_model or 'o1' in config.smart_llm_model:
             kwargs['reasoning_effort'] = "high"
         else:
-            kwargs['temperature'] = temperature
+            kwargs['temperature'] = config.temperature
             kwargs['max_tokens'] = config.smart_token_limit
 
-        print(f"\n🤖 Calling {config.smart_llm_provider} with model {config.smart_llm_model}...\n")
         provider = get_llm(config.smart_llm_provider, **kwargs)
 
         model = provider.llm

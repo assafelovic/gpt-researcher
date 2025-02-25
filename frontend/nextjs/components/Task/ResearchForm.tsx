@@ -2,12 +2,8 @@ import React, { useState, useEffect } from "react";
 import FileUpload from "../Settings/FileUpload";
 import ToneSelector from "../Settings/ToneSelector";
 import { useAnalytics } from "../../hooks/useAnalytics";
-
-interface ChatBoxSettings {
-  report_type: string;
-  report_source: string;
-  tone: string;
-}
+import { CloseIcon } from '@chakra-ui/icons';
+import { ChatBoxSettings, Domain } from '@/types/data';
 
 interface ResearchFormProps {
   chatBoxSettings: ChatBoxSettings;
@@ -16,21 +12,49 @@ interface ResearchFormProps {
     task: string,
     reportType: string,
     reportSource: string,
+    domains: Domain[]
   ) => void;
-  defaultReportType: string;
 }
 
 export default function ResearchForm({
   chatBoxSettings,
   setChatBoxSettings,
   onFormSubmit,
-  defaultReportType,
 }: ResearchFormProps) {
   const { trackResearchQuery } = useAnalytics();
-  const [task, setTask] = useState(""); // You can use this to capture any specific task data if needed
+  const [task, setTask] = useState("");
+  const [newDomain, setNewDomain] = useState('');
 
   // Destructure necessary fields from chatBoxSettings
   let { report_type, report_source, tone } = chatBoxSettings;
+
+  const [domains, setDomains] = useState<Domain[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('domainFilters');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+  
+  useEffect(() => {
+    localStorage.setItem('domainFilters', JSON.stringify(domains));
+    setChatBoxSettings(prev => ({
+      ...prev,
+      domains: domains
+    }));
+  }, [domains, setChatBoxSettings]);
+
+  const handleAddDomain = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newDomain.trim()) {
+      setDomains([...domains, { value: newDomain.trim() }]);
+      setNewDomain('');
+    }
+  };
+
+  const handleRemoveDomain = (domainToRemove: string) => {
+    setDomains(domains.filter(domain => domain.value !== domainToRemove));
+  };
 
   const onFormChange = (e: { target: { name: any; value: any } }) => {
     const { name, value } = e.target;
@@ -51,22 +75,14 @@ export default function ResearchForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onFormSubmit) {
-        onFormSubmit(task, report_type, report_source); // Trigger the onFormSubmit prop when form is submitted
-      trackResearchQuery({ query: task, report_type, report_source });
-    } else {
-      console.warn("onFormSubmit is not defined");
+      const updatedSettings = {
+        ...chatBoxSettings,
+        domains: domains // Make sure domains are included
+      };
+      setChatBoxSettings(updatedSettings);
+      onFormSubmit(task, report_type, report_source, domains);
     }
   };
-
-  useEffect(() => {
-    // Set default report type only if report_type is empty (initial mount)
-    if (!chatBoxSettings.report_type) {
-      setChatBoxSettings((prevSettings) => ({
-        ...prevSettings,
-        report_type: defaultReportType,
-      }));
-    }
-  }, [defaultReportType, setChatBoxSettings, chatBoxSettings.report_type]);
 
   return (
     <form
@@ -85,17 +101,17 @@ export default function ResearchForm({
           className="form-control"
           required
         >
-
-          <option value="multi_agents">Multi Agents Report</option>
           <option value="research_report">
             Summary - Short and fast (~2 min)
           </option>
+          <option value="deep">Deep Research Report</option>
+          <option value="multi_agents">Multi Agents Report</option>
           <option value="detailed_report">
             Detailed - In depth and longer (~5 min)
           </option>
-
         </select>
       </div>
+
       <div className="form-group">
         <label htmlFor="report_source" className="agent_question">
           Report Source{" "}
@@ -112,13 +128,57 @@ export default function ResearchForm({
           <option value="hybrid">Hybrid</option>
         </select>
       </div>
-      {/* Conditional file upload if the report source is 'local' or 'hybrid' */}
+
+      {(chatBoxSettings.report_source === "web" || chatBoxSettings.report_source === "hybrid") && (
+        <div className="mt-4">
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={newDomain}
+              onChange={(e) => setNewDomain(e.target.value)}
+              placeholder="Filter by domain (e.g., techcrunch.com)"
+              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddDomain(e);
+                }
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleAddDomain}
+              className="inline-flex justify-center rounded-md border border-transparent bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              Add Domain
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {domains.map((domain, index) => (
+              <div
+                key={index}
+                className="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-sm mb-3"
+              >
+                <span className="text-purple-700">{domain.value}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveDomain(domain.value)}
+                  className="ml-2 text-purple-400 hover:text-purple-600"
+                >
+                  <CloseIcon className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {report_source === "local" || report_source === "hybrid" ? (
         <FileUpload />
       ) : null}
-      {/* ToneSelector for changing the tone */}
+      
       <ToneSelector tone={tone} onToneChange={onToneChange} />
-
     </form>
   );
 }

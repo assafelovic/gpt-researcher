@@ -4,7 +4,7 @@ Provides a command line interface for the GPTResearcher class.
 Usage:
 
 ```shell
-python cli.py "<query>" --report_type <report_type>
+python cli.py "<query>" --report_type <report_type> --tone <tone> --query_domains <foo.com,bar.com>
 ```
 
 """
@@ -64,8 +64,9 @@ cli.add_argument(
     choices=choices,
     required=True)
 
-# First, let's see what values are actually in the Tone enum
-print([t.value for t in Tone])
+# =====================================
+# Arg: Tone
+# =====================================
 
 cli.add_argument(
     "--tone",
@@ -77,19 +78,32 @@ cli.add_argument(
     default="objective"
 )
 
+# =====================================
+# Arg: Query Domains
+# =====================================
+
+cli.add_argument(
+    "--query_domains",
+    type=str,
+    help="A comma-separated list of domains to search for the query.",
+    default=""
+)
+
 # =============================================================================
 # Main
 # =============================================================================
-
 
 async def main(args):
     """ 
     Conduct research on the given query, generate the report, and write
     it as a markdown file to the output directory.
     """
+    query_domains = args.query_domains.split(",") if args.query_domains else []
+
     if args.report_type == 'detailed_report':
         detailed_report = DetailedReport(
             query=args.query,
+            query_domains=query_domains,
             report_type="research_report",
             report_source="web_search",
         )
@@ -117,6 +131,7 @@ async def main(args):
 
         researcher = GPTResearcher(
             query=args.query,
+            query_domains=query_domains,
             report_type=args.report_type,
             tone=tone_map[args.tone]
         )

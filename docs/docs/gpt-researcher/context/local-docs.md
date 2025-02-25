@@ -1,4 +1,4 @@
-# Research on Local Documents
+# Local Documents
 
 ## Just Local Docs
 
@@ -16,7 +16,7 @@ Step 2:
 
 ## Local Docs + Web (Hybrid)
 
-![GPT Researcher hybrid research](./gptr-hybrid.png)
+![GPT Researcher hybrid research](./img/gptr-hybrid.png)
 
 Check out the blog post on [Hybrid Research](https://docs.gptr.dev/blog/gptr-hybrid) to learn more about how to combine local documents with web research.
 ```

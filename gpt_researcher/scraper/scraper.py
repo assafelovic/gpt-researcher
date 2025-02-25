@@ -17,6 +17,7 @@ from . import (
     BrowserScraper,
     NoDriverScraper,
     TavilyExtract,
+    FireCrawl,
 )
 
 
@@ -37,6 +38,8 @@ class Scraper:
         self.scraper = scraper
         if self.scraper == "tavily_extract":
             self._check_pkg(self.scraper)
+        if self.scraper == "firecrawl":
+            self._check_pkg(self.scraper)
         self.logger = logging.getLogger(__name__)
         self.worker_pool = worker_pool
 
@@ -51,15 +54,21 @@ class Scraper:
         res = [content for content in contents if content["raw_content"] is not None]
         return res
 
-    def _check_pkg(self, scrapper_name : str) -> None:
+    def _check_pkg(self, scrapper_name: str) -> None:
         """
         Checks and ensures required Python packages are available for scrapers that need
         dependencies beyond requirements.txt. When adding a new scraper to the repo, update `pkg_map`
         with its required information and call check_pkg() during initialization.
         """
         pkg_map = {
-            "tavily_extract": {"package_installation_name": "tavily-python",
-                               "import_name": "tavily"},
+            "tavily_extract": {
+                "package_installation_name": "tavily-python",
+                "import_name": "tavily",
+            },
+            "firecrawl": {
+                "package_installation_name": "firecrawl-py",
+                "import_name": "firecrawl",
+            },
         }
         pkg = pkg_map[scrapper_name]
         if not importlib.util.find_spec(pkg["import_name"]):
@@ -67,12 +76,15 @@ class Scraper:
             init(autoreset=True)
             print(Fore.YELLOW + f"{pkg_inst_name} not found. Attempting to install...")
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", pkg_inst_name])
+                subprocess.check_call(
+                    [sys.executable, "-m", "pip", "install", pkg_inst_name]
+                )
                 print(Fore.GREEN + f"{pkg_inst_name} installed successfully.")
             except subprocess.CalledProcessError:
                 raise ImportError(
-                    Fore.RED + f"Unable to install {pkg_inst_name}. Please install manually with "
-                               f"`pip install -U {pkg_inst_name}`"
+                    Fore.RED
+                    + f"Unable to install {pkg_inst_name}. Please install manually with "
+                    f"`pip install -U {pkg_inst_name}`"
                 )
 
     async def extract_data_from_url(self, link, session):
@@ -163,6 +175,7 @@ class Scraper:
             "browser": BrowserScraper,
             "nodriver": NoDriverScraper,
             "tavily_extract": TavilyExtract,
+            "firecrawl": FireCrawl,
         }
 
         scraper_key = None

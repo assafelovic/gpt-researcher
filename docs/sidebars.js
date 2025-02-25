@@ -35,6 +35,7 @@
         'gpt-researcher/gptr/pip-package',
         'gpt-researcher/gptr/npm-package',
         'gpt-researcher/gptr/example',
+        'gpt-researcher/gptr/deep_research',
         'gpt-researcher/gptr/config',
         'gpt-researcher/gptr/scraping',
         'gpt-researcher/gptr/querying-the-backend',
@@ -63,6 +64,7 @@
       items: [
         'gpt-researcher/context/tailored-research',
         'gpt-researcher/context/local-docs',
+        'gpt-researcher/context/azure-storage',
         'gpt-researcher/context/filtering-by-domain',
         'gpt-researcher/context/vector-stores',
         'gpt-researcher/context/data-ingestion'

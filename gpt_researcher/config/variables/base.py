@@ -30,3 +30,6 @@ class BaseConfig(TypedDict):
     MAX_SUBTOPICS: int
     REPORT_SOURCE: Union[str, None]
     DOC_PATH: str
+    DEEP_RESEARCH_CONCURRENCY: int
+    DEEP_RESEARCH_DEPTH: int
+    DEEP_RESEARCH_BREADTH: int
