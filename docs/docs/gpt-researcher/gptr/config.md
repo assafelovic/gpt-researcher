@@ -38,7 +38,6 @@ Below is a list of current supported options:
 - **`MAX_SUBTOPICS`**: Maximum number of subtopics to generate or consider. Defaults to `3`.
 - **`SCRAPER`**: Web scraper to use for gathering information. Defaults to `bs` (BeautifulSoup). You can also use [newspaper](https://github.com/codelucas/newspaper).
 - **`MAX_SCRAPER_WORKERS`**: Maximum number of concurrent scraper workers per research. Defaults to `15`.
-- **`MAX_SCRAPER_HTTP_SESSIONS`**: Maximum number of concurrent http sessions or user agents per research. Defaults to `3`.
 - **`DOC_PATH`**: Path to read and research local documents. Defaults to an empty string indicating no path specified.
 - **`USER_AGENT`**: Custom User-Agent string for web crawling and web requests.
 - **`MEMORY_BACKEND`**: Backend used for memory operations, such as local storage of temporary data. Defaults to `local`.
