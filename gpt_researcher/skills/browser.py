@@ -13,11 +13,7 @@ class BrowserManager:
 
     def __init__(self, researcher):
         self.researcher = researcher
-        max_sessions = researcher.cfg.max_scraper_http_sessions
-        # max workers need to at least match max sessions
-        max_workers = max(researcher.cfg.max_scraper_workers, max_sessions)
-        self.worker_pool = WorkerPool(max_workers)
-        self.session_semaphore = asyncio.Semaphore(max_sessions)
+        self.worker_pool = WorkerPool(researcher.cfg.max_scraper_workers)
 
     async def browse_urls(self, urls: List[str]) -> List[Dict]:
         """
@@ -37,11 +33,9 @@ class BrowserManager:
                 self.researcher.websocket,
             )
 
-        # each scrape_urls call will create a new session
-        async with self.session_semaphore:
-            scraped_content, images = await scrape_urls(
-                urls, self.researcher.cfg, self.worker_pool
-            )
+        scraped_content, images = await scrape_urls(
+            urls, self.researcher.cfg, self.worker_pool
+        )
         self.researcher.add_research_sources(scraped_content)
         new_images = self.select_top_images(images, k=4)  # Select top 2 images
         self.researcher.add_research_images(new_images)

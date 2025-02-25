@@ -18,6 +18,7 @@ class NoDriverScraper:
     browser_tasks: Dict[
         requests.Session | None, asyncio.Task["NoDriverScraper.Browser"]
     ] = {}
+    browser_throttler = asyncio.Semaphore(3)
 
     @staticmethod
     def get_domain(url: str) -> str:
@@ -115,6 +116,7 @@ class NoDriverScraper:
     ) -> "NoDriverScraper.Browser":
 
         async def create_browser():
+            await cls.browser_throttler.acquire()
             config = zendriver.Config(
                 headless=headless,
                 browser_connection_timeout=3,
@@ -141,8 +143,11 @@ class NoDriverScraper:
     @classmethod
     async def stop_browser_if_necessary(cls, browser: Browser):
         if browser and browser.processing_count <= 0:
-            cls.browser_tasks.pop(browser.session, None)
-            await browser.driver.stop()
+            try:
+                cls.browser_tasks.pop(browser.session, None)
+                await browser.driver.stop()
+            finally:
+                cls.browser_throttler.release()
 
     def __init__(self, url: str, session: Optional[requests.Session] = None):
         self.url = url
