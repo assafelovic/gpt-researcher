@@ -11,17 +11,16 @@ You can choose your preferred scraping method by setting the `SCRAPER` environme
    export SCRAPER="bs"
    ```
 
-2. For Selenium (dynamic browser scraping):
+2. For dynamic browser scraping, either with Selenium:
    ```
    export SCRAPER="browser"
    ```
-
-3. For NoDriver (ZenDriver) (dynamic browser scraping):
+   Or with NoDriver (ZenDriver):
    ```
    export SCRAPER="nodriver"
    ```
 
-4. For **production** use cases, you can set the Scraper to `tavily_extract` or `firecrawl`. [Tavily](https://tavily.com) allows you to scrape sites at scale without the hassle of setting up proxies, managing cookies, or dealing with CAPTCHAs. Please note that you need to have a Tavily account and [API key](https://app.tavily.com) to use this option. To learn more about Tavily Extract [see here](https://docs.tavily.com/docs/python-sdk/tavily-extract/getting-started).
+3. For **production** use cases, you can set the Scraper to `tavily_extract` or `firecrawl`. [Tavily](https://tavily.com) allows you to scrape sites at scale without the hassle of setting up proxies, managing cookies, or dealing with CAPTCHAs. Please note that you need to have a Tavily account and [API key](https://app.tavily.com) to use this option. To learn more about Tavily Extract [see here](https://docs.tavily.com/docs/python-sdk/tavily-extract/getting-started).
     Make sure to first install the pip package `tavily-python`. Then:
    ```
    export SCRAPER="tavily_extract"
