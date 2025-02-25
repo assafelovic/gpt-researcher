@@ -28,7 +28,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "REPORT_SOURCE": "web",
     "DOC_PATH": "./my-docs",
     # Deep research specific settings
-    "DEEP_RESEARCH_BREADTH": 4,
+    "DEEP_RESEARCH_BREADTH": 3,
     "DEEP_RESEARCH_DEPTH": 2,
     "DEEP_RESEARCH_CONCURRENCY": 4,
 }
