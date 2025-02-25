@@ -65,7 +65,7 @@ async def create_chat_completion(
         kwargs['max_tokens'] = max_tokens
 
     if llm_provider == "openai":
-        base_url = os.enviorn.get("OPENAI_BASE_URL", None)
+        base_url = os.environ.get("OPENAI_BASE_URL", None)
         if base_url:
             kwargs['openai_api_base'] = base_url
 
