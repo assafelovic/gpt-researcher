@@ -56,7 +56,7 @@ async def generate_sub_queries(
         response = await create_chat_completion(
             model=cfg.strategic_llm_model,
             messages=[{"role": "user", "content": gen_queries_prompt}],
-            temperature=1,
+            temperature=0.6,
             llm_provider=cfg.strategic_llm_provider,
             max_tokens=None,
             llm_kwargs=cfg.llm_kwargs,
