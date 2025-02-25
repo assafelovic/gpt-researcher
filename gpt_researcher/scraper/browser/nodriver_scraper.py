@@ -4,7 +4,7 @@ import random
 import traceback
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from typing import Dict, cast, Tuple, List, Optional
+from typing import Dict, cast, Tuple, List
 import requests
 import zendriver
 import asyncio
@@ -149,7 +149,7 @@ class NoDriverScraper:
             finally:
                 cls.browser_throttler.release()
 
-    def __init__(self, url: str, session: Optional[requests.Session] = None):
+    def __init__(self, url: str, session: requests.Session | None = None):
         self.url = url
         self.session = session
         self.debug = False
@@ -163,8 +163,8 @@ class NoDriverScraper:
                 "",
             )
 
-        browser: Optional[NoDriverScraper.Browser] = None
-        page: Optional[zendriver.Tab] = None
+        browser: NoDriverScraper.Browser | None = None
+        page: zendriver.Tab | None = None
         try:
             browser = await self.get_browser(session=self.session)
             page = await browser.get(self.url)
