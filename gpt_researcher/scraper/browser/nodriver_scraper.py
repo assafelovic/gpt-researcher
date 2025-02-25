@@ -66,7 +66,7 @@ class NoDriverScraper:
                 scroll_percent = random.randrange(46, 97)
                 total_scroll_percent += scroll_percent
                 await page.scroll_down(scroll_percent)
-                await page.wait()
+                await page.wait(2)
                 await page.sleep(random.uniform(0.23, 0.56))
 
                 if total_scroll_percent >= self.max_scroll_percent:
@@ -163,9 +163,9 @@ class NoDriverScraper:
         try:
             browser = await self.get_browser(session=self.session)
             page = await browser.get(self.url)
-            await page.wait()
-            await page.sleep(random.uniform(2.5, 3.3))
-            await page.wait()
+            await page.wait(2)
+            await page.sleep(random.uniform(1, 2.3))
+            await page.wait(3)
 
             await browser.scroll_page_to_bottom(page)
             html = await page.get_content()
