@@ -15,7 +15,7 @@ Paste the model name & size into the Web UI:
 
 <img width="1511" alt="Screen Shot 2024-08-27 at 23 26 28" src="https://github.com/user-attachments/assets/32abd048-745c-4232-9f1f-6af265cff250"></img>
 
-For our example, let's choose to download the `qwen2:1.5b` model.
+For our example, let's choose to download the `qwen2:1.5b` from the chat completion model & `nomic-embed-text` for the embeddings model.
 
 This model now automatically becomes available via your Server's out-of-the-box API - we'll leverage it within our GPT-Researcher .env file in the next step.
 
@@ -31,7 +31,8 @@ OLLAMA_BASE_URL="http://127.0.0.1:11434/"
 FAST_LLM="ollama:qwen2:1.5b"
 SMART_LLM="ollama:qwen2:1.5b"
 STRATEGIC_LLM="ollama:qwen2:1.5b"
-EMBEDDING="ollama:all-minilm:22m"
+EMBEDDING_PROVIDER="ollama"
+OLLAMA_EMBEDDING_MODEL="nomic-embed-text"
 ```
 
 Replace `FAST_LLM` & `SMART_LLM` with the model you downloaded from the Elestio Web UI in the previous step.
@@ -58,7 +59,8 @@ OLLAMA_BASE_URL="https://ollama-2d52b-u21899.vm.elestio.app:57987/"
 FAST_LLM="openai:qwen2.5"
 SMART_LLM="openai:qwen2.5"
 STRATEGIC_LLM="openai:qwen2.5"
-EMBEDDING="openai:nomic-embed-text"
+EMBEDDING_PROVIDER="ollama"
+OLLAMA_EMBEDDING_MODEL="nomic-embed-text"
 ```
 
 Note: to verify you're pointing at the correct API URL, you can run something like this in your terminal:
