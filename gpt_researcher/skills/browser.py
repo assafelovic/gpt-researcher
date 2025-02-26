@@ -1,3 +1,8 @@
+import asyncio
+from typing import List, Dict
+
+from gpt_researcher.utils.workers import WorkerPool
+
 from ..actions.utils import stream_output
 from ..actions.web_scraping import scrape_urls
 from ..scraper.utils import get_image_hash
@@ -8,6 +13,7 @@ class BrowserManager:
 
     def __init__(self, researcher):
         self.researcher = researcher
+        self.worker_pool = WorkerPool(researcher.cfg.max_scraper_workers)
 
     async def browse_urls(self, urls: list[str]) -> list[dict]:
         """
@@ -27,7 +33,9 @@ class BrowserManager:
                 self.researcher.websocket,
             )
 
-        scraped_content, images = scrape_urls(urls, self.researcher.cfg)
+        scraped_content, images = await scrape_urls(
+            urls, self.researcher.cfg, self.worker_pool
+        )
         self.researcher.add_research_sources(scraped_content)
         new_images = self.select_top_images(images, k=4)  # Select top 4 images
         self.researcher.add_research_images(new_images)
@@ -45,7 +53,7 @@ class BrowserManager:
                 f"🖼️ Selected {len(new_images)} new images from {len(images)} total images",
                 self.researcher.websocket,
                 True,
-                new_images
+                new_images,
             )
             await stream_output(
                 "logs",
@@ -82,7 +90,7 @@ class BrowserManager:
                 and img['url'] not in current_research_images
             ):
                 seen_hashes.add(img_hash)
-                unique_images.append(img['url'])
+                unique_images.append(img["url"])
 
                 if len(unique_images) == k:
                     break
