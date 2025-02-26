@@ -49,13 +49,11 @@ logging.basicConfig(level=logging.DEBUG)
 from gpt_researcher.llm_provider.generic import GenericLLMProvider
 from gpt_researcher.utils.llm import get_llm
 
-OLLAMA_BASE_URL = "https://ollama-ug3qr-u21899.vm.elestio.app:57987"
 LLM_MODEL = "llama3.1"
 
 # Create the GenericLLMProvider instance
 llm_provider = get_llm(
     "ollama",
-    base_url=OLLAMA_BASE_URL,
     model=LLM_MODEL,
     temperature=0.7,
     max_tokens=2000,
