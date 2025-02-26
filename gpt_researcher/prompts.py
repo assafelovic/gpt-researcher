@@ -141,7 +141,7 @@ The response MUST not contain any markdown format or additional text (like ```js
 
 
 def generate_resource_report_prompt(
-    question, context, report_source: str, report_format="apa", tone=None, total_words=1000, language=None
+    question, context, report_source: str, report_format="apa", tone=None, total_words=1000, language="english"
 ):
     """Generates the resource report prompt for the given question and research summary.
 
@@ -172,6 +172,7 @@ def generate_resource_report_prompt(
         "Ensure that the report is well-structured, informative, in-depth, and follows Markdown syntax.\n"
         "Include relevant facts, figures, and numbers whenever available.\n"
         f"The report should have a minimum length of {total_words} words.\n"
+        f"You MUST write the report in the following language: {language}.\n"
         "You MUST include all relevant source urls."
         "Every url should be hyperlinked: [url website](url)"
         f"{reference_prompt}"
