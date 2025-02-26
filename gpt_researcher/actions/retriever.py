@@ -1,11 +1,10 @@
-from typing import List, Type
 from ..config.config import Config
 
-def get_retriever(retriever):
+def get_retriever(retriever: str):
     """
     Gets the retriever
     Args:
-        retriever: retriever name
+        retriever (str): retriever name
 
     Returns:
         retriever: Retriever class
@@ -15,63 +14,61 @@ def get_retriever(retriever):
         case "google":
             from gpt_researcher.retrievers import GoogleSearch
 
-            retriever = GoogleSearch
+            return GoogleSearch
         case "searx":
             from gpt_researcher.retrievers import SearxSearch
 
-            retriever = SearxSearch
+            return SearxSearch
         case "searchapi":
             from gpt_researcher.retrievers import SearchApiSearch
 
-            retriever = SearchApiSearch
+            return SearchApiSearch
         case "serpapi":
             from gpt_researcher.retrievers import SerpApiSearch
 
-            retriever = SerpApiSearch
+            return SerpApiSearch
         case "serper":
             from gpt_researcher.retrievers import SerperSearch
 
-            retriever = SerperSearch
+            return SerperSearch
         case "duckduckgo":
             from gpt_researcher.retrievers import Duckduckgo
 
-            retriever = Duckduckgo
+            return Duckduckgo
         case "bing":
             from gpt_researcher.retrievers import BingSearch
 
-            retriever = BingSearch
+            return BingSearch
         case "arxiv":
             from gpt_researcher.retrievers import ArxivSearch
 
-            retriever = ArxivSearch
+            return ArxivSearch
         case "tavily":
             from gpt_researcher.retrievers import TavilySearch
 
-            retriever = TavilySearch
+            return TavilySearch
         case "exa":
             from gpt_researcher.retrievers import ExaSearch
 
-            retriever = ExaSearch
+            return ExaSearch
         case "semantic_scholar":
             from gpt_researcher.retrievers import SemanticScholarSearch
 
-            retriever = SemanticScholarSearch
+            return SemanticScholarSearch
         case "pubmed_central":
             from gpt_researcher.retrievers import PubMedCentralSearch
 
-            retriever = PubMedCentralSearch
+            return PubMedCentralSearch
         case "custom":
             from gpt_researcher.retrievers import CustomRetriever
 
-            retriever = CustomRetriever
+            return CustomRetriever
 
         case _:
-            retriever = None
-
-    return retriever
+            return None
 
 
-def get_retrievers(headers, cfg):
+def get_retrievers(headers: dict[str, str], cfg: Config):
     """
     Determine which retriever(s) to use based on headers, config, or default.
 
@@ -103,7 +100,7 @@ def get_retrievers(headers, cfg):
     return [get_retriever(r) or get_default_retriever() for r in retrievers]
 
 
-def get_default_retriever(retriever):
+def get_default_retriever():
     from gpt_researcher.retrievers import TavilySearch
 
     return TavilySearch
