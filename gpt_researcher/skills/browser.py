@@ -1,8 +1,6 @@
-from typing import List, Dict
-
 from ..actions.utils import stream_output
 from ..actions.web_scraping import scrape_urls
-from ..scraper.utils import get_image_hash  # Add this import
+from ..scraper.utils import get_image_hash
 
 
 class BrowserManager:
@@ -11,15 +9,15 @@ class BrowserManager:
     def __init__(self, researcher):
         self.researcher = researcher
 
-    async def browse_urls(self, urls: List[str]) -> List[Dict]:
+    async def browse_urls(self, urls: list[str]) -> list[dict]:
         """
         Scrape content from a list of URLs.
 
         Args:
-            urls (List[str]): List of URLs to scrape.
+            urls (list[str]): list of URLs to scrape.
 
         Returns:
-            List[Dict]: List of scraped content results.
+            list[dict]: list of scraped content results.
         """
         if self.researcher.verbose:
             await stream_output(
@@ -31,7 +29,7 @@ class BrowserManager:
 
         scraped_content, images = scrape_urls(urls, self.researcher.cfg)
         self.researcher.add_research_sources(scraped_content)
-        new_images = self.select_top_images(images, k=4)  # Select top 2 images
+        new_images = self.select_top_images(images, k=4)  # Select top 4 images
         self.researcher.add_research_images(new_images)
 
         if self.researcher.verbose:
@@ -58,16 +56,16 @@ class BrowserManager:
 
         return scraped_content
 
-    def select_top_images(self, images: List[Dict], k: int = 2) -> List[str]:
+    def select_top_images(self, images: list[dict], k: int = 2) -> list[str]:
         """
         Select most relevant images and remove duplicates based on image content.
 
         Args:
-            images (List[Dict]): List of image dictionaries with 'url' and 'score' keys.
+            images (list[dict]): list of image dictionaries with 'url' and 'score' keys.
             k (int): Number of top images to select if no high-score images are found.
 
         Returns:
-            List[str]: List of selected image URLs.
+            list[str]: list of selected image URLs.
         """
         unique_images = []
         seen_hashes = set()
@@ -78,7 +76,11 @@ class BrowserManager:
 
         for img in high_score_images + images:  # Process high-score images first, then all images
             img_hash = get_image_hash(img['url'])
-            if img_hash and img_hash not in seen_hashes and img['url'] not in current_research_images:
+            if (
+                img_hash
+                and img_hash not in seen_hashes
+                and img['url'] not in current_research_images
+            ):
                 seen_hashes.add(img_hash)
                 unique_images.append(img['url'])
 

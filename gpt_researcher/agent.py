@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any, Set
+from typing import Any
 import json
 
 from .config import Config
@@ -33,10 +33,10 @@ class GPTResearcher:
         report_format: str = "markdown",
         report_source: str = ReportSource.Web.value,
         tone: Tone = Tone.Objective,
-        source_urls=None,
-        document_urls=None,
-        complement_source_urls=False,
-        query_domains: List[str] = [],
+        source_urls: list[str] | None = None,
+        document_urls: list[str] | None = None,
+        complement_source_urls: bool = False,
+        query_domains: list[str] | None = None,
         documents=None,
         vector_store=None,
         vector_store_filter=None,
@@ -45,11 +45,11 @@ class GPTResearcher:
         agent=None,
         role=None,
         parent_query: str = "",
-        subtopics: list = [],
-        visited_urls: set = set(),
+        subtopics: list | None = None,
+        visited_urls: set | None = None,
         verbose: bool = True,
-        context=[],
-        headers: dict = None,
+        context=None,
+        headers: dict | None = None,
         max_subtopics: int = 5,
         log_handler=None,
     ):
@@ -63,8 +63,8 @@ class GPTResearcher:
         self.tone = tone if isinstance(tone, Tone) else Tone.Objective
         self.source_urls = source_urls
         self.document_urls = document_urls
-        self.complement_source_urls: bool = complement_source_urls
-        self.query_domains = query_domains
+        self.complement_source_urls = complement_source_urls
+        self.query_domains = query_domains or []
         self.research_sources = []  # The list of scraped sources including title, content and images
         self.research_images = []  # The list of selected research images
         self.documents = documents
@@ -74,10 +74,10 @@ class GPTResearcher:
         self.agent = agent
         self.role = role
         self.parent_query = parent_query
-        self.subtopics = subtopics
-        self.visited_urls = visited_urls
+        self.subtopics = subtopics or []
+        self.visited_urls = visited_urls or set()
         self.verbose = verbose
-        self.context = context
+        self.context = context or []
         self.headers = headers or {}
         self.research_costs = 0.0
         self.retrievers = get_retrievers(self.headers, self.cfg)
@@ -232,10 +232,10 @@ class GPTResearcher:
     async def get_similar_written_contents_by_draft_section_titles(
         self,
         current_subtopic: str,
-        draft_section_titles: List[str],
-        written_contents: List[Dict],
+        draft_section_titles: list[str],
+        written_contents: list[dict],
         max_results: int = 10
-    ) -> List[str]:
+    ) -> list[str]:
         return await self.context_manager.get_similar_written_contents_by_draft_section_titles(
             current_subtopic,
             draft_section_titles,
@@ -244,25 +244,25 @@ class GPTResearcher:
         )
 
     # Utility methods
-    def get_research_images(self, top_k=10) -> List[Dict[str, Any]]:
+    def get_research_images(self, top_k=10) -> list[dict[str, Any]]:
         return self.research_images[:top_k]
 
-    def add_research_images(self, images: List[Dict[str, Any]]) -> None:
+    def add_research_images(self, images: list[dict[str, Any]]) -> None:
         self.research_images.extend(images)
 
-    def get_research_sources(self) -> List[Dict[str, Any]]:
+    def get_research_sources(self) -> list[dict[str, Any]]:
         return self.research_sources
 
-    def add_research_sources(self, sources: List[Dict[str, Any]]) -> None:
+    def add_research_sources(self, sources: list[dict[str, Any]]) -> None:
         self.research_sources.extend(sources)
 
     def add_references(self, report_markdown: str, visited_urls: set) -> str:
         return add_references(report_markdown, visited_urls)
 
-    def extract_headers(self, markdown_text: str) -> List[Dict]:
+    def extract_headers(self, markdown_text: str) -> list[dict]:
         return extract_headers(markdown_text)
 
-    def extract_sections(self, markdown_text: str) -> List[Dict]:
+    def extract_sections(self, markdown_text: str) -> list[dict]:
         return extract_sections(markdown_text)
 
     def table_of_contents(self, markdown_text: str) -> str:
