@@ -30,6 +30,7 @@ OPENAI_API_BASE="http://127.0.0.1:11434/v1"
 OLLAMA_BASE_URL="http://127.0.0.1:11434/"
 FAST_LLM="ollama:qwen2:1.5b"
 SMART_LLM="ollama:qwen2:1.5b"
+STRATEGIC_LLM="ollama:qwen2:1.5b"
 EMBEDDING="ollama:all-minilm:22m"
 ```
 
@@ -42,8 +43,8 @@ Elestio is a platform that allows you to deploy and manage custom language model
 
 You can deploy an [Open WebUI](https://github.com/open-webui/open-webui/tree/main) server with [Elestio](https://elest.io/open-source/ollama)
 
-## Run LLM Test Script for GPTR
 
+## Run LLM Test Script for GPTR
 
 You can leverage the global `test-your-llm` function with `tests/test-your-llm`.
 Here are the steps to do so:
@@ -56,7 +57,8 @@ OPENAI_API_BASE="https://ollama-2d52b-u21899.vm.elestio.app:57987/v1"
 OLLAMA_BASE_URL="https://ollama-2d52b-u21899.vm.elestio.app:57987/"
 FAST_LLM="openai:qwen2.5"
 SMART_LLM="openai:qwen2.5"
-EMBEDDING="ollama:nomic-embed-text"
+STRATEGIC_LLM="openai:qwen2.5"
+EMBEDDING="openai:nomic-embed-text"
 ```
 
 Note: to verify you're pointing at the correct API URL, you can run something like this in your terminal:
