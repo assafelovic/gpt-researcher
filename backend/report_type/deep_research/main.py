@@ -1,10 +1,9 @@
 from gpt_researcher import GPTResearcher
-from gpt_researcher.utils.enum import ReportType, Tone
 from backend.utils import write_md_to_pdf
 import asyncio
 
 
-async def main():
+async def main(task: str):
     # Progress callback
     def on_progress(progress):
         print(f"Depth: {progress.current_depth}/{progress.total_depth}")
@@ -15,9 +14,8 @@ async def main():
     
     # Initialize researcher with deep research type
     researcher = GPTResearcher(
-        query="What are the reasons for the recent rise in the price of Bitcoin?",
+        query=task,
         report_type="deep",  # This will trigger deep research
-        tone=Tone.Objective,
     )
     
     # Run research with progress tracking
@@ -31,4 +29,5 @@ async def main():
     print(f"\nFinal Report: {report}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    query = "What are the most effective ways for beginners to start investing?"
+    asyncio.run(main(query))
