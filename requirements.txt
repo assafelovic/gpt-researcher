@@ -28,6 +28,7 @@ unstructured
 json_repair
 json5
 loguru
+langgraph
 
 # uncomment for testing
 # pytest
