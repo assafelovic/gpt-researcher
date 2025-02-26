@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from typing import Dict, cast, Tuple, List
 import requests
-import zendriver
 import asyncio
 import logging
 
@@ -29,10 +28,9 @@ class NoDriverScraper:
         return domain
 
     class Browser:
-
         def __init__(
             self,
-            driver: zendriver.Browser,
+            driver,
             session: requests.Session | None,
         ):
             self.driver = driver
@@ -44,7 +42,7 @@ class NoDriverScraper:
             self.tab_mode = True
             self.max_scroll_percent = 500
 
-        async def get(self, url: str) -> zendriver.Tab:
+        async def get(self, url: str):
             self.processing_count += 1
             try:
                 async with self.rate_limit_for_domain(url):
@@ -58,7 +56,7 @@ class NoDriverScraper:
                 self.processing_count -= 1
                 raise e
 
-        async def scroll_page_to_bottom(self, page: zendriver.Tab):
+        async def scroll_page_to_bottom(self, page):
             total_scroll_percent = 0
             while True:
                 # in tab mode, we need to bring the tab to front before scrolling to load the page content properly
@@ -81,7 +79,7 @@ class NoDriverScraper:
                 ):
                     break
 
-        async def close_page(self, page: zendriver.Tab):
+        async def close_page(self, page):
             try:
                 await page.close()
             finally:
@@ -114,6 +112,13 @@ class NoDriverScraper:
     async def get_browser(
         cls, session: requests.Session | None, headless: bool = False
     ) -> "NoDriverScraper.Browser":
+        try:
+            import zendriver
+        except ImportError:
+            raise ImportError(
+                "The zendriver package is required to use NoDriverScraper. "
+                "Please install it with: pip install zendriver"
+            )
 
         async def create_browser():
             await cls.browser_throttler.acquire()
@@ -164,9 +169,14 @@ class NoDriverScraper:
             )
 
         browser: NoDriverScraper.Browser | None = None
-        page: zendriver.Tab | None = None
+        page = None
         try:
-            browser = await self.get_browser(session=self.session)
+            try:
+                browser = await self.get_browser(session=self.session)
+            except ImportError as e:
+                self.logger.error(f"Failed to initialize browser: {str(e)}")
+                return str(e), [], ""
+
             page = await browser.get(self.url)
             await page.wait(2)
             await page.sleep(random.uniform(1, 2.3))
