@@ -10,6 +10,7 @@ from langchain.prompts import PromptTemplate
 from ..prompts import generate_subtopics_prompt
 from .costs import estimate_llm_cost
 from .validators import Subtopics
+import os
 
 
 def get_llm(llm_provider, **kwargs):
