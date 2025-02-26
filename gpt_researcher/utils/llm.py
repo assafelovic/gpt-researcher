@@ -63,6 +63,11 @@ async def create_chat_completion(
         kwargs['temperature'] = temperature
         kwargs['max_tokens'] = max_tokens
 
+    if llm_provider == "openai":
+        base_url = os.environ.get("OPENAI_BASE_URL", None)
+        if base_url:
+            kwargs['openai_api_base'] = base_url
+
     provider = get_llm(llm_provider, **kwargs)
     response = ""
     # create response
