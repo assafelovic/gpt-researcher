@@ -11,9 +11,13 @@ You can choose your preferred scraping method by setting the `SCRAPER` environme
    export SCRAPER="bs"
    ```
 
-2. For Selenium (dynamic browser scraping):
+2. For dynamic browser scraping, either with Selenium:
    ```
    export SCRAPER="browser"
+   ```
+   Or with NoDriver (ZenDriver):
+   ```
+   export SCRAPER="nodriver"
    ```
 
 3. For **production** use cases, you can set the Scraper to `tavily_extract` or `firecrawl`. [Tavily](https://tavily.com) allows you to scrape sites at scale without the hassle of setting up proxies, managing cookies, or dealing with CAPTCHAs. Please note that you need to have a Tavily account and [API key](https://app.tavily.com) to use this option. To learn more about Tavily Extract [see here](https://docs.tavily.com/docs/python-sdk/tavily-extract/getting-started).
@@ -66,6 +70,15 @@ Limitations:
 - Slower than static scraping
 - Requires more system resources
 - Requires additional setup (Selenium and WebDriver installation)
+
+### NoDriver (Browser Scraping)
+
+Alternative to Selenium for potentially better performance.
+
+Setup:
+```bash
+pip install zendriver
+```
 
 ### Tavily Extract (Recommended for Production)
 

@@ -1,12 +1,17 @@
 from typing import List, Dict, Any, Tuple
 from colorama import Fore, Style
+
+from gpt_researcher.utils.workers import WorkerPool
 from ..scraper import Scraper
 from ..config.config import Config
 from ..utils.logger import get_formatted_logger
 
 logger = get_formatted_logger()
 
-def scrape_urls(urls, cfg=None) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+
+async def scrape_urls(
+    urls, cfg: Config, worker_pool: WorkerPool
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Scrapes the urls
     Args:
@@ -26,8 +31,8 @@ def scrape_urls(urls, cfg=None) -> Tuple[List[Dict[str, Any]], List[Dict[str, An
     )
 
     try:
-        scraper = Scraper(urls, user_agent, cfg.scraper)
-        scraped_data = scraper.run()
+        scraper = Scraper(urls, user_agent, cfg.scraper, worker_pool=worker_pool)
+        scraped_data = await scraper.run()
         for item in scraped_data:
             if 'image_urls' in item:
                 images.extend([img for img in item['image_urls']])
@@ -35,6 +40,7 @@ def scrape_urls(urls, cfg=None) -> Tuple[List[Dict[str, Any]], List[Dict[str, An
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
 
     return scraped_data, images
+
 
 async def filter_urls(urls: List[str], config: Config) -> List[str]:
     """
