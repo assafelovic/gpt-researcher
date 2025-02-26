@@ -295,7 +295,7 @@ response:
 task: "what are the most interesting sites in Tel Aviv?"
 response:
 {
-    "server:  "🌍 Travel Agent",
+    "server":  "🌍 Travel Agent",
     "agent_role_prompt": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights."
 }
 """
