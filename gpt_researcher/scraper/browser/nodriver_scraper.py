@@ -219,11 +219,7 @@ class NoDriverScraper:
                 "Full stack trace:\n"
                 f"{traceback.format_exc()}"
             )
-            return (
-                f"An error occurred: {str(e)}\n\nStack trace:\n{traceback.format_exc()}",
-                [],
-                "",
-            )
+            return str(e), [], ""
         finally:
             if page and browser:
                 await browser.close_page(page)
