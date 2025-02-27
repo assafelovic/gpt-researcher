@@ -1,6 +1,3 @@
-import asyncio
-from typing import List, Dict
-
 from gpt_researcher.utils.workers import WorkerPool
 
 from ..actions.utils import stream_output
@@ -79,10 +76,8 @@ class BrowserManager:
         seen_hashes = set()
         current_research_images = self.researcher.get_research_images()
 
-        # First, select all score 2 and 3 images
-        high_score_images = [img for img in images if img['score'] >= 2]
-
-        for img in high_score_images + images:  # Process high-score images first, then all images
+        # Process images in descending order of their scores
+        for img in sorted(images, key=lambda im: im["score"], reverse=True):
             img_hash = get_image_hash(img['url'])
             if (
                 img_hash

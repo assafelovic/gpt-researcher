@@ -41,12 +41,7 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
         # Sort images by score (highest first)
         sorted_images = sorted(image_urls, key=lambda x: x['score'], reverse=True)
         
-        # Select all images with score 3 and 2, then add score 1 images up to a total of 10
-        high_score_images = [img for img in sorted_images if img['score'] in [3, 2]]
-        low_score_images = [img for img in sorted_images if img['score'] == 1]
-        
-        result = high_score_images + low_score_images[:max(0, 10 - len(high_score_images))]
-        return result[:10]  # Ensure we don't return more than 10 images in total
+        return sorted_images[:10]  # Ensure we don't return more than 10 images in total
     
     except Exception as e:
         logging.error(f"Error in get_relevant_images: {e}")
