@@ -35,7 +35,7 @@ async def scrape_urls(
         scraped_data = await scraper.run()
         for item in scraped_data:
             if 'image_urls' in item:
-                images.extend([img for img in item['image_urls']])
+                images.extend(item['image_urls'])
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
 
