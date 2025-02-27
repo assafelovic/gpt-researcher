@@ -120,19 +120,24 @@ The evaluation provides detailed metrics including:
 ### Example Output
 ```
 === Evaluation Summary ===
-Total queries tested: 10
-Successful queries: 9
-Failed queries: 1
-
 === AGGREGATE METRICS ===
+
+Debug counts:
+Total successful: 100
+CORRECT: 92
+INCORRECT: 7
+NOT_ATTEMPTED: 1
 {
-  "correct_rate": 0.667,
-  "incorrect_rate": 0.222,
-  "not_attempted_rate": 0.111,
-  "answer_rate": 0.889,
-  "accuracy": 0.750,
-  "f1": 0.800
+  "correct_rate": 0.92,
+  "incorrect_rate": 0.07,
+  "not_attempted_rate": 0.01,
+  "answer_rate": 0.99,
+  "accuracy": 0.9292929292929293,
+  "f1": 0.9246231155778895
 }
+========================
+Accuracy: 0.929
+F1 Score: 0.925
 
 Total cost: $1.2345
 Average cost per query: $0.1371
