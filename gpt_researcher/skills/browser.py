@@ -1,6 +1,3 @@
-import asyncio
-from typing import List, Dict
-
 from gpt_researcher.utils.workers import WorkerPool
 
 from ..actions.utils import stream_output
