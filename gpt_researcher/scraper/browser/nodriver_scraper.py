@@ -30,7 +30,7 @@ class NoDriverScraper:
     class Browser:
         def __init__(
             self,
-            driver,
+            driver: "zendriver.Browser",
             session: requests.Session | None,
         ):
             self.driver = driver
@@ -42,7 +42,7 @@ class NoDriverScraper:
             self.tab_mode = True
             self.max_scroll_percent = 500
 
-        async def get(self, url: str):
+        async def get(self, url: str) -> "zendriver.Tab":
             self.processing_count += 1
             try:
                 async with self.rate_limit_for_domain(url):
@@ -56,7 +56,7 @@ class NoDriverScraper:
                 self.processing_count -= 1
                 raise
 
-        async def scroll_page_to_bottom(self, page):
+        async def scroll_page_to_bottom(self, page: "zendriver.Tab"):
             total_scroll_percent = 0
             while True:
                 # in tab mode, we need to bring the tab to front before scrolling to load the page content properly
@@ -79,7 +79,7 @@ class NoDriverScraper:
                 ):
                     break
 
-        async def close_page(self, page):
+        async def close_page(self, page: "zendriver.Tab"):
             try:
                 await page.close()
             finally:
@@ -113,6 +113,7 @@ class NoDriverScraper:
         cls, session: requests.Session | None, headless: bool = False
     ) -> "NoDriverScraper.Browser":
         try:
+            global zendriver
             import zendriver
         except ImportError:
             raise ImportError(
