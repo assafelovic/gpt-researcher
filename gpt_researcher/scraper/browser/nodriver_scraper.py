@@ -52,9 +52,9 @@ class NoDriverScraper:
                         return await self.driver.get(url, new_tab=new_window)
                     else:
                         return await self.driver.get(url, new_window=new_window)
-            except Exception as e:
+            except Exception:
                 self.processing_count -= 1
-                raise e
+                raise
 
         async def scroll_page_to_bottom(self, page):
             total_scroll_percent = 0
@@ -122,12 +122,16 @@ class NoDriverScraper:
 
         async def create_browser():
             await cls.browser_throttler.acquire()
-            config = zendriver.Config(
-                headless=headless,
-                browser_connection_timeout=3,
-            )
-            driver = await zendriver.start(config)
-            return cls.Browser(driver, session)
+            try:
+                config = zendriver.Config(
+                    headless=headless,
+                    browser_connection_timeout=3,
+                )
+                driver = await zendriver.start(config)
+                return cls.Browser(driver, session)
+            except Exception:
+                cls.browser_throttler.release()
+                raise
 
         try:
             browser_task = cls.browser_tasks.get(session)
