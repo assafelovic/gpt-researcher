@@ -34,7 +34,7 @@ export interface ChatBoxSettings {
   report_type: string;
   report_source: string;
   tone: string;
-  query_domains: string[];
+  domains: string[];
   defaultReportType: string;
 }
 
