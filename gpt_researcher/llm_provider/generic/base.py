@@ -21,6 +21,7 @@ _SUPPORTED_PROVIDERS = {
     "xai",
     "deepseek",
     "litellm",
+    "gigachat"
 }
 
 
