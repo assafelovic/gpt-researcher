@@ -24,7 +24,7 @@ export default function Home() {
     report_source: 'web', 
     report_type: 'research_report', 
     tone: 'Objective',
-    query_domains: [],
+    domains: [],
     defaultReportType: 'research_report'
   });
   const [question, setQuestion] = useState("");
