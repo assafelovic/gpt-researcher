@@ -48,13 +48,13 @@ export const useWebSocket = (
       setSocket(newSocket);
 
       newSocket.onopen = () => {
-        const { report_type, report_source, tone, query_domains } = chatBoxSettings;
+        const { report_type, report_source, tone, domains } = chatBoxSettings;
         let data = "start " + JSON.stringify({ 
           task: promptValue,
           report_type, 
           report_source, 
           tone,
-          query_domains
+          query_domains: domains.map(domain => domain.value)
         });
         newSocket.send(data);
         startHeartbeat(newSocket);
