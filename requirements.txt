@@ -11,7 +11,7 @@ python-multipart
 markdown
 langchain
 langchain_community
-langchain-openai
+
 tiktoken
 gpt-researcher
 arxiv
@@ -28,7 +28,7 @@ unstructured
 json_repair
 json5
 loguru
-langgraph
+langgraph==0.2.76
 
 # uncomment for testing
 # pytest
