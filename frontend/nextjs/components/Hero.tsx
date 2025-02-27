@@ -19,9 +19,9 @@ const Hero: FC<THeroProps> = ({
 
   return (
     <div>
-      <div className="flex flex-col items-center justify-center">
-        <div className="landing flex flex-col items-center">
-          <h1 className="text-4xl font-extrabold text-center lg:text-7xl">
+      <div className="flex flex-col items-center justify-center py-8 md:py-12 lg:pt-8 lg:pb-16">
+        <div className="landing flex flex-col items-center mb-8 md:mb-12">
+          <h1 className="text-4xl font-extrabold text-center lg:text-7xl mb-6">
             Say Goodbye to <br />
             <span
               style={{
@@ -33,13 +33,13 @@ const Hero: FC<THeroProps> = ({
               Hours of Research
             </span>
           </h1>
-          <h2 className="text-xl font-light text-center px-4 mb-10 text-gray-300">
+          <h2 className="text-xl font-light text-center px-4 mb-10 md:mb-12 text-gray-300">
             Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research
           </h2>
         </div>
 
         {/* Input section */}
-        <div className="w-full max-w-[708px] pb-6">
+        <div className="w-full max-w-[708px] pb-8 md:pb-10 px-4">
           <InputArea
             promptValue={promptValue}
             setPromptValue={setPromptValue}
@@ -48,7 +48,7 @@ const Hero: FC<THeroProps> = ({
         </div>
 
         {/* Suggestions section */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5 pb-[30px] lg:flex-nowrap lg:justify-normal">
+        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 pb-8 md:pb-10 px-4 lg:flex-nowrap lg:justify-normal">
           {suggestions.map((item) => (
             <div
               className="flex h-[35px] cursor-pointer items-center justify-center gap-[5px] rounded border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"
