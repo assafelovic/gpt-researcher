@@ -152,7 +152,7 @@ class NoDriverScraper:
             return browser
 
     @classmethod
-    async def stop_browser_if_necessary(cls, browser: Browser):
+    async def release_browser(cls, browser: Browser):
         async with cls.browsers_lock:
             if browser and browser.processing_count <= 0:
                 try:
@@ -225,4 +225,4 @@ class NoDriverScraper:
             if page and browser:
                 await browser.close_page(page)
             if browser:
-                await self.stop_browser_if_necessary(browser)
+                await self.release_browser(browser)
