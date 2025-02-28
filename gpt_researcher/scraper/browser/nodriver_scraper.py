@@ -144,7 +144,7 @@ class NoDriverScraper:
 
             # If all browsers are heavily loaded and we can create more
             if (
-                browser.processing_count > cls.browser_load_threshold
+                browser.processing_count >= cls.browser_load_threshold
                 and len(cls.browsers) < cls.max_browsers
             ):
                 return await create_browser()
