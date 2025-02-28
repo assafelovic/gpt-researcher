@@ -106,6 +106,7 @@ class DetailedReport:
             agent=self.gpt_researcher.agent,
             role=self.gpt_researcher.role,
             tone=self.tone,
+            language=self.language
         )
 
         subtopic_assistant.context = list(set(self.global_context))
