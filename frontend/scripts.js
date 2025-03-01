@@ -101,7 +101,7 @@ const GPTResearcher = (() => {
     // return dispose function
     return () => {
       try {
-        if (socket.readyState === WebSocket.OPEN) {
+        if (socket.readyState !== WebSocket.CLOSED && socket.readyState !== WebSocket.CLOSING) {
           socket.close();
         }
       } catch (e) {
