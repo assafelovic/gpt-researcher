@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from langgraph.graph.state import CompiledStateGraph, StateGraph
+
 if __name__ == "__main__":
     import sys
+
     from pathlib import Path
 
     sys.path.append(str(Path(__file__).parent.parent))
@@ -24,7 +27,7 @@ chief_editor = ChiefEditorAgent(
     websocket=None,
     stream_output=None,
 )
-graph = chief_editor.init_research_team()
-graph = graph.compile()
+graph: StateGraph = chief_editor.init_research_team()
+compiled_graph: CompiledStateGraph = graph.compile()
 
-graph.invoke({"query": "Is AI in a hype cycle?"})
+compiled_graph.invoke({"query": "Is AI in a hype cycle?"})

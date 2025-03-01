@@ -211,6 +211,32 @@ button:disabled {
     line-height: 1.7;
     overflow-x: auto;
     border: 1px solid var(--border);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#report-container {
+    display: none;
+    margin-top: 2rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+#report-container h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+    font-size: 1.5rem;
+}
+
+.markdown-report {
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 2rem;
 }
 
 .error {
@@ -366,4 +392,196 @@ input:checked + .slider:before {
     font-size: 0.875rem;
     flex: 1;
     min-width: 100px;
+}
+
+/* Add styles for download section and buttons */
+.download-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+}
+
+.download-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.download-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.download-button {
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.download-button.generating {
+    background-color: #f1f5f9;
+    cursor: not-allowed;
+    opacity: 0.8;
+    position: relative;
+    color: #64748b;
+    border-color: #64748b;
+}
+
+.download-button.generating::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background-color: #64748b;
+    animation: download-progress 1.5s infinite ease-in-out;
+}
+
+@keyframes download-progress {
+    0% { width: 0%; }
+    50% { width: 100%; }
+    100% { width: 0%; }
+}
+
+.download-button:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.download-button.generating:hover {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.download-icon {
+    font-size: 1.25rem;
+}
+
+/* Markdown report styling */
+.markdown-report {
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    margin: 1rem 0;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.markdown-report h1, 
+.markdown-report h2, 
+.markdown-report h3, 
+.markdown-report h4, 
+.markdown-report h5, 
+.markdown-report h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text);
+}
+
+.markdown-report h1 {
+    font-size: 1.8rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+}
+
+.markdown-report h2 {
+    font-size: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3rem;
+}
+
+.markdown-report h3 {
+    font-size: 1.3rem;
+}
+
+.markdown-report p {
+    margin: 1rem 0;
+}
+
+.markdown-report ul, 
+.markdown-report ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.markdown-report li {
+    margin: 0.5rem 0;
+}
+
+.markdown-report blockquote {
+    border-left: 4px solid var(--primary);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #64748b;
+}
+
+.markdown-report code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+}
+
+.markdown-report pre {
+    background: #f1f5f9;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.markdown-report pre code {
+    background: transparent;
+    padding: 0;
+}
+
+.markdown-report a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.markdown-report a:hover {
+    text-decoration: underline;
+}
+
+.markdown-report table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+}
+
+.markdown-report th, 
+.markdown-report td {
+    border: 1px solid var(--border);
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.markdown-report th {
+    background: #f1f5f9;
+}
+
+.markdown-report img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
 } 

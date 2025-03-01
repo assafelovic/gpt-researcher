@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
 
@@ -173,12 +174,16 @@ class SerperSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ) -> None:
         """Initializes the SerperSearch object.
 
         Args:
             query (str): The search query string.
             query_domains (list, optional): List of domains to include in the search. Defaults to None.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
         """
         self.query: str = query
         self.query_domains: list[str] | None = query_domains

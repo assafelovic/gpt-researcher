@@ -5,6 +5,7 @@ import traceback
 
 from dotenv import load_dotenv
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
+from langchain_core.messages import BaseMessage
 
 load_dotenv()
 
@@ -20,6 +21,7 @@ async def main():
         llm_provider,
         model=model,
         temperature=temperature,
+        fallback_models=["litellm:openai/gpt-3.5-turbo"],
         max_tokens=max_tokens,
     )
     print(f"LLM Provider: {llm_provider}, Model: {model}, Temperature: {temperature}, Max Tokens: {max_tokens}")
@@ -29,7 +31,7 @@ async def main():
 
 async def test_llm(llm: GenericLLMProvider):
     # Test the connection with a simple query
-    messages = [{"role": "user", "content": "sup?"}]
+    messages: list[BaseMessage | dict[str, str]] = [{"role": "user", "content": "sup?"}]
     try:
         response = await llm.get_chat_response(messages, stream=False)
         print("LLM response:", response)

@@ -177,11 +177,16 @@ class SerpApiSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ) -> None:
         """
         Initializes the SerpApiSearch object
         Args:
-            query:
+            query: The search query string.
+            query_domains: The domains to whitelist for search.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
         """
         self.query: str = query
         self.query_domains: list[str] | None = query_domains

@@ -4,18 +4,12 @@ import json
 import logging
 import os
 
-from typing import TYPE_CHECKING, Any, ClassVar, Coroutine, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Coroutine
 
 from langchain_core.documents import Document
 
-from llm_fallbacks.config import FREE_MODELS, LiteLLMBaseModelSpec
 from gpt_researcher.actions.agent_creator import choose_agent
-from gpt_researcher.actions.markdown_processing import (
-    add_references,
-    extract_headers,
-    extract_sections,
-    table_of_contents,
-)
+from gpt_researcher.actions.markdown_processing import add_references, extract_headers, extract_sections, table_of_contents
 from gpt_researcher.actions.retriever import get_retrievers
 from gpt_researcher.config import Config
 from gpt_researcher.llm_provider import GenericLLMProvider
@@ -25,18 +19,12 @@ from gpt_researcher.skills.context_manager import ContextManager
 from gpt_researcher.skills.curator import SourceCurator
 from gpt_researcher.skills.researcher import ResearchConductor
 from gpt_researcher.skills.writer import ReportGenerator
+from gpt_researcher.utils.enum import OutputFileType, ReportFormat, ReportSource, ReportType, Tone
 from gpt_researcher.utils.validators import Subtopics
-from gpt_researcher.utils.enum import (
-    OutputFileType,
-    ReportFormat,
-    ReportSource,
-    ReportType,
-    Tone,
-)
 from gpt_researcher.vector_store import VectorStoreWrapper
 
 if TYPE_CHECKING:
-    from backend.server.server_utils import CustomLogsHandler
+    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
     from fastapi.websockets import WebSocket
     from langchain_community.vectorstores import VectorStore
     from langchain_core.retrievers import BaseRetriever
@@ -50,10 +38,10 @@ class GPTResearcher:
     def __init__(
         self,
         query: str,
-        report_type: ReportType | str | None = ReportType.ResearchReport.value,
-        report_format: ReportFormat | str | None = ReportFormat.APA.value,
-        output_file_type: OutputFileType = OutputFileType.MARKDOWN,
-        report_source: ReportSource | str | None = ReportSource.Web.value,
+        report_type: ReportType | str | None = None,
+        report_format: ReportFormat | str | None = None,
+        output_file_type: OutputFileType | str | None = None,
+        report_source: ReportSource | str | None = None,
         tone: Tone | str | None = None,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
@@ -62,7 +50,7 @@ class GPTResearcher:
         vector_store: VectorStore | None = None,
         vector_store_filter: dict[str, Any] | None = None,
         config: Config | dict[str, Any] | os.PathLike | str | None = None,
-        websocket: WebSocket | CustomLogsHandler | None = None,
+        websocket: WebSocket | HTTPStreamAdapter | CustomLogsHandler | None = None,
         agent_role: str | None = None,
         parent_query: str = "",
         subtopics: list[str] | None = None,
@@ -70,7 +58,7 @@ class GPTResearcher:
         verbose: bool = True,
         context: list[str] | None = None,
         headers: dict[str, str] | None = None,
-        max_subtopics: int = 10,
+        max_subtopics: int | None = None,
         log_handler: LogHandler | None = None,
         research_images: list[dict[str, Any]] | None = None,
         research_sources: list[dict[str, Any]] | None = None,
@@ -80,20 +68,12 @@ class GPTResearcher:
         self.query: str = query
         self.cfg: Config = Config(config_path)  # For backwards compatibility
 
-        self.report_type = ReportType.OutlineReport if report_type is None else ReportType(report_type)
-        self.report_source = ReportSource.Web if report_source is None else ReportSource(report_source)
-        self.report_format = ReportFormat.APA if report_format is None else ReportFormat(report_format)
-        self.output_format = output_file_type
-        self.max_subtopics = max_subtopics
-        self.tone = (
-            tone
-            if isinstance(tone, Tone)
-            else (
-                Tone.__members__[tone]
-                if (tone or "").strip() and tone is not None
-                else Tone.Objective
-            )
-        )
+        self.report_type = self.cfg.REPORT_TYPE if report_type is None else report_type
+        self.report_source = self.cfg.REPORT_SOURCE if report_source is None else report_source
+        self.report_format = self.cfg.REPORT_FORMAT if report_format is None else report_format
+        self.output_format = self.cfg.OUTPUT_FORMAT if output_file_type is None else output_file_type
+        self.tone = self.cfg.TONE if tone is None else tone
+        self.max_subtopics = self.cfg.MAX_SUBTOPICS if max_subtopics is None else max_subtopics
         self.source_urls: list[str] = [] if source_urls is None else source_urls
         self.document_urls: list[str] = [] if document_urls is None else document_urls
         self.complement_source_urls: bool = complement_source_urls
@@ -107,47 +87,27 @@ class GPTResearcher:
                     self.documents.append(document.model_dump())
                 else:
                     self.documents.append(document)
-        self.vector_store: VectorStoreWrapper | None = (
-            None
-            if vector_store is None
-            else VectorStoreWrapper(vector_store)
-        )
+        self.vector_store: VectorStoreWrapper | None = None if vector_store is None else VectorStoreWrapper(vector_store)
         self.vector_store_filter: dict[str, Any] | None = vector_store_filter
-        self.websocket: CustomLogsHandler | WebSocket | None = websocket
+        self.websocket: CustomLogsHandler | WebSocket | HTTPStreamAdapter | None = websocket
         self.parent_query: str = parent_query
         self.subtopics: list[str] = [] if subtopics is None else subtopics
         self.visited_urls: set[str] = set() if visited_urls is None else visited_urls
         self.agent_role = agent_role if agent_role else ""
-        self.verbose = verbose
 
         self.context: list[str] = [] if context is None else context
         self.headers: dict[str, str] = {} if headers is None else headers
         self.research_costs: float = 0.0
-        self.retrievers: list[type[BaseRetriever]] = get_retrievers(
-            self.headers,
-            self.cfg,
-        )
+        self.retrievers: list[type[BaseRetriever]] = get_retrievers(self.headers, self.cfg)
         self.memory: Memory = Memory(
             self.cfg.EMBEDDING_PROVIDER,
             self.cfg.EMBEDDING_MODEL,
             **self.cfg.EMBEDDING_KWARGS,
         )
         self.log_handler: LogHandler | None = log_handler
-        self.fallback_models: dict[Literal["SMART", "FAST", "STRATEGIC"] | str, list[tuple[str, LiteLLMBaseModelSpec]]] = {
-            "SMART": [],
-            "FAST": [],
-            "STRATEGIC": [],
-        }
-        for model_type in ["SMART", "FAST", "STRATEGIC"]:
-            for model in FREE_MODELS:
-                if model in self.INCOMPATIBLE_MODELS[model_type]:
-                    logging.getLogger().debug(f"Skipping incompatible model: {model} for model type '{model_type}'")
-                    continue
-                self.fallback_models[model_type].append(model)
         self.llm: GenericLLMProvider = GenericLLMProvider(
-            self.smart_llm,
-            use_fallbacks=self.cfg.USE_FALLBACKS,
-            fallback_models=self.fallback_models["SMART"],
+            self.cfg.SMART_LLM,
+            fallback_models=self.cfg.FALLBACK_MODELS,
         )
 
         # Initialize components
@@ -163,7 +123,7 @@ class GPTResearcher:
         **kwargs,
     ):
         """Helper method to handle logging events."""
-        if self.log_handler:
+        if self.log_handler is not None:
             try:
                 if event_type == "tool":
                     await self.log_handler.on_tool_start(kwargs.get("tool_name", ""), **kwargs)
@@ -373,7 +333,7 @@ class GPTResearcher:
         self,
         verbose: bool,
     ):
-        self.verbose = verbose
+        self.cfg.VERBOSE = verbose
 
     def add_costs(
         self,
@@ -407,23 +367,19 @@ class GPTResearcher:
         self.cfg.AGENT_ROLE = value
 
     @property
-    def verbose(self) -> bool:
-        return self.cfg.VERBOSE
-
-    @verbose.setter
-    def verbose(self, value: bool):
-        self.cfg.VERBOSE = value
-
-    @property
     def tone(self) -> Tone:
         return self.cfg.TONE
 
     @tone.setter
-    def tone(self, value: Tone | str):
+    def tone(self, value: Tone | str | None):
         self.cfg.TONE = (
-            value
-            if isinstance(value, Tone)
+            Tone.Objective
+            if value is None
             else Tone.__members__[value.capitalize()]
+            if isinstance(value, str) and value.capitalize() in Tone.__members__
+            else value
+            if isinstance(value, Tone)
+            else Tone(value)
         )
 
     @property
@@ -433,9 +389,11 @@ class GPTResearcher:
     @report_type.setter
     def report_type(self, value: ReportType | str):
         self.cfg.REPORT_TYPE = (
-            value
+            ReportType.__members__[value.replace("_", " ").title().replace(" ", "")]
+            if isinstance(value, str) and value.replace("_", " ").title().replace(" ", "") in ReportType.__members__
+            else value
             if isinstance(value, ReportType)
-            else ReportType.__members__[value]
+            else ReportType(value)
         )
 
     @property
@@ -445,9 +403,11 @@ class GPTResearcher:
     @report_format.setter
     def report_format(self, value: ReportFormat | str):
         self.cfg.REPORT_FORMAT = (
-            value
+            ReportFormat.__members__[value.upper()]
+            if isinstance(value, str) and value.upper() in ReportFormat.__members__
+            else value
             if isinstance(value, ReportFormat)
-            else ReportFormat.__members__[value]
+            else ReportFormat(value)
         )
 
     @property
@@ -457,9 +417,11 @@ class GPTResearcher:
     @report_source.setter
     def report_source(self, value: ReportSource | str):
         self.cfg.REPORT_SOURCE = (
-            value
+            ReportSource.__members__[value]
+            if isinstance(value, str) and value in ReportSource.__members__
+            else value
             if isinstance(value, ReportSource)
-            else ReportSource.__members__[value]
+            else ReportSource(value)
         )
 
     @property
@@ -469,9 +431,11 @@ class GPTResearcher:
     @output_format.setter
     def output_format(self, value: OutputFileType | str):
         self.cfg.OUTPUT_FORMAT = (
-            value
+            OutputFileType.__members__[value]
+            if isinstance(value, str) and value in OutputFileType.__members__
+            else value
             if isinstance(value, OutputFileType)
-            else OutputFileType.__members__[value.upper()]
+            else OutputFileType(value)
         )
 
     @property

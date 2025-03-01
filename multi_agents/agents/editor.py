@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from gpt_researcher.utils.enum import Tone
+from langgraph.graph import END, StateGraph
+
 from multi_agents.agents.researcher import ResearchAgent
 from multi_agents.agents.reviewer import ReviewerAgent
 from multi_agents.agents.reviser import ReviserAgent
@@ -12,9 +15,8 @@ from multi_agents.agents.utils.llms import call_model
 from multi_agents.agents.utils.views import print_agent_output
 from multi_agents.memory.draft import DraftState
 
-from langgraph.graph import END, StateGraph
-
 if TYPE_CHECKING:
+    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
     from langgraph.graph.state import CompiledStateGraph
 
@@ -24,15 +26,12 @@ class EditorAgent:
 
     def __init__(
         self,
-        websocket: WebSocket | None = None,
-        stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, Any]]
-        | None = None,
+        websocket: WebSocket | HTTPStreamAdapter | None = None,
+        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, Any]] | None = None,
         headers: dict[str, Any] | None = None,
     ):
-        self.websocket: WebSocket | None = websocket
-        self.stream_output: (
-            Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, Any]] | None
-        ) = stream_output
+        self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
+        self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, Any]] | None = stream_output
         self.headers: dict[str, Any] = {} if headers is None else headers
 
     async def plan_research(
@@ -49,7 +48,6 @@ class EditorAgent:
         """
         initial_research: str = str(research_state.get("initial_research") or "")
         task: dict[str, Any] = research_state.get("task") or {}
-        task_type: str = str(task.get("type", "") or "")
         model: str = str(task.get("model", "gpt-4o") or "gpt-4o")
         include_human_feedback: bool = bool(task.get("include_human_feedback", False))
         human_feedback: str | None = research_state.get("human_feedback")
@@ -62,10 +60,8 @@ class EditorAgent:
             max_sections,
         )
 
-        print_agent_output(
-            "Planning an outline layout based on initial research...", agent="EDITOR"
-        )
-        plan = await call_model(prompt=prompt, model=model, response_format="json")
+        print_agent_output("Planning an outline layout based on initial research...", agent="EDITOR")
+        plan: dict[str, Any] = await call_model(prompt=prompt, model=model, response_format="json")
         plan = plan if isinstance(plan, dict) else {}
         return {
             "title": str(plan.get("title", "") or ""),
@@ -84,7 +80,7 @@ class EditorAgent:
         Returns:
             Dictionary with research results
         """
-        agents: dict[str, Any] = self._initialize_agents()
+        _agents: dict[str, Any] = self._initialize_agents()
         workflow: StateGraph = self._create_workflow()
         chain: CompiledStateGraph = workflow.compile()
 
@@ -93,12 +89,9 @@ class EditorAgent:
 
         self._log_parallel_research(queries)
 
-        final_drafts: list[Coroutine[Any, Any, dict[str, Any]]] = [
-            chain.ainvoke(self._create_task_input(research_state, query, title))
-            for query in queries
-        ]
         research_results: list[dict[str, Any]] = [
-            result["draft"] for result in asyncio.gather(*final_drafts)
+            (await chain.ainvoke(self._create_task_input(research_state, query, title)))["draft"]
+            for query in queries
         ]
 
         return {

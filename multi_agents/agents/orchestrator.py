@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from logging import getLogger
+from logging import Logger, getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, cast
 
 from gpt_researcher.utils.enum import Tone
 from langgraph.graph import END, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 # Import agent classes
 from multi_agents.agents.utils.utils import sanitize_filename
@@ -16,11 +17,12 @@ from multi_agents.agents.utils.views import print_agent_output
 from multi_agents.memory.research import ResearchState
 
 if TYPE_CHECKING:
+    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
     from langchain_core.runnables.config import RunnableConfig
     from langgraph.graph.state import CompiledStateGraph
 
-logger = getLogger(__name__)
+logger: Logger = getLogger(__name__)
 
 
 class ChiefEditorAgent:
@@ -29,20 +31,18 @@ class ChiefEditorAgent:
     def __init__(
         self,
         task: dict[str, Any],
-        websocket: WebSocket | None = None,
-        stream_output: Callable | None = None,
+        websocket: WebSocket | HTTPStreamAdapter | None = None,
+        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = None,
         tone: Tone | str | None = None,
         headers: dict[str, Any] | None = None,
     ):
         self.task: dict[str, Any] = task
-        self.websocket: WebSocket | None = websocket
-        self.stream_output: (
-            Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, None]] | None
-        ) = stream_output
+        self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
+        self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = stream_output
         self.headers: dict[str, Any] = {} if headers is None else headers
         self.tone: Tone = Tone.Objective
         if tone is None:
-            ...
+            self.tone = Tone.Objective
         elif isinstance(tone, str):
             self.tone = Tone.__members__[tone.capitalize()]
         else:
@@ -56,14 +56,12 @@ class ChiefEditorAgent:
         return int(datetime.now(timezone.utc).timestamp())
 
     def _create_output_directory(self) -> Path:
-        task_filename = sanitize_filename(
-            f"run_{self.task_id}_{(self.task.get('query', {}) or {})[0:40]}"
-        )
+        task_filename = sanitize_filename(f"run_{self.task_id}_{(self.task.get('query', {}) or {})[0:40]}")
         output_filepath = Path("./outputs/", task_filename)
         output_filepath.parent.mkdir(parents=True, exist_ok=True)
         return output_filepath
 
-    def _initialize_agents(self):
+    def _initialize_agents(self) -> dict[str, Any]:
         from multi_agents.agents import (
             EditorAgent,
             HumanAgent,
@@ -76,9 +74,7 @@ class ChiefEditorAgent:
             "writer": WriterAgent(self.websocket, self.stream_output, self.headers),
             "editor": EditorAgent(self.websocket, self.stream_output, self.headers),
             "research": ResearchAgent(self.websocket, self.stream_output, self.tone, self.headers),
-            "publisher": PublisherAgent(
-                self.output_dir.as_posix(), self.websocket, self.stream_output, self.headers
-            ),
+            "publisher": PublisherAgent(self.output_dir.as_posix(), self.websocket, self.stream_output, self.headers),
             "human": HumanAgent(self.websocket, self.stream_output, self.headers),
         }
 
@@ -89,11 +85,11 @@ class ChiefEditorAgent:
         workflow = StateGraph(ResearchState)
 
         # Add nodes for each agent
-        from agents.editor import EditorAgent
-        from agents.human import HumanAgent
-        from agents.publisher import PublisherAgent
-        from agents.researcher import ResearchAgent
-        from agents.writer import WriterAgent
+        from multi_agents.agents.editor import EditorAgent
+        from multi_agents.agents.human import HumanAgent
+        from multi_agents.agents.publisher import PublisherAgent
+        from multi_agents.agents.researcher import ResearchAgent
+        from multi_agents.agents.writer import WriterAgent
 
         workflow.add_node("browser", cast(ResearchAgent, agents["research"]).run_initial_research)
         workflow.add_node("planner", cast(EditorAgent, agents["editor"]).plan_research)
@@ -167,9 +163,13 @@ class ChiefEditorAgent:
             }
         }
 
-        result = await chain.ainvoke(
+        result: dict[str, Any] = await chain.ainvoke(
             {"task": self.task},
             config=config,
         )
-        logger.info("chain.ainvoke result: ", result, f"({result!r})")
+        logger.info(
+            "chain.ainvoke result: ",
+            result,
+            f"({result!r})",
+        )
         return result.get("research_report", "")

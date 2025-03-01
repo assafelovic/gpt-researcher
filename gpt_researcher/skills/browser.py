@@ -33,7 +33,7 @@ class BrowserManager:
         -------
             tuple[list[dict[str, Any]], list[dict[str, Any]]]: Tuple containing the scraped text data and images.
         """
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "scraping_urls",
@@ -54,8 +54,8 @@ class BrowserManager:
         )
         self.researcher.add_research_images(images)
 
-        if self.researcher.verbose:
-            total_text_length: int = sum(len(page["text"]) for page in text_data)
+        if self.researcher.cfg.VERBOSE:
+            total_text_length: int = sum(len(page.get("text", page.get("content", page.get("raw_content", "")))) for page in text_data)
             num_pages: int = len(text_data)
             average_text_length: float = (
                 total_text_length / num_pages if num_pages > 0 else 0

@@ -23,7 +23,6 @@ def _get_llm(
     cfg: Config,
     model: str | None = None,
     temperature: float | None = None,
-    max_tokens: int | None = None,
 ) -> GenericLLMProvider:
     """Get an LLM provider instance with optional overrides.
 
@@ -31,7 +30,6 @@ def _get_llm(
         cfg: The config object
         model: Optional model override
         temperature: Optional temperature override
-        max_tokens: Optional max_tokens override
 
     Returns:
         The LLM provider instance
@@ -40,7 +38,7 @@ def _get_llm(
         cfg.STRATEGIC_LLM_PROVIDER if model == cfg.STRATEGIC_LLM_MODEL else cfg.SMART_LLM_PROVIDER,
         model=model or cfg.SMART_LLM_MODEL,
         temperature=temperature or cfg.TEMPERATURE,
-        max_tokens=max_tokens,
+        fallback_models=cfg.FALLBACK_MODELS,
         **cfg.llm_kwargs,
     )
 

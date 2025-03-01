@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
+from typing import Any
 from urllib.parse import urlparse
 
 import requests
@@ -16,6 +17,8 @@ class PyMuPDFScraper:
         self,
         link: str,
         session: requests.Session | None = None,
+        *args: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """Initialize the scraper with a link and an optional session.
 
@@ -25,6 +28,8 @@ class PyMuPDFScraper:
         """
         self.link: str = link
         self.session: requests.Session | None = session
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
     def is_url(self) -> bool:
         """Check if the provided `link` is a valid URL.
@@ -40,13 +45,14 @@ class PyMuPDFScraper:
         except Exception:
             return False
 
-    def scrape(self) -> str | None:
+    def scrape(self) -> tuple[str, list[str], str]:
         """Scrape a document from the provided link (either URL or local file)
 
         Returns:
-            str: A string representation of the scraped document.
+            tuple[str, list[str], str]: A tuple containing the content, image URLs, and title of the scraped document.
         """
         try:
+            image_urls: list[str] = []
             if self.is_url():
                 response = requests.get(self.link, timeout=5, stream=True)
                 response.raise_for_status()
@@ -64,11 +70,15 @@ class PyMuPDFScraper:
                 loader = PyMuPDFLoader(self.link)
                 doc = loader.load()
 
-            return str(doc)
+                for page in doc:
+                    for img in getattr(page, "images", []):
+                        image_urls.append(img.url)
+
+            return str(d.model_dump_json() for d in doc), image_urls, ""
 
         except requests.exceptions.Timeout:
             logger.exception(f"Download timed out. Please check the link : {self.link}")
         except Exception as e:
             logger.exception(f"Error loading PDF : {self.link} {e.__class__.__name__}: {e}")
 
-        return None
+        return "", [], ""

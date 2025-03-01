@@ -3,9 +3,9 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from gpt_researcher import GPTResearcher
 from backend.server.server_utils import CustomLogsHandler
-from utils.schemas import Tone
+from gpt_researcher import GPTResearcher
+from gpt_researcher.utils.enum import Tone
 
 
 logger: logging.Logger = logging.getLogger(__name__)

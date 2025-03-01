@@ -9,7 +9,7 @@ from gpt_researcher.utils.logger import get_formatted_logger
 if TYPE_CHECKING:
     import logging
 
-    from backend.server.server_utils import CustomLogsHandler
+    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
     from fastapi.websockets import WebSocket
 
 logger: logging.Logger = get_formatted_logger()
@@ -19,7 +19,7 @@ async def stream_output(
     type: str,
     content: str,
     output: str,
-    websocket: WebSocket | CustomLogsHandler | None = None,
+    websocket: WebSocket | CustomLogsHandler | HTTPStreamAdapter | None = None,
     output_log: bool = True,
     metadata: dict[str, Any] | None = None,
 ) -> None:
@@ -51,7 +51,7 @@ async def stream_output(
 
 
 async def safe_send_json(
-    websocket: WebSocket | CustomLogsHandler | None,
+    websocket: WebSocket | CustomLogsHandler | HTTPStreamAdapter | None,
     data: dict[str, Any],
 ) -> None:
     """Safely send JSON data through a WebSocket connection.

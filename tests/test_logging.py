@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+from typing import Any
 
 import pytest
 from unittest.mock import AsyncMock
@@ -46,7 +47,11 @@ async def test_content_update():
     handler = CustomLogsHandler(mock_websocket, "test_query")
 
     # Test content update
-    content_data: dict[str, str] = {"query": "test query", "sources": ["source1", "source2"], "report": "test report"}
+    content_data: dict[str, Any] = {
+        "query": "test query",
+        "sources": ["source1", "source2"],
+        "report": "test report",
+    }
 
     await handler.send_json(content_data)
 

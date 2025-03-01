@@ -17,6 +17,8 @@ class TavilyExtract:
         self,
         link: str,
         session: requests.Session | None = None,
+        *args: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         self.link: str = link
         self.session: requests.Session = requests.Session() if session is None else session

@@ -6,7 +6,9 @@ from multi_agents.agents.utils.llms import call_model
 from multi_agents.agents.utils.views import print_agent_output
 
 if TYPE_CHECKING:
+    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
+
 
 SAMPLE_REVISION_NOTES = """
 {
@@ -21,18 +23,18 @@ SAMPLE_REVISION_NOTES = """
 class ReviserAgent:
     def __init__(
         self,
-        websocket: WebSocket | None = None,
-        stream_output: Callable[..., Coroutine[Any, Any, Any]] | None = None,
+        websocket: WebSocket | HTTPStreamAdapter | None = None,
+        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = None,
         headers: dict[str, Any] | None = None,
     ):
-        self.websocket: WebSocket | None = websocket
-        self.stream_output: Callable[..., Coroutine[Any, Any, Any]] | None = stream_output
+        self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
+        self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = stream_output
         self.headers: dict[str, Any] = {} if headers is None else headers
 
     async def revise_draft(
         self,
         draft_state: dict[str, Any],
-    ) -> list[str] | tuple[str, list[dict[str, str]]]:
+    ) -> dict[str, Any]:
         """Review a draft article.
 
         Args:
@@ -46,6 +48,7 @@ class ReviserAgent:
         model: str = task.get("model", "") or ""
         if not model or not model.strip():
             raise ValueError("Model is required but not found in task from draft_state")
+
         draft_report: str = draft_state.get("draft", "") or ""
         if not draft_report or not draft_report.strip():
             raise ValueError("Draft is required but not found in draft_state")
@@ -67,7 +70,7 @@ You MUST return nothing but a JSON in the following format:
             },
         ]
 
-        response: list[str] | tuple[str, list[dict[str, str]]] = await call_model(
+        response: dict[str, Any] = await call_model(
             prompt,
             model=model,
             response_format="json",
@@ -79,13 +82,9 @@ You MUST return nothing but a JSON in the following format:
         draft_state: dict[str, Any],
     ) -> dict[str, Any]:
         print_agent_output("Rewriting draft based on feedback...", agent="REVISOR")
-        revision: (
-            dict[str, Any] | list[Any] | tuple[Any, list[dict[str, str]]]
-        ) = await self.revise_draft(draft_state)
+        revision: dict[str, Any] | list[Any] | tuple[Any, list[dict[str, str]]] = await self.revise_draft(draft_state)
         if not isinstance(revision, dict):
-            raise ValueError(
-                f"Revision is not a dictionary, instead was {revision.__class__.__name__}: {revision!r}"
-            )
+            raise ValueError(f"Revision is not a dictionary, instead was {revision.__class__.__name__}: {revision!r}")
 
         task: dict[str, Any] = draft_state.get("task", {})
         if task and task.get("verbose"):

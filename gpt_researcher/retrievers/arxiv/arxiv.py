@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import arxiv
 
@@ -13,11 +13,17 @@ class ArxivSearch:
         query: str,
         sort: str = "Relevance",
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ):
         self.arxiv: arxiv.Client = arxiv.Client()
         self.query: str = query
         assert sort in ["Relevance", "SubmittedDate"], "Invalid sort criterion"
-        self.sort: arxiv.SortCriterion | arxiv.SortCriterion = arxiv.SortCriterion.SubmittedDate if sort == "SubmittedDate" else arxiv.SortCriterion.Relevance
+        self.sort: arxiv.SortCriterion = (
+            arxiv.SortCriterion.SubmittedDate
+            if sort == "SubmittedDate"
+            else arxiv.SortCriterion.Relevance
+        )
 
     def search(
         self,
@@ -32,18 +38,19 @@ class ArxivSearch:
         Returns:
             A list of dictionaries containing the search results.
         """
-
-        arxiv_gen: list[arxiv.Result] = list(
-            self.arxiv.Search(
-                query=self.query,  # +
+        arxiv_results: list[arxiv.Result] = list(
+            cast(arxiv, self.arxiv).Search(
+                query=self.query,
+                id_list=[],
                 max_results=max_results,
                 sort_by=self.sort,
-            )
+                sort_order=arxiv.SortOrder.Descending,
+            ).results()
         )
 
         search_result: list[dict[str, Any]] = []
 
-        for result in arxiv_gen:
+        for result in arxiv_results:
             search_result.append(
                 {
                     "title": result.title,

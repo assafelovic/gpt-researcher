@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import logging
 
-from typing import TYPE_CHECKING, Any, List, cast
+from typing import TYPE_CHECKING, Any
 
 import json5 as json
 import json_repair
+from langchain_core.messages.base import BaseMessage
 
 from gpt_researcher.config.config import Config
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
@@ -22,7 +23,7 @@ async def call_model(
     model: str,
     response_format: str | None = None,
     cost_callback: Callable[[float], None] | None = None,
-) -> list[str] | tuple[str, list[dict[str, Any]]]:
+) -> dict[str, Any]:
     """Call an LLM model with the given prompt.
 
     Args:
@@ -35,13 +36,14 @@ async def call_model(
         The model's response
     """
     cfg = Config()
-    lc_messages = convert_openai_messages(prompt)
+    lc_messages: list[BaseMessage | dict[str, str]] = convert_openai_messages(prompt)  # pyright: ignore[reportAssignmentType]
 
     try:
         provider = GenericLLMProvider(
             cfg.SMART_LLM_PROVIDER,
             model=model,
             temperature=0,
+            fallback_models=cfg.FALLBACK_MODELS,
             **cfg.llm_kwargs,
         )
         response: str = await provider.get_chat_response(
@@ -52,18 +54,21 @@ async def call_model(
 
         if response_format == "json":
             try:
-                result = json.loads(response.strip("```json\n"))
-                assert isinstance(result, list)
-                return cast(List[str], result)
+                result   = json.loads(response.strip("```json\n"))
+                if isinstance(result, dict):
+                    return result
+                else:
+                    raise ValueError(f"Unexpected response format: {result.__class__.__name__} with value: {result!r}")
             except Exception as e:
                 logger.warning("⚠️ Error in reading JSON, attempting to repair JSON ⚠️")
                 logger.exception(f"Error in reading JSON: {e.__class__.__name__}: {e}. Attempting to repair reponse: {response}")
                 result = json_repair.loads(response)
-                assert isinstance(result, list)
+                assert isinstance(result, dict)
                 return result
         else:
-            return [response]
+            assert isinstance(response, dict)
+            return {"response": response}
 
     except Exception as e:
         logger.exception(f"Error in calling model: {e.__class__.__name__}: {e}")
-        return []
+        return {"response": None}

@@ -14,14 +14,15 @@ from dotenv import load_dotenv
 
 if TYPE_CHECKING:
     from fastapi import WebSocket as ServerWebSocket
-    from backend.server.server_utils import CustomLogsHandler
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-if __name__ == "__main__":
-    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-
+try:
+    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter  # noqa: E402
+except ImportError:
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    sys.path.insert(0, path)
+    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter  # noqa: E402
 from gpt_researcher.utils.enum import Tone  # noqa: E402
 
 # Run with LangSmith if API key is set
@@ -33,31 +34,24 @@ load_dotenv()
 def open_task() -> dict[str, Any]:
     # Construct the absolute path to task.json
     task_json_path: Path = Path(os.path.normpath(os.path.abspath(__file__))).parent.joinpath("task.json")
-
     task: dict[str, Any] = json.loads(task_json_path.read_text())
-
     logger.debug("task:", repr(task))
 
-    if (
-        not task
-        or not isinstance(task, dict)
-        or not task.get("query")
-        or not str(task.get("query")).strip()
-    ):
-        raise Exception("No task found. Please ensure a valid task.json file is present in the multi_agents directory and contains the necessary task information.")
+    if not task or not task_json_path.exists() or not task_json_path.is_file() or not isinstance(task, dict) or not task.get("query") or not str(task.get("query")).strip():
+        raise RuntimeError("No task found. Please ensure a valid task.json file is present in the multi_agents directory and contains the necessary task information.")
 
     return task
 
 
 async def run_research_task(
     query: str,
-    websocket: CustomLogsHandler | ServerWebSocket | None = None,
+    websocket: CustomLogsHandler | HTTPStreamAdapter | ServerWebSocket | None = None,
     stream_output: Callable[
-        [str, str, str, ServerWebSocket | CustomLogsHandler | None],
+        [str, str, str, ServerWebSocket | CustomLogsHandler | HTTPStreamAdapter | None],
         Coroutine[Any, Any, Any],
     ]
     | None = None,
-    tone: Tone = Tone.Objective,
+    tone: Tone | str = Tone.Objective,
     headers: dict[str, Any] | None = None,
 ) -> str:
     from multi_agents.agents import ChiefEditorAgent
@@ -75,12 +69,7 @@ async def run_research_task(
     research_report: str = await chief_editor.run_research_task(task_id=uuid.uuid4().int)
 
     if websocket and stream_output:
-        await stream_output(
-            "logs",
-            "research_report",
-            research_report,
-            websocket,
-        )
+        await stream_output("logs", "research_report", research_report, websocket)
 
     return research_report
 

@@ -23,6 +23,7 @@ async def main():
             cfg.SMART_LLM_PROVIDER,
             model=cfg.SMART_LLM_MODEL,
             temperature=0.35,
+            fallback_models=cfg.FALLBACK_MODELS,
             max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL),  # type: ignore[attr-defined]
             **cfg.llm_kwargs,
         )

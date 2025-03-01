@@ -18,8 +18,8 @@ class BeautifulSoupScraper:
         self,
         link: str,
         session: requests.Session | None = None,
-        *args,
-        **kwargs,  # future proofing by allowing additional arguments, e.g. query_domains was added recently.
+        *args: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         self.link: str = link
         self.session: requests.Session | None = session

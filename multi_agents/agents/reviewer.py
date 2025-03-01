@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Awaitable, Callable
+from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from multi_agents.agents.utils.llms import call_model
 from multi_agents.agents.utils.views import print_agent_output
 
 if TYPE_CHECKING:
+    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
 
 TEMPLATE = """You are an expert research article reviewer. \
@@ -16,18 +17,18 @@ Your goal is to review research drafts and provide feedback to the reviser only 
 class ReviewerAgent:
     def __init__(
         self,
-        websocket: WebSocket | None = None,
-        stream_output: Callable[..., Awaitable[None]] | None = None,
+        websocket: WebSocket | HTTPStreamAdapter | None = None,
+        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = None,
         headers: dict[str, str] | None = None,
     ):
-        self.websocket: WebSocket | None = websocket
-        self.stream_output: Callable[..., Awaitable[None]] | None = stream_output
+        self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
+        self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = stream_output
         self.headers: dict[str, str] = {} if headers is None else headers
 
     async def review_draft(
         self,
         draft_state: dict,
-    ) -> list[str] | tuple[str, list[dict[str, Any]]] | None:
+    ) -> dict[str, Any] | None:
         """Review a draft article
 
         Args:
@@ -55,13 +56,17 @@ If the draft meets all the guidelines, please return None.
 Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
 """
         prompt: list[dict[str, Any]] = [
-            {"role": "system", "content": TEMPLATE},
-            {"role": "user", "content": review_prompt},
+            {
+                "role": "system",
+                "content": TEMPLATE,
+            },
+            {
+                "role": "user",
+                "content": review_prompt,
+            },
         ]
 
-        response: list[str] | tuple[str, list[dict[str, Any]]] = await call_model(
-            prompt, model=task.get("model", "")
-        )
+        response: dict[str, Any] = await call_model(prompt, model=task.get("model", ""))
 
         if task.get("verbose"):
             if self.websocket and self.stream_output:
@@ -85,12 +90,15 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
         task: dict[str, Any] = draft_state.get("task", {})
         guidelines: list[str] = task.get("guidelines", [])
         to_follow_guidelines: bool = task.get("follow_guidelines", False)
-        review: list[str] | tuple[str, list[dict[str, Any]]] | None = None
+        review: dict[str, Any] | None = None
         if to_follow_guidelines:
             print_agent_output("Reviewing draft...", agent="REVIEWER")
 
             if task.get("verbose"):
-                print_agent_output(f"Following guidelines {guidelines}...", agent="REVIEWER")
+                print_agent_output(
+                    f"Following guidelines {guidelines}...",
+                    agent="REVIEWER",
+                )
 
             review = await self.review_draft(draft_state)
         else:

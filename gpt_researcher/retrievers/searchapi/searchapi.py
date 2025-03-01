@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import urllib.parse
+from typing import Any
 
 import requests
 
@@ -14,12 +15,16 @@ class SearchApiSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ):
         """Initializes the SearchApiSearch object.
 
         Args:
             query (str): The query to search for.
             query_domains (list[str] | None): The domains to search for.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
         """
         self.query: str = query
         self.query_domains: list[str] = [] if query_domains is None else query_domains

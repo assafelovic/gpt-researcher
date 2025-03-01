@@ -11,7 +11,7 @@ from multi_agents.agents.utils.views import print_agent_output
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
-
+    from backend.server.server_utils import HTTPStreamAdapter
 
 logger: Logger = getLogger(__name__)
 
@@ -19,13 +19,13 @@ logger: Logger = getLogger(__name__)
 class ResearchAgent:
     def __init__(
         self,
-        websocket: WebSocket | None = None,
-        stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, Any]] | None = None,
+        websocket: WebSocket | HTTPStreamAdapter | None = None,
+        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, Any]] | None = None,
         tone: Tone | str | None = Tone.Objective,
         headers: dict[str, Any] | None = None,
     ):
-        self.websocket: WebSocket | None = websocket
-        self.stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, Any]] | None = stream_output
+        self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
+        self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, Any]] | None = stream_output
         self.headers: dict[str, Any] = {} if headers is None else headers
         self.tone: Tone = Tone.Objective
         if isinstance(tone, str):

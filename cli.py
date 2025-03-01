@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from backend.report_type import DetailedReporter
+from backend.report_type import DetailedReport
 from dotenv import load_dotenv
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, Tone
@@ -146,11 +146,11 @@ async def main(args) -> None:
     """Conduct research on the given query, generate the report, and write it as a markdown file to the output directory."""
     query_domains: list[str] = [] if args.query_domains is None else args.query_domains.split(",")
 
-    if str(args.report_type).casefold() == "detailed_report":
-        detailed_report: DetailedReporter = DetailedReporter(
+    if str(args.report_type).casefold() == ReportType.DetailedReport.value:
+        detailed_report: DetailedReport = DetailedReport(
             query=args.query,
             query_domains=query_domains,
-            report_type="research_report",
+            report_type=ReportType.DetailedReport,
             report_source="web_search",
         )
 

@@ -29,6 +29,7 @@ class VectorStoreWrapper:
         Translate to langchain doc type, split to chunks then load.
 
         Args:
+        ----
             documents: list[dict[str, str]]: The documents to load into the vector store.
         """
         langchain_documents: list[Document] = self._create_langchain_documents(documents)
@@ -42,9 +43,11 @@ class VectorStoreWrapper:
         """Convert GPT Researcher Document to Langchain Document.
 
         Args:
+        ----
             data: list[dict[str, str]]: The documents to convert to Langchain Document.
 
         Returns:
+        -------
             list[Document]: The Langchain Document.
         """
         return [
@@ -61,11 +64,13 @@ class VectorStoreWrapper:
         """Split documents into smaller chunks.
 
         Args:
+        ----
             documents: list[Document]: The documents to split.
             chunk_size: int: The size of the chunks.
             chunk_overlap: int: The overlap of the chunks.
 
         Returns:
+        -------
             list[Document]: The split documents.
         """
         text_splitter: RecursiveCharacterTextSplitter = RecursiveCharacterTextSplitter(
@@ -83,11 +88,13 @@ class VectorStoreWrapper:
         """Return query by vector store.
 
         Args:
+        ----
             query: str: The query to search for.
             k: int: The number of results to return.
             filter: dict[str, str] | None: The filter to apply to the search.
 
         Returns:
+        -------
             list[Document]: The results of the search.
         """
         results: list[Document] = await self.vector_store.asimilarity_search(

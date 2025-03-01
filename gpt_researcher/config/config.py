@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Union, get_args, get_origin
 
 from gpt_researcher.retrievers.utils import get_all_retriever_names
-from gpt_researcher.utils.enum import OutputFileType, ReportFormat, ReportSource, ReportType, SupportedLanguages, Tone
+from gpt_researcher.utils.enum import OutputFileType, ReportFormat, ReportSource, ReportType, Tone
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -22,49 +22,16 @@ class Config:
     CURATE_SOURCES: bool = bool(os.environ.get("CURATE_SOURCES", False))
     DOC_PATH: str = os.environ.get("DOC_PATH", str(Path.home().absolute()))
     EMBEDDING: str = os.environ.get("EMBEDDING", "openai:text-embedding-3-small")
-    EMBEDDING_KWARGS: dict[str, Any] = json.loads(os.environ.get("EMBEDDING_KWARGS", "{}"))
     EMBEDDING_MODEL: str = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
     EMBEDDING_PROVIDER: str = os.environ.get("EMBEDDING_PROVIDER", "openai")
-    FAST_LLM: str = os.environ.get("FAST_LLM", "groq:mixtral-8x7b-32768")
-    FAST_LLM_MODEL: str = os.environ.get("FAST_LLM_MODEL", "mixtral-8x7b-32768")
-    FAST_LLM_PROVIDER: str = os.environ.get("FAST_LLM_PROVIDER", "groq")
-    FAST_TOKEN_LIMIT: int = int(os.environ.get("FAST_TOKEN_LIMIT", 32768))
-    LANGUAGE: SupportedLanguages = SupportedLanguages(
-        os.environ.get(
-            "LANGUAGE",
-            (locale.getdefaultlocale()[0] or "en").split("_")[0],
-        )
-    )
-    MAX_ITERATIONS: int = int(os.environ.get("MAX_ITERATIONS", 4))
-    MAX_SEARCH_RESULTS_PER_QUERY: int = int(os.environ.get("MAX_SEARCH_RESULTS_PER_QUERY", 5))
-    MAX_SUBTOPICS: int = int(os.environ.get("MAX_SUBTOPICS", 3))
-    MEMORY_BACKEND: ReportSource = ReportSource(os.environ.get("MEMORY_BACKEND", "local").lower())
-    OUTPUT_FORMAT: OutputFileType = OutputFileType(
-        os.environ.get(
-            "OUTPUT_FORMAT",
-            "markdown",
-        )
-    )
-    REPORT_FORMAT: ReportFormat = ReportFormat(os.environ.get("REPORT_FORMAT", "APA"))
-    REPORT_SOURCE: ReportSource = ReportSource(os.environ.get("REPORT_SOURCE", "web"))
-    REPORT_TYPE: ReportType = ReportType(os.environ.get("REPORT_TYPE", "research_report"))
-    RESEARCH_PLANNER: str = os.environ.get("RESEARCH_PLANNER", "outline")
-    RETRIEVER: str = os.environ.get("RETRIEVER", "tavily")
-    SCRAPER: str = os.environ.get("SCRAPER", "bs")
-    SIMILARITY_THRESHOLD: float = float(os.environ.get("SIMILARITY_THRESHOLD", 0.42))
-    SMART_LLM: str = os.environ.get("SMART_LLM", "litellm:gemini-2.0-flash-exp")
-    SMART_LLM_MODEL: str = os.environ.get("SMART_LLM_MODEL", "gemini-2.0-flash-exp")
-    SMART_LLM_PROVIDER: str = os.environ.get("SMART_LLM_PROVIDER", "litellm")
-    SMART_TOKEN_LIMIT: int = int(os.environ.get("SMART_TOKEN_LIMIT", 4096))
-    STRATEGIC_LLM: str = os.environ.get("STRATEGIC_LLM", "litellm:gemini-2.0-flash-thinking-exp")
-    STRATEGIC_LLM_MODEL: str = os.environ.get(
-        "STRATEGIC_LLM_MODEL",
-        "gemini-2.0-flash-thinking-exp",
-    )
-    STRATEGIC_LLM_PROVIDER: str = os.environ.get("STRATEGIC_LLM_PROVIDER", "litellm")
-    STRATEGIC_TOKEN_LIMIT: int = int(os.environ.get("STRATEGIC_TOKEN_LIMIT", 4096))
-    TEMPERATURE: float = float(os.environ.get("TEMPERATURE", 0.4))
-    TONE: Tone = Tone.__members__.get(os.environ.get("TONE", "Objective").upper(), Tone.Objective)
+    EMBEDDING_FALLBACK_MODELS: list[str] = (
+        lambda value: json.loads(value)
+        if value.lstrip().startswith("[") and value.rstrip().endswith("]")
+        else value.split(",")
+        if "," in value
+        else [item.strip() for item in value.split(",") if item.strip()]
+    )(str(os.environ.get("EMBEDDING_FALLBACK_MODELS", "") or "").strip())
+    EMBEDDING_KWARGS: dict[str, Any] = json.loads(os.environ.get("EMBEDDING_KWARGS", "{}"))
     # FALLBACK_MODELS is a list of free LLM fallback model identifiers.
     # Users can specify this as a JSON-encoded list (e.g., '["model1", "model2"]') or as a comma-separated string (e.g., "model1, model2").
     FALLBACK_MODELS: list[str] = (
@@ -74,13 +41,49 @@ class Config:
         if "," in value
         else [item.strip() for item in value.split(",") if item.strip()]
     )(str(os.environ.get("FALLBACK_MODELS", "") or "").strip())
+    FAST_LLM: str = os.environ.get("FAST_LLM", "groq:mixtral-8x7b-32768")
+    FAST_LLM_MODEL: str = os.environ.get("FAST_LLM_MODEL", "mixtral-8x7b-32768")
+    FAST_LLM_PROVIDER: str = os.environ.get("FAST_LLM_PROVIDER", "groq")
+    FAST_LLM_TEMPERATURE: float = float(os.environ.get("FAST_LLM_TEMPERATURE", 0.15))
+    FAST_TOKEN_LIMIT: int = int(os.environ.get("FAST_TOKEN_LIMIT", 32768))
+    LANGUAGE: str = os.environ.get(
+        "LANGUAGE",
+        (locale.getdefaultlocale()[0] or "en").split("_")[0],
+    )
+    MAX_ITERATIONS: int = int(os.environ.get("MAX_ITERATIONS", 4))
+    MAX_SEARCH_RESULTS_PER_QUERY: int = int(os.environ.get("MAX_SEARCH_RESULTS_PER_QUERY", 5))
+    MAX_SUBTOPICS: int = int(os.environ.get("MAX_SUBTOPICS", 3))
+    MEMORY_BACKEND: ReportSource = ReportSource.__members__[os.environ.get("MEMORY_BACKEND", ReportSource.Local.name) or ReportSource.Local.name]
+    OUTPUT_FORMAT: OutputFileType = OutputFileType.__members__[os.environ.get("OUTPUT_FORMAT", OutputFileType.MARKDOWN.name) or OutputFileType.MARKDOWN.name]
+    REPORT_FORMAT: ReportFormat = ReportFormat.__members__[os.environ.get("REPORT_FORMAT", ReportFormat.APA.name) or ReportFormat.APA.name]
+    REPORT_SOURCE: ReportSource = ReportSource.__members__[os.environ.get("REPORT_SOURCE", ReportSource.Web.name) or ReportSource.Web.name]
+    REPORT_TYPE: ReportType = ReportType.__members__[os.environ.get("REPORT_TYPE", ReportType.ResearchReport.name) or ReportType.ResearchReport.name]
+    RESEARCH_PLANNER: str = os.environ.get("RESEARCH_PLANNER", "outline")
+    RETRIEVER: str = os.environ.get("RETRIEVER", "tavily")
+    SCRAPER: str = os.environ.get("SCRAPER", "bs")
+    SIMILARITY_THRESHOLD: float = float(os.environ.get("SIMILARITY_THRESHOLD", 0.42))
+    SMART_LLM: str = os.environ.get("SMART_LLM", "litellm:gemini-2.0-flash-exp")
+    SMART_LLM_MODEL: str = os.environ.get("SMART_LLM_MODEL", "gemini-2.0-flash-exp")
+    SMART_LLM_PROVIDER: str = os.environ.get("SMART_LLM_PROVIDER", "litellm")
+    SMART_LLM_TEMPERATURE: float = float(os.environ.get("SMART_LLM_TEMPERATURE", 0.15))
+    SMART_TOKEN_LIMIT: int = int(os.environ.get("SMART_TOKEN_LIMIT", 4096))
+    STRATEGIC_LLM: str = os.environ.get("STRATEGIC_LLM", "litellm:gemini-2.0-flash-thinking-exp")
+    STRATEGIC_LLM_MODEL: str = os.environ.get(
+        "STRATEGIC_LLM_MODEL",
+        "gemini-2.0-flash-thinking-exp",
+    )
+    STRATEGIC_LLM_PROVIDER: str = os.environ.get("STRATEGIC_LLM_PROVIDER", "litellm")
+    STRATEGIC_LLM_TEMPERATURE: float = float(os.environ.get("STRATEGIC_LLM_TEMPERATURE", 0.4))
+    STRATEGIC_TOKEN_LIMIT: int = int(os.environ.get("STRATEGIC_TOKEN_LIMIT", 4096))
+    TEMPERATURE: float = STRATEGIC_LLM_TEMPERATURE
+    TONE: Tone = Tone.__members__.get(os.environ.get("TONE", "Objective").upper(), Tone.Objective)
     TOTAL_WORDS: int = int(os.environ.get("TOTAL_WORDS", 1000))
     USER_AGENT: str = os.environ.get(
         "USER_AGENT",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
     )  # alternatively: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     USE_FALLBACKS: bool = True
-    VERBOSE: bool = bool(os.environ.get("VERBOSE", True))
+    VERBOSE: bool = bool(os.environ.get("VERBOSE", False))
 
     def __init__(
         self,
@@ -107,7 +110,10 @@ class Config:
             )
             self.retrievers = ["tavily"]
         self._setup_llms()
+        self._setup_fallback_models()
         self._set_doc_path(config_to_use)
+        #os.environ["LITELLM_LOG"] = "DEBUG" if self.VERBOSE else "INFO"
+        os.environ["LITELLM_LOG"] = "INFO"
 
     @classmethod
     def from_path(
@@ -130,6 +136,11 @@ class Config:
     def to_dict(self) -> dict[str, Any]:
         """Return the config as a dictionary."""
         return {k: v for k, v in self.__dict__.items() if not k.startswith("_") and k.upper() == k}
+
+    def to_json(self) -> str:
+        """Return the config as a JSON string."""
+        config_dict: dict[str, Any] = {k: str(v) for k, v in self.to_dict().items()}
+        return json.dumps(config_dict, indent=2)
 
     @classmethod
     def default_config_dict(cls) -> dict[str, Any]:
@@ -223,6 +234,25 @@ class Config:
             self.STRATEGIC_LLM_PROVIDER = self.__class__.STRATEGIC_LLM_PROVIDER
             self.STRATEGIC_LLM_MODEL = self.__class__.STRATEGIC_LLM_MODEL
 
+    def _setup_fallback_models(self) -> None:
+        if not self.FALLBACK_MODELS:
+            from llm_fallbacks.config import FREE_MODELS
+            for model_name, model_spec in FREE_MODELS:
+                if str(model_spec.get("mode", "chat") or "chat").strip().casefold() != "chat":
+                    continue
+                provider = model_spec["litellm_provider"]  # pyright: ignore[reportTypedDictNotRequiredAccess]
+                self.FALLBACK_MODELS.append(f"litellm:{provider}/{model_name}")
+        else:
+            self.FALLBACK_MODELS = list(self.FALLBACK_MODELS)
+
+        if not self.EMBEDDING_FALLBACK_MODELS:
+            from llm_fallbacks.config import ALL_EMBEDDING_MODELS
+            for model_name, model_spec in ALL_EMBEDDING_MODELS:
+                provider = model_spec['litellm_provider']  # pyright: ignore[reportTypedDictNotRequiredAccess]
+                self.EMBEDDING_FALLBACK_MODELS.append(f"litellm:{provider}/{model_name}")
+        else:
+            self.EMBEDDING_FALLBACK_MODELS = list(self.EMBEDDING_FALLBACK_MODELS)
+
     def _set_doc_path(
         self,
         config: dict[str, Any],
@@ -234,7 +264,7 @@ class Config:
             os.makedirs(self.DOC_PATH, exist_ok=True)
         except Exception as e:
             logger.warning(
-                f"Warning: Error validating doc_path: {e.__class__.__name__}: {e}. Using default doc_path.",
+                f"Warning! Error validating doc_path! {e.__class__.__name__}: {e} Using default doc_path.",
                 exc_info=True,
             )
             self.DOC_PATH = config.get("DOC_PATH", str(Path.home().absolute()))
@@ -245,10 +275,11 @@ class Config:
         config_path: os.PathLike | str | None,
     ) -> dict[str, Any]:
         """Load a configuration by name."""
-        if config_path is None:
-            config_dict: dict[str, Any] = cls.default_config_dict()
-        else:
-            config_dict = cls._create_config_dict(config_path)
+        config_dict: dict[str, Any] = (
+            cls.default_config_dict()
+            if config_path is None
+            else cls._create_config_dict(config_path)
+        )
 
         # Merge with default config to ensure all keys are present
         merged_config: dict[str, Any] = cls.default_config_dict().copy()

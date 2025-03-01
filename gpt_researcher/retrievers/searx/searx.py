@@ -16,12 +16,16 @@ class SearxSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ):
         """Initializes the SearxSearch object.
 
         Args:
             query (str): Search query string.
             query_domains (list[str] | None): List of domains to search.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
         """
         self.query: str = query
         self.base_url: str = self.get_searxng_url()

@@ -26,6 +26,8 @@ class BingSearch(BaseRetriever):
         self,
         query: str,
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ):
         """Initialize the BingSearch retriever.
 
@@ -140,7 +142,7 @@ class BingSearch(BaseRetriever):
             "responseFilter": "Webpages",
             "q": query,
             "count": max_results,
-            "setLang": "en-GB",
+            "setLang": "en-US",
             "textDecorations": False,
             "textFormat": "HTML",
             "safeSearch": "Strict",

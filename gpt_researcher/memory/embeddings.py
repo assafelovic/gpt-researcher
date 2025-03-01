@@ -18,6 +18,14 @@ class Memory:
         model: str,
         **embedding_kwargs: Any,
     ):
+        self._setup_embeddings(embedding_provider, model, **embedding_kwargs)
+
+    def _setup_embeddings(
+        self,
+        embedding_provider: str,
+        model: str,
+        **embedding_kwargs: Any,
+    ):
         _embeddings = None
         match embedding_provider:
             case "custom":

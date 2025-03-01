@@ -241,7 +241,7 @@ class BrowserScraper:
 
             text: str = self.get_text(soup)
             image_urls: list[dict[str, Any]] = get_relevant_images(soup, self.url)
-            title: str | None = extract_title(soup)
+            title: str = extract_title(soup) or ""
 
         lines: list[str] = list(line.strip() for line in text.splitlines())
         chunks: list[str] = list(phrase.strip() for line in lines for phrase in line.split("  "))

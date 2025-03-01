@@ -5,21 +5,26 @@ import importlib.util
 import logging
 import os
 import sys
+import time
+import uuid
 
-from typing import Any, Callable, Dict, List, Sequence, cast
+from collections import defaultdict
+from dataclasses import dataclass
+from typing import Any, Callable, Sequence, cast, TYPE_CHECKING
 
 from colorama import Fore, Style, init
 from fastapi import WebSocket
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import BaseMessage  # keep out of type checking block because of pydantic's nonsense.
-from litellm.exceptions import BadRequestError, ContextWindowExceededError
-from llm_fallbacks.config import LiteLLMBaseModelSpec
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from llm_fallbacks.config import FREE_MODELS, LiteLLMBaseModelSpec
 from pydantic import SecretStr
 
+if TYPE_CHECKING:
+    from backend.server.server_utils import HTTPStreamAdapter
+
 logger: logging.Logger = logging.getLogger(__name__)
-os.environ["LITELLM_LOG"] = "DEBUG"  # pyright: ignore[reportPrivateImportUsage]
 
-
+# Supported LLM providers
 _SUPPORTED_PROVIDERS: set[str] = {
     "anthropic",
     "azure_openai",
@@ -41,45 +46,306 @@ _SUPPORTED_PROVIDERS: set[str] = {
 }
 
 
+# New dataclass for model info
+@dataclass
+class ModelInfo:
+    model: BaseChatModel
+    model_id: str
+    provider: str
+
+
+# Class for error/failure tracking
+class ErrorTracker:
+    MAX_MODEL_FAILURES: int = 3
+    MAX_PROVIDER_FAILURES: int = 5
+    MAX_CONSECUTIVE_PROVIDER_FAILURES: int = 3
+    FAILURE_RESET_TIME: int = 3600  # 1 hour in seconds
+    MAX_ERROR_MESSAGES: int = 3
+
+    def __init__(self) -> None:
+        self.model_failures: dict[str, int] = defaultdict(int)
+        self.provider_failures: dict[str, int] = defaultdict(int)
+        self.consecutive_provider_failures: dict[str, int] = defaultdict(int)
+        self.last_failure_time: dict[str, float] = {}
+        self.error_messages: dict[str, list[str]] = defaultdict(list)
+
+    def record_failure(
+        self,
+        model_id: str,
+        provider: str,
+        error: Exception,
+    ) -> None:
+        error_type: str = error.__class__.__name__
+        error_msg: str = str(error)
+        self.model_failures[model_id] += 1
+        self.provider_failures[provider] += 1
+        self.consecutive_provider_failures[provider] += 1
+        self.last_failure_time[model_id] = time.time()
+        if model_id in self.error_messages:
+            if len(self.error_messages[model_id]) >= self.MAX_ERROR_MESSAGES:
+                self.error_messages[model_id].pop(0)
+            self.error_messages[model_id].append(f"{error_type}: {error_msg}")
+        else:
+            self.error_messages[model_id] = [f"{error_type}: {error_msg}"]
+        logger.error(f"Error with model '{model_id}' (provider: {provider}): {error_type}: {error_msg}")
+
+    def should_skip(
+        self,
+        model_id: str,
+        provider: str,
+    ) -> bool:
+        if self.model_failures.get(model_id, 0) >= self.MAX_MODEL_FAILURES:
+            logger.warning(f"Skipping model {model_id} due to excessive failures ({self.model_failures[model_id]})")
+            return True
+        if self.provider_failures.get(provider, 0) >= self.MAX_PROVIDER_FAILURES:
+            logger.warning(f"Skipping provider {provider} due to excessive total failures")
+            return True
+        if self.consecutive_provider_failures.get(provider, 0) >= self.MAX_CONSECUTIVE_PROVIDER_FAILURES:
+            logger.warning(f"Skipping provider {provider} due to excessive consecutive failures")
+            return True
+        return False
+
+    def reset_expired_failures(self) -> None:
+        current_time: float = time.time()
+        for model_id, last_failure in list(self.last_failure_time.items()):
+            if current_time - last_failure > self.FAILURE_RESET_TIME:
+                if model_id in self.model_failures:
+                    logger.info(f"Resetting failure count for model {model_id}")
+                    del self.model_failures[model_id]
+                    if model_id in self.error_messages:
+                        del self.error_messages[model_id]
+                provider = model_id.split(":", 1)[0] if ":" in model_id else model_id
+                if provider in self.provider_failures:
+                    logger.info(f"Resetting failure count for provider {provider}")
+                    del self.provider_failures[provider]
+                    if provider in self.consecutive_provider_failures:
+                        del self.consecutive_provider_failures[provider]
+                del self.last_failure_time[model_id]
+
+    def reset_all_failures(self) -> None:
+        self.model_failures.clear()
+        self.provider_failures.clear()
+        self.consecutive_provider_failures.clear()
+        self.last_failure_time.clear()
+        self.error_messages.clear()
+        logger.info("Reset all model and provider failure tracking")
+
+    def get_error_info(
+        self,
+        model_id: str,
+    ) -> list[str]:
+        return self.error_messages.get(model_id, ["No specific errors recorded"])
+
+
+# Class for model instance creation
+class ModelFactory:
+    @staticmethod
+    def extract_model_info(
+        model_source: BaseChatModel | str,
+    ) -> tuple[str, str]:
+        if isinstance(model_source, str):
+            if ":" in model_source:
+                provider = model_source.split(":", 1)[0]
+            elif "/" in model_source:
+                provider = model_source.split("/", 1)[0]
+            else:
+                provider = model_source
+            return model_source, provider
+        else:
+            return f"model_{uuid.uuid4().hex[:8]}", "unknown"
+
+    @classmethod
+    def create_model(
+        cls,
+        provider: str | BaseChatModel,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        if isinstance(provider, BaseChatModel):
+            return provider
+        provider_name, model = provider.split(":", 1) if ":" in provider else (provider, "")
+        model_name = str(kwargs.get("model", "") or model).strip().casefold()
+        model_name = model_name.split(":", 1)[1] if ":" in model_name else model_name
+        kwargs["model"] = model_name
+        try:
+            return GenericLLMProvider._create_model_for_provider(provider_name, **kwargs)
+        except ImportError as e:
+            init(autoreset=True)
+            raise ImportError(f"{Fore.RED}Unable to import required package: {str(e)}") from e
+        except ValueError as e:
+            raise ValueError(f"{Fore.RED}Unsupported provider: '{provider_name}'.\nSupported providers: [{', '.join(_SUPPORTED_PROVIDERS)}]") from e
+
+
+# Class for message conversion
+class MessageConverter:
+    @staticmethod
+    def convert_dicts_to_base(
+        messages: list[dict[str, str]],
+    ) -> list[BaseMessage]:
+        converted: list[BaseMessage] = []
+        for msg in messages:
+            role: str = msg["role"]
+            content: str = msg["content"]
+            if role == "system":
+                converted.append(SystemMessage(content=content))
+            elif role == "assistant":
+                converted.append(AIMessage(content=content))
+            else:
+                converted.append(HumanMessage(content=content))
+        return converted
+
+    @classmethod
+    def convert_to_str(
+        cls,
+        msg: BaseMessage | str | dict | list,
+    ) -> str:
+        if isinstance(msg, str):
+            return msg
+        elif isinstance(msg, dict):
+            return str(msg.get("contents", msg.get("content", msg)))
+        elif isinstance(msg, BaseMessage):
+            content: str | list[str | dict[str, str]] = msg.content
+            if isinstance(content, list):
+                return "\n".join(str(item) for item in content if str(item).strip())
+            elif isinstance(content, dict):
+                return str(content.get("contents", content.get("content", content)))
+            else:
+                return str(content)
+        elif isinstance(msg, list):
+            return "\n".join(cls.convert_to_str(item) for item in msg if cls.convert_to_str(item).strip())
+        else:
+            return str(msg)
+
+
 class GenericLLMProvider:
+    """A generic provider for LLM models with fallback capabilities."""
+
+    _error_tracker: ErrorTracker = ErrorTracker()
+
     def __init__(
         self,
         llm: BaseChatModel | str,
-        use_fallbacks: bool = False,
-        fallback_models: Sequence[tuple[str, LiteLLMBaseModelSpec] | BaseChatModel] | None = None,
-        **kwargs: Any,
+        fallback_models: Sequence[BaseChatModel | str | tuple[str, LiteLLMBaseModelSpec]] | None = None,
+        **llm_kwargs: Any,
     ):
-        self.current_model: BaseChatModel = self._get_base_model(llm, **kwargs)
-        self.use_fallbacks: bool = use_fallbacks
-        from llm_fallbacks.config import FREE_MODELS
+        self.current_model: BaseChatModel = ModelFactory.create_model(llm, **llm_kwargs) if isinstance(llm, str) else llm
+        self.fallback_models: list[BaseChatModel] = []
+        self.model_info: list[ModelInfo] = []
 
-        current_model_name: str = str(self.current_model.name).casefold() if str(self.current_model.name or "").strip() else str(self.current_model).casefold()
-        self.fallback_models: list[tuple[str, LiteLLMBaseModelSpec] | BaseChatModel] = []
+        model_id, provider = ModelFactory.extract_model_info(llm)
+        if isinstance(self.current_model, BaseChatModel):
+            self.model_info.append(ModelInfo(model=self.current_model, model_id=model_id, provider=provider))
+
+        self._setup_fallbacks(fallback_models, **llm_kwargs)
+
+        if self.current_model not in self.fallback_models:
+            self.fallback_models.insert(0, self.current_model)
+
+        self._filter_failed_models()
+        self._log_configuration()
+
+    def _setup_fallbacks(
+        self,
+        fallback_models: Sequence[BaseChatModel | str | tuple[str, LiteLLMBaseModelSpec]] | None,
+        **llm_kwargs: Any,
+    ) -> None:
         if not fallback_models:
-            for model_name, model_spec in FREE_MODELS:
-                if model_name.casefold() == current_model_name:
-                    continue
-                # Do not suppress/wrap in try/except, we want to fail loudly if a fallback model fails to initialize.
-                provider: str = model_spec["litellm_provider"]  # pyright: ignore[reportTypedDictNotRequiredAccess]  # Incorrect type warning.
-                # Create the model directly without recursive fallbacks
-                fallback_model = self._get_base_model(f"litellm:{provider}/{model_name}", **model_spec)
-                self.fallback_models.append(fallback_model)
-        elif fallback_models is not None:
-            self.fallback_models = list(fallback_models)
+            self._setup_default_fallbacks(**llm_kwargs)
+            return
+        for model in fallback_models:
+            if isinstance(model, BaseChatModel):
+                self._add_preconstructed_fallback(model)
+            elif isinstance(model, str):
+                self._add_string_fallback(model, **llm_kwargs)
+            elif isinstance(model, tuple):
+                self._add_tuple_fallback(model, **llm_kwargs)
 
-        self.fallback_models.insert(0, self.current_model)
-        print(
-            Fore.GREEN + Style.BRIGHT + "Using LLM provider: " + Style.RESET_ALL + f"{self.current_model}",
-            file=sys.__stdout__,
-        )
-        print(
-            Fore.GREEN + Style.BRIGHT + "Using fallbacks: " + Style.RESET_ALL + f"{self.fallback_models}",
-            file=sys.__stdout__,
-        )
-        print(
-            f"Using model '{self.current_model}' with fallbacks '{self.fallback_models!r}'",
-            file=sys.__stdout__,
-        )
+    def _setup_default_fallbacks(
+        self,
+        **llm_kwargs: Any,
+    ) -> None:
+        logger.info("No fallback models provided, using default FREE_MODELS")
+        for model_name, model_spec in FREE_MODELS:
+            provider = cast(str, model_spec.get("litellm_provider", "")).replace("vertex_ai-language-models", "vertex_ai")
+            model_str = f"litellm:{provider}/{model_name}"
+            fallback_model: BaseChatModel = ModelFactory.create_model(model_str, **llm_kwargs)
+            model_id, _ = ModelFactory.extract_model_info(model_str)
+            self.fallback_models.append(fallback_model)
+            self.model_info.append(ModelInfo(model=fallback_model, model_id=model_id, provider=provider))
+
+    def _add_preconstructed_fallback(
+        self,
+        model: BaseChatModel,
+    ) -> None:
+        model_id = f"model_{uuid.uuid4().hex[:8]}"
+        provider = "unknown"
+        self.fallback_models.append(model)
+        self.model_info.append(ModelInfo(model=model, model_id=model_id, provider=provider))
+
+    def _add_string_fallback(
+        self,
+        model_str: str,
+        **llm_kwargs: Any,
+    ) -> None:
+        model_str = model_str.replace("vertex_ai-language-models", "vertex_ai")
+        fallback_model: BaseChatModel = ModelFactory.create_model(model_str, **llm_kwargs)
+        model_id, provider = ModelFactory.extract_model_info(model_str)
+        self.fallback_models.append(fallback_model)
+        self.model_info.append(ModelInfo(model=fallback_model, model_id=model_id, provider=provider))
+
+    def _add_tuple_fallback(
+        self,
+        model_tuple: tuple[str, LiteLLMBaseModelSpec],
+        **llm_kwargs: Any,
+    ) -> None:
+        model_name: str
+        model_spec: LiteLLMBaseModelSpec
+        model_name, model_spec = model_tuple
+        provider = cast(str, model_spec.get("litellm_provider", "")).replace("vertex_ai-language-models", "vertex_ai")
+        model_str = f"litellm:{provider}/{model_name}"
+        fallback_model: BaseChatModel = ModelFactory.create_model(model_str, **llm_kwargs)
+        model_id, _ = ModelFactory.extract_model_info(model_str)
+        self.fallback_models.append(fallback_model)
+        self.model_info.append(ModelInfo(model=fallback_model, model_id=model_id, provider=provider))
+
+    def _log_configuration(self) -> None:
+        current_model_info = self._get_model_info(self.current_model)
+        logger.info(f"Using primary model: {current_model_info.model_id} (provider: {current_model_info.provider})")
+        fallbacks: list[str] = [f"{self._get_model_info(model).model_id} ({self._get_model_info(model).provider})" for model in self.fallback_models[1:]]
+        if fallbacks:
+            logger.info(f"Available fallbacks: {', '.join(fallbacks)}")
+        else:
+            logger.info("No fallback models available")
+        print(f"{Fore.GREEN}{Style.BRIGHT}Using LLM provider: {Style.RESET_ALL}{self.current_model}", file=sys.__stdout__)
+        if self.fallback_models[1:]:
+            print(f"{Fore.GREEN}{Style.BRIGHT}Using fallbacks: {Style.RESET_ALL}{self.fallback_models[1:]}", file=sys.__stdout__)
+
+    def _get_model_info(
+        self,
+        model: BaseChatModel,
+    ) -> ModelInfo:
+        for info in self.model_info:
+            if info.model is model:
+                return info
+        model_id = f"model_{uuid.uuid4().hex[:8]}"
+        provider = "unknown"
+        new_info = ModelInfo(model=model, model_id=model_id, provider=provider)
+        self.model_info.append(new_info)
+        return new_info
+
+    def _filter_failed_models(self) -> None:
+        self._error_tracker.reset_expired_failures()
+        filtered_models: list[BaseChatModel] = []
+        filtered_model_info: list[ModelInfo] = []
+        for info in self.model_info:
+            if self._error_tracker.should_skip(info.model_id, info.provider):
+                continue
+            filtered_models.append(info.model)
+            filtered_model_info.append(info)
+        self.fallback_models = filtered_models
+        self.model_info = filtered_model_info
+        if not self.fallback_models:
+            logger.warning("All models have been filtered out due to failures. Resetting failure tracking.")
+            self._error_tracker.reset_all_failures()
 
     @classmethod
     async def create_chat_completion(
@@ -90,69 +356,35 @@ class GenericLLMProvider:
         max_tokens: int | None = 16000,
         llm_provider: str | None = None,
         stream: bool | None = False,
-        websocket: Any | None = None,
+        websocket: WebSocket | None = None,
         llm_kwargs: dict[str, Any] | None = None,
-        cost_callback: Callable[[Any], None] | None = None,
+        cost_callback: Callable[[float], None] | None = None,
     ) -> str:
-        """Create a chat completion using the specified LLM provider.
-
-        Args:
-        ----
-            messages (list[dict[str | str]]): The messages to send to the chat completion
-            model (str | None): The model to use. Defaults to None.
-            temperature (float | None): The temperature to use. Defaults to 0.4.
-            max_tokens (int | None): The max tokens to use. Defaults to 16000.
-            stream (bool | None): Whether to stream the response. Defaults to False.
-            llm_provider (str | None): The LLM Provider to use.
-            websocket (WebSocket | None): The websocket used in the current request,
-            cost_callback (Callable[[Any], None] | None): Callback function for updating cost
-
-        Returns:
-        -------
-            str: The response from the chat completion.
-
-        Raises:
-        ------
-            ValueError: If model is None or max_tokens > 16000
-            RuntimeError: If provider fails to get response
-        """
-        # validate input
         if model is None:
             raise ValueError("Model cannot be None")
         if max_tokens is not None and max_tokens >= 16000:
             raise ValueError(f"Max tokens cannot be more than 16000, but got {max_tokens}")
-
-        # Get the provider from supported providers
-        assert llm_provider is not None
+        if llm_provider is None:
+            raise ValueError("LLM provider cannot be None")
         provider: GenericLLMProvider = cls(
             llm_provider,
             model=model,
             temperature=temperature,
             max_tokens=max_tokens,
-            **(llm_kwargs or {}),
+            **({} if llm_kwargs is None else llm_kwargs),
         )
-
-        response: str = ""
-        # create response
-        response = await provider.get_chat_response(
+        response: str = await provider.get_chat_response(
             messages,
             bool(stream),
             websocket,
         )
-
         if cost_callback is not None:
             from gpt_researcher.utils.costs import estimate_llm_cost
 
-            llm_costs: float = estimate_llm_cost(
-                str(messages),
-                response,
-            )
-            cost_callback(llm_costs)
-
+            cost_callback(estimate_llm_cost(str(messages), response))
         if not response.strip():
             logger.error(f"Failed to get response from {llm_provider} API")
             raise RuntimeError(f"Failed to get response from {llm_provider} API")
-
         return response
 
     @classmethod
@@ -163,310 +395,381 @@ class GenericLLMProvider:
     ) -> BaseChatModel:
         if isinstance(provider, BaseChatModel):
             return provider
-        provider, model = provider.split(":", 1) if ":" in provider else (provider, "")
-        model_name: str = str(kwargs.get("model", "") or model).strip().casefold()
+        provider_name: str
+        model: str
+        provider_name, model = provider.split(":", 1) if ":" in provider else (provider, "")
+        model_name = str(kwargs.get("model", "") or model).strip().casefold()
         model_name = model_name.split(":", 1)[1] if ":" in model_name else model_name
-        if "model" not in kwargs:
-            kwargs["model"] = model_name
-        else:
-            kwargs["model"] = model_name
+        kwargs["model"] = model_name
+        try:
+            return cls._create_model_for_provider(provider_name, **kwargs)
+        except ImportError as e:
+            init(autoreset=True)
+            raise ImportError(f"{Fore.RED}Unable to import required package: {str(e)}") from e
+        except ValueError as e:
+            raise ValueError(f"{Fore.RED}Unsupported provider: '{provider_name}'.\nSupported providers: [{', '.join(_SUPPORTED_PROVIDERS)}]") from e
+
+    @classmethod
+    def _create_model_for_provider(
+        cls,
+        provider: str,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        """Create a model instance for the specified provider."""
+        # Handle provider:model or provider/model format
+        if ":" in provider:
+            return cls._create_model_for_provider(provider.split(":")[0], **kwargs)
+        elif "/" in provider:
+            return cls._create_model_for_provider(provider.split("/")[0], **kwargs)
+
+        # Create model based on provider
         if provider == "openai":
-            _check_pkg("langchain_openai")
-            from langchain_openai import ChatOpenAI
+            return cls._create_openai_model(**kwargs)
 
-            llm = ChatOpenAI(**kwargs)
         elif provider == "anthropic":
-            _check_pkg("langchain_anthropic")
-            from langchain_anthropic import ChatAnthropic
+            return cls._create_anthropic_model(**kwargs)
 
-            llm = ChatAnthropic(**kwargs)
         elif provider == "azure_openai":
-            _check_pkg("langchain_openai")
-            from langchain_openai import AzureChatOpenAI
+            return cls._create_azure_openai_model(**kwargs)
 
-            if "model" in kwargs:
-                model_name = str(kwargs.get("model", "") or "").strip().casefold() or model_name
-                kwargs = {"azure_deployment": model_name, **kwargs}
-
-            llm = AzureChatOpenAI(**kwargs)
         elif provider == "cohere":
-            _check_pkg("langchain_cohere")
-            from langchain_cohere import ChatCohere
+            return cls._create_cohere_model(**kwargs)
 
-            llm = ChatCohere(**kwargs)
         elif provider == "google_vertexai":
-            _check_pkg("langchain_google_vertexai")
-            from langchain_google_vertexai import ChatVertexAI
+            return cls._create_google_vertexai_model(**kwargs)
 
-            llm = ChatVertexAI(**kwargs)
         elif provider == "google_genai":
-            _check_pkg("langchain_google_genai")
-            from langchain_google_genai import ChatGoogleGenerativeAI
+            return cls._create_google_genai_model(**kwargs)
 
-            llm = ChatGoogleGenerativeAI(**kwargs)
         elif provider == "fireworks":
-            _check_pkg("langchain_fireworks")
-            from langchain_fireworks import ChatFireworks
+            return cls._create_fireworks_model(**kwargs)
 
-            llm = ChatFireworks(**kwargs)
         elif provider == "ollama":
-            _check_pkg("langchain_community")
-            from langchain_ollama import ChatOllama
+            return cls._create_ollama_model(**kwargs)
 
-            llm = ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
         elif provider == "together":
-            _check_pkg("langchain_together")
-            from langchain_together import ChatTogether
+            return cls._create_together_model(**kwargs)
 
-            llm = ChatTogether(**kwargs)
         elif provider == "mistralai":
-            _check_pkg("langchain_mistralai")
-            from langchain_mistralai import ChatMistralAI
+            return cls._create_mistralai_model(**kwargs)
 
-            llm = ChatMistralAI(**kwargs)
         elif provider == "huggingface":
-            _check_pkg("langchain_huggingface")
-            from langchain_huggingface import ChatHuggingFace
+            return cls._create_huggingface_model(**kwargs)
 
-            if "model" in kwargs or "model_name" in kwargs:
-                model_id = kwargs.pop("model", kwargs.pop("model_name", None))
-                kwargs = {"model_id": model_id, **kwargs}
-            llm = ChatHuggingFace(**kwargs)
         elif provider == "groq":
-            _check_pkg("langchain_groq")
-            from langchain_groq import ChatGroq
+            return cls._create_groq_model(**kwargs)
 
-            llm = ChatGroq(**kwargs)
         elif provider == "bedrock":
-            _check_pkg("langchain_aws")
-            from langchain_aws import ChatBedrock
+            return cls._create_bedrock_model(**kwargs)
 
-            if "model" in kwargs or "model_name" in kwargs:
-                model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
-                kwargs = {
-                    "model_id": model_id,
-                    "model_kwargs": kwargs,
-                }
-            llm = ChatBedrock(**kwargs)
         elif provider == "dashscope":
-            _check_pkg("langchain_dashscope")
-            from langchain_dashscope import ChatDashScope
+            return cls._create_dashscope_model(**kwargs)
 
-            llm = ChatDashScope(**kwargs)
         elif provider == "xai":
-            _check_pkg("langchain_xai")
-            from langchain_xai import ChatXAI
+            return cls._create_xai_model(**kwargs)
 
-            llm = ChatXAI(**kwargs)
         elif provider == "deepseek":
-            _check_pkg("langchain_openai")
-            from langchain_openai import ChatOpenAI
+            return cls._create_deepseek_model(**kwargs)
 
-            llm = ChatOpenAI(
-                base_url="https://api.deepseek.com",
-                api_key=SecretStr(os.environ["DEEPSEEK_API_KEY"]),
-                **kwargs,
-            )
         elif provider == "litellm":
-            _check_pkg("langchain_community")
-            from langchain_community.chat_models.litellm import ChatLiteLLM
-
-            llm = ChatLiteLLM(**kwargs)
+            return cls._create_litellm_model(**kwargs)
         else:
-            # Check if provider was provided with the model name. e.g. openai:gpt-4o or anthropic:claude-sonnet-3.5
-            if ":" in provider:
-                return cls._get_base_model(provider.split(":")[0], **kwargs)
-            # checks litellm's providers.
-            if "/" in provider:
-                return cls._get_base_model(provider.split("/")[0], **kwargs)
-            supported = ", ".join(_SUPPORTED_PROVIDERS)
-            raise ValueError(f"Unsupported provider: '{provider}'.\nSupported model providers are:\n[{supported}]\n")
+            raise ValueError(f"Unsupported provider: {provider}")
 
-        return llm
+    # Provider-specific model creation methods
+    @classmethod
+    def _create_openai_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_openai")
+        from langchain_openai import ChatOpenAI
+
+        return ChatOpenAI(**kwargs)
+
+    @classmethod
+    def _create_anthropic_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_anthropic")
+        from langchain_anthropic import ChatAnthropic
+
+        return ChatAnthropic(**kwargs)
+
+    @classmethod
+    def _create_azure_openai_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_openai")
+        from langchain_openai import AzureChatOpenAI
+
+        model_name = str(kwargs.get("model", "")).strip().casefold()
+        kwargs = {"azure_deployment": model_name, **kwargs}
+        return AzureChatOpenAI(**kwargs)
+
+    @classmethod
+    def _create_cohere_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_cohere")
+        from langchain_cohere import ChatCohere
+
+        return ChatCohere(**kwargs)
+
+    @classmethod
+    def _create_google_vertexai_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_google_vertexai")
+        from langchain_google_vertexai import ChatVertexAI
+
+        return ChatVertexAI(**kwargs)
+
+    @classmethod
+    def _create_google_genai_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_google_genai")
+        from langchain_google_genai import ChatGoogleGenerativeAI
+
+        return ChatGoogleGenerativeAI(**kwargs)
+
+    @classmethod
+    def _create_fireworks_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_fireworks")
+        from langchain_fireworks import ChatFireworks
+
+        return ChatFireworks(**kwargs)
+
+    @classmethod
+    def _create_ollama_model(cls, **kwargs: Any) -> BaseChatModel:
+        _check_pkg("langchain_community")
+        from langchain_ollama import ChatOllama
+
+        return ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
+
+    @classmethod
+    def _create_together_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_together")
+        from langchain_together import ChatTogether
+
+        return ChatTogether(**kwargs)
+
+    @classmethod
+    def _create_mistralai_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_mistralai")
+        from langchain_mistralai import ChatMistralAI
+
+        return ChatMistralAI(**kwargs)
+
+    @classmethod
+    def _create_huggingface_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_huggingface")
+        from langchain_huggingface import ChatHuggingFace
+
+        model_id = kwargs.pop("model", kwargs.pop("model_name", None))
+        return ChatHuggingFace(model_id=model_id, **kwargs)
+
+    @classmethod
+    def _create_groq_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_groq")
+        from langchain_groq import ChatGroq
+
+        return ChatGroq(**kwargs)
+
+    @classmethod
+    def _create_bedrock_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_aws")
+        from langchain_aws import ChatBedrock
+
+        model_id = kwargs.pop("model", None) or kwargs.pop("model_name", None)
+        return ChatBedrock(model=model_id, model_kwargs=kwargs)
+
+    @classmethod
+    def _create_dashscope_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_dashscope")
+        from langchain_dashscope import ChatDashScope
+
+        return ChatDashScope(**kwargs)
+
+    @classmethod
+    def _create_xai_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_xai")
+        from langchain_xai import ChatXAI
+
+        return ChatXAI(**kwargs)
+
+    @classmethod
+    def _create_deepseek_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_openai")
+        from langchain_openai import ChatOpenAI
+
+        return ChatOpenAI(
+            base_url="https://api.deepseek.com",
+            api_key=SecretStr(os.environ["DEEPSEEK_API_KEY"]),
+            **kwargs,
+        )
+
+    @classmethod
+    def _create_litellm_model(
+        cls,
+        **kwargs: Any,
+    ) -> BaseChatModel:
+        _check_pkg("langchain_community")
+        from langchain_community.chat_models.litellm import ChatLiteLLM
+
+        return ChatLiteLLM(**kwargs)
 
     def _convert_to_base_messages(
         self,
         messages: list[dict[str, str]],
     ) -> list[BaseMessage]:
         """Convert dict messages to BaseMessage objects."""
-        from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-
-        converted: list[BaseMessage] = []
-        for msg in messages:
-            role: str = msg["role"]
-            content: str = msg["content"]
-            if role == "system":
-                converted.append(SystemMessage(content=content))
-            elif role == "assistant":
-                converted.append(AIMessage(content=content))
-            else:  # user or default
-                converted.append(HumanMessage(content=content))
-        return converted
-
-    @classmethod
-    def _convert_entry_to_str(
-        cls,
-        entry: BaseMessage | str | str | dict,
-    ) -> str:
-        result = ""
-        if isinstance(entry, str):
-            # Return string directly without any processing
-            return entry
-        elif isinstance(entry, dict):
-            assert not isinstance(entry, tuple)  # model.ainvoke/BaseMessage are statically typed incorrectly, this line helps static type checkers.
-            # Get content directly from dict
-            return str(entry.get("contents", entry.get("content", entry)))
-        elif isinstance(entry, tuple):
-            # Join tuple elements with space
-            return " ".join(str(x) for x in entry)
-        elif isinstance(entry, list):
-            return cls._convert_to_str(entry)
-        elif isinstance(entry, BaseMessage):
-            # Handle BaseMessage content
-            content: str | list[str | dict] = entry.content
-            if isinstance(content, list):
-                return cls._convert_to_str(content)
-            return cls._convert_entry_to_str(content)
-        else:
-            raise ValueError(f"Unexpected response type: {entry.__class__.__name__}: repr: {entry!r}")
+        return [
+            SystemMessage(content=msg["content"])
+            if msg["role"] == "system"
+            else AIMessage(content=msg["content"])
+            if msg["role"] == "assistant"
+            else HumanMessage(content=msg["content"])
+            for msg in messages
+        ]
 
     @classmethod
     def _convert_to_str(
         cls,
         msg: BaseMessage | str | dict | list,
     ) -> str:
-        """Convert various message types to string without unnecessary splitting."""
-        if not isinstance(msg, list):
-            return cls._convert_entry_to_str(msg)
-        
-        # Handle list of messages
-        parts: list[str] = []
-        for entry in msg:
-            part: str = cls._convert_entry_to_str(entry)
-            if part.strip():
-                parts.append(part)
-        
-        # Join with newlines only between actual content
-        return "\n".join(parts)
+        """
+        Convert various message types to string.
+        Handles BaseMessage, dict, list, and string formats.
+        """
+        if isinstance(msg, str):
+            return msg
+        elif isinstance(msg, dict):
+            return str(msg.get("contents", msg.get("content", msg)))
+        elif isinstance(msg, BaseMessage):
+            content: str | list[str | dict[str, str]] = msg.content
+            if isinstance(content, list):
+                return "\n".join(str(item) for item in content if str(item).strip())
+            elif isinstance(content, dict):
+                return str(content.get("contents", content.get("content", content)))
+            else:
+                return str(content)
+        elif isinstance(msg, list):
+            # Convert each item once and filter, then join
+            converted_items: list[str] = [cls._convert_to_str(item) for item in msg]
+            return "\n".join(item for item in converted_items if item.strip())
+        else:
+            return str(msg)
 
     async def get_chat_response(
         self,
-        messages: list[dict[str, str]] | list[BaseMessage],
+        messages: list[BaseMessage | dict[str, str]],
         stream: bool,
-        websocket: WebSocket | None = None,
+        websocket: WebSocket | HTTPStreamAdapter | None = None,
         max_retries: int = 1,
         cost_callback: Callable[[float], None] | None = None,
         headers: dict[str, str] | None = None,
     ) -> str:
-        """Get chat response with fallback support.
-
-        Args:
-        ----
-            messages (list[dict[str, str]] | list[BaseMessage]): List of message dictionaries (with 'role' and 'content' keys), or BaseMessage objects
-            stream (bool): Whether to stream the response
-            websocket (WebSocket | None): Optional websocket for streaming
-            max_retries (int): Maximum number of retries per model
-
-        Returns:
-        -------
-            (str): The response text.
-        """
-        headers = {} if headers is None else headers
-
-        for i, model in enumerate(self.fallback_models):
-            retries = 0
-            while retries < max_retries:
+        headers = headers or {}
+        self._filter_failed_models()
+        if not self.fallback_models:
+            logger.warning("No viable models available. Resetting failure tracking.")
+            self._error_tracker.reset_all_failures()
+            self.fallback_models = [self.current_model]
+            info = self._get_model_info(self.current_model)
+            self.model_info = [info]
+        for model in self.fallback_models:
+            info = self._get_model_info(model)
+            if self._error_tracker.should_skip(info.model_id, info.provider):
+                continue
+            for retry in range(max_retries):
                 try:
+                    logger.info(f"Attempting request with model {info.model_id} (provider: {info.provider}), attempt {retry + 1}/{max_retries}")
                     if stream:
-                        msgs: list[dict[str, Any]] = cast(List[Dict[str, Any]], messages)  # TODO: cleanup the static types here later.
-                        return await self.stream_response(msgs, websocket)
-                    response: BaseMessage = await self.current_model.ainvoke(messages, headers=headers)
+                        return await self._stream_response(model, messages, websocket)
+                    response: BaseMessage = await model.ainvoke(messages, headers=headers)
                     result: str = self._convert_to_str(response)
-                    logger.debug(f"Response: {result}")
-                    if cost_callback is not None:
+                    if info.provider in self._error_tracker.consecutive_provider_failures:
+                        self._error_tracker.consecutive_provider_failures[info.provider] = 0
+                    if cost_callback:
                         from gpt_researcher.utils.costs import estimate_llm_cost
 
-                        cost_callback(estimate_llm_cost(self._convert_to_str(messages), result))
+                        cost_callback(estimate_llm_cost(self._convert_to_str(list(messages)), result))
+                    logger.info(f"Successfully got response from {info.model_id}")
                     return result
-                except ContextWindowExceededError:
-                    logger.warning("Context window exceeded, trying fallback models...", exc_info=True)
-                    break  # Move to the next model
-                except BadRequestError as e:
-                    logger.exception(f"Bad request error with model '{model}'! {e.__class__.__name__}: {e}, retrying {retries}/{max_retries}")
                 except Exception as e:
-                    err_str: str = str(e).casefold()
-                    if "rate limit" in err_str or "too many requests" in err_str:
-                        logger.exception(f"Rate limit error with model '{model}'! {e.__class__.__name__}: {e}, retrying {retries}/{max_retries}")
-                    else:
-                        logger.exception(f"Error with model '{model}'! {e.__class__.__name__}: {e}, retrying {retries}/{max_retries}")
-                    retries += 1
-                    if retries == max_retries:
-                        # If there are no more fallback models, raise an error
-                        if self.fallback_models and i == len(self.fallback_models) - 1:
-                            raise ValueError(f"All models failed. Last error: {e.__class__.__name__}: {e}")
-                        self.next_fallback_model()
+                    self._error_tracker.record_failure(info.model_id, info.provider, e)
+                    if retry == max_retries - 1:
+                        logger.warning(f"Model {info.model_id} failed after {max_retries} attempts")
                         break
-        raise ValueError("All models failed to generate a response")
+        self._raise_all_models_failed_error()
+        raise ValueError("All models failed")
 
-    def next_fallback_model(
+    async def _stream_response(
         self,
-        i: int | None = None,
-    ) -> None:
-        if i is None:
-            i = self.fallback_models.index(self.current_model)
-        next_model: tuple[str, LiteLLMBaseModelSpec] | BaseChatModel = self.fallback_models[i + 1]
-        if isinstance(next_model, tuple):
-            model_name, model_spec = next_model
-            fallback_provider = GenericLLMProvider(model_name, **model_spec)
-        else:
-            fallback_provider = GenericLLMProvider(next_model)
-        self.current_model = fallback_provider.current_model
-
-    async def stream_response(
-        self,
-        messages: list[dict[str, str]],
-        websocket: WebSocket | None = None,
+        model: BaseChatModel,
+        messages: list[BaseMessage | dict[str, str]],
+        websocket: WebSocket | HTTPStreamAdapter | None = None,
     ) -> str:
-        from langchain_core.messages import BaseMessage
-        
+        info = self._get_model_info(model)
+        logger.info(f"Streaming response from {info.model_id}")
         paragraph: str = ""
         response: str = ""
-
-        # Streaming the response using the chain astream method from langchain
-        async for chunk in self.current_model.astream(messages):
-            # Convert chunk to string content
-            if isinstance(chunk, dict):
-                chunk_content = chunk.get("contents") or chunk.get("content", "")
-            elif isinstance(chunk, (list, tuple)):
-                chunk_content = " ".join(str(x) for x in chunk)
-            elif isinstance(chunk, BaseMessage):
-                chunk_content = chunk.content
-            else:
-                chunk_content = str(chunk)
-                
-            content = str(chunk_content)
-            
-            # Append to response and paragraph
-            response += content
-            paragraph += content
-            
-            # Only split on actual newlines in the content
-            if "\n" in content:
+        try:
+            async for chunk in model.astream(messages):
+                content: str = self._convert_to_str(chunk)
+                response += content
+                paragraph += content
+                if "\n" in content:
+                    await self._send_output(paragraph.strip(), websocket)
+                    paragraph = ""
+            if paragraph.strip():
                 await self._send_output(paragraph.strip(), websocket)
-                paragraph = ""
-
-        # Send any remaining content
-        if paragraph.strip():
-            await self._send_output(paragraph.strip(), websocket)
-
-        return response
+            if info.provider in self._error_tracker.consecutive_provider_failures:
+                self._error_tracker.consecutive_provider_failures[info.provider] = 0
+            return response
+        except Exception as e:
+            self._error_tracker.record_failure(info.model_id, info.provider, e)
+            raise
 
     async def _send_output(
         self,
         content: str,
-        websocket: WebSocket | None = None,
-    ):
-        """Helper to send output to websocket or console."""
+        websocket: WebSocket | HTTPStreamAdapter | None = None,
+    ) -> None:
         if websocket is not None:
             await websocket.send_json(
                 {
@@ -476,11 +779,20 @@ class GenericLLMProvider:
             )
         logger.debug(f"{Fore.GREEN}{content.strip()}{Style.RESET_ALL}")
 
+    def _raise_all_models_failed_error(self) -> None:
+        failed_models_info: list[str] = []
+        for model in self.fallback_models:
+            info: ModelInfo = self._get_model_info(model)
+            failures: int = self._error_tracker.model_failures.get(info.model_id, 0)
+            errors: list[str] = self._error_tracker.get_error_info(info.model_id)
+            failed_models_info.append(f"{info.model_id} (provider: {info.provider}, failures: {failures}, errors: {errors})")
+        error_msg: str = "All models failed to generate a response. Tried:\n" + "\n".join(failed_models_info)
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
 
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
         pkg_kebab = pkg.replace("_", "-")
-        # Import colorama and initialize it
         init(autoreset=True)
-        # Use Fore.RED to color the error message
-        raise ImportError(Fore.RED + f"Unable to import {pkg_kebab}. Please install with `pip install -U {pkg_kebab}`")
+        raise ImportError(f"{Fore.RED}Unable to import {pkg_kebab}. Please install with `pip install -U {pkg_kebab}`")

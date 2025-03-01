@@ -143,12 +143,16 @@ class ExaSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ) -> None:
         """Initializes the ExaSearch object.
 
         Args:
             query: The search query.
             query_domains: The domains to search.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
         """
         # This validation is necessary since exa_py is optional
         check_pkg("exa_py")

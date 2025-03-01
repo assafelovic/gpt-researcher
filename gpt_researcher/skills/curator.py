@@ -28,6 +28,7 @@ class SourceCurator:
                 self.researcher.cfg.SMART_LLM_PROVIDER,
                 model=self.researcher.cfg.SMART_LLM_MODEL,
                 temperature=self.researcher.cfg.TEMPERATURE,
+                fallback_models=self.researcher.cfg.FALLBACK_MODELS,
             )
         return self.llm_provider
 
@@ -48,7 +49,7 @@ class SourceCurator:
             str: Ranked list of source URLs with reasoning
         """
         logger.debug(f"\n\nCurating {len(source_data)} sources: {source_data}")
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "research_plan",
@@ -86,7 +87,7 @@ class SourceCurator:
             curated_sources = json.loads(response)
             logger.info(f"\n\nFinal Curated sources {len(source_data)} sources: {curated_sources}")
 
-            if self.researcher.verbose:
+            if self.researcher.cfg.VERBOSE:
                 await stream_output(
                     "logs",
                     "research_plan",
@@ -98,7 +99,7 @@ class SourceCurator:
 
         except Exception as e:
             logger.exception(f"Error in curate_sources from LLM response: {response}")
-            if self.researcher.verbose:
+            if self.researcher.cfg.VERBOSE:
                 await stream_output(
                     "logs",
                     "research_plan",

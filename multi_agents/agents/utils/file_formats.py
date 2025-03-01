@@ -39,18 +39,19 @@ async def write_to_file_async(
 
 async def write_md_to_word(
     text: str,
-    path: str,
+    path: os.PathLike | str,
 ) -> str:
     """Converts Markdown text to a DOCX file and returns the file path.
 
     Args:
         text (str): Markdown text to convert.
+        path (os.PathLike | str): The path to save the DOCX file.
 
     Returns:
         str: The encoded file path of the generated DOCX.
     """
     task = uuid.uuid4().hex
-    file_path = f"{path}/{task}.docx"
+    file_path = Path(os.path.normpath(path), task).with_suffix(".docx").absolute()
 
     try:
         from docx import Document
@@ -64,7 +65,7 @@ async def write_md_to_word(
         HtmlToDocx().add_html_to_document(html, doc)
 
         # Saving the docx document to file_path
-        doc.save(file_path)
+        doc.save(str(file_path))
 
         print(f"Report written to {file_path}")
 

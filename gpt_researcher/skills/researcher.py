@@ -14,7 +14,7 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from litellm.utils import get_max_tokens
 
-from gpt_researcher.actions.query_processing import get_search_results, plan_research_outline
+from gpt_researcher.actions.query_processing import plan_research_outline
 from gpt_researcher.actions.utils import stream_output
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher.document.langchain_document import LangChainDocumentLoader
@@ -59,6 +59,7 @@ class ResearchConductor:
             model (str): The model to use
             provider (str): The LLM provider to use
             temperature (float): The temperature to use for generation
+            **llm_kwargs: Additional keyword arguments to pass to the LLM provider
 
         Returns:
         -------
@@ -69,6 +70,7 @@ class ResearchConductor:
                 provider,
                 model=model,
                 temperature=temperature,
+                fallback_models=self.researcher.cfg.FALLBACK_MODELS,
                 **llm_kwargs,
             )
         return self.llm_provider
@@ -158,7 +160,7 @@ class ResearchConductor:
         self.researcher.visited_urls.clear()
         research_data: list[str] = []
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "starting_research",
@@ -166,7 +168,7 @@ class ResearchConductor:
                 self.researcher.websocket,
             )
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "agent_generated",
@@ -178,7 +180,7 @@ class ResearchConductor:
         if self.researcher.source_urls:
             self.logger.info("Using provided source URLs")
             research_data.append(await self._get_context_by_urls(self.researcher.source_urls))
-            if research_data[0] and len(research_data[0]) == 0 and self.researcher.verbose:
+            if research_data[0] and len(research_data[0]) == 0 and self.researcher.cfg.VERBOSE:
                 await stream_output(
                     "logs",
                     "answering_from_memory",
@@ -261,8 +263,8 @@ class ResearchConductor:
 
             self.logger.info("Using Azure Document Loader")
             azure_loader = AzureDocumentLoader(
-                container_name=os.getenv("AZURE_CONTAINER_NAME"),
-                connection_string=os.getenv("AZURE_CONNECTION_STRING"),
+                container_name=os.getenv("AZURE_CONTAINER_NAME", ""),
+                connection_string=os.getenv("AZURE_CONNECTION_STRING", ""),
             )
             azure_files: list[Any] = await azure_loader.load()
             document_data: list[dict[str, Any]] = await DocumentLoader(azure_files).load()  # Reuse existing loader
@@ -280,7 +282,7 @@ class ResearchConductor:
             self.logger.info("Curating sources")
             self.researcher.context = await self.researcher.source_curator.curate_sources(research_data)
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "research_step_finalized",
@@ -350,14 +352,14 @@ class ResearchConductor:
         if self.researcher.report_type != ReportType.SubtopicReport:
             sub_queries.append(query)
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "subqueries",
                 f"🗂️  I will conduct my research based on the following queries: {sub_queries}...",
                 self.researcher.websocket,
-                True,
-                {"queries": sub_queries},
+                output_log=True,
+                metadata={"queries": sub_queries},
             )
 
         # Using asyncio.gather to process the sub_queries asynchronously
@@ -402,19 +404,28 @@ class ResearchConductor:
         if self.researcher.report_type != ReportType.SubtopicReport:
             sub_queries.append(query)
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "subqueries",
                 f"🗂️ I will conduct my research based on the following queries: {sub_queries}...",
                 self.researcher.websocket,
-                True,
-                {"queries": sub_queries},
+                output_log=True,
+                metadata={"queries": sub_queries},
             )
 
         # Using asyncio.gather to process the sub_queries asynchronously
         try:
-            context: list[str] = await asyncio.gather(*[self._process_sub_query(sub_query, scraped_data, query_domains) for sub_query in sub_queries])
+            context: list[str] = await asyncio.gather(
+                *[
+                    self._process_sub_query(
+                        sub_query,
+                        scraped_data,
+                        query_domains,
+                    )
+                    for sub_query in sub_queries
+                ]
+            )
             self.logger.info(f"Gathered context from {len(context)} sub-queries")
             # Filter out empty results and join the context
             context_str: str = " ".join(c for c in context if c.strip())
@@ -452,7 +463,7 @@ class ResearchConductor:
                 },
             )
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "running_subquery_research",
@@ -478,7 +489,7 @@ class ResearchConductor:
                     f"📃 {content}",
                     self.researcher.websocket,
                 )
-                if self.researcher.verbose and self.json_handler is not None:
+                if self.researcher.cfg.VERBOSE and self.json_handler is not None:
                     self.json_handler.log_event(
                         "content_found",
                         {
@@ -486,7 +497,7 @@ class ResearchConductor:
                             "content_size": len(content),
                         },
                     )
-            elif self.researcher.verbose:
+            elif self.researcher.cfg.VERBOSE:
                 await stream_output(
                     "logs",
                     "subquery_context_not_found",
@@ -515,7 +526,7 @@ class ResearchConductor:
             (str): The processed sub-query.
         """
         sub_filter = sub_filter if sub_filter is not None else {}
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "running_subquery_with_vectorstore_research",
@@ -529,7 +540,7 @@ class ResearchConductor:
         )
 
         self.logger.debug(f"Content found for sub-query: {len(content) if content else 0} chars")
-        if not self.researcher.verbose:
+        if not self.researcher.cfg.VERBOSE:
             return content
 
         if content and content.strip():
@@ -560,7 +571,7 @@ class ResearchConductor:
                 continue
             self.researcher.visited_urls.add(url)
             new_urls.append(url)
-            if not self.researcher.verbose:
+            if not self.researcher.cfg.VERBOSE:
                 continue
             await stream_output(
                 "logs",
@@ -638,7 +649,7 @@ class ResearchConductor:
             try:
                 retriever = retriever_class(query, query_domains=query_domains)  # type: ignore
 
-                search_results = await asyncio.to_thread(
+                search_results: list[dict[str, Any]] = await asyncio.to_thread(
                     retriever.search,  # type: ignore[attr-defined]
                     max_results=self.researcher.cfg.MAX_SEARCH_RESULTS_PER_QUERY,
                 )
@@ -674,7 +685,7 @@ class ResearchConductor:
         """
         new_search_urls: list[str] = await self._search_relevant_source_urls(sub_query, query_domains)
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "researching",
@@ -763,6 +774,7 @@ async def generate_sub_queries(
             model=cfg.STRATEGIC_LLM_MODEL,
             temperature=cfg.TEMPERATURE,
             max_tokens=strategic_token_limit,
+            fallback_models=cfg.FALLBACK_MODELS,
             **cfg.llm_kwargs,
         )
         response: str = await provider.get_chat_response(
@@ -778,6 +790,7 @@ async def generate_sub_queries(
                 cfg.STRATEGIC_LLM_PROVIDER,
                 model=cfg.STRATEGIC_LLM_MODEL,
                 temperature=cfg.TEMPERATURE,
+                fallback_models=cfg.FALLBACK_MODELS,
                 max_tokens=strategic_token_limit,  # Keep original limit
                 **cfg.llm_kwargs,
             )
@@ -792,6 +805,7 @@ async def generate_sub_queries(
                     cfg.SMART_LLM_PROVIDER,
                     model=cfg.SMART_LLM_MODEL,
                     temperature=cfg.TEMPERATURE,
+                    fallback_models=cfg.FALLBACK_MODELS,
                     max_tokens=strategic_token_limit,
                     **cfg.llm_kwargs,
                 )
@@ -822,7 +836,10 @@ async def generate_sub_queries(
     if isinstance(result, (str, int)):
         return [str(result)]  # Convert to string and wrap in a list
     if isinstance(result, list):
-        # Flatten list of lists
-        return [item for sublist in result for item in (sublist if isinstance(sublist, list) else [sublist])]
+        return [
+            item
+            for sublist in result  # Flatten list of lists
+            for item in (sublist if isinstance(sublist, list) else [sublist])
+        ]
     logger.exception(f"Unexpected result type: `{result.__class__.__name__}`. Result: `{result!r}`")
     return []

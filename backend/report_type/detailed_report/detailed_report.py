@@ -5,8 +5,10 @@ import logging
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from gpt_researcher import GPTResearcher
-from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
+from gpt_researcher.utils.enum import ReportFormat, ReportSource, ReportType, Tone
 from gpt_researcher.utils.validators import Subtopics
+
+from backend.server.server_utils import CustomLogsHandler
 
 if TYPE_CHECKING:
     import os
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
     from fastapi import WebSocket
 
 
-class DetailedReporter:
+class DetailedReport:
     logger: ClassVar[logging.Logger] = logging.getLogger(__name__)
 
     def __init__(
@@ -22,35 +24,44 @@ class DetailedReporter:
         query: str,
         report_type: str | ReportType,
         report_source: str | ReportSource,
+        websocket: WebSocket | CustomLogsHandler | None = None,
+        report_format: str | ReportFormat | None = None,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
         config_path: os.PathLike | str | None = None,
-        tone: str | Tone = "",
-        websocket: WebSocket | None = None,
+        tone: str | Tone = Tone.Objective,
         subtopics: list[dict[str, Any]] | None = None,
         headers: dict[str, Any] | None = None,
         query_domains: list[str] | None = None,
     ):
         self.query: str = query
         self.report_type: ReportType = ReportType.__members__[report_type.lower().title()] if isinstance(report_type, str) else report_type
+        self.report_format: ReportFormat = (
+            ReportFormat.__members__[report_format.lower().title()]
+            if isinstance(report_format, str)
+            else report_format
+            if isinstance(report_format, ReportFormat)
+            else ReportFormat.APA
+        )
         self.report_source: ReportSource = ReportSource.__members__[report_source.lower().capitalize()] if isinstance(report_source, str) else report_source
         self.source_urls: list[str] = [] if source_urls is None else source_urls
         self.document_urls: list[str] = [] if document_urls is None else document_urls
         self.config_path: os.PathLike | str | None = config_path
         self.tone: Tone | None = Tone.__members__[tone.lower().capitalize()] if isinstance(tone, str) else tone
-        self.websocket: WebSocket | None = websocket
+        self.websocket: WebSocket | CustomLogsHandler | None = websocket
         self.subtopics: list[dict[str, Any]] = [] if subtopics is None else subtopics
         self.headers: dict[str, Any] = {} if headers is None else headers
         self.query_domains: list[str] = [] if query_domains is None else query_domains
 
         self.gpt_researcher: GPTResearcher = GPTResearcher(
             query=self.query,
-            config_path=self.config_path,
             report_type=self.report_type.value,
+            report_format=self.report_format.value,
             report_source=self.report_source.value,
+            tone=self.tone,
             source_urls=self.source_urls,
             document_urls=self.document_urls,
-            tone=self.tone,
+            config=self.config_path,
             websocket=self.websocket,
             headers=self.headers,
             query_domains=self.query_domains,
@@ -118,15 +129,17 @@ class DetailedReporter:
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
             report_type=ReportType.SubtopicReport.value,
+            report_format=self.report_format.value,
             report_source=self.report_source.value,
+            tone=self.tone if isinstance(self.tone, Tone) else Tone(self.tone),
+            config=self.config_path,
             websocket=self.websocket,
-            headers=self.headers,
+            agent_role=self.gpt_researcher.agent,
             parent_query=self.query,
             subtopics=[repr(subtopic) if isinstance(subtopic, dict) else subtopic for subtopic in self.subtopics],
             visited_urls=self.global_urls,
-            agent_role=self.gpt_researcher.agent,
-            tone=self.tone if isinstance(self.tone, Tone) else Tone(self.tone),
             context=list(set(self.global_context)),
+            headers=self.headers,
             query_domains=self.query_domains,
         )
 
@@ -151,12 +164,7 @@ class DetailedReporter:
             relevant_contents,
         )
 
-        self.global_written_sections.extend(
-            [
-                section.get("content", "")
-                for section in self.gpt_researcher.extract_sections(subtopic_report)
-            ]
-        )
+        self.global_written_sections.extend([section.get("content", "") for section in self.gpt_researcher.extract_sections(subtopic_report)])
         self.global_context = list(set(subtopic_assistant.context))
         self.global_urls.update(subtopic_assistant.visited_urls)
 

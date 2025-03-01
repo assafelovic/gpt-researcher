@@ -5,7 +5,7 @@ import warnings
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Any
 
-from gpt_researcher.utils.enum import ReportFormat, ReportSource, ReportType, SupportedLanguages, Tone
+from gpt_researcher.utils.enum import ReportFormat, ReportSource, ReportType, Tone
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -63,7 +63,7 @@ def generate_report_prompt(
     report_format: ReportFormat = ReportFormat.APA,
     total_words: int = 1000,
     tone: Tone | None = None,
-    language: SupportedLanguages = SupportedLanguages.ENGLISH,
+    language: str = "ENGLISH",
 ):
     """Generates the report prompt for the given question and research summary.
     Args: question (str): The question to generate the report prompt for
@@ -102,7 +102,7 @@ Please follow all of the following guidelines in your report:
 - {reference_prompt}
 - {tone_prompt}
 
-You MUST write the report in the following language: {language.value}.
+You MUST write the report in the following language: {language}.
 Please do your best, this is very important to my career.
 Assume that the current date is {date.today()}."""
 
@@ -295,7 +295,7 @@ Provided the main topic:
 
 {task}
 
-and research data:
+Providerarch data:
 
 {data}
 
@@ -323,7 +323,7 @@ def generate_subtopic_report_prompt(
     max_subsections: int = 5,
     total_words: int = 800,
     tone: Tone = Tone.Objective,
-    language: SupportedLanguages = SupportedLanguages.ENGLISH,
+    language: str = "ENGLISH",
 ) -> str:
     return f"""
 Context:
@@ -377,7 +377,7 @@ IMPORTANT: CONTENT AND SECTIONS UNIQUENESS:
 Assume the current date is {datetime.now(timezone.utc).strftime("%B %d, %Y")} if required.
 
 "IMPORTANT RESTRICTIONS AND GUIDELINES!":
-- You MUST write the report in the following language: {language.value}.
+- You MUST write the report in the following language: {language}.
 - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
 - Must NOT have any introduction, conclusion, summary or reference section.
 - You MUST include hyperlinks with markdown syntax ([url website](url)) related to the sentences wherever necessary.
@@ -394,12 +394,24 @@ def generate_draft_titles_prompt(
     main_topic: str,
     context: str,
 ) -> str:
+    """Generate draft section title headers for a detailed report.
+
+    Args:
+    ----
+        current_subtopic (str): The current subtopic to generate draft headers for.
+        main_topic (str): The main topic of the report.
+        context (str): The context of the report.
+
+    Returns:
+    -------
+        str: A list of draft section title headers for the subtopic report.
+    """
     return f"""
 "Context":
 "{context}"
 
 "MAIN TOPIC AND SUBTOPIC":
-Using the latest information available, construct a draft section title headers for a DETAILED Report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
+Using the latest invocation available, construct a draft section title headers for a DETAILED Report on the subtopic: {current_subtopic} under the main topic: {main_topic}.
 
 "TASK":
 1. Create a list of draft section title headers for the subtopic report.
@@ -425,8 +437,20 @@ Provide the draft headers in a list format using markdown syntax, for example:
 def generate_report_introduction(
     question: str,
     research_summary: str = "",
-    language: SupportedLanguages = SupportedLanguages.ENGLISH,
+    language: str = "ENGLISH",
 ) -> str:
+    """Generate a detailed report introduction.
+
+    Args:
+    ----
+        question (str): The research task to generate the introduction for.
+        research_summary (str): The latest reference information.
+        language (str): The language of the report.
+
+    Returns:
+    -------
+        str: A detailed report introduction.
+    """
     return f"""{research_summary}\n
 Using the above latest reference information, prepare a detailed report introduction on the topic -- {question}.
 - Your introduction will be succinct, well-structured, and informative utilizing markdown syntax.
@@ -434,14 +458,14 @@ Using the above latest reference information, prepare a detailed report introduc
 - Your introduction will be preceded with an H1 heading with a suitable topic for the entire report.
 - You must include authentic hyperlinks with correct and valid markdown syntax ([url website](url)) appropriately for the relevant sentences.
 Assume that the current date is {datetime.now(timezone.utc).strftime("%B %d, %Y")} if required.
-Write the report in the following language: {language.value}.
+Write the report in the following language: {language}.
 """
 
 
 def generate_report_conclusion(
     query: str,
     report_content: str,
-    language: SupportedLanguages = SupportedLanguages.ENGLISH,
+    language: str = "ENGLISH",
 ) -> str:
     """Generate a concise conclusion summarizing the main findings and implications of a research report.
 
@@ -449,6 +473,7 @@ def generate_report_conclusion(
     ----
         query (str): The research task to generate the conclusion for.
         report_content (str): The content of the research report.
+        language (str): The language of the report.
 
     Returns:
     -------
@@ -469,7 +494,7 @@ def generate_report_conclusion(
 
     If there is no "## Conclusion" section title written at the end of the report, please add it to the top of your conclusion.
     You must include authentic hyperlinks with correct and valid markdown syntax ([url website](url)) appropriately for any and all sentences relevant to the URL.
-    Write the conclusion in the following language: {language.value}.
+    Write the conclusion in the following language: {language}.
     
     Write the conclusion now:
     """

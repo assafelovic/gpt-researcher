@@ -28,7 +28,7 @@ class ContextManager:
         query: str,
         pages: list[dict[str, Any]],
     ) -> str:
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "fetching_query_content",
@@ -51,7 +51,7 @@ class ContextManager:
         query: str,
         filter: dict | None = None,
     ) -> str:
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "fetching_query_format",
@@ -80,7 +80,7 @@ class ContextManager:
         )
         relevant_contents = list(set().union(*results))[:max_results]
 
-        if relevant_contents and self.researcher.verbose:
+        if relevant_contents and self.researcher.cfg.VERBOSE:
             prettier_contents = "\n".join(relevant_contents)
             await stream_output(
                 "logs",
@@ -98,7 +98,7 @@ class ContextManager:
         similarity_threshold: float = 0.5,
         max_results: int = 10,
     ) -> list[str]:
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "fetching_relevant_written_content",

@@ -14,12 +14,16 @@ class PubMedCentralSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ):
         """Initializes the PubMedCentralSearch object.
 
         Args:
             query: The search query.
             query_domains: The domains to search for.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
         """
         self.query: str = query
         self.query_domains: list[str] | None = query_domains

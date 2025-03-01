@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import BaseMessage
 from litellm.utils import get_max_tokens
 
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider  # noqa: F811
@@ -61,7 +62,7 @@ def get_llm(
 
 
 async def create_chat_completion(
-    messages: list[dict[str, str]],  # type: ignore
+    messages: list[BaseMessage | dict[str, str]],
     model: str | None = None,
     temperature: float | None = 0.4,
     max_tokens: int | None = 4000,
@@ -119,7 +120,7 @@ async def create_chat_completion(
     # create response
     for _ in range(10):  # maximum of 10 attempts
         response = await provider.get_chat_response(
-            messages,
+            messages=messages,
             stream=bool(stream),
             websocket=websocket,
             max_retries=max_retries or 10,
@@ -133,7 +134,7 @@ async def create_chat_completion(
             )
             cost_callback(llm_costs)
 
-        return response
+        return response.encode().decode('utf-8')
 
     logger.error(f"Failed to get response from provider '{llm_provider}'")
     raise RuntimeError(f"Failed to get response from provider '{llm_provider}'")
@@ -181,6 +182,7 @@ async def construct_subtopics(
             config.SMART_LLM_PROVIDER,
             model=config.SMART_LLM_MODEL,
             temperature=temperature,
+            fallback_models=config.FALLBACK_MODELS,
             **config.llm_kwargs,
             headers=headers,
         )

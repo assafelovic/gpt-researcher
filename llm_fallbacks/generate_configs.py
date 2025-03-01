@@ -199,8 +199,8 @@ if __name__ == "__main__":
             ensure_ascii=True,
         ),
     )
-    print("Saving free_models.json")
-    Path("free_models.json").absolute().write_text(
+    print("Saving free_chat_models.json")
+    Path("free_chat_models.json").absolute().write_text(
         json.dumps(
             {model: spec for model, spec in FREE_MODELS},
             indent=4,

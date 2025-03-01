@@ -53,7 +53,7 @@ async def choose_agent(
                     "content": f"task: {query}",
                 },
             ],
-            temperature=0.15,
+            temperature=cfg.SMART_LLM_TEMPERATURE,
             llm_provider=cfg.SMART_LLM_PROVIDER,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
@@ -62,6 +62,9 @@ async def choose_agent(
 
         if response is None:
             raise ValueError("Response is None")
+
+        # Clean the response to remove invalid escape sequences
+        response = re.sub(r'\\(?![\\/"bfnrtu]|u[0-9a-fA-F]{4})', '', response)
 
         agent_dict: dict[str, Any] = json.loads(response)
         return agent_dict["server"], agent_dict["agent_role_prompt"]
@@ -90,10 +93,16 @@ async def handle_json_error(
     json_string: str | None = extract_json_with_regex(response)
     if json_string and json_string.strip():
         try:
-            json_data: dict[str, Any] = json.loads(json_string)
+            json_data: dict[str, Any] = json.loads(json_string.encode().decode('utf-8'))  # type: ignore
             return json_data["server"], json_data["agent_role_prompt"]
         except json.JSONDecodeError as e:
             logger.exception(f"Error decoding JSON: {e.__class__.__name__}: {e}")
+            try:
+                # Fallback decoding strategy
+                json_data = json.loads(json_string, strict=False)
+                return json_data["server"], json_data["agent_role_prompt"]
+            except Exception as e2:
+                logger.exception(f"Secondary error decoding JSON: {e2.__class__.__name__}: {e2}")
 
     logger.warning("No JSON found in the string. Falling back to Default Agent.")
     return "Default Agent", (

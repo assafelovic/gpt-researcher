@@ -146,6 +146,8 @@ class GoogleSearch:
         query: str,
         headers: dict[str, str] | None = None,
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ) -> None:
         """Initializes the GoogleSearch object.
 
@@ -153,6 +155,8 @@ class GoogleSearch:
             query: The search query
             headers: The headers to use for the request
             query_domains: The domains to filter the search by
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
         """
         self.query: str = query
         self.headers: dict[str, str] = headers or {}

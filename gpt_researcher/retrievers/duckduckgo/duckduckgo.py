@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from gpt_researcher.utils import check_pkg
 
@@ -133,6 +133,8 @@ class Duckduckgo:
         self,
         query: str,
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ):
         check_pkg("duckduckgo_search")
         from duckduckgo_search import DDGS

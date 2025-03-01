@@ -17,6 +17,8 @@ class ArxivRetriever(BaseRetriever):
         self,
         load_max_docs: int,
         doc_content_chars_max: int | None,
+        *args: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         self.load_max_docs: int = load_max_docs
         self.doc_content_chars_max: int | None = doc_content_chars_max

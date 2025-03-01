@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import requests
 from bs4 import BeautifulSoup
@@ -19,6 +19,8 @@ class WebBaseLoaderScraper:
         self,
         link: str,
         session: Session | None = None,
+        *args: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         self.link: str = link
         self.session: Session = session or requests.Session()

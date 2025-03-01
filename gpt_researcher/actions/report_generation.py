@@ -18,7 +18,7 @@ from gpt_researcher.utils.enum import ReportType, Tone
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from backend.server.server_utils import CustomLogsHandler
+    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
     from fastapi.websockets import WebSocket
 
 logger: Logger = get_formatted_logger()
@@ -28,24 +28,24 @@ def _get_llm(
     cfg: Config,
     model: str | None = None,
     temperature: float | None = None,
-    max_tokens: int | None = None,
 ) -> GenericLLMProvider:
     """Get an LLM provider instance with optional overrides.
 
     Args:
+    ----
         cfg: The config object
         model: Optional model override
         temperature: Optional temperature override
-        max_tokens: Optional max_tokens override
 
     Returns:
+    -------
         The LLM provider instance
     """
     return GenericLLMProvider(
         cfg.STRATEGIC_LLM_PROVIDER if model == cfg.STRATEGIC_LLM_MODEL else cfg.SMART_LLM_PROVIDER,
         model=model or cfg.SMART_LLM_MODEL,
-        temperature=temperature or cfg.TEMPERATURE,
-        max_tokens=max_tokens,
+        temperature=temperature or cfg.SMART_LLM_TEMPERATURE,
+        fallback_models=cfg.FALLBACK_MODELS,
         **cfg.llm_kwargs,
     )
 
@@ -55,12 +55,13 @@ async def write_report_introduction(
     context: str,
     agent_role_prompt: str,
     cfg: Config,
-    websocket: CustomLogsHandler | WebSocket | None = None,
+    websocket: CustomLogsHandler | WebSocket | HTTPStreamAdapter | None = None,
     cost_callback: Callable[[float], None] | None = None,
 ) -> str:
     """Generate an introduction for the report.
 
     Args:
+    ----
         query (str): The research query.
         context (str): Context for the report.
         role (str): The role of the agent.
@@ -69,6 +70,7 @@ async def write_report_introduction(
         cost_callback (callable, optional): Callback for calculating LLM costs.
 
     Returns:
+    -------
         str: The generated introduction.
     """
     params: dict[str, Any] = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.25)
@@ -115,12 +117,13 @@ async def write_conclusion(
     context: str,
     agent_role_prompt: str,
     cfg: Config,
-    websocket: CustomLogsHandler | WebSocket | None = None,
+    websocket: CustomLogsHandler | WebSocket | HTTPStreamAdapter | None = None,
     cost_callback: Callable[[float], None] | None = None,
 ) -> str:
     """Write a conclusion for the report.
 
     Args:
+    ----
         query (str): The research query.
         context (str): Context for the report.
         role (str): The role of the agent.
@@ -129,6 +132,7 @@ async def write_conclusion(
         cost_callback (callable, optional): Callback for calculating LLM costs.
 
     Returns:
+    -------
         str: The generated conclusion.
     """
     params: dict[str, Any] = get_llm_params(cfg.SMART_LLM_MODEL, temperature=0.25)
@@ -173,12 +177,13 @@ async def summarize_url(
     content: str,
     role: str,
     config: Config,
-    websocket: WebSocket | None = None,
+    websocket: WebSocket | HTTPStreamAdapter | None = None,
     cost_callback: Callable[[float], None] | None = None,
 ) -> str:
     """Summarize the content of a URL.
 
     Args:
+    ----
         url (str): The URL to summarize.
         content (str): The content of the URL.
         role (str): The role of the agent.
@@ -187,6 +192,7 @@ async def summarize_url(
         cost_callback (callable, optional): Callback for calculating LLM costs.
 
     Returns:
+    -------
         str: The summarized content.
     """
     params: dict[str, Any] = get_llm_params(config.SMART_LLM_MODEL, temperature=0.25)
@@ -229,12 +235,13 @@ async def generate_draft_section_titles(
     context: str,
     role: str,
     config: Config,
-    websocket: CustomLogsHandler | WebSocket | None = None,
+    websocket: CustomLogsHandler | WebSocket | HTTPStreamAdapter | None = None,
     cost_callback: Callable[[float], None] | None = None,
 ) -> list[str]:
     """Generate draft section titles for the report.
 
     Args:
+    ----
         query (str): The research query.
         context (str): Context for the report.
         role (str): The role of the agent.
@@ -243,6 +250,7 @@ async def generate_draft_section_titles(
         cost_callback (callable, optional): Callback for calculating LLM costs.
 
     Returns:
+    -------
         list[str]: A list of generated section titles.
     """
     params: dict[str, Any] = get_llm_params(config.SMART_LLM_MODEL, temperature=0.25)
@@ -308,6 +316,7 @@ async def generate_report(
     """Generates the final report.
 
     Args:
+    ----
         query (str):
         context (Any):
         agent_role_prompt (str):
@@ -321,6 +330,7 @@ async def generate_report(
         cost_callback (Callable[[float], None] | None): Callback for calculating LLM costs.
 
     Returns:
+    -------
         report (str): The final report
 
     """

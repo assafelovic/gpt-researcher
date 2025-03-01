@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -11,13 +12,12 @@ from typing import TYPE_CHECKING, Any
 
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
-from fastapi.websockets import WebSocket as ServerWebSocket  # pyright: ignore[reportMissingImports]
+from fastapi.websockets import WebSocket as ServerWebSocket
 from gpt_researcher.actions import stream_output
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.config import Config
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher.utils.enum import ReportType, Tone
-from multi_agents.main import run_research_task
 from werkzeug.utils import secure_filename
 
 from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
@@ -29,15 +29,61 @@ logging.basicConfig(level=logging.DEBUG)
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+class HTTPStreamAdapter:
+    """Adapter to make HTTP streaming look like a WebSocket for WebSocketManager"""
+
+    def __init__(
+        self,
+        message_queue: asyncio.Queue[str],
+    ):
+        self.message_queue: asyncio.Queue[str] = message_queue
+        self.client_state: dict[str, Any] = {"ready": True}
+        self._closed: bool = False
+
+    async def send_text(
+        self,
+        message: str,
+    ) -> None:
+        await self.message_queue.put(message)
+
+    async def send_json(
+        self,
+        data: dict[str, Any],
+    ) -> None:
+        await self.message_queue.put(json.dumps(data, indent=2))
+
+    # Required WebSocket compatibility methods
+    async def accept(self) -> None:
+        """Simulated WebSocket accept"""
+        self._closed = False
+
+    async def close(self) -> None:
+        """Simulated WebSocket close"""
+        self._closed = True
+
+    @property
+    def closed(self) -> bool:
+        """Simulated WebSocket closed property"""
+        return self._closed
+
+    async def receive_text(self) -> str:
+        """Simulated WebSocket receive text"""
+        return ""
+
+    async def receive_json(self) -> dict[str, Any]:
+        """Simulated WebSocket receive JSON"""
+        return {}
+
+
 class CustomLogsHandler:
     """Custom handler to capture streaming logs from the research process."""
 
     def __init__(
         self,
-        websocket: ServerWebSocket | None = None,
+        websocket: ServerWebSocket | HTTPStreamAdapter | None = None,
         task: str | None = None,
     ):
-        self.websocket: ServerWebSocket | None = websocket
+        self.websocket: ServerWebSocket | HTTPStreamAdapter | None = websocket
         self.logs: list[dict[str, Any]] = []
         self.timestamp: str = datetime.now().isoformat()
 
@@ -144,11 +190,7 @@ class Researcher:
         )
 
         # Get the JSON log path that was created by CustomLogsHandler
-        if (
-            self.logs_handler is not None
-            and self.logs_handler.log_file.exists()
-            and self.logs_handler.log_file.is_file()
-        ):
+        if self.logs_handler is not None and self.logs_handler.log_file.exists() and self.logs_handler.log_file.is_file():
             json_relative_path: Path = self.logs_handler.log_file.relative_to(Path.cwd().absolute())
         else:
             json_relative_path: Path = Path("")
@@ -173,9 +215,7 @@ def sanitize_filename(
     max_task_length = 255 - 8 - 5 - 10 - 6 - 10  # ~216 chars for task
 
     # Truncate task if needed
-    truncated_task: str = (
-        task[:max_task_length] if len(task) > max_task_length else task
-    )
+    truncated_task: str = task[:max_task_length] if len(task) > max_task_length else task
 
     # Reassemble and clean the filename
     sanitized: str = f"{prefix}_{timestamp}_{truncated_task}"
@@ -229,9 +269,7 @@ async def handle_start_command(
         headers=headers,
         query_domains=query_domains or [],
     )
-    sanitized_filename: str = sanitize_filename(
-        f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{str(task or '').strip()}"
-    )
+    sanitized_filename: str = sanitize_filename(f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{str(task or '').strip()}")
     # Generate the files
     file_paths: dict[str, Path] = await generate_report_files(
         str(report or "").strip(),
@@ -260,7 +298,7 @@ async def handle_chat(
 ) -> str | None:
     json_data: dict[str, Any] = json.loads(data[4:])
     logger.debug(f"Received chat message: {json_data['message']}")
-    return await manager.chat(str(json_data['message'] or "").strip(), websocket)
+    return await manager.chat(str(json_data["message"] or "").strip(), websocket)
 
 
 async def generate_report_files(
@@ -363,8 +401,9 @@ async def handle_file_deletion(
 async def execute_multi_agents(
     manager: WebSocketManager,
 ) -> Any:
-    websocket: ServerWebSocket | None = next(iter(manager.active_connections), None)
+    websocket: ServerWebSocket | HTTPStreamAdapter | None = next(iter(manager.active_connections), None)
     if websocket:
+        from multi_agents.main import run_research_task
         report: str = await run_research_task(
             "Is AI in a hype cycle?",
             websocket=websocket,

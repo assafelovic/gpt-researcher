@@ -25,6 +25,8 @@ class TavilySearch:
         headers: dict[str, Any] | None = None,
         topic: str = "general",
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ):
         """
         Initializes the TavilySearch object.
@@ -34,6 +36,8 @@ class TavilySearch:
             headers (dict, optional): Additional headers to include in the request. Defaults to None.
             topic (str, optional): The topic for the search. Defaults to "general".
             query_domains (list, optional): List of domains to include in the search. Defaults to None.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
         """
         self.query: str = query
         self.headers: dict[str, str] = headers or {}
@@ -74,9 +78,7 @@ class TavilySearch:
         include_images: bool = False,
         use_cache: bool = True,
     ) -> dict[str, Any]:
-        """
-        Internal search method to send the request to the API.
-        """
+        """Internal search method to send the request to the API."""
 
         data: dict[str, Any] = {
             "query": query,
@@ -105,12 +107,16 @@ class TavilySearch:
         else:
             # Raises a HTTPError if the HTTP request returned an unsuccessful status code
             response.raise_for_status()
+        return {}
 
     def search(
         self,
         max_results: int = 10,
     ) -> list[dict[str, Any]]:
         """Searches the query.
+        
+        Args:
+            max_results (int, optional): The maximum number of results to return. Defaults to 10.
 
         Returns:
             list[dict[str, Any]]: The search results.

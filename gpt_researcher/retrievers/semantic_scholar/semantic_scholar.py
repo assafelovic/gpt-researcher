@@ -179,6 +179,8 @@ class SemanticScholarSearch:
         query: str,
         sort: str = "relevance",
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ) -> None:
         """Initialize the SemanticScholarSearch class with a query and sort criterion.
 
@@ -186,6 +188,8 @@ class SemanticScholarSearch:
             query: Search query string
             sort: Sort criterion ('relevance', 'citationCount', 'publicationDate')
             query_domains: List of domains to search for
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
         """
         self.query: str = query
         assert sort in self.VALID_SORT_CRITERIA, "Invalid sort criterion"

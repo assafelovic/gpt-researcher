@@ -547,3 +547,18 @@ if "FREE_MODELS" not in globals():  # don't waste time and energy redefining the
         all_configs,
         free_only=True,
     )
+    ALL_EMBEDDING_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
+        {
+            k: v
+            for k, v in all_configs.items()
+            if v.get("mode") == "embedding"
+        },
+    )
+    FREE_EMBEDDING_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
+        {
+            k: v
+            for k, v in all_configs.items()
+            if v.get("mode") == "embedding"
+        },
+        free_only=True,
+    )

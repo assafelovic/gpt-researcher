@@ -17,6 +17,8 @@ class CustomRetriever:
         self,
         query: str,
         query_domains: list[str] | None = None,
+        *args: Any,  # provided for compatibility with other retrievers
+        **kwargs: Any,  # provided for compatibility with other retrievers
     ):
         self.endpoint: str | None = os.getenv("RETRIEVER_ENDPOINT")
         if not self.endpoint:
@@ -37,9 +39,11 @@ class CustomRetriever:
         """Performs the search using the custom retriever endpoint.
 
         Args:
+        ----
             max_results: Maximum number of results to return (not currently used)
 
         Returns:
+        -------
             JSON response in the format:
             [
               {

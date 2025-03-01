@@ -30,7 +30,7 @@ class ReportGenerator:
             "agent_role_prompt": (self.researcher.cfg.AGENT_ROLE or "").strip(),
             "report_type": self.researcher.cfg.REPORT_TYPE,
             "report_source": self.researcher.cfg.REPORT_SOURCE,
-            "tone": self.researcher.cfg.TONE,
+            "tone": self.researcher.tone,
             "websocket": self.researcher.websocket,
             "research_config": self.researcher.cfg,
             "headers": self.researcher.headers,
@@ -76,7 +76,7 @@ class ReportGenerator:
                 metadata={"images": research_images},
             )
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "writing_report",
@@ -101,7 +101,7 @@ class ReportGenerator:
 
         report = await generate_report(**report_params)
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "report_written",
@@ -125,7 +125,7 @@ class ReportGenerator:
         -------
             (str): The generated conclusion to the entire report.
         """
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "writing_conclusion",
@@ -146,7 +146,7 @@ class ReportGenerator:
             websocket=self.researcher.websocket,
         )
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "conclusion_written",
@@ -160,7 +160,7 @@ class ReportGenerator:
 
     async def write_introduction(self) -> str:
         """Write the introduction section of the report."""
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "writing_introduction",
@@ -181,7 +181,7 @@ class ReportGenerator:
             cost_callback=self.researcher.add_costs,
         )
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "introduction_written",
@@ -193,7 +193,7 @@ class ReportGenerator:
 
     async def get_subtopics(self) -> list[str] | Subtopics:
         """Retrieve subtopics for the research."""
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "generating_subtopics",
@@ -208,7 +208,7 @@ class ReportGenerator:
             subtopics=self.researcher.subtopics,
         )
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "subtopics_generated",
@@ -223,7 +223,7 @@ class ReportGenerator:
         current_subtopic: str,
     ) -> list[str]:
         """Generate draft section titles for the report."""
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "generating_draft_sections",
@@ -245,7 +245,7 @@ class ReportGenerator:
             cost_callback=self.researcher.add_costs,
         )
 
-        if self.researcher.verbose:
+        if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
                 "draft_sections_generated",
