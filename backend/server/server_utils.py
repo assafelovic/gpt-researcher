@@ -272,7 +272,10 @@ async def handle_websocket_communication(websocket, manager):
                 await websocket.send_text("pong")
             elif running_task and not running_task.done():
                 # discard any new request if a task is already running
-                websocket.send_text("Task already running. Please wait.")
+                logger.warning("Task already running. Please wait.")
+                websocket.send_json(
+                    {"types": "logs", "output": "Task already running. Please wait."}
+                )
             elif data.startswith("start"):
                 running_task = run_long_running_task(
                     handle_start_command(websocket, data, manager)
