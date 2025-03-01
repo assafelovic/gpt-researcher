@@ -18,9 +18,11 @@ const GPTResearcher = (() => {
     }
   }
 
+  let dispose_socket = null
   const startResearch = () => {
     document.getElementById('output').innerHTML = ''
     document.getElementById('reportContainer').innerHTML = ''
+    dispose_socket?.()
 
     const imageContainer = document.getElementById('selectedImagesContainer')
     imageContainer.innerHTML = ''
@@ -32,7 +34,7 @@ const GPTResearcher = (() => {
       output: '🤔 Thinking about research questions for the task...',
     })
 
-    listenToSockEvents()
+    dispose_socket = listenToSockEvents()
   }
 
   const listenToSockEvents = () => {
@@ -95,6 +97,17 @@ const GPTResearcher = (() => {
 
       socket.send(`start ${JSON.stringify(requestData)}`)
     }
+
+    // return dispose function
+    return () => {
+      try {
+        if (socket.readyState !== WebSocket.CLOSED && socket.readyState !== WebSocket.CLOSING) {
+          socket.close();
+        }
+      } catch (e) {
+        console.error('Error closing socket:', e)
+      }
+    }; 
   }
 
   const addAgentResponse = (data) => {
