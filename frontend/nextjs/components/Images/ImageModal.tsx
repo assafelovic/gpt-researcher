@@ -1,14 +1,24 @@
 import React, { useEffect } from 'react';
+import { TouchEventHandler } from 'react';
 
-export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }) {
+interface ImageModalProps {
+    imageSrc: any;
+    isOpen: boolean;
+    onClose: () => void;
+    onNext?: () => void;
+    onPrev?: () => void;
+  }
+
+
+export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }: ImageModalProps) {
     useEffect(() => {
         if (!isOpen) return;
         
-        const handleKeyDown = (e) => {
+        const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft') {
-                onPrev();
+                onPrev?.();
             } else if (e.key === 'ArrowRight') {
-                onNext();
+                onNext?.();
             } else if (e.key === 'Escape') {
                 onClose();
             }
@@ -24,24 +34,24 @@ export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }
     let touchStartX = 0;
     let touchEndX = 0;
 
-    const handleTouchStart = (e) => {
+    const handleTouchStart = (e: TouchEvent) => {
         touchStartX = e.changedTouches[0].screenX;
     };
 
-    const handleTouchEnd = (e) => {
+    const handleTouchEnd = (e: TouchEvent) => {
         touchEndX = e.changedTouches[0].screenX;
         handleSwipeGesture();
     };
 
     const handleSwipeGesture = () => {
         if (touchEndX < touchStartX - 50) {
-            onNext();
+            onNext?.();
         } else if (touchEndX > touchStartX + 50) {
-            onPrev();
+            onPrev?.();
         }
     };
 
-    const handleClose = (e) => {
+    const handleClose = (e: React.MouseEvent<HTMLDivElement>) => {
         if (e.target === e.currentTarget) {
             onClose();
         }
@@ -51,12 +61,12 @@ export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }
         <div
             className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 overflow-auto"
             onClick={handleClose}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
+            onTouchStart={handleTouchStart as unknown as TouchEventHandler<HTMLDivElement>}
+            onTouchEnd={handleTouchEnd as unknown as TouchEventHandler<HTMLDivElement>}
         >
             <div className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center">
                 <button
-                    onClick={onPrev}
+                        onClick={onPrev}
                     className="absolute left-4 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"
                 >
                     ←

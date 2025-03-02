@@ -1,10 +1,10 @@
 // frontend/nextjs/src/GPTResearcher.tsx
 import { useRef, useState, useEffect, useCallback } from "react";
-import { useWebSocket } from '@/hooks/useWebSocket';
-import findDifferences from '@/helpers/findDifferences';
-import { Data, ChatBoxSettings, QuestionData } from '@/types/data';
+import { useWebSocket } from '../hooks/useWebSocket';
+
+import { Data, ChatBoxSettings, QuestionData } from '../types/data';
 import { preprocessOrderedData } from '../utils/dataProcessing';
-import { ResearchResults } from '@/components/ResearchResults';
+import { ResearchResults } from '../components/ResearchResults';
 
 import Header from "../components/Header";
 import Hero from "../components/Hero";
