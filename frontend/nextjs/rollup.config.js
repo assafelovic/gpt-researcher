@@ -1,6 +1,6 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import typescript from '@rollup/plugin-typescript';
+import typescript from 'rollup-plugin-typescript2';
 import babel from '@rollup/plugin-babel';
 // import alias from '@rollup/plugin-alias';
 // import path from 'path';
@@ -45,10 +45,8 @@ export default {
     commonjs(),
     typescript({
       tsconfig: './tsconfig.lib.json',
-      noEmitOnError: false, // This allows the build to continue even with TS errors
-      declaration: true,
-      declarationDir: 'dist',
-      emitDeclarationOnly: false
+      useTsconfigDeclarationDir: true,
+      clean: true
     }),
     babel({
       babelHelpers: 'bundled',

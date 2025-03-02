@@ -1,7 +1,7 @@
 {
   "name": "gpt-researcher-ui",
   "description": "GPT Researcher frontend as a React component",
-  "version": "0.1.54",
+  "version": "0.1.55",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -16,6 +16,7 @@
     "lint": "next lint",
     "prepare": "npm run build:lib",
     "build:lib": "rollup -c",
+    "build:types": "cp src/index.d.ts dist/",
     "dev:lib": "rollup -c -w"
   },
   "peerDependencies": {

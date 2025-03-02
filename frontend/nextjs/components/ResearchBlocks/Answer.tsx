@@ -1,4 +1,5 @@
 import Image from "next/image";
+import React from 'react';
 import { Toaster, toast } from "react-hot-toast";
 import { useEffect, useState } from 'react';
 import { remark } from 'remark';
