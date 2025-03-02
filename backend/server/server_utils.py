@@ -253,6 +253,9 @@ async def handle_websocket_communication(websocket, manager):
         async def safe_run():
             try:
                 await awaitable
+            except asyncio.CancelledError:
+                logger.info("Task cancelled.")
+                raise
             except Exception as e:
                 logger.error(f"Error running task: {e}\n{traceback.format_exc()}")
                 await websocket.send_json(
@@ -265,35 +268,41 @@ async def handle_websocket_communication(websocket, manager):
 
         return asyncio.create_task(safe_run())
 
-    while True:
-        try:
-            data = await websocket.receive_text()
-            if data == "ping":
-                await websocket.send_text("pong")
-            elif running_task and not running_task.done():
-                # discard any new request if a task is already running
-                logger.warning(
-                    f"Received request while task is already running. Request data preview: {data[: min(20, len(data))]}..."
-                )
-                websocket.send_json(
-                    {"types": "logs", "output": "Task already running. Please wait."}
-                )
-            elif data.startswith("start"):
-                running_task = run_long_running_task(
-                    handle_start_command(websocket, data, manager)
-                )
-            elif data.startswith("human_feedback"):
-                running_task = run_long_running_task(handle_human_feedback(data))
-            elif data.startswith("chat"):
-                running_task = run_long_running_task(
-                    handle_chat(websocket, data, manager)
-                )
-            else:
-                print("Error: Unknown command or not enough parameters provided.")
-        except Exception as e:
-            print(f"WebSocket error: {e}")
-            break
-
+    try:
+        while True:
+            try:
+                data = await websocket.receive_text()
+                if data == "ping":
+                    await websocket.send_text("pong")
+                elif running_task and not running_task.done():
+                    # discard any new request if a task is already running
+                    logger.warning(
+                        f"Received request while task is already running. Request data preview: {data[: min(20, len(data))]}..."
+                    )
+                    websocket.send_json(
+                        {
+                            "types": "logs",
+                            "output": "Task already running. Please wait.",
+                        }
+                    )
+                elif data.startswith("start"):
+                    running_task = run_long_running_task(
+                        handle_start_command(websocket, data, manager)
+                    )
+                elif data.startswith("human_feedback"):
+                    running_task = run_long_running_task(handle_human_feedback(data))
+                elif data.startswith("chat"):
+                    running_task = run_long_running_task(
+                        handle_chat(websocket, data, manager)
+                    )
+                else:
+                    print("Error: Unknown command or not enough parameters provided.")
+            except Exception as e:
+                print(f"WebSocket error: {e}")
+                break
+    finally:
+        if running_task and not running_task.done():
+            running_task.cancel()
 
 def extract_command_data(json_data: Dict) -> tuple:
     return (
