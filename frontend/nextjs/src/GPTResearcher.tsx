@@ -1,6 +1,4 @@
-import '../styles/markdown.css';
-import '../app/globals.css';
-import '../components/Settings/App.css';
+import './index.css';
 
 import React from 'react';
 import { useRef, useState, useEffect, useCallback } from "react";
