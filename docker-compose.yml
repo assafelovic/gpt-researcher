@@ -32,6 +32,7 @@ services:
     volumes:
       - /app/node_modules
       - ./frontend/nextjs:/app
+      - ./frontend/nextjs/.next:/app/.next
       - ./outputs:/app/outputs
     restart: always
     ports:
