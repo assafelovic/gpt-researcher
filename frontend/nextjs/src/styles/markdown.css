@@ -1,0 +1,111 @@
+.markdown-content {
+  /* Base styles */
+  color: white;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 18px;
+  line-height: 1.6;
+
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+    font-weight: 500;
+  }
+
+  h1 { font-size: 2.5em; }
+  h2 { font-size: 2em; }
+  h3 { font-size: 1.5em; }
+  h4 { font-size: 1.2em; }
+  h5 { font-size: 1.1em; }
+  h6 { font-size: 1em; }
+
+  /* Paragraphs and spacing */
+  p {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* Text formatting */
+  strong, b {
+    font-weight: 600;
+  }
+
+  /* Lists */
+  ul, ol {
+    margin: 0;
+    padding-left: 2em;
+    line-height: 1.6;
+  }
+
+  li {
+    margin: 0;
+    padding-left: 0.5em;
+  }
+
+  ul li {
+    list-style-type: disc;
+  }
+
+  ol li {
+    list-style-type: decimal;
+  }
+
+  /* Links */
+  a {
+    color: rgb(168 85 247);
+    text-decoration: underline;
+    font-weight: 500;
+    
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  /* Code blocks */
+  pre {
+    background-color: #1e1e1e;
+    padding: 1em;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+    padding: 0 0.4em;
+    background-color: #1e1e1e;
+    border-radius: 3px;
+  }
+
+  /* Blockquotes */
+  blockquote {
+    border-left: 4px solid rgb(168 85 247);
+    margin: 0;
+    padding-left: 1em;
+    font-style: italic;
+  }
+
+  /* Tables */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+  }
+
+  th, td {
+    border: 1px solid #444;
+    padding: 0.5em;
+    text-align: left;
+  }
+
+  th {
+    background-color: #333;
+  }
+
+  /* Horizontal rule */
+  hr {
+    border: 0;
+    border-top: 1px solid #444;
+    margin: 1em 0;
+  }
+} 
