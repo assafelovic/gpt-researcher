@@ -2,10 +2,11 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import babel from '@rollup/plugin-babel';
-import alias from '@rollup/plugin-alias';
-import path from 'path';
+// import alias from '@rollup/plugin-alias';
+// import path from 'path';
 import postcss from 'rollup-plugin-postcss';
 import { terser } from 'rollup-plugin-terser';
+import json from '@rollup/plugin-json';
 
 const removeUseClientPlugin = {
   name: 'remove-use-client',
@@ -29,12 +30,13 @@ export default {
     }
   ],
   plugins: [
+    json(), // Add this plugin to handle JSON files   
     removeUseClientPlugin,
-    alias({
-      entries: [
-        { find: '@', replacement: path.resolve(__dirname, 'src') }
-      ]
-    }),
+    // alias({
+    //   entries: [
+    //     { find: '@', replacement: path.resolve(__dirname, 'src') }
+    //   ]
+    // }),
     resolve({
       extensions: ['.js', '.jsx', '.ts', '.tsx']
     }),
