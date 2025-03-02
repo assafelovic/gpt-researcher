@@ -27,5 +27,6 @@
     "outDir": "dist"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules", "dist", ".next", "out", "**/*.test.ts", "**/*.test.tsx"]
+  "exclude": ["node_modules", "dist", ".next", "out", "**/*.test.ts", "**/*.test.tsx"],
+  "typeRoots": ["./node_modules/@types", "./types"]
 }
