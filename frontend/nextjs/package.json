@@ -15,12 +15,13 @@
     "start": "next start",
     "lint": "next lint",
     "prepare": "npm run build:lib",
-    "build:lib": "rollup -c"
+    "build:lib": "rollup -c",
+    "dev:lib": "rollup -c -w"
   },
   "peerDependencies": {
     "next": "^14.2.0",
-    "react": "^18",
-    "react-dom": "^18"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
@@ -45,12 +46,16 @@
   },
   "devDependencies": {
     "@babel/core": "^7.26.9",
+    "@babel/plugin-syntax-flow": "^7.26.0",
+    "@babel/plugin-transform-typescript": "^7.26.8",
     "@babel/preset-env": "^7.26.9",
     "@babel/preset-react": "^7.26.3",
+    "@babel/preset-typescript": "^7.26.0",
     "@rollup/plugin-babel": "^6.0.4",
     "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@types/jsdom": "^21.1.6",
     "@types/node": "^20",
     "@types/react": "^18",
