@@ -1,23 +1,17 @@
 {
   "name": "gpt-researcher-ui",
   "description": "GPT Researcher frontend as a React component",
-  "version": "0.1.58",
+  "version": "0.1.59",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "styles",
+    "styles/*",
     "app/globals.css",
     "components/Settings/App.css",
-    "public/favicon.ico",
-    "public/favicons",
-    "public/img",
-    "public/img/browser.svg",
-    "public/img/chat-check.svg",
-    "public/img/image.svg",
-    "public/img/logo.svg",
-    "public/img/logo-dark.svg"    
+    "public/*",
+    "src/utils/injectFavicons.ts"
   ],
   "private": false,
   "scripts": {
@@ -71,6 +65,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.20",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "postcss": "^8",

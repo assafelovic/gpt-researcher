@@ -5,6 +5,8 @@ import babel from '@rollup/plugin-babel';
 import { terser } from 'rollup-plugin-terser';
 import json from '@rollup/plugin-json';
 import postcss from 'rollup-plugin-postcss';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
 
 const removeUseClientPlugin = {
   name: 'remove-use-client',
@@ -29,12 +31,13 @@ export default {
   ],
   plugins: [
     postcss({
-      config: {
-        path: './postcss.config.mjs',
-      },
-      extensions: ['.css'],
+      plugins: [
+        tailwindcss('./tailwind.config.ts'),
+        autoprefixer,
+      ],
+      inject: true, // This will automatically inject CSS
       minimize: true,
-      inject: true
+      extract: false // Keep CSS in JS for easier consumption
     }),
     json(), // Add this plugin to handle JSON files   
     removeUseClientPlugin,
