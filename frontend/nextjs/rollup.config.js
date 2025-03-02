@@ -1,10 +1,18 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
-import { babel } from '@rollup/plugin-babel';
-import { terser } from 'rollup-plugin-terser';
-import peerDepsExternal from 'rollup-plugin-peer-deps-external';
+import babel from '@rollup/plugin-babel';
+import alias from '@rollup/plugin-alias';
+import path from 'path';
 import postcss from 'rollup-plugin-postcss';
+import { terser } from 'rollup-plugin-terser';
+
+const removeUseClientPlugin = {
+  name: 'remove-use-client',
+  transform(code) {
+    return code.replace(/"use client";?/, '');
+  }
+};
 
 export default {
   input: 'src/index.ts',
@@ -12,42 +20,42 @@ export default {
     {
       file: 'dist/index.js',
       format: 'cjs',
-      sourcemap: true,
+      sourcemap: true
     },
     {
       file: 'dist/index.esm.js',
       format: 'esm',
-      sourcemap: true,
-    },
+      sourcemap: true
+    }
   ],
   plugins: [
-    peerDepsExternal(),
+    removeUseClientPlugin,
+    alias({
+      entries: [
+        { find: '@', replacement: path.resolve(__dirname, 'src') }
+      ]
+    }),
     resolve({
-      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      extensions: ['.js', '.jsx', '.ts', '.tsx']
     }),
     commonjs(),
-    typescript({
-      tsconfig: './tsconfig.json',
-      sourceMap: true,
-      inlineSources: true,
-      // Important: Don't let TypeScript handle JSX
-      jsx: 'preserve',
-    }),
+    typescript({ tsconfig: './tsconfig.json' }),
     babel({
       babelHelpers: 'bundled',
-      extensions: ['.js', '.jsx', '.ts', '.tsx'],
-      exclude: 'node_modules/**',
       presets: [
         '@babel/preset-env',
         '@babel/preset-react',
         '@babel/preset-typescript'
       ],
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      exclude: 'node_modules/**'
     }),
     postcss({
       extensions: ['.css'],
       minimize: true,
+      extract: 'css/styles.css'
     }),
-    terser(),
+    terser()
   ],
   external: [
     'react', 
@@ -57,5 +65,5 @@ export default {
     'remark-html',
     '@langchain/langgraph-sdk',
     'react-ga4'
-  ],
+  ]
 };
