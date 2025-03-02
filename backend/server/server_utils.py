@@ -253,6 +253,9 @@ async def handle_websocket_communication(websocket, manager):
         async def safe_run():
             try:
                 await awaitable
+            except asyncio.CancelledError:
+                logger.info("Task cancelled.")
+                raise
             except Exception as e:
                 logger.error(f"Error running task: {e}\n{traceback.format_exc()}")
                 await websocket.send_json(
@@ -291,6 +294,8 @@ async def handle_websocket_communication(websocket, manager):
             else:
                 print("Error: Unknown command or not enough parameters provided.")
         except Exception as e:
+            if running_task and not running_task.done():
+                running_task.cancel()
             print(f"WebSocket error: {e}")
             break
 
