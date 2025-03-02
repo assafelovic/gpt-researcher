@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { remark } from 'remark';
 import html from 'remark-html';
 import { Compatible } from "vfile";
-import '@/styles/markdown.css';
+import '../../styles/markdown.css';
 
 export default function Answer({ answer }: { answer: string }) {
   async function markdownToHtml(markdown: Compatible | undefined) {
