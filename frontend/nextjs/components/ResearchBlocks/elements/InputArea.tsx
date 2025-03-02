@@ -111,8 +111,7 @@ const InputArea: FC<TInputAreaProps> = ({
           </div>
         )}
 
-        <Image
-          unoptimized
+        <img
           src={"/img/arrow-narrow-right.svg"}
           alt="search"
           width={24}

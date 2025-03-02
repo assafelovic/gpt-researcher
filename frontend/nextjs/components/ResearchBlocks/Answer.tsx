@@ -38,7 +38,7 @@ export default function Answer({ answer }: { answer: string }) {
                     });
                   }}
                 >
-                  <Image
+                  <img
                     src="/img/copy-white.svg"
                     alt="footer"
                     width={20}

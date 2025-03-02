@@ -55,7 +55,7 @@ const Hero: FC<THeroProps> = ({
               onClick={() => handleClickSuggestion(item?.name)}
               key={item.id}
             >
-              <Image
+              <img
                 src={item.icon}
                 alt={item.name}
                 width={18}
