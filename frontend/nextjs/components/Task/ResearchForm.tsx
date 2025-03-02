@@ -40,7 +40,7 @@ export default function ResearchForm({
     localStorage.setItem('domainFilters', JSON.stringify(domains));
     setChatBoxSettings(prev => ({
       ...prev,
-      domains: domains
+      domains: domains.map(domain => domain.value)
     }));
   }, [domains, setChatBoxSettings]);
 
@@ -77,7 +77,7 @@ export default function ResearchForm({
     if (onFormSubmit) {
       const updatedSettings = {
         ...chatBoxSettings,
-        domains: domains // Make sure domains are included
+        domains: domains.map(domain => domain.value)
       };
       setChatBoxSettings(updatedSettings);
       onFormSubmit(task, report_type, report_source, domains);
