@@ -20,7 +20,7 @@ const Footer: React.FC<FooterProps> = ({ chatBoxSettings, setChatBoxSettings }) 
         </div>
         <div className="flex items-center gap-3">
           <Link href={"https://github.com/assafelovic/gpt-researcher"} target="_blank">
-            <Image
+            <img
               src={"/img/github.svg"}
               alt="github"
               width={30}
@@ -28,7 +28,7 @@ const Footer: React.FC<FooterProps> = ({ chatBoxSettings, setChatBoxSettings }) 
             />{" "}
           </Link>
           <Link href={"https://discord.gg/QgZXvJAccX"} target="_blank">
-              <Image
+              <img
                 src={"/img/discord.svg"}
                 alt="discord"
                 width={30}
@@ -36,7 +36,7 @@ const Footer: React.FC<FooterProps> = ({ chatBoxSettings, setChatBoxSettings }) 
               />{" "}
           </Link>
           <Link href={"https://hub.docker.com/r/gptresearcher/gpt-researcher"} target="_blank">
-              <Image
+              <img
                 src={"/img/docker.svg"}
                 alt="docker"
                 width={30}
