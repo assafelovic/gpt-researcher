@@ -1,3 +1,7 @@
+import '../styles/markdown.css';
+import '../app/globals.css';
+import '../components/Settings/App.css';
+
 import React from 'react';
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useWebSocket } from '../hooks/useWebSocket';
