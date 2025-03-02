@@ -24,6 +24,7 @@
     },
     "declaration": true,
     "declarationDir": "dist",
+    "emitDeclarationOnly": false,
     "outDir": "dist"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],

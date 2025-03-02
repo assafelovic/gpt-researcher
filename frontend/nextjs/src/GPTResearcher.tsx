@@ -1,4 +1,4 @@
-// frontend/nextjs/src/GPTResearcher.tsx
+
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useWebSocket } from '../hooks/useWebSocket';
 
