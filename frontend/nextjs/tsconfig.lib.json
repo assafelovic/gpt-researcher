@@ -7,7 +7,7 @@
     "emitDeclarationOnly": false,
     "sourceMap": true,
     "noEmit": false,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true

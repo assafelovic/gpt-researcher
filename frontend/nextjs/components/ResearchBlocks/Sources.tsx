@@ -1,4 +1,5 @@
 import Image from "next/image";
+import React from 'react';
 import SourceCard from "./elements/SourceCard";
 
 export default function Sources({

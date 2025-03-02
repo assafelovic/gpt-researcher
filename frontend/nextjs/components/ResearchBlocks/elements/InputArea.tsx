@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { FC, useRef } from "react";
+import React, { FC, useRef } from "react";
 import TypeAnimation from "../../TypeAnimation";
 
 type TInputAreaProps = {
