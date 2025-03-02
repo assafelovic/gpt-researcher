@@ -38,7 +38,9 @@ export default {
     //   ]
     // }),
     resolve({
-      extensions: ['.js', '.jsx', '.ts', '.tsx']
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      browser: true, // Ensures it only includes browser-compatible modules
+      preferBuiltins: false // Prevents bundling Node.js modules
     }),
     commonjs(),
     typescript({
@@ -72,6 +74,7 @@ export default {
     'remark',
     'remark-html',
     '@langchain/langgraph-sdk',
-    'react-ga4'
+     // Ensure all Node.js built-in modules are excluded 
+     'fs', 'path', 'crypto', 'util', 'http', 'https', 'zlib', 'stream', 'url', 'assert', 'tty'
   ]
 };
