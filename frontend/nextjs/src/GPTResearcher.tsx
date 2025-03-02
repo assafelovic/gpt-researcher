@@ -1,19 +1,17 @@
 // frontend/nextjs/src/GPTResearcher.tsx
-"use client";
-
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useWebSocket } from '@/hooks/useWebSocket';
 import findDifferences from '@/helpers/findDifferences';
 import { Data, ChatBoxSettings, QuestionData } from '@/types/data';
-import { preprocessOrderedData } from '@/utils/dataProcessing';
+import { preprocessOrderedData } from '../utils/dataProcessing';
 import { ResearchResults } from '@/components/ResearchResults';
 
-import Header from "@/components/Header";
-import Hero from "@/components/Hero";
-import Footer from "@/components/Footer";
-import InputArea from "@/components/ResearchBlocks/elements/InputArea";
-import HumanFeedback from "@/components/HumanFeedback";
-import LoadingDots from "@/components/LoadingDots";
+import Header from "../components/Header";
+import Hero from "../components/Hero";
+import Footer from "../components/Footer";
+import InputArea from "../components/ResearchBlocks/elements/InputArea";
+import HumanFeedback from "../components/HumanFeedback";
+import LoadingDots from "../components/LoadingDots";
 
 export interface GPTResearcherProps {
   apiUrl?: string;
