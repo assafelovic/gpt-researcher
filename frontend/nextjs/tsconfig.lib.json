@@ -4,6 +4,7 @@
     "outDir": "./dist",
     "declaration": true,
     "declarationDir": "./dist",
+    "emitDeclarationOnly": false,
     "sourceMap": true,
     "noEmit": false,
     "jsx": "react",

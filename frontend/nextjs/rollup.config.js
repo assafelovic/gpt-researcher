@@ -44,8 +44,11 @@ export default {
     }),
     commonjs(),
     typescript({
-      tsconfig: './tsconfig.json',
+      tsconfig: './tsconfig.lib.json',
       noEmitOnError: false, // This allows the build to continue even with TS errors
+      declaration: true,
+      declarationDir: 'dist',
+      emitDeclarationOnly: false
     }),
     babel({
       babelHelpers: 'bundled',
