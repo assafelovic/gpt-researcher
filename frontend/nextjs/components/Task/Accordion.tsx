@@ -47,7 +47,7 @@ const Accordion: React.FC<AccordionProps> = ({ logs }) => {
               {typeof data.htmlContent === 'object' ? JSON.stringify(data.htmlContent) : data.htmlContent}
             </p>
           )}
-          <style jsx>{`
+          <style>{`
             .markdown-content {
               margin: 0;
               padding: 0;

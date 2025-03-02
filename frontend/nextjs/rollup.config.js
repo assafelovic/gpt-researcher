@@ -55,6 +55,7 @@ export default {
     'react-hot-toast',
     'remark',
     'remark-html',
-    '@langchain/langgraph-sdk'
+    '@langchain/langgraph-sdk',
+    'react-ga4'
   ],
 };
