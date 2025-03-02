@@ -2,11 +2,9 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import typescript from 'rollup-plugin-typescript2';
 import babel from '@rollup/plugin-babel';
-// import alias from '@rollup/plugin-alias';
-// import path from 'path';
-import postcss from 'rollup-plugin-postcss';
 import { terser } from 'rollup-plugin-terser';
 import json from '@rollup/plugin-json';
+import postcss from 'rollup-plugin-postcss';
 
 const removeUseClientPlugin = {
   name: 'remove-use-client',
@@ -30,6 +28,14 @@ export default {
     }
   ],
   plugins: [
+    postcss({
+      config: {
+        path: './postcss.config.mjs',
+      },
+      extensions: ['.css'],
+      minimize: true,
+      inject: true
+    }),
     json(), // Add this plugin to handle JSON files   
     removeUseClientPlugin,
     // alias({
@@ -60,11 +66,6 @@ export default {
         ['@babel/plugin-transform-typescript', { allowNamespaces: true }]
       ],
       exclude: 'node_modules/**'
-    }),
-    postcss({
-      extensions: ['.css'],
-      minimize: true,
-      extract: 'css/styles.css'
     }),
     terser()
   ],
