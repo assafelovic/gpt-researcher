@@ -11,6 +11,7 @@ python-multipart
 markdown
 langchain
 langchain_community
+langchain-openai
 
 tiktoken
 gpt-researcher
