@@ -28,9 +28,6 @@ if TYPE_CHECKING:
     from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
     from fastapi.websockets import WebSocket
     from langchain_community.vectorstores import VectorStore
-    from langchain_core.retrievers import BaseRetriever
-
-    from gpt_researcher.utils.schemas import LogHandler
 
 
 class GPTResearcher:
@@ -228,6 +225,7 @@ class GPTResearcher:
     ) -> list[str]:
         """Handle deep research execution and logging."""
         # Log deep research configuration
+        assert self.deep_researcher is not None
         await self._log_event(
             "research",
             step="deep_research_initialize",
@@ -252,24 +250,34 @@ class GPTResearcher:
         )
 
         # Run deep research and get context
-        self.context = await self.deep_researcher.run(on_progress=on_progress)
+        assert self.deep_researcher is not None
+        result: str = await self.deep_researcher.run(on_progress=on_progress)
+        self.context = result.split("\n")
 
         # Get total research costs
-        total_costs = self.get_costs()
+        total_costs: float = self.get_costs()
 
         # Log deep research completion with costs
-        await self._log_event("research", step="deep_research_complete", details={
-            "context_length": len(self.context),
-            "visited_urls": len(self.visited_urls),
-            "total_costs": total_costs
-        })
+        await self._log_event(
+            "research",
+            step="deep_research_complete",
+            details={
+                "context_length": len(self.context),
+                "visited_urls": len(self.visited_urls),
+                "total_costs": total_costs,
+            },
+        )
 
         # Log final cost update
-        await self._log_event("research", step="cost_update", details={
-            "cost": total_costs,
-            "total_cost": total_costs,
-            "research_type": "deep_research"
-        })
+        await self._log_event(
+            "research",
+            step="cost_update",
+            details={
+                "cost": total_costs,
+                "total_cost": total_costs,
+                "research_type": "deep_research",
+            },
+        )
 
         # Return the research context
         return self.context

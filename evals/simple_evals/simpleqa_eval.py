@@ -3,13 +3,8 @@ SimpleQA: Measuring short-form factuality in large language models
 Adapted for GPT-Researcher from OpenAI's simple-evals
 """
 
-import os
-import re
-import json
 import pandas
 import random
-from typing import Dict, List, Any
-from langchain_openai import ChatOpenAI
 
 GRADER_TEMPLATE = """
 Your job is to look at a question, a gold target, and a predicted answer, and then assign a grade of either ["CORRECT", "INCORRECT", "NOT_ATTEMPTED"].
@@ -118,14 +113,16 @@ class SimpleQAEval:
 
     def evaluate_example(self, example: dict) -> dict:
         """Evaluate a single example."""
-        problem = example.get("problem") or example.get("question")
-        correct_answer = example["answer"]
-        predicted_answer = example["predicted"]
-        
-        grade = self.grade_response(problem, correct_answer, predicted_answer)
-        
+        problem: str | None = example.get("problem") or example.get("question")
+        if problem is None:
+            raise ValueError("Problem or question is required")
+        correct_answer: str = example["answer"]
+        predicted_answer: str = example["predicted"]
+
+        grade: str = self.grade_response(problem, correct_answer, predicted_answer)
+
         # Calculate metrics based on grade
-        metrics = {
+        metrics: dict[str, float | str] = {
             "grade": grade,
             "is_correct": 1.0 if grade == "CORRECT" else 0.0,
             "is_incorrect": 1.0 if grade == "INCORRECT" else 0.0,
@@ -133,34 +130,43 @@ class SimpleQAEval:
         }
         
         return {
-            "score": metrics["is_correct"],  # Score is 1.0 for CORRECT, 0.0 otherwise
+            "score": metrics[
+                "is_correct"
+            ],  # Score is 1.0 for CORRECT, 0.0 otherwise
             "metrics": {"grade": grade},
             "html": "",
-            "convo": [{"role": "evaluator", "content": problem},
-                      {"role": "evaluator", "content": correct_answer},
-                      {"role": "agent", "content": predicted_answer}]
+            "convo": [
+                {"role": "evaluator", "content": problem},
+                {"role": "evaluator", "content": correct_answer},
+                {"role": "agent", "content": predicted_answer},
+            ],
         }
 
-    def grade_response(self, question: str, correct_answer: str, model_answer: str) -> str:
+    def grade_response(
+        self,
+        question: str,
+        correct_answer: str,
+        model_answer: str,
+    ) -> str:
         """Grade a single response using the grader model."""
         print("\n=== Grading Details ===")
         print(f"Question: {question}")
         print(f"Gold target: {correct_answer}")
         print(f"Predicted answer: {model_answer}")
-        
+
         prompt = GRADER_TEMPLATE.format(
             question=question,
             target=correct_answer,
             predicted_answer=model_answer
         )
-        
-        messages = [{"role": "user", "content": prompt}]
+
+        messages: list[dict[str, str]] = [{"role": "user", "content": prompt}]
         response = self.grader_model.invoke(messages)
         response_text = response.content.strip()
-        
+
         # Convert letter response to grade string
         if response_text in CHOICE_LETTERS:
-            grade = CHOICE_LETTER_TO_STRING[response_text]
+            grade: str = CHOICE_LETTER_TO_STRING[response_text]
         else:
             # Fallback for direct string responses
             for grade in CHOICE_STRINGS:

@@ -40,12 +40,8 @@ class ArxivSearch:
         Returns:
             A list of dictionaries containing the search results.
         """
-        # Use the provided max_results, or get it from config, or use default
         if max_results is None:
-            if self.config and hasattr(self.config, "MAX_SOURCES"):
-                max_results = self.config.MAX_SOURCES
-            else:
-                max_results = 5  # Default fallback
+            max_results = 5
                 
         arxiv_results: list[arxiv.Result] = list(
             cast(arxiv, self.arxiv).Search(

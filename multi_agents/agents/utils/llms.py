@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Any
 
 import json5 as json
 import json_repair
-from langchain_core.messages.base import BaseMessage
 
 from gpt_researcher.config.config import Config
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from langchain_community.adapters.openai import convert_openai_messages
+from langchain_core.messages.base import BaseMessage
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -36,7 +36,7 @@ async def call_model(
         The model's response
     """
     cfg = Config()
-    lc_messages: list[BaseMessage | dict[str, str]] = convert_openai_messages(prompt)  # pyright: ignore[reportAssignmentType]
+    lc_messages: list[BaseMessage] | list[dict[str, str]] = convert_openai_messages(prompt)  # pyright: ignore[reportAssignmentType]
 
     try:
         provider = GenericLLMProvider(
@@ -54,14 +54,16 @@ async def call_model(
 
         if response_format == "json":
             try:
-                result   = json.loads(response.strip("```json\n"))
+                result = json.loads(response.strip("```json\n"))
                 if isinstance(result, dict):
                     return result
                 else:
                     raise ValueError(f"Unexpected response format: {result.__class__.__name__} with value: {result!r}")
             except Exception as e:
                 logger.warning("⚠️ Error in reading JSON, attempting to repair JSON ⚠️")
-                logger.exception(f"Error in reading JSON: {e.__class__.__name__}: {e}. Attempting to repair reponse: {response}")
+                logger.exception(
+                    f"Error in reading JSON: {e.__class__.__name__}: {e}. Attempting to repair reponse: {response}"
+                )
                 result = json_repair.loads(response)
                 assert isinstance(result, dict)
                 return result

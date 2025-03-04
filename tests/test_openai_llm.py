@@ -31,7 +31,7 @@ async def main():
 
 async def test_llm(llm: GenericLLMProvider):
     # Test the connection with a simple query
-    messages: list[BaseMessage | dict[str, str]] = [{"role": "user", "content": "sup?"}]
+    messages: list[BaseMessage] | list[dict[str, str]] = [{"role": "user", "content": "sup?"}]
     try:
         response = await llm.get_chat_response(messages, stream=False)
         print("LLM response:", response)

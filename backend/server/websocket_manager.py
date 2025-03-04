@@ -199,7 +199,7 @@ async def run_agent(
             query=task,
             tone=tone,
             config_path=config_path,
-            websocket=logs_handler.websocket,
+            websocket=logs_handler,
             headers=headers,
             concurrency_limit=2,
         )

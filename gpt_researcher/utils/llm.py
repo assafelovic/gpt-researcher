@@ -57,12 +57,12 @@ def get_llm(
     from gpt_researcher.llm_provider import GenericLLMProvider
     # Use the new from_provider method if available, otherwise fallback to the constructor
     if hasattr(GenericLLMProvider, "from_provider"):
-        return GenericLLMProvider.from_provider(llm_provider, **kwargs)
+        return GenericLLMProvider(llm_provider, **kwargs)
     return GenericLLMProvider(llm_provider, **kwargs)
 
 
 async def create_chat_completion(
-    messages: list[BaseMessage | dict[str, str]],
+    messages: list[BaseMessage] | list[dict[str, str]],
     model: str | None = None,
     temperature: float | None = 0.4,
     max_tokens: int | None = 16384,
@@ -129,7 +129,7 @@ async def create_chat_completion(
     # create response
     for _ in range(10):  # maximum of 10 attempts
         response = await provider.get_chat_response(
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             stream=bool(stream),
             websocket=websocket,
             max_retries=max_retries or 10,

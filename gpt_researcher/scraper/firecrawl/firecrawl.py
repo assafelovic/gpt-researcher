@@ -1,14 +1,28 @@
-from bs4 import BeautifulSoup
+from __future__ import annotations
+
+import logging
 import os
-from ..utils import get_relevant_images
+
+from typing import Any
+
+from bs4 import BeautifulSoup
+from requests import Response, Session
+
+from gpt_researcher.scraper.utils import get_relevant_images
+
 
 class FireCrawl:
-
-    def __init__(self, link, session=None):
-        self.link = link
-        self.session = session
+    def __init__(
+        self,
+        link: str,
+        session: Session | None = None,
+    ):
+        self.link: str = link
+        self.session: Session | None = session
         from firecrawl import FirecrawlApp
-        self.firecrawl = FirecrawlApp(api_key=self.get_api_key(), api_url=self.get_server_url())
+
+        self.firecrawl: FirecrawlApp = FirecrawlApp(api_key=self.get_api_key(), api_url=self.get_server_url())
+        self.logger: logging.Logger = logging.getLogger(__name__)
 
     def get_api_key(self) -> str:
         """
@@ -19,8 +33,7 @@ class FireCrawl:
         try:
             api_key = os.environ["FIRECRAWL_API_KEY"]
         except KeyError:
-            raise Exception(
-                "FireCrawl API key not found. Please set the FIRECRAWL_API_KEY environment variable.")
+            raise Exception("FireCrawl API key not found. Please set the FIRECRAWL_API_KEY environment variable.")
         return api_key
 
     def get_server_url(self) -> str:
@@ -33,10 +46,10 @@ class FireCrawl:
         try:
             server_url = os.environ["FIRECRAWL_SERVER_URL"]
         except KeyError:
-            server_url = 'https://api.firecrawl.dev'
+            server_url = "https://api.firecrawl.dev"
         return server_url
 
-    def scrape(self) -> tuple:
+    def scrape(self) -> tuple[str, list[dict[str, Any]], str]:
         """
         This function extracts content and title from a specified link using the FireCrawl Python SDK,
         images from the link are extracted using the functions from `gpt_researcher/scraper/utils.py`.
@@ -53,27 +66,26 @@ class FireCrawl:
 
             # Check if the page has been scraped success
             if "error" in response:
-                print("Scrape failed! : " + str(response["error"]))
+                self.logger.error(f"Scrape failed! : {response['error']}")
                 return "", [], ""
             elif response["metadata"]["statusCode"] != 200:
-                print("Scrape failed! : " + str(response))
+                self.logger.error(f"Scrape failed! : {response}")
                 return "", [], ""
 
             # Extract the content (markdown) and title from FireCrawl response
-            content = response["markdown"]
-            title = response["metadata"]["title"]
+            content: str = response["markdown"]
+            title: str = response["metadata"]["title"]
 
             # Parse the HTML content of the response to create a BeautifulSoup object for the utility functions
-            response_bs = self.session.get(self.link, timeout=4)
-            soup = BeautifulSoup(
-                response_bs.content, "lxml", from_encoding=response_bs.encoding
-            )
+            assert self.session is not None
+            response_bs: Response = self.session.get(self.link, timeout=4)
+            soup: BeautifulSoup = BeautifulSoup(response_bs.content, "lxml", from_encoding=response_bs.encoding)
 
             # Get relevant images using the utility function
-            image_urls = get_relevant_images(soup, self.link)
+            image_urls: list[dict[str, Any]] = get_relevant_images(soup, self.link)
 
             return content, image_urls, title
 
         except Exception as e:
-            print("Error! : " + str(e))
+            self.logger.exception(f"Error! : {e.__class__.__name__}: {e}")
             return "", [], ""

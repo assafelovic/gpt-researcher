@@ -336,18 +336,16 @@ class ResearchConductor:
         new_search_urls: list[str] = await self._get_new_urls(set(urls))
         self.logger.info(f"New URLs to process: {new_search_urls}")
 
-        scraped_content: tuple[
-            list[dict[str, Any]], list[dict[str, Any]]
-        ] = await self.researcher.scraper_manager.browse_urls(new_search_urls)
+        scraped_content: list[dict[str, Any]] = await self.researcher.scraper_manager.browse_urls(new_search_urls)
         self.logger.info(f"Scraped content from {len(scraped_content[0])} URLs")
 
         if self.researcher.vector_store is not None:
             self.logger.info("Loading content into vector store")
-            self.researcher.vector_store.load(scraped_content[0])
+            self.researcher.vector_store.load(scraped_content)
 
         context = await self.researcher.context_manager.get_similar_content_by_query(
             self.researcher.query,
-            scraped_content[0],
+            scraped_content,
         )
         self.logger.info(f"Generated context length: {len(context)}")
         return context
@@ -600,7 +598,7 @@ class ResearchConductor:
             if issubclass(retriever_class, BaseRetriever):
                 try:
                     retriever_params: dict[str, str] = {"query": query}
-                    retriever: BaseRetriever = retriever_class(**retriever_params)
+                    retriever: BaseRetriever = retriever_class(**retriever_params)  # type: ignore[arg-type]
                 except TypeError as e:
                     self.logger.exception(
                         f"Error instantiating retriever {retriever_class.__name__}! {e.__class__.__name__}: {e}"
@@ -616,10 +614,10 @@ class ResearchConductor:
                             str(
                                 webpage.metadata.get(
                                     "source",
-                                    webpage.metadata.get("href", ""),
+                                    webpage.metadata.get("href", "") or "",
                                 )
                                 if isinstance(webpage, Document)
-                                else webpage.get("href", "")
+                                else webpage.get("href", "") or ""
                             ).strip()
                             for webpage in search_results_list
                         ]
@@ -632,7 +630,7 @@ class ResearchConductor:
             else:
                 retriever = retriever_class(query, query_domains=query_domains, config=self.researcher.cfg)
                 search_results_list = await asyncio.to_thread(
-                    retriever.search,
+                    retriever.search,  # type: ignore[attr-defined]
                     max_results=self.researcher.cfg.MAX_SEARCH_RESULTS_PER_QUERY,
                 )
                 if search_results_list:
@@ -697,8 +695,8 @@ async def get_search_results_new(
     """
     try:
         retriever_instance: BaseRetriever = retriever(
-            query=query,
-            query_domains=query_domains,
+            query=query,  # type: ignore[arg-type]
+            query_domains=query_domains,  # type: ignore[arg-type]
         )
         documents: list[Document] = await retriever_instance.aget_relevant_documents(query)
         return [
@@ -772,7 +770,12 @@ async def generate_sub_queries(
                 **cfg.llm_kwargs,
             )
             response = await provider.get_chat_response(
-                messages=[{"role": "user", "content": llm_queries_prompt}],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": llm_queries_prompt,
+                    },
+                ],
                 stream=False,
             )
             logger.warning("Retry with adjusted max_tokens successful.")

@@ -85,7 +85,7 @@ class DetailedReport:
         self.gpt_researcher: GPTResearcher = GPTResearcher(
             query=self.query,
             report_type=self.report_type,
-            report_format=self.report_format,
+            report_format=self.cfg.OUTPUT_FORMAT,
             report_source=self.report_source,
             tone=self.tone,
             source_urls=self.source_urls,
@@ -154,7 +154,7 @@ class DetailedReport:
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
             report_type=ReportType.SubtopicReport,
-            report_format=self.report_format,
+            report_format=self.cfg.OUTPUT_FORMAT,
             report_source=self.report_source,
             tone=self.tone,
             config=self.cfg,

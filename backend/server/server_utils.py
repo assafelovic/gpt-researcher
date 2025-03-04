@@ -6,9 +6,10 @@ import logging
 import os
 import re
 import traceback
+
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Awaitable
+from typing import TYPE_CHECKING, Any, Awaitable
 
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
@@ -142,9 +143,7 @@ class Researcher:
     ):
         self.query: str = str(query or "").strip()
         self.report_type: ReportType = (
-            ReportType.__members__[report_type.lower().title()]
-            if isinstance(report_type, str)
-            else report_type
+            ReportType.__members__[report_type.lower().title()] if isinstance(report_type, str) else report_type
         )
         self.research_id: str = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(self.query)}"
         self.logs_handler: CustomLogsHandler | None = None
@@ -248,7 +247,9 @@ async def handle_start_command(
         headers=headers,
         query_domains=query_domains or [],
     )
-    sanitized_filename: str = sanitize_filename(f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{str(task or '').strip()}")
+    sanitized_filename: str = sanitize_filename(
+        f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{str(task or '').strip()}"
+    )
     # Generate the files
     file_paths: dict[str, Path] = await generate_report_files(
         str(report or "").strip(),
@@ -277,11 +278,11 @@ async def handle_chat(
 async def generate_report_files(report: str, base_filename: str) -> dict[str, Path]:
     """
     Generate report files in different formats.
-    
+
     Args:
         report: The report content in markdown format
         base_filename: The base filename to use for the reports
-        
+
     Returns:
         A dictionary mapping format names to file paths
     """
@@ -294,6 +295,7 @@ async def generate_report_files(report: str, base_filename: str) -> dict[str, Pa
         result: dict[str, Path] = {"md": md_path}
         try:
             from backend.utils import write_md_to_pdf
+
             await write_md_to_pdf(report)
             pdf_path: Path = base_path.with_suffix(".pdf")
             result["pdf"] = pdf_path
@@ -301,6 +303,7 @@ async def generate_report_files(report: str, base_filename: str) -> dict[str, Pa
             logger.exception(f"Error generating PDF: {e.__class__.__name__}: {e}")
         try:
             from backend.utils import write_md_to_word
+
             await write_md_to_word(report)
             docx_path: Path = base_path.with_suffix(".docx")
             result["docx"] = docx_path
@@ -404,6 +407,7 @@ async def execute_multi_agents(
     websocket: ServerWebSocket | HTTPStreamAdapter | None = next(iter(manager.active_connections), None)
     if websocket:
         from multi_agents.main import run_research_task
+
         report: str = await run_research_task(
             "Is AI in a hype cycle?",
             websocket=websocket,
@@ -429,11 +433,14 @@ async def handle_websocket_communication(
                 raise
             except Exception as e:
                 logger.error(f"Error running task: {e}\n{traceback.format_exc()}")
-                await websocket.send_json({
-                    "type": "logs",
-                    "content": "error",
-                    "output": f"Error: {e}",
-                })
+                await websocket.send_json(
+                    {
+                        "type": "logs",
+                        "content": "error",
+                        "output": f"Error: {e}",
+                    }
+                )
+
         return asyncio.create_task(safe_run())
 
     try:
@@ -444,12 +451,14 @@ async def handle_websocket_communication(
                     await websocket.send_text("pong")
                 elif running_task and not running_task.done():
                     logger.warning(
-                        f"Received request while task is already running. Request data preview: {data[:min(20, len(data))]}..."
+                        f"Received request while task is already running. Request data preview: {data[: min(20, len(data))]}..."
                     )
-                    await websocket.send_json({
-                        "type": "logs",
-                        "output": "Task already running. Please wait.",
-                    })
+                    await websocket.send_json(
+                        {
+                            "type": "logs",
+                            "output": "Task already running. Please wait.",
+                        }
+                    )
                 elif data.startswith("start"):
                     running_task = run_long_running_task(handle_start_command(websocket, data, manager))
                 elif data.startswith("human_feedback"):
@@ -457,7 +466,9 @@ async def handle_websocket_communication(
                 elif data.startswith("chat"):
                     running_task = run_long_running_task(handle_chat(websocket, data, manager))
                 else:
-                    logger.error("Error in handle_websocket_communication: Unknown command or not enough parameters provided.")
+                    logger.error(
+                        "Error in handle_websocket_communication: Unknown command or not enough parameters provided."
+                    )
             except Exception as e:
                 logger.error(f"WebSocket error: {e}")
                 break
@@ -496,12 +507,7 @@ async def get_report_file_urls(
         except Exception as e:
             logger.error(f"Error converting path to URL for {format_name}: {e}")
             file_urls[format_name] = str(file_path)
-    return {
-        "type": "report_complete",
-        "content": report,
-        "files": file_urls,
-        "base_filename": base_filename
-    }
+    return {"type": "report_complete", "content": report, "files": file_urls, "base_filename": base_filename}
 
 
 def validate_config_file(content: bytes) -> bool:
@@ -590,6 +596,7 @@ def get_file_content(file_path: str) -> tuple[bytes, int, str]:
         tuple: The file content, size, and content type.
     """
     import mimetypes
+
     path: Path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")

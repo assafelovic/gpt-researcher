@@ -107,12 +107,8 @@ class Scraper:
                     Fore.RED + f"Unable to install {pkg_inst_name}. Please install manually with "
                     f"`pip install -U {pkg_inst_name}`"
                 )
-                self.logger.info(Fore.GREEN + f"{pkg_inst_name} installed successfully.")
-            except subprocess.CalledProcessError as e:
-                raise ImportError(
-                    Fore.RED
-                    + f"Unable to install {pkg_inst_name}. Please install manually with `pip install -U {pkg_inst_name}`"
-                ) from e
+            self.logger.info(Fore.GREEN + f"{pkg_inst_name} installed successfully.")
+
 
     async def extract_data_from_url(
         self,
@@ -125,7 +121,7 @@ class Scraper:
         async with self.worker_pool.throttle():
             try:
                 Scraper: type[BaseScraper] = self.get_scraper(link)
-                scraper = Scraper(link, session)
+                scraper = Scraper(link, session)  # type: ignore[arg-type]
 
                 # Get scraper name
                 scraper_name: str = scraper.__class__.__name__
@@ -133,7 +129,7 @@ class Scraper:
 
                 # Get content
                 if hasattr(scraper, "scrape_async"):
-                    content, image_urls, title = await scraper.scrape_async()
+                    content, image_urls, title = await scraper.scrape_async()  # type: ignore[attr-defined]
                 else:
                     (
                         content,

@@ -3,12 +3,16 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from typing import Any, Callable, Coroutine
+from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from fastapi import WebSocket
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.llm import create_chat_completion
+from server.server_utils import CustomLogsHandler
+
+if TYPE_CHECKING:
+    from backend.server.websocket_manager import CustomLogsHandler, HTTPStreamAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +43,7 @@ class DeepResearch:
         query: str,
         breadth: int = 4,
         depth: int = 2,
-        websocket: WebSocket | None = None,
+        websocket: WebSocket | CustomLogsHandler | HTTPStreamAdapter | None = None,
         tone: Tone = Tone.Objective,
         config_path: str | None = None,
         headers: dict[str, str] | None = None,
@@ -48,7 +52,7 @@ class DeepResearch:
         self.query: str = query
         self.breadth: int = breadth
         self.depth: int = depth
-        self.websocket: WebSocket | None = websocket
+        self.websocket: WebSocket | CustomLogsHandler | HTTPStreamAdapter | None = websocket
         self.tone: Tone = tone
         self.config_path: str | None = config_path
         self.headers: dict[str, str] | None = headers or {}
@@ -351,7 +355,7 @@ class DeepResearch:
                 context_with_citations.append(learning)
 
         # Set enhanced context for final report
-        researcher.context = "\n".join(context_with_citations)
+        researcher.context = context_with_citations
         researcher.visited_urls = set(results["visited_urls"])
 
         # Generate report

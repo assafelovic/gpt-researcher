@@ -708,7 +708,7 @@ class GenericLLMProvider:
 
     async def get_chat_response(
         self,
-        messages: list[BaseMessage | dict[str, str]],
+        messages: list[BaseMessage] | list[dict[str, str]],
         stream: bool,
         websocket: WebSocket | HTTPStreamAdapter | None = None,
         max_retries: int = 1,
@@ -758,7 +758,7 @@ class GenericLLMProvider:
     async def _stream_response(
         self,
         model: BaseChatModel,
-        messages: list[BaseMessage | dict[str, str]],
+        messages: list[BaseMessage] | list[dict[str, str]],
         websocket: WebSocket | HTTPStreamAdapter | None = None,
     ) -> str:
         info = self._get_model_info(model)
