@@ -8,8 +8,6 @@ from typing import Any
 from bs4 import BeautifulSoup
 from requests import Response, Session
 
-from gpt_researcher.scraper.utils import get_relevant_images
-
 
 class FireCrawl:
     def __init__(
@@ -25,10 +23,10 @@ class FireCrawl:
         self.logger: logging.Logger = logging.getLogger(__name__)
 
     def get_api_key(self) -> str:
-        """
-        Gets the FireCrawl API key
+        """Gets the FireCrawl API key
+
         Returns:
-        Api key (str)
+            Api key (str)
         """
         try:
             api_key = os.environ["FIRECRAWL_API_KEY"]
@@ -37,11 +35,12 @@ class FireCrawl:
         return api_key
 
     def get_server_url(self) -> str:
-        """
-        Gets the FireCrawl server URL.
+        """ Gets the FireCrawl server URL.
+
         Default to official FireCrawl server ('https://api.firecrawl.dev').
+
         Returns:
-        server url (str)
+            server url (str)
         """
         try:
             server_url = os.environ["FIRECRAWL_SERVER_URL"]
@@ -50,15 +49,14 @@ class FireCrawl:
         return server_url
 
     def scrape(self) -> tuple[str, list[dict[str, Any]], str]:
-        """
-        This function extracts content and title from a specified link using the FireCrawl Python SDK,
-        images from the link are extracted using the functions from `gpt_researcher/scraper/utils.py`.
+        """Extracts content and title from a specified link using the FireCrawl Python SDK.
+
+        Images from the link are extracted using the functions from `gpt_researcher/scraper/utils.py`.
 
         Returns:
-          The `scrape` method returns a tuple containing the extracted content, a list of image URLs, and
-        the title of the webpage specified by the `self.link` attribute. It uses the FireCrawl Python SDK to
-        extract and clean content from the webpage. If any exception occurs during the process, an error
-        message is printed and an empty result is returned.
+            A tuple containing the extracted content, a list of image URLs, and the title of the webpage specified by the `self.link` attribute.
+            It uses the FireCrawl Python SDK to extract and clean content from the webpage. If any exception occurs during the process, an error
+            message is printed and an empty result is returned.
         """
 
         try:
@@ -82,6 +80,7 @@ class FireCrawl:
             soup: BeautifulSoup = BeautifulSoup(response_bs.content, "lxml", from_encoding=response_bs.encoding)
 
             # Get relevant images using the utility function
+            from gpt_researcher.scraper.utils import get_relevant_images
             image_urls: list[dict[str, Any]] = get_relevant_images(soup, self.link)
 
             return content, image_urls, title

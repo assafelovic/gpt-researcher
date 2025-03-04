@@ -22,7 +22,7 @@ from gpt_researcher.skills.researcher import ResearchConductor
 from gpt_researcher.skills.writer import ReportGenerator
 from gpt_researcher.utils.enum import OutputFileType, ReportFormat, ReportSource, ReportType, Tone
 from gpt_researcher.vector_store import VectorStoreWrapper
-from skills.deep_research import ResearchProgress
+from gpt_researcher.skills.deep_research import ResearchProgress
 
 if TYPE_CHECKING:
     from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
@@ -44,7 +44,7 @@ class GPTResearcher:
         document_urls: list[str] | None = None,
         complement_source_urls: bool = False,
         query_domains: list[str] | None = None,
-        documents: list[dict[str, Any] | Document] | None = None,
+        documents: list[dict[str, Any]] | list[Document] | None = None,
         vector_store: VectorStore | None = None,
         vector_store_filter: dict[str, Any] | None = None,
         config: Config | dict[str, Any] | os.PathLike | str | None = None,

@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Any
 
 from gpt_researcher.actions.utils import stream_output
 from gpt_researcher.actions.web_scraping import scrape_urls
-from gpt_researcher.scraper.utils import get_image_hash
 from gpt_researcher.utils.workers import WorkerPool
 
 if TYPE_CHECKING:
@@ -108,13 +107,11 @@ class BrowserManager:
         # First, select all score 2 and 3 images
         high_score_images: list[dict[str, Any]] = [img for img in images if img["score"] >= 2]
 
+        from gpt_researcher.scraper.utils import get_image_hash
+
         for img in high_score_images + images:  # Process high-score images first, then all images
             img_hash: str | None = get_image_hash(img["url"])
-            if (
-                img_hash
-                and img_hash not in seen_hashes
-                and img["url"] not in current_research_images
-            ):
+            if img_hash and img_hash not in seen_hashes and img["url"] not in current_research_images:
                 seen_hashes.add(img_hash)
                 unique_images.append(img)
 

@@ -34,7 +34,6 @@ if __name__ == "__main__" and path not in sys.path:
 
 from backend.chat.chat import ChatAgentWithMemory  # noqa: E402
 from backend.server.server_utils import HTTPStreamAdapter, generate_report_files  # noqa: E402
-from backend.server.websocket_manager import WebSocketManager  # noqa: E402
 from gpt_researcher.config import Config  # noqa: E402
 from gpt_researcher.utils.enum import ReportFormat, ReportSource, ReportType, Tone  # noqa: E402
 
@@ -196,9 +195,11 @@ class ResearchAPIHandler:
     ) -> AsyncGenerator[str, None]:
         """Stream the research process with progress updates"""
         try:
-            manager = WebSocketManager()
-            message_queue = asyncio.Queue()
-            http_adapter = HTTPStreamAdapter(message_queue)
+            from backend.server.websocket_manager import WebSocketManager  # noqa: E402
+
+            manager: WebSocketManager = WebSocketManager()
+            message_queue: asyncio.Queue = asyncio.Queue()
+            http_adapter: HTTPStreamAdapter = HTTPStreamAdapter(message_queue)
             await manager.connect(http_adapter)
 
             task: str = params.get("query", "")
@@ -222,22 +223,39 @@ class ResearchAPIHandler:
 
             # Update config with form parameters
             config.CURATE_SOURCES = str(params.get("curate_sources", config.CURATE_SOURCES)).lower() == "true"
-            config.EMBEDDING_KWARGS = json.loads(params.get("embedding_kwargs", json.dumps(config.EMBEDDING_KWARGS))) or config.EMBEDDING_KWARGS
+            config.EMBEDDING_KWARGS = (
+                json.loads(params.get("embedding_kwargs", json.dumps(config.EMBEDDING_KWARGS))) or config.EMBEDDING_KWARGS
+            )
             config.EMBEDDING_MODEL = params.get("embedding_model", config.EMBEDDING_MODEL) or config.EMBEDDING_MODEL
-            config.EMBEDDING_PROVIDER = params.get("embedding_provider", config.EMBEDDING_PROVIDER) or config.EMBEDDING_PROVIDER
+            config.EMBEDDING_PROVIDER = (
+                params.get("embedding_provider", config.EMBEDDING_PROVIDER) or config.EMBEDDING_PROVIDER
+            )
             config.EMBEDDING = params.get("embedding", config.EMBEDDING) or config.EMBEDDING
-            config.FALLBACK_MODELS = str(params.get("fallback_models", "")).split(",") if params.get("fallback_models") else config.FALLBACK_MODELS
+            config.FALLBACK_MODELS = (
+                str(params.get("fallback_models", "")).split(",")
+                if params.get("fallback_models")
+                else config.FALLBACK_MODELS
+            )
             config.FAST_LLM_MODEL = params.get("fast_llm_model", config.FAST_LLM_MODEL) or config.FAST_LLM_MODEL
             config.FAST_LLM_PROVIDER = params.get("fast_llm_provider", config.FAST_LLM_PROVIDER) or config.FAST_LLM_PROVIDER
             config.FAST_LLM = params.get("fast_llm", config.FAST_LLM) or config.FAST_LLM
             config.FAST_TOKEN_LIMIT = int(params.get("fast_token_limit", config.FAST_TOKEN_LIMIT)) or config.FAST_TOKEN_LIMIT
             config.LANGUAGE = params.get("language", config.LANGUAGE) or config.LANGUAGE
             config.MAX_ITERATIONS = int(params.get("max_iterations", config.MAX_ITERATIONS)) or config.MAX_ITERATIONS
-            config.MAX_SEARCH_RESULTS_PER_QUERY = int(params.get("max_search_results_per_query", config.MAX_SEARCH_RESULTS_PER_QUERY)) or config.MAX_SEARCH_RESULTS_PER_QUERY
+            config.MAX_SEARCH_RESULTS_PER_QUERY = (
+                int(params.get("max_search_results_per_query", config.MAX_SEARCH_RESULTS_PER_QUERY))
+                or config.MAX_SEARCH_RESULTS_PER_QUERY
+            )
             config.MAX_SUBTOPICS = int(params.get("max_subtopics", config.MAX_SUBTOPICS)) or config.MAX_SUBTOPICS
-            config.MEMORY_BACKEND = ReportSource(str(params.get("memory_backend", config.MEMORY_BACKEND.value)) or config.MEMORY_BACKEND.value)
-            config.REPORT_FORMAT = ReportFormat.__members__[str(params.get("report_format", config.REPORT_FORMAT.name)).upper() or config.REPORT_FORMAT.name]
-            config.REPORT_SOURCE = ReportSource(str(params.get("report_source", config.REPORT_SOURCE.value) or config.REPORT_SOURCE.value).casefold())
+            config.MEMORY_BACKEND = ReportSource(
+                str(params.get("memory_backend", config.MEMORY_BACKEND.value)) or config.MEMORY_BACKEND.value
+            )
+            config.REPORT_FORMAT = ReportFormat.__members__[
+                str(params.get("report_format", config.REPORT_FORMAT.name)).upper() or config.REPORT_FORMAT.name
+            ]
+            config.REPORT_SOURCE = ReportSource(
+                str(params.get("report_source", config.REPORT_SOURCE.value) or config.REPORT_SOURCE.value).casefold()
+            )
             report_type = str(params.get("report_type", config.REPORT_TYPE.name)) or config.REPORT_TYPE.name
             if report_type not in ReportType.__members__:
                 report_type = report_type.replace("_", " ").title().replace(" ", "")
@@ -245,46 +263,115 @@ class ResearchAPIHandler:
             config.RESEARCH_PLANNER = params.get("research_planner", config.RESEARCH_PLANNER) or config.RESEARCH_PLANNER
             config.RETRIEVER = params.get("retriever", config.RETRIEVER) or config.RETRIEVER
             config.SCRAPER = params.get("scraper", config.SCRAPER) or config.SCRAPER
-            config.SIMILARITY_THRESHOLD = float(params.get("similarity_threshold", config.SIMILARITY_THRESHOLD)) or config.SIMILARITY_THRESHOLD
+            config.SIMILARITY_THRESHOLD = (
+                float(params.get("similarity_threshold", config.SIMILARITY_THRESHOLD)) or config.SIMILARITY_THRESHOLD
+            )
             config.SMART_LLM_MODEL = params.get("smart_llm_model", config.SMART_LLM_MODEL) or config.SMART_LLM_MODEL
-            config.SMART_LLM_PROVIDER = params.get("smart_llm_provider", config.SMART_LLM_PROVIDER) or config.SMART_LLM_PROVIDER
+            config.SMART_LLM_PROVIDER = (
+                params.get("smart_llm_provider", config.SMART_LLM_PROVIDER) or config.SMART_LLM_PROVIDER
+            )
             config.SMART_LLM = params.get("smart_llm", config.SMART_LLM) or config.SMART_LLM
-            config.SMART_TOKEN_LIMIT = int(params.get("smart_token_limit", config.SMART_TOKEN_LIMIT)) or config.SMART_TOKEN_LIMIT
-            config.STRATEGIC_LLM_MODEL = params.get("strategic_llm_model", config.STRATEGIC_LLM_MODEL) or config.STRATEGIC_LLM_MODEL
-            config.STRATEGIC_LLM_PROVIDER = params.get("strategic_llm_provider", config.STRATEGIC_LLM_PROVIDER) or config.STRATEGIC_LLM_PROVIDER
+            config.SMART_TOKEN_LIMIT = (
+                int(params.get("smart_token_limit", config.SMART_TOKEN_LIMIT)) or config.SMART_TOKEN_LIMIT
+            )
+            config.STRATEGIC_LLM_MODEL = (
+                params.get("strategic_llm_model", config.STRATEGIC_LLM_MODEL) or config.STRATEGIC_LLM_MODEL
+            )
+            config.STRATEGIC_LLM_PROVIDER = (
+                params.get("strategic_llm_provider", config.STRATEGIC_LLM_PROVIDER) or config.STRATEGIC_LLM_PROVIDER
+            )
             config.STRATEGIC_LLM = params.get("strategic_llm", config.STRATEGIC_LLM) or config.STRATEGIC_LLM
-            config.STRATEGIC_TOKEN_LIMIT = params.get("strategic_token_limit", config.STRATEGIC_TOKEN_LIMIT) or config.STRATEGIC_TOKEN_LIMIT
+            config.STRATEGIC_TOKEN_LIMIT = (
+                params.get("strategic_token_limit", config.STRATEGIC_TOKEN_LIMIT) or config.STRATEGIC_TOKEN_LIMIT
+            )
             config.TEMPERATURE = float(params.get("temperature", config.TEMPERATURE)) or config.TEMPERATURE
-            config.TONE = Tone.__members__[str(params.get("tone", config.TONE.name) or config.TONE.name).capitalize()] or config.TONE
+            config.TONE = (
+                Tone.__members__[str(params.get("tone", config.TONE.name) or config.TONE.name).capitalize()] or config.TONE
+            )
             config.TOTAL_WORDS = int(params.get("total_words", config.TOTAL_WORDS) or config.TOTAL_WORDS)
-            config.USE_FALLBACKS = str(params.get("use_fallbacks", config.USE_FALLBACKS) or config.USE_FALLBACKS).lower() == "true"
+            config.USE_FALLBACKS = (
+                str(params.get("use_fallbacks", config.USE_FALLBACKS) or config.USE_FALLBACKS).lower() == "true"
+            )
             config.USER_AGENT = params.get("user_agent", config.USER_AGENT) or config.USER_AGENT
             config.VERBOSE = str(params.get("verbose", config.VERBOSE)).lower() == "true" or config.VERBOSE
 
             # Add missing variables from Config
             config.AGENT_ROLE = params.get("agent_role", config.AGENT_ROLE) or config.AGENT_ROLE
             config.DOC_PATH = params.get("doc_path", config.DOC_PATH) or config.DOC_PATH
-            config.EMBEDDING_FALLBACK_MODELS = ( str(params.get("embedding_fallback_models", "")).split(",") if params.get("embedding_fallback_models") else config.EMBEDDING_FALLBACK_MODELS )
-            config.FAST_LLM_TEMPERATURE = float(params.get("fast_llm_temperature", config.FAST_LLM_TEMPERATURE)) or config.FAST_LLM_TEMPERATURE
+            config.EMBEDDING_FALLBACK_MODELS = (
+                str(params.get("embedding_fallback_models", "")).split(",")
+                if params.get("embedding_fallback_models")
+                else config.EMBEDDING_FALLBACK_MODELS
+            )
+            config.FAST_LLM_TEMPERATURE = (
+                float(params.get("fast_llm_temperature", config.FAST_LLM_TEMPERATURE)) or config.FAST_LLM_TEMPERATURE
+            )
             config.MAX_URLS = int(params.get("max_urls", config.MAX_URLS)) or config.MAX_URLS
             config.OUTPUT_FORMAT = params.get("output_format", config.OUTPUT_FORMAT) or config.OUTPUT_FORMAT
-            config.SMART_LLM_TEMPERATURE = float(params.get("smart_llm_temperature", config.SMART_LLM_TEMPERATURE)) or config.SMART_LLM_TEMPERATURE
-            config.STRATEGIC_LLM_TEMPERATURE = float(params.get("strategic_llm_temperature", config.STRATEGIC_LLM_TEMPERATURE)) or config.STRATEGIC_LLM_TEMPERATURE
-            config.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS = ( params.get("post_retrieval_processing_instructions", config.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS) or config.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS )
-            config.PROMPT_GENERATE_SEARCH_QUERIES = ( params.get("prompt_generate_search_queries", config.PROMPT_GENERATE_SEARCH_QUERIES) or config.PROMPT_GENERATE_SEARCH_QUERIES )
-            config.PROMPT_GENERATE_REPORT = params.get("prompt_generate_report", config.PROMPT_GENERATE_REPORT) or config.PROMPT_GENERATE_REPORT
-            config.PROMPT_CURATE_SOURCES = params.get("prompt_curate_sources", config.PROMPT_CURATE_SOURCES) or config.PROMPT_CURATE_SOURCES
-            config.PROMPT_GENERATE_RESOURCE_REPORT = ( params.get("prompt_generate_resource_report", config.PROMPT_GENERATE_RESOURCE_REPORT) or config.PROMPT_GENERATE_RESOURCE_REPORT )
-            config.PROMPT_GENERATE_CUSTOM_REPORT = params.get("prompt_generate_custom_report", config.PROMPT_GENERATE_CUSTOM_REPORT) or config.PROMPT_GENERATE_CUSTOM_REPORT
-            config.PROMPT_GENERATE_OUTLINE_REPORT = ( params.get("prompt_generate_outline_report", config.PROMPT_GENERATE_OUTLINE_REPORT) or config.PROMPT_GENERATE_OUTLINE_REPORT )
-            config.PROMPT_AUTO_AGENT_INSTRUCTIONS = ( params.get("prompt_auto_agent_instructions", config.PROMPT_AUTO_AGENT_INSTRUCTIONS) or config.PROMPT_AUTO_AGENT_INSTRUCTIONS )
-            config.PROMPT_CONDENSE_INFORMATION = params.get("prompt_condense_information", config.PROMPT_CONDENSE_INFORMATION) or config.PROMPT_CONDENSE_INFORMATION
-            config.PROMPT_GENERATE_SUBTOPICS = params.get("prompt_generate_subtopics", config.PROMPT_GENERATE_SUBTOPICS) or config.PROMPT_GENERATE_SUBTOPICS
-            config.PROMPT_GENERATE_SUBTOPIC_REPORT = ( params.get("prompt_generate_subtopic_report", config.PROMPT_GENERATE_SUBTOPIC_REPORT) or config.PROMPT_GENERATE_SUBTOPIC_REPORT )
-            config.PROMPT_GENERATE_DRAFT_TITLES = params.get("prompt_generate_draft_titles", config.PROMPT_GENERATE_DRAFT_TITLES) or config.PROMPT_GENERATE_DRAFT_TITLES
-            config.PROMPT_GENERATE_REPORT_INTRODUCTION = ( params.get("prompt_generate_report_introduction", config.PROMPT_GENERATE_REPORT_INTRODUCTION) or config.PROMPT_GENERATE_REPORT_INTRODUCTION )
-            config.PROMPT_GENERATE_REPORT_CONCLUSION = ( params.get("prompt_generate_report_conclusion", config.PROMPT_GENERATE_REPORT_CONCLUSION) or config.PROMPT_GENERATE_REPORT_CONCLUSION )
-            config.PROMPT_POST_RETRIEVAL_PROCESSING = ( params.get("prompt_post_retrieval_processing", config.PROMPT_POST_RETRIEVAL_PROCESSING) or config.PROMPT_POST_RETRIEVAL_PROCESSING )
+            config.SMART_LLM_TEMPERATURE = (
+                float(params.get("smart_llm_temperature", config.SMART_LLM_TEMPERATURE)) or config.SMART_LLM_TEMPERATURE
+            )
+            config.STRATEGIC_LLM_TEMPERATURE = (
+                float(params.get("strategic_llm_temperature", config.STRATEGIC_LLM_TEMPERATURE))
+                or config.STRATEGIC_LLM_TEMPERATURE
+            )
+            config.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS = (
+                params.get("post_retrieval_processing_instructions", config.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS)
+                or config.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS
+            )
+            config.PROMPT_GENERATE_SEARCH_QUERIES = (
+                params.get("prompt_generate_search_queries", config.PROMPT_GENERATE_SEARCH_QUERIES)
+                or config.PROMPT_GENERATE_SEARCH_QUERIES
+            )
+            config.PROMPT_GENERATE_REPORT = (
+                params.get("prompt_generate_report", config.PROMPT_GENERATE_REPORT) or config.PROMPT_GENERATE_REPORT
+            )
+            config.PROMPT_CURATE_SOURCES = (
+                params.get("prompt_curate_sources", config.PROMPT_CURATE_SOURCES) or config.PROMPT_CURATE_SOURCES
+            )
+            config.PROMPT_GENERATE_RESOURCE_REPORT = (
+                params.get("prompt_generate_resource_report", config.PROMPT_GENERATE_RESOURCE_REPORT)
+                or config.PROMPT_GENERATE_RESOURCE_REPORT
+            )
+            config.PROMPT_GENERATE_CUSTOM_REPORT = (
+                params.get("prompt_generate_custom_report", config.PROMPT_GENERATE_CUSTOM_REPORT)
+                or config.PROMPT_GENERATE_CUSTOM_REPORT
+            )
+            config.PROMPT_GENERATE_OUTLINE_REPORT = (
+                params.get("prompt_generate_outline_report", config.PROMPT_GENERATE_OUTLINE_REPORT)
+                or config.PROMPT_GENERATE_OUTLINE_REPORT
+            )
+            config.PROMPT_AUTO_AGENT_INSTRUCTIONS = (
+                params.get("prompt_auto_agent_instructions", config.PROMPT_AUTO_AGENT_INSTRUCTIONS)
+                or config.PROMPT_AUTO_AGENT_INSTRUCTIONS
+            )
+            config.PROMPT_CONDENSE_INFORMATION = (
+                params.get("prompt_condense_information", config.PROMPT_CONDENSE_INFORMATION)
+                or config.PROMPT_CONDENSE_INFORMATION
+            )
+            config.PROMPT_GENERATE_SUBTOPICS = (
+                params.get("prompt_generate_subtopics", config.PROMPT_GENERATE_SUBTOPICS) or config.PROMPT_GENERATE_SUBTOPICS
+            )
+            config.PROMPT_GENERATE_SUBTOPIC_REPORT = (
+                params.get("prompt_generate_subtopic_report", config.PROMPT_GENERATE_SUBTOPIC_REPORT)
+                or config.PROMPT_GENERATE_SUBTOPIC_REPORT
+            )
+            config.PROMPT_GENERATE_DRAFT_TITLES = (
+                params.get("prompt_generate_draft_titles", config.PROMPT_GENERATE_DRAFT_TITLES)
+                or config.PROMPT_GENERATE_DRAFT_TITLES
+            )
+            config.PROMPT_GENERATE_REPORT_INTRODUCTION = (
+                params.get("prompt_generate_report_introduction", config.PROMPT_GENERATE_REPORT_INTRODUCTION)
+                or config.PROMPT_GENERATE_REPORT_INTRODUCTION
+            )
+            config.PROMPT_GENERATE_REPORT_CONCLUSION = (
+                params.get("prompt_generate_report_conclusion", config.PROMPT_GENERATE_REPORT_CONCLUSION)
+                or config.PROMPT_GENERATE_REPORT_CONCLUSION
+            )
+            config.PROMPT_POST_RETRIEVAL_PROCESSING = (
+                params.get("prompt_post_retrieval_processing", config.PROMPT_POST_RETRIEVAL_PROCESSING)
+                or config.PROMPT_POST_RETRIEVAL_PROCESSING
+            )
 
             config_path.write_text(config.to_json())
 
@@ -716,7 +803,11 @@ class AsyncStreamingResearchRequestHandler(http.server.SimpleHTTPRequestHandler)
             self.send_header("Content-type", "application/json")
             self.end_headers()
 
-            response: dict[str, Any] = {"status": "success", "message": "Configuration loaded successfully", "config": config.to_dict()}
+            response: dict[str, Any] = {
+                "status": "success",
+                "message": "Configuration loaded successfully",
+                "config": config.to_dict(),
+            }
             self.wfile.write(json.dumps(response).encode())
         except Exception as e:
             self.send_response(400)

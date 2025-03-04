@@ -9,7 +9,7 @@ from fastapi import WebSocket
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.llm import create_chat_completion
-from server.server_utils import CustomLogsHandler
+from backend.server.server_utils import CustomLogsHandler
 
 if TYPE_CHECKING:
     from backend.server.websocket_manager import CustomLogsHandler, HTTPStreamAdapter

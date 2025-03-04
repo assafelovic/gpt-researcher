@@ -2,19 +2,23 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from pathlib import Path
 import time
 
 from datetime import datetime, timedelta
-from typing import Any, Callable, Coroutine, Optional
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional
 
 from fastapi import WebSocket
 
-from agent import GPTResearcher
 from gpt_researcher.actions.query_processing import get_search_results
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.llm import create_chat_completion
-from server.server_utils import CustomLogsHandler, HTTPStreamAdapter
+
+if TYPE_CHECKING:
+    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
+
+    from gpt_researcher.agent import GPTResearcher
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,36 +52,45 @@ def trim_context_to_word_limit(
 
 
 class ResearchProgress:
-    def __init__(self, total_depth: int, total_breadth: int):
-        self.current_depth = 1  # Start from 1 and increment up to total_depth
-        self.total_depth = total_depth
-        self.current_breadth = 0  # Start from 0 and count up to total_breadth as queries complete
-        self.total_breadth = total_breadth
-        self.current_query: Optional[str] = None
-        self.total_queries = 0
-        self.completed_queries = 0
+    def __init__(
+        self,
+        total_depth: int,
+        total_breadth: int,
+    ):
+        self.current_depth: int = 1  # Start from 1 and increment up to total_depth
+        self.total_depth: int = total_depth
+        self.current_breadth: int = 0  # Start from 0 and count up to total_breadth as queries complete
+        self.total_breadth: int = total_breadth
+        self.current_query: str | None = None
+        self.total_queries: int = 0
+        self.completed_queries: int = 0
 
 
 class DeepResearchSkill:
-    def __init__(self, researcher: GPTResearcher):
+    def __init__(
+        self,
+        researcher: GPTResearcher,
+    ):
+        from gpt_researcher.agent import GPTResearcher  # pyright: ignore[reportUnusedImport]  # noqa: F401
+
         self.researcher: GPTResearcher = researcher
         self.breadth: int = getattr(researcher.cfg, "deep_research_breadth", 4)
         self.depth: int = getattr(researcher.cfg, "deep_research_depth", 2)
         self.concurrency_limit: int = getattr(researcher.cfg, "deep_research_concurrency", 2)
         self.websocket: WebSocket | HTTPStreamAdapter | CustomLogsHandler | None = researcher.websocket
         self.tone: Tone = researcher.tone
-        self.config_path: Path | None = (
-            researcher.cfg.config_path
-            if hasattr(researcher.cfg, "config_path")
-            else None
-        )
+        self.config_path: Path | None = researcher.cfg.config_path if hasattr(researcher.cfg, "config_path") else None
         self.headers: dict[str, str] = researcher.headers or {}
         self.visited_urls: set[str] = researcher.visited_urls
         self.learnings: list[str] = []
         self.research_sources: list[dict[str, Any]] = []  # Track all research sources
         self.context: list[str] = []  # Track all context
 
-    async def generate_search_queries(self, query: str, num_queries: int = 3) -> list[dict[str, str]]:
+    async def generate_search_queries(
+        self,
+        query: str,
+        num_queries: int = 3,
+    ) -> list[dict[str, str]]:
         """Generate SERP queries for research"""
         messages: list[dict[str, str]] = [
             {"role": "system", "content": "You are an expert researcher generating search queries."},

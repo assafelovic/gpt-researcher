@@ -5,7 +5,6 @@ import asyncio
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
-from gpt_researcher.utils.enum import Tone
 from langgraph.graph import END, StateGraph
 
 from multi_agents.agents.researcher import ResearchAgent
@@ -53,7 +52,7 @@ class EditorAgent:
         human_feedback: str | None = research_state.get("human_feedback")
         max_sections: int = int(task.get("max_sections", 10) or 10)
 
-        prompt = self._create_planning_prompt(
+        prompt: list[dict[str, str]] = self._create_planning_prompt(
             initial_research,
             include_human_feedback,
             human_feedback,
@@ -61,7 +60,9 @@ class EditorAgent:
         )
 
         print_agent_output("Planning an outline layout based on initial research...", agent="EDITOR")
-        plan: dict[str, Any] = await call_model(prompt=prompt, model=model, response_format="json")
+        plan: dict[str, Any] = await call_model(
+            prompt=prompt, model=model, response_format="json"
+        )
         plan = plan if isinstance(plan, dict) else {}
         return {
             "title": str(plan.get("title", "") or ""),
@@ -153,6 +154,7 @@ class EditorAgent:
 
     def _initialize_agents(self) -> dict[str, Any]:
         """Initialize the research, reviewer, and reviser skills."""
+        from gpt_researcher.utils.enum import Tone
         return {
             "research": ResearchAgent(
                 websocket=self.websocket,
