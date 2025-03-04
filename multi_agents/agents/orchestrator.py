@@ -40,13 +40,16 @@ class ChiefEditorAgent:
         self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
         self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = stream_output
         self.headers: dict[str, Any] = {} if headers is None else headers
-        self.tone: Tone = Tone.Objective
-        if tone is None:
-            self.tone = Tone.Objective
-        elif isinstance(tone, str):
-            self.tone = Tone.__members__[tone.capitalize()]
-        else:
-            self.tone = tone
+        self.tone: Tone = (
+            Tone.__members__[tone.capitalize()]
+            if isinstance(tone, str)
+            and tone.capitalize() in Tone.__members__
+            else tone
+            if isinstance(tone, Tone)
+            else Tone(tone)
+            if isinstance(tone, str)
+            else Tone.Objective
+        )
         self.task_id: int = self._generate_task_id()
         self.output_dir: Path = self._create_output_directory()
 

@@ -45,14 +45,20 @@ class VectorStoreWrapper:
         Args:
         ----
             data: list[dict[str, str]]: The documents to convert to Langchain Document.
+                Each dictionary must contain 'raw_content' and 'url' keys.
+                'raw_content' contains the text content and 'url' contains the source URL.
 
         Returns:
         -------
             list[Document]: The Langchain Document.
         """
         return [
-            Document(page_content=item["raw_content"], metadata={"source": item["url"]})
+            Document(
+                page_content=item.get("raw_content", ""),
+                metadata={"source": item.get("url", "unknown")},
+            )
             for item in data
+            if "raw_content" in item  # Only include documents with content
         ]
 
     def _split_documents(
@@ -73,7 +79,7 @@ class VectorStoreWrapper:
         -------
             list[Document]: The split documents.
         """
-        text_splitter: RecursiveCharacterTextSplitter = RecursiveCharacterTextSplitter(
+        text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
         )
@@ -98,6 +104,8 @@ class VectorStoreWrapper:
             list[Document]: The results of the search.
         """
         results: list[Document] = await self.vector_store.asimilarity_search(
-            query=query, k=k, filter=filter
+            query=query,
+            k=k,
+            filter=filter,
         )
         return results

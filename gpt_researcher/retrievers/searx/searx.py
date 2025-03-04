@@ -3,10 +3,13 @@ from __future__ import annotations
 import json
 import os
 
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import urljoin
 
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SearxSearch:
@@ -16,8 +19,8 @@ class SearxSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """Initializes the SearxSearch object.
 
@@ -47,7 +50,7 @@ class SearxSearch:
 
     def search(
         self,
-        max_results: int = 10,
+        max_results: Optional[int] = None,
     ) -> list[dict[str, str]]:
         """Searches the query using SearxNG API.
 
@@ -57,6 +60,11 @@ class SearxSearch:
         Returns:
             list[dict[str, str]]: List of dictionaries containing search results.
         """
+        if max_results is None:
+            max_results = int(os.environ.get("MAX_SOURCES", 10))
+            
+        logger.info(f"SearxSearch: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
+
         search_url: str = urljoin(self.base_url, "search")
 
         params: dict[str, str] = {

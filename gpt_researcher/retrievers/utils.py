@@ -5,16 +5,16 @@ import logging
 import os
 
 # Map our retriever names to langchain equivalents
-LANGCHAIN_RETRIEVERS = {
+LANGCHAIN_RETRIEVERS: dict[str, str] = {
     "arxiv": "ArxivRetriever",
     "pubmed": "PubMedRetriever",
     "tavily": "TavilySearchAPIRetriever",
     "you": "YouRetriever",
 }
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
-VALID_RETRIEVERS = [
+VALID_RETRIEVERS: list[str] = [
     *tuple(
         {
             "bing",
@@ -43,7 +43,7 @@ def check_pkg(pkg: str) -> None:
         ImportError: If package is not installed
     """
     if not importlib.util.find_spec(pkg):
-        pkg_kebab = pkg.replace("_", "-")
+        pkg_kebab: str = pkg.replace("_", "-")
         raise ImportError(f"Unable to import {pkg_kebab}. Please install with `pip install -U {pkg_kebab}`")
 
 def get_all_retriever_names() -> list[str]:
@@ -54,10 +54,10 @@ def get_all_retriever_names() -> list[str]:
     """
     try:
         current_dir = os.path.dirname(__file__)
-        all_items = os.listdir(current_dir)
+        all_items: list[str] = os.listdir(current_dir)
 
         # Filter out only the directories, excluding __pycache__ and hidden dirs
-        retrievers = [
+        retrievers: list[str] = [
             item for item in all_items
             if os.path.isdir(os.path.join(current_dir, item))
             and not item.startswith("__")

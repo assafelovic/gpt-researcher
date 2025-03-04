@@ -19,7 +19,7 @@ class WebBaseLoaderScraper:
         self,
         link: str,
         session: Session | None = None,
-        *args: Any,  # provided for compatibility with other scrapers
+        *_: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         self.link: str = link

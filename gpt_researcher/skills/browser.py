@@ -33,6 +33,7 @@ class BrowserManager:
         -------
             tuple[list[dict[str, Any]], list[dict[str, Any]]]: Tuple containing the scraped text data and images.
         """
+        
         if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",

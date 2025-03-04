@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
+import os
 
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Optional
 
 from gpt_researcher.utils import check_pkg
 
@@ -133,8 +134,8 @@ class Duckduckgo:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         check_pkg("duckduckgo_search")
         from duckduckgo_search import DDGS
@@ -145,17 +146,22 @@ class Duckduckgo:
 
     def search(
         self,
-        max_results: int = 5,
+        max_results: Optional[int] = None,
     ) -> list[dict[str, str]]:
-        """Performs the search.
+        """Searches the query.
 
-        Args:
-            max_results (int): The maximum number of results to return.
+        Useful for general internet search queries using DuckDuckGo.
 
         Returns:
             list[dict[str, str]]: The search results.
         """
         # TODO: Add support for query domains
+        # If max_results is the default, check environment variable
+        if max_results is None:
+            max_results = int(os.environ.get("MAX_SOURCES", 10))
+            
+        logger.info(f"Duckduckgo: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
+
         try:
             search_response: list[dict[str, str]] = self.ddg.text(self.query, region="wt-wt", max_results=max_results)
         except Exception as e:

@@ -25,8 +25,8 @@ class TavilySearch:
         headers: dict[str, Any] | None = None,
         topic: str = "general",
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """
         Initializes the TavilySearch object.

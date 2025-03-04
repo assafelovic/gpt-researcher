@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import logging
+import os
 
 from typing import Any, ClassVar, Dict, cast
 
 # import httpx
+from aiohttp_retry import Optional
 import requests
 
 # from langchain_core.callbacks import CallbackManagerForRetrieverRun
@@ -179,8 +181,8 @@ class SemanticScholarSearch:
         query: str,
         sort: str = "relevance",
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         """Initialize the SemanticScholarSearch class with a query and sort criterion.
 
@@ -198,7 +200,7 @@ class SemanticScholarSearch:
 
     def search(
         self,
-        max_results: int = 20,
+        max_results: Optional[int] = None,
     ) -> list[dict[str, str]]:
         """
         Perform the search on Semantic Scholar and return results.
@@ -209,6 +211,12 @@ class SemanticScholarSearch:
         Returns:
             List of dictionaries containing title, href, and body of each paper
         """
+        # If max_results is the default, check environment variable
+        if max_results is None:
+            max_results = int(os.environ.get("MAX_SOURCES", 20))
+            
+        logger.info(f"SemanticScholarSearch: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
+
         params: dict[str, Any] = {
             "query": self.query,
             "limit": max_results,

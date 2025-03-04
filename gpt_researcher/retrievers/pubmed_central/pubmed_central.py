@@ -14,8 +14,8 @@ class PubMedCentralSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """Initializes the PubMedCentralSearch object.
 

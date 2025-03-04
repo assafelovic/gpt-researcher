@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import TYPE_CHECKING
 
 from gpt_researcher.actions import stream_output
@@ -17,9 +18,13 @@ logger = logging.getLogger(__name__)
 class SourceCurator:
     """Ranks sources and curates data based on their relevance, credibility and reliability."""
 
-    def __init__(self, researcher: GPTResearcher):
+    def __init__(
+        self,
+        researcher: GPTResearcher,
+        llm_provider: GenericLLMProvider | None = None,
+    ):
         self.researcher: GPTResearcher = researcher
-        self.llm_provider: GenericLLMProvider | None = None
+        self.llm_provider: GenericLLMProvider | None = llm_provider
 
     def _get_llm(self) -> GenericLLMProvider:
         """Get or create an LLM provider instance."""
@@ -34,11 +39,10 @@ class SourceCurator:
 
     async def curate_sources(
         self,
-        source_data: list,
-        max_results: int = 10,
-    ) -> list:
-        """
-        Rank sources based on research data and guidelines.
+        source_data: list[str],
+        max_results: int | None = None,
+    ) -> list[str]:
+        """Rank sources based on research data and guidelines.
 
         Args:
             query: The research query/task
@@ -48,6 +52,9 @@ class SourceCurator:
         Returns:
             str: Ranked list of source URLs with reasoning
         """
+        if max_results is None:
+            max_results = int(os.environ.get("MAX_SOURCES", 10))
+
         logger.debug(f"\n\nCurating {len(source_data)} sources: {source_data}")
         if self.researcher.cfg.VERBOSE:
             await stream_output(
@@ -59,7 +66,7 @@ class SourceCurator:
 
         response: str = ""
         try:
-            provider = self._get_llm()
+            provider: GenericLLMProvider = self._get_llm()
             response = await provider.get_chat_response(
                 messages=[
                     {
@@ -76,7 +83,7 @@ class SourceCurator:
                 stream=False,
             )
 
-            if self.researcher.add_costs:
+            if self.researcher.add_costs is not None:
                 from gpt_researcher.utils.costs import estimate_llm_cost
                 llm_costs = estimate_llm_cost(
                     rank_sources_prompt(self.researcher.query, source_data, max_results),

@@ -42,6 +42,8 @@ class BrowserScraper:
         headless: bool = False,
         user_agent: str | None = None,
         use_browser_cookies: bool = False,
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         self.url: str = url
         self.session: requests.Session | None = session

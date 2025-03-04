@@ -177,8 +177,8 @@ class SerpApiSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         """
         Initializes the SerpApiSearch object
@@ -212,13 +212,17 @@ class SerpApiSearch:
         max_results: int = 7,
     ) -> list[dict[str, str]]:
         """Searches the query.
-        
+
         Useful for general internet search queries using SerpApi.
 
         Returns:
             List of dictionaries containing title, href, and body of each paper.
         """
-        logger.info(f"SerpApiSearch: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
+        # If max_results is the default, check environment variable
+        if max_results == 7:  # Default value
+            max_results = int(os.environ.get("MAX_SOURCES", 10))
+            
+        logging.info(f"SerpApiSearch: Searching with query {self.query}...")
         url: str = "https://serpapi.com/search.json"
 
         search_query: str = self.query

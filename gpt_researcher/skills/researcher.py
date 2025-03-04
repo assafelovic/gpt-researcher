@@ -5,7 +5,7 @@ import logging
 import os
 import random
 
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Sequence
 
 import json_repair
 
@@ -111,7 +111,7 @@ class ResearchConductor:
                 )
                 break
             except Exception as e:
-                self.logger.exception(f"Error with retriever {retriever_entry.__name__}: {e}")
+                self.logger.exception(f"Error with retriever {retriever_entry.__name__}! {e.__class__.__name__}: {e}")
         self.logger.info(f"Initial search results obtained: {len(search_results)} results")
 
         await stream_output(
@@ -145,7 +145,7 @@ class ResearchConductor:
         return outline
 
     async def conduct_research(self) -> list[str]:
-        """Runs the GPT Researcher to conduct research.
+        """Runs the GPT Researcher to conduct research, handling different source types and errors.
 
         Returns:
         -------
@@ -158,37 +158,97 @@ class ResearchConductor:
 
         # Reset visited_urls at the start of each research task
         self.researcher.visited_urls.clear()
+
+        if self.researcher.cfg.VERBOSE:
+            await self._stream_research_start()
+
+        try:
+            research_data: list[str] = await self._gather_research_data()
+        except Exception as e:
+            self.logger.exception(f"Failed to gather research data: {e.__class__.__name__}: {e}")
+            return []  # Return empty list on failure
+
+        if self.researcher.cfg.CURATE_SOURCES:
+            try:
+                self.logger.info("Curating sources")
+                self.researcher.context = await self.researcher.source_curator.curate_sources(research_data)
+            except Exception as e:
+                self.logger.warning(f"Source curation failed, using original sources: {e.__class__.__name__}: {e}", exc_info=True)
+                self.researcher.context.extend(research_data)
+        else:
+            self.researcher.context.extend(research_data)
+
+
+        if self.researcher.cfg.VERBOSE:
+            await self._stream_research_finalization()
+
+        self.logger.info(f"RESEARCH COMPLETED! Total Context Length: {len(str(self.researcher.context))}")
+        return self.researcher.context
+
+    async def _stream_research_start(self) -> None:
+        """Streams the initial research start messages."""
+        await stream_output(
+            "logs",
+            "starting_research",
+            f"🔍 Starting the research task for '{self.researcher.query}'...",
+            self.researcher.websocket,
+        )
+        await stream_output(
+            "logs",
+            "agent_generated",
+            self.researcher.agent or "🤖 I am an AI Researcher, here to help you with your queries...",
+            self.researcher.websocket,
+        )
+
+    async def _gather_research_data(self) -> list[str]:
+        """Gathers research data based on the configured source type."""
         research_data: list[str] = []
 
-        if self.researcher.cfg.VERBOSE:
-            await stream_output(
-                "logs",
-                "starting_research",
-                f"🔍 Starting the research task for '{self.researcher.query}'...",
-                self.researcher.websocket,
-            )
-
-        if self.researcher.cfg.VERBOSE:
-            await stream_output(
-                "logs",
-                "agent_generated",
-                self.researcher.agent or "🤖 I am an AI Researcher, here to help you with your queries...",
-                self.researcher.websocket,
-            )
-
-        # Research for relevant sources based on source types below
         if self.researcher.source_urls:
-            self.logger.info("Using provided source URLs")
-            research_data.append(await self._get_context_by_urls(self.researcher.source_urls))
-            if research_data[0] and len(research_data[0]) == 0 and self.researcher.cfg.VERBOSE:
-                await stream_output(
-                    "logs",
-                    "answering_from_memory",
-                    "🧐 I was unable to find relevant context in the provided sources...",
-                    self.researcher.websocket,
-                )
-            if self.researcher.complement_source_urls:
-                self.logger.info("Complementing with web search")
+            research_data = await self._handle_provided_urls()
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Web:
+            research_data = [await self._get_context_by_web_search(
+                self.researcher.query, query_domains=self.researcher.query_domains
+            )]
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Local:
+            research_data = await self._handle_local_documents()
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Hybrid:
+            research_data = await self._handle_hybrid_search()
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.LangChainDocuments:
+            research_data = await self._handle_langchain_documents()
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.LangChainVectorStore:
+            research_data = await self._get_context_by_vectorstore(
+                self.researcher.query, self.researcher.vector_store_filter
+            )
+        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Azure:
+            research_data = await self._handle_azure_documents()
+        else:
+            raise ValueError(f"Invalid report source: {self.researcher.cfg.REPORT_SOURCE}")
+
+        return research_data if isinstance(research_data, list) else [research_data]
+
+    async def _handle_provided_urls(self) -> list[str]:
+        """Handles research when source URLs are provided."""
+        self.logger.info("Using provided source URLs")
+        research_data: list[str] = []
+        try:
+            context: str = await self._get_context_by_urls(self.researcher.source_urls)
+            research_data.append(context)
+        except Exception as e:
+            self.logger.exception(f"Error getting context from provided URLs: {e.__class__.__name__}: {e}")
+            # Optionally, allow fallback to web search or other strategies
+            return []
+
+        if not research_data[0] and self.researcher.cfg.VERBOSE:
+            await stream_output(
+                "logs",
+                "answering_from_memory",
+                "🧐 I was unable to find relevant context in the provided sources...",
+                self.researcher.websocket,
+            )
+        if self.researcher.complement_source_urls:
+            self.logger.info("Complementing with web search")
+            try:
                 additional_research: list[str] = [
                     await self._get_context_by_web_search(
                         self.researcher.query,
@@ -196,31 +256,31 @@ class ResearchConductor:
                     )
                 ]
                 research_data.extend(additional_research)
+            except Exception as e:
+                self.logger.exception(f"Error during complementary web search: {e.__class__.__name__}: {e}")
+                # Decide whether to continue without the additional research or return an empty list
 
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Web:
-            self.logger.info("Using web search")
-            research_data = [
-                await self._get_context_by_web_search(
-                    self.researcher.query,
-                    query_domains=self.researcher.query_domains,
-                )
-            ]
+        return research_data
 
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Local:
+    async def _handle_local_documents(self) -> list[str]:
+        """Handles research using local documents."""
+        try:
             document_data: list[dict[str, Any]] = await DocumentLoader(self.researcher.cfg.DOC_PATH).load()
             if self.researcher.vector_store is not None:
                 self.researcher.vector_store.load(document_data)
+            context: str = await self._get_context_by_web_search(
+                self.researcher.query,
+                document_data,
+                query_domains=self.researcher.query_domains,
+            )
+            return [context]
+        except Exception as e:
+            self.logger.exception(f"Error handling local documents: {e.__class__.__name__}: {e}")
+            return []
 
-            research_data = [
-                await self._get_context_by_web_search(
-                    self.researcher.query,
-                    document_data,
-                    query_domains=self.researcher.query_domains,
-                )
-            ]
-
-        # Hybrid search including both local documents and web sources
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Hybrid:
+    async def _handle_hybrid_search(self) -> list[str]:
+        """Handles hybrid search including both local documents and web sources."""
+        try:
             document_data: list[dict[str, Any]] = (
                 await OnlineDocumentLoader(self.researcher.document_urls).load()
                 if self.researcher.document_urls
@@ -228,6 +288,7 @@ class ResearchConductor:
             )
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(document_data)
+
             docs_context: str = await self._get_context_by_web_search(
                 self.researcher.query,
                 document_data,
@@ -237,28 +298,33 @@ class ResearchConductor:
                 self.researcher.query,
                 query_domains=self.researcher.query_domains,
             )
-            research_data = [f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"]
+            return [f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"]
 
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.LangChainDocuments:
+        except Exception as e:
+            self.logger.exception(f"Error during Hybrid search: {e.__class__.__name__}: {e}")
+            return []  # Return an empty list or handle partial results
+
+    async def _handle_langchain_documents(self) -> list[str]:
+        """Handles research using LangChain documents."""
+        try:
             self.logger.info("Using LangChain documents")
             lang_docs: list[Document] = [Document(**doc) for doc in self.researcher.documents]
             langchain_documents_data: list[dict[str, Any]] = await LangChainDocumentLoader(lang_docs).load()
             if self.researcher.vector_store is not None:
                 self.researcher.vector_store.load(langchain_documents_data)
-            research_data = [
-                await self._get_context_by_web_search(
-                    self.researcher.query,
-                    langchain_documents_data,
-                    query_domains=self.researcher.query_domains,
-                )
-            ]
-
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.LangChainVectorStore:
-            research_data = await self._get_context_by_vectorstore(
+            context: str = await self._get_context_by_web_search(
                 self.researcher.query,
-                self.researcher.vector_store_filter,
+                langchain_documents_data,
+                query_domains=self.researcher.query_domains,
             )
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Azure:
+            return [context]
+        except Exception as e:
+            self.logger.exception(f"Error handling LangChain documents: {e.__class__.__name__}: {e}")
+            return []
+
+    async def _handle_azure_documents(self) -> list[str]:
+        """Handles research using Azure Document Loader."""
+        try:
             from gpt_researcher.document.azure_document_loader import AzureDocumentLoader
 
             self.logger.info("Using Azure Document Loader")
@@ -268,33 +334,26 @@ class ResearchConductor:
             )
             azure_files: list[Any] = await azure_loader.load()
             document_data: list[dict[str, Any]] = await DocumentLoader(azure_files).load()  # Reuse existing loader
-            research_data = [await self._get_context_by_web_search(self.researcher.query, document_data)]
+            context: str = await self._get_context_by_web_search(self.researcher.query, document_data)
+            return [context]
+        except ImportError as e:
+            self.logger.exception(f"Azure Document Loader dependency not found: {e.__class__.__name__}: {e}")
+            return []
+        except Exception as e:
+            self.logger.exception(f"Error handling Azure documents: {e.__class__.__name__}: {e}")
+            return []
 
-        else:
-            raise ValueError(f"Invalid report source: {self.researcher.cfg.REPORT_SOURCE}")
-
-        # Ensure research_data is a list before extending context
-        if isinstance(research_data, str):
-            research_data = [research_data]
-        self.researcher.context.extend(research_data)
-
-        if self.researcher.cfg.CURATE_SOURCES:
-            self.logger.info("Curating sources")
-            self.researcher.context = await self.researcher.source_curator.curate_sources(research_data)
-
-        if self.researcher.cfg.VERBOSE:
-            await stream_output(
-                "logs",
-                "research_step_finalized",
-                f"Finalized research step.{os.linesep}💸 Total Research Costs: ${self.researcher.get_costs()}",
-                self.researcher.websocket,
-            )
-            if self.json_handler is not None:
-                self.json_handler.update_content("costs", self.researcher.get_costs())
-                self.json_handler.update_content("context", self.researcher.context)
-
-        self.logger.info(f"RESEARCH COMPLETED! Total Context Length: {len(str(self.researcher.context))}")
-        return self.researcher.context
+    async def _stream_research_finalization(self) -> None:
+        """Streams the final research step messages."""
+        await stream_output(
+            "logs",
+            "research_step_finalized",
+            f"Finalized research step.\n💸 Total Research Costs: ${self.researcher.get_costs()}",
+            self.researcher.websocket,
+        )
+        if self.json_handler is not None:
+            self.json_handler.update_content("costs", self.researcher.get_costs())
+            self.json_handler.update_content("context", self.researcher.context)
 
     async def _get_context_by_urls(
         self,
@@ -432,7 +491,7 @@ class ResearchConductor:
             self.logger.info(f"Combined context size: {len(context_str)}")
             return context_str
         except Exception as e:
-            self.logger.exception(f"Error during web search: {type(e).__name__}: {e}")
+            self.logger.exception(f"Error during web search: {e.__class__.__name__}: {e}")
             return ""
 
     async def _process_sub_query(
@@ -594,78 +653,57 @@ class ResearchConductor:
 
         # Iterate through all retrievers
         for retriever_class in self.researcher.retrievers:
-            if not issubclass(retriever_class, BaseRetriever):
-                self.logger.warning(f"Skipping non-Langchain retriever: {retriever_class.__name__}")
-                continue
+            if issubclass(retriever_class, BaseRetriever):
+                # Instantiate the retriever
+                try:
+                    # For Langchain retrievers, we need to check if they accept our parameters
+                    # Some may not accept query_domains or config
+                    retriever_params: dict[str, str] = {"query": query}
+                    retriever: BaseRetriever = retriever_class(**retriever_params)  # type: ignore[arg-type]
+                except TypeError as e:
+                    self.logger.exception(f"Error instantiating retriever {retriever_class.__name__}! {e.__class__.__name__}: {e}")
+                    continue
 
-            # Instantiate the retriever
-            try:
-                retriever: BaseRetriever = retriever_class(
-                    query=query,  # type: ignore[arg-type]
-                    query_domains=query_domains,  # type: ignore[arg-type]
-                )
-            except TypeError as e:
-                self.logger.error(f"Error instantiating retriever {retriever_class.__name__}: {e}")
-                continue
+                # Perform the search and collect URLs
+                try:
+                    search_results_list: Sequence[Document | dict[str, Any]] | None = await retriever.aget_relevant_documents(query)
+                    if search_results_list:
+                        search_urls: list[str] = [
+                            str(
+                                webpage.metadata.get(
+                                    "source",
+                                    webpage.metadata.get("href", ""),
+                                ) if isinstance(webpage, Document) else webpage.get("href", "")
+                            ).strip()
+                            for webpage in search_results_list
+                        ]
+                        new_search_urls.update(search_urls)
 
-            # Perform the search and collect URLs
-            try:
-                search_results: list[Document] | None = await retriever.aget_relevant_documents(
-                    query,
+                except Exception as e:
+                    self.logger.exception(f"Error during search with {retriever_class.__name__}! {e.__class__.__name__}: {e}")
+                    continue
+            else:
+                retriever = retriever_class(
+                    query, 
+                    query_domains=query_domains,
+                    config=self.researcher.cfg
+                )  # type: ignore[attr-defined]
+
+                search_results_list = await asyncio.to_thread(
+                    retriever.search,
                     max_results=self.researcher.cfg.MAX_SEARCH_RESULTS_PER_QUERY,
                 )
-                if search_results:
-                    search_urls: list[str] = [str(webpage.metadata.get("source", webpage.metadata.get("href", ""))).strip() for webpage in search_results]
-                    new_search_urls.update(search_urls)
 
-            except Exception as e:
-                self.logger.error(f"Error during search with {retriever_class.__name__}: {e.__class__.__name__}: {e}")
-                continue
+                if search_results_list:
+                    for url in search_results_list:
+                        href = str(url.get("href", "") or "").strip() if isinstance(url, dict) else str(url).strip()
+                        if href:
+                            new_search_urls.add(href)
 
         # Get unique and new URLs
         new_search_urls_list: list[str] = await self._get_new_urls(new_search_urls)
         random.shuffle(new_search_urls_list)
         return new_search_urls_list
-
-    async def _search_relevant_source_urls_legacy(
-        self,
-        query: str,
-        query_domains: list[str] | None = None,
-    ) -> list[str]:
-        """Legacy method for searching relevant source URLs (for non-Langchain retrievers).
-
-        Args:
-        ----
-            query (str): The query to search for.
-            query_domains (list[str] | None): Optional list of domains to focus the search on.
-
-        Returns:
-        -------
-            (list[str]): A list of URLs.
-        """
-        new_search_urls: list[str] = []
-
-        for retriever_class in self.researcher.retrievers:
-            try:
-                retriever = retriever_class(query, query_domains=query_domains)  # type: ignore
-
-                search_results: list[dict[str, Any]] = await asyncio.to_thread(
-                    retriever.search,  # type: ignore[attr-defined]
-                    max_results=self.researcher.cfg.MAX_SEARCH_RESULTS_PER_QUERY,
-                )
-
-                for url in search_results:
-                    href = str(url.get("href", "") or "").strip()
-                    if href:
-                        new_search_urls.append(href)
-
-            except Exception as e:
-                self.logger.error(f"Error with legacy retriever {retriever_class.__name__}: {e}")
-                continue
-
-        unique_new_urls: list[str] = await self._get_new_urls(set(new_search_urls))
-        random.shuffle(unique_new_urls)
-        return unique_new_urls
 
     async def _scrape_data_by_urls(
         self,
@@ -733,7 +771,7 @@ async def get_search_results_new(
             for doc in documents
         ]
     except Exception as e:
-        logger.error(f"Error getting search results with retriever {retriever.__name__}: {type(e).__name__}: {e}")
+        logger.exception(f"Error getting search results with retriever {retriever.__name__}! {e.__class__.__name__}: {e}")
         return []  # Return an empty list on error
 
 
@@ -782,7 +820,7 @@ async def generate_sub_queries(
             stream=False,
         )
     except Exception as e:
-        logger.warning(f"Error with strategic LLM ({cfg.STRATEGIC_LLM_MODEL}): {e.__class__.__name__}: {e}. Retrying with adjusted max_tokens.")
+        logger.warning(f"Error with strategic LLM ({cfg.STRATEGIC_LLM_MODEL}): {e.__class__.__name__}: {e}. Retrying with adjusted max_tokens.", exc_info=True)
         logger.warning("See https://github.com/assafelovic/gpt-researcher/issues/1022")
         try:
             # Retry with the *same* provider, but adjusted max_tokens
@@ -798,7 +836,7 @@ async def generate_sub_queries(
             logger.warning("Retry with adjusted max_tokens successful.")
 
         except Exception as e2:
-            logger.warning(f"Retry with adjusted max_tokens failed: {e2.__class__.__name__}: {e2}. Falling back to smart LLM.")
+            logger.warning(f"Retry with adjusted max_tokens failed: {e2.__class__.__name__}: {e2}. Falling back to smart LLM.", exc_info=True)
             # Fall back to smart LLM
             try:
                 provider = GenericLLMProvider(
@@ -824,22 +862,32 @@ async def generate_sub_queries(
         result: dict[str, Any] | list[Any] | str | float | int | bool | None | tuple[dict[str, Any] | list[Any] | str | float | int | bool | None, list[dict[str, str]]] = (
             json_repair.loads(response)
         )
+        # Validate the parsed JSON structure
+        if result is None:
+            logger.warning(f"JSON response parsed as None for query: {query}")
+            return []
     except (TypeError, ValueError) as e:
-        logger.exception(f"Failed to parse JSON response: {e.__class__.__name__}: {e}. Response: {response}")
+        logger.exception(f"Failed to parse JSON response for query '{query}': {e.__class__.__name__}: {e.__class__.__name__}: {e}")
+        logger.debug(f"Raw response that failed parsing: {response[:500]}...")
         return []
 
     if isinstance(result, float):
-        logger.exception(f"Unexpected float result: {result}")
+        logger.exception(f"Unexpected float result for query '{query}': {result}")
         return []
     if isinstance(result, dict):
-        return result.get("queries", [])
+        queries = result.get("queries", [])
+        logger.debug(f"Extracted {len(queries)} queries from dict result for '{query}'")
+        return queries
     if isinstance(result, (str, int)):
+        logger.debug(f"Converting single result to list for query '{query}': {result}")
         return [str(result)]  # Convert to string and wrap in a list
     if isinstance(result, list):
-        return [
+        flattened = [
             item
             for sublist in result  # Flatten list of lists
             for item in (sublist if isinstance(sublist, list) else [sublist])
         ]
-    logger.exception(f"Unexpected result type: `{result.__class__.__name__}`. Result: `{result!r}`")
+        logger.debug(f"Flattened {len(result)} list items to {len(flattened)} items for query '{query}'")
+        return flattened
+    logger.exception(f"Unexpected result type for query '{query}': `{result.__class__.__name__}`. Result: `{str(result)[:200]}...`")
     return []

@@ -388,31 +388,32 @@ async def generate_report(
             websocket=websocket,
         )
 
-        if cost_callback is not None:
-            from gpt_researcher.utils.costs import estimate_llm_cost
+        try:
+            if cost_callback is not None:
+                from gpt_researcher.utils.costs import estimate_llm_cost
 
-            llm_costs: float = estimate_llm_cost(content, report)
-            cost_callback(llm_costs)
+                llm_costs: float = estimate_llm_cost(content, report)
+                cost_callback(llm_costs)
+        except Exception as e:
+            logger.exception(f"Error in estimating LLM costs: {e.__class__.__name__}: {e}")
 
     except Exception as first_error:
         logger.exception(f"Error in generate_report: {first_error.__class__.__name__}: {first_error}")
+        provider: GenericLLMProvider = _get_llm(
+            cfg,
+            **params,
+        )
+        report = await provider.get_chat_response(
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"{agent_role_prompt}\n\n{content}",
+                },
+            ],
+            stream=True,
+            websocket=websocket,
+        )
         try:
-            # Try again with combined prompt
-            provider: GenericLLMProvider = _get_llm(
-                cfg,
-                **params,
-            )
-            report = await provider.get_chat_response(
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"{agent_role_prompt}\n\n{content}",
-                    },
-                ],
-                stream=True,
-                websocket=websocket,
-            )
-
             if cost_callback is not None:
                 from gpt_researcher.utils.costs import estimate_llm_cost
 

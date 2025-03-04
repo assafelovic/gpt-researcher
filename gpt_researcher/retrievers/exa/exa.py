@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from exa_py.api import SearchResponse, _Result
 from langchain_core.documents import Document
@@ -143,8 +143,8 @@ class ExaSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         """Initializes the ExaSearch object.
 
@@ -246,7 +246,7 @@ class ExaSearch:
 
     def search(
         self,
-        max_results: int = 10,
+        max_results: Optional[int] = None,
         use_autoprompt: bool = False,
         search_type: str = "neural",
         **filters: Any,
@@ -262,6 +262,12 @@ class ExaSearch:
         Returns:
             A list of search results.
         """
+        # If max_results is the default, check environment variable
+        if max_results is None:
+            max_results = int(os.environ.get("MAX_SOURCES", 10))
+            
+        logger.info(f"ExaSearch: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
+
         results: SearchResponse[_Result] = self.client.search(
             self.query,
             type=search_type,

@@ -80,9 +80,8 @@ class WebSocketManager:
         websocket: WebSocket | HTTPStreamAdapter,
         headers: dict[str, str] | None = None,
         query_domains: list[str] | None = None,
-    ):
+    ) -> str:
         """Start streaming the output."""
-        tone = Tone[tone] if isinstance(tone, str) else tone
         # add customized JSON config file path here
         config_path = "default"
         report: str = await run_agent(
@@ -122,10 +121,10 @@ async def run_agent(
     task: str,
     report_type: str | ReportType,
     report_source: str | ReportSource,
-    source_urls: list[str],
-    document_urls: list[str],
-    tone: Tone | str,
-    websocket: WebSocket | HTTPStreamAdapter,
+    source_urls: list[str] | None = None,
+    document_urls: list[str] | None = None,
+    tone: Tone | str | None = None,
+    websocket: WebSocket | HTTPStreamAdapter | None = None,
     headers: dict[str, str] | None = None,
     query_domains: list[str] | None = None,
     config_path: str = "",
@@ -133,6 +132,16 @@ async def run_agent(
     """Run the agent."""
     # Create logs handler for this research task
     logs_handler = CustomLogsHandler(websocket, task)
+    tone = (
+        Tone.__members__[tone.capitalize()]
+        if isinstance(tone, str)
+        and tone.capitalize() in Tone.__members__
+        else tone
+        if isinstance(tone, Tone)
+        else Tone(tone)
+        if tone is not None
+        else Tone.Objective
+    )
     report_type = (
         ReportType.__members__[report_type]
         if isinstance(report_type, str)

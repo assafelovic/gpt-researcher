@@ -10,6 +10,22 @@ from typing import Any, Dict, List, Union, get_args, get_origin
 
 from gpt_researcher.retrievers.utils import get_all_retriever_names
 from gpt_researcher.utils.enum import OutputFileType, ReportFormat, ReportSource, ReportType, Tone
+from gpt_researcher.prompts import (
+    PROMPT_GENERATE_SEARCH_QUERIES,
+    PROMPT_GENERATE_REPORT,
+    PROMPT_CURATE_SOURCES,
+    PROMPT_GENERATE_RESOURCE_REPORT,
+    PROMPT_GENERATE_CUSTOM_REPORT,
+    PROMPT_GENERATE_OUTLINE_REPORT,
+    PROMPT_AUTO_AGENT_INSTRUCTIONS,
+    PROMPT_CONDENSE_INFORMATION,
+    PROMPT_GENERATE_SUBTOPICS,
+    PROMPT_GENERATE_SUBTOPIC_REPORT,
+    PROMPT_GENERATE_DRAFT_TITLES,
+    PROMPT_GENERATE_REPORT_INTRODUCTION,
+    PROMPT_GENERATE_REPORT_CONCLUSION,
+    PROMPT_POST_RETRIEVAL_PROCESSING,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -52,6 +68,8 @@ class Config:
     )
     MAX_ITERATIONS: int = int(os.environ.get("MAX_ITERATIONS", 4))
     MAX_SEARCH_RESULTS_PER_QUERY: int = int(os.environ.get("MAX_SEARCH_RESULTS_PER_QUERY", 5))
+    MAX_SOURCES: int = int(os.environ.get("MAX_SOURCES", 10))
+    MAX_URLS: int = int(os.environ.get("MAX_URLS", 10))
     MAX_SUBTOPICS: int = int(os.environ.get("MAX_SUBTOPICS", 3))
     MEMORY_BACKEND: ReportSource = ReportSource.__members__[os.environ.get("MEMORY_BACKEND", ReportSource.Local.name) or ReportSource.Local.name]
     OUTPUT_FORMAT: OutputFileType = OutputFileType.__members__[os.environ.get("OUTPUT_FORMAT", OutputFileType.MARKDOWN.name) or OutputFileType.MARKDOWN.name]
@@ -84,20 +102,75 @@ class Config:
     )  # alternatively: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     USE_FALLBACKS: bool = True
     VERBOSE: bool = bool(os.environ.get("VERBOSE", False))
+    POST_RETRIEVAL_PROCESSING_INSTRUCTIONS: str = os.environ.get("POST_RETRIEVAL_PROCESSING_INSTRUCTIONS", "")
+    PROMPT_GENERATE_SEARCH_QUERIES: str = os.environ.get("PROMPT_GENERATE_SEARCH_QUERIES", PROMPT_GENERATE_SEARCH_QUERIES)
+    PROMPT_GENERATE_REPORT: str = os.environ.get("PROMPT_GENERATE_REPORT", PROMPT_GENERATE_REPORT)
+    PROMPT_CURATE_SOURCES: str = os.environ.get("PROMPT_CURATE_SOURCES", PROMPT_CURATE_SOURCES)
+    PROMPT_GENERATE_RESOURCE_REPORT: str = os.environ.get("PROMPT_GENERATE_RESOURCE_REPORT", PROMPT_GENERATE_RESOURCE_REPORT)
+    PROMPT_GENERATE_CUSTOM_REPORT: str = os.environ.get("PROMPT_GENERATE_CUSTOM_REPORT", PROMPT_GENERATE_CUSTOM_REPORT)
+    PROMPT_GENERATE_OUTLINE_REPORT: str = os.environ.get("PROMPT_GENERATE_OUTLINE_REPORT", PROMPT_GENERATE_OUTLINE_REPORT)
+    PROMPT_AUTO_AGENT_INSTRUCTIONS: str = os.environ.get("PROMPT_AUTO_AGENT_INSTRUCTIONS", PROMPT_AUTO_AGENT_INSTRUCTIONS)
+    PROMPT_CONDENSE_INFORMATION: str = os.environ.get("PROMPT_CONDENSE_INFORMATION", PROMPT_CONDENSE_INFORMATION)
+    PROMPT_GENERATE_SUBTOPICS: str = os.environ.get("PROMPT_GENERATE_SUBTOPICS", PROMPT_GENERATE_SUBTOPICS)
+    PROMPT_GENERATE_SUBTOPIC_REPORT: str = os.environ.get("PROMPT_GENERATE_SUBTOPIC_REPORT", PROMPT_GENERATE_SUBTOPIC_REPORT)
+    PROMPT_GENERATE_DRAFT_TITLES: str = os.environ.get("PROMPT_GENERATE_DRAFT_TITLES", PROMPT_GENERATE_DRAFT_TITLES)
+    PROMPT_GENERATE_REPORT_INTRODUCTION: str = os.environ.get("PROMPT_GENERATE_REPORT_INTRODUCTION", PROMPT_GENERATE_REPORT_INTRODUCTION)
+    PROMPT_GENERATE_REPORT_CONCLUSION: str = os.environ.get("PROMPT_GENERATE_REPORT_CONCLUSION", PROMPT_GENERATE_REPORT_CONCLUSION)
+    PROMPT_POST_RETRIEVAL_PROCESSING: str = os.environ.get("PROMPT_POST_RETRIEVAL_PROCESSING", PROMPT_POST_RETRIEVAL_PROCESSING)
+
+    def __new__(
+        cls,
+        config: Config | dict[str, Any] | os.PathLike | str | None = None,
+        **kwargs: Any,
+    ) -> Config:
+        obj = super().__new__(cls)
+        if config is not None:
+            if isinstance(config, Config):
+                cfg_path = Path(os.path.normpath(config.config_path)).expanduser().absolute()
+            elif isinstance(config, dict):
+                cfg_path = Config.from_dict(config).config_path
+            elif isinstance(config, (os.PathLike, str)):
+                cfg_path = Path(os.path.normpath(config)).expanduser().absolute()
+            else:
+                raise ValueError(f"Invalid config type: {config.__class__.__name__}, expected path-like or dict.")
+        else:
+            cfg_path = Path.home().joinpath(".gpt_researcher", "default.json").expanduser().absolute()
+        for k, v in kwargs.items():
+            setattr(obj, k, v)
+        obj.config_path = cfg_path
+        return obj
 
     def __init__(
         self,
-        config: os.PathLike | str | None = None,
+        config: Config | dict[str, Any] | os.PathLike | str | None = None,
         **kwargs: Any,
     ):
         """Initialize the config class."""
-        self.config_path: Path | None = None
-        if config is not None:
-            self.config_path = Path(os.path.normpath(config)).expanduser().absolute()
         self.llm_kwargs: dict[str, Any] = {}
         self.embedding_kwargs: dict[str, Any] = {}
+        if isinstance(config, Config):
+            self.config_path = Path(os.path.normpath(config.config_path)).expanduser().absolute()
+        elif isinstance(config, (os.PathLike, str)):
+            self.config_path = Path(os.path.normpath(config)).expanduser().absolute()
+        elif isinstance(config, dict):
+            config_path = config.get("config_path")
+            if config_path is None:
+                self.config_path = Path.home().joinpath(".gpt_researcher", "default.json").expanduser().absolute()
+            else:
+                self.config_path = Path(os.path.normpath(config_path)).expanduser().absolute()
 
-        config_to_use: dict[str, Any] = self.default_config_dict() if config == "default" or config is None else self._create_config_dict(config)
+        else:
+            self.config_path = Path.home().joinpath(".gpt_researcher", "default.json").expanduser().absolute()
+
+        config_to_use: dict[str, Any] = {}
+        if not os.path.exists(self.config_path) and not os.path.isfile(self.config_path):
+            config_to_use = (
+                self.default_config_dict()
+                if config == "default" or config is None
+                else self._create_config_dict(config.to_dict() if isinstance(config, Config) else config)
+            )
+        else:
+            config_to_use = self._create_config_dict(self.config_path)
         config_to_use.update(kwargs)  # type: ignore
         for key, value in config_to_use.items():
             setattr(self, key, value)
@@ -127,11 +200,21 @@ class Config:
     @classmethod
     def from_config(
         cls,
-        config: dict[str, Any],
+        config: dict[str, Any] | Config,
     ) -> Config:
         """Load a configuration from a dictionary."""
-        config_dict: dict[str, Any] = cls._create_config_dict(config)
-        return cls(None, **config_dict)
+        return cls(
+            None,
+            **(config.to_dict() if isinstance(config, Config) else config),
+        )
+
+    @classmethod
+    def from_dict(
+        cls,
+        config: dict[str, Any] | Config,
+    ) -> Config:
+        """Load a configuration from a dictionary."""
+        return cls.from_config(config)
 
     def to_dict(self) -> dict[str, Any]:
         """Return the config as a dictionary."""
@@ -186,9 +269,8 @@ class Config:
         if upper_key not in Config.__annotations__:
             super().__setattr__(key, value)
             return
-        env_value: str | None = os.environ.get(key)
-        if env_value is None:
-            super().__setattr__(key, value)
+        env_value: str = os.environ.get(key, "") or ""
+        if not env_value:
             return
         value = self.convert_env_value(
             key,
@@ -196,6 +278,7 @@ class Config:
             Config.__annotations__[upper_key],
         )
         os.environ[upper_key] = str(value)
+        super().__setattr__(key, str(value))
 
     def _setup_llms(self) -> None:
         embedding_provider: str | None = os.environ.get("EMBEDDING_PROVIDER")

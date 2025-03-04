@@ -9,6 +9,8 @@ from gpt_researcher.context.compression import (
     VectorstoreCompressor,
     WrittenContentCompressor,
 )
+from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
+from gpt_researcher.prompts import post_retrieval_processing
 
 if TYPE_CHECKING:
     from gpt_researcher.agent import GPTResearcher
@@ -22,6 +24,18 @@ class ContextManager:
         researcher: GPTResearcher,
     ):
         self.researcher: GPTResearcher = researcher
+        self.llm_provider: GenericLLMProvider | None = None
+
+    def _get_llm(self) -> GenericLLMProvider:
+        """Get or create an LLM provider instance."""
+        if self.llm_provider is None:
+            self.llm_provider = GenericLLMProvider(
+                self.researcher.cfg.SMART_LLM_PROVIDER,
+                model=self.researcher.cfg.SMART_LLM_MODEL,
+                temperature=self.researcher.cfg.TEMPERATURE,
+                fallback_models=self.researcher.cfg.FALLBACK_MODELS,
+            )
+        return self.llm_provider
 
     async def get_similar_content_by_query(
         self,
@@ -40,11 +54,54 @@ class ContextManager:
             documents=pages,
             embeddings=self.researcher.memory.get_embeddings(),
         )
-        return await context_compressor.async_get_context(
+        content = await context_compressor.async_get_context(
             query=query,
             max_results=10,
             cost_callback=self.researcher.add_costs,
         )
+        
+        # Apply post-retrieval processing if instructions are provided
+        if self.researcher.cfg.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS and content:
+            if self.researcher.cfg.VERBOSE:
+                await stream_output(
+                    "logs",
+                    "post_retrieval_processing",
+                    "🔍 Applying post-retrieval processing to content...",
+                    self.researcher.websocket,
+                )
+            
+            provider = self._get_llm()
+            processing_prompt = post_retrieval_processing(
+                query=query,
+                content=content,
+                processing_instructions=self.researcher.cfg.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS,
+            )
+            
+            processed_content = await provider.get_chat_response(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"{self.researcher.agent_role}",
+                    },
+                    {
+                        "role": "user",
+                        "content": processing_prompt,
+                    },
+                ],
+                stream=False,
+            )
+            
+            if self.researcher.add_costs:
+                from gpt_researcher.utils.costs import estimate_llm_cost
+                llm_costs = estimate_llm_cost(
+                    processing_prompt,
+                    processed_content,
+                )
+                self.researcher.add_costs(llm_costs)
+            
+            return processed_content
+        
+        return content
 
     async def get_similar_content_by_query_with_vectorstore(
         self,
@@ -55,13 +112,56 @@ class ContextManager:
             await stream_output(
                 "logs",
                 "fetching_query_format",
-                f" Getting relevant content based on query: {query}...",
+                f"📚 Getting relevant content based on query: {query}...",
                 self.researcher.websocket,
             )
         if self.researcher.vector_store is None:
             raise ValueError("Vector store is not initialized")
         vectorstore_compressor = VectorstoreCompressor(self.researcher.vector_store, filter=filter)
-        return await vectorstore_compressor.async_get_context(query=query, max_results=8)
+        content = await vectorstore_compressor.async_get_context(query=query, max_results=8)
+        
+        # Apply post-retrieval processing if instructions are provided
+        if self.researcher.cfg.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS and content:
+            if self.researcher.cfg.VERBOSE:
+                await stream_output(
+                    "logs",
+                    "post_retrieval_processing",
+                    "🔍 Applying post-retrieval processing to content...",
+                    self.researcher.websocket,
+                )
+            
+            provider = self._get_llm()
+            processing_prompt = post_retrieval_processing(
+                query=query,
+                content=content,
+                processing_instructions=self.researcher.cfg.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS,
+            )
+            
+            processed_content = await provider.get_chat_response(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"{self.researcher.agent_role}",
+                    },
+                    {
+                        "role": "user",
+                        "content": processing_prompt,
+                    },
+                ],
+                stream=False,
+            )
+            
+            if self.researcher.add_costs:
+                from gpt_researcher.utils.costs import estimate_llm_cost
+                llm_costs = estimate_llm_cost(
+                    processing_prompt,
+                    processed_content,
+                )
+                self.researcher.add_costs(llm_costs)
+            
+            return processed_content
+        
+        return content
 
     async def get_similar_written_contents_by_draft_section_titles(
         self,

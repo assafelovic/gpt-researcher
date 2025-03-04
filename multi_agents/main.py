@@ -51,7 +51,7 @@ async def run_research_task(
         Coroutine[Any, Any, Any],
     ]
     | None = None,
-    tone: Tone | str = Tone.Objective,
+    tone: Tone | str | None = None,
     headers: dict[str, Any] | None = None,
 ) -> str:
     from multi_agents.agents import ChiefEditorAgent

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 
-from typing import Any
+from typing import Any, Optional
 
 import requests
 
@@ -17,8 +17,8 @@ class CustomRetriever:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         self.endpoint: str | None = os.getenv("RETRIEVER_ENDPOINT")
         if not self.endpoint:
@@ -27,6 +27,8 @@ class CustomRetriever:
         self.params: dict[str, Any] = self._populate_params()
         self.query: str = query
         self.query_domains: list[str] | None = query_domains
+        # Extract config from kwargs if provided
+        self.config = kwargs.get("config") if kwargs else None
 
     def _populate_params(self) -> dict[str, Any]:
         """Populates parameters from environment variables prefixed with 'RETRIEVER_ARG_'."""
@@ -34,7 +36,7 @@ class CustomRetriever:
 
     def search(
         self,
-        max_results: int = 5,
+        max_results: Optional[int] = None,
     ) -> list[dict[str, Any]] | None:
         """Performs the search using the custom retriever endpoint.
 
@@ -56,6 +58,13 @@ class CustomRetriever:
               }
             ]
         """
+        # Use the provided max_results, or get it from config, or use default
+        if max_results is None:
+            if self.config and hasattr(self.config, "MAX_SOURCES"):
+                max_results = self.config.MAX_SOURCES
+            else:
+                max_results = 5  # Default fallback
+                
         assert self.endpoint is not None
         try:
             response: requests.Response = requests.get(

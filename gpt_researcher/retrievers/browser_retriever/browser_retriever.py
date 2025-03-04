@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import time
 
-from typing import Any, List
+from typing import Any, List, Optional
 
 import cv2
 import numpy as np
@@ -14,6 +15,7 @@ from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain.schema import Document
 from langchain_core.retrievers import BaseRetriever
 from playwright.sync_api import Browser, Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
+from playwright.sync_api._generated import Playwright
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -23,8 +25,8 @@ class BrowserRetriever(BaseRetriever):
         self,
         headless: bool = True,
         vision_threshold: float = 0.8,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """
         Initialize browser session with vision capabilities.
@@ -42,7 +44,7 @@ class BrowserRetriever(BaseRetriever):
     def _init_browser(self):
         """Initialize Playwright browser instance."""
         if self.browser is None:
-            self.playwright = sync_playwright().start()
+            self.playwright: Playwright = sync_playwright().start()
             self.browser = self.playwright.chromium.launch(headless=self.headless)
             self.page = self.browser.new_page()
 
@@ -59,7 +61,7 @@ class BrowserRetriever(BaseRetriever):
         query: str,
         *,
         run_manager: CallbackManagerForRetrieverRun,
-        max_results: int = 5,
+        max_results: Optional[int] = None,
         timeout: int = 60000,
     ) -> List[Document]:
         """Execute visual web interaction flow:
@@ -80,6 +82,10 @@ class BrowserRetriever(BaseRetriever):
         -------
             List[Document]: List containing one Document with the page content.
         """
+        # If max_results is the default, check environment variable
+        if max_results is None:
+            max_results = int(os.environ.get("MAX_SOURCES", 10))
+
         self._init_browser()
         try:
             # Navigate to a predetermined website (can be parameterized)
@@ -120,7 +126,7 @@ class BrowserRetriever(BaseRetriever):
         query: str,
         *,
         run_manager: CallbackManagerForRetrieverRun,
-        max_results: int = 5,
+        max_results: Optional[int] = None,
     ) -> List[Document]:
         """Asynchronous version of _get_relevant_documents.
 
@@ -136,13 +142,20 @@ class BrowserRetriever(BaseRetriever):
         -------
             List[Document]: The list of documents.
         """
+        # If max_results is the default, check environment variable
+        if max_results is None:
+            max_results = int(os.environ.get("MAX_SOURCES", 10))
+
         from functools import partial
 
         loop = asyncio.get_event_loop()
         func = partial(self._get_relevant_documents, query=query, run_manager=run_manager, max_results=max_results)
         return await loop.run_in_executor(None, func)
 
-    def _visual_element_detection(self, screenshot: bytes) -> List[dict]:
+    def _visual_element_detection(
+        self,
+        screenshot: bytes,
+    ) -> List[dict]:
         """
         Core vision pipeline using OpenCV and Tesseract.
 
@@ -191,8 +204,7 @@ class BrowserRetriever(BaseRetriever):
         element: dict[str, Any],
         query: str,
     ):
-        """
-        Execute a human-like interaction with a detected element using Playwright.
+        """Execute a human-like interaction with a detected element using Playwright.
 
         This function simulates user interactions such as clicking and typing,
         based on the detected element's properties.

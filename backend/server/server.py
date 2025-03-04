@@ -3,33 +3,33 @@ from __future__ import annotations
 import logging
 import os
 
-from fastapi import FastAPI, File, Request, UploadFile, WebSocket, WebSocketDisconnect
+from typing import TYPE_CHECKING
+
+from fastapi import FastAPI, File, UploadFile, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from gpt_researcher.utils.logging_config import setup_research_logging
 from pydantic import BaseModel
 
-from backend.server.server_utils import (
-    execute_multi_agents,
-    handle_file_deletion,
-    handle_file_upload,
-    handle_websocket_communication,
-)
+from backend.server.server_utils import execute_multi_agents, handle_file_deletion, handle_file_upload, handle_websocket_communication
 from backend.server.websocket_manager import WebSocketManager
 
-# Get logger instance
-logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    from fastapi import Request, WebSocket
+    from fastapi.responses import JSONResponse
+    from starlette.templating import _TemplateResponse
 
-# Don't override parent logger settings
-logger.propagate = True
+
+logger: logging.Logger = logging.getLogger(__name__)  # Get logger instance
+logger.propagate = True  # Don't override parent logger settings
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler()  # Only log to console
-    ],
+    handlers=[logging.StreamHandler()],  # Only log to console
 )
+
 
 # Models
 
@@ -56,7 +56,6 @@ class ConfigRequest(BaseModel):
     SERPER_API_KEY: str = ""
     SEARX_URL: str = ""
     XAI_API_KEY: str
-    DEEPSEEK_API_KEY: str
 
 
 # App initialization
@@ -91,34 +90,46 @@ def startup_event():
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
     os.makedirs(DOC_PATH, exist_ok=True)
 
+    # Setup research logging
+    log_file, json_file, research_logger, json_handler = setup_research_logging()  # Unpack all 4 values
+    research_logger.json_handler = json_handler  # Store the JSON handler on the logger  # pyright: ignore[reportAttributeAccessIssue]
+    research_logger.info(f"Research log file: {log_file}")
+    research_logger.info(f"Research JSON file: {json_file}")
+
 
 # Routes
 
 
 @app.get("/")
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "report": None})
+async def read_root(request: Request) -> _TemplateResponse:
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "report": None,
+        },
+    )
 
 
 @app.get("/files/")
-async def list_files():
-    files = os.listdir(DOC_PATH)
-    logger.debug(f"Files in '{DOC_PATH}': {files}")
+async def list_files() -> dict[str, list[str]]:
+    files: list[str] = os.listdir(DOC_PATH)
+    print(f"Files in {DOC_PATH}: {files}")
     return {"files": files}
 
 
 @app.post("/api/multi_agents")
-async def run_multi_agents():
+async def run_multi_agents() -> JSONResponse:
     return await execute_multi_agents(manager)
 
 
 @app.post("/upload/")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...)) -> dict[str, str]:
     return await handle_file_upload(file, DOC_PATH)
 
 
 @app.delete("/files/{filename}")
-async def delete_file(filename: str):
+async def delete_file(filename: str) -> JSONResponse:
     return await handle_file_deletion(filename, DOC_PATH)
 
 

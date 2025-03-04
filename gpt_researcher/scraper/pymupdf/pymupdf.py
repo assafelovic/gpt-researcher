@@ -17,7 +17,7 @@ class PyMuPDFScraper:
         self,
         link: str,
         session: requests.Session | None = None,
-        *args: Any,  # provided for compatibility with other scrapers
+        *_: Any,
         **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """Initialize the scraper with a link and an optional session.
@@ -28,7 +28,6 @@ class PyMuPDFScraper:
         """
         self.link: str = link
         self.session: requests.Session | None = session
-        self.args: tuple[Any, ...] = args
         self.kwargs: dict[str, Any] = kwargs
 
     def is_url(self) -> bool:

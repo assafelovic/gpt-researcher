@@ -6,6 +6,7 @@ import os
 
 from typing import Any
 
+from aiohttp_retry import Optional
 import requests
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -174,8 +175,8 @@ class SerperSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         """Initializes the SerperSearch object.
 
@@ -206,7 +207,7 @@ class SerperSearch:
 
     def search(
         self,
-        max_results: int = 7,
+        max_results: Optional[int] = None,
     ) -> list[dict[str, str]]:
         """Searches the query.
 
@@ -215,6 +216,11 @@ class SerperSearch:
         Returns:
             list[dict[str, str]]: A list of dictionaries containing the search results.
         """
+        # If max_results is the default, check environment variable
+        if max_results is None:
+            max_results = int(os.environ.get("MAX_SOURCES", 7))
+            
+        logger.info(f"SerperSearch: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
         print("Searching with query {0}...".format(self.query))
 
         # Search the query (see https://serper.dev/playground for the format)

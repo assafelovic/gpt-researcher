@@ -7,7 +7,7 @@ import logging
 # libraries
 import os
 
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 import requests
@@ -26,8 +26,8 @@ class BingSearch(BaseRetriever):
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """Initialize the BingSearch retriever.
 
@@ -40,16 +40,25 @@ class BingSearch(BaseRetriever):
         self.query_domains: list[str] | None = query_domains or None
         self.api_key: str = self.get_api_key()
         self.logger: logging.Logger = logging.getLogger(__name__)
+        # Extract config from kwargs if provided
+        self.config = kwargs.get("config") if kwargs else None
 
     def search(
         self,
-        max_results: int = 7,
+        max_results: Optional[int] = None,
     ) -> list[dict[str, Any]]:
         """
         Searches the query
         Returns:
             list[dict[str, Any]]: A list of dictionaries containing the search results.
         """
+        # Use the provided max_results, or get it from config, or use default
+        if max_results is None:
+            if self.config and hasattr(self.config, "MAX_SOURCES"):
+                max_results = self.config.MAX_SOURCES
+            else:
+                max_results = 7  # Default fallback
+                
         print("Searching with query {0}...".format(self.query))
         """Useful for general internet search queries using the Bing API."""
 
@@ -119,14 +128,12 @@ class BingSearch(BaseRetriever):
         query: str,
         *,
         run_manager: CallbackManagerForRetrieverRun,
-        max_results: int = 7,
     ) -> list[Document]:
         """Get documents relevant to a query using Bing Search API.
 
         Args:
             query: The search query string.
             run_manager: Callback manager for the retriever run.
-            max_results: Maximum number of results to return. Defaults to 7.
 
         Returns:
             List of relevant documents.
@@ -138,6 +145,12 @@ class BingSearch(BaseRetriever):
             "Ocp-Apim-Subscription-Key": self.api_key,
             "Content-Type": "application/json",
         }
+        
+        # Use config MAX_SOURCES if available, otherwise use default
+        max_results = 7
+        if self.config and hasattr(self.config, "MAX_SOURCES"):
+            max_results = self.config.MAX_SOURCES
+            
         params: dict[str, Any] = {
             "responseFilter": "Webpages",
             "q": query,
@@ -190,7 +203,6 @@ class BingSearch(BaseRetriever):
         query: str,
         *,
         run_manager: CallbackManagerForRetrieverRun,
-        max_results: int = 7,
     ) -> list[Document]:
         """Asynchronously get documents relevant to a query.
 
@@ -203,6 +215,12 @@ class BingSearch(BaseRetriever):
             "Ocp-Apim-Subscription-Key": self.api_key,
             "Content-Type": "application/json",
         }
+        
+        # Use config MAX_SOURCES if available, otherwise use default
+        max_results = 7
+        if self.config and hasattr(self.config, "MAX_SOURCES"):
+            max_results = self.config.MAX_SOURCES
+            
         params: dict[str, Any] = {
             "responseFilter": "Webpages",
             "q": query,

@@ -35,6 +35,30 @@ Thanks to our community, we have integrated the following web search engines:
 - [Exa](https://docs.exa.ai/reference/getting-started) - Env: `RETRIEVER=exa`
 - [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`
 
+## Post-Retrieval Processing
+
+GPT Researcher now supports post-retrieval processing, which allows you to apply custom instructions to the retrieved content before it's used in the research report. This feature is useful for extracting specific information, formatting content in a particular way, or highlighting the most important parts of the retrieved information.
+
+To use this feature, set the `POST_RETRIEVAL_PROCESSING_INSTRUCTIONS` environment variable with your custom instructions:
+
+```bash
+POST_RETRIEVAL_PROCESSING_INSTRUCTIONS="In the provided text, please tell me the most important exact snippets, formatted in markdown quote blocks, citing the most important pieces of information and the information necessary to follow to continue this line of research, e.g. user asks a question on reddit, one post says 'check this out: link'. it has the most upvotes. click it."
+```
+
+You can also set this programmatically:
+
+```python
+from gpt_researcher.agent import GPTResearcher
+
+researcher = GPTResearcher(
+    query="What are the latest advancements in quantum computing?",
+    report_type="research_report",
+)
+researcher.post_retrieval_processing_instructions = "Extract and format the most important information as markdown quote blocks, highlighting key statistics and findings."
+```
+
+The post-retrieval processing is applied to all retrieved content before it's used in the research report, allowing for more focused and better-formatted information.
+
 ## Custom Retrievers
 
 You can also use any custom retriever of your choice by specifying the `RETRIEVER=custom` env var.

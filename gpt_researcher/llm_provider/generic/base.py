@@ -170,7 +170,7 @@ class ModelFactory:
             return GenericLLMProvider._create_model_for_provider(provider_name, **kwargs)
         except ImportError as e:
             init(autoreset=True)
-            raise ImportError(f"{Fore.RED}Unable to import required package: {str(e)}") from e
+            raise ImportError(f"{Fore.RED}Unable to import required package: {e.__class__.__name__}: {e}")  # from e
         except ValueError as e:
             raise ValueError(f"{Fore.RED}Unsupported provider: '{provider_name}'.\nSupported providers: [{', '.join(_SUPPORTED_PROVIDERS)}]") from e
 
@@ -667,12 +667,12 @@ class GenericLLMProvider:
         ]
 
     @classmethod
-    def _convert_to_str(
+    def msgs_to_str(
         cls,
         msg: BaseMessage | str | dict | list,
     ) -> str:
-        """
-        Convert various message types to string.
+        """Convert various message types to string.
+
         Handles BaseMessage, dict, list, and string formats.
         """
         if isinstance(msg, str):
@@ -689,7 +689,7 @@ class GenericLLMProvider:
                 return str(content)
         elif isinstance(msg, list):
             # Convert each item once and filter, then join
-            converted_items: list[str] = [cls._convert_to_str(item) for item in msg]
+            converted_items: list[str] = [cls.msgs_to_str(item) for item in msg]
             return "\n".join(item for item in converted_items if item.strip())
         else:
             return str(msg)
@@ -721,16 +721,17 @@ class GenericLLMProvider:
                     if stream:
                         return await self._stream_response(model, messages, websocket)
                     response: BaseMessage = await model.ainvoke(messages, headers=headers)
-                    result: str = self._convert_to_str(response)
+                    result: str = self.msgs_to_str(response)
                     if info.provider in self._error_tracker.consecutive_provider_failures:
                         self._error_tracker.consecutive_provider_failures[info.provider] = 0
-                    if cost_callback:
+                    if cost_callback is not None:
                         from gpt_researcher.utils.costs import estimate_llm_cost
 
-                        cost_callback(estimate_llm_cost(self._convert_to_str(list(messages)), result))
+                        cost_callback(estimate_llm_cost(self.msgs_to_str(list(messages)), result))
                     logger.info(f"Successfully got response from {info.model_id}")
                     return result
                 except Exception as e:
+                    logger.exception(f"Error getting response from {info.provider}/{getattr(info.model, 'model', model.name)}! {e.__class__.__name__}: {e}")
                     self._error_tracker.record_failure(info.model_id, info.provider, e)
                     if retry == max_retries - 1:
                         logger.warning(f"Model {info.model_id} failed after {max_retries} attempts")
@@ -750,7 +751,7 @@ class GenericLLMProvider:
         response: str = ""
         try:
             async for chunk in model.astream(messages):
-                content: str = self._convert_to_str(chunk)
+                content: str = self.msgs_to_str(chunk)
                 response += content
                 paragraph += content
                 if "\n" in content:

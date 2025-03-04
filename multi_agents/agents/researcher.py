@@ -21,17 +21,24 @@ class ResearchAgent:
         self,
         websocket: WebSocket | HTTPStreamAdapter | None = None,
         stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, Any]] | None = None,
-        tone: Tone | str | None = Tone.Objective,
+        tone: Tone | str | None = None,
         headers: dict[str, Any] | None = None,
     ):
         self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
         self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, Any]] | None = stream_output
         self.headers: dict[str, Any] = {} if headers is None else headers
-        self.tone: Tone = Tone.Objective
-        if isinstance(tone, str):
-            self.tone = Tone.__members__[tone]
-        elif isinstance(tone, Tone):
-            self.tone = tone
+        self.tone: Tone = (
+            Tone.Objective
+            if tone is None
+            else Tone.__members__[tone.capitalize()]
+            if isinstance(tone, str)
+            and tone.capitalize() in Tone.__members__
+            else tone
+            if isinstance(tone, Tone)
+            else Tone(tone)
+            if isinstance(tone, str)
+            else Tone.Objective
+        )
 
     async def research(
         self,
@@ -39,8 +46,8 @@ class ResearchAgent:
         research_report: str = "research_report",
         parent_query: str = "",
         verbose: bool = True,
-        source: ReportSource | str = ReportSource.Web,
-        tone: Tone | str | None = Tone.Objective,
+        source: ReportSource | str | None = None,
+        tone: Tone | str | None = None,
         headers: dict[str, Any] | None = None,
     ) -> str:
         if headers:
@@ -53,8 +60,8 @@ class ResearchAgent:
             report_type=research_report,
             parent_query=parent_query,
             verbose=verbose,
-            report_source=source.value if isinstance(source, ReportSource) else source,
-            tone=tone.value if isinstance(tone, Tone) else tone,
+            report_source=source,
+            tone=tone,
             websocket=self.websocket,
             headers=self.headers,
         )
@@ -69,7 +76,7 @@ class ResearchAgent:
         parent_query: str,
         subtopic: str,
         verbose: bool = True,
-        source: ReportSource | str = ReportSource.Web,
+        source: ReportSource | str | None = None,
         headers: dict[str, Any] | None = None,
     ) -> dict[str, str]:
         try:
@@ -123,10 +130,10 @@ class ResearchAgent:
 
     async def run_depth_research(
         self,
-        draft_state: dict[str, Any],
+        draft_state: dict[str, Any] | None = None,
     ) -> dict[str, dict[str, Any]]:
-        task: dict[str, Any] = draft_state.get("task", {})
-        task = {} if task is None else task
+        draft_state = {} if draft_state is None else draft_state
+        task: dict[str, Any] = draft_state.get("task", {}) or {}
 
         topic: str | None = draft_state.get("topic", "")
         topic = "" if topic is None else str(topic).strip()
@@ -135,7 +142,14 @@ class ResearchAgent:
         parent_query = "" if parent_query is None else str(parent_query).strip()
 
         source: str | None = task.get("source", "web")
-        report_source: ReportSource = ReportSource.Web if source is None else ReportSource.__members__[source.lower().capitalize()]
+        report_source: ReportSource = (
+            ReportSource.__members__[source.lower().capitalize()]
+            if isinstance(source, str)
+            and source.lower().capitalize() in ReportSource.__members__
+            else ReportSource(source.casefold())
+            if isinstance(source, str)
+            else ReportSource.Web
+        )
 
         v = task.get("verbose", True)
         verbose: bool = True if v is None else bool(v)

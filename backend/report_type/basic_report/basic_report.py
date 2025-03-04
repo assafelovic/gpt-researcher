@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from gpt_researcher import GPTResearcher
 from backend.server.server_utils import CustomLogsHandler
 from gpt_researcher.utils.enum import ReportFormat, ReportSource, Tone, ReportType
+from gpt_researcher.config import Config
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
@@ -27,7 +28,12 @@ class BasicReport:
         report_format: str | ReportFormat | None = None,
         headers: dict[str, Any] | None = None,
         query_domains: list[str] | None = None,
+        config: Config | None = None,
+        **kwargs: Any,
     ):
+        self.cfg: Config = Config(config_path) if config is None else config
+        for key, value in kwargs.items():
+            self.cfg.__setattr__(key, value)
         self.query: str = query
         self.report_type: ReportType = ReportType(report_type) if isinstance(report_type, str) else report_type
         self.report_source: ReportSource = ReportSource(report_source) if isinstance(report_source, str) else report_source
@@ -67,5 +73,9 @@ class BasicReport:
         )
 
         _research_context: str | list[str] = await researcher.conduct_research()
-        report: str = await researcher.write_report()
+        report: str = await researcher.write_report(
+            existing_headers=[researcher.headers],
+            relevant_written_contents=researcher.context,
+            external_context=[],
+        )
         return report

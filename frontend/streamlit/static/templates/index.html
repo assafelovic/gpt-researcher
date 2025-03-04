@@ -16,6 +16,25 @@
     </head>
     <body>
         {% import "form_fields.html" as forms %}
+        
+        <!-- Dark mode toggle -->
+        <div class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="sun-icon">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="moon-icon" style="display: none;">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </div>
+        
         <div class="side-features">
             <div class="feature">
                 <h3>🚀 Fast Results</h3>
@@ -64,7 +83,7 @@
                 </div>
             </div>
 
-            <form id="researchForm" onsubmit="startResearch(event)">
+            <form id="research-form" method="post" enctype="multipart/form-data">
                 <!-- Basic Options -->
                 <div class="form-group">
                     <label for="query">What would you like to research?</label>
@@ -108,7 +127,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="file-label" for="documents">Upload Research Documents</label>
+                    <label>Upload Research Documents</label>
+                    <div id="fileUploadArea" class="file-upload-area">
+                        <div class="file-upload-icon">📄</div>
+                        <p>Drag and drop files here or click to browse</p>
+                        <p class="help-text">Upload PDFs, DOCs, or other research materials to include in the research</p>
+                    </div>
                     <input
                         type="file"
                         id="documents"
@@ -118,7 +142,6 @@
                         accept=".pdf,.doc,.docx,.txt,.md"
                     />
                     <div class="selected-files" id="selectedFiles"></div>
-                    <p class="help-text">Upload PDFs, DOCs, or other research materials to include in the research</p>
                 </div>
 
                 <!-- Advanced Options Toggle -->
@@ -144,6 +167,35 @@
                     {{ forms.render_input("similarity_threshold", config.SIMILARITY_THRESHOLD, type="number", min=0, max=1, step=0.01) }}
                     {{ forms.render_input("temperature", config.TEMPERATURE, type="number", min=0, max=1, step=0.01) }}
 
+                    <div class="section-title">Default Settings</div>
+                    <div class="form-group">
+                        <label for="defaultReportType">Default Report Type</label>
+                        <select id="defaultReportType" name="defaultReportType">
+                            {% for key, value in report_types.items() %}
+                                <option value="{{ key }}" {% if key == config.REPORT_TYPE %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="help-text">Default report type for new research</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="defaultReportFormat">Default Report Format</label>
+                        <select id="defaultReportFormat" name="defaultReportFormat">
+                            {% for key, value in report_formats.items() %}
+                                <option value="{{ key }}" {% if key == config.REPORT_FORMAT %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="help-text">Default report format for new research</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="themeSelect">Theme</label>
+                        <select id="themeSelect" name="themeSelect">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="system">System Default</option>
+                        </select>
+                        <p class="help-text">UI theme preference</p>
+                    </div>
+
                     <div class="section-title">LLM Configuration</div>
                     {{ forms.render_input("fast_llm", config.FAST_LLM) }}
                     {{ forms.render_input("fast_token_limit", config.FAST_TOKEN_LIMIT, type="number", min=1) }}
@@ -168,7 +220,50 @@
                     {{ forms.render_checkbox("verbose", config.VERBOSE) }}
                     {{ forms.render_checkbox("curate_sources", config.CURATE_SOURCES) }}
                     {{ forms.render_checkbox("use_fallbacks", config.USE_FALLBACKS) }}
-                    {{ forms.render_input("fallback_models", ",".join(config.FALLBACK_MODELS)) }}
+                    <div class="form-group">
+                        <label for="fallback_models">Fallback Models</label>
+                        <input
+                            type="text"
+                            id="fallback_models"
+                            name="fallback_models"
+                            value="{{ ','.join(config.FALLBACK_MODELS) }}"
+                        />
+                        <p class="help-text">Comma-separated list of fallback models</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="embedding_fallback_models">Embedding Fallback Models</label>
+                        <input
+                            type="text"
+                            id="embedding_fallback_models"
+                            name="embedding_fallback_models"
+                            value="{{ ','.join(config.EMBEDDING_FALLBACK_MODELS) }}"
+                        />
+                        <p class="help-text">Comma-separated list of embedding fallback models</p>
+                    </div>
+                    {{ forms.render_input("max_sources", config.MAX_SOURCES, type="number", min=1) }}
+                    {{ forms.render_input("max_urls", config.MAX_URLS, type="number", min=1) }}
+                    {{ forms.render_input("agent_role", config.AGENT_ROLE) }}
+                    {{ forms.render_input("doc_path", config.DOC_PATH) }}
+                    {{ forms.render_input("fast_llm_temperature", config.FAST_LLM_TEMPERATURE, type="number", min=0, max=1, step=0.01) }}
+                    {{ forms.render_input("smart_llm_temperature", config.SMART_LLM_TEMPERATURE, type="number", min=0, max=1, step=0.01) }}
+                    {{ forms.render_input("strategic_llm_temperature", config.STRATEGIC_LLM_TEMPERATURE, type="number", min=0, max=1, step=0.01) }}
+                    
+                    <div class="section-title">Prompt Customization</div>
+                    {{ forms.render_input("post_retrieval_processing_instructions", config.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS) }}
+                    {{ forms.render_input("prompt_generate_search_queries", config.PROMPT_GENERATE_SEARCH_QUERIES) }}
+                    {{ forms.render_input("prompt_generate_report", config.PROMPT_GENERATE_REPORT) }}
+                    {{ forms.render_input("prompt_curate_sources", config.PROMPT_CURATE_SOURCES) }}
+                    {{ forms.render_input("prompt_generate_resource_report", config.PROMPT_GENERATE_RESOURCE_REPORT) }}
+                    {{ forms.render_input("prompt_generate_custom_report", config.PROMPT_GENERATE_CUSTOM_REPORT) }}
+                    {{ forms.render_input("prompt_generate_outline_report", config.PROMPT_GENERATE_OUTLINE_REPORT) }}
+                    {{ forms.render_input("prompt_auto_agent_instructions", config.PROMPT_AUTO_AGENT_INSTRUCTIONS) }}
+                    {{ forms.render_input("prompt_condense_information", config.PROMPT_CONDENSE_INFORMATION) }}
+                    {{ forms.render_input("prompt_generate_subtopics", config.PROMPT_GENERATE_SUBTOPICS) }}
+                    {{ forms.render_input("prompt_generate_subtopic_report", config.PROMPT_GENERATE_SUBTOPIC_REPORT) }}
+                    {{ forms.render_input("prompt_generate_draft_titles", config.PROMPT_GENERATE_DRAFT_TITLES) }}
+                    {{ forms.render_input("prompt_generate_report_introduction", config.PROMPT_GENERATE_REPORT_INTRODUCTION) }}
+                    {{ forms.render_input("prompt_generate_report_conclusion", config.PROMPT_GENERATE_REPORT_CONCLUSION) }}
+                    {{ forms.render_input("prompt_post_retrieval_processing", config.PROMPT_POST_RETRIEVAL_PROCESSING) }}
                 </div>
 
                 <button type="submit" id="submitBtn">
@@ -190,6 +285,25 @@
                 <h2>Research Report</h2>
                 <div id="report-content" class="markdown-report"></div>
                 <div id="report-downloads" class="download-section"></div>
+                
+                <!-- Chat interface -->
+                <div id="chat-container" class="chat-container" style="display: none;">
+                    <h3>Chat with your Research</h3>
+                    <p class="chat-intro">Ask follow-up questions about your research report</p>
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <textarea 
+                            id="chat-input" 
+                            class="chat-input" 
+                            placeholder="Ask a question about your research..."
+                            rows="2"
+                        ></textarea>
+                        <button id="chat-submit" class="chat-submit">
+                            <span>Send</span>
+                            <div class="spinner" style="display: none"></div>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div id="error" class="error"></div>
@@ -209,7 +323,39 @@
                 <p>Web, documents, and custom data sources</p>
             </div>
         </div>
-
+        
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="settings-modal-overlay" style="display: none;">
+            <div class="settings-modal">
+                <div class="settings-header">
+                    <h3>Settings</h3>
+                    <button id="closeSettings" class="settings-button secondary">×</button>
+                </div>
+                <div class="settings-tabs">
+                    <div class="settings-tab active" data-tab="general">General</div>
+                    <div class="settings-tab" data-tab="api">API Configuration</div>
+                    <div class="settings-tab" data-tab="appearance">Appearance</div>
+                </div>
+                <div class="settings-content">
+                    <div class="settings-tab-content" id="generalTab">
+                        <!-- Removed settings that were moved to advanced section -->
+                    </div>
+                    <div class="settings-tab-content" id="apiTab" style="display: none;">
+                        <div class="form-group">
+                            <label for="apiKey">OpenAI API Key</label>
+                            <input type="password" id="apiKey" placeholder="Enter your OpenAI API key" />
+                        </div>
+                    </div>
+                    <div class="settings-tab-content" id="appearanceTab" style="display: none;">
+                        <!-- Removed settings that were moved to advanced section -->
+                    </div>
+                </div>
+                <div class="settings-footer">
+                    <button id="saveSettings" class="settings-button">Save Settings</button>
+                </div>
+            </div>
+        </div>
+        
         <script src="/static/js/main.js"></script>
     </body>
 </html>

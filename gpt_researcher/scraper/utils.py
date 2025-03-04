@@ -4,13 +4,12 @@ import hashlib
 import logging
 import re
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import parse_qs, urljoin, urlparse
+from bs4 import BeautifulSoup, Tag
 
 if TYPE_CHECKING:
     from urllib.parse import ParseResult
-
-    from bs4 import BeautifulSoup
 
 
 def get_relevant_images(
@@ -25,16 +24,28 @@ def get_relevant_images(
         all_images: list[Any] = soup.find_all("img", src=True)
 
         for img in all_images:
-            img_src: str = urljoin(url, img["src"])
+            img: Tag = cast(Tag, img)
+            src: str | list[str] = img.get("src", "")
+            img_src: str = urljoin(url, src if isinstance(src, str) else "\n".join(src))
             if img_src.startswith(("http://", "https://")):
                 score = 0
                 # Check for relevant classes
-                if any(cls in img.get("class", []) for cls in ["header", "featured", "hero", "thumbnail", "main", "content"]):
+                if any(
+                    str(cls).casefold().strip() in img.get("class", [])
+                    for cls in [
+                        "header",
+                        "featured",
+                        "hero",
+                        "thumbnail",
+                        "main",
+                        "content",
+                    ]
+                ):
                     score = 4  # Higher score
                 # Check for size attributes
                 elif img.get("width") and img.get("height"):
-                    width: int | None = parse_dimension(img["width"])
-                    height: int | None = parse_dimension(img["height"])
+                    width: int | None = parse_dimension(img.get("width", ""))
+                    height: int | None = parse_dimension(img.get("height", ""))
                     if width and height:
                         if width >= 2000 and height >= 1000:
                             score = 3  # Medium score (very large images)
@@ -51,7 +62,7 @@ def get_relevant_images(
                 image_urls.append({"url": img_src, "score": score})
 
     except Exception as e:
-        logging.error(f"Error in get_relevant_images: {e}")
+        logging.getLogger().exception(f"Error in get_relevant_images: {e.__class__.__name__}: {e}")
         return []
     else:
         # Sort images by score (highest first)
@@ -65,7 +76,7 @@ def get_relevant_images(
         return result[:10]  # Ensure we don't return more than 10 images in total
 
 
-def parse_dimension(value: str) -> int | None:
+def parse_dimension(value: str | list[str]) -> int | None:
     """Parse dimension value, handling px units, percentages, and relative units.
 
     Args:
@@ -76,6 +87,8 @@ def parse_dimension(value: str) -> int | None:
     """
 
     # Remove whitespace
+    if isinstance(value, list):
+        value = "\n".join(value)
     value = value.strip().casefold()
     
     if value == "auto":
@@ -89,7 +102,7 @@ def parse_dimension(value: str) -> int | None:
         try:
             return int(float(value[:-1]) / 100 * parent_size)
         except ValueError:
-            logging.warning(f"Error parsing percentage dimension value {value}")
+            logging.getLogger().warning(f"Error parsing percentage dimension value {value}")
             return None
 
     # Handle relative units (simplified example)
@@ -101,7 +114,7 @@ def parse_dimension(value: str) -> int | None:
         try:
             pixel_value: float = float(match.group(1)) * (16 if match.group(3) == "em" else 10)
         except ValueError:
-            logging.warning(f"Error parsing relative unit dimension value {value}")
+            logging.getLogger().warning(f"Error parsing relative unit dimension value {value}")
             return None
         else:
             return int(pixel_value)
@@ -115,7 +128,7 @@ def parse_dimension(value: str) -> int | None:
         return int(float(value))
     except ValueError:
         # Fallback to default value if parsing failed
-        logging.warning(f"Error parsing dimension value {value}")
+        logging.getLogger().warning(f"Error parsing dimension value {value}")
         return None
 
 
@@ -142,7 +155,7 @@ def get_image_hash(image_url: str) -> str | None:
         # Calculate hash
         return hashlib.md5(image_identifier.encode()).hexdigest()
     except Exception as e:
-        logging.error(f"Error calculating image hash for {image_url}: {e}")
+        logging.getLogger().error(f"Error calculating image hash for {image_url}: {e}")
         return None
 
 

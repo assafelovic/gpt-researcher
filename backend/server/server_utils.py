@@ -8,7 +8,7 @@ import re
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Dict
 
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
@@ -19,8 +19,6 @@ from gpt_researcher.config import Config
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher.utils.enum import ReportType, Tone
 from werkzeug.utils import secure_filename
-
-from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 
 if TYPE_CHECKING:
     from backend.server.websocket_manager import WebSocketManager
@@ -303,16 +301,55 @@ async def handle_chat(
 
 async def generate_report_files(
     report: str,
-    filename: str,
-) -> dict[str, Path]:
-    pdf_path: str = await write_md_to_pdf(report, filename)
-    docx_path: str = await write_md_to_word(report, filename)
-    md_path: str = await write_text_to_md(report, filename)
-    return {
-        "pdf": Path(os.path.expandvars(os.path.normpath(str(pdf_path or "").strip()))).absolute(),
-        "docx": Path(os.path.expandvars(os.path.normpath(str(docx_path or "").strip()))).absolute(),
-        "md": Path(os.path.expandvars(os.path.normpath(str(md_path or "").strip()))).absolute(),
-    }
+    base_filename: str,
+) -> Dict[str, Path]:
+    """
+    Generate report files in different formats.
+    
+    Args:
+        report: The report content in markdown format
+        base_filename: The base filename to use for the reports
+        
+    Returns:
+        A dictionary mapping format names to file paths
+    """
+    try:
+        # Create reports directory if it doesn't exist
+        reports_dir = Path("reports")
+        reports_dir.mkdir(exist_ok=True)
+        
+        # Base file path
+        base_path: Path = reports_dir / base_filename
+        
+        # Generate markdown file
+        md_path: Path = base_path.with_suffix(".md")
+        md_path.write_text(report)
+        
+        # Initialize result with markdown file
+        result: dict[str, Path] = {"md": md_path}
+        
+        # Generate PDF if possible
+        try:
+            from backend.utils import write_md_to_pdf
+            await write_md_to_pdf(report)
+            pdf_path: Path = base_path.with_suffix(".pdf")
+            result["pdf"] = pdf_path
+        except Exception as e:
+            logger.exception(f"Error generating PDF: {e.__class__.__name__}: {e}")
+            
+        # Generate DOCX if possible
+        try:
+            from backend.utils import write_md_to_word
+            await write_md_to_word(report)
+            docx_path: Path = base_path.with_suffix(".docx")
+            result["docx"] = docx_path
+        except Exception as e:
+            logger.exception(f"Error generating DOCX: {e.__class__.__name__}: {e}")
+            
+        return result
+    except Exception as e:
+        logger.exception(f"Error generating report files: {e.__class__.__name__}: {e}")
+        return {"md": Path(f"reports/{base_filename}.md")}
 
 
 async def send_file_paths(
@@ -378,7 +415,10 @@ async def handle_file_upload(
     document_loader = DocumentLoader(DOC_PATH)
     await document_loader.load()
 
-    return {"filename": str(filename or "").strip(), "path": str(file_path or "").strip()}
+    return {
+        "filename": str(filename or "").strip(),
+        "path": str(file_path or "").strip(),
+    }
 
 
 async def handle_file_deletion(
@@ -389,7 +429,7 @@ async def handle_file_deletion(
     if file_path.exists() and file_path.is_file():
         file_path.unlink(missing_ok=True)
         logger.debug(f"File deleted: '{file_path}'")
-        return JSONResponse({"message": "File deleted successfully"})
+        return JSONResponse({"message": "File deleted successfully"}, status_code=200)
     else:
         logger.error(f"File not found: '{file_path}'")
         return JSONResponse(
@@ -400,7 +440,7 @@ async def handle_file_deletion(
 
 async def execute_multi_agents(
     manager: WebSocketManager,
-) -> Any:
+) -> JSONResponse:
     websocket: ServerWebSocket | HTTPStreamAdapter | None = next(iter(manager.active_connections), None)
     if websocket:
         from multi_agents.main import run_research_task
@@ -409,9 +449,9 @@ async def execute_multi_agents(
             websocket=websocket,
             stream_output=stream_output,
         )
-        return {"report": report}
+        return JSONResponse({"report": report}, status_code=200)
     else:
-        return JSONResponse({"message": "No active ServerWebSocket connection"}), 400
+        return JSONResponse({"message": "No active ServerWebSocket connection"}, status_code=400)
 
 
 async def handle_websocket_communication(
@@ -442,3 +482,146 @@ def extract_command_data(
         str(json_data.get("report_source") or "").strip(),
         [str(domain or "").strip() for domain in json_data.get("query_domains", [])],
     )
+
+
+async def get_report_file_urls(
+    report: str,
+    base_filename: str,
+) -> dict[str, Any]:
+    """Generate report files and return their URLs."""
+    # Generate the files
+    file_paths: dict[str, Path] = await generate_report_files(report, base_filename)
+    
+    # Convert file paths to URLs
+    file_urls: dict[str, str] = {}
+    for format_name, file_path in file_paths.items():
+        try:
+            # Use relative path from the current working directory
+            relative_path: Path = file_path.relative_to(Path.cwd())
+            # Convert to URL
+            url: str = f"/{relative_path.as_posix()}"
+            file_urls[format_name] = url
+        except Exception as e:
+            logger.error(f"Error converting path to URL for {format_name}: {e}")
+            file_urls[format_name] = str(file_path)
+    
+    return {
+        "type": "report_complete",
+        "content": report,
+        "files": file_urls,
+        "base_filename": base_filename
+    }
+
+
+def validate_config_file(content: bytes) -> bool:
+    """Validate the uploaded config file.
+
+    Args:
+        content: The content of the config file.
+
+    Returns:
+        bool: True if the config file is valid, False otherwise.
+    """
+    try:
+        # Try to parse the JSON
+        config_dict = json.loads(content.decode("utf-8"))
+
+        # Check if it's a dictionary
+        if not isinstance(config_dict, dict):
+            logger.error("Config file is not a dictionary")
+            return False
+
+        # Check if it has at least some expected keys
+        expected_keys: list[str] = ["REPORT_TYPE", "REPORT_FORMAT", "LANGUAGE", "TONE"]
+        if not any(key in config_dict for key in expected_keys):
+            logger.error(f"Config file is missing expected keys: {expected_keys}")
+            return False
+
+        return True
+    except json.JSONDecodeError as e:
+        logger.exception(f"Invalid JSON in config file: {e.__class__.__name__}: {e}")
+        return False
+    except Exception as e:
+        logger.exception(f"Error validating config file: {e.__class__.__name__}: {e}")
+        return False
+
+
+def save_config_file(content: bytes, config_path: Path) -> bool:
+    """Save a config file if it's valid.
+
+    Args:
+    ----
+        content: The content of the config file.
+        config_path: The path to save the config file.
+
+    Returns:
+    -------
+        bool: True if the config file was saved successfully, False otherwise.
+    """
+    if validate_config_file(content):
+        try:
+            # Save the config file
+            config_path.write_bytes(content)
+            logger.info(f"Uploaded config file saved to {config_path}")
+            return True
+        except Exception as e:
+            logger.exception(f"Error saving config file: {e.__class__.__name__}: {e}")
+            return False
+    else:
+        logger.error("Invalid config file")
+        return False
+
+
+def save_uploaded_file(filename: str, content: bytes, upload_dir: Path) -> str:
+    """Save an uploaded file.
+
+    Args:
+    ----
+        filename: The name of the file.
+        content: The content of the file.
+        upload_dir: The directory to save the file in.
+
+    Returns:
+    -------
+        str: The path to the saved file.
+    """
+    file_path: Path = upload_dir / filename
+    file_path.parent.mkdir(exist_ok=True, parents=True)
+    file_path.write_bytes(content)
+    return str(file_path)
+
+
+def get_file_content(file_path: str) -> tuple[bytes, int, str]:
+    """Get the content of a file.
+
+    Args:
+    ----
+        file_path: The path to the file.
+
+    Returns:
+    -------
+        tuple: The file content, size, and content type.
+    """
+    import mimetypes
+    
+    path: Path = Path(file_path)
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    file_size = path.stat().st_size
+    data = path.read_bytes()
+
+    ext = os.path.splitext(path)[1]
+    content_type = mimetypes.guess_type(path)[0]
+    if not content_type and ext in mimetypes.types_map:
+        content_type = mimetypes.types_map[ext]
+    if not content_type:
+        content_type = "application/octet-stream"
+
+    return data, file_size, content_type
+
+
+def get_default_prompt_templates() -> dict[str, str]:
+    """Get default prompt templates from the Config class."""
+    default_config: dict[str, Any] = Config.default_config_dict()
+    return {k: v for k, v in default_config.items() if k.startswith("PROMPT_")}

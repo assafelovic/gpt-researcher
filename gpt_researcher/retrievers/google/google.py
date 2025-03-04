@@ -5,8 +5,7 @@ import json
 import logging
 import os
 
-from typing import Any
-
+from typing import Any, Optional
 import requests
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -146,8 +145,8 @@ class GoogleSearch:
         query: str,
         headers: dict[str, str] | None = None,
         query_domains: list[str] | None = None,
-        *args: Any,  # provided for compatibility with other retrievers
-        **kwargs: Any,  # provided for compatibility with other retrievers
+        *_: Any,  # provided for compatibility with other scrapers
+        **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         """Initializes the GoogleSearch object.
 
@@ -202,13 +201,21 @@ class GoogleSearch:
 
     def search(
         self,
-        max_results: int = 7,
-    ) -> list[dict[str, str]] | None:
-        """Searches the query using Google Custom Search API, optionally restricting to specific domains.
+        max_results: Optional[int] = None,
+    ) -> list[dict[str, str]]:
+        """Searches the query.
+
+        Useful for general internet search queries using Google.
 
         Returns:
             list: List of search results with title, href and body
         """
+        # If max_results is the default, check environment variable
+        if max_results == 7:  # Default value
+            max_results = int(os.environ.get("MAX_SOURCES", 10))
+            
+        logger.info(f"GoogleSearch: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
+
         # Build query with domain restrictions if specified
         search_query: str = self.query
         if self.query_domains and len(self.query_domains) > 0:
@@ -224,22 +231,22 @@ class GoogleSearch:
             logger.warning(f"Google search: unexpected response status: {resp.status_code}")
 
         if resp is None:
-            return None
+            return []
         try:
             search_results: dict[str, Any] = json.loads(resp.text)
         except Exception as e:
             logger.warning("Google search: unexpected response text: ", resp.text)
             logger.exception(f"{e.__class__.__name__}: {e}")
-            return None
+            return []
         else:
             if search_results is None:
                 logger.debug("Google search: no results found")
-                return None
+                return []
 
         results: list[dict[str, str]] | None = search_results.get("items")
         if not results:
             logger.debug("Google search: no results found")
-            return None
+            return []
 
         # Normalizing results to match the format of the other search APIs
         search_results_list: list[dict[str, str]] = []

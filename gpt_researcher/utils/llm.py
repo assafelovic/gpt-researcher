@@ -12,7 +12,6 @@ from langchain_core.messages import BaseMessage
 from litellm.utils import get_max_tokens
 
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider  # noqa: F811
-from gpt_researcher.prompts import generate_subtopics_prompt
 from gpt_researcher.utils.costs import estimate_llm_cost
 from gpt_researcher.utils.validators import Subtopics
 
@@ -29,7 +28,7 @@ def get_llm_params(
     include_max_tokens: bool = True,
 ) -> dict[str, Any]:
     """Get LLM parameters for the given model.
-    
+
     Args:
     ----
         model (str): The model name.
@@ -52,6 +51,7 @@ def get_llm_params(
             logger.error(f"Error in get_max_tokens: {e.__class__.__name__}: {e}")
     return params
 
+
 def get_llm(
     llm_provider: str,
     **kwargs,
@@ -65,7 +65,7 @@ async def create_chat_completion(
     messages: list[BaseMessage | dict[str, str]],
     model: str | None = None,
     temperature: float | None = 0.4,
-    max_tokens: int | None = 4000,
+    max_tokens: int | None = 16384,
     llm_provider: str | None = None,
     stream: bool | None = False,
     websocket: Any | None = None,
@@ -92,8 +92,6 @@ async def create_chat_completion(
     # validate input
     if model is None:
         raise ValueError("Model cannot be None")
-    if max_tokens is not None and max_tokens > 16001:
-        raise ValueError(f"Max tokens cannot be more than 16,000, but got {max_tokens}")
     if llm_provider is None:
         raise ValueError("LLM provider cannot be None")
 
@@ -106,7 +104,7 @@ async def create_chat_completion(
         **(llm_kwargs or {}),
     }
 
-    if "o3" in model or "o1" in model:
+    if "o3-" in model or "o1-" in model:
         print(f"Using reasoning model '{model}'")
         kwargs["reasoning_effort"] = reasoning_effort
     else:
@@ -129,12 +127,12 @@ async def create_chat_completion(
 
         if cost_callback is not None:
             llm_costs: float = estimate_llm_cost(
-                str(messages),
+                provider.msgs_to_str(messages),
                 response,
             )
             cost_callback(llm_costs)
 
-        return response.encode().decode('utf-8')
+        return response.encode().decode("utf-8")
 
     logger.error(f"Failed to get response from provider '{llm_provider}'")
     raise RuntimeError(f"Failed to get response from provider '{llm_provider}'")
@@ -164,7 +162,27 @@ async def construct_subtopics(
         parser = PydanticOutputParser(pydantic_object=Subtopics)
 
         prompt = PromptTemplate(
-            template=generate_subtopics_prompt(),
+            template="""
+Provided the main topic:
+
+{task}
+
+Providerarch data:
+
+{data}
+
+- Construct a list of subtopics which indicate the headers of a report document to be generated on the task.
+- These are a possible list of subtopics: {subtopics}.
+- There should NOT be any duplicate subtopics.
+- Limit the number of subtopics to a maximum of {max_subtopics}
+- Finally order the subtopics by their tasks, in a relevant and meaningful order which is presentable in a detailed report
+
+"IMPORTANT!":
+- Every subtopic MUST be relevant to the main topic and task and provided research data ONLY!
+- Consider what subtopics will likely dive into the proper rabbitholes that would uncover the most relevant information.
+
+{format_instructions}
+""",
             input_variables=[
                 "task",
                 "data",
