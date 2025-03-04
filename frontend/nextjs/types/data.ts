@@ -31,7 +31,13 @@ export interface ChatData extends BaseData {
 export type Data = BasicData | LanggraphButtonData | DifferencesData | QuestionData | ChatData;
 
 export interface ChatBoxSettings {
-  report_source: string;
   report_type: string;
+  report_source: string;
   tone: string;
+  domains: string[];
+  defaultReportType: string;
+}
+
+export interface Domain {
+  value: string;
 } 

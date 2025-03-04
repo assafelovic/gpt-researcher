@@ -1,7 +1,7 @@
-# libraries
 from __future__ import annotations
 
 import logging
+import os
 
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -30,13 +30,11 @@ def get_llm_params(
     """Get LLM parameters for the given model.
 
     Args:
-    ----
         model (str): The model name.
         temperature (float): The temperature for the model.
         include_max_tokens (bool): Whether to include max tokens.
 
     Returns:
-    -------
         dict[str, Any]: A dictionary of LLM parameters.
     """
     params: dict[str, Any] = {
@@ -57,7 +55,9 @@ def get_llm(
     **kwargs,
 ) -> GenericLLMProvider:
     from gpt_researcher.llm_provider import GenericLLMProvider
-
+    # Use the new from_provider method if available, otherwise fallback to the constructor
+    if hasattr(GenericLLMProvider, "from_provider"):
+        return GenericLLMProvider.from_provider(llm_provider, **kwargs)
     return GenericLLMProvider(llm_provider, **kwargs)
 
 
@@ -76,18 +76,23 @@ async def create_chat_completion(
     headers: dict[str, str] | None = None,
 ) -> str:
     """Create a chat completion using the OpenAI API
+
     Args:
-        messages (list[dict[str, str]]): The messages to send to the chat completion
+        messages (list[BaseMessage | dict[str, str]]): The messages to send to the chat completion
         model (str | None): The model to use. Defaults to None.
         temperature (float | None): The temperature to use. Defaults to 0.4.
-        max_tokens (int | None): The max tokens to use. Defaults to 4000.
-        stream (bool | None): Whether to stream the response. Defaults to False.
+        max_tokens (int | None): The max tokens to use. Defaults to 16384.
         llm_provider (str | None): The LLM Provider to use.
-        webocket (WebSocket): The websocket used in the currect request,
-        cost_callback (Callable | None): Callback function for updating cost
+        stream (bool | None): Whether to stream the response. Defaults to False.
+        websocket (Any | None): The websocket used in the current request.
+        llm_kwargs (dict[str, Any] | None): Additional LLM keyword arguments.
+        cost_callback (Callable | None): Callback function for updating cost.
+        reasoning_effort (str | None): Reasoning effort for models. Defaults to "low".
+        max_retries (int | None): Maximum number of retries. Defaults to 10.
         headers (dict[str, str] | None): The headers to use. Defaults to None.
+
     Returns:
-        str: The response from the chat completion
+        str: The response from the chat completion.
     """
     # validate input
     if model is None:
@@ -111,6 +116,12 @@ async def create_chat_completion(
         print(f"Using non-reasoning model '{model}'")
         kwargs["temperature"] = temperature
         kwargs["max_tokens"] = max_tokens
+
+    # Merge incoming change: handle OpenAI base URL if provided
+    if llm_provider == "openai":
+        base_url = os.environ.get("OPENAI_BASE_URL", None)
+        if base_url:
+            kwargs["openai_api_base"] = base_url
 
     print(f"\n🤖 Calling {llm_provider} with model '{model}'...\n")
     provider: GenericLLMProvider = get_llm(llm_provider, **kwargs)
@@ -153,8 +164,9 @@ async def construct_subtopics(
         config: Configuration settings.
         subtopics (list, optional): Existing subtopics. Defaults to empty list.
         headers (dict[str, str] | None): The headers to use, if any.
+
     Returns:
-        list: A list of constructed subtopics.
+        list[str] | Subtopics: A list of constructed subtopics.
     """
     subtopics = [] if subtopics is None else subtopics
     headers = {} if headers is None else headers
@@ -196,7 +208,7 @@ Providerarch data:
 
         temperature: float = config.TEMPERATURE
         assert config.SMART_LLM_PROVIDER is not None
-        provider: GenericLLMProvider = GenericLLMProvider(
+        provider: GenericLLMProvider = get_llm(
             config.SMART_LLM_PROVIDER,
             model=config.SMART_LLM_MODEL,
             temperature=temperature,

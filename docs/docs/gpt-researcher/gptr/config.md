@@ -37,6 +37,7 @@ Below is a list of current supported options:
 - **`AGENT_ROLE`**: Role of the agent. This might be used to customize the behavior of the agent based on its assigned roles. No default value.
 - **`MAX_SUBTOPICS`**: Maximum number of subtopics to generate or consider. Defaults to `3`.
 - **`SCRAPER`**: Web scraper to use for gathering information. Defaults to `bs` (BeautifulSoup). You can also use [newspaper](https://github.com/codelucas/newspaper).
+- **`MAX_SCRAPER_WORKERS`**: Maximum number of concurrent scraper workers per research. Defaults to `15`.
 - **`DOC_PATH`**: Path to read and research local documents. Defaults to an empty string indicating no path specified.
 - **`USER_AGENT`**: Custom User-Agent string for web crawling and web requests.
 - **`MEMORY_BACKEND`**: Backend used for memory operations, such as local storage of temporary data. Defaults to `local`.
@@ -44,12 +45,13 @@ Below is a list of current supported options:
 To change the default configurations, you can simply add env variables to your `.env` file as named above or export manually in your local project directory.
 
 For example, to manually change the search engine and report format:
+
 ```bash
 export RETRIEVER=bing
 export REPORT_FORMAT=IEEE
 ```
+
 Please note that you might need to export additional env vars and obtain API keys for other supported search retrievers and LLM providers. Please follow your console logs for further assistance.
 To learn more about additional LLM support you can check out the docs [here](/docs/gpt-researcher/llms/llms).
 
 You can also include your own external JSON file `config.json` by adding the path in the `config_file` param.
-

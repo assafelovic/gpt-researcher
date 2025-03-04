@@ -11,7 +11,7 @@ export default function Sources({
       <div className="flex items-start gap-4 pb-3 lg:pb-3.5">
         <Image src="/img/browser.svg" alt="footer" width={24} height={24} />
         <h3 className="text-base font-bold uppercase leading-[152.5%] text-white">
-          sources{" "}
+          {sources.length} Sources{" "}
         </h3>
       </div>
       <div className="overflow-y-auto max-h-[250px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300">

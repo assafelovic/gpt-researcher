@@ -3,17 +3,7 @@ import FileUpload from "../Settings/FileUpload";
 import ToneSelector from "../Settings/ToneSelector";
 import { useAnalytics } from "../../hooks/useAnalytics";
 import { CloseIcon } from '@chakra-ui/icons';
-
-interface ChatBoxSettings {
-  report_type: string;
-  report_source: string;
-  tone: string;
-  domains: Domain[];
-}
-
-interface Domain {
-  value: string;
-}
+import { ChatBoxSettings, Domain } from '@/types/data';
 
 interface ResearchFormProps {
   chatBoxSettings: ChatBoxSettings;
@@ -24,14 +14,12 @@ interface ResearchFormProps {
     reportSource: string,
     domains: Domain[]
   ) => void;
-  defaultReportType: string;
 }
 
 export default function ResearchForm({
   chatBoxSettings,
   setChatBoxSettings,
   onFormSubmit,
-  defaultReportType,
 }: ResearchFormProps) {
   const { trackResearchQuery } = useAnalytics();
   const [task, setTask] = useState("");
@@ -52,9 +40,9 @@ export default function ResearchForm({
     localStorage.setItem('domainFilters', JSON.stringify(domains));
     setChatBoxSettings(prev => ({
       ...prev,
-      domains: domains
+      domains: domains.map(domain => domain.value)
     }));
-  }, [domains]);
+  }, [domains, setChatBoxSettings]);
 
   const handleAddDomain = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,22 +77,12 @@ export default function ResearchForm({
     if (onFormSubmit) {
       const updatedSettings = {
         ...chatBoxSettings,
-        domains: domains // Make sure domains are included
+        domains: domains.map(domain => domain.value)
       };
       setChatBoxSettings(updatedSettings);
       onFormSubmit(task, report_type, report_source, domains);
     }
   };
-
-  useEffect(() => {
-    // Set default report type only if report_type is empty (initial mount)
-    if (!chatBoxSettings.report_type) {
-      setChatBoxSettings((prevSettings) => ({
-        ...prevSettings,
-        report_type: defaultReportType,
-      }));
-    }
-  }, [defaultReportType, setChatBoxSettings, chatBoxSettings.report_type]);
 
   return (
     <form
@@ -123,10 +101,11 @@ export default function ResearchForm({
           className="form-control"
           required
         >
-          <option value="multi_agents">Multi Agents Report</option>
           <option value="research_report">
             Summary - Short and fast (~2 min)
           </option>
+          <option value="deep">Deep Research Report</option>
+          <option value="multi_agents">Multi Agents Report</option>
           <option value="detailed_report">
             Detailed - In depth and longer (~5 min)
           </option>

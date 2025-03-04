@@ -29,7 +29,7 @@ async def stream_output(
         type (str): The type of output to stream.
         content (str): The content to stream.
         output (str): The output to stream.
-        websocket (WebSocket | CustomLogsHandler | None): The websocket to stream to.
+        websocket (WebSocket | CustomLogsHandler | HTTPStreamAdapter | None): The websocket to stream to.
         output_log (bool): Whether to log the output.
         metadata (dict[str, Any] | None): The metadata to stream.
     """
@@ -57,8 +57,8 @@ async def safe_send_json(
     """Safely send JSON data through a WebSocket connection.
 
     Args:
-        websocket (WebSocket): The WebSocket connection to send data through.
-        data (Dict[str, Any]): The data to send as JSON.
+        websocket (WebSocket | CustomLogsHandler | HTTPStreamAdapter | None): The WebSocket connection to send data through.
+        data (dict[str, Any]): The data to send as JSON.
     """
     if websocket is None:
         logger.warning("WebSocket is None, skipping send_json")
@@ -96,7 +96,7 @@ async def update_cost(
         prompt_tokens (int): Number of tokens in the prompt.
         completion_tokens (int): Number of tokens in the completion.
         model (str): The model used for the API call.
-        websocket (WebSocket): The WebSocket connection to send data through.
+        websocket (WebSocket | CustomLogsHandler | HTTPStreamAdapter | None): The WebSocket connection to send data through.
     """
     prompt_tokens_cost, completion_tokens_cost = cost_per_token(
         model=model,
@@ -128,7 +128,7 @@ def create_cost_callback(
     """Create a callback function for updating costs.
 
     Args:
-        websocket (WebSocket | CustomLogsHandler | None): The WebSocket connection to send data through.
+        websocket (WebSocket | CustomLogsHandler | HTTPStreamAdapter | None): The WebSocket connection to send data through.
 
     Returns:
         Callable[[int, int, str], Coroutine[Any, Any, None]]: A callback function that can be used to update costs.

@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from gpt_researcher.config.config import Config
 from gpt_researcher.scraper import Scraper
 from gpt_researcher.utils.logger import get_formatted_logger
+from gpt_researcher.utils.workers import WorkerPool
 
 if TYPE_CHECKING:
     import logging
@@ -15,7 +17,8 @@ logger: logging.Logger = get_formatted_logger()
 
 def scrape_urls(
     urls: list[str],
-    research_config: Config | None = None,
+    cfg: Config,
+    worker_pool: WorkerPool,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Scrapes the urls.
 
@@ -24,20 +27,20 @@ def scrape_urls(
         research_config: Config (optional).
 
     Returns:
-        tuple[list[dict[str, Any]], list[dict[str, Any]]]: Tuple containing scraped content and images
+        tuple[list[dict[str, Any]], list[dict[str, Any]]]: tuple containing scraped content and images
 
     """
     scraped_data: list[dict[str, Any]] = []
     images: list[dict[str, Any]] = []
     user_agent: str = (
-        research_config.USER_AGENT  # type: ignore[attr-defined]
-        if research_config
+        cfg.USER_AGENT  # type: ignore[attr-defined]
+        if cfg
         else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     )
 
     try:
-        scraper = Scraper(urls, user_agent, research_config.SCRAPER)  # type: ignore[attr-defined]
-        scraped_data = scraper.run()
+        scraper = Scraper(urls, user_agent, cfg.SCRAPER, worker_pool=worker_pool)
+        scraped_data = await scraper.run()
         for item in scraped_data:
             if "image_urls" in item:
                 images.extend([img for img in item["image_urls"]])
@@ -102,9 +105,7 @@ async def process_scraped_data(
     for item in scraped_data:
         if item["status"] == "success":
             main_content: str = await extract_main_content(item["content"])
-            processed_data.append(
-                {"url": item["url"], "content": main_content, "status": "success"}
-            )
+            processed_data.append({"url": item["url"], "content": main_content, "status": "success"})
         else:
             processed_data.append(item)
     return processed_data

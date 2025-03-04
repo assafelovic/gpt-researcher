@@ -23,7 +23,9 @@ export default function Home() {
   const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({ 
     report_source: 'web', 
     report_type: 'research_report', 
-    tone: 'Objective' 
+    tone: 'Objective',
+    domains: [],
+    defaultReportType: 'research_report'
   });
   const [question, setQuestion] = useState("");
   const [orderedData, setOrderedData] = useState<Data[]>([]);
@@ -163,7 +165,7 @@ export default function Home() {
    */
   useEffect(() => {
     const groupedData = preprocessOrderedData(orderedData);
-    const statusReports = ["agent_generated", "starting_research", "planning_research"];
+    const statusReports = ["agent_generated", "starting_research", "planning_research", "error"];
     
     const newLogs = groupedData.reduce((acc: any[], data) => {
       // Process accordion blocks (grouped data)
@@ -203,20 +205,21 @@ export default function Home() {
 
   // Add ResizeObserver to watch for content changes
   useEffect(() => {
+    const mainContentElement = mainContentRef.current;
     const resizeObserver = new ResizeObserver(() => {
       handleScroll();
     });
 
-    if (mainContentRef.current) {
-      resizeObserver.observe(mainContentRef.current);
+    if (mainContentElement) {
+      resizeObserver.observe(mainContentElement);
     }
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleScroll);
     
     return () => {
-      if (mainContentRef.current) {
-        resizeObserver.unobserve(mainContentRef.current);
+      if (mainContentElement) {
+        resizeObserver.unobserve(mainContentElement);
       }
       resizeObserver.disconnect();
       window.removeEventListener('scroll', handleScroll);

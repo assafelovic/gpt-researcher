@@ -40,6 +40,7 @@ tiktoken = ">=0.7.0"
 unstructured = ">=0.13,<0.16"
 uvicorn = ">=0.24.0.post1"
 websockets = "^13.1"
+firecrawl-py = "^1.12.0"
 
 [build-system]
 requires = ["poetry-core"]

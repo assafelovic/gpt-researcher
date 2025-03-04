@@ -1,19 +1,15 @@
+import React from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import Modal from './Settings/Modal';
+import { ChatBoxSettings } from '@/types/data';
 
-interface ChatBoxSettings {
-  report_source: string;
-  report_type: string;
-  tone: string;
-}
-
-interface ChatBoxProps {
+interface FooterProps {
   chatBoxSettings: ChatBoxSettings;
   setChatBoxSettings: React.Dispatch<React.SetStateAction<ChatBoxSettings>>;
 }
 
-const Footer = ({ setChatBoxSettings, chatBoxSettings}: ChatBoxProps) => {
+const Footer: React.FC<FooterProps> = ({ chatBoxSettings, setChatBoxSettings }) => {
   
   return (
     <>

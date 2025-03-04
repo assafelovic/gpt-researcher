@@ -9,8 +9,8 @@ from multi_agents.main import run_research_task
 
 from backend.chat import ChatAgentWithMemory
 from backend.report_type import BasicReport, DetailedReport
+from backend.report_type.deep_research.example import DeepResearch
 from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
-
 
 
 class WebSocketManager:
@@ -33,7 +33,7 @@ class WebSocketManager:
             return
 
         while True:
-            message = await queue.get()
+            message: str = await queue.get()
             if websocket in self.active_connections:
                 try:
                     if message == "ping":
@@ -104,17 +104,16 @@ class WebSocketManager:
         self,
         message: str,
         websocket: WebSocket | HTTPStreamAdapter,
-    ):
+    ) -> str | None:
         """Chat with the agent based message diff"""
         if self.chat_agent:
-            await self.chat_agent.chat(message, websocket)
-        else:
-            await websocket.send_json(
-                {
-                    "type": "chat",
-                    "content": "Knowledge empty, please run the research first to obtain knowledge",
-                }
-            )
+            return await self.chat_agent.chat(message, websocket)
+        await websocket.send_json(
+            {
+                "type": "chat",
+                "content": "Knowledge empty, please run the research first to obtain knowledge",
+            }
+        )
 
 
 async def run_agent(
@@ -134,8 +133,7 @@ async def run_agent(
     logs_handler = CustomLogsHandler(websocket, task)
     tone = (
         Tone.__members__[tone.capitalize()]
-        if isinstance(tone, str)
-        and tone.capitalize() in Tone.__members__
+        if isinstance(tone, str) and tone.capitalize() in Tone.__members__
         else tone
         if isinstance(tone, Tone)
         else Tone(tone)
@@ -144,16 +142,14 @@ async def run_agent(
     )
     report_type = (
         ReportType.__members__[report_type]
-        if isinstance(report_type, str)
-        and report_type in ReportType.__members__
+        if isinstance(report_type, str) and report_type in ReportType.__members__
         else report_type
         if isinstance(report_type, ReportType)
         else ReportType(report_type)
     )
     report_source = (
         ReportSource.__members__[report_source]
-        if isinstance(report_source, str)
-        and report_source in ReportSource.__members__
+        if isinstance(report_source, str) and report_source in ReportSource.__members__
         else report_source
         if isinstance(report_source, ReportSource)
         else ReportSource(report_source)
@@ -162,7 +158,7 @@ async def run_agent(
     if report_type == ReportType.MultiAgents:
         report: str = await run_research_task(
             query=task,
-            websocket=logs_handler,  # Use logs_handler instead of raw websocket
+            websocket=logs_handler,
             stream_output=stream_output,
             tone=tone,
             headers=headers,
@@ -178,7 +174,7 @@ async def run_agent(
             document_urls=document_urls,
             tone=tone,
             config_path=config_path,
-            websocket=logs_handler,  # Use logs_handler instead of raw websocket
+            websocket=logs_handler,
             headers=headers,
         )
         report = await researcher.run()
@@ -193,12 +189,25 @@ async def run_agent(
             document_urls=document_urls,
             tone=tone,
             config_path=config_path,
-            websocket=logs_handler,  # Use logs_handler instead of raw websocket
+            websocket=logs_handler,
             headers=headers,
         )
         report = await researcher.run()
 
+    elif report_type == ReportType.DeepResearch:
+        researcher = DeepResearch(
+            query=task,
+            tone=tone,
+            config_path=config_path,
+            websocket=logs_handler.websocket,
+            headers=headers,
+            concurrency_limit=2,
+        )
+        report = await researcher.run()
+
     else:
-        raise ValueError(f"Invalid report type: {report_type!r}: must be MultiAgents, DetailedReport, or ResearchReport")
+        raise ValueError(
+            f"Invalid report type: {report_type!r}: must be MultiAgents, DetailedReport, DeepResearch, or ResearchReport"
+        )
 
     return report

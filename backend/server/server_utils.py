@@ -5,10 +5,10 @@ import json
 import logging
 import os
 import re
-
+import traceback
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Awaitable
 
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
@@ -87,14 +87,7 @@ class CustomLogsHandler:
 
         # Initialize log file with metadata
         sanitized_filename: str = sanitize_filename(f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{task}")
-        self.log_file: Path = Path(
-            os.path.expandvars(
-                os.path.join(
-                    "outputs",
-                    f"{sanitized_filename}.json",
-                )
-            )
-        ).absolute()
+        self.log_file: Path = Path(os.path.expandvars(os.path.join("outputs", f"{sanitized_filename}.json"))).absolute()
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
         self.log_file.write_text(
             json.dumps(
@@ -118,14 +111,11 @@ class CustomLogsHandler:
         data: dict[str, Any],
     ) -> None:
         """Store log data and send to websocket."""
-        # Send to websocket for real-time display
         if self.websocket is not None:
             await self.websocket.send_json(data)
 
-        # Read current log file
         log_data: dict[str, Any] = json.loads(self.log_file.read_text().strip())
 
-        # Update appropriate section based on data type
         if str(data.get("type")).casefold() == "logs":
             events_list: list[dict[str, Any]] = log_data["events"]
             events_list.append(
@@ -136,11 +126,9 @@ class CustomLogsHandler:
                 }
             )
         else:
-            # Update content section for other types of data
             content_dict: dict[str, Any] = log_data["content"]
             content_dict.update(data)
 
-        # Save updated log file
         self.log_file.write_text(json.dumps(log_data, indent=2))
         logger.debug(f"Log entry written to: '{self.log_file}'")
 
@@ -153,16 +141,15 @@ class Researcher:
         websocket: CustomLogsHandler | ServerWebSocket | None = None,
     ):
         self.query: str = str(query or "").strip()
-        self.report_type: ReportType = ReportType.__members__[report_type.lower().title()] if isinstance(report_type, str) else report_type
-        # Generate unique ID for this research task
+        self.report_type: ReportType = (
+            ReportType.__members__[report_type.lower().title()]
+            if isinstance(report_type, str)
+            else report_type
+        )
         self.research_id: str = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(self.query)}"
-        # Initialize logs handler with research ID
         self.logs_handler: CustomLogsHandler | None = None
         if isinstance(websocket, ServerWebSocket):  # fastapi
-            self.logs_handler = CustomLogsHandler(
-                websocket=websocket,
-                task=self.query,
-            )
+            self.logs_handler = CustomLogsHandler(websocket=websocket, task=self.query)
         elif isinstance(websocket, CustomLogsHandler):  # flask-socketio
             self.logs_handler = websocket
         else:
@@ -180,14 +167,11 @@ class Researcher:
         await self.researcher.conduct_research()
         report: str = await self.researcher.write_report()
 
-        # Generate the files
-        sanitized_filename: str = sanitize_filename(f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{self.query}")
-        file_paths: dict[str, Path] = await generate_report_files(
-            report,
-            sanitized_filename,
+        sanitized_filename: str = sanitize_filename(
+            f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{self.query}"
         )
+        file_paths: dict[str, Path] = await generate_report_files(report, sanitized_filename)
 
-        # Get the JSON log path that was created by CustomLogsHandler
         if self.logs_handler is not None and self.logs_handler.log_file.exists() and self.logs_handler.log_file.is_file():
             json_relative_path: Path = self.logs_handler.log_file.relative_to(Path.cwd().absolute())
         else:
@@ -201,10 +185,7 @@ class Researcher:
         }
 
 
-def sanitize_filename(
-    filename: str,
-) -> str:
-    # Split into components
+def sanitize_filename(filename: str) -> str:
     prefix, timestamp, *task_parts = filename.split("_")
     task: str = "_".join(task_parts)
 
@@ -273,17 +254,11 @@ async def handle_start_command(
         str(report or "").strip(),
         str(sanitized_filename or "").strip(),
     )
-    # Add JSON log path to file_paths
     file_paths["json"] = logs_handler.log_file.relative_to(Path.cwd().absolute())
-    await send_file_paths(
-        websocket=websocket,
-        file_paths=file_paths,
-    )
+    await send_file_paths(websocket=websocket, file_paths=file_paths)
 
 
-async def handle_human_feedback(
-    data: str,
-):
+async def handle_human_feedback(data: str) -> None:
     feedback_data: dict[str, Any] = json.loads(data[14:])  # Remove "human_feedback" prefix
     logger.debug(f"Received human feedback: {feedback_data}")
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
@@ -299,10 +274,7 @@ async def handle_chat(
     return await manager.chat(str(json_data["message"] or "").strip(), websocket)
 
 
-async def generate_report_files(
-    report: str,
-    base_filename: str,
-) -> Dict[str, Path]:
+async def generate_report_files(report: str, base_filename: str) -> dict[str, Path]:
     """
     Generate report files in different formats.
     
@@ -314,21 +286,12 @@ async def generate_report_files(
         A dictionary mapping format names to file paths
     """
     try:
-        # Create reports directory if it doesn't exist
         reports_dir = Path("reports")
         reports_dir.mkdir(exist_ok=True)
-        
-        # Base file path
         base_path: Path = reports_dir / base_filename
-        
-        # Generate markdown file
         md_path: Path = base_path.with_suffix(".md")
         md_path.write_text(report)
-        
-        # Initialize result with markdown file
         result: dict[str, Path] = {"md": md_path}
-        
-        # Generate PDF if possible
         try:
             from backend.utils import write_md_to_pdf
             await write_md_to_pdf(report)
@@ -336,8 +299,6 @@ async def generate_report_files(
             result["pdf"] = pdf_path
         except Exception as e:
             logger.exception(f"Error generating PDF: {e.__class__.__name__}: {e}")
-            
-        # Generate DOCX if possible
         try:
             from backend.utils import write_md_to_word
             await write_md_to_word(report)
@@ -345,7 +306,6 @@ async def generate_report_files(
             result["docx"] = docx_path
         except Exception as e:
             logger.exception(f"Error generating DOCX: {e.__class__.__name__}: {e}")
-            
         return result
     except Exception as e:
         logger.exception(f"Error generating report files: {e.__class__.__name__}: {e}")
@@ -457,16 +417,53 @@ async def execute_multi_agents(
 async def handle_websocket_communication(
     websocket: ServerWebSocket,
     manager: WebSocketManager,
-):
-    data: str = await websocket.receive_text()
-    if data.startswith("start"):
-        await handle_start_command(websocket, data, manager)
-    elif data.startswith("human_feedback"):
-        await handle_human_feedback(data)
-    elif data.startswith("chat"):
-        await handle_chat(websocket, data, manager)
-    else:
-        logger.error("Error in handle_websocket_communication: Unknown command or not enough parameters provided.")
+) -> None:
+    running_task: asyncio.Task | None = None
+
+    def run_long_running_task(awaitable: Awaitable) -> asyncio.Task:
+        async def safe_run():
+            try:
+                await awaitable
+            except asyncio.CancelledError:
+                logger.info("Task cancelled.")
+                raise
+            except Exception as e:
+                logger.error(f"Error running task: {e}\n{traceback.format_exc()}")
+                await websocket.send_json({
+                    "type": "logs",
+                    "content": "error",
+                    "output": f"Error: {e}",
+                })
+        return asyncio.create_task(safe_run())
+
+    try:
+        while True:
+            try:
+                data: str = await websocket.receive_text()
+                if data == "ping":
+                    await websocket.send_text("pong")
+                elif running_task and not running_task.done():
+                    logger.warning(
+                        f"Received request while task is already running. Request data preview: {data[:min(20, len(data))]}..."
+                    )
+                    await websocket.send_json({
+                        "type": "logs",
+                        "output": "Task already running. Please wait.",
+                    })
+                elif data.startswith("start"):
+                    running_task = run_long_running_task(handle_start_command(websocket, data, manager))
+                elif data.startswith("human_feedback"):
+                    running_task = run_long_running_task(handle_human_feedback(data))
+                elif data.startswith("chat"):
+                    running_task = run_long_running_task(handle_chat(websocket, data, manager))
+                else:
+                    logger.error("Error in handle_websocket_communication: Unknown command or not enough parameters provided.")
+            except Exception as e:
+                logger.error(f"WebSocket error: {e}")
+                break
+    finally:
+        if running_task and not running_task.done():
+            running_task.cancel()
 
 
 def extract_command_data(
@@ -489,22 +486,16 @@ async def get_report_file_urls(
     base_filename: str,
 ) -> dict[str, Any]:
     """Generate report files and return their URLs."""
-    # Generate the files
     file_paths: dict[str, Path] = await generate_report_files(report, base_filename)
-    
-    # Convert file paths to URLs
     file_urls: dict[str, str] = {}
     for format_name, file_path in file_paths.items():
         try:
-            # Use relative path from the current working directory
             relative_path: Path = file_path.relative_to(Path.cwd())
-            # Convert to URL
             url: str = f"/{relative_path.as_posix()}"
             file_urls[format_name] = url
         except Exception as e:
             logger.error(f"Error converting path to URL for {format_name}: {e}")
             file_urls[format_name] = str(file_path)
-    
     return {
         "type": "report_complete",
         "content": report,
@@ -523,15 +514,11 @@ def validate_config_file(content: bytes) -> bool:
         bool: True if the config file is valid, False otherwise.
     """
     try:
-        # Try to parse the JSON
         config_dict = json.loads(content.decode("utf-8"))
-
-        # Check if it's a dictionary
         if not isinstance(config_dict, dict):
             logger.error("Config file is not a dictionary")
             return False
 
-        # Check if it has at least some expected keys
         expected_keys: list[str] = ["REPORT_TYPE", "REPORT_FORMAT", "LANGUAGE", "TONE"]
         if not any(key in config_dict for key in expected_keys):
             logger.error(f"Config file is missing expected keys: {expected_keys}")
@@ -546,21 +533,21 @@ def validate_config_file(content: bytes) -> bool:
         return False
 
 
-def save_config_file(content: bytes, config_path: Path) -> bool:
+def save_config_file(
+    content: bytes,
+    config_path: Path,
+) -> bool:
     """Save a config file if it's valid.
 
     Args:
-    ----
         content: The content of the config file.
         config_path: The path to save the config file.
 
     Returns:
-    -------
         bool: True if the config file was saved successfully, False otherwise.
     """
     if validate_config_file(content):
         try:
-            # Save the config file
             config_path.write_bytes(content)
             logger.info(f"Uploaded config file saved to {config_path}")
             return True
@@ -572,17 +559,19 @@ def save_config_file(content: bytes, config_path: Path) -> bool:
         return False
 
 
-def save_uploaded_file(filename: str, content: bytes, upload_dir: Path) -> str:
+def save_uploaded_file(
+    filename: str,
+    content: bytes,
+    upload_dir: Path,
+) -> str:
     """Save an uploaded file.
 
     Args:
-    ----
         filename: The name of the file.
         content: The content of the file.
         upload_dir: The directory to save the file in.
 
     Returns:
-    -------
         str: The path to the saved file.
     """
     file_path: Path = upload_dir / filename
@@ -595,29 +584,23 @@ def get_file_content(file_path: str) -> tuple[bytes, int, str]:
     """Get the content of a file.
 
     Args:
-    ----
         file_path: The path to the file.
 
     Returns:
-    -------
         tuple: The file content, size, and content type.
     """
     import mimetypes
-    
     path: Path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
-
-    file_size = path.stat().st_size
-    data = path.read_bytes()
-
-    ext = os.path.splitext(path)[1]
-    content_type = mimetypes.guess_type(path)[0]
+    file_size: int = path.stat().st_size
+    data: bytes = path.read_bytes()
+    ext: str = os.path.splitext(path)[1]
+    content_type: str | None = mimetypes.guess_type(path)[0]
     if not content_type and ext in mimetypes.types_map:
         content_type = mimetypes.types_map[ext]
     if not content_type:
         content_type = "application/octet-stream"
-
     return data, file_size, content_type
 
 

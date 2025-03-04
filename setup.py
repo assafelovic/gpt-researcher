@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from setuptools import find_packages, setup
 
-LATEST_VERSION = "0.11.0"
+LATEST_VERSION = "0.12.3"
 
 exclude_packages = ["selenium", "webdriver", "fastapi", "fastapi.*", "uvicorn", "jinja2", "gpt-researcher", "langgraph"]
 
@@ -33,5 +33,6 @@ setup(
         "Programming Language :: Python :: 3.12",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
+    python_requires='>=3.11',
     install_requires=reqs,
 )

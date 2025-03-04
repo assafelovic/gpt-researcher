@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 from gpt_researcher.actions.utils import stream_output
 from gpt_researcher.actions.web_scraping import scrape_urls
 from gpt_researcher.scraper.utils import get_image_hash
+from gpt_researcher.utils.workers import WorkerPool
 
 if TYPE_CHECKING:
     from gpt_researcher.agent import GPTResearcher
@@ -18,6 +19,7 @@ class BrowserManager:
         researcher: GPTResearcher,
     ):
         self.researcher: GPTResearcher = researcher
+        self.worker_pool = WorkerPool(researcher.cfg.MAX_SCRAPER_WORKERS)
 
     async def browse_urls(
         self,
@@ -33,7 +35,7 @@ class BrowserManager:
         -------
             tuple[list[dict[str, Any]], list[dict[str, Any]]]: Tuple containing the scraped text data and images.
         """
-        
+
         if self.researcher.cfg.VERBOSE:
             await stream_output(
                 "logs",
@@ -44,9 +46,10 @@ class BrowserManager:
 
         text_data: list[dict[str, Any]]
         scraped_images: list[dict[str, Any]]
-        text_data, scraped_images = scrape_urls(
+        text_data, scraped_images = await scrape_urls(
             urls,
             self.researcher.cfg,
+            self.worker_pool,
         )
         self.researcher.add_research_sources(text_data)
         images: list[dict[str, Any]] = self.select_top_images(
@@ -56,11 +59,11 @@ class BrowserManager:
         self.researcher.add_research_images(images)
 
         if self.researcher.cfg.VERBOSE:
-            total_text_length: int = sum(len(page.get("text", page.get("content", page.get("raw_content", "")))) for page in text_data)
-            num_pages: int = len(text_data)
-            average_text_length: float = (
-                total_text_length / num_pages if num_pages > 0 else 0
+            total_text_length: int = sum(
+                len(page.get("text", page.get("content", page.get("raw_content", "")))) for page in text_data
             )
+            num_pages: int = len(text_data)
+            average_text_length: float = total_text_length / num_pages if num_pages > 0 else 0
             await stream_output(
                 "logs",
                 "scraping_content",
@@ -108,7 +111,9 @@ class BrowserManager:
         for img in high_score_images + images:  # Process high-score images first, then all images
             img_hash: str | None = get_image_hash(img["url"])
             if (
-                img_hash and img_hash not in seen_hashes and img["url"] not in current_research_images  # TODO: case sensitive??
+                img_hash
+                and img_hash not in seen_hashes
+                and img["url"] not in current_research_images
             ):
                 seen_hashes.add(img_hash)
                 unique_images.append(img)

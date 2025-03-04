@@ -2,53 +2,39 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from langchain_core.documents import Document
-from langchain_core.retrievers import BaseRetriever
-from langchain_core.runnables import RunnableConfig
-
-from gpt_researcher.utils.schemas import BaseScraper
+from langchain_community.retrievers import ArxivRetriever
 
 if TYPE_CHECKING:
-    from typing_extensions import Literal
+    pass
 
 
-class ArxivRetriever(BaseRetriever):
+class ArxivScraper:
     def __init__(
         self,
-        load_max_docs: int,
-        doc_content_chars_max: int | None,
-        **kwargs: Any,  # provided for compatibility with other scrapers
-    ) -> None:
-        self.load_max_docs: int = load_max_docs
-        self.doc_content_chars_max: int | None = doc_content_chars_max
-
-    def invoke(
-        self,
-        input: str,
-        config: RunnableConfig | None = None,
+        link: str,
+        session: Any | None = None,
+        *args: Any,
         **kwargs: Any,
-    ) -> list[Document]:
-        if not self.doc_content_chars_max:
-            raise ValueError("doc_content_chars_max must be provided")
-        return super().invoke(input=input, config=config, **kwargs)
+    ):
+        self.link: str = link
+        self.session: Any | None = session
 
-    def _get_relevant_documents(self, query: str) -> list[Document]:
-        return []
-
-
-class ArxivScraper(BaseScraper):
-    MODULE_NAME: Literal["arxiv"] = "arxiv"
-
-    def scrape(self) -> str:
-        """Scrapes relevant documents from Arxiv based on a given link
+    def scrape(self) -> tuple[str, list[Any], Any]:
+        """
+        The function scrapes relevant documents from Arxiv based on a given link and returns the content
+        of the first document.
 
         Returns:
-            The content of the first document retrieved by the ArxivRetriever
+            The code is returning the page content of the first document retrieved by the ArxivRetriever
+            for a given query extracted from the link.
         """
-        query = self.link.split("/")[-1]
-        retriever = ArxivRetriever(
+        query: str = self.link.split("/")[-1]
+        retriever: ArxivRetriever = ArxivRetriever(
             load_max_docs=2,
             doc_content_chars_max=None,
+            arxiv_search=None,
+            arxiv_exceptions=None,
         )
-        docs: list[Document] = retriever.invoke(input=query)
-        return docs[0].page_content
+        docs: list[Any] = retriever.invoke(query)
+        # returns content, image_urls, title
+        return docs[0].page_content, [], docs[0].metadata["Title"]

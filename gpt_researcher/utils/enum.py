@@ -11,6 +11,7 @@ class ReportType(Enum):
     OutlineReport = "Outline - Skeleton of the report"
     CustomReport = "Custom - Your Unique Report"
     SubtopicReport = "Subtopic - Subtopic report"
+    DeepResearch = "Deep Research - Deep research report"
 
 
 class ReportSource(Enum):

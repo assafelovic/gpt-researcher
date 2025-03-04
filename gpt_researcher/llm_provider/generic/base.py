@@ -4,13 +4,14 @@ import importlib
 import importlib.util
 import logging
 import os
+import subprocess
 import sys
 import time
 import uuid
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Callable, Sequence, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Callable, Sequence, cast
 
 from colorama import Fore, Style, init
 from fastapi import WebSocket
@@ -33,6 +34,7 @@ _SUPPORTED_PROVIDERS: set[str] = {
     "dashscope",
     "deepseek",
     "fireworks",
+    "gigachat",
     "google_genai",
     "google_vertexai",
     "groq",
@@ -172,7 +174,9 @@ class ModelFactory:
             init(autoreset=True)
             raise ImportError(f"{Fore.RED}Unable to import required package: {e.__class__.__name__}: {e}")  # from e
         except ValueError as e:
-            raise ValueError(f"{Fore.RED}Unsupported provider: '{provider_name}'.\nSupported providers: [{', '.join(_SUPPORTED_PROVIDERS)}]") from e
+            raise ValueError(
+                f"{Fore.RED}Unsupported provider: '{provider_name}'.\nSupported providers: [{', '.join(_SUPPORTED_PROVIDERS)}]"
+            ) from e
 
 
 # Class for message conversion
@@ -310,14 +314,20 @@ class GenericLLMProvider:
     def _log_configuration(self) -> None:
         current_model_info = self._get_model_info(self.current_model)
         logger.info(f"Using primary model: {current_model_info.model_id} (provider: {current_model_info.provider})")
-        fallbacks: list[str] = [f"{self._get_model_info(model).model_id} ({self._get_model_info(model).provider})" for model in self.fallback_models[1:]]
+        fallbacks: list[str] = [
+            f"{self._get_model_info(model).model_id} ({self._get_model_info(model).provider})"
+            for model in self.fallback_models[1:]
+        ]
         if fallbacks:
             logger.info(f"Available fallbacks: {', '.join(fallbacks)}")
         else:
             logger.info("No fallback models available")
         print(f"{Fore.GREEN}{Style.BRIGHT}Using LLM provider: {Style.RESET_ALL}{self.current_model}", file=sys.__stdout__)
         if self.fallback_models[1:]:
-            print(f"{Fore.GREEN}{Style.BRIGHT}Using fallbacks: {Style.RESET_ALL}{self.fallback_models[1:]}", file=sys.__stdout__)
+            print(
+                f"{Fore.GREEN}{Style.BRIGHT}Using fallbacks: {Style.RESET_ALL}{self.fallback_models[1:]}",
+                file=sys.__stdout__,
+            )
 
     def _get_model_info(
         self,
@@ -407,7 +417,9 @@ class GenericLLMProvider:
             init(autoreset=True)
             raise ImportError(f"{Fore.RED}Unable to import required package: {str(e)}") from e
         except ValueError as e:
-            raise ValueError(f"{Fore.RED}Unsupported provider: '{provider_name}'.\nSupported providers: [{', '.join(_SUPPORTED_PROVIDERS)}]") from e
+            raise ValueError(
+                f"{Fore.RED}Unsupported provider: '{provider_name}'.\nSupported providers: [{', '.join(_SUPPORTED_PROVIDERS)}]"
+            ) from e
 
     @classmethod
     def _create_model_for_provider(
@@ -717,7 +729,9 @@ class GenericLLMProvider:
                 continue
             for retry in range(max_retries):
                 try:
-                    logger.info(f"Attempting request with model {info.model_id} (provider: {info.provider}), attempt {retry + 1}/{max_retries}")
+                    logger.info(
+                        f"Attempting request with model {info.model_id} (provider: {info.provider}), attempt {retry + 1}/{max_retries}"
+                    )
                     if stream:
                         return await self._stream_response(model, messages, websocket)
                     response: BaseMessage = await model.ainvoke(messages, headers=headers)
@@ -731,7 +745,9 @@ class GenericLLMProvider:
                     logger.info(f"Successfully got response from {info.model_id}")
                     return result
                 except Exception as e:
-                    logger.exception(f"Error getting response from {info.provider}/{getattr(info.model, 'model', model.name)}! {e.__class__.__name__}: {e}")
+                    logger.exception(
+                        f"Error getting response from {info.provider}/{getattr(info.model, 'model', model.name)}! {e.__class__.__name__}: {e}"
+                    )
                     self._error_tracker.record_failure(info.model_id, info.provider, e)
                     if retry == max_retries - 1:
                         logger.warning(f"Model {info.model_id} failed after {max_retries} attempts")
@@ -796,4 +812,16 @@ def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
         pkg_kebab = pkg.replace("_", "-")
         init(autoreset=True)
-        raise ImportError(f"{Fore.RED}Unable to import {pkg_kebab}. Please install with `pip install -U {pkg_kebab}`")
+
+        try:
+            print(f"{Fore.YELLOW}Installing {pkg_kebab}...{Style.RESET_ALL}")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", pkg_kebab])
+            print(f"{Fore.GREEN}Successfully installed {pkg_kebab}{Style.RESET_ALL}")
+
+            # Try importing again after install
+            importlib.import_module(pkg)
+
+        except subprocess.CalledProcessError:
+            raise ImportError(
+                Fore.RED + f"Failed to install {pkg_kebab}. Please install manually with `pip install -U {pkg_kebab}`"
+            )

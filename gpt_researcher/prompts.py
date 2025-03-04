@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import warnings
 import os
+import warnings
 
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Any
@@ -199,7 +199,7 @@ Assume the current date is {current_date} if required.
 - The report should have a minimum length of {total_words} words.
 - Use an {tone_value} tone throughout the report.
 
-DO NOT create a 'conclusion' section under any circumstances, assume that the report will be part of a larger essay/article.
+DO NOT create a 'conclusion' section under any circumstances.
 """
 
 PROMPT_GENERATE_DRAFT_TITLES = """
@@ -271,6 +271,7 @@ PROCESSING INSTRUCTIONS:
 Apply the above processing instructions to the content and return the processed result.
 """
 
+
 def generate_search_queries_prompt(
     question: str,
     parent_query: str,
@@ -323,18 +324,18 @@ Use this context to inform and refine your search queries. The context provides 
                 task=task,
                 context_prompt=context_prompt,
                 dynamic_example=dynamic_example,
-                current_date=datetime.now(timezone.utc).strftime("%B %d, %Y")
+                current_date=datetime.now(timezone.utc).strftime("%B %d, %Y"),
             )
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-    
+
     return default_prompt.format(
         max_iterations=max_iterations,
         task=task,
         current_date=datetime.now(timezone.utc).strftime("%B %d, %Y"),
         context_prompt=context_prompt,
-        dynamic_example=dynamic_example
+        dynamic_example=dynamic_example,
     )
 
 
@@ -385,12 +386,12 @@ eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url webs
                 language=language,
                 reference_prompt=reference_prompt,
                 tone_prompt=tone_prompt,
-                current_date=date.today()
+                current_date=date.today(),
             )
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
+
     return default_prompt.format(
         question=question,
         context=context,
@@ -399,7 +400,7 @@ eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url webs
         reference_prompt=reference_prompt,
         tone_prompt=tone_prompt,
         language=language,
-        current_date=date.today()
+        current_date=date.today(),
     )
 
 
@@ -415,20 +416,12 @@ def curate_sources(
     if custom_prompt:
         try:
             # Use string formatting with named parameters for template
-            return custom_prompt.format(
-                query=query,
-                sources=sources,
-                max_results=max_results
-            )
+            return custom_prompt.format(query=query, sources=sources, max_results=max_results)
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
-    return default_prompt.format(
-        query=query,
-        sources=sources,
-        max_results=max_results
-    )
+
+    return default_prompt.format(query=query, sources=sources, max_results=max_results)
 
 
 def generate_resource_report_prompt(
@@ -471,17 +464,14 @@ def generate_resource_report_prompt(
                 report_source=report_source,
                 report_source_value=report_source.value,
                 total_words=total_words,
-                reference_prompt=reference_prompt
+                reference_prompt=reference_prompt,
             )
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
+
     return default_prompt.format(
-        question=question,
-        context=context,
-        total_words=total_words,
-        reference_prompt=reference_prompt
+        question=question, context=context, total_words=total_words, reference_prompt=reference_prompt
     )
 
 
@@ -496,18 +486,12 @@ def generate_custom_report_prompt(
     if custom_prompt:
         try:
             # Use string formatting with named parameters for template
-            return custom_prompt.format(
-                query_prompt=query_prompt,
-                context=context
-            )
+            return custom_prompt.format(query_prompt=query_prompt, context=context)
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
-    return default_prompt.format(
-        query_prompt=query_prompt,
-        context=context
-    )
+
+    return default_prompt.format(query_prompt=query_prompt, context=context)
 
 
 def generate_outline_report_prompt(
@@ -531,20 +515,84 @@ def generate_outline_report_prompt(
     if custom_prompt:
         try:
             # Use string formatting with named parameters for template
-            return custom_prompt.format(
-                question=question,
-                context=context,
-                total_words=total_words
-            )
+            return custom_prompt.format(question=question, context=context, total_words=total_words)
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
-    return default_prompt.format(
-        question=question,
-        context=context,
-        total_words=total_words
-    )
+
+    return default_prompt.format(question=question, context=context, total_words=total_words)
+
+
+def generate_deep_research_prompt(
+    question: str,
+    context: str,
+    report_source: ReportSource,
+    report_format: ReportFormat = ReportFormat.APA,
+    tone: Tone | None = None,
+    total_words: int = 2000,
+    language: str = "ENGLISH",
+) -> str:
+    """Generates the deep research report prompt, specialized for handling hierarchical research results.
+
+    Args:
+        question (str): The research question.
+        context (str): The research context containing detailed information and citations.
+        report_source (ReportSource): Source of the research (e.g., Web).
+        report_format (ReportFormat): Report formatting style.
+        tone (Tone | None): The tone to use in writing.
+        total_words (int): Minimum word count for the report.
+        language (str): The language in which to write the report.
+
+    Returns:
+        str: The deep research report prompt.
+    """
+    reference_prompt = ""
+    if report_source == ReportSource.Web:
+        reference_prompt = """
+You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
+Every url should be hyperlinked: [url website](url)
+Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report: 
+
+eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
+"""
+    else:
+        reference_prompt = """
+You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
+"""
+    tone_prompt = f"Write the report in a {tone.value} tone." if tone else ""
+
+    return f"""
+Using the following hierarchically researched information and citations:
+
+"{context}"
+
+Write a comprehensive research report answering the query: "{question}"
+
+The report should:
+1. Synthesize information from multiple levels of research depth
+2. Integrate findings from various research branches
+3. Present a coherent narrative that builds from foundational to advanced insights
+4. Maintain proper citation of sources throughout
+5. Be well-structured with clear sections and subsections
+6. Have a minimum length of {total_words} words
+7. Follow {report_format} format with markdown syntax
+
+Additional requirements:
+- Prioritize insights that emerged from deeper levels of research
+- Highlight connections between different research branches
+- Include relevant statistics, data, and concrete examples
+- You MUST determine your own concrete and valid opinion based on the given information. Do NOT defer to general and meaningless conclusions.
+- You MUST prioritize the relevance, reliability, and significance of the sources you use. Choose trusted sources over less reliable ones.
+- You must also prioritize new articles over older articles if the source can be trusted.
+- Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+- {tone_prompt}
+- Write in {language}
+
+{reference_prompt}
+
+Please write a thorough, well-researched report that synthesizes all the gathered information into a cohesive whole.
+Assume the current date is {datetime.now(timezone.utc).strftime("%B %d, %Y")}.
+"""
 
 
 def get_report_by_type(
@@ -556,6 +604,7 @@ def get_report_by_type(
         ReportType.OutlineReport: generate_outline_report_prompt,
         ReportType.CustomReport: generate_custom_report_prompt,
         ReportType.SubtopicReport: generate_subtopic_report_prompt,
+        ReportType.DeepResearch: generate_deep_research_prompt,
     }
     return report_type_mapping[ReportType.__members__[report_type] if isinstance(report_type, str) else report_type]
 
@@ -572,7 +621,7 @@ def auto_agent_instructions() -> str:
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
+
     return default_prompt
 
 
@@ -604,18 +653,12 @@ def condense_information(
     if custom_prompt:
         try:
             # Use string formatting with named parameters for template
-            return custom_prompt.format(
-                query=query,
-                data=data
-            )
+            return custom_prompt.format(query=query, data=data)
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
-    return default_prompt.format(
-        query=query,
-        data=data
-    )
+
+    return default_prompt.format(query=query, data=data)
 
 
 ################################################################################################
@@ -631,7 +674,7 @@ def generate_subtopics_prompt() -> str:
     if custom_prompt:
         # No parameters since this is usually used as a template itself
         return custom_prompt
-    
+
     return default_prompt
 
 
@@ -667,12 +710,12 @@ def generate_subtopic_report_prompt(
                 tone=tone,
                 tone_value=tone.value,
                 language=language,
-                current_date=datetime.now(timezone.utc).strftime("%B %d, %Y")
+                current_date=datetime.now(timezone.utc).strftime("%B %d, %Y"),
             )
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
+
     return default_prompt.format(
         current_subtopic=current_subtopic,
         existing_headers=existing_headers,
@@ -684,7 +727,7 @@ def generate_subtopic_report_prompt(
         total_words=total_words,
         tone_value=tone.value,
         language=language,
-        current_date=datetime.now(timezone.utc).strftime("%B %d, %Y")
+        current_date=datetime.now(timezone.utc).strftime("%B %d, %Y"),
     )
 
 
@@ -712,20 +755,12 @@ def generate_draft_titles_prompt(
     if custom_prompt:
         try:
             # Use string formatting with named parameters for template
-            return custom_prompt.format(
-                current_subtopic=current_subtopic,
-                main_topic=main_topic,
-                context=context
-            )
+            return custom_prompt.format(current_subtopic=current_subtopic, main_topic=main_topic, context=context)
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
-    return default_prompt.format(
-        current_subtopic=current_subtopic,
-        main_topic=main_topic,
-        context=context
-    )
+
+    return default_prompt.format(current_subtopic=current_subtopic, main_topic=main_topic, context=context)
 
 
 def generate_report_introduction(
@@ -756,17 +791,17 @@ def generate_report_introduction(
                 question=question,
                 research_summary=research_summary,
                 language=language,
-                current_date=datetime.now(timezone.utc).strftime("%B %d, %Y")
+                current_date=datetime.now(timezone.utc).strftime("%B %d, %Y"),
             )
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
+
     return default_prompt.format(
         question=question,
         research_summary=research_summary,
         language=language,
-        current_date=datetime.now(timezone.utc).strftime("%B %d, %Y")
+        current_date=datetime.now(timezone.utc).strftime("%B %d, %Y"),
     )
 
 
@@ -794,20 +829,12 @@ def generate_report_conclusion(
     if custom_prompt:
         try:
             # Use string formatting with named parameters for template
-            return custom_prompt.format(
-                query=query,
-                report_content=report_content,
-                language=language
-            )
+            return custom_prompt.format(query=query, report_content=report_content, language=language)
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
-    return default_prompt.format(
-        query=query,
-        report_content=report_content,
-        language=language
-    )
+
+    return default_prompt.format(query=query, report_content=report_content, language=language)
 
 
 report_type_mapping: dict[ReportType, Callable[..., str]] = {
@@ -816,6 +843,7 @@ report_type_mapping: dict[ReportType, Callable[..., str]] = {
     ReportType.OutlineReport: generate_outline_report_prompt,
     ReportType.CustomReport: generate_custom_report_prompt,
     ReportType.SubtopicReport: generate_subtopic_report_prompt,
+    ReportType.DeepResearch: generate_deep_research_prompt,
 }
 
 
@@ -841,17 +869,17 @@ def post_retrieval_processing(
     processing_instructions: str,
 ) -> str:
     """Applies custom processing instructions to retrieved content.
-    
+
     This function allows for additional processing of retrieved web content
     before it's used in the research report. It can be used to extract specific
     information, format content in a particular way, or highlight the most
     important parts of the retrieved information.
-    
+
     Args:
         query (str): The original research query
         content (str): The retrieved content to process
         processing_instructions (str): Custom instructions for processing the content
-        
+
     Returns:
         str: The processed content
     """
@@ -862,17 +890,9 @@ def post_retrieval_processing(
     if custom_prompt:
         try:
             # Use string formatting with named parameters for template
-            return custom_prompt.format(
-                query=query,
-                content=content,
-                processing_instructions=processing_instructions
-            )
+            return custom_prompt.format(query=query, content=content, processing_instructions=processing_instructions)
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
-            
-    return default_prompt.format(
-        query=query,
-        content=content,
-        processing_instructions=processing_instructions
-    )
+
+    return default_prompt.format(query=query, content=content, processing_instructions=processing_instructions)
