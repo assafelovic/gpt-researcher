@@ -24,7 +24,7 @@ class BrowserManager:
     async def browse_urls(
         self,
         urls: list[str],
-    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    ) -> list[dict[str, Any]]:
         """Scrape content that exists on each URL from the given list.
 
         Args:
@@ -85,7 +85,7 @@ class BrowserManager:
                 self.researcher.websocket,
             )
 
-        return text_data, images
+        return text_data
 
     def select_top_images(
         self,

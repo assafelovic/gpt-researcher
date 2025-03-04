@@ -40,12 +40,12 @@ class GPTResearcher:
         self,
         query: str,
         report_type: ReportType | str | None = ReportType.ResearchReport.value,
-        report_format: ReportFormat | str | None = ReportFormat.Markdown.value,
+        report_format: OutputFileType | str | None = OutputFileType.MARKDOWN.value,
         report_source: ReportSource | str | None = ReportSource.Web.value,
         tone: Tone | str | None = Tone.Objective.value,
-        source_urls=None,
-        document_urls=None,
-        complement_source_urls=False,
+        source_urls: list[str] | None = None,
+        document_urls: list[str] | None = None,
+        complement_source_urls: bool = False,
         query_domains: list[str] | None = None,
         documents: list[dict[str, Any] | Document] | None = None,
         vector_store: VectorStore | None = None,
@@ -57,10 +57,12 @@ class GPTResearcher:
         subtopics: list[str] | None = None,
         visited_urls: set[str] | None = None,
         verbose: bool = True,
-        context: list[str] = [],
+        context: list[str] | None = None,
         headers: dict[str, str] | None = None,
         max_subtopics: int = 5,
         log_handler: CustomLogsHandler | None = None,
+        config_path: os.PathLike | str | None = None,
+        **kwargs,
     ):
         self.cfg: Config = config if isinstance(config, Config) else Config(VERBOSE=verbose, **kwargs)
         for key, value in kwargs.items():
@@ -79,8 +81,8 @@ class GPTResearcher:
         self.document_urls: list[str] = [] if document_urls is None else document_urls
         self.complement_source_urls: bool = complement_source_urls
         self.query_domains: list[str] = [] if query_domains is None else query_domains
-        self.research_images: list[dict[str, Any]] = [] if research_images is None else research_images
-        self.research_sources: list[dict[str, Any]] = [] if research_sources is None else research_sources
+        self.research_images: list[dict[str, Any]] = []
+        self.research_sources: list[dict[str, Any]] = []
         self.documents: list[dict[str, Any]] = [
             document.model_dump()
             if isinstance(document, Document)
@@ -97,13 +99,13 @@ class GPTResearcher:
         self.context: list[str] = [] if context is None else context
         self.headers: dict[str, str] = {} if headers is None else headers
         self.research_costs: float = 0.0
-        self.retrievers: list[type[BaseRetriever]] = get_retrievers(self.headers, self.cfg)
+        self.retrievers: list[type] = get_retrievers(self.headers, self.cfg)
         self.memory: Memory = Memory(
             self.cfg.EMBEDDING_PROVIDER,
             self.cfg.EMBEDDING_MODEL,
             **self.cfg.EMBEDDING_KWARGS,
         )
-        self.log_handler: LogHandler | None = log_handler
+        self.log_handler: CustomLogsHandler | None = log_handler
         self.llm: GenericLLMProvider = GenericLLMProvider(
             self.cfg.SMART_LLM,
             fallback_models=self.cfg.FALLBACK_MODELS,
@@ -112,14 +114,10 @@ class GPTResearcher:
         # deprecated arguments, it's recommended to use Config objects instead of passing a billion parameters to GPTResearcher.
         self.agent_role = self.cfg.AGENT_ROLE if agent_role is None else agent_role
         self.max_subtopics = self.cfg.MAX_SUBTOPICS if max_subtopics is None else max_subtopics
-        self.output_format = self.cfg.OUTPUT_FORMAT if output_file_type is None else output_file_type
-        self.report_format = self.cfg.REPORT_FORMAT if report_format is None else report_format
+        self.output_format = self.cfg.OUTPUT_FORMAT if report_format is None else report_format
         self.report_source = self.cfg.REPORT_SOURCE if report_source is None else report_source
         self.report_type = self.cfg.REPORT_TYPE if report_type is None else report_type
         self.tone = self.cfg.TONE if tone is None else tone
-        self.deep_researcher: Optional[DeepResearchSkill] = None
-        if report_type == ReportType.DeepResearch.value:
-            self.deep_researcher = DeepResearchSkill(self)
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
@@ -224,23 +222,34 @@ class GPTResearcher:
         )
         return self.context
 
-    async def _handle_deep_research(self, on_progress=None):
+    async def _handle_deep_research(
+        self,
+        on_progress: Callable[[ResearchProgress], None] | None = None,
+    ) -> list[str]:
         """Handle deep research execution and logging."""
         # Log deep research configuration
-        await self._log_event("research", step="deep_research_initialize", details={
-            "type": "deep_research",
-            "breadth": self.deep_researcher.breadth,
-            "depth": self.deep_researcher.depth,
-            "concurrency": self.deep_researcher.concurrency_limit
-        })
+        await self._log_event(
+            "research",
+            step="deep_research_initialize",
+            details={
+                "type": "deep_research",
+                "breadth": self.deep_researcher.breadth,
+                "depth": self.deep_researcher.depth,
+                "concurrency": self.deep_researcher.concurrency_limit,
+            },
+        )
 
         # Log deep research start
-        await self._log_event("research", step="deep_research_start", details={
-            "query": self.query,
-            "breadth": self.deep_researcher.breadth,
-            "depth": self.deep_researcher.depth,
-            "concurrency": self.deep_researcher.concurrency_limit
-        })
+        await self._log_event(
+            "research",
+            step="deep_research_start",
+            details={
+                "query": self.query,
+                "breadth": self.deep_researcher.breadth,
+                "depth": self.deep_researcher.depth,
+                "concurrency": self.deep_researcher.concurrency_limit,
+            },
+        )
 
         # Run deep research and get context
         self.context = await self.deep_researcher.run(on_progress=on_progress)
@@ -265,21 +274,6 @@ class GPTResearcher:
         # Return the research context
         return self.context
 
-    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None) -> str:
-        await self._log_event("research", step="writing_report", details={
-            "existing_headers": existing_headers,
-            "context_source": "external" if ext_context else "internal"
-        })
-        
-        report = await self.report_generator.write_report(
-            existing_headers,
-            relevant_written_contents,
-            ext_context or self.context
-        )
-        
-        await self._log_event("research", step="report_completed", details={
-            "report_length": len(report)
-        })
     async def write_report(
         self,
         existing_headers: list[dict[str, Any]] | None = None,
@@ -373,7 +367,6 @@ class GPTResearcher:
     ):
         self.research_images.extend(images)
 
-    def get_research_sources(self) -> list[dict[str, Any]]:
     def get_research_sources(self) -> list[dict[str, Any]]:
         return self.research_sources
 

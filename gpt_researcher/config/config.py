@@ -67,6 +67,7 @@ class Config:
         (locale.getdefaultlocale()[0] or "en").split("_")[0],
     )
     MAX_ITERATIONS: int = int(os.environ.get("MAX_ITERATIONS", 4))
+    MAX_SCRAPER_WORKERS: int = int(os.environ.get("MAX_SCRAPER_WORKERS", 10))
     MAX_SEARCH_RESULTS_PER_QUERY: int = int(os.environ.get("MAX_SEARCH_RESULTS_PER_QUERY", 5))
     MAX_SOURCES: int = int(os.environ.get("MAX_SOURCES", 10))
     MAX_URLS: int = int(os.environ.get("MAX_URLS", 10))

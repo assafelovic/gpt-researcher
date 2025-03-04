@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 logger: logging.Logger = get_formatted_logger()
 
 
-def scrape_urls(
+async def scrape_urls(
     urls: list[str],
     cfg: Config,
     worker_pool: WorkerPool,
