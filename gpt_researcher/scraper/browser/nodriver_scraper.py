@@ -5,7 +5,7 @@ import random
 
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, AsyncGenerator, cast, ClassVar
+from typing import TYPE_CHECKING, Any, AsyncGenerator, ClassVar, cast
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup

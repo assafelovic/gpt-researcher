@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from http.cookiejar import CookieJar
-import logging
 import os
 import pickle
 import random
@@ -20,11 +18,14 @@ from gpt_researcher.scraper.utils import extract_title, get_relevant_images
 from gpt_researcher.utils.logger import get_formatted_logger
 
 if TYPE_CHECKING:
+    import logging
+
+    from http.cookiejar import CookieJar
+
     import requests
-    
-    from typing_extensions import Literal
 
     from selenium.webdriver.remote.webdriver import WebDriver
+    from typing_extensions import Literal
 
 
 FILE_DIR: Path = Path(__file__).parent.parent.absolute()
@@ -177,7 +178,7 @@ class BrowserScraper:
             self.driver.add_cookie({"name": cookie.name, "value": cookie.value, "domain": cookie.domain})
 
     def _cleanup_cookie_file(self):
-        """Remove the cookie file"""
+        """Remove the cookie file."""
         cookie_file = Path(self.cookie_filename)
         if cookie_file.exists():
             try:

@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import importlib
 import importlib.util
-import logging
 import subprocess
 import sys
 
@@ -25,10 +24,12 @@ from gpt_researcher.scraper import (
 )
 from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.utils.schemas import BaseScraper
-from gpt_researcher.utils.workers import WorkerPool
 
 if TYPE_CHECKING:
+    import logging
+
     from gpt_researcher.utils.schemas import BaseScraper
+    from gpt_researcher.utils.workers import WorkerPool
 
 
 class Scraper:
@@ -64,9 +65,7 @@ class Scraper:
         self.worker_pool: WorkerPool = worker_pool
 
     async def run(self) -> list[dict[str, Any]]:
-        """
-        Extracts the content from the links
-        """
+        """Extracts the content from the links."""
         contents: list[dict[str, Any]] = await asyncio.gather(
             *(self.extract_data_from_url(url, self.session) for url in self.urls)
         )
@@ -120,9 +119,7 @@ class Scraper:
         link: str,
         session: Session,
     ) -> dict[str, Any]:
-        """
-        Extracts the data from the link with logging
-        """
+        """Extracts the data from the link with logging."""
         async with self.worker_pool.throttle():
             try:
                 Scraper: type[BaseScraper] = self.get_scraper(link)
