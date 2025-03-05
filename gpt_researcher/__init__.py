@@ -1,5 +1,3 @@
-from __future__ import annotations
-
-from gpt_researcher.agent import GPTResearcher
+from .agent import GPTResearcher
 
 __all__ = ["GPTResearcher"]

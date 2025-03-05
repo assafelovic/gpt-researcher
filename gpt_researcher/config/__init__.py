@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-from gpt_researcher.config.config import Config
+from .config import Config
 
 if TYPE_CHECKING:
     from typing_extensions import TypedDict

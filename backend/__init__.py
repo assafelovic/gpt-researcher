@@ -1,5 +1,3 @@
-from __future__ import annotations
+from .chat import ChatAgentWithMemory
 
-from multi_agents import agents
-
-__all__ = ["agents"]
+__all__ = ["ChatAgentWithMemory"]
