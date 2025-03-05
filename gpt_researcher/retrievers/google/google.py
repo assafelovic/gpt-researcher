@@ -2,13 +2,18 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
+
 import requests
 
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 # class GoogleSearch(BaseRetriever):
@@ -145,7 +150,7 @@ class GoogleSearch:
         query: str,
         headers: dict[str, str] | None = None,
         query_domains: list[str] | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         """Initializes the GoogleSearch object.
@@ -162,6 +167,8 @@ class GoogleSearch:
         self.api_key: str = self.headers.get("google_api_key") or self.get_api_key()
         self.cx_key: str = self.headers.get("google_cx_key") or self.get_cx_key()
         self.query_domains: list[str] | None = query_domains or None
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
     def get_api_key(self) -> str:
         """Gets the Google API key from environment variables.
@@ -191,7 +198,7 @@ class GoogleSearch:
             Exception: If CX key is not found in environment variables.
         """
         try:
-            api_key = os.environ["GOOGLE_CX_KEY"]
+            api_key: str = os.environ["GOOGLE_CX_KEY"]
         except KeyError:
             raise Exception(
                 "Google CX key not found. Please set the GOOGLE_CX_KEY environment variable. You can get a key at https://developers.google.com/custom-search/v1/overview"
@@ -201,7 +208,7 @@ class GoogleSearch:
 
     def search(
         self,
-        max_results: Optional[int] = None,
+        max_results: int | None = None,
     ) -> list[dict[str, str]]:
         """Searches the query.
 
@@ -211,9 +218,9 @@ class GoogleSearch:
             list: List of search results with title, href and body
         """
         # If max_results is the default, check environment variable
-        if max_results == 7:  # Default value
+        if max_results is None:  # Default value
             max_results = int(os.environ.get("MAX_SOURCES", 10))
-            
+
         logger.info(f"GoogleSearch: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
 
         # Build query with domain restrictions if specified

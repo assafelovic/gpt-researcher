@@ -1,15 +1,20 @@
 from __future__ import annotations
 
-import logging
 import os
-from typing import Any
+
+from typing import TYPE_CHECKING, Any
 
 import requests
+
 from bs4 import BeautifulSoup
 
 from gpt_researcher.scraper.utils import extract_title, get_relevant_images
+from gpt_researcher.utils.logger import get_formatted_logger
 
-logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    import logging
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 class TavilyExtract:
@@ -17,7 +22,7 @@ class TavilyExtract:
         self,
         link: str,
         session: requests.Session | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         self.link: str = link
@@ -28,7 +33,7 @@ class TavilyExtract:
 
     def get_api_key(self) -> str:
         try:
-            api_key = os.environ["TAVILY_API_KEY"]
+            api_key: str = os.environ["TAVILY_API_KEY"]
         except KeyError:
             raise Exception(
                 "Tavily API key not found. Please set the TAVILY_API_KEY environment variable."
@@ -42,21 +47,21 @@ class TavilyExtract:
                 return "", [], ""
 
             # Parse the HTML content of the response to create a BeautifulSoup object for the utility functions
-            response_bs = self.session.get(self.link, timeout=4)
-            soup = BeautifulSoup(response_bs.content, "lxml", from_encoding=response_bs.encoding)
+            response_bs: requests.Response = self.session.get(self.link, timeout=4)
+            soup: BeautifulSoup = BeautifulSoup(response_bs.content, "lxml", from_encoding=response_bs.encoding)
 
             # Since only a single link is provided to tavily_client, the results will contain only one entry.
-            content = response["results"][0]["raw_content"]
+            content: str = response["results"][0]["raw_content"]
             logger.info(f"Content: {content}")
 
             # Get relevant images using the utility function
             image_urls: list[dict[str, Any]] = get_relevant_images(soup, self.link)
 
             # Extract the title using the utility function
-            title = extract_title(soup) or ""
+            title: str = extract_title(soup) or ""
 
             return content, [image["url"] for image in image_urls], title
 
         except Exception as e:
-            logger.exception("Error! : " + str(e))
+            logger.exception(f"Error! : {e.__class__.__name__}: {e}")
             return "", [], ""

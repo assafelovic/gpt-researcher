@@ -1,33 +1,37 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import time
 
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Coroutine, Optional
-
-from fastapi import WebSocket
+from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from gpt_researcher.actions.query_processing import get_search_results
-from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
+from gpt_researcher.utils.enum import ReportSource, ReportType
 from gpt_researcher.utils.llm import create_chat_completion
 
 if TYPE_CHECKING:
+    import logging
+
+    from pathlib import Path
+
     from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
+    from fastapi import WebSocket
 
     from gpt_researcher.agent import GPTResearcher
+    from gpt_researcher.utils.enum import Tone
 
 
-logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 # Maximum words allowed in context (25k words for safety margin)
 MAX_CONTEXT_WORDS = 25000
 
 
 def count_words(text: str) -> int:
-    """Count words in a text string"""
+    """Count words in a text string."""
     return len(text.split())
 
 
@@ -35,7 +39,7 @@ def trim_context_to_word_limit(
     context_list: list[str],
     max_words: int = MAX_CONTEXT_WORDS,
 ) -> list[str]:
-    """Trim context list to stay within word limit while preserving most recent/relevant items"""
+    """Trim context list to stay within word limit while preserving most recent/relevant items."""
     total_words: int = 0
     trimmed_context: list[str] = []
 
@@ -75,25 +79,28 @@ class DeepResearchSkill:
 
         self.researcher: GPTResearcher = researcher
         self.breadth: int = getattr(researcher.cfg, "deep_research_breadth", 4)
-        self.depth: int = getattr(researcher.cfg, "deep_research_depth", 2)
         self.concurrency_limit: int = getattr(researcher.cfg, "deep_research_concurrency", 2)
-        self.websocket: WebSocket | HTTPStreamAdapter | CustomLogsHandler | None = researcher.websocket
-        self.tone: Tone = researcher.tone
         self.config_path: Path | None = researcher.cfg.config_path if hasattr(researcher.cfg, "config_path") else None
+        self.context: list[str] = []  # Track all context
+        self.depth: int = getattr(researcher.cfg, "deep_research_depth", 2)
         self.headers: dict[str, str] = researcher.headers or {}
-        self.visited_urls: set[str] = researcher.visited_urls
         self.learnings: list[str] = []
         self.research_sources: list[dict[str, Any]] = []  # Track all research sources
-        self.context: list[str] = []  # Track all context
+        self.tone: Tone = researcher.tone
+        self.visited_urls: set[str] = researcher.visited_urls
+        self.websocket: WebSocket | HTTPStreamAdapter | CustomLogsHandler | None = researcher.websocket
 
     async def generate_search_queries(
         self,
         query: str,
         num_queries: int = 3,
     ) -> list[dict[str, str]]:
-        """Generate SERP queries for research"""
+        """Generate SERP queries for research."""
         messages: list[dict[str, str]] = [
-            {"role": "system", "content": "You are an expert researcher generating search queries."},
+            {
+                "role": "system",
+                "content": "You are an expert researcher generating search queries.",
+            },
             {
                 "role": "user",
                 "content": f"Given the following prompt, generate {num_queries} unique search queries to research the topic thoroughly. For each query, provide a research goal. Format as 'Query: <query>' followed by 'Goal: <goal>' for each pair: {query}",
@@ -131,7 +138,7 @@ class DeepResearchSkill:
         query: str,
         num_questions: int = 3,
     ) -> list[str]:
-        """Generate follow-up questions to clarify research direction"""
+        """Generate follow-up questions to clarify research direction."""
         # Get initial search results to inform query generation
         search_results: list[dict[str, Any]] = await get_search_results(query, self.researcher.retrievers[0])
         logger.info(f"Initial web knowledge obtained: {len(search_results)} results")
@@ -168,7 +175,9 @@ Format each question on a new line starting with 'Question: '""",
         )
 
         questions: list[str] = [
-            q.replace("Question:", "").strip() for q in response.split("\n") if q.strip().startswith("Question:")
+            q.replace("Question:", "").strip()
+            for q in response.split("\n")
+            if q.strip().startswith("Question:")
         ]
         return questions[:num_questions]
 
@@ -178,7 +187,7 @@ Format each question on a new line starting with 'Question: '""",
         context: str,
         num_learnings: int = 3,
     ) -> dict[str, list[str]]:
-        """Process research results to extract learnings and follow-up questions"""
+        """Process research results to extract learnings and follow-up questions."""
         messages: list[dict[str, str]] = [
             {"role": "system", "content": "You are an expert researcher analyzing search results."},
             {
@@ -243,7 +252,7 @@ Format each question on a new line starting with 'Question: '""",
         visited_urls: set[str] | None = None,
         on_progress: Callable[[ResearchProgress], None] | None = None,
     ) -> dict[str, Any]:
-        """Conduct deep iterative research"""
+        """Conduct deep iterative research."""
         if learnings is None:
             learnings = []
         if citations is None:
@@ -269,14 +278,14 @@ Format each question on a new line starting with 'Question: '""",
         # Process queries with concurrency limit
         semaphore = asyncio.Semaphore(self.concurrency_limit)
 
-        async def process_query(serp_query: dict[str, str]) -> Optional[dict[str, Any]]:
+        async def process_query(serp_query: dict[str, str]) -> dict[str, Any] | None:
             async with semaphore:
                 try:
                     progress.current_query = serp_query["query"]
                     if on_progress:
                         on_progress(progress)
 
-                    from .. import GPTResearcher
+                    from gpt_researcher import GPTResearcher
 
                     researcher = GPTResearcher(
                         query=serp_query["query"],
@@ -395,7 +404,7 @@ Format each question on a new line starting with 'Question: '""",
         self,
         on_progress: Callable[[ResearchProgress], None] | None = None,
     ) -> list[str]:
-        """Run the deep research process and generate final report"""
+        """Run the deep research process and generate final report."""
         start_time: float = time.time()
 
         # Log initial costs
@@ -404,7 +413,9 @@ Format each question on a new line starting with 'Question: '""",
         follow_up_questions: list[str] = await self.generate_research_plan(self.researcher.query)
         answers: list[str] = ["Automatically proceeding with research"] * len(follow_up_questions)
 
-        qa_pairs: list[str] = [f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers)]
+        qa_pairs: list[str] = [
+            f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers)
+        ]
         combined_query: str = f"""
         Initial Query: {self.researcher.query}\nFollow - up Questions and Answers:\n
         """ + "\n".join(qa_pairs)

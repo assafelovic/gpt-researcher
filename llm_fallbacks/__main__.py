@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import tkinter as tk
+
 from tkinter import messagebox, ttk
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -67,7 +68,7 @@ def filter_model_specs(
     columns: list[str] | str | None = None,
     *,
     # Value filtering
-    comparison: Literal[">", "<", ">=", "<=", "==", "!="] | None = None,
+    comparison: Literal[">", "<", ">=", "<=", "==", "!="] | None = None,  # noqa: F722
     value: Any = None,
     # Regex
     pattern: str | None = None,

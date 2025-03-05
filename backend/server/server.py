@@ -5,29 +5,38 @@ import os
 
 from typing import TYPE_CHECKING
 
-from fastapi import FastAPI, File, UploadFile, WebSocketDisconnect
+from fastapi import FastAPI, File, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.utils.logging_config import setup_research_logging
 from pydantic import BaseModel
 
-from backend.server.server_utils import execute_multi_agents, handle_file_deletion, handle_file_upload, handle_websocket_communication
+from backend.server.server_utils import (
+    execute_multi_agents,
+    handle_file_deletion,
+    handle_file_upload,
+    handle_websocket_communication,
+)
 from backend.server.websocket_manager import WebSocketManager
 
 if TYPE_CHECKING:
-    from fastapi import Request, WebSocket
+    from fastapi import Request, UploadFile, WebSocket
     from fastapi.responses import JSONResponse
-    from starlette.templating import _TemplateResponse
 
+# Get logger instance
+logger: logging.Logger = get_formatted_logger(__name__)
 
-logger: logging.Logger = logging.getLogger(__name__)  # Get logger instance
-logger.propagate = True  # Don't override parent logger settings
+# Don't override parent logger settings
+logger.propagate = True
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler()],  # Only log to console
+    handlers=[
+        logging.StreamHandler()  # Only log to console
+    ],
 )
 
 
@@ -101,14 +110,8 @@ def startup_event():
 
 
 @app.get("/")
-async def read_root(request: Request) -> _TemplateResponse:
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "report": None,
-        },
-    )
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "report": None})
 
 
 @app.get("/files/")

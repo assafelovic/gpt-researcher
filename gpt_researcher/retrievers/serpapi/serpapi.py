@@ -14,8 +14,9 @@ import requests
 # from langchain_core.callbacks import CallbackManagerForRetrieverRun
 # from langchain_core.documents import Document
 # from langchain_core.retrievers import BaseRetriever
+from gpt_researcher.utils.logger import get_formatted_logger
 
-logger: logging.Logger = logging.getLogger(__name__)
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 # class SerpApiSearch(BaseRetriever):
@@ -177,7 +178,7 @@ class SerpApiSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         """
@@ -191,6 +192,8 @@ class SerpApiSearch:
         self.query: str = query
         self.query_domains: list[str] | None = query_domains
         self.api_key: str = self.get_api_key()
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
     def get_api_key(self) -> str:
         """Gets the SerpApi API key.
@@ -209,7 +212,7 @@ class SerpApiSearch:
 
     def search(
         self,
-        max_results: int = 7,
+        max_results: int | None = None,
     ) -> list[dict[str, str]]:
         """Searches the query.
 
@@ -219,9 +222,9 @@ class SerpApiSearch:
             List of dictionaries containing title, href, and body of each paper.
         """
         # If max_results is the default, check environment variable
-        if max_results == 7:  # Default value
+        if max_results is None:  # Default value
             max_results = int(os.environ.get("MAX_SOURCES", 10))
-            
+
         logging.info(f"SerpApiSearch: Searching with query {self.query}...")
         url: str = "https://serpapi.com/search.json"
 

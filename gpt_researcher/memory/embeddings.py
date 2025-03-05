@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+
 from typing import Any
 
 from pydantic import SecretStr
@@ -31,7 +32,7 @@ class Memory:
             case "custom":
                 from langchain_openai import OpenAIEmbeddings
 
-                _api_key = (
+                _api_key: None | SecretStr = (
                     None
                     if os.getenv("OPENAI_API_KEY", "custom") == "custom"
                     else SecretStr(os.getenv("OPENAI_API_KEY", "custom"))

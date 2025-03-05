@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from logging import Logger, getLogger
+from logging import getLogger
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from gpt_researcher.utils.enum import ReportSource, Tone
@@ -10,8 +10,10 @@ from gpt_researcher.utils.enum import ReportSource, Tone
 from multi_agents.agents.utils.views import print_agent_output
 
 if TYPE_CHECKING:
-    from fastapi import WebSocket
+    from logging import Logger
+
     from backend.server.server_utils import HTTPStreamAdapter
+    from fastapi import WebSocket
 
 logger: Logger = getLogger(__name__)
 

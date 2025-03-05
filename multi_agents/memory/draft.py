@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
-
-class DraftState(TypedDict):
-    task: dict
-    topic: str
-    draft: dict
-    review: str
-    revision_notes: str
+if TYPE_CHECKING:
+    class DraftState(TypedDict):
+        task: dict[str, Any]
+        topic: str
+        draft: dict[str, Any]
+        review: str
+        revision_notes: str

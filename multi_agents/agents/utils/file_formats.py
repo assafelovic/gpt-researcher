@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import os
 import urllib
 import urllib.parse
@@ -13,9 +12,13 @@ import aiofiles
 import mistune
 
 if TYPE_CHECKING:
+    import logging
+
     from docx.document import Document
 
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 async def write_to_file_async(

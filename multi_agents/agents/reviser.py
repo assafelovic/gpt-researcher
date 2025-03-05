@@ -12,10 +12,10 @@ if TYPE_CHECKING:
 
 SAMPLE_REVISION_NOTES = """
 {
-  "draft": {
-    draft title: The revised draft that you are submitting for review
-  },
-  "revision_notes": Your message to the reviewer about the changes you made to the draft based on their feedback
+    "draft": {
+        "draft title": The revised draft that you are submitting for review
+    },
+    "revision_notes": Your message to the reviewer about the changes you made to the draft based on their feedback
 }
 """
 

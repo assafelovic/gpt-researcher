@@ -1,23 +1,29 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import os
 import time
 
-from typing import Any, List, Optional
+from typing import TYPE_CHECKING, Any
 
 import cv2
 import numpy as np
 import pytesseract
 
-from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain.schema import Document
 from langchain_core.retrievers import BaseRetriever
-from playwright.sync_api import Browser, Page, TimeoutError as PlaywrightTimeoutError, sync_playwright
-from playwright.sync_api._generated import Playwright
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, sync_playwright
 
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+    from langchain.callbacks.manager import CallbackManagerForRetrieverRun
+    from playwright.sync_api import Browser, Page
+    from playwright.sync_api._generated import Playwright
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 class BrowserRetriever(BaseRetriever):
@@ -25,7 +31,7 @@ class BrowserRetriever(BaseRetriever):
         self,
         headless: bool = True,
         vision_threshold: float = 0.8,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """
@@ -60,10 +66,10 @@ class BrowserRetriever(BaseRetriever):
         self,
         query: str,
         *,
-        run_manager: CallbackManagerForRetrieverRun,
-        max_results: Optional[int] = None,
+        run_manager: CallbackManagerForRetrieverRun | None = None,
+        max_results: int | None = None,
         timeout: int = 60000,
-    ) -> List[Document]:
+    ) -> list[Document]:
         """Execute visual web interaction flow:
             1. Navigate to target website.
             2. Detect interactive elements using OCR/vision.
@@ -112,7 +118,7 @@ class BrowserRetriever(BaseRetriever):
             time.sleep(2)
 
             # Extract page content and build document with metadata
-            content = self.page.content()
+            content: str = self.page.content()
             metadata: dict[str, str] = {"url": self.page.url, "query": query}
             document = Document(page_content=content, metadata=metadata)
             return [document]
@@ -125,9 +131,9 @@ class BrowserRetriever(BaseRetriever):
         self,
         query: str,
         *,
-        run_manager: CallbackManagerForRetrieverRun,
-        max_results: Optional[int] = None,
-    ) -> List[Document]:
+        run_manager: CallbackManagerForRetrieverRun | None = None,
+        max_results: int | None = None,
+    ) -> list[Document]:
         """Asynchronous version of _get_relevant_documents.
 
         For demonstration purposes, this calls the synchronous version in a thread.
@@ -148,14 +154,14 @@ class BrowserRetriever(BaseRetriever):
 
         from functools import partial
 
-        loop = asyncio.get_event_loop()
+        loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
         func = partial(self._get_relevant_documents, query=query, run_manager=run_manager, max_results=max_results)
         return await loop.run_in_executor(None, func)
 
     def _visual_element_detection(
         self,
         screenshot: bytes,
-    ) -> List[dict]:
+    ) -> list[dict]:
         """
         Core vision pipeline using OpenCV and Tesseract.
 
@@ -177,7 +183,7 @@ class BrowserRetriever(BaseRetriever):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         ret, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
         # Use Tesseract OCR to detect text regions
-        data = pytesseract.image_to_data(thresh, output_type=pytesseract.Output.DICT)
+        data: dict[str, Any] = pytesseract.image_to_data(thresh, output_type=pytesseract.Output.DICT)
         elements: list[dict[str, Any]] = []
         n_boxes: int = len(data["level"])
         for i in range(n_boxes):
@@ -250,7 +256,7 @@ class BrowserRetriever(BaseRetriever):
                 logger.info(f"Clicking button with text: {element_text}")
                 self.page.click(f"text={element_text}")  # Use text selector for robustness
             elif element["element_type"] == "a":  # Handle links
-                href = element.get("href")
+                href: str | None = element.get("href")
                 if href:
                     logger.info(f"Navigating to link: {href}")
                     self.page.goto(href)
@@ -260,4 +266,4 @@ class BrowserRetriever(BaseRetriever):
             logger.info(f"Interacted with element: {element_text[:50]}...")  # Log the interaction
 
         except Exception as e:
-            logger.error(f"Error interacting with element: {e}")
+            logger.exception(f"Error interacting with element: {e.__class__.__name__}: {e}")

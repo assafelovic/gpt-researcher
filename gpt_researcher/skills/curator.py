@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
+
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 from gpt_researcher.actions import stream_output
@@ -10,9 +11,13 @@ from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from gpt_researcher.prompts import curate_sources as rank_sources_prompt
 
 if TYPE_CHECKING:
+    import logging
+
     from gpt_researcher.agent import GPTResearcher
 
-logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 class SourceCurator:
@@ -30,10 +35,10 @@ class SourceCurator:
         """Get or create an LLM provider instance."""
         if self.llm_provider is None:
             self.llm_provider = GenericLLMProvider(
-                self.researcher.cfg.SMART_LLM_PROVIDER,
-                model=self.researcher.cfg.SMART_LLM_MODEL,
+                model=self.researcher.cfg.SMART_LLM,
                 temperature=self.researcher.cfg.TEMPERATURE,
                 fallback_models=self.researcher.cfg.FALLBACK_MODELS,
+                **self.researcher.cfg.llm_kwargs,
             )
         return self.llm_provider
 
@@ -84,14 +89,15 @@ class SourceCurator:
             )
 
             if self.researcher.add_costs is not None:
-                from gpt_researcher.utils.costs import estimate_llm_cost
-                llm_costs = estimate_llm_cost(
-                    rank_sources_prompt(self.researcher.query, source_data, max_results),
-                    response,
-                )
-                self.researcher.add_costs(llm_costs)
+                with suppress(Exception):
+                    from gpt_researcher.utils.costs import estimate_llm_cost
+                    llm_costs: float = estimate_llm_cost(
+                        rank_sources_prompt(self.researcher.query, source_data, max_results),
+                        response,
+                    )
+                    self.researcher.add_costs(llm_costs)
 
-            curated_sources = json.loads(response)
+            curated_sources: list[str] = json.loads(response)
             logger.info(f"\n\nFinal Curated sources {len(source_data)} sources: {curated_sources}")
 
             if self.researcher.cfg.VERBOSE:
@@ -110,7 +116,7 @@ class SourceCurator:
                 await stream_output(
                     "logs",
                     "research_plan",
-                    f"🚫 Source verification failed: {str(e)}",
+                    f"🚫 Source verification failed: {e.__class__.__name__}: {e}",
                     self.researcher.websocket,
                 )
             return source_data

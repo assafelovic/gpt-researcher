@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 
 ONLINE_REASONING_CHAT_LLM_PRIORITY_ORDER = [

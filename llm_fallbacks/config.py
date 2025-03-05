@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-import logging
 import os
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, Iterable
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable
 
 if __name__ == "__main__":
     import sys
 
     sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
+
+from gpt_researcher.utils.logger import get_formatted_logger
 
 from llm_fallbacks.core import (
     calculate_cost_per_token,
@@ -17,14 +18,14 @@ from llm_fallbacks.core import (
     sort_models_by_cost_and_limits,
 )
 
-logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    import logging
+logger: logging.Logger = get_formatted_logger(__name__)
 
 if TYPE_CHECKING:
     from typing_extensions import Literal, TypedDict
 
-    RoutingStrategies = Literal[
-        "simple-shuffle", "least-busy", "usage-based-routing", "latency-based-routing"
-    ]
+    RoutingStrategies = Literal["simple-shuffle", "least-busy", "usage-based-routing", "latency-based-routing"]
     SupportedCallTypes = Literal["acompletion", "atext_completion", "aembedding", "atranscription"]
     ModelModes = Literal[
         "audio_speech",
@@ -57,9 +58,7 @@ if TYPE_CHECKING:
     class RouterSettings(TypedDict, total=False):
         allowed_fails_policy: AllowedFailsPolicy  # Allowed failures policy
         allowed_fails: int  # Number of failures allowed before cooldown
-        content_policy_fallbacks: list[
-            dict[str, list[str]]
-        ]  # Fallback models for content policy violations
+        content_policy_fallbacks: list[dict[str, list[str]]]  # Fallback models for content policy violations
         cooldown_time: int  # Cooldown duration in seconds
         disable_cooldowns: bool  # Disable cooldowns for all models
         enable_pre_call_checks: bool  # Check if call is within model context window
@@ -119,7 +118,9 @@ if TYPE_CHECKING:
         global_max_parallel_requests: int  # Global maximum parallel requests
         health_check_interval: int  # Health check interval
         infer_model_from_keys: bool  # Infer model from keys
-        key_management_settings: list[dict[str, Any]]  # Settings for key management system (e.g. AWS KMS, Azure Key Vault). Doc on key management: https://docs.litellm.ai/docs/secret
+        key_management_settings: list[
+            dict[str, Any]
+        ]  # Settings for key management system (e.g. AWS KMS, Azure Key Vault). Doc on key management: https://docs.litellm.ai/docs/secret
         key_management_system: str  # Key management system
         master_key: str  # Master key
         max_parallel_requests: int  # Maximum parallel requests
@@ -217,7 +218,7 @@ else:
 
 
 class BaseProviderConfig:
-    ALL_KNOWN_MODELS: ClassVar[Dict[str, LiteLLMBaseModelSpec]] = get_litellm_models()
+    ALL_KNOWN_MODELS: ClassVar[dict[str, LiteLLMBaseModelSpec]] = get_litellm_models()
     FREE_COSTS: ClassVar[LiteLLMBaseModelSpec] = {
         "cache_creation_input_token_cost": 0.0,
         "cache_read_input_token_cost": 0.0,
@@ -257,25 +258,25 @@ class BaseProviderConfig:
 class CustomProviderConfig(BaseProviderConfig):
     provider_name: str
     base_url: str
-    raw_models: Iterable[str] | Dict[str, LiteLLMBaseModelSpec | Dict[str, Any]] | None = None
+    raw_models: Iterable[str] | dict[str, LiteLLMBaseModelSpec | dict[str, Any]] | None = None
     api_env_key_name: str | None = None
     api_key: str | None = None
     api_key_required: bool = False
     api_version: str | None = None  # e.g. "2024-10-21"
     custom_get_models_from_api: (
-        Callable[[str | None], list[str] | Dict[str, LiteLLMBaseModelSpec | Dict[str, Any]]] | None
+        Callable[[str | None], list[str] | dict[str, LiteLLMBaseModelSpec | dict[str, Any]]] | None
     ) = None
-    parse_models_function: Callable[[str, Dict[str, Any]]] | None = None
+    parse_models_function: Callable[[str, dict[str, Any]]] | None = None
     auto_fetch_models: bool = True
-    model_specs: Dict[str, LiteLLMBaseModelSpec] = field(default_factory=dict)
-    free_models: Dict[str, LiteLLMBaseModelSpec] = field(default_factory=dict)
+    model_specs: dict[str, LiteLLMBaseModelSpec] = field(default_factory=dict)
+    free_models: dict[str, LiteLLMBaseModelSpec] = field(default_factory=dict)
 
     def __post_init__(self):
         self._requested_models: Any = None
         self._parse_api_key()
         self._parse_models()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert the CustomProviderConfig to a dictionary for JSON serialization."""
         return {
             "provider_name": self.provider_name,
@@ -293,9 +294,7 @@ class CustomProviderConfig(BaseProviderConfig):
         else:
             self.api_env_key_name = env_key_name.upper()
 
-        if (
-            not self.api_env_key_name or not self.api_env_key_name.strip()
-        ) and self.api_key_required:
+        if (not self.api_env_key_name or not self.api_env_key_name.strip()) and self.api_key_required:
             raise ValueError(f"API environment key name for {self.provider_name} is not set.")
         self.api_key = os.getenv(self.api_env_key_name)
         if (not self.api_key or not self.api_key.strip()) and self.api_key_required:
@@ -307,29 +306,25 @@ class CustomProviderConfig(BaseProviderConfig):
     def _parse_standard_model_response(
         cls,
         provider_name: str,
-        requested_models: Dict[str, Any],
-    ) -> Dict[str, LiteLLMBaseModelSpec]:
+        requested_models: dict[str, Any],
+    ) -> dict[str, LiteLLMBaseModelSpec]:
         data = requested_models.get("data", [])
         if not isinstance(data, list):
             return {}
-        parsed_requested_models: Dict[str, LiteLLMBaseModelSpec] = {
+        parsed_requested_models: dict[str, LiteLLMBaseModelSpec] = {
             f"{provider_name}/{model['id']}": {"litellm_provider": provider_name} for model in data
         }
         return parsed_requested_models
 
     def _update_model_specs_with_cost(
         self,
-        models: Dict[str, LiteLLMBaseModelSpec],
+        models: dict[str, LiteLLMBaseModelSpec],
     ):
         for model_name, model_spec in models.items():
-            model_key = (
-                model_name
-                if f"{self.provider_name}/" in model_name
-                else f"{self.provider_name}/{model_name}"
-            )
+            model_key = model_name if f"{self.provider_name}/" in model_name else f"{self.provider_name}/{model_name}"
             try:
                 key = model_key if model_key in self.ALL_KNOWN_MODELS else model_name
-                entry = self.ALL_KNOWN_MODELS.setdefault(key, model_spec.copy())
+                entry: LiteLLMBaseModelSpec = self.ALL_KNOWN_MODELS.setdefault(key, model_spec.copy())
                 self.model_specs.setdefault(model_name, entry.copy()).update(model_spec)
                 entry.update(model_spec)
             except Exception:
@@ -340,7 +335,7 @@ class CustomProviderConfig(BaseProviderConfig):
 
     def _set_free_model_costs(
         self,
-        models: Dict[str, LiteLLMBaseModelSpec],
+        models: dict[str, LiteLLMBaseModelSpec],
     ):
         for model_name, model_spec in models.items():
             self.model_specs[model_name].setdefault(  # pyright: ignore[reportCallIssue]
@@ -354,10 +349,10 @@ class CustomProviderConfig(BaseProviderConfig):
 
     def _process_requested_models(
         self,
-        models: Dict[str, LiteLLMBaseModelSpec],
+        models: dict[str, LiteLLMBaseModelSpec],
     ):
         if self.parse_models_function is not None:
-            parsed_requested_models: Dict[str, LiteLLMBaseModelSpec] = self.parse_models_function(
+            parsed_requested_models: dict[str, LiteLLMBaseModelSpec] = self.parse_models_function(
                 self.provider_name,
                 self._requested_models,
             )
@@ -368,20 +363,16 @@ class CustomProviderConfig(BaseProviderConfig):
                 print(repr(models))
                 print(f"unsupported format from '{self.base_url}' ({self.provider_name}) see above")
                 return
-            models.update(
-                {model.get("name", model.get("model_name")): {} for model in self._requested_models}
-            )
+            models.update({model.get("name", model.get("model_name")): {} for model in self._requested_models})
         elif isinstance(self._requested_models, dict):
             object_models_list = self._requested_models.get("object")
             if object_models_list == "list":
-                models.update(
-                    self._parse_standard_model_response(self.provider_name, self._requested_models)
-                )
+                models.update(self._parse_standard_model_response(self.provider_name, self._requested_models))
             else:
                 models.update(self._requested_models)
 
     def _parse_models(self):
-        models: Dict[str, LiteLLMBaseModelSpec] = (  # pyright: ignore[reportAssignmentType]
+        models: dict[str, LiteLLMBaseModelSpec] = (  # pyright: ignore[reportAssignmentType]
             self.raw_models
             if isinstance(self.raw_models, dict)
             else {model: {} for model in self.raw_models}
@@ -425,13 +416,13 @@ class CustomProviderConfig(BaseProviderConfig):
 
 def _parse_openrouter_models_response(
     provider_name: str,
-    requested_models: Dict[str, Any],
-) -> Dict[str, LiteLLMBaseModelSpec]:
+    requested_models: dict[str, Any],
+) -> dict[str, LiteLLMBaseModelSpec]:
     data = requested_models.get("data", [])
     if not isinstance(data, list):
         return {}
 
-    parsed_requested_models: Dict[str, LiteLLMBaseModelSpec] = {}
+    parsed_requested_models: dict[str, LiteLLMBaseModelSpec] = {}
     for model in data:
         model_id = model.get("id", "")
         if not model_id:
@@ -499,16 +490,16 @@ def _parse_openrouter_models_response(
 
 if "CUSTOM_PROVIDERS" not in globals():
     CUSTOM_PROVIDERS: list[CustomProviderConfig] = [
-        CustomProviderConfig(
-            provider_name="arliai",
-            base_url="https://api.arliai.com/v1",
-            api_key_required=True,
-        ),
-        CustomProviderConfig(
-            provider_name="awanllm",
-            base_url="https://api.awanllm.com/v1",
-            api_key_required=True,
-        ),
+        #        CustomProviderConfig(
+        #            provider_name="arliai",
+        #            base_url="https://api.arliai.com/v1",
+        #            api_key_required=True,
+        #        ),
+        #        CustomProviderConfig(
+        #            provider_name="awanllm",
+        #            base_url="https://api.awanllm.com/v1",
+        #            api_key_required=True,
+        #        ),
         CustomProviderConfig(
             provider_name="openrouter",
             base_url="https://openrouter.ai/api/v1",
@@ -530,10 +521,8 @@ if "CUSTOM_PROVIDERS" not in globals():
     ]
 
 if "FREE_MODELS" not in globals():  # don't waste time and energy redefining these anytime config.py is imported.
-    all_configs: Dict[str, LiteLLMBaseModelSpec] = {
-        model_name: config
-        for provider in CUSTOM_PROVIDERS
-        for model_name, config in provider.model_specs.items()
+    all_configs: dict[str, LiteLLMBaseModelSpec] = {
+        model_name: config for provider in CUSTOM_PROVIDERS for model_name, config in provider.model_specs.items()
     }
     all_configs.update(
         {
@@ -548,17 +537,9 @@ if "FREE_MODELS" not in globals():  # don't waste time and energy redefining the
         free_only=True,
     )
     ALL_EMBEDDING_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
-        {
-            k: v
-            for k, v in all_configs.items()
-            if v.get("mode") == "embedding"
-        },
+        {k: v for k, v in all_configs.items() if v.get("mode") == "embedding"},
     )
     FREE_EMBEDDING_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
-        {
-            k: v
-            for k, v in all_configs.items()
-            if v.get("mode") == "embedding"
-        },
+        {k: v for k, v in all_configs.items() if v.get("mode") == "embedding"},
         free_only=True,
     )

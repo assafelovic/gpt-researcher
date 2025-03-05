@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from langchain_community.retrievers import ArxivRetriever
-
-if TYPE_CHECKING:
-    pass
 
 
 class ArxivScraper:
@@ -18,15 +15,14 @@ class ArxivScraper:
     ):
         self.link: str = link
         self.session: Any | None = session
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
     def scrape(self) -> tuple[str, list[Any], Any]:
-        """
-        The function scrapes relevant documents from Arxiv based on a given link and returns the content
-        of the first document.
+        """Scrape relevant documents from Arxiv based on a given link.
 
         Returns:
-            The code is returning the page content of the first document retrieved by the ArxivRetriever
-            for a given query extracted from the link.
+            tuple[str, list[Any], Any]: The content of the first document, an empty list of images, and the title of the first document.
         """
         query: str = self.link.split("/")[-1]
         retriever: ArxivRetriever = ArxivRetriever(

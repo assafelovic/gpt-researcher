@@ -1,5 +1,5 @@
 from __future__ import annotations
 
-from .embeddings import Memory
+from gpt_researcher.memory.embeddings import Memory
 
 __all__ = ["Memory"]

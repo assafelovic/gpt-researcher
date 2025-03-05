@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-import logging
 import re
-from typing import Any
+
+from typing import TYPE_CHECKING, Any
 
 import markdown
 
-logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 def extract_headers(

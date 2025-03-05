@@ -1,20 +1,25 @@
 from __future__ import annotations
 
 import json
-import logging
 import re
+
 from typing import TYPE_CHECKING, Any, Callable
 
 import json_repair
-from json_repair.json_parser import JSONReturnType
 
 from gpt_researcher.prompts import auto_agent_instructions
 from gpt_researcher.utils.llm import create_chat_completion
 
 if TYPE_CHECKING:
+    import logging
+
+    from json_repair.json_parser import JSONReturnType
+
     from gpt_researcher.config import Config
 
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 async def choose_agent(
@@ -63,7 +68,7 @@ async def choose_agent(
             raise ValueError("Response is None")
 
         # Clean the response to remove invalid escape sequences
-        response = re.sub(r'\\(?![\\/"bfnrtu]|u[0-9a-fA-F]{4})', '', response)
+        response = re.sub(r'\\(?![\\/"bfnrtu]|u[0-9a-fA-F]{4})', "", response)
 
         agent_dict: dict[str, Any] = json.loads(response)
         return agent_dict["server"], agent_dict["agent_role_prompt"]
@@ -92,7 +97,7 @@ async def handle_json_error(
     json_string: str | None = extract_json_with_regex(response)
     if json_string and json_string.strip():
         try:
-            json_data: dict[str, Any] = json.loads(json_string.encode().decode('utf-8'))  # type: ignore
+            json_data: dict[str, Any] = json.loads(json_string.encode().decode("utf-8"))  # type: ignore
             return json_data["server"], json_data["agent_role_prompt"]
         except json.JSONDecodeError as e:
             logger.exception(f"Error decoding JSON: {e.__class__.__name__}: {e}")

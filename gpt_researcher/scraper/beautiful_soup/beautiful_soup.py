@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-import logging
-
-from typing import Any
-
-import requests
+from typing import TYPE_CHECKING, Any
 
 from bs4 import BeautifulSoup
 
 from gpt_researcher.scraper.utils import clean_soup, extract_title, get_relevant_images, get_text_from_soup
+from gpt_researcher.utils.logger import get_formatted_logger
 
-logger: logging.Logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    import logging
+
+    import requests
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 class BeautifulSoupScraper:
@@ -18,21 +20,30 @@ class BeautifulSoupScraper:
         self,
         link: str,
         session: requests.Session | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         self.link: str = link
         self.session: requests.Session | None = session
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
     def scrape(
         self,
-        timeout: int = 4,
+        timeout: int = 8,
         features: str = "lxml",
     ) -> tuple[str, list[dict[str, Any]], str | None]:
         """Scrapes content from a webpage.
 
         Will make a GET request to the specified link, parse the HTML with BeautifulSoup,
         remove script and style elements, and extract the cleaned text content.
+
+        Args:
+            timeout (int): The timeout for the GET request.
+            features (str): The features to use for parsing the HTML.
+
+        Raises:
+            AssertionError: If the session is not initialized.
 
         Returns:
             tuple: A tuple containing the cleaned content as a string, a list of image URLs, and the page title.

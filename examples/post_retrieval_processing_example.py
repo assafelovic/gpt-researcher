@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""
-Example script demonstrating how to use the post-retrieval processing feature.
-"""
+"""Example script demonstrating how to use the post-retrieval processing feature."""
+from __future__ import annotations
 
 import asyncio
+
 from pathlib import Path
 
 from gpt_researcher.agent import GPTResearcher
@@ -14,7 +14,7 @@ async def main():
     """Run the example."""
     post_retrieval_processing_instructions = """
     In the provided text, please extract and format the most important information as follows:
-    
+
     1. Identify the most important exact snippets related to quantum computing advancements
     2. Format each important snippet as a markdown quote block
     3. For each quote, include the source URL if available
@@ -30,19 +30,19 @@ async def main():
         report_title="Latest Advancements in Quantum Computing",
         post_retrieval_processing_instructions=post_retrieval_processing_instructions,
     )
-    
+
     # Run the research
     report: list[str] = await researcher.conduct_research()
-    
+
     # Save the report
     output_dir = Path("output")
     output_dir.mkdir(exist_ok=True)
-    
+
     with open(output_dir / "quantum_computing_report.md", "w", encoding="utf-8") as f:
         f.write("\n".join(report))
-    
+
     print(f"Report saved to {output_dir / 'quantum_computing_report.md'}")
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())

@@ -1,25 +1,27 @@
 from __future__ import annotations
 
-import logging
 import json
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any
 
-from gpt_researcher.config.config import Config
 from gpt_researcher import GPTResearcher
+from gpt_researcher.config.config import Config
 from gpt_researcher.utils.enum import ReportFormat, ReportSource, ReportType, Tone
+from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.utils.validators import Subtopics
 
-from backend.server.server_utils import CustomLogsHandler
-
 if TYPE_CHECKING:
+    import logging
     import os
 
     from fastapi import WebSocket
 
+    from backend.server.server_utils import CustomLogsHandler
+
+
 
 class DetailedReport:
-    logger: ClassVar[logging.Logger] = logging.getLogger(__name__)
+    logger: logging.Logger = get_formatted_logger(__name__)
 
     def __init__(
         self,
@@ -85,7 +87,7 @@ class DetailedReport:
         self.gpt_researcher: GPTResearcher = GPTResearcher(
             query=self.query,
             report_type=self.report_type,
-            report_format=self.cfg.OUTPUT_FORMAT,
+            report_format=self.cfg.REPORT_FORMAT,
             report_source=self.report_source,
             tone=self.tone,
             source_urls=self.source_urls,
@@ -154,7 +156,7 @@ class DetailedReport:
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
             report_type=ReportType.SubtopicReport,
-            report_format=self.cfg.OUTPUT_FORMAT,
+            report_format=self.cfg.REPORT_FORMAT,
             report_source=self.report_source,
             tone=self.tone,
             config=self.cfg,

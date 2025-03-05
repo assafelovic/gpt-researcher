@@ -133,8 +133,8 @@ class EditorAgent:
         max_sections: int,
     ) -> str:
         """Format the instructions for research planning."""
-        today = datetime.now().strftime("%d/%m/%Y")
-        feedback_instruction = (
+        today: str = datetime.now().strftime("%d/%m/%Y")
+        feedback_instruction: str = (
             f"Human feedback: {human_feedback}. You must plan the sections based on the human feedback."
             if include_human_feedback and human_feedback and human_feedback != "no"
             else ""

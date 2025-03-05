@@ -2,16 +2,20 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
 import ssl
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import uvicorn
 
 from backend.server.server import app
 from dotenv import load_dotenv
-from fastapi import FastAPI
+
+if TYPE_CHECKING:
+    import os
+
+    from fastapi import FastAPI
 
 
 def configure_logging(
@@ -47,7 +51,8 @@ def configure_logging(
     logging.getLogger("fontTools.ttLib").setLevel(logging.WARNING)
 
     # Create logger instance
-    logger: logging.Logger = logging.getLogger(__name__)
+    from gpt_researcher.utils.logger import get_formatted_logger
+    logger: logging.Logger = get_formatted_logger(__name__)
     return logger
 
 
@@ -165,9 +170,9 @@ def run_uvicorn(
 
 
 def main():
-    logger = configure_logging()
+    logger: logging.Logger = configure_logging()
     load_dotenv()
-    args = parse_arguments()
+    args: argparse.Namespace = parse_arguments()
     run_uvicorn(args, app, logger)
 
 

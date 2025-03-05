@@ -1,22 +1,27 @@
 from __future__ import annotations
 
 import json
-import logging
 
 # Bing Search Retriever
 # libraries
 import os
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import httpx
 import requests
 
-from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 
-logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+    from langchain_core.callbacks import CallbackManagerForRetrieverRun
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 class BingSearch(BaseRetriever):
@@ -26,7 +31,7 @@ class BingSearch(BaseRetriever):
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """Initialize the BingSearch retriever.
@@ -39,27 +44,23 @@ class BingSearch(BaseRetriever):
         self.query: str = query
         self.query_domains: list[str] | None = query_domains or None
         self.api_key: str = self.get_api_key()
-        self.logger: logging.Logger = logging.getLogger(__name__)
-        # Extract config from kwargs if provided
-        self.config = kwargs.get("config") if kwargs else None
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
     def search(
         self,
-        max_results: Optional[int] = None,
+        max_results: int | None = None,
     ) -> list[dict[str, Any]]:
-        """
-        Searches the query
+        """Searches the query.
+
         Returns:
             list[dict[str, Any]]: A list of dictionaries containing the search results.
         """
         # Use the provided max_results, or get it from config, or use default
         if max_results is None:
-            if self.config and hasattr(self.config, "MAX_SOURCES"):
-                max_results = self.config.MAX_SOURCES
-            else:
-                max_results = 7  # Default fallback
-                
-        print("Searching with query {0}...".format(self.query))
+            max_results = int(os.environ.get("MAX_SOURCES", 7))
+
+        logger.info(f"Searching with query {self.query}...")
         """Useful for general internet search queries using the Bing API."""
 
         # Search the query
@@ -86,10 +87,10 @@ class BingSearch(BaseRetriever):
             search_results: dict[str, Any] = json.loads(resp.text)
             results: list[dict[str, Any]] = search_results["webPages"]["value"]
         except Exception as e:
-            self.logger.error(f"Error parsing Bing search results: {e}. Resulting in empty response.")
+            logger.error(f"Error parsing Bing search results: {e}. Resulting in empty response.")
             return []
         if search_results is None:
-            self.logger.warning(f"No search results found for query: {self.query}")
+            logger.warning(f"No search results found for query: {self.query}")
             return []
         search_results_list: list[dict[str, Any]] = []
 
@@ -127,7 +128,7 @@ class BingSearch(BaseRetriever):
         self,
         query: str,
         *,
-        run_manager: CallbackManagerForRetrieverRun,
+        run_manager: CallbackManagerForRetrieverRun | None = None,
     ) -> list[Document]:
         """Get documents relevant to a query using Bing Search API.
 
@@ -145,12 +146,12 @@ class BingSearch(BaseRetriever):
             "Ocp-Apim-Subscription-Key": self.api_key,
             "Content-Type": "application/json",
         }
-        
+
         # Use config MAX_SOURCES if available, otherwise use default
-        max_results = 7
-        if self.config and hasattr(self.config, "MAX_SOURCES"):
-            max_results = self.config.MAX_SOURCES
-            
+        max_results: int = 7
+        if os.environ.get("MAX_SOURCES"):
+            max_results = int(os.environ.get("MAX_SOURCES", 7))
+
         params: dict[str, Any] = {
             "responseFilter": "Webpages",
             "q": query,
@@ -171,7 +172,7 @@ class BingSearch(BaseRetriever):
             search_results: dict[str, Any] = json.loads(resp.text)
             results: list[dict[str, Any]] = search_results["webPages"]["value"]
         except Exception as e:
-            logger.exception(f"Error parsing Bing search results: {e}. Resulting in empty response.")
+            logger.exception(f"Error parsing Bing search results: {e.__class__.__name__}: {e}. Resulting in empty response.")
             return []
 
         if not results:
@@ -202,7 +203,7 @@ class BingSearch(BaseRetriever):
         self,
         query: str,
         *,
-        run_manager: CallbackManagerForRetrieverRun,
+        run_manager: CallbackManagerForRetrieverRun | None = None,
     ) -> list[Document]:
         """Asynchronously get documents relevant to a query.
 
@@ -215,12 +216,12 @@ class BingSearch(BaseRetriever):
             "Ocp-Apim-Subscription-Key": self.api_key,
             "Content-Type": "application/json",
         }
-        
+
         # Use config MAX_SOURCES if available, otherwise use default
-        max_results = 7
-        if self.config and hasattr(self.config, "MAX_SOURCES"):
-            max_results = self.config.MAX_SOURCES
-            
+        max_results: int = 7
+        if os.environ.get("MAX_SOURCES"):
+            max_results = int(os.environ.get("MAX_SOURCES", 7))
+
         params: dict[str, Any] = {
             "responseFilter": "Webpages",
             "q": query,
@@ -242,7 +243,7 @@ class BingSearch(BaseRetriever):
             search_results: dict[str, Any] = resp.json()
             results: list[dict[str, Any]] = search_results["webPages"]["value"]
         except Exception as e:
-            logger.exception(f"Error parsing Bing search results: {e}. Resulting in empty response.")
+            logger.exception(f"Error parsing Bing search results: {e.__class__.__name__}: {e}. Resulting in empty response.")
             return []
 
         if not results:

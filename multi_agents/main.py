@@ -1,8 +1,8 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import asyncio
 import json
-import logging
 import os
 import sys
 import uuid
@@ -13,17 +13,22 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine
 from dotenv import load_dotenv
 
 if TYPE_CHECKING:
-    from fastapi import WebSocket as ServerWebSocket
+    import logging
 
-logger: logging.Logger = logging.getLogger(__name__)
+    from backend.server.server_utils import HTTPStreamAdapter
+    from fastapi import WebSocket as ServerWebSocket
+    from gpt_researcher.utils.enum import Tone
+
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 try:
-    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter  # noqa: E402
+    from backend.server.server_utils import CustomLogsHandler  # noqa: E402
 except ImportError:
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     sys.path.insert(0, path)
-    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter  # noqa: E402
-from gpt_researcher.utils.enum import Tone  # noqa: E402
+    from backend.server.server_utils import CustomLogsHandler  # noqa: E402
 
 # Run with LangSmith if API key is set
 if os.environ.get("LANGCHAIN_API_KEY"):

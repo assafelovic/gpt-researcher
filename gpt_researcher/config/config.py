@@ -2,32 +2,35 @@ from __future__ import annotations
 
 import json
 import locale
-import logging
 import os
 
 from pathlib import Path
-from typing import Any, Dict, List, Union, get_args, get_origin
+from typing import TYPE_CHECKING, Any, Union, get_args, get_origin
 
-from gpt_researcher.retrievers.utils import get_all_retriever_names
-from gpt_researcher.utils.enum import OutputFileType, ReportFormat, ReportSource, ReportType, Tone
 from gpt_researcher.prompts import (
-    PROMPT_GENERATE_SEARCH_QUERIES,
-    PROMPT_GENERATE_REPORT,
-    PROMPT_CURATE_SOURCES,
-    PROMPT_GENERATE_RESOURCE_REPORT,
-    PROMPT_GENERATE_CUSTOM_REPORT,
-    PROMPT_GENERATE_OUTLINE_REPORT,
     PROMPT_AUTO_AGENT_INSTRUCTIONS,
     PROMPT_CONDENSE_INFORMATION,
+    PROMPT_CURATE_SOURCES,
+    PROMPT_GENERATE_CUSTOM_REPORT,
+    PROMPT_GENERATE_DRAFT_TITLES,
+    PROMPT_GENERATE_OUTLINE_REPORT,
+    PROMPT_GENERATE_REPORT,
+    PROMPT_GENERATE_REPORT_CONCLUSION,
+    PROMPT_GENERATE_REPORT_INTRODUCTION,
+    PROMPT_GENERATE_RESOURCE_REPORT,
+    PROMPT_GENERATE_SEARCH_QUERIES,
     PROMPT_GENERATE_SUBTOPICS,
     PROMPT_GENERATE_SUBTOPIC_REPORT,
-    PROMPT_GENERATE_DRAFT_TITLES,
-    PROMPT_GENERATE_REPORT_INTRODUCTION,
-    PROMPT_GENERATE_REPORT_CONCLUSION,
     PROMPT_POST_RETRIEVAL_PROCESSING,
 )
+from gpt_researcher.retrievers.utils import get_all_retriever_names
+from gpt_researcher.utils.enum import OutputFileType, ReportFormat, ReportSource, ReportType, Tone
+from gpt_researcher.utils.logger import get_formatted_logger
 
-logger: logging.Logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    import logging
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 class Config:
@@ -37,6 +40,9 @@ class Config:
     CONFIG_DIR: str = os.path.join(os.path.dirname(__file__), "variables")
     CURATE_SOURCES: bool = bool(os.environ.get("CURATE_SOURCES", False))
     DOC_PATH: str = os.environ.get("DOC_PATH", str(Path.home().absolute()))
+    DEEP_RESEARCH_CONCURRENCY: int = int(os.environ.get("DEEP_RESEARCH_CONCURRENCY", 1))
+    DEEP_RESEARCH_DEPTH: int = int(os.environ.get("DEEP_RESEARCH_DEPTH", 1))
+    DEEP_RESEARCH_BREADTH: int = int(os.environ.get("DEEP_RESEARCH_BREADTH", 1))
     EMBEDDING: str = os.environ.get("EMBEDDING", "openai:text-embedding-3-small")
     EMBEDDING_MODEL: str = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
     EMBEDDING_PROVIDER: str = os.environ.get("EMBEDDING_PROVIDER", "openai")
@@ -81,15 +87,15 @@ class Config:
     RETRIEVER: str = os.environ.get("RETRIEVER", "tavily")
     SCRAPER: str = os.environ.get("SCRAPER", "bs")
     SIMILARITY_THRESHOLD: float = float(os.environ.get("SIMILARITY_THRESHOLD", 0.42))
-    SMART_LLM: str = os.environ.get("SMART_LLM", "litellm:gemini-2.0-flash-exp")
-    SMART_LLM_MODEL: str = os.environ.get("SMART_LLM_MODEL", "gemini-2.0-flash-exp")
+    SMART_LLM: str = os.environ.get("SMART_LLM", "litellm:openrouter/qwen/qwen2.5-vl-72b-instruct:free")
+    SMART_LLM_MODEL: str = os.environ.get("SMART_LLM_MODEL", "openrouter/qwen/qwen2.5-vl-72b-instruct:free")
     SMART_LLM_PROVIDER: str = os.environ.get("SMART_LLM_PROVIDER", "litellm")
     SMART_LLM_TEMPERATURE: float = float(os.environ.get("SMART_LLM_TEMPERATURE", 0.15))
     SMART_TOKEN_LIMIT: int = int(os.environ.get("SMART_TOKEN_LIMIT", 4096))
-    STRATEGIC_LLM: str = os.environ.get("STRATEGIC_LLM", "litellm:gemini-2.0-flash-thinking-exp")
+    STRATEGIC_LLM: str = os.environ.get("STRATEGIC_LLM", "litellm:openrouter/deepseek/deepseek-r1:free")
     STRATEGIC_LLM_MODEL: str = os.environ.get(
         "STRATEGIC_LLM_MODEL",
-        "gemini-2.0-flash-thinking-exp",
+        "openrouter/deepseek/deepseek-r1:free",
     )
     STRATEGIC_LLM_PROVIDER: str = os.environ.get("STRATEGIC_LLM_PROVIDER", "litellm")
     STRATEGIC_LLM_TEMPERATURE: float = float(os.environ.get("STRATEGIC_LLM_TEMPERATURE", 0.4))
@@ -332,7 +338,7 @@ class Config:
         if not self.EMBEDDING_FALLBACK_MODELS:
             from llm_fallbacks.config import ALL_EMBEDDING_MODELS
             for model_name, model_spec in ALL_EMBEDDING_MODELS:
-                provider = model_spec['litellm_provider']  # pyright: ignore[reportTypedDictNotRequiredAccess]
+                provider = model_spec["litellm_provider"]  # pyright: ignore[reportTypedDictNotRequiredAccess]
                 self.EMBEDDING_FALLBACK_MODELS.append(f"litellm:{provider}/{model_name}")
         else:
             self.EMBEDDING_FALLBACK_MODELS = list(self.EMBEDDING_FALLBACK_MODELS)
@@ -423,7 +429,7 @@ class Config:
             return float(env_value)
         elif type_hint in (str, Any, "str"):
             return env_value
-        elif origin in {list, List, dict, Dict, "list", "dict", "List", "Dict"}:
+        elif origin in {list, list, dict, dict, "list", "dict", "List", "Dict"}:
             return json.loads(env_value)
         else:
             raise ValueError(f"Unsupported type '{type_hint}' for key '{key}'")

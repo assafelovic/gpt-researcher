@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+
 from typing import TYPE_CHECKING, Any
 
 from gpt_researcher.actions import (
@@ -11,10 +12,10 @@ from gpt_researcher.actions import (
     write_report_introduction,
 )
 from gpt_researcher.utils.llm import construct_subtopics
-from gpt_researcher.utils.validators import Subtopics
 
 if TYPE_CHECKING:
     from gpt_researcher import GPTResearcher
+    from gpt_researcher.utils.validators import Subtopics
 
 
 class ReportGenerator:
@@ -55,14 +56,8 @@ class ReportGenerator:
             (str): The generated report.
         """
         existing_headers = [] if existing_headers is None else existing_headers
-        relevant_written_contents = (
-            [] if relevant_written_contents is None else relevant_written_contents
-        )
-        ext_context = (
-            "\n".join(self.researcher.context)
-            if ext_context is None or not ext_context.strip()
-            else ext_context
-        )
+        relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
+        ext_context = "\n".join(self.researcher.context) if ext_context is None or not ext_context.strip() else ext_context
 
         # send the selected images prior to writing report
         research_images: list[dict[str, Any]] = self.researcher.get_research_images()
@@ -99,7 +94,7 @@ class ReportGenerator:
         else:
             report_params["cost_callback"] = self.researcher.add_costs
 
-        report = await generate_report(**report_params)
+        report: str = await generate_report(**report_params)
 
         if self.researcher.cfg.VERBOSE:
             await stream_output(
@@ -139,9 +134,7 @@ class ReportGenerator:
             query=self.researcher.query,
             context=report_content,
             cfg=self.researcher.cfg,
-            agent_role_prompt=(
-                self.researcher.cfg.AGENT_ROLE or self.researcher.agent_role or ""
-            ).strip(),
+            agent_role_prompt=(self.researcher.cfg.AGENT_ROLE or self.researcher.agent_role or "").strip(),
             cost_callback=self.researcher.add_costs,
             websocket=self.researcher.websocket,
         )
@@ -171,11 +164,7 @@ class ReportGenerator:
         introduction: str = await write_report_introduction(
             query=self.researcher.query,
             context="\n".join(self.researcher.context),
-            agent_role_prompt=(
-                self.researcher.cfg.AGENT_ROLE
-                or self.researcher.agent_role
-                or ""
-            ).strip(),
+            agent_role_prompt=(self.researcher.cfg.AGENT_ROLE or self.researcher.agent_role or "").strip(),
             cfg=self.researcher.cfg,
             websocket=self.researcher.websocket,
             cost_callback=self.researcher.add_costs,
@@ -235,11 +224,7 @@ class ReportGenerator:
             query=self.researcher.query,
             current_subtopic=current_subtopic,
             context="\n".join(self.researcher.context),
-            role=(
-                self.researcher.cfg.AGENT_ROLE
-                or self.researcher.agent_role
-                or ""
-            ).strip(),
+            role=(self.researcher.cfg.AGENT_ROLE or self.researcher.agent_role or "").strip(),
             websocket=self.researcher.websocket,
             config=self.researcher.cfg,
             cost_callback=self.researcher.add_costs,

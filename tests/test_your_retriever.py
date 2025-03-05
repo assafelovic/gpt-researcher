@@ -3,13 +3,17 @@ from __future__ import annotations
 import asyncio
 import pprint
 
+from typing import TYPE_CHECKING
+
 from dotenv import load_dotenv
-from fastapi import WebSocket
 from gpt_researcher.actions.retriever import get_retrievers
 from gpt_researcher.config.config import Config
 from gpt_researcher.skills.researcher import ResearchConductor
-from langchain_core.retrievers import BaseRetriever
-from langchain_core.vectorstores import VectorStore
+
+if TYPE_CHECKING:
+    from fastapi import WebSocket
+    from langchain_core.retrievers import BaseRetriever
+    from langchain_core.vectorstores import VectorStore
 
 # Load environment variables from .env file
 load_dotenv()

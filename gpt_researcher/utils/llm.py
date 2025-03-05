@@ -1,25 +1,29 @@
 from __future__ import annotations
 
-import logging
 import os
 
+from contextlib import suppress
 from typing import TYPE_CHECKING, Any, Callable
 
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import BaseMessage
 from litellm.utils import get_max_tokens
 
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider  # noqa: F811
 from gpt_researcher.utils.costs import estimate_llm_cost
+from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.utils.validators import Subtopics
 
 if TYPE_CHECKING:
+    import logging
+
+    from langchain_core.language_models.chat_models import BaseChatModel
+    from langchain_core.messages import BaseMessage
+
     from gpt_researcher.config import Config
     from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 
-logger: logging.Logger = logging.getLogger(__name__)
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 def get_llm_params(
@@ -43,22 +47,19 @@ def get_llm_params(
     }
     if model and include_max_tokens:
         try:
-            max_tokens = get_max_tokens(model)
+            max_tokens: int | None = get_max_tokens(model)
             params["max_tokens"] = max_tokens
         except Exception as e:
-            logger.error(f"Error in get_max_tokens: {e.__class__.__name__}: {e}")
+            logger.warning(f"Error in get_max_tokens: {e.__class__.__name__}: {e}")
     return params
 
 
 def get_llm(
-    llm_provider: str,
+    model: str,
     **kwargs,
 ) -> GenericLLMProvider:
     from gpt_researcher.llm_provider import GenericLLMProvider
-    # Use the new from_provider method if available, otherwise fallback to the constructor
-    if hasattr(GenericLLMProvider, "from_provider"):
-        return GenericLLMProvider(llm_provider, **kwargs)
-    return GenericLLMProvider(llm_provider, **kwargs)
+    return GenericLLMProvider(model, **kwargs)
 
 
 async def create_chat_completion(
@@ -75,7 +76,7 @@ async def create_chat_completion(
     max_retries: int | None = 10,
     headers: dict[str, str] | None = None,
 ) -> str:
-    """Create a chat completion using the OpenAI API
+    """Create a chat completion using the OpenAI API.
 
     Args:
         messages (list[BaseMessage | dict[str, str]]): The messages to send to the chat completion
@@ -119,23 +120,25 @@ async def create_chat_completion(
 
     # Merge incoming change: handle OpenAI base URL if provided
     if llm_provider == "openai":
-        base_url = os.environ.get("OPENAI_BASE_URL", None)
+        base_url: str | None = os.environ.get("OPENAI_BASE_URL", None)
         if base_url:
             kwargs["openai_api_base"] = base_url
 
-    print(f"\n🤖 Calling {llm_provider} with model '{model}'...\n")
-    provider: GenericLLMProvider = get_llm(llm_provider, **kwargs)
-    response: str = ""
-    # create response
-    for _ in range(10):  # maximum of 10 attempts
-        response = await provider.get_chat_response(
-            messages=messages,  # type: ignore[arg-type]
-            stream=bool(stream),
-            websocket=websocket,
-            max_retries=max_retries or 10,
-            headers=headers,
-        )
+    logger.info(f"\n🤖 Calling {llm_provider} with model '{model}'...\n")
+    model = (kwargs.pop("model", model) or "").strip() or model
+    if model is None:
+        raise ValueError(f"Invalid model: {model}")
+    full_model_provider_str = model if model.startswith(llm_provider) else f"{llm_provider}:{model}"
+    provider: GenericLLMProvider = get_llm(full_model_provider_str, **kwargs)
+    response: str = await provider.get_chat_response(
+        messages=messages,  # type: ignore[arg-type]
+        stream=bool(stream),
+        websocket=websocket,
+        max_retries=max_retries or 1,
+        headers=headers,
+    )
 
+    with suppress(Exception):
         if cost_callback is not None:
             llm_costs: float = estimate_llm_cost(
                 provider.msgs_to_str(messages),
@@ -143,10 +146,7 @@ async def create_chat_completion(
             )
             cost_callback(llm_costs)
 
-        return response.encode().decode("utf-8")
-
-    logger.error(f"Failed to get response from provider '{llm_provider}'")
-    raise RuntimeError(f"Failed to get response from provider '{llm_provider}'")
+    return response.encode().decode("utf-8")
 
 
 async def construct_subtopics(
@@ -209,10 +209,9 @@ Providerarch data:
         temperature: float = config.TEMPERATURE
         assert config.SMART_LLM_PROVIDER is not None
         provider: GenericLLMProvider = get_llm(
-            config.SMART_LLM_PROVIDER,
-            model=config.SMART_LLM_MODEL,
-            temperature=temperature,
+            config.SMART_LLM,
             fallback_models=config.FALLBACK_MODELS,
+            temperature=temperature,
             **config.llm_kwargs,
             headers=headers,
         )

@@ -1,15 +1,19 @@
 from __future__ import annotations
 
-import pytest
-from pathlib import Path
 import json
 import logging
-from fastapi import WebSocket
+
+from pathlib import Path
 from typing import Any
 
+import pytest
+
+from fastapi import WebSocket
 
 logging.basicConfig(level=logging.INFO)
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 class TestWebSocket(WebSocket):
@@ -27,7 +31,7 @@ class TestWebSocket(WebSocket):
 
 @pytest.mark.asyncio
 async def test_log_output_file():
-    """Test to verify logs are properly written to output file"""
+    """Test to verify logs are properly written to output file."""
     from gpt_researcher.agent import GPTResearcher
 
     # 1. Setup like the main app

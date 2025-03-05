@@ -9,8 +9,8 @@ from multi_agents.agents.utils.views import print_agent_output
 if TYPE_CHECKING:
     import os
 
-    from fastapi import WebSocket
     from backend.server.server_utils import HTTPStreamAdapter
+    from fastapi import WebSocket
 
 
 class PublisherAgent:
@@ -42,10 +42,10 @@ class PublisherAgent:
         self,
         research_state: dict,
     ) -> str:
-        sections = "\n\n".join(f"{value}" for subheader in research_state.get("research_data", []) for key, value in subheader.items())
-        references = "\n".join(f"{reference}" for reference in research_state.get("sources", []) or [])
+        sections: str = "\n\n".join(f"{value}" for subheader in research_state.get("research_data", []) for key, value in subheader.items())
+        references: str = "\n".join(f"{reference}" for reference in research_state.get("sources", []) or [])
         headers: dict[str, Any] = research_state.get("headers", {})
-        layout = f"""# {headers.get("title")}
+        layout: str = f"""# {headers.get("title")}
 #### {headers.get("date")}: {research_state.get("date")}
 
 ## {headers.get("introduction")}

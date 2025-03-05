@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from logging import Logger, getLogger
+from logging import getLogger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Coroutine, cast
 
@@ -9,14 +9,13 @@ from gpt_researcher.utils.enum import Tone
 from langgraph.graph import END, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-# Import agent classes
 from multi_agents.agents.utils.utils import sanitize_filename
-
-# from langgraph.checkpoint.memory import MemorySaver
 from multi_agents.agents.utils.views import print_agent_output
 from multi_agents.memory.research import ResearchState
 
 if TYPE_CHECKING:
+    from logging import Logger
+
     from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
     from langchain_core.runnables.config import RunnableConfig
@@ -32,18 +31,20 @@ class ChiefEditorAgent:
         self,
         task: dict[str, Any],
         websocket: WebSocket | HTTPStreamAdapter | None = None,
-        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = None,
+        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]]
+        | None = None,
         tone: Tone | str | None = None,
         headers: dict[str, Any] | None = None,
     ):
         self.task: dict[str, Any] = task
         self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
-        self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = stream_output
+        self.stream_output: (
+            Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None
+        ) = stream_output
         self.headers: dict[str, Any] = {} if headers is None else headers
         self.tone: Tone = (
             Tone.__members__[tone.capitalize()]
-            if isinstance(tone, str)
-            and tone.capitalize() in Tone.__members__
+            if isinstance(tone, str) and tone.capitalize() in Tone.__members__
             else tone
             if isinstance(tone, Tone)
             else Tone(tone)

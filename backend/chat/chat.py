@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import uuid
 
 from typing import TYPE_CHECKING, Any
@@ -11,20 +10,22 @@ from gpt_researcher.utils.llm import get_llm
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.tools import tool
 from langchain_community.vectorstores import InMemoryVectorStore
-from langchain_core.embeddings import Embeddings
-from langchain_core.messages import BaseMessage
-from langchain_core.runnables.config import RunnableConfig
-from langchain_core.vectorstores.base import VectorStoreRetriever
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import create_react_agent
 
-from backend.server.server_utils import HTTPStreamAdapter
-
 if TYPE_CHECKING:
+    import os
+
     from fastapi import WebSocket
     from langchain.tools import BaseTool
+    from langchain_core.embeddings import Embeddings
     from langchain_core.language_models import BaseChatModel
+    from langchain_core.messages import BaseMessage
+    from langchain_core.runnables.config import RunnableConfig
+    from langchain_core.vectorstores.base import VectorStoreRetriever
+    from langgraph.graph.graph import CompiledGraph
+
+    from backend.server.server_utils import HTTPStreamAdapter
 
 
 class ChatAgentWithMemory:
@@ -58,8 +59,8 @@ class ChatAgentWithMemory:
 
         params: dict[str, Any] = get_llm_params(self.config.SMART_LLM_MODEL, temperature=0.35)
 
+        params["model"] = self.config.SMART_LLM
         provider: BaseChatModel = get_llm(
-            llm_provider=self.config.SMART_LLM_PROVIDER,
             **params,
             **self.config.llm_kwargs,
         ).current_model

@@ -1,20 +1,25 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
-from fastapi import WebSocket
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.llm import create_chat_completion
+
 from backend.server.server_utils import CustomLogsHandler
 
 if TYPE_CHECKING:
+    import logging
+
+    from fastapi import WebSocket
+
     from backend.server.websocket_manager import CustomLogsHandler, HTTPStreamAdapter
 
-logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 # Constants for models
 GPT4_MODEL = "gpt-4o"  # For standard tasks
@@ -65,7 +70,7 @@ class DeepResearch:
         query: str,
         num_questions: int = 3,
     ) -> list[str]:
-        """Generate follow-up questions to clarify research direction"""
+        """Generate follow-up questions to clarify research direction."""
         messages: list[dict[str, str]] = [
             {
                 "role": "system",
@@ -97,7 +102,7 @@ class DeepResearch:
         query: str,
         num_queries: int = 3,
     ) -> list[dict[str, str]]:
-        """Generate SERP queries for research"""
+        """Generate SERP queries for research."""
         messages: list[dict[str, str]] = [
             {
                 "role": "system",
@@ -142,7 +147,7 @@ class DeepResearch:
         context: str,
         num_learnings: int = 3,
     ) -> dict[str, Any]:
-        """Process research results to extract learnings and follow-up questions"""
+        """Process research results to extract learnings and follow-up questions."""
         messages: list[dict[str, str]] = [
             {"role": "system", "content": "You are an expert researcher analyzing search results."},
             {
@@ -199,7 +204,7 @@ class DeepResearch:
         visited_urls: set[str] | None = None,
         on_progress=None,
     ) -> dict[str, Any]:
-        """Conduct deep iterative research"""
+        """Conduct deep iterative research."""
         if learnings is None:
             learnings = []
         if citations is None:
@@ -315,7 +320,7 @@ class DeepResearch:
         self,
         on_progress: Callable[[ResearchProgress], None] | None = None,
     ) -> str:
-        """Run the deep research process and generate final report"""
+        """Run the deep research process and generate final report."""
         # Get initial feedback
         follow_up_questions: list[str] = await self.generate_feedback(self.query)
 

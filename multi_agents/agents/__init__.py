@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-from .editor import EditorAgent
-from .human import HumanAgent
+from multi_agents.agents.editor import EditorAgent
+from multi_agents.agents.human import HumanAgent
 
 # Below import should remain last since it imports all of the above
-from .orchestrator import ChiefEditorAgent
-from .publisher import PublisherAgent
-from .researcher import ResearchAgent
-from .reviewer import ReviewerAgent
-from .reviser import ReviserAgent
-from .writer import WriterAgent
+from multi_agents.agents.orchestrator import ChiefEditorAgent
+from multi_agents.agents.publisher import PublisherAgent
+from multi_agents.agents.researcher import ResearchAgent
+from multi_agents.agents.reviewer import ReviewerAgent
+from multi_agents.agents.reviser import ReviserAgent
+from multi_agents.agents.writer import WriterAgent
 
 __all__ = [
     "ChiefEditorAgent",

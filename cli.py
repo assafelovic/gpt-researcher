@@ -12,7 +12,6 @@ python cli.py "<query>" --report_type <report_type> --tone <tone> --query_domain
 from __future__ import annotations
 
 import asyncio
-import logging
 
 from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
 from pathlib import Path
@@ -23,11 +22,14 @@ from backend.report_type import DetailedReport
 from dotenv import load_dotenv
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, Tone
+from gpt_researcher.utils.logger import get_formatted_logger
 
 if TYPE_CHECKING:
+    import logging
+
     from argparse import Namespace
 
-logger: logging.Logger = logging.getLogger()
+logger: logging.Logger = get_formatted_logger("gpt_researcher")
 
 # =============================================================================
 # CLI

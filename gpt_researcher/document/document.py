@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import os
 
 from pathlib import Path
-from typing import Any, Coroutine, Sequence
+from typing import TYPE_CHECKING, Any, Coroutine, Sequence
 
 from langchain_community.document_loaders import (
     BSHTMLLoader,
@@ -18,7 +17,12 @@ from langchain_community.document_loaders import (
     UnstructuredWordDocumentLoader,
 )
 
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 def _normalize_path(path: os.PathLike | str) -> Path:

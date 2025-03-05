@@ -29,7 +29,7 @@ class ReviewerAgent:
         self,
         draft_state: dict,
     ) -> dict[str, Any] | None:
-        """Review a draft article
+        """Review a draft article.
 
         Args:
             draft_state (dict): The state of the draft article.

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import logging
+import sys
+
+from pathlib import Path
 from typing import Any
 
 import pytest
-import sys
-from pathlib import Path
 
 # Add the project root to Python path
 project_root: Path = Path(__file__).parent.parent
@@ -13,7 +14,9 @@ sys.path.append(str(project_root))
 
 # Configure basic logging
 logging.basicConfig(level=logging.INFO)
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 @pytest.mark.asyncio

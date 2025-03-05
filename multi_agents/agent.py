@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from langgraph.graph.state import CompiledStateGraph, StateGraph
-
 if __name__ == "__main__":
     import sys
 
@@ -9,7 +7,12 @@ if __name__ == "__main__":
 
     sys.path.append(str(Path(__file__).parent.parent))
 
+from typing import TYPE_CHECKING
+
 from multi_agents.agents import ChiefEditorAgent
+
+if TYPE_CHECKING:
+    from langgraph.graph.state import CompiledStateGraph, StateGraph
 
 chief_editor = ChiefEditorAgent(
     {

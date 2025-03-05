@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import logging
-
 from typing import TYPE_CHECKING, Any, Callable
 
 import json_repair
@@ -10,13 +8,15 @@ from langchain_core.retrievers import BaseRetriever
 
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from gpt_researcher.prompts import generate_search_queries_prompt
-from gpt_researcher.utils.enum import ReportType
 from gpt_researcher.utils.llm import create_chat_completion
 
 if TYPE_CHECKING:
+    import logging
+
     from json_repair.json_parser import JSONReturnType
 
     from gpt_researcher.config import Config
+    from gpt_researcher.utils.enum import ReportType
 
 
 def _get_llm(
@@ -35,15 +35,16 @@ def _get_llm(
         The LLM provider instance
     """
     return GenericLLMProvider(
-        cfg.STRATEGIC_LLM_PROVIDER if model == cfg.STRATEGIC_LLM_MODEL else cfg.SMART_LLM_PROVIDER,
-        model=model or cfg.SMART_LLM_MODEL,
-        temperature=temperature or cfg.TEMPERATURE,
+        cfg.STRATEGIC_LLM if model is None else f"{cfg.STRATEGIC_LLM_PROVIDER}:{model}",
         fallback_models=cfg.FALLBACK_MODELS,
+        temperature=temperature or cfg.TEMPERATURE,
         **cfg.llm_kwargs,
     )
 
 
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 async def get_search_results(

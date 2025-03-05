@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import traceback
 
 from dotenv import load_dotenv
@@ -12,7 +11,13 @@ from litellm.utils import get_max_tokens
 load_dotenv()
 
 
-logger = logging.getLogger(__name__)
+from typing import TYPE_CHECKING
+
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 async def main():
@@ -20,10 +25,9 @@ async def main():
 
     try:
         provider = GenericLLMProvider(
-            cfg.SMART_LLM_PROVIDER,
-            model=cfg.SMART_LLM_MODEL,
-            temperature=0.35,
+            f"{cfg.SMART_LLM_PROVIDER}:{cfg.SMART_LLM_MODEL}",
             fallback_models=cfg.FALLBACK_MODELS,
+            temperature=0.35,
             max_tokens=get_max_tokens(cfg.SMART_LLM_MODEL),  # type: ignore[attr-defined]
             **cfg.llm_kwargs,
         )

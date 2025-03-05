@@ -31,7 +31,7 @@ class ArxivSearch:
         self,
         max_results: int | None = None,
     ) -> list[dict[str, Any]]:
-        """Performs the search
+        """Performs the search.
 
         Args:
             query: The query to search for.
@@ -42,7 +42,7 @@ class ArxivSearch:
         """
         if max_results is None:
             max_results = 5
-                
+
         arxiv_results: list[arxiv.Result] = list(
             cast(arxiv, self.arxiv).Search(
                 query=self.query,

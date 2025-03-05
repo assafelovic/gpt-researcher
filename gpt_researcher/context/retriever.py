@@ -20,7 +20,7 @@ class SearchAPIRetriever(BaseRetriever):
         *,
         run_manager: CallbackManagerForRetrieverRun,
     ) -> list[Document]:
-        docs = [
+        docs: list[Document] = [
             Document(
                 page_content=page.get("raw_content", ""),
                 metadata={
@@ -58,7 +58,7 @@ class SectionRetriever(BaseRetriever):
         *,
         run_manager: CallbackManagerForRetrieverRun,
     ) -> list[Document]:
-        docs = [
+        docs: list[Document] = [
             Document(
                 page_content=page.get("written_content", ""),
                 metadata={

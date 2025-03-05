@@ -11,12 +11,13 @@ import traceback
 
 from pathlib import Path
 from sys import platform
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from bs4 import BeautifulSoup
 
 from gpt_researcher.scraper.browser.processing.scrape_skills import scrape_pdf_with_arxiv, scrape_pdf_with_pymupdf
 from gpt_researcher.scraper.utils import extract_title, get_relevant_images
+from gpt_researcher.utils.logger import get_formatted_logger
 
 if TYPE_CHECKING:
     import requests
@@ -32,7 +33,7 @@ FILE_DIR: Path = Path(__file__).parent.parent.absolute()
 class BrowserScraper:
     """Browser Scraper."""
 
-    logger: logging.Logger = logging.getLogger(__name__)
+    logger: ClassVar[logging.Logger] = get_formatted_logger(__name__)
 
     def __init__(
         self,

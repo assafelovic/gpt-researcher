@@ -1,16 +1,27 @@
 from __future__ import annotations
 
+import importlib.util
 import json
-import logging
 import os
 import uuid
 
 from pathlib import Path
 
-from llm_fallbacks.config import ALL_MODELS, CUSTOM_PROVIDERS, FREE_MODELS, CustomProviderConfig, LiteLLMYAMLConfig
+if not importlib.util.find_spec("llm_fallbacks"):
+    import sys
+    sys.path.append(str(Path(__file__).parents[1]))
+from typing import TYPE_CHECKING
+
+from gpt_researcher.utils.logger import get_formatted_logger
+
+from llm_fallbacks.config import ALL_MODELS, CUSTOM_PROVIDERS, FREE_MODELS
 from llm_fallbacks.core import calculate_cost_per_token
 
-logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    import logging
+
+    from llm_fallbacks.config import CustomProviderConfig, LiteLLMYAMLConfig
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 def to_litellm_config_yaml(

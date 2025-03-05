@@ -2,30 +2,32 @@ from __future__ import annotations
 
 import json
 import logging
+
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import os
+
     from typing import TypedDict
 
     class EventData(TypedDict):
+        data: dict[str, Any]
         timestamp: str
         type: str
-        data: dict[str, Any]
 
     class ContentData(TypedDict):
-        query: str
-        sources: list[str]
         context: list[str]
-        report: str
         costs: float
+        query: str
+        report: str
+        sources: list[str]
 
     class ResearchData(TypedDict):
-        timestamp: str
-        events: list[EventData]
         content: ContentData
+        events: list[EventData]
+        timestamp: str
 
 
 class JSONResearchHandler:

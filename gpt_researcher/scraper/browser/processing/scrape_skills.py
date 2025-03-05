@@ -25,7 +25,7 @@ def scrape_pdf_with_arxiv(
     arxiv_search: str | None = None,
     arxiv_exceptions: str | None = None,
 ) -> str:
-    """Scrape a pdf with arxiv
+    """Scrape a pdf with arxiv.
 
     Default document length of 70000 about ~15 pages or None for no limit.
 

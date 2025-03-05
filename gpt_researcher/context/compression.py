@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import asyncio
 import os
+
 from typing import TYPE_CHECKING, Any, Callable
 
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors.base import DocumentCompressorPipeline
 from langchain.retrievers.document_compressors.embeddings_filter import EmbeddingsFilter
-from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 from gpt_researcher.context.retriever import SearchAPIRetriever, SectionRetriever
@@ -15,6 +15,7 @@ from gpt_researcher.memory.embeddings import OPENAI_EMBEDDING_MODEL
 from gpt_researcher.utils.costs import estimate_embedding_cost
 
 if TYPE_CHECKING:
+    from langchain.schema import Document
     from langchain_core.embeddings import Embeddings
 
     from gpt_researcher.vector_store import VectorStoreWrapper

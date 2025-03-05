@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
-
-class ResearchState(TypedDict):
-    task: dict
-    initial_research: str
-    sections: list[str]
-    research_data: list[dict]
-    human_feedback: str
-    # Report layout
-    title: str
-    headers: dict
-    date: str
-    table_of_contents: str
-    introduction: str
-    conclusion: str
-    sources: list[str]
-    report: str
+if TYPE_CHECKING:
+    class ResearchState(TypedDict):
+        human_feedback: str
+        initial_research: str
+        research_data: list[dict]
+        sections: list[str]
+        task: dict
+        # Report layout
+        conclusion: str
+        date: str
+        headers: dict
+        introduction: str
+        report: str
+        sources: list[str]
+        table_of_contents: str
+        title: str

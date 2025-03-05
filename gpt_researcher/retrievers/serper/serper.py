@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from aiohttp_retry import Optional
 import requests
 
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 # class SerperSearch(BaseRetriever):
@@ -175,7 +179,7 @@ class SerperSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         """Initializes the SerperSearch object.
@@ -188,6 +192,8 @@ class SerperSearch:
         """
         self.query: str = query
         self.query_domains: list[str] | None = query_domains
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
         self.api_key: str = self.get_api_key()
 
     def get_api_key(self) -> str:
@@ -207,7 +213,7 @@ class SerperSearch:
 
     def search(
         self,
-        max_results: Optional[int] = None,
+        max_results: int | None = None,
     ) -> list[dict[str, str]]:
         """Searches the query.
 
@@ -219,9 +225,9 @@ class SerperSearch:
         # If max_results is the default, check environment variable
         if max_results is None:
             max_results = int(os.environ.get("MAX_SOURCES", 7))
-            
+
         logger.info(f"SerperSearch: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
-        print("Searching with query {0}...".format(self.query))
+        print(f"Searching with query {self.query}...")
 
         # Search the query (see https://serper.dev/playground for the format)
         url: str = "https://google.serper.dev/search"

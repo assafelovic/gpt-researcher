@@ -1,20 +1,23 @@
 from __future__ import annotations
 
-import logging
 import os
 
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
-from exa_py.api import SearchResponse, _Result
+from exa_py.api import SearchResponse
 from langchain_core.documents import Document
 
 from gpt_researcher.utils import check_pkg
 
 if TYPE_CHECKING:
-    from exa_py import Exa
-    from exa_py.api import ResultWithText, SearchResponse
+    import logging
 
-logger: logging.Logger = logging.getLogger(__name__)
+    from exa_py import Exa
+    from exa_py.api import ResultWithText, SearchResponse, _Result
+
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 # class ExaSearch(BaseRetriever):
@@ -137,13 +140,13 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ExaSearch:
-    """Exa API Retriever"""
+    """Exa API Retriever."""
 
     def __init__(
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         """Initializes the ExaSearch object.
@@ -162,6 +165,8 @@ class ExaSearch:
         self.query_domains: list[str] | None = query_domains
         self.api_key: str = self._retrieve_api_key()
         self.client: Exa = Exa(api_key=self.api_key)
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
     def _retrieve_api_key(self) -> str:
         """Gets the Exa API key from environment variables.
@@ -246,7 +251,7 @@ class ExaSearch:
 
     def search(
         self,
-        max_results: Optional[int] = None,
+        max_results: int | None = None,
         use_autoprompt: bool = False,
         search_type: str = "neural",
         **filters: Any,
@@ -265,7 +270,7 @@ class ExaSearch:
         # If max_results is the default, check environment variable
         if max_results is None:
             max_results = int(os.environ.get("MAX_SOURCES", 10))
-            
+
         logger.info(f"ExaSearch: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
 
         results: SearchResponse[_Result] = self.client.search(

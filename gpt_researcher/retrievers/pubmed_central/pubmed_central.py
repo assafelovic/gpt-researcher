@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import xml.etree.ElementTree as ET
+
 from typing import Any
 
 import requests
@@ -14,7 +15,7 @@ class PubMedCentralSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """Initializes the PubMedCentralSearch object.
@@ -28,6 +29,8 @@ class PubMedCentralSearch:
         self.query: str = query
         self.query_domains: list[str] | None = query_domains
         self.api_key: str = self._retrieve_api_key()
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
     def _retrieve_api_key(self) -> str:
         """Retrieves the NCBI API key from environment variables.

@@ -3,13 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from gpt_researcher.config.config import Config
+from gpt_researcher.scraper.scraper import Scraper
 from gpt_researcher.utils.logger import get_formatted_logger
-from gpt_researcher.utils.workers import WorkerPool
 
 if TYPE_CHECKING:
     import logging
 
     from gpt_researcher.config.config import Config
+    from gpt_researcher.utils.workers import WorkerPool
 
 logger: logging.Logger = get_formatted_logger()
 
@@ -38,9 +39,8 @@ async def scrape_urls(
     )
 
     try:
-        from gpt_researcher.scraper import Scraper
         scraper = Scraper(urls, user_agent, cfg.SCRAPER, worker_pool=worker_pool)
-        scraped_data = await scraper.run()
+        scraped_data = await scraper.run()  # type: ignore[attr-defined]
         for item in scraped_data:
             if "image_urls" in item:
                 images.extend([img for img in item["image_urls"]])

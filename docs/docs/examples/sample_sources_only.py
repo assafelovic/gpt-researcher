@@ -1,5 +1,8 @@
-from gpt_researcher import GPTResearcher
+from __future__ import annotations
+
 import asyncio
+
+from gpt_researcher import GPTResearcher
 
 
 async def get_report(query: str, report_source: str, sources: list) -> str:

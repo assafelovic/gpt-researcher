@@ -23,6 +23,7 @@ from gpt_researcher.scraper import (
     TavilyExtract,
     WebBaseLoaderScraper,
 )
+from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.utils.schemas import BaseScraper
 from gpt_researcher.utils.workers import WorkerPool
 
@@ -59,7 +60,7 @@ class Scraper:
         self.max_workers: int = cpu_count() * 2 if max_workers is None else max_workers
         if self.scraper == "firecrawl":
             self._check_pkg(self.scraper)
-        self.logger: logging.Logger = logging.getLogger(__name__)
+        self.logger: logging.Logger = get_formatted_logger(__name__)
         self.worker_pool: WorkerPool = worker_pool
 
     async def run(self) -> list[dict[str, Any]]:
@@ -99,16 +100,20 @@ class Scraper:
             self.logger.warning(Fore.YELLOW + f"{pkg_inst_name} not found. Attempting to install...")
             try:
                 subprocess.check_call(
-                    [sys.executable, "-m", "pip", "install", pkg_inst_name],
+                    [
+                        sys.executable,
+                        "-m",
+                        "pip",
+                        "install",
+                        pkg_inst_name,
+                    ],
                 )
-                print(Fore.GREEN + f"{pkg_inst_name} installed successfully.")
+                self.logger.info(Fore.GREEN + f"{pkg_inst_name} installed successfully.")
             except subprocess.CalledProcessError:
                 raise ImportError(
                     Fore.RED + f"Unable to install {pkg_inst_name}. Please install manually with "
                     f"`pip install -U {pkg_inst_name}`"
                 )
-            self.logger.info(Fore.GREEN + f"{pkg_inst_name} installed successfully.")
-
 
     async def extract_data_from_url(
         self,
@@ -198,14 +203,14 @@ class Scraper:
 
         scraper_key: str | None = None
 
-        if link.endswith(".pdf"):
+        if link.casefold().endswith(".pdf"):
             scraper_key = "pdf"
-        elif "arxiv.org" in link:
+        elif "arxiv.org" in link.casefold():
             scraper_key = "arxiv"
         else:
             scraper_key = self.scraper
 
-        scraper_class: type[BaseScraper] | None = SCRAPER_CLASSES.get(scraper_key)
+        scraper_class: type[BaseScraper] | None = SCRAPER_CLASSES.get(scraper_key)  # type: ignore[var-annotated]
         if scraper_class is None:
             raise Exception("Scraper not found.")
 

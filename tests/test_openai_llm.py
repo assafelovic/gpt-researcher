@@ -3,9 +3,13 @@ from __future__ import annotations
 import asyncio
 import traceback
 
+from typing import TYPE_CHECKING
+
 from dotenv import load_dotenv
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
-from langchain_core.messages import BaseMessage
+
+if TYPE_CHECKING:
+    from langchain_core.messages import BaseMessage
 
 load_dotenv()
 
@@ -18,10 +22,12 @@ async def main():
     max_tokens = 1000
 
     llm = GenericLLMProvider(
-        llm_provider,
-        model=model,
+        f"{llm_provider}:{model}",
+        fallback_models=[
+            "litellm:openai/gpt-3.5-turbo",
+            "openai:gpt-3.5-turbo",
+        ],
         temperature=temperature,
-        fallback_models=["litellm:openai/gpt-3.5-turbo"],
         max_tokens=max_tokens,
     )
     print(f"LLM Provider: {llm_provider}, Model: {model}, Temperature: {temperature}, Max Tokens: {max_tokens}")

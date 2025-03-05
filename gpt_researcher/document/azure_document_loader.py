@@ -5,9 +5,10 @@ import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from azure.storage.blob import BlobClient, BlobProperties, BlobServiceClient
+from azure.storage.blob import BlobServiceClient
 
 if TYPE_CHECKING:
+    from azure.storage.blob import BlobClient, BlobProperties
     from azure.storage.blob._container_client import ContainerClient
 
 

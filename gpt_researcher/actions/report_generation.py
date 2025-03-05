@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from logging import Logger
 from typing import TYPE_CHECKING, Any
 
 from gpt_researcher.config.config import Config
-from gpt_researcher.utils.llm import get_llm_params
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from gpt_researcher.prompts import (
     generate_draft_titles_prompt,
@@ -12,14 +10,18 @@ from gpt_researcher.prompts import (
     generate_report_introduction,
     get_prompt_by_report_type,
 )
+from gpt_researcher.utils.enum import ReportType
+from gpt_researcher.utils.llm import get_llm_params
 from gpt_researcher.utils.logger import get_formatted_logger
-from gpt_researcher.utils.enum import ReportType, Tone
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from logging import Logger
 
     from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
     from fastapi.websockets import WebSocket
+
+    from gpt_researcher.utils.enum import Tone
 
 logger: Logger = get_formatted_logger()
 
@@ -42,8 +44,7 @@ def _get_llm(
         The LLM provider instance
     """
     return GenericLLMProvider(
-        cfg.STRATEGIC_LLM_PROVIDER if model == cfg.STRATEGIC_LLM_MODEL else cfg.SMART_LLM_PROVIDER,
-        model=model or cfg.SMART_LLM_MODEL,
+        cfg.STRATEGIC_LLM if model is None else f"{cfg.STRATEGIC_LLM_PROVIDER}:{model}",
         temperature=temperature or cfg.SMART_LLM_TEMPERATURE,
         fallback_models=cfg.FALLBACK_MODELS,
         **cfg.llm_kwargs,

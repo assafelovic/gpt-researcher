@@ -5,13 +5,12 @@ from typing import TYPE_CHECKING, Any
 
 import json5 as json
 
-from fastapi import WebSocket
-
 from multi_agents.agents.utils.llms import call_model
 from multi_agents.agents.utils.views import print_agent_output
 
 if TYPE_CHECKING:
     from backend.server.server_utils import HTTPStreamAdapter
+    from fastapi import WebSocket
 
 sample_json = """
 {
@@ -96,7 +95,7 @@ class WriterAgent:
             model,
             response_format="json",
         )
-        
+
         return response
 
     async def revise_headers(

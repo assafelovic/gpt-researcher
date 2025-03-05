@@ -12,10 +12,12 @@ Default is False, i.e., no additional research will be conducted on newer source
 
 
 #### Test case 1 (original test case as control from https://docs.gptr.dev/docs/gpt-researcher/tailored-research)
+from __future__ import annotations
 
-from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 import asyncio
+
 from backend.server.server_utils import CustomLogsHandler  # Update import
+from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 
 
 async def get_report(

@@ -97,7 +97,11 @@ logging.basicConfig(
         frontend_log_handler,  # Add the frontend log handler
     ],
 )
-logger = logging.getLogger(__name__)
+import contextlib
+
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 def validate_config_file(content: bytes) -> bool:
@@ -111,7 +115,7 @@ def validate_config_file(content: bytes) -> bool:
     """
     try:
         # Try to parse the JSON
-        config_dict = json.loads(content.decode("utf-8"))
+        config_dict: dict[str, Any] = json.loads(content.decode("utf-8"))
 
         # Check if it's a dictionary
         if not isinstance(config_dict, dict):
@@ -186,14 +190,22 @@ class ResearchAPIHandler:
             )
 
         except Exception as e:
-            logger.exception(f"Error in chat process! {e.__class__.__name__}: {e}")
-            return json.dumps({"type": "error", "content": f"Error in chat process! {e.__class__.__name__}: {e}"})
+            logger.exception(
+                f"Error in chat process! {e.__class__.__name__}: {e}"
+            )
+            return json.dumps(
+                {
+                    "type": "error",
+                    "content": f"Error in chat process! {e.__class__.__name__}: {e}",
+                }
+            )
 
     @staticmethod
     async def stream_research(
         params: dict[str, Any],
     ) -> AsyncGenerator[str, None]:
-        """Stream the research process with progress updates"""
+        """Stream the research process with progress updates."""
+        os.environ["LITELLM_LOG"] = "INFO"
         try:
             from backend.server.websocket_manager import WebSocketManager  # noqa: E402
 
@@ -448,10 +460,8 @@ class ResearchAPIHandler:
             finally:
                 # Cancel the log forwarding task
                 log_task.cancel()
-                try:
+                with contextlib.suppress(asyncio.CancelledError):
                     await log_task
-                except asyncio.CancelledError:
-                    pass
 
             await manager.disconnect(http_adapter)
 
@@ -481,7 +491,7 @@ class ResearchAPIHandler:
         if validate_config_file(content):
             try:
                 # Save the config file
-                config_path = SCRIPT_DIR / "config.json"
+                config_path: Path = SCRIPT_DIR / "config.json"
                 config_path.write_bytes(content)
                 logger.info(f"Uploaded config file saved to '{config_path}'")
                 return True
@@ -529,11 +539,11 @@ class ResearchAPIHandler:
         if not path.exists():
             raise FileNotFoundError(f"File not found: '{file_path}'")
 
-        file_size = path.stat().st_size
-        data = path.read_bytes()
+        file_size: int = path.stat().st_size
+        data: bytes = path.read_bytes()
 
-        ext = os.path.splitext(path)[1]
-        content_type = mimetypes.guess_type(path)[0]
+        ext: str = os.path.splitext(path)[1]
+        content_type: str | None = mimetypes.guess_type(path)[0]
         if not content_type and ext in mimetypes.types_map:
             content_type = mimetypes.types_map[ext]
         if not content_type:
@@ -551,7 +561,9 @@ logging.basicConfig(
         logging.StreamHandler(),
     ],
 )
-logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 # Initialize MIME types
 mimetypes.init()
@@ -572,7 +584,7 @@ class AsyncStreamingResearchRequestHandler(http.server.SimpleHTTPRequestHandler)
         super().__init__(*args, **kwargs)
 
     def do_GET(self) -> None:
-        """Handle GET requests - serve static files and the HTML form"""
+        """Handle GET requests - serve static files and the HTML form."""
         parsed_path: urllib.parse.ParseResult = urllib.parse.urlparse(self.path)
         path: str = parsed_path.path
 
@@ -587,9 +599,9 @@ class AsyncStreamingResearchRequestHandler(http.server.SimpleHTTPRequestHandler)
                     return
 
                 # Get file content
-                data = nextjs_asset_path.read_bytes()
-                file_size = nextjs_asset_path.stat().st_size
-                content_type = "image/svg+xml"
+                data: bytes = nextjs_asset_path.read_bytes()
+                file_size: int = nextjs_asset_path.stat().st_size
+                content_type: str = "image/svg+xml"
 
                 self.send_response(200)
                 self.send_header("Content-type", content_type)
@@ -607,7 +619,7 @@ class AsyncStreamingResearchRequestHandler(http.server.SimpleHTTPRequestHandler)
             # Load default config
             config_path: Path = SCRIPT_DIR / "config.json"
             try:
-                config = Config.from_path(config_path)
+                config: Config = Config.from_path(config_path)
             except Exception as e:
                 logger.exception(f"Error loading config! {e.__class__.__name__}: {e}")
                 config = Config()
@@ -622,6 +634,7 @@ class AsyncStreamingResearchRequestHandler(http.server.SimpleHTTPRequestHandler)
                 "research_report": ReportType.ResearchReport.value,
                 "detailed_report": ReportType.DetailedReport.value,
                 "multi_agents": ReportType.MultiAgents.value,
+                "deep_research": ReportType.DeepResearch.value,
                 #                "resource_report": ReportType.ResourceReport.value,
                 #                "outline_report": ReportType.OutlineReport.value,
                 #                "custom_report": ReportType.CustomReport.value,
@@ -721,6 +734,78 @@ class AsyncStreamingResearchRequestHandler(http.server.SimpleHTTPRequestHandler)
                 self.send_error(500, f"Internal server error! {e.__class__.__name__}: {e}")
             return
 
+        # Add a new route for handling downloads
+        if self.path.startswith("/download/"):
+            try:
+                filename = os.path.basename(self.path)
+                file_extension = os.path.splitext(filename)[1].lower()
+
+                # Set content type based on file extension
+                content_type = "application/octet-stream"
+                if file_extension == ".pdf":
+                    content_type = "application/pdf"
+                elif file_extension == ".docx":
+                    content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                elif file_extension == ".md":
+                    content_type = "text/markdown"
+
+                # Check if the file exists in the reports directory
+                file_path = Path("reports") / filename
+
+                if not file_path.exists():
+                    # If the file doesn't exist, try to generate it from the markdown version
+                    md_path = Path("reports") / f"{os.path.splitext(filename)[0]}.md"
+
+                    if not md_path.exists():
+                        self.send_error(404, "Report file not found")
+                        return
+
+                    # If we need to generate PDF or DOCX
+                    if file_extension == ".pdf":
+                        from backend.utils import write_md_to_pdf
+                        report_content = md_path.read_text()
+                        # Create a new event loop to run the async function
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        loop.run_until_complete(write_md_to_pdf(report_content, str(file_path)))
+                        loop.close()
+                    elif file_extension == ".docx":
+                        from backend.utils import write_md_to_word
+                        report_content = md_path.read_text()
+                        # Create a new event loop to run the async function
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        loop.run_until_complete(write_md_to_word(report_content, str(file_path)))
+                        loop.close()
+
+                    if not file_path.exists():
+                        self.send_error(500, f"Failed to generate {file_extension} file")
+                        return
+
+                # Read and send the file
+                data = file_path.read_bytes()
+                file_size = file_path.stat().st_size
+
+                self.send_response(200)
+                self.send_header("Content-type", content_type)
+                self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+                self.send_header("Content-Length", str(file_size))
+                self.end_headers()
+
+                chunk_size = 8192
+                for i in range(0, len(data), chunk_size):
+                    chunk = data[i : i + chunk_size]
+                    self.wfile.write(chunk)
+                    self.wfile.flush()
+
+                logger.info(f"Successfully served download file: {filename}")
+                return
+
+            except Exception as e:
+                logger.exception(f"Error serving download file! {e.__class__.__name__}: {e}")
+                self.send_error(500, f"Internal server error! {e.__class__.__name__}: {e}")
+            return
+
         if self.path.startswith("/research"):
             parsed_url: urllib.parse.ParseResult = urllib.parse.urlparse(self.path)
             params: dict[str, Any] = dict(urllib.parse.parse_qsl(parsed_url.query))
@@ -758,7 +843,7 @@ class AsyncStreamingResearchRequestHandler(http.server.SimpleHTTPRequestHandler)
             return
 
     def do_POST(self) -> None:
-        """Handle POST requests - process file uploads and research requests"""
+        """Handle POST requests - process file uploads and research requests."""
         try:
             logger.info(f"Received POST request to {self.path}")
             parsed_path: urllib.parse.ParseResult = urllib.parse.urlparse(self.path)
@@ -890,7 +975,7 @@ class AsyncStreamingResearchRequestHandler(http.server.SimpleHTTPRequestHandler)
                 if not field_name_match:
                     continue
 
-                field_name = field_name_match.group(1)
+                field_name: str = str(field_name_match.group(1))
 
                 # Check if this is a file upload
                 filename_match: re.Match | None = re.search(r'filename="([^"]*)"', content_disposition)
@@ -924,8 +1009,8 @@ class AsyncStreamingResearchRequestHandler(http.server.SimpleHTTPRequestHandler)
                     # This is a regular form field
                     payload = p.get_payload(decode=True)
                     if isinstance(payload, bytes):
-                        charset = p.get_content_charset("utf-8")
-                        value_str = payload.decode(charset)
+                        charset: str = p.get_content_charset("utf-8")
+                        value_str: str = payload.decode(charset)
                     else:
                         value_str = str(payload)
 
@@ -965,7 +1050,7 @@ class AsyncStreamingResearchRequestHandler(http.server.SimpleHTTPRequestHandler)
             self.send_header("Connection", "keep-alive")
             self.end_headers()
 
-            loop = asyncio.new_event_loop()
+            loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
 
             async def stream() -> None:
@@ -1030,7 +1115,7 @@ def run_server(
     host: str = "0.0.0.0",
     port: int = 8080,
 ) -> None:
-    """Run the web server on the specified port"""
+    """Run the web server on the specified port."""
     load_dotenv()
 
     class ThreadingHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):

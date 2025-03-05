@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-import logging
 import os
 
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import requests
 
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 class CustomRetriever:
@@ -17,7 +21,7 @@ class CustomRetriever:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         self.endpoint: str | None = os.getenv("RETRIEVER_ENDPOINT")
@@ -27,16 +31,20 @@ class CustomRetriever:
         self.params: dict[str, Any] = self._populate_params()
         self.query: str = query
         self.query_domains: list[str] | None = query_domains
-        # Extract config from kwargs if provided
-        self.config = kwargs.get("config") if kwargs else None
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
     def _populate_params(self) -> dict[str, Any]:
         """Populates parameters from environment variables prefixed with 'RETRIEVER_ARG_'."""
-        return {key[len("RETRIEVER_ARG_") :].lower(): value for key, value in os.environ.items() if key.startswith("RETRIEVER_ARG_")}
+        return {
+            key[len("RETRIEVER_ARG_") :].lower(): value
+            for key, value in os.environ.items()
+            if key.startswith("RETRIEVER_ARG_")
+        }
 
     def search(
         self,
-        max_results: Optional[int] = None,
+        max_results: int | None = None,
     ) -> list[dict[str, Any]] | None:
         """Performs the search using the custom retriever endpoint.
 
@@ -48,23 +56,20 @@ class CustomRetriever:
         -------
             JSON response in the format:
             [
-              {
-                "url": "http://example.com/page1",
-                "raw_content": "Content of page 1"
-              },
-              {
-                "url": "http://example.com/page2",
-                "raw_content": "Content of page 2"
-              }
+                {
+                    "url": "http://example.com/page1",
+                    "raw_content": "Content of page 1"
+                },
+                {
+                    "url": "http://example.com/page2",
+                    "raw_content": "Content of page 2"
+                }
             ]
         """
         # Use the provided max_results, or get it from config, or use default
         if max_results is None:
-            if self.config and hasattr(self.config, "MAX_SOURCES"):
-                max_results = self.config.MAX_SOURCES
-            else:
-                max_results = 5  # Default fallback
-                
+            max_results = int(os.environ.get("MAX_SOURCES", 5))
+
         assert self.endpoint is not None
         try:
             response: requests.Response = requests.get(

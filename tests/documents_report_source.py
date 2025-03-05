@@ -1,16 +1,22 @@
 from __future__ import annotations
 
-import logging
 import os
-from typing import Any
+
+from typing import TYPE_CHECKING, Any
 
 import pytest
+
 from dotenv import load_dotenv
 from gpt_researcher import GPTResearcher
 
 load_dotenv()
 
-logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 # Define the report types to test
 report_types = [

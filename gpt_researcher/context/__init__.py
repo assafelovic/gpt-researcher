@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .compression import ContextCompressor
+from gpt_researcher.context.compression import ContextCompressor
 
 # from .retriever import SearchAPIRetriever
 

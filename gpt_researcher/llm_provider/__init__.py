@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .generic import GenericLLMProvider
+from gpt_researcher.llm_provider.generic import GenericLLMProvider
 
 __all__ = [
     "GenericLLMProvider",

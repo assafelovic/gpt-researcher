@@ -6,11 +6,11 @@ LATEST_VERSION = "0.12.3"
 
 exclude_packages = ["selenium", "webdriver", "fastapi", "fastapi.*", "uvicorn", "jinja2", "gpt-researcher", "langgraph"]
 
-with open(r"README.md", "r", encoding="utf-8") as f:
+with open(r"README.md", encoding="utf-8") as f:
     long_description = f.read()
 
-with open("requirements.txt", "r") as f:
-    reqs = [line.strip() for line in f if not any(pkg in line for pkg in exclude_packages)]
+with open("requirements.txt") as f:
+    reqs     = [line.strip() for line in f if not any(pkg in line for pkg in exclude_packages)]
 
 setup(
     name="gpt-researcher",
@@ -33,6 +33,6 @@ setup(
         "Programming Language :: Python :: 3.12",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
-    python_requires='>=3.11',
+    python_requires=">=3.11",
     install_requires=reqs,
 )

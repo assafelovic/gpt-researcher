@@ -1,10 +1,12 @@
 """Tests for post-retrieval processing functionality."""
+from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from gpt_researcher.skills.context_manager import ContextManager
+import pytest
+
 from gpt_researcher.prompts import post_retrieval_processing
+from gpt_researcher.skills.context_manager import ContextManager
 
 
 @pytest.fixture

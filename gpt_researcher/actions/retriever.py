@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-import logging
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from langchain_core.retrievers import BaseRetriever
+    import logging
 
     from gpt_researcher.config.config import Config
 
 
-logger = logging.getLogger(__name__)
+from langchain_core.retrievers import BaseRetriever
+
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 def get_retriever(

@@ -29,7 +29,9 @@ if TYPE_CHECKING:
     from gpt_researcher.utils.logging_config import JSONResearchHandler
 
 
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 class ResearchConductor:
@@ -65,8 +67,7 @@ class ResearchConductor:
         """
         if self.llm_provider is None:
             self.llm_provider = GenericLLMProvider(
-                provider,
-                model=model,
+                f"{provider}:{model}",
                 temperature=temperature,
                 fallback_models=self.researcher.cfg.FALLBACK_MODELS,
                 **llm_kwargs,
@@ -174,21 +175,21 @@ class ResearchConductor:
 
         if self.researcher.source_urls:
             research_data = await self._handle_provided_urls()
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Web:
+        elif ReportSource.Web == self.researcher.cfg.REPORT_SOURCE:
             research_data = [
                 await self._get_context_by_web_search(self.researcher.query, query_domains=self.researcher.query_domains)
             ]
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Local:
+        elif ReportSource.Local == self.researcher.cfg.REPORT_SOURCE:
             research_data = await self._handle_local_documents()
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Hybrid:
+        elif ReportSource.Hybrid == self.researcher.cfg.REPORT_SOURCE:
             research_data = await self._handle_hybrid_search()
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.LangChainDocuments:
+        elif ReportSource.LangChainDocuments == self.researcher.cfg.REPORT_SOURCE:
             research_data = await self._handle_langchain_documents()
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.LangChainVectorStore:
+        elif ReportSource.LangChainVectorStore == self.researcher.cfg.REPORT_SOURCE:
             research_data = await self._get_context_by_vectorstore(
                 self.researcher.query, self.researcher.vector_store_filter
             )
-        elif self.researcher.cfg.REPORT_SOURCE == ReportSource.Azure:
+        elif ReportSource.Azure == self.researcher.cfg.REPORT_SOURCE:
             research_data = await self._handle_azure_documents()
         else:
             raise ValueError(f"Invalid report source: {self.researcher.cfg.REPORT_SOURCE}")
@@ -743,8 +744,7 @@ async def generate_sub_queries(
     strategic_token_limit: int | None = get_max_tokens(cfg.STRATEGIC_LLM_MODEL)
     try:
         provider: GenericLLMProvider = GenericLLMProvider(
-            cfg.STRATEGIC_LLM_PROVIDER,
-            model=cfg.STRATEGIC_LLM_MODEL,
+            cfg.STRATEGIC_LLM,
             temperature=cfg.TEMPERATURE,
             max_tokens=strategic_token_limit,
             fallback_models=cfg.FALLBACK_MODELS,
@@ -762,10 +762,9 @@ async def generate_sub_queries(
         logger.warning("See https://github.com/assafelovic/gpt-researcher/issues/1022")
         try:
             provider = GenericLLMProvider(
-                cfg.STRATEGIC_LLM_PROVIDER,
-                model=cfg.STRATEGIC_LLM_MODEL,
-                temperature=cfg.TEMPERATURE,
+                cfg.STRATEGIC_LLM,
                 fallback_models=cfg.FALLBACK_MODELS,
+                temperature=cfg.TEMPERATURE,
                 max_tokens=strategic_token_limit,
                 **cfg.llm_kwargs,
             )
@@ -787,10 +786,9 @@ async def generate_sub_queries(
             )
             try:
                 provider = GenericLLMProvider(
-                    cfg.SMART_LLM_PROVIDER,
-                    model=cfg.SMART_LLM_MODEL,
-                    temperature=cfg.TEMPERATURE,
+                    cfg.SMART_LLM,
                     fallback_models=cfg.FALLBACK_MODELS,
+                    temperature=cfg.TEMPERATURE,
                     max_tokens=strategic_token_limit,
                     **cfg.llm_kwargs,
                 )

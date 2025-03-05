@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-import logging
 import os
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bs4 import BeautifulSoup
-from requests import Response, Session
+
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+    from requests import Response, Session
 
 
 class FireCrawl:
@@ -14,16 +19,20 @@ class FireCrawl:
         self,
         link: str,
         session: Session | None = None,
+        *args: Any,
+        **kwargs: Any,
     ):
         self.link: str = link
         self.session: Session | None = session
-        from firecrawl import FirecrawlApp
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
+        from firecrawl import FirecrawlApp
         self.firecrawl: FirecrawlApp = FirecrawlApp(api_key=self.get_api_key(), api_url=self.get_server_url())
-        self.logger: logging.Logger = logging.getLogger(__name__)
+        self.logger: logging.Logger = get_formatted_logger(__name__)
 
     def get_api_key(self) -> str:
-        """Gets the FireCrawl API key
+        """Gets the FireCrawl API key.
 
         Returns:
             Api key (str)
@@ -35,7 +44,7 @@ class FireCrawl:
         return api_key
 
     def get_server_url(self) -> str:
-        """ Gets the FireCrawl server URL.
+        """Gets the FireCrawl server URL.
 
         Default to official FireCrawl server ('https://api.firecrawl.dev').
 
@@ -60,7 +69,10 @@ class FireCrawl:
         """
 
         try:
-            response = self.firecrawl.scrape_url(url=self.link, params={"formats": ["markdown"]})
+            response: dict[str, Any] = self.firecrawl.scrape_url(
+                url=self.link,
+                params={"formats": ["markdown"]},
+            )
 
             # Check if the page has been scraped success
             if "error" in response:

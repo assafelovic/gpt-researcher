@@ -5,13 +5,13 @@ import asyncio
 import json
 import os
 
-from typing import Any, Callable, List, TypeVar
+from typing import Any, Callable, TypeVar
 
 from dotenv import load_dotenv
-from pydantic import SecretStr
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
 from tqdm import tqdm
 
 from evals.simple_evals.simpleqa_eval import SimpleQAEval
@@ -21,7 +21,7 @@ T = TypeVar("T")
 R = TypeVar("R")
 
 
-def map_with_progress(fn: Callable[[T], R], items: List[T]) -> List[R]:
+def map_with_progress(fn: Callable[[T], R], items: list[T]) -> list[R]:
     """Map function over items with progress bar."""
     return [fn(item) for item in tqdm(items)]
 
@@ -37,7 +37,7 @@ for var in required_env_vars:
 
 
 async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
-    """Run a single evaluation query and return results"""
+    """Run a single evaluation query and return results."""
     print(f"\nEvaluating query: {query}")
 
     # Run the researcher and get report

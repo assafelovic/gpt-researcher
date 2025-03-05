@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import pytest
-from gpt_researcher.agent import GPTResearcher
-from backend.server.server_utils import CustomLogsHandler  # Update import
 from unittest.mock import AsyncMock
 
+import pytest
+
+from backend.server.server_utils import CustomLogsHandler  # Update import
+from gpt_researcher.agent import GPTResearcher
 
 OUTPUT_DIR = "./outputs"  # Define the output directory
 REPORT_TYPES: list[str] = ["research_report", "subtopic_report"]  # Define the report types to test
@@ -36,7 +37,7 @@ async def test_gpt_researcher(report_type: str) -> None:
     print("--------------------------------")
 
     # Check if the report contains part of the query
-    assert "gpt-researcher" in report, f"Report should contain 'gpt-researcher'"
+    assert "gpt-researcher" in report, "Report should contain 'gpt-researcher'"
 
     # test if at least one url starts with "github.com" as it was limited to this domain
     matching_urls: list[str] = [

@@ -6,12 +6,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from gpt_researcher import GPTResearcher
-from backend.server.server_utils import CustomLogsHandler
-from gpt_researcher.utils.enum import ReportFormat, ReportSource, Tone, ReportType
 from gpt_researcher.config import Config
+from gpt_researcher.utils.enum import ReportFormat, ReportSource, ReportType, Tone
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
+
+    from backend.server.server_utils import CustomLogsHandler
 
 
 class BasicReport:

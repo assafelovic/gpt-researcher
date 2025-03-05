@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine
 if TYPE_CHECKING:
     from logging import Logger
 
-    from fastapi import WebSocket
     from backend.server.server_utils import HTTPStreamAdapter
+    from fastapi import WebSocket
 
 logger: Logger = getLogger(__name__)
 

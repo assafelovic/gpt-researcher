@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import asyncio
-import logging
+
+from typing import TYPE_CHECKING
 
 from backend.server.server_utils import CustomLogsHandler
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import Tone
+from gpt_researcher.utils.logger import get_formatted_logger
 
+if TYPE_CHECKING:
+    import logging
 
-logger: logging.Logger = logging.getLogger(__name__)
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 async def run() -> str:

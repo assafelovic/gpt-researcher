@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import hashlib
-import logging
 import re
 
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import parse_qs, urljoin, urlparse
-from bs4 import BeautifulSoup, Tag
+
+from bs4 import Tag
+
+from gpt_researcher.utils.logger import get_formatted_logger
 
 if TYPE_CHECKING:
     from urllib.parse import ParseResult
+
+    from bs4 import BeautifulSoup
 
 
 def get_relevant_images(
@@ -62,7 +66,7 @@ def get_relevant_images(
                 image_urls.append({"url": img_src, "score": score})
 
     except Exception as e:
-        logging.getLogger().exception(f"Error in get_relevant_images: {e.__class__.__name__}: {e}")
+        get_formatted_logger(__name__).exception(f"Error in get_relevant_images: {e.__class__.__name__}: {e}")
         return []
     else:
         # Sort images by score (highest first)
@@ -90,7 +94,7 @@ def parse_dimension(value: str | list[str]) -> int | None:
     if isinstance(value, list):
         value = "\n".join(value)
     value = value.strip().casefold()
-    
+
     if value == "auto":
         return None
 
@@ -102,7 +106,7 @@ def parse_dimension(value: str | list[str]) -> int | None:
         try:
             return int(float(value[:-1]) / 100 * parent_size)
         except ValueError:
-            logging.getLogger().warning(f"Error parsing percentage dimension value {value}")
+            get_formatted_logger(__name__).warning(f"Error parsing percentage dimension value {value}")
             return None
 
     # Handle relative units (simplified example)
@@ -114,7 +118,7 @@ def parse_dimension(value: str | list[str]) -> int | None:
         try:
             pixel_value: float = float(match.group(1)) * (16 if match.group(3) == "em" else 10)
         except ValueError:
-            logging.getLogger().warning(f"Error parsing relative unit dimension value {value}")
+            get_formatted_logger(__name__).warning(f"Error parsing relative unit dimension value {value}")
             return None
         else:
             return int(pixel_value)
@@ -128,7 +132,7 @@ def parse_dimension(value: str | list[str]) -> int | None:
         return int(float(value))
     except ValueError:
         # Fallback to default value if parsing failed
-        logging.getLogger().warning(f"Error parsing dimension value {value}")
+        get_formatted_logger(__name__).warning(f"Error parsing dimension value {value}")
         return None
 
 
@@ -155,7 +159,7 @@ def get_image_hash(image_url: str) -> str | None:
         # Calculate hash
         return hashlib.md5(image_identifier.encode()).hexdigest()
     except Exception as e:
-        logging.getLogger().error(f"Error calculating image hash for {image_url}: {e}")
+        get_formatted_logger(__name__).error(f"Error calculating image hash for {image_url}: {e}")
         return None
 
 
@@ -163,13 +167,13 @@ def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
     """Clean the soup by removing unwanted tags."""
     for tag in soup.find_all(
         [
-            "script",
-            "style",
             "footer",
             "header",
-            "nav",
             "menu",
+            "nav",
+            "script",
             "sidebar",
+            "style",
             "svg",
         ]
     ):

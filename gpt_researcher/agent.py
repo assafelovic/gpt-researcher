@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Coroutine
@@ -16,29 +15,34 @@ from gpt_researcher.llm_provider import GenericLLMProvider
 from gpt_researcher.memory import Memory
 from gpt_researcher.skills.browser import BrowserManager
 from gpt_researcher.skills.context_manager import ContextManager
-from gpt_researcher.skills.deep_research import DeepResearchSkill
 from gpt_researcher.skills.curator import SourceCurator
+from gpt_researcher.skills.deep_research import DeepResearchSkill
 from gpt_researcher.skills.researcher import ResearchConductor
 from gpt_researcher.skills.writer import ReportGenerator
 from gpt_researcher.utils.enum import OutputFileType, ReportFormat, ReportSource, ReportType, Tone
+from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.vector_store import VectorStoreWrapper
-from gpt_researcher.skills.deep_research import ResearchProgress
 
 if TYPE_CHECKING:
+    import logging
+
     from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
     from fastapi.websockets import WebSocket
     from langchain_community.vectorstores import VectorStore
 
+    from gpt_researcher.skills.deep_research import ResearchProgress
+
 
 class GPTResearcher:
-    logger: ClassVar[logging.Logger] = logging.getLogger("gpt_researcher")
+    logger: ClassVar[logging.Logger] = get_formatted_logger("gpt_researcher")
 
     def __init__(
         self,
         query: str,
         report_type: ReportType | str | None = ReportType.ResearchReport.value,
-        report_format: OutputFileType | str | None = OutputFileType.MARKDOWN.value,
+        report_format: ReportFormat | str | None = ReportFormat.APA.value,
         report_source: ReportSource | str | None = ReportSource.Web.value,
+        output_format: OutputFileType | str | None = OutputFileType.MARKDOWN.value,
         tone: Tone | str | None = Tone.Objective.value,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
@@ -106,12 +110,14 @@ class GPTResearcher:
         self.llm: GenericLLMProvider = GenericLLMProvider(
             self.cfg.SMART_LLM,
             fallback_models=self.cfg.FALLBACK_MODELS,
+            **self.cfg.llm_kwargs,
         )
 
         # deprecated arguments, it's recommended to use Config objects instead of passing a billion parameters to GPTResearcher.
         self.agent_role = self.cfg.AGENT_ROLE if agent_role is None else agent_role
         self.max_subtopics = self.cfg.MAX_SUBTOPICS if max_subtopics is None else max_subtopics
-        self.output_format = self.cfg.OUTPUT_FORMAT if report_format is None else report_format
+        self.output_format = self.cfg.OUTPUT_FORMAT if output_format is None else output_format
+        self.report_format = self.cfg.REPORT_FORMAT if report_format is None else report_format
         self.report_source = self.cfg.REPORT_SOURCE if report_source is None else report_source
         self.report_type = self.cfg.REPORT_TYPE if report_type is None else report_type
         self.tone = self.cfg.TONE if tone is None else tone

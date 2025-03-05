@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import nest_asyncio  # required for notebooks
 
 nest_asyncio.apply()
 
-from gpt_researcher import GPTResearcher
 import asyncio
+
+from gpt_researcher import GPTResearcher
 
 
 async def get_report(query: str, report_type: str):

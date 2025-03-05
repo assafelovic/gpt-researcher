@@ -255,7 +255,7 @@ PROMPT_GENERATE_REPORT_CONCLUSION = """
     If there is no "## Conclusion" section title written at the end of the report, please add it to the top of your conclusion.
     You must include authentic hyperlinks with correct and valid markdown syntax ([url website](url)) appropriately for any and all sentences relevant to the URL.
     Write the conclusion in the following language: {language}.
-    
+
     Write the conclusion now:
     """
 
@@ -551,7 +551,7 @@ def generate_deep_research_prompt(
         reference_prompt = """
 You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
 Every url should be hyperlinked: [url website](url)
-Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report: 
+Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report:
 
 eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
 """

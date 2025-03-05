@@ -3,9 +3,11 @@ from __future__ import annotations
 import logging
 import os
 import urllib.parse
-from typing import Any, Optional
+
+from typing import Any
 
 import requests
+
 
 class SearchApiSearch:
     """SearchApi Retriever."""
@@ -14,7 +16,7 @@ class SearchApiSearch:
         self,
         query: str,
         query_domains: list[str] | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ):
         """Initializes the SearchApiSearch object.
@@ -28,7 +30,8 @@ class SearchApiSearch:
         self.query: str = query
         self.query_domains: list[str] = [] if query_domains is None else query_domains
         self.api_key: str = self.get_api_key()
-        self.config = kwargs.get("config") if kwargs else None
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
 
     def get_api_key(self) -> str:
         """Gets the SearchApi API key.
@@ -46,7 +49,7 @@ class SearchApiSearch:
 
     def search(
         self,
-        max_results: Optional[int] = None,
+        max_results: int | None = None,
     ) -> list[dict[str, str]]:
         """Searches the query.
 
@@ -57,12 +60,8 @@ class SearchApiSearch:
         """
         # Use the provided max_results, or get it from config, or use default
         if max_results is None:
-            if self.config and hasattr(self.config, "MAX_SOURCES"):
-                max_results = self.config.MAX_SOURCES
-                assert max_results is not None
-            else:
-                max_results = 7  # Default fallback
-            
+            max_results = int(os.environ.get("MAX_SOURCES", 7))
+
         logging.info(f"SearchApiSearch: Searching with query {self.query}...")
 
         url: str = "https://www.searchapi.io/api/v1/search"

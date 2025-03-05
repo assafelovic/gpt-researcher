@@ -1,19 +1,22 @@
 from __future__ import annotations
 
-import logging
 import os
 
-from typing import Any, ClassVar, Dict, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
-# import httpx
-from aiohttp_retry import Optional
 import requests
 
+# import httpx
 # from langchain_core.callbacks import CallbackManagerForRetrieverRun
 # from langchain_core.documents import Document
 # from langchain_core.retrievers import BaseRetriever
+from gpt_researcher.utils.logger import get_formatted_logger
 
-logger: logging.Logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    import logging
+
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 # class SemanticScholarSearch(BaseRetriever):
@@ -181,7 +184,7 @@ class SemanticScholarSearch:
         query: str,
         sort: str = "relevance",
         query_domains: list[str] | None = None,
-        *_: Any,  # provided for compatibility with other scrapers
+        *args: Any,  # provided for compatibility with other scrapers
         **kwargs: Any,  # provided for compatibility with other scrapers
     ) -> None:
         """Initialize the SemanticScholarSearch class with a query and sort criterion.
@@ -197,10 +200,13 @@ class SemanticScholarSearch:
         assert sort in self.VALID_SORT_CRITERIA, "Invalid sort criterion"
         self.sort: str = sort.lower()
         self.query_domains: list[str] = [] if query_domains is None else query_domains
+        self.args: tuple[Any, ...] = args
+        self.kwargs: dict[str, Any] = kwargs
+
 
     def search(
         self,
-        max_results: Optional[int] = None,
+        max_results: int | None = None,
     ) -> list[dict[str, str]]:
         """
         Perform the search on Semantic Scholar and return results.
@@ -214,15 +220,18 @@ class SemanticScholarSearch:
         # If max_results is the default, check environment variable
         if max_results is None:
             max_results = int(os.environ.get("MAX_SOURCES", 20))
-            
+
         logger.info(f"SemanticScholarSearch: Searching with query:{os.linesep*2}```{self.query}{os.linesep}```")
 
         params: dict[str, Any] = {
-            "query": self.query,
-            "limit": max_results,
             "fields": "title,abstract,url,venue,year,authors,isOpenAccess,openAccessPdf",
+            "limit": max_results,
+            "query": self.query,
             "sort": self.sort,
         }
+
+        if self.query_domains:
+            params["domains"] = ",".join(self.query_domains)
 
         try:
             response: requests.Response = requests.get(self.BASE_URL, params=params)
@@ -231,7 +240,7 @@ class SemanticScholarSearch:
             print(f"An error occurred while accessing Semantic Scholar API: {e}")
             return []
 
-        results: list[dict[str, Any]] = cast(Dict[str, Any], response.json()).get("data", [])
+        results: list[dict[str, Any]] = cast(dict[str, Any], response.json()).get("data", [])
         search_result: list[dict[str, str]] = []
 
         for result in results:
@@ -239,7 +248,7 @@ class SemanticScholarSearch:
                 search_result.append(
                     {
                         "title": result.get("title", "No Title"),
-                        "href": cast(Dict[str, Any], result["openAccessPdf"]).get("url", "No URL"),
+                        "href": cast(dict[str, Any], result["openAccessPdf"]).get("url", "No URL"),
                         "body": result.get("abstract", "Abstract not available"),
                     }
                 )

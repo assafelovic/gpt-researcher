@@ -1,27 +1,32 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import random
 
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, AsyncGenerator, cast, ClassVar
 from urllib.parse import urlparse
-
-import requests
 
 from bs4 import BeautifulSoup
 
 from gpt_researcher.scraper.utils import clean_soup, extract_title, get_relevant_images, get_text_from_soup
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+    import requests
+
+    from zendriver import Tab
 
 
 class NoDriverScraper:
-    logger = logging.getLogger(__name__)
-    max_browsers = 3
-    browser_load_threshold = 5
-    browsers: set["NoDriverScraper.Browser"] = set()
-    browsers_lock = asyncio.Lock()
+    logger: ClassVar[logging.Logger] = get_formatted_logger(__name__)
+    max_browsers: ClassVar[int] = 3
+    browser_load_threshold: ClassVar[int] = 5
+    browsers: ClassVar[set[NoDriverScraper.Browser]] = set()
+    browsers_lock: ClassVar[asyncio.Lock] = asyncio.Lock()
 
     @staticmethod
     def get_domain(url: str) -> str:
@@ -34,7 +39,7 @@ class NoDriverScraper:
     class Browser:
         def __init__(
             self,
-            driver: "zendriver.Browser",
+            driver: zendriver.Browser,
         ):
             self.driver: zendriver.Browser = driver
             self.processing_count: int = 0
@@ -59,13 +64,16 @@ class NoDriverScraper:
                 self.processing_count -= 1
                 raise
 
-        async def scroll_page_to_bottom(self, page: "zendriver.Tab"):
-            total_scroll_percent = 0
+        async def scroll_page_to_bottom(
+            self,
+            page: zendriver.Tab,
+        ):
+            total_scroll_percent: int = 0
             while True:
                 # in tab mode, we need to bring the tab to front before scrolling to load the page content properly
                 if self.tab_mode:
                     await page.bring_to_front()
-                scroll_percent = random.randrange(46, 97)
+                scroll_percent: int = random.randrange(46, 97)
                 total_scroll_percent += scroll_percent
                 await page.scroll_down(scroll_percent)
                 await page.wait(2)
@@ -80,17 +88,20 @@ class NoDriverScraper:
                 ):
                     break
 
-        async def close_page(self, page: "zendriver.Tab"):
+        async def close_page(self, page: zendriver.Tab):
             try:
                 await page.close()
             finally:
                 self.processing_count -= 1
 
         @asynccontextmanager
-        async def rate_limit_for_domain(self, url: str):
-            semaphore = None
+        async def rate_limit_for_domain(
+            self,
+            url: str,
+        ) -> AsyncGenerator[None, Any]:
+            semaphore: asyncio.Semaphore | None = None
             try:
-                domain = NoDriverScraper.get_domain(url)
+                domain: str = NoDriverScraper.get_domain(url)
 
                 semaphore = self.domain_semaphores.get(domain)
                 if not semaphore:
@@ -117,8 +128,8 @@ class NoDriverScraper:
     async def get_browser(
         cls,
         headless: bool = False,
-    ) -> "NoDriverScraper.Browser":
-        async def create_browser() -> "NoDriverScraper.Browser":
+    ) -> NoDriverScraper.Browser:
+        async def create_browser() -> NoDriverScraper.Browser:
             try:
                 global zendriver
                 import zendriver
@@ -153,7 +164,7 @@ class NoDriverScraper:
     @classmethod
     async def release_browser(
         cls,
-        browser: "NoDriverScraper.Browser",
+        browser: NoDriverScraper.Browser,
     ):
         async with cls.browsers_lock:
             if browser and browser.processing_count <= 0:
@@ -172,7 +183,7 @@ class NoDriverScraper:
         self.debug: bool = False
 
     async def scrape_async(self) -> tuple[str, list[str], str]:
-        """Returns tuple of (text, image_urls, title)"""
+        """Returns tuple of (text, image_urls, title)."""
         if not self.url:
             return (
                 "A URL was not specified, cancelling request to browse website.",
@@ -181,7 +192,7 @@ class NoDriverScraper:
             )
 
         browser: NoDriverScraper.Browser | None = None
-        page = None
+        page: Tab | None = None
         try:
             try:
                 browser = await self.get_browser()
@@ -195,10 +206,10 @@ class NoDriverScraper:
             await page.wait(random.uniform(2, 3))
 
             await browser.scroll_page_to_bottom(page)
-            html = await page.get_content()
-            soup = BeautifulSoup(html, "lxml")
+            html: str = await page.get_content()
+            soup: BeautifulSoup = BeautifulSoup(html, "lxml")
             clean_soup(soup)
-            text = get_text_from_soup(soup)
+            text: str = get_text_from_soup(soup)
             images: list[dict[str, Any]] = get_relevant_images(soup, self.url)
             image_urls: list[str] = [image.get("url", image.get("href", "")) for image in images]
             title: str | None = extract_title(soup)
@@ -208,9 +219,9 @@ class NoDriverScraper:
                     f"Content is too short from {self.url}. Title: {title}, Text length: {len(text)},\nexcerpt: {text}."
                 )
                 if self.debug:
-                    screenshot_dir = Path("logs/screenshots")
+                    screenshot_dir: Path = Path("logs/screenshots")
                     screenshot_dir.mkdir(exist_ok=True)
-                    screenshot_path = screenshot_dir / f"screenshot-error-{NoDriverScraper.get_domain(self.url)}.jpeg"
+                    screenshot_path: Path = screenshot_dir / f"screenshot-error-{NoDriverScraper.get_domain(self.url)}.jpeg"
                     await page.save_screenshot(screenshot_path)
                     self.logger.warning(f"check screenshot at [{screenshot_path}] for more details.")
 

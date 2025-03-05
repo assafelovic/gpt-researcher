@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import logging
 import os
 import tempfile
-from typing import Any
+
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
+
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
     TextLoader,
@@ -16,7 +17,12 @@ from langchain_community.document_loaders import (
     UnstructuredWordDocumentLoader,
 )
 
-logger: logging.Logger = logging.getLogger(__name__)
+from gpt_researcher.utils.logger import get_formatted_logger
+
+if TYPE_CHECKING:
+    import logging
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 class OnlineDocumentLoader:

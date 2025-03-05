@@ -3,7 +3,8 @@ from __future__ import annotations
 import http.client
 import json
 import os
-from typing import TYPE_CHECKING, Any, Dict, cast
+
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from llm_fallbacks.config import LiteLLMBaseModelSpec
@@ -139,9 +140,9 @@ def calculate_cost_per_token(
     ]
 
     for input_key, output_key, multiplier in token_costs:
-        input_cost = cast(Dict[str, Any], model_spec).get(input_key, -1)
+        input_cost = cast(dict[str, Any], model_spec).get(input_key, -1)
         output_cost = (
-            -1 if output_key is None else cast(Dict[str, Any], model_spec).get(output_key, -1)
+            -1 if output_key is None else cast(dict[str, Any], model_spec).get(output_key, -1)
         )
 
         if isinstance(input_cost, (int, float)) and isinstance(output_cost, (int, float)):
@@ -178,7 +179,7 @@ def calculate_approx_max_tokens(
     ]
 
     for limit_key, multiplier in token_limits:
-        val = cast(Dict[str, Any], model_spec).get(limit_key, -1)
+        val = cast(dict[str, Any], model_spec).get(limit_key, -1)
         if isinstance(val, (int, float)) and val > 0:
             final_total += val * multiplier
             found = True
@@ -216,7 +217,7 @@ def sort_models_by_cost_and_limits(
         and (
             not free_only
             or all(
-                cast(Dict[str, Any], spec).get(key, 0) == 0
+                cast(dict[str, Any], spec).get(key, 0) == 0
                 for key in [
                     "input_cost_per_token",
                     "output_cost_per_token",
@@ -298,12 +299,12 @@ def get_chat_models(
 
     for model_name, model_spec in models.items():
         # Check mode
-        if (cast(Dict[str, Any], model_spec).get("mode", "") or "").lower() != "chat":
+        if (cast(dict[str, Any], model_spec).get("mode", "") or "").lower() != "chat":
             continue
 
         # Check audio input support
         if supports_audio_input is not None:
-            audio_input_support = cast(Dict[str, Any], model_spec).get(
+            audio_input_support = cast(dict[str, Any], model_spec).get(
                 "supports_audio_input", False
             )
             if bool(audio_input_support) != supports_audio_input:
@@ -311,7 +312,7 @@ def get_chat_models(
 
         # Check audio output support
         if supports_audio_output is not None:
-            audio_output_support = cast(Dict[str, Any], model_spec).get(
+            audio_output_support = cast(dict[str, Any], model_spec).get(
                 "supports_audio_output", False
             )
             if bool(audio_output_support) != supports_audio_output:
@@ -319,7 +320,7 @@ def get_chat_models(
 
         # Check vision support
         if supports_vision is not None:
-            vision_support = cast(Dict[str, Any], model_spec).get("supports_vision", False)
+            vision_support = cast(dict[str, Any], model_spec).get("supports_vision", False)
             if bool(vision_support) != supports_vision:
                 continue
 
@@ -339,7 +340,7 @@ def get_completion_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if str(cast(Dict[str, Any], model_spec).get("mode", "") or "").strip() == "completion"
+        if str(cast(dict[str, Any], model_spec).get("mode", "") or "").strip() == "completion"
     }
 
 
@@ -354,7 +355,7 @@ def get_embedding_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if str(cast(Dict[str, Any], model_spec).get("mode", "") or "").strip() == "embedding"
+        if str(cast(dict[str, Any], model_spec).get("mode", "") or "").strip() == "embedding"
     }
 
 
@@ -369,7 +370,7 @@ def get_image_generation_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if str(cast(Dict[str, Any], model_spec).get("mode", "") or "").strip() == "image_generation"
+        if str(cast(dict[str, Any], model_spec).get("mode", "") or "").strip() == "image_generation"
     }
 
 
@@ -384,7 +385,7 @@ def get_audio_transcription_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if str(cast(Dict[str, Any], model_spec).get("mode", "") or "").strip()
+        if str(cast(dict[str, Any], model_spec).get("mode", "") or "").strip()
         == "audio_transcription"
     }
 
@@ -402,7 +403,7 @@ def get_audio_speech_models(
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if str(cast(Dict[str, Any], model_spec).get("mode", "") or "").strip() == "audio_speech"
+        if str(cast(dict[str, Any], model_spec).get("mode", "") or "").strip() == "audio_speech"
     }
 
 
@@ -417,7 +418,7 @@ def get_moderation_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if str(cast(Dict[str, Any], model_spec).get("mode", "") or "").strip()
+        if str(cast(dict[str, Any], model_spec).get("mode", "") or "").strip()
         in ["moderation", "moderations"]
     }
 
@@ -433,7 +434,7 @@ def get_rerank_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if str(cast(Dict[str, Any], model_spec).get("mode", "") or "").strip() == "rerank"
+        if str(cast(dict[str, Any], model_spec).get("mode", "") or "").strip() == "rerank"
     }
 
 
@@ -448,7 +449,7 @@ def get_vision_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if cast(Dict[str, Any], model_spec).get("supports_vision")
+        if cast(dict[str, Any], model_spec).get("supports_vision")
     }
 
 
@@ -463,7 +464,7 @@ def get_function_calling_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if cast(Dict[str, Any], model_spec).get("supports_function_calling")
+        if cast(dict[str, Any], model_spec).get("supports_function_calling")
     }
 
 
@@ -478,7 +479,7 @@ def get_parallel_function_calling_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if cast(Dict[str, Any], model_spec).get("supports_parallel_function_calling")
+        if cast(dict[str, Any], model_spec).get("supports_parallel_function_calling")
     }
 
 
@@ -493,7 +494,7 @@ def get_image_input_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if cast(Dict[str, Any], model_spec).get("supports_image_input")
+        if cast(dict[str, Any], model_spec).get("supports_image_input")
     }
 
 
@@ -508,7 +509,7 @@ def get_audio_input_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if cast(Dict[str, Any], model_spec).get("supports_audio_input")
+        if cast(dict[str, Any], model_spec).get("supports_audio_input")
     }
 
 
@@ -523,7 +524,7 @@ def get_audio_output_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if cast(Dict[str, Any], model_spec).get("supports_audio_output")
+        if cast(dict[str, Any], model_spec).get("supports_audio_output")
     }
 
 
@@ -538,12 +539,12 @@ def get_pdf_input_models() -> dict[str, LiteLLMBaseModelSpec]:
     return {
         model_name: model_spec
         for model_name, model_spec in get_litellm_models().items()
-        if cast(Dict[str, Any], model_spec).get("supports_pdf_input")
+        if cast(dict[str, Any], model_spec).get("supports_pdf_input")
     }
 
 
 def get_models() -> dict[str, LiteLLMBaseModelSpec]:
-    """Get all available models
+    """Get all available models.
 
     Returns:
         dict[str, LiteLLMBaseModelSpec]: Dictionary of all models and their specifications known to litellm

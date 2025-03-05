@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import logging
-
 from typing import TYPE_CHECKING, Any
 
 import json5 as json
@@ -10,12 +8,17 @@ import json_repair
 from gpt_researcher.config.config import Config
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from langchain_community.adapters.openai import convert_openai_messages
-from langchain_core.messages.base import BaseMessage
 
 if TYPE_CHECKING:
+    import logging
+
     from collections.abc import Callable
 
-logger = logging.getLogger(__name__)
+    from langchain_core.messages.base import BaseMessage
+
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger(__name__)
 
 
 async def call_model(
@@ -40,10 +43,9 @@ async def call_model(
 
     try:
         provider = GenericLLMProvider(
-            cfg.SMART_LLM_PROVIDER,
-            model=model,
-            temperature=0,
+            cfg.SMART_LLM_PROVIDER if model is None else f"{cfg.SMART_LLM_PROVIDER}:{model}",
             fallback_models=cfg.FALLBACK_MODELS,
+            temperature=0,
             **cfg.llm_kwargs,
         )
         response: str = await provider.get_chat_response(

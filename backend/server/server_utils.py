@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 import os
 import re
 import traceback
@@ -11,7 +10,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Awaitable
 
-from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.websockets import WebSocket as ServerWebSocket
 from gpt_researcher.actions import stream_output
@@ -22,14 +20,20 @@ from gpt_researcher.utils.enum import ReportType, Tone
 from werkzeug.utils import secure_filename
 
 if TYPE_CHECKING:
+    import logging
+
+    from fastapi import UploadFile
+
     from backend.server.websocket_manager import WebSocketManager
 
-logging.basicConfig(level=logging.DEBUG)
-logger: logging.Logger = logging.getLogger(__name__)
+
+from gpt_researcher.utils.logger import get_formatted_logger
+
+logger: logging.Logger = get_formatted_logger("gpt_researcher")
 
 
 class HTTPStreamAdapter:
-    """Adapter to make HTTP streaming look like a WebSocket for WebSocketManager"""
+    """Adapter to make HTTP streaming look like a WebSocket for WebSocketManager."""
 
     def __init__(
         self,
@@ -53,24 +57,24 @@ class HTTPStreamAdapter:
 
     # Required WebSocket compatibility methods
     async def accept(self) -> None:
-        """Simulated WebSocket accept"""
+        """Simulated WebSocket accept."""
         self._closed = False
 
     async def close(self) -> None:
-        """Simulated WebSocket close"""
+        """Simulated WebSocket close."""
         self._closed = True
 
     @property
     def closed(self) -> bool:
-        """Simulated WebSocket closed property"""
+        """Simulated WebSocket closed property."""
         return self._closed
 
     async def receive_text(self) -> str:
-        """Simulated WebSocket receive text"""
+        """Simulated WebSocket receive text."""
         return ""
 
     async def receive_json(self) -> dict[str, Any]:
-        """Simulated WebSocket receive JSON"""
+        """Simulated WebSocket receive JSON."""
         return {}
 
 

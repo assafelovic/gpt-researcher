@@ -1,19 +1,23 @@
 from __future__ import annotations
 
-import logging
 import os
 import urllib.parse
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import aiofiles
 import mistune
 
 from fpdf import FPDF
 from fpdf.errors import FPDFUnicodeEncodingException
+from gpt_researcher.utils.logger import get_formatted_logger
 from markdown_it import MarkdownIt
 
-logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    import logging
+
+logger: logging.Logger = get_formatted_logger("gpt_researcher")
 
 MAX_FILENAME_LENGTH: int = 60
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
-import logging
 import os
 import subprocess
 import sys
@@ -11,19 +10,25 @@ import uuid
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable, Sequence, cast
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Sequence, cast
 
 from colorama import Fore, Style, init
-from fastapi import WebSocket
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
-from llm_fallbacks.config import FREE_MODELS, LiteLLMBaseModelSpec
+from llm_fallbacks.config import FREE_MODELS
 from pydantic import SecretStr
 
-if TYPE_CHECKING:
-    from backend.server.server_utils import HTTPStreamAdapter
+from gpt_researcher.utils.logger import get_formatted_logger
 
-logger: logging.Logger = logging.getLogger(__name__)
+if TYPE_CHECKING:
+    import logging
+
+    from backend.server.server_utils import HTTPStreamAdapter
+    from fastapi import WebSocket
+    from llm_fallbacks.config import LiteLLMBaseModelSpec
+
+logger: logging.Logger = get_formatted_logger("GenericLLMProvider")
+
 
 # Supported LLM providers
 _SUPPORTED_PROVIDERS: set[str] = {
@@ -58,11 +63,11 @@ class ModelInfo:
 
 # Class for error/failure tracking
 class ErrorTracker:
-    MAX_MODEL_FAILURES: int = 3
-    MAX_PROVIDER_FAILURES: int = 5
-    MAX_CONSECUTIVE_PROVIDER_FAILURES: int = 3
-    FAILURE_RESET_TIME: int = 3600  # 1 hour in seconds
-    MAX_ERROR_MESSAGES: int = 3
+    MAX_MODEL_FAILURES: ClassVar[int] = 3
+    MAX_PROVIDER_FAILURES: ClassVar[int] = 25
+    MAX_CONSECUTIVE_PROVIDER_FAILURES: ClassVar[int] = 50
+    FAILURE_RESET_TIME: ClassVar[int] = 300
+    MAX_ERROR_MESSAGES: ClassVar[int] = 3
 
     def __init__(self) -> None:
         self.model_failures: dict[str, int] = defaultdict(int)
@@ -116,7 +121,8 @@ class ErrorTracker:
                     del self.model_failures[model_id]
                     if model_id in self.error_messages:
                         del self.error_messages[model_id]
-                provider = model_id.split(":", 1)[0] if ":" in model_id else model_id
+                # Extract only the provider part (before the first colon)
+                provider: str = model_id.split(":", 1)[0] if ":" in model_id else model_id
                 if provider in self.provider_failures:
                     logger.info(f"Resetting failure count for provider {provider}")
                     del self.provider_failures[provider]
@@ -138,6 +144,10 @@ class ErrorTracker:
     ) -> list[str]:
         return self.error_messages.get(model_id, ["No specific errors recorded"])
 
+    def mark_provider_permanently_failed(self, provider: str) -> None:
+        self.provider_failures[provider] = self.MAX_PROVIDER_FAILURES
+        logger.warning(f"Provider '{provider}' marked as permanently failed due to billing issues.")
+
 
 # Class for model instance creation
 class ModelFactory:
@@ -146,13 +156,14 @@ class ModelFactory:
         model_source: BaseChatModel | str,
     ) -> tuple[str, str]:
         if isinstance(model_source, str):
+            # Only split at the first colon to get the provider
             if ":" in model_source:
-                provider = model_source.split(":", 1)[0]
+                provider, model_id = model_source.split(":", 1)
             elif "/" in model_source:
-                provider = model_source.split("/", 1)[0]
+                provider, model_id = model_source.split("/", 1)
             else:
-                provider = model_source
-            return model_source, provider
+                raise ValueError(f"Invalid model source: '{model_source}'")
+            return model_id, provider
         else:
             return f"model_{uuid.uuid4().hex[:8]}", "unknown"
 
@@ -165,11 +176,9 @@ class ModelFactory:
         if isinstance(provider, BaseChatModel):
             return provider
         provider_name, model = provider.split(":", 1) if ":" in provider else (provider, "")
-        model_name = str(kwargs.get("model", "") or model).strip().casefold()
-        model_name = model_name.split(":", 1)[1] if ":" in model_name else model_name
-        kwargs["model"] = model_name
+        model_name = str(kwargs.pop("model", "") or model).strip().casefold()
         try:
-            return GenericLLMProvider._create_model_for_provider(provider_name, **kwargs)
+            return GenericLLMProvider._create_model_for_provider(provider_name, model=model_name, **kwargs)
         except ImportError as e:
             init(autoreset=True)
             raise ImportError(f"{Fore.RED}Unable to import required package: {e.__class__.__name__}: {e}")  # from e
@@ -223,7 +232,7 @@ class MessageConverter:
 class GenericLLMProvider:
     """A generic provider for LLM models with fallback capabilities."""
 
-    _error_tracker: ErrorTracker = ErrorTracker()
+    _error_tracker: ClassVar[ErrorTracker] = ErrorTracker()
 
     def __init__(
         self,
@@ -231,7 +240,11 @@ class GenericLLMProvider:
         fallback_models: Sequence[BaseChatModel | str | tuple[str, LiteLLMBaseModelSpec]] | None = None,
         **llm_kwargs: Any,
     ):
-        self.current_model: BaseChatModel = ModelFactory.create_model(llm, **llm_kwargs) if isinstance(llm, str) else llm
+        self.current_model: BaseChatModel = (
+            ModelFactory.create_model(llm, **llm_kwargs)
+            if isinstance(llm, str)
+            else llm
+        )
         self.fallback_models: list[BaseChatModel] = []
         self.model_info: list[ModelInfo] = []
 
@@ -245,7 +258,6 @@ class GenericLLMProvider:
             self.fallback_models.insert(0, self.current_model)
 
         self._filter_failed_models()
-        self._log_configuration()
 
     def _setup_fallbacks(
         self,
@@ -268,9 +280,13 @@ class GenericLLMProvider:
         **llm_kwargs: Any,
     ) -> None:
         logger.info("No fallback models provided, using default FREE_MODELS")
+        logger.info(f"FREE_MODELS: {FREE_MODELS!r}")
         for model_name, model_spec in FREE_MODELS:
-            provider = cast(str, model_spec.get("litellm_provider", "")).replace("vertex_ai-language-models", "vertex_ai")
-            model_str = f"litellm:{provider}/{model_name}"
+            provider: str = cast(str, model_spec.get("litellm_provider", "")).replace(
+                "vertex_ai-language-models",
+                "vertex_ai",
+            )
+            model_str: str = f"litellm:{provider}/{model_name}"
             fallback_model: BaseChatModel = ModelFactory.create_model(model_str, **llm_kwargs)
             model_id, _ = ModelFactory.extract_model_info(model_str)
             self.fallback_models.append(fallback_model)
@@ -280,8 +296,8 @@ class GenericLLMProvider:
         self,
         model: BaseChatModel,
     ) -> None:
-        model_id = f"model_{uuid.uuid4().hex[:8]}"
-        provider = "unknown"
+        model_id: str = f"model_{uuid.uuid4().hex[:8]}"
+        provider: str = "unknown"
         self.fallback_models.append(model)
         self.model_info.append(ModelInfo(model=model, model_id=model_id, provider=provider))
 
@@ -304,30 +320,12 @@ class GenericLLMProvider:
         model_name: str
         model_spec: LiteLLMBaseModelSpec
         model_name, model_spec = model_tuple
-        provider = cast(str, model_spec.get("litellm_provider", "")).replace("vertex_ai-language-models", "vertex_ai")
-        model_str = f"litellm:{provider}/{model_name}"
+        provider: str = cast(str, model_spec.get("litellm_provider", "")).replace("vertex_ai-language-models", "vertex_ai")
+        model_str: str = f"litellm:{provider}/{model_name}"
         fallback_model: BaseChatModel = ModelFactory.create_model(model_str, **llm_kwargs)
         model_id, _ = ModelFactory.extract_model_info(model_str)
         self.fallback_models.append(fallback_model)
         self.model_info.append(ModelInfo(model=fallback_model, model_id=model_id, provider=provider))
-
-    def _log_configuration(self) -> None:
-        current_model_info = self._get_model_info(self.current_model)
-        logger.info(f"Using primary model: {current_model_info.model_id} (provider: {current_model_info.provider})")
-        fallbacks: list[str] = [
-            f"{self._get_model_info(model).model_id} ({self._get_model_info(model).provider})"
-            for model in self.fallback_models[1:]
-        ]
-        if fallbacks:
-            logger.info(f"Available fallbacks: {', '.join(fallbacks)}")
-        else:
-            logger.info("No fallback models available")
-        print(f"{Fore.GREEN}{Style.BRIGHT}Using LLM provider: {Style.RESET_ALL}{self.current_model}", file=sys.__stdout__)
-        if self.fallback_models[1:]:
-            print(
-                f"{Fore.GREEN}{Style.BRIGHT}Using fallbacks: {Style.RESET_ALL}{self.fallback_models[1:]}",
-                file=sys.__stdout__,
-            )
 
     def _get_model_info(
         self,
@@ -336,9 +334,9 @@ class GenericLLMProvider:
         for info in self.model_info:
             if info.model is model:
                 return info
-        model_id = f"model_{uuid.uuid4().hex[:8]}"
-        provider = "unknown"
-        new_info = ModelInfo(model=model, model_id=model_id, provider=provider)
+        model_id: str = f"model_{uuid.uuid4().hex[:8]}"
+        provider: str = "unknown"
+        new_info: ModelInfo = ModelInfo(model=model, model_id=model_id, provider=provider)
         self.model_info.append(new_info)
         return new_info
 
@@ -408,8 +406,18 @@ class GenericLLMProvider:
         provider_name: str
         model: str
         provider_name, model = provider.split(":", 1) if ":" in provider else (provider, "")
-        model_name = str(kwargs.get("model", "") or model).strip().casefold()
-        model_name = model_name.split(":", 1)[1] if ":" in model_name else model_name
+
+        # If model is explicitly provided in kwargs, use that
+        # Otherwise use the model part from the provider string without further splitting
+        if kwargs.get("model"):
+            model_name: str = str(kwargs.get("model")).strip().casefold()
+            # If this is a provider:model format in kwargs, extract just the model part
+            if ":" in model_name:
+                model_name = model_name.split(":", 1)[1]
+        else:
+            # Use the model from the provider string as is, without further splitting
+            model_name = model.strip().casefold()
+
         kwargs["model"] = model_name
         try:
             return cls._create_model_for_provider(provider_name, **kwargs)
@@ -430,9 +438,9 @@ class GenericLLMProvider:
         """Create a model instance for the specified provider."""
         # Handle provider:model or provider/model format
         if ":" in provider:
-            return cls._create_model_for_provider(provider.split(":")[0], **kwargs)
+            return cls._create_model_for_provider(provider.split(":", 1)[0], **kwargs)
         elif "/" in provider:
-            return cls._create_model_for_provider(provider.split("/")[0], **kwargs)
+            return cls._create_model_for_provider(provider.split("/", 1)[0], **kwargs)
 
         # Create model based on provider
         if provider == "openai":
@@ -486,7 +494,7 @@ class GenericLLMProvider:
         elif provider == "litellm":
             return cls._create_litellm_model(**kwargs)
         else:
-            raise ValueError(f"Unsupported provider: {provider}")
+            raise ValueError(f"Unsupported provider: '{provider}'")
 
     # Provider-specific model creation methods
     @classmethod
@@ -517,7 +525,7 @@ class GenericLLMProvider:
         _check_pkg("langchain_openai")
         from langchain_openai import AzureChatOpenAI
 
-        model_name = str(kwargs.get("model", "")).strip().casefold()
+        model_name: str = str(kwargs.get("model", "") or kwargs.get("model_name", "")).strip().casefold()
         kwargs = {"azure_deployment": model_name, **kwargs}
         return AzureChatOpenAI(**kwargs)
 
@@ -596,7 +604,7 @@ class GenericLLMProvider:
         _check_pkg("langchain_huggingface")
         from langchain_huggingface import ChatHuggingFace
 
-        model_id = kwargs.pop("model", kwargs.pop("model_name", None))
+        model_id: str = kwargs.pop("model", kwargs.pop("model_name", None))
         return ChatHuggingFace(model_id=model_id, **kwargs)
 
     @classmethod
@@ -721,7 +729,7 @@ class GenericLLMProvider:
             logger.warning("No viable models available. Resetting failure tracking.")
             self._error_tracker.reset_all_failures()
             self.fallback_models = [self.current_model]
-            info = self._get_model_info(self.current_model)
+            info: ModelInfo = self._get_model_info(self.current_model)
             self.model_info = [info]
         for model in self.fallback_models:
             info = self._get_model_info(model)
@@ -742,11 +750,18 @@ class GenericLLMProvider:
                         from gpt_researcher.utils.costs import estimate_llm_cost
 
                         cost_callback(estimate_llm_cost(self.msgs_to_str(list(messages)), result))
-                    logger.info(f"Successfully got response from {info.model_id}")
+                    logger.debug(f"Successfully got response from {info.model_id}")
                     return result
                 except Exception as e:
+                    error_message = str(e)
+                    if (
+                        "Please enable billing on project" in error_message
+                        or "If you enabled billing for this project" in error_message
+                    ) and (e.__class__.__name__ == "VertexAIError" or info.provider == "vertex_ai"):
+                        self._error_tracker.mark_provider_permanently_failed(info.provider)
+                        break
                     logger.exception(
-                        f"Error getting response from {info.provider}/{getattr(info.model, 'model', model.name)}! {e.__class__.__name__}: {e}"
+                        f"Error getting response from {info.provider}/{getattr(info.model, 'model', info.model.name)}! {e.__class__.__name__}: {e}"
                     )
                     self._error_tracker.record_failure(info.model_id, info.provider, e)
                     if retry == max_retries - 1:
@@ -761,7 +776,7 @@ class GenericLLMProvider:
         messages: list[BaseMessage] | list[dict[str, str]],
         websocket: WebSocket | HTTPStreamAdapter | None = None,
     ) -> str:
-        info = self._get_model_info(model)
+        info: ModelInfo = self._get_model_info(model)
         logger.info(f"Streaming response from {info.model_id}")
         paragraph: str = ""
         response: str = ""
@@ -810,13 +825,13 @@ class GenericLLMProvider:
 
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
-        pkg_kebab = pkg.replace("_", "-")
+        pkg_kebab: str = pkg.replace("_", "-")
         init(autoreset=True)
 
         try:
-            print(f"{Fore.YELLOW}Installing {pkg_kebab}...{Style.RESET_ALL}")
+            logger.info(f"{Fore.YELLOW}Installing {pkg_kebab}...{Style.RESET_ALL}")
             subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", pkg_kebab])
-            print(f"{Fore.GREEN}Successfully installed {pkg_kebab}{Style.RESET_ALL}")
+            logger.info(f"{Fore.GREEN}Successfully installed {pkg_kebab}{Style.RESET_ALL}")
 
             # Try importing again after install
             importlib.import_module(pkg)
