@@ -51,12 +51,12 @@ export const GPTResearcher = ({
   const [showScrollButton, setShowScrollButton] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
 
+  // Store apiUrl in state to ensure consistency
+  const [currentApiUrl, setCurrentApiUrl] = useState(apiUrl);
+
+  // Update currentApiUrl when prop changes
   useEffect(() => {
-    if (apiUrl) {
-      // Update both environment variables when apiUrl prop changes
-      process.env.REACT_APP_GPTR_API_URL = apiUrl;
-      process.env.NEXT_PUBLIC_GPTR_API_URL = apiUrl;
-    }
+    setCurrentApiUrl(apiUrl);
   }, [apiUrl]);
 
   // Update callback when results change
@@ -71,7 +71,8 @@ export const GPTResearcher = ({
     setAnswer,
     setLoading,
     setShowHumanFeedback,
-    setQuestionForHuman
+    setQuestionForHuman,
+    currentApiUrl
   );
 
   const handleFeedbackSubmit = (feedback: string | null) => {

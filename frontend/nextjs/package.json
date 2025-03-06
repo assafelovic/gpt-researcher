@@ -1,15 +1,15 @@
 {
   "name": "gpt-researcher-ui",
   "description": "GPT Researcher frontend as a React component",
-  "version": "0.1.62",
+  "version": "0.1.63",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
     "styles/*",
-    "app/globals.css",
-    "components/Settings/App.css"
+    "app/globals.module.css",
+    "components/Settings/Settings.module.css"
   ],
   "private": false,
   "scripts": {
