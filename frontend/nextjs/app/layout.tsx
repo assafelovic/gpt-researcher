@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Lexend } from "next/font/google";
 import PlausibleProvider from "next-plausible";
 import { GoogleAnalytics } from '@next/third-parties/google'
-import "./globals.css";
+import "./globals.module.css";
 
 const inter = Lexend({ subsets: ["latin"] });
 
