@@ -25,6 +25,13 @@ const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) 
     if (storedConfig) {
       setApiVariables(JSON.parse(storedConfig));
     }
+
+    if(showModal) {
+      const header = document.querySelector('.settings .App-header');
+      if (header) {
+        header.classList.remove('App-header');
+      }
+    }
   }, [showModal]);
 
   const handleSaveChanges = () => {
