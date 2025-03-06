@@ -24,7 +24,7 @@ export interface GPTResearcherProps {
 }
 
 export const GPTResearcher = ({
-  apiUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000',
+  apiUrl = process.env.REACT_PUBLIC_GPTR_API_URL || process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000',
   apiKey = '',
   defaultPrompt = '',
   onResultsChange,
@@ -50,6 +50,14 @@ export const GPTResearcher = ({
   const [isStopped, setIsStopped] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (apiUrl) {
+      // Update both environment variables when apiUrl prop changes
+      process.env.REACT_APP_GPTR_API_URL = apiUrl;
+      process.env.NEXT_PUBLIC_GPTR_API_URL = apiUrl;
+    }
+  }, [apiUrl]);
 
   // Update callback when results change
   useEffect(() => {
