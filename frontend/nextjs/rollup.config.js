@@ -7,6 +7,7 @@ import json from '@rollup/plugin-json';
 import postcss from 'rollup-plugin-postcss';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
+import imageTransformPlugin from './src/utils/imageTransformPlugin';
 
 const removeUseClientPlugin = {
   name: 'remove-use-client',
@@ -41,11 +42,7 @@ export default {
     }),
     json(), // Add this plugin to handle JSON files   
     removeUseClientPlugin,
-    // alias({
-    //   entries: [
-    //     { find: '@', replacement: path.resolve(__dirname, 'src') }
-    //   ]
-    // }),
+    imageTransformPlugin(),
     resolve({
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       browser: true, // Ensures it only includes browser-compatible modules
