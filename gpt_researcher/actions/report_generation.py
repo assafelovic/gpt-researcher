@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from logging import Logger
 
-    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
+    from backend.server.server_utils import CustomLogsHandler
     from fastapi.websockets import WebSocket
 
     from gpt_researcher.utils.enum import Tone
@@ -56,7 +56,7 @@ async def write_report_introduction(
     context: str,
     agent_role_prompt: str,
     cfg: Config,
-    websocket: CustomLogsHandler | WebSocket | HTTPStreamAdapter | None = None,
+    websocket: CustomLogsHandler | WebSocket | None = None,
     cost_callback: Callable[[float], None] | None = None,
 ) -> str:
     """Generate an introduction for the report.
@@ -118,7 +118,7 @@ async def write_conclusion(
     context: str,
     agent_role_prompt: str,
     cfg: Config,
-    websocket: CustomLogsHandler | WebSocket | HTTPStreamAdapter | None = None,
+    websocket: CustomLogsHandler | WebSocket | None = None,
     cost_callback: Callable[[float], None] | None = None,
 ) -> str:
     """Write a conclusion for the report.
@@ -178,7 +178,7 @@ async def summarize_url(
     content: str,
     role: str,
     config: Config,
-    websocket: WebSocket | HTTPStreamAdapter | None = None,
+    websocket: WebSocket | None = None,
     cost_callback: Callable[[float], None] | None = None,
 ) -> str:
     """Summarize the content of a URL.
@@ -236,7 +236,7 @@ async def generate_draft_section_titles(
     context: str,
     role: str,
     config: Config,
-    websocket: CustomLogsHandler | WebSocket | HTTPStreamAdapter | None = None,
+    websocket: CustomLogsHandler | WebSocket | None = None,
     cost_callback: Callable[[float], None] | None = None,
 ) -> list[str]:
     """Generate draft section titles for the report.

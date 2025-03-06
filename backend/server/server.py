@@ -3,10 +3,12 @@ from __future__ import annotations
 import logging
 import os
 
-from typing import TYPE_CHECKING
+from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator
 
-from fastapi import FastAPI, File, WebSocketDisconnect
+from fastapi import FastAPI, File, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from gpt_researcher.utils.logger import get_formatted_logger
@@ -21,10 +23,6 @@ from backend.server.server_utils import (
 )
 from backend.server.websocket_manager import WebSocketManager
 
-if TYPE_CHECKING:
-    from fastapi import Request, UploadFile, WebSocket
-    from fastapi.responses import JSONResponse
-
 # Get logger instance
 logger: logging.Logger = get_formatted_logger(__name__)
 
@@ -35,7 +33,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.StreamHandler()  # Only log to console
+        logging.StreamHandler(),  # Only log to console
     ],
 )
 
@@ -44,9 +42,17 @@ logging.basicConfig(
 
 
 class ResearchRequest(BaseModel):
-    task: str
-    report_type: str
     agent: str
+    query_domains: str = ""
+    report_type: str
+    source_urls: str = ""
+    task: str
+    tone: str = "objective"
+    # Add any additional fields that might be needed for configuration
+
+
+class ChatRequest(BaseModel):
+    message: str
 
 
 class ConfigRequest(BaseModel):
@@ -70,6 +76,7 @@ class ConfigRequest(BaseModel):
 # App initialization
 app = FastAPI()
 
+
 # Static files and templates
 app.mount("/site", StaticFiles(directory="./frontend"), name="site")
 app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
@@ -90,20 +97,21 @@ app.add_middleware(
 # Constants
 DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 
-# Startup event
 
-
-@app.on_event("startup")
-def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
+    """Startup Event."""
     os.makedirs("outputs", exist_ok=True)
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
     os.makedirs(DOC_PATH, exist_ok=True)
 
     # Setup research logging
     log_file, json_file, research_logger, json_handler = setup_research_logging()  # Unpack all 4 values
-    research_logger.json_handler = json_handler  # Store the JSON handler on the logger  # pyright: ignore[reportAttributeAccessIssue]
+    setattr(research_logger, "json_handler", json_handler)  # Use setattr to avoid linter error
     research_logger.info(f"Research log file: {log_file}")
     research_logger.info(f"Research JSON file: {json_file}")
+
+    yield
 
 
 # Routes
@@ -117,7 +125,7 @@ async def read_root(request: Request):
 @app.get("/files/")
 async def list_files() -> dict[str, list[str]]:
     files: list[str] = os.listdir(DOC_PATH)
-    print(f"Files in {DOC_PATH}: {files}")
+    logger.debug(f"Files in {DOC_PATH}: {files}")
     return {"files": files}
 
 

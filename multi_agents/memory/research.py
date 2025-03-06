@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import Any, TypedDict
 
 class ResearchState(TypedDict):
     human_feedback: str
     initial_research: str
-    research_data: list[dict]
+    research_data: list[dict[str, Any]]
     sections: list[str]
-    task: dict
+    task: dict[str, Any]
     # Report layout
     conclusion: str
     date: str

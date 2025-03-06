@@ -26,7 +26,7 @@ from gpt_researcher.vector_store import VectorStoreWrapper
 if TYPE_CHECKING:
     import logging
 
-    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
+    from backend.server.server_utils import CustomLogsHandler
     from fastapi.websockets import WebSocket
     from langchain_community.vectorstores import VectorStore
 
@@ -52,7 +52,7 @@ class GPTResearcher:
         vector_store: VectorStore | None = None,
         vector_store_filter: dict[str, Any] | None = None,
         config: Config | dict[str, Any] | os.PathLike | str | None = None,
-        websocket: WebSocket | HTTPStreamAdapter | CustomLogsHandler | None = None,
+        websocket: WebSocket | CustomLogsHandler | None = None,
         agent_role: str | None = None,
         parent_query: str = "",
         subtopics: list[str] | None = None,
@@ -92,7 +92,7 @@ class GPTResearcher:
         ]
         self.vector_store: VectorStoreWrapper | None = None if vector_store is None else VectorStoreWrapper(vector_store)
         self.vector_store_filter: dict[str, Any] = {} if vector_store_filter is None else vector_store_filter
-        self.websocket: CustomLogsHandler | WebSocket | HTTPStreamAdapter | None = websocket
+        self.websocket: CustomLogsHandler | WebSocket | None = websocket
         self.parent_query: str = parent_query
         self.subtopics: list[str] = [] if subtopics is None else subtopics
         self.visited_urls: set[str] = set() if visited_urls is None else visited_urls
@@ -114,7 +114,7 @@ class GPTResearcher:
         )
 
         # deprecated arguments, it's recommended to use Config objects instead of passing a billion parameters to GPTResearcher.
-        self.agent_role = self.cfg.AGENT_ROLE if agent_role is None else agent_role
+        self.role = self.cfg.AGENT_ROLE if agent_role is None else agent_role
         self.max_subtopics = self.cfg.MAX_SUBTOPICS if max_subtopics is None else max_subtopics
         self.output_format = self.cfg.OUTPUT_FORMAT if output_format is None else output_format
         self.report_format = self.cfg.REPORT_FORMAT if report_format is None else report_format
@@ -150,19 +150,11 @@ class GPTResearcher:
                 elif event_type == "action":
                     await self.log_handler.on_agent_action(kwargs.get("action", ""), **kwargs)
                 elif event_type == "research":
-                    await self.log_handler.on_research_step(kwargs.get("step", ""), kwargs.get("details", {}))
-                elif event_type == "logs":
-                    await self.log_handler.on_logs(
-                        kwargs.get("content", ""),
-                        kwargs.get("output", ""),
-                        kwargs.get("metadata", {}),
-                    )
-                elif event_type == "images":
-                    await self.log_handler.on_images(kwargs.get("images", []))
+                    await self.log_handler.on_research_step(kwargs.get("step", ""), kwargs.pop("details", {}), **kwargs)
 
+                # Add direct logging as backup
                 import logging
-
-                research_logger: logging.Logger = logging.getLogger("research")
+                research_logger = logging.getLogger('research')
                 research_logger.info(f"{event_type}: {json.dumps(kwargs, default=str)}")
 
             except (ValueError, TypeError, KeyError) as e:
@@ -178,7 +170,7 @@ class GPTResearcher:
             "query": self.query,
             "agent": self.agent,
             "report_type": self.report_type,
-            "role": self.agent_role,
+            "role": self.role,
         }
         log_event_result: Coroutine[Any, Any, Any] | None = self._log_event(
             "research",
@@ -194,7 +186,7 @@ class GPTResearcher:
 
         if not (self.agent and self.role):
             await self._log_event("action", action="choose_agent")
-            self.agent, self.agent_role = await choose_agent(
+            self.agent, self.role = await choose_agent(
                 query=self.query,
                 cfg=self.cfg,
                 parent_query=self.parent_query,
@@ -204,13 +196,13 @@ class GPTResearcher:
             await self._log_event(
                 "action",
                 action="agent_selected",
-                details={"agent": self.agent, "role": self.agent_role},
+                details={"agent": self.agent, "role": self.role},
             )
 
         await self._log_event(
             "research",
             step="conducting_research",
-            details={"agent": self.agent, "role": self.agent_role},
+            details={"agent": self.agent, "role": self.role},
         )
         research_result: str | list[str] = await self.research_conductor.conduct_research()
         self.context = [research_result] if isinstance(research_result, str) else research_result
@@ -257,8 +249,8 @@ class GPTResearcher:
 
         # Run deep research and get context
         assert self.deep_researcher is not None
-        result: str = await self.deep_researcher.run(on_progress=on_progress)
-        self.context = result.split("\n")
+        unparsed_result: str | list[str] = await self.deep_researcher.run(on_progress=on_progress)
+        self.context = unparsed_result.split("\n") if isinstance(unparsed_result, str) else unparsed_result
 
         # Get total research costs
         total_costs: float = self.get_costs()
@@ -540,11 +532,11 @@ class GPTResearcher:
         self.cfg.CURATE_SOURCES = value
 
     @property
-    def agent_role(self) -> str:
+    def role(self) -> str:
         return self.cfg.AGENT_ROLE
 
-    @agent_role.setter
-    def agent_role(self, value: str):
+    @role.setter
+    def role(self, value: str):
         self.cfg.AGENT_ROLE = value
 
     @property

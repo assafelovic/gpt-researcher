@@ -43,3 +43,4 @@ server_log.txt
 tmp/
 venv.bak/
 venv/
+reports

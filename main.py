@@ -52,6 +52,7 @@ def configure_logging(
 
     # Create logger instance
     from gpt_researcher.utils.logger import get_formatted_logger
+
     logger: logging.Logger = get_formatted_logger(__name__)
     return logger
 
@@ -67,6 +68,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address to run the server on.")
     parser.add_argument("--choose", "-c", action="store_true", help="Choose a configuration to run.")
     parser.add_argument("--interactive", "-i", action="store_true", help="Choose a configuration to run.")
+    parser.add_argument("--frontend", type=str, default="default", help="Frontend to use (default or other).")
     parser.add_argument("--uds", type=str, default=None, help="Unix domain socket.")
     parser.add_argument("--fd", type=int, default=None, help="File descriptor.")
     parser.add_argument("--loop", type=str, default="auto", help="Event loop implementation.")
@@ -86,7 +88,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--reload-delay", type=float, default=0.25, help="Delay before reloading.")
     parser.add_argument("--workers", type=int, default=None, help="Number of worker processes.")
     parser.add_argument("--env-file", type=str, default=None, help="Path to environment file.")
-    parser.add_argument("--log-config", type=str, default=None, help="Path to logging configuration file.")  # Simplified to str
+    parser.add_argument(
+        "--log-config", type=str, default=None, help="Path to logging configuration file."
+    )  # Simplified to str
     parser.add_argument("--log-level", type=str, default=None, help="Logging level.")
     parser.add_argument("--access-log", action="store_true", help="Enable access logging.")
     parser.add_argument("--proxy-headers", action="store_true", help="Enable proxy headers.")
@@ -102,7 +106,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--ssl-keyfile", type=str, default=None, help="Path to SSL key file.")
     parser.add_argument("--ssl-certfile", type=str, default=None, help="Path to SSL certificate file.")
     parser.add_argument("--ssl-keyfile-password", type=str, default=None, help="Password for SSL key file.")
-    parser.add_argument("--ssl-version", type=int, default=ssl.PROTOCOL_TLS, help="SSL protocol version.")  # Use default from ssl
+    parser.add_argument(
+        "--ssl-version", type=int, default=ssl.PROTOCOL_TLS, help="SSL protocol version."
+    )  # Use default from ssl
     parser.add_argument("--ssl-cert-reqs", type=int, default=ssl.CERT_NONE, help="SSL certificate requirements.")
     parser.add_argument("--ssl-ca-certs", type=str, default=None, help="Path to CA certificates.")
     parser.add_argument("--ssl-ciphers", type=str, default="TLSv1", help="SSL ciphers.")
@@ -110,7 +116,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--use-colors", action="store_true", help="Enable colored logging output.")  # store_true is simpler
     parser.add_argument("--app-dir", type=str, default=None, help="Application directory.")
     parser.add_argument("--factory", action="store_true", help="Use application factory.")
-    parser.add_argument("--h11-max-incomplete-event-size", type=int, default=None, help="Maximum incomplete event size for h11.")
+    parser.add_argument(
+        "--h11-max-incomplete-event-size", type=int, default=None, help="Maximum incomplete event size for h11."
+    )
 
     return parser.parse_args()
 

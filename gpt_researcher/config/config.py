@@ -80,6 +80,7 @@ class Config:
     MAX_SUBTOPICS: int = int(os.environ.get("MAX_SUBTOPICS", 3))
     MEMORY_BACKEND: ReportSource = ReportSource.__members__[os.environ.get("MEMORY_BACKEND", ReportSource.Local.name) or ReportSource.Local.name]
     OUTPUT_FORMAT: OutputFileType = OutputFileType.__members__[os.environ.get("OUTPUT_FORMAT", OutputFileType.MARKDOWN.name) or OutputFileType.MARKDOWN.name]
+    QUERY_DOMAINS: list[str] = str(os.environ.get("QUERY_DOMAINS", "")).split(",")
     REPORT_FORMAT: ReportFormat = ReportFormat.__members__[os.environ.get("REPORT_FORMAT", ReportFormat.APA.name) or ReportFormat.APA.name]
     REPORT_SOURCE: ReportSource = ReportSource.__members__[os.environ.get("REPORT_SOURCE", ReportSource.Web.name) or ReportSource.Web.name]
     REPORT_TYPE: ReportType = ReportType.__members__[os.environ.get("REPORT_TYPE", ReportType.ResearchReport.name) or ReportType.ResearchReport.name]
@@ -214,6 +215,161 @@ class Config:
             None,
             **(config.to_dict() if isinstance(config, Config) else config),
         )
+
+    @classmethod
+    def from_params(cls, params: dict[str, Any], config: Config | None = None) -> Config:
+        """Load a configuration from a dictionary."""
+        if config is None:
+            config = cls()
+        config.CURATE_SOURCES = (
+            str(params.get("curate_sources", config.CURATE_SOURCES)).lower() == "true"
+            or config.CURATE_SOURCES
+        )
+        config.EMBEDDING_KWARGS = (
+            json.loads(params.get("embedding_kwargs", json.dumps(config.EMBEDDING_KWARGS)))
+            or config.EMBEDDING_KWARGS
+        )
+        config.EMBEDDING_MODEL = (
+            params.get("embedding_model", config.EMBEDDING_MODEL)
+            or config.EMBEDDING_MODEL
+        )
+        config.EMBEDDING_PROVIDER = (
+            params.get("embedding_provider", config.EMBEDDING_PROVIDER)
+            or config.EMBEDDING_PROVIDER
+        )
+        config.EMBEDDING = (
+            params.get("embedding", config.EMBEDDING)
+            or config.EMBEDDING
+        )
+        config.FALLBACK_MODELS = (
+            str(params.get("fallback_models", "")).split(",")
+            if params.get("fallback_models")
+            else config.FALLBACK_MODELS
+        )
+        config.FAST_LLM_MODEL = (
+            params.get("fast_llm_model", config.FAST_LLM_MODEL)
+            or config.FAST_LLM_MODEL
+        )
+        config.FAST_LLM_PROVIDER = (
+            params.get("fast_llm_provider", config.FAST_LLM_PROVIDER)
+            or config.FAST_LLM_PROVIDER
+        )
+        config.FAST_LLM = (
+            params.get("fast_llm", config.FAST_LLM)
+            or config.FAST_LLM
+        )
+        config.FAST_TOKEN_LIMIT = (
+            int(params.get("fast_token_limit", config.FAST_TOKEN_LIMIT))
+            or config.FAST_TOKEN_LIMIT
+        )
+        config.LANGUAGE = (
+            params.get("language", config.LANGUAGE)
+            or config.LANGUAGE
+        )
+        config.MAX_ITERATIONS = (
+            int(params.get("max_iterations", config.MAX_ITERATIONS))
+            or config.MAX_ITERATIONS
+        )
+        config.MAX_SEARCH_RESULTS_PER_QUERY = (
+            int(params.get("max_search_results_per_query", config.MAX_SEARCH_RESULTS_PER_QUERY))
+            or config.MAX_SEARCH_RESULTS_PER_QUERY
+        )
+        config.MAX_SUBTOPICS = (
+            int(params.get("max_subtopics", config.MAX_SUBTOPICS))
+            or config.MAX_SUBTOPICS
+        )
+        config.MEMORY_BACKEND = ReportSource(
+            str(params.get("memory_backend", config.MEMORY_BACKEND.value))
+            or config.MEMORY_BACKEND.value
+        )
+        config.QUERY_DOMAINS = (
+            str(params.get("query_domains", "")).split(",")
+            if params.get("query_domains")
+            else []
+        )
+        config.REPORT_FORMAT = ReportFormat.__members__[
+            str(params.get("report_format", config.REPORT_FORMAT.name)).upper()
+            or config.REPORT_FORMAT.name
+        ]
+        config.REPORT_SOURCE = ReportSource(
+            str(params.get("report_source", config.REPORT_SOURCE.value)) or config.REPORT_SOURCE.value
+        )
+        config.REPORT_TYPE = ReportType.__members__[
+            str(params.get("report_type", config.REPORT_TYPE.name))
+            or config.REPORT_TYPE.name
+        ]
+        config.RESEARCH_PLANNER = (
+            params.get("research_planner", config.RESEARCH_PLANNER)
+            or config.RESEARCH_PLANNER
+        )
+        config.RETRIEVER = (
+            params.get("retriever", config.RETRIEVER)
+            or config.RETRIEVER
+        )
+        config.SCRAPER = (
+            params.get("scraper", config.SCRAPER)
+            or config.SCRAPER
+        )
+        config.SIMILARITY_THRESHOLD = (
+            float(params.get("similarity_threshold", config.SIMILARITY_THRESHOLD)) or config.SIMILARITY_THRESHOLD
+        )
+        config.SMART_LLM_MODEL = (
+            params.get("smart_llm_model", config.SMART_LLM_MODEL)
+            or config.SMART_LLM_MODEL
+        )
+        config.SMART_LLM_PROVIDER = (
+            params.get("smart_llm_provider", config.SMART_LLM_PROVIDER)
+            or config.SMART_LLM_PROVIDER
+        )
+        config.SMART_LLM = (
+            params.get("smart_llm", config.SMART_LLM)
+            or config.SMART_LLM
+        )
+        config.SMART_TOKEN_LIMIT = (
+            int(params.get("smart_token_limit", config.SMART_TOKEN_LIMIT))
+            or config.SMART_TOKEN_LIMIT
+        )
+        config.STRATEGIC_LLM_MODEL = (
+            params.get("strategic_llm_model", config.STRATEGIC_LLM_MODEL)
+            or config.STRATEGIC_LLM_MODEL
+        )
+        config.STRATEGIC_LLM_PROVIDER = (
+            params.get("strategic_llm_provider", config.STRATEGIC_LLM_PROVIDER)
+            or config.STRATEGIC_LLM_PROVIDER
+        )
+        config.STRATEGIC_LLM = (
+            params.get("strategic_llm", config.STRATEGIC_LLM)
+            or config.STRATEGIC_LLM
+        )
+        config.STRATEGIC_TOKEN_LIMIT = (
+            params.get("strategic_token_limit", config.STRATEGIC_TOKEN_LIMIT)
+            or config.STRATEGIC_TOKEN_LIMIT
+        )
+        config.TEMPERATURE = (
+            float(params.get("temperature", config.TEMPERATURE))
+            or config.TEMPERATURE
+        )
+        config.TONE = (
+            Tone.__members__[str(params.get("tone", config.TONE.name) or config.TONE.name).capitalize()]
+            or config.TONE
+        )
+        config.TOTAL_WORDS = (
+            int(params.get("total_words", config.TOTAL_WORDS))
+            or config.TOTAL_WORDS
+        )
+        config.USE_FALLBACKS = (
+            str(params.get("use_fallbacks", config.USE_FALLBACKS)).lower() == "true"
+            or config.USE_FALLBACKS
+        )
+        config.USER_AGENT = (
+            params.get("user_agent", config.USER_AGENT)
+            or config.USER_AGENT
+        )
+        config.VERBOSE = (
+            str(params.get("verbose", config.VERBOSE)).lower() == "true"
+            or config.VERBOSE
+        )
+        return config
 
     @classmethod
     def from_dict(

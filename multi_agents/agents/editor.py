@@ -15,7 +15,6 @@ from multi_agents.agents.utils.views import print_agent_output
 from multi_agents.memory.draft import DraftState
 
 if TYPE_CHECKING:
-    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
     from langgraph.graph.state import CompiledStateGraph
 
@@ -25,12 +24,12 @@ class EditorAgent:
 
     def __init__(
         self,
-        websocket: WebSocket | HTTPStreamAdapter | None = None,
-        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, Any]] | None = None,
+        websocket: WebSocket | None = None,
+        stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, Any]] | None = None,
         headers: dict[str, Any] | None = None,
     ):
-        self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
-        self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, Any]] | None = stream_output
+        self.websocket: WebSocket | None = websocket
+        self.stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, Any]] | None = stream_output
         self.headers: dict[str, Any] = {} if headers is None else headers
 
     async def plan_research(

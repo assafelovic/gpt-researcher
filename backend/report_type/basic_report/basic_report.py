@@ -21,8 +21,8 @@ class BasicReport:
         query: str,
         report_type: str | ReportType,
         report_source: str | ReportSource,
-        config_path: os.PathLike | str,
-        websocket: WebSocket | CustomLogsHandler,
+        config_path: os.PathLike | str | None = None,
+        websocket: WebSocket | CustomLogsHandler | None = None,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
         tone: Tone | str | None = Tone.Objective,
@@ -52,8 +52,9 @@ class BasicReport:
             if isinstance(tone, Tone)
             else Tone.__members__[tone.capitalize()]
         )
-        self.config_path: Path = Path(os.path.normpath(config_path)).absolute()
-        self.websocket: WebSocket | CustomLogsHandler = websocket
+        self.config_path: Path = Path(os.path.normpath(config_path)) if config_path is not None else Path.cwd()
+        self.config: Config = Config.from_path(self.config_path) if config_path is not None else config if config is not None else Config()
+        self.websocket: WebSocket | CustomLogsHandler | None = websocket
         self.headers: dict[str, Any] = {} if headers is None else headers
         self.query_domains: list[str] = [] if query_domains is None else query_domains
 
@@ -67,10 +68,10 @@ class BasicReport:
             source_urls=self.source_urls,
             document_urls=self.document_urls,
             tone=self.tone if isinstance(self.tone, Tone) else Tone(self.tone),
-            config_path=self.config_path,
             websocket=self.websocket,
             headers=self.headers,
             query_domains=self.query_domains,
+            config=self.config
         )
 
         _research_context: str | list[str] = await researcher.conduct_research()

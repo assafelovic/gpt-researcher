@@ -2,29 +2,25 @@ from __future__ import annotations
 
 import asyncio
 
+import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
+from config.config import Config
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.llm import create_chat_completion
-
-from backend.server.server_utils import CustomLogsHandler
 
 if TYPE_CHECKING:
     import logging
 
     from fastapi import WebSocket
 
-    from backend.server.websocket_manager import CustomLogsHandler, HTTPStreamAdapter
+    from backend.server.server_utils import CustomLogsHandler
 
 from gpt_researcher.utils.logger import get_formatted_logger
 
 logger: logging.Logger = get_formatted_logger(__name__)
-
-# Constants for models
-GPT4_MODEL = "gpt-4o"  # For standard tasks
-O3_MINI_MODEL = "o3-mini"  # For reasoning tasks
-LLM_PROVIDER = "openai"
 
 
 class ResearchProgress:
@@ -48,18 +44,20 @@ class DeepResearch:
         query: str,
         breadth: int = 4,
         depth: int = 2,
-        websocket: WebSocket | CustomLogsHandler | HTTPStreamAdapter | None = None,
+        websocket: WebSocket | CustomLogsHandler | None = None,
         tone: Tone = Tone.Objective,
         config_path: str | None = None,
         headers: dict[str, str] | None = None,
         concurrency_limit: int = 2,  # Match TypeScript version
+        config: Config | None = None,
     ):
+        self.config_path: Path | None = None if config_path is None else Path(os.path.normpath(config_path))
+        self.cfg: Config = Config.from_path(self.config_path) if self.config_path is not None else config if config is not None else Config()
         self.query: str = query
         self.breadth: int = breadth
         self.depth: int = depth
-        self.websocket: WebSocket | CustomLogsHandler | HTTPStreamAdapter | None = websocket
+        self.websocket: WebSocket | CustomLogsHandler | None = websocket
         self.tone: Tone = tone
-        self.config_path: str | None = config_path
         self.headers: dict[str, str] | None = headers or {}
         self.visited_urls: set[str] = set()
         self.learnings: list[str] = []
@@ -84,8 +82,8 @@ class DeepResearch:
 
         response: str = await create_chat_completion(
             messages=messages,
-            llm_provider=LLM_PROVIDER,
-            model=O3_MINI_MODEL,  # Using reasoning model for better question generation
+            llm_provider=self.cfg.SMART_LLM_PROVIDER,
+            model=self.cfg.SMART_LLM_MODEL,  # Using reasoning model for better question generation
             temperature=0.7,
             max_tokens=500,
             reasoning_effort="high",
@@ -116,8 +114,8 @@ class DeepResearch:
 
         response: str = await create_chat_completion(
             messages=messages,
-            llm_provider=LLM_PROVIDER,
-            model=GPT4_MODEL,  # Using GPT-4 for general task
+            llm_provider=self.cfg.SMART_LLM_PROVIDER,
+            model=self.cfg.SMART_LLM_MODEL,  # Using GPT-4 for general task
             temperature=0.7,
             max_tokens=1000,
         )
@@ -158,8 +156,8 @@ class DeepResearch:
 
         response: str = await create_chat_completion(
             messages=messages,
-            llm_provider=LLM_PROVIDER,
-            model=O3_MINI_MODEL,  # Using reasoning model for analysis
+            llm_provider=self.cfg.SMART_LLM_PROVIDER,
+            model=self.cfg.SMART_LLM_MODEL,  # Using reasoning model for analysis
             temperature=0.7,
             max_tokens=1000,
             reasoning_effort="high",
@@ -242,7 +240,7 @@ class DeepResearch:
                         report_source=ReportSource.Web.value,
                         tone=self.tone,
                         websocket=self.websocket,
-                        config_path=self.config_path,
+                        config=self.cfg,
                         headers=self.headers,
                     )
 
@@ -346,7 +344,7 @@ class DeepResearch:
             report_source=ReportSource.Web.value,
             tone=self.tone,
             websocket=self.websocket,
-            config_path=self.config_path,
+            config=self.cfg,
             headers=self.headers,
         )
 

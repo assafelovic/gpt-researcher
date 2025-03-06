@@ -103,7 +103,7 @@ class ResearchConductor:
         outline: list[str] = await plan_research_outline(
             query=query,
             search_results=search_results,
-            agent_role_prompt=self.researcher.agent_role,
+            agent_role_prompt=self.researcher.role,
             cfg=self.researcher.cfg,
             parent_query=self.researcher.parent_query,
             report_type=self.researcher.report_type,

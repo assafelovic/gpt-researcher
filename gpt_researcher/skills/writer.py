@@ -134,7 +134,7 @@ class ReportGenerator:
             query=self.researcher.query,
             context=report_content,
             cfg=self.researcher.cfg,
-            agent_role_prompt=(self.researcher.cfg.AGENT_ROLE or self.researcher.agent_role or "").strip(),
+            agent_role_prompt=(self.researcher.cfg.AGENT_ROLE or self.researcher.role or "").strip(),
             cost_callback=self.researcher.add_costs,
             websocket=self.researcher.websocket,
         )
@@ -164,7 +164,7 @@ class ReportGenerator:
         introduction: str = await write_report_introduction(
             query=self.researcher.query,
             context="\n".join(self.researcher.context),
-            agent_role_prompt=(self.researcher.cfg.AGENT_ROLE or self.researcher.agent_role or "").strip(),
+            agent_role_prompt=(self.researcher.cfg.AGENT_ROLE or self.researcher.role or "").strip(),
             cfg=self.researcher.cfg,
             websocket=self.researcher.websocket,
             cost_callback=self.researcher.add_costs,
@@ -224,7 +224,7 @@ class ReportGenerator:
             query=self.researcher.query,
             current_subtopic=current_subtopic,
             context="\n".join(self.researcher.context),
-            role=(self.researcher.cfg.AGENT_ROLE or self.researcher.agent_role or "").strip(),
+            role=(self.researcher.cfg.AGENT_ROLE or self.researcher.role or "").strip(),
             websocket=self.researcher.websocket,
             config=self.researcher.cfg,
             cost_callback=self.researcher.add_costs,

@@ -23,7 +23,6 @@ from gpt_researcher.utils.logger import get_formatted_logger
 if TYPE_CHECKING:
     import logging
 
-    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
     from llm_fallbacks.config import LiteLLMBaseModelSpec
 
@@ -718,7 +717,7 @@ class GenericLLMProvider:
         self,
         messages: list[BaseMessage] | list[dict[str, str]],
         stream: bool,
-        websocket: WebSocket | HTTPStreamAdapter | None = None,
+        websocket: WebSocket | None = None,
         max_retries: int = 1,
         cost_callback: Callable[[float], None] | None = None,
         headers: dict[str, str] | None = None,
@@ -774,7 +773,7 @@ class GenericLLMProvider:
         self,
         model: BaseChatModel,
         messages: list[BaseMessage] | list[dict[str, str]],
-        websocket: WebSocket | HTTPStreamAdapter | None = None,
+        websocket: WebSocket | None = None,
     ) -> str:
         info: ModelInfo = self._get_model_info(model)
         logger.info(f"Streaming response from {info.model_id}")
@@ -800,7 +799,7 @@ class GenericLLMProvider:
     async def _send_output(
         self,
         content: str,
-        websocket: WebSocket | HTTPStreamAdapter | None = None,
+        websocket: WebSocket | None = None,
     ) -> None:
         if websocket is not None:
             await websocket.send_json(

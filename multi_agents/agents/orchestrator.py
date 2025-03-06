@@ -16,7 +16,6 @@ from multi_agents.memory.research import ResearchState
 if TYPE_CHECKING:
     from logging import Logger
 
-    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
     from langchain_core.runnables.config import RunnableConfig
     from langgraph.graph.state import CompiledStateGraph
@@ -30,16 +29,16 @@ class ChiefEditorAgent:
     def __init__(
         self,
         task: dict[str, Any],
-        websocket: WebSocket | HTTPStreamAdapter | None = None,
-        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]]
+        websocket: WebSocket | None = None,
+        stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, None]]
         | None = None,
         tone: Tone | str | None = None,
         headers: dict[str, Any] | None = None,
     ):
         self.task: dict[str, Any] = task
-        self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
+        self.websocket: WebSocket | None = websocket
         self.stream_output: (
-            Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None
+            Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, None]] | None
         ) = stream_output
         self.headers: dict[str, Any] = {} if headers is None else headers
         self.tone: Tone = (

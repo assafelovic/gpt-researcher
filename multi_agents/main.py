@@ -15,7 +15,6 @@ from dotenv import load_dotenv
 if TYPE_CHECKING:
     import logging
 
-    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket as ServerWebSocket
     from gpt_researcher.utils.enum import Tone
 
@@ -50,9 +49,9 @@ def open_task() -> dict[str, Any]:
 
 async def run_research_task(
     query: str,
-    websocket: CustomLogsHandler | HTTPStreamAdapter | ServerWebSocket | None = None,
+    websocket: CustomLogsHandler | ServerWebSocket | None = None,
     stream_output: Callable[
-        [str, str, str, ServerWebSocket | CustomLogsHandler | HTTPStreamAdapter | None],
+        [str, str, str, ServerWebSocket | CustomLogsHandler | None],
         Coroutine[Any, Any, Any],
     ]
     | None = None,

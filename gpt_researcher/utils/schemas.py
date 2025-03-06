@@ -42,14 +42,6 @@ class LogHandler(ABC, Generic[T]):
     async def on_research_step(self, step: str, details: dict, **kwargs):
         pass
 
-    @abstractmethod
-    async def on_logs(self, content: str, output: str, metadata: dict, **kwargs):
-        pass
-
-    @abstractmethod
-    async def on_images(self, images: list, **kwargs):
-        pass
-
 
 class Subtopic(BaseModel):
     task: str = Field(description="Task name", min_length=1)

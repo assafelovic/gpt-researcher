@@ -9,7 +9,7 @@ from gpt_researcher.utils.logger import get_formatted_logger
 if TYPE_CHECKING:
     import logging
 
-    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
+    from backend.server.server_utils import CustomLogsHandler
     from fastapi.websockets import WebSocket
 
 logger: logging.Logger = get_formatted_logger()
@@ -19,7 +19,7 @@ async def stream_output(
     type: str,
     content: str,
     output: str,
-    websocket: WebSocket | CustomLogsHandler | HTTPStreamAdapter | None = None,
+    websocket: WebSocket | CustomLogsHandler | None = None,
     output_log: bool = True,
     metadata: dict[str, Any] | None = None,
 ) -> None:
@@ -29,7 +29,7 @@ async def stream_output(
         type (str): The type of output to stream.
         content (str): The content to stream.
         output (str): The output to stream.
-        websocket (WebSocket | CustomLogsHandler | HTTPStreamAdapter | None): The websocket to stream to.
+        websocket (WebSocket | CustomLogsHandler | None): The websocket to stream to.
         output_log (bool): Whether to log the output.
         metadata (dict[str, Any] | None): The metadata to stream.
     """
@@ -39,25 +39,36 @@ async def stream_output(
         except UnicodeEncodeError:
             logger.exception(output.encode("cp1252", errors="replace").decode("cp1252"))
 
-    await safe_send_json(
-        websocket,
-        {
-            "type": type,
-            "content": content,
-            "output": output,
-            "metadata": metadata,
-        },
-    )
+    # For research content, send as research_progress to enable real-time streaming
+    if type == "research" and content == "content":
+        await safe_send_json(
+            websocket,
+            {
+                "type": "research_progress",
+                "content": output,
+                "metadata": metadata,
+            },
+        )
+    else:
+        await safe_send_json(
+            websocket,
+            {
+                "type": type,
+                "content": content,
+                "output": output,
+                "metadata": metadata,
+            },
+        )
 
 
 async def safe_send_json(
-    websocket: WebSocket | CustomLogsHandler | HTTPStreamAdapter | None,
+    websocket: WebSocket | CustomLogsHandler | None,
     data: dict[str, Any],
 ) -> None:
     """Safely send JSON data through a WebSocket connection.
 
     Args:
-        websocket (WebSocket | CustomLogsHandler | HTTPStreamAdapter | None): The WebSocket connection to send data through.
+        websocket (WebSocket | CustomLogsHandler | None): The WebSocket connection to send data through.
         data (dict[str, Any]): The data to send as JSON.
     """
     if websocket is None:
@@ -96,7 +107,7 @@ async def update_cost(
         prompt_tokens (int): Number of tokens in the prompt.
         completion_tokens (int): Number of tokens in the completion.
         model (str): The model used for the API call.
-        websocket (WebSocket | CustomLogsHandler | HTTPStreamAdapter | None): The WebSocket connection to send data through.
+        websocket (WebSocket | CustomLogsHandler | None): The WebSocket connection to send data through.
     """
     prompt_tokens_cost, completion_tokens_cost = cost_per_token(
         model=model,
@@ -128,7 +139,7 @@ def create_cost_callback(
     """Create a callback function for updating costs.
 
     Args:
-        websocket (WebSocket | CustomLogsHandler | HTTPStreamAdapter | None): The WebSocket connection to send data through.
+        websocket (WebSocket | CustomLogsHandler | None): The WebSocket connection to send data through.
 
     Returns:
         Callable[[int, int, str], Coroutine[Any, Any, None]]: A callback function that can be used to update costs.

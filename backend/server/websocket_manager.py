@@ -1,28 +1,22 @@
 from __future__ import annotations
 
 import asyncio
-import json
-import re
 
-from datetime import datetime
-from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from fastapi import WebSocket
+from config.config import Config
 from gpt_researcher.actions import stream_output  # Import stream_output
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.logger import get_formatted_logger
-from multi_agents.main import run_research_task
 
 from backend.chat import ChatAgentWithMemory
 from backend.report_type import BasicReport, DetailedReport
 from backend.report_type.deep_research.example import DeepResearch
-from backend.server.server_utils import CustomLogsHandler
 
 if TYPE_CHECKING:
     import logging
 
-    from backend.server.server_utils import HTTPStreamAdapter
 
 logger: logging.Logger = get_formatted_logger(__name__)
 
@@ -32,14 +26,14 @@ class WebSocketManager:
 
     def __init__(self):
         """Initialize the WebSocketManager class."""
-        self.active_connections: list[WebSocket | HTTPStreamAdapter] = []
-        self.sender_tasks: dict[WebSocket | HTTPStreamAdapter, asyncio.Task] = {}
-        self.message_queues: dict[WebSocket | HTTPStreamAdapter, asyncio.Queue[str]] = {}
+        self.active_connections: list[WebSocket] = []
+        self.sender_tasks: dict[WebSocket, asyncio.Task] = {}
+        self.message_queues: dict[WebSocket, asyncio.Queue[str]] = {}
         self.chat_agent: ChatAgentWithMemory | None = None
 
     async def start_sender(
         self,
-        websocket: WebSocket | HTTPStreamAdapter,
+        websocket: WebSocket,
     ):
         """Start the sender task."""
         queue: asyncio.Queue[str] | None = self.message_queues.get(websocket)
@@ -62,7 +56,7 @@ class WebSocketManager:
 
     async def connect(
         self,
-        websocket: WebSocket | HTTPStreamAdapter,
+        websocket: WebSocket,
     ):
         """Connect a websocket."""
         if isinstance(websocket, WebSocket):
@@ -73,7 +67,7 @@ class WebSocketManager:
 
     async def disconnect(
         self,
-        websocket: WebSocket | HTTPStreamAdapter,
+        websocket: WebSocket,
     ):
         """Disconnect a websocket."""
         if websocket in self.active_connections:
@@ -92,7 +86,7 @@ class WebSocketManager:
         source_urls: list[str],
         document_urls: list[str],
         tone: Tone | str,
-        websocket: WebSocket | HTTPStreamAdapter,
+        websocket: WebSocket,
         headers: dict[str, str] | None = None,
         query_domains: list[str] | None = None,
     ) -> str:
@@ -101,10 +95,6 @@ class WebSocketManager:
 
         # add customized JSON config file path here
         config_path = "default"
-
-        # Generate a sanitized filename for the report
-        base_filename = self._generate_filename(task)
-
         try:
             # Run the research agent
             report: str = await run_agent(
@@ -121,98 +111,28 @@ class WebSocketManager:
             )
 
             logger.info(f"Research completed for: {task}")
-
-            # Create new Chat Agent whenever a new report is written
             self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
 
-            # Save the report to files
-            output_dir = Path("outputs")
-            output_dir.mkdir(exist_ok=True)
-
-            # Save markdown version
-            md_path = output_dir / f"{base_filename}.md"
-            md_path.write_text(report)
-            logger.info(f"Report saved to {md_path}")
-
-            # Send report completion notification to the frontend
-            await self._send_report_complete_notification(websocket, report, base_filename)
-
             return report
-
         except Exception as e:
-            logger.exception(f"Error in research process: {e}")
-            # Notify the frontend about the error
-            await websocket.send_json({"type": "error", "message": f"Research failed: {str(e)}"})
-            return ""
-
-    def _generate_filename(self, task: str) -> str:
-        """Generate a sanitized filename for the report."""
-        timestamp: str = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-        # Sanitize the task for use in a filename
-        sanitized_task: str = re.sub(r"[^\w\s-]", "", task)
-        sanitized_task = re.sub(r"\s+", "_", sanitized_task)
-
-        # Truncate if too long
-        if len(sanitized_task) > 50:
-            sanitized_task = sanitized_task[:50]
-
-        return f"report_{timestamp}_{sanitized_task}"
-
-    async def _send_report_complete_notification(
-        self, websocket: WebSocket | HTTPStreamAdapter, report: str, base_filename: str
-    ) -> None:
-        """Send report completion notification to the frontend."""
-        logger.info("Sending report completion notification to frontend")
-
-        # Create file URLs for download
-        files: dict[str, str] = {
-            "md": f"/download/{base_filename}.md",
-            "pdf": f"/download/{base_filename}.pdf",
-            "docx": f"/download/{base_filename}.docx",
-        }
-
-        # Format the notification as a server-sent event
-        notification: dict[str, Any] = {
-            "type": "report_complete",
-            "content": report,
-            "base_filename": base_filename,
-            "files": files,
-            "timestamp": datetime.now().strftime("%Y%m%d_%H%M%S"),
-        }
-
-        # Send as JSON
-        await websocket.send_json(notification)
-
-        # Also send individual file_ready notifications for each format
-        for fmt in ["md", "pdf", "docx"]:
-            await websocket.send_json(
-                {
-                    "type": "file_ready",
-                    "format": fmt,
-                    "url": files[fmt],
-                }
-            )
-
-        # Send files_ready notification
-        await websocket.send_json(
-            {
-                "type": "files_ready",
-                "message": "All output files have been generated.",
-                "files": files,
-            }
-        )
-
-        # Also send as a data event for SSE clients
-        sse_message = f"data: {json.dumps(notification)}\n\n"
-        await websocket.send_text(sse_message)
-
-        logger.info("Report completion notification sent")
+            logger.exception(f"Error in start_streaming: {e.__class__.__name__}: {e}")
+            if websocket in self.active_connections:
+                try:
+                    await websocket.send_json(
+                        {
+                            "type": "logs",
+                            "level": "error",
+                            "output": f"Error: {e.__class__.__name__}: {e}",
+                        }
+                    )
+                except Exception as send_error:
+                    logger.exception(f"Error sending error message: {send_error.__class__.__name__}: {send_error}")
+            raise
 
     async def chat(
         self,
         message: str,
-        websocket: WebSocket | HTTPStreamAdapter,
+        websocket: WebSocket,
     ) -> str | None:
         """Chat with the agent based message diff."""
         if self.chat_agent:
@@ -232,13 +152,16 @@ async def run_agent(
     source_urls: list[str] | None = None,
     document_urls: list[str] | None = None,
     tone: Tone | str | None = None,
-    websocket: WebSocket | HTTPStreamAdapter | None = None,
+    websocket: WebSocket | None = None,
     headers: dict[str, str] | None = None,
     query_domains: list[str] | None = None,
-    config_path: str = "",
+    config_path: str | None = None,
+    config: Config | None = None,
 ) -> str:
     """Run the agent."""
+    config = config if config is not None else Config.from_path(config_path) if config_path is not None else Config()
     # Create logs handler for this research task
+    from backend.server.server_utils import CustomLogsHandler
     logs_handler = CustomLogsHandler(websocket, task)
     tone = (
         Tone.__members__[tone.capitalize()]
@@ -249,6 +172,8 @@ async def run_agent(
         if tone is not None
         else Tone.Objective
     )
+    if isinstance(report_type, str):
+        report_type = report_type.replace("_", " ").title().replace(" ", "")
     report_type = (
         ReportType.__members__[report_type]
         if isinstance(report_type, str) and report_type in ReportType.__members__
@@ -263,60 +188,89 @@ async def run_agent(
         if isinstance(report_source, ReportSource)
         else ReportSource(report_source)
     )
+    
+    # Stream initial message
+    if websocket:
+        await websocket.send_json(
+            {
+                "type": "logs",
+                "level": "info",
+                "output": f"Starting research on: {task}",
+            }
+        )
+
     # Initialize researcher based on report type
-    if report_type == ReportType.MultiAgents:
-        report: str = await run_research_task(
-            query=task,
-            websocket=logs_handler,
-            stream_output=stream_output,
-            tone=tone,
-            headers=headers,
-        )
+    try:
+        if report_type == ReportType.MultiAgents:
+            from multi_agents.main import run_research_task
+            report: str = await run_research_task(
+                query=task,
+                websocket=logs_handler,
+                stream_output=stream_output,
+                tone=tone,
+                headers=headers,
+            )
 
-    elif report_type == ReportType.DetailedReport:
-        researcher = DetailedReport(
-            query=task,
-            query_domains=query_domains,
-            report_type=report_type,
-            report_source=report_source,
-            source_urls=source_urls,
-            document_urls=document_urls,
-            tone=tone,
-            config_path=config_path,
-            websocket=logs_handler,
-            headers=headers,
-        )
-        report = await researcher.run()
+        elif report_type == ReportType.DetailedReport:
+            researcher = DetailedReport(
+                query=task,
+                query_domains=query_domains,
+                report_type=report_type,
+                report_source=report_source,
+                source_urls=source_urls,
+                document_urls=document_urls,
+                tone=tone,
+                websocket=logs_handler,
+                headers=headers,
+                config=config,
+            )
+            report = await researcher.run()
 
-    elif report_type == ReportType.ResearchReport:
-        researcher = BasicReport(
-            query=task,
-            query_domains=query_domains,
-            report_type=report_type,
-            report_source=report_source,
-            source_urls=source_urls,
-            document_urls=document_urls,
-            tone=tone,
-            config_path=config_path,
-            websocket=logs_handler,
-            headers=headers,
-        )
-        report = await researcher.run()
+        elif report_type == ReportType.DeepResearch:
+            researcher = DeepResearch(
+                query=task,
+                websocket=logs_handler,
+                tone=tone,
+                headers=headers,
+                concurrency_limit=2,
+                config=config,
+            )
+            report = await researcher.run()
 
-    elif report_type == ReportType.DeepResearch:
-        researcher = DeepResearch(
-            query=task,
-            tone=tone,
-            config_path=config_path,
-            websocket=logs_handler,
-            headers=headers,
-            concurrency_limit=2,
-        )
-        report = await researcher.run()
+        else:
+            researcher = BasicReport(
+                query=task,
+                report_type=report_type,
+                report_source=report_source,
+                websocket=logs_handler,
+                source_urls=source_urls,
+                document_urls=document_urls,
+                tone=tone,
+                headers=headers,
+                query_domains=query_domains,
+                config=config,
+            )
+            report = await researcher.run()
+            
+        # Stream final report completion message
+        if websocket:
+            await websocket.send_json(
+                {
+                    "type": "logs",
+                    "level": "info",
+                    "output": "Research completed successfully!",
+                }
+            )
 
-    else:
-        raise ValueError(
-            f"Invalid report type: {report_type!r}: must be MultiAgents, DetailedReport, DeepResearch, or ResearchReport"
-        )
-
-    return report
+        return report
+    except Exception as e:
+        logger.exception(f"Error in run_agent: {e.__class__.__name__}: {e}")
+        if websocket:
+            await websocket.send_json(
+                {
+                    "type": "logs",
+                    "level": "error",
+                    "output": f"Research failed: {e.__class__.__name__}: {e}",
+                }
+            )
+        raise

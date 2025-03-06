@@ -25,20 +25,19 @@ if TYPE_CHECKING:
     from langchain_core.vectorstores.base import VectorStoreRetriever
     from langgraph.graph.graph import CompiledGraph
 
-    from backend.server.server_utils import HTTPStreamAdapter
-
 
 class ChatAgentWithMemory:
     def __init__(
         self,
         report: str,
-        config_path: os.PathLike | str,
+        config_path: os.PathLike | str | None = None,
         headers: dict[str, Any] | None = None,
         vector_store: InMemoryVectorStore | None = None,
+        config: Config | None = None,
     ):
         self.report: str = report
         self.headers: dict[str, Any] | None = headers
-        self.config: Config = Config(config_path)
+        self.config: Config = Config.from_path(config_path) if config_path is not None else config if config is not None else Config()
         self.vector_store: InMemoryVectorStore | None = vector_store
         self.graph: CompiledGraph = self.create_agent()
 
@@ -109,7 +108,7 @@ class ChatAgentWithMemory:
     async def chat(
         self,
         message: str,
-        websocket: WebSocket | HTTPStreamAdapter | None = None,
+        websocket: WebSocket | None = None,
     ) -> str:
         """Chat with React Agent."""
         message = f"""You are GPT Researcher, a autonomous research agent created by an open source community at https://github.com/assafelovic/gpt-researcher, homepage: https://gptr.dev.

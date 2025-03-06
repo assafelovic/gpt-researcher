@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine
 if TYPE_CHECKING:
     from logging import Logger
 
-    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
 
 logger: Logger = getLogger(__name__)
@@ -17,12 +16,12 @@ logger: Logger = getLogger(__name__)
 class HumanAgent:
     def __init__(
         self,
-        websocket: WebSocket | HTTPStreamAdapter | None = None,
-        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter], Coroutine[Any, Any, None]] | None = None,
+        websocket: WebSocket | None = None,
+        stream_output: Callable[[str, str, str, WebSocket], Coroutine[Any, Any, None]] | None = None,
         headers: dict[str, Any] | None = None,
     ):
-        self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
-        self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter], Coroutine[Any, Any, None]] | None = stream_output
+        self.websocket: WebSocket | None = websocket
+        self.stream_output: Callable[[str, str, str, WebSocket], Coroutine[Any, Any, None]] | None = stream_output
         self.headers: dict[str, Any] | None = headers
 
     async def review_plan(

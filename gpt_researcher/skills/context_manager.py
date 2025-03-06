@@ -78,7 +78,7 @@ class ContextManager:
                 messages=[
                     {
                         "role": "system",
-                        "content": f"{self.researcher.agent_role}",
+                        "content": f"{self.researcher.role}",
                     },
                     {
                         "role": "user",
@@ -139,7 +139,7 @@ class ContextManager:
                 messages=[
                     {
                         "role": "system",
-                        "content": f"{self.researcher.agent_role}",
+                        "content": f"{self.researcher.role}",
                     },
                     {
                         "role": "user",

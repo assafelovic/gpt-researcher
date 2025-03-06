@@ -161,7 +161,7 @@ class DetailedReport:
             tone=self.tone,
             config=self.cfg,
             websocket=self.websocket,
-            agent_role=self.gpt_researcher.agent_role,
+            agent_role=self.gpt_researcher.role,
             parent_query=self.query,
             subtopics=[json.dumps(subtopic) for subtopic in self.subtopics],
             visited_urls=self.global_urls,

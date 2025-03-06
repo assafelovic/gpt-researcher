@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
     from pathlib import Path
 
-    from backend.server.server_utils import CustomLogsHandler, HTTPStreamAdapter
+    from backend.server.server_utils import CustomLogsHandler
     from fastapi import WebSocket
 
     from gpt_researcher.agent import GPTResearcher
@@ -88,7 +88,7 @@ class DeepResearchSkill:
         self.research_sources: list[dict[str, Any]] = []  # Track all research sources
         self.tone: Tone = researcher.tone
         self.visited_urls: set[str] = researcher.visited_urls
-        self.websocket: WebSocket | HTTPStreamAdapter | CustomLogsHandler | None = researcher.websocket
+        self.websocket: WebSocket | CustomLogsHandler | None = researcher.websocket
 
     async def generate_search_queries(
         self,

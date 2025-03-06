@@ -9,7 +9,6 @@ from multi_agents.agents.utils.views import print_agent_output
 if TYPE_CHECKING:
     import os
 
-    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
 
 
@@ -19,12 +18,12 @@ class PublisherAgent:
     def __init__(
         self,
         output_dir: os.PathLike | str,
-        websocket: WebSocket | HTTPStreamAdapter | None = None,
-        stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = None,
+        websocket: WebSocket | None = None,
+        stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, None]] | None = None,
         headers: dict[str, Any] | None = None,
     ):
-        self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
-        self.stream_output: Callable[[str, str, str, WebSocket | HTTPStreamAdapter | None], Coroutine[Any, Any, None]] | None = stream_output
+        self.websocket: WebSocket | None = websocket
+        self.stream_output: Callable[[str, str, str, WebSocket | None], Coroutine[Any, Any, None]] | None = stream_output
         self.output_dir: Path = Path(output_dir)
         self.headers: dict[str, Any] = {} if headers is None else headers
 

@@ -9,7 +9,6 @@ from multi_agents.agents.utils.llms import call_model
 from multi_agents.agents.utils.views import print_agent_output
 
 if TYPE_CHECKING:
-    from backend.server.server_utils import HTTPStreamAdapter
     from fastapi import WebSocket
 
 sample_json = """
@@ -25,11 +24,11 @@ sample_json = """
 class WriterAgent:
     def __init__(
         self,
-        websocket: WebSocket | HTTPStreamAdapter | None = None,
+        websocket: WebSocket | None = None,
         stream_output: Any | None = None,
         headers: dict[str, Any] | None = None,
     ):
-        self.websocket: WebSocket | HTTPStreamAdapter | None = websocket
+        self.websocket: WebSocket | None = websocket
         self.stream_output: Any | None = stream_output
         self.headers: dict[str, Any] | None = headers
 

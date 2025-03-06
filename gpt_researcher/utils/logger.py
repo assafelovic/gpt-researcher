@@ -82,12 +82,14 @@ def get_formatted_logger(
         console_format_str = "%(levelname)s(%(name)s): %(message)s"
         if cur_process.name == "MainProcess":
             log_dir = Path("logs") if log_dir is None else log_dir
+            log_dir.mkdir(parents=True, exist_ok=True)
             everything_log_file = "debug.log"
             info_warning_log_file = "info.log"
             error_critical_log_file = "errors.log"
             exception_log_file = "exception.log"
         else:
             log_dir = Path(f"logs/{cur_process.pid}") if log_dir is None else log_dir
+            log_dir.mkdir(parents=True, exist_ok=True)
             everything_log_file: str = f"debug_{cur_process.pid}.log"
             info_warning_log_file: str = f"info_{cur_process.pid}.log"
             error_critical_log_file: str = f"errors_{cur_process.pid}.log"
@@ -110,6 +112,7 @@ def get_formatted_logger(
         if use_level == logging.DEBUG:
             log_dir.mkdir(parents=True, exist_ok=True)
 
+            Path(log_dir / everything_log_file).parent.mkdir(parents=True, exist_ok=True)
             everything_handler = RotatingFileHandler(
                 str(log_dir / everything_log_file), maxBytes=20 * 1024 * 1024, backupCount=5, encoding="utf8"
             )
@@ -118,6 +121,7 @@ def get_formatted_logger(
             logger.addHandler(everything_handler)
 
         # Handler for INFO and WARNING
+        Path(log_dir / info_warning_log_file).parent.mkdir(parents=True, exist_ok=True)
         info_warning_handler = RotatingFileHandler(
             str(log_dir / info_warning_log_file), maxBytes=20 * 1024 * 1024, backupCount=5, encoding="utf8"
         )
@@ -127,6 +131,7 @@ def get_formatted_logger(
         logger.addHandler(info_warning_handler)
 
         # Handler for ERROR and CRITICAL
+        Path(log_dir / error_critical_log_file).parent.mkdir(parents=True, exist_ok=True)
         error_critical_handler = RotatingFileHandler(
             str(log_dir / error_critical_log_file), maxBytes=20 * 1024 * 1024, backupCount=5, encoding="utf8"
         )
@@ -136,6 +141,7 @@ def get_formatted_logger(
         logger.addHandler(error_critical_handler)
 
         # Handler for EXCEPTIONS (using CustomExceptionFormatter)
+        Path(log_dir / exception_log_file).parent.mkdir(parents=True, exist_ok=True)
         exception_handler = RotatingFileHandler(
             str(log_dir / exception_log_file), maxBytes=20 * 1024 * 1024, backupCount=5, encoding="utf8"
         )
