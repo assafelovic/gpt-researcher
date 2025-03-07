@@ -120,3 +120,44 @@ body {
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
 }
+
+/* Sidebar styles */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 40;
+  transition: opacity 0.3s ease;
+}
+
+/* Sidebar backdrop blur */
+.sidebar-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Scrollbar styling for the sidebar */
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+  border-radius: 3px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
+}
+
+/* Ensure sidebar is above other content */
+.sidebar-z-index {
+  z-index: 50;
+}
