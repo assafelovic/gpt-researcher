@@ -37,7 +37,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
         <div 
           className={`h-full transition-all duration-300 text-white overflow-hidden 
             ${isOpen 
-              ? 'bg-gray-900/80 sidebar-backdrop shadow-lg p-4' 
+              ? 'bg-gray-900/70 sidebar-backdrop shadow-lg p-4' 
               : 'bg-transparent hover:bg-gray-900/10 p-0'
             }`}
         >
@@ -45,10 +45,10 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
           {!isOpen && (
             <button
               onClick={toggleSidebar}
-              className="absolute left-3 mx-auto top-[24px] w-10 h-10 flex items-center justify-center bg-gray-800/70 text-white rounded-full shadow-lg z-10 hover:bg-gray-700 transition-colors"
+              className="absolute left-3 mx-auto top-[24px] w-10 h-10 flex items-center justify-center bg-gradient-to-br from-purple-400/8 via-purple-300/6 to-cyan-400/5 text-white rounded-full shadow-sm z-10 hover:from-purple-500/90 hover:via-teal-400/90 hover:to-cyan-500/90 hover:shadow-purple-500/20 hover:shadow-xl transition-all duration-300"
               aria-label="Open sidebar"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </button>
@@ -78,7 +78,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
               {/* New Research button */}
               <button
                 onClick={onNewResearch}
-                className="w-full py-3 px-4 mb-6 bg-purple-500 hover:bg-purple-600 text-white rounded shadow hover:shadow-lg font-bold text-sm transition-all duration-150 flex items-center justify-center"
+                className="w-full py-3 px-4 mb-6 bg-purple-500 hover:bg-gradient-to-br hover:from-purple-500/90 hover:via-teal-400/90 hover:to-cyan-500/90 text-white rounded shadow hover:shadow-purple-500/20 hover:shadow-lg font-bold text-sm transition-all duration-300 flex items-center justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
