@@ -320,7 +320,7 @@ export default function Home() {
                 />
               </div>
 
-              {showHumanFeedback && (
+              {showHumanFeedback && false &&(
                 <HumanFeedback
                   questionForHuman={questionForHuman}
                   websocket={socket}
