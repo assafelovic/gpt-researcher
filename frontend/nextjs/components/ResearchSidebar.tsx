@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ResearchHistoryItem } from '../types/data';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -20,6 +20,23 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
   toggleSidebar,
 }) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen && 
+          sidebarRef.current && 
+          !sidebarRef.current.contains(event.target as Node)) {
+        toggleSidebar();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, toggleSidebar]);
 
   return (
     <>
@@ -32,7 +49,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
         />
       )}
       
-      <div className={`fixed top-0 left-0 h-full sidebar-z-index transition-all duration-300 ${isOpen ? 'w-72' : 'w-16'}`}>
+      <div ref={sidebarRef} className={`fixed top-0 left-0 h-full sidebar-z-index transition-all duration-300 ${isOpen ? 'w-72' : 'w-16'}`}>
         {/* Sidebar content */}
         <div 
           className={`h-full transition-all duration-300 text-white overflow-hidden 
