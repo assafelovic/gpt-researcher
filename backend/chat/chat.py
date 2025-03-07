@@ -56,8 +56,6 @@ class ChatAgentWithMemory:
 
     def create_agent(self) -> CompiledGraph:
         """Create React Agent Graph."""
-
-        # Retrieve LLM using get_llm with settings from config
         assert self.config.SMART_LLM_PROVIDER is not None, "smart_llm_provider is not set"
         assert self.config.SMART_LLM_MODEL is not None, "smart_llm_model is not set"
         assert isinstance(self.config.SMART_LLM_PROVIDER, str), (
@@ -121,12 +119,10 @@ class ChatAgentWithMemory:
         vector_store: InMemoryVectorStore,
     ) -> BaseTool:
         """Create Vector Store Tool."""
-
         @tool
         def retrieve_info(query: str) -> list[str]:
             """Consult the report for relevant contexts whenever you don't know something."""
             return [page.page_content for page in self.retriever.invoke(query)]
-
         return retrieve_info
 
     async def chat(
@@ -143,13 +139,10 @@ class ChatAgentWithMemory:
         ai_message: str | list[str | dict[str, Any]] = last_message.content
         if websocket is not None:  # fastapi
             await websocket.send_json({"type": "chat", "content": ai_message})
-
         if isinstance(ai_message, list):
             return "\n".join([item["text"] if isinstance(item, dict) else item for item in ai_message])
-
         elif isinstance(ai_message, str):
             return ai_message
-
         else:
             raise ValueError(f"Unexpected message type: {ai_message.__class__.__name__}")
 

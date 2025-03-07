@@ -886,7 +886,7 @@ def post_retrieval_processing(
     default_prompt = PROMPT_POST_RETRIEVAL_PROCESSING
 
     # Get prompt from environment variable or use default
-    custom_prompt = os.environ.get("PROMPT_POST_RETRIEVAL_PROCESSING", "")
+    custom_prompt = os.environ.get("PROMPT_POST_RETRIEVAL_PROCESSING", default_prompt)
     if custom_prompt:
         try:
             # Use string formatting with named parameters for template

@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 import locale
 import os
-from multiprocessing import cpu_count
 
+from multiprocessing import cpu_count
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Union, get_args, get_origin
 
@@ -28,9 +28,10 @@ from gpt_researcher.retrievers.utils import get_all_retriever_names
 from gpt_researcher.utils.enum import OutputFileType, ReportFormat, ReportSource, ReportType, Tone
 from gpt_researcher.utils.logger import get_formatted_logger
 
+
 if TYPE_CHECKING:
     import logging
-    
+
     from typing_extensions import Self
 
 logger: logging.Logger = get_formatted_logger(__name__)
@@ -38,10 +39,10 @@ logger: logging.Logger = get_formatted_logger(__name__)
 
 class BaseConfig:
     """Base config class for GPT Researcher.
-    
+
     This class defines the base configuration for GPT Researcher. It provides a structure for managing configuration settings and environment variables.
     """
-    
+
     DEFAULT_PATH: ClassVar[Path] = Path.home().joinpath(".gpt_researcher", "base.json").expanduser().absolute()
 
     def __new__(
@@ -270,7 +271,7 @@ class Config(BaseConfig):
     Config.from_path: constructs one from path, partially using class defaults if the file doesn't have the stuff already,
     Config.from_dict: Constructs a config from case-insensitive keys mapping to the attribute names.
     Config.from_params: same as from_dict except keys can be snake_case format.
-    
+
     Examples:
         print(Config.DOC_PATH) # prints "./my-docs", the default.
         cfg = Config(doc_path="custom/path")
@@ -279,7 +280,7 @@ class Config(BaseConfig):
         print(cfg.DOC_PATH) # prints "custom/path"
         cfg = Config.from_path("~/.gpt_researcher/config.json")
         print(cfg.DOC_PATH) # prints whatever is defined in config.json, otherwise if it's not defined there, './my-docs'
-        
+
 
     Attributes:
         AGENT_ROLE: The role of the agent.
@@ -335,27 +336,27 @@ class Config(BaseConfig):
         USER_AGENT: The user agent for the LLM.
         USE_FALLBACKS: Whether to use fallback models.
         VERBOSE: Whether to enable verbose logging.
-        
+
         # Scraper configuration
         SCRAPER_TIMEOUT: The default timeout for scrapers in seconds.
         SCRAPER_MAX_WORKERS: The maximum number of scraper worker threads.
         SCRAPER_MIN_CONTENT_LENGTH: The minimum content length to consider valid.
-        
+
         # Deep research configuration
         MAX_CONTEXT_WORDS: The maximum number of words to keep in context.
         DEEP_RESEARCH_NUM_QUERIES: The number of queries to generate for deep research.
         DEEP_RESEARCH_NUM_LEARNINGS: The number of learnings to extract from research results.
-        
+
         # Retriever configuration
         RETRIEVER_TIMEOUT: The default timeout for retrievers in seconds.
         RETRIEVER_SERPER_TIMEOUT: The timeout for Serper retriever in seconds.
         RETRIEVER_TAVILY_TIMEOUT: The timeout for Tavily retriever in seconds.
         RETRIEVER_SEARCHAPI_TIMEOUT: The timeout for SearchAPI retriever in seconds.
-        
+
         # Web request configuration
         WEB_REQUEST_TIMEOUT: The timeout for general web requests in seconds.
         XHR_TIMEOUT: The timeout for XHR requests in milliseconds.
-        
+
         POST_RETRIEVAL_PROCESSING_INSTRUCTIONS: The instructions for post-retrieval processing.
         PROMPT_GENERATE_SEARCH_QUERIES: The prompt for generating search queries.
         PROMPT_GENERATE_REPORT: The prompt for generating a report.
@@ -372,9 +373,9 @@ class Config(BaseConfig):
         PROMPT_GENERATE_REPORT_CONCLUSION: The prompt for generating a report conclusion.
         PROMPT_POST_RETRIEVAL_PROCESSING: The prompt for post-retrieval processing.
     """
-    
+
     DEFAULT_PATH: ClassVar[Path] = Path.home().joinpath(".gpt_researcher", "config.json").expanduser().absolute()
-    
+
 
     AGENT_ROLE: str = os.environ.get("AGENT_ROLE", "")
     CONFIG_DIR: str = os.path.join(os.path.dirname(__file__), "variables")
@@ -449,22 +450,22 @@ class Config(BaseConfig):
       # alternatively: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     USE_FALLBACKS: bool = bool(str(os.environ.get("USE_FALLBACKS", True)).casefold() == "true")
     VERBOSE: bool = bool(str(os.environ.get("VERBOSE", True)).casefold() == "true")
-    
+
     # Scraper configuration
     SCRAPER: str = os.environ.get("SCRAPER", "bs")
     SCRAPER_TIMEOUT: int = int(os.environ.get("SCRAPER_TIMEOUT", 10))  # TODO: add to all the scrapers
     SCRAPER_MAX_WORKERS: int = int(os.environ.get("SCRAPER_MAX_WORKERS", cpu_count() * 2))  # TODO: add to all the scrapers
     SCRAPER_MIN_CONTENT_LENGTH: int = int(os.environ.get("SCRAPER_MIN_CONTENT_LENGTH", 100))  # TODO: add to all the scrapers
-    
+
     # Deep research configuration
     MAX_CONTEXT_WORDS: int = int(os.environ.get("MAX_CONTEXT_WORDS", 25000))
     DEEP_RESEARCH_NUM_QUERIES: int = int(os.environ.get("DEEP_RESEARCH_NUM_QUERIES", 3))
     DEEP_RESEARCH_NUM_LEARNINGS: int = int(os.environ.get("DEEP_RESEARCH_NUM_LEARNINGS", 3))
-    
+
     # Retriever configuration
     RETRIEVER: str = os.environ.get("RETRIEVER", "tavily")  # TODO: add to all the retrievers
     RETRIEVER_TIMEOUT: int = int(os.environ.get("RETRIEVER_TIMEOUT", 10))  # TODO: add to all the retrievers
-    
+
     POST_RETRIEVAL_PROCESSING_INSTRUCTIONS: str = os.environ.get("POST_RETRIEVAL_PROCESSING_INSTRUCTIONS", "")
     PROMPT_GENERATE_SEARCH_QUERIES: str = os.environ.get("PROMPT_GENERATE_SEARCH_QUERIES", PROMPT_GENERATE_SEARCH_QUERIES)
     PROMPT_GENERATE_REPORT: str = os.environ.get("PROMPT_GENERATE_REPORT", PROMPT_GENERATE_REPORT)
@@ -568,10 +569,10 @@ class Config(BaseConfig):
 
 class Settings(BaseConfig):
     """Settings Configuration class for GPT Researcher.
-    
+
     This subclass of BaseConfig is specifically designed to handle settings configurations
     for the GPT Researcher application. It provides a structure for managing settings needed for the application.
-    
+
     Attributes:
 
         AI21_API_KEY: API key for AI21 services.
@@ -682,7 +683,7 @@ class Settings(BaseConfig):
     YANDEX_API_KEY: str = os.environ.get("YANDEX_API_KEY", "")
     YOU_API_KEY: str = os.environ.get("YOU_API_KEY", "")
     ZENML_API_KEY: str = os.environ.get("ZENML_API_KEY", "")
-    
+
     def __init__(
         self,
         *args: Any,
