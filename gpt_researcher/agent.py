@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from langchain_community.vectorstores import VectorStore
 
     from gpt_researcher.skills.deep_research import ResearchProgress
+    from gpt_researcher.utils.validators import Subtopics
 
 
 class GPTResearcher:
@@ -74,8 +75,6 @@ class GPTResearcher:
             self.cfg.__dict__.update(Config.from_path(config).to_dict())
         elif isinstance(config, dict):
             self.cfg.__dict__.update(config)
-        elif config is not None:
-            raise ValueError(f"Invalid config type: {config.__class__.__name__} with contents: {config}")
 
         self.query: str = query
         self.source_urls: list[str] = [] if source_urls is None else source_urls
@@ -186,13 +185,14 @@ class GPTResearcher:
 
         if not (self.agent and self.role):
             await self._log_event("action", action="choose_agent")
-            self.agent, self.role = await choose_agent(
+            agent_dict: dict[str, Any] = await choose_agent(
                 query=self.query,
                 cfg=self.cfg,
                 parent_query=self.parent_query,
                 cost_callback=self.add_costs,
-                headers=self.headers,  # Pass headers to choose_agent?
+                headers=self.headers,
             )
+            self.agent, self.role = agent_dict["server"], agent_dict["agent_role_prompt"]
             await self._log_event(
                 "action",
                 action="agent_selected",
@@ -301,16 +301,13 @@ class GPTResearcher:
             details={
                 "existing_headers": existing_headers,
                 "context_source": "external" if external_context else "internal",
-                #                "context": self.context,
-                #                "ext_context": ext_context,
-                #                "relevant_written_contents": relevant_written_contents,
             },
         )
 
         report: str = await self.report_generator.write_report(
             existing_headers=existing_headers,
             relevant_written_contents=relevant_written_contents,
-            ext_context="\n".join(external_context or self.context) if external_context else "",
+            ext_context=" ".join(external_context or self.context) if external_context else "",
         )
 
         await self._log_event(
@@ -339,6 +336,9 @@ class GPTResearcher:
         intro = await self.report_generator.write_introduction()
         await self._log_event("research", step="introduction_completed", details={"introduction": intro})
         return intro
+
+    async def get_subtopics(self) -> list[str] | Subtopics:
+        return await self.report_generator.get_subtopics()
 
     async def get_draft_section_titles(
         self,
@@ -435,6 +435,7 @@ class GPTResearcher:
             details={"cost": cost, "total_cost": self.research_costs},
         )
 
+    # all of these simply are here for the static type checker.
     @property
     def max_subtopics(self) -> int:
         return self.cfg.MAX_SUBTOPICS

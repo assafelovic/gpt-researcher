@@ -33,7 +33,7 @@ class ReportGenerator:
             "report_source": self.researcher.cfg.REPORT_SOURCE,
             "tone": self.researcher.tone,
             "websocket": self.researcher.websocket,
-            "research_config": self.researcher.cfg,
+            "cfg": self.researcher.cfg,
             "headers": self.researcher.headers,
         }
 
@@ -57,7 +57,7 @@ class ReportGenerator:
         """
         existing_headers = [] if existing_headers is None else existing_headers
         relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
-        ext_context = "\n".join(self.researcher.context) if ext_context is None or not ext_context.strip() else ext_context
+        ext_context = " ".join(self.researcher.context) if ext_context is None or not ext_context.strip() else ext_context
 
         # send the selected images prior to writing report
         research_images: list[dict[str, Any]] = self.researcher.get_research_images()
@@ -133,7 +133,7 @@ class ReportGenerator:
         conclusion: str = await write_conclusion(
             query=self.researcher.query,
             context=report_content,
-            cfg=self.researcher.cfg,
+            config=self.researcher.cfg,
             agent_role_prompt=(self.researcher.cfg.AGENT_ROLE or self.researcher.role or "").strip(),
             cost_callback=self.researcher.add_costs,
             websocket=self.researcher.websocket,
@@ -163,9 +163,9 @@ class ReportGenerator:
 
         introduction: str = await write_report_introduction(
             query=self.researcher.query,
-            context="\n".join(self.researcher.context),
-            agent_role_prompt=(self.researcher.cfg.AGENT_ROLE or self.researcher.role or "").strip(),
-            cfg=self.researcher.cfg,
+            context=" ".join(self.researcher.context),
+            agent_role_prompt=(self.researcher.cfg.AGENT_ROLE or "").strip(),
+            config=self.researcher.cfg,
             websocket=self.researcher.websocket,
             cost_callback=self.researcher.add_costs,
         )
@@ -192,7 +192,7 @@ class ReportGenerator:
 
         subtopics: list[str] | Subtopics = await construct_subtopics(
             task=self.researcher.query,
-            data="\n".join(self.researcher.context),
+            data=" ".join(self.researcher.context),
             config=self.researcher.cfg,
             subtopics=self.researcher.subtopics,
         )
@@ -223,8 +223,8 @@ class ReportGenerator:
         draft_section_titles: list[str] = await generate_draft_section_titles(
             query=self.researcher.query,
             current_subtopic=current_subtopic,
-            context="\n".join(self.researcher.context),
-            role=(self.researcher.cfg.AGENT_ROLE or self.researcher.role or "").strip(),
+            context=" ".join(self.researcher.context),
+            role=(self.researcher.cfg.AGENT_ROLE or "").strip(),
             websocket=self.researcher.websocket,
             config=self.researcher.cfg,
             cost_callback=self.researcher.add_costs,

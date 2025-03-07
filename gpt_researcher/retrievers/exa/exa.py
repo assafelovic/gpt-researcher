@@ -8,6 +8,7 @@ from exa_py.api import SearchResponse
 from langchain_core.documents import Document
 
 from gpt_researcher.utils import check_pkg
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
 if TYPE_CHECKING:
     import logging
@@ -139,7 +140,7 @@ logger: logging.Logger = get_formatted_logger(__name__)
 #        )
 
 
-class ExaSearch:
+class ExaSearch(RetrieverABC):
     """Exa API Retriever."""
 
     def __init__(

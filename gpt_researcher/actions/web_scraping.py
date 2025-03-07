@@ -67,45 +67,6 @@ async def filter_urls(
     for url in urls:
         # Add your filtering logic here
         # For example, you might want to exclude certain domains or URL patterns
-        if not any(excluded in url for excluded in config.excluded_domains):  # type: ignore[attr-defined]
+        if not any(excluded.casefold() in url.casefold() for excluded in config.EXCLUDED_DOMAINS):
             filtered_urls.append(url)
     return filtered_urls
-
-
-async def extract_main_content(
-    html_content: str,
-) -> str:
-    """Extract the main content from HTML.
-
-    Args:
-        html_content (str): Raw HTML content.
-
-    Returns:
-        str: Extracted main content.
-    """
-    # Implement content extraction logic here
-    # This could involve using libraries like BeautifulSoup or custom parsing logic
-    # For now, we'll just return the raw HTML as a placeholder
-    return html_content
-
-
-async def process_scraped_data(
-    scraped_data: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    """Process the scraped data to extract and clean the main content.
-
-    Args:
-        scraped_data (list[dict[str, Any]]): List of dictionaries containing scraped data.
-        config (Config): Configuration object.
-
-    Returns:
-        list[dict[str, Any]]: Processed scraped data.
-    """
-    processed_data: list[dict[str, Any]] = []
-    for item in scraped_data:
-        if item["status"] == "success":
-            main_content: str = await extract_main_content(item["content"])
-            processed_data.append({"url": item["url"], "content": main_content, "status": "success"})
-        else:
-            processed_data.append(item)
-    return processed_data

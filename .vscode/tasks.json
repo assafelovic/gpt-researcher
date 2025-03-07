@@ -2,6 +2,20 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Python: Current File",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} ${file}",
+            "args": [],
+            "group": "build"
+        },
+        {
+            "label": "Python: Main File",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} ${workspaceFolder}/main.py",
+            "args": [],
+            "group": "build"
+        },
+        {
             "label": "Run Compile Script",
             "type": "shell",
             "command": "powershell.exe",

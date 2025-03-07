@@ -11,6 +11,7 @@ import requests
 # from langchain_core.documents import Document
 # from langchain_core.retrievers import BaseRetriever
 from gpt_researcher.utils.logger import get_formatted_logger
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
 if TYPE_CHECKING:
     import logging
@@ -173,7 +174,7 @@ logger: logging.Logger = get_formatted_logger(__name__)
 # =======
 
 
-class SemanticScholarSearch:
+class SemanticScholarSearch(RetrieverABC):
     """Semantic Scholar API Retriever."""
 
     BASE_URL: ClassVar[str] = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -237,7 +238,7 @@ class SemanticScholarSearch:
             response: requests.Response = requests.get(self.BASE_URL, params=params)
             response.raise_for_status()
         except requests.RequestException as e:
-            print(f"An error occurred while accessing Semantic Scholar API: {e}")
+            logger.error(f"An error occurred while accessing Semantic Scholar API: {e.__class__.__name__}: {e}")
             return []
 
         results: list[dict[str, Any]] = cast(dict[str, Any], response.json()).get("data", [])

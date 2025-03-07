@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 import locale
 import os
+from multiprocessing import cpu_count
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Union, get_args, get_origin
+from typing import TYPE_CHECKING, Any, ClassVar, Union, get_args, get_origin
 
 from gpt_researcher.prompts import (
     PROMPT_AUTO_AGENT_INSTRUCTIONS,
@@ -29,120 +30,37 @@ from gpt_researcher.utils.logger import get_formatted_logger
 
 if TYPE_CHECKING:
     import logging
+    
+    from typing_extensions import Self
 
 logger: logging.Logger = get_formatted_logger(__name__)
 
 
-class Config:
-    """Config class for GPT Researcher."""
-
-    AGENT_ROLE: str = os.environ.get("AGENT_ROLE", "")
-    CONFIG_DIR: str = os.path.join(os.path.dirname(__file__), "variables")
-    CURATE_SOURCES: bool = bool(os.environ.get("CURATE_SOURCES", False))
-    DOC_PATH: str = os.environ.get("DOC_PATH", str(Path.home().absolute()))
-    DEEP_RESEARCH_CONCURRENCY: int = int(os.environ.get("DEEP_RESEARCH_CONCURRENCY", 1))
-    DEEP_RESEARCH_DEPTH: int = int(os.environ.get("DEEP_RESEARCH_DEPTH", 1))
-    DEEP_RESEARCH_BREADTH: int = int(os.environ.get("DEEP_RESEARCH_BREADTH", 1))
-    EMBEDDING: str = os.environ.get("EMBEDDING", "openai:text-embedding-3-small")
-    EMBEDDING_MODEL: str = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
-    EMBEDDING_PROVIDER: str = os.environ.get("EMBEDDING_PROVIDER", "openai")
-    EMBEDDING_FALLBACK_MODELS: list[str] = (
-        lambda value: json.loads(value)
-        if value.lstrip().startswith("[") and value.rstrip().endswith("]")
-        else value.split(",")
-        if "," in value
-        else [item.strip() for item in value.split(",") if item.strip()]
-    )(str(os.environ.get("EMBEDDING_FALLBACK_MODELS", "") or "").strip())
-    EMBEDDING_KWARGS: dict[str, Any] = json.loads(os.environ.get("EMBEDDING_KWARGS", "{}"))
-    # FALLBACK_MODELS is a list of free LLM fallback model identifiers.
-    # Users can specify this as a JSON-encoded list (e.g., '["model1", "model2"]') or as a comma-separated string (e.g., "model1, model2").
-    FALLBACK_MODELS: list[str] = (
-        lambda value: json.loads(value)
-        if value.lstrip().startswith("[") and value.rstrip().endswith("]")
-        else value.split(",")
-        if "," in value
-        else [item.strip() for item in value.split(",") if item.strip()]
-    )(str(os.environ.get("FALLBACK_MODELS", "") or "").strip())
-    FAST_LLM: str = os.environ.get("FAST_LLM", "groq:mixtral-8x7b-32768")
-    FAST_LLM_MODEL: str = os.environ.get("FAST_LLM_MODEL", "mixtral-8x7b-32768")
-    FAST_LLM_PROVIDER: str = os.environ.get("FAST_LLM_PROVIDER", "groq")
-    FAST_LLM_TEMPERATURE: float = float(os.environ.get("FAST_LLM_TEMPERATURE", 0.15))
-    FAST_TOKEN_LIMIT: int = int(os.environ.get("FAST_TOKEN_LIMIT", 32768))
-    LANGUAGE: str = os.environ.get(
-        "LANGUAGE",
-        (locale.getdefaultlocale()[0] or "en").split("_")[0],
-    )
-    MAX_ITERATIONS: int = int(os.environ.get("MAX_ITERATIONS", 4))
-    MAX_SCRAPER_WORKERS: int = int(os.environ.get("MAX_SCRAPER_WORKERS", 10))
-    MAX_SEARCH_RESULTS_PER_QUERY: int = int(os.environ.get("MAX_SEARCH_RESULTS_PER_QUERY", 5))
-    MAX_SOURCES: int = int(os.environ.get("MAX_SOURCES", 10))
-    MAX_URLS: int = int(os.environ.get("MAX_URLS", 10))
-    MAX_SUBTOPICS: int = int(os.environ.get("MAX_SUBTOPICS", 3))
-    MEMORY_BACKEND: ReportSource = ReportSource.__members__[os.environ.get("MEMORY_BACKEND", ReportSource.Local.name) or ReportSource.Local.name]
-    OUTPUT_FORMAT: OutputFileType = OutputFileType.__members__[os.environ.get("OUTPUT_FORMAT", OutputFileType.MARKDOWN.name) or OutputFileType.MARKDOWN.name]
-    QUERY_DOMAINS: list[str] = str(os.environ.get("QUERY_DOMAINS", "")).split(",")
-    REPORT_FORMAT: ReportFormat = ReportFormat.__members__[os.environ.get("REPORT_FORMAT", ReportFormat.APA.name) or ReportFormat.APA.name]
-    REPORT_SOURCE: ReportSource = ReportSource.__members__[os.environ.get("REPORT_SOURCE", ReportSource.Web.name) or ReportSource.Web.name]
-    REPORT_TYPE: ReportType = ReportType.__members__[os.environ.get("REPORT_TYPE", ReportType.ResearchReport.name) or ReportType.ResearchReport.name]
-    RESEARCH_PLANNER: str = os.environ.get("RESEARCH_PLANNER", "outline")
-    RETRIEVER: str = os.environ.get("RETRIEVER", "tavily")
-    SCRAPER: str = os.environ.get("SCRAPER", "bs")
-    SIMILARITY_THRESHOLD: float = float(os.environ.get("SIMILARITY_THRESHOLD", 0.42))
-    SMART_LLM: str = os.environ.get("SMART_LLM", "litellm:openrouter/qwen/qwen2.5-vl-72b-instruct:free")
-    SMART_LLM_MODEL: str = os.environ.get("SMART_LLM_MODEL", "openrouter/qwen/qwen2.5-vl-72b-instruct:free")
-    SMART_LLM_PROVIDER: str = os.environ.get("SMART_LLM_PROVIDER", "litellm")
-    SMART_LLM_TEMPERATURE: float = float(os.environ.get("SMART_LLM_TEMPERATURE", 0.15))
-    SMART_TOKEN_LIMIT: int = int(os.environ.get("SMART_TOKEN_LIMIT", 4096))
-    STRATEGIC_LLM: str = os.environ.get("STRATEGIC_LLM", "litellm:openrouter/deepseek/deepseek-r1:free")
-    STRATEGIC_LLM_MODEL: str = os.environ.get(
-        "STRATEGIC_LLM_MODEL",
-        "openrouter/deepseek/deepseek-r1:free",
-    )
-    STRATEGIC_LLM_PROVIDER: str = os.environ.get("STRATEGIC_LLM_PROVIDER", "litellm")
-    STRATEGIC_LLM_TEMPERATURE: float = float(os.environ.get("STRATEGIC_LLM_TEMPERATURE", 0.4))
-    STRATEGIC_TOKEN_LIMIT: int = int(os.environ.get("STRATEGIC_TOKEN_LIMIT", 4096))
-    TEMPERATURE: float = STRATEGIC_LLM_TEMPERATURE
-    TONE: Tone = Tone.__members__.get(os.environ.get("TONE", "Objective").upper(), Tone.Objective)
-    TOTAL_WORDS: int = int(os.environ.get("TOTAL_WORDS", 1000))
-    USER_AGENT: str = os.environ.get(
-        "USER_AGENT",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
-    )  # alternatively: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
-    USE_FALLBACKS: bool = True
-    VERBOSE: bool = bool(os.environ.get("VERBOSE", False))
-    POST_RETRIEVAL_PROCESSING_INSTRUCTIONS: str = os.environ.get("POST_RETRIEVAL_PROCESSING_INSTRUCTIONS", "")
-    PROMPT_GENERATE_SEARCH_QUERIES: str = os.environ.get("PROMPT_GENERATE_SEARCH_QUERIES", PROMPT_GENERATE_SEARCH_QUERIES)
-    PROMPT_GENERATE_REPORT: str = os.environ.get("PROMPT_GENERATE_REPORT", PROMPT_GENERATE_REPORT)
-    PROMPT_CURATE_SOURCES: str = os.environ.get("PROMPT_CURATE_SOURCES", PROMPT_CURATE_SOURCES)
-    PROMPT_GENERATE_RESOURCE_REPORT: str = os.environ.get("PROMPT_GENERATE_RESOURCE_REPORT", PROMPT_GENERATE_RESOURCE_REPORT)
-    PROMPT_GENERATE_CUSTOM_REPORT: str = os.environ.get("PROMPT_GENERATE_CUSTOM_REPORT", PROMPT_GENERATE_CUSTOM_REPORT)
-    PROMPT_GENERATE_OUTLINE_REPORT: str = os.environ.get("PROMPT_GENERATE_OUTLINE_REPORT", PROMPT_GENERATE_OUTLINE_REPORT)
-    PROMPT_AUTO_AGENT_INSTRUCTIONS: str = os.environ.get("PROMPT_AUTO_AGENT_INSTRUCTIONS", PROMPT_AUTO_AGENT_INSTRUCTIONS)
-    PROMPT_CONDENSE_INFORMATION: str = os.environ.get("PROMPT_CONDENSE_INFORMATION", PROMPT_CONDENSE_INFORMATION)
-    PROMPT_GENERATE_SUBTOPICS: str = os.environ.get("PROMPT_GENERATE_SUBTOPICS", PROMPT_GENERATE_SUBTOPICS)
-    PROMPT_GENERATE_SUBTOPIC_REPORT: str = os.environ.get("PROMPT_GENERATE_SUBTOPIC_REPORT", PROMPT_GENERATE_SUBTOPIC_REPORT)
-    PROMPT_GENERATE_DRAFT_TITLES: str = os.environ.get("PROMPT_GENERATE_DRAFT_TITLES", PROMPT_GENERATE_DRAFT_TITLES)
-    PROMPT_GENERATE_REPORT_INTRODUCTION: str = os.environ.get("PROMPT_GENERATE_REPORT_INTRODUCTION", PROMPT_GENERATE_REPORT_INTRODUCTION)
-    PROMPT_GENERATE_REPORT_CONCLUSION: str = os.environ.get("PROMPT_GENERATE_REPORT_CONCLUSION", PROMPT_GENERATE_REPORT_CONCLUSION)
-    PROMPT_POST_RETRIEVAL_PROCESSING: str = os.environ.get("PROMPT_POST_RETRIEVAL_PROCESSING", PROMPT_POST_RETRIEVAL_PROCESSING)
+class BaseConfig:
+    """Base config class for GPT Researcher.
+    
+    This class defines the base configuration for GPT Researcher. It provides a structure for managing configuration settings and environment variables.
+    """
+    
+    DEFAULT_PATH: ClassVar[Path] = Path.home().joinpath(".gpt_researcher", "base.json").expanduser().absolute()
 
     def __new__(
         cls,
-        config: Config | dict[str, Any] | os.PathLike | str | None = None,
+        config: Self | dict[str, Any] | os.PathLike | str | None = None,
         **kwargs: Any,
-    ) -> Config:
+    ) -> Self:
         obj = super().__new__(cls)
         if config is not None:
-            if isinstance(config, Config):
+            if isinstance(config, cls):
                 cfg_path = Path(os.path.normpath(config.config_path)).expanduser().absolute()
             elif isinstance(config, dict):
-                cfg_path = Config.from_dict(config).config_path
+                cfg_path = cls.from_dict(config).config_path
             elif isinstance(config, (os.PathLike, str)):
                 cfg_path = Path(os.path.normpath(config)).expanduser().absolute()
             else:
                 raise ValueError(f"Invalid config type: {config.__class__.__name__}, expected path-like or dict.")
         else:
-            cfg_path = Path.home().joinpath(".gpt_researcher", "default.json").expanduser().absolute()
+            cfg_path = cls.DEFAULT_PATH
         for k, v in kwargs.items():
             setattr(obj, k, v)
         obj.config_path = cfg_path
@@ -150,13 +68,13 @@ class Config:
 
     def __init__(
         self,
-        config: Config | dict[str, Any] | os.PathLike | str | None = None,
+        config: Self | dict[str, Any] | os.PathLike | str | None = None,
         **kwargs: Any,
     ):
         """Initialize the config class."""
-        self.llm_kwargs: dict[str, Any] = {}
-        self.embedding_kwargs: dict[str, Any] = {}
-        if isinstance(config, Config):
+        self.llm_kwargs: dict[str, Any] = kwargs.pop("llm_kwargs", {})
+        self.embedding_kwargs: dict[str, Any] = kwargs.pop("embedding_kwargs", {})
+        if isinstance(config, self.__class__):
             self.config_path = Path(os.path.normpath(config.config_path)).expanduser().absolute()
         elif isinstance(config, (os.PathLike, str)):
             self.config_path = Path(os.path.normpath(config)).expanduser().absolute()
@@ -175,32 +93,19 @@ class Config:
             config_to_use = (
                 self.default_config_dict()
                 if config == "default" or config is None
-                else self._create_config_dict(config.to_dict() if isinstance(config, Config) else config)
+                else self._create_config_dict(config)
             )
         else:
             config_to_use = self._create_config_dict(self.config_path)
         config_to_use.update(kwargs)  # type: ignore
         for key, value in config_to_use.items():
             setattr(self, key, value)
-        try:
-            self.retrievers: list[str] = self.parse_retrievers(self.RETRIEVER)
-        except ValueError as e:
-            logger.warning(
-                f"{e.__class__.__name__}: {e}. Defaulting to 'tavily' retriever.",
-                exc_info=True,
-            )
-            self.retrievers = ["tavily"]
-        self._setup_llms()
-        self._setup_fallback_models()
-        self._set_doc_path(config_to_use)
-        #os.environ["LITELLM_LOG"] = "DEBUG" if self.VERBOSE else "INFO"
-        os.environ["LITELLM_LOG"] = "INFO"
 
     @classmethod
     def from_path(
         cls,
         config_path: os.PathLike | str | None,
-    ) -> Config:
+    ) -> Self:
         """Load a configuration from a path."""
         config_dict: dict[str, Any] = cls._create_config_dict(config_path)
         return cls(config_path, **config_dict)
@@ -208,176 +113,24 @@ class Config:
     @classmethod
     def from_config(
         cls,
-        config: dict[str, Any] | Config,
-    ) -> Config:
+        params: dict[str, Any] | Self,
+        config: Self | None = None,
+    ) -> Self:
         """Load a configuration from a dictionary."""
-        return cls(
-            None,
-            **(config.to_dict() if isinstance(config, Config) else config),
-        )
-
-    @classmethod
-    def from_params(cls, params: dict[str, Any], config: Config | None = None) -> Config:
-        """Load a configuration from a dictionary."""
-        if config is None:
-            config = cls()
-        config.CURATE_SOURCES = (
-            str(params.get("curate_sources", config.CURATE_SOURCES)).lower() == "true"
-            or config.CURATE_SOURCES
-        )
-        config.EMBEDDING_KWARGS = (
-            json.loads(params.get("embedding_kwargs", json.dumps(config.EMBEDDING_KWARGS)))
-            or config.EMBEDDING_KWARGS
-        )
-        config.EMBEDDING_MODEL = (
-            params.get("embedding_model", config.EMBEDDING_MODEL)
-            or config.EMBEDDING_MODEL
-        )
-        config.EMBEDDING_PROVIDER = (
-            params.get("embedding_provider", config.EMBEDDING_PROVIDER)
-            or config.EMBEDDING_PROVIDER
-        )
-        config.EMBEDDING = (
-            params.get("embedding", config.EMBEDDING)
-            or config.EMBEDDING
-        )
-        config.FALLBACK_MODELS = (
-            str(params.get("fallback_models", "")).split(",")
-            if params.get("fallback_models")
-            else config.FALLBACK_MODELS
-        )
-        config.FAST_LLM_MODEL = (
-            params.get("fast_llm_model", config.FAST_LLM_MODEL)
-            or config.FAST_LLM_MODEL
-        )
-        config.FAST_LLM_PROVIDER = (
-            params.get("fast_llm_provider", config.FAST_LLM_PROVIDER)
-            or config.FAST_LLM_PROVIDER
-        )
-        config.FAST_LLM = (
-            params.get("fast_llm", config.FAST_LLM)
-            or config.FAST_LLM
-        )
-        config.FAST_TOKEN_LIMIT = (
-            int(params.get("fast_token_limit", config.FAST_TOKEN_LIMIT))
-            or config.FAST_TOKEN_LIMIT
-        )
-        config.LANGUAGE = (
-            params.get("language", config.LANGUAGE)
-            or config.LANGUAGE
-        )
-        config.MAX_ITERATIONS = (
-            int(params.get("max_iterations", config.MAX_ITERATIONS))
-            or config.MAX_ITERATIONS
-        )
-        config.MAX_SEARCH_RESULTS_PER_QUERY = (
-            int(params.get("max_search_results_per_query", config.MAX_SEARCH_RESULTS_PER_QUERY))
-            or config.MAX_SEARCH_RESULTS_PER_QUERY
-        )
-        config.MAX_SUBTOPICS = (
-            int(params.get("max_subtopics", config.MAX_SUBTOPICS))
-            or config.MAX_SUBTOPICS
-        )
-        config.MEMORY_BACKEND = ReportSource(
-            str(params.get("memory_backend", config.MEMORY_BACKEND.value))
-            or config.MEMORY_BACKEND.value
-        )
-        config.QUERY_DOMAINS = (
-            str(params.get("query_domains", "")).split(",")
-            if params.get("query_domains")
-            else []
-        )
-        config.REPORT_FORMAT = ReportFormat.__members__[
-            str(params.get("report_format", config.REPORT_FORMAT.name)).upper()
-            or config.REPORT_FORMAT.name
-        ]
-        config.REPORT_SOURCE = ReportSource(
-            str(params.get("report_source", config.REPORT_SOURCE.value)) or config.REPORT_SOURCE.value
-        )
-        config.REPORT_TYPE = ReportType.__members__[
-            str(params.get("report_type", config.REPORT_TYPE.name))
-            or config.REPORT_TYPE.name
-        ]
-        config.RESEARCH_PLANNER = (
-            params.get("research_planner", config.RESEARCH_PLANNER)
-            or config.RESEARCH_PLANNER
-        )
-        config.RETRIEVER = (
-            params.get("retriever", config.RETRIEVER)
-            or config.RETRIEVER
-        )
-        config.SCRAPER = (
-            params.get("scraper", config.SCRAPER)
-            or config.SCRAPER
-        )
-        config.SIMILARITY_THRESHOLD = (
-            float(params.get("similarity_threshold", config.SIMILARITY_THRESHOLD)) or config.SIMILARITY_THRESHOLD
-        )
-        config.SMART_LLM_MODEL = (
-            params.get("smart_llm_model", config.SMART_LLM_MODEL)
-            or config.SMART_LLM_MODEL
-        )
-        config.SMART_LLM_PROVIDER = (
-            params.get("smart_llm_provider", config.SMART_LLM_PROVIDER)
-            or config.SMART_LLM_PROVIDER
-        )
-        config.SMART_LLM = (
-            params.get("smart_llm", config.SMART_LLM)
-            or config.SMART_LLM
-        )
-        config.SMART_TOKEN_LIMIT = (
-            int(params.get("smart_token_limit", config.SMART_TOKEN_LIMIT))
-            or config.SMART_TOKEN_LIMIT
-        )
-        config.STRATEGIC_LLM_MODEL = (
-            params.get("strategic_llm_model", config.STRATEGIC_LLM_MODEL)
-            or config.STRATEGIC_LLM_MODEL
-        )
-        config.STRATEGIC_LLM_PROVIDER = (
-            params.get("strategic_llm_provider", config.STRATEGIC_LLM_PROVIDER)
-            or config.STRATEGIC_LLM_PROVIDER
-        )
-        config.STRATEGIC_LLM = (
-            params.get("strategic_llm", config.STRATEGIC_LLM)
-            or config.STRATEGIC_LLM
-        )
-        config.STRATEGIC_TOKEN_LIMIT = (
-            params.get("strategic_token_limit", config.STRATEGIC_TOKEN_LIMIT)
-            or config.STRATEGIC_TOKEN_LIMIT
-        )
-        config.TEMPERATURE = (
-            float(params.get("temperature", config.TEMPERATURE))
-            or config.TEMPERATURE
-        )
-        config.TONE = (
-            Tone.__members__[str(params.get("tone", config.TONE.name) or config.TONE.name).capitalize()]
-            or config.TONE
-        )
-        config.TOTAL_WORDS = (
-            int(params.get("total_words", config.TOTAL_WORDS))
-            or config.TOTAL_WORDS
-        )
-        config.USE_FALLBACKS = (
-            str(params.get("use_fallbacks", config.USE_FALLBACKS)).lower() == "true"
-            or config.USE_FALLBACKS
-        )
-        config.USER_AGENT = (
-            params.get("user_agent", config.USER_AGENT)
-            or config.USER_AGENT
-        )
-        config.VERBOSE = (
-            str(params.get("verbose", config.VERBOSE)).lower() == "true"
-            or config.VERBOSE
-        )
-        return config
+        cur_config_dict: dict[str, Any] = cls().to_dict() if config is None else config.to_dict()
+        params_dict = params.to_dict() if isinstance(params, cls) else params
+        assert isinstance(params_dict, dict), f"params_dict must be a dictionary, got {params_dict.__class__.__name__}"
+        cur_config_dict.update(params_dict)
+        return cls(None, **cur_config_dict)
 
     @classmethod
     def from_dict(
         cls,
-        config: dict[str, Any] | Config,
-    ) -> Config:
+        params: dict[str, Any] | Self,
+        config: Self | None = None,
+    ) -> Self:
         """Load a configuration from a dictionary."""
-        return cls.from_config(config)
+        return cls.from_config(params, config)
 
     def to_dict(self) -> dict[str, Any]:
         """Return the config as a dictionary."""
@@ -396,7 +149,7 @@ class Config:
     @classmethod
     def _create_config_dict(
         cls,
-        config: os.PathLike | str | dict[str, Any] | None = None,
+        config: os.PathLike | str | dict[str, Any] | Self | None = None,
     ) -> dict[str, Any]:
         """Parse a config from a path or dict."""
         if config is None or config == "default":
@@ -429,19 +182,323 @@ class Config:
 
     def __setattr__(self, key: str, value: Any):
         upper_key = key.upper()
-        if upper_key not in Config.__annotations__:
+        if upper_key not in self.__class__.__annotations__:
             super().__setattr__(key, value)
             return
-        env_value: str = os.environ.get(key, "") or ""
+        env_value: str = os.environ.get(upper_key, "") or ""
         if not env_value:
             return
         value = self.convert_env_value(
-            key,
+            upper_key,
             env_value,
-            Config.__annotations__[upper_key],
+            self.__class__.__annotations__[upper_key],
         )
         os.environ[upper_key] = str(value)
         super().__setattr__(key, str(value))
+
+    @classmethod
+    def load_config(
+        cls,
+        config_path: os.PathLike | str | None,
+    ) -> dict[str, Any]:
+        """Load a configuration by name."""
+        config_dict: dict[str, Any] = (
+            cls.default_config_dict()
+            if config_path is None
+            else cls._create_config_dict(config_path)
+        )
+
+        # Merge with default config to ensure all keys are present
+        merged_config: dict[str, Any] = cls.default_config_dict().copy()
+        merged_config.update(config_dict)
+        return merged_config
+
+    def parse_retrievers(
+        self,
+        retriever_str: str,
+    ) -> list[str]:
+        """Parse the retriever string into a list of retrievers and validate them."""
+        retrievers: list[str] = [retriever.strip() for retriever in retriever_str.split(",")]
+        valid_retrievers: list[str] = get_all_retriever_names()
+        invalid_retrievers: list[str] = [r for r in retrievers if r not in valid_retrievers]
+        if invalid_retrievers:
+            raise ValueError(f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. Valid options are: {', '.join(valid_retrievers)}.")
+        return retrievers
+
+    @classmethod
+    def convert_env_value(
+        cls,
+        key: str,
+        env_value: str,
+        type_hint: type | str,
+    ) -> Any:
+        """Convert environment variable to the appropriate type based on the type hint."""
+        origin: Any = get_origin(type_hint)
+        args: tuple[Any, ...] = get_args(type_hint)
+
+        if origin in (Union, "Union"):
+            # Handle Union types (e.g., Union[str, None])
+            for arg in args:
+                if arg in (None.__class__.__name__, None.__class__):
+                    if env_value.casefold() in ("none", "null", "", None):
+                        return None
+                else:
+                    try:
+                        return cls.convert_env_value(key, env_value, arg)
+                    except ValueError:
+                        continue
+            raise ValueError(f"Cannot convert env value '{env_value}' to any of arg types `{args}` for key '{key}'")
+
+        if type_hint in (bool, "bool"):
+            return env_value.casefold() in ("true", "1", "yes", "on", "y")
+        elif type_hint in (int, "int"):
+            return int(env_value)
+        elif type_hint in (float, "float"):
+            return float(env_value)
+        elif type_hint in (str, Any, "str"):
+            return env_value
+        elif origin in {list, list, dict, dict, "list", "dict", "List", "Dict"}:
+            return json.loads(env_value)
+        else:
+            raise ValueError(f"Unsupported type `{type_hint}` for key '{key}'")
+
+
+class Config(BaseConfig):
+    """Config class for GPT Researcher.
+
+    Config(): creates a default config,
+    Config.from_path: constructs one from path, partially using class defaults if the file doesn't have the stuff already,
+    Config.from_dict: Constructs a config from case-insensitive keys mapping to the attribute names.
+    Config.from_params: same as from_dict except keys can be snake_case format.
+    
+    Examples:
+        print(Config.DOC_PATH) # prints "./my-docs", the default.
+        cfg = Config(doc_path="custom/path")
+        print(cfg.DOC_PATH) # prints "custom/path"
+        cfg = Config.from_dict({"doc_path": "custom/path"})
+        print(cfg.DOC_PATH) # prints "custom/path"
+        cfg = Config.from_path("~/.gpt_researcher/config.json")
+        print(cfg.DOC_PATH) # prints whatever is defined in config.json, otherwise if it's not defined there, './my-docs'
+        
+
+    Attributes:
+        AGENT_ROLE: The role of the agent.
+        CONFIG_DIR: The directory for configuration files.
+        CURATE_SOURCES: Whether to curate sources.
+        DOC_PATH: The path to the document directory.
+        DEEP_RESEARCH_CONCURRENCY: The number of concurrent deep research threads.
+        DEEP_RESEARCH_DEPTH: The depth of the deep research.
+        DEEP_RESEARCH_BREADTH: The breadth of the deep research.
+        EMBEDDING: The embedding model to use.
+        EMBEDDING_MODEL: The specific embedding model to use.
+        EMBEDDING_PROVIDER: The provider of the embedding model.
+        EMBEDDING_FALLBACK_MODELS: The fallback models for the embedding provider.
+        EMBEDDING_KWARGS: The keyword arguments for the embedding model.
+        FALLBACK_MODELS: The fallback models for the LLM.
+        FAST_LLM: The fast LLM to use.
+        FAST_LLM_MODEL: The specific fast LLM to use.
+        FAST_LLM_PROVIDER: The provider of the fast LLM.
+        FAST_LLM_TEMPERATURE: The temperature for the fast LLM.
+        FAST_TOKEN_LIMIT: The token limit for the fast LLM.
+        LANGUAGE: The language to use.
+        LANGCHAIN_TRACING_V2: Boolean flag to enable LangChain tracing V2.
+        MAX_ITERATIONS: The maximum number of iterations.
+        MAX_SCRAPER_WORKERS: The maximum number of scraper workers.
+        MAX_SEARCH_RESULTS_PER_QUERY: The maximum number of search results per query.
+        MAX_SOURCES: The maximum number of sources.
+        MAX_URLS: The maximum number of URLs.
+        MAX_SUBTOPICS: The maximum number of subtopics.
+        MAX_LINK_EXPLORATION_DEPTH: The maximum number of link exploration depth.
+        MEMORY_BACKEND: The backend for memory storage.
+        OUTPUT_FORMAT: The format of the output.
+        QUERY_DOMAINS: The domains to query.
+        REPORT_FORMAT: The format of the report.
+        REPORT_SOURCE: The source of the report.
+        REPORT_TYPE: The type of report.
+        RESEARCH_PLANNER: The planner for research.
+        RETRIEVER: The retriever to use.
+        SCRAPER: The scraper to use.
+        SIMILARITY_THRESHOLD: The similarity threshold for the retriever.
+        SMART_LLM: The smart LLM to use.
+        SMART_LLM_MODEL: The specific smart LLM to use.
+        SMART_LLM_PROVIDER: The provider of the smart LLM.
+        SMART_LLM_TEMPERATURE: The temperature for the smart LLM.
+        SMART_TOKEN_LIMIT: The token limit for the smart LLM.
+        STRATEGIC_LLM: The strategic LLM to use.
+        STRATEGIC_LLM_MODEL: The specific strategic LLM to use.
+        STRATEGIC_LLM_PROVIDER: The provider of the strategic LLM.
+        STRATEGIC_LLM_TEMPERATURE: The temperature for the strategic LLM.
+        STRATEGIC_TOKEN_LIMIT: The token limit for the strategic LLM.
+        TEMPERATURE: The temperature for the LLM.
+        TONE: The tone for the LLM.
+        TOTAL_WORDS: The total number of words for the LLM.
+        USER_AGENT: The user agent for the LLM.
+        USE_FALLBACKS: Whether to use fallback models.
+        VERBOSE: Whether to enable verbose logging.
+        
+        # Scraper configuration
+        SCRAPER_TIMEOUT: The default timeout for scrapers in seconds.
+        SCRAPER_MAX_WORKERS: The maximum number of scraper worker threads.
+        SCRAPER_MIN_CONTENT_LENGTH: The minimum content length to consider valid.
+        
+        # Deep research configuration
+        MAX_CONTEXT_WORDS: The maximum number of words to keep in context.
+        DEEP_RESEARCH_NUM_QUERIES: The number of queries to generate for deep research.
+        DEEP_RESEARCH_NUM_LEARNINGS: The number of learnings to extract from research results.
+        
+        # Retriever configuration
+        RETRIEVER_TIMEOUT: The default timeout for retrievers in seconds.
+        RETRIEVER_SERPER_TIMEOUT: The timeout for Serper retriever in seconds.
+        RETRIEVER_TAVILY_TIMEOUT: The timeout for Tavily retriever in seconds.
+        RETRIEVER_SEARCHAPI_TIMEOUT: The timeout for SearchAPI retriever in seconds.
+        
+        # Web request configuration
+        WEB_REQUEST_TIMEOUT: The timeout for general web requests in seconds.
+        XHR_TIMEOUT: The timeout for XHR requests in milliseconds.
+        
+        POST_RETRIEVAL_PROCESSING_INSTRUCTIONS: The instructions for post-retrieval processing.
+        PROMPT_GENERATE_SEARCH_QUERIES: The prompt for generating search queries.
+        PROMPT_GENERATE_REPORT: The prompt for generating a report.
+        PROMPT_CURATE_SOURCES: The prompt for curating sources.
+        PROMPT_GENERATE_RESOURCE_REPORT: The prompt for generating a resource report.
+        PROMPT_GENERATE_CUSTOM_REPORT: The prompt for generating a custom report.
+        PROMPT_GENERATE_OUTLINE_REPORT: The prompt for generating an outline report.
+        PROMPT_AUTO_AGENT_INSTRUCTIONS: The prompt for auto-agent instructions.
+        PROMPT_CONDENSE_INFORMATION: The prompt for condensing information.
+        PROMPT_GENERATE_SUBTOPICS: The prompt for generating subtopics.
+        PROMPT_GENERATE_SUBTOPIC_REPORT: The prompt for generating a subtopic report.
+        PROMPT_GENERATE_DRAFT_TITLES: The prompt for generating draft titles.
+        PROMPT_GENERATE_REPORT_INTRODUCTION: The prompt for generating a report introduction.
+        PROMPT_GENERATE_REPORT_CONCLUSION: The prompt for generating a report conclusion.
+        PROMPT_POST_RETRIEVAL_PROCESSING: The prompt for post-retrieval processing.
+    """
+    
+    DEFAULT_PATH: ClassVar[Path] = Path.home().joinpath(".gpt_researcher", "config.json").expanduser().absolute()
+    
+
+    AGENT_ROLE: str = os.environ.get("AGENT_ROLE", "")
+    CONFIG_DIR: str = os.path.join(os.path.dirname(__file__), "variables")
+    CURATE_SOURCES: bool = bool(str(os.environ.get("CURATE_SOURCES", False)).casefold() == "true")
+    DOC_PATH: str = os.environ.get("DOC_PATH", str(Path.home().absolute()))
+    DEEP_RESEARCH_CONCURRENCY: int = int(os.environ.get("DEEP_RESEARCH_CONCURRENCY", 1))
+    DEEP_RESEARCH_DEPTH: int = int(os.environ.get("DEEP_RESEARCH_DEPTH", 1))
+    DEEP_RESEARCH_BREADTH: int = int(os.environ.get("DEEP_RESEARCH_BREADTH", 1))
+    EMBEDDING: str = os.environ.get("EMBEDDING", "openai:text-embedding-3-small")
+    EMBEDDING_MODEL: str = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
+    EMBEDDING_PROVIDER: str = os.environ.get("EMBEDDING_PROVIDER", "openai")
+    EMBEDDING_FALLBACK_MODELS: list[str] = (
+        lambda value: json.loads(value)
+        if value.lstrip().startswith("[") and value.rstrip().endswith("]")
+        else value.split(",")
+        if "," in value
+        else [item.strip() for item in value.split(",") if item.strip()]
+    )(str(os.environ.get("EMBEDDING_FALLBACK_MODELS", "") or "").strip())
+    EMBEDDING_KWARGS: dict[str, Any] = json.loads(os.environ.get("EMBEDDING_KWARGS", "{}"))
+    # FALLBACK_MODELS is a list of free LLM fallback model identifiers.
+    # Users can specify this as a JSON-encoded list (e.g., '["model1", "model2"]') or as a comma-separated string (e.g., "model1, model2").
+    EXCLUDED_DOMAINS: list[str] = (
+        lambda value: json.loads(value)
+        if value.lstrip().startswith("[") and value.rstrip().endswith("]")
+        else value.split(",")
+        if "," in value
+        else [item.strip() for item in value.split(",") if item.strip()]
+    )(str(os.environ.get("EXCLUDED_DOMAINS", "") or "").strip())
+    FALLBACK_MODELS: list[str] = (
+        lambda value: json.loads(value)
+        if value.lstrip().startswith("[") and value.rstrip().endswith("]")
+        else value.split(",")
+        if "," in value
+        else [item.strip() for item in value.split(",") if item.strip()]
+    )(str(os.environ.get("FALLBACK_MODELS", "") or "").strip())
+    FAST_LLM: str = os.environ.get("FAST_LLM", "groq:mixtral-8x7b-32768")  # TODO: use this somewhere
+    FAST_LLM_MODEL: str = os.environ.get("FAST_LLM_MODEL", "mixtral-8x7b-32768")  # TODO: use this somewhere
+    FAST_LLM_PROVIDER: str = os.environ.get("FAST_LLM_PROVIDER", "groq")
+    FAST_LLM_TEMPERATURE: float = float(os.environ.get("FAST_LLM_TEMPERATURE", 0.15))
+    FAST_TOKEN_LIMIT: int = int(os.environ.get("FAST_TOKEN_LIMIT", 32768))
+    LANGCHAIN_TRACING_V2: bool = bool(str(os.environ.get("LANGCHAIN_TRACING_V2", False)).casefold() == "true")
+    LANGUAGE: str = os.environ.get("LANGUAGE", (locale.getdefaultlocale()[0] or "en").split("_")[0])
+    MAX_ITERATIONS: int = int(os.environ.get("MAX_ITERATIONS", 4))
+    MAX_SCRAPER_WORKERS: int = int(os.environ.get("MAX_SCRAPER_WORKERS", 10))
+    MAX_SEARCH_RESULTS_PER_QUERY: int = int(os.environ.get("MAX_SEARCH_RESULTS_PER_QUERY", 5))
+    MAX_SOURCES: int = int(os.environ.get("MAX_SOURCES", 10))
+    MAX_URLS: int = int(os.environ.get("MAX_URLS", 10))
+    MAX_SUBTOPICS: int = int(os.environ.get("MAX_SUBTOPICS", 3))
+    MAX_LINK_EXPLORATION_DEPTH: int = int(os.environ.get("MAX_LINK_EXPLORATION_DEPTH", 2))
+    MEMORY_BACKEND: ReportSource = ReportSource.__members__[os.environ.get("MEMORY_BACKEND", ReportSource.Local.name) or ReportSource.Local.name]
+    OUTPUT_FORMAT: OutputFileType = OutputFileType.__members__[os.environ.get("OUTPUT_FORMAT", OutputFileType.MARKDOWN.name) or OutputFileType.MARKDOWN.name]
+    QUERY_DOMAINS: list[str] = str(os.environ.get("QUERY_DOMAINS", "")).split(",")
+    REPORT_FORMAT: ReportFormat = ReportFormat.__members__[os.environ.get("REPORT_FORMAT", ReportFormat.APA.name) or ReportFormat.APA.name]
+    REPORT_SOURCE: ReportSource = ReportSource.__members__[os.environ.get("REPORT_SOURCE", ReportSource.Web.name) or ReportSource.Web.name]
+    REPORT_TYPE: ReportType = ReportType.__members__[os.environ.get("REPORT_TYPE", ReportType.ResearchReport.name) or ReportType.ResearchReport.name]
+    RESEARCH_PLANNER: str = os.environ.get("RESEARCH_PLANNER", "outline")
+    SIMILARITY_THRESHOLD: float = float(os.environ.get("SIMILARITY_THRESHOLD", 0.42))
+    SMART_LLM: str = os.environ.get("SMART_LLM", "litellm:openrouter/google/gemini-2.0-pro-exp-02-05:free")
+    SMART_LLM_MODEL: str = os.environ.get("SMART_LLM_MODEL", "openrouter/google/gemini-2.0-pro-exp-02-05:free")
+    SMART_LLM_PROVIDER: str = os.environ.get("SMART_LLM_PROVIDER", "litellm")
+    SMART_LLM_TEMPERATURE: float = float(os.environ.get("SMART_LLM_TEMPERATURE", 0.15))
+    SMART_TOKEN_LIMIT: int = int(os.environ.get("SMART_TOKEN_LIMIT", 4096))
+    STRATEGIC_LLM: str = os.environ.get("STRATEGIC_LLM", "litellm:openrouter/google/gemini-2.0-pro-exp-02-05:free")
+    STRATEGIC_LLM_MODEL: str = os.environ.get("STRATEGIC_LLM_MODEL", "openrouter/google/gemini-2.0-pro-exp-02-05:free")
+    STRATEGIC_LLM_PROVIDER: str = os.environ.get("STRATEGIC_LLM_PROVIDER", "litellm")
+    STRATEGIC_LLM_TEMPERATURE: float = float(os.environ.get("STRATEGIC_LLM_TEMPERATURE", 0.4))
+    STRATEGIC_TOKEN_LIMIT: int = int(os.environ.get("STRATEGIC_TOKEN_LIMIT", 4096))
+    TEMPERATURE: float = STRATEGIC_LLM_TEMPERATURE
+    TONE: Tone = Tone.__members__.get(os.environ.get("TONE", "Objective").upper(), Tone.Objective)
+    TOTAL_WORDS: int = int(os.environ.get("TOTAL_WORDS", 1000))
+    USER_AGENT: str = os.environ.get("USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0")
+      # alternatively: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+    USE_FALLBACKS: bool = bool(str(os.environ.get("USE_FALLBACKS", True)).casefold() == "true")
+    VERBOSE: bool = bool(str(os.environ.get("VERBOSE", True)).casefold() == "true")
+    
+    # Scraper configuration
+    SCRAPER: str = os.environ.get("SCRAPER", "bs")
+    SCRAPER_TIMEOUT: int = int(os.environ.get("SCRAPER_TIMEOUT", 10))  # TODO: add to all the scrapers
+    SCRAPER_MAX_WORKERS: int = int(os.environ.get("SCRAPER_MAX_WORKERS", cpu_count() * 2))  # TODO: add to all the scrapers
+    SCRAPER_MIN_CONTENT_LENGTH: int = int(os.environ.get("SCRAPER_MIN_CONTENT_LENGTH", 100))  # TODO: add to all the scrapers
+    
+    # Deep research configuration
+    MAX_CONTEXT_WORDS: int = int(os.environ.get("MAX_CONTEXT_WORDS", 25000))
+    DEEP_RESEARCH_NUM_QUERIES: int = int(os.environ.get("DEEP_RESEARCH_NUM_QUERIES", 3))
+    DEEP_RESEARCH_NUM_LEARNINGS: int = int(os.environ.get("DEEP_RESEARCH_NUM_LEARNINGS", 3))
+    
+    # Retriever configuration
+    RETRIEVER: str = os.environ.get("RETRIEVER", "tavily")  # TODO: add to all the retrievers
+    RETRIEVER_TIMEOUT: int = int(os.environ.get("RETRIEVER_TIMEOUT", 10))  # TODO: add to all the retrievers
+    
+    POST_RETRIEVAL_PROCESSING_INSTRUCTIONS: str = os.environ.get("POST_RETRIEVAL_PROCESSING_INSTRUCTIONS", "")
+    PROMPT_GENERATE_SEARCH_QUERIES: str = os.environ.get("PROMPT_GENERATE_SEARCH_QUERIES", PROMPT_GENERATE_SEARCH_QUERIES)
+    PROMPT_GENERATE_REPORT: str = os.environ.get("PROMPT_GENERATE_REPORT", PROMPT_GENERATE_REPORT)
+    PROMPT_CURATE_SOURCES: str = os.environ.get("PROMPT_CURATE_SOURCES", PROMPT_CURATE_SOURCES)
+    PROMPT_GENERATE_RESOURCE_REPORT: str = os.environ.get("PROMPT_GENERATE_RESOURCE_REPORT", PROMPT_GENERATE_RESOURCE_REPORT)
+    PROMPT_GENERATE_CUSTOM_REPORT: str = os.environ.get("PROMPT_GENERATE_CUSTOM_REPORT", PROMPT_GENERATE_CUSTOM_REPORT)
+    PROMPT_GENERATE_OUTLINE_REPORT: str = os.environ.get("PROMPT_GENERATE_OUTLINE_REPORT", PROMPT_GENERATE_OUTLINE_REPORT)
+    PROMPT_AUTO_AGENT_INSTRUCTIONS: str = os.environ.get("PROMPT_AUTO_AGENT_INSTRUCTIONS", PROMPT_AUTO_AGENT_INSTRUCTIONS)
+    PROMPT_CONDENSE_INFORMATION: str = os.environ.get("PROMPT_CONDENSE_INFORMATION", PROMPT_CONDENSE_INFORMATION)
+    PROMPT_GENERATE_SUBTOPICS: str = os.environ.get("PROMPT_GENERATE_SUBTOPICS", PROMPT_GENERATE_SUBTOPICS)
+    PROMPT_GENERATE_SUBTOPIC_REPORT: str = os.environ.get("PROMPT_GENERATE_SUBTOPIC_REPORT", PROMPT_GENERATE_SUBTOPIC_REPORT)
+    PROMPT_GENERATE_DRAFT_TITLES: str = os.environ.get("PROMPT_GENERATE_DRAFT_TITLES", PROMPT_GENERATE_DRAFT_TITLES)
+    PROMPT_GENERATE_REPORT_INTRODUCTION: str = os.environ.get("PROMPT_GENERATE_REPORT_INTRODUCTION", PROMPT_GENERATE_REPORT_INTRODUCTION)
+    PROMPT_GENERATE_REPORT_CONCLUSION: str = os.environ.get("PROMPT_GENERATE_REPORT_CONCLUSION", PROMPT_GENERATE_REPORT_CONCLUSION)
+    PROMPT_POST_RETRIEVAL_PROCESSING: str = os.environ.get("PROMPT_POST_RETRIEVAL_PROCESSING", PROMPT_POST_RETRIEVAL_PROCESSING)
+
+    def __init__(
+        self,
+        config: Self | dict[str, Any] | os.PathLike | str | None = None,
+        **kwargs: Any,
+    ):
+        super().__init__(config, **kwargs)
+        try:
+            self.retrievers: list[str] = self.parse_retrievers(self.RETRIEVER)
+        except ValueError as e:
+            logger.warning(
+                f"{e.__class__.__name__}: {e}. Defaulting to 'tavily' retriever.",
+                exc_info=True,
+            )
+            self.retrievers = ["tavily"]
+        self._setup_llms()
+        self._setup_fallback_models()
+        os.makedirs(self.DOC_PATH, exist_ok=True)
+        os.environ["LITELLM_LOG"] = "DEBUG" if self.VERBOSE else "INFO"
 
     def _setup_llms(self) -> None:
         embedding_provider: str | None = os.environ.get("EMBEDDING_PROVIDER")
@@ -499,39 +556,6 @@ class Config:
         else:
             self.EMBEDDING_FALLBACK_MODELS = list(self.EMBEDDING_FALLBACK_MODELS)
 
-    def _set_doc_path(
-        self,
-        config: dict[str, Any],
-    ):
-        self.DOC_PATH = config.get("DOC_PATH", self.DOC_PATH)
-        if not self.DOC_PATH or not self.DOC_PATH.strip():
-            return
-        try:
-            os.makedirs(self.DOC_PATH, exist_ok=True)
-        except Exception as e:
-            logger.warning(
-                f"Warning! Error validating doc_path! {e.__class__.__name__}: {e} Using default doc_path.",
-                exc_info=True,
-            )
-            self.DOC_PATH = config.get("DOC_PATH", str(Path.home().absolute()))
-
-    @classmethod
-    def load_config(
-        cls,
-        config_path: os.PathLike | str | None,
-    ) -> dict[str, Any]:
-        """Load a configuration by name."""
-        config_dict: dict[str, Any] = (
-            cls.default_config_dict()
-            if config_path is None
-            else cls._create_config_dict(config_path)
-        )
-
-        # Merge with default config to ensure all keys are present
-        merged_config: dict[str, Any] = cls.default_config_dict().copy()
-        merged_config.update(config_dict)
-        return merged_config
-
     @classmethod
     def list_available_configs(cls) -> list[str]:
         """List all available configuration names."""
@@ -541,51 +565,128 @@ class Config:
                 configs.append(file.stem)  # Remove .json extension
         return configs
 
-    def parse_retrievers(
+
+class Settings(BaseConfig):
+    """Settings Configuration class for GPT Researcher.
+    
+    This subclass of BaseConfig is specifically designed to handle settings configurations
+    for the GPT Researcher application. It provides a structure for managing settings needed for the application.
+    
+    Attributes:
+
+        AI21_API_KEY: API key for AI21 services.
+        ANTHROPIC_API_KEY: API key for Anthropic services.
+        ARLIAI_API_KEY: API key for ArliAI services.
+        AWANLLM_API_KEY: API key for AwanLLM services.
+        AZURE_OPENAI_API_KEY: API key for Azure OpenAI services.
+        AZURE_OPENAI_API_VERSION: API version for Azure OpenAI services.
+        AZURE_OPENAI_ENDPOINT: Endpoint URL for Azure OpenAI services.
+        BASETEN_API_KEY: API key for Baseten services.
+        BING_API_KEY: API key for Bing search services.
+        BRAVE_API_KEY: API key for Brave search services.
+        CEREBRIUMAI_API_KEY: API key for CerebriumAI services.
+        DEEPINFRA_API_KEY: API key for DeepInfra services.
+        DEEPSEEK_API_KEY: API key for DeepSeek services.
+        EXA_API_KEY: API key for Exa services.
+        FOREFRONTAI_API_KEY: API key for ForefrontAI services.
+        GEMINI_API_KEY: API key for Google Gemini services.
+        GITHUB_TOKEN: Authentication token for GitHub API.
+        GITLAB_TOKEN: Authentication token for GitLab API.
+        GLAMA_API_KEY: API key for Glama services.
+        GOOGLE_API_KEY: API key for Google services.
+        GOOGLE_APPLICATION_CREDENTIALS: Path to Google application credentials file.
+        GROQ_API_KEY: API key for Groq services.
+        HUGGINGFACE_ACCESS_TOKEN: Access token for Hugging Face services.
+        JINA_API_KEY: API key for Jina services.
+        LANGCHAIN_API_KEY: API key for LangChain services.
+        LM_STUDIO_API_BASE: Base URL for LM Studio API.
+        MEILI_HTTP_ADDR: HTTP address for MeiliSearch.
+        MEILI_MASTER_KEY: Master key for MeiliSearch.
+        MISTRAL_API_KEY: API key for Mistral services.
+        MISTRALAI_API_KEY: API key for MistralAI services.
+        OLLAMA_BASE_URL: Base URL for Ollama services.
+        OPENAI_API_KEY: API key for OpenAI services.
+        OPENAI_ORGANIZATION: Organization ID for OpenAI services.
+        OPENROUTER_API_KEY: API key for OpenRouter services.
+        PERPLEXITY_API_KEY: API key for Perplexity services.
+        PERPLEXITYAI_API_KEY: API key for PerplexityAI services.
+        RETRIEVER: Default retriever to use (e.g., "tavily").
+        RETRIEVER_ENDPOINT: Endpoint URL for custom retriever services.
+        SEARCHAPI_API_KEY: API key for SearchAPI services.
+        SEARX_URL: URL for SearX search engine.
+        SERPAPI_API_KEY: API key for SerpAPI services.
+        SERPER_API_KEY: API key for Serper services.
+        SMART_LLM: Configuration string for smart LLM in format "provider:model".
+        STRATEGIC_LLM: Configuration string for strategic LLM in format "provider:model".
+        TAVILY_API_KEY: API key for Tavily search services.
+        TOGETHERAI_API_KEY: API key for TogetherAI services.
+        VERTEX_LOCATION: Location for Google Vertex AI services.
+        VERTEX_PROJECT: Project ID for Google Vertex AI services.
+        VOYAGE_API_KEY: API key for Voyage services.
+        YANDEX_API_KEY: API key for Yandex services.
+        YOU_API_KEY: API key for You.com services.
+        ZENML_API_KEY: API key for ZenML services.
+
+    """
+    BASE_PATH: ClassVar[Path] = Path.home().joinpath(".gpt_researcher", "settings.json").expanduser().absolute()
+
+    AI21_API_KEY: str = os.environ.get("AI21_API_KEY", "")
+    ANTHROPIC_API_KEY: str = os.environ.get("ANTHROPIC_API_KEY", "")
+    ARLIAI_API_KEY: str = os.environ.get("ARLIAI_API_KEY", "")
+    AWANLLM_API_KEY: str = os.environ.get("AWANLLM_API_KEY", "")
+    AZURE_OPENAI_API_KEY: str = os.environ.get("AZURE_OPENAI_API_KEY", "")
+    AZURE_OPENAI_API_VERSION: str = os.environ.get("AZURE_OPENAI_API_VERSION", "")
+    AZURE_OPENAI_ENDPOINT: str = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
+    BASETEN_API_KEY: str = os.environ.get("BASETEN_API_KEY", "")
+    BING_API_KEY: str = os.environ.get("BING_API_KEY", "")
+    BRAVE_API_KEY: str = os.environ.get("BRAVE_API_KEY", "")
+    CEREBRIUMAI_API_KEY: str = os.environ.get("CEREBRIUMAI_API_KEY", "")
+    DEEPINFRA_API_KEY: str = os.environ.get("DEEPINFRA_API_KEY", "")
+    DEEPSEEK_API_KEY: str = os.environ.get("DEEPSEEK_API_KEY", "")
+    EXA_API_KEY: str = os.environ.get("EXA_API_KEY", "")
+    FOREFRONTAI_API_KEY: str = os.environ.get("FOREFRONTAI_API_KEY", "")
+    GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "")
+    GITHUB_TOKEN: str = os.environ.get("GITHUB_TOKEN", "")
+    GITLAB_TOKEN: str = os.environ.get("GITLAB_TOKEN", "")
+    GLAMA_API_KEY: str = os.environ.get("GLAMA_API_KEY", "")
+    GOOGLE_API_KEY: str = os.environ.get("GOOGLE_API_KEY", "")
+    GOOGLE_APPLICATION_CREDENTIALS: str = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
+    GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
+    HUGGINGFACE_ACCESS_TOKEN: str = os.environ.get("HUGGINGFACE_ACCESS_TOKEN", "")
+    JINA_API_KEY: str = os.environ.get("JINA_API_KEY", "")
+    LANGCHAIN_API_KEY: str = os.environ.get("LANGCHAIN_API_KEY", "")
+    LM_STUDIO_API_BASE: str = os.environ.get("LM_STUDIO_API_BASE", "")
+    MEILI_HTTP_ADDR: str = os.environ.get("MEILI_HTTP_ADDR", "")
+    MEILI_MASTER_KEY: str = os.environ.get("MEILI_MASTER_KEY", "")
+    MISTRAL_API_KEY: str = os.environ.get("MISTRAL_API_KEY", "")
+    MISTRALAI_API_KEY: str = os.environ.get("MISTRALAI_API_KEY", "")
+    OLLAMA_BASE_URL: str = os.environ.get("OLLAMA_BASE_URL", "")
+    OPENAI_API_KEY: str = os.environ.get("OPENAI_API_KEY", "")
+    OPENAI_ORGANIZATION: str = os.environ.get("OPENAI_ORGANIZATION", "")
+    OPENROUTER_API_KEY: str = os.environ.get("OPENROUTER_API_KEY", "")
+    PERPLEXITY_API_KEY: str = os.environ.get("PERPLEXITY_API_KEY", "")
+    PERPLEXITYAI_API_KEY: str = os.environ.get("PERPLEXITYAI_API_KEY", "")
+    RETRIEVER: str = os.environ.get("RETRIEVER", "tavily")
+    RETRIEVER_ENDPOINT: str = os.environ.get("RETRIEVER_ENDPOINT", "")
+    SEARCHAPI_API_KEY: str = os.environ.get("SEARCHAPI_API_KEY", "")
+    SEARX_URL: str = os.environ.get("SEARX_URL", "")
+    SERPAPI_API_KEY: str = os.environ.get("SERPAPI_API_KEY", "")
+    SERPER_API_KEY: str = os.environ.get("SERPER_API_KEY", "")
+    SMART_LLM: str = os.environ.get("SMART_LLM", "")
+    STRATEGIC_LLM: str = os.environ.get("STRATEGIC_LLM", "")
+    TAVILY_API_KEY: str = os.environ.get("TAVILY_API_KEY", "")
+    TOGETHERAI_API_KEY: str = os.environ.get("TOGETHERAI_API_KEY", "")
+    VERTEX_LOCATION: str = os.environ.get("VERTEX_LOCATION", "")
+    VERTEX_PROJECT: str = os.environ.get("VERTEX_PROJECT", "")
+    VOYAGE_API_KEY: str = os.environ.get("VOYAGE_API_KEY", "")
+    YANDEX_API_KEY: str = os.environ.get("YANDEX_API_KEY", "")
+    YOU_API_KEY: str = os.environ.get("YOU_API_KEY", "")
+    ZENML_API_KEY: str = os.environ.get("ZENML_API_KEY", "")
+    
+    def __init__(
         self,
-        retriever_str: str,
-    ) -> list[str]:
-        """Parse the retriever string into a list of retrievers and validate them."""
-        retrievers: list[str] = [retriever.strip() for retriever in retriever_str.split(",")]
-        valid_retrievers: list[str] = get_all_retriever_names()
-        invalid_retrievers: list[str] = [r for r in retrievers if r not in valid_retrievers]
-        if invalid_retrievers:
-            raise ValueError(f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. Valid options are: {', '.join(valid_retrievers)}.")
-        return retrievers
-
-    @classmethod
-    def convert_env_value(
-        cls,
-        key: str,
-        env_value: str,
-        type_hint: type | str,
-    ) -> Any:
-        """Convert environment variable to the appropriate type based on the type hint."""
-        origin: Any = get_origin(type_hint)
-        args: tuple[Any, ...] = get_args(type_hint)
-
-        if origin in (Union, "Union"):
-            # Handle Union types (e.g., Union[str, None])
-            for arg in args:
-                if arg in (None.__class__.__name__, None.__class__):
-                    if env_value.casefold() in ("none", "null", "", None):
-                        return None
-                else:
-                    try:
-                        return cls.convert_env_value(key, env_value, arg)
-                    except ValueError:
-                        continue
-            raise ValueError(f"Cannot convert env value `{env_value}` to any of arg types `{args}` for key '{key}'")
-
-        if type_hint in (bool, "bool"):
-            return env_value.casefold() in ("true", "1", "yes", "on", "y")
-        elif type_hint in (int, "int"):
-            return int(env_value)
-        elif type_hint in (float, "float"):
-            return float(env_value)
-        elif type_hint in (str, Any, "str"):
-            return env_value
-        elif origin in {list, list, dict, dict, "list", "dict", "List", "Dict"}:
-            return json.loads(env_value)
-        else:
-            raise ValueError(f"Unsupported type '{type_hint}' for key '{key}'")
+        *args: Any,
+        **kwargs: Any,
+    ):
+        """Initialize the settings class."""
+        super().__init__(*args, **kwargs)

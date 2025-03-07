@@ -1,54 +1,129 @@
-[tool.poetry]
-name = "gpt-researcher"
-version = "0.8.5"
-description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
-authors = ["Assaf Elovic <assaf.elovic@gmail.com>"]
-license = "GPL-3.0-or-later"
-readme = "README.md"
+[tool.black]
+target-version = ['py310']
+line-length = 120
+skip-string-normalization = true
+skip-magic-trailing-comma = true
+force-exclude = '''
+/(
+  | docs
+  | setup.py
+)/
+'''
 
-[tool.poetry.dependencies]
-python = ">=3.11,<3.12"
-aiofiles = ">=23.2.1"
-arxiv = ">=2.0.0"
-beautifulsoup4 = ">=4.12.2"
-colorama = ">=0.4.6"
-duckduckgo_search = ">=4.1.1"
-htmldocx = "^0.0.6"
-jinja2 = ">=3.1.2"
-json-repair = "^0.29.8"
-json5 = "^0.9.25"
-langchain = "^0.2"
-langchain_community = "^0.2"
-langchain-openai = "^0.1"
-langgraph = ">=0.0.29,<0.3"
-loguru = "^0.7.2"
-lxml = { version = ">=4.9.2", extras = ["html_clean"] }
-markdown = ">=3.5.1"
-md2pdf = ">=1.0.1"
-mistune = "^3.0.2"
-openai = ">=1.3.3"
-permchain = ">=0.0.6"
-PyMuPDF = ">=1.23.6"
-python-docx = "^1.1.0"
-python-dotenv = ">=1.0.0"
-python-multipart = ">=0.0.6"
-pyyaml = ">=6.0.1"
-requests = ">=2.31.0"
-SQLAlchemy = ">=2.0.28"
-tavily-python = ">=0.2.8"
-tiktoken = ">=0.7.0"
-unstructured = ">=0.13,<0.16"
-uvicorn = ">=0.24.0.post1"
-websockets = "^13.1"
-firecrawl-py = "^1.12.0"
+[tool.isort]
+py_version = 310
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+default_section = "THIRDPARTY"
+known_third_party = []
+known_first_party = []
+known_local_folder = []
+# style: black
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 120
+split_on_trailing_comma = true
+lines_after_imports = 2
+force_single_line = true
+skip_glob = ["docs/*", "setup.py"]
+filter_files = true
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+indent-width = 4
+extend-exclude = ["docs", "test", "tests"]
 
-[tool.pytest.ini_options]
-asyncio_mode = "strict"
-addopts = "-v"
-testpaths = ["tests"]
-python_files = "test_*.py"
-asyncio_fixture_loop_scope = "function"
+[tool.ruff.lint]
+select = ["F", "E"]
+extend-select = ["W", "C90", "I", "N", "B", "A", "C4", "PERF", "RUF"]
+ignore = ["I001"]
+fixable = ["ALL"]
+unfixable = []
+preview = true
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.isort]
+force-single-line = true
+force-sort-within-sections = false
+lines-after-imports = 2
+known-first-party = []
+known-local-folder = []
+known-third-party = []
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 24
+
+[tool.ruff.lint.pycodestyle]
+ignore-overlong-task-comments = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
+ignore-fully-untyped = true
+
+[tool.ruff.lint.pylint]
+max-args = 5
+max-branches = 12
+max-locals = 15
+max-statements = 50
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+preview = false
+docstring-code-format = true
+
+[tool.mypy]
+# Platform configuration
+python_version = "3.10"
+# imports related
+ignore_missing_imports = true
+follow_imports = "silent"
+# None and Optional handling
+no_implicit_optional = false
+strict_optional = false
+# Configuring warnings
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+warn_return_any = false
+# Untyped definitions and calls
+check_untyped_defs = false
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_decorators = false
+# Disallow dynamic typing
+disallow_subclassing_any = false
+disallow_any_unimported = false
+disallow_any_expr = false
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_generics = false
+# Miscellaneous strictness flags
+allow_untyped_globals = true
+allow_redefinition = true
+local_partial_types = false
+implicit_reexport = true
+strict_equality = true
+# Configuring error messages
+show_error_context = false
+show_column_numbers = false
+show_error_codes = true
+exclude = ["docs", "test", "tests"]

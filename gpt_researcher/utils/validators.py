@@ -8,4 +8,4 @@ class Subtopic(BaseModel):
 
 
 class Subtopics(BaseModel):
-    subtopics: list[Subtopic] = []
+    subtopics: list[Subtopic] = Field(description="List of subtopics", min_length=1)

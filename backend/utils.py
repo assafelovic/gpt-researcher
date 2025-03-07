@@ -4,15 +4,12 @@ import os
 import urllib.parse
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import aiofiles
 import mistune
 
-from fpdf import FPDF
-from fpdf.errors import FPDFUnicodeEncodingException
 from gpt_researcher.utils.logger import get_formatted_logger
-from markdown_it import MarkdownIt
 
 if TYPE_CHECKING:
     import logging
@@ -91,6 +88,24 @@ async def write_md_to_pdf(
     file_path = os.path.join(output_dir, f"{filename[:MAX_FILENAME_LENGTH]}.pdf")
 
     try:
+        from md2pdf.core import md2pdf
+
+        md2pdf(
+            file_path,
+            md_content=text,
+            # md_file_path=f"{file_path}.md",
+            css_file_path=str(css_file_path),
+            base_url=None,
+        )
+        logger.debug(f"Report written to '{file_path}' with styles from '{css_file_path}'")
+        return urllib.parse.quote(file_path)
+    except Exception as e:
+        logger.warning(f"Error in converting Markdown to PDF! {e.__class__.__name__}: {e}", exc_info=True)
+        logger.info("Falling back to fpdf/markdown_it")
+        from fpdf import FPDF
+        from fpdf.errors import FPDFUnicodeEncodingException
+        from markdown_it import MarkdownIt
+
         # Convert markdown to HTML
         md = MarkdownIt()
         html = md.render(text)
@@ -118,11 +133,7 @@ async def write_md_to_pdf(
 
         logger.debug(f"Report written to '{file_path}' with styles from '{css_file_path}'")
 
-    except Exception as e:
-        logger.exception(f"Error in converting Markdown to PDF! {e.__class__.__name__}: {e}")
-        return ""
-
-    return urllib.parse.quote(file_path)
+        return urllib.parse.quote(file_path)
 
 
 async def write_md_to_word(
@@ -145,23 +156,24 @@ async def write_md_to_word(
     file_path = os.path.join(output_dir, f"{filename[:MAX_FILENAME_LENGTH]}.docx")
 
     try:
-        from docx import Document
+        from docx import Document as NewDocument
+        from docx.document import Document
         from htmldocx import HtmlToDocx
 
         # Convert report markdown to HTML
-        html = mistune.html(text)
+        html: str | list[dict[str, Any]] = mistune.html(text)
         # Create a document object
-        doc = Document()
+        doc: Document = NewDocument()
         # Convert the html generated from the report to document format
         HtmlToDocx().add_html_to_document(html, doc)
 
         # Saving the docx document to file_path
         doc.save(file_path)
 
-        logger.debug(f"Report written to {file_path}")
+        logger.debug(f"Report written to '{file_path}'")
 
         return urllib.parse.quote(file_path)
 
     except Exception as e:
-        logger.exception(f"Error in converting Markdown to DOCX! {e.__class__.__name__}: {e}")
+        logger.warning(f"Error in converting Markdown to DOCX! {e.__class__.__name__}: {e}", exc_info=True)
         return ""

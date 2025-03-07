@@ -25,16 +25,19 @@ class VectorstoreCompressor:
     def __init__(
         self,
         vector_store: VectorStoreWrapper,
-        max_results: int = 7,
+        max_results: int | None = None,
         filter: dict[str, Any] | None = None,
         **kwargs,
     ):
         self.vector_store: VectorStoreWrapper = vector_store
-        self.max_results: int = max_results
+        self.max_results: int = 7 if max_results is None else max_results
         self.filter: dict[str, Any] | None = filter
         self.kwargs: dict[str, Any] = kwargs
 
-    def __pretty_print_docs(self, docs):
+    def __pretty_print_docs(
+        self,
+        docs: list[Document],
+    ) -> str:
         return "\n".join(
             f"Source: {d.metadata.get('source')}\nTitle: {d.metadata.get('title')}\nContent: {d.page_content}\n"
             for d in docs
@@ -43,12 +46,12 @@ class VectorstoreCompressor:
     async def async_get_context(
         self,
         query: str,
-        max_results: int = 5,
-    ):
+        max_results: int | None = None,
+    ) -> str:
         """Get relevant context from vector store."""
-        results = await self.vector_store.asimilarity_search(
+        results: list[Document] = await self.vector_store.asimilarity_search(
             query=query,
-            k=max_results,
+            k=5 if max_results is None else max_results,
             filter=self.filter,
         )
         return self.__pretty_print_docs(results)
@@ -59,11 +62,12 @@ class ContextCompressor:
         self,
         documents: list,
         embeddings: Embeddings,
-        max_results: int = 5,
+        max_results: int | None = None,
         similarity_threshold: float = 0.35,
-        **kwargs,
+        *args: Any,
+        **kwargs: Any,
     ):
-        self.max_results: int = max_results
+        self.max_results: int = 5 if max_results is None else max_results
         self.documents: list = documents
         self.kwargs: dict[str, Any] = kwargs
         self.embeddings: Embeddings = embeddings
@@ -71,7 +75,7 @@ class ContextCompressor:
             os.environ.get("SIMILARITY_THRESHOLD", similarity_threshold)
         )
 
-    def __get_contextual_retriever(self):
+    def __get_contextual_retriever(self) -> ContextualCompressionRetriever:
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=100,
@@ -107,16 +111,16 @@ class ContextCompressor:
     async def async_get_context(
         self,
         query: str,
-        max_results: int = 5,
+        max_results: int | None = None,
         cost_callback: Callable[[float], None] | None = None,
     ):
-        compressed_docs = self.__get_contextual_retriever()
+        compressed_docs: ContextualCompressionRetriever = self.__get_contextual_retriever()
         if cost_callback:
             cost_callback(
                 estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents)
             )
-        relevant_docs = await asyncio.to_thread(compressed_docs.invoke, query)
-        return self.__pretty_print_docs(relevant_docs, max_results)
+        relevant_docs: list[Document] = await asyncio.to_thread(compressed_docs.invoke, query)
+        return self.__pretty_print_docs(relevant_docs, 5 if max_results is None else max_results)
 
 
 class WrittenContentCompressor:
@@ -132,7 +136,7 @@ class WrittenContentCompressor:
         self.embeddings: Embeddings = embeddings
         self.similarity_threshold: float = float(similarity_threshold)
 
-    def __get_contextual_retriever(self):
+    def __get_contextual_retriever(self) -> ContextualCompressionRetriever:
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000,
             chunk_overlap=100,
@@ -152,20 +156,19 @@ class WrittenContentCompressor:
     def __pretty_docs_list(
         self,
         docs: list[Document],
-        top_n: int,
-    ) -> list[str]:
-        return [
-            f"Title: {d.metadata.get('section_title')}\nContent: {d.page_content}\n"
-            for i, d in enumerate(docs)
-            if i < top_n
-        ]
+        top_n: int | None = None,
+    ) -> str:
+        return "\n".join(
+            f"Source: {d.metadata.get('source')}\nTitle: {d.metadata.get('title')}\nContent: {d.page_content}\n"
+            for d in docs
+        )
 
     async def async_get_context(
         self,
         query: str,
-        max_results: int = 5,
+        max_results: int | None = None,
         cost_callback: Callable[[float], None] | None = None,
-    ) -> list[str]:
+    ) -> str:
         compressed_docs: ContextualCompressionRetriever = self.__get_contextual_retriever()
         if cost_callback is not None:
             cost_callback(
@@ -174,5 +177,5 @@ class WrittenContentCompressor:
         relevant_docs: list = await asyncio.to_thread(compressed_docs.invoke, query)
         return self.__pretty_docs_list(
             relevant_docs,
-            max_results,
+            5 if max_results is None else max_results,
         )

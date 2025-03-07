@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
+
 if TYPE_CHECKING:
     import logging
 
@@ -17,7 +19,7 @@ logger: logging.Logger = get_formatted_logger(__name__)
 
 def get_retriever(
     retriever: str | type[BaseRetriever] | None = None,
-) -> type[BaseRetriever]:
+) -> type[BaseRetriever] | type[RetrieverABC]:
     """Gets the retriever.
 
     Args:
@@ -258,7 +260,7 @@ def get_langchain_retriever(
 def get_retrievers(
     headers: dict,
     research_config: Config,
-) -> list[type[BaseRetriever]]:
+) -> list[type[BaseRetriever] | type[RetrieverABC]]:
     """Determine which retriever(s) to use based on headers, config, or default.
 
     Args:
@@ -272,10 +274,10 @@ def get_retrievers(
     """
     # Check headers first for multiple retrievers
     if headers.get("retrievers"):
-        retrievers = str(headers.get("retrievers")).split(",")
+        retrievers: list[str] = str(headers.get("retrievers")).split(",")
     # If not found, check headers for a single retriever
     elif headers.get("retriever"):
-        retrievers = [headers.get("retriever")]
+        retrievers = [r for r in headers.get("retriever", []) if r is not None]
     # If not in headers, check config for multiple retrievers
     elif research_config.retrievers:
         retrievers = research_config.retrievers
@@ -286,10 +288,10 @@ def get_retrievers(
     else:
         retrievers = [get_default_retriever().__name__]
 
-    return [get_retriever(r) for r in retrievers]
+    return [get_retriever(r) for r in retrievers if r not in ("ModelMetaclass", "BaseRetriever")]
 
 
-def get_default_retriever() -> type[BaseRetriever]:
+def get_default_retriever() -> type[BaseRetriever] | type[RetrieverABC]:
     from langchain_community.retrievers import TavilySearchAPIRetriever
 
     return TavilySearchAPIRetriever

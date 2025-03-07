@@ -44,3 +44,7 @@ tmp/
 venv.bak/
 venv/
 reports
+custom_providers.json
+free_chat_models.json
+config/default_config.json
+config/user_config.json

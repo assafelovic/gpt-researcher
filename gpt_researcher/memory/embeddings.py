@@ -8,7 +8,7 @@ from pydantic import SecretStr
 
 OPENAI_EMBEDDING_MODEL: str = os.environ.get(
     "OPENAI_EMBEDDING_MODEL",
-    "text-embedding-3-small",
+    os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small"),
 )
 
 

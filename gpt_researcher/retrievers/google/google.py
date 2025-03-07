@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 import requests
 
 from gpt_researcher.utils.logger import get_formatted_logger
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
 if TYPE_CHECKING:
     import logging
@@ -142,7 +143,7 @@ logger: logging.Logger = get_formatted_logger(__name__)
 #        return documents[:max_results]
 
 
-class GoogleSearch:
+class GoogleSearch(RetrieverABC):
     """Google API Retriever."""
 
     def __init__(

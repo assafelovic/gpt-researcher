@@ -20,6 +20,11 @@ from backend.server.server_utils import (
     handle_file_deletion,
     handle_file_upload,
     handle_websocket_communication,
+    handle_get_config,
+    handle_save_config,
+    handle_get_default_config,
+    handle_get_settings,
+    ConfigRequest,
 )
 from backend.server.websocket_manager import WebSocketManager
 
@@ -49,28 +54,6 @@ class ResearchRequest(BaseModel):
     task: str
     tone: str = "objective"
     # Add any additional fields that might be needed for configuration
-
-
-class ChatRequest(BaseModel):
-    message: str
-
-
-class ConfigRequest(BaseModel):
-    ANTHROPIC_API_KEY: str
-    TAVILY_API_KEY: str
-    LANGCHAIN_TRACING_V2: str
-    LANGCHAIN_API_KEY: str
-    OPENAI_API_KEY: str
-    DOC_PATH: str
-    RETRIEVER: str
-    GOOGLE_API_KEY: str = ""
-    GOOGLE_CX_KEY: str = ""
-    BING_API_KEY: str = ""
-    SEARCHAPI_API_KEY: str = ""
-    SERPAPI_API_KEY: str = ""
-    SERPER_API_KEY: str = ""
-    SEARX_URL: str = ""
-    XAI_API_KEY: str
 
 
 # App initialization
@@ -151,3 +134,33 @@ async def websocket_endpoint(websocket: WebSocket):
         await handle_websocket_communication(websocket, manager)
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
+
+
+@app.get("/api/config")
+async def get_config() -> JSONResponse:
+    """Get the current configuration."""
+    return await handle_get_config()
+
+
+@app.post("/api/config/export")
+async def save_config(config: ConfigRequest) -> JSONResponse:
+    """Save a configuration."""
+    return await handle_save_config(config)
+
+
+@app.get("/api/config/default")
+async def get_default_config() -> JSONResponse:
+    """Get the default configuration."""
+    return await handle_get_default_config()
+
+
+@app.post("/api/config/import")
+async def import_config(config: ConfigRequest) -> JSONResponse:
+    """Import a configuration from a file."""
+    return await handle_save_config(config)
+
+
+@app.get("/api/settings")
+async def get_settings() -> JSONResponse:
+    """Get the current settings."""
+    return await handle_get_settings()

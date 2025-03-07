@@ -15,6 +15,7 @@ import requests
 # from langchain_core.documents import Document
 # from langchain_core.retrievers import BaseRetriever
 from gpt_researcher.utils.logger import get_formatted_logger
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
 logger: logging.Logger = get_formatted_logger(__name__)
 
@@ -171,7 +172,7 @@ logger: logging.Logger = get_formatted_logger(__name__)
 # =======
 
 
-class SerpApiSearch:
+class SerpApiSearch(RetrieverABC):
     """SerpApi Retriever."""
 
     def __init__(

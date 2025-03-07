@@ -6,25 +6,50 @@ import logging
 import os
 import re
 import shutil
+import time
 import traceback
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Awaitable
+from typing import Any, Awaitable, Dict, TypeVar
 
 from fastapi.responses import JSONResponse
 from fastapi.websockets import WebSocket as ServerWebSocket
 from gpt_researcher.actions import stream_output
 from gpt_researcher.agent import GPTResearcher
-from gpt_researcher.config import Config
+from gpt_researcher.config.config import Config, Settings
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher.utils.enum import ReportType, Tone
 from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.utils.schemas import LogHandler
+from pydantic import BaseModel
 
 from backend.server.websocket_manager import WebSocketManager
 
 logger: logging.Logger = get_formatted_logger("gpt_researcher")
+
+
+class ConfigRequest(BaseModel):
+    """Configuration request model.
+
+    This model is used to receive configuration data from the client.
+    It should match the structure of the Config class.
+    """
+
+    research: Dict[str, Any] = {}
+    settings: Dict[str, Any] = {}
+
+    def dict(self) -> Dict[str, Any]:
+        """Convert the model to a dictionary.
+
+        This method is used to convert the model to a dictionary
+        that can be passed to Config.from_dict().
+        """
+        # Combine research and settings into a single dictionary
+        result = {}
+        result.update(self.research)
+        result.update(self.settings)
+        return result
 
 
 class CustomLogsHandler(LogHandler):
@@ -35,13 +60,13 @@ class CustomLogsHandler(LogHandler):
         websocket: ServerWebSocket | None = None,
         task: str | None = None,
     ):
-        self.websocket: ServerWebSocket | None = websocket
         self.logs: list[dict[str, Any]] = []
+        self.websocket: ServerWebSocket | None = websocket
+        sanitized_filename: str = sanitize_filename(f"task_{int(time.time())}_{task}")
+        self.log_file: Path = Path(os.path.expandvars(os.path.join("outputs", f"{sanitized_filename}.json"))).absolute()
         self.timestamp: str = datetime.now().isoformat()
 
         # Initialize log file with metadata
-        sanitized_filename: str = sanitize_filename(f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{task}")
-        self.log_file: Path = Path(os.path.expandvars(os.path.join("outputs", f"{sanitized_filename}.json"))).absolute()
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
         self.log_file.write_text(
             json.dumps(
@@ -119,9 +144,9 @@ class Researcher:
 
         self.researcher: GPTResearcher = GPTResearcher(
             query=self.query,
-            config=Config(REPORT_TYPE=self.report_type) if config is None else config,
-            websocket=self.logs_handler,
             report_type=self.report_type,
+            websocket=self.logs_handler,
+            config=Config(REPORT_TYPE=self.report_type) if config is None else config,
         )
 
     async def research(self) -> dict[str, Any]:
@@ -129,15 +154,14 @@ class Researcher:
         await self.researcher.conduct_research()
         report: str = await self.researcher.write_report()
 
-        sanitized_filename: str = sanitize_filename(
-            f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{self.query}"
-        )
+        timestamp: str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        sanitized_filename: str = sanitize_filename(f"task_{timestamp}_{self.query}")
         file_paths: dict[str, str] = await generate_report_files(report, sanitized_filename)
 
-        if self.logs_handler is not None and self.logs_handler.log_file.exists() and self.logs_handler.log_file.is_file():
-            json_relative_path: str = str(self.logs_handler.log_file.relative_to(Path.cwd().absolute()))
-        else:
-            json_relative_path: str = f"{sanitized_filename}.json"
+        # Get the JSON log path that was created by CustomLogsHandler
+        json_relative_path: str = (
+            sanitized_filename if self.logs_handler is None else os.path.relpath(self.logs_handler.log_file)
+        )
 
         return {
             "output": {
@@ -187,10 +211,7 @@ async def handle_start_command(
         return
 
     # Create logs handler with websocket and task
-    logs_handler = CustomLogsHandler(
-        websocket=websocket,
-        task=task,
-    )
+    logs_handler = CustomLogsHandler(websocket=websocket, task=task)
     # Initialize log content with query
     await logs_handler.send_json(
         {
@@ -201,20 +222,31 @@ async def handle_start_command(
         }
     )
 
-    sanitized_filename: str = sanitize_filename(
-        f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{str(task or '').strip()}"
-    )
+    timestamp: str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    sanitized_filename: str = sanitize_filename(f"task_{timestamp}_{str(task or '').strip().replace(' ', '_')}")
 
     report: str = await manager.start_streaming(
         task=str(task or "").strip(),
         report_type=str(report_type or "").strip(),
         report_source=str(report_source or "").strip(),
-        source_urls=source_urls or [],
-        document_urls=document_urls or [],
+        source_urls=(source_urls or [])
+        if isinstance(source_urls, list)
+        else []
+        if source_urls is None
+        else source_urls.split(","),
+        document_urls=(document_urls or [])
+        if isinstance(document_urls, list)
+        else []
+        if document_urls is None
+        else document_urls.split(","),
         tone=tone or Tone.Objective,
         websocket=websocket,
-        headers=headers,
-        query_domains=query_domains or [],
+        headers=(headers or {}) if isinstance(headers, dict) else json.loads(headers or "{}"),
+        query_domains=(query_domains or [])
+        if isinstance(query_domains, list)
+        else []
+        if query_domains is None
+        else query_domains.split(","),
     )
     file_paths: dict[str, str] = await generate_report_files(
         str(report or "").strip(),
@@ -231,10 +263,10 @@ async def handle_human_feedback(data: str) -> None:
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
 
 
-async def handle_chat(websocket, data: str, manager):
-    json_data = json.loads(data[4:])
+async def handle_chat(websocket: ServerWebSocket, data: str, manager: WebSocketManager):
+    json_data: dict[str, Any] = json.loads(data[4:])
     print(f"Received chat message: {json_data.get('message')}")
-    await manager.chat(json_data.get("message"), websocket)
+    await manager.chat(json_data.get("message", ""), websocket)
 
 
 async def generate_report_files(
@@ -254,7 +286,7 @@ async def generate_report_files(
         result: dict[str, str] = {}
         try:
             from backend.utils import write_text_to_md
-            
+
             result["md"] = await write_text_to_md(report, filename)
         except Exception as e:
             logger.exception(f"Error generating MD: {e.__class__.__name__}: {e}")
@@ -278,16 +310,21 @@ async def generate_report_files(
     else:
         return result
 
-async def send_file_paths(
-    websocket: ServerWebSocket,
-    file_paths: dict[str, Any],
-):
-    await websocket.send_json(
-        {
-            "type": "path",
-            "output": str(file_paths),
-        }
-    )
+
+async def send_file_paths(websocket: ServerWebSocket, file_paths: dict[str, Any]):
+    """Send file paths to the frontend.
+    
+    This function ensures file paths are properly JSON serialized before sending.
+    """
+    try:
+        # Convert file paths to a properly serialized JSON string
+        file_paths_json = json.dumps(file_paths)
+        await websocket.send_json({"type": "path", "output": file_paths_json})
+        logger.info(f"Sent file paths to frontend: {file_paths}")
+    except Exception as e:
+        logger.exception(f"Error sending file paths: {e}")
+        # Fallback attempt - direct serialization
+        await websocket.send_json({"type": "path", "output": file_paths})
 
 
 def get_config_dict(
@@ -324,14 +361,14 @@ def update_environment_variables(
     config: dict[str, str],
 ) -> None:
     for key, value in config.items():
-        os.environ[str(key or "").strip()] = str(value or "").strip()
+        os.environ[key] = value
 
 
 async def handle_file_upload(file, DOC_PATH: str) -> dict[str, str]:
     file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    print(f"File uploaded to {file_path}")
+    logger.info(f"File uploaded to {file_path}")
 
     document_loader = DocumentLoader(DOC_PATH)
     await document_loader.load()
@@ -373,16 +410,21 @@ async def execute_multi_agents(
         return JSONResponse({"message": "No active ServerWebSocket connection"}, status_code=400)
 
 
+T = TypeVar("T")
+
+
 async def handle_websocket_communication(
     websocket: ServerWebSocket,
     manager: WebSocketManager,
 ) -> None:
     running_task: asyncio.Task | None = None
 
-    def run_long_running_task(awaitable: Awaitable) -> asyncio.Task:
-        async def safe_run():
+    def run_long_running_task(
+        awaitable: Awaitable[T],
+    ) -> asyncio.Task[T | None]:
+        async def safe_run() -> T | None:
             try:
-                await awaitable
+                return await awaitable
             except asyncio.CancelledError:
                 logger.info("Task cancelled.")
                 raise
@@ -420,6 +462,61 @@ async def handle_websocket_communication(
                     running_task = run_long_running_task(handle_human_feedback(data))
                 elif data.startswith("chat"):
                     running_task = run_long_running_task(handle_chat(websocket, data, manager))
+                elif data.startswith("config"):
+                    # Handle configuration commands
+                    json_data: dict[str, Any] = json.loads(data[7:])
+                    command, config_data = extract_config_command_data(json_data)
+
+                    logger.info(f"Received configuration command: {command}")
+
+                    if command == "get":
+                        logger.info("Getting current configuration")
+                        config_response: JSONResponse = await handle_get_config()
+                        config_json: dict[str, Any] = json.loads(config_response.body)
+                        await websocket.send_json({"type": "config", "data": config_json})
+                        logger.info("Sent current configuration to client")
+                    elif command == "save":
+                        logger.info("Saving configuration")
+                        try:
+                            # Create ConfigRequest object from data
+                            config_obj = ConfigRequest(**config_data)
+                            result: JSONResponse = await handle_save_config(config_obj)
+                            success = result.status_code == 200
+                            await websocket.send_json({"type": "config_saved", "success": success})
+                            logger.info(f"Configuration save {'succeeded' if success else 'failed'}")
+                        except Exception as e:
+                            logger.exception(f"Error saving configuration: {e.__class__.__name__}: {e}")
+                            await websocket.send_json(
+                                {"type": "config_saved", "success": False, "error": f"{e.__class__.__name__}: {e}"}
+                            )
+                    elif command == "default":
+                        logger.info("Getting default configuration")
+                        config_response = await handle_get_default_config()
+                        config_json = json.loads(config_response.body)
+                        await websocket.send_json({"type": "default_config", "data": config_json})
+                        logger.info("Sent default configuration to client")
+                    elif command == "load":
+                        # Handle loading a configuration from a file
+                        logger.info("Loading configuration from file")
+                        if isinstance(config_data, dict):
+                            try:
+                                # Create ConfigRequest object from data
+                                config_obj = ConfigRequest(**config_data)
+                                result: JSONResponse = await handle_save_config(config_obj)
+                                success = result.status_code == 200
+                            except Exception as e:
+                                logger.exception(f"Error loading configuration: {e.__class__.__name__}: {e}")
+                                await websocket.send_json(
+                                    {"type": "config_loaded", "success": False, "error": f"{e.__class__.__name__}: {e}"}
+                                )
+                            else:
+                                await websocket.send_json({"type": "config_loaded", "success": success})
+                                logger.info(f"Configuration load {'succeeded' if success else 'failed'}")
+                        else:
+                            logger.error("Invalid configuration data format")
+                            await websocket.send_json(
+                                {"type": "config_loaded", "success": False, "error": "Invalid configuration data format"}
+                            )
                 else:
                     logger.error(
                         "Error in handle_websocket_communication: Unknown command or not enough parameters provided."
@@ -433,6 +530,7 @@ async def handle_websocket_communication(
 
 
 def extract_command_data(json_data: dict[str, Any]):
+    """Extract command data from JSON data."""
     return (
         json_data.get("task"),
         json_data.get("report_type"),
@@ -443,3 +541,105 @@ def extract_command_data(json_data: dict[str, Any]):
         json_data.get("report_source"),
         json_data.get("query_domains", []),
     )
+
+
+def extract_config_command_data(
+    json_data: dict[str, Any],
+) -> tuple[str, dict[str, Any]]:
+    """Extract configuration command data from JSON data."""
+    return json_data.get("command", ""), json_data.get("data", {})
+
+
+# Configuration management functions
+
+
+async def handle_get_config() -> JSONResponse:
+    """Handle get configuration request."""
+    try:
+        logger.info("Getting current configuration")
+        config: Config = Config()
+        if os.path.exists(Config.DEFAULT_PATH):
+            logger.info(f"Loading user configuration from {Config.DEFAULT_PATH}")
+            config = Config.from_path(Config.DEFAULT_PATH)
+        else:
+            logger.info("No configuration found, creating default configuration")
+            Config.DEFAULT_PATH.parent.mkdir(parents=True, exist_ok=True)
+            Config.DEFAULT_PATH.write_text(config.to_json())
+            logger.info(f"Default configuration available at '{Config.DEFAULT_PATH}'")
+
+        config_json: dict[str, Any] = json.loads(config.to_json())
+
+    except Exception as e:
+        logger.exception(f"Error getting configuration! {e.__class__.__name__}: {e}")
+        return JSONResponse(
+            content={"message": f"Error getting configuration! {e.__class__.__name__}: {e}"}, status_code=500
+        )
+
+    else:
+        logger.info(f"User configuration loaded successfully with {len(config_json)} top-level keys")
+        return JSONResponse(content=config_json, status_code=200)
+
+
+async def handle_save_config(config_request: ConfigRequest) -> JSONResponse:
+    """Handle save configuration request."""
+    try:
+        logger.info("Saving configuration")
+        os.makedirs(Config.DEFAULT_PATH, exist_ok=True)
+
+        # Convert the request to a dictionary
+        config_dict: dict[str, Any] = config_request.dict()
+        logger.info(f"Configuration request contains {len(config_dict)} top-level keys: {', '.join(config_dict.keys())}")
+
+        # Create a Config object from the dictionary
+        config: Config = Config.from_dict(config_dict)
+
+        # Save config to file
+        logger.info(f"Saving configuration to {Config.DEFAULT_PATH}")
+        with open(Config.DEFAULT_PATH, "w") as f:
+            f.write(config.to_json())
+
+        logger.info("Configuration saved successfully")
+        return JSONResponse(content={"message": "Configuration saved successfully"}, status_code=200)
+    except Exception as e:
+        logger.exception(f"Error saving configuration! {e.__class__.__name__}: {e}")
+        return JSONResponse(content={"message": f"Error saving configuration! {e.__class__.__name__}: {e}"}, status_code=500)
+
+
+async def handle_get_default_config() -> JSONResponse:
+    """Handle get default configuration request."""
+    try:
+        logger.info("Getting default configuration")
+
+        # Create default config
+        config = Config()
+
+        # Create config directory if it doesn't exist
+        Config.DEFAULT_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+        # Save default config to file if it doesn't exist
+        if not Config.DEFAULT_PATH.exists():
+            logger.info(f"User configuration file not found, creating at {Config.DEFAULT_PATH}")
+            Config.DEFAULT_PATH.write_text(config.to_json())
+            logger.info(f"Default configuration created successfully with {len(config.to_dict())} top-level keys")
+        config_dict: dict[str, Any] = json.loads(config.to_json())
+
+    except Exception as e:
+        logger.exception(f"Error getting default configuration! {e.__class__.__name__}: {e}")
+        return JSONResponse(
+            content={"message": f"Error getting default configuration! {e.__class__.__name__}: {e}"}, status_code=500
+        )
+    else:
+        return JSONResponse(content=config_dict, status_code=200)
+
+
+async def handle_get_settings() -> JSONResponse:
+    """Handle get settings request."""
+    try:
+        logger.info("Getting settings")
+        settings: Settings = Settings()
+        settings_dict: dict[str, Any] = {"settings": settings.to_dict()}
+        logger.info(f"Settings loaded successfully with {len(settings_dict['settings'])} keys")
+        return JSONResponse(content=settings_dict, status_code=200)
+    except Exception as e:
+        logger.exception(f"Error getting settings! {e.__class__.__name__}: {e}")
+        return JSONResponse(content={"message": f"Error getting settings! {e.__class__.__name__}: {e}"}, status_code=500)

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal, Sequence
 import requests
 
 from gpt_researcher.utils.logger import get_formatted_logger
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
 if TYPE_CHECKING:
     import logging
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
     from typing import Any, Literal, Sequence
 
 
-class TavilySearch:
+class TavilySearch(RetrieverABC):
     """Tavily API Retriever."""
 
     logger: logging.Logger = get_formatted_logger(__name__)

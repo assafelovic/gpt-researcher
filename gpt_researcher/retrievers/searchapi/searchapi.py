@@ -8,8 +8,10 @@ from typing import Any
 
 import requests
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class SearchApiSearch:
+
+class SearchApiSearch(RetrieverABC):
     """SearchApi Retriever."""
 
     def __init__(

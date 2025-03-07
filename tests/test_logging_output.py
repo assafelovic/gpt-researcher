@@ -24,7 +24,7 @@ class TestWebSocket(WebSocket):
     async def accept(self):
         pass
 
-    async def send_json(self, event):
+    async def send_json(self, event: dict[str, Any]):
         logger.info(f"WebSocket received event: {event}")
         self.events.append(event)
 

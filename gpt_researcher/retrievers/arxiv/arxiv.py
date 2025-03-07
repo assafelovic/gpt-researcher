@@ -4,8 +4,10 @@ from typing import Any, cast
 
 import arxiv
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class ArxivSearch:
+
+class ArxivSearch(RetrieverABC):
     """Arxiv API Retriever."""
 
     def __init__(

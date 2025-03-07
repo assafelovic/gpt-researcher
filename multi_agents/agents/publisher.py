@@ -29,8 +29,8 @@ class PublisherAgent:
 
     async def publish_research_report(
         self,
-        research_state: dict,
-        publish_formats: dict,
+        research_state: dict[str, Any],
+        publish_formats: dict[str, Any],
     ):
         layout = self.generate_layout(research_state)
         await self.write_report_by_formats(layout, publish_formats)
@@ -39,10 +39,10 @@ class PublisherAgent:
 
     def generate_layout(
         self,
-        research_state: dict,
+        research_state: dict[str, Any],
     ) -> str:
-        sections: str = "\n\n".join(f"{value}" for subheader in research_state.get("research_data", []) for key, value in subheader.items())
-        references: str = "\n".join(f"{reference}" for reference in research_state.get("sources", []) or [])
+        sections: str = " ".join(f"{value}" for subheader in research_state.get("research_data", []) for key, value in subheader.items())
+        references: str = " ".join(f"{reference}" for reference in research_state.get("sources", []) or [])
         headers: dict[str, Any] = research_state.get("headers", {})
         layout: str = f"""# {headers.get("title")}
 #### {headers.get("date")}: {research_state.get("date")}
@@ -66,7 +66,7 @@ class PublisherAgent:
     async def write_report_by_formats(
         self,
         layout: str,
-        publish_formats: dict,
+        publish_formats: dict[str, Any],
     ):
         if publish_formats.get("pdf"):
             await write_md_to_pdf(layout, self.output_dir)
@@ -77,7 +77,7 @@ class PublisherAgent:
 
     async def run(
         self,
-        research_state: dict,
+        research_state: dict[str, Any],
     ) -> dict[str, str]:
         task: dict[str, Any] = research_state.get("task", {})
         publish_formats: dict[str, Any] = task.get("publish_formats", {})
@@ -93,5 +93,5 @@ class PublisherAgent:
                 output="Publishing final research report based on retrieved data...",
                 agent="PUBLISHER",
             )
-        final_research_report = await self.publish_research_report(research_state, publish_formats)
+        final_research_report: str = await self.publish_research_report(research_state, publish_formats)
         return {"report": final_research_report}

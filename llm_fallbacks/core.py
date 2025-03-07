@@ -305,7 +305,8 @@ def get_chat_models(
         # Check audio input support
         if supports_audio_input is not None:
             audio_input_support = cast(dict[str, Any], model_spec).get(
-                "supports_audio_input", False
+                "supports_audio_input",
+                False,
             )
             if bool(audio_input_support) != supports_audio_input:
                 continue

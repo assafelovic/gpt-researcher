@@ -300,13 +300,6 @@ class BrowserScraper:
                 break
             last_height = new_height
 
-    def _scroll_to_percentage(self, ratio: float) -> None:
-        """Scroll to a percentage of the page."""
-        if ratio < 0 or ratio > 1:
-            raise ValueError("Percentage should be between 0 and 1")
-        assert self.driver is not None
-        self.driver.execute_script(f"window.scrollTo(0, document.body.scrollHeight * {ratio});")
-
     def _add_header(self) -> None:
         """Add a header to the website."""
         assert self.driver is not None

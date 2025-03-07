@@ -66,5 +66,5 @@ class BeautifulSoupScraper:
             return content, image_urls, title
 
         except Exception as e:
-            logger.exception(f"Unexpected error occurred while scraping: {e.__class__.__name__}: {e}")
+            logger.error(f"Unexpected error occurred while scraping link '{self.link}'! {e.__class__.__name__}: {e}")
             return "", [], ""

@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING, Any, Callable
 
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
-from litellm.utils import get_max_tokens
+from langchain_core.runnables.base import RunnableSerializable
 
-from gpt_researcher.llm_provider.generic.base import GenericLLMProvider  # noqa: F811
+from gpt_researcher.llm_provider.generic.base import GenericLLMProvider, MessageConverter  # noqa: F811
 from gpt_researcher.utils.costs import estimate_llm_cost
 from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.utils.validators import Subtopics
@@ -26,39 +26,12 @@ if TYPE_CHECKING:
 logger: logging.Logger = get_formatted_logger(__name__)
 
 
-def get_llm_params(
-    model: str | None,
-    temperature: float = 0.35,
-    include_max_tokens: bool = True,
-) -> dict[str, Any]:
-    """Get LLM parameters for the given model.
-
-    Args:
-        model (str): The model name.
-        temperature (float): The temperature for the model.
-        include_max_tokens (bool): Whether to include max tokens.
-
-    Returns:
-        dict[str, Any]: A dictionary of LLM parameters.
-    """
-    params: dict[str, Any] = {
-        "model": model,
-        "temperature": temperature,
-    }
-    if model and include_max_tokens:
-        try:
-            max_tokens: int | None = get_max_tokens(model)
-            params["max_tokens"] = max_tokens
-        except Exception as e:
-            logger.warning(f"Error in get_max_tokens: {e.__class__.__name__}: {e}")
-    return params
-
-
 def get_llm(
     model: str,
     **kwargs,
 ) -> GenericLLMProvider:
     from gpt_researcher.llm_provider import GenericLLMProvider
+
     return GenericLLMProvider(model, **kwargs)
 
 
@@ -73,7 +46,7 @@ async def create_chat_completion(
     llm_kwargs: dict[str, Any] | None = None,
     cost_callback: Callable | None = None,
     reasoning_effort: str | None = "low",
-    max_retries: int | None = 10,
+    max_retries: int | None = 1,
     headers: dict[str, str] | None = None,
 ) -> str:
     """Create a chat completion using the OpenAI API.
@@ -105,6 +78,7 @@ async def create_chat_completion(
 
     # Get the provider from supported providers
     model = model.casefold()
+    llm_provider = llm_provider.casefold()
     kwargs: dict[str, Any] = {
         "model": model,
         **(llm_kwargs or {}),
@@ -127,11 +101,11 @@ async def create_chat_completion(
     logger.info(f"\n🤖 Calling {llm_provider} with model '{model}'...\n")
     model = (kwargs.pop("model", model) or "").strip() or model
     if model is None:
-        raise ValueError(f"Invalid model: {model}")
-    full_model_provider_str = model if model.startswith(llm_provider) else f"{llm_provider}:{model}"
+        raise ValueError(f"Invalid model: '{model}'")
+    full_model_provider_str: str = model if model.startswith(f"{llm_provider}:") else f"{llm_provider}:{model}"
     provider: GenericLLMProvider = get_llm(full_model_provider_str, **kwargs)
     response: str = await provider.get_chat_response(
-        messages=messages,  # type: ignore[arg-type]
+        messages=messages,
         stream=bool(stream),
         websocket=websocket,
         max_retries=max_retries or 1,
@@ -141,7 +115,7 @@ async def create_chat_completion(
     with suppress(Exception):
         if cost_callback is not None:
             llm_costs: float = estimate_llm_cost(
-                provider.msgs_to_str(messages),
+                MessageConverter.convert_to_str(messages),
                 response,
             )
             cost_callback(llm_costs)
@@ -207,7 +181,7 @@ Providerarch data:
         logger.debug(f"\n🤖 Calling {config.SMART_LLM_MODEL}...\n")
 
         temperature: float = config.TEMPERATURE
-        assert config.SMART_LLM_PROVIDER is not None
+        assert config.SMART_LLM is not None, "SMART_LLM is not set"
         provider: GenericLLMProvider = get_llm(
             config.SMART_LLM,
             fallback_models=config.FALLBACK_MODELS,
@@ -216,7 +190,7 @@ Providerarch data:
             headers=headers,
         )
         model: BaseChatModel = provider.current_model
-        chain = prompt | model | parser
+        chain: RunnableSerializable[dict[str, Any], Subtopics] = prompt | model | parser
         output: Subtopics = await chain.ainvoke(
             {
                 "task": task,

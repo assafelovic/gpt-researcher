@@ -6,9 +6,11 @@ import pprint
 from typing import TYPE_CHECKING
 
 from dotenv import load_dotenv
+from langchain_core.retrievers import BaseRetriever
 from gpt_researcher.actions.retriever import get_retrievers
 from gpt_researcher.config.config import Config
 from gpt_researcher.skills.researcher import ResearchConductor
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
@@ -24,13 +26,13 @@ async def test_scrape_data_by_query():
     config = Config()
 
     # Retrieve the retrievers based on the current configuration
-    retrievers = get_retrievers({}, config)
+    retrievers: list[type[BaseRetriever] | type[RetrieverABC]] = get_retrievers({}, config)
     print("Retrievers:", retrievers)
 
     # Create a mock researcher object with necessary attributes
     class MockResearcher:
         def __init__(self):
-            self.retrievers: list[type[BaseRetriever]] = retrievers
+            self.retrievers: list[type[BaseRetriever] | type[RetrieverABC]] = retrievers
             self.cfg: Config = config
             self.verbose: bool = True
             self.websocket: WebSocket | None = None
@@ -47,11 +49,11 @@ async def test_scrape_data_by_query():
 
     # Iterate through all retrievers
     for retriever_class in retrievers:
-        # Instantiate the retriever with the sub-query
-        retriever = retriever_class()
-
-        # Perform the search using the current retriever
-        search_results = await retriever.ainvoke(sub_query)
+        retriever: BaseRetriever | RetrieverABC = retriever_class()
+        if isinstance(retriever, RetrieverABC):
+            search_results = retriever.search(sub_query)
+        else:
+            search_results = await retriever.ainvoke(sub_query)
 
         print("\033[35mSearch results:\033[0m")
         pprint.pprint(search_results, indent=4, width=80)

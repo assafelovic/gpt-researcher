@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, Coroutine
+from typing import TYPE_CHECKING, Any
 
 from litellm.cost_calculator import cost_per_token
 
@@ -16,7 +16,7 @@ logger: logging.Logger = get_formatted_logger()
 
 
 async def stream_output(
-    type: str,
+    output_type: str,
     content: str,
     output: str,
     websocket: WebSocket | CustomLogsHandler | None = None,
@@ -33,32 +33,23 @@ async def stream_output(
         output_log (bool): Whether to log the output.
         metadata (dict[str, Any] | None): The metadata to stream.
     """
-    if (not websocket or output_log) and type != "images":
+    if (not websocket or output_log) and output_type != "images":
         try:
             logger.info(str(output))
         except UnicodeEncodeError:
             logger.exception(output.encode("cp1252", errors="replace").decode("cp1252"))
 
     # For research content, send as research_progress to enable real-time streaming
-    if type == "research" and content == "content":
-        await safe_send_json(
-            websocket,
-            {
-                "type": "research_progress",
-                "content": output,
-                "metadata": metadata,
-            },
-        )
+    if output_type == "research" and content == "content":
+        await safe_send_json(websocket, {"type": "research_progress", "content": output, "metadata": metadata})
+    # For subquery context windows, send as research_progress for real-time streaming
+    elif output_type == "logs" and content == "subquery_context_window":
+        await safe_send_json(websocket, {"type": "research_progress", "content": output, "metadata": metadata})
+    # For all other logs content, ensure it's sent as logs type for proper frontend handling
+    elif output_type == "logs":
+        await safe_send_json(websocket, {"type": "logs", "content": content, "output": output, "metadata": metadata})
     else:
-        await safe_send_json(
-            websocket,
-            {
-                "type": type,
-                "content": content,
-                "output": output,
-                "metadata": metadata,
-            },
-        )
+        await safe_send_json(websocket, {"type": "logs", "content": content, "output": output, "metadata": metadata})
 
 
 async def safe_send_json(
@@ -131,21 +122,3 @@ async def update_cost(
             },
         },
     )
-
-
-def create_cost_callback(
-    websocket: WebSocket | CustomLogsHandler | None,
-) -> Callable[[int, int, str], Coroutine[Any, Any, None]]:
-    """Create a callback function for updating costs.
-
-    Args:
-        websocket (WebSocket | CustomLogsHandler | None): The WebSocket connection to send data through.
-
-    Returns:
-        Callable[[int, int, str], Coroutine[Any, Any, None]]: A callback function that can be used to update costs.
-    """
-
-    async def cost_callback(prompt_tokens: int, completion_tokens: int, model: str) -> None:
-        await update_cost(prompt_tokens, completion_tokens, model, websocket)
-
-    return cost_callback

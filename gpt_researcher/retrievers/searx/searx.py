@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 import requests
 
 from gpt_researcher.utils.logger import get_formatted_logger
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
 if TYPE_CHECKING:
     import logging
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 logger: logging.Logger = get_formatted_logger(__name__)
 
 
-class SearxSearch:
+class SearxSearch(RetrieverABC):
     """SearxNG API Retriever."""
 
     def __init__(

@@ -105,8 +105,6 @@ PDF_INPUT_MODEL_PRIORITY_ORDER: list[tuple[str, LiteLLMBaseModelSpec]] = (
 )
 
 
-import json
-
 if __name__ == "__main__":
 
     def convert_floats_in_dict(d: dict) -> dict:

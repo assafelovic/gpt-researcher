@@ -46,6 +46,7 @@ class DetailedReport:
         self.document_urls: list[str] = [] if document_urls is None else document_urls
         self.existing_headers: list[dict[str, Any]] = kwargs.get("existing_headers", [])
         self.global_context: list[str] = kwargs.get("global_context", [])
+        self.source_urls: list[str] = [] if source_urls is None else source_urls
         self.global_urls: set[str] = set(self.source_urls) if self.source_urls else set()
         self.global_written_sections: list[str] = kwargs.get("global_written_sections", [])
         self.headers: dict[str, Any] = {} if headers is None else headers
@@ -72,7 +73,6 @@ class DetailedReport:
             if isinstance(report_type, ReportType)
             else ReportType.ResearchReport
         )
-        self.source_urls: list[str] = [] if source_urls is None else source_urls
         self.subtopics: list[dict[str, Any]] = [] if subtopics is None else subtopics
         self.tone: Tone | None = (
             Tone.__members__[tone.lower().capitalize()]
@@ -141,7 +141,7 @@ class DetailedReport:
                 subtopic_reports.append(result)
             report: str = str(result.get("report", "") or "").strip()
             if report:
-                subtopics_report_body += f"\n\n\n{report}"
+                subtopics_report_body += f" {report}"
 
         return subtopic_reports, subtopics_report_body
 
@@ -226,5 +226,5 @@ class DetailedReport:
             *self.gpt_researcher.visited_urls,
         }
         conclusion_with_references: str = self.gpt_researcher.add_references(conclusion, urls)
-        report: str = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
+        report: str = f"{introduction} {toc}\n\n{report_body}\n\n{conclusion_with_references}"
         return report

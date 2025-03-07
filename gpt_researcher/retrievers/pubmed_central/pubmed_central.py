@@ -7,8 +7,10 @@ from typing import Any
 
 import requests
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class PubMedCentralSearch:
+
+class PubMedCentralSearch(RetrieverABC):
     """PubMed Central API Retriever."""
 
     def __init__(

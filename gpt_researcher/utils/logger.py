@@ -7,12 +7,10 @@ import sys
 import threading
 
 from contextlib import contextmanager
-from copy import copy
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Generator, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Generator, Literal
 
-import click
 
 from loggerplus.utility.error_handling import format_exception_with_variables
 
@@ -157,17 +155,6 @@ def get_formatted_logger(
         # If handlers already exist, just update the propagate flag
         logger.propagate = propagate
 
-    # Check if we're in a Streamlit environment by looking for FrontendLogHandler in the root logger
-    root_logger: logging.Logger = logging.getLogger()
-    has_frontend_handler: bool = any(
-        handler.__class__.__name__ == "FrontendLogHandler"
-        for handler in root_logger.handlers
-    )
-
-    # If we're in a Streamlit environment, ensure propagation is enabled
-    if has_frontend_handler and not logger.propagate:
-        logger.propagate = True
-
     return logger
 
 
@@ -197,22 +184,22 @@ class UTF8StreamWrapper:
     def __init__(self, original_stream: TextIOWrapper):
         self.original_stream: TextIOWrapper = original_stream
 
-    def write(self, message):
+    def write(self, message: str):
         # Ensure message is a string, encode to UTF-8 with errors replaced,
         # then write to the original stream's buffer directly.
         # This fixes/works-around a bug in Python's logging module, observed in 3.8.10
         if self.original_stream is None:  # windowed mode PyInstaller
             return
         if isinstance(message, str):
-            message = message.encode("utf-8", errors="replace")
-        self.original_stream.buffer.write(message)
+            message_bytes: bytes = message.encode("utf-8", errors="replace")
+        self.original_stream.buffer.write(message_bytes)
 
     def flush(self):
         if self.original_stream is None:  # windowed mode PyInstaller
             return
         self.original_stream.flush()
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         # Delegate any other method calls to the original stream
         return getattr(self.original_stream, attr)
 
@@ -259,7 +246,7 @@ class CustomPrintToLogger:
         if message and message.strip():
             with logging_context():
                 if self.log_type == "stderr":
-                    self.logger.error(message.strip())
+                    self.logger.warning(message.strip())
                 else:
                     self.logger.debug(message.strip())
 
@@ -275,6 +262,7 @@ class ColoredConsoleHandler(logging.StreamHandler):
 
     RESET_CODE: str = colorama.Style.RESET_ALL if USING_COLORAMA else "\033[0m"
     COLOR_CODES: ClassVar[dict[int, str]] = {
+        TRACE_LOG_LEVEL: colorama.Fore.BLUE if USING_COLORAMA else "\033[0;34m",  # Blue
         logging.DEBUG: colorama.Fore.CYAN if USING_COLORAMA else "\033[0;36m",  # Cyan
         logging.INFO: colorama.Fore.WHITE if USING_COLORAMA else "\033[0;37m",  # White
         logging.WARNING: colorama.Fore.YELLOW if USING_COLORAMA else "\033[0;33m",  # Yellow
@@ -283,75 +271,9 @@ class ColoredConsoleHandler(logging.StreamHandler):
     }
 
     def format(self, record: logging.LogRecord) -> str:
-        # Check if detailed formatting is requested
-        detailed: bool = getattr(record, "detailed", False)
-        formatter: logging.Formatter | None = self.formatter
-        if formatter is None:
-            formatter = logging.Formatter()
-        orig_style: logging.PercentStyle = formatter._style  # noqa: SLF001
-        if detailed:
-            formatter = CustomExceptionFormatter(formatter._fmt, datefmt=formatter.datefmt, validate=True)  # noqa: SLF001  # pyright: ignore[reportArgumentType]
-        else:
-            formatter = logging.Formatter(formatter._fmt, datefmt=formatter.datefmt, validate=True)  # noqa: SLF001  # pyright: ignore[reportArgumentType]
-        formatter._style = orig_style  # noqa: SLF001
-        formatter._style.validate()  # noqa: SLF001
-        msg = formatter.format(record)
-        return f"{self.COLOR_CODES.get(record.levelno, '')}{msg}{self.RESET_CODE}"
+        return f"{self.COLOR_CODES.get(record.levelno, '')}{super().format(record)}{self.RESET_CODE}"
 
 
-class ColourizedFormatter(logging.Formatter):
-    """A custom log formatter class that:
-
-    * Outputs the LOG_LEVEL with an appropriate color.
-    * If a log call includes an `extras={"color_message": ...}` it will be used
-    for formatting the output, instead of the plain text message.
-    """
-
-    level_name_colors: dict[int, Callable[[str], str]] = {
-        TRACE_LOG_LEVEL: lambda level_name: click.style(str(level_name), fg="blue"),
-        logging.DEBUG: lambda level_name: click.style(str(level_name), fg="cyan"),
-        logging.INFO: lambda level_name: click.style(str(level_name), fg="green"),
-        logging.WARNING: lambda level_name: click.style(str(level_name), fg="yellow"),
-        logging.ERROR: lambda level_name: click.style(str(level_name), fg="red"),
-        logging.CRITICAL: lambda level_name: click.style(str(level_name), fg="bright_red"),
-    }
-
-    def __init__(
-        self,
-        fmt: str | None = None,
-        datefmt: str | None = None,
-        style: Literal["%", "{", "$"] = "%",
-        use_colors: bool | None = None,
-    ):
-        if use_colors in (True, False):
-            self.use_colors: bool = use_colors
-        else:
-            self.use_colors = sys.stdout.isatty()
-        super().__init__(fmt=fmt, datefmt=datefmt, style=style)
-
-    def color_level_name(self, level_name: str, level_no: int) -> str:
-        def default(level_name: str) -> str:
-            return str(level_name)  # pragma: no cover
-
-        func: Callable[[str], str] = self.level_name_colors.get(level_no, default)
-        return func(level_name)
-
-    def should_use_colors(self) -> bool:
-        return True  # pragma: no cover
-
-    def formatMessage(self, record: logging.LogRecord) -> str:
-        recordcopy: logging.LogRecord = copy(record)
-        levelname: str = recordcopy.levelname
-        seperator: str = " " * (8 - len(recordcopy.levelname))
-        if self.use_colors:
-            levelname = self.color_level_name(levelname, recordcopy.levelno)
-            if "color_message" in recordcopy.__dict__:
-                recordcopy.msg = recordcopy.__dict__["color_message"]
-                recordcopy.__dict__["message"] = recordcopy.getMessage()
-        recordcopy.__dict__["levelprefix"] = levelname + ":" + seperator
-        return super().formatMessage(recordcopy)
-
-
-class DefaultFormatter(ColourizedFormatter):
+class DefaultFormatter(ColoredConsoleHandler):
     def should_use_colors(self) -> bool:
         return sys.stderr.isatty()  # pragma: no cover

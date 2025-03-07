@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from gpt_researcher.utils import check_pkg
 from gpt_researcher.utils.logger import get_formatted_logger
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
 if TYPE_CHECKING:
     import logging
@@ -129,7 +130,7 @@ logger: logging.Logger = get_formatted_logger(__name__)
 #         return documents
 
 
-class Duckduckgo:
+class Duckduckgo(RetrieverABC):
     """Duckduckgo API Retriever."""
 
     def __init__(

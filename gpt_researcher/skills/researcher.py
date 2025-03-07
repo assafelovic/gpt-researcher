@@ -90,8 +90,14 @@ class ResearchConductor:
             self.researcher.websocket,
         )
 
-        search_results: list[dict[str, Any]] = await get_search_results(query, self.researcher.retrievers[0], query_domains)
-        self.logger.info(f"Initial search results obtained: {len(search_results)} results")
+        for retriever in self.researcher.retrievers:
+            self.logger.info(f"Attempting to use retriever: '{retriever.__name__}' to plan research...")
+            try:
+                search_results: list[dict[str, Any]] = await get_search_results(query, retriever, query_domains)
+                self.logger.info(f"Initial search results obtained: {len(search_results)} results")
+                break
+            except Exception as e:
+                self.logger.exception(f"Error with retriever {retriever.__name__}: {e}. Attempting next retriever...")
 
         await stream_output(
             "logs",
@@ -489,7 +495,7 @@ class ResearchConductor:
                 sub_query,
                 scraped_data,
             )
-            self.logger.info(f"Content found for sub-query was {len(content)} chars")
+            self.logger.info(f"Content found for sub-query '{sub_query}' was {len(content)} chars")
 
             if content and content.strip():
                 await stream_output(
@@ -609,7 +615,7 @@ class ResearchConductor:
                 try:
                     search_results_list: (
                         Sequence[Document | dict[str, Any]] | None
-                    ) = await retriever.aget_relevant_documents(query)
+                    ) = await retriever.ainvoke(query)
                     if search_results_list:
                         search_urls: list[str] = [
                             str(
@@ -636,7 +642,7 @@ class ResearchConductor:
                 )
                 if search_results_list:
                     for url in search_results_list:
-                        href = str(url.get("href", "") or "").strip() if isinstance(url, dict) else str(url).strip()
+                        href: str = str(url.get("href", "") or "").strip() if isinstance(url, dict) else str(url).strip()
                         if href:
                             new_search_urls.add(href)
         new_search_urls_list: list[str] = await self._get_new_urls(new_search_urls)

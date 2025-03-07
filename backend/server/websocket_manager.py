@@ -5,7 +5,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from fastapi import WebSocket
-from config.config import Config
+from gpt_researcher.config.config import Config
 from gpt_researcher.actions import stream_output  # Import stream_output
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.logger import get_formatted_logger
@@ -70,13 +70,14 @@ class WebSocketManager:
         websocket: WebSocket,
     ):
         """Disconnect a websocket."""
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-            if websocket in self.sender_tasks:
-                self.sender_tasks[websocket].cancel()
-                await self.message_queues[websocket].put("close")
-                del self.sender_tasks[websocket]
-                del self.message_queues[websocket]
+        if websocket not in self.active_connections:
+            return
+        self.active_connections.remove(websocket)
+        if websocket in self.sender_tasks:
+            self.sender_tasks[websocket].cancel()
+            await self.message_queues[websocket].put("close")
+            del self.sender_tasks[websocket]
+            del self.message_queues[websocket]
 
     async def start_streaming(
         self,
@@ -111,23 +112,21 @@ class WebSocketManager:
             )
 
             logger.info(f"Research completed for: {task}")
+            if websocket in self.active_connections:
+                await websocket.send_json({"type": "report", "output": report})
             self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
 
-            return report
         except Exception as e:
             logger.exception(f"Error in start_streaming: {e.__class__.__name__}: {e}")
             if websocket in self.active_connections:
                 try:
-                    await websocket.send_json(
-                        {
-                            "type": "logs",
-                            "level": "error",
-                            "output": f"Error: {e.__class__.__name__}: {e}",
-                        }
-                    )
+                    await websocket.send_json({"type": "logs", "level": "error", "output": f"Error: {e.__class__.__name__}: {e}"})
                 except Exception as send_error:
                     logger.exception(f"Error sending error message: {send_error.__class__.__name__}: {send_error}")
             raise
+
+        else:
+            return report
 
     async def chat(
         self,
@@ -137,12 +136,7 @@ class WebSocketManager:
         """Chat with the agent based message diff."""
         if self.chat_agent:
             return await self.chat_agent.chat(message, websocket)
-        await websocket.send_json(
-            {
-                "type": "chat",
-                "content": "Knowledge empty, please run the research first to obtain knowledge",
-            }
-        )
+        await websocket.send_json({"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"})
 
 
 async def run_agent(
@@ -190,14 +184,8 @@ async def run_agent(
     )
     
     # Stream initial message
-    if websocket:
-        await websocket.send_json(
-            {
-                "type": "logs",
-                "level": "info",
-                "output": f"Starting research on: {task}",
-            }
-        )
+    if websocket is not None:
+        await websocket.send_json({"type": "logs", "level": "info", "output": f"Starting research on: {task}"})
 
     # Initialize researcher based on report type
     try:
@@ -236,7 +224,6 @@ async def run_agent(
                 config=config,
             )
             report = await researcher.run()
-
         else:
             researcher = BasicReport(
                 query=task,
@@ -251,26 +238,12 @@ async def run_agent(
                 config=config,
             )
             report = await researcher.run()
-            
-        # Stream final report completion message
-        if websocket:
-            await websocket.send_json(
-                {
-                    "type": "logs",
-                    "level": "info",
-                    "output": "Research completed successfully!",
-                }
-            )
-
-        return report
     except Exception as e:
         logger.exception(f"Error in run_agent: {e.__class__.__name__}: {e}")
-        if websocket:
-            await websocket.send_json(
-                {
-                    "type": "logs",
-                    "level": "error",
-                    "output": f"Research failed: {e.__class__.__name__}: {e}",
-                }
-            )
+        if websocket is not None:
+            await websocket.send_json({"type": "logs", "level": "error", "output": f"Research failed: {e.__class__.__name__}: {e}"})
         raise
+    else:
+        if websocket is not None:
+            await websocket.send_json({"type": "logs", "level": "info", "output": "Research completed successfully!"})
+        return report

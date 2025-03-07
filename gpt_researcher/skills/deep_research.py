@@ -75,27 +75,31 @@ class DeepResearchSkill:
         self,
         researcher: GPTResearcher,
     ):
-        from gpt_researcher.agent import GPTResearcher  # pyright: ignore[reportUnusedImport]  # noqa: F401
-
         self.researcher: GPTResearcher = researcher
-        self.breadth: int = getattr(researcher.cfg, "deep_research_breadth", 4)
-        self.concurrency_limit: int = getattr(researcher.cfg, "deep_research_concurrency", 2)
+        self.breadth: int = researcher.cfg.DEEP_RESEARCH_BREADTH
+        self.concurrency_limit: int = getattr(researcher.cfg, "DEEP_RESEARCH_CONCURRENCY", 2)
         self.config_path: Path | None = researcher.cfg.config_path if hasattr(researcher.cfg, "config_path") else None
         self.context: list[str] = []  # Track all context
-        self.depth: int = getattr(researcher.cfg, "deep_research_depth", 2)
+        self.depth: int = researcher.cfg.DEEP_RESEARCH_DEPTH
         self.headers: dict[str, str] = researcher.headers or {}
         self.learnings: list[str] = []
         self.research_sources: list[dict[str, Any]] = []  # Track all research sources
         self.tone: Tone = researcher.tone
         self.visited_urls: set[str] = researcher.visited_urls
         self.websocket: WebSocket | CustomLogsHandler | None = researcher.websocket
+        self.max_context_words: int = researcher.cfg.MAX_CONTEXT_WORDS
+        self.num_queries: int = researcher.cfg.DEEP_RESEARCH_NUM_QUERIES
+        self.num_learnings: int = researcher.cfg.DEEP_RESEARCH_NUM_LEARNINGS
 
     async def generate_search_queries(
         self,
         query: str,
-        num_queries: int = 3,
+        num_queries: int | None = None,
     ) -> list[dict[str, str]]:
         """Generate SERP queries for research."""
+        if num_queries is None:
+            num_queries = self.num_queries
+            
         messages: list[dict[str, str]] = [
             {
                 "role": "system",
@@ -136,9 +140,12 @@ class DeepResearchSkill:
     async def generate_research_plan(
         self,
         query: str,
-        num_questions: int = 3,
+        num_questions: int | None = None,
     ) -> list[str]:
         """Generate follow-up questions to clarify research direction."""
+        if num_questions is None:
+            num_questions = self.num_queries
+            
         # Get initial search results to inform query generation
         search_results: list[dict[str, Any]] = await get_search_results(query, self.researcher.retrievers[0])
         logger.info(f"Initial web knowledge obtained: {len(search_results)} results")
@@ -185,9 +192,12 @@ Format each question on a new line starting with 'Question: '""",
         self,
         query: str,
         context: str,
-        num_learnings: int = 3,
-    ) -> dict[str, list[str]]:
+        num_learnings: int | None = None,
+    ) -> dict[str, Any]:
         """Process research results to extract learnings and follow-up questions."""
+        if num_learnings is None:
+            num_learnings = self.num_learnings
+            
         messages: list[dict[str, str]] = [
             {"role": "system", "content": "You are an expert researcher analyzing search results."},
             {
@@ -239,7 +249,7 @@ Format each question on a new line starting with 'Question: '""",
         return {
             "learnings": learnings[:num_learnings],
             "followUpQuestions": questions[:num_learnings],
-            "citations": citations,  # type: ignore[return-value]
+            "citations": citations,
         }
 
     async def deep_research(
@@ -285,7 +295,7 @@ Format each question on a new line starting with 'Question: '""",
                     if on_progress:
                         on_progress(progress)
 
-                    from gpt_researcher import GPTResearcher
+                    from gpt_researcher.agent import GPTResearcher
 
                     researcher = GPTResearcher(
                         query=serp_query["query"],
@@ -309,6 +319,7 @@ Format each question on a new line starting with 'Question: '""",
                     results: dict[str, Any] = await self.process_research_results(
                         query=serp_query["query"],
                         context="\n".join(context),
+                        num_learnings=self.num_learnings
                     )
 
                     # Update progress
@@ -387,7 +398,7 @@ Format each question on a new line starting with 'Question: '""",
         self.research_sources.extend(all_sources)
 
         # Trim context to stay within word limits
-        trimmed_context: list[str] = trim_context_to_word_limit(all_context)
+        trimmed_context: list[str] = trim_context_to_word_limit(all_context, max_words=self.max_context_words)
         logger.info(
             f"Trimmed context from {len(all_context)} items to {len(trimmed_context)} items to stay within word limit"
         )

@@ -1,32 +1,114 @@
 {
-    "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.autoImportCompletions": true,
-    "python.analysis.diagnosticMode": "workspace",
-    "python.analysis.diagnosticSeverityOverrides": {
-        "reportPrivateImportUsage": "warning",
-        "reportUnusedImport": "warning",
-    },
-    "python.analysis.extraPaths": [
-        "${workspaceFolder}",
-        "${workspaceFolder}/backend",
-        "${workspaceFolder}/gpt_researcher",
-        "${workspaceFolder}/llm_fallbacks",
-        "${workspaceFolder}/multi_agents",
-        "${workspaceFolder}/tests",
+    "editor.tabSize": 4,
+    "editor.rulers": [
+        120
     ],
-    "python.analysis.autoSearchPaths": true,
-    "python.analysis.importFormat": "absolute",
-    "python.analysis.logLevel": "Trace",
-    "python.testing.unittestArgs": [
-        "-v",
-        "-s",
-        "${workspaceFolder}/tests",
-        "-p",
-        "*test*.py"
-    ],
-    "python.testing.pytestEnabled": false,
-    "python.testing.unittestEnabled": true,
+    "editor.renderWhitespace": "trailing",
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "explorer.compactFolders": false,
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": false,
+    "explorer.copyRelativePathSeparator": "/",
+    "files.autoSave": "onFocusChange",
     "files.associations": {
-        "*.yaml": "home-assistant"
+        "*.pyx": "cython"
     },
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "workbench.editorAssociations": {
+        "*.ipynb": "jupyter-notebook",
+        "*.md": "vscode.markdown.preview.editor",
+        "*.svg": "svgPreviewer.customEditor"
+    },
+    "git.enableSmartCommit": true,
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.openRepositoryInParentFolders": "always",
+    "markdown.validate.enabled": true,
+    "[markdown]": {
+        "files.trimTrailingWhitespace": false,
+        "editor.wordWrapColumn": 80,
+        "editor.wordWrap": "wordWrapColumn",
+        "editor.defaultFormatter": "yzhang.markdown-all-in-one",
+        "editor.formatOnSave": false
+    },
+    "[yaml]": {
+        "editor.wordWrap": "wordWrapColumn",
+        "editor.wordWrapColumn": 80,
+        "editor.defaultFormatter": "redhat.vscode-yaml",
+        "editor.formatOnSave": false
+    },
+    "[toml]": {
+        "editor.wordWrap": "wordWrapColumn",
+        "editor.wordWrapColumn": 80,
+        "editor.defaultFormatter": "tamasfe.even-better-toml",
+        "editor.formatOnSave": true
+    },
+    "better-comments.tags": [
+        {
+            "tag": "XXX",
+            "color": "#F8C471"
+        },
+        {
+            "tag": "WARN",
+            "color": "#FF6961"
+        },
+        {
+            "tag": "NOTE",
+            "color": "#3498DB"
+        },
+        {
+            "tag": "TODO",
+            "color": "#77C3EC"
+        }
+    ],
+    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+    "codesnap.showWindowControls": false,
+    "codesnap.shutterAction": "copy",
+    "Workspace_Formatter.excludePattern": [
+        "**/build",
+        "**/.*",
+        "**/.vscode",
+        "**/html"
+    ],
+    "svg.preview.autoOpen": true,
+    "errorLens.delay": 1000,
+    "errorLens.enabledDiagnosticLevels": [
+        "error",
+        "warning"
+    ],
+    "errorLens.enabled": false,
+    "[python]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnType": false,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "never"
+        }
+    },
+    "python.languageServer": "Pylance",
+    "python.analysis.autoImportCompletions": false,
+    "python.analysis.completeFunctionParens": false,
+    "python.analysis.autoFormatStrings": true,
+    "python.analysis.logLevel": "Error",
+    "python.createEnvironment.contentButton": "show",
+    "python.missingPackage.severity": "Error",
+    "mypy-type-checker.importStrategy": "fromEnvironment",
+    "black-formatter.importStrategy": "fromEnvironment",
+    "isort.check": true,
+    "isort.importStrategy": "fromEnvironment",
+    "ruff.organizeImports": false,
+    "ruff.fixAll": false,
+    "autoDocstring.generateDocstringOnEnter": true,
+    "autoDocstring.quoteStyle": "'''",
+    "jupyter.interactiveWindow.creationMode": "perFile",
+    "jupyter.askForKernelRestart": false,
+    "jupyter.themeMatplotlibPlots": true,
+    "jupyter.logging.level": "error",
+    "notebook.formatOnSave.enabled": false,
+    "notebook.output.textLineLimit": 20,
+    "notebook.compactView": false,
+    "notebook.diff.ignoreMetadata": true,
+    "notebook.diff.ignoreOutputs": true
 }

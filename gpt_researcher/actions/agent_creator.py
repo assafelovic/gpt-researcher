@@ -28,7 +28,7 @@ async def choose_agent(
     parent_query: str | None = None,
     cost_callback: Callable[[float], None] | None = None,
     headers: dict[str, str] | None = None,
-) -> tuple[Any, Any] | tuple[str, str]:
+) -> dict[str, Any]:
     """Chooses the agent automatically.
 
     Args:
@@ -49,14 +49,8 @@ async def choose_agent(
         response = await create_chat_completion(
             model=cfg.SMART_LLM_MODEL,
             messages=[
-                {
-                    "role": "system",
-                    "content": f"{auto_agent_instructions()}",
-                },
-                {
-                    "role": "user",
-                    "content": f"task: {query}",
-                },
+                {"role": "system", "content": f"{auto_agent_instructions()}"},
+                {"role": "user", "content": f"task: {query}"},
             ],
             temperature=cfg.SMART_LLM_TEMPERATURE,
             llm_provider=cfg.SMART_LLM_PROVIDER,
@@ -64,54 +58,75 @@ async def choose_agent(
             cost_callback=cost_callback,
         )
 
-        if response is None:
-            raise ValueError("Response is None")
-
-        # Clean the response to remove invalid escape sequences
-        response = re.sub(r'\\(?![\\/"bfnrtu]|u[0-9a-fA-F]{4})', "", response)
-
-        agent_dict: dict[str, Any] = json.loads(response)
-        return agent_dict["server"], agent_dict["agent_role_prompt"]
+        try:
+            agent_dict: dict[str, Any] = json.loads(response)
+            return agent_dict
+        except json.JSONDecodeError as e:
+            logger.warning(f"⚠️ Error in reading JSON: {e.__class__.__name__}: {e}. attempting to repair JSON")
+            response = (
+                re.sub(r'\\(?![\\/"bfnrtu]|u[0-9a-fA-F]{4})', "", response)
+                .replace("\n", "")
+                .replace("\r", "")
+                .replace(" ", "")
+            )
+            agent_dict: dict[str, Any] = json.loads(response)
+        return agent_dict
 
     except Exception as e:
-        logger.exception(
-            f"⚠️ Error in reading JSON: {e.__class__.__name__}: {e}. attempting to repair JSON"
-        )
+        logger.warning(f"⚠️ Error in reading JSON: {e.__class__.__name__}: {e}. attempting to repair JSON")
         return await handle_json_error(response or "")
 
 
 async def handle_json_error(
     response: str,
-) -> tuple[str, str]:
+) -> dict[str, Any]:
     try:
-        agent_dict: JSONReturnType | tuple[JSONReturnType, list[dict[str, str]]] = (
-            json_repair.loads(response)
-        )
+        agent_dict: JSONReturnType | tuple[JSONReturnType, list[dict[str, str]]] = json_repair.loads(response)
         if not isinstance(agent_dict, dict):
             raise TypeError("Agent dict is not a valid JSON")
+        agent_dict["server"] = agent_dict.get("server", "Default Agent")
+        agent_dict["agent_role_prompt"] = agent_dict.get(
+            "agent_role_prompt",
+            "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text.",
+        )
         if agent_dict.get("server") and agent_dict.get("agent_role_prompt"):
-            return agent_dict["server"], agent_dict["agent_role_prompt"]
+            return agent_dict
     except Exception as e:
         logger.exception(f"Error using json_repair: {e}")
 
     json_string: str | None = extract_json_with_regex(response)
     if json_string and json_string.strip():
         try:
-            json_data: dict[str, Any] = json.loads(json_string.encode().decode("utf-8"))  # type: ignore
-            return json_data["server"], json_data["agent_role_prompt"]
+            agent_dict = json.loads(json_string.encode().decode("utf-8"))  # type: ignore
+            if not isinstance(agent_dict, dict):
+                raise TypeError("Agent dict is not a valid JSON")
+            agent_dict["server"] = agent_dict.get("server", "Default Agent")
+            agent_dict["agent_role_prompt"] = agent_dict.get(
+                "agent_role_prompt",
+                "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text.",
+            )
         except json.JSONDecodeError as e:
             logger.exception(f"Error decoding JSON: {e.__class__.__name__}: {e}")
             try:
-                # Fallback decoding strategy
-                json_data = json.loads(json_string, strict=False)
-                return json_data["server"], json_data["agent_role_prompt"]
+                agent_dict = json.loads(json_string, strict=False)
+                if not isinstance(agent_dict, dict):
+                    raise TypeError("Agent dict is not a valid JSON")
+                agent_dict["server"] = agent_dict.get("server", "Default Agent")
+                agent_dict["agent_role_prompt"] = agent_dict.get(
+                    "agent_role_prompt",
+                    "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text.",
+                )
+                return agent_dict
             except Exception as e2:
                 logger.exception(f"Secondary error decoding JSON: {e2.__class__.__name__}: {e2}")
+        else:
+            return agent_dict
 
     logger.warning("No JSON found in the string. Falling back to Default Agent.")
-    return "Default Agent", (
-        "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text."
-    )
+    return {
+        "server": "Default Agent",
+        "agent_role_prompt": "You are an AI critical thinker research assistant. Your sole purpose is to write well written, critically acclaimed, objective and structured reports on given text.",
+    }
 
 
 def extract_json_with_regex(

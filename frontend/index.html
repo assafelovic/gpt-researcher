@@ -136,10 +136,24 @@
             <input type="submit" value="Research" class="btn btn-primary button-padding">
         </form>
 
+        <!-- Configuration Management Section -->
+        <div class="config-management mt-4 mb-4">
+            <h3>Configuration Management</h3>
+            <div class="btn-group" role="group">
+                <button id="exportConfig" class="btn btn-outline-secondary">Export Configuration</button>
+                <button id="importConfig" class="btn btn-outline-secondary">Import Configuration</button>
+                <button id="resetConfig" class="btn btn-outline-secondary">Reset to Default</button>
+            </div>
+            <div id="configStatus" class="mt-2" style="display: none;"></div>
+        </div>
+
         <div class="margin-div">
             <h2>Agent Output</h2>
             <p class="mt-2 text-left" style="font-size: 0.8rem;">An agent tailored specifically to your task
                 will be generated to provide the most precise and relevant research results.</p>
+            <div class="text-right mb-2">
+                <button id="enableAutoScroll" class="btn btn-sm btn-outline-secondary">Enable Auto-Scroll</button>
+            </div>
             <div id="output"></div>
         </div>
         <div class="images_div">
@@ -165,7 +179,7 @@
             <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GitHub</a> |
             <a target="_blank" href="https://discord.gg/spBgZmm3Xe">Discord</a>
         </p>
-        <p>GPT Researcher &copy; 2024</p>
+        <p>GPT Researcher &copy; 2025</p>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
@@ -206,6 +220,31 @@
         }
 
 </script>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;">
+        <div class="modal-content" style="background-color: white; margin: 10% auto; padding: 20px; width: 80%; max-width: 700px; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <span id="closeSettings" style="float: right; cursor: pointer; font-size: 24px;">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Tabs will be dynamically generated -->
+                <div class="settings-tabs">
+                    <!-- Tabs will be inserted here -->
+                </div>
+                <div class="settings-content">
+                    <!-- Tab content will be inserted here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettings" class="btn btn-primary">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for config import -->
+    <input type="file" id="configFileInput" accept=".json" style="display: none;">
 </body>
 
 </html>

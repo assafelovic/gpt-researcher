@@ -11,6 +11,17 @@ from gpt_researcher.utils.enum import ReportFormat, ReportSource, ReportType, To
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+
+PROMPT_CHAT_WITH_REPORT = """You are GPT Researcher, a autonomous research agent created by an open source community at https://github.com/assafelovic/gpt-researcher, homepage: https://gptr.dev.
+To learn more about GPT Researcher you can suggest to check out: https://docs.gptr.dev.
+
+This is a chat message between the user and you: GPT Researcher.
+The chat is about a research reports that you created. Answer based on the given context and report.
+You must include citations to your answer based on the report.
+
+Report: {self.report}
+User Message: {message}"""
+
 # Global prompt variables
 PROMPT_GENERATE_SEARCH_QUERIES = """Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"
 
@@ -271,6 +282,39 @@ PROCESSING INSTRUCTIONS:
 Apply the above processing instructions to the content and return the processed result.
 """
 
+PROMPT_DEEP_RESEARCH = """
+Using the following hierarchically researched information and citations:
+
+"{context}"
+
+Write a comprehensive research report answering the query: "{question}"
+
+The report should:
+1. Synthesize information from multiple levels of research depth
+2. Integrate findings from various research branches
+3. Present a coherent narrative that builds from foundational to advanced insights
+4. Maintain proper citation of sources throughout
+5. Be well-structured with clear sections and subsections
+6. Have a minimum length of {total_words} words
+7. Follow {report_format} format with markdown syntax
+
+Additional requirements:
+- Prioritize insights that emerged from deeper levels of research
+- Highlight connections between different research branches
+- Include relevant statistics, data, and concrete examples
+- You MUST determine your own concrete and valid opinion based on the given information. Do NOT defer to general and meaningless conclusions.
+- You MUST prioritize the relevance, reliability, and significance of the sources you use. Choose trusted sources over less reliable ones.
+- You must also prioritize new articles over older articles if the source can be trusted.
+- Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+- {tone_prompt}
+- Write in {language}
+
+{reference_prompt}
+
+Please write a thorough, well-researched report that synthesizes all the gathered information into a cohesive whole.
+
+"""
+
 
 def generate_search_queries_prompt(
     question: str,
@@ -309,12 +353,9 @@ Use this context to inform and refine your search queries. The context provides 
     dynamic_example = ", ".join([f'"query {i + 1}"' for i in range(max_iterations)])
 
     default_prompt = PROMPT_GENERATE_SEARCH_QUERIES
-
-    # Get prompt from environment variable or use default
     custom_prompt = os.environ.get("PROMPT_GENERATE_SEARCH_QUERIES", "")
     if custom_prompt:
         try:
-            # Use string formatting with named parameters for template
             return custom_prompt.format(
                 question=question,
                 parent_query=parent_query,
@@ -327,7 +368,6 @@ Use this context to inform and refine your search queries. The context provides 
                 current_date=datetime.now(timezone.utc).strftime("%B %d, %Y"),
             )
         except (KeyError, ValueError):
-            # If formatting fails, fall back to default prompt
             return default_prompt
 
     return default_prompt.format(
@@ -354,7 +394,7 @@ def generate_report_prompt(
     Returns: str: The report prompt for the given question and research summary.
     """
 
-    reference_prompt = ""
+    reference_prompt: str = ""
     if report_source == ReportSource.Web:
         reference_prompt = """
 You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
@@ -366,15 +406,12 @@ eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url webs
     else:
         reference_prompt = """You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."""
 
-    tone_prompt = f"Write the report in a {tone.value} tone." if tone else ""
+    tone_prompt: str = f"Write the report using the {tone.name} tone ({tone.value})." if tone else ""
 
     default_prompt = PROMPT_GENERATE_REPORT
-
-    # Get prompt from environment variable or use default
-    custom_prompt = os.environ.get("PROMPT_GENERATE_REPORT", "")
+    custom_prompt: str = os.environ.get("PROMPT_GENERATE_REPORT", "")
     if custom_prompt:
         try:
-            # Use string formatting with named parameters for template
             return custom_prompt.format(
                 question=question,
                 context=context,
@@ -389,7 +426,6 @@ eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url webs
                 current_date=date.today(),
             )
         except (KeyError, ValueError):
-            # If formatting fails, fall back to default prompt
             return default_prompt
 
     return default_prompt.format(
@@ -410,15 +446,11 @@ def curate_sources(
     max_results: int = 10,
 ) -> str:
     default_prompt = PROMPT_CURATE_SOURCES
-
-    # Get prompt from environment variable or use default
-    custom_prompt = os.environ.get("PROMPT_CURATE_SOURCES", "")
+    custom_prompt: str = os.environ.get("PROMPT_CURATE_SOURCES", "")
     if custom_prompt:
         try:
-            # Use string formatting with named parameters for template
             return custom_prompt.format(query=query, sources=sources, max_results=max_results)
         except (KeyError, ValueError):
-            # If formatting fails, fall back to default prompt
             return default_prompt
 
     return default_prompt.format(query=query, sources=sources, max_results=max_results)
@@ -440,7 +472,7 @@ def generate_resource_report_prompt(
         str: The resource report prompt for the given question and research summary.
     """
     report_source = ReportSource(report_source) if isinstance(report_source, str) else report_source
-    reference_prompt = ""
+    reference_prompt: str = ""
     if report_source == ReportSource.Web:
         reference_prompt = """
             You MUST include all relevant source urls.
@@ -452,12 +484,9 @@ def generate_resource_report_prompt(
         """
 
     default_prompt = PROMPT_GENERATE_RESOURCE_REPORT
-
-    # Get prompt from environment variable or use default
     custom_prompt = os.environ.get("PROMPT_GENERATE_RESOURCE_REPORT", "")
     if custom_prompt:
         try:
-            # Use string formatting with named parameters for template
             return custom_prompt.format(
                 question=question,
                 context=context,
@@ -467,12 +496,9 @@ def generate_resource_report_prompt(
                 reference_prompt=reference_prompt,
             )
         except (KeyError, ValueError):
-            # If formatting fails, fall back to default prompt
             return default_prompt
 
-    return default_prompt.format(
-        question=question, context=context, total_words=total_words, reference_prompt=reference_prompt
-    )
+    return default_prompt.format(question=question, context=context, total_words=total_words, reference_prompt=reference_prompt)
 
 
 def generate_custom_report_prompt(
@@ -485,10 +511,8 @@ def generate_custom_report_prompt(
     custom_prompt = os.environ.get("PROMPT_GENERATE_CUSTOM_REPORT", "")
     if custom_prompt:
         try:
-            # Use string formatting with named parameters for template
             return custom_prompt.format(query_prompt=query_prompt, context=context)
         except (KeyError, ValueError):
-            # If formatting fails, fall back to default prompt
             return default_prompt
 
     return default_prompt.format(query_prompt=query_prompt, context=context)
@@ -502,8 +526,8 @@ def generate_outline_report_prompt(
     """Generates the outline report prompt for the given question and research summary.
 
     Args:
-        question (str): The question to generate the outline report prompt for research_summary (str):
-                        The research summary to generate the outline report prompt for
+        question (str): The question to generate the outline report prompt for
+        context (str): The research summary to generate the outline report prompt for
         total_words (int): The total words of the research report
     Returns: str: The outline report prompt for the given question and research summary.
     """
@@ -511,13 +535,11 @@ def generate_outline_report_prompt(
     default_prompt = PROMPT_GENERATE_OUTLINE_REPORT
 
     # Get prompt from environment variable or use default
-    custom_prompt = os.environ.get("PROMPT_GENERATE_OUTLINE_REPORT", "")
+    custom_prompt: str = os.environ.get("PROMPT_GENERATE_OUTLINE_REPORT", "")
     if custom_prompt:
         try:
-            # Use string formatting with named parameters for template
             return custom_prompt.format(question=question, context=context, total_words=total_words)
         except (KeyError, ValueError):
-            # If formatting fails, fall back to default prompt
             return default_prompt
 
     return default_prompt.format(question=question, context=context, total_words=total_words)
@@ -553,46 +575,27 @@ You MUST write all used source urls at the end of the report as references, and 
 Every url should be hyperlinked: [url website](url)
 Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report:
 
-eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
+For example:
+```
+Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
+```
+Think about where the information in the report came from, and cite your sources using the above format.
 """
     else:
         reference_prompt = """
 You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
 """
-    tone_prompt = f"Write the report in a {tone.value} tone." if tone else ""
+    tone_prompt: str = f"Write the report using the {tone.name} tone ({tone.value})." if tone else ""
 
-    return f"""
-Using the following hierarchically researched information and citations:
-
-"{context}"
-
-Write a comprehensive research report answering the query: "{question}"
-
-The report should:
-1. Synthesize information from multiple levels of research depth
-2. Integrate findings from various research branches
-3. Present a coherent narrative that builds from foundational to advanced insights
-4. Maintain proper citation of sources throughout
-5. Be well-structured with clear sections and subsections
-6. Have a minimum length of {total_words} words
-7. Follow {report_format} format with markdown syntax
-
-Additional requirements:
-- Prioritize insights that emerged from deeper levels of research
-- Highlight connections between different research branches
-- Include relevant statistics, data, and concrete examples
-- You MUST determine your own concrete and valid opinion based on the given information. Do NOT defer to general and meaningless conclusions.
-- You MUST prioritize the relevance, reliability, and significance of the sources you use. Choose trusted sources over less reliable ones.
-- You must also prioritize new articles over older articles if the source can be trusted.
-- Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
-- {tone_prompt}
-- Write in {language}
-
-{reference_prompt}
-
-Please write a thorough, well-researched report that synthesizes all the gathered information into a cohesive whole.
-Assume the current date is {datetime.now(timezone.utc).strftime("%B %d, %Y")}.
-"""
+    return os.environ.get("PROMPT_DEEP_RESEARCH", PROMPT_DEEP_RESEARCH).format(
+        question=question,
+        context=context,
+        report_format=report_format,
+        tone=tone_prompt,
+        total_words=total_words,
+        language=language,
+        reference_prompt=reference_prompt,
+    ) + f"\nAssume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')}"
 
 
 def get_report_by_type(
@@ -824,14 +827,11 @@ def generate_report_conclusion(
     """
     default_prompt = PROMPT_GENERATE_REPORT_CONCLUSION
 
-    # Get prompt from environment variable or use default
     custom_prompt = os.environ.get("PROMPT_GENERATE_REPORT_CONCLUSION", "")
     if custom_prompt:
         try:
-            # Use string formatting with named parameters for template
             return custom_prompt.format(query=query, report_content=report_content, language=language)
         except (KeyError, ValueError):
-            # If formatting fails, fall back to default prompt
             return default_prompt
 
     return default_prompt.format(query=query, report_content=report_content, language=language)

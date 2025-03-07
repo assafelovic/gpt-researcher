@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
-from config.config import Config
+from gpt_researcher.config.config import Config
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.llm import create_chat_completion

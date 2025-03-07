@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from __future__ import annotations
 
 import importlib.util
@@ -10,7 +11,7 @@ from pathlib import Path
 if not importlib.util.find_spec("llm_fallbacks"):
     import sys
     sys.path.append(str(Path(__file__).parents[1]))
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from gpt_researcher.utils.logger import get_formatted_logger
 
@@ -48,14 +49,14 @@ def to_litellm_config_yaml(
         },
         "general_settings": {
             "master_key": f"sk-{uuid.uuid4().hex}",
-            "alerting": ["slack", "email"],
+#            "alerting": ["slack", "email"],
             "proxy_batch_write_at": 60,  # Batch write spend updates every 60s
             "database_connection_pool_limit": 10,  # limit the number of database connections to = MAX Number of DB Connections/Number of instances of litellm proxy (Around 10-20 is good number)
             "alerting_threshold": 0,
             "allow_requests_on_db_unavailable": True,
             "allowed_routes": [],
             "background_health_checks": True,
-            "database_url": f"postgresql://postgres:{os.environ.get('POSTGRES_PASSWORD')}@localhost:5432/postgres",
+            "database_url": f"postgresql://postgres:{os.environ.get('POSTGRES_PASSWORD', 'postgres')}@localhost:5432/postgres",
             "disable_adding_master_key_hash_to_db": False,
             "disable_master_key_return": False,
             "disable_reset_budget": False,
@@ -125,8 +126,8 @@ def to_litellm_config_yaml(
             if free_only and (not is_free or is_local):
                 continue
 
-            key_name = model_name if "/" in model_name else f"{p.provider_name}/{model_name}"
-            model_entry = {
+            key_name: str = model_name if "/" in model_name else f"{p.provider_name}/{model_name}"
+            model_entry: dict[str, Any] = {
                 "model_name": key_name,
                 "litellm_params": {
                     "model": (key_name if key_name.startswith("openai/") else f"openai/{key_name}"),
@@ -186,15 +187,15 @@ def to_litellm_config_yaml(
                     break
 
             if suitable_fallbacks:
-                fallback_list = config["router_settings"].setdefault("fallbacks", [])
-                fallback_entry = {model_name: suitable_fallbacks}
+                fallback_list: list[dict[str, list[str]]] = config["router_settings"].setdefault("fallbacks", [])
+                fallback_entry: dict[str, list[str]] = {model_name: suitable_fallbacks}
                 fallback_list.append(fallback_entry)
 
     return config
 
 
 if __name__ == "__main__":
-    print("Saving custom_providers.json")
+    logger.info("Saving custom_providers.json")
     Path("custom_providers.json").absolute().write_text(
         json.dumps(
             [provider.to_dict() for provider in CUSTOM_PROVIDERS],
@@ -202,7 +203,7 @@ if __name__ == "__main__":
             ensure_ascii=True,
         ),
     )
-    print("Saving all_models.json")
+    logger.info("Saving all_models.json")
     Path("all_models.json").absolute().write_text(
         json.dumps(
             {model: spec for model, spec in ALL_MODELS},
@@ -210,7 +211,7 @@ if __name__ == "__main__":
             ensure_ascii=True,
         ),
     )
-    print("Saving free_chat_models.json")
+    logger.info("Saving free_chat_models.json")
     Path("free_chat_models.json").absolute().write_text(
         json.dumps(
             {model: spec for model, spec in FREE_MODELS},
@@ -223,7 +224,7 @@ if __name__ == "__main__":
     try:
         import yaml
 
-        print("Saving litellm_config_free.yaml")
+        logger.info("Saving litellm_config_free.yaml")
         Path("litellm_config_free.yaml").write_text(
             yaml.dump(
                 to_litellm_config_yaml(CUSTOM_PROVIDERS, free_only=True),
@@ -233,7 +234,7 @@ if __name__ == "__main__":
             errors="replace",
             encoding="utf-8",
         )
-        print("Saving litellm_config.yaml")
+        logger.info("Saving litellm_config.yaml")
         Path("litellm_config.yaml").write_text(
             yaml.dump(
                 to_litellm_config_yaml(CUSTOM_PROVIDERS, free_only=False),
