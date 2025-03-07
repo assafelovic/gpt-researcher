@@ -32,25 +32,31 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
         />
       )}
       
-      <div className={`fixed top-0 left-0 h-full sidebar-z-index transition-all duration-300 ${isOpen ? 'w-72' : 'w-12'}`}>
+      <div className={`fixed top-0 left-0 h-full sidebar-z-index transition-all duration-300 ${isOpen ? 'w-72' : 'w-16'}`}>
         {/* Sidebar content */}
-        <div className={`h-full bg-gray-900/80 sidebar-backdrop text-white shadow-lg overflow-hidden ${isOpen ? 'p-4 border-r border-gray-700' : 'p-0'}`}>
+        <div 
+          className={`h-full transition-all duration-300 text-white overflow-hidden 
+            ${isOpen 
+              ? 'bg-gray-900/80 sidebar-backdrop shadow-lg p-4' 
+              : 'bg-transparent hover:bg-gray-900/10 p-0'
+            }`}
+        >
           {/* Toggle button - only shown when sidebar is closed */}
           {!isOpen && (
             <button
               onClick={toggleSidebar}
-              className="absolute left-1 right-1 mx-auto top-[24px] w-10 h-10 flex items-center justify-center bg-gray-800 text-white rounded-full shadow-lg z-10"
+              className="absolute left-3 mx-auto top-[24px] w-10 h-10 flex items-center justify-center bg-gray-800/70 text-white rounded-full shadow-lg z-10 hover:bg-gray-700 transition-colors"
               aria-label="Open sidebar"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </button>
           )}
 
           {!isOpen && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-90 whitespace-nowrap text-gray-400 text-xs font-medium tracking-wider">
-              RESEARCH HISTORY
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-90 whitespace-nowrap text-gray-600 font-medium tracking-wider text-xs">
+              {" "}
             </div>
           )}
 
