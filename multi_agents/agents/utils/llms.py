@@ -11,6 +11,7 @@ async def call_model(
     prompt: list,
     model: str,
     response_format: str | None = None,
+    temperature: float = 0.3,
 ):
 
     cfg = Config()
@@ -20,7 +21,7 @@ async def call_model(
         response = await create_chat_completion(
             model=model,
             messages=lc_messages,
-            temperature=0,
+            temperature=temperature,
             llm_provider=cfg.smart_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             # cost_callback=cost_callback,

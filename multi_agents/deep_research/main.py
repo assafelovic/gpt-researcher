@@ -87,8 +87,14 @@ async def run_deep_research(
         publisher = PublisherAgent(orchestrator.output_dir, websocket, stream_output, headers)
         publish_state = await publisher.run({
             "task": task,
-            "report": report_state.get("report", ""),
-            "title": research_state.get("title", "")
+            "headers": report_state.get("headers", {}),
+            "research_data": research_state.get("research_data", []),
+            "sources": research_state.get("sources", []),
+            "introduction": report_state.get("introduction", ""),
+            "conclusion": report_state.get("conclusion", ""),
+            "table_of_contents": report_state.get("table_of_contents", ""),
+            "title": research_state.get("title", ""),
+            "date": research_state.get("date", "")
         })
         
         # Add published files to results

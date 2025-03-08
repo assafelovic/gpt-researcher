@@ -209,7 +209,20 @@ class DeepResearchOrchestrator:
     async def finalize_research(self, state: DeepResearchState) -> DeepResearchState:
         """Finalize research results"""
         # Finalize context
-        state.finalize_context()
+        try:
+            state.finalize_context()
+        except Exception as e:
+            logger.error(f"Error finalizing context: {e}")
+            # Fallback: join context items if finalize_context fails
+            if hasattr(state, 'context') and isinstance(state.context, list):
+                state.final_context = "\n".join(state.context)
+            else:
+                state.final_context = ""
+        
+        # Ensure final_context is set
+        if not hasattr(state, 'final_context') or not state.final_context:
+            state.final_context = ""
+            
         return state
         
     def should_continue_recursion(self, state: DeepResearchState) -> str:
@@ -293,11 +306,11 @@ class DeepResearchOrchestrator:
         return {
             "task": self.task,
             "query": self.task.get('query'),
-            "context": final_state.final_context,
-            "learnings": final_state.learnings,
-            "citations": final_state.citations,
-            "visited_urls": list(final_state.visited_urls),
-            "sources": final_state.sources,
-            "review": final_state.review,
+            "context": getattr(final_state, 'final_context', '\n'.join(final_state.context) if hasattr(final_state, 'context') else ''),
+            "learnings": getattr(final_state, 'learnings', []),
+            "citations": getattr(final_state, 'citations', {}),
+            "visited_urls": list(getattr(final_state, 'visited_urls', set())),
+            "sources": getattr(final_state, 'sources', []),
+            "review": getattr(final_state, 'review', None),
             "execution_time": str(execution_time)
         } 

@@ -32,9 +32,15 @@ class WriterAgent:
     async def write_sections(self, research_state: dict):
         query = research_state.get("title")
         data = research_state.get("research_data")
-        task = research_state.get("task")
-        follow_guidelines = task.get("follow_guidelines")
-        guidelines = task.get("guidelines")
+        task = research_state.get("task", {})
+        follow_guidelines = task.get("follow_guidelines", False)
+        guidelines = task.get("guidelines", "")
+        # Get model from task or use a default model if None
+        model = task.get("model")
+        if model is None:
+            from gpt_researcher.config.config import Config
+            cfg = Config()
+            model = cfg.smart_llm_model  # Use the default smart model from config
 
         prompt = [
             {
@@ -61,12 +67,19 @@ class WriterAgent:
 
         response = await call_model(
             prompt,
-            task.get("model"),
+            model,
             response_format="json",
         )
         return response
 
     async def revise_headers(self, task: dict, headers: dict):
+        # Get model from task or use a default model if None
+        model = task.get("model")
+        if model is None:
+            from gpt_researcher.config.config import Config
+            cfg = Config()
+            model = cfg.smart_llm_model  # Use the default smart model from config
+            
         prompt = [
             {
                 "role": "system",
@@ -86,7 +99,7 @@ Headers Data: {headers}\n
 
         response = await call_model(
             prompt,
-            task.get("model"),
+            model,
             response_format="json",
         )
         return {"headers": response}
@@ -106,8 +119,29 @@ Headers Data: {headers}\n
             )
 
         research_layout_content = await self.write_sections(research_state)
+        
+        # If research_layout_content is None, create a default empty structure
+        if research_layout_content is None:
+            if self.websocket and self.stream_output:
+                await self.stream_output(
+                    "logs",
+                    "error",
+                    "Error generating research layout content. Using default empty structure.",
+                    self.websocket,
+                )
+            else:
+                print_agent_output(
+                    "Error generating research layout content. Using default empty structure.",
+                    agent="WRITER",
+                )
+            research_layout_content = {
+                "table_of_contents": "",
+                "introduction": "",
+                "conclusion": "",
+                "sources": []
+            }
 
-        if research_state.get("task").get("verbose"):
+        if research_state.get("task", {}).get("verbose"):
             if self.websocket and self.stream_output:
                 research_layout_content_str = json.dumps(
                     research_layout_content, indent=2
@@ -122,7 +156,7 @@ Headers Data: {headers}\n
                 print_agent_output(research_layout_content, agent="WRITER")
 
         headers = self.get_headers(research_state)
-        if research_state.get("task").get("follow_guidelines"):
+        if research_state.get("task", {}).get("follow_guidelines"):
             if self.websocket and self.stream_output:
                 await self.stream_output(
                     "logs",
@@ -134,9 +168,10 @@ Headers Data: {headers}\n
                 print_agent_output(
                     "Rewriting layout based on guidelines...", agent="WRITER"
                 )
-            headers = await self.revise_headers(
-                task=research_state.get("task"), headers=headers
+            headers_response = await self.revise_headers(
+                task=research_state.get("task", {}), headers=headers
             )
-            headers = headers.get("headers")
+            if headers_response and "headers" in headers_response:
+                headers = headers_response.get("headers")
 
         return {**research_layout_content, "headers": headers}

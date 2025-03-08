@@ -10,6 +10,19 @@ An average run generates a 5-6 page research report in multiple formats such as 
 
 Please note: Multi-agents are utilizing the same configuration of models like GPT-Researcher does. However, only the SMART_LLM is used for the time being. Please refer to the [LLM config pages](https://docs.gptr.dev/docs/gpt-researcher/llms/llms).
 
+## Research Modes
+
+The system supports two research modes:
+
+### Standard Research
+The standard research mode follows a sequential process with a team of agents working together to produce a comprehensive report.
+
+### Deep Research
+The deep research mode performs more extensive research by exploring topics in breadth and depth. It allows for:
+- Parallel exploration of multiple research queries
+- Recursive research to specified depth levels
+- Configurable concurrency for performance optimization
+
 ## The Multi Agent Team
 The research team is made up of 8 agents:
 - **Human** - The human in the loop that oversees the process and provides feedback to the agents.
@@ -55,7 +68,17 @@ More specifically (as seen in the architecture diagram) the process is as follow
 
 2. Run the application:
     ```bash
+    # Run standard research mode
     python main.py
+    
+    # Run standard research with a specific query
+    python main.py --query "Your research question here"
+    
+    # Run deep research mode
+    python main.py --mode deep
+    
+    # Run deep research with custom parameters
+    python main.py --mode deep --query "Your research question" --breadth 5 --depth 3 --concurrency 3
     ```
 
 ## Usage
@@ -71,7 +94,13 @@ To change the research query and customize the report, edit the `task.json` file
 - `guidelines` - A list of guidelines that the report must follow.
 - `verbose` - If true, the application will print detailed logs to the console.
 
-#### For example:
+#### Deep Research Configuration
+For deep research mode, you can also configure:
+- `deep_research_breadth` - Number of parallel search queries at each level (default: 4)
+- `deep_research_depth` - Maximum depth of recursive research (default: 2)
+- `deep_research_concurrency` - Maximum number of concurrent research tasks (default: 2)
+
+#### Example task.json:
 ```json
 {
   "query": "Is AI in a hype cycle?",
@@ -90,7 +119,10 @@ To change the research query and customize the report, edit the `task.json` file
     "The report MUST be written in apa format",
     "The report MUST be written in english"
   ],
-  "verbose": true
+  "verbose": true,
+  "deep_research_breadth": 4,
+  "deep_research_depth": 2,
+  "deep_research_concurrency": 2
 }
 ```
 
