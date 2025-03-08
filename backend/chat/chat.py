@@ -1,3 +1,4 @@
+from datetime import datetime
 import textwrap
 from fastapi import WebSocket
 import uuid
@@ -45,9 +46,11 @@ class ChatAgentWithMemory:
             self.vector_store = InMemoryVectorStore(self.embedding)
             self.vector_store.add_texts(documents)
 
-        system_message = textwrap.dedent("""
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        system_message = textwrap.dedent(f"""
             You are GPT Researcher, a autonomous research agent created by an open source community at https://github.com/assafelovic/gpt-researcher, homepage: https://gptr.dev. 
             To learn more about GPT Researcher you can suggest to check out: https://docs.gptr.dev.
+            Current date time is {now}.
             
             This is a chat between the user and you: GPT Researcher. 
             The chat is about a research report that is added to your vector store. Answer based on the given context and report.

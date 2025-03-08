@@ -138,6 +138,9 @@ async def retrieve_model(model: str):
 
 
 cfg = Config()
+
+str_output_parser = StrOutputParser()
+
 smart_chat_model = cast(
     BaseChatModel,
     get_llm(
@@ -248,8 +251,6 @@ async def start_research(
     )
 
 
-str_output_parser = StrOutputParser()
-
 TriageResultValue: TypeAlias = Literal["fast", "research"]
 
 
@@ -267,7 +268,7 @@ triage_agent = (
     ChatPromptTemplate.from_messages(
         (
             SystemMessagePromptTemplate.from_template(
-                "Today is {today_date}. decide which agent to handle the request."
+                "Current date time is {now}. decide which agent to handle the request."
             ),
             MessagesPlaceholder("messages"),
         )
@@ -282,7 +283,7 @@ research_model = smart_chat_model.bind_tools(research_tools)
 research_prompt = ChatPromptTemplate.from_messages(
     (
         SystemMessagePromptTemplate.from_template(
-            "Decide if you need to start a research tool call. note that today is {today_date}."
+            "Decide if you need to start a research tool call. note that current date time is {now}."
             "If you have enough info, propose a research task. always wait for user to confirm first."
             "Else ask for necessary info to suggest the parameters."
             "If user confirms, start the research task."
@@ -291,6 +292,14 @@ research_prompt = ChatPromptTemplate.from_messages(
     )
 )
 research_agent = research_prompt | research_model
+
+fast_agent_prompt = ChatPromptTemplate.from_messages(
+    (
+        SystemMessagePromptTemplate.from_template("Current date time is {now}."),
+        MessagesPlaceholder("messages"),
+    )
+)
+fast_agent = fast_agent_prompt | fast_chat_model
 
 
 async def triage_request(
@@ -305,10 +314,8 @@ async def triage_request(
                 json_data["message_index"] = i
                 return "follow_up", ResearchTaskMetadata(**json_data)
 
-    today_date = datetime.now().strftime("%Y-%m-%d")
-    result = await triage_agent.ainvoke(
-        {"today_date": today_date, "messages": messages}
-    )
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    result = await triage_agent.ainvoke({"now": now, "messages": messages})
     return result, None
 
 
@@ -317,8 +324,8 @@ async def prepare_research(
     sse_writer: SseWebSocketAdapter,
     request: ChatCompletionsRequest,
 ):
-    today_date = datetime.now().strftime("%Y-%m-%d")
-    chunks = research_agent.astream({"today_date": today_date, "messages": messages})
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    chunks = research_agent.astream({"now": now, "messages": messages})
     tool_call_message = None
     async for chunk in chunks:
         if isinstance(chunk, AIMessageChunk) and chunk.tool_call_chunks:
@@ -411,7 +418,12 @@ async def workflow(
         messages = json_to_langchain_messages(request.messages)
         triage_result, research_task_metadata = await triage_request(messages)
         if triage_result == "fast":
-            async for chunk in fast_chat_model.astream(messages):
+            async for chunk in fast_agent.astream(
+                {
+                    "now": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "messages": messages,
+                }
+            ):
                 await sse_writer.send_text(str_output_parser.invoke(chunk))
             return
         elif triage_result == "research":
