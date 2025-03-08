@@ -38,7 +38,7 @@ from langchain_core.tools import tool, InjectedToolArg
 from langchain_core.vectorstores import InMemoryVectorStore
 
 from backend.chat.chat import ChatAgentWithMemory
-from backend.server.openai.OpenAiResponseFormatter import OpenAiResponseFormatter
+from backend.server.openai.openai_response_formatter import OpenAiResponseFormatter
 from backend.server.server_utils import get_file_path, run_research
 from backend.server.openai.sse_websocket_adapter import (
     SseWebSocketAdapter,

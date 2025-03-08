@@ -15,7 +15,7 @@ from backend.server.server_utils import (
     execute_multi_agents, handle_websocket_communication
 )
 from backend.server import websocket_manager
-from backend.server.openai.openai_middleware import router as openai_router
+from backend.server.openai.openai_api_router import router as openai_router
 
 from gpt_researcher.utils.logging_config import setup_research_logging
 
