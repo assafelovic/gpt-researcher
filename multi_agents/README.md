@@ -22,6 +22,8 @@ The deep research mode performs more extensive research by exploring topics in b
 - Parallel exploration of multiple research queries
 - Recursive research to specified depth levels
 - Configurable concurrency for performance optimization
+- Organized sections with logical headers
+- Comprehensive report generation with proper formatting
 
 ## The Multi Agent Team
 The research team is made up of 8 agents:
@@ -33,6 +35,14 @@ The research team is made up of 8 agents:
 - **Revisor** - Revises the research results based on the feedback from the reviewer.
 - **Writer** - Responsible for compiling and writing the final report.
 - **Publisher** - Responsible for publishing the final report in various formats.
+
+### Deep Research Agents
+For deep research mode, additional specialized agents are used:
+- **DeepExplorerAgent** - Generates search queries and research plans
+- **DeepSynthesizerAgent** - Processes and synthesizes research results
+- **DeepReviewerAgent** - Reviews research quality and completeness
+- **SectionWriterAgent** - Organizes research data into logical sections with titles
+- **ReportFormatterAgent** - Prepares the final state for the publisher
 
 ## How it works
 Generally, the process is based on the following stages: 
@@ -58,6 +68,18 @@ More specifically (as seen in the architecture diagram) the process is as follow
   - Revisor - Revises the draft until it is satisfactory based on the reviewer feedback.
 - Writer - Compiles and writes the final report including an introduction, conclusion and references section from the given research findings.
 - Publisher - Publishes the final report to multi formats such as PDF, Docx, Markdown, etc.
+
+### Deep Research Workflow
+The deep research mode follows a different workflow:
+1. **DeepExplorerAgent** generates search queries and a research plan
+2. Multiple search queries are processed in parallel with a concurrency limit
+3. **DeepSynthesizerAgent** processes the research results
+4. **DeepReviewerAgent** reviews the research quality
+5. The process repeats recursively for deeper research levels
+6. **SectionWriterAgent** organizes the research data into logical sections
+7. Standard **WriterAgent** creates introduction, conclusion, and table of contents
+8. **ReportFormatterAgent** prepares the final state for the publisher
+9. Standard **PublisherAgent** creates the final report in the requested formats
 
 ## How to run
 1. Install required packages found in this root folder including `langgraph`:

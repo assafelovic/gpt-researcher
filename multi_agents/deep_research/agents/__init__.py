@@ -2,6 +2,8 @@ from .base import count_words, trim_context_to_word_limit, ResearchProgress, Dee
 from .explorer import DeepExplorerAgent
 from .synthesizer import DeepSynthesizerAgent
 from .reviewer import DeepReviewerAgent
+from .section_writer import SectionWriterAgent
+from .report_formatter import ReportFormatterAgent
 
 __all__ = [
     "count_words",
@@ -10,5 +12,7 @@ __all__ = [
     "DeepResearchAgent",
     "DeepExplorerAgent",
     "DeepSynthesizerAgent",
-    "DeepReviewerAgent"
+    "DeepReviewerAgent",
+    "SectionWriterAgent",
+    "ReportFormatterAgent"
 ] 

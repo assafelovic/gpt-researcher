@@ -12,6 +12,9 @@ class AgentColor(Enum):
     MASTER = Fore.LIGHTYELLOW_EX
     EXPLORER = Fore.LIGHTRED_EX
     SYNTHESIZER = Fore.LIGHTMAGENTA_EX
+    SECTION_WRITER = Fore.LIGHTCYAN_EX
+    REPORT_FORMATTER = Fore.LIGHTWHITE_EX
+    DEEP_WRITER = Fore.LIGHTGREEN_EX
 
 
 def print_agent_output(output:str, agent: str="RESEARCHER"):

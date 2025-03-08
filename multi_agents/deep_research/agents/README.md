@@ -26,6 +26,18 @@ This directory contains the specialized agents used in the deep research process
   - Methods:
     - `review_research()`: Evaluates research quality and completeness
 
+- **section_writer.py**: Contains the `SectionWriterAgent` class
+  - Responsible for generating structured sections from deep research data
+  - Methods:
+    - `generate_sections()`: Organizes research data into logical sections with titles
+    - `transform_to_research_data()`: Transforms sections into the format expected by the writer agent
+
+- **report_formatter.py**: Contains the `ReportFormatterAgent` class
+  - Responsible for formatting the report for the publisher agent
+  - Methods:
+    - `extract_sections_from_research_data()`: Extracts sections from research data
+    - `prepare_publisher_state()`: Prepares the state for the publisher agent
+
 ## Agent Workflow
 
 The agents work together in the following workflow:
@@ -35,7 +47,11 @@ The agents work together in the following workflow:
 3. `DeepSynthesizerAgent` processes the research results
 4. `DeepReviewerAgent` reviews the research quality
 5. The process repeats recursively for deeper research levels
+6. `SectionWriterAgent` organizes the research data into logical sections
+7. Standard `WriterAgent` creates introduction, conclusion, and table of contents
+8. `ReportFormatterAgent` prepares the final state for the publisher
+9. Standard `PublisherAgent` creates the final report in the requested formats
 
 ## Usage
 
-The agents are orchestrated by the `DeepResearchOrchestrator` class, which creates a LangGraph workflow to coordinate their actions. You don't need to instantiate these agents directly in most cases. 
+The agents are orchestrated by the `DeepResearchOrchestrator` class, which creates a LangGraph workflow to coordinate their actions. The research workflow is managed by the orchestrator, while the report generation is handled by the main.py file, which coordinates the SectionWriterAgent, WriterAgent, ReportFormatterAgent, and PublisherAgent. 

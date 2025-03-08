@@ -7,6 +7,7 @@ sample_json = """
 {
   "table_of_contents": A table of contents in markdown syntax (using '-') based on the research headers and subheaders,
   "introduction": An indepth introduction to the topic in markdown syntax and hyperlink references to relevant sources,
+  "sections": An array of section objects, each with a "title" and "content" field. The content should be in markdown syntax with hyperlink references to relevant sources,
   "conclusion": A conclusion to the entire research based on all research data in markdown syntax and hyperlink references to relevant sources,
   "sources": A list with strings of all used source links in the entire research data in markdown syntax and apa citation format. For example: ['-  Title, year, Author [source url](source)', ...]
 }
@@ -42,11 +43,16 @@ class WriterAgent:
             cfg = Config()
             model = cfg.smart_llm_model  # Use the default smart model from config
 
+        # Check if this is deep research data (has a single entry with 'topic' and 'content')
+        is_deep_research = False
+        if data and len(data) == 1 and 'topic' in data[0] and 'content' in data[0]:
+            is_deep_research = True
+            
         prompt = [
             {
                 "role": "system",
                 "content": "You are a research writer. Your sole purpose is to write a well-written "
-                "research reports about a "
+                "research report about a "
                 "topic based on research findings and information.\n ",
             },
             {
@@ -54,10 +60,11 @@ class WriterAgent:
                 "content": f"Today's date is {datetime.now().strftime('%d/%m/%Y')}\n."
                 f"Query or Topic: {query}\n"
                 f"Research data: {str(data)}\n"
-                f"Your task is to write an in depth, well written and detailed "
-                f"introduction and conclusion to the research report based on the provided research data. "
-                f"Do not include headers in the results.\n"
-                f"You MUST include any relevant sources to the introduction and conclusion as markdown hyperlinks -"
+                f"Your task is to write an in-depth, well-written and detailed research report based on the provided research data. "
+                f"This should include an introduction, main content sections with appropriate headers, and a conclusion. "
+                f"Do not include headers in the introduction or conclusion results.\n"
+                f"{'For deep research data, analyze the content and organize it into logical sections with appropriate headers.' if is_deep_research else ''}\n"
+                f"You MUST include any relevant sources to all sections as markdown hyperlinks -"
                 f"For example: 'This is a sample text. ([url website](url))'\n\n"
                 f"{f'You must follow the guidelines provided: {guidelines}' if follow_guidelines else ''}\n"
                 f"You MUST return nothing but a JSON in the following format (without json markdown):\n"
@@ -137,6 +144,7 @@ Headers Data: {headers}\n
             research_layout_content = {
                 "table_of_contents": "",
                 "introduction": "",
+                "sections": [],
                 "conclusion": "",
                 "sources": []
             }

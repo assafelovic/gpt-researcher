@@ -25,15 +25,33 @@ class PublisherAgent:
         if research_data is None:
             research_data = []
             
+        # Check for sections from writer agent
+        sections_from_writer = research_state.get("sections", [])
+        
         # Create sections with proper error handling
         sections = ""
-        try:
-            sections = '\n\n'.join(f"{value}"
-                                 for subheader in research_data
-                                 for key, value in subheader.items())
-        except Exception as e:
-            print(f"Error generating sections: {e}")
-            sections = ""
+        
+        # First try to use sections from writer agent
+        if sections_from_writer:
+            try:
+                sections_content = []
+                for section in sections_from_writer:
+                    if isinstance(section, dict) and "title" in section and "content" in section:
+                        sections_content.append(f"## {section['title']}\n{section['content']}")
+                sections = '\n\n'.join(sections_content)
+            except Exception as e:
+                print(f"Error generating sections from writer: {e}")
+                sections = ""
+        
+        # Fallback to old method if no sections from writer
+        if not sections:
+            try:
+                sections = '\n\n'.join(f"{value}"
+                                    for subheader in research_data
+                                    for key, value in subheader.items())
+            except Exception as e:
+                print(f"Error generating sections from research_data: {e}")
+                sections = ""
             
         # Add safety checks for sources
         sources = research_state.get("sources", [])

@@ -10,10 +10,21 @@ class DeepExplorerAgent(DeepResearchAgent):
         """Generate SERP queries for research"""
         await self._stream_or_print(f"Generating {num_queries} search queries for: {query}", "EXPLORER")
         
+        # Get current time for context
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         prompt = [
             {"role": "system", "content": "You are an expert researcher generating search queries."},
             {"role": "user",
-             "content": f"Given the following prompt, generate {num_queries} unique search queries to research the topic thoroughly. For each query, provide a research goal. Format as 'Query: <query>' followed by 'Goal: <goal>' for each pair: {query}"}
+             "content": f"""Given the following prompt, generate {num_queries} unique search queries to research the topic thoroughly. For each query, provide a research goal.
+
+Current time: {current_time}
+
+Consider the current time when generating queries, especially for time-sensitive topics. Include recent developments up to {current_time} when relevant.
+
+Format as 'Query: <query>' followed by 'Goal: <goal>' for each pair.
+
+Research topic: {query}"""}
         ]
 
         response = await call_model(

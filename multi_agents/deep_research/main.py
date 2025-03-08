@@ -3,11 +3,13 @@ import json
 import asyncio
 import argparse
 from typing import Dict, Any, Optional
+from datetime import datetime
 from gpt_researcher.utils.enum import Tone
 
 from .orchestrator import DeepResearchOrchestrator
 from ..agents.writer import WriterAgent
 from ..agents.publisher import PublisherAgent
+from .agents import SectionWriterAgent, ReportFormatterAgent
 
 async def run_deep_research(
     query: str,
@@ -64,38 +66,72 @@ async def run_deep_research(
     # Run the research
     research_results = await orchestrator.run()
     
-    # Generate report using the Writer agent
-    writer = WriterAgent(websocket, stream_output, headers)
+    # Create the section writer agent
+    section_writer = SectionWriterAgent(websocket, stream_output, headers)
+    
+    # Get current date
+    current_date = datetime.now().strftime("%d/%m/%Y")
+    
+    # Format sources for references if they're in dictionary format
+    sources = research_results.get("sources", [])
+    formatted_sources = []
+    
+    for source in sources:
+        if isinstance(source, dict) and "url" in source:
+            # Format source as a reference
+            title = source.get("title", "Unknown Title")
+            url = source.get("url", "")
+            formatted_sources.append(f"- {title} [{url}]({url})")
+        elif isinstance(source, str):
+            # Source is already a string
+            formatted_sources.append(source)
     
     # Prepare research state for writer
     research_state = {
         "task": task,
         "query": query,
         "title": f"Deep Research: {query}",
-        "date": research_results.get("date", ""),
+        "date": current_date,
         "context": research_results.get("context", ""),
         "research_data": [{"topic": query, "content": research_results.get("context", "")}],
-        "sources": research_results.get("sources", []),
+        "sources": formatted_sources or research_results.get("sources", []),
         "citations": research_results.get("citations", {})
     }
     
-    # Write the report
-    report_state = await writer.run(research_state)
+    # Generate sections and transform research data
+    transformed_research_state = await section_writer.run(research_state)
+    
+    # Generate report using the Writer agent
+    writer = WriterAgent(websocket, stream_output, headers)
+    report_state = await writer.run(transformed_research_state)
+    
+    # Create the report formatter agent
+    report_formatter = ReportFormatterAgent(websocket, stream_output, headers)
+    
+    # Format the report for the publisher
+    publisher_state = await report_formatter.run(report_state, transformed_research_state)
     
     # Publish the report if formats are specified
     if publish_formats:
+        # Create the publisher agent
         publisher = PublisherAgent(orchestrator.output_dir, websocket, stream_output, headers)
-        publish_state = await publisher.run({
+        
+        # Ensure all necessary components are in the publisher state
+        complete_publisher_state = {
             "task": task,
-            "headers": report_state.get("headers", {}),
-            "research_data": research_state.get("research_data", []),
-            "sources": research_state.get("sources", []),
-            "introduction": report_state.get("introduction", ""),
-            "conclusion": report_state.get("conclusion", ""),
-            "table_of_contents": report_state.get("table_of_contents", ""),
-            "title": research_state.get("title", ""),
-            "date": research_state.get("date", "")
-        })
+            "headers": publisher_state.get("headers", {}),
+            "research_data": publisher_state.get("research_data", []),
+            "sources": publisher_state.get("sources", []),
+            "introduction": publisher_state.get("introduction", ""),
+            "conclusion": publisher_state.get("conclusion", ""),
+            "table_of_contents": publisher_state.get("table_of_contents", ""),
+            "title": publisher_state.get("title", f"Deep Research: {query}"),
+            "date": publisher_state.get("date", current_date),
+            "sections": publisher_state.get("sections", [])
+        }
+        
+        # Run the publisher agent
+        publish_state = await publisher.run(complete_publisher_state)
         
         # Add published files to results
         research_results["published_files"] = publish_state.get("published_files", [])
