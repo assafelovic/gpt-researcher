@@ -139,4 +139,82 @@ Recommendations: <list recommendations>"""}
                 review_results['score'] = 5
         
         await self._stream_or_print(f"Review complete. Quality score: {review_results['score']}/10", "REVIEWER")
-        return review_results 
+        return review_results
+        
+    async def review(self, query: str, context_items: List[str], current_depth: int, total_depth: int) -> Dict[str, Any]:
+        """
+        Review research results and identify follow-up questions.
+        
+        Args:
+            query: The original research query
+            context_items: List of context items from research
+            current_depth: Current research depth
+            total_depth: Maximum research depth
+            
+        Returns:
+            Dictionary with review results and follow-up questions
+        """
+        # Log the action
+        await self._stream_or_print(f"Reviewing research at depth {current_depth}/{total_depth}", "REVIEWER")
+        
+        # If no context items, return empty result
+        if not context_items:
+            return {
+                "follow_up_questions": []
+            }
+        
+        # Combine context items
+        combined_context = "\n\n".join(context_items)
+        
+        # Create prompt for generating follow-up questions
+        prompt = [
+            {"role": "system", "content": "You are an expert research reviewer. Your task is to identify gaps in research and suggest follow-up questions to explore."},
+            {"role": "user", 
+             "content": f"""Review the following research on the topic: '{query}'
+
+Research Content:
+{combined_context}
+
+Current Research Depth: {current_depth} of {total_depth}
+
+Based on this research, identify 3-5 specific follow-up questions that would help deepen the research. 
+These questions should:
+1. Address gaps or unexplored areas in the current research
+2. Be specific and focused enough to yield useful results
+3. Help build a more comprehensive understanding of the topic
+
+Format your response as a JSON array of strings, each containing a follow-up question.
+For example:
+["What are the environmental impacts of X?", "How does Y compare to Z in terms of efficiency?"]
+
+ONLY return the JSON array, nothing else."""}
+        ]
+        
+        # Call the model to generate follow-up questions
+        response = await call_model(
+            prompt=prompt,
+            model="gpt-4o",
+            temperature=0.7,
+            response_format="json"
+        )
+        
+        # Handle potential errors
+        follow_up_questions = []
+        if isinstance(response, list):
+            follow_up_questions = response
+        
+        # Limit the number of questions
+        max_questions = 5
+        follow_up_questions = follow_up_questions[:max_questions]
+        
+        # Log the follow-up questions
+        if follow_up_questions:
+            questions_str = "\n".join([f"- {q}" for q in follow_up_questions])
+            await self._stream_or_print(f"Generated follow-up questions:\n{questions_str}", "REVIEWER")
+        else:
+            await self._stream_or_print("No follow-up questions generated.", "REVIEWER")
+        
+        # Return the review results
+        return {
+            "follow_up_questions": follow_up_questions
+        } 

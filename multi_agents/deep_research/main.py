@@ -7,9 +7,9 @@ from datetime import datetime
 from gpt_researcher.utils.enum import Tone
 
 from .orchestrator import DeepResearchOrchestrator
-from ..agents.writer import WriterAgent
+from ..agents.writer import WriterAgent as MainWriterAgent
 from ..agents.publisher import PublisherAgent
-from .agents import SectionWriterAgent, ReportFormatterAgent
+from .agents import WriterAgent, ReporterAgent
 
 async def run_deep_research(
     query: str,
@@ -67,7 +67,7 @@ async def run_deep_research(
     research_results = await orchestrator.run()
     
     # Create the section writer agent
-    section_writer = SectionWriterAgent(websocket, stream_output, headers)
+    writer = WriterAgent(websocket, stream_output, headers)
     
     # Get current date
     current_date = datetime.now().strftime("%d/%m/%Y")
@@ -101,7 +101,19 @@ async def run_deep_research(
             )
         else:
             print(f"ERROR: {error_msg}")
-        raise ValueError(error_msg)
+        
+        # Create a fallback context
+        context = f"Research on: {query}\n\nNo specific research data was collected. This could be due to API limitations, network issues, or lack of relevant information."
+        print(f"Created fallback context: {len(context)} chars")
+    
+    # If we have sources but no formatted sources, create them
+    if sources and not formatted_sources:
+        print("Creating formatted sources from sources")
+        for i, source in enumerate(sources):
+            if isinstance(source, dict):
+                title = source.get("title", f"Source {i+1}")
+                url = source.get("url", "")
+                formatted_sources.append(f"- {title} [{url}]({url})")
     
     # Prepare research state for writer
     research_state = {
@@ -116,18 +128,36 @@ async def run_deep_research(
         "citations": research_results.get("citations", {})
     }
     
+    # If context is empty but we have sources, create context from sources
+    if not context and sources:
+        print("WARNING: Context is empty but sources exist. Creating context from sources.")
+        context_parts = []
+        for source in sources:
+            if isinstance(source, dict) and "content" in source:
+                title = source.get("title", "Unknown Title")
+                url = source.get("url", "")
+                content = source.get("content", "")
+                if content:
+                    context_parts.append(f"From {title} [{url}]:\n{content}")
+        
+        if context_parts:
+            context = "\n\n".join(context_parts)
+            research_state["context"] = context
+            research_state["research_data"] = [{"topic": query, "content": context}]
+            print(f"Created context from sources: {len(context)} chars")
+    
     # Generate sections and transform research data
-    transformed_research_state = await section_writer.run(research_state)
+    transformed_research_state = await writer.run(research_state)
     
     # Generate report using the Writer agent
-    writer = WriterAgent(websocket, stream_output, headers)
-    report_state = await writer.run(transformed_research_state)
+    main_writer = MainWriterAgent(websocket, stream_output, headers)
+    report_state = await main_writer.run(transformed_research_state)
     
     # Create the report formatter agent
-    report_formatter = ReportFormatterAgent(websocket, stream_output, headers)
+    reporter = ReporterAgent(websocket, stream_output, headers)
     
     # Format the report for the publisher
-    publisher_state = await report_formatter.run(report_state, transformed_research_state)
+    publisher_state = await reporter.run(report_state, transformed_research_state)
     
     # Publish the report if formats are specified
     if publish_formats:

@@ -2,8 +2,10 @@ from .base import count_words, trim_context_to_word_limit, ResearchProgress, Dee
 from .explorer import DeepExplorerAgent
 from .synthesizer import DeepSynthesizerAgent
 from .reviewer import DeepReviewerAgent
-from .section_writer import SectionWriterAgent
-from .report_formatter import ReportFormatterAgent
+from .writer import WriterAgent
+from .reporter import ReporterAgent
+from .planner import PlannerAgent
+from .finalizer import FinalizerAgent
 
 __all__ = [
     "count_words",
@@ -13,6 +15,8 @@ __all__ = [
     "DeepExplorerAgent",
     "DeepSynthesizerAgent",
     "DeepReviewerAgent",
-    "SectionWriterAgent",
-    "ReportFormatterAgent"
+    "WriterAgent",
+    "ReporterAgent",
+    "PlannerAgent",
+    "FinalizerAgent"
 ] 

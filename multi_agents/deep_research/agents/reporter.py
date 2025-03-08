@@ -1,5 +1,5 @@
 """
-Report Formatter Agent for Deep Research
+Reporter Agent for Deep Research
 
 This agent is responsible for formatting the report for the publisher agent.
 """
@@ -9,7 +9,7 @@ from typing import Dict, Any, List
 from ...agents.utils.views import print_agent_output
 from .base import DeepResearchAgent
 
-class ReportFormatterAgent(DeepResearchAgent):
+class ReporterAgent(DeepResearchAgent):
     """
     Agent responsible for formatting the report for the publisher agent.
     """
@@ -68,7 +68,7 @@ class ReportFormatterAgent(DeepResearchAgent):
         else:
             print_agent_output(
                 f"Formatting report for publisher...",
-                agent="REPORT_FORMATTER",
+                agent="REPORTER",
             )
             
         # Use sections from research_state if available, otherwise extract from research_data
@@ -90,7 +90,7 @@ class ReportFormatterAgent(DeepResearchAgent):
             else:
                 print_agent_output(
                     error_msg,
-                    agent="REPORT_FORMATTER",
+                    agent="REPORTER",
                 )
             raise ValueError(error_msg)
             
@@ -140,7 +140,7 @@ class ReportFormatterAgent(DeepResearchAgent):
             else:
                 print_agent_output(
                     error_msg,
-                    agent="REPORT_FORMATTER",
+                    agent="REPORTER",
                 )
             raise ValueError(error_msg)
             
@@ -160,7 +160,7 @@ class ReportFormatterAgent(DeepResearchAgent):
         
     async def run(self, writer_output: Dict[str, Any], research_state: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Run the report formatter agent.
+        Run the reporter agent.
         
         Args:
             writer_output: Output from the writer agent

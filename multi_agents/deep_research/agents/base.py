@@ -6,15 +6,35 @@ from ...agents.utils.views import print_agent_output
 
 logger = logging.getLogger(__name__)
 
-# Maximum words allowed in context (25k words for safety margin)
-MAX_CONTEXT_WORDS = 25000
+# Maximum words allowed in context (100k words for larger research contexts)
+MAX_CONTEXT_WORDS = 100000
 
 def count_words(text: str) -> int:
     """Count words in a text string"""
     return len(text.split())
 
-def trim_context_to_word_limit(context_list: List[str], max_words: int = MAX_CONTEXT_WORDS) -> List[str]:
-    """Trim context list to stay within word limit while preserving most recent/relevant items"""
+def trim_context_to_word_limit(context, max_words: int = MAX_CONTEXT_WORDS) -> str:
+    """
+    Trim context to stay within word limit while preserving most recent/relevant items.
+    
+    Args:
+        context: Either a string or a list of strings to trim
+        max_words: Maximum number of words to include
+        
+    Returns:
+        A trimmed string
+    """
+    # Handle different input types
+    if isinstance(context, str):
+        # If input is a string, convert to list of paragraphs
+        context_list = context.split("\n\n")
+    elif isinstance(context, list):
+        # If input is already a list, use as is
+        context_list = context
+    else:
+        # For any other type, convert to string and then split
+        context_list = str(context).split("\n\n")
+    
     total_words = 0
     trimmed_context = []
     
@@ -26,8 +46,9 @@ def trim_context_to_word_limit(context_list: List[str], max_words: int = MAX_CON
             total_words += words
         else:
             break
-            
-    return trimmed_context
+    
+    # Join the trimmed context items into a single string
+    return "\n\n".join(trimmed_context)
 
 class ResearchProgress:
     """Track progress of deep research"""
@@ -68,4 +89,85 @@ class DeepResearchAgent:
         
         # Conduct research
         context = await researcher.conduct_research()
-        return context, researcher.visited_urls, researcher.research_sources 
+        return context, researcher.visited_urls, researcher.research_sources
+        
+    async def search(self, query: str, task: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        Search for information on a query.
+        
+        Args:
+            query: The search query
+            task: Task configuration
+            
+        Returns:
+            List of search results
+        """
+        # Log the action
+        await self._stream_or_print(f"Searching for information on: {query}", "RESEARCHER")
+        
+        # Get the source from task or use default
+        source = task.get("source", "web")
+        
+        # Conduct basic research
+        context, visited_urls, sources = await self.basic_research(
+            query=query,
+            source=source
+        )
+        
+        # Debug log the research results
+        print_agent_output(f"Basic research returned: {len(sources)} sources and {len(context) if context else 0} chars of context", "RESEARCHER")
+        
+        # Format search results
+        search_results = []
+        
+        # Add sources with content
+        for i, source in enumerate(sources):
+            if isinstance(source, dict):
+                # Debug log each source
+                source_keys = ', '.join(source.keys())
+                print_agent_output(f"Source {i+1} has keys: {source_keys}", "RESEARCHER")
+                
+                # Ensure the source has content
+                if "content" not in source or not source["content"]:
+                    # Try to extract content from other fields
+                    for field in ["text", "snippet", "body", "description"]:
+                        if field in source and source[field]:
+                            source["content"] = source[field]
+                            print_agent_output(f"Using {field} as content for source {i+1}", "RESEARCHER")
+                            break
+                
+                # If still no content, create content from available fields
+                if "content" not in source or not source["content"]:
+                    content_parts = []
+                    for key, value in source.items():
+                        if key not in ["title", "url"] and isinstance(value, str) and len(value) > 10:
+                            content_parts.append(f"{key}: {value}")
+                    
+                    if content_parts:
+                        source["content"] = "\n".join(content_parts)
+                        print_agent_output(f"Created content from other fields for source {i+1}", "RESEARCHER")
+                
+                search_results.append(source)
+                
+        # If no sources with content, create a result from context
+        if not search_results and context:
+            print_agent_output(f"No sources with content found. Creating a result from context ({len(context)} chars)", "RESEARCHER")
+            search_results.append({
+                "title": f"Research on {query}",
+                "url": "",
+                "content": context
+            })
+        
+        # If still no search results, create a minimal result
+        if not search_results:
+            print_agent_output("No search results or context found. Creating a minimal result.", "RESEARCHER")
+            search_results.append({
+                "title": f"Research on {query}",
+                "url": "",
+                "content": f"No specific information found for the query: {query}. This could be due to API limitations, network issues, or lack of relevant information."
+            })
+            
+        # Debug log the final search results
+        print_agent_output(f"Returning {len(search_results)} search results", "RESEARCHER")
+            
+        return search_results 

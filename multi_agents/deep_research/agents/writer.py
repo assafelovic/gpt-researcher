@@ -1,7 +1,7 @@
 """
-Section Writer Agent for Deep Research
+Writer Agent for Deep Research
 
-This agent is responsible for generating sections from deep research data.
+This agent is responsible for generating sections and title from deep research data.
 """
 
 import asyncio
@@ -12,9 +12,9 @@ from ...agents.utils.llms import call_model
 from ...agents.utils.views import print_agent_output
 from .base import DeepResearchAgent
 
-class SectionWriterAgent(DeepResearchAgent):
+class WriterAgent(DeepResearchAgent):
     """
-    Agent responsible for generating sections from deep research data.
+    Agent responsible for generating sections and title from deep research data.
     """
     
     def __init__(self, websocket=None, stream_output=None, headers=None):
@@ -27,6 +27,95 @@ class SectionWriterAgent(DeepResearchAgent):
             headers: Optional headers for API requests
         """
         super().__init__(websocket, stream_output, headers)
+    
+    async def generate_title(self, research_state: Dict[str, Any]) -> str:
+        """
+        Generate an engaging title for the research report.
+        
+        Args:
+            research_state: Research state containing deep research data
+            
+        Returns:
+            A generated title for the research report
+        """
+        query = research_state.get("query", "")
+        context = research_state.get("context", "")
+        task = research_state.get("task", {})
+        
+        # Get model from task or use a default model if None
+        model = task.get("model")
+        if model is None:
+            from gpt_researcher.config.config import Config
+            cfg = Config()
+            model = cfg.smart_llm_model  # Use the default smart model from config
+        
+        # Log the action
+        if self.websocket and self.stream_output:
+            await self.stream_output(
+                "logs",
+                "generating_title",
+                "Generating an engaging title for the research report...",
+                self.websocket,
+            )
+        else:
+            print_agent_output(
+                "Generating an engaging title for the research report...",
+                agent="WRITER",
+            )
+        
+        # Create the prompt for generating title
+        prompt = [
+            {
+                "role": "system",
+                "content": "You are a research writer. Your task is to create an engaging, professional title for a research report."
+            },
+            {
+                "role": "user",
+                "content": f"""Today's date is {datetime.now().strftime('%d/%m/%Y')}.
+Query or Topic: {query}
+Research context summary: {context[:1000]}...
+
+Create an engaging, professional title for this research report. The title should be:
+1. Clear and descriptive of the content
+2. Engaging but not clickbait
+3. Professional in tone
+4. Between 5-12 words in length
+
+Return only the title text with no additional formatting or explanation.
+"""
+            }
+        ]
+        
+        # Call the model to generate title
+        title = await call_model(
+            prompt,
+            model,
+        )
+        
+        # Handle potential errors
+        if not title or not isinstance(title, str):
+            if self.websocket and self.stream_output:
+                await self.stream_output(
+                    "logs",
+                    "error",
+                    "Error generating title. Using default title.",
+                    self.websocket,
+                )
+            else:
+                print_agent_output(
+                    "Error generating title. Using default title.",
+                    agent="WRITER",
+                )
+            return f"Deep Research: {query}"
+        
+        # Clean up the title - remove quotes and extra whitespace
+        title = title.strip()
+        if title.startswith('"') and title.endswith('"'):
+            title = title[1:-1].strip()
+        elif title.startswith("'") and title.endswith("'"):
+            title = title[1:-1].strip()
+            
+        return title
         
     async def generate_sections(self, research_state: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
@@ -58,7 +147,7 @@ class SectionWriterAgent(DeepResearchAgent):
             else:
                 print_agent_output(
                     "No research context found. Cannot generate sections without research data.",
-                    agent="SECTION_WRITER",
+                    agent="WRITER",
                 )
             raise ValueError("No research context found. Cannot generate sections without research data.")
         
@@ -80,7 +169,7 @@ class SectionWriterAgent(DeepResearchAgent):
         else:
             print_agent_output(
                 f"Generating sections from deep research data with {len(sources)} sources...",
-                agent="SECTION_WRITER",
+                agent="WRITER",
             )
         
         # Format sources for better context
@@ -155,7 +244,7 @@ For example:
             else:
                 print_agent_output(
                     "Error generating sections. Using default empty structure.",
-                    agent="SECTION_WRITER",
+                    agent="WRITER",
                 )
             return []
             
@@ -183,14 +272,17 @@ For example:
         
     async def run(self, research_state: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Run the section writer agent.
+        Run the writer agent.
         
         Args:
             research_state: Research state containing deep research data
             
         Returns:
-            Transformed research state with sections as research_data
+            Transformed research state with sections as research_data and AI-generated title
         """
+        # Generate an engaging title
+        title = await self.generate_title(research_state)
+        
         # Generate sections from deep research data
         sections = await self.generate_sections(research_state)
         
@@ -207,6 +299,7 @@ For example:
         # Return the transformed research state
         return {
             **research_state,
+            "title": title,  # Use the AI-generated title
             "research_data": research_data,
             "sections": sections,  # Store the original sections for later use
             "formatted_sources": formatted_sources  # Preserve formatted sources

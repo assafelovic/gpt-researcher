@@ -2,7 +2,13 @@ from typing import Dict, List, Any, Set, Optional
 from pydantic import BaseModel, Field
 
 class DeepResearchState(BaseModel):
-    """State for deep research process"""
+    """
+    State for deep research process.
+    
+    Key context-related attributes:
+    - context_items: List of individual research findings/context pieces collected during research
+    - final_context: The final processed context string (only set at the end by the finalizer)
+    """
     # Task configuration
     task: Dict[str, Any] = Field(default_factory=dict)
     
@@ -21,7 +27,14 @@ class DeepResearchState(BaseModel):
     learnings: List[str] = Field(default_factory=list)
     citations: Dict[str, str] = Field(default_factory=dict)
     visited_urls: Set[str] = Field(default_factory=set)
+    
+    # Primary context storage - individual pieces of research
+    context_items: List[str] = Field(default_factory=list)
+    
+    # Legacy context field - kept for backward compatibility
     context: List[str] = Field(default_factory=list)
+    
+    # Sources from research
     sources: List[Dict[str, Any]] = Field(default_factory=list)
     
     # Intermediate results
@@ -32,7 +45,7 @@ class DeepResearchState(BaseModel):
     # Review results
     review: Optional[Dict[str, Any]] = None
     
-    # Final output
+    # Final output - set by the finalizer
     final_context: str = ""
     
     def update_progress(self, depth: int, breadth: int):
@@ -48,7 +61,7 @@ class DeepResearchState(BaseModel):
                 self.citations[learning] = citation
                 
     def add_context(self, context: str):
-        """Add context to the research state"""
+        """Add context to the research state (legacy method)"""
         # Skip empty context
         if not context:
             return
@@ -56,6 +69,16 @@ class DeepResearchState(BaseModel):
         # Add context if it's not already in the list
         if context not in self.context:
             self.context.append(context)
+            
+    def add_context_item(self, context_item: str):
+        """Add a context item to the research state"""
+        # Skip empty context items
+        if not context_item:
+            return
+            
+        # Add context item if it's not already in the list
+        if context_item not in self.context_items:
+            self.context_items.append(context_item)
             
     def add_visited_urls(self, urls: List[str]):
         """Add visited URLs to the research state"""
@@ -86,35 +109,28 @@ class DeepResearchState(BaseModel):
         self.review = review
         
     def finalize_context(self):
-        """Finalize context for report generation"""
+        """
+        Finalize context for report generation.
+        
+        This method combines all context_items into a single string,
+        trims it to a reasonable size, and returns it.
+        """
         from .agents.base import trim_context_to_word_limit
         
-        # Prepare context with citations
-        context_with_citations = []
+        # Combine all context items
+        combined_context = "\n\n".join(self.context_items)
         
-        # Add learnings with citations
-        for learning in self.learnings:
-            citation = self.citations.get(learning, '')
-            if citation:
-                context_with_citations.append(f"{learning} [Source: {citation}]")
-            else:
-                context_with_citations.append(learning)
+        # If no context items, try using legacy context
+        if not combined_context and self.context:
+            combined_context = "\n\n".join(self.context)
+            
+        # If still no context, create a default message
+        if not combined_context:
+            combined_context = f"Research on: {self.query}\n\nNo specific research data was collected."
         
-        # Add all research context
-        if self.context:
-            context_with_citations.extend(self.context)
+        # Trim the combined context to a reasonable size
+        trimmed_context = trim_context_to_word_limit(combined_context)
         
-        # Add source content with proper attribution
-        for source in self.sources:
-            if isinstance(source, dict):
-                title = source.get("title", "Unknown Title")
-                url = source.get("url", "")
-                content = source.get("content", "")
-                if content:
-                    context_with_citations.append(f"From {title} [{url}]: {content}")
-        
-        # Trim final context to word limit
-        final_context_list = trim_context_to_word_limit(context_with_citations)
-        self.final_context = "\n".join(final_context_list)
-        
+        # Set and return the final context
+        self.final_context = trimmed_context
         return self.final_context 
