@@ -86,15 +86,33 @@ async def run_deep_research(
             # Source is already a string
             formatted_sources.append(source)
     
+    # The context already contains the research results with sources
+    # We don't need to check for empty sources as the context itself is the source
+    # Just ensure the context is not empty
+    context = research_results.get("context", "")
+    if not context:
+        error_msg = "No research context found in results. Cannot generate report without research data."
+        if websocket and stream_output:
+            await stream_output(
+                "logs",
+                "error",
+                error_msg,
+                websocket,
+            )
+        else:
+            print(f"ERROR: {error_msg}")
+        raise ValueError(error_msg)
+    
     # Prepare research state for writer
     research_state = {
         "task": task,
         "query": query,
         "title": f"Deep Research: {query}",
         "date": current_date,
-        "context": research_results.get("context", ""),
-        "research_data": [{"topic": query, "content": research_results.get("context", "")}],
-        "sources": formatted_sources or research_results.get("sources", []),
+        "context": context,  # Pass context as is, no need to convert
+        "research_data": [{"topic": query, "content": context}],  # Pass context as is
+        "sources": sources,  # Pass the original sources with full content
+        "formatted_sources": formatted_sources,  # Also pass formatted sources for display
         "citations": research_results.get("citations", {})
     }
     

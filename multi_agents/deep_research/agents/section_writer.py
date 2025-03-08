@@ -44,6 +44,24 @@ class SectionWriterAgent(DeepResearchAgent):
         sources = research_state.get("sources", [])
         citations = research_state.get("citations", {})
         
+        # The context already contains the research results with sources
+        # We don't need to check for empty sources as the context itself is the source
+        # Just ensure the context is not empty
+        if not context:
+            if self.websocket and self.stream_output:
+                await self.stream_output(
+                    "logs",
+                    "error",
+                    "No research context found. Cannot generate sections without research data.",
+                    self.websocket,
+                )
+            else:
+                print_agent_output(
+                    "No research context found. Cannot generate sections without research data.",
+                    agent="SECTION_WRITER",
+                )
+            raise ValueError("No research context found. Cannot generate sections without research data.")
+        
         # Get model from task or use a default model if None
         model = task.get("model")
         if model is None:
@@ -56,33 +74,48 @@ class SectionWriterAgent(DeepResearchAgent):
             await self.stream_output(
                 "logs",
                 "generating_sections",
-                f"Generating sections from deep research data...",
+                f"Generating sections from deep research data with {len(sources)} sources...",
                 self.websocket,
             )
         else:
             print_agent_output(
-                f"Generating sections from deep research data...",
+                f"Generating sections from deep research data with {len(sources)} sources...",
                 agent="SECTION_WRITER",
             )
-            
+        
+        # Format sources for better context
+        formatted_sources = []
+        for source in sources:
+            if isinstance(source, dict) and "url" in source:
+                title = source.get("title", "Unknown Title")
+                url = source.get("url", "")
+                content = source.get("content", "")
+                formatted_sources.append(f"Source: {title}\nURL: {url}\nContent: {content}")
+            elif isinstance(source, str):
+                formatted_sources.append(source)
+                
         # Create the prompt for generating sections
         prompt = [
             {
                 "role": "system",
-                "content": "You are a research writer. Your sole purpose is to organize research data into logical sections with detailed content."
+                "content": "You are a research writer. Your sole purpose is to organize research data into logical sections with detailed content. You MUST include relevant sources as citations in each section."
             },
             {
                 "role": "user",
                 "content": f"""Today's date is {datetime.now().strftime('%d/%m/%Y')}.
 Query or Topic: {query}
 Research data: {context}
-Sources: {sources}
+Sources: {formatted_sources}
 Citations: {citations}
 
 Your task is to organize this research data into 3-5 logical sections with appropriate headers.
 Each section should be comprehensive and detailed, with a minimum of 300 words per section.
-Include any relevant sources in the content as markdown hyperlinks.
-For example: 'This is a sample text. ([url website](url))'
+
+IMPORTANT: You MUST include relevant sources in the content as markdown hyperlinks.
+For example: 'This is a sample text. ([Source Title](url))'
+
+For each major claim or piece of information, include a citation to the relevant source.
+If a source doesn't have a URL, cite it by title.
 
 Make sure each section covers a distinct aspect of the research topic and provides in-depth analysis.
 The sections should flow logically and cover the topic comprehensively.
@@ -167,10 +200,14 @@ For example:
         # If no sections were generated, use the original research data
         if not research_data:
             research_data = research_state.get("research_data", [])
-            
+        
+        # Preserve the formatted_sources if they exist
+        formatted_sources = research_state.get("formatted_sources", [])
+        
         # Return the transformed research state
         return {
             **research_state,
             "research_data": research_data,
-            "sections": sections  # Store the original sections for later use
+            "sections": sections,  # Store the original sections for later use
+            "formatted_sources": formatted_sources  # Preserve formatted sources
         } 

@@ -76,22 +76,74 @@ class ReportFormatterAgent(DeepResearchAgent):
             sections = research_state["sections"]
         else:
             sections = self.extract_sections_from_research_data(research_state.get("research_data", []))
+        
+        # Validate that sections exist
+        if not sections:
+            error_msg = "No sections found in research data. Cannot format report."
+            if self.websocket and self.stream_output:
+                await self.stream_output(
+                    "logs",
+                    "error",
+                    error_msg,
+                    self.websocket,
+                )
+            else:
+                print_agent_output(
+                    error_msg,
+                    agent="REPORT_FORMATTER",
+                )
+            raise ValueError(error_msg)
             
         # Format sources for references
         sources = research_state.get("sources", [])
         formatted_sources = []
         
-        # Ensure sources are properly formatted
+        # Extract URLs from sections to ensure all cited sources are included
+        cited_urls = set()
+        for section in sections:
+            if isinstance(section, dict) and "content" in section:
+                content = section["content"]
+                # Find all URLs in markdown format
+                import re
+                urls = re.findall(r'\[.*?\]\((https?://[^\s\)]+)\)', content)
+                for url in urls:
+                    cited_urls.add(url)
+        
+        # Ensure sources are properly formatted and include all cited URLs
         for source in sources:
             if isinstance(source, dict) and "url" in source:
                 # Format source as a reference
                 title = source.get("title", "Unknown Title")
                 url = source.get("url", "")
                 formatted_sources.append(f"- {title} [{url}]({url})")
+                # Remove from cited_urls if present
+                if url in cited_urls:
+                    cited_urls.remove(url)
             elif isinstance(source, str):
                 # Source is already a string
                 formatted_sources.append(source)
-                
+        
+        # Add any remaining cited URLs that weren't in the sources
+        for url in cited_urls:
+            formatted_sources.append(f"- Additional Source [{url}]({url})")
+        
+        # Validate that we have sources
+        if not formatted_sources:
+            error_msg = "No sources found for research. Cannot format report without sources."
+            if self.websocket and self.stream_output:
+                await self.stream_output(
+                    "logs",
+                    "error",
+                    error_msg,
+                    self.websocket,
+                )
+            else:
+                print_agent_output(
+                    error_msg,
+                    agent="REPORT_FORMATTER",
+                )
+            raise ValueError(error_msg)
+            
         # Return the publisher state
         return {
             "task": research_state.get("task", {}),

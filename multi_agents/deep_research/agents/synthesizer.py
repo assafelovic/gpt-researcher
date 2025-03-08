@@ -6,7 +6,7 @@ from .base import DeepResearchAgent
 class DeepSynthesizerAgent(DeepResearchAgent):
     """Agent responsible for synthesizing research results"""
     
-    async def process_research_results(self, query: str, context: str, num_learnings: int = 3) -> Dict[str, List[str]]:
+    async def process_research_results(self, query: str, context: str, num_learnings: int = 3) -> tuple:
         """Process research results to extract learnings and follow-up questions"""
         await self._stream_or_print(f"Synthesizing research results for: {query}", "SYNTHESIZER")
         
@@ -51,8 +51,9 @@ class DeepSynthesizerAgent(DeepResearchAgent):
                 questions.append(line.replace('Question:', '').strip())
 
         await self._stream_or_print(f"Extracted {len(learnings)} learnings and {len(questions)} follow-up questions", "SYNTHESIZER")
-        return {
-            'learnings': learnings[:num_learnings],
-            'followUpQuestions': questions[:num_learnings],
-            'citations': citations
-        } 
+        
+        # Store follow-up questions in the state
+        follow_up_questions = questions[:num_learnings]
+        
+        # Return learnings and citations as a tuple
+        return learnings[:num_learnings], citations 

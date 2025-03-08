@@ -49,7 +49,12 @@ class DeepResearchState(BaseModel):
                 
     def add_context(self, context: str):
         """Add context to the research state"""
-        if context and context not in self.context:
+        # Skip empty context
+        if not context:
+            return
+            
+        # Add context if it's not already in the list
+        if context not in self.context:
             self.context.append(context)
             
     def add_visited_urls(self, urls: List[str]):
@@ -86,17 +91,28 @@ class DeepResearchState(BaseModel):
         
         # Prepare context with citations
         context_with_citations = []
+        
+        # Add learnings with citations
         for learning in self.learnings:
             citation = self.citations.get(learning, '')
             if citation:
                 context_with_citations.append(f"{learning} [Source: {citation}]")
             else:
                 context_with_citations.append(learning)
-                
+        
         # Add all research context
         if self.context:
             context_with_citations.extend(self.context)
-            
+        
+        # Add source content with proper attribution
+        for source in self.sources:
+            if isinstance(source, dict):
+                title = source.get("title", "Unknown Title")
+                url = source.get("url", "")
+                content = source.get("content", "")
+                if content:
+                    context_with_citations.append(f"From {title} [{url}]: {content}")
+        
         # Trim final context to word limit
         final_context_list = trim_context_to_word_limit(context_with_citations)
         self.final_context = "\n".join(final_context_list)
