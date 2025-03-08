@@ -2,6 +2,8 @@ import importlib
 from typing import Any
 from colorama import Fore, Style, init
 import os
+import subprocess
+import sys
 
 _SUPPORTED_PROVIDERS = {
     "openai",
