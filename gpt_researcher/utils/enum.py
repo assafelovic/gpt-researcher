@@ -1,7 +1,6 @@
-from enum import Enum
+from enum import Enum, StrEnum
 
-
-class ReportType(Enum):
+class ReportType(StrEnum):
     ResearchReport = "research_report"
     ResourceReport = "resource_report"
     OutlineReport = "outline_report"
@@ -9,9 +8,10 @@ class ReportType(Enum):
     DetailedReport = "detailed_report"
     SubtopicReport = "subtopic_report"
     DeepResearch = "deep"
+    MultiAgents = "multi_agents"
 
 
-class ReportSource(Enum):
+class ReportSource(StrEnum):
     Web = "web"
     Local = "local"
     Azure = "azure"
@@ -21,31 +21,64 @@ class ReportSource(Enum):
     Hybrid = "hybrid"
 
 
-class Tone(Enum):
-    Objective = "Objective (impartial and unbiased presentation of facts and findings)"
-    Formal = "Formal (adheres to academic standards with sophisticated language and structure)"
+class Tone(StrEnum):
+    def __new__(cls, value, doc=None):
+        obj = str.__new__(cls, value)
+        obj._value_ = value
+        obj.__doc__ = doc
+        return obj
+
+    Objective = (
+        "Objective",
+        "impartial and unbiased presentation of facts and findings",
+    )
+    Formal = (
+        "Formal",
+        "adheres to academic standards with sophisticated language and structure",
+    )
     Analytical = (
-        "Analytical (critical evaluation and detailed examination of data and theories)"
+        "Analytical",
+        "critical evaluation and detailed examination of data and theories",
     )
     Persuasive = (
-        "Persuasive (convincing the audience of a particular viewpoint or argument)"
+        "Persuasive",
+        "convincing the audience of a particular viewpoint or argument",
     )
     Informative = (
-        "Informative (providing clear and comprehensive information on a topic)"
+        "Informative",
+        "providing clear and comprehensive information on a topic",
     )
-    Explanatory = "Explanatory (clarifying complex concepts and processes)"
+    Explanatory = ("Explanatory", "clarifying complex concepts and processes")
     Descriptive = (
-        "Descriptive (detailed depiction of phenomena, experiments, or case studies)"
+        "Descriptive",
+        "detailed depiction of phenomena, experiments, or case studies",
     )
-    Critical = "Critical (judging the validity and relevance of the research and its conclusions)"
-    Comparative = "Comparative (juxtaposing different theories, data, or methods to highlight differences and similarities)"
-    Speculative = "Speculative (exploring hypotheses and potential implications or future research directions)"
-    Reflective = "Reflective (considering the research process and personal insights or experiences)"
+    Critical = (
+        "Critical",
+        "judging the validity and relevance of the research and its conclusions",
+    )
+    Comparative = (
+        "Comparative",
+        "juxtaposing different theories, data, or methods to highlight differences and similarities",
+    )
+    Speculative = (
+        "Speculative",
+        "exploring hypotheses and potential implications or future research directions",
+    )
+    Reflective = (
+        "Reflective",
+        "considering the research process and personal insights or experiences",
+    )
     Narrative = (
-        "Narrative (telling a story to illustrate research findings or methodologies)"
+        "Narrative",
+        "telling a story to illustrate research findings or methodologies",
     )
-    Humorous = "Humorous (light-hearted and engaging, usually to make the content more relatable)"
-    Optimistic = "Optimistic (highlighting positive findings and potential benefits)"
+    Humorous = (
+        "Humorous",
+        "light-hearted and engaging, usually to make the content more relatable",
+    )
+    Optimistic = ("Optimistic", "highlighting positive findings and potential benefits")
     Pessimistic = (
-        "Pessimistic (focusing on limitations, challenges, or negative outcomes)"
+        "Pessimistic",
+        "focusing on limitations, challenges, or negative outcomes",
     )

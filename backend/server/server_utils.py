@@ -5,7 +5,7 @@ import re
 import time
 import shutil
 import traceback
-from typing import Awaitable, Dict, List, Any
+from typing import Awaitable, Dict, List, Any, Protocol
 from fastapi.responses import JSONResponse, FileResponse
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher import GPTResearcher
@@ -18,13 +18,23 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+class WebSocketLike(Protocol):
+    async def send_json(self, data: dict): ...
+
+
 class CustomLogsHandler:
     """Custom handler to capture streaming logs from the research process"""
-    def __init__(self, websocket, task: str):
+
+    def __init__(
+        self,
+        websocket,
+        task: str,
+        task_id: int = int(time.time()),
+        task_name: str | None = None,
+    ):
         self.logs = []
         self.websocket = websocket
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
-        self.log_file = os.path.join("outputs", f"{sanitized_filename}.json")
+        self.log_file = get_file_path(task_id, task_name or task, "json")
         self.timestamp = datetime.now().isoformat()
         # Initialize log file with metadata
         os.makedirs("outputs", exist_ok=True)
@@ -117,6 +127,9 @@ def sanitize_filename(filename: str) -> str:
     sanitized = f"{prefix}_{timestamp}_{truncated_task}"
     return re.sub(r"[^\w\s-]", "", sanitized).strip()
 
+def get_file_path(task_id: int, task_name: str, file_ext: str) -> Path:
+    sanitized_filename = sanitize_filename(f"task_{task_id}_{task_name}")
+    return Path("outputs") / f"{sanitized_filename}.{file_ext}"
 
 async def handle_start_command(websocket, data: str, manager):
     json_data = json.loads(data[6:])
@@ -130,13 +143,42 @@ async def handle_start_command(websocket, data: str, manager):
         report_source,
         query_domains,
     ) = extract_command_data(json_data)
+    await run_research(
+        websocket=websocket,
+        task=task,
+        report_type=report_type,
+        source_urls=source_urls,
+        document_urls=document_urls,
+        tone=tone,
+        headers=headers,
+        report_source=report_source,
+        query_domains=query_domains,
+        manager=manager,
+    )
 
+
+async def run_research(
+    websocket: WebSocketLike,
+    task: str,
+    report_type: str,
+    source_urls: list[str],
+    document_urls: list[str],
+    tone: str,
+    headers: dict,
+    report_source: str,
+    query_domains: list[str],
+    manager,
+    task_id: int = int(time.time()),
+    task_name: str | None = None,
+):
     if not task or not report_type:
         print("Error: Missing task or report_type")
         return
 
     # Create logs handler with websocket and task
-    logs_handler = CustomLogsHandler(websocket, task)
+    logs_handler = CustomLogsHandler(
+        websocket, task, task_id=task_id, task_name=task_name
+    )
     # Initialize log content with query
     await logs_handler.send_json({
         "query": task,
@@ -145,7 +187,7 @@ async def handle_start_command(websocket, data: str, manager):
         "report": ""
     })
 
-    sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
+    sanitized_filename = sanitize_filename(f"task_{task_id}_{task_name or task}")
 
     report = await manager.start_streaming(
         task,
