@@ -146,7 +146,7 @@ smart_chat_model = cast(
     get_llm(
         llm_provider=cfg.smart_llm_provider,
         model=cfg.smart_llm_model,
-        temperature=0.5,
+        temperature=0.35,
         top_p=0.9,
         max_tokens=cfg.smart_token_limit,  # type: ignore
         **cfg.llm_kwargs,
@@ -158,7 +158,7 @@ fast_chat_model = cast(
     get_llm(
         llm_provider=cfg.fast_llm_provider,
         model=cfg.fast_llm_model,
-        temperature=0.5,
+        temperature=0.35,
         max_tokens=cfg.fast_token_limit,  # type: ignore
         **cfg.llm_kwargs,
     ).llm,
@@ -167,32 +167,27 @@ fast_chat_model = cast(
 
 research_type_descriptions = {
     ReportType.ResearchReport: "A brief summary, ~2 min",
-    ReportType.DeepResearch: "advanced recursive deep research workflow",
-    ReportType.MultiAgents: "leveraging multiple agents with specialized skills",
+    ReportType.DeepResearch: "Advanced recursive deep research workflow",
+    ReportType.MultiAgents: "Leveraging multiple agents with specialized skills",
 }
+
+CuratedReportTypes: TypeAlias = Literal[
+    ReportType.ResearchReport, ReportType.DeepResearch, ReportType.MultiAgents
+]
 
 
 class BaseResearchTaskMetaData(BaseModel):
     """Base class for research task metadata."""
 
-    report_tone: Literal[
-        Tone.Analytical,
-        Tone.Speculative,
-        Tone.Critical,
-        Tone.Formal,
-        Tone.Objective,
-        Tone.Persuasive,
-    ] = Field(
-        description="Highly prefer one of following report tones: \n"
-        f" - {Tone.Analytical}\n"
-        f" - {Tone.Speculative}\n"
-        f" - {Tone.Critical}\n"
+    report_tone: Tone = Field(
+        description="Prioritize the following curated tones:\n"
+        f"- {Tone.Analytical}\n"
+        f"- {Tone.Speculative}\n"
+        f"- {Tone.Critical}\n"
     )
-    research_type: Literal[
-        ReportType.ResearchReport, ReportType.DeepResearch, ReportType.MultiAgents
-    ] = Field(
-        description="Highly prefer one of following research types: \n"
-        + "\n".join(f"  - {k}: {v}" for k, v in research_type_descriptions.items())
+    research_type: CuratedReportTypes = Field(
+        description="Prioritize the following curated types:\n"
+        + "\n".join(f"- {k}: {v}" for k, v in research_type_descriptions.items())
     )
     research_prompt: str = Field(
         description="The prompt that is passed to the next agent for the research task."
@@ -212,13 +207,13 @@ async def propose_research_task(
     metadata: BaseResearchTaskMetaData,
     sse_writer: Annotated[SseWebSocketAdapter, InjectedToolArg],
 ) -> None:
-    """Propose a research task to user."""
+    """Propose a research task to user. Call this before starting the research task."""
     await sse_writer.send_text(
         "Would you like to proceed with the proposed research task as outlined, or would you like me to provide more information or adjust the parameters?"
     )
     await sse_writer.send_text("\n## Proposed Research Task\n")
     for k, v in metadata.model_dump().items():
-        await sse_writer.send_text(f"  - **{k.replace('_', ' ').title()}**: {v}")
+        await sse_writer.send_text(f"- **{k.replace('_', ' ').title()}**: {v}")
         if k == "research_type" and v in research_type_descriptions:
             await sse_writer.send_text(f" ({research_type_descriptions[v]})")
         await sse_writer.send_text("\n")
@@ -284,8 +279,8 @@ research_prompt = ChatPromptTemplate.from_messages(
     (
         SystemMessagePromptTemplate.from_template(
             "Decide if you need to start a research tool call. note that current date time is {now}."
-            "If you have enough info, propose a research task. always wait for user to confirm first."
-            "Else ask for necessary info to suggest the parameters."
+            "If you have enough info, propose a research task by calling the `propose_research_task`."
+            "Else ask for necessary info to propose the research task."
             "If user confirms, start the research task."
         ),
         MessagesPlaceholder("messages"),
