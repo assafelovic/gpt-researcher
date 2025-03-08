@@ -118,7 +118,7 @@ def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
 
 def get_text_from_soup(soup: BeautifulSoup) -> str:
     """Get the relevant text from the soup with improved filtering"""
-    text = soup.get_text(strip=True, separator="\n")
+    text = soup.get_text(strip=True, separator="|")
     # Remove excess whitespace
     text = re.sub(r"\s{2,}", " ", text)
     return text
