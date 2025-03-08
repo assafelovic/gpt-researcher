@@ -81,19 +81,12 @@ class OpenAiResponseFormatter(SseFormatter):
             return json.dumps(chunk)
 
         message_buffer = []
-        i = 0
-        while True:
-            if i >= len(self.messages):
-                break
-            try:
-                message = self.messages[i]
-                message_buffer.append(message)
-                # need to separate reasoning tokens and chat messages, to avoid confusing the client
-                if i == len(self.messages) - 1 or message == self.think_tag_end:
-                    yield build_chunk("".join(message_buffer))
-                    message_buffer.clear()
-            finally:
-                i += 1
+        for i, message in enumerate(self.messages):
+            message_buffer.append(message)
+            # need to separate reasoning tokens and chat messages, to avoid confusing the client
+            if i == len(self.messages) - 1 or message == self.think_tag_end:
+                yield build_chunk("".join(message_buffer))
+                message_buffer.clear()
 
     def message_response(self) -> str:
         message = "".join(self.messages)
