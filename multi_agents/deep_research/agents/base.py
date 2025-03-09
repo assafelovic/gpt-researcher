@@ -125,7 +125,6 @@ class DeepResearchAgent:
             if isinstance(source, dict):
                 # Debug log each source
                 source_keys = ', '.join(source.keys())
-                print_agent_output(f"Source {i+1} has keys: {source_keys}", "RESEARCHER")
                 
                 # Ensure the source has content
                 if "content" not in source or not source["content"]:
@@ -133,7 +132,6 @@ class DeepResearchAgent:
                     for field in ["text", "snippet", "body", "description"]:
                         if field in source and source[field]:
                             source["content"] = source[field]
-                            print_agent_output(f"Using {field} as content for source {i+1}", "RESEARCHER")
                             break
                 
                 # If still no content, create content from available fields
@@ -145,7 +143,6 @@ class DeepResearchAgent:
                     
                     if content_parts:
                         source["content"] = "\n".join(content_parts)
-                        print_agent_output(f"Created content from other fields for source {i+1}", "RESEARCHER")
                 
                 search_results.append(source)
                 

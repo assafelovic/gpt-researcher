@@ -22,8 +22,8 @@ def create_default_task():
         "max_sections": 3,
         "publish_formats": {
             "markdown": True,
-            "pdf": False,
-            "docx": False
+            "pdf": True,
+            "docx": True
         },
         "include_human_feedback": False,
         "follow_guidelines": False,
