@@ -10,62 +10,59 @@ def get_retriever(retriever: str):
         retriever: Retriever class
 
     """
-    match retriever:
-        case "google":
-            from gpt_researcher.retrievers import GoogleSearch
-
-            return GoogleSearch
-        case "searx":
-            from gpt_researcher.retrievers import SearxSearch
-
-            return SearxSearch
-        case "searchapi":
-            from gpt_researcher.retrievers import SearchApiSearch
-
-            return SearchApiSearch
-        case "serpapi":
-            from gpt_researcher.retrievers import SerpApiSearch
-
-            return SerpApiSearch
-        case "serper":
-            from gpt_researcher.retrievers import SerperSearch
-
-            return SerperSearch
-        case "duckduckgo":
-            from gpt_researcher.retrievers import Duckduckgo
-
-            return Duckduckgo
-        case "bing":
-            from gpt_researcher.retrievers import BingSearch
-
-            return BingSearch
-        case "arxiv":
-            from gpt_researcher.retrievers import ArxivSearch
-
-            return ArxivSearch
-        case "tavily":
-            from gpt_researcher.retrievers import TavilySearch
-
-            return TavilySearch
-        case "exa":
-            from gpt_researcher.retrievers import ExaSearch
-
-            return ExaSearch
-        case "semantic_scholar":
-            from gpt_researcher.retrievers import SemanticScholarSearch
-
-            return SemanticScholarSearch
-        case "pubmed_central":
-            from gpt_researcher.retrievers import PubMedCentralSearch
-
-            return PubMedCentralSearch
-        case "custom":
-            from gpt_researcher.retrievers import CustomRetriever
-
-            return CustomRetriever
-
-        case _:
-            return None
+    if retriever == "google":
+        from gpt_researcher.retrievers import GoogleSearch
+        return GoogleSearch
+    elif retriever == "searx":
+        from gpt_researcher.retrievers import SearxSearch
+        return SearxSearch
+    elif retriever == "searchapi":
+        from gpt_researcher.retrievers import SearchApiSearch
+        return SearchApiSearch
+    elif retriever == "serpapi":
+        from gpt_researcher.retrievers import SerpApiSearch
+        return SerpApiSearch
+    elif retriever == "serper":
+        from gpt_researcher.retrievers import SerperSearch
+        return SerperSearch
+    elif retriever == "duckduckgo":
+        from gpt_researcher.retrievers import Duckduckgo
+        return Duckduckgo
+    elif retriever == "bing":
+        from gpt_researcher.retrievers import BingSearch
+        return BingSearch
+    elif retriever == "arxiv":
+        from gpt_researcher.retrievers import ArxivSearch
+        return ArxivSearch
+    elif retriever == "tavily":
+        from gpt_researcher.retrievers import TavilySearch
+        return TavilySearch
+    elif retriever == "exa":
+        from gpt_researcher.retrievers import ExaSearch
+        return ExaSearch
+    elif retriever == "semantic_scholar":
+        from gpt_researcher.retrievers import SemanticScholarSearch
+        return SemanticScholarSearch
+    elif retriever == "pubmed_central":
+        from gpt_researcher.retrievers import PubMedCentralSearch
+        return PubMedCentralSearch
+    elif retriever == "custom":
+        from gpt_researcher.retrievers import CustomRetriever
+        return CustomRetriever
+    elif retriever == "brave":
+        from gpt_researcher.retrievers import BraveSearch
+        return BraveSearch
+    elif retriever == "you":
+        from gpt_researcher.retrievers import YouSearch
+        return YouSearch
+    elif retriever == "perplexity":
+        from gpt_researcher.retrievers import PerplexitySearch
+        return PerplexitySearch
+    elif retriever == "local_documents":
+        from gpt_researcher.retrievers import LocalDocumentRetriever
+        return LocalDocumentRetriever
+    else:
+        raise ValueError(f"Retriever {retriever} not found")
 
 
 def get_retrievers(headers: dict[str, str], cfg: Config):

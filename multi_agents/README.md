@@ -10,6 +10,21 @@ An average run generates a 5-6 page research report in multiple formats such as 
 
 Please note: Multi-agents are utilizing the same configuration of models like GPT-Researcher does. However, only the SMART_LLM is used for the time being. Please refer to the [LLM config pages](https://docs.gptr.dev/docs/gpt-researcher/llms/llms).
 
+## Research Modes
+
+The system supports two research modes:
+
+### Standard Research
+The standard research mode follows a sequential process with a team of agents working together to produce a comprehensive report.
+
+### Deep Research
+The deep research mode performs more extensive research by exploring topics in breadth and depth. It allows for:
+- Parallel exploration of multiple research queries
+- Recursive research to specified depth levels
+- Configurable concurrency for performance optimization
+- Organized sections with logical headers
+- Comprehensive report generation with proper formatting
+
 ## The Multi Agent Team
 The research team is made up of 8 agents:
 - **Human** - The human in the loop that oversees the process and provides feedback to the agents.
@@ -20,6 +35,14 @@ The research team is made up of 8 agents:
 - **Revisor** - Revises the research results based on the feedback from the reviewer.
 - **Writer** - Responsible for compiling and writing the final report.
 - **Publisher** - Responsible for publishing the final report in various formats.
+
+### Deep Research Agents
+For deep research mode, additional specialized agents are used:
+- **DeepExplorerAgent** - Generates search queries and research plans
+- **DeepSynthesizerAgent** - Processes and synthesizes research results
+- **DeepReviewerAgent** - Reviews research quality and completeness
+- **SectionWriterAgent** - Organizes research data into logical sections with titles
+- **ReportFormatterAgent** - Prepares the final state for the publisher
 
 ## How it works
 Generally, the process is based on the following stages: 
@@ -46,6 +69,18 @@ More specifically (as seen in the architecture diagram) the process is as follow
 - Writer - Compiles and writes the final report including an introduction, conclusion and references section from the given research findings.
 - Publisher - Publishes the final report to multi formats such as PDF, Docx, Markdown, etc.
 
+### Deep Research Workflow
+The deep research mode follows a different workflow:
+1. **DeepExplorerAgent** generates search queries and a research plan
+2. Multiple search queries are processed in parallel with a concurrency limit
+3. **DeepSynthesizerAgent** processes the research results
+4. **DeepReviewerAgent** reviews the research quality
+5. The process repeats recursively for deeper research levels
+6. **SectionWriterAgent** organizes the research data into logical sections
+7. Standard **WriterAgent** creates introduction, conclusion, and table of contents
+8. **ReportFormatterAgent** prepares the final state for the publisher
+9. Standard **PublisherAgent** creates the final report in the requested formats
+
 ## How to run
 1. Install required packages found in this root folder including `langgraph`:
     ```bash
@@ -55,44 +90,50 @@ More specifically (as seen in the architecture diagram) the process is as follow
 
 2. Run the application:
     ```bash
-    python main.py
+    # Run standard research mode
+    python main.py --query "Your research question here"
+    
+    # Run deep research mode
+    python main.py --mode deep --query "Your research question" --breadth 4 --depth 2 --concurrency 2
     ```
 
 ## Usage
-To change the research query and customize the report, edit the `task.json` file in the main directory.
-#### Task.json contains the following fields:
-- `query` - The research query or task.
-- `model` - The OpenAI LLM to use for the agents.
-- `max_sections` - The maximum number of sections in the report. Each section is a subtopic of the research query.
-- `include_human_feedback` - If true, the user can provide feedback to the agents. If false, the agents will work autonomously.
-- `publish_formats` - The formats to publish the report in. The reports will be written in the `output` directory.
-- `source` - The location from which to conduct the research. Options: `web` or `local`. For local, please add `DOC_PATH` env var.
-- `follow_guidelines` - If true, the research report will follow the guidelines below. It will take longer to complete. If false, the report will be generated faster but may not follow the guidelines.
-- `guidelines` - A list of guidelines that the report must follow.
-- `verbose` - If true, the application will print detailed logs to the console.
+To run research with custom parameters, use the command line arguments:
 
-#### For example:
-```json
-{
-  "query": "Is AI in a hype cycle?",
-  "model": "gpt-4o",
-  "max_sections": 3, 
-  "publish_formats": { 
-    "markdown": true,
-    "pdf": true,
-    "docx": true
-  },
-  "include_human_feedback": false,
-  "source": "web",
-  "follow_guidelines": true,
-  "guidelines": [
-    "The report MUST fully answer the original question",
-    "The report MUST be written in apa format",
-    "The report MUST be written in english"
-  ],
-  "verbose": true
-}
+```bash
+# Run standard research
+python main.py --mode standard --query "Your research question"
+
+# Run deep research
+python main.py --mode deep --query "Your research question" --breadth 4 --depth 2 --concurrency 2 --model "gpt-4o" --verbose
 ```
+
+### Available Command Line Arguments
+- `--mode` - Research mode: "standard" or "deep" (default: "standard")
+- `--query` - The research query or task (required)
+- `--model` - The OpenAI LLM to use for the agents (default: "gpt-4o")
+- `--verbose` - Enable verbose output (default: True)
+
+### Deep Research Arguments
+For deep research mode, you can also configure:
+- `--breadth` - Number of parallel search queries at each level (default: 4)
+- `--depth` - Maximum depth of recursive research (default: 2)
+- `--concurrency` - Maximum number of concurrent research tasks (default: 2)
+- `--markdown` - Generate markdown output (default: True)
+- `--pdf` - Generate PDF output (default: False)
+- `--docx` - Generate DOCX output (default: False)
+
+### Example Commands
+
+```bash
+# Run standard research on AI
+python main.py --mode standard --query "Is AI in a hype cycle?"
+
+# Run deep research with custom parameters
+python main.py --mode deep --query "Impact of climate change on agriculture" --breadth 5 --depth 3 --concurrency 3 --pdf --docx
+```
+
+The reports will be written in the `outputs` directory.
 
 ## To Deploy
 
