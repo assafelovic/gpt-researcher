@@ -16,22 +16,25 @@ if os.environ.get("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
 load_dotenv()
 
-def open_task():
-    # Get the directory of the current script
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    # Construct the absolute path to task.json
-    task_json_path = os.path.join(current_dir, 'task.json')
-    
-    with open(task_json_path, 'r') as f:
-        task = json.load(f)
-
-    if not task:
-        raise Exception("No task found. Please ensure a valid task.json file is present in the multi_agents directory and contains the necessary task information.")
-
-    return task
+def create_default_task():
+    """Create a default task configuration with sensible defaults."""
+    return {
+        "max_sections": 3,
+        "publish_formats": {
+            "markdown": True,
+            "pdf": True,
+            "docx": True
+        },
+        "include_human_feedback": False,
+        "follow_guidelines": False,
+        "model": "gpt-4o",
+        "guidelines": [],
+        "verbose": True,
+        "source": "web"
+    }
 
 async def run_research_task(query, websocket=None, stream_output=None, tone=Tone.Objective, headers=None):
-    task = open_task()
+    task = create_default_task()
     task["query"] = query
 
     chief_editor = ChiefEditorAgent(task, websocket, stream_output, tone, headers)
@@ -44,7 +47,7 @@ async def run_research_task(query, websocket=None, stream_output=None, tone=Tone
 
 async def run_deep_research_task(query, breadth=4, depth=2, concurrency=2, websocket=None, stream_output=None, tone=Tone.Objective, headers=None):
     """Run deep research on a given query"""
-    task = open_task()
+    task = create_default_task()
     task["query"] = query
     task["deep_research_breadth"] = breadth
     task["deep_research_depth"] = depth
@@ -76,18 +79,16 @@ async def main():
     parser = argparse.ArgumentParser(description="Run research tasks")
     parser.add_argument("--mode", type=str, choices=["standard", "deep"], default="standard", 
                         help="Research mode: standard or deep")
-    parser.add_argument("--query", type=str, help="Research query (overrides task.json)")
+    parser.add_argument("--query", type=str, required=True, help="Research query")
     parser.add_argument("--breadth", type=int, default=4, help="Deep research breadth")
     parser.add_argument("--depth", type=int, default=2, help="Deep research depth")
     parser.add_argument("--concurrency", type=int, default=2, help="Deep research concurrency")
+    parser.add_argument("--model", type=str, default="gpt-4o", help="Model to use for research")
+    parser.add_argument("--verbose", action="store_true", default=True, help="Enable verbose output")
     
     args = parser.parse_args()
     
-    task = open_task()
-    query = args.query or task.get("query")
-    
-    if not query:
-        raise ValueError("No query provided. Please specify a query in task.json or with --query")
+    query = args.query
     
     if args.mode == "deep":
         print(f"Running deep research on: {query}")

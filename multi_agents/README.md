@@ -91,62 +91,49 @@ The deep research mode follows a different workflow:
 2. Run the application:
     ```bash
     # Run standard research mode
-    python main.py
-    
-    # Run standard research with a specific query
     python main.py --query "Your research question here"
     
     # Run deep research mode
-    python main.py --mode deep
-    
-    # Run deep research with custom parameters
-    python main.py --mode deep --query "Your research question" --breadth 5 --depth 3 --concurrency 3
+    python main.py --mode deep --query "Your research question" --breadth 4 --depth 2 --concurrency 2
     ```
 
 ## Usage
-To change the research query and customize the report, edit the `task.json` file in the main directory.
-#### Task.json contains the following fields:
-- `query` - The research query or task.
-- `model` - The OpenAI LLM to use for the agents.
-- `max_sections` - The maximum number of sections in the report. Each section is a subtopic of the research query.
-- `include_human_feedback` - If true, the user can provide feedback to the agents. If false, the agents will work autonomously.
-- `publish_formats` - The formats to publish the report in. The reports will be written in the `output` directory.
-- `source` - The location from which to conduct the research. Options: `web` or `local`. For local, please add `DOC_PATH` env var.
-- `follow_guidelines` - If true, the research report will follow the guidelines below. It will take longer to complete. If false, the report will be generated faster but may not follow the guidelines.
-- `guidelines` - A list of guidelines that the report must follow.
-- `verbose` - If true, the application will print detailed logs to the console.
+To run research with custom parameters, use the command line arguments:
 
-#### Deep Research Configuration
-For deep research mode, you can also configure:
-- `deep_research_breadth` - Number of parallel search queries at each level (default: 4)
-- `deep_research_depth` - Maximum depth of recursive research (default: 2)
-- `deep_research_concurrency` - Maximum number of concurrent research tasks (default: 2)
+```bash
+# Run standard research
+python main.py --mode standard --query "Your research question"
 
-#### Example task.json:
-```json
-{
-  "query": "Is AI in a hype cycle?",
-  "model": "gpt-4o",
-  "max_sections": 3, 
-  "publish_formats": { 
-    "markdown": true,
-    "pdf": true,
-    "docx": true
-  },
-  "include_human_feedback": false,
-  "source": "web",
-  "follow_guidelines": true,
-  "guidelines": [
-    "The report MUST fully answer the original question",
-    "The report MUST be written in apa format",
-    "The report MUST be written in english"
-  ],
-  "verbose": true,
-  "deep_research_breadth": 4,
-  "deep_research_depth": 2,
-  "deep_research_concurrency": 2
-}
+# Run deep research
+python main.py --mode deep --query "Your research question" --breadth 4 --depth 2 --concurrency 2 --model "gpt-4o" --verbose
 ```
+
+### Available Command Line Arguments
+- `--mode` - Research mode: "standard" or "deep" (default: "standard")
+- `--query` - The research query or task (required)
+- `--model` - The OpenAI LLM to use for the agents (default: "gpt-4o")
+- `--verbose` - Enable verbose output (default: True)
+
+### Deep Research Arguments
+For deep research mode, you can also configure:
+- `--breadth` - Number of parallel search queries at each level (default: 4)
+- `--depth` - Maximum depth of recursive research (default: 2)
+- `--concurrency` - Maximum number of concurrent research tasks (default: 2)
+- `--markdown` - Generate markdown output (default: True)
+- `--pdf` - Generate PDF output (default: False)
+- `--docx` - Generate DOCX output (default: False)
+
+### Example Commands
+
+```bash
+# Run standard research on AI
+python main.py --mode standard --query "Is AI in a hype cycle?"
+
+# Run deep research with custom parameters
+python main.py --mode deep --query "Impact of climate change on agriculture" --breadth 5 --depth 3 --concurrency 3 --pdf --docx
+```
+
+The reports will be written in the `outputs` directory.
 
 ## To Deploy
 

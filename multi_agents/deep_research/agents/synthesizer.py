@@ -115,35 +115,21 @@ class DeepSynthesizerAgent(DeepResearchAgent):
         content_list = []
         sources = []
         
-        # Debug log the structure of the first search result if available
-        if search_results and len(search_results) > 0:
-            first_result = search_results[0]
-            if isinstance(first_result, dict):
-                print_agent_output(f"First search result keys: {', '.join(first_result.keys())}", "SYNTHESIZER")
-            else:
-                print_agent_output(f"First search result is not a dictionary but a {type(first_result)}", "SYNTHESIZER")
-        
         for i, result in enumerate(search_results):
             if isinstance(result, dict):
                 title = result.get("title", "Unknown Title")
                 url = result.get("url", "")
                 content = result.get("content", "")
                 
-                # Debug log each result
-                print_agent_output(f"Result {i+1}: Title: {title}, URL: {url}, Content length: {len(content)}", "SYNTHESIZER")
-                
                 # More robust content extraction - try different keys that might contain content
                 if not content and "text" in result:
                     content = result.get("text", "")
-                    print_agent_output(f"Using 'text' field instead of 'content' for result {i+1}", "SYNTHESIZER")
                 
                 if not content and "snippet" in result:
                     content = result.get("snippet", "")
-                    print_agent_output(f"Using 'snippet' field instead of 'content' for result {i+1}", "SYNTHESIZER")
                 
                 if not content and "body" in result:
                     content = result.get("body", "")
-                    print_agent_output(f"Using 'body' field instead of 'content' for result {i+1}", "SYNTHESIZER")
                 
                 # If we still don't have content but have other fields, create a summary from available fields
                 if not content:
@@ -154,66 +140,13 @@ class DeepSynthesizerAgent(DeepResearchAgent):
                     
                     if summary_parts:
                         content = "\n".join(summary_parts)
-                        print_agent_output(f"Created content from other fields for result {i+1}", "SYNTHESIZER")
                 
                 if content:
                     content_list.append(f"Source: {title}\nURL: {url}\nContent: {content}")
                     sources.append(result)
-                else:
-                    print_agent_output(f"No content found for result {i+1}", "SYNTHESIZER")
-            else:
-                print_agent_output(f"Result {i+1} is not a dictionary but a {type(result)}", "SYNTHESIZER")
-        
+
         # Combine content
         combined_content = "\n\n".join(content_list)
-        
-        # Log the combined content length
-        print_agent_output(f"Combined content length: {len(combined_content)}", "SYNTHESIZER")
-        
-        # If no content, create a fallback
-        if not combined_content:
-            print_agent_output("WARNING: No content extracted from search results. Creating fallback content.", "SYNTHESIZER")
-            
-            # Create a fallback context directly from the search results
-            fallback_context = f"# Research on: {query}\n\n"
-            
-            # Try to extract any useful information from the search results
-            for i, result in enumerate(search_results):
-                if isinstance(result, dict):
-                    title = result.get("title", "Unknown Title")
-                    url = result.get("url", "")
-                    
-                    # Try to extract any text content from any field
-                    content_fields = []
-                    for key, value in result.items():
-                        if isinstance(value, str) and len(value) > 10 and key not in ["title", "url"]:
-                            content_fields.append(f"{key}: {value}")
-                    
-                    snippet = "\n".join(content_fields) if content_fields else ""
-                    
-                    if not snippet:
-                        snippet = "No detailed content available for this source."
-                    
-                    if title or url or snippet:
-                        fallback_context += f"## Source {i+1}: {title}\n"
-                        if url:
-                            fallback_context += f"URL: {url}\n"
-                        fallback_context += f"Summary: {snippet}\n\n"
-            
-            # If we still don't have any content, create a generic message
-            if fallback_context == f"# Research on: {query}\n\n":
-                fallback_context += "No specific content could be extracted from the search results. This could be due to:\n\n"
-                fallback_context += "1. API limitations or rate limiting\n"
-                fallback_context += "2. Search results not containing detailed content\n"
-                fallback_context += "3. Technical issues with content extraction\n\n"
-                fallback_context += "Consider refining your search query or trying again later."
-            
-            # Use the fallback context
-            return {
-                "context": fallback_context,
-                "sources": search_results,  # Use the original search results as sources
-                "citations": {}
-            }
         
         try:
             # Process research results
@@ -243,32 +176,7 @@ class DeepSynthesizerAgent(DeepResearchAgent):
                 "sources": sources,
                 "citations": citations
             }
+
         except Exception as e:
             # Log the error
             print_agent_output(f"Error processing research results: {str(e)}. Using fallback approach.", "SYNTHESIZER")
-            
-            # Create a simple context from the combined content
-            simple_context = f"# Research on: {query}\n\n"
-            simple_context += "## Key Information\n\n"
-            
-            # Add a summary of each source
-            for i, source in enumerate(sources):
-                title = source.get("title", "Unknown Title")
-                url = source.get("url", "")
-                content = source.get("content", "")
-                
-                simple_context += f"### Source {i+1}: {title}\n"
-                if url:
-                    simple_context += f"URL: {url}\n"
-                
-                # Add a snippet of the content
-                if content:
-                    snippet = content[:300] + "..." if len(content) > 300 else content
-                    simple_context += f"Summary: {snippet}\n\n"
-            
-            # Return the simple context
-            return {
-                "context": simple_context,
-                "sources": sources,
-                "citations": {}
-            } 

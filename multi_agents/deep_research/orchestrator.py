@@ -173,43 +173,7 @@ class DeepResearchOrchestrator:
                 f"Synthesis complete: {len(context_item)} chars context, {len(sources)} sources, {len(citations)} citations",
                 "MASTER"
             )
-            
-            # If synthesis didn't return any context but we have search results, create a fallback
-            if not context_item and search_results:
-                print_agent_output(
-                    "WARNING: Synthesis returned empty context despite having search results. Creating fallback context.",
-                    "MASTER"
-                )
-                
-                # Create a fallback context directly from the search results
-                fallback_context = f"# Research on: {query}\n\n"
-                
-                # Add content from each search result
-                for i, result in enumerate(search_results):
-                    if isinstance(result, dict):
-                        result_title = result.get("title", "Unknown Title")
-                        url = result.get("url", "")
-                        content = result.get("content", "")
-                        
-                        if result_title or url or content:
-                            fallback_context += f"## Source {i+1}: {result_title}\n"
-                            if url:
-                                fallback_context += f"URL: {url}\n\n"
-                            if content:
-                                # Add a snippet of the content
-                                snippet = content[:500] + "..." if len(content) > 500 else content
-                                fallback_context += f"{snippet}\n\n"
-                
-                # Use the fallback context
-                context_item = fallback_context
-                sources = search_results
-                
-                print_agent_output(
-                    f"Created fallback context: {len(context_item)} chars",
-                    "MASTER"
-                )
-            
-            # Return the results
+
             return {
                 "context_item": context_item,
                 "sources": sources,
@@ -249,16 +213,12 @@ class DeepResearchOrchestrator:
             async with semaphore:
                 try:
                     result = await self.process_query(state, index)
-                    # Debug log each query result
-                    if "error" in result:
-                        print_agent_output(f"Query {index} error: {result['error']}", "MASTER")
-                    else:
-                        context_item = result.get("context_item", "")
-                        sources = result.get("sources", [])
-                        print_agent_output(
-                            f"Query {index} result: {len(context_item)} chars context, {len(sources)} sources",
-                            "MASTER"
-                        )
+                    context_item = result.get("context_item", "")
+                    sources = result.get("sources", [])
+                    print_agent_output(
+                        f"Query {index} result: {len(context_item)} chars context, {len(sources)} sources",
+                        "MASTER"
+                    )
                     return result
                 except Exception as e:
                     print_agent_output(f"Error processing query {index}: {str(e)}", "MASTER")
@@ -286,65 +246,28 @@ class DeepResearchOrchestrator:
         results_with_sources = 0
         
         for i, result in enumerate(results):
-            if "error" in result:
-                # Skip errors
-                print_agent_output(f"Skipping result {i} due to error", "MASTER")
-                continue
-                
             # Add context item
             context_item = result.get("context_item", "")
             if context_item:
                 combined_context_items.append(context_item)
                 results_with_context += 1
-                print_agent_output(f"Added context item from result {i}: {len(context_item)} chars", "MASTER")
                 
             # Add sources
             sources = result.get("sources", [])
             if sources:
                 combined_sources.extend(sources)
                 results_with_sources += 1
-                print_agent_output(f"Added {len(sources)} sources from result {i}", "MASTER")
                 
             # Add citations
             citations = result.get("citations", {})
             if citations:
                 combined_citations.update(citations)
-                print_agent_output(f"Added {len(citations)} citations from result {i}", "MASTER")
-        
-        # Log the results
-        message = f"Collected {len(combined_context_items)} context items and {len(combined_sources)} sources."
-        if self.websocket and self.stream_output:
-            await self.stream_output("logs", "collected_results", message, self.websocket)
-        else:
-            print_agent_output(message, "MASTER")
-            
-        # Debug log the final state
-        print_agent_output(
-            f"Ending process_all_queries with {len(combined_context_items)} context items and {len(combined_sources)} sources.",
-            "MASTER"
-        )
         
         # Debug log how many results contributed data
         print_agent_output(
             f"{results_with_context}/{len(results)} results contributed context items, {results_with_sources}/{len(results)} contributed sources",
             "MASTER"
         )
-        
-        # If we didn't collect any context items or sources, create a fallback
-        if not combined_context_items and not combined_sources:
-            print_agent_output(
-                "WARNING: No context items or sources collected. Creating fallback context.",
-                "MASTER"
-            )
-            
-            # Create a fallback context
-            fallback_context = f"Research on: {state.query}\n\n"
-            fallback_context += "No specific research data was collected from the search queries. "
-            fallback_context += "This could be due to API limitations, network issues, or lack of relevant information. "
-            fallback_context += "Consider refining your search query or trying again later."
-            
-            # Add the fallback context
-            combined_context_items.append(fallback_context)
         
         # Return combined results following LangGraph pattern
         return {
@@ -363,8 +286,6 @@ class DeepResearchOrchestrator:
         message = f"Reviewing research results and identifying follow-up questions..."
         if self.websocket and self.stream_output:
             await self.stream_output("logs", "reviewing_research", message, self.websocket)
-        else:
-            print_agent_output(message, "MASTER")
             
         # Run the reviewer agent
         review_result = await reviewer.review(
@@ -592,14 +513,9 @@ class DeepResearchOrchestrator:
                 # If that fails, try to extract attributes from the object
                 try:
                     result_dict = result.__dict__
-                except AttributeError:
-                    # If that fails too, try to extract items one by one
-                    for key in dir(result):
-                        if not key.startswith('_') and not callable(getattr(result, key, None)):
-                            try:
-                                result_dict[key] = getattr(result, key)
-                            except (AttributeError, TypeError):
-                                pass
+                except Exception as e:
+                    self.stream_output("logs", "error", f"Error converting result to dictionary. Error: {e}", self.websocket)
+                    pass
             
             # Extract data from the result dictionary
             context_items = result_dict.get('context_items', [])
@@ -624,11 +540,6 @@ class DeepResearchOrchestrator:
             if not final_context and context_items:
                 # If no final_context but we have context_items, join them
                 final_context = "\n\n".join(context_items)
-                print_agent_output("Using joined context_items as final context", "MASTER")
-            elif not final_context:
-                # Create a default context if all else fails
-                final_context = f"Research on: {self.task.get('query', '')}\n\nNo specific research data was collected."
-                print_agent_output("Using default context as final context", "MASTER")
             
             # If we have sources but they're not in the right format, try to fix them
             processed_sources = []
@@ -682,4 +593,4 @@ class DeepResearchOrchestrator:
                 "context": f"Research on: {self.task.get('query', '')}\n\nAn error occurred during research: {str(e)}",
                 "sources": [],
                 "citations": {}
-            } 
+            }
