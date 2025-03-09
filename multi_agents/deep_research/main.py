@@ -189,55 +189,33 @@ async def run_deep_research(
     
     return research_results
 
-def open_task_file() -> Dict[str, Any]:
-    """Open and parse the task.json file"""
-    # Get the directory of the current script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    # Go up one level to the multi_agents directory
-    parent_dir = os.path.dirname(script_dir)
-    # Construct the path to task.json
-    task_path = os.path.join(parent_dir, "task.json")
-    
-    # Read and parse the task file
-    with open(task_path, "r") as f:
-        return json.load(f)
-
 async def main():
     """Main entry point for deep research"""
     parser = argparse.ArgumentParser(description="Run deep research on a topic")
-    parser.add_argument("--query", type=str, help="Research query")
+    parser.add_argument("--query", type=str, required=True, help="Research query")
     parser.add_argument("--breadth", type=int, default=4, help="Research breadth")
     parser.add_argument("--depth", type=int, default=2, help="Research depth")
     parser.add_argument("--concurrency", type=int, default=2, help="Concurrency limit")
     parser.add_argument("--source", type=str, default="web", help="Research source (web or local)")
-    parser.add_argument("--verbose", action="store_true", help="Verbose output")
-    parser.add_argument("--task-file", action="store_true", help="Use task.json file")
+    parser.add_argument("--verbose", action="store_true", default=True, help="Verbose output")
+    parser.add_argument("--markdown", action="store_true", default=True, help="Generate markdown output")
+    parser.add_argument("--pdf", action="store_true", default=False, help="Generate PDF output")
+    parser.add_argument("--docx", action="store_true", default=False, help="Generate DOCX output")
     
     args = parser.parse_args()
     
-    if args.task_file:
-        # Use task.json file
-        task = open_task_file()
-        query = task.get("query")
-        breadth = task.get("deep_research_breadth", 4)
-        depth = task.get("deep_research_depth", 2)
-        concurrency = task.get("deep_research_concurrency", 2)
-        source = task.get("source", "web")
-        verbose = task.get("verbose", True)
-        publish_formats = task.get("publish_formats", {"markdown": True})
-    else:
-        # Use command line arguments
-        query = args.query
-        breadth = args.breadth
-        depth = args.depth
-        concurrency = args.concurrency
-        source = args.source
-        verbose = args.verbose
-        publish_formats = {"markdown": True}
-    
-    if not query:
-        print("Please provide a research query with --query or use --task-file")
-        return
+    # Use command line arguments
+    query = args.query
+    breadth = args.breadth
+    depth = args.depth
+    concurrency = args.concurrency
+    source = args.source
+    verbose = args.verbose
+    publish_formats = {
+        "markdown": args.markdown,
+        "pdf": args.pdf,
+        "docx": args.docx
+    }
     
     # Run deep research
     results = await run_deep_research(
@@ -260,6 +238,8 @@ async def main():
         print("\nPublished files:")
         for file in results["published_files"]:
             print(f"- {file}")
+    
+    return results
 
 if __name__ == "__main__":
     asyncio.run(main()) 

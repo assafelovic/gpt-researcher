@@ -46,10 +46,13 @@ The recursive research step is conditionally executed based on the current depth
 
 You can use the deep research implementation in two ways:
 
+> **Note:** The command line examples below should be run from the parent `multi_agents` directory, not from within the `deep_research` directory.
+
 ### 1. From the command line:
 
 ```bash
-python -m multi_agents.main --mode deep --query "Your research query" --depth 2 --breadth 4
+# Run deep research from the multi_agents directory
+python main.py --mode deep --query "Your research query" --depth 2 --breadth 4
 ```
 
 ### 2. Programmatically:
@@ -67,21 +70,27 @@ results = await run_deep_research(
 
 ## Configuration
 
-You can configure the deep research process through the `task.json` file by adding these parameters:
+You can configure the deep research process through command line arguments:
 
-```json
-{
-  "query": "Your research query",
-  "deep_research_depth": 2,
-  "deep_research_breadth": 4,
-  "deep_research_concurrency": 2,
-  "source": "web",
-  "verbose": true,
-  "publish_formats": {
-    "markdown": true,
-    "pdf": true
-  }
-}
+```bash
+# Run deep research with all options
+python main.py --mode deep --query "Your research query" --depth 2 --breadth 4 --concurrency 2 --model "gpt-4o" --verbose --pdf --docx
+```
+
+### Available Arguments
+- `--query` - The research query (required)
+- `--depth` - Maximum depth of recursive research (default: 2)
+- `--breadth` - Number of parallel search queries at each level (default: 4)
+- `--concurrency` - Maximum number of concurrent research tasks (default: 2)
+- `--model` - The model to use for research (default: "gpt-4o")
+- `--verbose` - Enable verbose output (default: True)
+- `--pdf` - Generate PDF output (default: False)
+- `--docx` - Generate DOCX output (default: False)
+
+### Example
+```bash
+# Run deep research with custom parameters
+python main.py --mode deep --query "Impact of climate change on agriculture" --depth 3 --breadth 5 --concurrency 3 --pdf --docx
 ```
 
 ## Output
