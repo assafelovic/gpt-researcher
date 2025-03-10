@@ -98,35 +98,51 @@ def startup_event():
 # Routes
 
 
-@app.get("/")
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "report": None})
+# @app.get("/")
+# async def read_root(request: Request):
+#     return templates.TemplateResponse("index.html", {"request": request, "report": None})
 
 
-@app.get("/files/")
-async def list_files():
-    files = os.listdir(DOC_PATH)
-    print(f"Files in {DOC_PATH}: {files}")
-    return {"files": files}
+# @app.get("/files/")
+# async def list_files():
+#     files = os.listdir(DOC_PATH)
+#     print(f"Files in {DOC_PATH}: {files}")
+#     return {"files": files}
 
 
-@app.post("/api/multi_agents")
-async def run_multi_agents():
-    return await execute_multi_agents(manager)
+# @app.post("/api/multi_agents")
+# async def run_multi_agents():
+#     return await execute_multi_agents(manager)
 
 
-@app.post("/upload/")
-async def upload_file(file: UploadFile = File(...)):
-    return await handle_file_upload(file, DOC_PATH)
+# @app.post("/upload/")
+# async def upload_file(file: UploadFile = File(...)):
+#     return await handle_file_upload(file, DOC_PATH)
 
 
-@app.delete("/files/{filename}")
-async def delete_file(filename: str):
-    return await handle_file_deletion(filename, DOC_PATH)
+# @app.delete("/files/{filename}")
+# async def delete_file(filename: str):
+#     return await handle_file_deletion(filename, DOC_PATH)
 
+@app.delete("/output_file")
+async def delete_output_file(path: str): 
+    filename = path.split("/")[-1] # get the filename from the path if it's a relative path
+    return await handle_file_deletion(filename, "outputs")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    # Get auth token from environment
+    auth_token = os.getenv("AUTH_TOKEN")
+    
+    # Get token from query params
+    client_token = websocket.query_params.get("token")
+    
+    # Validate token
+    if not auth_token or client_token != auth_token:
+        logger.error(f"Unauthorized access: Invalid token")
+        await websocket.close(code=4001, reason="Unauthorized")
+        return
+        
     await manager.connect(websocket)
     try:
         await handle_websocket_communication(websocket, manager)
