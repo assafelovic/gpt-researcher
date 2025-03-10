@@ -159,9 +159,9 @@ async def handle_start_command(websocket, data: str, manager):
         query_domains,
     )
     report = str(report)
-    file_paths = await generate_report_files(report, sanitized_filename)
+    # file_paths = await generate_report_files(report, sanitized_filename)
     # Add JSON log path to file_paths
-    file_paths["json"] = os.path.relpath(logs_handler.log_file)
+    file_paths = { "json": os.path.relpath(logs_handler.log_file) }
     await send_file_paths(websocket, file_paths)
 
 
