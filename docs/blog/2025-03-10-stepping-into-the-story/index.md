@@ -13,25 +13,25 @@ As a teenager, I remember stepping into Barnes & Noble, the scent of fresh pages
 
 To me, books weren’t just stories—they were reflections of the human experience, ways for people to see themselves more clearly. Shakespeare once said, “The purpose of art is to hold a mirror up to nature.” That idea stuck with me. Art, writing, and storytelling weren’t just about entertainment; they were about understanding ourselves in new ways.
 
-But the world changed. The bookstores faded, attention shifted, and the novel—once the pinnacle of deep thought and reflection—gave way to new forms of engagement. The long, immersive experience of reading was replaced with something more dynamic, more interactive. And at first, I thought that meant I had lost my dream.
+But the world changed. The bookstores faded, attention shifted, and the novel—once the pinnacle of deep thought and reflection—gave way to new forms of engagement. The long, immersive experience of reading was replaced with something more dynamic, more interactive.
 
-## The Journey of Doubt: A Simba Moment
+## The Journey into Coding: A Simba Moment
 
-Much like Simba in The Lion King, I embarked on a journey filled with doubt and uncertainty. Leaving my known world of writing, I stepped into the unknown realm of coding. It was a foreign language at first—endless lines of syntax, debugging errors that made no sense, and moments of frustration where I felt like an imposter in a world of developers.
+About 9 years ago, much like Simba in The Lion King, I embarked on a new journey filled with doubt and uncertainty. Leaving my known world of writing, I stepped into the unknown realm of coding. It was a foreign language at first—endless lines of syntax, debugging errors that made no sense, and moments of frustration where I felt like an imposter in a world of developers.
 
-The journey was tough—I struggled to find my place, faced canceled contracts, and got my butt handed to me more times than I could count. Every rejection, every missed opportunity made me question if I had taken the wrong path. Maybe I wasn’t meant to build—maybe I was meant to stay in the world of words.
+The journey was tough—I struggled to find my place, faced canceled contracts, and got my butt handed to me more times than I could count. Every rejection, every missed opportunity made me question if I had taken the wrong path. Maybe I wasn’t meant to build—maybe I was meant to stay in the world of stories.
 
-Even when I finally landed a job at Fiverr, working with JavaScript, MySQL, HTML, and CSS, I still felt like I had abandoned my identity as a writer. I was stepping into a new role, but the journey to accept this new identity was long and filled with doubts.
+Even when I finally landed a job at Fiverr, working with JavaScript, MySQL, HTML, and CSS, I still felt like I had abandoned my identity as a writer.
 
 ## Discovering GPT Researcher
 
-Then, one night, deep into a rabbit hole of AI research, I stumbled upon GPT Researcher. The concept struck me instantly—AI wasn’t just a tool; it was a means of expanding human knowledge, refining our questions, and reshaping how we approach research itself.
+One night, about a year ago, deep into a rabbit hole of AI research, I stumbled upon GPT Researcher. The concept struck me instantly—AI wasn’t just a tool; it was a means of expanding human knowledge, refining our questions, and reshaping how we approach research itself.
 
 I reached out to Assaf, not expecting much. But instead of a polite acknowledgment, he welcomed me in. That moment—seeing my first commit merged—felt like an echo of my old dream. Only this time, I wasn’t just writing stories. I was building something that helped others uncover their own.
 
 ## The Wicked Witch of the Researcher’s Mirror
 
-I found myself repeatedly asking GPT Researcher the same question, over and over again:
+Around that time, I found myself repeatedly asking GPT Researcher the same question:
 
 "Who is Elisha Kramer?"
 
@@ -41,11 +41,11 @@ I made more commits to GPT Researcher. More contributions. And as I coded, I ask
 
 "Who is Elisha Kramer?"
 
-As time went on, the answer changed:
+As time went on, the answer changed since the Researcher was pulling new sources fresh off web search results.
 
 "Elisha Kramer is an active contributor to GPT Researcher."
 
-I smirked. Oh, it was evolving. It was learning. Another commit. Another feature. Another line of documentation.
+Holy Shnikes! It was learning. Another commit. Another feature. Another line of documentation.
 
 "Who is Elisha Kramer?"
 
@@ -63,7 +63,7 @@ And that’s when I knew—I wasn’t just using GPT Researcher. I was becoming 
 
 This evolving feedback helped me frame my own self-narrative. GPT Researcher wasn’t just reflecting what was already known—it was pulling in context from both my work and the broader internet.
 
-It showed me that my path wasn’t about choosing between writing and development. It was about embracing the journey, refining it with each step, and seeing myself not as a fixed identity, but as an evolving one.
+It was reflecting back my own journey, refining it with each step, blurring the illusion of a fixed identity, and embracing an evolving one.
 
 Every query, every commit, every improvement shaped the tool—and in turn, it shaped me.
 
