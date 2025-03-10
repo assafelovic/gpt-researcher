@@ -41,7 +41,7 @@ tiktoken = ">=0.7.0"
 json-repair = "^0.29.8"
 json5 = "^0.9.25"
 loguru = "^0.7.2"
-websockets = "^13.1"
+websockets = "^15.0"
 firecrawl-py = "^1.12.0"
 
 [tool.poetry.group.dev.dependencies]
