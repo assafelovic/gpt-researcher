@@ -61,21 +61,22 @@ class Config:
                 os.environ["EMBEDDING_PROVIDER"] or self.embedding_provider
             )
 
-            match os.environ["EMBEDDING_PROVIDER"]:
-                case "ollama":
-                    self.embedding_model = os.environ["OLLAMA_EMBEDDING_MODEL"]
-                case "custom":
-                    self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "custom")
-                case "openai":
-                    self.embedding_model = "text-embedding-3-large"
-                case "azure_openai":
-                    self.embedding_model = "text-embedding-3-large"
-                case "huggingface":
-                    self.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
-                case "google_genai":
-                    self.embedding_model = "text-embedding-004"
-                case _:
-                    raise Exception("Embedding provider not found.")
+            # Replace match statement with if-elif for Python 3.9 compatibility
+            embedding_provider = os.environ["EMBEDDING_PROVIDER"]
+            if embedding_provider == "ollama":
+                self.embedding_model = os.environ["OLLAMA_EMBEDDING_MODEL"]
+            elif embedding_provider == "custom":
+                self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "custom")
+            elif embedding_provider == "openai":
+                self.embedding_model = "text-embedding-3-large"
+            elif embedding_provider == "azure_openai":
+                self.embedding_model = "text-embedding-3-large"
+            elif embedding_provider == "huggingface":
+                self.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
+            elif embedding_provider == "google_genai":
+                self.embedding_model = "text-embedding-004"
+            else:
+                raise Exception("Embedding provider not found.")
 
         _deprecation_warning = (
             "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "

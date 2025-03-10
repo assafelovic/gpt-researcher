@@ -20,26 +20,84 @@ class PublisherAgent:
         return layout
 
     def generate_layout(self, research_state: dict):
-        sections = '\n\n'.join(f"{value}"
-                                 for subheader in research_state.get("research_data")
-                                 for key, value in subheader.items())
-        references = '\n'.join(f"{reference}" for reference in research_state.get("sources"))
-        headers = research_state.get("headers")
-        layout = f"""# {headers.get('title')}
-#### {headers.get("date")}: {research_state.get('date')}
+        # Add safety checks for research_data
+        research_data = research_state.get("research_data", [])
+        if research_data is None:
+            research_data = []
+            
+        # Check for sections from writer agent
+        sections_from_writer = research_state.get("sections", [])
+        
+        # Create sections with proper error handling
+        sections = ""
+        
+        # First try to use sections from writer agent
+        if sections_from_writer:
+            try:
+                sections_content = []
+                for section in sections_from_writer:
+                    if isinstance(section, dict) and "title" in section and "content" in section:
+                        sections_content.append(f"## {section['title']}\n{section['content']}")
+                sections = '\n\n'.join(sections_content)
+            except Exception as e:
+                print(f"Error generating sections from writer: {e}")
+                sections = ""
+        
+        # Fallback to old method if no sections from writer
+        if not sections:
+            try:
+                sections = '\n\n'.join(f"{value}"
+                                    for subheader in research_data
+                                    for key, value in subheader.items())
+            except Exception as e:
+                print(f"Error generating sections from research_data: {e}")
+                sections = ""
+            
+        # Add safety checks for sources
+        sources = research_state.get("sources", [])
+        if sources is None:
+            sources = []
+            
+        # Create references with proper error handling
+        references = ""
+        try:
+            references = '\n'.join(f"{reference}" for reference in sources)
+        except Exception as e:
+            print(f"Error generating references: {e}")
+            references = ""
+            
+        # Get headers with default values
+        headers = research_state.get("headers", {})
+        if headers is None:
+            headers = {}
+            
+        # Default values for all required fields
+        title = headers.get("title", research_state.get("title", "Research Report"))
+        date_header = headers.get("date", "Date")
+        date_value = research_state.get("date", "")
+        intro_header = headers.get("introduction", "Introduction")
+        intro_value = research_state.get("introduction", "")
+        toc_header = headers.get("table_of_contents", "Table of Contents")
+        toc_value = research_state.get("table_of_contents", "")
+        conclusion_header = headers.get("conclusion", "Conclusion")
+        conclusion_value = research_state.get("conclusion", "")
+        references_header = headers.get("references", "References")
+        
+        layout = f"""# {title}
+#### {date_header}: {date_value}
 
-## {headers.get("introduction")}
-{research_state.get('introduction')}
+## {intro_header}
+{intro_value}
 
-## {headers.get("table_of_contents")}
-{research_state.get('table_of_contents')}
+## {toc_header}
+{toc_value}
 
 {sections}
 
-## {headers.get("conclusion")}
-{research_state.get('conclusion')}
+## {conclusion_header}
+{conclusion_value}
 
-## {headers.get("references")}
+## {references_header}
 {references}
 """
         return layout

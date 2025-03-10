@@ -29,7 +29,7 @@ unstructured
 json_repair
 json5
 loguru
-langgraph==0.2.76
+langgraph
 
 # uncomment for testing
 # pytest
