@@ -1,104 +1,161 @@
 # Deep Research with LangGraph
 
-This module implements a deep research capability using LangGraph, inspired by the recursive deep research approach in GPT Researcher's `deep_research.py`.
+This project implements a deep research system using LangGraph, a library for building stateful, multi-actor applications with LLMs. The system can perform in-depth research on a given topic, synthesize the information, and generate comprehensive reports.
 
-## Overview
+## Features
 
-The Deep Research implementation uses LangGraph to create a recursive research workflow that:
-
-1. Generates search queries based on the initial query
-2. Creates a research plan with follow-up questions
-3. Conducts parallel research on each search query
-4. Synthesizes and reviews the research results
-5. Recursively explores deeper based on follow-up questions
-6. Finalizes the research with citations and context
+- **Deep Research**: Recursively explore a topic with configurable breadth and depth
+- **Stateful Workflow**: Maintain state across multiple research steps using LangGraph's checkpointing
+- **Human-in-the-Loop**: Optional human review and feedback during the research process
+- **Multi-format Output**: Generate reports in Markdown, PDF, and DOCX formats
+- **Customizable Tone**: Adjust the tone of the research output
 
 ## Architecture
 
-The deep research system is built with the following components:
+The system is built using LangGraph's StateGraph to create a workflow with the following components:
 
-- **DeepResearchOrchestrator**: Coordinates the entire research process using LangGraph
-- **DeepExplorerAgent**: Generates search queries and research plans
-- **DeepResearchAgent**: Conducts basic research using GPTResearcher
-- **DeepSynthesizerAgent**: Processes and synthesizes research results
-- **DeepReviewerAgent**: Reviews research quality and completeness
-- **DeepResearchState**: Manages the state of the research process
+1. **Planner**: Generates a research plan with search queries
+2. **Explorer**: Executes search queries and collects information
+3. **Synthesizer**: Processes and synthesizes the collected information
+4. **Reviewer**: Reviews the research and identifies follow-up questions
+5. **Finalizer**: Finalizes the research and prepares it for report generation
 
-The LangGraph workflow is structured as follows:
+The workflow is designed to support recursive research, allowing it to explore topics in depth based on the findings at each level.
 
+## State Management
+
+The system uses LangGraph's state management capabilities to maintain and update the research state throughout the workflow. The state includes:
+
+- Research parameters (query, breadth, depth)
+- Research progress (current depth, breadth)
+- Research results (context items, sources, citations)
+- Intermediate results (search queries, follow-up questions)
+
+## Human-in-the-Loop
+
+The system supports human-in-the-loop research through LangGraph's interrupt mechanism. When enabled, the system will pause at review points to allow human feedback and guidance. Humans can:
+
+- Review the current research progress
+- Add feedback or additional context
+- Suggest follow-up questions
+- Continue or stop the research process
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/your-repo.git
+cd your-repo
 ```
-generate_queries → generate_plan → process_queries → review_research → [recursive_research] → finalize_research
+
+2. Install the required dependencies:
+```bash
+pip install -r requirements.txt
 ```
 
-The recursive research step is conditionally executed based on the current depth and creates a recursive loop back to the review step.
-
-## How It Works
-
-1. **Query Generation**: The system generates multiple search queries based on the initial query
-2. **Research Planning**: Follow-up questions are generated to guide the research
-3. **Parallel Research**: Each search query is processed in parallel with a concurrency limit
-4. **Research Synthesis**: Results are synthesized to extract key learnings with citations
-5. **Research Review**: The quality and completeness of the research is evaluated
-6. **Recursive Exploration**: If the maximum depth hasn't been reached, the system generates new queries based on follow-up questions and continues the research
-7. **Finalization**: The research is finalized with a comprehensive context that includes all learnings with citations
+3. Set up your API keys:
+Create a `.env` file in the root directory with your API keys:
+```
+OPENAI_API_KEY=your_openai_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
+TAVILY_API_KEY=your_tavily_api_key
+```
 
 ## Usage
 
-You can use the deep research implementation in two ways:
+### Command Line
 
-> **Note:** The command line examples below should be run from the parent `multi_agents` directory, not from within the `deep_research` directory.
-
-### 1. From the command line:
+You can run the deep research module directly:
 
 ```bash
-# Run deep research from the multi_agents directory
-python main.py --mode deep --query "Your research query" --depth 2 --breadth 4
+python -m multi_agents.deep_research.main --query "Your research query" --depth 2 --breadth 4 --human-review
 ```
 
-### 2. Programmatically:
+Or through the main interface:
+
+```bash
+python -m multi_agents.main --mode deep --query "Your research query" --depth 2 --breadth 4 --human-review
+```
+
+If you don't provide a query, you'll be prompted to enter one.
+
+### Parameters
+
+- `--mode`: Research mode (default: "deep")
+- `--query`: The research query
+- `--depth`: Maximum depth of recursive research (default: 2)
+- `--breadth`: Number of parallel search queries at each level (default: 4)
+- `--concurrency`: Maximum number of concurrent research tasks (default: 2)
+- `--source`: Research source ('web' or 'local') (default: 'web')
+- `--verbose`: Enable verbose output (default: True)
+- `--markdown`: Generate markdown output (default: True)
+- `--pdf`: Generate PDF output (default: False)
+- `--docx`: Generate DOCX output (default: False)
+- `--human-review`: Enable human review during research (default: False)
+
+### Programmatic Usage
 
 ```python
-from multi_agents.deep_research.main import run_deep_research
+from multi_agents.deep_research import run_deep_research
 
 results = await run_deep_research(
     query="Your research query",
     depth=2,
     breadth=4,
-    concurrency=2
+    human_review=True
 )
-```
-
-## Configuration
-
-You can configure the deep research process through command line arguments:
-
-```bash
-# Run deep research with all options
-python main.py --mode deep --query "Your research query" --depth 2 --breadth 4 --concurrency 2 --model "gpt-4o" --verbose --pdf --docx
-```
-
-### Available Arguments
-- `--query` - The research query (required)
-- `--depth` - Maximum depth of recursive research (default: 2)
-- `--breadth` - Number of parallel search queries at each level (default: 4)
-- `--concurrency` - Maximum number of concurrent research tasks (default: 2)
-- `--model` - The model to use for research (default: "gpt-4o")
-- `--verbose` - Enable verbose output (default: True)
-- `--pdf` - Generate PDF output (default: False)
-- `--docx` - Generate DOCX output (default: False)
-
-### Example
-```bash
-# Run deep research with custom parameters
-python main.py --mode deep --query "Impact of climate change on agriculture" --depth 3 --breadth 5 --concurrency 3 --pdf --docx
 ```
 
 ## Output
 
-The deep research process produces:
+The system generates a comprehensive research report that includes:
 
-1. A comprehensive research context with citations
-2. A list of key learnings from the research
-3. A quality review of the research
-4. A final report generated by the Writer agent
-5. Published files in the specified formats 
+- Introduction and context
+- Detailed findings organized by sections
+- Sources and citations
+- Conclusion and summary
+
+## Requirements
+
+- Python 3.8+
+- LangGraph
+- LangChain
+- An LLM provider (e.g., OpenAI, Anthropic)
+
+## Troubleshooting
+
+### LangGraph Compatibility Issues
+
+This project is designed to work with LangGraph version 0.0.19. If you encounter import errors, try the following:
+
+1. Install the exact version specified in requirements.txt:
+```bash
+pip install -r requirements.txt
+```
+
+2. If you're still having issues, you can try installing a specific version of LangGraph:
+```bash
+pip install langgraph==0.0.19
+```
+
+3. For newer versions of LangGraph, you might need to update import paths. Common issues include:
+
+   - `append_list` and `merge_dicts` functions: The project includes custom implementations if these are not available in your LangGraph version.
+   
+   - `MemorySaver` location: This might be in `langgraph.checkpoint.memory` or directly in `langgraph.checkpoint` depending on your version.
+   
+   - `Command` and `interrupt`: These might be in different modules in different versions.
+
+4. If you're using a very new version of LangGraph, you might need to update the code to use the latest API. Check the [LangGraph documentation](https://python.langchain.com/docs/langgraph) for the latest information.
+
+### Python Version Compatibility
+
+This project is tested with Python 3.8+. If you're using Python 3.12, you might encounter compatibility issues with some dependencies. Try using Python 3.10 or 3.11 if possible.
+
+### API Key Issues
+
+If you're encountering errors related to API calls, make sure your API keys are correctly set in the `.env` file and that you have sufficient credits/quota for the services you're using.
+
+## License
+
+[MIT License](LICENSE) 

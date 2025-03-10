@@ -1,5 +1,22 @@
-from typing import Dict, List, Any, Set, Optional
+from typing import Dict, List, Any, Set, Optional, Annotated
 from pydantic import BaseModel, Field
+from .agents.base import trim_context_to_word_limit
+
+# Define our own merge_dicts function since it's not available in the current langgraph version
+def merge_dicts(old_dict: Dict, new_dict: Dict) -> Dict:
+    """Merge two dictionaries, updating the old_dict with values from new_dict."""
+    result = old_dict.copy()
+    result.update(new_dict)
+    return result
+
+# Define our own append_list function since it's not available in the current langgraph version
+def append_list(old_list: List, new_list: List) -> List:
+    """Append items from new_list to old_list, avoiding duplicates."""
+    result = old_list.copy()
+    for item in new_list:
+        if item not in result:
+            result.append(item)
+    return result
 
 class DeepResearchState(BaseModel):
     """
@@ -24,18 +41,18 @@ class DeepResearchState(BaseModel):
     total_breadth: int = 4
     
     # Research results
-    learnings: List[str] = Field(default_factory=list)
-    citations: Dict[str, str] = Field(default_factory=dict)
-    visited_urls: Set[str] = Field(default_factory=set)
+    learnings: Annotated[List[str], append_list] = Field(default_factory=list)
+    citations: Annotated[Dict[str, str], merge_dicts] = Field(default_factory=dict)
+    visited_urls: Annotated[Set[str], lambda x, y: x.union(y)] = Field(default_factory=set)
     
     # Primary context storage - individual pieces of research
-    context_items: List[str] = Field(default_factory=list)
+    context_items: Annotated[List[str], append_list] = Field(default_factory=list)
     
     # Legacy context field - kept for backward compatibility
-    context: List[str] = Field(default_factory=list)
+    context: Annotated[List[str], append_list] = Field(default_factory=list)
     
     # Sources from research
-    sources: List[Dict[str, Any]] = Field(default_factory=list)
+    sources: Annotated[List[Dict[str, Any]], append_list] = Field(default_factory=list)
     
     # Intermediate results
     search_queries: List[Dict[str, str]] = Field(default_factory=list)
@@ -115,7 +132,6 @@ class DeepResearchState(BaseModel):
         This method combines all context_items into a single string,
         trims it to a reasonable size, and returns it.
         """
-        from .agents.base import trim_context_to_word_limit
         
         # Combine all context items
         combined_context = "\n\n".join(self.context_items)

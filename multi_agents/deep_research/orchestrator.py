@@ -5,7 +5,52 @@ import logging
 from typing import Dict, List, Any, Optional, Set
 from datetime import datetime, timedelta
 
-from langgraph.graph import StateGraph, END
+# Basic LangGraph imports that should be available in all versions
+try:
+    from langgraph.graph import StateGraph, START, END
+except ImportError:
+    logging.error("Could not import StateGraph from langgraph.graph. Please check your LangGraph installation.")
+    raise
+
+# Try to import MemorySaver from different possible locations
+try:
+    from langgraph.checkpoint.memory import MemorySaver
+except ImportError:
+    try:
+        from langgraph.checkpoint import MemorySaver
+    except ImportError:
+        # Create a simple in-memory checkpointer if not available
+        class MemorySaver:
+            def __init__(self):
+                self.memory = {}
+                
+            def get(self, key, default=None):
+                return self.memory.get(key, default)
+                
+            def put(self, key, value):
+                self.memory[key] = value
+                return key
+        logging.warning("Using a simplified MemorySaver implementation as the original could not be imported.")
+
+# Try to import Command and interrupt, create placeholders if not available
+try:
+    from langgraph.types import Command, interrupt
+except ImportError:
+    try:
+        from langgraph.graph.types import Command, interrupt
+    except ImportError:
+        # Create placeholder implementations
+        class Command:
+            def __init__(self, resume=None, update=None):
+                self.resume = resume
+                self.update = update
+        
+        def interrupt(data):
+            """Placeholder for interrupt function if not available."""
+            logging.warning("Interrupt functionality not available in this version of LangGraph.")
+            return {"action": "Continue"}
+        logging.warning("Using placeholder implementations for Command and interrupt.")
+
 from ..agents.utils.views import print_agent_output, AgentColor
 from ..agents.utils.utils import sanitize_filename
 
@@ -24,7 +69,7 @@ logger = logging.getLogger(__name__)
 class DeepResearchOrchestrator:
     """Orchestrator for deep research using LangGraph"""
     
-    def __init__(self, task: dict, websocket=None, stream_output=None, tone=None, headers=None):
+    def __init__(self, task: dict, websocket=None, stream_output=None, tone=None, headers=None, human_review_enabled=False):
         self.task = task
         self.websocket = websocket
         self.stream_output = stream_output
@@ -32,6 +77,7 @@ class DeepResearchOrchestrator:
         self.tone = tone
         self.task_id = self._generate_task_id()
         self.output_dir = self._create_output_directory()
+        self.human_review_enabled = human_review_enabled
         
         # Research parameters
         self.breadth = task.get('deep_research_breadth', 4)
@@ -41,6 +87,29 @@ class DeepResearchOrchestrator:
         # Initialize agents
         self.agents = self._initialize_agents()
         
+        # Initialize checkpointer
+        self.checkpointer = MemorySaver()
+        
+    async def _stream_or_print(self, message: str, agent_type: str = "MASTER"):
+        """
+        Stream a message to the websocket or print it to the console.
+        
+        Args:
+            message: The message to stream or print
+            agent_type: The type of agent sending the message (for coloring)
+        """
+        if self.websocket and self.stream_output:
+            # Stream to websocket if available
+            await self.stream_output(
+                "logs",
+                agent_type.lower(),
+                message,
+                self.websocket
+            )
+        else:
+            # Otherwise print to console
+            print_agent_output(message, agent_type)
+            
     def _generate_task_id(self):
         """Generate a unique task ID"""
         return int(time.time())
@@ -103,6 +172,9 @@ class DeepResearchOrchestrator:
         queries = planner_result.get("search_queries", [])
         total_breadth = planner_result.get("total_breadth", len(queries))
         
+        # Update the state's total_breadth directly
+        state.total_breadth = total_breadth
+        
         # Return a dictionary with updated search queries
         return {
             "search_queries": queries,
@@ -119,6 +191,9 @@ class DeepResearchOrchestrator:
         query_obj = state.search_queries[query_index]
         query = query_obj.get("query", "")
         title = query_obj.get("title", f"Query {query_index + 1}")
+        
+        # Update the state's current_breadth
+        state.current_breadth = query_index + 1
         
         # Log progress
         await self._on_progress(state, current_breadth=query_index+1)
@@ -167,12 +242,6 @@ class DeepResearchOrchestrator:
             context_item = synthesis_result.get("context", "")
             sources = synthesis_result.get("sources", [])
             citations = synthesis_result.get("citations", {})
-            
-            # Log synthesis results
-            print_agent_output(
-                f"Synthesis complete: {len(context_item)} chars context, {len(sources)} sources, {len(citations)} citations",
-                "MASTER"
-            )
 
             return {
                 "context_item": context_item,
@@ -207,6 +276,9 @@ class DeepResearchOrchestrator:
                 "citations": state.citations,
                 "current_depth": state.current_depth
             }
+            
+        # Reset current_breadth to 0 at the start
+        state.current_breadth = 0
         
         async def process_with_semaphore(index):
             """Process a query with semaphore for concurrency control"""
@@ -230,16 +302,13 @@ class DeepResearchOrchestrator:
         # Wait for all tasks to complete
         results = await asyncio.gather(*tasks)
         
+        # Update the state's current_breadth to the total after all queries are processed
+        state.current_breadth = len(state.search_queries)
+        
         # Combine results
         combined_context_items = list(state.context_items)  # Create a copy to avoid modifying the original
         combined_sources = list(state.sources)  # Create a copy
         combined_citations = dict(state.citations)  # Create a copy
-        
-        # Debug log the results before combining
-        print_agent_output(
-            f"Processing {len(results)} query results to combine",
-            "MASTER"
-        )
         
         # Track how many results actually contributed data
         results_with_context = 0
@@ -278,31 +347,118 @@ class DeepResearchOrchestrator:
         }
         
     async def review_research(self, state: DeepResearchState) -> dict:
-        """Review the research results and identify follow-up questions"""
+        """Review the research results"""
         # Get the reviewer agent
-        reviewer = self.agents["reviewer"]
+        reviewer = self.agents.get("reviewer")
         
-        # Log the action
-        message = f"Reviewing research results and identifying follow-up questions..."
-        if self.websocket and self.stream_output:
-            await self.stream_output("logs", "reviewing_research", message, self.websocket)
-            
-        # Run the reviewer agent
+        # Update progress
+        await self._on_progress(state, current_depth=state.current_depth)
+        
+        # Log the review process
+        await self._stream_or_print(f"Reviewing research results for depth {state.current_depth}...", "REVIEWER")
+        
+        # If human review is enabled, request human input
+        if self.human_review_enabled:
+            return await self.human_review_research(state)
+        
+        # Otherwise, use the AI reviewer
         review_result = await reviewer.review(
-            query=state.query,
-            context_items=state.context_items,
-            current_depth=state.current_depth,
-            total_depth=state.total_depth
+            state.query,
+            state.context_items,
+            state.current_depth,
+            state.total_depth
         )
         
-        # Extract follow-up questions
-        follow_up_questions = review_result.get("follow_up_questions", [])
+        # Set the review in the state
+        state.set_review(review_result)
         
-        # Return the results, including the current depth to ensure it's preserved
-        return {
-            "follow_up_questions": follow_up_questions,
-            "current_depth": state.current_depth  # Explicitly include current_depth
-        }
+        # Set follow-up questions if available
+        if "follow_up_questions" in review_result:
+            state.set_follow_up_questions(review_result["follow_up_questions"])
+            
+        return state
+        
+    async def human_review_research(self, state: DeepResearchState) -> dict:
+        """Request human review of research results"""
+        # Prepare a summary of the research for human review
+        context_summary = "\n\n".join(state.context_items[:3])  # Show first 3 items
+        if len(state.context_items) > 3:
+            context_summary += f"\n\n... and {len(state.context_items) - 3} more items"
+            
+        sources_summary = "\n".join([
+            f"- {s.get('title', 'Source')} ({s.get('url', 'No URL')})"
+            for s in state.sources[:5]  # Show first 5 sources
+        ])
+        if len(state.sources) > 5:
+            sources_summary += f"\n... and {len(state.sources) - 5} more sources"
+            
+        # Create a summary message
+        summary = f"""
+Research Progress: Depth {state.current_depth} of {state.total_depth}
+
+Query: {state.query}
+
+Context Items: {len(state.context_items)}
+{context_summary}
+
+Sources: {len(state.sources)}
+{sources_summary}
+
+Learnings: {len(state.learnings)}
+"""
+        
+        # Log that we're waiting for human review
+        await self._stream_or_print("Waiting for human review...", "HUMAN")
+        
+        # Use interrupt to pause execution and wait for human input
+        try:
+            human_response = interrupt({
+                "summary": summary,
+                "question": "Would you like to continue with this research or provide feedback?",
+                "options": ["Continue", "Add feedback", "Stop research"]
+            })
+            
+            # Process the human response
+            if human_response.get("action") == "Stop research":
+                # If the human wants to stop, set current_depth to total_depth to end recursion
+                state.current_depth = state.total_depth
+                state.set_review({"follow_up_questions": []})
+                await self._stream_or_print("Research stopped by human reviewer", "HUMAN")
+                
+            elif human_response.get("action") == "Add feedback":
+                # Add the human feedback as a context item
+                feedback = human_response.get("feedback", "")
+                if feedback:
+                    state.add_context_item(f"Human feedback: {feedback}")
+                    await self._stream_or_print(f"Added human feedback: {feedback}", "HUMAN")
+                    
+                # Set any follow-up questions provided by the human
+                follow_ups = human_response.get("follow_up_questions", [])
+                if follow_ups:
+                    state.set_follow_up_questions(follow_ups)
+                    await self._stream_or_print(f"Added {len(follow_ups)} follow-up questions from human", "HUMAN")
+                    
+                state.set_review({"follow_up_questions": follow_ups})
+                
+            else:
+                # Continue with default AI-generated follow-up questions
+                reviewer = self.agents.get("reviewer")
+                review_result = await reviewer.review(
+                    state.query,
+                    state.context_items,
+                    state.current_depth,
+                    state.total_depth
+                )
+                state.set_review(review_result)
+                
+                # Set follow-up questions if available
+                if "follow_up_questions" in review_result:
+                    state.set_follow_up_questions(review_result["follow_up_questions"])
+                
+        except Exception as e:
+            logger.warning(f"Human review interrupted with error: {str(e)}. Falling back to AI reviewer.")
+                
+        return state
         
     async def recursive_research(self, state: DeepResearchState) -> dict:
         """Perform recursive research on follow-up questions"""
@@ -405,16 +561,24 @@ class DeepResearchOrchestrator:
         """Finalize the research process using the finalizer agent"""
         finalizer = self.agents["finalizer"]
         
+        # First, call the state's finalize_context method to ensure it's set
+        final_context = state.finalize_context()
+        
         # Create a temporary state for the finalizer
         finalizer_state = {
             "query": state.query,
             "context_items": state.context_items,
             "sources": state.sources,
-            "citations": state.citations
+            "citations": state.citations,
+            "final_context": final_context  # Include the finalized context
         }
         
         # Run the finalizer to generate the final context
         finalizer_result = await finalizer.run(finalizer_state)
+        
+        # Ensure final_context is set
+        if not finalizer_result.get("final_context") and final_context:
+            finalizer_result["final_context"] = final_context
         
         # Return the finalized research state
         return {
@@ -422,7 +586,8 @@ class DeepResearchOrchestrator:
             "summary": finalizer_result.get("summary", ""),
             "sources": finalizer_result.get("sources", []),
             "citations": finalizer_result.get("citations", {}),
-            "final_context": finalizer_result.get("final_context", "")
+            "final_context": finalizer_result.get("final_context", final_context),  # Use the state's final_context as fallback
+            "learnings": finalizer_result.get("learnings", [])
         }
         
     def should_continue_recursion(self, state: DeepResearchState) -> str:
@@ -443,7 +608,8 @@ class DeepResearchOrchestrator:
         workflow.add_node("recursive_research", self.recursive_research)
         workflow.add_node("finalize_research", self.finalize_research)
         
-        # Add edges
+        # Add edges with START and END nodes
+        workflow.add_edge(START, "generate_queries")
         workflow.add_edge("generate_queries", "process_queries")
         workflow.add_edge("process_queries", "review_research")
         
@@ -460,9 +626,6 @@ class DeepResearchOrchestrator:
         workflow.add_edge("recursive_research", "review_research")
         workflow.add_edge("finalize_research", END)
         
-        # Set entry point
-        workflow.set_entry_point("generate_queries")
-        
         return workflow
         
     async def run(self) -> Dict[str, Any]:
@@ -473,8 +636,8 @@ class DeepResearchOrchestrator:
         # Create the workflow
         workflow = self.create_workflow()
         
-        # Compile the workflow to get an executable chain
-        chain = workflow.compile()
+        # Compile the workflow with checkpointer
+        chain = workflow.compile(checkpointer=self.checkpointer)
         
         # Create the initial state
         initial_state = DeepResearchState(
@@ -494,84 +657,49 @@ class DeepResearchOrchestrator:
         # Run the workflow with async invoke
         config = {
             "configurable": {
-                "thread_id": self.task_id,
-                "thread_ts": datetime.utcnow()
+                "thread_id": str(self.task_id),  # Convert to string for compatibility
+                "checkpoint_ns": "",  # Use default namespace
             }
         }
         
         try:
+            # Use ainvoke to run the workflow asynchronously
+            print_agent_output("Starting LangGraph workflow...", "MASTER")
             result = await chain.ainvoke(initial_state, config=config)
+            print_agent_output("LangGraph workflow completed", "MASTER")
+
+            final_context = result.get('final_context', '')
+            sources = result.get('sources', [])
+            citations = result.get('citations', {})
+            learnings = result.get('learnings', [])
             
-            # Convert the result to a dictionary to ensure we can access all attributes
-            result_dict = {}
-            
-            # Try to convert the result to a dictionary
-            try:
-                # First try to convert directly
-                result_dict = dict(result)
-            except (TypeError, ValueError):
-                # If that fails, try to extract attributes from the object
-                try:
-                    result_dict = result.__dict__
-                except Exception as e:
-                    self.stream_output("logs", "error", f"Error converting result to dictionary. Error: {e}", self.websocket)
-                    pass
-            
-            # Extract data from the result dictionary
-            context_items = result_dict.get('context_items', [])
-            sources = result_dict.get('sources', [])
-            citations = result_dict.get('citations', {})
-            final_context = result_dict.get('final_context', '')
-            
-            # If we couldn't extract the data from the result dictionary, try to access it directly
-            if not context_items and hasattr(result, 'context_items'):
-                context_items = result.context_items
-                
-            if not sources and hasattr(result, 'sources'):
-                sources = result.sources
-                
-            if not citations and hasattr(result, 'citations'):
-                citations = result.citations
-                
-            if not final_context and hasattr(result, 'final_context'):
-                final_context = result.final_context
-            
-            # Extract the final context, ensuring it's not empty
-            if not final_context and context_items:
-                # If no final_context but we have context_items, join them
-                final_context = "\n\n".join(context_items)
-            
-            # If we have sources but they're not in the right format, try to fix them
-            processed_sources = []
-            for source in sources:
-                if isinstance(source, dict):
-                    processed_sources.append(source)
-                elif isinstance(source, str):
-                    # Try to parse the source string
-                    if source.startswith('http'):
-                        processed_sources.append({
-                            'title': 'Source from URL',
-                            'url': source,
-                            'content': ''
-                        })
-                    else:
-                        processed_sources.append({
-                            'title': 'Source',
-                            'url': '',
-                            'content': source
-                        })
-            
-            # If we still don't have any sources but we have context, create a source from the context
-            if not processed_sources and final_context:
-                processed_sources.append({
-                    'title': f"Research on {self.task.get('query', '')}",
-                    'url': '',
-                    'content': final_context
-                })
+            # If final_context is empty but we have context_items, join them
+            if not final_context:
+                context_items = result.get('context_items', []) if hasattr(result, 'get') else getattr(result, 'context_items', [])
+                if context_items:
+                    print_agent_output(f"No final_context found, creating from {len(context_items)} context items", "MASTER")
+                    final_context = "\n\n".join(context_items)
+                else:
+                    print_agent_output("No final_context or context_items found", "MASTER")
+                    # Try to get context from the state directly
+                    try:
+                        state = chain.get_state(config)
+                        if state and hasattr(state, 'values'):
+                            state_obj = state.values
+                            if hasattr(state_obj, 'finalize_context'):
+                                print_agent_output("Calling finalize_context on state", "MASTER")
+                                final_context = state_obj.finalize_context()
+                            elif hasattr(state_obj, 'context_items'):
+                                context_items = getattr(state_obj, 'context_items', [])
+                                if context_items:
+                                    print_agent_output(f"Creating final_context from state's {len(context_items)} context items", "MASTER")
+                                    final_context = "\n\n".join(context_items)
+                    except Exception as e:
+                        print_agent_output(f"Error getting state: {str(e)}", "MASTER")
             
             # Log the final result
             print_agent_output(
-                f"Final result: {len(final_context)} chars context, {len(processed_sources)} sources, {len(citations)} citations",
+                f"Final result: {len(final_context)} chars context, {len(sources)} sources, {len(citations)} citations",
                 "MASTER"
             )
             
@@ -579,18 +707,23 @@ class DeepResearchOrchestrator:
             return {
                 "query": self.task.get("query", ""),
                 "context": final_context,
-                "sources": processed_sources,
-                "citations": citations
+                "sources": sources,
+                "citations": citations,
+                "execution_time": str(datetime.now() - datetime.fromtimestamp(self.task_id)),
+                "learnings": learnings
             }
             
         except Exception as e:
             # Log the error
             print_agent_output(f"Error running research workflow: {str(e)}", "MASTER")
+            logger.exception("Error in research workflow")
             
             # Return a default result
             return {
                 "query": self.task.get("query", ""),
                 "context": f"Research on: {self.task.get('query', '')}\n\nAn error occurred during research: {str(e)}",
                 "sources": [],
-                "citations": {}
+                "citations": {},
+                "execution_time": str(datetime.now() - datetime.fromtimestamp(self.task_id)),
+                "learnings": []
             }

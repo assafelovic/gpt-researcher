@@ -131,24 +131,15 @@ Return only the title text with no additional formatting or explanation.
         context = research_state.get("context", "")
         task = research_state.get("task", {})
         sources = research_state.get("sources", [])
-        citations = research_state.get("citations", {})
         
         # The context already contains the research results with sources
         # We don't need to check for empty sources as the context itself is the source
         # Just ensure the context is not empty
         if not context:
-            if self.websocket and self.stream_output:
-                await self.stream_output(
-                    "logs",
-                    "error",
-                    "No research context found. Cannot generate sections without research data.",
-                    self.websocket,
-                )
-            else:
-                print_agent_output(
-                    "No research context found. Cannot generate sections without research data.",
-                    agent="WRITER",
-                )
+            print_agent_output(
+                "No research context found. Cannot generate sections without research data.",
+                agent="WRITER",
+            )
             raise ValueError("No research context found. Cannot generate sections without research data.")
         
         # Get model from task or use a default model if None
@@ -159,18 +150,10 @@ Return only the title text with no additional formatting or explanation.
             model = cfg.smart_llm_model  # Use the default smart model from config
             
         # Log the action
-        if self.websocket and self.stream_output:
-            await self.stream_output(
-                "logs",
-                "generating_sections",
-                f"Generating sections from deep research data with {len(sources)} sources...",
-                self.websocket,
-            )
-        else:
-            print_agent_output(
-                f"Generating sections from deep research data with {len(sources)} sources...",
-                agent="WRITER",
-            )
+        print_agent_output(
+            f"Generating sections from deep research data with {len(sources)} sources...",
+            agent="WRITER",
+        )
         
         # Format sources for better context
         formatted_sources = []
@@ -182,7 +165,7 @@ Return only the title text with no additional formatting or explanation.
                 formatted_sources.append(f"Source: {title}\nURL: {url}\nContent: {content}")
             elif isinstance(source, str):
                 formatted_sources.append(source)
-                
+
         # Create the prompt for generating sections
         prompt = [
             {
@@ -194,11 +177,9 @@ Return only the title text with no additional formatting or explanation.
                 "content": f"""Today's date is {datetime.now().strftime('%d/%m/%Y')}.
 Query or Topic: {query}
 Research data: {context}
-Sources: {formatted_sources}
-Citations: {citations}
 
 Your task is to organize this research data into 3-5 logical sections with appropriate headers.
-Each section should be comprehensive and detailed, with a minimum of 300 words per section.
+Each section should be comprehensive and detailed, with a minimum of 400 words per section.
 
 IMPORTANT: You MUST include relevant sources in the content as markdown hyperlinks.
 For example: 'This is a sample text. ([Source Title](url))'

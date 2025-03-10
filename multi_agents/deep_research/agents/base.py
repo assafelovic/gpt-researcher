@@ -154,15 +154,6 @@ class DeepResearchAgent:
                 "url": "",
                 "content": context
             })
-        
-        # If still no search results, create a minimal result
-        if not search_results:
-            print_agent_output("No search results or context found. Creating a minimal result.", "RESEARCHER")
-            search_results.append({
-                "title": f"Research on {query}",
-                "url": "",
-                "content": f"No specific information found for the query: {query}. This could be due to API limitations, network issues, or lack of relevant information."
-            })
             
         # Debug log the final search results
         print_agent_output(f"Returning {len(search_results)} search results", "RESEARCHER")
