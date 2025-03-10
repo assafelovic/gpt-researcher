@@ -9,7 +9,7 @@ image: https://drive.google.com/u/0/drive-viewer/AKGpihZZPB4FI9Y_ctRqHaaV_F0ZOUf
 
 ## The Barnes & Noble Dream
 
-I remember stepping into Barnes & Noble, the scent of fresh pages filling the air, my fingers tracing the spines of books that had shaped minds and captured hearts. I’d whisper to myself: One day, my name will be here.
+As a teenager, I remember stepping into Barnes & Noble, the scent of fresh pages filling the air, my fingers tracing the spines of books that had shaped minds and captured hearts. I’d whisper to myself: One day, my name will be here.
 
 To me, books weren’t just stories—they were reflections of the human experience, ways for people to see themselves more clearly. Shakespeare once said, “The purpose of art is to hold a mirror up to nature.” That idea stuck with me. Art, writing, and storytelling weren’t just about entertainment; they were about understanding ourselves in new ways.
 
