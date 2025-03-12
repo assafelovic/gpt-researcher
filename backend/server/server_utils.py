@@ -107,8 +107,8 @@ def sanitize_filename(filename: str) -> str:
     task = '_'.join(task_parts)
     
     # Calculate max length for task portion
-    # 255 - len("outputs/") - len("task_") - len(timestamp) - len("_.json") - safety_margin
-    max_task_length = 255 - 8 - 5 - 10 - 6 - 10  # ~216 chars for task
+    # 255 - len(os.getcwd()) - len("\\gpt-researcher\\outputs\\") - len("task_") - len(timestamp) - len("_.json") - safety_margin
+    max_task_length = 255 - len(os.getcwd()) - 24 - 5 - 10 - 6 - 5  # ~189 chars for task
     
     # Truncate task if needed
     truncated_task = task[:max_task_length] if len(task) > max_task_length else task
