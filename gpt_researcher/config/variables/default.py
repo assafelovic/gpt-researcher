@@ -27,6 +27,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "LANGUAGE": "english",
     "REPORT_SOURCE": "web",
     "DOC_PATH": "./my-docs",
+    "PROMPT_FAMILY": "default",
     # Deep research specific settings
     "DEEP_RESEARCH_BREADTH": 3,
     "DEEP_RESEARCH_DEPTH": 2,
