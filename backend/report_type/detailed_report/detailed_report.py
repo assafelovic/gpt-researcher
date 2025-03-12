@@ -54,6 +54,7 @@ class DetailedReport:
         await self._initial_research()
         subtopics = await self._get_all_subtopics()
         report_introduction = await self.gpt_researcher.write_introduction()
+        await self._send_new_lines()
         _, report_body = await self._generate_subtopic_reports(subtopics)
         self.gpt_researcher.visited_urls.update(self.global_urls)
         report = await self._construct_detailed_report(report_introduction, report_body)
@@ -82,6 +83,7 @@ class DetailedReport:
 
         for subtopic in subtopics:
             result = await self._get_subtopic_report(subtopic)
+            await self._send_new_lines()
             if result["report"]:
                 subtopic_reports.append(result)
                 subtopics_report_body += f"\n\n\n{result['report']}"
@@ -141,3 +143,6 @@ class DetailedReport:
             conclusion, self.gpt_researcher.visited_urls)
         report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
         return report
+    
+    async def _send_new_lines(self):
+        await self.websocket.send_json({"type": "report", "output": "\n\n\n"})
