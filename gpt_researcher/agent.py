@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Optional, Any
 import json
 
 from .config import Config
@@ -106,12 +106,12 @@ class GPTResearcher:
                     await self.log_handler.on_agent_action(kwargs.get('action', ''), **kwargs)
                 elif event_type == "research":
                     await self.log_handler.on_research_step(kwargs.get('step', ''), kwargs.get('details', {}))
-                
+
                 # Add direct logging as backup
                 import logging
                 research_logger = logging.getLogger('research')
                 research_logger.info(f"{event_type}: {json.dumps(kwargs, default=str)}")
-                
+
             except Exception as e:
                 import logging
                 logging.getLogger('research').error(f"Error in _log_event: {e}", exc_info=True)
@@ -147,7 +147,7 @@ class GPTResearcher:
             "role": self.role
         })
         self.context = await self.research_conductor.conduct_research()
-        
+
         await self._log_event("research", step="research_completed", details={
             "context_length": len(self.context)
         })
@@ -199,13 +199,13 @@ class GPTResearcher:
             "existing_headers": existing_headers,
             "context_source": "external" if ext_context else "internal"
         })
-        
+
         report = await self.report_generator.write_report(
             existing_headers,
             relevant_written_contents,
             ext_context or self.context
         )
-        
+
         await self._log_event("research", step="report_completed", details={
             "report_length": len(report)
         })
