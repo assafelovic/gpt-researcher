@@ -102,6 +102,7 @@ async def plan_research_outline(
     parent_query: str,
     report_type: str,
     cost_callback: callable = None,
+    prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
 ) -> List[str]:
     """
     Plan the research outline by generating sub-queries.
@@ -114,6 +115,7 @@ async def plan_research_outline(
         parent_query: Parent query
         report_type: Report type
         cost_callback: Callback for cost calculation
+        prompt_family: Family of prompts
 
     Returns:
         A list of sub-queries
@@ -125,7 +127,8 @@ async def plan_research_outline(
         report_type,
         search_results,
         cfg,
-        cost_callback
+        cost_callback,
+        prompt_family,
     )
 
     return sub_queries

@@ -2,6 +2,7 @@ import warnings
 from datetime import date, datetime, timezone
 
 from .utils.enum import ReportSource, ReportType, Tone
+from .utils.enum import PromptFamily as PromptFamilyEnum
 from typing import Callable, List, Dict, Any
 
 
@@ -580,7 +581,25 @@ def get_prompt_by_report_type(
         prompt_by_type = getattr(prompt_family, _report_type_mapping.get(default_report_type))
     return prompt_by_type
 
-# Define the method names for each report generator type
+
+def get_prompt_family(
+    prompt_family_name: PromptFamilyEnum | str,
+) -> PromptFamily:
+    """Get a prompt family by name or value."""
+    if isinstance(prompt_family_name, PromptFamilyEnum):
+        prompt_family_name = prompt_family_name.value
+    if prompt_family := _prompt_family_mapping.get(prompt_family_name):
+        return prompt_family
+    warnings.warn(
+        f"Invalid prompt family: {prompt_family_name}.\n"
+        f"Please use one of the following: {', '.join([enum_value for enum_value in _prompt_family_mapping.keys()])}\n"
+        f"Using default prompt family: {PromptFamilyEnum.Default.value} prompt.",
+        UserWarning,
+    )
+    return PromptFamily()
+
+
+# Mapping of report types to report generators
 _report_type_mapping = {
     ReportType.ResearchReport.value: "generate_report_prompt",
     ReportType.ResourceReport.value: "generate_resource_report_prompt",
@@ -590,4 +609,10 @@ _report_type_mapping = {
     #   rest of the report prompt generators
     # ReportType.SubtopicReport.value: "generate_subtopic_report_prompt",
     ReportType.DeepResearch.value: "generate_deep_research_prompt",
+}
+
+
+# Mapping of prompt families to prompt family classes
+_prompt_family_mapping = {
+    PromptFamilyEnum.Default.value: PromptFamily,
 }

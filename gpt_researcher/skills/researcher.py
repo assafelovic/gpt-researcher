@@ -47,6 +47,7 @@ class ResearchConductor:
             parent_query=self.researcher.parent_query,
             report_type=self.researcher.report_type,
             cost_callback=self.researcher.add_costs,
+            prompt_family=self.researcher.prompt_family,
         )
         self.logger.info(f"Research outline planned: {outline}")
         return outline

@@ -6,6 +6,7 @@ from .memory import Memory
 from .utils.enum import ReportSource, ReportType, Tone
 from .llm_provider import GenericLLMProvider
 from .vector_store import VectorStoreWrapper
+from .prompts import get_prompt_family
 
 # Research skills
 from .skills.researcher import ResearchConductor
@@ -52,6 +53,7 @@ class GPTResearcher:
         headers: dict | None = None,
         max_subtopics: int = 5,
         log_handler=None,
+        prompt_family: str | None = None,
     ):
         self.query = query
         self.report_type = report_type
@@ -85,6 +87,7 @@ class GPTResearcher:
             self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
         )
         self.log_handler = log_handler
+        self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family)
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
@@ -136,6 +139,7 @@ class GPTResearcher:
                 parent_query=self.parent_query,
                 cost_callback=self.add_costs,
                 headers=self.headers,
+                prompt_family=self.prompt_family,
             )
             await self._log_event("action", action="agent_selected", details={
                 "agent": self.agent,

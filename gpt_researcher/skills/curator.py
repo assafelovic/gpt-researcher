@@ -16,7 +16,6 @@ class SourceCurator:
         self,
         source_data: List,
         max_results: int = 10,
-        prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
     ) -> List:
         """
         Rank sources based on research data and guidelines.
@@ -25,7 +24,6 @@ class SourceCurator:
             query: The research query/task
             source_data: List of source documents to rank
             max_results: Maximum number of top sources to return
-            prompt_family: Family of prompts
 
         Returns:
             str: Ranked list of source URLs with reasoning
@@ -45,7 +43,7 @@ class SourceCurator:
                 model=self.researcher.cfg.smart_llm_model,
                 messages=[
                     {"role": "system", "content": f"{self.researcher.role}"},
-                    {"role": "user", "content": prompt_family.curate_sources(
+                    {"role": "user", "content": self.researcher.prompt_family.curate_sources(
                         self.researcher.query, source_data, max_results)},
                 ],
                 temperature=0.2,
