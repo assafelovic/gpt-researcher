@@ -5,8 +5,9 @@ interface GetHostParams {
 export const getHost = ({ purpose }: GetHostParams = {}): string => {
   if (typeof window !== 'undefined') {
     let { host } = window.location;
-    if(localStorage.getItem('apiURL')){
-      return localStorage.getItem('apiURL');
+    const storedApiUrl = localStorage.getItem('apiURL');
+    if(storedApiUrl){
+      return storedApiUrl;
     } else if (process.env.REACT_APP_GPTR_API_URL) {
       return process.env.REACT_APP_GPTR_API_URL;
     } else if (process.env.NEXT_PUBLIC_GPTR_API_URL) {
