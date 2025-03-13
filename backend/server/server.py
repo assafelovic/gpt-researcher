@@ -99,9 +99,9 @@ def startup_event():
 
 
 # Keep this for testing and development purposes
-# @app.get("/")
-# async def read_root(request: Request):
-#     return templates.TemplateResponse("index.html", {"request": request, "report": None})
+@app.get("/")
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "report": None})
 
 @app.delete("/output_file")
 async def delete_output_file(path: str): 
@@ -117,10 +117,10 @@ async def websocket_endpoint(websocket: WebSocket):
     client_token = websocket.query_params.get("token")
     
     # Validate token
-    if not auth_token or client_token != auth_token:
-        logger.error(f"Unauthorized access: Invalid token")
-        await websocket.close(code=4001, reason="Unauthorized")
-        return
+    # if not auth_token or client_token != auth_token:
+    #    logger.error(f"Unauthorized access: Invalid token")
+    #    await websocket.close(code=4001, reason="Unauthorized")
+    #    return
         
     await manager.connect(websocket)
     try:
