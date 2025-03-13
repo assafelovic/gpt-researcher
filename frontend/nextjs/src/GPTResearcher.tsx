@@ -24,12 +24,15 @@ export interface GPTResearcherProps {
 }
 
 export const GPTResearcher = ({
-  apiUrl = process.env.REACT_PUBLIC_GPTR_API_URL || process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000',
+  apiUrl = process.env.REACT_PUBLIC_GPTR_API_URL || process.env.NEXT_PUBLIC_GPTR_API_URL
   apiKey = '',
   defaultPrompt = '',
   onResultsChange,
   theme = {}
 }: GPTResearcherProps) => {
+
+  localStorage.setItem('apiURL', apiUrl);
+
   const [promptValue, setPromptValue] = useState(defaultPrompt);
   const [showResult, setShowResult] = useState(false);
   const [answer, setAnswer] = useState("");
