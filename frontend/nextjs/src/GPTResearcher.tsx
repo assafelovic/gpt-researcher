@@ -24,7 +24,7 @@ export interface GPTResearcherProps {
 }
 
 export const GPTResearcher = ({
-  apiUrl = process.env.REACT_PUBLIC_GPTR_API_URL || process.env.NEXT_PUBLIC_GPTR_API_URL
+  apiUrl = '',
   apiKey = '',
   defaultPrompt = '',
   onResultsChange,
