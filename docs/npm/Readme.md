@@ -83,7 +83,7 @@ Common log content types:
 - `task` (required): The research question or task to investigate
 - `reportType` (optional): Type of report to generate (default: 'research_report')
 - `reportSource` (optional): Source of the report data (default: 'web')
-- `tone` (optional): Tone of the report (default: 'professional')
+- `tone` (optional): Tone of the report
 - `queryDomains` (optional): Array of domain names to filter search results
 
 
@@ -100,6 +100,5 @@ researcher.sendMessage({
   task: "What are the latest developments in AI?",
   reportType: "research_report",
   reportSource: "web",
-  tone: "professional",
   queryDomains: ["techcrunch.com", "wired.com"]
 });
