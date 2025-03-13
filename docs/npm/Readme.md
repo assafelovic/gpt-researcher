@@ -1,4 +1,4 @@
-# GPT Researcher Webhook
+# GPT Researcher
 
 The gpt-researcher npm package is a WebSocket client for interacting with GPT Researcher.
 
@@ -18,7 +18,7 @@ npm install gpt-researcher
 const GPTResearcher = require('gpt-researcher');
 
 const researcher = new GPTResearcher({
-  host: 'localhost:8000',
+  host: 'http://localhost:8000',
   logListener: (data) => console.log('logListener logging data: ',data)
 });
 
@@ -53,3 +53,4 @@ Common log content types:
 'scraping_complete': Scraping completion
 'fetching_query_content': Query processing
 ```
+
