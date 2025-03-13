@@ -11,7 +11,8 @@ class GPTResearcherWebhook {
 
   async initializeWebSocket() {
     if (!this.socket) {
-      const ws_uri = `ws://${this.host}/ws`;
+      const host = this.host.replace('http://', '').replace('https://', '');
+      const ws_uri = `${this.host.includes('https') ? 'wss:' : 'ws:'}//${host}/ws`;
       this.socket = new WebSocket(ws_uri);
 
       this.socket.onopen = () => {
