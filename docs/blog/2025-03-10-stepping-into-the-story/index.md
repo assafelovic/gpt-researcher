@@ -35,27 +35,31 @@ Around that time, I found myself repeatedly asking GPT Researcher the same quest
 
 "Who is Elisha Kramer?"
 
-At first, it was like the Magic Mirror in Snow White, responding with something generic like, “Elisha Kramer is a software engineer with experience in web development.” It pulled information from my LinkedIn, GitHub, and Udemy profiles, painting a picture of who I was professionally. But then, things got weird.
+At first, it was like the Magic Mirror in Snow White, responding with something generic like, "Elisha Kramer is a software engineer with experience in web development." It pulled information from my LinkedIn, GitHub, and Udemy profiles, painting a picture of who I was professionally. But then, things got weird.
 
-I made more commits to GPT Researcher. More contributions. And as I coded, I asked again.
+I made more commits to GPT Researcher. More contributions. And as I coded, I asked a different question.
 
-"Who is Elisha Kramer?"
+"Who is ElishaKay on Github?"
 
 As time went on, the answer changed since the Researcher was pulling new sources fresh off web search results.
 
-"Elisha Kramer is an active contributor to GPT Researcher."
+"ElishaKay is an active open source contributor with multiple repositories and over 500 commits in the past year."
 
-Holy Shnikes! It was learning. Another commit. Another feature. Another line of documentation.
+Holy Shnikes! It was learning. Another commit. Another feature. Another line of documentation. Time to get more specific.
 
-"Who is Elisha Kramer?"
+"Who is ElishaKay of gpt-researcher?"
 
-"Elisha Kramer is a core contributor of GPT Researcher, improving research workflows and enhancing AI retrieval."
+"ElishaKay is a core contributor of GPT Researcher, improving research workflows and enhancing AI retrieval through significant code and documentation contributions."
 
 Now we were talking. But I wasn't done. Like the Wicked Witch, I kept coming back. More commits. More improvements. More features.
 
-Until finally, GPT Researcher looked back at me and said:
+Until finally, I asked:
 
-"Elisha Kramer is a vital part of GPT Researcher's development, shaping its functionality and user experience within a growing community of AI researchers and developers."
+"Tell me about gpt-researcher and tips to improve it"
+
+And GPT Researcher looked back at me and said:
+
+"GPTR is a thriving open-source community. The best path forward is to continue investing in that community - through code contributions, documentation improvements, and helping new contributors get started. The project's strength lies in its collaborative nature."
 
 And that's when I knew—I wasn't just using GPT Researcher. I was becoming part of its story.
 
