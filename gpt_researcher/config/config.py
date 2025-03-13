@@ -223,5 +223,7 @@ class Config:
             return env_value
         elif origin is list or origin is List:
             return json.loads(env_value)
+        elif type_hint is dict:
+            return json.loads(env_value)
         else:
             raise ValueError(f"Unsupported type {type_hint} for key {key}")
