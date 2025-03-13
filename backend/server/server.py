@@ -115,6 +115,9 @@ async def websocket_endpoint(websocket: WebSocket):
     
     # Get token from query params
     client_token = websocket.query_params.get("token")
+
+    print('auth token', auth_token)
+    print('client token', client_token)
     
     # Validate token
     # if not auth_token or client_token != auth_token:
