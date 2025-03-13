@@ -48,8 +48,7 @@ const researcher = new GPTResearcher({
 });
 
 researcher.sendMessage({
-  query: 'Does providing better context reduce LLM hallucinations?',
-  moreContext: 'Provide a detailed answer'
+  query: 'Does providing better context reduce LLM hallucinations?'
 });
 ```
 
@@ -79,3 +78,28 @@ Common log content types:
 'fetching_query_content': Query processing
 ```
 
+### Parameters
+
+- `task` (required): The research question or task to investigate
+- `reportType` (optional): Type of report to generate (default: 'research_report')
+- `reportSource` (optional): Source of the report data (default: 'web')
+- `tone` (optional): Tone of the report (default: 'professional')
+- `queryDomains` (optional): Array of domain names to filter search results
+
+
+### Advanced usage
+
+```javascript
+const researcher = new GPTResearcher({
+  host: 'http://localhost:8000',
+  logListener: (data) => console.log('Log:', data)
+});
+
+// Advanced usage with all parameters
+researcher.sendMessage({
+  task: "What are the latest developments in AI?",
+  reportType: "research_report",
+  reportSource: "web",
+  tone: "professional",
+  queryDomains: ["techcrunch.com", "wired.com"]
+});
