@@ -11,11 +11,11 @@ class GPTResearcher {
   }
 
   async initializeWebSocket() {
-    if (!this.socket) {
-      
+    if (!this.socket) {      
       const protocol = this.host.includes('https') ? 'wss:' : 'ws:';
       const cleanHost = this.host.replace('http://', '').replace('https://', '');
       const ws_uri = `${protocol}//${cleanHost}/ws`;
+
       this.socket = new WebSocket(ws_uri);
 
       this.socket.onopen = () => {
@@ -74,6 +74,7 @@ class GPTResearcher {
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
         this.initializeWebSocket();
       }
+
 
       const payload = "start " + JSON.stringify(data);
 
