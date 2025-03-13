@@ -46,8 +46,7 @@ function App() {
   return (
     <div className="App">
       <GPTResearcher 
-        apiUrl="http://your-gpt-researcher-backend.com" 
-        apiKey="your-api-key-if-needed"
+        apiUrl="http://localhost:8000"
         defaultPrompt="What is quantum computing?"
         onResultsChange={(results) => console.log('Research results:', results)}
       />
