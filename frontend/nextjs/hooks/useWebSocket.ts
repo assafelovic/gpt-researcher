@@ -41,10 +41,11 @@ export const useWebSocket = (
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
 
     if (!socket && typeof window !== 'undefined') {
-      // Use currentApiUrl instead of getHost()
-      const wsProtocol = currentApiUrl.includes('https') ? 'wss:' : 'ws:';
-      const host = currentApiUrl.replace('http://', '').replace('https://', '');
-      const ws_uri = `${wsProtocol}//${host}/ws`;
+      
+      let fullHost = getHost()
+      const protocol = fullHost.includes('https') ? 'wss:' : 'ws:'
+      const cleanHost = fullHost.replace('http://', '').replace('https://', '')
+      const ws_uri = `${protocol}//${cleanHost}/ws`
 
       const newSocket = new WebSocket(ws_uri);
       setSocket(newSocket);
