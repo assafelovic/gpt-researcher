@@ -56,6 +56,7 @@ export default {
     }),
     babel({
       babelHelpers: 'bundled',
+      configFile: './.babelrc.build.json',
       extensions: ['.js', '.jsx', '.ts', '.tsx'],
       presets: [
         '@babel/preset-env',
