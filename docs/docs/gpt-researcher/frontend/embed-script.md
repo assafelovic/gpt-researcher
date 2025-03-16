@@ -2,6 +2,13 @@
 
 The embed script enables you to embed the latest GPTR NextJS app into your web app.
 
+To achieve this, simply add these 2 script tags into your HTML:
+
+```javascript
+<script>localStorage.setItem("GPTR_API_URL", "http://localhost:8000");</script>
+<script src="https://gptr.app/embed.js"></script>
+```
+
 Here's a minmalistic HTML example (P.S. You can also save this as an index.html file and open it with your Web Browser)
 
 ```html
