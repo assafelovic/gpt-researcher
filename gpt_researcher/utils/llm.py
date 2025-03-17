@@ -7,6 +7,8 @@ from typing import Any
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
+
 from ..prompts import generate_subtopics_prompt
 from .costs import estimate_llm_cost
 from .validators import Subtopics
@@ -28,7 +30,7 @@ async def create_chat_completion(
         websocket: Any | None = None,
         llm_kwargs: dict[str, Any] | None = None,
         cost_callback: callable = None,
-        reasoning_effort: str | None = "low"
+        reasoning_effort: str | None = ReasoningEfforts.Medium.value
 ) -> str:
     """Create a chat completion using the OpenAI API
     Args:
