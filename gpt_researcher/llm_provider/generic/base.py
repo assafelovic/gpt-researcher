@@ -26,6 +26,11 @@ _SUPPORTED_PROVIDERS = {
     "gigachat"
 }
 
+SUPPORT_REASONING_EFFORT_MODELS = [
+    "o3-mini",
+    "o3-mini-2025-01-31"
+]
+
 
 class GenericLLMProvider:
 
