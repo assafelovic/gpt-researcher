@@ -4,6 +4,7 @@ import sys
 from typing import Any
 from colorama import Fore, Style, init
 import os
+from enum import Enum
 
 _SUPPORTED_PROVIDERS = {
     "openai",
@@ -31,6 +32,10 @@ SUPPORT_REASONING_EFFORT_MODELS = [
     "o3-mini-2025-01-31"
 ]
 
+class ReasoningEfforts(Enum):
+    High = "high"
+    Medium = "medium"
+    Low = "low"
 
 class GenericLLMProvider:
 
