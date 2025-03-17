@@ -7,7 +7,7 @@ from typing import Any
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 
-from gpt_researcher.llm_provider.generic.base import SUPPORT_REASONING_EFFORT_MODELS, ReasoningEfforts
+from gpt_researcher.llm_provider.generic.base import NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, ReasoningEfforts
 
 from ..prompts import generate_subtopics_prompt
 from .costs import estimate_llm_cost
@@ -62,7 +62,8 @@ async def create_chat_completion(
 
     if model in SUPPORT_REASONING_EFFORT_MODELS:
         kwargs['reasoning_effort'] = reasoning_effort
-    else:
+
+    if model not in NO_SUPPORT_TEMPERATURE_MODELS:
         kwargs['temperature'] = temperature
         kwargs['max_tokens'] = max_tokens
 
