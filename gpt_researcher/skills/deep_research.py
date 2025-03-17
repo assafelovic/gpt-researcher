@@ -122,7 +122,7 @@ Format each question on a new line starting with 'Question: '"""}
             messages=messages,
             llm_provider=self.researcher.cfg.strategic_llm_provider,
             model=self.researcher.cfg.strategic_llm_model,
-            reasoning_effort=ReasoningEfforts.Medium.value,
+            reasoning_effort=ReasoningEfforts.High.value,
             temperature=0.4
         )
 
