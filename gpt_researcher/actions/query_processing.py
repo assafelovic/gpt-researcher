@@ -1,4 +1,6 @@
 import json_repair
+
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from ..utils.llm import create_chat_completion
 from ..prompts import generate_search_queries_prompt
 from typing import Any, List, Dict
@@ -10,11 +12,11 @@ logger = logging.getLogger(__name__)
 async def get_search_results(query: str, retriever: Any, query_domains: List[str] = None) -> List[Dict[str, Any]]:
     """
     Get web search results for a given query.
-    
+
     Args:
         query: The search query
         retriever: The retriever instance
-    
+
     Returns:
         A list of search results
     """
@@ -31,7 +33,7 @@ async def generate_sub_queries(
 ) -> List[str]:
     """
     Generate sub-queries using the specified LLM model.
-    
+
     Args:
         query: The original query
         parent_query: The parent query
@@ -40,7 +42,7 @@ async def generate_sub_queries(
         context: Search results context
         cfg: Configuration object
         cost_callback: Callback for cost calculation
-    
+
     Returns:
         A list of sub-queries
     """
@@ -60,7 +62,7 @@ async def generate_sub_queries(
             llm_provider=cfg.strategic_llm_provider,
             max_tokens=None,
             llm_kwargs=cfg.llm_kwargs,
-            reasoning_effort="high",
+            reasoning_effort=ReasoningEfforts.High.value,
             cost_callback=cost_callback,
         )
     except Exception as e:
@@ -103,7 +105,7 @@ async def plan_research_outline(
 ) -> List[str]:
     """
     Plan the research outline by generating sub-queries.
-    
+
     Args:
         query: Original query
         retriever: Retriever instance
@@ -112,11 +114,11 @@ async def plan_research_outline(
         parent_query: Parent query
         report_type: Report type
         cost_callback: Callback for cost calculation
-    
+
     Returns:
         A list of sub-queries
     """
-    
+
     sub_queries = await generate_sub_queries(
         query,
         parent_query,
