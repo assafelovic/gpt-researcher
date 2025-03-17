@@ -110,17 +110,6 @@ async def delete_output_file(path: str):
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    # Get auth token from environment
-    auth_token = os.getenv("AUTH_TOKEN")
-    
-    # Get token from query params
-    client_token = websocket.query_params.get("token")
-    
-    # Validate token
-    if not auth_token or client_token != auth_token:
-        logger.error(f"Unauthorized access: Invalid token")
-        await websocket.close(code=4001, reason="Unauthorized")
-        return
         
     await manager.connect(websocket)
     try:
