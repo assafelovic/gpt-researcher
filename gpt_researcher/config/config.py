@@ -23,7 +23,8 @@ class Config:
         self._set_embedding_attributes()
         self._set_llm_attributes()
         self._handle_deprecated_attributes()
-        self._set_doc_path(config_to_use)
+        if config_to_use['REPORT_SOURCE'] != 'web':
+          self._set_doc_path(config_to_use)
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         for key, value in config.items():
