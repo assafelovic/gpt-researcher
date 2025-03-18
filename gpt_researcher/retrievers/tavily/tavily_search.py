@@ -5,6 +5,8 @@ import os
 from typing import Literal, Sequence, Optional
 import requests
 import json
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 class TavilySearch:
@@ -12,7 +14,7 @@ class TavilySearch:
     Tavily API Retriever
     """
 
-    def __init__(self, query, headers=None, topic="general", query_domains=None):
+    def __init__(self, query, headers=None, topic="general", query_domains=None, max_retries=3, retry_delay=1):
         """
         Initializes the TavilySearch object.
 
@@ -21,6 +23,8 @@ class TavilySearch:
             headers (dict, optional): Additional headers to include in the request. Defaults to None.
             topic (str, optional): The topic for the search. Defaults to "general".
             query_domains (list, optional): List of domains to include in the search. Defaults to None.
+            max_retries (int, optional): Maximum number of retries for failed requests. Defaults to 3.
+            retry_delay (int, optional): Delay between retries in seconds. Defaults to 1.
         """
         self.query = query
         self.headers = headers or {}
@@ -31,6 +35,19 @@ class TavilySearch:
             "Content-Type": "application/json",
         }
         self.query_domains = query_domains or None
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        
+        # Setup session with retry strategy
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=max_retries,
+            backoff_factor=retry_delay,
+            status_forcelist=[403, 429, 500, 502, 503, 504],
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
 
     def get_api_key(self):
         """
@@ -83,7 +100,7 @@ class TavilySearch:
             "use_cache": use_cache,
         }
 
-        response = requests.post(
+        response = self.session.post(
             self.base_url, data=json.dumps(data), headers=self.headers, timeout=100
         )
 
