@@ -132,6 +132,9 @@ async def handle_start_command(websocket, data: str, manager):
         query_domains,
     ) = extract_command_data(json_data)
     
+    print('token', token)
+    print('GPT_RESEARCHER_AUTH_TOKEN', os.getenv("GPT_RESEARCHER_AUTH_TOKEN"))
+    
     # Authenticate the request before proceeding
     if not token or token != os.getenv("GPT_RESEARCHER_AUTH_TOKEN"):
         await websocket.send_json({ "type": "error", "output": "Unauthorized: Invalid token" })
