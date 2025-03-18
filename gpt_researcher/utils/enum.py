@@ -54,3 +54,4 @@ class Tone(Enum):
 class PromptFamily(Enum):
     """Supported prompt families by name"""
     Default = "default"
+    Granite = "granite"
