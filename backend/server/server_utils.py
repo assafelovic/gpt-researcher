@@ -313,6 +313,7 @@ async def handle_websocket_communication(websocket, manager):
 
 def extract_command_data(json_data: Dict) -> tuple:
     return (
+        json_data.get("token"),
         json_data.get("task"),
         json_data.get("report_type"),
         json_data.get("source_urls"),
