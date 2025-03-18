@@ -52,6 +52,11 @@ class ReportGenerator:
             )
 
         context = ext_context or self.researcher.context
+        
+        if not context:
+            await self.researcher.websocket.send_json({ "type": "error", "output": "No context found. Unable to generate report." })
+            return ""
+        
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -95,6 +100,11 @@ class ReportGenerator:
         Returns:
             str: The generated conclusion.
         """
+        
+        if not report_content:
+            await self.researcher.websocket.send_json({ "type": "error", "output": "No report content found. Unable to generate conclusion." })
+            return ""
+        
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -124,6 +134,11 @@ class ReportGenerator:
 
     async def write_introduction(self):
         """Write the introduction section of the report."""
+        
+        if not self.researcher.context:
+            await self.researcher.websocket.send_json({ "type": "error", "output": "No context found. Unable to generate introduction." })
+            return ""
+        
         if self.researcher.verbose:
             await stream_output(
                 "logs",
