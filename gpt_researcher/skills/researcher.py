@@ -35,9 +35,8 @@ class ResearchConductor:
         # Check if search results are empty
         if len(search_results) == 0:
             self.logger.error("No search results found for query. Unable to conduct research.")
-            raise Exception("No search results found for query. Unable to conduct research.")
+            return []
         
-
         await stream_output(
             "logs",
             "planning_research",
