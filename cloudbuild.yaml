@@ -15,6 +15,6 @@
    - '--image'
    - 'gcr.io/$PROJECT_ID/gpt-researcher:$COMMIT_SHA'
    - '--region'
-   - 'REGION'
+   - 'us-central1 '
  images:
  - 'gcr.io/$PROJECT_ID/gpt-researcher:$COMMIT_SHA'
