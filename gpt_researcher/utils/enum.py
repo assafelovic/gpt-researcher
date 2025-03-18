@@ -49,3 +49,9 @@ class Tone(Enum):
     Pessimistic = (
         "Pessimistic (focusing on limitations, challenges, or negative outcomes)"
     )
+
+
+class PromptFamily(Enum):
+    """Supported prompt families by name"""
+    Default = "default"
+    Granite = "granite"
