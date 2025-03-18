@@ -1,6 +1,8 @@
 import warnings
 from datetime import date, datetime, timezone
 
+from langchain.docstore.document import Document
+
 from .utils.enum import ReportSource, ReportType, Tone
 from .utils.enum import PromptFamily as PromptFamilyEnum
 from typing import Callable, List, Dict, Any
@@ -463,6 +465,15 @@ IMPORTANT: The entire conclusion MUST be written in {language} language.
 
 Write the conclusion:
 """
+
+    @staticmethod
+    def pretty_print_docs(docs: list[Document], top_n: int | None = None) -> str:
+        """Compress the list of documents into a context string"""
+        return f"\n".join(f"Source: {d.metadata.get('source')}\n"
+                          f"Title: {d.metadata.get('title')}\n"
+                          f"Content: {d.page_content}\n"
+                          for i, d in enumerate(docs)
+                          if top_n is None or i < top_n)
 
     # Deprecated??
     @staticmethod
