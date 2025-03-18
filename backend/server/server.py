@@ -92,7 +92,7 @@ DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 def startup_event():
     os.makedirs("outputs", exist_ok=True)
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
-    os.makedirs(DOC_PATH, exist_ok=True)
+    # os.makedirs(DOC_PATH, exist_ok=True)  # Commented out to avoid creating the folder if not needed
     
 
 # Routes
@@ -105,6 +105,8 @@ async def read_root(request: Request):
 
 @app.get("/files/")
 async def list_files():
+    if not os.path.exists(DOC_PATH):
+      os.makedirs(DOC_PATH, exist_ok=True)
     files = os.listdir(DOC_PATH)
     print(f"Files in {DOC_PATH}: {files}")
     return {"files": files}
