@@ -116,23 +116,25 @@ class TavilySearch:
         Returns:
 
         """
-        try:
-            # Search the query
-            results = self._search(
-                self.query,
-                search_depth="basic",
-                max_results=max_results,
-                topic=self.topic,
-                include_domains=self.query_domains,
-            )
-            sources = results.get("results", [])
-            if not sources:
-                raise Exception("No results found with Tavily API search.")
-            # Return the results
-            search_response = [
-                {"href": obj["url"], "body": obj["content"]} for obj in sources
-            ]
-        except Exception as e:
-            print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
-            search_response = []
-        return search_response
+        # TODO: Remove this after testing error handling
+        return []
+        # try:
+        #     # Search the query
+        #     results = self._search(
+        #         self.query,
+        #         search_depth="basic",
+        #         max_results=max_results,
+        #         topic=self.topic,
+        #         include_domains=self.query_domains,
+        #     )
+        #     sources = results.get("results", [])
+        #     if not sources:
+        #         raise Exception("No results found with Tavily API search.")
+        #     # Return the results
+        #     search_response = [
+        #         {"href": obj["url"], "body": obj["content"]} for obj in sources
+        #     ]
+        # except Exception as e:
+        #     print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
+        #     search_response = []
+        # return search_response
