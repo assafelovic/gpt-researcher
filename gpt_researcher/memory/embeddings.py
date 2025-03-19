@@ -72,6 +72,10 @@ class Memory:
                 from langchain_fireworks import FireworksEmbeddings
 
                 _embeddings = FireworksEmbeddings(model=model, **embdding_kwargs)
+            case "gigachat":
+                from langchain_gigachat import GigaChatEmbeddings
+
+                _embeddings = GigaChatEmbeddings(model=model, **embdding_kwargs)
             case "ollama":
                 from langchain_ollama import OllamaEmbeddings
 
