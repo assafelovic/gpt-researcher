@@ -7,6 +7,8 @@ from typing import Any
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 
+from gpt_researcher.llm_provider.generic.base import NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, ReasoningEfforts
+
 from ..prompts import generate_subtopics_prompt
 from .costs import estimate_llm_cost
 from .validators import Subtopics
@@ -28,7 +30,7 @@ async def create_chat_completion(
         websocket: Any | None = None,
         llm_kwargs: dict[str, Any] | None = None,
         cost_callback: callable = None,
-        reasoning_effort: str | None = "low"
+        reasoning_effort: str | None = ReasoningEfforts.Medium.value
 ) -> str:
     """Create a chat completion using the OpenAI API
     Args:
@@ -58,9 +60,10 @@ async def create_chat_completion(
         **(llm_kwargs or {})
     }
 
-    if 'o3' in model or 'o1' in model:
+    if model in SUPPORT_REASONING_EFFORT_MODELS:
         kwargs['reasoning_effort'] = reasoning_effort
-    else:
+
+    if model not in NO_SUPPORT_TEMPERATURE_MODELS:
         kwargs['temperature'] = temperature
         kwargs['max_tokens'] = max_tokens
 
@@ -115,9 +118,8 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
             **(config.llm_kwargs or {})
         }
 
-        temperature = config.temperature
-        if 'o3' in config.smart_llm_model or 'o1' in config.smart_llm_model:
-            kwargs['reasoning_effort'] = "high"
+        if config.smart_llm_model in SUPPORT_REASONING_EFFORT_MODELS:
+            kwargs['reasoning_effort'] = ReasoningEfforts.High.value
         else:
             kwargs['temperature'] = config.temperature
             kwargs['max_tokens'] = config.smart_token_limit
