@@ -11,7 +11,7 @@ steps:
   args: 
     - 'run'
     - 'deploy'
-    - 'wald-research-agent'
+    - 'gpt-researcher'
     - '--image'
     - 'gcr.io/$PROJECT_ID/gpt-researcher:$COMMIT_SHA'
     - '--region'
