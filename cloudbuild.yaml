@@ -2,6 +2,10 @@ steps:
 # Build the image
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'gcr.io/$PROJECT_ID/gpt-researcher:$COMMIT_SHA', '.']
+  secretEnv:
+      - GPT_RESEARCHER_AUTH_TOKEN
+      - OPENAI_API_KEY
+      - TAVILY_API_KEY
 # Push the image to Artifact Registry
 - name: 'gcr.io/cloud-builders/docker'
   args: ['push', 'gcr.io/$PROJECT_ID/gpt-researcher:$COMMIT_SHA']
@@ -18,3 +22,12 @@ steps:
     - 'us-central1'
 images:
 - 'gcr.io/$PROJECT_ID/gpt-researcher:$COMMIT_SHA'
+# Make secrets available to the build
+availableSecrets:
+  secretManager:
+    - versionName: projects/wald-ml-demos/secrets/GPT_RESEARCHER_AUTH_TOKEN/versions/latest
+      env: "GPT_RESEARCHER_AUTH_TOKEN"
+    - versionName: projects/wald-ml-demos/secrets/OPENAI_ZDR_API_KEY/versions/latest
+      env: "OPENAI_API_KEY"
+    - versionName: projects/wald-ml-demos/secrets/TAVILY_API_KEY/versions/latest
+      env: "TAVILY_API_KEY"
