@@ -9,6 +9,7 @@ _SUPPORTED_PROVIDERS = {
     "openai",
     "azure_openai",
     "cohere",
+    "gigachat",
     "google_vertexai",
     "google_genai",
     "fireworks",
