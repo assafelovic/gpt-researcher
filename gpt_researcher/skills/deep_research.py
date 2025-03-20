@@ -95,7 +95,7 @@ class DeepResearchSkill:
     async def generate_research_plan(self, query: str, num_questions: int = 3) -> List[str]:
         """Generate follow-up questions to clarify research direction"""
         # Get initial search results to inform query generation
-        search_results = await get_search_results(query, self.researcher.retrievers[0])
+        search_results = await get_search_results(query, self.researcher.retrievers)
         logger.info(f"Initial web knowledge obtained: {len(search_results)} results")
 
         # Get current time for context
