@@ -43,21 +43,40 @@ class GPTResearcherWebhook {
     }
   }
 
-  async sendMessage({query, moreContext, repoName = 'assafelovic/gpt-researcher', branchName = 'master'}) {
+  async sendMessage({query, moreContext, useHTPP = false, execute_in_background = true, repoName = 'assafelovic/gpt-researcher', branchName = 'master'}) {
+    const data = {
+      task: `${query}. Additional context: ${moreContext}`,
+      report_type: 'research_report',
+      report_source: 'web',
+      tone: 'Objective',
+      headers: {},
+      repo_name: repoName,
+      branch_name: branchName,
+      execute_in_background: execute_in_background
+    };
+
+    if (useHTPP) {
+      return await this.sendHttpRequest(data);
+    } else {
+      return await this.sendWebSocketRequest(data);
+    }
+  }
+
+  async sendHttpRequest(data) {
+    try {
+      const response = await axios.post(`http://${this.host}/report/`, data);
+      return { message: 'success', data: response.data };
+    } catch (error) {
+      console.error('HTTP request error:', error);
+      return { message: 'error', error: error.message };
+    }
+  }
+
+  async sendWebSocketRequest() {
     return new Promise((resolve, reject) => {
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
         this.initializeWebSocket();
       }
-
-      const data = {
-        task: `${query}. Additional context: ${moreContext}`,
-        report_type: 'research_report',
-        report_source: 'web',
-        tone: 'Objective',
-        headers: {},
-        repo_name: repoName,
-        branch_name: branchName
-      };
 
       const payload = "start " + JSON.stringify(data);
 
@@ -80,6 +99,16 @@ class GPTResearcherWebhook {
         };
       }
     });
+  }
+
+  async getReport(reportId) {
+    try {
+      const response = await axios.get(`http://${this.host}/report/${reportId}`);
+      return response;
+    } catch (error) {
+      console.error('HTTP request error:', error);
+      return { message: 'error', error: error.message };
+    }
   }
 }
 
