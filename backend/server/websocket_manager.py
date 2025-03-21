@@ -91,11 +91,11 @@ class WebSocketManager:
         else:
             await websocket.send_json({"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"})
 
-async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, headers=None, query_domains=[], config_path=""):
+async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, stream_output=stream_output, headers=None, query_domains=[], config_path="", return_researcher=False):
     """Run the agent."""    
     # Create logs handler for this research task
     logs_handler = CustomLogsHandler(websocket, task)
-    
+
     # Initialize researcher based on report type
     if report_type == "multi_agents":
         report = await run_research_task(
@@ -106,7 +106,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
             headers=headers
         )
         report = report.get("report", "")
-        
+
     elif report_type == ReportType.DetailedReport.value:
         researcher = DetailedReport(
             query=task,
@@ -137,4 +137,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
         )
         report = await researcher.run()
 
-    return report
+    if report_type != "multi_agents" and return_researcher:
+        return report, researcher.gpt_researcher
+    else:
+        return report
