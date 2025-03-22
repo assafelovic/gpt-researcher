@@ -51,6 +51,7 @@
       items: [
         'gpt-researcher/frontend/introduction',
         'gpt-researcher/frontend/nextjs-frontend',
+        'gpt-researcher/frontend/embed-script',
         'gpt-researcher/frontend/vanilla-js-frontend',
         'gpt-researcher/frontend/discord-bot',
         'gpt-researcher/frontend/visualizing-websockets'
