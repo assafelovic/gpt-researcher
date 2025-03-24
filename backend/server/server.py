@@ -109,6 +109,7 @@ async def read_root(request: Request):
 async def export_file(request: Request):
     
     auth_header = request.headers.get("Authorization")
+    
     if not auth_header or auth_header != os.getenv("GPT_RESEARCHER_AUTH_TOKEN"):
         raise HTTPException(status_code=401, detail="Unauthorized")
     
