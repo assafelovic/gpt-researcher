@@ -116,9 +116,7 @@ async def export_pdf(text: str) -> bytes:
             file_buffer = f.read()
             
         # Delete temp file
-        # os.remove(temp_path)
-        
-        print("Generated PDF", temp_path)
+        os.remove(temp_path)
         
         return file_buffer
     except Exception as e:
@@ -159,10 +157,7 @@ async def export_docx(text: str) -> bytes:
             file_buffer = f.read()
             
         # Delete temp file
-        # os.remove(temp_path)
-        
-        print("Generated DOCX", temp_path)
-        
+        os.remove(temp_path)
         
         return file_buffer  
     except Exception as e:
