@@ -1,6 +1,8 @@
 import aiofiles
 import urllib
 import mistune
+import time
+import os
 
 async def write_to_file(filename: str, text: str) -> None:
     """Asynchronously write text to a file in UTF-8 encoding.
@@ -89,4 +91,74 @@ async def write_md_to_word(text: str, filename: str = "") -> str:
 
     except Exception as e:
         print(f"Error in converting Markdown to DOCX: {e}")
+        return ""
+    
+async def export_pdf(text: str) -> bytes:
+    """Converts Markdown text to a PDF file and returns the file buffer.
+
+    Args:
+        text (str): Markdown text to convert.
+
+    Returns:
+        bytes: The PDF file contents as bytes.
+    """
+    temp_path = f"outputs/temp_{int(time.time())}.pdf"
+    
+    try:
+        from md2pdf.core import md2pdf
+        md2pdf(temp_path,
+            md_content=text,
+            css_file_path="./frontend/pdf_styles.css",
+            base_url=None)
+        
+        # Read file into buffer
+        with open(temp_path, 'rb') as f:
+            file_buffer = f.read()
+            
+        # Delete temp file
+        os.remove(temp_path)
+        
+        return file_buffer
+    except Exception as e:
+        print(f"Error in generating PDF: {e}")
+        return ""
+
+
+async def export_docx(text: str) -> bytes:
+    """Converts Markdown text to a DOCX file and returns the file buffer.
+
+    Args:
+        text (str): Markdown text to convert.
+
+    Returns:
+        bytes: The DOCX file contents as bytes.
+    """
+    temp_path = f"outputs/temp_{int(time.time())}.docx"
+    
+    try:
+        from docx import Document
+        from htmldocx import HtmlToDocx
+        
+        # Convert report markdown to HTML
+        html = mistune.html(text)
+        
+        # Create a document object
+        doc = Document()
+    
+        # Convert the html generated from the report to document format
+        HtmlToDocx().add_html_to_document(html, doc)
+        
+        # Save the document to the temporary file
+        doc.save(temp_path)
+        
+        # Read the document into a buffer
+        with open(temp_path, 'rb') as f:
+            file_buffer = f.read()
+            
+        # Delete temp file
+        os.remove(temp_path)
+        
+        return file_buffer  
+    except Exception as e:
+        print(f"Error in generating DOCX: {e}")
         return ""

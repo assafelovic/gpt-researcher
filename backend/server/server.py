@@ -15,6 +15,8 @@ from backend.server.server_utils import (
     execute_multi_agents, handle_websocket_communication
 )
 
+from backend.utils import export_pdf, export_docx
+from fastapi import Response, HTTPException
 
 from gpt_researcher.utils.logging_config import setup_research_logging
 
@@ -102,6 +104,45 @@ def startup_event():
 @app.get("/")
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "report": None})
+
+@app.post("/export_file")
+async def export_file(request: Request):
+    
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or auth_header != os.getenv("GPT_RESEARCHER_AUTH_TOKEN"):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    data = await request.json()
+    format = data.get("format")
+    content = data.get("content")
+    
+    try:
+        logger.info(f"Generating {format} file from content")
+        
+        if format.lower() == "pdf":
+            file_buffer = await export_pdf(content)
+            media_type = "application/pdf"
+            
+        elif format.lower() == "docx":
+            file_buffer = await export_docx(content)
+            media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            
+        else:
+            raise Exception(f"Unsupported format: {format}")
+        
+        return Response(
+            content=file_buffer,
+            media_type=media_type,
+            headers={
+                "Content-Disposition": f"attachment; filename=generated.{format.lower()}"
+            }
+        )
+            
+        
+    except Exception as e:
+        logger.error(f"Error generating file: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.delete("/output_file")
 async def delete_output_file(path: str): 
