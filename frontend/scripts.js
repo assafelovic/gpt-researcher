@@ -62,7 +62,6 @@ const GPTResearcher = (() => {
     }
 
     socket.onopen = (event) => {
-      const token = document.querySelector('input[name="token"]').value
       const task = document.querySelector('input[name="task"]').value
       const report_type = document.querySelector(
         'select[name="report_type"]'
@@ -87,7 +86,6 @@ const GPTResearcher = (() => {
       }
 
       const requestData = {
-        token: token,
         task: task,
         report_type: report_type,
         report_source: report_source,

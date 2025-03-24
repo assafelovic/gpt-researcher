@@ -101,9 +101,9 @@ def startup_event():
 
 
 # Keep this for testing and development purposes
-@app.get("/")
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "report": None})
+# @app.get("/")
+# async def read_root(request: Request):
+#     return templates.TemplateResponse("index.html", {"request": request, "report": None})
 
 @app.post("/export_file")
 async def export_file(request: Request):
