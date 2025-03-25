@@ -107,6 +107,13 @@ def startup_event():
 
 @app.post("/export_file")
 async def export_file(request: Request):
+    """
+    Generate a file from the content and format
+    Args:
+        request: Request object
+    Returns:
+        bytes: The file buffer
+    """
     
     auth_header = request.headers.get("Authorization")
     
