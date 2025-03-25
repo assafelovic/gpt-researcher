@@ -18,3 +18,6 @@ steps:
     - 'us-central1'
 images:
 - 'gcr.io/$PROJECT_ID/gpt-researcher:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
