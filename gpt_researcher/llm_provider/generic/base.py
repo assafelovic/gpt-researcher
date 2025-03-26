@@ -24,7 +24,8 @@ _SUPPORTED_PROVIDERS = {
     "xai",
     "deepseek",
     "litellm",
-    "gigachat"
+    "gigachat",
+    "openrouter"
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS = [
@@ -160,6 +161,25 @@ class GenericLLMProvider:
 
             kwargs.pop("model", None) # Use env GIGACHAT_MODEL=GigaChat-Max
             llm = GigaChat(**kwargs)
+        elif provider == "openrouter":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+            from langchain_core.rate_limiters import InMemoryRateLimiter
+
+            rps = float(os.environ["OPENROUTER_LIMIT_RPS"]) if "OPENROUTER_LIMIT_RPS" in os.environ else 1.0
+            
+            rate_limiter = InMemoryRateLimiter(
+                requests_per_second=rps,
+                check_every_n_seconds=0.1,
+                max_bucket_size=10,
+            )
+
+            llm = ChatOpenAI(openai_api_base='https://openrouter.ai/api/v1',
+                     openai_api_key=os.environ["OPENROUTER_API_KEY"],
+                     rate_limiter=rate_limiter,
+                     **kwargs
+                )
+        
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
