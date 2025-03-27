@@ -299,6 +299,18 @@ FAST_LLM="deepseek:deepseek-chat"
 SMART_LLM="deepseek:deepseek-chat"
 STRATEGIC_LLM="deepseek:deepseek-chat"
 ```
+## Openrouter.ai
+
+```bash
+OPENROUTER_API_KEY=[Your openrouter.ai key]
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+FAST_LLM="openrouter:google/gemini-2.0-flash-lite-001"
+SMART_LLM="openrouter:google/gemini-2.0-flash-001"
+STRATEGIC_LLM="openrouter:google/gemini-2.5-pro-exp-03-25"
+OPENROUTER_LIMIT_RPS=1  # Ratelimit request per secound
+EMBEDDING=google_genai:models/text-embedding-004 # openrouter doesn't support embedding models, use google instead its free
+GOOGLE_API_KEY=[Your *google gemini* key]  
+```
 
 
 ## Other Embedding Models
