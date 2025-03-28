@@ -96,6 +96,7 @@ STRATEGIC_LLM="azure_openai:o1-preview"
 EMBEDDING="azure_openai:text-embedding-3-large"
 ```
 
+Add `langchain-azure-dynamic-sessions` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Ollama
 
@@ -110,6 +111,8 @@ STRATEGIC_LLM="ollama:llama3"
 
 EMBEDDING="ollama:nomic-embed-text"
 ```
+
+Add `langchain-ollama` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Groq
 
@@ -135,6 +138,8 @@ SMART_LLM="groq:Mixtral-8x7b-32768"
 STRATEGIC_LLM="groq:Mixtral-8x7b-32768"
 ```
 
+Add `langchain-groq` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
+
 __NOTE:__ As of the writing of this Doc (May 2024), the available Language Models from Groq are:
 
 * Llama3-70b-8192
@@ -153,7 +158,9 @@ SMART_LLM="anthropic:claude-3-opus-20240229"
 STRATEGIC_LLM="anthropic:claude-3-opus-20240229"
 ```
 
-Anthropic does not offer its own embedding model. 
+Add `langchain-anthropic` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
+
+Anthropic does not offer its own embedding model, therefore, you'll want to either default to the OpenAI embedding model, or find another.
 
 
 ## Mistral AI
@@ -169,6 +176,7 @@ STRATEGIC_LLM="mistralai:mistral-large-latest"
 EMBEDDING="mistralai:mistral-embed"
 ```
 
+Add `langchain-mistralai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Together AI
 [Together AI](https://www.together.ai/) offers an API to query [50+ leading open-source models](https://docs.together.ai/docs/inference-models) in a couple lines of code.
@@ -182,6 +190,7 @@ STRATEGIC_LLM="together:meta-llama/Llama-3-70b-chat-hf"
 EMBEDDING="mistralai:nomic-ai/nomic-embed-text-v1.5"
 ```
 
+Add `langchain-together` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## HuggingFace
 
@@ -196,6 +205,7 @@ STRATEGIC_LLM="huggingface:HuggingFaceH4/zephyr-7b-beta"
 EMBEDDING="sentence-transformers/all-MiniLM-L6-v2"
 ```
 
+Add `langchain-huggingface` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Google Gemini
 
@@ -209,6 +219,7 @@ STRATEGIC_LLM="google_genai:gemini-1.5-pro"
 EMBEDDING="google_genai:models/text-embedding-004"
 ```
 
+Add `langchain-google-genai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Google VertexAI
 
@@ -220,6 +231,7 @@ STRATEGIC_LLM="google_vertexai:gemini-1.5-pro-001"
 EMBEDDING="google_vertexai:text-embedding-004"
 ```
 
+Add `langchain-google-vertexai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Cohere
 
@@ -232,6 +244,7 @@ STRATEGIC_LLM="cohere:command-nightly"
 EMBEDDING="cohere:embed-english-v3.0"
 ```
 
+Add `langchain-cohere` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Fireworks
 
@@ -245,6 +258,7 @@ STRATEGIC_LLM="fireworks:accounts/fireworks/models/mixtral-8x7b-instruct"
 EMBEDDING="fireworks:nomic-ai/nomic-embed-text-v1.5"
 ```
 
+Add `langchain-fireworks` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Bedrock
 
@@ -256,6 +270,7 @@ STRATEGIC_LLM="bedrock:anthropic.claude-3-sonnet-20240229-v1:0"
 EMBEDDING="bedrock:amazon.titan-embed-text-v2:0"
 ```
 
+Add `langchain_aws` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## LiteLLM
 
@@ -265,6 +280,7 @@ SMART_LLM="litellm:perplexity/pplx-70b-chat"
 STRATEGIC_LLM="litellm:perplexity/pplx-70b-chat"
 ```
 
+Add `langchain_community` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## xAI
 
@@ -274,6 +290,7 @@ SMART_LLM="xai:grok-beta"
 STRATEGIC_LLM="xai:grok-beta"
 ```
 
+Add `langchain_xai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## DeepSeek
 ```bash
@@ -281,6 +298,18 @@ DEEPSEEK_API_KEY=[Your key]
 FAST_LLM="deepseek:deepseek-chat"
 SMART_LLM="deepseek:deepseek-chat"
 STRATEGIC_LLM="deepseek:deepseek-chat"
+```
+## Openrouter.ai
+
+```bash
+OPENROUTER_API_KEY=[Your openrouter.ai key]
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+FAST_LLM="openrouter:google/gemini-2.0-flash-lite-001"
+SMART_LLM="openrouter:google/gemini-2.0-flash-001"
+STRATEGIC_LLM="openrouter:google/gemini-2.5-pro-exp-03-25"
+OPENROUTER_LIMIT_RPS=1  # Ratelimit request per secound
+EMBEDDING=google_genai:models/text-embedding-004 # openrouter doesn't support embedding models, use google instead its free
+GOOGLE_API_KEY=[Your *google gemini* key]  
 ```
 
 
@@ -298,3 +327,5 @@ EMBEDDING="nomic:nomic-embed-text-v1.5"
 VOYAGE_API_KEY=[Your Key]
 EMBEDDING="voyageai:voyage-law-2"
 ```
+
+Add `langchain-voyageai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it

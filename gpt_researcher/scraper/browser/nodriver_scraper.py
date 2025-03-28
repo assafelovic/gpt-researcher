@@ -14,10 +14,10 @@ from ..utils import get_relevant_images, extract_title, get_text_from_soup, clea
 
 class NoDriverScraper:
     logger = logging.getLogger(__name__)
-    browser_tasks: Dict[
-        requests.Session | None, asyncio.Task["NoDriverScraper.Browser"]
-    ] = {}
-    browser_throttler = asyncio.Semaphore(3)
+    max_browsers = 3
+    browser_load_threshold = 5
+    browsers: set["NoDriverScraper.Browser"] = set()
+    browsers_lock = asyncio.Lock()
 
     @staticmethod
     def get_domain(url: str) -> str:
@@ -30,19 +30,18 @@ class NoDriverScraper:
     class Browser:
         def __init__(
             self,
-            driver,
-            session: requests.Session | None,
+            driver: "zendriver.Browser",
         ):
             self.driver = driver
-            self.session = session
             self.processing_count = 0
             self.has_blank_page = True
             self.allowed_requests_times = {}
             self.domain_semaphores: Dict[str, asyncio.Semaphore] = {}
             self.tab_mode = True
             self.max_scroll_percent = 500
+            self.stopping = False
 
-        async def get(self, url: str):
+        async def get(self, url: str) -> "zendriver.Tab":
             self.processing_count += 1
             try:
                 async with self.rate_limit_for_domain(url):
@@ -52,11 +51,11 @@ class NoDriverScraper:
                         return await self.driver.get(url, new_tab=new_window)
                     else:
                         return await self.driver.get(url, new_window=new_window)
-            except Exception as e:
+            except Exception:
                 self.processing_count -= 1
-                raise e
+                raise
 
-        async def scroll_page_to_bottom(self, page):
+        async def scroll_page_to_bottom(self, page: "zendriver.Tab"):
             total_scroll_percent = 0
             while True:
                 # in tab mode, we need to bring the tab to front before scrolling to load the page content properly
@@ -79,7 +78,7 @@ class NoDriverScraper:
                 ):
                     break
 
-        async def close_page(self, page):
+        async def close_page(self, page: "zendriver.Tab"):
             try:
                 await page.close()
             finally:
@@ -108,51 +107,58 @@ class NoDriverScraper:
                     f"Rate limiting error for {url}: {str(e)}"
                 )
 
-    @classmethod
-    async def get_browser(
-        cls, session: requests.Session | None, headless: bool = False
-    ) -> "NoDriverScraper.Browser":
-        try:
-            import zendriver
-        except ImportError:
-            raise ImportError(
-                "The zendriver package is required to use NoDriverScraper. "
-                "Please install it with: pip install zendriver"
-            )
+        async def stop(self):
+            if self.stopping:
+                return
+            self.stopping = True
+            await self.driver.stop()
 
+    @classmethod
+    async def get_browser(cls, headless: bool = False) -> "NoDriverScraper.Browser":
         async def create_browser():
-            await cls.browser_throttler.acquire()
+            try:
+                global zendriver
+                import zendriver
+            except ImportError:
+                raise ImportError(
+                    "The zendriver package is required to use NoDriverScraper. "
+                    "Please install it with: pip install zendriver"
+                )
+
             config = zendriver.Config(
                 headless=headless,
                 browser_connection_timeout=3,
             )
             driver = await zendriver.start(config)
-            return cls.Browser(driver, session)
+            browser = cls.Browser(driver)
+            cls.browsers.add(browser)
+            return browser
 
-        try:
-            browser_task = cls.browser_tasks.get(session)
-            if browser_task:
-                browser = await browser_task
-                if not browser.driver.stopped:
-                    return browser
+        async with cls.browsers_lock:
+            if len(cls.browsers) == 0:
+                # No browsers available, create new one
+                return await create_browser()
 
-            # Create new browser
-            browser_task = asyncio.create_task(create_browser())
-            cls.browser_tasks[session] = browser_task
-            return await browser_task
-        except Exception:
-            # Clear task on error
-            cls.browser_tasks.pop(session, None)
-            raise
+            # Load balancing: Get browser with lowest number of tabs
+            browser = min(cls.browsers, key=lambda b: b.processing_count)
+
+            # If all browsers are heavily loaded and we can create more
+            if (
+                browser.processing_count >= cls.browser_load_threshold
+                and len(cls.browsers) < cls.max_browsers
+            ):
+                return await create_browser()
+
+            return browser
 
     @classmethod
-    async def stop_browser_if_necessary(cls, browser: Browser):
-        if browser and browser.processing_count <= 0:
-            try:
-                cls.browser_tasks.pop(browser.session, None)
-                await browser.driver.stop()
-            finally:
-                cls.browser_throttler.release()
+    async def release_browser(cls, browser: Browser):
+        async with cls.browsers_lock:
+            if browser and browser.processing_count <= 0:
+                try:
+                    await browser.stop()
+                finally:
+                    cls.browsers.discard(browser)
 
     def __init__(self, url: str, session: requests.Session | None = None):
         self.url = url
@@ -172,7 +178,7 @@ class NoDriverScraper:
         page = None
         try:
             try:
-                browser = await self.get_browser(session=self.session)
+                browser = await self.get_browser()
             except ImportError as e:
                 self.logger.error(f"Failed to initialize browser: {str(e)}")
                 return str(e), [], ""
@@ -214,13 +220,9 @@ class NoDriverScraper:
                 "Full stack trace:\n"
                 f"{traceback.format_exc()}"
             )
-            return (
-                f"An error occurred: {str(e)}\n\nStack trace:\n{traceback.format_exc()}",
-                [],
-                "",
-            )
+            return str(e), [], ""
         finally:
             if page and browser:
                 await browser.close_page(page)
             if browser:
-                await self.stop_browser_if_necessary(browser)
+                await self.release_browser(browser)

@@ -3,6 +3,7 @@ from fastapi import WebSocket
 import asyncio
 import logging
 from gpt_researcher import GPTResearcher
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 
@@ -59,7 +60,7 @@ class DeepResearch:
             model=O3_MINI_MODEL,  # Using reasoning model for better question generation
             temperature=0.7,
             max_tokens=500,
-            reasoning_effort="high"
+            reasoning_effort=ReasoningEfforts.High.value
         )
 
         # Parse questions from response
@@ -115,7 +116,7 @@ class DeepResearch:
             model=O3_MINI_MODEL,  # Using reasoning model for analysis
             temperature=0.7,
             max_tokens=1000,
-            reasoning_effort="high"
+            reasoning_effort=ReasoningEfforts.High.value
         )
 
         # Parse learnings and questions with citations

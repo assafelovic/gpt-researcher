@@ -19,7 +19,8 @@ class DetailedReport:
         websocket: WebSocket = None,
         subtopics: List[Dict] = [],
         headers: Optional[Dict] = None,
-        language: str = "english"
+        complement_source_urls: bool = False,
+		language: str = "english",
     ):
         self.query = query
         self.report_type = report_type
@@ -32,8 +33,9 @@ class DetailedReport:
         self.websocket = websocket
         self.subtopics = subtopics
         self.headers = headers or {}
-        self.language = language
-
+        self.complement_source_urls = complement_source_urls
+		self.language = language
+        
         self.gpt_researcher = GPTResearcher(
             query=self.query,
             query_domains=self.query_domains,
@@ -45,6 +47,7 @@ class DetailedReport:
             tone=self.tone,
             websocket=self.websocket,
             headers=self.headers,
+            complement_source_urls=self.complement_source_urls,
             language=self.language
         )
         self.existing_headers: List[Dict] = []
@@ -106,7 +109,9 @@ class DetailedReport:
             agent=self.gpt_researcher.agent,
             role=self.gpt_researcher.role,
             tone=self.tone,
-            language=self.language
+            complement_source_urls=self.complement_source_urls,
+            source_urls=self.source_urls,
+			language=self.language
         )
 
         subtopic_assistant.context = list(set(self.global_context))

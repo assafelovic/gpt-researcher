@@ -31,9 +31,8 @@ class BasicReport:
         self.headers = headers or {}
         self.language = language
 
-    async def run(self):
         # Initialize researcher
-        researcher = GPTResearcher(
+        self.gpt_researcher = GPTResearcher(
             query=self.query,
             query_domains=self.query_domains,
             report_type=self.report_type,
@@ -47,6 +46,7 @@ class BasicReport:
             language=self.language
         )
 
-        await researcher.conduct_research()
-        report = await researcher.write_report()
+    async def run(self):
+        await self.gpt_researcher.conduct_research()
+        report = await self.gpt_researcher.write_report()
         return report

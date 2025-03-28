@@ -1,22 +1,17 @@
-import json5 as json
 import json_repair
 from langchain_community.adapters.openai import convert_openai_messages
+from langchain_core.utils.json import parse_json_markdown
+from loguru import logger
 
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.llm import create_chat_completion
-
-from loguru import logger
 
 
 async def call_model(
     prompt: list,
     model: str,
-    response_format: str = None,
+    response_format: str | None = None,
 ):
-
-    optional_params = {}
-    if response_format == "json":
-        optional_params = {"response_format": {"type": "json_object"}}
 
     cfg = Config()
     lc_messages = convert_openai_messages(prompt)
@@ -32,17 +27,9 @@ async def call_model(
         )
 
         if response_format == "json":
-            try:
-                cleaned_json_string = response.strip("```json\n")
-                return json.loads(cleaned_json_string)
-            except Exception as e:
-                print("⚠️ Error in reading JSON, attempting to repair JSON")
-                logger.error(
-                    f"Error in reading JSON, attempting to repair reponse: {response}"
-                )
-                return json_repair.loads(response)
-        else:
-            return response
+            return parse_json_markdown(response, parser=json_repair.loads)
+
+        return response
 
     except Exception as e:
         print("⚠️ Error in calling model")
