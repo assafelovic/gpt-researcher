@@ -87,6 +87,16 @@
   box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.2);
 }
 
+.settings .static-container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  max-height: 80vh; /* Fixed maximum height */
+  overflow-y: auto; /* Enable scrolling if content overflows */
+}
+
 .settings input, 
 .settings select, 
 .settings #output, 
@@ -212,4 +222,68 @@
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease-in-out;
+}
+
+.report_settings_static {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.form-control-static {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background-color: rgba(0, 0, 0, 0.4);
+  color: #fff;
+}
+
+.input-static {
+  flex: 1;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: #fff;
+}
+
+.button-static {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  background-color: #6b46c1;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+}
+
+.domain-tag-static {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  background-color: #ede9fe;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+  margin-right: 0.5rem;
+}
+
+.domain-text-static {
+  color: #6b46c1;
+}
+
+.domain-button-static {
+  margin-left: 0.5rem;
+  color: #9f7aea;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
 }

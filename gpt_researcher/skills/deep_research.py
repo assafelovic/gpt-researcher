@@ -3,6 +3,8 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timedelta
+
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from ..utils.llm import create_chat_completion
 from ..utils.enum import ReportType, ReportSource, Tone
 from ..actions.query_processing import get_search_results
@@ -20,7 +22,7 @@ def trim_context_to_word_limit(context_list: List[str], max_words: int = MAX_CON
     """Trim context list to stay within word limit while preserving most recent/relevant items"""
     total_words = 0
     trimmed_context = []
-    
+
     # Process in reverse to keep most recent items
     for item in reversed(context_list):
         words = count_words(item)
@@ -29,7 +31,7 @@ def trim_context_to_word_limit(context_list: List[str], max_words: int = MAX_CON
             total_words += words
         else:
             break
-            
+
     return trimmed_context
 
 class ResearchProgress:
@@ -70,7 +72,7 @@ class DeepResearchSkill:
             messages=messages,
             llm_provider=self.researcher.cfg.strategic_llm_provider,
             model=self.researcher.cfg.strategic_llm_model,
-            reasoning_effort="medium",
+            reasoning_effort=ReasoningEfforts.Medium.value,
             temperature=0.4
         )
 
@@ -120,7 +122,7 @@ Format each question on a new line starting with 'Question: '"""}
             messages=messages,
             llm_provider=self.researcher.cfg.strategic_llm_provider,
             model=self.researcher.cfg.strategic_llm_model,
-            reasoning_effort="medium",
+            reasoning_effort=ReasoningEfforts.High.value,
             temperature=0.4
         )
 
@@ -142,7 +144,7 @@ Format each question on a new line starting with 'Question: '"""}
             llm_provider=self.researcher.cfg.strategic_llm_provider,
             model=self.researcher.cfg.strategic_llm_model,
             temperature=0.4,
-            reasoning_effort="high",
+            reasoning_effort=ReasoningEfforts.High.value,
             max_tokens=1000
         )
 

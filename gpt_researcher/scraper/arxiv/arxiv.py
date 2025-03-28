@@ -19,5 +19,10 @@ class ArxivScraper:
         query = self.link.split("/")[-1]
         retriever = ArxivRetriever(load_max_docs=2, doc_content_chars_max=None)
         docs = retriever.invoke(query)
-        # returns content, image_urls, title
-        return docs[0].page_content, [], docs[0].metadata["Title"]
+
+        # Include the published date and author to provide additional context, 
+        # aligning with APA-style formatting in the report.
+        context = f"Published: {docs[0].metadata['Published']}; Author: {docs[0].metadata['Authors']}; Content: {docs[0].page_content}"
+        image = []
+
+        return context, image, docs[0].metadata["Title"]

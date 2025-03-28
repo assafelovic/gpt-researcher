@@ -54,12 +54,6 @@ class ContextManager:
         relevant_contents = set().union(*results)
         relevant_contents = list(relevant_contents)[:max_results]
 
-        if relevant_contents and self.researcher.verbose:
-            prettier_contents = "\n".join(relevant_contents)
-            await stream_output(
-                "logs", "relevant_contents_context", f"📃 {prettier_contents}", self.researcher.websocket
-            )
-
         return relevant_contents
 
     async def __get_similar_written_contents_by_query(self,

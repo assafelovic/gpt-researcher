@@ -35,8 +35,11 @@ class OnlineDocumentLoader:
 
     async def _download_and_process(self, url: str) -> list:
         try:
+            headers = {
+                "User-Agent": "Mozilla/5.0"
+            }
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=6) as response:
+                async with session.get(url, headers=headers, timeout=6) as response:
                     if response.status != 200:
                         print(f"Failed to download {url}: HTTP {response.status}")
                         return []
