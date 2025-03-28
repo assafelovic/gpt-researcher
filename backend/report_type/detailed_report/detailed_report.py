@@ -34,8 +34,7 @@ class DetailedReport:
         self.subtopics = subtopics
         self.headers = headers or {}
         self.complement_source_urls = complement_source_urls
-		self.language = language
-        
+        self.language = language
         self.gpt_researcher = GPTResearcher(
             query=self.query,
             query_domains=self.query_domains,
