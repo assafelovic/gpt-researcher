@@ -6,6 +6,8 @@ sidebar_position: 3
 
 This guide specifically focuses on how to integrate your locally running GPT Researcher MCP server with the Claude desktop application for Mac, providing a seamless research experience within the Claude interface.
 
+Check out the official Anthropic MCP docs [here](https://modelcontextprotocol.io/quickstart/user)
+
 ## Prerequisites
 
 Before integrating with Claude desktop client, you'll need:
