@@ -207,6 +207,7 @@ async def generate_report(
     existing_headers: list = [],
     relevant_written_contents: list = [],
     cost_callback: callable = None,
+    custom_prompt: str = "", # This can be any prompt the user chooses with the context
     headers=None,
 ):
     """
@@ -233,6 +234,8 @@ async def generate_report(
 
     if report_type == "subtopic_report":
         content = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
+    elif custom_prompt:
+        content = f"{custom_prompt}\n\nContext: {context}"
     else:
         content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
     try:
