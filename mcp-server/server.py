@@ -7,8 +7,7 @@ to conduct web research and generate reports via the MCP protocol.
 """
 
 import os
-import json
-import asyncio
+import sys
 from typing import Dict, List, Optional, Tuple, Any
 from dotenv import load_dotenv
 from loguru import logger
@@ -18,8 +17,8 @@ from gpt_researcher import GPTResearcher
 # Load environment variables
 load_dotenv()
 
-# Configure logging
-logger.add("researcher_mcp_server.log", rotation="100 MB")
+# Configure logging for console only (no file logging)
+logger.configure(handlers=[{"sink": sys.stderr, "level": "INFO"}])
 
 # Initialize FastMCP server
 mcp = FastMCP("GPT Researcher")
@@ -277,24 +276,6 @@ def research_query(topic: str, goal: str, report_format: str = "research_report"
     
     You can also use get_research_sources to view additional details about the information sources.
     """
-
-
-@mcp.tool()
-async def ping() -> Dict[str, str]:
-    """
-    A simple ping tool to check if the MCP server is responsive.
-    
-    Returns:
-        Dict with status and timestamp
-    """
-    from datetime import datetime
-    
-    logger.info("Ping received - server is responsive")
-    return {
-        "status": "success",
-        "message": "GPT Researcher MCP Server is running",
-        "timestamp": datetime.now().isoformat()
-    }
 
 
 def run_server():
