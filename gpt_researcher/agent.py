@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING, Any, Callable, ClassVar, Coroutine
 from langchain_core.documents import Document
 
 from gpt_researcher.actions.agent_creator import choose_agent
-from gpt_researcher.actions.markdown_processing import add_references, extract_headers, extract_sections, table_of_contents
+from gpt_researcher.actions.markdown_processing import (
+    add_references,
+    extract_headers,
+    extract_sections,
+    table_of_contents,
+)
 from gpt_researcher.actions.retriever import get_retrievers
 from gpt_researcher.config import Config
 from gpt_researcher.llm_provider import GenericLLMProvider
@@ -43,7 +48,6 @@ class GPTResearcher:
         report_type: ReportType | str | None = ReportType.ResearchReport.value,
         report_format: ReportFormat | str | None = ReportFormat.APA.value,
         report_source: ReportSource | str | None = ReportSource.Web.value,
-        output_format: OutputFileType | str | None = OutputFileType.MARKDOWN.value,
         tone: Tone | str | None = Tone.Objective.value,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
@@ -66,6 +70,7 @@ class GPTResearcher:
         config_path: os.PathLike | str | None = None,
         **kwargs,
     ):
+        print("GPTResearcher initialized")
         self.cfg: Config = config if isinstance(config, Config) else Config(VERBOSE=verbose, **kwargs)
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -87,9 +92,13 @@ class GPTResearcher:
             document.model_dump()
             if isinstance(document, Document)
             else document
-            for document in (tuple() if documents is None else documents)
+            for document in (() if documents is None else documents)
         ]
-        self.vector_store: VectorStoreWrapper | None = None if vector_store is None else VectorStoreWrapper(vector_store)
+        self.vector_store: VectorStoreWrapper | None = (
+            None
+            if vector_store is None
+            else VectorStoreWrapper(vector_store)
+        )
         self.vector_store_filter: dict[str, Any] = {} if vector_store_filter is None else vector_store_filter
         self.websocket: CustomLogsHandler | WebSocket | None = websocket
         self.parent_query: str = parent_query
@@ -112,10 +121,10 @@ class GPTResearcher:
             **self.cfg.llm_kwargs,
         )
 
-        # deprecated arguments, it's recommended to use Config objects instead of passing a billion parameters to GPTResearcher.
+        # deprecated arguments, it's recommended to use Config objects instead of
+        # passing a billion parameters to GPTResearcher.
         self.role = self.cfg.AGENT_ROLE if agent_role is None else agent_role
         self.max_subtopics = self.cfg.MAX_SUBTOPICS if max_subtopics is None else max_subtopics
-        self.output_format = self.cfg.OUTPUT_FORMAT if output_format is None else output_format
         self.report_format = self.cfg.REPORT_FORMAT if report_format is None else report_format
         self.report_source = self.cfg.REPORT_SOURCE if report_source is None else report_source
         self.report_type = self.cfg.REPORT_TYPE if report_type is None else report_type
@@ -185,14 +194,13 @@ class GPTResearcher:
 
         if not (self.agent and self.role):
             await self._log_event("action", action="choose_agent")
-            agent_dict: dict[str, Any] = await choose_agent(
+            self.agent, self.role = await choose_agent(
                 query=self.query,
                 cfg=self.cfg,
                 parent_query=self.parent_query,
                 cost_callback=self.add_costs,
                 headers=self.headers,
             )
-            self.agent, self.role = agent_dict["server"], agent_dict["agent_role_prompt"]
             await self._log_event(
                 "action",
                 action="agent_selected",
@@ -204,16 +212,13 @@ class GPTResearcher:
             step="conducting_research",
             details={"agent": self.agent, "role": self.role},
         )
-        research_result: str | list[str] = await self.research_conductor.conduct_research()
-        self.context = [research_result] if isinstance(research_result, str) else research_result
+        research_result: list[str] = await self.research_conductor.conduct_research()
+        self.context.extend(research_result)
 
         await self._log_event(
             "research",
             step="research_completed",
-            details={
-                "context_length": len(self.context),
-                "context": self.context,
-            },
+            details={"context_length": len(self.context)},
         )
         return self.context
 
@@ -295,6 +300,8 @@ class GPTResearcher:
         relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
         external_context = [] if external_context is None else external_context
 
+        # Check if we have any research data
+        research_context = external_context or self.context
         await self._log_event(
             "research",
             step="writing_report",
@@ -307,7 +314,7 @@ class GPTResearcher:
         report: str = await self.report_generator.write_report(
             existing_headers=existing_headers,
             relevant_written_contents=relevant_written_contents,
-            ext_context=" ".join(external_context or self.context) if external_context else "",
+            ext_context=" ".join(research_context),
         )
 
         await self._log_event(
@@ -555,3 +562,11 @@ class GPTResearcher:
     @post_retrieval_processing_instructions.setter
     def post_retrieval_processing_instructions(self, value: str):
         self.cfg.POST_RETRIEVAL_PROCESSING_INSTRUCTIONS = value
+
+    @property
+    def verbose(self) -> bool:
+        return self.cfg.VERBOSE
+
+    @verbose.setter
+    def verbose(self, value: bool):
+        self.cfg.VERBOSE = value

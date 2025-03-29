@@ -7,7 +7,12 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from dotenv import load_dotenv
-from gpt_researcher import GPTResearcher
+try:
+    from gpt_researcher import GPTResearcher
+except ImportError:
+    import sys
+    sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # Adjust the path to import GPTResearcher from the parent directory
+    from gpt_researcher import GPTResearcher
 
 load_dotenv()
 

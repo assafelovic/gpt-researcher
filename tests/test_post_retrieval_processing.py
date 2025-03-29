@@ -5,7 +5,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from gpt_researcher.prompts import post_retrieval_processing
+try:
+    from gpt_researcher.prompts import post_retrieval_processing
+except ImportError:
+    import os
+    import sys
+    sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # Adjust the path to import GPTResearcher from the parent directory
+    from gpt_researcher.prompts import post_retrieval_processing
+
 from gpt_researcher.skills.context_manager import ContextManager
 
 
@@ -99,3 +106,6 @@ def test_post_retrieval_processing_prompt():
     assert query in prompt
     assert content in prompt
     assert instructions in prompt
+
+if __name__ == "__main__":
+    pytest.main()

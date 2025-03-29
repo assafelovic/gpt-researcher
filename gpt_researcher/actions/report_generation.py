@@ -336,7 +336,7 @@ async def generate_report(
             )
         except BaseException as second_error:
             logger.exception(
-                f"Error in generate_report fallback: {second_error.__class__.__name__}: {second_error}. Additionally, an attempt to output the existing content failed."
+                f"Error in generate_report fallback: {second_error.__class__.__name__}: {second_error}. Additionally, an attempt to output the existing content failed."  # noqa: E501
             )
             report = content
 

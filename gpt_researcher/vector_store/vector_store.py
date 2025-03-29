@@ -89,7 +89,7 @@ class VectorStoreWrapper:
         self,
         query: str,
         k: int,
-        filter: dict[str, str] | None = None,
+        vector_store_filter: dict[str, str] | None = None,
     ) -> list[Document]:
         """Return query by vector store.
 
@@ -106,6 +106,6 @@ class VectorStoreWrapper:
         results: list[Document] = await self.vector_store.asimilarity_search(
             query=query,
             k=k,
-            filter=filter,
+            filter=vector_store_filter,
         )
         return results

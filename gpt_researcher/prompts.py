@@ -20,7 +20,7 @@ The chat is about a research reports that you created. Answer based on the given
 You must include citations to your answer based on the report.
 
 Report: {self.report}
-User Message: {message}"""
+User Message: {message}"""  # noqa: E501
 
 # Global prompt variables
 PROMPT_GENERATE_SEARCH_QUERIES = """Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"
@@ -29,7 +29,7 @@ Assume the current date is {current_date} if required.
 
 {context_prompt}
 You must respond with a list of strings in the following format: [{dynamic_example}].
-The response should contain ONLY the list."""
+The response should contain ONLY the list."""  # noqa: E501
 
 PROMPT_GENERATE_REPORT = """Information: "{context}"
 ---
@@ -50,7 +50,8 @@ Please follow all of the following guidelines in your report:
 
 You MUST write the report in the following language: {language}.
 Please do your best, this is very important to my career.
-Assume that the current date is {current_date}."""
+Assume that the current date is {current_date}.
+Your response must start with the report itself, with no precursors or explanations."""  # noqa: E501
 
 PROMPT_CURATE_SOURCES = """Your goal is to evaluate and curate the provided scraped content for the research task: {query} while prioritizing the inclusion of relevant and high-quality information, especially sources containing statistics, numbers, or concrete data.
 
@@ -81,7 +82,7 @@ SOURCES LIST TO EVALUATE:
 {sources}
 
 You MUST return your response in the EXACT sources JSON list format as the original sources.
-The response MUST not contain any markdown format or additional text (like ```json), just the JSON list!"""
+The response MUST not contain any markdown format or additional text (like ```json), just the JSON list!"""  # noqa: E501
 
 PROMPT_GENERATE_RESOURCE_REPORT = """"{context}"\n\nBased on the above information, generate a bibliography recommendation report for the following question or topic: "{question}". The report should provide a detailed analysis of each recommended resource, explaining how each source can contribute to finding answers to the research question.
 Focus on the relevance, reliability, and significance of each source.
@@ -90,11 +91,11 @@ Include relevant facts, figures, and numbers whenever available.
 The report should have a minimum length of {total_words} words.
 You MUST include all relevant source urls.
 Every url should be hyperlinked: [url website](url)
-{reference_prompt}"""
+{reference_prompt}"""  # noqa: E501
 
 PROMPT_GENERATE_CUSTOM_REPORT = """"{context}"\n\n{query_prompt}"""
 
-PROMPT_GENERATE_OUTLINE_REPORT = """"{context}" Using the above information, generate an outline for a research report in Markdown syntax for the following question or topic: "{question}". The outline should provide a well-structured framework for the research report, including the main sections, subsections, and key points to be covered. The research report should be detailed, informative, in-depth, and a minimum of {total_words} words. Use appropriate Markdown syntax to format the outline and ensure readability."""
+PROMPT_GENERATE_OUTLINE_REPORT = """"{context}" Using the above information, generate an outline for a research report in Markdown syntax for the following question or topic: "{question}". The outline should provide a well-structured framework for the research report, including the main sections, subsections, and key points to be covered. The research report should be detailed, informative, in-depth, and a minimum of {total_words} words. Use appropriate Markdown syntax to format the outline and ensure readability."""  # noqa: E501
 
 PROMPT_AUTO_AGENT_INSTRUCTIONS = """
 This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer.
@@ -124,9 +125,9 @@ response:
     "server": "🌍 Travel Agent 🌍",
     "agent_role_prompt": "You are a well-traveled and culturally-aware AI tour guide assistant. Your primary directive is to create engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and potentially cultural insights."
 }
-"""
+"""  # noqa: E501
 
-PROMPT_CONDENSE_INFORMATION = """{data}\n Using EXCLUSIVELY the above text, condense it as much as possible based on the following task or query: "{query}".\n If the query cannot be answered using the text, YOU MUST summarize the text in short.\n Include all factual information such as numbers, stats, quotes, etc if available. DO NOT under ANY circumstances 'summarize' or 'generalize': you MUST be highly accurate and specific to the query!"""
+PROMPT_CONDENSE_INFORMATION = """{data}\n Using EXCLUSIVELY the above text, condense it as much as possible based on the following task or query: "{query}".\n If the query cannot be answered using the text, YOU MUST summarize the text in short.\n Include all factual information such as numbers, stats, quotes, etc if available. DO NOT under ANY circumstances 'summarize' or 'generalize': you MUST be highly accurate and specific to the query!"""  # noqa: E501
 
 PROMPT_GENERATE_SUBTOPICS = """
 Provided the main topic:
@@ -148,7 +149,7 @@ Providerarch data:
 - Consider what subtopics will likely dive into the proper rabbitholes that would uncover the most relevant information.
 
 {format_instructions}
-"""
+"""  # noqa: E501
 
 PROMPT_GENERATE_SUBTOPIC_REPORT = """
 Context:
@@ -211,7 +212,7 @@ Assume the current date is {current_date} if required.
 - Use an {tone_value} tone throughout the report.
 
 DO NOT create a 'conclusion' section under any circumstances.
-"""
+"""  # noqa: E501
 
 PROMPT_GENERATE_DRAFT_TITLES = """
 "Context":
@@ -238,7 +239,7 @@ Provide the draft headers in a list format using markdown syntax, for example:
 - Focus EXCLUSIVELY and SPECIFICALLY ONLY on the **MAIN TOPIC**! DO NOT BECOME DISTRACTED BY IRRELEVANT INFORMATION. Stay HIGHLY FIXATED AND FOCUSED ON EXCLUSIVELY AND HIGHLY SPECIFICALLY THE MAIN TOPIC AT ALL TIMES.
 - **DO NOT** write any introduction, conclusion, summary or reference section.
 - Focus solely explicitly on creating HEADERS, not content.
-"""
+"""  # noqa: E501
 
 PROMPT_GENERATE_REPORT_INTRODUCTION = """{research_summary}\n
 Using the above latest reference information, prepare a detailed report introduction on the topic -- {question}.
@@ -248,7 +249,7 @@ Using the above latest reference information, prepare a detailed report introduc
 - You must include authentic hyperlinks with correct and valid markdown syntax ([url website](url)) appropriately for the relevant sentences.
 Assume that the current date is {current_date} if required.
 Write the report in the following language: {language}.
-"""
+"""  # noqa: E501
 
 PROMPT_GENERATE_REPORT_CONCLUSION = """
     Using the following resource report below, you are now tasked to write a concise conclusion that summarizes the main findings and their implications:
@@ -268,7 +269,7 @@ PROMPT_GENERATE_REPORT_CONCLUSION = """
     Write the conclusion in the following language: {language}.
 
     Write the conclusion now:
-    """
+    """  # noqa: E501
 
 PROMPT_POST_RETRIEVAL_PROCESSING = """
 You are processing retrieved web content for a research task on: "{query}"
@@ -313,7 +314,7 @@ Additional requirements:
 
 Please write a thorough, well-researched report that synthesizes all the gathered information into a cohesive whole.
 
-"""
+"""  # noqa: E501
 
 
 def generate_search_queries_prompt(
@@ -345,7 +346,7 @@ def generate_search_queries_prompt(
         f"""You are a seasoned research assistant tasked with generating search queries to find relevant information for the following task: "{task}".
 Context: {context}
 
-Use this context to inform and refine your search queries. The context provides real-time web information that can help you generate more specific and relevant queries. Consider any current events, recent developments, or specific details mentioned in the context that could enhance the search queries."""
+Use this context to inform and refine your search queries. The context provides real-time web information that can help you generate more specific and relevant queries. Consider any current events, recent developments, or specific details mentioned in the context that could enhance the search queries."""  # noqa: E501
         if context
         else ""
     )
@@ -389,9 +390,18 @@ def generate_report_prompt(
     language: str = "ENGLISH",
 ):
     """Generates the report prompt for the given question and research summary.
-    Args: question (str): The question to generate the report prompt for
-            research_summary (str): The research summary to generate the report prompt for
-    Returns: str: The report prompt for the given question and research summary.
+
+    Args:
+        question (str): The question to generate the report prompt for
+        context (str): The research summary to generate the report prompt for
+        report_source (str): The report source (web or document)
+        report_format (str): The report format (APA or MLA)
+        total_words (int): The total words of the research report
+        tone (Tone): The tone of the report (Informative, Conversational, etc.)
+        language (str): The language of the report (default is English)
+
+    Returns:
+        str: The report prompt for the given question and research summary.
     """
 
     reference_prompt: str = ""
@@ -402,9 +412,9 @@ Every url should be hyperlinked: [url website](url)
 Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report:
 
 eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
-"""
+"""  # noqa: E501
     else:
-        reference_prompt = """You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."""
+        reference_prompt = """You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."""  # noqa: E501
 
     tone_prompt: str = f"Write the report using the {tone.name} tone ({tone.value})." if tone else ""
 
@@ -481,7 +491,7 @@ def generate_resource_report_prompt(
     else:
         reference_prompt = """
             You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
-        """
+        """  # noqa: E501
 
     default_prompt = PROMPT_GENERATE_RESOURCE_REPORT
     custom_prompt = os.environ.get("PROMPT_GENERATE_RESOURCE_REPORT", "")
@@ -498,7 +508,7 @@ def generate_resource_report_prompt(
         except (KeyError, ValueError):
             return default_prompt
 
-    return default_prompt.format(question=question, context=context, total_words=total_words, reference_prompt=reference_prompt)
+    return default_prompt.format(question=question, context=context, total_words=total_words, reference_prompt=reference_prompt)  # noqa: E501
 
 
 def generate_custom_report_prompt(
@@ -580,11 +590,11 @@ For example:
 Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
 ```
 Think about where the information in the report came from, and cite your sources using the above format.
-"""
+"""  # noqa: E501
     else:
         reference_prompt = """
 You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
-"""
+"""  # noqa: E501
     tone_prompt: str = f"Write the report using the {tone.name} tone ({tone.value})." if tone else ""
 
     return os.environ.get("PROMPT_DEEP_RESEARCH", PROMPT_DEEP_RESEARCH).format(
@@ -617,7 +627,7 @@ def auto_agent_instructions() -> str:
 
     # Get prompt from environment variable or use default
     custom_prompt = os.environ.get("PROMPT_AUTO_AGENT_INSTRUCTIONS", "")
-    if custom_prompt:
+    if custom_prompt and custom_prompt.strip():
         try:
             # Auto agent instructions don't have parameters to format
             return custom_prompt
@@ -855,9 +865,10 @@ def get_prompt_by_report_type(
     if prompt_by_type is None:
         warnings.warn(
             f"Invalid report type: {report_type}.\n"
-            f"Please use one of the following: {', '.join([enum_value.value for enum_value in report_type_mapping.keys()])}\n"
+            f"Please use one of the following: {', '.join([enum_value.value for enum_value in report_type_mapping.keys()])}\n"  # noqa: E501
             f"Using default report type: {default_report_type} prompt.",
             UserWarning,
+            stacklevel=2,
         )
         prompt_by_type = report_type_mapping[default_report_type]
     return prompt_by_type

@@ -1,0 +1,47 @@
+{% from "form_fields.html" import render_input, render_select, render_checkbox %}
+
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Settings</h2>
+            <button id="closeSettingsBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="settingsForm">
+                <div class="settings-section">
+                    <h3>API Keys</h3>
+                    {{ render_input("openai_api_key", config.get("OPENAI_API_KEY", ""), type="password", placeholder="sk-...") }}
+                    {{ render_input("tavily_api_key", config.get("TAVILY_API_KEY", ""), type="password", placeholder="tvly-...") }}
+                    {{ render_input("langchain_api_key", config.get("LANGCHAIN_API_KEY", ""), type="password") }}
+                    {{ render_input("anthropic_api_key", config.get("ANTHROPIC_API_KEY", ""), type="password", placeholder="sk-ant-...") }}
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Search Providers</h3>
+                    {{ render_input("google_api_key", config.get("GOOGLE_API_KEY", ""), type="password") }}
+                    {{ render_input("google_cx_key", config.get("GOOGLE_CX_KEY", ""), type="password") }}
+                    {{ render_input("bing_api_key", config.get("BING_API_KEY", ""), type="password") }}
+                    {{ render_input("searchapi_api_key", config.get("SEARCHAPI_API_KEY", ""), type="password") }}
+                    {{ render_input("serpapi_api_key", config.get("SERPAPI_API_KEY", ""), type="password") }}
+                    {{ render_input("serper_api_key", config.get("SERPER_API_KEY", ""), type="password") }}
+                    {{ render_input("searx_url", config.get("SEARX_URL", ""), placeholder="http://localhost:8080") }}
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Document Settings</h3>
+                    {{ render_input("doc_path", config.get("DOC_PATH", "./my-docs"), placeholder="./my-docs") }}
+                    {{ render_select("retriever", config.get("RETRIEVER", "tavily"), ["tavily", "google", "bing", "searchapi", "serpapi", "serper", "searx"]) }}
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Model Settings</h3>
+                    {{ render_input("embedding_model", config.get("EMBEDDING_MODEL", "text-embedding-ada-002"), placeholder="text-embedding-ada-002") }}
+                    {{ render_checkbox("langchain_tracing_v2", config.get("LANGCHAIN_TRACING_V2", "true") == "true") }}
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
+        </div>
+    </div>
+</div> 

@@ -5,9 +5,9 @@ from .researcher import ResearchConductor
 from .writer import ReportGenerator
 
 __all__ = [
-    "ResearchConductor",
-    "ReportGenerator",
-    "ContextManager",
     "BrowserManager",
+    "ContextManager",
+    "ReportGenerator",
+    "ResearchConductor",
     "SourceCurator",
 ]

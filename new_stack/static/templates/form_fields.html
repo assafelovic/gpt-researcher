@@ -1,0 +1,553 @@
+{# Form Field Macros Library
+
+This library provides a comprehensive set of Jinja2 macros for rendering HTML form fields
+with support for validation, accessibility, customization, and advanced features.
+
+Usage:
+    {% import 'form_fields.html' as forms %}
+    {{ forms.render_input(name="username", config_value="", required=true) }}
+
+Common Parameters:
+    name (str): Field name/id
+    config_value: Default/initial value
+    label (str, optional): Custom label text. Defaults to formatted name
+    required (bool, optional): If field is required. Defaults to false
+    disabled (bool, optional): If field is disabled. Defaults to false
+    readonly (bool, optional): If field is readonly. Defaults to false
+    class_ (str, optional): Additional CSS classes
+    attributes (dict, optional): Additional HTML attributes
+    help_text (str, optional): Help text below field
+    error (str, optional): Error message to display
+    wrapper_class (str, optional): CSS class for wrapper div
+    label_class (str, optional): CSS class for label
+    validate (str, optional): Client-side validation rules
+    data_attrs (dict, optional): Data attributes to add
+#}
+
+{# Base field wrapper macro #}
+{% macro field_wrapper(name, label=None, required=false, error=None, help_text=None, wrapper_class="") %}
+<div class="form-group {{ wrapper_class }} {% if error %}has-error{% endif %}" id="{{ name }}-wrapper">
+    {% if label != false %}
+        <label for="{{ name }}" class="form-label">
+            {{ label or name | replace('_', ' ') | title }}
+            {% if required %}<span class="required" aria-hidden="true">*</span>{% endif %}
+        </label>
+    {% endif %}
+    {{ caller() }}
+    {% if error %}
+        <div class="error-message" role="alert">{{ error }}</div>
+    {% endif %}
+    {% if help_text %}
+        <p class="help-text" id="{{ name }}-help">{{ help_text }}</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_input(
+    name,
+    config_value="",
+    type="text",
+    label=None,
+    placeholder=None,
+    required=false,
+    readonly=false,
+    disabled=false,
+    min=None,
+    max=None,
+    step=None,
+    pattern=None,
+    class_="",
+    wrapper_class="",
+    label_class="",
+    help_text=None,
+    error=None,
+    validate="",
+    mask=None,
+    dependent_fields=[],
+    attributes={},
+    data_attrs={}
+) %}
+    {% call field_wrapper(name, label, required, error, help_text, wrapper_class) %}
+        <input
+            type="{{ type }}"
+            id="{{ name }}"
+            name="{{ name }}"
+            value="{{ config_value }}"
+            class="form-control {{ class_ }}"
+            {% if placeholder is not none %}placeholder="{{ placeholder }}"{% endif %}
+            {% if required %}required aria-required="true"{% endif %}
+            {% if readonly %}readonly{% endif %}
+            {% if disabled %}disabled{% endif %}
+            {% if min is not none %}min="{{ min }}"{% endif %}
+            {% if max is not none %}max="{{ max }}"{% endif %}
+            {% if step is not none %}step="{{ step }}"{% endif %}
+            {% if pattern is not none %}pattern="{{ pattern }}"{% endif %}
+            {% if validate %}data-validate="{{ validate }}"{% endif %}
+            {% if mask %}data-mask="{{ mask }}"{% endif %}
+            {% if help_text %}aria-describedby="{{ name }}-help"{% endif %}
+            {% if dependent_fields %}data-depends-on="{{ dependent_fields|join(',') }}"{% endif %}
+            {% for key, value in attributes.items() %}
+                {{ key }}="{{ value }}"
+            {% endfor %}
+            {% for key, value in data_attrs.items() %}
+                data-{{ key }}="{{ value }}"
+            {% endfor %}
+        />
+    {% endcall %}
+{% endmacro %}
+
+{% macro render_select(
+    name,
+    config_value="",
+    options=[],
+    label=None,
+    required=false,
+    disabled=false,
+    multiple=false,
+    size=None,
+    class_="",
+    wrapper_class="",
+    label_class="",
+    help_text=None,
+    error=None,
+    validate="",
+    placeholder="Select an option",
+    dependent_fields=[],
+    attributes={},
+    data_attrs={},
+    option_attrs={},
+    labels=false
+) %}
+    {% call field_wrapper(name, label, required, error, help_text, wrapper_class) %}
+        <select
+            id="{{ name }}"
+            name="{{ name }}{% if multiple %}[]{% endif %}"
+            class="form-select {{ class_ }}"
+            {% if required %}required aria-required="true"{% endif %}
+            {% if disabled %}disabled{% endif %}
+            {% if multiple %}multiple{% endif %}
+            {% if size %}size="{{ size }}"{% endif %}
+            {% if validate %}data-validate="{{ validate }}"{% endif %}
+            {% if help_text %}aria-describedby="{{ name }}-help"{% endif %}
+            {% if dependent_fields %}data-depends-on="{{ dependent_fields|join(',') }}"{% endif %}
+            {% for key, value in attributes.items() %}
+                {{ key }}="{{ value }}"
+            {% endfor %}
+            {% for key, value in data_attrs.items() %}
+                data-{{ key }}="{{ value }}"
+            {% endfor %}
+        >
+            {% if placeholder %}
+                <option value="">{{ placeholder }}</option>
+            {% endif %}
+            {% for option in options %}
+                {% if labels %}
+                    <option
+                        value="{{ option }}"
+                        {% if option == config_value %}selected{% endif %}
+                        {% for key, value in option_attrs.items() %}
+                            {{ key }}="{{ value }}"
+                        {% endfor %}
+                    >
+                        {{ options[option] }}
+                    </option>
+                {% else %}
+                    {% if option is mapping %}
+                        <option
+                            value="{{ option.value }}"
+                            {% if option.value == config_value %}selected{% endif %}
+                            {% for key, value in option_attrs.items() %}
+                                {{ key }}="{{ value }}"
+                            {% endfor %}
+                            {% for key, value in option.get('attrs', {}).items() %}
+                                {{ key }}="{{ value }}"
+                            {% endfor %}
+                        >
+                            {{ option.label }}
+                        </option>
+                    {% else %}
+                        <option
+                            value="{{ option }}"
+                            {% if option == config_value %}selected{% endif %}
+                            {% for key, value in option_attrs.items() %}
+                                {{ key }}="{{ value }}"
+                            {% endfor %}
+                        >
+                            {{ option }}
+                        </option>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </select>
+    {% endcall %}
+{% endmacro %}
+
+{% macro render_textarea(
+    name,
+    config_value="",
+    label=None,
+    rows=4,
+    cols=50,
+    required=false,
+    readonly=false,
+    disabled=false,
+    maxlength=None,
+    placeholder=None,
+    class_="",
+    wrapper_class="",
+    label_class="",
+    help_text=None,
+    error=None,
+    validate="",
+    dependent_fields=[],
+    attributes={},
+    data_attrs={},
+    resizable=true
+) %}
+    {% call field_wrapper(name, label, required, error, help_text, wrapper_class) %}
+        <textarea
+            id="{{ name }}"
+            name="{{ name }}"
+            rows="{{ rows }}"
+            cols="{{ cols }}"
+            class="form-control {{ class_ }} {% if not resizable %}resize-none{% endif %}"
+            {% if required %}required aria-required="true"{% endif %}
+            {% if readonly %}readonly{% endif %}
+            {% if disabled %}disabled{% endif %}
+            {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+            {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+            {% if validate %}data-validate="{{ validate }}"{% endif %}
+            {% if help_text %}aria-describedby="{{ name }}-help"{% endif %}
+            {% if dependent_fields %}data-depends-on="{{ dependent_fields|join(',') }}"{% endif %}
+            {% for key, value in attributes.items() %}
+                {{ key }}="{{ value }}"
+            {% endfor %}
+            {% for key, value in data_attrs.items() %}
+                data-{{ key }}="{{ value }}"
+            {% endfor %}
+        >{{ config_value }}</textarea>
+    {% endcall %}
+{% endmacro %}
+
+{% macro render_checkbox(
+    name,
+    config_value=false,
+    label=None,
+    required=false,
+    disabled=false,
+    class_="",
+    wrapper_class="",
+    label_class="",
+    help_text=None,
+    error=None,
+    validate="",
+    switch=false,
+    dependent_fields=[],
+    attributes={},
+    data_attrs={}
+) %}
+    {% call field_wrapper(name, false, required, error, help_text, wrapper_class ~ ' checkbox-wrapper') %}
+        <div class="form-check {% if switch %}form-switch{% endif %}">
+            <input
+                type="checkbox"
+                id="{{ name }}"
+                name="{{ name }}"
+                class="form-check-input {{ class_ }}"
+                {% if config_value %}checked{% endif %}
+                {% if required %}required aria-required="true"{% endif %}
+                {% if disabled %}disabled{% endif %}
+                {% if validate %}data-validate="{{ validate }}"{% endif %}
+                {% if help_text %}aria-describedby="{{ name }}-help"{% endif %}
+                {% if dependent_fields %}data-depends-on="{{ dependent_fields|join(',') }}"{% endif %}
+                {% for key, value in attributes.items() %}
+                    {{ key }}="{{ value }}"
+                {% endfor %}
+                {% for key, value in data_attrs.items() %}
+                    data-{{ key }}="{{ value }}"
+                {% endfor %}
+            />
+            <label class="form-check-label {{ label_class }}" for="{{ name }}">
+                {{ label or name | replace('_', ' ') | title }}
+                {% if required %}<span class="required" aria-hidden="true">*</span>{% endif %}
+            </label>
+        </div>
+    {% endcall %}
+{% endmacro %}
+
+{% macro render_radio_group(
+    name,
+    config_value="",
+    options=[],
+    label=None,
+    required=false,
+    disabled=false,
+    inline=false,
+    class_="",
+    wrapper_class="",
+    label_class="",
+    help_text=None,
+    error=None,
+    validate="",
+    dependent_fields=[],
+    attributes={},
+    data_attrs={},
+    option_attrs={}
+) %}
+    {% call field_wrapper(name, label, required, error, help_text, wrapper_class) %}
+        <div class="radio-group {% if inline %}radio-inline{% endif %}" role="radiogroup">
+            {% for option in options %}
+                {% if option is mapping %}
+                    {% set option_value = option.value %}
+                    {% set option_label = option.label %}
+                {% else %}
+                    {% set option_value = option %}
+                    {% set option_label = option %}
+                {% endif %}
+                <div class="form-check {% if inline %}form-check-inline{% endif %}">
+                    <input
+                        type="radio"
+                        id="{{ name }}-{{ option_value }}"
+                        name="{{ name }}"
+                        value="{{ option_value }}"
+                        class="form-check-input {{ class_ }}"
+                        {% if option_value == config_value %}checked{% endif %}
+                        {% if required %}required aria-required="true"{% endif %}
+                        {% if disabled %}disabled{% endif %}
+                        {% if validate %}data-validate="{{ validate }}"{% endif %}
+                        {% if help_text %}aria-describedby="{{ name }}-help"{% endif %}
+                        {% if dependent_fields %}data-depends-on="{{ dependent_fields|join(',') }}"{% endif %}
+                        {% for key, value in attributes.items() %}
+                            {{ key }}="{{ value }}"
+                        {% endfor %}
+                        {% for key, value in data_attrs.items() %}
+                            data-{{ key }}="{{ value }}"
+                        {% endfor %}
+                        {% if option is mapping %}
+                            {% for key, value in option.get('attrs', {}).items() %}
+                                {{ key }}="{{ value }}"
+                            {% endfor %}
+                        {% endif %}
+                        {% for key, value in option_attrs.items() %}
+                            {{ key }}="{{ value }}"
+                        {% endfor %}
+                    />
+                    <label class="form-check-label" for="{{ name }}-{{ option_value }}">
+                        {{ option_label }}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+    {% endcall %}
+{% endmacro %}
+
+{% macro render_file_upload(
+    name,
+    config_value="",
+    label=None,
+    required=false,
+    disabled=false,
+    accept=None,
+    multiple=false,
+    class_="",
+    wrapper_class="",
+    label_class="",
+    help_text=None,
+    error=None,
+    validate="",
+    max_size=null,
+    preview=false,
+    dependent_fields=[],
+    attributes={},
+    data_attrs={}
+) %}
+    {% call field_wrapper(name, label, required, error, help_text, wrapper_class) %}
+        <input
+            type="file"
+            id="{{ name }}"
+            name="{{ name }}{% if multiple %}[]{% endif %}"
+            class="form-control {{ class_ }}"
+            {% if required %}required aria-required="true"{% endif %}
+            {% if disabled %}disabled{% endif %}
+            {% if accept %}accept="{{ accept }}"{% endif %}
+            {% if multiple %}multiple{% endif %}
+            {% if validate %}data-validate="{{ validate }}"{% endif %}
+            {% if max_size %}data-max-size="{{ max_size }}"{% endif %}
+            {% if preview %}data-preview="true"{% endif %}
+            {% if help_text %}aria-describedby="{{ name }}-help"{% endif %}
+            {% if dependent_fields %}data-depends-on="{{ dependent_fields|join(',') }}"{% endif %}
+            {% for key, value in attributes.items() %}
+                {{ key }}="{{ value }}"
+            {% endfor %}
+            {% for key, value in data_attrs.items() %}
+                data-{{ key }}="{{ value }}"
+            {% endfor %}
+        />
+        {% if preview %}
+            <div id="{{ name }}-preview" class="file-preview"></div>
+        {% endif %}
+    {% endcall %}
+{% endmacro %}
+
+{% macro render_fieldset(
+    legend,
+    class_="",
+    attributes={},
+    data_attrs={}
+) %}
+    <fieldset
+        class="form-fieldset {{ class_ }}"
+        {% for key, value in attributes.items() %}
+            {{ key }}="{{ value }}"
+        {% endfor %}
+        {% for key, value in data_attrs.items() %}
+            data-{{ key }}="{{ value }}"
+        {% endfor %}
+    >
+        <legend>{{ legend }}</legend>
+        {{ caller() }}
+    </fieldset>
+{% endmacro %}
+
+{% macro render_form_row(class_="") %}
+    <div class="form-row {{ class_ }}">
+        {{ caller() }}
+    </div>
+{% endmacro %}
+
+{% macro render_form_group(class_="") %}
+    <div class="form-group-wrapper {{ class_ }}">
+        {{ caller() }}
+    </div>
+{% endmacro %}
+
+{% macro render_submit(
+    label="Submit",
+    name=None,
+    class_="",
+    wrapper_class="",
+    disabled=false,
+    attributes={},
+    data_attrs={}
+) %}
+    <div class="form-submit {{ wrapper_class }}">
+        <button
+            type="submit"
+            {% if name %}name="{{ name }}" id="{{ name }}"{% endif %}
+            class="btn btn-primary {{ class_ }}"
+            {% if disabled %}disabled{% endif %}
+            {% for key, value in attributes.items() %}
+                {{ key }}="{{ value }}"
+            {% endfor %}
+            {% for key, value in data_attrs.items() %}
+                data-{{ key }}="{{ value }}"
+            {% endfor %}
+        >
+            {{ label }}
+        </button>
+    </div>
+{% endmacro %}
+
+{# CSRF Protection #}
+{% macro csrf_token() %}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+{% endmacro %}
+
+{# Conditional Form Elements #}
+{% macro render_if(condition) %}
+    {% if condition %}
+        {{ caller() }}
+    {% endif %}
+{% endmacro %}
+
+{# Hidden Fields #}
+{% macro render_hidden(
+    name,
+    value,
+    attributes={},
+    data_attrs={}
+) %}
+    <input
+        type="hidden"
+        id="{{ name }}"
+        name="{{ name }}"
+        value="{{ value }}"
+        {% for key, value in attributes.items() %}
+            {{ key }}="{{ value }}"
+        {% endfor %}
+        {% for key, value in data_attrs.items() %}
+            data-{{ key }}="{{ value }}"
+        {% endfor %}
+    />
+{% endmacro %}
+
+{# Form Alerts/Messages #}
+{% macro render_form_message(
+    message,
+    type="info",
+    dismissible=true,
+    class_=""
+) %}
+    <div
+        class="alert alert-{{ type }} {{ 'alert-dismissible' if dismissible }} {{ class_ }}"
+        role="alert"
+    >
+        {{ message }}
+        {% if dismissible %}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{# Dynamic Form Elements #}
+{% macro render_repeatable_field(
+    template,
+    min=1,
+    max=null,
+    add_label="Add More",
+    remove_label="Remove",
+    wrapper_class=""
+) %}
+    <div
+        class="repeatable-field {{ wrapper_class }}"
+        data-min="{{ min }}"
+        {% if max %}data-max="{{ max }}"{% endif %}
+    >
+        <div class="repeatable-items">
+            {{ caller() }}
+        </div>
+        <template class="repeatable-template">
+            {{ template }}
+        </template>
+        <button type="button" class="btn btn-secondary add-item">{{ add_label }}</button>
+    </div>
+{% endmacro %}
+
+{# Form Section #}
+{% macro form_section(
+    title=None,
+    description=None,
+    class_="",
+    wrapper_class="",
+    attributes={},
+    data_attrs={}
+) %}
+    <section
+        class="form-section {{ wrapper_class }}"
+        {% for key, value in attributes.items() %}
+            {{ key }}="{{ value }}"
+        {% endfor %}
+        {% for key, value in data_attrs.items() %}
+            data-{{ key }}="{{ value }}"
+        {% endfor %}
+    >
+        {% if title %}
+            <h3 class="section-title">{{ title }}</h3>
+        {% endif %}
+        {% if description %}
+            <p class="section-description">{{ description }}</p>
+        {% endif %}
+        <div class="section-content {{ class_ }}">
+            {{ caller() }}
+        </div>
+    </section>
+{% endmacro %}

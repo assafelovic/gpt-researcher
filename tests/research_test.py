@@ -15,24 +15,40 @@ Default is False, i.e., no additional research will be conducted on newer source
 from __future__ import annotations
 
 import asyncio
+from dotenv import load_dotenv
 
+try:
+    from gpt_researcher import GPTResearcher
+except ImportError:
+    import os
+    import sys
+    sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # Adjust the path to import GPTResearcher from the parent directory
+    from gpt_researcher import GPTResearcher
 from backend.server.server_utils import CustomLogsHandler  # Update import
-from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
+
+load_dotenv()
+assert os.getenv("SMART_LLM") == "openai:gpt-4o-2024-11-20", "Please set the SMART_LLM to gpt-4o-2024-11-20 in your .env file."
 
 
 async def get_report(
     query: str,
     report_type: str,
-    sources: list,
+    sources: list[str],
 ) -> tuple[str, GPTResearcher]:
     custom_logs_handler = CustomLogsHandler(None, query)  # Pass query parameter
+    print("testing case 1")
     researcher = GPTResearcher(
         query=query,
         report_type=report_type,
+        source_urls=sources,
         complement_source_urls=False,
         websocket=custom_logs_handler,
+        verbose=True
     )
+    assert researcher.cfg.VERBOSE is True, "Verbose mode is not enabled."
     _research_result: str | list[str] = await researcher.conduct_research()
+    context_len = len(researcher.get_research_context())
+    print(f"Context length after research: {context_len}")
     report: str = await researcher.write_report()
     return report, researcher
 

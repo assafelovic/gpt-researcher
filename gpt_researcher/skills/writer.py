@@ -57,7 +57,11 @@ class ReportGenerator:
         """
         existing_headers = [] if existing_headers is None else existing_headers
         relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
-        ext_context = " ".join(self.researcher.context) if ext_context is None or not ext_context.strip() else ext_context
+        ext_context = (
+            " ".join(self.researcher.context)
+            if ext_context is None or not ext_context.strip()
+            else ext_context
+        )
 
         # send the selected images prior to writing report
         research_images: list[dict[str, Any]] = self.researcher.get_research_images()

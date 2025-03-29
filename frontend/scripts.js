@@ -107,7 +107,7 @@ const GPTResearcher = (() => {
       } catch (e) {
         console.error('Error closing socket:', e)
       }
-    }; 
+    };
   }
 
   const addAgentResponse = (data) => {
@@ -130,16 +130,20 @@ const GPTResearcher = (() => {
         console.error('No output data received');
         return;
     }
-    
-    const { pdf, docx, md, json } = data.output;
+
+    // Parse the output if it's a string, otherwise use it directly
+    const paths = typeof data.output === 'string' ? JSON.parse(data.output) : data.output;
+    const { pdf, docx, md, json } = paths;
     console.log('Received paths:', { pdf, docx, md, json });
-    
+
     // Helper function to safely update link
     const updateLink = (id, path) => {
         const element = document.getElementById(id);
         if (element && path) {
-            console.log(`Setting ${id} href to:`, path);
-            element.setAttribute('href', path);
+            // Ensure the path starts with /
+            const downloadPath = path.startsWith('/') ? path : `/${path}`;
+            console.log(`Setting ${id} href to:`, downloadPath);
+            element.setAttribute('href', downloadPath);
             element.classList.remove('disabled');
         } else {
             console.warn(`Either element ${id} not found or path not provided`);
@@ -273,15 +277,15 @@ const GPTResearcher = (() => {
   const showImageDialog = (imageUrl) => {
     const dialog = document.createElement('div');
     dialog.className = 'image-dialog';
-    
+
     const img = document.createElement('img');
     img.src = imageUrl;
     img.alt = 'Full-size Research Image';
-    
+
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Close';
     closeBtn.onclick = () => document.body.removeChild(dialog);
-    
+
     dialog.appendChild(img);
     dialog.appendChild(closeBtn);
     document.body.appendChild(dialog);

@@ -4,7 +4,6 @@ import os
 
 from typing import Any
 
-from pydantic import SecretStr
 
 OPENAI_EMBEDDING_MODEL: str = os.environ.get(
     "OPENAI_EMBEDDING_MODEL",
@@ -17,109 +16,100 @@ class Memory:
         self,
         embedding_provider: str,
         model: str,
-        **embedding_kwargs: Any,
+        **embdding_kwargs: Any,
     ):
-        self._setup_embeddings(embedding_provider, model, **embedding_kwargs)
-
-    def _setup_embeddings(
-        self,
-        embedding_provider: str,
-        model: str,
-        **embedding_kwargs: Any,
-    ):
-        _embeddings = None
+        embeddings = None
         match embedding_provider:
             case "custom":
                 from langchain_openai import OpenAIEmbeddings
 
-                _api_key: None | SecretStr = (
-                    None
-                    if os.getenv("OPENAI_API_KEY", "custom") == "custom"
-                    else SecretStr(os.getenv("OPENAI_API_KEY", "custom"))
-                )
-                _embeddings = OpenAIEmbeddings(
+                embeddings = OpenAIEmbeddings(
                     model=model,
-                    api_key=_api_key,
-                    organization=os.getenv("OPENAI_ORGANIZATION", "custom"),
-                    max_retries=3,
-                    timeout=60.0,
-                    chunk_size=128,
-                    **embedding_kwargs,
+                    openai_api_key=os.getenv("OPENAI_API_KEY", "custom"),
+                    openai_api_base=os.getenv(
+                        "OPENAI_BASE_URL",
+                        "http://localhost:1234/v1",
+                    ),  # default for lmstudio
+                    check_embedding_ctx_length=False,
+                    **embdding_kwargs,
                 )  # quick fix for lmstudio
             case "openai":
                 from langchain_openai import OpenAIEmbeddings
 
-                _embeddings = OpenAIEmbeddings(model=model, **embedding_kwargs)
+                embeddings = OpenAIEmbeddings(model=model, **embdding_kwargs)
             case "azure_openai":
                 from langchain_openai import AzureOpenAIEmbeddings
 
-                _embeddings = AzureOpenAIEmbeddings(
+                embeddings = AzureOpenAIEmbeddings(
                     model=model,
                     azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-                    openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],  # type: ignore[arg-type]
-                    openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],  # type: ignore[arg-type]
-                    **embedding_kwargs,
+                    openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
+                    openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+                    **embdding_kwargs,
                 )
             case "cohere":
                 from langchain_cohere import CohereEmbeddings
 
-                _embeddings = CohereEmbeddings(model=model, **embedding_kwargs)
+                embeddings = CohereEmbeddings(model=model, **embdding_kwargs)
             case "google_vertexai":
                 from langchain_google_vertexai import VertexAIEmbeddings
 
-                _embeddings = VertexAIEmbeddings(model=model, **embedding_kwargs)
+                embeddings = VertexAIEmbeddings(model=model, **embdding_kwargs)
             case "google_genai":
                 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-                _embeddings = GoogleGenerativeAIEmbeddings(model=model, **embedding_kwargs)
+                embeddings = GoogleGenerativeAIEmbeddings(
+                    model=model,
+                    **embdding_kwargs,
+                )
             case "fireworks":
                 from langchain_fireworks import FireworksEmbeddings
 
-                _embeddings = FireworksEmbeddings(model=model, **embedding_kwargs)
+                embeddings = FireworksEmbeddings(model=model, **embdding_kwargs)
             case "ollama":
                 from langchain_ollama import OllamaEmbeddings
 
-                _embeddings = OllamaEmbeddings(
+                embeddings = OllamaEmbeddings(
                     model=model,
                     base_url=os.environ["OLLAMA_BASE_URL"],
-                    **embedding_kwargs,
+                    **embdding_kwargs,
                 )
             case "together":
                 from langchain_together import TogetherEmbeddings
 
-                _embeddings = TogetherEmbeddings(model=model, **embedding_kwargs)
+                embeddings = TogetherEmbeddings(model=model, **embdding_kwargs)
             case "mistralai":
                 from langchain_mistralai import MistralAIEmbeddings
 
-                _embeddings = MistralAIEmbeddings(model=model, **embedding_kwargs)
+                embeddings = MistralAIEmbeddings(model=model, **embdding_kwargs)
             case "huggingface":
                 from langchain_huggingface import HuggingFaceEmbeddings
 
-                _embeddings = HuggingFaceEmbeddings(model_name=model, **embedding_kwargs)
+                embeddings = HuggingFaceEmbeddings(model_name=model, **embdding_kwargs)
             case "nomic":
                 from langchain_nomic import NomicEmbeddings
 
-                _embeddings = NomicEmbeddings(model=model, **embedding_kwargs)
+                embeddings = NomicEmbeddings(model=model, **embdding_kwargs)
             case "voyageai":
                 from langchain_voyageai import VoyageAIEmbeddings
 
-                _embeddings = VoyageAIEmbeddings(
-                    api_key=SecretStr(os.environ.get("VOYAGE_API_KEY", "")),
+                embeddings = VoyageAIEmbeddings(
+                    voyage_api_key=os.environ["VOYAGE_API_KEY"],
                     model=model,
-                    **embedding_kwargs,
+                    **embdding_kwargs,
                 )
             case "dashscope":
                 from langchain_community.embeddings import DashScopeEmbeddings
 
-                _embeddings = DashScopeEmbeddings(model=model, **embedding_kwargs)
+                embeddings = DashScopeEmbeddings(model=model, **embdding_kwargs)
             case "bedrock":
                 from langchain_aws.embeddings import BedrockEmbeddings
 
-                _embeddings = BedrockEmbeddings(model_id=model, **embedding_kwargs)
+                embeddings = BedrockEmbeddings(model_id=model, **embdding_kwargs)
             case _:
-                raise Exception(f"Embedding not found: '{embedding_provider}'")
+                raise Exception("Embedding not found.")
 
-        self._embeddings = _embeddings
+        self._embeddings = embeddings
 
     def get_embeddings(self):
         return self._embeddings

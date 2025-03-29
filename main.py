@@ -68,7 +68,6 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host address to run the server on.")
     parser.add_argument("--choose", "-c", action="store_true", help="Choose a configuration to run.")
     parser.add_argument("--interactive", "-i", action="store_true", help="Choose a configuration to run.")
-    parser.add_argument("--frontend", type=str, default="default", help="Frontend to use (default or other).")
     parser.add_argument("--uds", type=str, default=None, help="Unix domain socket.")
     parser.add_argument("--fd", type=int, default=None, help="File descriptor.")
     parser.add_argument("--loop", type=str, default="auto", help="Event loop implementation.")

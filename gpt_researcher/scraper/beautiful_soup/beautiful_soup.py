@@ -1,18 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+import requests
 from bs4 import BeautifulSoup
 
 from gpt_researcher.scraper.utils import clean_soup, extract_title, get_relevant_images, get_text_from_soup
 from gpt_researcher.utils.logger import get_formatted_logger
 
-if TYPE_CHECKING:
-    import logging
 
-    import requests
-
-logger: logging.Logger = get_formatted_logger(__name__)
+logger = get_formatted_logger(__name__)
 
 
 class BeautifulSoupScraper:
@@ -49,18 +46,20 @@ class BeautifulSoupScraper:
             tuple: A tuple containing the cleaned content as a string, a list of image URLs, and the page title.
         """
         try:
-            assert self.session is not None, "Session is not initialized"
-            response: requests.Response = self.session.get(self.link, timeout=timeout)
-            soup: BeautifulSoup = BeautifulSoup(
+            response: requests.Response = self.session.get(self.link, timeout=4)
+            soup = BeautifulSoup(
                 response.content,
-                features,
+                "lxml",
                 from_encoding=response.encoding,
             )
 
-            soup = clean_soup(soup)
+            soup: BeautifulSoup = clean_soup(soup)
 
             content: str = get_text_from_soup(soup)
+
             image_urls: list[dict[str, Any]] = get_relevant_images(soup, self.link)
+
+            # Extract the title using the utility function
             title: str | None = extract_title(soup)
 
             return content, image_urls, title

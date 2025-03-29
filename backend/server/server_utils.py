@@ -8,11 +8,13 @@ import re
 import shutil
 import time
 import traceback
+import uuid
 
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Awaitable, Dict, TypeVar
 
+from fastapi import UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.websockets import WebSocket as ServerWebSocket
 from gpt_researcher.actions import stream_output
@@ -25,6 +27,7 @@ from gpt_researcher.utils.schemas import LogHandler
 from pydantic import BaseModel
 
 from backend.server.websocket_manager import WebSocketManager
+
 
 logger: logging.Logger = get_formatted_logger("gpt_researcher")
 
@@ -63,7 +66,7 @@ class CustomLogsHandler(LogHandler):
         self.logs: list[dict[str, Any]] = []
         self.websocket: ServerWebSocket | None = websocket
         sanitized_filename: str = sanitize_filename(f"task_{int(time.time())}_{task}")
-        self.log_file: Path = Path(os.path.expandvars(os.path.join("outputs", f"{sanitized_filename}.json"))).absolute()
+        self.log_file: Path = Path(f"outputs/{sanitized_filename}.json").absolute()
         self.timestamp: str = datetime.now().isoformat()
 
         # Initialize log file with metadata
@@ -160,7 +163,8 @@ class Researcher:
 
         # Get the JSON log path that was created by CustomLogsHandler
         json_relative_path: str = (
-            sanitized_filename if self.logs_handler is None else os.path.relpath(self.logs_handler.log_file)
+            sanitized_filename if self.logs_handler is None
+            else str(self.logs_handler.log_file).replace('\\', '/')
         )
 
         return {
@@ -252,8 +256,8 @@ async def handle_start_command(
         str(report or "").strip(),
         str(sanitized_filename or "").strip(),
     )
-    # Add JSON log path to file_paths
-    file_paths["json"] = os.path.relpath(logs_handler.log_file)
+    # Add JSON log path to file_paths, ensuring forward slashes
+    file_paths["json"] = str(logs_handler.log_file).replace('\\', '/')
     await send_file_paths(websocket, file_paths)
 
 
@@ -305,7 +309,7 @@ async def generate_report_files(
 
     except Exception as e:
         logger.exception(f"Error generating report files: {e.__class__.__name__}: {e}")
-        return {"md": f"reports/{filename}.md"}
+        return {"md": f"outputs/{filename}.md".replace('\\', '/')}
 
     else:
         return result
@@ -313,21 +317,19 @@ async def generate_report_files(
 
 async def send_file_paths(websocket: ServerWebSocket, file_paths: dict[str, Any]):
     """Send file paths to the frontend.
-    
+
     This function ensures file paths are properly JSON serialized before sending.
     """
     try:
-        # Convert file paths to a properly serialized JSON string
-        file_paths_json = json.dumps(file_paths)
-        await websocket.send_json({"type": "path", "output": file_paths_json})
+        # Send file paths directly without double encoding
+        await websocket.send_json({"type": "path", "output": file_paths})
         logger.info(f"Sent file paths to frontend: {file_paths}")
     except Exception as e:
         logger.exception(f"Error sending file paths: {e}")
-        # Fallback attempt - direct serialization
-        await websocket.send_json({"type": "path", "output": file_paths})
+        await websocket.send_text(json.dumps({"type": "error", "output": str(e)}))
 
 
-def get_config_dict(
+def get_settings_dict(
     langchain_api_key: str | None = None,
     openai_api_key: str | None = None,
     tavily_api_key: str | None = None,
@@ -364,23 +366,30 @@ def update_environment_variables(
         os.environ[key] = value
 
 
-async def handle_file_upload(file, DOC_PATH: str) -> dict[str, str]:
-    file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
-    with open(file_path, "wb") as buffer:
+async def handle_file_upload(
+    file: UploadFile,
+    doc_path: os.PathLike | str | None = None,
+) -> dict[str, str]:
+    doc_path = os.getenv("DOC_PATH", "./my-docs") if doc_path is None else doc_path
+    filename: str = str(file.filename or "").strip() if file.filename is None else f"{uuid.uuid4().hex[:8]}_document.pdf"
+    file_path: Path = Path(doc_path, filename)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with file_path.open("wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     logger.info(f"File uploaded to {file_path}")
 
-    document_loader = DocumentLoader(DOC_PATH)
+    document_loader = DocumentLoader(doc_path)
     await document_loader.load()
 
-    return {"filename": file.filename, "path": file_path}
+    return {"filename": filename, "path": str(file_path)}
 
 
 async def handle_file_deletion(
     filename: str,
-    DOC_PATH: os.PathLike | str,
+    doc_path: os.PathLike | str | None = None,
 ) -> JSONResponse:
-    file_path: Path = Path(DOC_PATH, os.path.basename(str(filename or "").strip())).absolute()
+    doc_path = os.getenv("DOC_PATH", "./my-docs") if doc_path is None else doc_path
+    file_path: Path = Path(doc_path, os.path.basename(str(filename or "").strip())).absolute()
     if file_path.exists() and file_path.is_file():
         file_path.unlink(missing_ok=True)
         logger.debug(f"File deleted: '{file_path}'")
@@ -460,7 +469,12 @@ async def handle_websocket_communication(
                     running_task = run_long_running_task(handle_start_command(websocket, data, manager))
                 elif data.startswith("human_feedback"):
                     running_task = run_long_running_task(handle_human_feedback(data))
+                elif data.startswith("chat:"):
+                    # Support for my_frontend chat format
+                    message = data[5:]
+                    running_task = run_long_running_task(manager.process_chat_message(message, websocket))
                 elif data.startswith("chat"):
+                    # Original chat format
                     running_task = run_long_running_task(handle_chat(websocket, data, manager))
                 elif data.startswith("config"):
                     # Handle configuration commands
@@ -521,7 +535,7 @@ async def handle_websocket_communication(
                     logger.error(
                         "Error in handle_websocket_communication: Unknown command or not enough parameters provided."
                     )
-            except Exception as e:
+            except Exception as e:  # noqa: PERF203
                 logger.error(f"WebSocket error: {e.__class__.__name__}: {e}")
                 break
     finally:

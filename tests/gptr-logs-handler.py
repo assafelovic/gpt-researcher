@@ -4,8 +4,14 @@ import asyncio
 
 from typing import TYPE_CHECKING
 
+try:
+    from gpt_researcher import GPTResearcher
+except ImportError:
+    import os
+    import sys
+    sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # Adjust the path to import GPTResearcher from the parent directory
+    from gpt_researcher import GPTResearcher
 from backend.server.server_utils import CustomLogsHandler
-from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import Tone
 from gpt_researcher.utils.logger import get_formatted_logger
 

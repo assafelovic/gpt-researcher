@@ -74,10 +74,15 @@ class BasicReport:
             config=self.config
         )
 
-        _research_context: str | list[str] = await researcher.conduct_research()
-        report: str = await researcher.write_report(
-            existing_headers=[researcher.headers],
-            relevant_written_contents=researcher.context,
-            external_context=[],
-        )
-        return report
+        try:
+            _research_context: str | list[str] = await researcher.conduct_research()
+            report: str = await researcher.write_report(
+                existing_headers=[researcher.headers],
+                relevant_written_contents=researcher.context,
+                external_context=[],
+            )
+            return report
+        except ValueError as e:
+            if "No research data available" in str(e):
+                return "Sorry, I was unable to gather any research data for your query. This could be due to network issues, API failures, or no relevant information being found. Please try again or rephrase your query."
+            raise

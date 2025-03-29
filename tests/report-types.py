@@ -4,8 +4,15 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+try:
+    from gpt_researcher import GPTResearcher
+except ImportError:
+    import os
+    import sys
+    sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # Adjust the path to import GPTResearcher from the parent directory
+    from gpt_researcher import GPTResearcher
+
 from backend.server.server_utils import CustomLogsHandler  # Update import
-from gpt_researcher.agent import GPTResearcher
 
 OUTPUT_DIR = "./outputs"  # Define the output directory
 REPORT_TYPES: list[str] = ["research_report", "subtopic_report"]  # Define the report types to test

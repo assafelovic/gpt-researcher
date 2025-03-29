@@ -19,7 +19,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "CURATE_SOURCES": False,
     "SUMMARY_TOKEN_LIMIT": 700,
     "TEMPERATURE": 0.4,
-    "USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
+    "USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",  # noqa: E501
     "MAX_SEARCH_RESULTS_PER_QUERY": 5,
     "MEMORY_BACKEND": "local",
     "TOTAL_WORDS": 1200,

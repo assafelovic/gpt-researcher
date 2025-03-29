@@ -9,7 +9,7 @@ from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableSerializable
 
-from gpt_researcher.llm_provider.generic.base import GenericLLMProvider, MessageConverter  # noqa: F811
+from gpt_researcher.llm_provider.generic.base import GenericLLMProvider, MessageConverter
 from gpt_researcher.utils.costs import estimate_llm_cost
 from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.utils.validators import Subtopics
@@ -109,7 +109,6 @@ async def create_chat_completion(
         stream=bool(stream),
         websocket=websocket,
         max_retries=max_retries or 1,
-        headers=headers,
     )
 
     with suppress(Exception):

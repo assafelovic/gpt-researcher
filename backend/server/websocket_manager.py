@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
 from typing import TYPE_CHECKING
 
 from fastapi import WebSocket
+from fastapi.websockets import WebSocketState
 from gpt_researcher.config.config import Config
 from gpt_researcher.actions import stream_output  # Import stream_output
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
@@ -30,6 +32,7 @@ class WebSocketManager:
         self.sender_tasks: dict[WebSocket, asyncio.Task] = {}
         self.message_queues: dict[WebSocket, asyncio.Queue[str]] = {}
         self.chat_agent: ChatAgentWithMemory | None = None
+        self._latest_report: str = ""
 
     async def start_sender(
         self,
@@ -79,6 +82,49 @@ class WebSocketManager:
             del self.sender_tasks[websocket]
             del self.message_queues[websocket]
 
+    def set_latest_report(
+        self,
+        report: str,
+        config_path: str = "default",
+        headers: dict[str, str] | None = None,
+    ) -> None:
+        """Set the latest report and initialize a chat agent for it.
+
+        This method is used by the my_frontend implementation.
+        """
+        self._latest_report = report
+        self.chat_agent = ChatAgentWithMemory(report, config_path, headers or {})
+        logger.debug("Chat agent initialized with new report")
+
+    async def process_chat_message(
+        self,
+        message: str,
+        websocket: WebSocket | None = None,
+    ) -> str:
+        """Process a chat message and return the response as a JSON string.
+
+        This method is used by the my_frontend implementation.
+        """
+        try:
+            if not self.chat_agent or not self._latest_report:
+                response = {"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"}
+                if websocket:
+                    await websocket.send_json(response)
+                return json.dumps(response)
+
+            response_text: str = await self.chat_agent.chat(message, websocket)
+            response = {"type": "chat", "content": response_text}
+            if websocket:
+                await websocket.send_json(response)
+            return json.dumps(response)
+
+        except Exception as e:
+            logger.exception(f"Error in chat process! {e.__class__.__name__}: {e}")
+            error_response = {"type": "error", "content": f"Error in chat process! {e.__class__.__name__}: {e}"}
+            if websocket:
+                await websocket.send_json(error_response)
+            return json.dumps(error_response)
+
     async def start_streaming(
         self,
         task: str,
@@ -93,6 +139,9 @@ class WebSocketManager:
     ) -> str:
         """Start streaming the output."""
         logger.info(f"Starting research: {task}")
+        if websocket not in self.active_connections:
+            logger.warning("WebSocket somehow not in active connections, fixing now...")
+            self.active_connections.append(websocket)
 
         # add customized JSON config file path here
         config_path = "default"
@@ -112,17 +161,21 @@ class WebSocketManager:
             )
 
             logger.info(f"Research completed for: {task}")
-            if websocket in self.active_connections:
-                await websocket.send_json({"type": "report", "output": report})
+            if websocket.client_state == WebSocketState.DISCONNECTED:
+                logger.warning("WebSocket disconnected, research cancelled.")
+                return report
+            await websocket.send_json({"type": "report", "output": report})
+
+            # Set the latest report for both implementations
             self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
+            self._latest_report = report
 
         except Exception as e:
             logger.exception(f"Error in start_streaming: {e.__class__.__name__}: {e}")
-            if websocket in self.active_connections:
-                try:
-                    await websocket.send_json({"type": "logs", "level": "error", "output": f"Error: {e.__class__.__name__}: {e}"})
-                except Exception as send_error:
-                    logger.exception(f"Error sending error message: {send_error.__class__.__name__}: {send_error}")
+            try:
+                await websocket.send_json({"type": "logs", "level": "error", "output": f"Error: {e.__class__.__name__}: {e}"})
+            except Exception as send_error:
+                logger.exception(f"Error sending error message: {send_error.__class__.__name__}: {send_error}")
             raise
 
         else:
@@ -166,7 +219,7 @@ async def run_agent(
         if tone is not None
         else Tone.Objective
     )
-    if isinstance(report_type, str):
+    if isinstance(report_type, str) and "_" in report_type:
         report_type = report_type.replace("_", " ").title().replace(" ", "")
     report_type = (
         ReportType.__members__[report_type]
@@ -182,7 +235,7 @@ async def run_agent(
         if isinstance(report_source, ReportSource)
         else ReportSource(report_source)
     )
-    
+
     # Stream initial message
     if websocket is not None:
         await websocket.send_json({"type": "logs", "level": "info", "output": f"Starting research on: {task}"})

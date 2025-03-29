@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable
 
 import json_repair
-
 from langchain_core.retrievers import BaseRetriever
 
 from gpt_researcher.prompts import generate_search_queries_prompt
 from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.logger import get_formatted_logger
+
 
 if TYPE_CHECKING:
     import logging
@@ -16,14 +16,16 @@ if TYPE_CHECKING:
     from json_repair.json_parser import JSONReturnType
 
     from gpt_researcher.config import Config
+    from gpt_researcher.retrievers.retriever_abc import RetrieverABC
     from gpt_researcher.utils.enum import ReportType
+    from gpt_researcher.utils.validators import BaseRetriever
 
 logger: logging.Logger = get_formatted_logger(__name__)
 
 
 async def get_search_results(
     query: str,
-    retriever: type[BaseRetriever] | type,  # TODO(th3w1zard1): type[GPTResearcherBaseRetriever]
+    retriever: type[BaseRetriever] | type[RetrieverABC],
     query_domains: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Get web search results for a given query.
@@ -38,11 +40,8 @@ async def get_search_results(
         A list of search results
     """
     if isinstance(retriever, type) and issubclass(retriever, BaseRetriever):
-        return [
-            doc.model_dump()
-            for doc in await retriever().ainvoke(query)
-        ]
-    search_retriever = retriever(
+        return [doc.model_dump() for doc in await retriever().ainvoke(query)]
+    search_retriever: RetrieverABC = retriever(
         query,
         query_domains=query_domains,
     )
@@ -93,7 +92,9 @@ async def generate_sub_queries(
             cost_callback=cost_callback,
         )
     except Exception as e:
-        logger.warning(f"Error with strategic LLM! {e.__class__.__name__}: {e}. Retrying with max_tokens={cfg.STRATEGIC_TOKEN_LIMIT}.")
+        logger.warning(
+            f"Error with strategic LLM! {e.__class__.__name__}: {e}. Retrying with max_tokens={cfg.STRATEGIC_TOKEN_LIMIT}."
+        )
         logger.warning("See https://github.com/assafelovic/gpt-researcher/issues/1022")
         try:
             response = await create_chat_completion(

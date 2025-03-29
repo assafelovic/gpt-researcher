@@ -57,9 +57,9 @@ async def write_text_to_md(
     -------
         str: The file path of the generated Markdown file.
     """
-    file_path = os.path.join(output_dir, f"{filename[:MAX_FILENAME_LENGTH]}.md")
+    file_path = f"{output_dir}/{filename[:MAX_FILENAME_LENGTH]}.md".replace('\\', '/')
     await write_to_file(file_path, text)
-    return urllib.parse.quote(file_path)
+    return file_path
 
 
 async def write_md_to_pdf(
@@ -85,7 +85,7 @@ async def write_md_to_pdf(
     -------
         str: The encoded file path of the generated PDF
     """
-    file_path = os.path.join(output_dir, f"{filename[:MAX_FILENAME_LENGTH]}.pdf")
+    file_path = f"{output_dir}/{filename[:MAX_FILENAME_LENGTH]}.pdf".replace('\\', '/')
 
     try:
         from md2pdf.core import md2pdf
@@ -98,7 +98,7 @@ async def write_md_to_pdf(
             base_url=None,
         )
         logger.debug(f"Report written to '{file_path}' with styles from '{css_file_path}'")
-        return urllib.parse.quote(file_path)
+        return file_path
     except Exception as e:
         logger.warning(f"Error in converting Markdown to PDF! {e.__class__.__name__}: {e}", exc_info=True)
         logger.info("Falling back to fpdf/markdown_it")
@@ -153,7 +153,7 @@ async def write_md_to_word(
     -------
         str: The encoded file path of the generated DOCX.
     """
-    file_path = os.path.join(output_dir, f"{filename[:MAX_FILENAME_LENGTH]}.docx")
+    file_path = f"{output_dir}/{filename[:MAX_FILENAME_LENGTH]}.docx".replace('\\', '/')
 
     try:
         from docx import Document as NewDocument
@@ -172,7 +172,7 @@ async def write_md_to_word(
 
         logger.debug(f"Report written to '{file_path}'")
 
-        return urllib.parse.quote(file_path)
+        return file_path
 
     except Exception as e:
         logger.warning(f"Error in converting Markdown to DOCX! {e.__class__.__name__}: {e}", exc_info=True)
