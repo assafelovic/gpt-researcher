@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 GPT Researcher MCP Server
 
@@ -8,24 +7,40 @@ to conduct web research and generate reports via the MCP protocol.
 
 import os
 import sys
-from typing import Dict, List, Optional, Tuple, Any
+import uuid
+import logging
+from typing import Dict, Any, Optional
 from dotenv import load_dotenv
-from loguru import logger
 from mcp.server.fastmcp import FastMCP
 from gpt_researcher import GPTResearcher
 
 # Load environment variables
 load_dotenv()
 
-# Configure logging for console only (no file logging)
-logger.configure(handlers=[{"sink": sys.stderr, "level": "INFO"}])
+from utils import (
+    research_store,
+    create_success_response, 
+    handle_exception,
+    get_researcher_by_id, 
+    format_sources_for_response,
+    format_context_with_sources, 
+    store_research_results,
+    create_research_prompt
+)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s][%(levelname)s] - %(message)s',
+)
+
+logger = logging.getLogger(__name__)
 
 # Initialize FastMCP server
 mcp = FastMCP("GPT Researcher")
 
-
-# Track ongoing research topics and contexts
-research_store = {}
+# Initialize researchers dictionary
+if not hasattr(mcp, "researchers"):
+    mcp.researchers = {}
 
 
 @mcp.resource("research://{topic}")
@@ -50,7 +65,7 @@ async def research_resource(topic: str) -> str:
     logger.info(f"Conducting new research for resource on topic: {topic}")
     
     # Initialize GPT Researcher
-    researcher = GPTResearcher(topic, "resource_report")
+    researcher = GPTResearcher(topic)
     
     try:
         # Conduct the research
@@ -62,49 +77,36 @@ async def research_resource(topic: str) -> str:
         source_urls = researcher.get_source_urls()
         
         # Format with sources included
-        formatted_context = f"## Research: {topic}\n\n{context}\n\n"
-        formatted_context += "## Sources:\n"
-        for i, source in enumerate(sources):
-            formatted_context += f"{i+1}. {source.get('title', 'Unknown')}: {source.get('url', '')}\n"
+        formatted_context = format_context_with_sources(topic, context, sources)
         
         # Store for future use
-        research_store[topic] = {
-            "context": formatted_context,
-            "sources": sources,
-            "source_urls": source_urls
-        }
+        store_research_results(topic, context, sources, source_urls, formatted_context)
         
         return formatted_context
     except Exception as e:
-        logger.error(f"Research resource failed: {str(e)}")
         return f"Error conducting research on '{topic}': {str(e)}"
 
 
 @mcp.tool()
-async def conduct_research(query: str, report_type: str = "research_report") -> Dict[str, Any]:
+async def conduct_research(query: str) -> Dict[str, Any]:
     """
-    Conduct research on a given query using GPT Researcher.
+    Conduct a web research on a given query using GPT Researcher. 
+    Use this tool when you need time-sensitive, real-time information like stock prices, news, people, specific knowledge, etc.
     
     Args:
         query: The research query or topic
-        report_type: Type of report to generate (research_report, resource_report, outline_report)
         
     Returns:
         Dict containing research status, ID, and the actual research context and sources
         that can be used directly by LLMs for context enrichment
     """
-    logger.info(f"Conducting research on query: {query} with report type: {report_type}")
-    
-    # Store the researcher in the server's shared state
-    if not hasattr(mcp, "researchers"):
-        mcp.researchers = {}
+    logger.info(f"Conducting research on query: {query}...")
     
     # Generate a unique ID for this research session
-    import uuid
     research_id = str(uuid.uuid4())
     
     # Initialize GPT Researcher
-    researcher = GPTResearcher(query, report_type)
+    researcher = GPTResearcher(query)
     
     # Start research
     try:
@@ -118,35 +120,18 @@ async def conduct_research(query: str, report_type: str = "research_report") -> 
         source_urls = researcher.get_source_urls()
         
         # Store in the research store for the resource API
-        research_store[query] = {
-            "context": context,
-            "sources": sources,
-            "source_urls": source_urls
-        }
+        store_research_results(query, context, sources, source_urls)
         
-        return {
-            "status": "completed",
+        return create_success_response({
             "research_id": research_id,
-            "report_type": report_type,
             "query": query,
             "source_count": len(sources),
             "context": context,
-            "sources": [
-                {
-                    "title": source.get("title", "Unknown"),
-                    "url": source.get("url", ""),
-                    "content_length": len(source.get("content", ""))
-                }
-                for source in sources
-            ],
+            "sources": format_sources_for_response(sources),
             "source_urls": source_urls
-        }
+        })
     except Exception as e:
-        logger.error(f"Research failed: {str(e)}")
-        return {
-            "status": "failed",
-            "error": str(e)
-        }
+        return handle_exception(e, "Research")
 
 
 @mcp.tool()
@@ -161,10 +146,10 @@ async def write_report(research_id: str, custom_prompt: Optional[str] = None) ->
     Returns:
         Dict containing the report content and metadata
     """
-    if not hasattr(mcp, "researchers") or research_id not in mcp.researchers:
-        return {"status": "error", "message": "Research ID not found. Please conduct research first."}
+    success, researcher, error = get_researcher_by_id(mcp.researchers, research_id)
+    if not success:
+        return error
     
-    researcher = mcp.researchers[research_id]
     logger.info(f"Generating report for research ID: {research_id}")
     
     try:
@@ -175,18 +160,13 @@ async def write_report(research_id: str, custom_prompt: Optional[str] = None) ->
         sources = researcher.get_research_sources()
         costs = researcher.get_costs()
         
-        return {
-            "status": "success",
+        return create_success_response({
             "report": report,
             "source_count": len(sources),
             "costs": costs
-        }
+        })
     except Exception as e:
-        logger.error(f"Report generation failed: {str(e)}")
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+        return handle_exception(e, "Report generation")
 
 
 @mcp.tool()
@@ -200,25 +180,17 @@ async def get_research_sources(research_id: str) -> Dict[str, Any]:
     Returns:
         Dict containing the research sources
     """
-    if not hasattr(mcp, "researchers") or research_id not in mcp.researchers:
-        return {"status": "error", "message": "Research ID not found. Please conduct research first."}
+    success, researcher, error = get_researcher_by_id(mcp.researchers, research_id)
+    if not success:
+        return error
     
-    researcher = mcp.researchers[research_id]
     sources = researcher.get_research_sources()
     source_urls = researcher.get_source_urls()
     
-    return {
-        "status": "success",
-        "sources": [
-            {
-                "title": source.get("title", "Unknown"),
-                "url": source.get("url", ""),
-                "content_length": len(source.get("content", ""))
-            }
-            for source in sources
-        ],
+    return create_success_response({
+        "sources": format_sources_for_response(sources),
         "source_urls": source_urls
-    }
+    })
 
 
 @mcp.tool()
@@ -232,16 +204,15 @@ async def get_research_context(research_id: str) -> Dict[str, Any]:
     Returns:
         Dict containing the research context
     """
-    if not hasattr(mcp, "researchers") or research_id not in mcp.researchers:
-        return {"status": "error", "message": "Research ID not found. Please conduct research first."}
+    success, researcher, error = get_researcher_by_id(mcp.researchers, research_id)
+    if not success:
+        return error
     
-    researcher = mcp.researchers[research_id]
     context = researcher.get_research_context()
     
-    return {
-        "status": "success",
+    return create_success_response({
         "context": context
-    }
+    })
 
 
 @mcp.prompt()
@@ -257,25 +228,7 @@ def research_query(topic: str, goal: str, report_format: str = "research_report"
     Returns:
         A formatted prompt for research
     """
-    return f"""
-    Please research the following topic: {topic}
-    
-    Goal: {goal}
-    
-    You have two methods to access web-sourced information:
-    
-    1. Use the "research://{topic}" resource to directly access context about this topic if it exists
-       or if you want to get straight to the information without tracking a research ID.
-       
-    2. Use the conduct_research tool to perform new research and get a research_id for later use.
-       This tool also returns the context directly in its response, which you can use immediately.
-    
-    After getting context, you can:
-    - Use it directly in your response
-    - Use the write_report tool with a custom prompt to generate a structured {report_format}
-    
-    You can also use get_research_sources to view additional details about the information sources.
-    """
+    return create_research_prompt(topic, goal, report_format)
 
 
 def run_server():
