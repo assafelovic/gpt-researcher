@@ -1,6 +1,6 @@
 # GPT Researcher dependencies
 gpt-researcher>=0.12.16
-python-dotenv>=1.0.0
+python-dotenv
 
 # MCP dependencies
 mcp>=1.6.0
