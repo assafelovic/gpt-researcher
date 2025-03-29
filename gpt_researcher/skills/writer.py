@@ -27,7 +27,7 @@ class ReportGenerator:
             "headers": self.researcher.headers,
         }
 
-    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None) -> str:
+    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="") -> str:
         """
         Write a report based on existing headers and relevant contents.
 
@@ -35,6 +35,7 @@ class ReportGenerator:
             existing_headers (list): List of existing headers.
             relevant_written_contents (list): List of relevant written contents.
             ext_context (Optional): External context, if any.
+            custom_prompt (str): Custom prompt for the report.
 
         Returns:
             str: The generated report.
@@ -62,6 +63,7 @@ class ReportGenerator:
 
         report_params = self.research_params.copy()
         report_params["context"] = context
+        report_params["custom_prompt"] = custom_prompt
 
         if self.researcher.report_type == "subtopic_report":
             report_params.update({

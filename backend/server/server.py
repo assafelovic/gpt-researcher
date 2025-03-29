@@ -154,7 +154,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
             "pdf_path": pdf_path
         }
     else:
-        response = { "research_id": research_id, "report": report, "docx_path": docx_path, "pdf_path": pdf_path }
+        response = { "research_id": research_id, "report": "", "docx_path": docx_path, "pdf_path": pdf_path }
 
     return response
 
