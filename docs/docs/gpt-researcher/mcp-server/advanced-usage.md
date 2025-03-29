@@ -2,7 +2,7 @@
 sidebar_position: 2
 ---
 
-# Advanced MCP Server Usage
+# Advanced Usage
 
 This guide covers advanced usage scenarios and configurations for the GPT Researcher MCP Server.
 
@@ -19,10 +19,10 @@ Create a `.env` file with additional configuration options:
 OPENAI_API_KEY=your_openai_api_key
 TAVILY_API_KEY=your_tavily_api_key
 
-# Optional configurations
-DEFAULT_MODEL=gpt-4-turbo  # Default LLM to use
-MAX_RESEARCH_DEPTH=5       # Maximum research depth
-ENABLE_LOGGING=true        # Enable detailed logging
+# Optional configurations assuming using OpenAI
+STRATEGIC_LLM=openai:gpt-4o-mini # Change default to faster reasoning model
+MAX_ITERATIONS=2 # Make the research faster by reducing iterations
+SCRAPER=tavily_extract # For production use, using hosted scraping methods (assuming you use tavily)
 ```
 
 ### Server Configuration File

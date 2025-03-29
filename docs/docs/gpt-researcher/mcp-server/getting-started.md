@@ -2,46 +2,31 @@
 sidebar_position: 1
 ---
 
-# Getting Started with MCP Server
+# Getting Started
 
 The GPT Researcher MCP Server provides Model Context Protocol (MCP) integration for GPT Researcher, allowing AI assistants to perform autonomous, comprehensive web research and generate reports via the MCP protocol.
 
 ## Why GPT Researcher MCP?
 
-While many AI assistants can already access web search tools, GPT Researcher MCP offers significant advantages:
+While many AI apps can access web search tools with MCP, GPT Researcher MCP delivers superior results. Standard search tools return raw results requiring manual filtering, often containing irrelevant sources and wasting context window space.
 
-### Beyond Simple Web Search
+GPT Researcher performs autonomous, comprehensive research - not just search. It intelligently explores and validates multiple sources, focusing only on relevant and up-to-date information. Though slightly slower (30-40 seconds) than standard search, it delivers higher quality information, optimized context, comprehensive results, and better reasoning for LLMs.
 
-Standard web search tools return raw search results that:
-- Require manual filtering by the AI
-- Often include irrelevant or low-quality sources
-- Don't organize information for optimal comprehension
-- Waste valuable context window space with redundant content
+The MCP server exposes the following capabilities to AI assistants:
 
-**GPT Researcher performs autonomous, comprehensive research** - not just search. It:
-- Intelligently explores multiple sources based on relevancy
-- Validates information across sources for reliability
-- Focuses only on the most up-to-date and pertinent information
-- Optimizes content for LLM context windows
-- Structures information for better AI reasoning
+### Resources
+- `research_resource`: Get web resources related to a given task via research.
 
-While it takes slightly longer (30-40 seconds) than a standard web search, it delivers:
+### Primary Tools
 
-1. **Higher quality information**: Only the most reliable and relevant sources
-2. **Better organized context**: Content structured for optimal AI comprehension
-3. **More comprehensive results**: Multi-source research, not just top search hits
-4. **Context optimization**: Intelligently fits within LLM context windows
-5. **Improved reasoning**: Helps AI assistants create better responses and reports
+- `conduct_research`: Performs autonomous web research on a topic, finding the most reliable and relevant information
+- `write_report`: Generate a report based on research results
+- `get_research_sources`: Get the sources used in the research
+- `get_research_context`: Get the full context of the research
 
-The result? LLMs powered by GPT Researcher produce dramatically better responses to research queries, with more accurate, up-to-date, and comprehensive information.
+### Prompts
 
-## Features
-
-- Autonomous web research capabilities through GPT Researcher
-- MCP protocol support for AI assistants like Claude
-- Research report generation in different formats
-- Access to research sources, context, costs, and images
-- Context optimization for different LLM requirements
+- `research_query`: Create a research query prompt
 
 ## Prerequisites
 
@@ -66,11 +51,16 @@ cd mcp-server
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file with your API keys:
-```bash
-OPENAI_API_KEY=your_openai_api_key
-TAVILY_API_KEY=your_tavily_api_key
-```
+3. Set up your environment variables:
+   - Copy the `.env.example` file to create a new file named `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   - Edit the `.env` file and add your API keys and configure other settings:
+   ```bash
+   OPENAI_API_KEY=your_openai_api_key
+   TAVILY_API_KEY=your_tavily_api_key
+   ```
 
 ## Running the MCP Server
 
@@ -90,34 +80,23 @@ mcp run server.py
 
 Once the server is running, you'll see output indicating that the server is ready to accept connections.
 
-## Using with Claude or Other MCP Clients
+## Integrating with Claude
 
-The MCP server exposes the following capabilities to AI assistants:
+There are two primary ways to integrate your MCP server with Claude:
 
-### Resources
-- `research_resource`: Get web resources related to a given task via research.
+1. **[API Integration](./claude-integration)** - For programmatic access through Claude API
+2. **[Desktop Integration](./claude-desktop-integration)** - For using with Claude desktop application on Mac
 
-### Primary Tools
-
-- `conduct_research`: Performs autonomous web research on a topic, finding the most reliable and relevant information
-- `write_report`: Generate a report based on research results
-- `get_research_sources`: Get the sources used in the research
-- `get_research_context`: Get the full context of the research
-
-### Prompts
-
-- `research_query`: Create a research query prompt
+For detailed instructions on each method, follow the links above.
 
 ## Example Usage with Claude
-
-Here's an example of how a user might interact with Claude to use GPT Researcher for time-sensitive, real-time information:
 
 ```
 User: I'm considering investing in NVIDIA. Can you research the current state of the company, recent stock performance, latest product announcements, and analyst opinions?
 
 Claude: I'll help you research NVIDIA for investment purposes. This will take a moment as I conduct comprehensive research to find the most up-to-date information about their stock performance, recent developments, and expert analysis.
 
-[Claude uses conduct_research tool - this takes 30-40 seconds but provides high-quality, real-time information]
+[Claude uses conduct_research tool - this takes 30-40 seconds]
 
 Claude: Based on my research, here's a comprehensive analysis of NVIDIA's current state:
 
@@ -150,54 +129,7 @@ Claude: Based on my research, here's a comprehensive analysis of NVIDIA's curren
 - Dominant in AI GPU market with estimated 80-90% market share
 - Expanding ecosystem through CUDA software platform and industry partnerships
 - Diversifying beyond chips with DGX Cloud, AI software platforms, and automotive solutions
-
-### Alternative Example: Sports Updates
-
 ```
-User: Can you provide me with the latest updates on the English Premier League? I'm particularly interested in the current standings, recent transfers, and any major news about top teams.
-
-Claude: I'll research the latest English Premier League updates for you. This will take a moment as I gather comprehensive information about current standings, recent transfers, and major team news.
-
-[Claude uses conduct_research tool - this takes 30-40 seconds but provides up-to-date sports information]
-
-Claude: Here are the latest updates on the English Premier League (as of my research):
-
-## Current EPL Standings (Top 6)
-1. **Manchester City** - 91 points (Champions)
-2. **Arsenal** - 89 points 
-3. **Liverpool** - 82 points
-4. **Aston Villa** - 68 points (Champions League qualification)
-5. **Tottenham** - 65 points
-6. **Chelsea** - 63 points
-
-## Recent Major Transfers & Rumors
-1. **Confirmed Deals**:
-   - Chelsea signed Tosin Adarabioyo from Fulham on a free transfer
-   - Cole Palmer signed new long-term contract with Chelsea until 2033
-   - Kieran Trippier extended his contract with Newcastle United
-
-2. **Active Transfer Rumors**:
-   - Manchester United pursuing PSG's Manuel Ugarte as midfield reinforcement
-   - Arsenal in advanced talks with Bologna for Riccardo Calafiori
-   - Liverpool showing interest in Anthony Gordon from Newcastle
-   - Chelsea negotiating with Napoli for Victor Osimhen
-
-## Major Recent Developments
-1. **Managerial Changes**:
-   - Ange Postecoglou remains at Tottenham despite Bayern Munich interest
-   - Jurgen Klopp departed Liverpool after nine years, replaced by Arne Slot
-   - Erik ten Hag retained by Manchester United after FA Cup victory
-
-2. **Financial Updates**:
-   - Premier League clubs agreed to reforms to financial rules, replacing Profit and Sustainability Rules (PSR)
-   - Everton's potential takeover by 777 Partners facing regulatory hurdles
-
-3. **2024/25 Season**:
-   - New season scheduled to start on August 17, 2024
-   - Introduction of semi-automated offside technology confirmed
-   - Manchester City entering as defending champions seeking fifth consecutive title
-
-This sports example further demonstrates GPT Researcher's ability to provide real-time information across diverse domains, compiling facts from multiple sources into a comprehensive, well-structured response.
 
 ## Troubleshooting
 
