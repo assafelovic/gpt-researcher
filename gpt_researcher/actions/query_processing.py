@@ -5,6 +5,13 @@ from typing import TYPE_CHECKING, Any, Callable
 import json_repair
 from langchain_core.retrievers import BaseRetriever
 
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
+from ..utils.llm import create_chat_completion
+from ..prompts import generate_search_queries_prompt
+from typing import Any, List, Dict
+from ..config import Config
+import logging
+
 from gpt_researcher.prompts import generate_search_queries_prompt
 from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.logger import get_formatted_logger
@@ -88,7 +95,7 @@ async def generate_sub_queries(
             llm_provider=cfg.STRATEGIC_LLM_PROVIDER,
             max_tokens=None,
             llm_kwargs=cfg.llm_kwargs,
-            reasoning_effort="high",
+            reasoning_effort=ReasoningEfforts.High.value,
             cost_callback=cost_callback,
         )
     except Exception as e:

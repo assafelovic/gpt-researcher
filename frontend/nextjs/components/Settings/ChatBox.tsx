@@ -63,7 +63,7 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBox
 
   return (
     <div>
-      <main className="container" id="form">
+      <main className="static-container" id="form">
         <ResearchForm 
           chatBoxSettings={chatBoxSettings} 
           setChatBoxSettings={setChatBoxSettings}

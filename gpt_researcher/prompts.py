@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import warnings
-
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Any
 
@@ -337,7 +336,10 @@ def generate_search_queries_prompt(
 
     context = [] if context is None else context
 
-    if report_type == ReportType.DetailedReport or report_type == ReportType.SubtopicReport:
+    if (
+        report_type == ReportType.DetailedReport
+        or report_type == ReportType.SubtopicReport
+    ):
         task = f"{parent_query} - {question}"
     else:
         task = question
@@ -416,7 +418,9 @@ eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url webs
     else:
         reference_prompt = """You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."""  # noqa: E501
 
-    tone_prompt: str = f"Write the report using the {tone.name} tone ({tone.value})." if tone else ""
+    tone_prompt: str = (
+        f"Write the report using the {tone.name} tone ({tone.value})." if tone else ""
+    )
 
     default_prompt = PROMPT_GENERATE_REPORT
     custom_prompt: str = os.environ.get("PROMPT_GENERATE_REPORT", "")
@@ -459,7 +463,9 @@ def curate_sources(
     custom_prompt: str = os.environ.get("PROMPT_CURATE_SOURCES", "")
     if custom_prompt:
         try:
-            return custom_prompt.format(query=query, sources=sources, max_results=max_results)
+            return custom_prompt.format(
+                query=query, sources=sources, max_results=max_results
+            )
         except (KeyError, ValueError):
             return default_prompt
 
@@ -481,7 +487,9 @@ def generate_resource_report_prompt(
     Returns:
         str: The resource report prompt for the given question and research summary.
     """
-    report_source = ReportSource(report_source) if isinstance(report_source, str) else report_source
+    report_source = (
+        ReportSource(report_source) if isinstance(report_source, str) else report_source
+    )
     reference_prompt: str = ""
     if report_source == ReportSource.Web:
         reference_prompt = """
@@ -508,7 +516,12 @@ def generate_resource_report_prompt(
         except (KeyError, ValueError):
             return default_prompt
 
-    return default_prompt.format(question=question, context=context, total_words=total_words, reference_prompt=reference_prompt)  # noqa: E501
+    return default_prompt.format(
+        question=question,
+        context=context,
+        total_words=total_words,
+        reference_prompt=reference_prompt,
+    )  # noqa: E501
 
 
 def generate_custom_report_prompt(
@@ -548,11 +561,15 @@ def generate_outline_report_prompt(
     custom_prompt: str = os.environ.get("PROMPT_GENERATE_OUTLINE_REPORT", "")
     if custom_prompt:
         try:
-            return custom_prompt.format(question=question, context=context, total_words=total_words)
+            return custom_prompt.format(
+                question=question, context=context, total_words=total_words
+            )
         except (KeyError, ValueError):
             return default_prompt
 
-    return default_prompt.format(question=question, context=context, total_words=total_words)
+    return default_prompt.format(
+        question=question, context=context, total_words=total_words
+    )
 
 
 def generate_deep_research_prompt(
@@ -595,17 +612,22 @@ Think about where the information in the report came from, and cite your sources
         reference_prompt = """
 You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
 """  # noqa: E501
-    tone_prompt: str = f"Write the report using the {tone.name} tone ({tone.value})." if tone else ""
+    tone_prompt: str = (
+        f"Write the report using the {tone.name} tone ({tone.value})." if tone else ""
+    )
 
-    return os.environ.get("PROMPT_DEEP_RESEARCH", PROMPT_DEEP_RESEARCH).format(
-        question=question,
-        context=context,
-        report_format=report_format,
-        tone=tone_prompt,
-        total_words=total_words,
-        language=language,
-        reference_prompt=reference_prompt,
-    ) + f"\nAssume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')}"
+    return (
+        os.environ.get("PROMPT_DEEP_RESEARCH", PROMPT_DEEP_RESEARCH).format(
+            question=question,
+            context=context,
+            report_format=report_format,
+            tone=tone_prompt,
+            total_words=total_words,
+            language=language,
+            reference_prompt=reference_prompt,
+        )
+        + f"\nAssume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')}"
+    )
 
 
 def get_report_by_type(
@@ -619,7 +641,11 @@ def get_report_by_type(
         ReportType.SubtopicReport: generate_subtopic_report_prompt,
         ReportType.DeepResearch: generate_deep_research_prompt,
     }
-    return report_type_mapping[ReportType.__members__[report_type] if isinstance(report_type, str) else report_type]
+    return report_type_mapping[
+        ReportType.__members__[report_type]
+        if isinstance(report_type, str)
+        else report_type
+    ]
 
 
 def auto_agent_instructions() -> str:
@@ -768,12 +794,18 @@ def generate_draft_titles_prompt(
     if custom_prompt:
         try:
             # Use string formatting with named parameters for template
-            return custom_prompt.format(current_subtopic=current_subtopic, main_topic=main_topic, context=context)
+            return custom_prompt.format(
+                current_subtopic=current_subtopic,
+                main_topic=main_topic,
+                context=context,
+            )
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
 
-    return default_prompt.format(current_subtopic=current_subtopic, main_topic=main_topic, context=context)
+    return default_prompt.format(
+        current_subtopic=current_subtopic, main_topic=main_topic, context=context
+    )
 
 
 def generate_report_introduction(
@@ -840,11 +872,15 @@ def generate_report_conclusion(
     custom_prompt = os.environ.get("PROMPT_GENERATE_REPORT_CONCLUSION", "")
     if custom_prompt:
         try:
-            return custom_prompt.format(query=query, report_content=report_content, language=language)
+            return custom_prompt.format(
+                query=query, report_content=report_content, language=language
+            )
         except (KeyError, ValueError):
             return default_prompt
 
-    return default_prompt.format(query=query, report_content=report_content, language=language)
+    return default_prompt.format(
+        query=query, report_content=report_content, language=language
+    )
 
 
 report_type_mapping: dict[ReportType, Callable[..., str]] = {
@@ -901,9 +937,15 @@ def post_retrieval_processing(
     if custom_prompt:
         try:
             # Use string formatting with named parameters for template
-            return custom_prompt.format(query=query, content=content, processing_instructions=processing_instructions)
+            return custom_prompt.format(
+                query=query,
+                content=content,
+                processing_instructions=processing_instructions,
+            )
         except (KeyError, ValueError):
             # If formatting fails, fall back to default prompt
             return default_prompt
 
-    return default_prompt.format(query=query, content=content, processing_instructions=processing_instructions)
+    return default_prompt.format(
+        query=query, content=content, processing_instructions=processing_instructions
+    )

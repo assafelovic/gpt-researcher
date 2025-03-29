@@ -52,7 +52,7 @@ class BasicReport:
             if isinstance(tone, Tone)
             else Tone.__members__[tone.capitalize()]
         )
-        self.config_path: Path = Path(os.path.normpath(config_path)) if config_path is not None else Path.cwd()
+        self.config_path: Path = Path.cwd() if config_path is None else Path(os.path.normpath(config_path))
         self.config: Config = Config.from_path(self.config_path) if config_path is not None else config if config is not None else Config()
         self.websocket: WebSocket | CustomLogsHandler | None = websocket
         self.headers: dict[str, Any] = {} if headers is None else headers
@@ -60,7 +60,7 @@ class BasicReport:
 
     async def run(self) -> str:
         # Initialize researcher
-        researcher = GPTResearcher(
+        self.gpt_researcher = GPTResearcher(
             query=self.query,
             report_type=self.report_type,
             report_format=self.report_format.value,
@@ -74,15 +74,10 @@ class BasicReport:
             config=self.config
         )
 
-        try:
-            _research_context: str | list[str] = await researcher.conduct_research()
-            report: str = await researcher.write_report(
-                existing_headers=[researcher.headers],
-                relevant_written_contents=researcher.context,
-                external_context=[],
-            )
-            return report
-        except ValueError as e:
-            if "No research data available" in str(e):
-                return "Sorry, I was unable to gather any research data for your query. This could be due to network issues, API failures, or no relevant information being found. Please try again or rephrase your query."
-            raise
+        _research_context: str | list[str] = await self.gpt_researcher.conduct_research()
+        report: str = await self.gpt_researcher.write_report(
+            existing_headers=[self.gpt_researcher.headers],
+            relevant_written_contents=self.gpt_researcher.context,
+            external_context=[],
+        )
+        return report

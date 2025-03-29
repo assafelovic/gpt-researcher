@@ -103,7 +103,7 @@ const InputArea: FC<TInputAreaProps> = ({
       <button
         disabled={disabled}
         type="submit"
-        className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-[linear-gradient(154deg,#1B1B16_23.37%,#565646_91.91%)] disabled:pointer-events-none disabled:opacity-75"
+        className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-purple-500 hover:bg-gradient-to-br hover:from-purple-400/95 hover:via-teal-400/90 hover:to-cyan-500/90 shadow-sm hover:shadow-purple-400/30 hover:shadow-lg transition-all duration-300 disabled:opacity-75 disabled:hover:shadow-none disabled:hover:bg-purple-500/75"
       >
         {disabled && (
           <div className="absolute inset-0 flex items-center justify-center">

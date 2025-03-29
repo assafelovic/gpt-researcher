@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import locale
 import os
-
 from multiprocessing import cpu_count
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar, Union, get_args, get_origin
@@ -20,19 +19,18 @@ from gpt_researcher.prompts import (
     PROMPT_GENERATE_REPORT_INTRODUCTION,
     PROMPT_GENERATE_RESOURCE_REPORT,
     PROMPT_GENERATE_SEARCH_QUERIES,
-    PROMPT_GENERATE_SUBTOPICS,
     PROMPT_GENERATE_SUBTOPIC_REPORT,
+    PROMPT_GENERATE_SUBTOPICS,
     PROMPT_POST_RETRIEVAL_PROCESSING,
 )
 from gpt_researcher.retrievers.utils import get_all_retriever_names
 from gpt_researcher.utils.enum import ReportFormat, ReportSource, ReportType, Tone
 from gpt_researcher.utils.logger import get_formatted_logger
 
-
 if TYPE_CHECKING:
     import logging
 
-    from typing_extensions import Self
+    from typing_extensions import Self  # pyright: ignore[reportMissingModuleSource]
 
 logger: logging.Logger = get_formatted_logger(__name__)
 
@@ -43,7 +41,9 @@ class BaseConfig:
     This class defines the base configuration for GPT Researcher. It provides a structure for managing configuration settings and environment variables.
     """  # noqa: E501
 
-    DEFAULT_PATH: ClassVar[Path] = Path.home().joinpath(".gpt_researcher", "base.json").expanduser().absolute()
+    DEFAULT_PATH: ClassVar[Path] = (
+        Path.home().joinpath(".gpt_researcher", "base.json").expanduser().absolute()
+    )
 
     def __new__(
         cls,
@@ -53,13 +53,17 @@ class BaseConfig:
         obj = super().__new__(cls)
         if config is not None:
             if isinstance(config, cls):
-                cfg_path = Path(os.path.normpath(config.config_path)).expanduser().absolute()
+                cfg_path = (
+                    Path(os.path.normpath(config.config_path)).expanduser().absolute()
+                )
             elif isinstance(config, dict):
                 cfg_path = cls.from_dict(config).config_path
             elif isinstance(config, (os.PathLike, str)):
                 cfg_path = Path(os.path.normpath(config)).expanduser().absolute()
             else:
-                raise ValueError(f"Invalid config type: {config.__class__.__name__}, expected path-like or dict.")
+                raise ValueError(
+                    f"Invalid config type: {config.__class__.__name__}, expected path-like or dict."
+                )
         else:
             cfg_path = cls.DEFAULT_PATH
         for k, v in kwargs.items():
@@ -76,21 +80,37 @@ class BaseConfig:
         self.llm_kwargs: dict[str, Any] = kwargs.pop("llm_kwargs", {})
         self.embedding_kwargs: dict[str, Any] = kwargs.pop("embedding_kwargs", {})
         if isinstance(config, self.__class__):
-            self.config_path = Path(os.path.normpath(config.config_path)).expanduser().absolute()
+            self.config_path = (
+                Path(os.path.normpath(config.config_path)).expanduser().absolute()
+            )
         elif isinstance(config, (os.PathLike, str)):
             self.config_path = Path(os.path.normpath(config)).expanduser().absolute()
         elif isinstance(config, dict):
             config_path = config.get("config_path")
             if config_path is None:
-                self.config_path = Path.home().joinpath(".gpt_researcher", "default.json").expanduser().absolute()
+                self.config_path = (
+                    Path.home()
+                    .joinpath(".gpt_researcher", "default.json")
+                    .expanduser()
+                    .absolute()
+                )
             else:
-                self.config_path = Path(os.path.normpath(config_path)).expanduser().absolute()
+                self.config_path = (
+                    Path(os.path.normpath(config_path)).expanduser().absolute()
+                )
 
         else:
-            self.config_path = Path.home().joinpath(".gpt_researcher", "default.json").expanduser().absolute()
+            self.config_path = (
+                Path.home()
+                .joinpath(".gpt_researcher", "default.json")
+                .expanduser()
+                .absolute()
+            )
 
         config_to_use: dict[str, Any] = {}
-        if not os.path.exists(self.config_path) and not os.path.isfile(self.config_path):
+        if not os.path.exists(self.config_path) and not os.path.isfile(
+            self.config_path
+        ):
             config_to_use = (
                 self.default_config_dict()
                 if config == "default" or config is None
@@ -121,9 +141,13 @@ class BaseConfig:
         config: Self | None = None,
     ) -> Self:
         """Load a configuration from a dictionary."""
-        cur_config_dict: dict[str, Any] = cls().to_dict() if config is None else config.to_dict()
+        cur_config_dict: dict[str, Any] = (
+            cls().to_dict() if config is None else config.to_dict()
+        )
         params_dict = params.to_dict() if isinstance(params, cls) else params
-        assert isinstance(params_dict, dict), f"params_dict must be a dictionary, got {params_dict.__class__.__name__}"
+        assert isinstance(
+            params_dict, dict
+        ), f"params_dict must be a dictionary, got {params_dict.__class__.__name__}"
         cur_config_dict.update(params_dict)
         return cls(None, **cur_config_dict)
 
@@ -138,7 +162,11 @@ class BaseConfig:
 
     def to_dict(self) -> dict[str, Any]:
         """Return the config as a dictionary."""
-        return {k: v for k, v in self.__dict__.items() if not k.startswith("_") and k.upper() == k}
+        return {
+            k: v
+            for k, v in self.__dict__.items()
+            if not k.startswith("_") and k.upper() == k
+        }
 
     def to_json(self) -> str:
         """Return the config as a JSON string."""
@@ -148,7 +176,11 @@ class BaseConfig:
     @classmethod
     def default_config_dict(cls) -> dict[str, Any]:
         """Return the default config as a dictionary."""
-        return {k: v for k, v in cls.__dict__.items() if k == k.upper() and not k.startswith("_")}
+        return {
+            k: v
+            for k, v in cls.__dict__.items()
+            if k == k.upper() and not k.startswith("_")
+        }
 
     @classmethod
     def _create_config_dict(
@@ -164,22 +196,34 @@ class BaseConfig:
         if isinstance(config, dict):
             config_dict = config
         elif isinstance(config, (os.PathLike, str)):
-            config_path_obj: Path = Path(os.path.expandvars(os.path.normpath(config))).absolute()
+            config_path_obj: Path = Path(
+                os.path.expandvars(os.path.normpath(config))
+            ).absolute()
             if not config_path_obj.exists():
-                config_path_obj = Path.home().joinpath(".gpt_researcher", f"{config_path_obj.stem}.json")
+                config_path_obj = Path.home().joinpath(
+                    ".gpt_researcher", f"{config_path_obj.stem}.json"
+                )
                 if not config_path_obj.exists():
-                    logger.warning(f"Warning: Configuration not found at '{config_path_obj}'. Using default configuration.")  # noqa: E501
+                    logger.warning(
+                        f"Warning: Configuration not found at '{config_path_obj}'. Using default configuration."
+                    )  # noqa: E501
                     if not config_path_obj.suffix.casefold().endswith(".json"):
-                        logger.warning(f"Did you mean: '{config_path_obj.with_suffix('.json')}'?")
+                        logger.warning(
+                            f"Did you mean: '{config_path_obj.with_suffix('.json')}'?"
+                        )
                     return cls.default_config_dict()
             try:
                 config_dict: dict[str, Any] = json.loads(config_path_obj.read_text())
             except Exception as e:
-                logger.exception(f"Error loading config from path '{config_path_obj}': {e.__class__.__name__}: {e}")
+                logger.exception(
+                    f"Error loading config from path '{config_path_obj}': {e.__class__.__name__}: {e}"
+                )
                 logger.warning("Using default configuration.")
                 return cls.default_config_dict()
         else:
-            raise ValueError(f"Invalid config type: {config.__class__.__name__}, expected path-like or dict.")
+            raise ValueError(
+                f"Invalid config type: {config.__class__.__name__}, expected path-like or dict."
+            )
 
         config_dict.update(cls.default_config_dict())  # type: ignore[arg-type]
         return config_dict
@@ -225,11 +269,17 @@ class BaseConfig:
         retriever_str: str,
     ) -> list[str]:
         """Parse the retriever string into a list of retrievers and validate them."""
-        retrievers: list[str] = [retriever.strip() for retriever in retriever_str.split(",")]
+        retrievers: list[str] = [
+            retriever.strip() for retriever in retriever_str.split(",")
+        ]
         valid_retrievers: list[str] = get_all_retriever_names()
-        invalid_retrievers: list[str] = [r for r in retrievers if r not in valid_retrievers]
+        invalid_retrievers: list[str] = [
+            r for r in retrievers if r not in valid_retrievers
+        ]
         if invalid_retrievers:
-            raise ValueError(f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. Valid options are: {', '.join(valid_retrievers)}.")  # noqa: E501
+            raise ValueError(
+                f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. Valid options are: {', '.join(valid_retrievers)}."
+            )  # noqa: E501
         return retrievers
 
     @classmethod
@@ -254,7 +304,9 @@ class BaseConfig:
                         return cls.convert_env_value(key, env_value, arg)
                     except ValueError:
                         continue
-            raise ValueError(f"Cannot convert env value '{env_value}' to any of arg types `{args}` for key '{key}'")
+            raise ValueError(
+                f"Cannot convert env value '{env_value}' to any of arg types `{args}` for key '{key}'"
+            )
 
         if type_hint in (bool, "bool"):
             return env_value.casefold() in ("true", "1", "yes", "on", "y")
@@ -380,12 +432,16 @@ class Config(BaseConfig):
         PROMPT_POST_RETRIEVAL_PROCESSING: The prompt for post-retrieval processing.
     """  # noqa: E501
 
-    DEFAULT_PATH: ClassVar[Path] = Path.home().joinpath(".gpt_researcher", "config.json").expanduser().absolute()
+    DEFAULT_PATH: ClassVar[Path] = (
+        Path.home().joinpath(".gpt_researcher", "config.json").expanduser().absolute()
+    )
 
     AGENT_ROLE: str = os.environ.get("AGENT_ROLE", "")
     BROWSE_CHUNK_MAX_LENGTH: int = int(os.environ.get("BROWSE_CHUNK_MAX_LENGTH", 8192))
     CONFIG_DIR: str = os.path.join(os.path.dirname(__file__), "variables")
-    CURATE_SOURCES: bool = bool(str(os.environ.get("CURATE_SOURCES", False)).casefold() == "true")
+    CURATE_SOURCES: bool = bool(
+        str(os.environ.get("CURATE_SOURCES", False)).casefold() == "true"
+    )
     DOC_PATH: str = os.environ.get("DOC_PATH", "./my-docs")
     DEEP_RESEARCH_CONCURRENCY: int = int(os.environ.get("DEEP_RESEARCH_CONCURRENCY", 4))
     DEEP_RESEARCH_DEPTH: int = int(os.environ.get("DEEP_RESEARCH_DEPTH", 2))
@@ -400,7 +456,9 @@ class Config(BaseConfig):
         if "," in value
         else [item.strip() for item in value.split(",") if item.strip()]
     )(str(os.environ.get("EMBEDDING_FALLBACK_MODELS", "") or "").strip())
-    EMBEDDING_KWARGS: dict[str, Any] = json.loads(os.environ.get("EMBEDDING_KWARGS", "{}"))
+    EMBEDDING_KWARGS: dict[str, Any] = json.loads(
+        os.environ.get("EMBEDDING_KWARGS", "{}")
+    )
     # FALLBACK_MODELS is a list of free LLM fallback model identifiers.
     # Users can specify this as a JSON-encoded list (e.g., '["model1", "model2"]') or as a comma-separated string (e.g., "model1, model2").  # noqa: E501
     EXCLUDED_DOMAINS: list[str] = (
@@ -422,70 +480,147 @@ class Config(BaseConfig):
     FAST_LLM_PROVIDER: str = os.environ.get("FAST_LLM_PROVIDER", "groq")
     FAST_LLM_TEMPERATURE: float = float(os.environ.get("FAST_LLM_TEMPERATURE", 0.15))
     FAST_TOKEN_LIMIT: int = int(os.environ.get("FAST_TOKEN_LIMIT", 32768))
-    LANGCHAIN_TRACING_V2: bool = bool(str(os.environ.get("LANGCHAIN_TRACING_V2", False)).casefold() == "true")
-    LANGUAGE: str = os.environ.get("LANGUAGE", (locale.getdefaultlocale()[0] or "en").split("_")[0])
+    LANGCHAIN_TRACING_V2: bool = bool(
+        str(os.environ.get("LANGCHAIN_TRACING_V2", False)).casefold() == "true"
+    )
+    LANGUAGE: str = os.environ.get(
+        "LANGUAGE", (locale.getdefaultlocale()[0] or "en").split("_")[0]
+    )
     MAX_ITERATIONS: int = int(os.environ.get("MAX_ITERATIONS", 4))
     MAX_SCRAPER_WORKERS: int = int(os.environ.get("MAX_SCRAPER_WORKERS", 15))
-    MAX_SEARCH_RESULTS_PER_QUERY: int = int(os.environ.get("MAX_SEARCH_RESULTS_PER_QUERY", 5))
+    MAX_SEARCH_RESULTS_PER_QUERY: int = int(
+        os.environ.get("MAX_SEARCH_RESULTS_PER_QUERY", 5)
+    )
     MAX_SOURCES: int = int(os.environ.get("MAX_SOURCES", 10))
     MAX_URLS: int = int(os.environ.get("MAX_URLS", 10))
     MAX_SUBTOPICS: int = int(os.environ.get("MAX_SUBTOPICS", 3))
-    MAX_LINK_EXPLORATION_DEPTH: int = int(os.environ.get("MAX_LINK_EXPLORATION_DEPTH", 2))
-    MEMORY_BACKEND: ReportSource = ReportSource.__members__[os.environ.get("MEMORY_BACKEND", ReportSource.Local.name) or ReportSource.Local.name]  # noqa: E501
+    MAX_LINK_EXPLORATION_DEPTH: int = int(
+        os.environ.get("MAX_LINK_EXPLORATION_DEPTH", 2)
+    )
+    MEMORY_BACKEND: ReportSource = ReportSource.__members__[
+        os.environ.get("MEMORY_BACKEND", ReportSource.Local.name)
+        or ReportSource.Local.name
+    ]  # noqa: E501
     QUERY_DOMAINS: list[str] = str(os.environ.get("QUERY_DOMAINS", "")).split(",")
-    REPORT_FORMAT: ReportFormat = ReportFormat.__members__[os.environ.get("REPORT_FORMAT", ReportFormat.APA.name) or ReportFormat.APA.name]  # noqa: E501
-    REPORT_SOURCE: ReportSource = ReportSource.__members__[os.environ.get("REPORT_SOURCE", ReportSource.Web.name) or ReportSource.Web.name]  # noqa: E501
-    REPORT_TYPE: ReportType = ReportType.__members__[os.environ.get("REPORT_TYPE", ReportType.ResearchReport.name) or ReportType.ResearchReport.name]  # noqa: E501
+    REPORT_FORMAT: ReportFormat = ReportFormat.__members__[
+        os.environ.get("REPORT_FORMAT", ReportFormat.APA.name) or ReportFormat.APA.name
+    ]  # noqa: E501
+    REPORT_SOURCE: ReportSource = ReportSource.__members__[
+        os.environ.get("REPORT_SOURCE", ReportSource.Web.name) or ReportSource.Web.name
+    ]  # noqa: E501
+    REPORT_TYPE: ReportType = ReportType.__members__[
+        os.environ.get("REPORT_TYPE", ReportType.ResearchReport.name)
+        or ReportType.ResearchReport.name
+    ]  # noqa: E501
     SIMILARITY_THRESHOLD: float = float(os.environ.get("SIMILARITY_THRESHOLD", 0.42))
-    SMART_LLM: str = os.environ.get("SMART_LLM", "litellm:openrouter/google/gemini-2.0-pro-exp-02-05:free")
-    SMART_LLM_MODEL: str = os.environ.get("SMART_LLM_MODEL", "openrouter/google/gemini-2.0-pro-exp-02-05:free")
+    SMART_LLM: str = os.environ.get(
+        "SMART_LLM", "litellm:openrouter/google/gemini-2.0-pro-exp-02-05:free"
+    )
+    SMART_LLM_MODEL: str = os.environ.get(
+        "SMART_LLM_MODEL", "openrouter/google/gemini-2.0-pro-exp-02-05:free"
+    )
     SMART_LLM_PROVIDER: str = os.environ.get("SMART_LLM_PROVIDER", "litellm")
     SMART_LLM_TEMPERATURE: float = float(os.environ.get("SMART_LLM_TEMPERATURE", 0.15))
     SMART_TOKEN_LIMIT: int = int(os.environ.get("SMART_TOKEN_LIMIT", 4000))
-    STRATEGIC_LLM: str = os.environ.get("STRATEGIC_LLM", "litellm:openrouter/google/gemini-2.0-pro-exp-02-05:free")
-    STRATEGIC_LLM_MODEL: str = os.environ.get("STRATEGIC_LLM_MODEL", "openrouter/google/gemini-2.0-pro-exp-02-05:free")
+    STRATEGIC_LLM: str = os.environ.get(
+        "STRATEGIC_LLM", "litellm:openrouter/google/gemini-2.0-pro-exp-02-05:free"
+    )
+    STRATEGIC_LLM_MODEL: str = os.environ.get(
+        "STRATEGIC_LLM_MODEL", "openrouter/google/gemini-2.0-pro-exp-02-05:free"
+    )
     STRATEGIC_LLM_PROVIDER: str = os.environ.get("STRATEGIC_LLM_PROVIDER", "litellm")
-    STRATEGIC_LLM_TEMPERATURE: float = float(os.environ.get("STRATEGIC_LLM_TEMPERATURE", 0.4))
+    STRATEGIC_LLM_TEMPERATURE: float = float(
+        os.environ.get("STRATEGIC_LLM_TEMPERATURE", 0.4)
+    )
     STRATEGIC_TOKEN_LIMIT: int = int(os.environ.get("STRATEGIC_TOKEN_LIMIT", 4000))
     SUMMARY_TOKEN_LIMIT: int = int(os.environ.get("SUMMARY_TOKEN_LIMIT", 700))
     TEMPERATURE: float = STRATEGIC_LLM_TEMPERATURE
-    TONE: Tone = Tone.__members__.get(os.environ.get("TONE", "Objective").upper(), Tone.Objective)
+    TONE: Tone = Tone.__members__.get(
+        os.environ.get("TONE", "Objective").upper(), Tone.Objective
+    )
     TOTAL_WORDS: int = int(os.environ.get("TOTAL_WORDS", 1200))
-    USER_AGENT: str = os.environ.get("USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0")  # noqa: E501
+    USER_AGENT: str = os.environ.get(
+        "USER_AGENT",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
+    )  # noqa: E501
     # alternatively: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"  # noqa: E501
-    USE_FALLBACKS: bool = bool(str(os.environ.get("USE_FALLBACKS", True)).casefold() == "true")
+    USE_FALLBACKS: bool = bool(
+        str(os.environ.get("USE_FALLBACKS", True)).casefold() == "true"
+    )
     VERBOSE: bool = bool(str(os.environ.get("VERBOSE", True)).casefold() == "true")
 
     # Scraper configuration
     SCRAPER: str = os.environ.get("SCRAPER", "bs")
-    SCRAPER_TIMEOUT: int = int(os.environ.get("SCRAPER_TIMEOUT", 10))  # TODO: add to all the scrapers
-    SCRAPER_MAX_WORKERS: int = int(os.environ.get("SCRAPER_MAX_WORKERS", cpu_count() * 2))  # TODO: add to all the scrapers
-    SCRAPER_MIN_CONTENT_LENGTH: int = int(os.environ.get("SCRAPER_MIN_CONTENT_LENGTH", 100))  # TODO: add to all the scrapers
+    SCRAPER_TIMEOUT: int = int(
+        os.environ.get("SCRAPER_TIMEOUT", 10)
+    )  # TODO: add to all the scrapers
+    SCRAPER_MAX_WORKERS: int = int(
+        os.environ.get("SCRAPER_MAX_WORKERS", cpu_count() * 2)
+    )  # TODO: add to all the scrapers
+    SCRAPER_MIN_CONTENT_LENGTH: int = int(
+        os.environ.get("SCRAPER_MIN_CONTENT_LENGTH", 100)
+    )  # TODO: add to all the scrapers
 
     # Deep research configuration
     MAX_CONTEXT_WORDS: int = int(os.environ.get("MAX_CONTEXT_WORDS", 25000))
     DEEP_RESEARCH_NUM_QUERIES: int = int(os.environ.get("DEEP_RESEARCH_NUM_QUERIES", 3))
-    DEEP_RESEARCH_NUM_LEARNINGS: int = int(os.environ.get("DEEP_RESEARCH_NUM_LEARNINGS", 3))
+    DEEP_RESEARCH_NUM_LEARNINGS: int = int(
+        os.environ.get("DEEP_RESEARCH_NUM_LEARNINGS", 3)
+    )
 
     # Retriever configuration
-    RETRIEVER: str = os.environ.get("RETRIEVER", "tavily")  # TODO: add to all the retrievers
-    RETRIEVER_TIMEOUT: int = int(os.environ.get("RETRIEVER_TIMEOUT", 10))  # TODO: add to all the retrievers
+    RETRIEVER: str = os.environ.get(
+        "RETRIEVER", "tavily"
+    )  # TODO: add to all the retrievers
+    RETRIEVER_TIMEOUT: int = int(
+        os.environ.get("RETRIEVER_TIMEOUT", 10)
+    )  # TODO: add to all the retrievers
 
-    POST_RETRIEVAL_PROCESSING_INSTRUCTIONS: str = os.environ.get("POST_RETRIEVAL_PROCESSING_INSTRUCTIONS", "")
-    PROMPT_GENERATE_SEARCH_QUERIES: str = os.environ.get("PROMPT_GENERATE_SEARCH_QUERIES", PROMPT_GENERATE_SEARCH_QUERIES)  # noqa: E501
-    PROMPT_GENERATE_REPORT: str = os.environ.get("PROMPT_GENERATE_REPORT", PROMPT_GENERATE_REPORT)
-    PROMPT_CURATE_SOURCES: str = os.environ.get("PROMPT_CURATE_SOURCES", PROMPT_CURATE_SOURCES)
-    PROMPT_GENERATE_RESOURCE_REPORT: str = os.environ.get("PROMPT_GENERATE_RESOURCE_REPORT", PROMPT_GENERATE_RESOURCE_REPORT)  # noqa: E501
-    PROMPT_GENERATE_CUSTOM_REPORT: str = os.environ.get("PROMPT_GENERATE_CUSTOM_REPORT", PROMPT_GENERATE_CUSTOM_REPORT)
-    PROMPT_GENERATE_OUTLINE_REPORT: str = os.environ.get("PROMPT_GENERATE_OUTLINE_REPORT", PROMPT_GENERATE_OUTLINE_REPORT)  # noqa: E501
-    PROMPT_AUTO_AGENT_INSTRUCTIONS: str = os.environ.get("PROMPT_AUTO_AGENT_INSTRUCTIONS", PROMPT_AUTO_AGENT_INSTRUCTIONS)  # noqa: E501
-    PROMPT_CONDENSE_INFORMATION: str = os.environ.get("PROMPT_CONDENSE_INFORMATION", PROMPT_CONDENSE_INFORMATION)
-    PROMPT_GENERATE_SUBTOPICS: str = os.environ.get("PROMPT_GENERATE_SUBTOPICS", PROMPT_GENERATE_SUBTOPICS)
-    PROMPT_GENERATE_SUBTOPIC_REPORT: str = os.environ.get("PROMPT_GENERATE_SUBTOPIC_REPORT", PROMPT_GENERATE_SUBTOPIC_REPORT)  # noqa: E501
-    PROMPT_GENERATE_DRAFT_TITLES: str = os.environ.get("PROMPT_GENERATE_DRAFT_TITLES", PROMPT_GENERATE_DRAFT_TITLES)
-    PROMPT_GENERATE_REPORT_INTRODUCTION: str = os.environ.get("PROMPT_GENERATE_REPORT_INTRODUCTION", PROMPT_GENERATE_REPORT_INTRODUCTION)  # noqa: E501
-    PROMPT_GENERATE_REPORT_CONCLUSION: str = os.environ.get("PROMPT_GENERATE_REPORT_CONCLUSION", PROMPT_GENERATE_REPORT_CONCLUSION)  # noqa: E501
-    PROMPT_POST_RETRIEVAL_PROCESSING: str = os.environ.get("PROMPT_POST_RETRIEVAL_PROCESSING", PROMPT_POST_RETRIEVAL_PROCESSING)  # noqa: E501
+    POST_RETRIEVAL_PROCESSING_INSTRUCTIONS: str = os.environ.get(
+        "POST_RETRIEVAL_PROCESSING_INSTRUCTIONS", ""
+    )
+    PROMPT_GENERATE_SEARCH_QUERIES: str = os.environ.get(
+        "PROMPT_GENERATE_SEARCH_QUERIES", PROMPT_GENERATE_SEARCH_QUERIES
+    )  # noqa: E501
+    PROMPT_GENERATE_REPORT: str = os.environ.get(
+        "PROMPT_GENERATE_REPORT", PROMPT_GENERATE_REPORT
+    )
+    PROMPT_CURATE_SOURCES: str = os.environ.get(
+        "PROMPT_CURATE_SOURCES", PROMPT_CURATE_SOURCES
+    )
+    PROMPT_GENERATE_RESOURCE_REPORT: str = os.environ.get(
+        "PROMPT_GENERATE_RESOURCE_REPORT", PROMPT_GENERATE_RESOURCE_REPORT
+    )  # noqa: E501
+    PROMPT_GENERATE_CUSTOM_REPORT: str = os.environ.get(
+        "PROMPT_GENERATE_CUSTOM_REPORT", PROMPT_GENERATE_CUSTOM_REPORT
+    )
+    PROMPT_GENERATE_OUTLINE_REPORT: str = os.environ.get(
+        "PROMPT_GENERATE_OUTLINE_REPORT", PROMPT_GENERATE_OUTLINE_REPORT
+    )  # noqa: E501
+    PROMPT_AUTO_AGENT_INSTRUCTIONS: str = os.environ.get(
+        "PROMPT_AUTO_AGENT_INSTRUCTIONS", PROMPT_AUTO_AGENT_INSTRUCTIONS
+    )  # noqa: E501
+    PROMPT_CONDENSE_INFORMATION: str = os.environ.get(
+        "PROMPT_CONDENSE_INFORMATION", PROMPT_CONDENSE_INFORMATION
+    )
+    PROMPT_GENERATE_SUBTOPICS: str = os.environ.get(
+        "PROMPT_GENERATE_SUBTOPICS", PROMPT_GENERATE_SUBTOPICS
+    )
+    PROMPT_GENERATE_SUBTOPIC_REPORT: str = os.environ.get(
+        "PROMPT_GENERATE_SUBTOPIC_REPORT", PROMPT_GENERATE_SUBTOPIC_REPORT
+    )  # noqa: E501
+    PROMPT_GENERATE_DRAFT_TITLES: str = os.environ.get(
+        "PROMPT_GENERATE_DRAFT_TITLES", PROMPT_GENERATE_DRAFT_TITLES
+    )
+    PROMPT_GENERATE_REPORT_INTRODUCTION: str = os.environ.get(
+        "PROMPT_GENERATE_REPORT_INTRODUCTION", PROMPT_GENERATE_REPORT_INTRODUCTION
+    )  # noqa: E501
+    PROMPT_GENERATE_REPORT_CONCLUSION: str = os.environ.get(
+        "PROMPT_GENERATE_REPORT_CONCLUSION", PROMPT_GENERATE_REPORT_CONCLUSION
+    )  # noqa: E501
+    PROMPT_POST_RETRIEVAL_PROCESSING: str = os.environ.get(
+        "PROMPT_POST_RETRIEVAL_PROCESSING", PROMPT_POST_RETRIEVAL_PROCESSING
+    )  # noqa: E501
 
     def __init__(
         self,
@@ -514,7 +649,9 @@ class Config(BaseConfig):
                 msg = "Set EMBEDDING = '<embedding_provider>:<embedding_model>' Eg 'openai:text-embedding-3-large'"
                 raise ValueError(msg)
             try:
-                self.EMBEDDING_PROVIDER, self.EMBEDDING_MODEL = self.EMBEDDING.split(":", 1)
+                self.EMBEDDING_PROVIDER, self.EMBEDDING_MODEL = self.EMBEDDING.split(
+                    ":", 1
+                )
             except ValueError:
                 msg = "Set EMBEDDING = '<embedding_provider>:<embedding_model>' Eg 'openai:text-embedding-3-large'"
                 raise ValueError(msg)  # noqa: B904
@@ -523,31 +660,45 @@ class Config(BaseConfig):
         try:
             self.FAST_LLM_PROVIDER, self.FAST_LLM_MODEL = self.FAST_LLM.split(":", 1)
         except ValueError:
-            logger.error("FAST_LLM not setup correctly. Format: '<llm_provider>:<llm_model>' e.g. 'openai:gpt-4o-mini'")
+            logger.error(
+                "FAST_LLM not setup correctly. Format: '<llm_provider>:<llm_model>' e.g. 'openai:gpt-4o-mini'"
+            )
             self.FAST_LLM_PROVIDER = self.__class__.FAST_LLM_PROVIDER
             self.FAST_LLM_MODEL = self.__class__.FAST_LLM_MODEL
 
         # SMART_LLM
         try:
-            self.SMART_LLM_PROVIDER, self.SMART_LLM_MODEL = self.STRATEGIC_LLM.split(":", 1)
+            self.SMART_LLM_PROVIDER, self.SMART_LLM_MODEL = self.STRATEGIC_LLM.split(
+                ":", 1
+            )
         except ValueError:
-            logger.error("STRATEGIC_LLM not setup correctly. Format: '<llm_provider>:<llm_model>' e.g. 'openai:gpt-4o-mini'")  # noqa: E501
+            logger.error(
+                "STRATEGIC_LLM not setup correctly. Format: '<llm_provider>:<llm_model>' e.g. 'openai:gpt-4o-mini'"
+            )  # noqa: E501
             self.SMART_LLM_PROVIDER = self.__class__.SMART_LLM_PROVIDER
             self.SMART_LLM_MODEL = self.__class__.SMART_LLM_MODEL
 
         # STRATEGIC_LLM
         try:
-            self.STRATEGIC_LLM_PROVIDER, self.STRATEGIC_LLM_MODEL = self.STRATEGIC_LLM.split(":", 1)
+            self.STRATEGIC_LLM_PROVIDER, self.STRATEGIC_LLM_MODEL = (
+                self.STRATEGIC_LLM.split(":", 1)
+            )
         except ValueError:
-            logger.error("STRATEGIC_LLM not setup correctly. Format: '<llm_provider>:<llm_model>' e.g. 'openai:gpt-4o-mini'")  # noqa: E501
+            logger.error(
+                "STRATEGIC_LLM not setup correctly. Format: '<llm_provider>:<llm_model>' e.g. 'openai:gpt-4o-mini'"
+            )  # noqa: E501
             self.STRATEGIC_LLM_PROVIDER = self.__class__.STRATEGIC_LLM_PROVIDER
             self.STRATEGIC_LLM_MODEL = self.__class__.STRATEGIC_LLM_MODEL
 
     def _setup_fallback_models(self) -> None:
         if not self.FALLBACK_MODELS:
             from llm_fallbacks.config import FREE_MODELS
+
             for model_name, model_spec in FREE_MODELS:
-                if str(model_spec.get("mode", "chat") or "chat").strip().casefold() != "chat":
+                if (
+                    str(model_spec.get("mode", "chat") or "chat").strip().casefold()
+                    != "chat"
+                ):
                     continue
                 provider = model_spec["litellm_provider"]  # pyright: ignore[reportTypedDictNotRequiredAccess]
                 self.FALLBACK_MODELS.append(f"litellm:{provider}/{model_name}")
@@ -556,9 +707,12 @@ class Config(BaseConfig):
 
         if not self.EMBEDDING_FALLBACK_MODELS:
             from llm_fallbacks.config import ALL_EMBEDDING_MODELS
+
             for model_name, model_spec in ALL_EMBEDDING_MODELS:
                 provider = model_spec["litellm_provider"]  # pyright: ignore[reportTypedDictNotRequiredAccess]
-                self.EMBEDDING_FALLBACK_MODELS.append(f"litellm:{provider}/{model_name}")
+                self.EMBEDDING_FALLBACK_MODELS.append(
+                    f"litellm:{provider}/{model_name}"
+                )
         else:
             self.EMBEDDING_FALLBACK_MODELS = list(self.EMBEDDING_FALLBACK_MODELS)
 
@@ -568,7 +722,9 @@ class Config(BaseConfig):
         configs: list[str] = ["default"]
         configs.extend(
             file.stem
-            for file in Path(os.path.expandvars(os.path.normpath(cls.CONFIG_DIR))).absolute().iterdir()
+            for file in Path(os.path.expandvars(os.path.normpath(cls.CONFIG_DIR)))
+            .absolute()
+            .iterdir()
             if file.suffix.casefold() == ".json"  # Remove .json extension
         )
         return configs
@@ -636,7 +792,10 @@ class Settings(BaseConfig):
         ZENML_API_KEY: API key for ZenML services.
 
     """
-    BASE_PATH: ClassVar[Path] = Path.home().joinpath(".gpt_researcher", "settings.json").expanduser().absolute()
+
+    BASE_PATH: ClassVar[Path] = (
+        Path.home().joinpath(".gpt_researcher", "settings.json").expanduser().absolute()
+    )
 
     AI21_API_KEY: str = os.environ.get("AI21_API_KEY", "")
     ANTHROPIC_API_KEY: str = os.environ.get("ANTHROPIC_API_KEY", "")
@@ -658,7 +817,9 @@ class Settings(BaseConfig):
     GITLAB_TOKEN: str = os.environ.get("GITLAB_TOKEN", "")
     GLAMA_API_KEY: str = os.environ.get("GLAMA_API_KEY", "")
     GOOGLE_API_KEY: str = os.environ.get("GOOGLE_API_KEY", "")
-    GOOGLE_APPLICATION_CREDENTIALS: str = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "")
+    GOOGLE_APPLICATION_CREDENTIALS: str = os.environ.get(
+        "GOOGLE_APPLICATION_CREDENTIALS", ""
+    )
     GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
     HUGGINGFACE_ACCESS_TOKEN: str = os.environ.get("HUGGINGFACE_ACCESS_TOKEN", "")
     JINA_API_KEY: str = os.environ.get("JINA_API_KEY", "")

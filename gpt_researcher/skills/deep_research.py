@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
-
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from gpt_researcher.actions.query_processing import get_search_results
-from gpt_researcher.utils.enum import ReportSource, ReportType
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
+from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.llm import create_chat_completion
 
 if TYPE_CHECKING:
     import logging
-
     from pathlib import Path
 
     from backend.server.server_utils import CustomLogsHandler
@@ -47,7 +47,9 @@ def trim_context_to_word_limit(
     for item in reversed(context_list):
         words: int = count_words(item)
         if total_words + words <= max_words:
-            trimmed_context.insert(0, item)  # Insert at start to maintain original order
+            trimmed_context.insert(
+                0, item
+            )  # Insert at start to maintain original order
             total_words += words
         else:
             break
@@ -63,7 +65,9 @@ class ResearchProgress:
     ):
         self.current_depth: int = 1  # Start from 1 and increment up to total_depth
         self.total_depth: int = total_depth
-        self.current_breadth: int = 0  # Start from 0 and count up to total_breadth as queries complete
+        self.current_breadth: int = (
+            0  # Start from 0 and count up to total_breadth as queries complete
+        )
         self.total_breadth: int = total_breadth
         self.current_query: str | None = None
         self.total_queries: int = 0
@@ -77,8 +81,14 @@ class DeepResearchSkill:
     ):
         self.researcher: GPTResearcher = researcher
         self.breadth: int = researcher.cfg.DEEP_RESEARCH_BREADTH
-        self.concurrency_limit: int = getattr(researcher.cfg, "DEEP_RESEARCH_CONCURRENCY", 2)
-        self.config_path: Path | None = researcher.cfg.config_path if hasattr(researcher.cfg, "config_path") else None
+        self.concurrency_limit: int = getattr(
+            researcher.cfg, "DEEP_RESEARCH_CONCURRENCY", 2
+        )
+        self.config_path: Path | None = (
+            researcher.cfg.config_path
+            if hasattr(researcher.cfg, "config_path")
+            else None
+        )
         self.context: list[str] = []  # Track all context
         self.depth: int = researcher.cfg.DEEP_RESEARCH_DEPTH
         self.headers: dict[str, str] = researcher.headers or {}
@@ -99,7 +109,7 @@ class DeepResearchSkill:
         """Generate SERP queries for research."""
         if num_queries is None:
             num_queries = self.num_queries
-            
+
         messages: list[dict[str, str]] = [
             {
                 "role": "system",
@@ -145,9 +155,11 @@ class DeepResearchSkill:
         """Generate follow-up questions to clarify research direction."""
         if num_questions is None:
             num_questions = self.num_queries
-            
+
         # Get initial search results to inform query generation
-        search_results: list[dict[str, Any]] = await get_search_results(query, self.researcher.retrievers[0])
+        search_results: list[dict[str, Any]] = await get_search_results(
+            query, self.researcher.retrievers[0]
+        )
         logger.info(f"Initial web knowledge obtained: {len(search_results)} results")
 
         # Get current time for context
@@ -177,7 +189,7 @@ Format each question on a new line starting with 'Question: '""",
             messages=messages,
             llm_provider=self.researcher.cfg.STRATEGIC_LLM_PROVIDER,
             model=self.researcher.cfg.STRATEGIC_LLM_MODEL,
-            reasoning_effort="medium",
+            reasoning_effort=ReasoningEfforts.High.value,
             temperature=0.4,
         )
 
@@ -197,9 +209,12 @@ Format each question on a new line starting with 'Question: '""",
         """Process research results to extract learnings and follow-up questions."""
         if num_learnings is None:
             num_learnings = self.num_learnings
-            
+
         messages: list[dict[str, str]] = [
-            {"role": "system", "content": "You are an expert researcher analyzing search results."},
+            {
+                "role": "system",
+                "content": "You are an expert researcher analyzing search results.",
+            },
             {
                 "role": "user",
                 "content": f"Given the following research results for the query '{query}', extract key learnings and suggest follow-up questions. For each learning, include a citation to the source URL if available. Format each learning as 'Learning [source_url]: <insight>' and each question as 'Question: <question>':\n\n{context}",
@@ -211,7 +226,7 @@ Format each question on a new line starting with 'Question: '""",
             llm_provider=self.researcher.cfg.STRATEGIC_LLM_PROVIDER,
             model=self.researcher.cfg.STRATEGIC_LLM_MODEL,
             temperature=0.4,
-            reasoning_effort="high",
+            reasoning_effort=ReasoningEfforts.High.value,
             max_tokens=1000,
         )
 
@@ -234,11 +249,14 @@ Format each question on a new line starting with 'Question: '""",
                 else:
                     # Try to find URL in the line itself
                     url_match: re.Match[str] | None = re.search(
-                        r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", line
+                        r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+                        line,
                     )
                     if url_match:
                         url = url_match.group(0)
-                        learning = line.replace(url, "").replace("Learning:", "").strip()
+                        learning = (
+                            line.replace(url, "").replace("Learning:", "").strip()
+                        )
                         learnings.append(learning)
                         citations[learning] = url
                     else:
@@ -276,7 +294,9 @@ Format each question on a new line starting with 'Question: '""",
             on_progress(progress)
 
         # Generate search queries
-        serp_queries: list[dict[str, str]] = await self.generate_search_queries(query, num_queries=breadth)
+        serp_queries: list[dict[str, str]] = await self.generate_search_queries(
+            query, num_queries=breadth
+        )
         progress.total_queries = len(serp_queries)
 
         all_learnings: list[str] = learnings.copy()
@@ -319,7 +339,7 @@ Format each question on a new line starting with 'Question: '""",
                     results: dict[str, Any] = await self.process_research_results(
                         query=serp_query["query"],
                         context="\n".join(context),
-                        num_learnings=self.num_learnings
+                        num_learnings=self.num_learnings,
                     )
 
                     # Update progress
@@ -339,11 +359,15 @@ Format each question on a new line starting with 'Question: '""",
                     }
 
                 except Exception as e:
-                    logger.error(f"Error processing query '{serp_query['query']}': {str(e)}")
+                    logger.error(
+                        f"Error processing query '{serp_query['query']}': {str(e)}"
+                    )
                     return None
 
         # Process queries concurrently with limit
-        tasks: list[Coroutine[Any, Any, dict[str, Any] | None]] = [process_query(query) for query in serp_queries]
+        tasks: list[Coroutine[Any, Any, dict[str, Any] | None]] = [
+            process_query(query) for query in serp_queries
+        ]
         results: list[dict[str, Any] | None] = await asyncio.gather(*tasks)
         filtered_results: list[dict[str, Any]] = [r for r in results if r is not None]
 
@@ -398,7 +422,9 @@ Format each question on a new line starting with 'Question: '""",
         self.research_sources.extend(all_sources)
 
         # Trim context to stay within word limits
-        trimmed_context: list[str] = trim_context_to_word_limit(all_context, max_words=self.max_context_words)
+        trimmed_context: list[str] = trim_context_to_word_limit(
+            all_context, max_words=self.max_context_words
+        )
         logger.info(
             f"Trimmed context from {len(all_context)} items to {len(trimmed_context)} items to stay within word limit"
         )
@@ -421,8 +447,12 @@ Format each question on a new line starting with 'Question: '""",
         # Log initial costs
         initial_costs: float = self.researcher.get_costs()
 
-        follow_up_questions: list[str] = await self.generate_research_plan(self.researcher.query)
-        answers: list[str] = ["Automatically proceeding with research"] * len(follow_up_questions)
+        follow_up_questions: list[str] = await self.generate_research_plan(
+            self.researcher.query
+        )
+        answers: list[str] = ["Automatically proceeding with research"] * len(
+            follow_up_questions
+        )
 
         qa_pairs: list[str] = [
             f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers)
@@ -446,7 +476,10 @@ Format each question on a new line starting with 'Question: '""",
             await self.researcher._log_event(
                 "research",
                 step="deep_research_costs",
-                details={"research_costs": research_costs, "total_costs": self.researcher.get_costs()},
+                details={
+                    "research_costs": research_costs,
+                    "total_costs": self.researcher.get_costs(),
+                },
             )
 
         # Prepare context with citations

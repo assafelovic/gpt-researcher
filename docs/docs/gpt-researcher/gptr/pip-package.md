@@ -239,8 +239,17 @@ After conducting research, you can process the results in various ways:
 # Conduct research
 research_result = await researcher.conduct_research()
 
-# Generate a report
+# Generate a standard report
 report = await researcher.write_report()
+
+# Generate a customized report with specific formatting requirements
+custom_report = await researcher.write_report(custom_prompt="Answer in short, 2 paragraphs max without citations.")
+
+# Generate a focused report for a specific audience
+executive_summary = await researcher.write_report(custom_prompt="Create an executive summary focused on business impact and ROI. Keep it under 500 words.")
+
+# Generate a report with specific structure requirements
+technical_report = await researcher.write_report(custom_prompt="Create a technical report with problem statement, methodology, findings, and recommendations sections.")
 
 # Generate a conclusion
 conclusion = await researcher.write_report_conclusion(report)
@@ -251,6 +260,45 @@ subtopics = await researcher.get_subtopics()
 # Get draft section titles for a subtopic
 draft_titles = await researcher.get_draft_section_titles("Subtopic name")
 ```
+
+### Customizing Report Generation with Custom Prompts
+
+The `write_report` method accepts a `custom_prompt` parameter that gives you complete control over how your research is presented:
+
+```python
+# After conducting research
+research_result = await researcher.conduct_research()
+
+# Generate a report with a custom prompt
+report = await researcher.write_report(
+    custom_prompt="Based on the research, provide a bullet-point summary of the key findings."
+)
+```
+
+Custom prompts can be used for various purposes:
+
+1. **Format Control**: Specify the structure, length, or style of your report
+   ```python
+   report = await researcher.write_report(
+       custom_prompt="Write a blog post in a conversational tone using the research. Include headings and a conclusion."
+   )
+   ```
+
+2. **Audience Targeting**: Tailor the content for specific readers
+   ```python
+   report = await researcher.write_report(
+       custom_prompt="Create a report for technical stakeholders, focusing on methodologies and implementation details."
+   )
+   ```
+
+3. **Specialized Outputs**: Generate specific types of content
+   ```python
+   report = await researcher.write_report(
+       custom_prompt="Create a FAQ section based on the research with at least 5 questions and detailed answers."
+   )
+   ```
+
+The custom prompt will be combined with the research context to generate your customized report.
 
 ### Working with Research Context
 

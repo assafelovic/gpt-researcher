@@ -42,6 +42,8 @@ class ReportGenerator:
         existing_headers: list[dict[str, Any]] | None = None,
         relevant_written_contents: list[str] | None = None,
         ext_context: str | None = None,
+        custom_prompt: str | None = None,
+        **kwargs: Any,
     ) -> str:
         """Write a report based on existing headers and relevant contents.
 
@@ -85,6 +87,7 @@ class ReportGenerator:
 
         report_params: dict[str, Any] = self.research_params.copy()
         report_params["context"] = ext_context
+        report_params["custom_prompt"] = custom_prompt
 
         if self.researcher.report_type == "subtopic_report":
             report_params.update(

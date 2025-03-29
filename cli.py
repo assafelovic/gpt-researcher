@@ -49,8 +49,33 @@ cli.add_argument(
     # Position 0 argument
     "query",
     type=str,
-    help="The query to conduct research on.",
-)
+    help="The query to conduct research on.")
+
+# =====================================
+# Arg: Report Type
+# =====================================
+
+choices = [report_type.value for report_type in ReportType]
+
+report_type_descriptions = {
+    ReportType.ResearchReport.value: "Summary - Short and fast (~2 min)",
+    ReportType.DetailedReport.value: "Detailed - In depth and longer (~5 min)",
+    ReportType.ResourceReport.value: "",
+    ReportType.OutlineReport.value: "",
+    ReportType.CustomReport.value: "",
+    ReportType.SubtopicReport.value: "",
+    ReportType.DeepResearch.value: "Deep Research"
+}
+
+cli.add_argument(
+    "--report_type",
+    type=str,
+    help="The type of report to generate. Options:\n" + "\n".join(
+        f"  {choice}: {report_type_descriptions[choice]}" for choice in choices
+    ),
+    # Deserialize ReportType as a List of strings:
+    choices=choices,
+    required=True)
 
 # =====================================
 # Arg: Tone

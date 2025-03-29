@@ -96,6 +96,7 @@ class DetailedReport:
             websocket=self.websocket,
             headers=self.headers,
             query_domains=self.query_domains,
+            complement_source_urls=self.complement_source_urls
         )
 
     async def run(self) -> str:
@@ -168,6 +169,8 @@ class DetailedReport:
             context=list(set(self.global_context)),
             headers=self.headers,
             query_domains=self.query_domains,
+            complement_source_urls=self.complement_source_urls,
+            source_urls=self.source_urls
         )
 
         _research_result: str | list[str] = await subtopic_assistant.conduct_research()

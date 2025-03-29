@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import json
 import logging
-
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import pytest
-
 from fastapi import WebSocket
 
 logging.basicConfig(level=logging.INFO)
@@ -21,7 +20,11 @@ class TestWebSocket(WebSocket):
         self.events: list[dict[str, Any]] = []
         self.scope: dict[str, Any] = {}
 
+    def __bool__(self):
+        return True
+
     async def accept(self):
+        self.scope["type"] = "websocket"
         pass
 
     async def send_json(self, event: dict[str, Any]):
@@ -32,6 +35,7 @@ class TestWebSocket(WebSocket):
 @pytest.mark.asyncio
 async def test_log_output_file():
     """Test to verify logs are properly written to output file."""
+    from backend.server.server_utils import CustomLogsHandler
     from gpt_researcher.agent import GPTResearcher
 
     # 1. Setup like the main app
@@ -40,8 +44,11 @@ async def test_log_output_file():
 
     # 2. Initialize researcher like main app
     query = "What is the capital of France?"
-    researcher = GPTResearcher(query=query, websocket=websocket)
-
+    research_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(query)}"
+    logs_handler = CustomLogsHandler(websocket=websocket, task=research_id)
+    researcher = GPTResearcher(
+        query=query, websocket=websocket, research_id=research_id
+    )
     # 3. Run research
     await researcher.conduct_research()
 
@@ -50,10 +57,15 @@ async def test_log_output_file():
     assert len(websocket.events) > 0, "No events were captured"
 
     # 5. Check output file
-    output_dir = Path("outputs")
-    output_files = list(output_dir.glob(f"task_*_{query.replace(' ', '_')[:50]}.json"))
+    output_dir = Path().joinpath(Path.cwd(), "outputs")
+    output_files = list(output_dir.glob(f"task_*{research_id}*.json"))
     assert len(output_files) > 0, "No output file was created"
 
     with open(output_files[-1]) as f:
         data = json.load(f)
         assert len(data.get("events", [])) > 0, "No events in output file"
+
+    # Clean up the output files
+    for output_file in output_files:
+        output_file.unlink()
+        logger.info(f"Deleted output file: {output_file}")

@@ -6,20 +6,29 @@ import json
 import logging
 import os
 import time
-
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, AsyncGenerator, ClassVar, Dict
 
 from anthropic import BaseModel
-from fastapi import FastAPI, File, Request, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import (
+    BackgroundTasks,
+    FastAPI,
+    File,
+    Request,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from gpt_researcher.config.config import Config
+from gpt_researcher.utils.enum import Tone
 from gpt_researcher.utils.logger import get_formatted_logger
 from gpt_researcher.utils.logging_config import setup_research_logging
+from pydantic import BaseModel
 
 from backend.chat import ChatAgentWithMemory
 from backend.server.server_utils import (
@@ -34,8 +43,8 @@ from backend.server.server_utils import (
     handle_websocket_communication,
     sanitize_filename,
 )
-from backend.server.websocket_manager import WebSocketManager
-
+from backend.server.websocket_manager import WebSocketManager, run_agent
+from backend.utils import write_md_to_pdf, write_md_to_word
 
 # Get logger instance
 logger: logging.Logger = get_formatted_logger(__name__)
@@ -49,7 +58,12 @@ logger.propagate = True
 class ResearchRequest(BaseModel):
     task: str
     report_type: str
-    agent: str
+    report_source: str
+    tone: str
+    headers: dict | None = None
+    repo_name: str
+    branch_name: str
+    generate_in_background: bool = True
 
 
 # App initialization
@@ -74,8 +88,7 @@ async def download_file(file_path: str) -> FileResponse:
     if os.path.exists(file_location):
         logger.info(f"File found, serving: {file_location}")
         return FileResponse(
-            path=file_location,
-            filename=os.path.basename(file_location)
+            path=file_location, filename=os.path.basename(file_location)
         )
     logger.error(f"File not found: {file_location}")
     files_in_dir = os.listdir("outputs")
@@ -122,13 +135,88 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, Any]:
 
 @app.get("/")
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "report": None})
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "report": None}
+    )
+
+
+@app.get("/report/{research_id}")
+async def read_report(request: Request, research_id: str):
+    docx_path = os.path.join("outputs", f"{research_id}.docx")
+    if not os.path.exists(docx_path):
+        return {"message": "Report not found."}
+    return FileResponse(docx_path)
+
+
+async def write_report(research_request: ResearchRequest, research_id: str = None):
+    report_information = await run_agent(
+        task=research_request.task,
+        report_type=research_request.report_type,
+        report_source=research_request.report_source,
+        source_urls=[],
+        document_urls=[],
+        tone=Tone[research_request.tone],
+        websocket=None,
+        stream_output=None,
+        headers=research_request.headers,
+        query_domains=[],
+        config_path="",
+        return_researcher=True,
+    )
+
+    docx_path = await write_md_to_word(report_information[0], research_id)
+    pdf_path = await write_md_to_pdf(report_information[0], research_id)
+    if research_request.report_type != "multi_agents":
+        report, researcher = report_information
+        response = {
+            "research_id": research_id,
+            "research_information": {
+                "source_urls": researcher.get_source_urls(),
+                "research_costs": researcher.get_costs(),
+                "visited_urls": list(researcher.visited_urls),
+                "research_images": researcher.get_research_images(),
+                # "research_sources": researcher.get_research_sources(),  # Raw content of sources may be very large
+            },
+            "report": report,
+            "docx_path": docx_path,
+            "pdf_path": pdf_path,
+        }
+    else:
+        response = {
+            "research_id": research_id,
+            "report": "",
+            "docx_path": docx_path,
+            "pdf_path": pdf_path,
+        }
+
+    return response
+
+
+@app.post("/report/")
+async def generate_report(
+    research_request: ResearchRequest, background_tasks: BackgroundTasks
+):
+    research_id = sanitize_filename(f"task_{int(time.time())}_{research_request.task}")
+
+    if research_request.generate_in_background:
+        background_tasks.add_task(
+            write_report, research_request=research_request, research_id=research_id
+        )
+        return {
+            "message": "Your report is being generated in the background. Please check back later.",
+            "research_id": research_id,
+        }
+    else:
+        response = await write_report(research_request, research_id)
+        return response
 
 
 @app.get("/files/")
 async def list_files() -> dict[str, list[str]]:
-    files: list[str] = os.listdir(DOC_PATH)
-    logger.debug(f"Files in {DOC_PATH}: {files}")
+    if not os.path.exists(DOC_PATH):
+        os.makedirs(DOC_PATH, exist_ok=True)
+    files = os.listdir(DOC_PATH)
+    print(f"Files in {DOC_PATH}: {files}")
     return {"files": files}
 
 
@@ -155,7 +243,9 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
     except Exception as e:
-        logger.exception(f"Error in websocket communication: {e.__class__.__name__}: {e}")
+        logger.exception(
+            f"Error in websocket communication: {e.__class__.__name__}: {e}"
+        )
         await manager.disconnect(websocket)
 
 
@@ -181,8 +271,13 @@ async def save_config(params: Dict[str, Any]) -> Dict[str, Any]:
         result: JSONResponse = await handle_save_config(config_obj)
         return json.loads(result.body)
     except Exception as e:
-        logger.exception(f"Error handling save_config request: {e.__class__.__name__}: {e}")
-        return {"status": "error", "message": f"Error handling save_config request: {e.__class__.__name__}: {e}"}
+        logger.exception(
+            f"Error handling save_config request: {e.__class__.__name__}: {e}"
+        )
+        return {
+            "status": "error",
+            "message": f"Error handling save_config request: {e.__class__.__name__}: {e}",
+        }
 
 
 @app.get("/get_settings")
@@ -195,8 +290,12 @@ async def get_settings() -> Dict[str, Any]:
         settings_response: JSONResponse = await handle_get_settings()
         return json.loads(settings_response.body)
     except Exception as e:
-        logger.exception(f"Error handling get_settings request: {e.__class__.__name__}: {e}")
-        return {"error": f"Error handling get_settings request: {e.__class__.__name__}: {e}"}
+        logger.exception(
+            f"Error handling get_settings request: {e.__class__.__name__}: {e}"
+        )
+        return {
+            "error": f"Error handling get_settings request: {e.__class__.__name__}: {e}"
+        }
 
 
 @app.post("/save_settings")
@@ -240,8 +339,13 @@ async def save_settings(settings_data: Dict[str, Any]) -> Dict[str, Any]:
 
         return {"status": "success"}
     except Exception as e:
-        logger.exception(f"Error handling save_settings request: {e.__class__.__name__}: {e}")
-        return {"status": "error", "message": f"Error handling save_settings request: {e.__class__.__name__}: {e}"}
+        logger.exception(
+            f"Error handling save_settings request: {e.__class__.__name__}: {e}"
+        )
+        return {
+            "status": "error",
+            "message": f"Error handling save_settings request: {e.__class__.__name__}: {e}",
+        }
 
 
 # endregion
@@ -255,7 +359,9 @@ class FrontendLogHandler(logging.Handler):
     ) -> None:
         super().__init__()
         self.message_queue: asyncio.Queue[str] | None = message_queue
-        self.formatter: logging.Formatter = logging.Formatter("%(levelname)s(%(name)s): %(message)s")
+        self.formatter: logging.Formatter = logging.Formatter(
+            "%(levelname)s(%(name)s): %(message)s"
+        )
         self.websocket: WebSocket | None = websocket
 
     def set_message_queue(
@@ -280,13 +386,25 @@ class FrontendLogHandler(logging.Handler):
             msg = f"{msg}\n{record.exc_text}"
         if no_frontend:
             return
-        log_event: dict[str, str] = {"type": "log", "level": record.levelname.lower(), "message": msg}
+        log_event: dict[str, str] = {
+            "type": "log",
+            "level": record.levelname.lower(),
+            "message": msg,
+        }
         if self.message_queue is not None:
-            frontend_task: asyncio.Task[None] = asyncio.create_task(self.message_queue.put(json.dumps(log_event)))
-            frontend_task.add_done_callback(lambda _: None if self.websocket is None else self.websocket.close())
+            frontend_task: asyncio.Task[None] = asyncio.create_task(
+                self.message_queue.put(json.dumps(log_event))
+            )
+            frontend_task.add_done_callback(
+                lambda _: None if self.websocket is None else self.websocket.close()
+            )
         if self.websocket is not None:
-            frontend_task: asyncio.Task[None] = asyncio.create_task(self.websocket.send_text(json.dumps(log_event)))
-            frontend_task.add_done_callback(lambda _: None if self.websocket is None else self.websocket.close())
+            frontend_task: asyncio.Task[None] = asyncio.create_task(
+                self.websocket.send_text(json.dumps(log_event))
+            )
+            frontend_task.add_done_callback(
+                lambda _: None if self.websocket is None else self.websocket.close()
+            )
 
 
 class ResearchAPIHandler:
@@ -311,13 +429,21 @@ class ResearchAPIHandler:
         try:
             if not cls._chat_agent or not cls._latest_report:
                 return json.dumps(
-                    {"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"}
+                    {
+                        "type": "chat",
+                        "content": "Knowledge empty, please run the research first to obtain knowledge",
+                    }
                 )
             response: str = await cls._chat_agent.chat(message)
             return json.dumps({"type": "chat", "content": response})
         except Exception as e:
             logger.exception(f"Error in chat process! {e.__class__.__name__}: {e}")
-            return json.dumps({"type": "error", "content": f"Error in chat process! {e.__class__.__name__}: {e}"})
+            return json.dumps(
+                {
+                    "type": "error",
+                    "content": f"Error in chat process! {e.__class__.__name__}: {e}",
+                }
+            )
 
     @staticmethod
     async def stream_research(
@@ -329,16 +455,34 @@ class ResearchAPIHandler:
         try:
             task: str = params["query"]
             report_type: str = params.get("report_type", "")
-            source_urls: list[str] = str(params.get("source_urls", "")).split(",") if params.get("source_urls") else []
-            query_domains: list[str] = str(params.get("query_domains", "")).split(",") if params.get("query_domains") else []  # noqa: E501
-            document_urls: list[str] = str(params.get("document_urls", "")).split(",") if params.get("document_urls") else []  # noqa: E501
+            source_urls: list[str] = (
+                str(params.get("source_urls", "")).split(",")
+                if params.get("source_urls")
+                else []
+            )
+            query_domains: list[str] = (
+                str(params.get("query_domains", "")).split(",")
+                if params.get("query_domains")
+                else []
+            )  # noqa: E501
+            document_urls: list[str] = (
+                str(params.get("document_urls", "")).split(",")
+                if params.get("document_urls")
+                else []
+            )  # noqa: E501
             script_dir = Path(__file__).parent.absolute()
             config_path: Path | None = script_dir / "config.json"
             if config_path and not config_path.is_file():
                 try:
-                    raise OSError(errno.EISDIR, f"Config file '{config_path}' is not a file!", config_path)
+                    raise OSError(
+                        errno.EISDIR,
+                        f"Config file '{config_path}' is not a file!",
+                        config_path,
+                    )
                 except Exception as e:
-                    logger.exception(f"Config file '{config_path}' is not a file!", exc_info=e)
+                    logger.exception(
+                        f"Config file '{config_path}' is not a file!", exc_info=e
+                    )
                 config_path = None
             if config_path and config_path.exists():
                 logger.info(f"Using config from '{config_path}'")
@@ -364,7 +508,9 @@ class ResearchAPIHandler:
             )
             ResearchAPIHandler.set_latest_report(report, str(config_path))
             yield json.dumps({"type": "report", "output": report})
-            sanitized_filename: str = sanitize_filename(f"task_{int(time.time())}_{task}")
+            sanitized_filename: str = sanitize_filename(
+                f"task_{int(time.time())}_{task}"
+            )
             if websocket is not None:
                 report: str = await websocket_manager.start_streaming(
                     task=task,
@@ -378,12 +524,21 @@ class ResearchAPIHandler:
                     query_domains=query_domains,
                 )
                 report = str(report)
-            file_paths: dict[str, str] = await generate_report_files(report, sanitized_filename)
+            file_paths: dict[str, str] = await generate_report_files(
+                report, sanitized_filename
+            )
             file_paths["json"] = str(f"logs/{sanitized_filename}.log")
-            yield json.dumps({"type": "path", "output": {k: str(f) for k, f in file_paths.items()}})
+            yield json.dumps(
+                {"type": "path", "output": {k: str(f) for k, f in file_paths.items()}}
+            )
         except Exception as e:
             logger.exception(f"Error in research process! {e.__class__.__name__}: {e}")
-            yield json.dumps({"type": "error", "output": f"Error in research process! {e.__class__.__name__}: {e}"})
+            yield json.dumps(
+                {
+                    "type": "error",
+                    "output": f"Error in research process! {e.__class__.__name__}: {e}",
+                }
+            )
 
 
 @app.websocket("/ws/research")
@@ -393,18 +548,29 @@ async def websocket_research(websocket: WebSocket):
         data: str = await websocket.receive_text()
         params: dict = json.loads(data)
     except Exception as e:
-        await websocket.send_text(json.dumps({"type": "error", "content": f"Invalid parameters: {e}"}))
+        await websocket.send_text(
+            json.dumps({"type": "error", "content": f"Invalid parameters: {e}"})
+        )
         await websocket.close()
         return
     websocket_manager = WebSocketManager()
     try:
-        async for chunk in ResearchAPIHandler.stream_research(params, websocket, websocket_manager):
+        async for chunk in ResearchAPIHandler.stream_research(
+            params, websocket, websocket_manager
+        ):
             await websocket.send_text(chunk)
         await websocket.close()
     except Exception as e:
-        logger.exception(f"Error in research websocket endpoint: {e.__class__.__name__}: {e}")
+        logger.exception(
+            f"Error in research websocket endpoint: {e.__class__.__name__}: {e}"
+        )
         await websocket.send_text(
-            json.dumps({"type": "error", "output": f"Error in research process! {e.__class__.__name__}: {e}"})
+            json.dumps(
+                {
+                    "type": "error",
+                    "output": f"Error in research process! {e.__class__.__name__}: {e}",
+                }
+            )
         )
         await websocket.close()
 

@@ -4,14 +4,12 @@ from typing import TYPE_CHECKING, Any
 
 import json5 as json
 import json_repair
-
 from gpt_researcher.config.config import Config
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from langchain_community.adapters.openai import convert_openai_messages
 
 if TYPE_CHECKING:
     import logging
-
     from collections.abc import Callable
 
     from langchain_core.messages.base import BaseMessage
@@ -39,11 +37,15 @@ async def call_model(
         The model's response
     """
     cfg = Config()
-    lc_messages: list[BaseMessage] | list[dict[str, str]] = convert_openai_messages(prompt)  # pyright: ignore[reportAssignmentType]
+    lc_messages: list[BaseMessage] | list[dict[str, str]] = convert_openai_messages(
+        prompt
+    )  # pyright: ignore[reportAssignmentType]
 
     try:
         provider = GenericLLMProvider(
-            cfg.SMART_LLM_PROVIDER if model is None else f"{cfg.SMART_LLM_PROVIDER}:{model}",
+            cfg.SMART_LLM_PROVIDER
+            if model is None
+            else f"{cfg.SMART_LLM_PROVIDER}:{model}",
             fallback_models=cfg.FALLBACK_MODELS,
             temperature=0,
             **cfg.llm_kwargs,
@@ -60,7 +62,9 @@ async def call_model(
                 if isinstance(result, dict):
                     return result
                 else:
-                    raise ValueError(f"Unexpected response format: {result.__class__.__name__} with value: {result!r}")
+                    raise ValueError(
+                        f"Unexpected response format: {result.__class__.__name__} with value: {result!r}"
+                    )
             except Exception as e:
                 logger.warning("⚠️ Error in reading JSON, attempting to repair JSON ⚠️")
                 logger.exception(

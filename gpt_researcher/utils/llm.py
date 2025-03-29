@@ -45,7 +45,7 @@ async def create_chat_completion(
     websocket: Any | None = None,
     llm_kwargs: dict[str, Any] | None = None,
     cost_callback: Callable | None = None,
-    reasoning_effort: str | None = "low",
+    reasoning_effort: str | None = ReasoningEfforts.Medium.value,
     max_retries: int | None = 1,
     headers: dict[str, str] | None = None,
 ) -> str:
@@ -84,13 +84,12 @@ async def create_chat_completion(
         **(llm_kwargs or {}),
     }
 
-    if "o3-" in model or "o1-" in model:
-        print(f"Using reasoning model '{model}'")
-        kwargs["reasoning_effort"] = reasoning_effort
-    else:
-        print(f"Using non-reasoning model '{model}'")
-        kwargs["temperature"] = temperature
-        kwargs["max_tokens"] = max_tokens
+    if model in SUPPORT_REASONING_EFFORT_MODELS:
+        kwargs['reasoning_effort'] = reasoning_effort
+
+    if model not in NO_SUPPORT_TEMPERATURE_MODELS:
+        kwargs['temperature'] = temperature
+        kwargs['max_tokens'] = max_tokens
 
     # Merge incoming change: handle OpenAI base URL if provided
     if llm_provider == "openai":
@@ -179,12 +178,17 @@ Providerarch data:
 
         logger.debug(f"\n🤖 Calling {config.SMART_LLM_MODEL}...\n")
 
-        temperature: float = config.TEMPERATURE
+        kwargs: dict[str, Any] = {}
+        if config.smart_llm_model in SUPPORT_REASONING_EFFORT_MODELS:
+            kwargs['reasoning_effort'] = ReasoningEfforts.High.value
+        else:
+            kwargs['temperature'] = config.temperature
+            kwargs['max_tokens'] = config.smart_token_limit
         assert config.SMART_LLM is not None, "SMART_LLM is not set"
         provider: GenericLLMProvider = get_llm(
             config.SMART_LLM,
             fallback_models=config.FALLBACK_MODELS,
-            temperature=temperature,
+            **kwargs,
             **config.llm_kwargs,
             headers=headers,
         )

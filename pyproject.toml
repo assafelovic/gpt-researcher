@@ -8,7 +8,7 @@ license = "LGPL-3.0-or-later"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.12"
+python = ">=3.11, <4"
 aiofiles = ">=23.2.1"
 arxiv = ">=2.0.0"
 beautifulsoup4 = ">=4.12.2"
@@ -16,6 +16,10 @@ colorama = ">=0.4.6"
 duckduckgo_search = ">=4.1.1"
 htmldocx = "^0.0.6"
 jinja2 = ">=3.1.2"
+python-docx = "^1.1.0"
+lxml = { version = ">=4.9.2", extras = ["html_clean"] }
+unstructured = ">=0.13"
+tiktoken = ">=0.7.0"
 json-repair = "^0.29.8"
 json5 = "^0.9.25"
 langchain = "^0.2"
@@ -54,6 +58,13 @@ force-exclude = '''
   | setup.py
 )/
 '''
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+pytest-asyncio = "^0.25.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 py_version = 310

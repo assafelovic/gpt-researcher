@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import asyncio
-
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
-from gpt_researcher.config.config import Config
 from gpt_researcher import GPTResearcher
+from gpt_researcher.config.config import Config
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.llm import create_chat_completion
 
@@ -51,8 +51,16 @@ class DeepResearch:
         concurrency_limit: int = 2,  # Match TypeScript version
         config: Config | None = None,
     ):
-        self.config_path: Path | None = None if config_path is None else Path(os.path.normpath(config_path))
-        self.cfg: Config = Config.from_path(self.config_path) if self.config_path is not None else config if config is not None else Config()
+        self.config_path: Path | None = (
+            None if config_path is None else Path(os.path.normpath(config_path))
+        )
+        self.cfg: Config = (
+            Config.from_path(self.config_path)
+            if self.config_path is not None
+            else config
+            if config is not None
+            else Config()
+        )
         self.query: str = query
         self.breadth: int = breadth
         self.depth: int = depth
@@ -86,12 +94,14 @@ class DeepResearch:
             model=self.cfg.SMART_LLM_MODEL,  # Using reasoning model for better question generation
             temperature=0.7,
             max_tokens=500,
-            reasoning_effort="high",
+            reasoning_effort=ReasoningEfforts.High.value,
         )
 
         # Parse questions from response
         questions: list[str] = [
-            q.replace("Question:", "").strip() for q in response.split("\n") if q.strip().startswith("Question:")
+            q.replace("Question:", "").strip()
+            for q in response.split("\n")
+            if q.strip().startswith("Question:")
         ]
         return questions[:num_questions]
 
@@ -147,7 +157,10 @@ class DeepResearch:
     ) -> dict[str, Any]:
         """Process research results to extract learnings and follow-up questions."""
         messages: list[dict[str, str]] = [
-            {"role": "system", "content": "You are an expert researcher analyzing search results."},
+            {
+                "role": "system",
+                "content": "You are an expert researcher analyzing search results.",
+            },
             {
                 "role": "user",
                 "content": f"Given the following research results for the query '{query}', extract key learnings and suggest follow-up questions. For each learning, include a citation to the source URL if available. Format each learning as 'Learning [source_url]: <insight>' and each question as 'Question: <question>':\n\n{context}",
@@ -160,7 +173,7 @@ class DeepResearch:
             model=self.cfg.SMART_LLM_MODEL,  # Using reasoning model for analysis
             temperature=0.7,
             max_tokens=1000,
-            reasoning_effort="high",
+            reasoning_effort=ReasoningEfforts.High.value,
         )
 
         # Parse learnings and questions with citations
@@ -216,7 +229,9 @@ class DeepResearch:
             on_progress(progress)
 
         # Generate search queries
-        serp_queries: list[dict[str, str]] = await self.generate_serp_queries(query, num_queries=breadth)
+        serp_queries: list[dict[str, str]] = await self.generate_serp_queries(
+            query, num_queries=breadth
+        )
         progress.total_queries = len(serp_queries)
 
         all_learnings: list[str] = learnings.copy()
@@ -272,13 +287,19 @@ class DeepResearch:
                     }
 
                 except Exception as e:
-                    logger.error(f"Error processing query '{serp_query['query']}': {str(e)}")
+                    logger.error(
+                        f"Error processing query '{serp_query['query']}': {str(e)}"
+                    )
                     return None
 
         # Process queries concurrently with limit
-        tasks: list[Coroutine[Any, Any, dict[str, Any] | None]] = [process_query(query) for query in serp_queries]
+        tasks: list[Coroutine[Any, Any, dict[str, Any] | None]] = [
+            process_query(query) for query in serp_queries
+        ]
         results: list[dict[str, Any] | None] = await asyncio.gather(*tasks)
-        filtered_results: list[dict[str, Any]] = [r for r in results if r is not None]  # Filter out failed queries
+        filtered_results: list[dict[str, Any]] = [
+            r for r in results if r is not None
+        ]  # Filter out failed queries
 
         # Collect all results
         for result in filtered_results:
@@ -312,7 +333,11 @@ class DeepResearch:
                 all_visited_urls = set(deeper_results["visited_urls"])
                 all_citations.update(deeper_results["citations"])
 
-        return {"learnings": list(set(all_learnings)), "visited_urls": list(all_visited_urls), "citations": all_citations}
+        return {
+            "learnings": list(set(all_learnings)),
+            "visited_urls": list(all_visited_urls),
+            "citations": all_citations,
+        }
 
     async def run(
         self,
@@ -323,7 +348,9 @@ class DeepResearch:
         follow_up_questions: list[str] = await self.generate_feedback(self.query)
 
         # Collect answers (this would normally come from user interaction)
-        answers: list[str] = ["Automatically proceeding with research"] * len(follow_up_questions)
+        answers: list[str] = ["Automatically proceeding with research"] * len(
+            follow_up_questions
+        )
 
         # Combine query and Q&A
         combined_query: str = f"""
@@ -334,7 +361,10 @@ class DeepResearch:
 
         # Run deep research
         results: dict[str, Any] = await self.deep_research(
-            query=combined_query, breadth=self.breadth, depth=self.depth, on_progress=on_progress
+            query=combined_query,
+            breadth=self.breadth,
+            depth=self.depth,
+            on_progress=on_progress,
         )
 
         # Generate final report
