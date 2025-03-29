@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 import json
 
 from .config import Config

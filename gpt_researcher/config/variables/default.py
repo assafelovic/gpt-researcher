@@ -19,7 +19,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "MEMORY_BACKEND": "local",
     "TOTAL_WORDS": 1200,
     "REPORT_FORMAT": "APA",
-    "MAX_ITERATIONS": 4,
+    "MAX_ITERATIONS": 3,
     "AGENT_ROLE": None,
     "SCRAPER": "bs",
     "MAX_SCRAPER_WORKERS": 15,
