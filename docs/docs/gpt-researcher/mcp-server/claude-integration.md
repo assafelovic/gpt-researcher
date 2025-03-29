@@ -2,200 +2,130 @@
 sidebar_position: 3
 ---
 
-# Integrating with Claude
+# Claude Desktop Integration
 
-This guide focuses specifically on how to integrate the GPT Researcher MCP Server with Claude, allowing you to leverage Claude's powerful conversational abilities with GPT Researcher's web research capabilities.
+This guide specifically focuses on how to integrate your locally running GPT Researcher MCP server with the Claude desktop application for Mac, providing a seamless research experience within the Claude interface.
 
 ## Prerequisites
 
-Before integrating with Claude, you'll need:
+Before integrating with Claude desktop client, you'll need:
 
-1. A Claude API key with MCP access enabled
-2. GPT Researcher MCP server running and accessible
-3. Basic familiarity with the Claude API
+1. GPT Researcher MCP server installed and running locally
+2. Claude for Mac desktop application installed
+3. Administrative access to your Mac to modify configuration files
 
-## Setting Up Claude with MCP
+## Setting Up Claude Desktop with MCP
 
-To use Claude with the GPT Researcher MCP server:
+To integrate your locally running MCP server with Claude for Mac, follow these steps:
 
-1. Configure your Claude API client to point to your MCP server endpoint
-2. Ensure Claude can access the necessary tools via MCP
+### 1. Install and Run the GPT Researcher MCP Server
 
-Here's an example configuration:
+Make sure you have the GPT Researcher MCP server installed and running:
 
-```python
-import anthropic
+```bash
+# Clone the repository (if you haven't already)
+git clone https://github.com/assafelovic/gpt-researcher.git
+cd gpt-researcher/mcp-server
 
-client = anthropic.Anthropic(
-    api_key="your_anthropic_api_key",
-)
+# Install dependencies
+pip install -r requirements.txt
 
-message = client.messages.create(
-    model="claude-3-opus-20240229",
-    max_tokens=1000,
-    temperature=0.0,
-    system="You are a helpful research assistant that has access to research tools via MCP.",
-    messages=[
-        {"role": "user", "content": "Research the impact of quantum computing on cryptography."}
-    ],
-    tools=[
-        {
-            "name": "gpt_researcher",
-            "description": "GPT Researcher tools for conducting web research",
-            "schemas": {
-                "conduct_research": {
-                    "type": "function",
-                    "function": {
-                        "name": "conduct_research",
-                        "description": "Conduct web research on a topic",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "query": {
-                                    "type": "string",
-                                    "description": "The research query to investigate"
-                                },
-                                "depth": {
-                                    "type": "string",
-                                    "enum": ["basic", "deep"],
-                                    "description": "The depth of research to conduct"
-                                }
-                            },
-                            "required": ["query"]
-                        }
-                    }
-                },
-                "write_report": {
-                    "type": "function",
-                    "function": {
-                        "name": "write_report",
-                        "description": "Generate a report based on research results",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "format": {
-                                    "type": "string",
-                                    "enum": ["markdown", "text"],
-                                    "description": "The format of the report"
-                                },
-                                "style": {
-                                    "type": "string",
-                                    "enum": ["academic", "blog", "summary"],
-                                    "description": "The writing style of the report"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    ],
-    tool_choice="auto",
-    tool_endpoints={
-        "gpt_researcher": {
-            "url": "http://localhost:8000/mcp"
-        }
+# Set up your environment variables
+cp .env.example .env
+# Edit the .env file with your API keys
+
+# Run the server
+python server.py
+```
+
+Verify that the server is running properly by checking the console output. The server should be listening on port 8000 by default.
+
+### 2. Configure Claude Desktop
+
+1. **Locate Claude's Configuration File**:
+   - Open Finder and press `Shift + Command + G` to open the "Go to Folder" dialog
+   - Enter `~/Library/Application Support/Claude/` and click "Go"
+   - Find the `claude_desktop_config.json` file in this directory. If it doesn't exist, create a new file with this name
+   - Alternatively, you can open the Claude App -> Settings -> Developer -> Update Config.
+
+2. **Edit the Configuration File**:
+   - Open `claude_desktop_config.json` with a text editor
+   - Add or update the `mcpServers` section to include your local GPT Researcher MCP server:
+
+```json
+{
+  "mcpServers": {
+    "gpt-researcher": {
+      "command": "/path/to/python",
+      "args": ["/path/to/gpt-researcher/mcp-server/server.py"]
     }
-)
+  }
+}
 ```
 
-## Claude-Specific Prompts
+Replace `/path/to/gpt-researcher/mcp-server/server.py` with the absolute path to your server.py file.
 
-To effectively guide Claude in using the GPT Researcher tools, use prompts like:
+Alternatively, if you prefer to manually start the server and just have Claude connect to it:
 
-```
-I need you to research [TOPIC]. Please use the conduct_research tool to gather information, then generate a comprehensive report using the write_report tool. Make sure to cite your sources properly.
-```
-
-For a more structured approach:
-
-```
-Please help me with a research task following these steps:
-1. Use the conduct_research tool to investigate [TOPIC]
-2. When the research is complete, use the write_report tool to create a comprehensive report
-3. Make sure to include key findings, trends, and cite your sources
+```json
+{
+  "mcpServers": {},
+  "externalMCPServers": {
+    "gpt-researcher": "http://localhost:8000/mcp"
+  }
+}
 ```
 
-## Example Conversation Flow
+### 3. Restart Claude for Desktop
 
-Here's an example of a typical conversation flow when using Claude with the GPT Researcher MCP server:
+Close and reopen the Claude application to apply the new configuration.
+
+### 4. Verify the Integration
+
+Upon restarting:
+- Look for a hammer icon (🔨) in the bottom right corner of the input box in Claude
+- Clicking this icon should display the GPT Researcher tools provided by your MCP server
+- If you don't see the hammer icon, check the Claude application logs for any errors
+
+## Using GPT Researcher in Claude Desktop
+
+Once integrated, you can use research capabilities by:
+
+1. Clicking on the hammer icon (🔨) in the message input area
+2. Selecting the "conduct_research" tool
+3. Entering your research query and other parameters
+4. Submitting your query
+
+You can also directly prompt Claude to use the tools:
 
 ```
-User: I need to understand the current state of fusion energy research. Please conduct thorough research on this topic and provide a comprehensive report.
-
-Claude: I'll help you research the current state of fusion energy research. Let me use the GPT Researcher tools to gather information and then create a comprehensive report for you.
-
-[Claude calls conduct_research tool with query="current state of fusion energy research" and depth="deep"]
-
-Claude: I've completed my research on fusion energy. Here are the key findings:
-
-1. Recent breakthroughs at NIF and JET laboratories
-2. Progress with ITER and other tokamak designs  
-3. Private fusion companies like Commonwealth Fusion Systems making significant advances
-4. Remaining challenges in plasma containment and net energy gain
-5. Projected timelines for commercial fusion energy
-
-Let me generate a complete report for you.
-
-[Claude calls write_report tool with format="markdown" and style="academic"]
-
-Claude: # Current State of Fusion Energy Research
-
-## Executive Summary
-Fusion energy research has seen significant advancements in recent years, with both public and private efforts accelerating progress toward viable fusion power...
-
-[Full report continues]
-
-## References
-1. ITER Organization. (2023). "Status of the ITER Project." https://www.iter.org/proj/status
-2. Lawrence Livermore National Laboratory. (2023). "National Ignition Facility achieves fusion ignition." https://www.llnl.gov/...
-...
-
-Would you like me to focus on any particular aspect of fusion energy research in more detail?
+I need to research the latest advancements in quantum computing. Please use the conduct_research tool to gather information, then create a comprehensive report.
 ```
-
-## Best Practices
-
-When integrating Claude with the GPT Researcher MCP server:
-
-1. **Provide clear instructions**: Be specific about what you want Claude to research and how you want the information presented.
-
-2. **Use system prompts effectively**: Configure Claude's system prompt to establish its role as a research assistant.
-
-3. **Balance depth vs. time**: For quick overviews, specify a "basic" depth. For comprehensive research, use "deep" but be aware it will take longer.
-
-4. **Request specific formats**: If you need a particular report format or style, specify it in your prompt or in the write_report tool parameters.
-
-5. **Verify sources**: Always review the sources Claude provides to ensure they're reliable and relevant.
 
 ## Troubleshooting
 
-If you encounter issues with Claude and the MCP server:
+If you encounter issues with the integration:
 
-1. **Connection problems**: Ensure the MCP server is running and accessible from Claude's environment.
+1. **Server Connection Issues**:
+   - Ensure the MCP server is running and listening on the expected port
+   - Check firewall settings that might block the connection
+   - Verify the path in the configuration file is correct
 
-2. **Authorization errors**: Check that your API keys are correctly configured and have the necessary permissions.
+2. **Tool Availability Issues**:
+   - If tools aren't showing up, restart both the MCP server and Claude
+   - Check the server logs for any error messages
+   - Make sure your API keys are properly configured in the .env file
 
-3. **Tool schema errors**: Verify that your tool schemas match the expected format for the MCP server.
+3. **Permission Issues**:
+   - Ensure Claude has permission to execute the server script
+   - Check file permissions on the server.py file
 
-4. **Rate limiting**: If you hit rate limits, implement exponential backoff or reduce the frequency of requests.
-
-## Advanced Claude Integration
-
-For advanced use cases, you can:
-
-1. **Chain multiple research queries**: Break complex topics into multiple focused research queries.
-
-2. **Implement custom tools**: Extend the MCP server with additional tools tailored to your needs.
-
-3. **Use Claude's memory**: Leverage Claude's context window to maintain research state across multiple interactions.
-
-4. **Combine with other tools**: Integrate GPT Researcher with other Claude tools for a more comprehensive workflow.
+4. **Configuration File Issues**:
+   - Verify your JSON syntax is correct in the configuration file
+   - Make sure the configuration directory exists and is accessible
 
 ## Next Steps
 
-- Explore [Claude's MCP documentation](https://docs.anthropic.com/claude/docs/model-context-protocol) for more details
-- Learn about [Claude's tool use capabilities](https://docs.anthropic.com/claude/docs/tools-use)
-- Check out the [GPT Researcher API documentation](../gptr/querying-the-backend) for additional features
-
-:-) 
+- Explore [advanced usage options](./advanced-usage) for customizing your research experience
+- Learn about [additional configuration options](../gptr/config) for the GPT Researcher
+- Check out [example prompts](./claude-integration#claude-specific-prompts) to effectively guide Claude in using the research tools
