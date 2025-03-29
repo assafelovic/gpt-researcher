@@ -194,16 +194,17 @@ class GPTResearcher:
         # Return the research context
         return self.context
 
-    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None) -> str:
+    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="") -> str:
         await self._log_event("research", step="writing_report", details={
             "existing_headers": existing_headers,
             "context_source": "external" if ext_context else "internal"
         })
         
         report = await self.report_generator.write_report(
-            existing_headers,
-            relevant_written_contents,
-            ext_context or self.context
+            existing_headers=existing_headers,
+            relevant_written_contents=relevant_written_contents,
+            ext_context=ext_context or self.context,
+            custom_prompt=custom_prompt
         )
         
         await self._log_event("research", step="report_completed", details={
