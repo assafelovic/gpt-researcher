@@ -17,7 +17,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "npm run build:lib",
     "build:lib": "rollup -c",
     "build:types": "cp src/index.d.ts dist/",
     "dev:lib": "rollup -c -w"
