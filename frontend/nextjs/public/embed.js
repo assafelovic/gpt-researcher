@@ -1,24 +1,25 @@
-// /frontend/nextjs/public/embed.js
-(function() {
+(function () {
     window.GPTResearcher = {
-        init: function() {
+        init: function () {
+            const parentApiUrl = localStorage.getItem("GPTR_API_URL");
+
             // Create container
-            const container = document.createElement('div');
-            container.id = 'gpt-researcher-container';
-            container.style.width = '100%';
-            container.style.height = '100vh';
-            container.style.overflow = 'hidden'; // Hide scrollbar
+            const container = document.createElement("div");
+            container.id = "gpt-researcher-container";
+            container.style.width = "100%";
+            container.style.height = "100vh";
+            container.style.overflow = "hidden"; // Hide scrollbar
 
             // Create iframe
-            const iframe = document.createElement('iframe');
-            iframe.src = 'https://gptr.app';
-            iframe.style.width = '100%';
-            iframe.style.border = 'none';
-            iframe.style.height = '100%'; // Set to 100% instead of window.innerHeight
-            iframe.style.overflow = 'hidden'; // Hide scrollbar
+            const iframe = document.createElement("iframe");
+            iframe.src = "https://gptr.app" + (parentApiUrl ? "?GPTR_API_URL=" + parentApiUrl : "");
+            iframe.style.width = "100%";
+            iframe.style.border = "none";
+            iframe.style.height = "100%";
+            iframe.style.overflow = "hidden";
 
             // Add custom styles to hide scrollbars
-            const style = document.createElement('style');
+            const style = document.createElement("style");
             style.textContent = `
                 #gpt-researcher-container {
                     -ms-overflow-style: none;  /* IE and Edge */
@@ -39,29 +40,27 @@
 
             // Add iframe to container
             container.appendChild(iframe);
-
-            // Add container to document
             document.currentScript.parentNode.insertBefore(container, document.currentScript);
 
             // Handle resize
-            window.addEventListener('resize', () => {
-                iframe.style.height = '100%';
+            window.addEventListener("resize", () => {
+                iframe.style.height = "100%";
             });
 
             // Ensure height is set after iframe loads
-            iframe.addEventListener('load', () => {
-                iframe.style.height = '100%';
+            iframe.addEventListener("load", () => {
+                iframe.style.height = "100%";
             });
         },
 
-        configure: function(options = {}) {
+        configure: function (options = {}) {
             if (options.height) {
-                const iframe = document.querySelector('#gpt-researcher-container iframe');
+                const iframe = document.querySelector("#gpt-researcher-container iframe");
                 if (iframe) {
-                    iframe.style.height = options.height + 'px';
+                    iframe.style.height = options.height + "px";
                 }
             }
-        }
+        },
     };
 
     // Initialize when script loads
