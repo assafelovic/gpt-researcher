@@ -96,7 +96,6 @@ class ResearchConductor:
             self.logger.info("Using web search")
             research_data = await self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains)
 
-        # ... rest of the conditions ...
         elif self.researcher.report_source == ReportSource.Local.value:
             self.logger.info("Using local search")
             document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
