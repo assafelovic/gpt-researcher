@@ -1,6 +1,6 @@
 {
   "name": "gpt-researcher",
-  "version": "1.0.4",
+  "version": "1.0.27",
   "description": "WebSocket client for GPT Researcher",
   "main": "index.js",
   "scripts": {
@@ -12,9 +12,17 @@
     "ai",
     "research"
   ],
-  "author": "GPT Researcher",
-  "license": "ISC",
   "dependencies": {
     "ws": "^8.18.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/assafelovic/gpt-researcher.git"
+  },
+  "author": "GPT Researcher Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/assafelovic/gpt-researcher/issues"
+  },
+  "homepage": "https://github.com/assafelovic/gpt-researcher#readme"
 }

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { FC, useRef } from "react";
+import React, { FC, useRef } from "react";
 import TypeAnimation from "../../TypeAnimation";
 
 type TInputAreaProps = {
@@ -111,8 +111,7 @@ const InputArea: FC<TInputAreaProps> = ({
           </div>
         )}
 
-        <Image
-          unoptimized
+        <img
           src={"/img/arrow-narrow-right.svg"}
           alt="search"
           width={24}

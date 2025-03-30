@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import FileUpload from "../Settings/FileUpload";
 import ToneSelector from "../Settings/ToneSelector";
 import { useAnalytics } from "../../hooks/useAnalytics";
-import { CloseIcon } from '@chakra-ui/icons';
 import { ChatBoxSettings, Domain } from '@/types/data';
 
 interface ResearchFormProps {
@@ -178,7 +177,7 @@ export default function ResearchForm({
                   onClick={() => handleRemoveDomain(domain.value)}
                   className="domain-button-static"
                 >
-                  <CloseIcon className="h-4 w-4" />
+                  X
                 </button>
               </div>
             ))}
