@@ -1,3 +1,4 @@
+import React from 'react';
 import Image from "next/image";
 
 interface QuestionProps {
@@ -8,7 +9,7 @@ const Question: React.FC<QuestionProps> = ({ question }) => {
   return (
     <div className="container w-full flex flex-col sm:flex-row items-start gap-3 pt-5 mb-5">
       <div className="flex items-center gap-2 sm:gap-4">
-        <Image
+        <img
           src={"/img/message-question-circle.svg"}
           alt="message"
           width={24}

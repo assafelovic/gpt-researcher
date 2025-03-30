@@ -1,3 +1,4 @@
+import React from 'react';
 import Image from "next/image";
 
 interface HeaderProps {
@@ -19,7 +20,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: Heade
         <div className="flex flex-col items-center">
           {/* Logo/Home link */}
           <a href="/">
-            <Image
+            <img
               src="/img/gptr-logo.png"
               alt="logo"
               width={60}

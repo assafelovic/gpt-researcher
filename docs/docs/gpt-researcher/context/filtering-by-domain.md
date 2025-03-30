@@ -43,3 +43,19 @@ When using the NextJS frontend, you can pass a list of domains to filter results
 When using the Vanilla JS frontend, you can pass a list of domains to filter results via the relevant input field:
 
 ![Filter by Domain](./img/vanilla-filter-by-domains.png)
+
+## Filtering by Domain based on URL Param
+
+If you'd like to show off for your work pals how GPTR is the ultra-customizable Deep Research Agent, you can send them a link to your hosted GPTR app with the domain filter included in the URL itself.
+
+This can be handle for demonstrating a proof of concept of the Research Agent tailored to a specific domain. Some examples below:
+
+### Single Domain:
+
+https://gptr.app/?domains=wikipedia.org
+
+### Multiple Domains:
+
+https://gptr.app/?domains=wired.com,forbes.com,wikipedia.org
+
+The `https://gptr.app` part of the URL can be replaces with [the domain that you deployed GPTR on](https://docs.gptr.dev/docs/gpt-researcher/getting-started/linux-deployment).

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { Data, ChatBoxSettings, QuestionData } from '../types/data';
 import { getHost } from '../helpers/getHost';
 
@@ -7,7 +7,8 @@ export const useWebSocket = (
   setAnswer: React.Dispatch<React.SetStateAction<string>>, 
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setShowHumanFeedback: React.Dispatch<React.SetStateAction<boolean>>,
-  setQuestionForHuman: React.Dispatch<React.SetStateAction<boolean | true>>
+  setQuestionForHuman: React.Dispatch<React.SetStateAction<boolean | true>>,
+  currentApiUrl: string
 ) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const heartbeatInterval = useRef<number>();
@@ -35,14 +36,16 @@ export const useWebSocket = (
     }, 30000); // Send ping every 30 seconds
   };
 
-  const initializeWebSocket = (promptValue: string, chatBoxSettings: ChatBoxSettings) => {
+  const initializeWebSocket = useCallback((promptValue: string, chatBoxSettings: ChatBoxSettings) => {
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
 
     if (!socket && typeof window !== 'undefined') {
-      const fullHost = getHost();
-      const host = fullHost.replace('http://', '').replace('https://', '');
-      const ws_uri = `${fullHost.includes('https') ? 'wss:' : 'ws:'}//${host}/ws`;
+      
+      let fullHost = getHost()
+      const protocol = fullHost.includes('https') ? 'wss:' : 'ws:'
+      const cleanHost = fullHost.replace('http://', '').replace('https://', '')
+      const ws_uri = `${protocol}//${cleanHost}/ws`
 
       const newSocket = new WebSocket(ws_uri);
       setSocket(newSocket);
@@ -102,7 +105,7 @@ export const useWebSocket = (
         }
       };
     }
-  };
+  }, [socket, currentApiUrl]); // Add currentApiUrl to dependencies
 
   return { socket, setSocket, initializeWebSocket };
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import './App.css';
+import './Settings.css';
 import ChatBox from './ChatBox';
 import { ChatBoxSettings } from '@/types/data';
 
@@ -24,6 +24,13 @@ const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) 
     const storedConfig = localStorage.getItem('apiVariables');
     if (storedConfig) {
       setApiVariables(JSON.parse(storedConfig));
+    }
+
+    if(showModal) {
+      const header = document.querySelector('.settings .App-header');
+      if (header) {
+        header.classList.remove('App-header');
+      }
     }
   }, [showModal]);
 

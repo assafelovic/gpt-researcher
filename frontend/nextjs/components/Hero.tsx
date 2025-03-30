@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { FC } from "react";
+import React, { FC } from "react";
 import InputArea from "./ResearchBlocks/elements/InputArea";
 
 type THeroProps = {
@@ -55,7 +55,7 @@ const Hero: FC<THeroProps> = ({
               onClick={() => handleClickSuggestion(item?.name)}
               key={item.id}
             >
-              <Image
+              <img
                 src={item.icon}
                 alt={item.name}
                 width={18}
