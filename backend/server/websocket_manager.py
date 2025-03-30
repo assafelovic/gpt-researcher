@@ -74,12 +74,12 @@ class WebSocketManager:
             except:
                 pass  # Connection might already be closed
 
-    async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[]):
+    async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[], language="english"):
         """Start streaming the output."""
         tone = Tone[tone]
         # add customized JSON config file path here
         config_path = "default"
-        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=headers, query_domains=query_domains, config_path=config_path)
+        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=headers, query_domains=query_domains, config_path=config_path, language=language)
         # Create new Chat Agent whenever a new report is written
         self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
         return report
@@ -91,7 +91,7 @@ class WebSocketManager:
         else:
             await websocket.send_json({"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"})
 
-async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, stream_output=stream_output, headers=None, query_domains=[], config_path="", return_researcher=False):
+async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, stream_output=stream_output, headers=None, query_domains=[], config_path="", return_researcher=False,language="english"):
     """Run the agent."""    
     # Create logs handler for this research task
     logs_handler = CustomLogsHandler(websocket, task)
@@ -118,7 +118,8 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
             tone=tone,
             config_path=config_path,
             websocket=logs_handler,  # Use logs_handler instead of raw websocket
-            headers=headers
+            headers=headers,
+            language=language
         )
         report = await researcher.run()
         
@@ -133,7 +134,8 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
             tone=tone,
             config_path=config_path,
             websocket=logs_handler,  # Use logs_handler instead of raw websocket
-            headers=headers
+            headers=headers,
+            language=language
         )
         report = await researcher.run()
 
