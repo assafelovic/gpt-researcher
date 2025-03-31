@@ -8,9 +8,9 @@ The GPT Researcher MCP Server provides Model Context Protocol (MCP) integration 
 
 ## Why GPT Researcher MCP?
 
-While many AI apps can access web search tools with MCP, GPT Researcher MCP delivers superior results. Standard search tools return raw results requiring manual filtering, often containing irrelevant sources and wasting context window space.
+While many AI apps can access web search tools with MCP, GPT Researcher MCP delivers in-depth results. Standard search tools return raw results requiring manual filtering, often containing irrelevant sources and wasting context window space.
 
-GPT Researcher performs autonomous, comprehensive research - not just search. It intelligently explores and validates multiple sources, focusing only on relevant and up-to-date information. Though slightly slower (30-40 seconds) than standard search, it delivers higher quality information, optimized context, comprehensive results, and better reasoning for LLMs.
+GPT Researcher performs autonomous, deep research - not just search. It intelligently explores and validates multiple sources, focusing only on relevant and up-to-date information. Though slightly slower (30-40 seconds) than standard search, it delivers higher quality information, optimized context, comprehensive results, and better reasoning for LLMs.
 
 The MCP server exposes the following capabilities to AI assistants:
 
@@ -19,7 +19,8 @@ The MCP server exposes the following capabilities to AI assistants:
 
 ### Primary Tools
 
-- `conduct_research`: Performs autonomous web research on a topic, finding the most reliable and relevant information
+- `deep_research`: Performs autonomous web research on a topic, finding the most reliable and relevant information
+- `quick_search`: Performs a fast web search optimized for speed over quality, returning search results with snippets
 - `write_report`: Generate a report based on research results
 - `get_research_sources`: Get the sources used in the research
 - `get_research_context`: Get the full context of the research

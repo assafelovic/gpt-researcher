@@ -20,6 +20,7 @@ from .actions import (
     extract_headers,
     extract_sections,
     table_of_contents,
+    get_search_results,
     get_retrievers,
     choose_agent
 )
@@ -225,6 +226,9 @@ class GPTResearcher:
         intro = await self.report_generator.write_introduction()
         await self._log_event("research", step="introduction_completed")
         return intro
+
+    async def quick_search(self, query: str, query_domains: list[str] = None) -> list[Any]:
+        return await get_search_results(query, self.retrievers[0], query_domains=query_domains)
 
     async def get_subtopics(self):
         return await self.report_generator.get_subtopics()

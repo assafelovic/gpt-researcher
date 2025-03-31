@@ -88,10 +88,11 @@ async def research_resource(topic: str) -> str:
 
 
 @mcp.tool()
-async def conduct_research(query: str) -> Dict[str, Any]:
+async def deep_research(query: str) -> Dict[str, Any]:
     """
-    Conduct a web research on a given query using GPT Researcher. 
+    Conduct a deep web research on a given query using GPT Researcher.
     Use this tool when you need time-sensitive, real-time information like stock prices, news, people, specific knowledge, etc.
+    You must include citations that back your responses when using this tool.
     
     Args:
         query: The research query or topic
