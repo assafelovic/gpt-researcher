@@ -202,7 +202,7 @@ FAST_LLM="huggingface:HuggingFaceH4/zephyr-7b-beta"
 SMART_LLM="huggingface:HuggingFaceH4/zephyr-7b-beta"
 STRATEGIC_LLM="huggingface:HuggingFaceH4/zephyr-7b-beta"
 
-EMBEDDING="sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING="huggingface:sentence-transformers/all-MiniLM-L6-v2"
 ```
 
 Add `langchain-huggingface` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
