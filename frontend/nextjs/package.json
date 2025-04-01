@@ -21,12 +21,10 @@
     "build:types": "cp src/index.d.ts dist/",
     "dev:lib": "rollup -c -w"
   },
-  "peerDependencies": {
+  "dependencies": {
     "next": "^14.2.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  },
-  "dependencies": {
+    "react-dom": "^18.0.0",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@mozilla/readability": "^0.5.0",

@@ -71,6 +71,7 @@ export default {
     terser()
   ],
   external: [
+    'next',
     'react', 
     'react-dom',
     'react-hot-toast',
