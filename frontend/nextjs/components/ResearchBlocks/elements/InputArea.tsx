@@ -76,7 +76,9 @@ const InputArea: FC<TInputAreaProps> = ({
     return null;
   }
 
-  return (
+  return handleSecondary ? (
+    <span></span>
+  ) : (
     <form
       className="mx-auto flex pt-2 pb-2 w-full items-center justify-between rounded-lg border bg-white px-3 shadow-[2px_2px_38px_0px_rgba(0,0,0,0.25),0px_-2px_4px_0px_rgba(0,0,0,0.25)_inset,1px_2px_4px_0px_rgba(0,0,0,0.25)_inset]"
       onSubmit={(e) => {
