@@ -29,7 +29,7 @@ class BasicReport:
         self.config_path = config_path
         self.websocket = websocket
         self.headers = headers or {}
-        self.additional_context = additional_contexts
+        self.additional_contexts = additional_contexts
 
     async def run(self):
         # Initialize researcher

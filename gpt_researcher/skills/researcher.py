@@ -150,7 +150,7 @@ class ResearchConductor:
         if self.researcher.additional_contexts:
             await stream_output(
                 "logs",
-                "additional_contexts",
+                "adding_additional_contexts",
                 f"Adding provided additional contexts to research",
                 self.researcher.websocket,
             )

@@ -79,7 +79,7 @@ class WebSocketManager:
         tone = Tone[tone]
         # add customized JSON config file path here
         config_path = "default"
-        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=headers, query_domains=query_domains, config_path=config_path, additional_context=additional_contexts)
+        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=headers, query_domains=query_domains, config_path=config_path, additional_contexts=additional_contexts)
         # Create new Chat Agent whenever a new report is written
         self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
         return report
