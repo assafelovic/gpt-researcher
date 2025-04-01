@@ -71,6 +71,7 @@ const GPTResearcher = (() => {
       ).value
       const tone = document.querySelector('select[name="tone"]').value
       const agent = document.querySelector('input[name="agent"]:checked').value
+      const additional_context = document.querySelector('textarea[name="additional_context"]').value
       let source_urls = tags
 
       if (report_source !== 'sources' && source_urls.length > 0) {
@@ -93,6 +94,7 @@ const GPTResearcher = (() => {
         tone: tone,
         agent: agent,
         query_domains: query_domains,
+        additional_contexts: [additional_context],
       }
 
       socket.send(`start ${JSON.stringify(requestData)}`)

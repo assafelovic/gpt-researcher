@@ -18,7 +18,8 @@ class DetailedReport:
         tone: Any = "",
         websocket: WebSocket = None,
         subtopics: List[Dict] = [],
-        headers: Optional[Dict] = None
+        headers: Optional[Dict] = None,
+        additional_contexts: Optional[list[str]] = None,
     ):
         self.query = query
         self.report_type = report_type
@@ -31,6 +32,7 @@ class DetailedReport:
         self.websocket = websocket
         self.subtopics = subtopics
         self.headers = headers or {}
+        self.additional_contexts = additional_contexts
 
         self.gpt_researcher = GPTResearcher(
             query=self.query,
@@ -42,7 +44,8 @@ class DetailedReport:
             config_path=self.config_path,
             tone=self.tone,
             websocket=self.websocket,
-            headers=self.headers
+            headers=self.headers,
+            additional_contexts=self.additional_contexts
         )
         self.existing_headers: List[Dict] = []
         self.global_context: List[str] = []

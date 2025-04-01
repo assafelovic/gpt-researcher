@@ -145,6 +145,22 @@ class ResearchConductor:
 
         elif self.researcher.report_source == ReportSource.LangChainVectorStore.value:
             research_data = await self._get_context_by_vectorstore(self.researcher.query, self.researcher.vector_store_filter)
+        
+        # Add additional context if provided
+        if self.researcher.additional_contexts:
+            await stream_output(
+                "logs",
+                "additional_contexts",
+                f"Adding provided additional contexts to research",
+                self.researcher.websocket,
+            )
+            
+            additional_contexts = [{
+                'raw_content': context
+            } for context in self.researcher.additional_contexts]
+            
+            relevant_contexts = await self.researcher.context_manager.get_similar_content_by_query(self.researcher.query, additional_contexts)
+            research_data += f"\n\nAdditional Context: {relevant_contexts}"
 
         # Rank and curate the sources
         self.researcher.context = research_data
@@ -270,6 +286,56 @@ class ResearchConductor:
         except Exception as e:
             self.logger.error(f"Error during web search: {e}", exc_info=True)
             return []
+        
+    async def _get_context_from_provided_content(self, query, additional_data: list, query_domains: list | None = None):
+        """
+        Generates the context for the research task by searching the query and scraping the results
+        Returns:
+            context: List of context
+        """
+        
+        if additional_data is None:
+            additional_data = []
+        if query_domains is None:
+            query_domains = []
+
+        # Generate Sub-Queries including original query
+        sub_queries = await self.plan_research(query, query_domains)
+        self.logger.info(f"Generated sub-queries: {sub_queries}")
+        
+        # If this is not part of a sub researcher, add original query to research for better results
+        if self.researcher.report_type != "subtopic_report":
+            sub_queries.append(query)
+
+        if self.researcher.verbose:
+            await stream_output(
+                "logs",
+                "subqueries",
+                f"🗂️ I will conduct my research based on the following queries: {sub_queries}...",
+                self.researcher.websocket,
+                True,
+                sub_queries,
+            )
+
+        # Using asyncio.gather to process the sub_queries asynchronously
+        try:
+            context = await asyncio.gather(
+                *[
+                    self._process_sub_query(sub_query, scraped_data, query_domains)
+                    for sub_query in sub_queries
+                ]
+            )
+            self.logger.info(f"Gathered context from {len(context)} sub-queries")
+            # Filter out empty results and join the context
+            context = [c for c in context if c]
+            if context:
+                combined_context = " ".join(context)
+                self.logger.info(f"Combined context size: {len(combined_context)}")
+                return combined_context
+            return []
+        except Exception as e:
+            self.logger.error(f"Error during web search: {e}", exc_info=True)
+            return []
 
     async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context."""
@@ -291,6 +357,12 @@ class ResearchConductor:
             if not scraped_data:
                 scraped_data = await self._scrape_data_by_urls(sub_query, query_domains)
                 self.logger.info(f"Scraped data size: {len(scraped_data)}")
+                
+    
+            
+            # print(scraped_data)
+            # self.logger.info(f"Scraped data: {scraped_data}")
+            # raise Exception("test")
 
             content = await self.researcher.context_manager.get_similar_content_by_query(sub_query, scraped_data)
             self.logger.info(f"Content found for sub-query: {len(str(content)) if content else 0} chars")

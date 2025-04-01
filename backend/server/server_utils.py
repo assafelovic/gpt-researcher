@@ -123,6 +123,7 @@ async def handle_start_command(websocket, data: str, manager):
     (
         token,
         task,
+        additional_contexts,
         report_type,
         source_urls,
         document_urls,
@@ -153,8 +154,6 @@ async def handle_start_command(websocket, data: str, manager):
         "report": ""
     })
 
-    sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
-
     report = await manager.start_streaming(
         task,
         report_type,
@@ -165,6 +164,7 @@ async def handle_start_command(websocket, data: str, manager):
         websocket,
         headers,
         query_domains,
+        additional_contexts,
     )
     report = str(report)
     # file_paths = await generate_report_files(report, sanitized_filename)
@@ -316,6 +316,7 @@ def extract_command_data(json_data: Dict) -> tuple:
     return (
         json_data.get("token"),
         json_data.get("task"),
+        json_data.get("additional_contexts", []),
         json_data.get("report_type"),
         json_data.get("source_urls"),
         json_data.get("document_urls"),

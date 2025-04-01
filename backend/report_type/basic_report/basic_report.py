@@ -1,5 +1,5 @@
 from fastapi import WebSocket
-from typing import Any
+from typing import Any, Optional
 
 from gpt_researcher import GPTResearcher
 
@@ -16,7 +16,8 @@ class BasicReport:
         tone: Any,
         config_path: str,
         websocket: WebSocket,
-        headers=None
+        headers=None,
+        additional_contexts: Optional[list[str]] = None,
     ):
         self.query = query
         self.query_domains = query_domains
@@ -28,11 +29,13 @@ class BasicReport:
         self.config_path = config_path
         self.websocket = websocket
         self.headers = headers or {}
+        self.additional_context = additional_contexts
 
     async def run(self):
         # Initialize researcher
         researcher = GPTResearcher(
             query=self.query,
+            additional_contexts=self.additional_contexts,
             query_domains=self.query_domains,
             report_type=self.report_type,
             report_source=self.report_source,
