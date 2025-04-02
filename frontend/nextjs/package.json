@@ -21,12 +21,14 @@
     "build:types": "cp src/index.d.ts dist/",
     "dev:lib": "rollup -c -w"
   },
-  "peerDependencies": {
+  "dependencies": {
     "next": "^14.2.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
-  },
-  "dependencies": {
+    "react-dom": "^18.0.0",
+    "@langchain/langgraph-sdk": "^0.0.1-rc.12",
+    "@next/third-parties": "^15.1.6",
+    "react-ga4": "^2.1.0",
+    "next-plausible": "^3.12.0",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@mozilla/readability": "^0.5.0",
