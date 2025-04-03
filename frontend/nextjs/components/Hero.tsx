@@ -18,24 +18,32 @@ const Hero: FC<THeroProps> = ({
   };
 
   return (
-    <div>
+    <div className="relative overflow-hidden">
+      {/* Background gradient elements */}
+      <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] rounded-full bg-purple-600/20 blur-[100px] -z-10"></div>
+      <div className="absolute top-[20%] right-[-100px] w-[350px] h-[350px] rounded-full bg-pink-600/20 blur-[100px] -z-10"></div>
+      
       <div className="flex flex-col items-center justify-center py-8 md:py-12 lg:pt-8 lg:pb-16">
         <div className="landing flex flex-col items-center mb-8 md:mb-12">
           <h1 className="text-4xl font-extrabold text-center lg:text-7xl mb-6">
             Say Goodbye to <br />
             <span
-              style={{
-                backgroundImage: 'linear-gradient(to right, #9867F0, #ED4E50)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent animate-pulse"
             >
               Hours of Research
             </span>
           </h1>
-          <h2 className="text-xl font-light text-center px-4 mb-10 md:mb-12 text-gray-300">
+          <h2 className="text-xl font-light text-center px-4 mb-10 md:mb-12 text-gray-300 max-w-2xl">
             Say Hello to GPT Researcher, your AI mate for rapid insights and comprehensive research
           </h2>
+          
+          {/* Visual element */}
+          <div className="hidden md:block relative w-20 h-20 mb-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-spin-slow opacity-80"></div>
+            <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center">
+              <img src="/img/gptr-logo.png" alt="GPT Researcher" className="w-12 h-12" />
+            </div>
+          </div>
         </div>
 
         {/* Input section */}
@@ -51,7 +59,7 @@ const Hero: FC<THeroProps> = ({
         <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 pb-8 md:pb-10 px-4 lg:flex-nowrap lg:justify-normal">
           {suggestions.map((item) => (
             <div
-              className="flex h-[35px] cursor-pointer items-center justify-center gap-[5px] rounded border border-solid border-[#C1C1C1] bg-[#EDEDEA] px-2.5 py-2"
+              className="flex h-[40px] cursor-pointer items-center justify-center gap-[5px] rounded-full border border-solid border-gray-700 bg-gray-800/50 hover:bg-gray-700/60 px-4 py-2 transition-all duration-200 hover:scale-105 shadow-lg"
               onClick={() => handleClickSuggestion(item?.name)}
               key={item.id}
             >
@@ -62,7 +70,7 @@ const Hero: FC<THeroProps> = ({
                 height={16}
                 className="w-[18px]"
               />
-              <span className="text-sm font-light leading-[normal] text-[#1B1B16]">
+              <span className="text-sm font-medium leading-[normal] text-gray-200">
                 {item.name}
               </span>
             </div>
