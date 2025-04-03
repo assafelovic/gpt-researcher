@@ -17,7 +17,7 @@ class BasicReport:
         config_path: str,
         websocket: WebSocket,
         headers=None,
-        additional_contexts: Optional[list[str]] = None,
+        additional_sources: Optional[list[dict]] = None,
     ):
         self.query = query
         self.query_domains = query_domains
@@ -29,13 +29,12 @@ class BasicReport:
         self.config_path = config_path
         self.websocket = websocket
         self.headers = headers or {}
-        self.additional_contexts = additional_contexts
-
+        self.additional_sources = additional_sources
     async def run(self):
         # Initialize researcher
         researcher = GPTResearcher(
             query=self.query,
-            additional_contexts=self.additional_contexts,
+            additional_sources=self.additional_sources,
             query_domains=self.query_domains,
             report_type=self.report_type,
             report_source=self.report_source,

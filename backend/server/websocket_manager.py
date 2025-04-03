@@ -74,12 +74,12 @@ class WebSocketManager:
             except:
                 pass  # Connection might already be closed
 
-    async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[], additional_contexts=[]):
+    async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[], additional_sources=None):
         """Start streaming the output."""
         tone = Tone[tone]
         # add customized JSON config file path here
         config_path = "default"
-        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=headers, query_domains=query_domains, config_path=config_path, additional_contexts=additional_contexts)
+        report = await run_agent(task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=headers, query_domains=query_domains, config_path=config_path, additional_sources=additional_sources)
         # Create new Chat Agent whenever a new report is written
         self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
         return report
@@ -91,7 +91,7 @@ class WebSocketManager:
         else:
             await websocket.send_json({"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"})
 
-async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, headers=None, query_domains=[], config_path="", additional_contexts=None):
+async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, headers=None, query_domains=[], config_path="", additional_sources=None):
     """Run the agent."""    
     # Create logs handler for this research task
     logs_handler = CustomLogsHandler(websocket, task)
@@ -110,7 +110,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
     elif report_type == ReportType.DetailedReport.value:
         researcher = DetailedReport(
             query=task,
-            additional_contexts=additional_contexts,
+            additional_sources=additional_sources,
             query_domains=query_domains,
             report_type=report_type,
             report_source=report_source,
@@ -126,7 +126,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
     else:
         researcher = BasicReport(
             query=task,
-            additional_contexts=additional_contexts,
+            additional_sources=additional_sources,
             query_domains=query_domains,
             report_type=report_type,
             report_source=report_source,

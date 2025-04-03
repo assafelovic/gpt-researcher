@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 import json
 
 from .config import Config
@@ -49,7 +49,7 @@ class GPTResearcher:
         visited_urls: set | None = None,
         verbose: bool = True,
         context=None,
-        additional_contexts : list[str] | None = None,
+        additional_sources : list[dict] | None = None,
         headers: dict | None = None,
         max_subtopics: int = 5,
         log_handler=None,
@@ -79,7 +79,7 @@ class GPTResearcher:
         self.visited_urls = visited_urls or set()
         self.verbose = verbose
         self.context = context or []
-        self.additional_contexts = additional_contexts or []
+        self.additional_sources = additional_sources
         self.headers = headers or {}
         self.research_costs = 0.0
         self.retrievers = get_retrievers(self.headers, self.cfg)

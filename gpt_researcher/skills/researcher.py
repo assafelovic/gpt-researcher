@@ -99,7 +99,7 @@ class ResearchConductor:
 
         elif self.researcher.report_source == ReportSource.Web.value:
             self.logger.info("Using web search")
-            research_data = await self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains)
+            research_data = await self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains, self.researcher.additional_sources)
 
         # ... rest of the conditions ...
         elif self.researcher.report_source == ReportSource.Local.value:
@@ -146,21 +146,6 @@ class ResearchConductor:
         elif self.researcher.report_source == ReportSource.LangChainVectorStore.value:
             research_data = await self._get_context_by_vectorstore(self.researcher.query, self.researcher.vector_store_filter)
         
-        # Add additional context if provided
-        if self.researcher.additional_contexts:
-            await stream_output(
-                "logs",
-                "adding_additional_contexts",
-                f"Adding provided additional contexts to research",
-                self.researcher.websocket,
-            )
-            
-            additional_contexts = [{
-                'raw_content': context
-            } for context in self.researcher.additional_contexts]
-            
-            relevant_contexts = await self.researcher.context_manager.get_similar_content_by_query(self.researcher.query, additional_contexts)
-            research_data += f"\n\nAdditional Context: {relevant_contexts}"
 
         # Rank and curate the sources
         self.researcher.context = research_data
@@ -236,7 +221,7 @@ class ResearchConductor:
         )
         return context
 
-    async def _get_context_by_web_search(self, query, scraped_data: list | None = None, query_domains: list | None = None):
+    async def _get_context_by_web_search(self, query, scraped_data: list | None = None, query_domains: list | None = None, additional_sources: list[dict] | None = None):
         """
         Generates the context for the research task by searching the query and scraping the results
         Returns:
@@ -266,12 +251,23 @@ class ResearchConductor:
                 True,
                 sub_queries,
             )
-
+            
+        if additional_sources and len(additional_sources) > 0:
+            self.logger.info(f"Additional sources count: {len(additional_sources)}")
+            await stream_output(
+                "logs",
+                "adding_additional_sources",
+                f"Adding additional sources to research",
+                self.researcher.websocket,
+                True,
+                [source['title'] for source in additional_sources],
+            )
+            
         # Using asyncio.gather to process the sub_queries asynchronously
         try:
             context = await asyncio.gather(
                 *[
-                    self._process_sub_query(sub_query, scraped_data, query_domains)
+                    self._process_sub_query(sub_query, scraped_data, query_domains, additional_sources)
                     for sub_query in sub_queries
                 ]
             )
@@ -337,7 +333,7 @@ class ResearchConductor:
             self.logger.error(f"Error during web search: {e}", exc_info=True)
             return []
 
-    async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = []):
+    async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = [], additional_sources: list[dict] | None = None):
         """Takes in a sub query and scrapes urls based on it and gathers context."""
         if self.json_handler:
             self.json_handler.log_event("sub_query", {
@@ -358,12 +354,9 @@ class ResearchConductor:
                 scraped_data = await self._scrape_data_by_urls(sub_query, query_domains)
                 self.logger.info(f"Scraped data size: {len(scraped_data)}")
                 
+            if additional_sources:
+                scraped_data.extend(additional_sources)
     
-            
-            # print(scraped_data)
-            # self.logger.info(f"Scraped data: {scraped_data}")
-            # raise Exception("test")
-
             content = await self.researcher.context_manager.get_similar_content_by_query(sub_query, scraped_data)
             self.logger.info(f"Content found for sub-query: {len(str(content)) if content else 0} chars")
 
