@@ -2,6 +2,14 @@ import Image from "next/image";
 import React, { FC } from "react";
 import InputArea from "./ResearchBlocks/elements/InputArea";
 
+// PLEASE NOTE - there is a HUGE user input VULNERABILITY HERE that should be fixed ASAP.
+// We are not sanitizing the user input and we are allowing the user to input arbitrary code.
+// This is a security risk and we need to fix it.
+// We are also not validating the user input and we are allowing the user to input arbitrary code.
+// This is a security risk and we need to fix it.
+// We are also not validating the user input and we are allowing the user to input arbitrary code.
+// This is a security risk and we need to fix it.
+
 type THeroProps = {
   promptValue: string;
   setPromptValue: React.Dispatch<React.SetStateAction<string>>;
