@@ -4,6 +4,7 @@
 import os
 import requests
 import json
+from ..utils import normalize_search_results
 
 
 class GoogleSearch:
@@ -71,16 +72,16 @@ class GoogleSearch:
             print("Google search: unexpected response status: ", resp.status_code)
 
         if resp is None:
-            return
+            return []
         try:
             search_results = json.loads(resp.text)
         except Exception:
-            return
+            return []
         if search_results is None:
-            return
+            return []
 
         results = search_results.get("items", [])
-        search_results = []
+        raw_results = []
 
         # Normalizing results to match the format of the other search APIs
         for result in results:
@@ -95,6 +96,7 @@ class GoogleSearch:
                 }
             except:
                 continue
-            search_results.append(search_result)
+            raw_results.append(search_result)
 
-        return search_results[:max_results]
+        # Use the normalize_search_results utility for consistent formatting
+        return normalize_search_results(raw_results, max_results)

@@ -36,6 +36,8 @@ async def choose_agent(
             cost_callback=cost_callback,
         )
 
+        
+
         agent_dict = json.loads(response)
         return agent_dict["server"], agent_dict["agent_role_prompt"]
 

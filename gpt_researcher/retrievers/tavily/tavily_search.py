@@ -5,6 +5,7 @@ import os
 from typing import Literal, Sequence, Optional
 import requests
 import json
+from ..utils import safe_request, rate_limit, normalize_search_results
 
 
 class TavilySearch:
@@ -50,6 +51,7 @@ class TavilySearch:
         return api_key
 
 
+    @rate_limit(domain="api.tavily.com", requests_per_minute=30)
     def _search(
         self,
         query: str,
@@ -83,15 +85,22 @@ class TavilySearch:
             "use_cache": use_cache,
         }
 
-        response = requests.post(
-            self.base_url, data=json.dumps(data), headers=self.headers, timeout=100
+        # Use the new safe_request helper function
+        response = safe_request(
+            url=self.base_url,
+            method="POST",
+            headers=self.headers,
+            json_data=data,
+            timeout=100
         )
 
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             return response.json()
         else:
-            # Raises a HTTPError if the HTTP request returned an unsuccessful status code
-            response.raise_for_status()
+            # Handle error case
+            if response:
+                response.raise_for_status()
+            raise Exception("Failed to get response from Tavily API")
 
     def search(self, max_results=10):
         """
@@ -111,11 +120,15 @@ class TavilySearch:
             sources = results.get("results", [])
             if not sources:
                 raise Exception("No results found with Tavily API search.")
-            # Return the results
-            search_response = [
+            
+            # Process results
+            raw_results = [
                 {"href": obj["url"], "body": obj["content"]} for obj in sources
             ]
+            
+            # Use normalize_search_results for consistent formatting
+            return normalize_search_results(raw_results, max_results)
+            
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
-            search_response = []
-        return search_response
+            return []
