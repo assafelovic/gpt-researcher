@@ -53,12 +53,10 @@ class GPTResearcher:
         headers: dict | None = None,
         max_subtopics: int = 5,
         log_handler=None,
-        language = "english"
     ):
         self.query = query
         self.report_type = report_type
         self.cfg = Config(config_path)
-        self.cfg.language = language
         self.llm = GenericLLMProvider(self.cfg)
         self.report_source = report_source if report_source else getattr(self.cfg, 'report_source', None)
         self.report_format = report_format

@@ -16,8 +16,7 @@ class BasicReport:
         tone: Any,
         config_path: str,
         websocket: WebSocket,
-        headers=None,
-        language:str = "english"
+        headers=None
     ):
         self.query = query
         self.query_domains = query_domains
@@ -29,7 +28,6 @@ class BasicReport:
         self.config_path = config_path
         self.websocket = websocket
         self.headers = headers or {}
-        self.language = language
 
         # Initialize researcher
         self.gpt_researcher = GPTResearcher(
@@ -42,8 +40,7 @@ class BasicReport:
             tone=self.tone,
             config_path=self.config_path,
             websocket=self.websocket,
-            headers=self.headers,
-            language=self.language
+            headers=self.headers
         )
 
     async def run(self):
