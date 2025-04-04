@@ -79,12 +79,13 @@
 
   /* Links */
   a {
-    color: rgb(168 85 247);
+    color: rgb(20, 184, 166);
     text-decoration: underline;
     font-weight: 500;
     
     &:hover {
       opacity: 0.8;
+      color: rgb(13, 148, 136);
     }
   }
 
@@ -107,11 +108,11 @@
 
   /* Blockquotes */
   blockquote {
-    border-left: 4px solid rgb(168 85 247);
+    border-left: 4px solid rgb(20, 184, 166);
     margin: 0;
     padding-left: 1em;
     font-style: italic;
-    background-color: rgba(168, 85, 247, 0.1);
+    background-color: rgba(20, 184, 166, 0.1);
     border-radius: 0 4px 4px 0;
   }
 
@@ -124,7 +125,7 @@
     border-radius: 4px;
     overflow: hidden;
     border: 2px solid #4B5563; /* Slightly thicker and lighter border for better visibility */
-    box-shadow: 0 0 0 1px rgb(168 85 247, 0.1); /* Subtle purple glow around table */
+    box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.1); /* Changed from purple to teal */
   }
 
   th, td {
