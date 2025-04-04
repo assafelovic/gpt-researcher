@@ -73,7 +73,7 @@ const Hero: FC<THeroProps> = ({
   };
 
   return (
-    <div className="relative overflow-visible min-h-[85vh] flex items-center pt-[80px] mt-[-80px]">
+    <div className="relative overflow-visible min-h-[85vh] flex items-center pt-[80px] mt-[-100px]">
       {/* Particle background */}
       <div ref={particlesContainerRef} className="absolute inset-0 -z-20"></div>
       
