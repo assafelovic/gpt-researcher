@@ -62,7 +62,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
           {!isOpen && (
             <button
               onClick={toggleSidebar}
-              className="absolute left-3 mx-auto top-[24px] w-10 h-10 flex items-center justify-center bg-gradient-to-br from-purple-400/8 via-purple-300/6 to-cyan-400/5 text-white rounded-full shadow-sm z-10 hover:from-purple-500/90 hover:via-teal-400/90 hover:to-cyan-500/90 hover:shadow-purple-500/20 hover:shadow-xl transition-all duration-300"
+              className="absolute left-3 mx-auto top-[24px] w-10 h-10 flex items-center justify-center bg-gradient-to-br from-teal-400/8 via-cyan-300/6 to-blue-400/5 text-white rounded-full shadow-sm z-10 hover:from-teal-500/90 hover:via-cyan-400/90 hover:to-blue-500/90 hover:shadow-teal-500/20 hover:shadow-xl transition-all duration-300"
               aria-label="Open sidebar"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,7 +95,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
               {/* New Research button */}
               <button
                 onClick={onNewResearch}
-                className="w-full py-3 px-4 mb-6 bg-purple-500 hover:bg-gradient-to-br text-white rounded shadow hover:shadow-purple-500/20 hover:shadow-lg font-bold text-sm transition-all duration-300 flex items-center justify-center"
+                className="w-full py-3 px-4 mb-6 bg-teal-500 hover:bg-gradient-to-br hover:from-teal-400 hover:to-cyan-500 text-white rounded shadow hover:shadow-teal-500/20 hover:shadow-lg font-bold text-sm transition-all duration-300 flex items-center justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -118,7 +118,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                     {history.map((item) => (
                       <li 
                         key={item.id}
-                        className="relative rounded-md hover:bg-gray-800 transition-colors duration-200 shadow-sm hover:shadow border-l-2 border-gray-700 hover:border-purple-500 pl-0.5"
+                        className="relative rounded-md hover:bg-gray-800 transition-colors duration-200 shadow-sm hover:shadow border-l-2 border-gray-700 hover:border-teal-500 pl-0.5"
                         onMouseEnter={() => setHoveredItem(item.id)}
                         onMouseLeave={() => setHoveredItem(null)}
                       >
