@@ -2,26 +2,16 @@ import Image from "next/image";
 import React from 'react';
 import { Toaster, toast } from "react-hot-toast";
 import { useEffect, useState } from 'react';
-import { remark } from 'remark';
-import html from 'remark-html';
-import { Compatible } from "vfile";
+import { markdownToHtml } from '../../helpers/markdownHelper';
 import '../../styles/markdown.css';
 
 export default function Answer({ answer }: { answer: string }) {
-  async function markdownToHtml(markdown: Compatible | undefined) {
-    try {
-      const result = await remark().use(html).process(markdown);
-      return result.toString();
-    } catch (error) {
-      console.error('Error converting Markdown to HTML:', error);
-      return ''; // Handle error gracefully, return empty string or default content
-    }
-  }
-
     const [htmlContent, setHtmlContent] = useState('');
 
     useEffect(() => {
-      markdownToHtml(answer).then((html) => setHtmlContent(html));
+      if (answer) {
+        markdownToHtml(answer).then((html) => setHtmlContent(html));
+      }
     }, [answer]);
     
     return (
