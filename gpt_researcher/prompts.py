@@ -92,6 +92,7 @@ You should strive to write the report as long as you can using all relevant and 
 Please follow all of the following guidelines in your report:
 - You MUST determine your own concrete and valid opinion based on the given information. Do NOT defer to general and meaningless conclusions.
 - You MUST write the report with markdown syntax and {report_format} format.
+- Use markdown tables when presenting structured data or comparisons to enhance readability.
 - You MUST prioritize the relevance, reliability, and significance of the sources you use. Choose trusted sources over less reliable ones.
 - You must also prioritize new articles over older articles if the source can be trusted.
 - Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
@@ -170,6 +171,7 @@ def generate_resource_report_prompt(
         " explaining how each source can contribute to finding answers to the research question.\n"
         "Focus on the relevance, reliability, and significance of each source.\n"
         "Ensure that the report is well-structured, informative, in-depth, and follows Markdown syntax.\n"
+        "Use markdown tables and other formatting features when appropriate to organize and present information clearly.\n"
         "Include relevant facts, figures, and numbers whenever available.\n"
         f"The report should have a minimum length of {total_words} words.\n"
         f"You MUST write the report in the following language: {language}.\n"
@@ -200,6 +202,7 @@ def generate_outline_report_prompt(
         " for the research report, including the main sections, subsections, and key points to be covered."
         f" The research report should be detailed, informative, in-depth, and a minimum of {total_words} words."
         " Use appropriate Markdown syntax to format the outline and ensure readability."
+        " Consider using markdown tables and other formatting features where they would enhance the presentation of information."
     )
 
 
@@ -255,6 +258,7 @@ The report should:
 5. Be well-structured with clear sections and subsections
 6. Have a minimum length of {total_words} words
 7. Follow {report_format} format with markdown syntax
+8. Use markdown tables, lists and other formatting features when presenting comparative data, statistics, or structured information
 
 Additional requirements:
 - Prioritize insights that emerged from deeper levels of research
@@ -367,6 +371,7 @@ You must limit the number of subsections to a maximum of {max_subsections}.
 Content Focus:
 - The report should focus on answering the question, be well-structured, informative, in-depth, and include facts and numbers if available.
 - Use markdown syntax and follow the {report_format.upper()} format.
+- When presenting data, comparisons, or structured information, use markdown tables to enhance readability.
 
 IMPORTANT:Content and Sections Uniqueness:
 - This part of the instructions is crucial to ensure the content is unique and does not overlap with existing reports.

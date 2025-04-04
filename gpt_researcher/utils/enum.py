@@ -49,3 +49,5 @@ class Tone(Enum):
     Pessimistic = (
         "Pessimistic (focusing on limitations, challenges, or negative outcomes)"
     )
+    Simple = "Simple (written for young readers, using basic vocabulary and clear explanations)"
+    Casual = "Casual (conversational and relaxed style for easy, everyday reading)"
