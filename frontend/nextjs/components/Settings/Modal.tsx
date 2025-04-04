@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import './Settings.css';
 import ChatBox from './ChatBox';
 import { ChatBoxSettings } from '@/types/data';
+import { createPortal } from 'react-dom';
 
 interface ChatBoxProps {
   chatBoxSettings: ChatBoxSettings;
@@ -15,10 +16,17 @@ interface Domain {
 const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) => {
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState('report_settings');
+  const [mounted, setMounted] = useState(false);
   
   const [apiVariables, setApiVariables] = useState({
     DOC_PATH: './my-docs',
   });
+
+  // Mount the component
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   useEffect(() => {
     const storedConfig = localStorage.getItem('apiVariables');
@@ -26,12 +34,21 @@ const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) 
       setApiVariables(JSON.parse(storedConfig));
     }
 
-    if(showModal) {
+    // Handle body scroll when modal is shown/hidden
+    if (showModal) {
+      document.body.style.overflow = 'hidden';
       const header = document.querySelector('.settings .App-header');
       if (header) {
         header.classList.remove('App-header');
       }
+    } else {
+      document.body.style.overflow = '';
     }
+    
+    // Cleanup function
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [showModal]);
 
   const handleSaveChanges = () => {
@@ -54,6 +71,45 @@ const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) 
     }));
   };
 
+  // Create modal content
+  const modalContent = showModal && (
+    <>
+      <div 
+        className="fixed inset-0 z-[1000] flex items-center justify-center overflow-auto" 
+        style={{ backdropFilter: 'blur(5px)' }}
+      >
+        <div className="relative w-auto my-6 mx-auto max-w-3xl z-[1001]">
+          <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
+            <div className="relative p-6 flex-auto">
+              {false && (<div className="tabs">
+                <button onClick={() => setActiveTab('report_settings')} className={`tab-button ${activeTab === 'report_settings' ? 'active' : ''}`}>Report Settings</button>
+              </div>)}
+
+              {activeTab === 'report_settings' && (
+                <div className="App">
+                  <header className="App-header">
+                    <ChatBox setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
+                  </header>
+                </div>
+              )}
+              
+            </div>
+            <div className="flex items-center justify-end p-3">
+              <button
+                className="bg-teal-500 text-white active:bg-teal-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+                type="button"
+                onClick={handleSaveChanges}
+              >
+                Save & Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="fixed inset-0 z-[999] bg-black opacity-50"></div>
+    </>
+  );
+
   return (
     <div className="settings">
       <button
@@ -63,40 +119,7 @@ const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) 
       >
         Preferences
       </button>
-      {showModal ? (
-        <>
-          <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-[9999] outline-none focus:outline-none">
-            <div className="relative w-auto my-6 mx-auto max-w-3xl">
-              <div className="border-0 rounded-lg shadow-lg relative flex flex-col w-full bg-white outline-none focus:outline-none">
-                <div className="relative p-6 flex-auto">
-                  {false && (<div className="tabs">
-                    <button onClick={() => setActiveTab('report_settings')} className={`tab-button ${activeTab === 'report_settings' ? 'active' : ''}`}>Report Settings</button>
-                  </div>)}
-
-                  {activeTab === 'report_settings' && (
-                    <div className="App">
-                      <header className="App-header">
-                        <ChatBox setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
-                      </header>
-                    </div>
-                  )}
-                  
-                </div>
-                <div className="flex items-center justify-end p-3">
-                  <button
-                    className="bg-teal-500 text-white active:bg-teal-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
-                    type="button"
-                    onClick={handleSaveChanges}
-                  >
-                    Save & Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="opacity-25 fixed inset-0 z-[9998] bg-black"></div>
-        </>
-      ) : null}
+      {mounted && showModal && createPortal(modalContent, document.body)}
     </div>
   );
 };
