@@ -179,13 +179,14 @@ footer p {
 }
 
 footer a {
-    color: #ffffff;
+    color: #14b8a6;
     font-weight: bold;
     text-decoration: none;
 }
 
 a:hover {
     text-decoration: underline;
+    color: #0d9488;
 }
 
 /* Add or modify these styles at the end of the file */
