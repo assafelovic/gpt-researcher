@@ -15,6 +15,7 @@ const Hero: FC<THeroProps> = ({
   handleDisplayResult,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const [showGradient, setShowGradient] = useState(true);
   const particlesContainerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -54,11 +55,35 @@ const Hero: FC<THeroProps> = ({
       }
     }
     
+    // Add scroll event listener to show/hide gradient
+    let lastScrollY = window.scrollY;
+    const threshold = 100; // Amount of scroll before hiding gradient
+    
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (currentScrollY <= threshold) {
+        // At or near the top, show gradient
+        setShowGradient(true);
+      } else if (currentScrollY > lastScrollY) {
+        // Scrolling down, hide gradient
+        setShowGradient(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up, show gradient
+        setShowGradient(true);
+      }
+      
+      lastScrollY = currentScrollY;
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    
     // Clean up function
     return () => {
       if (particlesContainerRef.current) {
         particlesContainerRef.current.innerHTML = '';
       }
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -160,7 +185,6 @@ const Hero: FC<THeroProps> = ({
           transition={{ duration: 0.8, delay: 1 }}
           className="flex flex-wrap items-center justify-center gap-2 xs:gap-3 md:gap-4 pb-6 sm:pb-8 md:pb-10 px-4 lg:flex-nowrap lg:justify-normal"
         >
-          <span className="text-gray-400 text-sm mr-2 mb-2 hidden sm:inline-block">Try:</span>
           <AnimatePresence>
             {suggestions.map((item, index) => (
               <motion.div
@@ -192,6 +216,74 @@ const Hero: FC<THeroProps> = ({
           </AnimatePresence>
         </motion.div>
       </motion.div>
+
+      {/* Magical premium gradient glow at the bottom */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: showGradient ? 1 : 0 }}
+        transition={{ duration: 1.2 }}
+        className="fixed bottom-0 left-0 right-0 h-[12px] z-50 overflow-hidden pointer-events-none"
+      >
+        <div className="relative w-full h-full">
+          {/* Main perfect center glow with smooth fade at edges */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              opacity: 0.85,
+              background: 'radial-gradient(ellipse at center, rgba(12, 219, 182, 1) 0%, rgba(6, 219, 238, 0.7) 25%, rgba(6, 219, 238, 0.2) 50%, rgba(0, 0, 0, 0) 75%)',
+              boxShadow: '0 0 30px 6px rgba(12, 219, 182, 0.5), 0 0 60px 10px rgba(6, 219, 238, 0.25)'
+            }}
+          />
+          
+          {/* Subtle shimmer overlay with perfect center focus */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              animation: 'shimmer 8s ease-in-out infinite alternate',
+              opacity: 0.5,
+              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 30%, rgba(255, 255, 255, 0) 60%)'
+            }}
+          />
+          
+          {/* Gentle breathing effect */}
+          <div 
+            className="absolute inset-0"
+            style={{
+              opacity: 0.4,
+              animation: 'breathe 7s cubic-bezier(0.4, 0.0, 0.2, 1) infinite',
+              background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 50%)'
+            }}
+          />
+        </div>
+      </motion.div>
+      
+      {/* Custom keyframes for magical animations */}
+      <style jsx global>{`
+        @keyframes shimmer {
+          0% {
+            opacity: 0.4;
+            transform: scale(0.98);
+          }
+          50% {
+            opacity: 0.6;
+          }
+          100% {
+            opacity: 0.4;
+            transform: scale(1.02);
+          }
+        }
+        
+        @keyframes breathe {
+          0%, 100% {
+            opacity: 0.3;
+            transform: scale(0.96);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(1.04);
+          }
+        }
+      `}</style>
     </div>
   );
 };

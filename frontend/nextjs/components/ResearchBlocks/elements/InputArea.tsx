@@ -94,18 +94,18 @@ const InputArea: FC<TInputAreaProps> = ({
         ref={textareaRef}
         className="focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal] 
         text-[#1B1B16]/30 text-black outline-none focus-visible:ring-0 focus-visible:ring-offset-0 
-        sm:text-xl min-h-[3em] resize-none"
+        sm:text-xl min-h-[4em] resize-none"
         disabled={disabled}
         value={promptValue}
         required
-        rows={2}
+        rows={3}
         onKeyDown={handleKeyDown}
         onChange={handleTextareaChange}
       />
       <button
         disabled={disabled}
         type="submit"
-        className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-teal-500 hover:bg-gradient-to-br hover:from-teal-400/95 hover:via-cyan-400/90 hover:to-blue-500/90 shadow-sm hover:shadow-teal-400/30 hover:shadow-lg transition-all duration-300 disabled:opacity-75 disabled:hover:shadow-none disabled:hover:bg-teal-500/75"
+        className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-teal-500 hover:bg-gradient-to-br hover:from-[#0cdbb6] hover:via-[#1fd0f0] hover:to-[#06dbee] transition-all duration-300 disabled:opacity-75 disabled:hover:bg-teal-500/75"
       >
         {disabled && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -113,13 +113,15 @@ const InputArea: FC<TInputAreaProps> = ({
           </div>
         )}
 
-        <img
-          src={"/img/arrow-narrow-right.svg"}
-          alt="search"
-          width={24}
-          height={24}
-          className={disabled ? "invisible" : ""}
-        />
+        <div className="relative p-2 cursor-pointer">
+          <img
+            src={"/img/arrow-narrow-right.svg"}
+            alt="search"
+            width={24}
+            height={24}
+            className={`${disabled ? "invisible" : ""} transition-all duration-300 hover:scale-110 hover:brightness-110 hover:filter hover:drop-shadow-[0_0_3px_rgba(255,255,255,0.7)]`}
+          />
+        </div>
       </button>
     </form>
   );
