@@ -85,9 +85,6 @@ const GPTResearcher = (() => {
           .filter((domain) => domain.length > 0);
       }
 
-      const language_str = document.querySelector('input[name="language"]').value
-
-
       const requestData = {
         task: task,
         report_type: report_type,
@@ -96,7 +93,6 @@ const GPTResearcher = (() => {
         tone: tone,
         agent: agent,
         query_domains: query_domains,
-        language: language_str,
       }
 
       socket.send(`start ${JSON.stringify(requestData)}`)
