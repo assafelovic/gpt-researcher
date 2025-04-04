@@ -166,7 +166,7 @@ const Hero: FC<THeroProps> = ({
                   alt={item.name}
                   width={18}
                   height={18}
-                  className="w-[18px] sm:w-[20px] opacity-80"
+                  className="w-[18px] sm:w-[20px] opacity-80 filter invert brightness-100"
                 />
                 <span className="text-xs sm:text-sm font-medium leading-[normal] text-gray-200">
                   {item.name}
