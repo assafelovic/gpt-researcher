@@ -73,7 +73,7 @@ const Hero: FC<THeroProps> = ({
   };
 
   return (
-    <div className="relative overflow-visible min-h-[85vh] flex items-center pt-[80px] mt-[-100px]">
+    <div className="relative overflow-visible min-h-[80vh] sm:min-h-[85vh] flex items-center pt-[60px] sm:pt-[80px] mt-[-60px] sm:mt-[-100px]">
       {/* Particle background */}
       <div ref={particlesContainerRef} className="absolute inset-0 -z-20"></div>
       
@@ -82,20 +82,20 @@ const Hero: FC<THeroProps> = ({
         animate={isVisible ? "visible" : "hidden"}
         variants={fadeInUp}
         transition={{ duration: 0.8 }}
-        className="flex flex-col items-center justify-center w-full py-8 md:py-16 lg:pt-10 lg:pb-20"
+        className="flex flex-col items-center justify-center w-full py-6 sm:py-8 md:py-16 lg:pt-10 lg:pb-20"
       >
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: isVisible ? 1 : 0, scale: isVisible ? 1 : 0.95 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="landing flex flex-col items-center mb-10 md:mb-16"
+          className="landing flex flex-col items-center mb-6 sm:mb-10 md:mb-16"
         >
           <motion.h1 
-            className="text-5xl font-black text-center lg:text-7xl mb-8 tracking-tight"
+            className="text-3xl xs:text-4xl sm:text-5xl font-black text-center lg:text-7xl mb-6 sm:mb-8 tracking-tight"
             variants={fadeInUp}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            Say Goodbye to <br />
+            Say Goodbye to <br className="mb-1 xs:mb-0" />
             <span
               style={{
                 backgroundImage: 'linear-gradient(to right, #0cdbb6, #1fd0f0, #06dbee)',
@@ -107,7 +107,7 @@ const Hero: FC<THeroProps> = ({
             </span>
           </motion.h1>
           <motion.h2 
-            className="text-xl font-light text-center px-4 mb-6 text-gray-300 max-w-2xl"
+            className="text-base sm:text-xl font-light text-center px-4 mb-6 text-gray-300 max-w-2xl"
             variants={fadeInUp}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
@@ -121,7 +121,7 @@ const Hero: FC<THeroProps> = ({
         <motion.div 
           variants={fadeInUp}
           transition={{ duration: 0.8, delay: 0.8 }}
-          className="w-full max-w-[760px] pb-12 md:pb-14 px-4"
+          className="w-full max-w-[760px] pb-8 sm:pb-12 md:pb-14 px-4"
         >
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-teal-600 via-cyan-500 to-blue-600 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-gradient-x"></div>
@@ -139,7 +139,7 @@ const Hero: FC<THeroProps> = ({
         <motion.div 
           variants={fadeInUp}
           transition={{ duration: 0.8, delay: 1 }}
-          className="flex flex-wrap items-center justify-center gap-3 md:gap-4 pb-8 md:pb-10 px-4 lg:flex-nowrap lg:justify-normal"
+          className="flex flex-wrap items-center justify-center gap-2 xs:gap-3 md:gap-4 pb-6 sm:pb-8 md:pb-10 px-4 lg:flex-nowrap lg:justify-normal"
         >
           <span className="text-gray-400 text-sm mr-2 mb-2 hidden sm:inline-block">Try:</span>
           <AnimatePresence>
@@ -150,10 +150,10 @@ const Hero: FC<THeroProps> = ({
                 initial="hidden"
                 animate="visible"
                 transition={{ duration: 0.4, delay: 1 + (index * 0.1) }}
-                className="flex h-[42px] cursor-pointer items-center justify-center gap-[6px] rounded-lg 
+                className="flex h-[38px] sm:h-[42px] cursor-pointer items-center justify-center gap-[6px] rounded-lg 
                          border border-solid border-teal-500/30 bg-gradient-to-r from-teal-900/30 to-cyan-900/30 
-                         backdrop-blur-sm px-3 py-2 hover:border-teal-500/60 hover:from-teal-900/40 
-                         hover:to-cyan-900/40 transition-all duration-300 hover:shadow-lg hover:shadow-teal-900/20"
+                         backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 hover:border-teal-500/60 hover:from-teal-900/40 
+                         hover:to-cyan-900/40 transition-all duration-300 hover:shadow-lg hover:shadow-teal-900/20 min-w-[100px]"
                 onClick={() => handleClickSuggestion(item?.name)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
@@ -161,11 +161,11 @@ const Hero: FC<THeroProps> = ({
                 <img
                   src={item.icon}
                   alt={item.name}
-                  width={20}
-                  height={20}
-                  className="w-[20px] opacity-80"
+                  width={18}
+                  height={18}
+                  className="w-[18px] sm:w-[20px] opacity-80"
                 />
-                <span className="text-sm font-medium leading-[normal] text-gray-200">
+                <span className="text-xs sm:text-sm font-medium leading-[normal] text-gray-200">
                   {item.name}
                 </span>
               </motion.div>

@@ -35,7 +35,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: Heade
             {loading && !isStopped && (
               <button
                 onClick={onStop}
-                className="flex items-center justify-center px-6 h-8 text-sm text-white bg-red-500 rounded-full hover:bg-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap"
+                className="flex items-center justify-center px-4 sm:px-6 h-9 sm:h-10 text-sm text-white bg-red-500 rounded-full hover:bg-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap min-w-[80px]"
               >
                 Stop
               </button>
@@ -44,7 +44,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: Heade
             {(isStopped || !loading) && showResult && (
               <button
                 onClick={onNewResearch}
-                className="flex items-center justify-center px-6 h-8 text-sm text-white bg-teal-500 rounded-full hover:bg-teal-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap"
+                className="flex items-center justify-center px-4 sm:px-6 h-9 sm:h-10 text-sm text-white bg-teal-500 rounded-full hover:bg-teal-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap min-w-[120px]"
               >
                 New Research
               </button>
