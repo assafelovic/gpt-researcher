@@ -1,8 +1,7 @@
 // LogMessage.tsx
 import Accordion from '../../Task/Accordion';
 import { useEffect, useState } from 'react';
-import { remark } from 'remark';
-import html from 'remark-html';
+import { markdownToHtml } from '../../../helpers/markdownHelper';
 import ImagesAlbum from '../../Images/ImagesAlbum';
 import Image from "next/image";
 
@@ -81,16 +80,6 @@ const LogMessage: React.FC<LogMessageProps> = ({ logs }) => {
       })}
     </>
   );
-};
-
-const markdownToHtml = async (markdown: string): Promise<string> => {
-  try {
-    const result = await remark().use(html).process(markdown);
-    return result.toString();
-  } catch (error) {
-    console.error('Error converting Markdown to HTML:', error);
-    return ''; // Handle error gracefully, return empty string or default content
-  }
 };
 
 const plainTextFields = ['task', 'sections', 'headers', 'sources', 'research_data'];
