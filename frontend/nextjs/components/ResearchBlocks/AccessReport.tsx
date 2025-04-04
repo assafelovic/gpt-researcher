@@ -47,14 +47,14 @@ const AccessReport: React.FC<AccessReportProps> = ({ accessData, chatBoxSettings
     <div className="flex justify-center mt-4">
       <a 
         href={getReportLink('pdf')} 
-        className="bg-purple-500 text-white active:bg-purple-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+        className="bg-teal-500 text-white active:bg-teal-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
         target="_blank"
         rel="noopener noreferrer">
         View as PDF
       </a>
       <a 
         href={getReportLink('docx')} 
-        className="bg-purple-500 text-white active:bg-purple-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+        className="bg-teal-500 text-white active:bg-teal-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
         target="_blank"
         rel="noopener noreferrer">
         Download DocX
@@ -62,7 +62,7 @@ const AccessReport: React.FC<AccessReportProps> = ({ accessData, chatBoxSettings
       {chatBoxSettings?.report_type === 'research_report' && (
         <a
           href={getReportLink('json')}
-          className="bg-purple-500 text-white active:bg-purple-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
+          className="bg-teal-500 text-white active:bg-teal-600 font-bold uppercase text-sm px-6 py-3 rounded shadow hover:shadow-lg outline-none focus:outline-none mr-1 mb-1 ease-linear transition-all duration-150"
           target="_blank"
           rel="noopener noreferrer">
           Download Logs
