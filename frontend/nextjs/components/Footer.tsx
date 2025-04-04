@@ -58,6 +58,15 @@ const Footer: React.FC<FooterProps> = ({ chatBoxSettings, setChatBoxSettings }) 
                 className="w-6 h-6 sm:w-7 sm:h-7"
               />{" "}
           </Link>
+          <Link href={"https://gptr.dev"} target="_blank" className="p-1">
+              <img
+                src={"/img/home.svg"}
+                alt="homepage"
+                width={24}
+                height={24}
+                className="w-6 h-6 sm:w-7 sm:h-7 filter invert brightness-100"
+              />{" "}
+          </Link>
         </div>
       </div>
     </>

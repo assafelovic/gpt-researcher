@@ -73,7 +73,7 @@ const Hero: FC<THeroProps> = ({
   };
 
   return (
-    <div className="relative overflow-visible min-h-[80vh] sm:min-h-[85vh] flex items-center pt-[60px] sm:pt-[80px] mt-[-60px] sm:mt-[-100px]">
+    <div className="relative overflow-visible min-h-[80vh] sm:min-h-[85vh] flex items-center pt-[60px] sm:pt-[80px] mt-[-60px] sm:mt-[-130px]">
       {/* Particle background */}
       <div ref={particlesContainerRef} className="absolute inset-0 -z-20"></div>
       
@@ -88,10 +88,10 @@ const Hero: FC<THeroProps> = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: isVisible ? 1 : 0, scale: isVisible ? 1 : 0.95 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="landing flex flex-col items-center mb-6 sm:mb-10 md:mb-16"
+          className="landing flex flex-col items-center mb-4 sm:mb-6 md:mb-8"
         >
           <motion.h1 
-            className="text-3xl xs:text-4xl sm:text-5xl font-black text-center lg:text-7xl mb-6 sm:mb-8 tracking-tight"
+            className="text-3xl xs:text-4xl sm:text-5xl font-black text-center lg:text-7xl mb-1 sm:mb-2 tracking-tight"
             variants={fadeInUp}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
@@ -117,14 +117,30 @@ const Hero: FC<THeroProps> = ({
             Say Hello to GPT Researcher, your AI partner for instant insights and comprehensive research
           </motion.h2>
           
-          {/* Powered by badge is hidden for now */}
+          {/* Powered by badge */}
+          {/*<motion.div
+            variants={fadeInUp}
+            transition={{ duration: 0.8, delay: 0.7 }}
+            className="flex items-center justify-center gap-2 py-2 px-4 rounded-full bg-black/30 backdrop-blur-sm border border-teal-500/20 hover:border-teal-500/40 transition-all duration-300 shadow-sm hover:shadow-teal-900/20"
+          >
+            <div className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse mr-0.5"></div>
+            <span className="text-gray-400 text-sm font-medium">Powered by</span>
+            <a 
+              href="https://gptr.dev" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-white text-[15px] font-bold hover:underline"
+            >
+              GPT Researcher
+            </a>
+          </motion.div>*/}
         </motion.div>
 
         {/* Input section with enhanced styling */}
         <motion.div 
           variants={fadeInUp}
           transition={{ duration: 0.8, delay: 0.8 }}
-          className="w-full max-w-[760px] pb-8 sm:pb-12 md:pb-14 px-4"
+          className="w-full max-w-[760px] pb-6 sm:pb-8 md:pb-10 px-4 mt-4"
         >
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-teal-600 via-cyan-500 to-blue-600 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-gradient-x"></div>
