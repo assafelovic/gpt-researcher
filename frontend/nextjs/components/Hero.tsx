@@ -95,12 +95,15 @@ const Hero: FC<THeroProps> = ({
             variants={fadeInUp}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            Say Goodbye to <br className="mb-1 xs:mb-0" />
+            <div className="mb-2 xs:mb-3 sm:mb-1 md:mb-0">Say Goodbye to</div>
             <span
               style={{
                 backgroundImage: 'linear-gradient(to right, #0cdbb6, #1fd0f0, #06dbee)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
+                display: 'block',
+                lineHeight: '1.2',
+                paddingBottom: '0.1em'
               }}
             >
               Hours of Research
