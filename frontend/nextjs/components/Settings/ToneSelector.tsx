@@ -24,6 +24,8 @@ export default function ToneSelector({ tone, onToneChange }: ToneSelectorProps) 
         <option value="Humorous">Humorous - Light-hearted and engaging, usually to make the content more relatable</option>
         <option value="Optimistic">Optimistic - Highlighting positive findings and potential benefits</option>
         <option value="Pessimistic">Pessimistic - Focusing on limitations, challenges, or negative outcomes</option>
+        <option value="Simple">Simple - Written for young readers, using basic vocabulary and clear explanations</option>
+        <option value="Casual">Casual - Conversational and relaxed style for easy, everyday reading</option>
       </select>
     </div>
   );
