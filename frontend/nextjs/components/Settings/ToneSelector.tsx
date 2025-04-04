@@ -8,7 +8,14 @@ export default function ToneSelector({ tone, onToneChange }: ToneSelectorProps) 
   return (
     <div className="form-group">
       <label htmlFor="tone" className="agent_question">Tone </label>
-      <select name="tone" id="tone" value={tone} onChange={onToneChange} className="form-control" required>
+      <select 
+        name="tone" 
+        id="tone" 
+        value={tone} 
+        onChange={onToneChange} 
+        className="form-control-static"
+        required
+      >
         <option value="Objective">Objective - Impartial and unbiased presentation of facts and findings</option>
         <option value="Formal">Formal - Adheres to academic standards with sophisticated language and structure</option>
         <option value="Analytical">Analytical - Critical evaluation and detailed examination of data and theories</option>
