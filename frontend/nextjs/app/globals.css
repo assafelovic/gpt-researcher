@@ -23,15 +23,6 @@
   }
 }
 
-@keyframes pulse-slow {
-  0%, 100% {
-    opacity: 0.2;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
 html {
   scroll-behavior: smooth;
   height: 100%;
@@ -60,7 +51,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Background gradient orbs */
+/* Background gradient orbs - static version */
 body::before {
   content: "";
   position: fixed;
@@ -69,10 +60,9 @@ body::before {
   width: 60%;
   height: 60%;
   border-radius: 9999px;
-  background-color: rgba(13, 148, 136, 0.15);
+  background-color: rgba(13, 148, 136, 0.12);
   filter: blur(120px);
   z-index: -10;
-  animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 body::after {
@@ -83,10 +73,9 @@ body::after {
   width: 60%;
   height: 60%;
   border-radius: 9999px;
-  background-color: rgba(8, 145, 178, 0.15);
+  background-color: rgba(8, 145, 178, 0.12);
   filter: blur(120px);
   z-index: -10;
-  animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite 2s;
 }
 
 /* Additional orb */
@@ -98,10 +87,9 @@ body::after {
   width: 35%;
   height: 35%;
   border-radius: 9999px;
-  background-color: rgba(37, 99, 235, 0.08);
+  background-color: rgba(37, 99, 235, 0.06);
   filter: blur(80px);
   z-index: -10;
-  animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite 4s;
 }
 
 .landing {
