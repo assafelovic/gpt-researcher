@@ -16,6 +16,22 @@ export const addTargetBlankToLinks = (htmlContent: string): string => {
 };
 
 /**
+ * Fixes the list item paragraph issue in HTML content
+ * This specifically addresses the problem where numbered list items with bold text
+ * have an extra line break between the marker and content
+ * @param htmlContent - The HTML content with possible list formatting issues
+ * @returns The processed HTML with fixed list formatting
+ */
+export const fixListItemParagraphIssue = (htmlContent: string): string => {
+  // This regex looks for list items with a paragraph immediately inside
+  // and removes the paragraph tags while preserving the content
+  return htmlContent.replace(
+    /<li>\s*<p>([\s\S]*?)<\/p>/g,
+    '<li>$1'
+  );
+};
+
+/**
  * Converts markdown to HTML with GitHub Flavored Markdown support and adds target="_blank" to links
  * @param markdown - The markdown content to convert
  * @returns Promise with the HTML content
@@ -27,8 +43,14 @@ export const markdownToHtml = async (markdown: Compatible | string): Promise<str
       .use(html, { sanitize: false })
       .process(markdown);
     
-    // Process the HTML to add target="_blank" to all links
-    return addTargetBlankToLinks(result.toString());
+    // Get the HTML string
+    let htmlString = result.toString();
+    
+    // Apply fixes
+    htmlString = fixListItemParagraphIssue(htmlString);
+    htmlString = addTargetBlankToLinks(htmlString);
+    
+    return htmlString;
   } catch (error) {
     console.error('Error converting Markdown to HTML:', error);
     return ''; // Handle error gracefully, return empty string or default content
