@@ -62,6 +62,7 @@ export default function ImagesAlbum({ images }: ImagesAlbumProps) {
                             className="absolute inset-0 w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity duration-300"
                             onClick={() => openModal(image, index)}
                             onError={() => handleImageError(image)}
+                            loading="lazy"
                         />
                     </div>
                 ))}
