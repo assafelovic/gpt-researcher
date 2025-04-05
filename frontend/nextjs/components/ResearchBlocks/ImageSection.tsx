@@ -1,5 +1,5 @@
 import Image from "next/image"; 
-import React from 'react';
+import React, { memo } from 'react';
 import ImagesAlbum from '../Images/ImagesAlbum';
 
 interface ImageSectionProps {
@@ -22,4 +22,21 @@ const ImageSection = ({ metadata }: ImageSectionProps) => {
   );
 };
 
-export default ImageSection; 
+// Simple memo implementation that compares arrays properly
+export default memo(ImageSection, (prevProps, nextProps) => {
+  // If both are null/undefined or the same reference, they're equal
+  if (prevProps.metadata === nextProps.metadata) return true;
+  
+  // If one is null/undefined but not the other, they're not equal
+  if (!prevProps.metadata || !nextProps.metadata) return false;
+  
+  // Compare lengths
+  if (prevProps.metadata.length !== nextProps.metadata.length) return false;
+  
+  // Compare each item
+  for (let i = 0; i < prevProps.metadata.length; i++) {
+    if (prevProps.metadata[i] !== nextProps.metadata[i]) return false;
+  }
+  
+  return true;
+}); 
