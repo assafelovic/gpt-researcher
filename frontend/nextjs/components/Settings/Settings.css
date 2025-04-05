@@ -30,7 +30,7 @@
 }
 
 .tab-button.active {
-  background-image: linear-gradient(to right, #9867F0, #ED4E50);
+  background-image: linear-gradient(to right, #0cdbb6, #1fd0f0);
   color: white;
   border-radius: 5px;
 }
@@ -137,8 +137,10 @@
 
 .settings .agent_question {
   font-size: 1.2rem;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 0.2rem;
+  color: white; /* Clean white color for the dark background */
+  letter-spacing: 0.01em;
 }
 
 .settings footer {
@@ -238,6 +240,29 @@
   border: 1px solid rgba(255, 255, 255, 0.3);
   background-color: rgba(0, 0, 0, 0.4);
   color: #fff;
+  appearance: none; /* Remove default arrow */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255, 255, 255, 0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1em;
+  transition: all 0.2s ease-in-out;
+}
+
+.form-control-static:hover {
+  border-color: rgba(20, 184, 166, 0.5);
+  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.1);
+}
+
+.form-control-static:focus {
+  outline: none;
+  border-color: rgba(20, 184, 166, 0.8);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+}
+
+.form-control-static option {
+  background-color: #1f2937;
+  color: white;
+  padding: 8px;
 }
 
 .input-static {
@@ -256,7 +281,7 @@
   align-items: center;
   border-radius: 0.375rem;
   border: 1px solid transparent;
-  background-color: #6b46c1;
+  background-color: #0d9488;
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -275,7 +300,7 @@
 }
 
 .domain-text-static {
-  color: #6b46c1;
+  color: #0d9488;
 }
 
 .domain-button-static {
@@ -286,4 +311,36 @@
   padding: 0;
   display: flex;
   align-items: center;
+}
+
+/* Add this after the existing .settings .agent_question rule */
+
+.modal-content .agent_question {
+  color: white;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  margin-bottom: 0.2rem;
+  display: block; /* Force block level for better spacing in the modal */
+  position: relative;
+}
+
+/* Removing the ::after pseudo-element that created the gradient underline */
+
+/* Adjust form-group styling in modal context */
+.modal-content .form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.modal-content .form-group label {
+  margin-bottom: 0.5rem;
+  margin-right: 0;
+  width: 100%;
+}
+
+.modal-content .form-group select,
+.modal-content .form-group input {
+  width: 100%;
 }

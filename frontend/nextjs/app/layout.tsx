@@ -50,7 +50,7 @@ export default function RootLayout({
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />
       </head>
       <body
-        className={`${inter.className} flex min-h-screen flex-col justify-between`}
+        className={`app-container ${inter.className} flex min-h-screen flex-col justify-between`}
         suppressHydrationWarning
       >
         {children}

@@ -6,7 +6,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "SIMILARITY_THRESHOLD": 0.42,
     "FAST_LLM": "openai:gpt-4o-mini",
     "SMART_LLM": "openai:gpt-4o-2024-11-20",  # Has support for long responses (2k+ words).
-    "STRATEGIC_LLM": "openai:o3-mini",  # Can be used with gpt-o1 or gpt-o3
+    "STRATEGIC_LLM": "openai:o3-mini",  # Can be used with o1 or o3, please note it will make tasks slower.
     "FAST_TOKEN_LIMIT": 2000,
     "SMART_TOKEN_LIMIT": 4000,
     "STRATEGIC_TOKEN_LIMIT": 4000,

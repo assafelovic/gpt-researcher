@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ResearchHistoryItem } from '../types/data';
 import { formatDistanceToNow } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ResearchSidebarProps {
   history: ResearchHistoryItem[];
@@ -38,123 +39,222 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
     };
   }, [isOpen, toggleSidebar]);
 
+  // Animation variants
+  const sidebarVariants = {
+    open: { 
+      width: 'var(--sidebar-width)', 
+      transition: { type: 'spring', stiffness: 250, damping: 25 } 
+    },
+    closed: { 
+      width: 'var(--sidebar-min-width)', 
+      transition: { type: 'spring', stiffness: 250, damping: 25, delay: 0.1 } 
+    }
+  };
+  
+  const fadeInVariants = {
+    hidden: { opacity: 0, transition: { duration: 0.2 } },
+    visible: { opacity: 1, transition: { duration: 0.3 } }
+  };
+
   return (
     <>
       {/* Overlay for mobile */}
-      {isOpen && (
-        <div 
-          className="sidebar-overlay md:hidden" 
-          onClick={toggleSidebar}
-          aria-hidden="true"
-        />
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="sidebar-overlay md:hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40" 
+            onClick={toggleSidebar}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
       
-      <div ref={sidebarRef} className={`fixed top-0 left-0 h-full sidebar-z-index transition-all duration-300 ${isOpen ? 'w-72' : 'w-16'}`}>
+      <motion.div 
+        ref={sidebarRef} 
+        className="fixed top-0 left-0 h-full sidebar-z-index"
+        variants={sidebarVariants}
+        initial={false}
+        animate={isOpen ? 'open' : 'closed'}
+        style={{
+          '--sidebar-width': 'min(300px, 85vw)',
+          '--sidebar-min-width': '12px'
+        } as React.CSSProperties}
+      >
         {/* Sidebar content */}
         <div 
           className={`h-full transition-all duration-300 text-white overflow-hidden 
             ${isOpen 
-              ? 'bg-gray-900/70 sidebar-backdrop shadow-lg p-4' 
-              : 'bg-transparent hover:bg-gray-900/10 p-0'
+              ? 'bg-gray-900/80 backdrop-blur-md shadow-2xl shadow-black/30 p-3 sm:p-4' 
+              : 'bg-transparent p-0'
             }`}
         >
           {/* Toggle button - only shown when sidebar is closed */}
-          {!isOpen && (
-            <button
-              onClick={toggleSidebar}
-              className="absolute left-3 mx-auto top-[24px] w-10 h-10 flex items-center justify-center bg-gradient-to-br from-purple-400/8 via-purple-300/6 to-cyan-400/5 text-white rounded-full shadow-sm z-10 hover:from-purple-500/90 hover:via-teal-400/90 hover:to-cyan-500/90 hover:shadow-purple-500/20 hover:shadow-xl transition-all duration-300"
-              aria-label="Open sidebar"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </button>
-          )}
-
-          {!isOpen && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 -rotate-90 whitespace-nowrap text-gray-600 font-medium tracking-wider text-xs">
-              {" "}
-            </div>
-          )}
-
-          {isOpen && (
-            <>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold">Research History</h2>
-                <button
-                  onClick={toggleSidebar}
-                  className="w-10 h-10 flex items-center justify-center bg-gray-800 text-white rounded-full shadow-lg"
-                  aria-label="Close sidebar"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* New Research button */}
-              <button
-                onClick={onNewResearch}
-                className="w-full py-3 px-4 mb-6 bg-purple-500 hover:bg-gradient-to-br text-white rounded shadow hover:shadow-purple-500/20 hover:shadow-lg font-bold text-sm transition-all duration-300 flex items-center justify-center"
+          <AnimatePresence mode="wait">
+            {!isOpen ? (
+              <motion.div
+                key="toggle-button"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute left-2 sm:left-3 mx-auto top-[20px] sm:top-[24px] w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center rounded-full shadow-sm z-10 overflow-hidden cursor-pointer group"
+                onClick={toggleSidebar}
+                aria-label="Open sidebar"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                {/* Subtle glowing background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-teal-500/15 via-cyan-400/12 to-blue-500/10 group-hover:from-teal-500/25 group-hover:via-cyan-400/20 group-hover:to-blue-500/15 transition-all duration-300 group-hover:shadow-[0_0_15px_rgba(20,184,166,0.3)]"></div>
+                
+                {/* Icon with subtle glow effect */}
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className="h-5 sm:h-6 w-5 sm:w-6 relative text-teal-100/90 filter drop-shadow-[0_0_1px_rgba(45,212,191,0.5)]" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                New Research
-              </button>
-
-              {/* History list */}
-              <div className="overflow-y-auto sidebar-scrollbar h-[calc(100vh-190px)]">
-                {history.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="sidebar-content"
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                variants={fadeInVariants}
+              >
+                <div className="flex justify-between items-center mb-5 sm:mb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">Research History</h2>
+                  <button
+                    onClick={toggleSidebar}
+                    className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-gray-800/60 text-white rounded-full shadow-lg hover:bg-gray-800 transition-all duration-300 group"
+                    aria-label="Close sidebar"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    <p>No research history yet</p>
-                    <p className="text-sm mt-2">Start a new research to see it here</p>
+                  </button>
+                </div>
+
+                {/* New Research button */}
+                <button
+                  onClick={onNewResearch}
+                  className="relative w-full py-2.5 sm:py-3 px-3 sm:px-4 mb-5 sm:mb-6 bg-teal-500 text-white rounded-md font-bold text-sm transition-all duration-300 overflow-hidden group"
+                >
+                  {/* Gradient background on hover */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br from-[#0cdbb6] via-[#1fd0f0] to-[#06dbee] transition-opacity duration-500"></div>
+                  
+                  {/* Magical glow effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
+                      style={{
+                        boxShadow: 'inset 0 0 20px 5px rgba(255, 255, 255, 0.2)',
+                        background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%)'
+                      }}>
                   </div>
-                ) : (
-                  <ul className="space-y-2">
-                    {history.map((item) => (
-                      <li 
-                        key={item.id}
-                        className="relative rounded-md hover:bg-gray-800 transition-colors duration-200 shadow-sm hover:shadow border-l-2 border-gray-700 hover:border-purple-500 pl-0.5"
-                        onMouseEnter={() => setHoveredItem(item.id)}
-                        onMouseLeave={() => setHoveredItem(null)}
-                      >
-                        <button
-                          onClick={() => onSelectResearch(item.id)}
-                          className="w-full text-left p-3 pr-8"
+                  
+                  <div className="relative z-10 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 sm:h-5 w-4 sm:w-5 mr-2 transition-transform duration-300 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    New Research
+                  </div>
+                </button>
+
+                {/* History list with improved scrollbar */}
+                <div className="overflow-y-auto h-[calc(100vh-150px)] sm:h-[calc(100vh-190px)] pr-1 custom-scrollbar">
+                  {history.length === 0 ? (
+                    <div className="text-center py-8 sm:py-10 px-4">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-800/60 to-gray-700/40 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 sm:h-10 w-8 sm:w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-300 mb-2">No research history yet</h3>
+                      <p className="text-sm text-gray-400">Start your first research journey to build your knowledge library</p>
+                    </div>
+                  ) : (
+                    <ul className="space-y-2 sm:space-y-3">
+                      {history.map((item) => (
+                        <motion.li 
+                          key={item.id}
+                          className="relative rounded-md transition-all duration-200 border-l-2 overflow-hidden group"
+                          style={{
+                            borderColor: hoveredItem === item.id ? '#0cdbb6' : 'rgba(55, 65, 81, 0.5)',
+                            background: hoveredItem === item.id ? 'rgba(17, 24, 39, 0.7)' : 'rgba(17, 24, 39, 0.4)'
+                          }}
+                          onMouseEnter={() => setHoveredItem(item.id)}
+                          onMouseLeave={() => setHoveredItem(null)}
+                          whileHover={{ x: 3, transition: { duration: 0.2 } }}
                         >
-                          <h3 className="font-medium truncate text-gray-200">{item.question}</h3>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
-                          </p>
-                        </button>
-                        
-                        {hoveredItem === item.id && (
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteResearch(item.id);
-                            }}
-                            className="absolute right-2 top-3 text-gray-400 hover:text-red-500 transition-colors duration-200"
-                            aria-label="Delete research"
+                            onClick={() => onSelectResearch(item.id)}
+                            className="w-full text-left p-3 sm:p-4 pr-10 min-h-[56px]"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                            <h3 className="font-medium truncate text-gray-200 text-sm sm:text-base transition-colors duration-200 group-hover:text-teal-400">{item.question}</h3>
+                            <p className="text-xs text-gray-400 mt-1.5 flex items-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
+                            </p>
                           </button>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </>
-          )}
+                          
+                          <AnimatePresence>
+                            {hoveredItem === item.id && (
+                              <motion.button
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 0.15 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDeleteResearch(item.id);
+                                }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-400 transition-colors duration-300 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-800/80"
+                                aria-label="Delete research"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </motion.button>
+                            )}
+                          </AnimatePresence>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
+      
+      {/* Custom scrollbar styles */}
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(15, 23, 42, 0.3);
+          border-radius: 20px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(45, 212, 191, 0.3);
+          border-radius: 20px;
+          transition: all 0.3s;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(45, 212, 191, 0.6);
+        }
+      `}</style>
     </>
   );
 };
