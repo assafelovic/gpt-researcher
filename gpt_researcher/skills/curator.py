@@ -2,7 +2,6 @@ from typing import Dict, Optional, List
 import json
 from ..config.config import Config
 from ..utils.llm import create_chat_completion
-from ..prompts import curate_sources as rank_sources_prompt
 from ..actions import stream_output
 
 
@@ -19,12 +18,12 @@ class SourceCurator:
     ) -> List:
         """
         Rank sources based on research data and guidelines.
-        
+
         Args:
             query: The research query/task
             source_data: List of source documents to rank
             max_results: Maximum number of top sources to return
-            
+
         Returns:
             str: Ranked list of source URLs with reasoning
         """
@@ -43,7 +42,7 @@ class SourceCurator:
                 model=self.researcher.cfg.smart_llm_model,
                 messages=[
                     {"role": "system", "content": f"{self.researcher.role}"},
-                    {"role": "user", "content": rank_sources_prompt(
+                    {"role": "user", "content": self.researcher.prompt_family.curate_soures(
                         self.researcher.query, source_data, max_results)},
                 ],
                 temperature=0.2,
@@ -70,7 +69,7 @@ class SourceCurator:
             print(f"Error in curate_sources from LLM response: {response}")
             if self.researcher.verbose:
                 await stream_output(
-                    "logs", 
+                    "logs",
                     "research_plan",
                     f"🚫 Source verification failed: {str(e)}",
                     self.researcher.websocket,
