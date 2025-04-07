@@ -5,6 +5,7 @@ from .config import Config
 from .memory import Memory
 from .utils.enum import ReportSource, ReportType, Tone
 from .llm_provider import GenericLLMProvider
+from .prompts import get_prompt_family
 from .vector_store import VectorStoreWrapper
 
 # Research skills
@@ -53,6 +54,7 @@ class GPTResearcher:
         headers: dict | None = None,
         max_subtopics: int = 5,
         log_handler=None,
+        prompt_family: str | None = None,
     ):
         self.query = query
         self.report_type = report_type
@@ -86,6 +88,7 @@ class GPTResearcher:
             self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
         )
         self.log_handler = log_handler
+        self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family)
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
@@ -107,12 +110,12 @@ class GPTResearcher:
                     await self.log_handler.on_agent_action(kwargs.get('action', ''), **kwargs)
                 elif event_type == "research":
                     await self.log_handler.on_research_step(kwargs.get('step', ''), kwargs.get('details', {}))
-                
+
                 # Add direct logging as backup
                 import logging
                 research_logger = logging.getLogger('research')
                 research_logger.info(f"{event_type}: {json.dumps(kwargs, default=str)}")
-                
+
             except Exception as e:
                 import logging
                 logging.getLogger('research').error(f"Error in _log_event: {e}", exc_info=True)
@@ -137,6 +140,7 @@ class GPTResearcher:
                 parent_query=self.parent_query,
                 cost_callback=self.add_costs,
                 headers=self.headers,
+                prompt_family=self.prompt_family,
             )
             await self._log_event("action", action="agent_selected", details={
                 "agent": self.agent,
@@ -148,7 +152,7 @@ class GPTResearcher:
             "role": self.role
         })
         self.context = await self.research_conductor.conduct_research()
-        
+
         await self._log_event("research", step="research_completed", details={
             "context_length": len(self.context)
         })
@@ -200,14 +204,14 @@ class GPTResearcher:
             "existing_headers": existing_headers,
             "context_source": "external" if ext_context else "internal"
         })
-        
+
         report = await self.report_generator.write_report(
             existing_headers=existing_headers,
             relevant_written_contents=relevant_written_contents,
             ext_context=ext_context or self.context,
             custom_prompt=custom_prompt
         )
-        
+
         await self._log_event("research", step="report_completed", details={
             "report_length": len(report)
         })
