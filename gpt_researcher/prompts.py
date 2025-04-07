@@ -537,9 +537,26 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
 
         return prompt
 
+
+class GranitePromptFamily(PromptFamily):
+    """Prompts for IBM's granite models"""
+
+    @staticmethod
+    def pretty_print_docs(docs: list[Document], top_n: int | None = None) -> str:
+        if not docs:
+            return ""
+        all_documents = "\n\n".join([
+            f"Document {doc.metadata.get('source', i)}\n" + \
+            f"Title: {doc.metadata.get('title')}\n" + \
+            doc.page_content
+            for i, doc in enumerate(docs)
+            if top_n is None or i < top_n
+        ])
+        return f"<|start_of_role|>documents<|end_of_role|>\n{all_documents}\n<|end_of_text|>"
+
 ## Factory ######################################################################
 
-# This is the
+# This is the function signature for the various prompt generator functions
 PROMPT_GENERATOR = Callable[
     [
         str,        # question
@@ -582,6 +599,7 @@ def get_prompt_by_report_type(
 
 prompt_family_mapping = {
     PromptFamilyEnum.Default.value: PromptFamily,
+    PromptFamilyEnum.Granite.value: GranitePromptFamily,
 }
 
 
