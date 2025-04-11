@@ -29,8 +29,8 @@ def open_task():
     # Override model with STRATEGIC_LLM if defined in environment
     strategic_llm = os.environ.get("STRATEGIC_LLM")
     if strategic_llm and ":" in strategic_llm:
-        # Extract the model name (part after the colon)
-        model_name = strategic_llm.split(":")[-1]
+        # Extract the model name (part after the first colon)
+        model_name = strategic_llm.split(":", 1)[1]
         task["model"] = model_name
     elif strategic_llm:
         task["model"] = model_name
