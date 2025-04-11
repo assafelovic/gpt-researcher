@@ -1,6 +1,10 @@
+import aiofiles
+import asyncio
 import importlib
+import json
 import subprocess
 import sys
+import traceback
 from typing import Any
 from colorama import Fore, Style, init
 import os
@@ -49,13 +53,33 @@ class ReasoningEfforts(Enum):
     Medium = "medium"
     Low = "low"
 
+
+class ChatLogger:
+    """Helper utility to log all chat requests and their corresponding responses
+    plus the stack trace leading to the call.
+    """
+
+    def __init__(self, fname: str):
+        self.fname = fname
+        self._lock = asyncio.Lock()
+
+    async def log_request(self, messages, response):
+        async with self._lock:
+            async with aiofiles.open(self.fname, mode="a", encoding="utf-8") as handle:
+                await handle.write(json.dumps({
+                    "messages": messages,
+                    "response": response,
+                    "stacktrace": traceback.format_exc()
+                }) + "\n")
+
 class GenericLLMProvider:
 
-    def __init__(self, llm):
+    def __init__(self, llm, chat_log: str | None = None):
         self.llm = llm
+        self.chat_logger = ChatLogger(chat_log) if chat_log else None
 
     @classmethod
-    def from_provider(cls, provider: str, **kwargs: Any):
+    def from_provider(cls, provider: str, chat_log: str | None = None, **kwargs: Any):
         if provider == "openai":
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
@@ -99,7 +123,7 @@ class GenericLLMProvider:
             _check_pkg("langchain_community")
             _check_pkg("langchain_ollama")
             from langchain_ollama import ChatOllama
-            
+
             llm = ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
         elif provider == "together":
             _check_pkg("langchain_together")
@@ -167,7 +191,7 @@ class GenericLLMProvider:
             from langchain_core.rate_limiters import InMemoryRateLimiter
 
             rps = float(os.environ["OPENROUTER_LIMIT_RPS"]) if "OPENROUTER_LIMIT_RPS" in os.environ else 1.0
-            
+
             rate_limiter = InMemoryRateLimiter(
                 requests_per_second=rps,
                 check_every_n_seconds=0.1,
@@ -179,13 +203,13 @@ class GenericLLMProvider:
                      rate_limiter=rate_limiter,
                      **kwargs
                 )
-        
+
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
                 f"Unsupported {provider}.\n\nSupported model providers are: {supported}"
             )
-        return cls(llm)
+        return cls(llm, chat_log)
 
 
     async def get_chat_response(self, messages, stream, websocket=None):
@@ -193,10 +217,15 @@ class GenericLLMProvider:
             # Getting output from the model chain using ainvoke for asynchronous invoking
             output = await self.llm.ainvoke(messages)
 
-            return output.content
+            res = output.content
 
         else:
-            return await self.stream_response(messages, websocket)
+            res = await self.stream_response(messages, websocket)
+
+        if self.chat_logger:
+            await self.chat_logger.log_request(messages, res)
+
+        return res
 
     async def stream_response(self, messages, websocket=None):
         paragraph = ""
@@ -229,15 +258,15 @@ def _check_pkg(pkg: str) -> None:
         pkg_kebab = pkg.replace("_", "-")
         # Import colorama and initialize it
         init(autoreset=True)
-        
+
         try:
             print(f"{Fore.YELLOW}Installing {pkg_kebab}...{Style.RESET_ALL}")
             subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", pkg_kebab])
             print(f"{Fore.GREEN}Successfully installed {pkg_kebab}{Style.RESET_ALL}")
-            
+
             # Try importing again after install
             importlib.import_module(pkg)
-            
+
         except subprocess.CalledProcessError:
             raise ImportError(
                 Fore.RED + f"Failed to install {pkg_kebab}. Please install manually with "
