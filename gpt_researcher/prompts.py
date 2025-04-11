@@ -350,6 +350,11 @@ response:
                           for i, d in enumerate(docs)
                           if top_n is None or i < top_n)
 
+    @staticmethod
+    def join_local_web_documents(docs_context: str, web_context: str) -> str:
+        """Joins local web documents with context scraped from the internet"""
+        return f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"
+
     ################################################################################################
 
     # DETAILED REPORT PROMPTS
@@ -541,8 +546,11 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
 class GranitePromptFamily(PromptFamily):
     """Prompts for IBM's granite models"""
 
-    @staticmethod
-    def pretty_print_docs(docs: list[Document], top_n: int | None = None) -> str:
+    _DOCUMENTS_PREFIX = "<|start_of_role|>documents<|end_of_role|>\n"
+    _DOCUMENTS_SUFFIX = "\n<|end_of_text|>"
+
+    @classmethod
+    def pretty_print_docs(cls, docs: list[Document], top_n: int | None = None) -> str:
         if not docs:
             return ""
         all_documents = "\n\n".join([
@@ -552,7 +560,17 @@ class GranitePromptFamily(PromptFamily):
             for i, doc in enumerate(docs)
             if top_n is None or i < top_n
         ])
-        return f"<|start_of_role|>documents<|end_of_role|>\n{all_documents}\n<|end_of_text|>"
+        return "".join([cls._DOCUMENTS_PREFIX, all_documents, cls._DOCUMENTS_SUFFIX])
+
+    @classmethod
+    def join_local_web_documents(cls, docs_context: str | list, web_context: str | list) -> str:
+        """Joins local web documents using Granite's preferred format"""
+        if isinstance(docs_context, str) and docs_context.startswith(cls._DOCUMENTS_PREFIX):
+            docs_context = docs_context[len(cls._DOCUMENTS_PREFIX):]
+        if isinstance(web_context, str) and web_context.endswith(cls._DOCUMENTS_SUFFIX):
+            web_context = web_context[:-len(cls._DOCUMENTS_SUFFIX)]
+        all_documents = "\n\n".join([docs_context, web_context])
+        return "".join([cls._DOCUMENTS_PREFIX, all_documents, cls._DOCUMENTS_SUFFIX])
 
 ## Factory ######################################################################
 
