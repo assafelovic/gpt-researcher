@@ -21,7 +21,7 @@ class ResearchConductor:
         self.logger.info(f"Planning research for query: {query}")
         if query_domains:
             self.logger.info(f"Query domains: {query_domains}")
-        
+
         await stream_output(
             "logs",
             "planning_research",
@@ -55,9 +55,9 @@ class ResearchConductor:
         """Runs the GPT Researcher to conduct research"""
         if self.json_handler:
             self.json_handler.update_content("query", self.researcher.query)
-        
+
         self.logger.info(f"Starting research for query: {self.researcher.query}")
-        
+
         # Reset visited_urls and source_urls at the start of each research task
         self.researcher.visited_urls.clear()
         research_data = []
@@ -77,6 +77,10 @@ class ResearchConductor:
             )
 
         # Research for relevant sources based on source types below
+        doc_loader_kwargs = {
+            "use_docling": self.researcher.cfg.convert_with_docling,
+            "docling_vlm": self.researcher.cfg.docling_vlm,
+        }
         if self.researcher.source_urls:
             self.logger.info("Using provided source URLs")
             research_data = await self._get_context_by_urls(self.researcher.source_urls)
@@ -98,7 +102,7 @@ class ResearchConductor:
 
         elif self.researcher.report_source == ReportSource.Local.value:
             self.logger.info("Using local search")
-            document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
+            document_data = await DocumentLoader(self.researcher.cfg.doc_path, **doc_loader_kwargs).load()
             self.logger.info(f"Loaded {len(document_data)} documents")
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(document_data)
@@ -110,7 +114,7 @@ class ResearchConductor:
             if self.researcher.document_urls:
                 document_data = await OnlineDocumentLoader(self.researcher.document_urls).load()
             else:
-                document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
+                document_data = await DocumentLoader(self.researcher.cfg.doc_path, **doc_loader_kwargs).load()
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(document_data)
             docs_context = await self._get_context_by_web_search(self.researcher.query, document_data, self.researcher.query_domains)
@@ -124,9 +128,9 @@ class ResearchConductor:
                 connection_string=os.getenv("AZURE_CONNECTION_STRING")
             )
             azure_files = await azure_loader.load()
-            document_data = await DocumentLoader(azure_files).load()  # Reuse existing loader
+            document_data = await DocumentLoader(azure_files, **doc_loader_kwargs).load()  # Reuse existing loader
             research_data = await self._get_context_by_web_search(self.researcher.query, document_data)
-            
+
         elif self.researcher.report_source == ReportSource.LangChainDocuments.value:
             langchain_documents_data = await LangChainDocumentLoader(
                 self.researcher.documents
@@ -163,7 +167,7 @@ class ResearchConductor:
     async def _get_context_by_urls(self, urls):
         """Scrapes and compresses the context from the given urls"""
         self.logger.info(f"Getting context from URLs: {urls}")
-        
+
         new_search_urls = await self._get_new_urls(urls)
         self.logger.info(f"New URLs to process: {new_search_urls}")
 
@@ -221,7 +225,7 @@ class ResearchConductor:
             context: List of context
         """
         self.logger.info(f"Starting web search for query: {query}")
-        
+
         if scraped_data is None:
             scraped_data = []
         if query_domains is None:
@@ -230,7 +234,7 @@ class ResearchConductor:
         # Generate Sub-Queries including original query
         sub_queries = await self.plan_research(query, query_domains)
         self.logger.info(f"Generated sub-queries: {sub_queries}")
-        
+
         # If this is not part of a sub researcher, add original query to research for better results
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
@@ -272,7 +276,7 @@ class ResearchConductor:
                 "query": sub_query,
                 "scraped_data_size": len(scraped_data)
             })
-        
+
         if self.researcher.verbose:
             await stream_output(
                 "logs",
