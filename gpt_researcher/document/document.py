@@ -16,6 +16,7 @@ from langchain_core.documents import Document
 
 try:
     from docling.document_converter import DocumentConverter, PdfFormatOption
+    from docling.datamodel.base_models import InputFormat
     from docling.datamodel.pipeline_options import (
         VlmModelType,
         VlmPipelineOptions,
@@ -54,15 +55,19 @@ class DoclingLoader:
         elif vlm is not None:
             raise ValueError(f"Unknown docling vlm option: {vlm}")
 
-        pdf_format_option = None
+        format_options = None
         if vlm_options is not None:
-            pipeline_options = VlmPipelineOptions()
+            pipeline_options = VlmPipelineOptions(enable_remote_services=True)
             pipeline_options.vlm_options = vlm_options
             pdf_format_option = PdfFormatOption(
                 pipeline_cls=VlmPipeline, pipeline_options=pipeline_options
             )
+            format_options = {
+                InputFormat.PDF: pdf_format_option,
+                InputFormat.IMAGE: pdf_format_option,
+            }
 
-        self.converter = DocumentConverter(format_options=pdf_format_option)
+        self.converter = DocumentConverter(format_options=format_options)
 
     def load(self) -> list[Document]:
         assert HAVE_DOCLING
