@@ -48,6 +48,10 @@ firecrawl-py = "^1.12.0"
 pytest = "^8.3.5"
 pytest-asyncio = "^0.25.3"
 
+
+[tool.poetry.group.docling.dependencies]
+docling = "^2.30.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
