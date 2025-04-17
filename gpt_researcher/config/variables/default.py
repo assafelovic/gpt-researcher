@@ -5,8 +5,8 @@ DEFAULT_CONFIG: BaseConfig = {
     "EMBEDDING": "openai:text-embedding-3-small",
     "SIMILARITY_THRESHOLD": 0.42,
     "FAST_LLM": "openai:gpt-4o-mini",
-    "SMART_LLM": "openai:gpt-4o-2024-11-20",  # Has support for long responses (2k+ words).
-    "STRATEGIC_LLM": "openai:o3-mini",  # Can be used with o1 or o3, please note it will make tasks slower.
+    "SMART_LLM": "openai:gpt-4.1",  # Has support for long responses (2k+ words).
+    "STRATEGIC_LLM": "openai:o4-mini",  # Can be used with o1 or o3, please note it will make tasks slower.
     "FAST_TOKEN_LIMIT": 2000,
     "SMART_TOKEN_LIMIT": 4000,
     "STRATEGIC_TOKEN_LIMIT": 4000,
