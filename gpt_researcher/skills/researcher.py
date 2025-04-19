@@ -115,7 +115,7 @@ class ResearchConductor:
                 self.researcher.vector_store.load(document_data)
             docs_context = await self._get_context_by_web_search(self.researcher.query, document_data, self.researcher.query_domains)
             web_context = await self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains)
-            research_data = f"Context from local documents: {docs_context}\n\nContext from web sources: {web_context}"
+            research_data = self.researcher.prompt_family.join_local_web_documents(docs_context, web_context)
 
         elif self.researcher.report_source == ReportSource.Azure.value:
             from ..document.azure_document_loader import AzureDocumentLoader
