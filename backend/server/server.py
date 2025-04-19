@@ -93,6 +93,8 @@ app.add_middleware(
 
 # Constants
 DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
+CONVERT_WITH_DOCLING = os.getenv("CONVERT_WITH_DOCLING", "").lower() == "true"
+DOCLING_VLM = os.getenv("DOCLING_VLM", "")
 
 # Startup event
 
@@ -102,7 +104,7 @@ def startup_event():
     os.makedirs("outputs", exist_ok=True)
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
     # os.makedirs(DOC_PATH, exist_ok=True)  # Commented out to avoid creating the folder if not needed
-    
+
 
 # Routes
 
@@ -187,7 +189,7 @@ async def run_multi_agents():
 
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
-    return await handle_file_upload(file, DOC_PATH)
+    return await handle_file_upload(file, DOC_PATH, CONVERT_WITH_DOCLING, DOCLING_VLM)
 
 
 @app.delete("/files/{filename}")

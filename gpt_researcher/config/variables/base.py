@@ -28,7 +28,12 @@ class BaseConfig(TypedDict):
     MAX_SCRAPER_WORKERS: int
     MAX_SUBTOPICS: int
     REPORT_SOURCE: Union[str, None]
-    DOC_PATH: str
+    PROMPT_FAMILY: str
+    LLM_KWARGS: dict
+    EMBEDDING_KWARGS: dict
     DEEP_RESEARCH_CONCURRENCY: int
     DEEP_RESEARCH_DEPTH: int
     DEEP_RESEARCH_BREADTH: int
+    DOC_PATH: str
+    CONVERT_WITH_DOCLING: bool
+    DOCLING_VLM: Union[str, None]
