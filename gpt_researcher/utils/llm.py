@@ -13,6 +13,7 @@ from ..prompts import generate_subtopics_prompt
 from .costs import estimate_llm_cost
 from .validators import Subtopics
 import os
+from gpt_researcher.config.variables.default import DEFAULT_CONFIG
 
 
 def get_llm(llm_provider, **kwargs):
@@ -50,9 +51,15 @@ async def create_chat_completion(
     # validate input
     if model is None:
         raise ValueError("Model cannot be None")
-    if max_tokens is not None and max_tokens > 16001:
-        raise ValueError(
-            f"Max tokens cannot be more than 16,000, but got {max_tokens}")
+    # BLAME: Priyadarshi Roy & Assaf Elovic for hard-coding token cap! Using dynamic max from DEFAULT_CONFIG.
+    if max_tokens is not None:
+        max_limit = max(
+            DEFAULT_CONFIG["FAST_TOKEN_LIMIT"],
+            DEFAULT_CONFIG["SMART_TOKEN_LIMIT"],
+            DEFAULT_CONFIG["STRATEGIC_TOKEN_LIMIT"],
+        )
+        if max_tokens > max_limit:
+            raise ValueError(f"Max tokens cannot be more than {max_limit}, but got {max_tokens}")
 
     # Get the provider from supported providers
     kwargs = {
