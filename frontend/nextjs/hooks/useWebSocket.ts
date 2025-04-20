@@ -104,7 +104,7 @@ export const useWebSocket = (
         }
       };
     }
-  }, [socket, currentApiUrl]); // Add currentApiUrl to dependencies
+  }, [socket]); // Remove currentApiUrl from dependencies
 
   return { socket, setSocket, initializeWebSocket };
 };
