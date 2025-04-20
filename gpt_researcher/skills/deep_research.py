@@ -65,7 +65,15 @@ class DeepResearchSkill:
         messages = [
             {"role": "system", "content": "You are an expert researcher generating search queries."},
             {"role": "user",
-             "content": f"Given the following prompt, generate {num_queries} unique search queries to research the topic thoroughly. For each query, provide a research goal. Format as 'Query: <query>' followed by 'Goal: <goal>' for each pair: {query}"}
+             "content": f"""Given the following topic:
+{query}
+
+Please generate exactly {num_queries} unique search queries to research this topic thoroughly. For each query, include a clear research goal.
+
+Output format (strictly, no extra text):
+Query: <search query>
+Goal: <research goal>
+"""}
         ]
 
         response = await create_chat_completion(
@@ -96,9 +104,36 @@ class DeepResearchSkill:
 
     async def generate_research_plan(self, query: str, num_questions: int = 3) -> List[str]:
         """Generate follow-up questions to clarify research direction"""
+        # Summarize the input query to <=400 chars for Tavily
+        from ..utils.llm import create_chat_completion
+        summary_prompt = (
+            "Summarize the following research goal as a single focused search query, no more than 400 characters. "
+            "Do not include any explanations, just output the query string.\n\nResearch goal:\n" + query
+        )
+        summary_prompt = (
+            "Rewrite the following research goal as a single, focused web search query for a search engine. "
+            "Return only the query, no explanations, no formatting. Limit to 400 characters.\n\nResearch goal:\n" + query
+        )
+        summary_response = await create_chat_completion(
+            messages=[{"role": "user", "content": summary_prompt}],
+            llm_provider=self.researcher.cfg.strategic_llm_provider,
+            model=self.researcher.cfg.strategic_llm_model,
+            reasoning_effort=ReasoningEfforts.Medium.value,
+            temperature=0.2
+        )
+
+        summary = summary_response.strip().replace('\n', ' ')
+        if not summary:
+            logger.warning("LLM returned empty summary, falling back to truncated user query.")
+            summary = query.strip().replace('\n', ' ')[:400]
+        elif len(summary) > 400:
+            summary = summary[:400]
+
         # Get initial search results to inform query generation
-        search_results = await get_search_results(query, self.researcher.retrievers[0])
+        search_results = await get_search_results(summary, self.researcher.retrievers[0])
+        import pprint
         logger.info(f"Initial web knowledge obtained: {len(search_results)} results")
+        debug.info(f"Initial Tavily search results (full): {pprint.pformat(search_results)}")
 
         # Get current time for context
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -209,6 +244,10 @@ Format each question on a new line starting with 'Question: '"""}
         # Generate search queries
         serp_queries = await self.generate_search_queries(query, num_queries=breadth)
         progress.total_queries = len(serp_queries)
+        if not serp_queries:
+            logger.warning(f"[deep_research] No search queries generated for '{query}'. Falling back to original query.")
+            serp_queries = [{'query': query, 'researchGoal': 'Fallback initial query'}]
+            progress.total_queries = len(serp_queries)
 
         all_learnings = learnings.copy()
         all_citations = citations.copy()
@@ -275,6 +314,8 @@ Format each question on a new line starting with 'Question: '"""}
         tasks = [process_query(query) for query in serp_queries]
         results = await asyncio.gather(*tasks)
         results = [r for r in results if r is not None]
+        if not results:
+            logger.warning(f"[deep_research] No results returned! Input queries: {serp_queries}")
 
         # Update breadth progress based on successful queries
         progress.current_breadth = len(results)
@@ -282,7 +323,7 @@ Format each question on a new line starting with 'Question: '"""}
             on_progress(progress)
 
         # Collect all results
-        for result in results:
+        for idx, result in enumerate(results):
             all_learnings.extend(result['learnings'])
             all_visited_urls.update(result['visited_urls'])
             all_citations.update(result['citations'])
@@ -291,36 +332,45 @@ Format each question on a new line starting with 'Question: '"""}
             if result['sources']:
                 all_sources.extend(result['sources'])
 
-            # Continue deeper if needed
-            if depth > 1:
-                new_breadth = max(2, breadth // 2)
-                new_depth = depth - 1
-                progress.current_depth += 1
+        # Safety: Only continue deeper if we have results to work with
+        if depth > 1 and results:
+            new_breadth = max(2, breadth // 2)
+            new_depth = depth - 1
+            progress.current_depth += 1
 
-                # Create next query from research goal and follow-up questions
-                next_query = f"""
-                Previous research goal: {result['researchGoal']}
-                Follow-up questions: {' '.join(result['followUpQuestions'])}
-                """
+            # Use the first result for next query (robust to >1 result)
+            next_query = f"""
+            Previous research goal: {results[0]['researchGoal']}
+            Follow-up questions: {' '.join(results[0]['followUpQuestions'])}
+            """
 
-                # Recursive research
-                deeper_results = await self.deep_research(
-                    query=next_query,
-                    breadth=new_breadth,
-                    depth=new_depth,
-                    learnings=all_learnings,
-                    citations=all_citations,
-                    visited_urls=all_visited_urls,
-                    on_progress=on_progress
-                )
+            # Recursive research
+            deeper_results = await self.deep_research(
+                query=next_query,
+                breadth=new_breadth,
+                depth=new_depth,
+                learnings=all_learnings,
+                citations=all_citations,
+                visited_urls=all_visited_urls,
+                on_progress=on_progress
+            )
 
-                all_learnings = deeper_results['learnings']
-                all_visited_urls.update(deeper_results['visited_urls'])
-                all_citations.update(deeper_results['citations'])
-                if deeper_results.get('context'):
-                    all_context.extend(deeper_results['context'])
-                if deeper_results.get('sources'):
-                    all_sources.extend(deeper_results['sources'])
+            all_learnings = deeper_results['learnings']
+            all_visited_urls.update(deeper_results['visited_urls'])
+            all_citations.update(deeper_results['citations'])
+            if deeper_results.get('context'):
+                all_context.extend(deeper_results['context'])
+            if deeper_results.get('sources'):
+                all_sources.extend(deeper_results['sources'])
+        elif depth > 1 and not results:
+            logger.warning("[deep_research] No results available for deeper research; skipping recursion and returning empty context.")
+            return {
+                'learnings': all_learnings,
+                'visited_urls': list(all_visited_urls),
+                'citations': all_citations,
+                'context': all_context,
+                'sources': all_sources
+            }
 
         # Update class tracking
         self.context.extend(all_context)

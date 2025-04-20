@@ -255,9 +255,9 @@ The report should:
 2. Integrate findings from various research branches
 3. Present a coherent narrative that builds from foundational to advanced insights
 4. Maintain proper citation of sources throughout
-5. Be well-structured with clear sections and subsections
+5. Be well-structured with clear sections and subsections, and use proper Markdown heading syntax (e.g., #, ##, ###, etc.) for all section and subsection titles. Do NOT use bold or numbered bold for headings. Each section and subsection title must use the correct Markdown heading syntax so that it is rendered as a heading in markdown renderers. This is critical for readability and compatibility with the application's dark theme.
 6. Have a minimum length of {total_words} words
-7. Follow {report_format} format with markdown syntax
+7. Follow {report_format} format with markdown syntax, and ensure all section and subsection titles use Markdown heading syntax only.
 8. Use markdown tables, lists and other formatting features when presenting comparative data, statistics, or structured information
 
 Additional requirements:
@@ -372,6 +372,7 @@ Content Focus:
 - The report should focus on answering the question, be well-structured, informative, in-depth, and include facts and numbers if available.
 - Use markdown syntax and follow the {report_format.upper()} format.
 - When presenting data, comparisons, or structured information, use markdown tables to enhance readability.
+- For Mermaid subgraphs, use unquoted IDs with simple display names in brackets (e.g., subgraph UserDevice[User Device]) or quote the entire label for complex names with spaces or special characters (e.g., subgraph "UserDevice[User Device (Client)]") and use arrow syntax with labels in pipes (e.g., -->|Label|).
 
 IMPORTANT:Content and Sections Uniqueness:
 - This part of the instructions is crucial to ensure the content is unique and does not overlap with existing reports.

@@ -1,9 +1,56 @@
 .markdown-content {
-  /* Base styles */
-  color: white;
-  font-family: Georgia, 'Times New Roman', Times, serif;
+  /* Dracula-inspired base styles */
+  background: #282a36;
+  color: #f8f8f2;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
   font-size: 18px;
-  line-height: 1.6;
+  line-height: 1.2;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 4px 32px 0 #0005;
+}
+
+.markdown-content h1 {
+  color: #bd93f9;
+  font-size: 2.5em;
+  border-bottom: 2px solid #44475a;
+  padding-bottom: 0.3em;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+}
+.markdown-content h2 {
+  color: #50fa7b;
+  font-size: 2em;
+  border-bottom: 1px solid #44475a;
+  padding-bottom: 0.2em;
+  margin-top: 1.1em;
+  margin-bottom: 0.4em;
+}
+.markdown-content h3 {
+  color: #ff79c6;
+  font-size: 1.5em;
+  margin-top: 1em;
+  margin-bottom: 0.35em;
+}
+.markdown-content h4 {
+  color: #ffb86c;
+  font-size: 1.2em;
+  margin-top: 0.9em;
+  margin-bottom: 0.3em;
+}
+.markdown-content h5 {
+  color: #8be9fd;
+  font-size: 1.1em;
+  margin-top: 0.8em;
+  margin-bottom: 0.25em;
+}
+.markdown-content h6 {
+  color: #f1fa8c;
+  font-size: 1em;
+  margin-top: 0.7em;
+  margin-bottom: 0.2em;
+}
+
 
   /* Headings */
   h1, h2, h3, h4, h5, h6 {
@@ -20,7 +67,8 @@
 
   /* Paragraphs and spacing */
   p {
-    margin: 0;
+    margin-top: 0;
+    margin-bottom: 0.7em;
     line-height: 1.6;
   }
 
@@ -40,7 +88,8 @@
 
   /* Lists */
   ul, ol {
-    margin: 0;
+    margin-top: 0;
+    margin-bottom: 0;
     padding-left: 2em;
     line-height: 1.6;
   }
@@ -79,41 +128,45 @@
 
   /* Links */
   a {
-    color: rgb(20, 184, 166);
+    color: #8be9fd;
     text-decoration: underline;
     font-weight: 500;
-    
-    &:hover {
-      opacity: 0.8;
-      color: rgb(13, 148, 136);
-    }
+    transition: color 0.2s;
+  }
+  a:hover {
+    color: #50fa7b;
+    opacity: 1;
   }
 
   /* Code blocks */
   pre {
-    background-color: #1e1e1e;
+    background-color: #44475a;
+    color: #f8f8f2;
     padding: 1em;
-    border-radius: 4px;
+    border-radius: 6px;
     overflow-x: auto;
     margin: 1em 0;
+    font-size: 1em;
   }
 
   code {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.9em;
+    font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', 'Courier New', Courier, monospace;
+    font-size: 0.95em;
     padding: 0 0.4em;
-    background-color: #1e1e1e;
+    background-color: #44475a;
+    color: #f1fa8c;
     border-radius: 3px;
   }
 
   /* Blockquotes */
   blockquote {
-    border-left: 4px solid rgb(20, 184, 166);
+    border-left: 4px solid #bd93f9;
     margin: 0;
     padding-left: 1em;
     font-style: italic;
-    background-color: rgba(20, 184, 166, 0.1);
-    border-radius: 0 4px 4px 0;
+    background-color: #44475a55;
+    color: #f1fa8c;
+    border-radius: 0 8px 8px 0;
   }
 
   /* Tables - Theme-matching styling */
@@ -121,15 +174,15 @@
     border-collapse: collapse;
     width: 100%;
     margin: 1em 0;
-    background-color: #111827; /* Dark background matching the site theme */
-    border-radius: 4px;
+    background-color: #21222c;
+    border-radius: 6px;
     overflow: hidden;
-    border: 2px solid #4B5563; /* Slightly thicker and lighter border for better visibility */
-    box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.1); /* Changed from purple to teal */
+    border: 2px solid #44475a;
+    box-shadow: 0 0 0 1px #44475a33;
   }
 
   th, td {
-    border: 1px solid #4B5563; /* Lighter border color for better contrast */
+    border: 1px solid #44475a;
     padding: 0.75em;
     text-align: left;
   }
@@ -152,23 +205,23 @@
   }
 
   th {
-    background-color: #1f2937; /* Darker header background */
-    font-weight: 600;
-    color: white; /* Changed from purple to white to match rest of content */
+    background-color: #44475a;
+    font-weight: 700;
+    color: #bd93f9;
   }
 
   tr:nth-child(even) {
-    background-color: #1a202c; /* Slightly lighter for alternating rows */
+    background-color: #343746;
   }
 
   tr:hover {
-    background-color: #282c34; /* Highlight on hover */
+    background-color: #44475a;
   }
 
   /* Horizontal rule */
   hr {
     border: 0;
-    border-top: 1px solid #444;
+    border-top: 2px solid #6272a4;
     margin: 1.5em 0;
   }
 
@@ -194,4 +247,3 @@
     margin-left: 2em;
     margin-bottom: 0.5em;
   }
-} 
