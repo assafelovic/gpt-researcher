@@ -8,7 +8,6 @@ export const useWebSocket = (
   setLoading: React.Dispatch<React.SetStateAction<boolean>>,
   setShowHumanFeedback: React.Dispatch<React.SetStateAction<boolean>>,
   setQuestionForHuman: React.Dispatch<React.SetStateAction<boolean | true>>,
-  currentApiUrl: string
 ) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const heartbeatInterval = useRef<number>();
