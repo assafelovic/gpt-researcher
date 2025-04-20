@@ -74,8 +74,7 @@ export const GPTResearcher = ({
     setAnswer,
     setLoading,
     setShowHumanFeedback,
-    setQuestionForHuman,
-    currentApiUrl
+    setQuestionForHuman
   );
 
   const handleFeedbackSubmit = (feedback: string | null) => {
