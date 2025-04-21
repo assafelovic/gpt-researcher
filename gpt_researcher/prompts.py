@@ -3,6 +3,7 @@ from datetime import date, datetime, timezone
 
 from langchain.docstore.document import Document
 
+from .config import Config
 from .utils.enum import ReportSource, ReportType, Tone
 from .utils.enum import PromptFamily as PromptFamilyEnum
 from typing import Callable, List, Dict, Any
@@ -26,6 +27,13 @@ class PromptFamily:
     All derived classes must retain the same set of method names, but may
     override individual methods.
     """
+
+    def __init__(self, config: Config):
+        """Initialize with a config instance. This may be used by derived
+        classes to select the correct prompting based on configured models and/
+        or providers
+        """
+        self.cfg = config
 
     @staticmethod
     def generate_search_queries_prompt(
@@ -543,8 +551,28 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
         return prompt
 
 
-class Granite32PromptFamily(PromptFamily):
+class GranitePromptFamily(PromptFamily):
     """Prompts for IBM's granite models"""
+
+
+    def _get_granite_class(self) -> type[PromptFamily]:
+        """Get the right granite prompt family based on the version number"""
+        if "3.3" in self.cfg.smart_llm:
+            return Granite33PromptFamily
+        if "3" in self.cfg.smart_llm:
+            return Granite3PromptFamily
+        # If not a known version, return the default
+        return PromptFamily
+
+    def pretty_print_docs(self, *args, **kwargs) -> str:
+        return self._get_granite_class().pretty_print_docs(*args, **kwargs)
+
+    def join_local_web_documents(self, *args, **kwargs) -> str:
+        return self._get_granite_class().join_local_web_documents(*args, **kwargs)
+
+
+class Granite3PromptFamily(PromptFamily):
+    """Prompts for IBM's granite 3.X models (before 3.3)"""
 
     _DOCUMENTS_PREFIX = "<|start_of_role|>documents<|end_of_role|>\n"
     _DOCUMENTS_SUFFIX = "\n<|end_of_text|>"
@@ -574,7 +602,7 @@ class Granite32PromptFamily(PromptFamily):
 
 
 class Granite33PromptFamily(PromptFamily):
-    """Prompts for IBM's granite models"""
+    """Prompts for IBM's granite 3.3 models"""
 
     _DOCUMENT_TEMPLATE = """<|start_of_role|>document {{"document_id": "{document_id}"}}<|end_of_role|>
 {document_content}<|end_of_text|>
@@ -648,19 +676,22 @@ def get_prompt_by_report_type(
 
 prompt_family_mapping = {
     PromptFamilyEnum.Default.value: PromptFamily,
-    PromptFamilyEnum.Granite32.value: Granite32PromptFamily,
+    PromptFamilyEnum.Granite.value: GranitePromptFamily,
+    PromptFamilyEnum.Granite3.value: Granite3PromptFamily,
+    PromptFamilyEnum.Granite31.value: Granite3PromptFamily,
+    PromptFamilyEnum.Granite32.value: Granite3PromptFamily,
     PromptFamilyEnum.Granite33.value: Granite33PromptFamily,
 }
 
 
 def get_prompt_family(
-    prompt_family_name: PromptFamilyEnum | str,
+    prompt_family_name: PromptFamilyEnum | str, config: Config,
 ) -> PromptFamily:
     """Get a prompt family by name or value."""
     if isinstance(prompt_family_name, PromptFamilyEnum):
         prompt_family_name = prompt_family_name.value
     if prompt_family := prompt_family_mapping.get(prompt_family_name):
-        return prompt_family
+        return prompt_family(config)
     warnings.warn(
         f"Invalid prompt family: {prompt_family_name}.\n"
         f"Please use one of the following: {', '.join([enum_value for enum_value in prompt_family_mapping.keys()])}\n"
