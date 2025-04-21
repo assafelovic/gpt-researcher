@@ -88,7 +88,7 @@ class GPTResearcher:
             self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
         )
         self.log_handler = log_handler
-        self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family)
+        self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
