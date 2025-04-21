@@ -543,7 +543,7 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
         return prompt
 
 
-class GranitePromptFamily(PromptFamily):
+class Granite32PromptFamily(PromptFamily):
     """Prompts for IBM's granite models"""
 
     _DOCUMENTS_PREFIX = "<|start_of_role|>documents<|end_of_role|>\n"
@@ -571,6 +571,37 @@ class GranitePromptFamily(PromptFamily):
             web_context = web_context[:-len(cls._DOCUMENTS_SUFFIX)]
         all_documents = "\n\n".join([docs_context, web_context])
         return "".join([cls._DOCUMENTS_PREFIX, all_documents, cls._DOCUMENTS_SUFFIX])
+
+
+class Granite33PromptFamily(PromptFamily):
+    """Prompts for IBM's granite models"""
+
+    _DOCUMENT_TEMPLATE = """<|start_of_role|>document {{"document_id": "{document_id}"}}<|end_of_role|>
+{document_content}<|end_of_text|>
+"""
+
+    @staticmethod
+    def _get_content(doc: Document) -> str:
+        doc_content = doc.page_content
+        if title := doc.metadata.get("title"):
+            doc_content = f"Title: {title}\n{doc_content}"
+        return doc_content.strip()
+
+    @classmethod
+    def pretty_print_docs(cls, docs: list[Document], top_n: int | None = None) -> str:
+        return "\n".join([
+            cls._DOCUMENT_TEMPLATE.format(
+                document_id=doc.metadata.get("source", i),
+                document_content=cls._get_content(doc),
+            )
+            for i, doc in enumerate(docs)
+            if top_n is None or i < top_n
+        ])
+
+    @classmethod
+    def join_local_web_documents(cls, docs_context: str | list, web_context: str | list) -> str:
+        """Joins local web documents using Granite's preferred format"""
+        return "\n\n".join([docs_context, web_context])
 
 ## Factory ######################################################################
 
@@ -617,7 +648,8 @@ def get_prompt_by_report_type(
 
 prompt_family_mapping = {
     PromptFamilyEnum.Default.value: PromptFamily,
-    PromptFamilyEnum.Granite.value: GranitePromptFamily,
+    PromptFamilyEnum.Granite32.value: Granite32PromptFamily,
+    PromptFamilyEnum.Granite33.value: Granite33PromptFamily,
 }
 
 
