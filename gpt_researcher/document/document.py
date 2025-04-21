@@ -52,7 +52,7 @@ class DoclingLoader:
                     vlm_options = smoldocling_vlm_mlx_conversion_options
                 except ImportError:
                     print("mlx-vlm not installed, falling back to torch")
-        elif vlm is not None:
+        elif vlm:
             raise ValueError(f"Unknown docling vlm option: {vlm}")
 
         format_options = None
