@@ -15,6 +15,12 @@ Follow these easy steps to get started:
 pip install gpt-researcher
 ```
 
+To install optional dependencies, use the following syntax:
+
+```bash
+pip install gpt-researcher[docling]
+```
+
 2. **Environment Variables:** Create a .env file with your OpenAI API key or simply export it
 
 ```bash

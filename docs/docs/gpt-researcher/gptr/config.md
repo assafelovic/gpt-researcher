@@ -44,6 +44,8 @@ Below is a list of current supported options:
 - **`EMBEDDING_KWARGS`**: Json formatted dict of additional keyword args to be passed to the embedding provider class when instantiating it.
 - **`USER_AGENT`**: Custom User-Agent string for web crawling and web requests.
 - **`MEMORY_BACKEND`**: Backend used for memory operations, such as local storage of temporary data. Defaults to `local`.
+- **`CONVERT_WITH_DOCLING`**: Use [docling](https://docling-project.github.io/docling/) for document conversion (NOTE: This requires installing the `docling` extra e.g. `pip install gpt-researcher[docling]`).
+- **`DOCLING_VLM`**: If `CONVERT_WITH_DOCLING` is set, this will enable docling's pipeline for using a Visual Language Model (VLM) to parse images.
 
 To change the default configurations, you can simply add env variables to your `.env` file as named above or export manually in your local project directory.
 
