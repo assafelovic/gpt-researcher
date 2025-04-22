@@ -145,7 +145,7 @@ class NoDriverScraper:
 
             config = zendriver.Config(
                 headless=headless,
-                browser_connection_timeout=3,
+                browser_connection_timeout=1,
             )
             driver = await zendriver.start(config)
             browser = cls.Browser(driver)
