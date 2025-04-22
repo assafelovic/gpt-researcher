@@ -183,7 +183,7 @@ class NoDriverScraper:
         self.session = session
         self.debug = False
 
-    async def scrape_async(self) -> Tuple[str, List[str], str]:
+    async def scrape_async(self) -> Tuple[str, list[dict], str]:
         """Returns tuple of (text, image_urls, title)"""
         if not self.url:
             return (
