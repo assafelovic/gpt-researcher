@@ -99,6 +99,8 @@ class NoDriverScraper:
         async def close_page(self, page: "zendriver.Tab"):
             try:
                 await page.close()
+            except Exception as e:
+                NoDriverScraper.logger.error(f"Failed to close page: {e}")
             finally:
                 self.processing_count -= 1
 
@@ -175,6 +177,8 @@ class NoDriverScraper:
             if browser and browser.processing_count <= 0:
                 try:
                     await browser.stop()
+                except Exception as e:
+                    NoDriverScraper.logger.error(f"Failed to release browser: {e}")
                 finally:
                     cls.browsers.discard(browser)
 
@@ -241,7 +245,10 @@ class NoDriverScraper:
             )
             return str(e), [], ""
         finally:
-            if page and browser:
-                await browser.close_page(page)
-            if browser:
-                await self.release_browser(browser)
+            try:
+                if page and browser:
+                    await browser.close_page(page)
+                if browser:
+                    await self.release_browser(browser)
+            except Exception as e:
+                self.logger.error(e)
