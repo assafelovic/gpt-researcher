@@ -1,10 +1,11 @@
 from contextlib import asynccontextmanager
+import math
 from pathlib import Path
 import random
 import traceback
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from typing import Dict, cast, Tuple, List
+from typing import Dict, Literal, cast, Tuple, List
 import requests
 import asyncio
 import logging
@@ -64,7 +65,7 @@ class NoDriverScraper:
                 scroll_percent = random.randrange(46, 97)
                 total_scroll_percent += scroll_percent
                 await page.scroll_down(scroll_percent)
-                await page.wait(2)
+                await self.wait_or_timeout(page, "idle", 2)
                 await page.sleep(random.uniform(0.23, 0.56))
 
                 if total_scroll_percent >= self.max_scroll_percent:
@@ -78,9 +79,28 @@ class NoDriverScraper:
                 ):
                     break
 
+        async def wait_or_timeout(
+            self,
+            page: "zendriver.Tab",
+            until: Literal["complete", "idle"] = "idle",
+            timeout: float = 3,
+        ):
+            try:
+                if until == "idle":
+                    await asyncio.wait_for(page.wait(), timeout)
+                else:
+                    timeout = math.ceil(timeout)
+                    await page.wait_for_ready_state(until, timeout=timeout)
+            except asyncio.TimeoutError:
+                NoDriverScraper.logger.debug(
+                    f"timeout waiting for {until} after {timeout} seconds"
+                )
+
         async def close_page(self, page: "zendriver.Tab"):
             try:
                 await page.close()
+            except Exception as e:
+                NoDriverScraper.logger.error(f"Failed to close page: {e}")
             finally:
                 self.processing_count -= 1
 
@@ -127,7 +147,7 @@ class NoDriverScraper:
 
             config = zendriver.Config(
                 headless=headless,
-                browser_connection_timeout=3,
+                browser_connection_timeout=1,
             )
             driver = await zendriver.start(config)
             browser = cls.Browser(driver)
@@ -157,6 +177,8 @@ class NoDriverScraper:
             if browser and browser.processing_count <= 0:
                 try:
                     await browser.stop()
+                except Exception as e:
+                    NoDriverScraper.logger.error(f"Failed to release browser: {e}")
                 finally:
                     cls.browsers.discard(browser)
 
@@ -165,7 +187,7 @@ class NoDriverScraper:
         self.session = session
         self.debug = False
 
-    async def scrape_async(self) -> Tuple[str, List[str], str]:
+    async def scrape_async(self) -> Tuple[str, list[dict], str]:
         """Returns tuple of (text, image_urls, title)"""
         if not self.url:
             return (
@@ -184,9 +206,10 @@ class NoDriverScraper:
                 return str(e), [], ""
 
             page = await browser.get(self.url)
-            await page.wait(2)
-            await page.sleep(random.uniform(1, 2.3))
-            await page.wait(random.uniform(2, 3))
+            await browser.wait_or_timeout(page, "complete", 2)
+            # wait for potential redirection
+            await page.sleep(random.uniform(0.3, 0.7))
+            await browser.wait_or_timeout(page, "idle", 2)
 
             await browser.scroll_page_to_bottom(page)
             html = await page.get_content()
@@ -222,7 +245,10 @@ class NoDriverScraper:
             )
             return str(e), [], ""
         finally:
-            if page and browser:
-                await browser.close_page(page)
-            if browser:
-                await self.release_browser(browser)
+            try:
+                if page and browser:
+                    await browser.close_page(page)
+                if browser:
+                    await self.release_browser(browser)
+            except Exception as e:
+                self.logger.error(e)
