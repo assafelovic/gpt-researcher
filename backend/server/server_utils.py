@@ -46,11 +46,11 @@ class CustomLogsHandler:
         # Send to websocket for real-time display
         if self.websocket:
             await self.websocket.send_json(data)
-            
+
         # Read current log file
         with open(self.log_file, 'r') as f:
             log_data = json.load(f)
-            
+
         # Update appropriate section based on data type
         if data.get('type') == 'logs':
             log_data['events'].append({
@@ -61,7 +61,7 @@ class CustomLogsHandler:
         else:
             # Update content section for other types of data
             log_data['content'].update(data)
-            
+
         # Save updated log file
         with open(self.log_file, 'w') as f:
             json.dump(log_data, f, indent=2)
@@ -86,14 +86,14 @@ class Researcher:
         """Conduct research and return paths to generated files"""
         await self.researcher.conduct_research()
         report = await self.researcher.write_report()
-        
+
         # Generate the files
         sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{self.query}")
         file_paths = await generate_report_files(report, sanitized_filename)
-        
+
         # Get the JSON log path that was created by CustomLogsHandler
         json_relative_path = os.path.relpath(self.logs_handler.log_file)
-        
+
         return {
             "output": {
                 **file_paths,  # Include PDF, DOCX, and MD paths
@@ -105,14 +105,14 @@ def sanitize_filename(filename: str) -> str:
     # Split into components
     prefix, timestamp, *task_parts = filename.split('_')
     task = '_'.join(task_parts)
-    
+
     # Calculate max length for task portion
     # 255 - len(os.getcwd()) - len("\\gpt-researcher\\outputs\\") - len("task_") - len(timestamp) - len("_.json") - safety_margin
     max_task_length = 255 - len(os.getcwd()) - 24 - 5 - 10 - 6 - 5  # ~189 chars for task
-    
+
     # Truncate task if needed
     truncated_task = task[:max_task_length] if len(task) > max_task_length else task
-    
+
     # Reassemble and clean the filename
     sanitized = f"{prefix}_{timestamp}_{truncated_task}"
     return re.sub(r"[^\w\s-]", "", sanitized).strip()
@@ -189,8 +189,8 @@ async def send_file_paths(websocket, file_paths: Dict[str, str]):
 def get_config_dict(
     langchain_api_key: str, openai_api_key: str, tavily_api_key: str,
     google_api_key: str, google_cx_key: str, bing_api_key: str,
-    searchapi_api_key: str, serpapi_api_key: str, serper_api_key: str, searx_url: str
-) -> Dict[str, str]:
+    searchapi_api_key: str, serpapi_api_key: str, serper_api_key: str, searx_url: str,
+) -> Dict[str, str | bool]:
     return {
         "LANGCHAIN_API_KEY": langchain_api_key or os.getenv("LANGCHAIN_API_KEY", ""),
         "OPENAI_API_KEY": openai_api_key or os.getenv("OPENAI_API_KEY", ""),
@@ -205,7 +205,7 @@ def get_config_dict(
         "LANGCHAIN_TRACING_V2": os.getenv("LANGCHAIN_TRACING_V2", "true"),
         "DOC_PATH": os.getenv("DOC_PATH", "./my-docs"),
         "RETRIEVER": os.getenv("RETRIEVER", ""),
-        "EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "")
+        "EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", ""),
     }
 
 
@@ -214,13 +214,19 @@ def update_environment_variables(config: Dict[str, str]):
         os.environ[key] = value
 
 
-async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
+async def handle_file_upload(
+    file, DOC_PATH: str, CONVERT_WITH_DOCLING: bool, DOCLING_VLM: str,
+) -> Dict[str, str]:
     file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     print(f"File uploaded to {file_path}")
 
-    document_loader = DocumentLoader(DOC_PATH)
+    document_loader = DocumentLoader(
+        path=DOC_PATH,
+        use_docling=CONVERT_WITH_DOCLING,
+        docling_vlm=DOCLING_VLM,
+    )
     await document_loader.load()
 
     return {"filename": file.filename, "path": file_path}

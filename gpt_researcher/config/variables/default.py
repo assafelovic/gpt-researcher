@@ -26,7 +26,6 @@ DEFAULT_CONFIG: BaseConfig = {
     "MAX_SUBTOPICS": 3,
     "LANGUAGE": "english",
     "REPORT_SOURCE": "web",
-    "DOC_PATH": "./my-docs",
     "PROMPT_FAMILY": "default",
     "LLM_KWARGS": {},
     "EMBEDDING_KWARGS": {},
@@ -34,4 +33,8 @@ DEFAULT_CONFIG: BaseConfig = {
     "DEEP_RESEARCH_BREADTH": 3,
     "DEEP_RESEARCH_DEPTH": 2,
     "DEEP_RESEARCH_CONCURRENCY": 4,
+    # Doc conversion settings
+    "DOC_PATH": "./my-docs",
+    "CONVERT_WITH_DOCLING": False,
+    "DOCLING_VLM": None,
 }
