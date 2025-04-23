@@ -2,7 +2,7 @@ import json_repair
 
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from ..utils.llm import create_chat_completion
-from ..prompts import generate_search_queries_prompt
+from ..prompts import PromptFamily
 from typing import Any, List, Dict
 from ..config import Config
 import logging
@@ -29,7 +29,8 @@ async def generate_sub_queries(
     report_type: str,
     context: List[Dict[str, Any]],
     cfg: Config,
-    cost_callback: callable = None
+    cost_callback: callable = None,
+    prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
 ) -> List[str]:
     """
     Generate sub-queries using the specified LLM model.
@@ -42,16 +43,17 @@ async def generate_sub_queries(
         context: Search results context
         cfg: Configuration object
         cost_callback: Callback for cost calculation
+        prompt_family: Family of prompts
 
     Returns:
         A list of sub-queries
     """
-    gen_queries_prompt = generate_search_queries_prompt(
+    gen_queries_prompt = prompt_family.generate_search_queries_prompt(
         query,
         parent_query,
         report_type,
         max_iterations=cfg.max_iterations or 3,
-        context=context
+        context=context,
     )
 
     try:
