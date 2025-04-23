@@ -9,7 +9,7 @@ from langchain.prompts import PromptTemplate
 
 from gpt_researcher.llm_provider.generic.base import NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, ReasoningEfforts
 
-from ..prompts import generate_subtopics_prompt
+from ..prompts import PromptFamily
 from .costs import estimate_llm_cost
 from .validators import Subtopics
 import os
@@ -90,7 +90,13 @@ async def create_chat_completion(
     raise RuntimeError(f"Failed to get response from {llm_provider} API")
 
 
-async def construct_subtopics(task: str, data: str, config, subtopics: list = []) -> list:
+async def construct_subtopics(
+    task: str,
+    data: str,
+    config,
+    subtopics: list = [],
+    prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+) -> list:
     """
     Construct subtopics based on the given task and data.
 
@@ -99,6 +105,7 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
         data (str): Additional data for context.
         config: Configuration settings.
         subtopics (list, optional): Existing subtopics. Defaults to [].
+        prompt_family (PromptFamily): Family of prompts
 
     Returns:
         list: A list of constructed subtopics.
@@ -107,7 +114,7 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
         parser = PydanticOutputParser(pydantic_object=Subtopics)
 
         prompt = PromptTemplate(
-            template=generate_subtopics_prompt(),
+            template=prompt_family.generate_subtopics_prompt(),
             input_variables=["task", "data", "subtopics", "max_subtopics"],
             partial_variables={
                 "format_instructions": parser.get_format_instructions()},

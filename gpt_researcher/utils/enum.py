@@ -51,3 +51,13 @@ class Tone(Enum):
     )
     Simple = "Simple (written for young readers, using basic vocabulary and clear explanations)"
     Casual = "Casual (conversational and relaxed style for easy, everyday reading)"
+
+
+class PromptFamily(Enum):
+    """Supported prompt families by name"""
+    Default = "default"
+    Granite = "granite"
+    Granite3 = "granite3"
+    Granite31 = "granite3.1"
+    Granite32 = "granite3.2"
+    Granite33 = "granite3.3"
