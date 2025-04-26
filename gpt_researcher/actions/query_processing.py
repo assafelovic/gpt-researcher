@@ -60,11 +60,10 @@ async def generate_sub_queries(
         response = await create_chat_completion(
             model=cfg.strategic_llm_model,
             messages=[{"role": "user", "content": gen_queries_prompt}],
-            temperature=0.6,
             llm_provider=cfg.strategic_llm_provider,
             max_tokens=None,
             llm_kwargs=cfg.llm_kwargs,
-            reasoning_effort=ReasoningEfforts.High.value,
+            reasoning_effort=ReasoningEfforts.Medium.value,
             cost_callback=cost_callback,
         )
     except Exception as e:
@@ -74,6 +73,7 @@ async def generate_sub_queries(
             response = await create_chat_completion(
                 model=cfg.strategic_llm_model,
                 messages=[{"role": "user", "content": gen_queries_prompt}],
+                max_tokens=cfg.strategic_token_limit,
                 llm_provider=cfg.strategic_llm_provider,
                 llm_kwargs=cfg.llm_kwargs,
                 cost_callback=cost_callback,
