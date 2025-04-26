@@ -97,6 +97,9 @@ module.exports = {
           remarkPlugins: [math],
           rehypePlugins: [katex],
         },
+        blog: {
+          onUntruncatedBlogPosts: 'ignore',
+        },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
