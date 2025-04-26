@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkwebsite=self.webpackChunkwebsite||[]).push([[4492],{7005:s=>{s.exports=JSON.parse('{"allTagsPath":"/blog/tags","slug":"/blog/tags/assistant-api","name":"assistant-api","count":1,"permalink":"/blog/tags/assistant-api"}')}}]);
