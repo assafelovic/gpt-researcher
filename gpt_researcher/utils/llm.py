@@ -66,6 +66,9 @@ async def create_chat_completion(
     if model not in NO_SUPPORT_TEMPERATURE_MODELS:
         kwargs['temperature'] = temperature
         kwargs['max_tokens'] = max_tokens
+    else:
+        kwargs['temperature'] = None
+        kwargs['max_tokens'] = None
 
     if llm_provider == "openai":
         base_url = os.environ.get("OPENAI_BASE_URL", None)
