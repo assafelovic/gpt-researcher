@@ -229,3 +229,8 @@ class Config:
             return json.loads(env_value)
         else:
             raise ValueError(f"Unsupported type {type_hint} for key {key}")
+
+
+    def set_verbose(self, verbose: bool) -> None:
+        """Set the verbosity level."""
+        self.llm_kwargs["verbose"] = verbose
