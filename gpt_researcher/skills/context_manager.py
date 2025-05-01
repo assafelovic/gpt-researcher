@@ -24,6 +24,7 @@ class ContextManager:
             documents=pages,
             embeddings=self.researcher.memory.get_embeddings(),
             prompt_family=self.researcher.prompt_family,
+            **self.researcher.kwargs
         )
         return await context_compressor.async_get_context(
             query=query, max_results=10, cost_callback=self.researcher.add_costs
@@ -39,6 +40,7 @@ class ContextManager:
                 )
         vectorstore_compressor = VectorstoreCompressor(
             self.researcher.vector_store, filter, prompt_family=self.researcher.prompt_family,
+            **self.researcher.kwargs
         )
         return await vectorstore_compressor.async_get_context(query=query, max_results=8)
 
@@ -52,7 +54,7 @@ class ContextManager:
         all_queries = [current_subtopic] + draft_section_titles
 
         async def process_query(query: str) -> Set[str]:
-            return set(await self.__get_similar_written_contents_by_query(query, written_contents))
+            return set(await self.__get_similar_written_contents_by_query(query, written_contents, **self.researcher.kwargs))
 
         results = await asyncio.gather(*[process_query(query) for query in all_queries])
         relevant_contents = set().union(*results)
@@ -77,7 +79,8 @@ class ContextManager:
         written_content_compressor = WrittenContentCompressor(
             documents=written_contents,
             embeddings=self.researcher.memory.get_embeddings(),
-            similarity_threshold=similarity_threshold
+            similarity_threshold=similarity_threshold,
+            **self.researcher.kwargs
         )
         return await written_content_compressor.async_get_context(
             query=query, max_results=max_results, cost_callback=self.researcher.add_costs
