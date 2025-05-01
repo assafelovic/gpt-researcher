@@ -73,7 +73,7 @@ class ContextCompressor:
         compressed_docs = self.__get_contextual_retriever()
         if cost_callback:
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
-        relevant_docs = await asyncio.to_thread(compressed_docs.invoke, query)
+        relevant_docs = await asyncio.to_thread(compressed_docs.invoke, query, **self.kwargs)
         return self.prompt_family.pretty_print_docs(relevant_docs, max_results)
 
 
@@ -106,5 +106,5 @@ class WrittenContentCompressor:
         compressed_docs = self.__get_contextual_retriever()
         if cost_callback:
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
-        relevant_docs = await asyncio.to_thread(compressed_docs.invoke, query)
+        relevant_docs = await asyncio.to_thread(compressed_docs.invoke, query, **self.kwargs)
         return self.__pretty_docs_list(relevant_docs, max_results)

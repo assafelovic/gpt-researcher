@@ -55,7 +55,9 @@ class GPTResearcher:
         max_subtopics: int = 5,
         log_handler=None,
         prompt_family: str | None = None,
+        **kwargs
     ):
+        self.kwargs = kwargs
         self.query = query
         self.report_type = report_type
         self.cfg = Config(config_path)
@@ -142,6 +144,7 @@ class GPTResearcher:
                 cost_callback=self.add_costs,
                 headers=self.headers,
                 prompt_family=self.prompt_family,
+                **self.kwargs
             )
             await self._log_event("action", action="agent_selected", details={
                 "agent": self.agent,
