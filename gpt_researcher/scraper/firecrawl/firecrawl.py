@@ -49,7 +49,7 @@ class FireCrawl:
         """
 
         try:
-            response = self.firecrawl.scrape_url(url=self.link, params={"formats": ["markdown"]})
+            response = self.firecrawl.scrape_url(url=self.link, formats=["markdown"])
 
             # Check if the page has been scraped success
             if "error" in response:
@@ -60,7 +60,7 @@ class FireCrawl:
                 return "", [], ""
 
             # Extract the content (markdown) and title from FireCrawl response
-            content = response["markdown"]
+            content = response.data.markdown
             title = response["metadata"]["title"]
 
             # Parse the HTML content of the response to create a BeautifulSoup object for the utility functions
