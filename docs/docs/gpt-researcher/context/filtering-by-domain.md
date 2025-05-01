@@ -58,4 +58,4 @@ https://gptr.app/?domains=wikipedia.org
 
 https://gptr.app/?domains=wired.com,forbes.com,wikipedia.org
 
-The `https://gptr.app` part of the URL can be replaces with [the domain that you deployed GPTR on](https://docs.gptr.dev/docs/gpt-researcher/getting-started/linux-deployment).
+The `https://gptr.app` part of the URL can be replaced with [the domain that you deployed GPTR on](https://docs.gptr.dev/docs/gpt-researcher/getting-started/linux-deployment).
