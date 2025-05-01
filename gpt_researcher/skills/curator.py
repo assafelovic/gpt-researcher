@@ -42,7 +42,7 @@ class SourceCurator:
                 model=self.researcher.cfg.smart_llm_model,
                 messages=[
                     {"role": "system", "content": f"{self.researcher.role}"},
-                    {"role": "user", "content": self.researcher.prompt_family.curate_soures(
+                    {"role": "user", "content": self.researcher.prompt_family.curate_sources(
                         self.researcher.query, source_data, max_results)},
                 ],
                 temperature=0.2,
