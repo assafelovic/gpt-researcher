@@ -52,10 +52,10 @@ This can be handle for demonstrating a proof of concept of the Research Agent ta
 
 ### Single Domain:
 
-https://gptr.app/?domains=wikipedia.org
+https://app.gptr.dev/?domains=wikipedia.org
 
 ### Multiple Domains:
 
-https://gptr.app/?domains=wired.com,forbes.com,wikipedia.org
+https://app.gptr.dev/?domains=wired.com,forbes.com,wikipedia.org
 
-The `https://gptr.app` part of the URL can be replaces with [the domain that you deployed GPTR on](https://docs.gptr.dev/docs/gpt-researcher/getting-started/linux-deployment).
+The `https://app.gptr.dev` part of the URL can be replaces with [the domain that you deployed GPTR on](https://docs.gptr.dev/docs/gpt-researcher/getting-started/linux-deployment).
