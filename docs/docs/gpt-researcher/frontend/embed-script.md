@@ -6,7 +6,7 @@ To achieve this, simply add these 2 script tags into your HTML:
 
 ```javascript
 <script>localStorage.setItem("GPTR_API_URL", "http://localhost:8000");</script>
-<script src="https://gptr.app/embed.js"></script>
+<script src="https://app.gptr.dev/embed.js"></script>
 ```
 
 Here's a minmalistic HTML example (P.S. You can also save this as an index.html file and open it with your Web Browser)
@@ -22,7 +22,7 @@ Here's a minmalistic HTML example (P.S. You can also save this as an index.html 
 <body style="margin: 0; padding: 0;">
     <!-- GPT Researcher Embed -->
     <script>localStorage.setItem("GPTR_API_URL", "http://localhost:8000");</script>
-    <script src="https://gptr.app/embed.js"></script>
+    <script src="https://app.gptr.dev/embed.js"></script>
 </body>
 </html>
 ```
