@@ -79,10 +79,6 @@ async def create_chat_completion(
 
     provider = get_llm(llm_provider, **provider_kwargs)
     response = ""
-
-    # Merge kwargs with provider_kwargs
-    kwargs = {**kwargs, **provider_kwargs}
-
     # create response
     for _ in range(10):  # maximum of 10 attempts
         response = await provider.get_chat_response(
@@ -147,8 +143,6 @@ async def construct_subtopics(
         model = provider.llm
 
         chain = prompt | model | parser
-
-        kwargs = {**kwargs, **provider_kwargs}
 
         output = chain.invoke({
             "task": task,
