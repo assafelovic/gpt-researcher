@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from multi_agents.agents import ChiefEditorAgent
 import asyncio
+import argparse
 import json
 from gpt_researcher.utils.enum import Tone
 
@@ -13,12 +14,19 @@ from gpt_researcher.utils.enum import Tone
 if os.environ.get("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
 load_dotenv()
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--task-file', dest='task_file', default=None, help='Path to task JSON file')
+    return parser.parse_args()
 
-def open_task():
-    # Get the directory of the current script
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    # Construct the absolute path to task.json
-    task_json_path = os.path.join(current_dir, 'task.json')
+def open_task(path_override=None):
+    if path_override:
+        task_json_path = path_override
+    else:
+        # Get the directory of the current script
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct the absolute path to task.json
+        task_json_path = os.path.join(current_dir, 'task.json')
     
     with open(task_json_path, 'r') as f:
         task = json.load(f)
@@ -49,8 +57,8 @@ async def run_research_task(query, websocket=None, stream_output=None, tone=Tone
 
     return research_report
 
-async def main():
-    task = open_task()
+async def main(task_file=None):
+    task = open_task(path_override=task_file)
 
     chief_editor = ChiefEditorAgent(task)
     research_report = await chief_editor.run_research_task(task_id=uuid.uuid4())
@@ -58,4 +66,5 @@ async def main():
     return research_report
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    args = parse_args()
+    asyncio.run(main(task_file=args.task_file))
