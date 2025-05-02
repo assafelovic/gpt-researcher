@@ -76,12 +76,12 @@ class ChatLogger:
 
 class GenericLLMProvider:
 
-    def __init__(self, llm, chat_log: str | None = None):
+    def __init__(self, llm, chat_log: str | None = None,  verbose: bool = True):
         self.llm = llm
         self.chat_logger = ChatLogger(chat_log) if chat_log else None
-
+        self.verbose = verbose
     @classmethod
-    def from_provider(cls, provider: str, chat_log: str | None = None, **kwargs: Any):
+    def from_provider(cls, provider: str, chat_log: str | None = None, verbose: bool=True, **kwargs: Any):
         if provider == "openai":
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
@@ -211,7 +211,7 @@ class GenericLLMProvider:
             raise ValueError(
                 f"Unsupported {provider}.\n\nSupported model providers are: {supported}"
             )
-        return cls(llm, chat_log)
+        return cls(llm, chat_log, verbose=verbose)
 
 
     async def get_chat_response(self, messages, stream, websocket=None):
@@ -251,7 +251,7 @@ class GenericLLMProvider:
     async def _send_output(self, content, websocket=None):
         if websocket is not None:
             await websocket.send_json({"type": "report", "output": content})
-        else:
+        elif self.verbose:
             print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
 
 
