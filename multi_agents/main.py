@@ -35,7 +35,7 @@ def open_task():
     global ARGS
     # Merge multiple config files if provided
     if ARGS and ARGS.config_files:
-        config = {}
+        config = deepcopy(DEFAULT_TASK)
         for config_path in ARGS.config_files:
             with open(config_path, 'r') as cf:
                 loaded = json.load(cf)
