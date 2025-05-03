@@ -100,7 +100,7 @@ async def run_research_task(query, websocket=None, stream_output=None, tone=Tone
     return research_report
 
 async def main(task_file=None):
-    task = open_task(path_override=task_file)
+    task = open_task()
 
     chief_editor = ChiefEditorAgent(task)
     research_report = await chief_editor.run_research_task(task_id=uuid.uuid4())

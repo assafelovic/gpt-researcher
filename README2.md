@@ -1,10 +1,39 @@
+eed install nodjs 
+need make a env file with api key, set to git ignore
+download python
+download npm
+
+maybe use vm evn
+
+install uvicorn?
+
+  Install (or reinstall) uvicorn in your active environment
+powershell
+Copy
+Edit
+# with the virtual‑env activated, or in your base interpreter
+python -m pip install uvicorn      # lightweight, cross‑platform
+On Windows you should not use the [standard] extras because C‑extensions (uvloop, httptools) don’t compile natively there. 
+Stack Overflow
+
+If you’re starting fresh with GPT‑Researcher‑CLI you’ll normally do:
+
+powershell
+Copy
+Edit
+python -m venv .venv
+.\.venv\Scripts\Activate            # PowerShell:  .\.venv\Scripts\Activate
+python -m pip install -r requirements.txt
 
 
+
+python -m pip install uvicorn
 $ git clone https://github.com/assafelovic/gpt-researcher.git
+or morganross gpt-researcher-CLI
 $ cd gpt-researcher
 $ pip install -r requirements.txt
 $ python uvicorn main:app --reload
-
+uvicorn main:app --reload
 test the multi_agents main script
 
 cd multi_agents
