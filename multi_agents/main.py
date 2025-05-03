@@ -19,7 +19,6 @@ def parse_args():
     parser.add_argument('-t', '--task-file', dest='task_file', default=None, help='Path to task JSON file')
     return parser.parse_args()
 
-<<<<<<< HEAD
 # Load default configuration and recognized keys
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_TASK_PATH = os.path.join(CURRENT_DIR, 'task.json')
@@ -56,19 +55,6 @@ def open_task():
     # Default task.json
     else:
         config = deepcopy(DEFAULT_TASK)
-=======
-def open_task(path_override=None):
-    if path_override:
-        task_json_path = path_override
-    else:
-        # Get the directory of the current script
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        # Construct the absolute path to task.json
-        task_json_path = os.path.join(current_dir, 'task.json')
-    
-    with open(task_json_path, 'r') as f:
-        task = json.load(f)
->>>>>>> e2b264d3a41f83dff6fb338c7a970c6eecc11503
 
     # Override query if a query-file is provided
     if ARGS and ARGS.query_file:
@@ -122,7 +108,6 @@ async def main(task_file=None):
     return research_report
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     parser = argparse.ArgumentParser(description="Multi-agents CLI")
     parser.add_argument("-t", "--config-file", type=str, help="Path to a single JSON configuration file")
     parser.add_argument("--config-files", nargs="+", type=str, help="Paths to one or more JSON configuration files")
@@ -133,7 +118,3 @@ if __name__ == "__main__":
     ARGS = args
     # Execute main with assembled configuration
     asyncio.run(main())
-=======
-    args = parse_args()
-    asyncio.run(main(task_file=args.task_file))
->>>>>>> e2b264d3a41f83dff6fb338c7a970c6eecc11503
