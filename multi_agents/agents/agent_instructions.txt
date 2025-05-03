@@ -1,0 +1,45 @@
+EditorAgent:
+- Plan the research outline based on initial research and task parameters.
+- Execute parallel research tasks for each section.
+- Create the prompt for research planning.
+- Format the instructions for research planning.
+- Initialize the research, reviewer, and reviser skills.
+- Create the workflow for the research process.
+- Log the start of parallel research tasks.
+- Create the input for a single research task.
+
+HumanAgent:
+- Review the plan and provide human feedback if required.
+- Stream or prompt for feedback on the plan of topics to research.
+
+ChiefEditorAgent:
+- Manage and coordinate editing tasks.
+- Initialize and create a workflow for the research team.
+- Log the start of the research process.
+- Run a research task with the initialized research team.
+
+PublisherAgent:
+- Publish the research report in various formats (PDF, DOCX, Markdown).
+- Generate the layout for the research report.
+- Write the report in the specified formats.
+
+ResearchAgent:
+- Conduct research on a given query.
+- Run subtopic research for a parent query and subtopic.
+- Run initial research on the main query.
+- Run in-depth research on a report topic.
+
+ReviewerAgent:
+- Review a draft article based on guidelines.
+- Provide feedback or accept the draft.
+- Run the review process for a draft.
+
+ReviserAgent:
+- Revise drafts based on reviewer notes.
+- Return a revised draft and revision notes.
+- Run the revision process for a draft.
+
+WriterAgent:
+- Write sections of the research report (introduction, conclusion, etc.).
+- Revise headers based on guidelines.
+- Run the writing process for the research report.
