@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument('-t', '--task-file', dest='task_file', default=None, help='Path to task JSON file')
     return parser.parse_args()
 
-# Load default configuration and recognized keys
+# Load default configuration and recognized keys thank yui
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_TASK_PATH = os.path.join(CURRENT_DIR, 'task.json')
 with open(DEFAULT_TASK_PATH, 'r') as _f:
