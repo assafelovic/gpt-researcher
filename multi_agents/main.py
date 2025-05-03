@@ -65,6 +65,18 @@ def open_task():
             with open(ARGS.query_file, 'r') as qf:
                 config['query'] = qf.read()
 
+    # Override publish_formats if output_file argument is provided
+    if ARGS and ARGS.output_file:
+        ext = os.path.splitext(ARGS.output_file)[1].lower()
+        pub = {'markdown': False, 'pdf': False, 'docx': False}
+        if ext == '.md':
+            pub['markdown'] = True
+        elif ext == '.pdf':
+            pub['pdf'] = True
+        elif ext == '.docx':
+            pub['docx'] = True
+        config['publish_formats'] = pub
+        config['output_file'] = ARGS.output_file
     return config
 
 async def run_research_task(query, websocket=None, stream_output=None, tone=Tone.Objective, headers=None):
@@ -72,6 +84,9 @@ async def run_research_task(query, websocket=None, stream_output=None, tone=Tone
     task["query"] = query
 
     chief_editor = ChiefEditorAgent(task, websocket, stream_output, tone, headers)
+    # Pass output_file through task to publisher
+    if 'output_file' in task:
+        chief_editor.output_file = task['output_file']
     research_report = await chief_editor.run_research_task()
 
     if websocket and stream_output:
@@ -92,6 +107,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--config-file", type=str, help="Path to a single JSON configuration file")
     parser.add_argument("--config-files", nargs="+", type=str, help="Paths to one or more JSON configuration files")
     parser.add_argument("--query-file", type=str, help="Path to a file containing query JSON or text")
+    parser.add_argument("-o", "--output-file", type=str, help="Path to write the output file; extension determines publish format (md, pdf, docx)")
     args = parser.parse_args()
     # Assign parsed arguments for open_task
     ARGS = args

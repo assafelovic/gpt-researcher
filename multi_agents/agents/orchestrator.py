@@ -45,7 +45,7 @@ class ChiefEditorAgent:
             "writer": WriterAgent(self.websocket, self.stream_output, self.headers),
             "editor": EditorAgent(self.websocket, self.stream_output, self.headers),
             "research": ResearchAgent(self.websocket, self.stream_output, self.tone, self.headers),
-            "publisher": PublisherAgent(self.output_dir, self.websocket, self.stream_output, self.headers),
+            "publisher": PublisherAgent(self.output_dir, self.websocket, self.stream_output, self.headers, self.task.get("output_file")),
             "human": HumanAgent(self.websocket, self.stream_output, self.headers)
         }
 
