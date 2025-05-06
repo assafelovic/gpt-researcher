@@ -68,7 +68,6 @@ body {
 }
 
 .container:hover {
-    transform: scale(1.01);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
 }
 
@@ -216,8 +215,8 @@ footer p {
     line-height: 1.7;
 }
 
-#reportContainer h1, 
-#reportContainer h2, 
+#reportContainer h1,
+#reportContainer h2,
 #reportContainer h3 {
     color: #ffffff;
 }
@@ -236,6 +235,34 @@ footer p {
     padding-left: 15px;
     color: #b8b8b8;
     font-style: italic;
+}
+
+/* Added code block styling for better readability */
+#reportContainer pre,
+#reportContainer code {
+    background-color: rgba(20, 20, 20, 0.7);
+    border-radius: 5px;
+    font-family: 'Courier New', Courier, monospace;
+    overflow-x: auto;
+}
+
+#reportContainer pre {
+    padding: 15px;
+    margin: 15px 0;
+    border: 1px solid rgba(157, 78, 221, 0.3);
+}
+
+#reportContainer code {
+    padding: 2px 5px;
+    color: #c77dff;
+}
+
+#reportContainer pre code {
+    padding: 0;
+    background-color: transparent;
+    color: #e4e4e4;
+    display: block;
+    white-space: pre-wrap;
 }
 
 .tags-input {
@@ -370,20 +397,20 @@ a:hover {
     .landing h1 {
         font-size: 2.5rem;
     }
-    
+
     .landing p {
         font-size: 1.2rem;
     }
-    
+
     .container {
         padding: 20px;
     }
-    
+
     .btn-primary, .btn-secondary, .btn-action {
         padding: 10px 20px;
         margin-bottom: 10px;
     }
-    
+
     #selectedImagesContainer img {
         width: 140px;
         height: 140px;

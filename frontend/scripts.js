@@ -1,4 +1,7 @@
 const GPTResearcher = (() => {
+  // Track if initial scroll has been performed
+  let hasScrolledToOutput = false;
+
   const init = () => {
     // Not sure, but I think it would be better to add event handlers here instead of in the HTML
     //document.getElementById("startResearch").addEventListener("click", startResearch);
@@ -32,6 +35,12 @@ const GPTResearcher = (() => {
       output: '🧙‍♂️ Gathering information and analyzing your research topic...',
     })
 
+    // Reset the scroll flag when starting new research
+    hasScrolledToOutput = false
+
+    // Initial scroll to output area
+    scrollToOutput()
+
     listenToSockEvents()
   }
 
@@ -40,7 +49,21 @@ const GPTResearcher = (() => {
     const ws_uri = `${
       protocol === 'https:' ? 'wss:' : 'ws:'
     }//${host}${pathname}ws`
-    const converter = new showdown.Converter()
+
+    // Configure Showdown converter to properly handle code blocks
+    const converter = new showdown.Converter({
+      ghCodeBlocks: true,         // GitHub style code blocks
+      tables: true,               // Enable tables
+      tasklists: true,            // Enable task lists
+      smartIndentationFix: true,  // Fix weird indentation
+      simpleLineBreaks: true,     // Treat newlines as <br>
+      openLinksInNewWindow: true, // Open links in new tab
+      parseImgDimensions: true    // Parse image dimensions from markdown
+    });
+
+    // Fix issues with code block formatting
+    converter.setOption('literalMidWordUnderscores', true);
+
     const socket = new WebSocket(ws_uri)
 
     socket.onmessage = (event) => {
@@ -91,16 +114,24 @@ const GPTResearcher = (() => {
   const addAgentResponse = (data) => {
     const output = document.getElementById('output')
     output.innerHTML += '<div class="agent_response">' + data.output + '</div>'
-    output.scrollTop = output.scrollHeight
+    output.scrollTop = output.scrollHeight // Auto-scroll within output container
     output.style.display = 'block'
-    updateScroll()
   }
 
   const writeReport = (data, converter) => {
     const reportContainer = document.getElementById('reportContainer')
-    const markdownOutput = converter.makeHtml(data.output)
+
+    // Ensure code blocks maintain formatting
+    let processedOutput = data.output;
+
+    // Process code blocks to preserve formatting
+    processedOutput = processedOutput.replace(/```(\w*)\n([\s\S]*?)\n```/g, function(match, lang, code) {
+      // Preserve newlines and indentation in code blocks
+      return '```' + lang + '\n' + code + '\n```';
+    });
+
+    const markdownOutput = converter.makeHtml(processedOutput)
     reportContainer.innerHTML += markdownOutput
-    updateScroll()
   }
 
   const updateDownloadLink = (data) => {
@@ -108,10 +139,10 @@ const GPTResearcher = (() => {
         console.error('No output data received');
         return;
     }
-    
+
     const { pdf, docx, md, json } = data.output;
     console.log('Received paths:', { pdf, docx, md, json });
-    
+
     // Helper function to safely update link
     const updateLink = (id, path) => {
         const element = document.getElementById(id);
@@ -131,7 +162,7 @@ const GPTResearcher = (() => {
   }
 
   const updateScroll = () => {
-    window.scrollTo(0, document.body.scrollHeight)
+    // Function intentionally left empty to prevent auto-scrolling
   }
 
   const copyToClipboard = () => {
@@ -144,7 +175,7 @@ const GPTResearcher = (() => {
     selector.select()
     document.execCommand('copy')
     document.body.removeChild(textarea)
-    
+
     // Show a temporary success message
     const copyBtn = document.getElementById('copyToClipboard');
     const originalText = copyBtn.textContent;
@@ -257,18 +288,29 @@ const GPTResearcher = (() => {
   const showImageDialog = (imageUrl) => {
     const dialog = document.createElement('div')
     dialog.className = 'image-dialog'
-    
+
     const img = document.createElement('img')
     img.src = imageUrl
     img.alt = 'Full Size Image'
-    
+
     const closeButton = document.createElement('button')
     closeButton.textContent = 'Close'
     closeButton.onclick = () => document.body.removeChild(dialog)
-    
+
     dialog.appendChild(img)
     dialog.appendChild(closeButton)
     document.body.appendChild(dialog)
+  }
+
+  // Renamed function to be more descriptive and only scroll once
+  const scrollToOutput = () => {
+    if (!hasScrolledToOutput) {
+      const outputElement = document.getElementById('output')
+      if (outputElement) {
+        outputElement.scrollIntoView({ behavior: 'smooth' })
+        hasScrolledToOutput = true
+      }
+    }
   }
 
   return {

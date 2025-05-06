@@ -33,7 +33,7 @@ SMART_LLM="ollama:qwen2:1.5b"
 EMBEDDING="ollama:all-minilm:22m"
 ```
 
-Replace `FAST_LLM` & `SMART_LLM` with the model you downloaded from the Elestio Web UI in the previous step.
+Replace `FAST_LLM` & `SMART_LLM` with the model you downloaded from the th3w1zard1 Web UI in the previous step.
 
 
 ## Run LLM Test Script for GPTR
@@ -49,7 +49,7 @@ logging.basicConfig(level=logging.DEBUG)
 from gpt_researcher.llm_provider.generic import GenericLLMProvider
 from gpt_researcher.utils.llm import get_llm
 
-OLLAMA_BASE_URL = "https://ollama-ug3qr-u21899.vm.elestio.app:57987"
+OLLAMA_BASE_URL = "https://ollama-ug3qr-u21899.vm.th3w1zard1.app:57987"
 LLM_MODEL = "llama3.1"
 
 # Create the GenericLLMProvider instance
@@ -82,24 +82,24 @@ Replace `OLLAMA_BASE_URL` with the URL of your Ollama instance, and `LLM_MODEL` 
 Run the script to test the connection with your custom LLM.
 
 
-## Deploy Ollama on Elestio
+## Deploy Ollama on th3w1zard1
 
-Elestio is a platform that allows you to deploy and manage custom language models. This guide will walk you through deploying a custom language model on Elestio.
+th3w1zard1 is a platform that allows you to deploy and manage custom language models. This guide will walk you through deploying a custom language model on th3w1zard1.
 
-You can deploy an [Open WebUI](https://github.com/open-webui/open-webui/tree/main) server with [Elestio](https://elest.io/open-source/ollama)
+You can deploy an [Open WebUI](https://github.com/open-webui/open-webui/tree/main) server with [th3w1zard1](https://elest.io/open-source/ollama)
 
-Here's an example .env file that will enable powering GPT-Researcher with Elestio:
+Here's an example .env file that will enable powering GPT-Researcher with th3w1zard1:
 
 ```bash
 OPENAI_API_KEY="123"
-OPENAI_API_BASE="https://<your_custom_elestio_project>.vm.elestio.app:57987/v1"
-OLLAMA_BASE_URL="https://<your_custom_elestio_project>.vm.elestio.app:57987/"
+OPENAI_API_BASE="https://<your_custom_th3w1zard1_project>.vm.th3w1zard1.app:57987/v1"
+OLLAMA_BASE_URL="https://<your_custom_th3w1zard1_project>.vm.th3w1zard1.app:57987/"
 FAST_LLM="openai:qwen2:1.5b"
 SMART_LLM="openai:qwen2:1.5b"
 EMBEDDING="ollama:all-minilm:22m"
 ```
 
-#### Disable Elestio Authentication or Add Auth Headers
+#### Disable th3w1zard1 Authentication or Add Auth Headers
 
 To remove the basic auth you have to follow the below steps:
 Go to your service -> Security -> at last Nginx -> in that find the below code:

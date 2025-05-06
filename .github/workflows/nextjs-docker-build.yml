@@ -1,5 +1,5 @@
-name: Docker Build and Push
-run-name: Building and pushing Docker images
+name: NextJS Docker Build and Push
+run-name: Building and pushing NextJS Docker images
 
 permissions:
   contents: read
@@ -38,8 +38,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ github.repository_owner }}/gpt-researcher
-            ghcr.io/${{ github.repository }}
+            ${{ github.repository_owner }}/gptr-nextjs
+            ghcr.io/${{ github.repository_owner }}/gptr-nextjs
           tags: |
             type=ref,event=branch
             type=ref,event=tag
@@ -64,7 +64,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./frontend/nextjs
+          file: ./frontend/nextjs/Dockerfile
           platforms: >
             linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6,linux/386,
             linux/ppc64le,linux/s390x,
@@ -73,5 +74,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=backend
-          cache-to: type=gha,mode=max,scope=backend
+          cache-from: type=gha,scope=nextjs
+          cache-to: type=gha,mode=max,scope=nextjs
