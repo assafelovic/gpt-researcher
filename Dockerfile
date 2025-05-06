@@ -6,24 +6,42 @@ RUN echo "Acquire::Retries \"5\";" > /etc/apt/apt.conf.d/80retries && \
     echo "Acquire::http::Timeout \"120\";" > /etc/apt/apt.conf.d/99timeout && \
     echo "Acquire::https::Timeout \"120\";" >> /etc/apt/apt.conf.d/99timeout
 
-# Install Chromium, Chromedriver, Firefox, Geckodriver, and build tools in one layer
-RUN apt-get update \
-    && apt-get install -y gnupg wget ca-certificates --no-install-recommends \
-    && wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    # Install Chrome first in a separate step
-    && apt-get install -y google-chrome-stable \
-    # Install the remaining browser packages in separate steps to improve resilience
-    && apt-get install -y chromium chromium-driver \
-    && google-chrome --version && chromedriver --version \
-    && apt-get install -y --no-install-recommends firefox-esr build-essential \
-    && wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz \
-    && tar -xvzf geckodriver-v0.33.0-linux64.tar.gz \
-    && chmod +x geckodriver \
-    && mv geckodriver /usr/local/bin/ \
-    && rm geckodriver-v0.33.0-linux64.tar.gz \
-    && rm -rf /var/lib/apt/lists/*  # Clean up apt lists to reduce image size
+# Install browser packages with architecture-specific handling
+RUN apt-get update && \
+    apt-get install -y gnupg wget ca-certificates --no-install-recommends && \
+    # Detect architecture
+    ARCH=$(dpkg --print-architecture) && \
+    # Install architecture-appropriate browsers
+    if [ "$ARCH" = "amd64" ]; then \
+        # Only add Chrome repo and install Chrome on amd64
+        wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
+        apt-get update && \
+        apt-get install -y google-chrome-stable chromium chromium-driver && \
+        google-chrome --version && chromedriver --version; \
+    else \
+        # On non-amd64 architectures, only install chromium
+        apt-get install -y chromium chromium-driver && \
+        chromium --version || echo "Chromium version check skipped" && \
+        chromedriver --version || echo "Chromedriver version check skipped"; \
+    fi && \
+    # Install Firefox and build tools on all architectures
+    apt-get install -y --no-install-recommends firefox-esr build-essential && \
+    # Only download and install geckodriver on amd64 architectures
+    if [ "$ARCH" = "amd64" ]; then \
+        wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz && \
+        tar -xvzf geckodriver-v0.33.0-linux64.tar.gz && \
+        chmod +x geckodriver && \
+        mv geckodriver /usr/local/bin/ && \
+        rm geckodriver-v0.33.0-linux64.tar.gz; \
+    elif [ "$ARCH" = "arm64" ]; then \
+        echo "Geckodriver not available for $ARCH, skipping"; \
+    else \
+        echo "Geckodriver not available for $ARCH, skipping"; \
+    fi && \
+    # Cleanup
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Stage 2: Python dependencies installation
 FROM install-browser AS gpt-researcher-install
