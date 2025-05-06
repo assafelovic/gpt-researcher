@@ -26,11 +26,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          platforms: >
-            linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6,linux/386,
-            linux/ppc64le,linux/s390x,
-#           these are experimental/slow:
-#            linux/riscv64,linux/mips64le
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
 
       # Extract metadata for Docker
       - name: Extract Docker metadata
@@ -65,11 +61,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: >
-            linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6,linux/386,
-            linux/ppc64le,linux/s390x,
-#           these are experimental/slow:
-#            linux/riscv64,linux/mips64le
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
