@@ -11,33 +11,40 @@ RUN apt-get update && \
     apt-get install -y gnupg wget ca-certificates --no-install-recommends && \
     # Detect architecture
     ARCH=$(dpkg --print-architecture) && \
+    # Install build-essential on all architectures
+    apt-get install -y --no-install-recommends build-essential && \
     # Install architecture-appropriate browsers
     if [ "$ARCH" = "amd64" ]; then \
-        # Only add Chrome repo and install Chrome on amd64
+        # Add Chrome repo and install Chrome on amd64
         wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
         echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
         apt-get update && \
-        apt-get install -y google-chrome-stable chromium chromium-driver && \
-        google-chrome --version && chromedriver --version; \
-    else \
-        # On non-amd64 architectures, only install chromium
-        apt-get install -y chromium chromium-driver && \
-        chromium --version || echo "Chromium version check skipped" && \
-        chromedriver --version || echo "Chromedriver version check skipped"; \
-    fi && \
-    # Install Firefox and build tools on all architectures
-    apt-get install -y --no-install-recommends firefox-esr build-essential && \
-    # Only download and install geckodriver on amd64 architectures
-    if [ "$ARCH" = "amd64" ]; then \
+        # Install Chrome and Firefox on x86_64
+        apt-get install -y google-chrome-stable && \
+        apt-get install -y -t bullseye-backports firefox-esr || apt-get install -y firefox-esr && \
+        # Try to install Chromium driver (may not be needed with Chrome)
+        apt-get install -y chromium chromium-driver || echo "Chromium not available, using Chrome" && \
+        # Install geckodriver for Firefox
         wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz && \
         tar -xvzf geckodriver-v0.33.0-linux64.tar.gz && \
         chmod +x geckodriver && \
         mv geckodriver /usr/local/bin/ && \
-        rm geckodriver-v0.33.0-linux64.tar.gz; \
-    elif [ "$ARCH" = "arm64" ]; then \
-        echo "Geckodriver not available for $ARCH, skipping"; \
-    else \
-        echo "Geckodriver not available for $ARCH, skipping"; \
+        rm geckodriver-v0.33.0-linux64.tar.gz && \
+        # Print versions
+        google-chrome --version && \
+        firefox --version || firefox-esr --version; \
+    elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "armhf" ]; then \
+        # ARM architectures - try to install Firefox and Chromium if available
+        # Try backports first for newer versions
+        echo "deb http://deb.debian.org/debian bullseye-backports main" > /etc/apt/sources.list.d/backports.list && \
+        apt-get update && \
+        apt-get install -y -t bullseye-backports firefox-esr || echo "Firefox not available from backports" && \
+        apt-get install -y firefox-esr || echo "Firefox not available" && \
+        apt-get install -y chromium || echo "Chromium not available" && \
+        apt-get install -y chromium-driver || echo "Chromium driver not available" && \
+        # Print versions if available
+        chromium --version || echo "Chromium version check skipped" && \
+        firefox --version || firefox-esr --version || echo "Firefox version check skipped"; \
     fi && \
     # Cleanup
     apt-get clean && \
