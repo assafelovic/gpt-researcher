@@ -1,0 +1,37 @@
+# Netlify configuration for GPT-Researcher deployment
+# This file only affects Netlify deployments and doesn't impact local development or other environments
+
+[build]
+  # Base directory is the root of the project
+  base = ""
+  # Command to build the site (install dependencies only - we'll handle the actual app in functions)
+  command = "pip install -r requirements.txt && pip install -r multi_agents/requirements.txt && npm install --only=dev"
+  # Directory to publish (where the static files are)
+  publish = "frontend/static"
+
+[build.environment]
+  # Use Python 3.11.12 specifically
+  PYTHON_VERSION = "3.11.12"
+  # Set Node.js version
+  NODE_VERSION = "18"
+
+# Handle API requests with redirects
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# SPA fallback for the frontend
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions]
+  directory = "netlify/functions"
+
+[dev]
+  framework = "#custom"
+  command = "python -m uvicorn main:app --reload"
+  port = 8000
+  targetPort = 8000
