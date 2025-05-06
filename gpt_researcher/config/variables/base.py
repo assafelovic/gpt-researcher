@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+from typing import Union
 from typing_extensions import TypedDict
 
 
@@ -16,6 +15,7 @@ class BaseConfig(TypedDict):
     BROWSE_CHUNK_MAX_LENGTH: int
     SUMMARY_TOKEN_LIMIT: int
     TEMPERATURE: float
+    LLM_TEMPERATURE: float
     USER_AGENT: str
     MAX_SEARCH_RESULTS_PER_QUERY: int
     MEMORY_BACKEND: str
@@ -24,12 +24,8 @@ class BaseConfig(TypedDict):
     CURATE_SOURCES: bool
     MAX_ITERATIONS: int
     LANGUAGE: str
-    AGENT_ROLE: str | None
+    AGENT_ROLE: Union[str, None]
     SCRAPER: str
-    MAX_SCRAPER_WORKERS: int
     MAX_SUBTOPICS: int
-    REPORT_SOURCE: str | None
+    REPORT_SOURCE: Union[str, None]
     DOC_PATH: str
-    DEEP_RESEARCH_CONCURRENCY: int
-    DEEP_RESEARCH_DEPTH: int
-    DEEP_RESEARCH_BREADTH: int

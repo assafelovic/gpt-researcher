@@ -1,0 +1,9 @@
+version: "3"
+services:
+  gpt-researcher:
+    image: elestio/gpt-researcher:${SOFTWARE_VERSION_TAG}
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+    ports:
+      - 172.17.0.1:27938:8000

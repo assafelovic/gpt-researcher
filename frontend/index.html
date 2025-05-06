@@ -2,30 +2,34 @@
 <html lang="en">
 
 <head>
-    <title>GPT Researcher</title>
-    <meta name="description" content="A research assistant powered by GPT-4">
+    <title>ResearchWizard | Powered by th3w1zard1</title>
+    <meta name="description" content="Your intelligent research assistant">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="./static/favicon.ico">
+    <link rel="icon" href="./static/new/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/site/styles.css" />
     <style>
         .avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            border: 2px solid #9d4edd;
+            box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
         }
 
         .agent-name {
             text-align: center;
+            font-weight: 600;
         }
 
         .agent-item {
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin-bottom: 20px;
         }
 
         .agent-choices {
@@ -43,25 +47,23 @@
     <section class="landing">
         <div class="max-w-5xl mx-auto text-center">
             <h1 class="text-4xl font-extrabold mx-auto lg:text-7xl">
-                Say Goodbye to <br>
-                <span
-                    style="background-image:linear-gradient(to right, #9867F0, #ED4E50); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hours
-                    of Research</span>
+                Transform Your Research <br>
+                <span class="gradient-text">In Minutes, Not Hours</span>
             </h1>
-            <p class="max-w-6xl mx-auto text-gray-600 mt-8" style="font-size:20px">
-                Say Hello to <b>GPT Researcher</b>, your AI mate for rapid insights and comprehensive research. <br>
-                GPT Researcher takes care of everything from accurate source gathering and organization of research results to generation of customized reports with citations.
+            <p class="max-w-6xl mx-auto mt-8" style="font-size:20px">
+                Meet <b>ResearchWizard</b>, your personal AI assistant that turns complex topics into clear insights. <br>
+                Get comprehensive reports with verified sources, organized findings, and professional formatting—all with a single click.
             </p>
-            <a href="#form" class="btn btn-primary">Get Started</a>
+            <a href="#form" class="btn btn-primary">Start Researching</a>
         </div>
     </section>
 
     <main class="container" id="form">
-        <div class="agent-item"><img src="/static/gptr-logo.png" class="avatar" alt="Auto Agent"></div>
+        <div class="agent-item"><img src="/static/new/wizard-logo.svg" class="avatar" alt="Research Wizard"></div>
         <form method="POST" class="mt-3" onsubmit="GPTResearcher.startResearch(); return false;">
             <div class="form-group">
-                <label for="task" class="agent-question">What would you like me to research next?</label>
-                <input id="task" name="task" class="form-control" required></input>
+                <label for="task" class="agent-question">What would you like me to research for you today?</label>
+                <input id="task" name="task" class="form-control" required placeholder="Enter any topic or question..."></input>
                 <input type="radio" name="agent" id="autoAgent" value="Auto Agent" checked hidden>
             </div>
             <div class="form-group">
@@ -72,132 +74,80 @@
                 <button type="button" id="btnShowAuto" class="btn btn-secondary mt-3 btn-show">Auto Agent</button>
             </div>
             <div class="form-group">
-                <label for="report_type" class="agent-question">What type of report would you like me to
-                    generate?</label>
+                <label for="report_type" class="agent-question">What level of detail do you want?</label>
                 <select name="report_type" class="form-control" required>
-                    <option value="research_report">Summary - Short and fast (~2 min)</option>
-                    <option value="detailed_report">Detailed - In depth and longer (~5 min)</option>
-                    <option value="resource_report">Resource Report</option>
+                    <option value="research_report">Quick Summary - Fast results (~2 min)</option>
+                    <option value="detailed_report">Deep Dive - Comprehensive analysis (~5 min)</option>
+                    <option value="resource_report">Resource List - Just the sources</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="tone" class="agent-question">In which tone would you like the report to be
-                    generated?</label>
+                <label for="tone" class="agent-question">How would you like your report to sound?</label>
                 <select name="tone" id="tone" class="form-control" required>
-                    <option value="Objective">Objective - Impartial and unbiased presentation of facts and findings
-                    </option>
-                    <option value="Formal">Formal - Adheres to academic standards with sophisticated language and
-                        structure</option>
-                    <option value="Analytical">Analytical - Critical evaluation and detailed examination of data and
-                        theories</option>
-                    <option value="Persuasive">Persuasive - Convincing the audience of a particular viewpoint or
-                        argument</option>
-                    <option value="Informative">Informative - Providing clear and comprehensive information on a topic
-                    </option>
-                    <option value="Explanatory">Explanatory - Clarifying complex concepts and processes</option>
-                    <option value="Descriptive">Descriptive - Detailed depiction of phenomena, experiments, or case
-                        studies</option>
-                    <option value="Critical">Critical - Judging the validity and relevance of the research and its
-                        conclusions</option>
-                    <option value="Comparative">Comparative - Juxtaposing different theories, data, or methods to
-                        highlight differences and similarities</option>
-                    <option value="Speculative">Speculative - Exploring hypotheses and potential implications or future
-                        research directions</option>
-                    <option value="Reflective">Reflective - Considering the research process and personal insights or
-                        experiences</option>
-                    <option value="Narrative">Narrative - Telling a story to illustrate research findings or
-                        methodologies</option>
-                    <option value="Humorous">Humorous - Light-hearted and engaging, usually to make the content more
-                        relatable</option>
-                    <option value="Optimistic">Optimistic - Highlighting positive findings and potential benefits
-                    </option>
-                    <option value="Pessimistic">Pessimistic - Focusing on limitations, challenges, or negative outcomes
-                    </option>
+                    <option value="Objective">Balanced - Just the facts without bias</option>
+                    <option value="Formal">Academic - Professional language and structure</option>
+                    <option value="Analytical">Analytical - Detailed examination with critical thinking</option>
+                    <option value="Persuasive">Persuasive - Makes a compelling case</option>
+                    <option value="Informative">Informative - Clear and straightforward explanation</option>
+                    <option value="Explanatory">Beginner-friendly - Simplifies complex ideas</option>
+                    <option value="Descriptive">Vivid - Rich with details and examples</option>
+                    <option value="Critical">Critical - Evaluates strengths and weaknesses</option>
+                    <option value="Comparative">Compare & Contrast - Shows similarities and differences</option>
+                    <option value="Speculative">Forward-looking - Explores possibilities and predictions</option>
+                    <option value="Reflective">Thoughtful - Includes deeper insights</option>
+                    <option value="Narrative">Storytelling - Presents findings as a journey</option>
+                    <option value="Humorous">Light-hearted - Adds a touch of humor</option>
+                    <option value="Optimistic">Positive - Highlights benefits and opportunities</option>
+                    <option value="Pessimistic">Cautious - Focuses on challenges and risks</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="report_source" class="agent-question">What sources would you like me to research
-                    from?</label>
-                <p class="text-left mt-0 pt-0" style="font-size: 0.7rem;">You can now do research on local documents as
-                    well. Please make sure to add the DOC_PATH env variable pointing to your documents folder.</p>
+                <label for="report_source" class="agent-question">Where should I look for information?</label>
+                <p class="text-left mt-0 pt-0" style="font-size: 0.8rem;">You can now research using your own documents too. Make sure your documents folder is properly set up.</p>
                 <select name="report_source" class="form-control" required>
-                    <option value="web">The Web</option>
-                    <option value="local">My Documents</option>
-                    <option value="hybrid">Hybrid</option>
-                    <option value="deep">Deep Research</option>
-                    <option value="azure">Azure storage</option>
+                    <option value="web">Internet Search</option>
+                    <option value="local">My Personal Documents</option>
+                    <option value="hybrid">Both Internet & My Documents</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="queryDomains" class="form-label">Query Domains (Optional)</label>
-                <input type="text" class="form-control" id="queryDomains" name="query_domains" placeholder="Enter domains separated by commas">
-                <small class="text-muted">Example: techcrunch.com, forbes.com</small>
-            </div>
-            <input type="submit" value="Research" class="btn btn-primary button-padding">
+            <input type="submit" value="Begin Research" class="btn btn-primary button-padding">
         </form>
 
-        <!-- Configuration Management Section -->
-        <div class="config-management mt-4 mb-4">
-            <h3>Configuration Management</h3>
-            <div class="btn-group" role="group">
-                <button id="exportConfig" class="btn btn-outline-secondary">Export Configuration</button>
-                <button id="importConfig" class="btn btn-outline-secondary">Import Configuration</button>
-                <button id="resetConfig" class="btn btn-outline-secondary">Reset to Default</button>
-            </div>
-            <div id="configStatus" class="mt-2" style="display: none;"></div>
-        </div>
-
-        <div class="margin-div">
-            <h2>Agent Output</h2>
-            <p class="mt-2 text-left" style="font-size: 0.8rem;">An agent tailored specifically to your task
-                will be generated to provide the most precise and relevant research results.</p>
-            <div class="text-right mb-2">
-                <button id="enableAutoScroll" class="btn btn-sm btn-outline-secondary">Enable Auto-Scroll</button>
-            </div>
+        <div class="margin-div research-output-container">
+            <h2>Research Progress</h2>
+            <p class="mt-2 text-left" style="font-size: 0.8rem;">Watch as the AI works to gather information and analyze your topic in real-time.</p>
             <div id="output"></div>
         </div>
         <div class="images_div">
             <div id="selectedImagesContainer" style="display: none;"></div>
         </div>
-        <div class="margin-div">
-            <h2>Research Report</h2>
+        <div class="margin-div report-container">
+            <h2>Your Finished Report</h2>
             <div id="reportContainer"></div>
             <div id="reportActions">
                 <div class="alert alert-info" role="alert" id="status"></div>
-                <a id="copyToClipboard" onclick="GPTResearcher.copyToClipboard()" class="btn btn-secondary mt-3" style="margin-right: 10px;">Copy to clipboard (markdown)</a>
-                <a id="downloadLinkMd" href="#" class="btn btn-secondary mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download as Markdown</a>
-                <a id="downloadLink" href="#" class="btn btn-secondary mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download as PDF</a>
-                <a id="downloadLinkWord" href="#" class="btn btn-secondary mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download as Docx</a>
-                <a id="downloadLinkJson" href="#" class="btn btn-secondary mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download Log</a>
+                <a id="copyToClipboard" onclick="GPTResearcher.copyToClipboard()" class="btn btn-action mt-3" style="margin-right: 10px;">Copy to clipboard</a>
+                <a id="downloadLinkMd" href="#" class="btn btn-action mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download as Markdown</a>
+                <a id="downloadLink" href="#" class="btn btn-action mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download as PDF</a>
+                <a id="downloadLinkWord" href="#" class="btn btn-action mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download as Word Doc</a>
+                <a id="downloadLinkJson" href="#" class="btn btn-action mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download Research Log</a>
             </div>
         </div>
     </main>
 
     <footer>
         <p>
-            <a target="_blank" href="https://gptr.dev">Homepage</a> |
-            <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GitHub</a> |
-            <a target="_blank" href="https://discord.gg/spBgZmm3Xe">Discord</a>
+            <a target="_blank" href="https://github.com/th3w1zard1">Created by Boden Crouch (th3w1zard1)</a> 
         </p>
-        <p>GPT Researcher &copy; 2025</p>
+        <p>ResearchWizard &copy; 2024</p>
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
     <script src="/site/scripts.js"></script>
     <script>
-        // const btnChoose = document.getElementById('btnChoose');
         const btnShowAuto = document.getElementById('btnShowAuto');
         const autoAgentDiv = document.getElementById('autoAgentDiv');
         const agentChoices = document.getElementsByClassName('agent-choices');
-
-        /**
-        btnChoose.addEventListener('click', function () {
-            btnShowAuto.style.display = 'inline-block';
-            btnChoose.style.display = 'none';
-            autoAgentDiv.style.display = 'none';
-            agentChoices[0].style.display = 'flex';
-        });
-        **/
 
         btnShowAuto.addEventListener('click', function () {
             btnShowAuto.style.display = 'none';
@@ -218,33 +168,7 @@
             }
         });
         }
-
-</script>
-
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow: auto;">
-        <div class="modal-content" style="background-color: white; margin: 10% auto; padding: 20px; width: 80%; max-width: 700px; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-            <div class="modal-header">
-                <h2>Settings</h2>
-                <span id="closeSettings" style="float: right; cursor: pointer; font-size: 24px;">&times;</span>
-            </div>
-            <div class="modal-body">
-                <!-- Tabs will be dynamically generated -->
-                <div class="settings-tabs">
-                    <!-- Tabs will be inserted here -->
-                </div>
-                <div class="settings-content">
-                    <!-- Tab content will be inserted here -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="saveSettings" class="btn btn-primary">Save Settings</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Hidden file input for config import -->
-    <input type="file" id="configFileInput" accept=".json" style="display: none;">
+    </script>
 </body>
 
 </html>

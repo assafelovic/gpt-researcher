@@ -63,8 +63,8 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
 
   return (
     <>
-      {initialQuestion && <Question question={initialQuestion.content} />}
       {orderedData.length > 0 && <LogsSection logs={allLogs} />}
+      {initialQuestion && <Question question={initialQuestion.content} />}
       {subqueriesComponent && (
         <SubQuestions
           metadata={subqueriesComponent.metadata}

@@ -1,69 +1,43 @@
 from __future__ import annotations
 
-import os
-import pickle
-import random
-import string
-import time
 import traceback
-
+import pickle
 from pathlib import Path
 from sys import platform
-from typing import TYPE_CHECKING, Any, ClassVar
+import time
+import random
+import string
+import os
 
 from bs4 import BeautifulSoup
 
-from gpt_researcher.scraper.browser.processing.scrape_skills import scrape_pdf_with_arxiv, scrape_pdf_with_pymupdf
-from gpt_researcher.scraper.utils import extract_title, get_relevant_images
-from gpt_researcher.utils.logger import get_formatted_logger
+from .processing.scrape_skills import (scrape_pdf_with_pymupdf,
+                                       scrape_pdf_with_arxiv)
 
-if TYPE_CHECKING:
-    import logging
+from urllib.parse import urljoin
 
-    from http.cookiejar import CookieJar
+FILE_DIR = Path(__file__).parent.parent
 
-    import requests
-
-    from selenium.webdriver.remote.webdriver import WebDriver
-    from typing_extensions import Literal
-
-
-FILE_DIR: Path = Path(__file__).parent.parent.absolute()
+from ..utils import get_relevant_images, extract_title
 
 
 class BrowserScraper:
-    """Browser Scraper."""
-
-    logger: ClassVar[logging.Logger] = get_formatted_logger(__name__)
-
-    def __init__(
-        self,
-        url: str,
-        session: requests.Session | None = None,
-        selenium_web_browser: Literal["chrome", "firefox", "safari"] = "chrome",
-        headless: bool = False,
-        user_agent: str | None = None,
-        use_browser_cookies: bool = False,
-        *_: Any,  # provided for compatibility with other scrapers
-        **kwargs: Any,  # provided for compatibility with other scrapers
-    ):
-        self.url: str = url
-        self.session: requests.Session | None = session
-        self.selenium_web_browser: Literal["chrome", "firefox", "safari"] = selenium_web_browser
-        self.headless: bool = headless
-        self.user_agent: str = (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
-            if user_agent is None
-            else user_agent
-        )
-        self.driver: WebDriver | None = None
-        self.use_browser_cookies: bool = use_browser_cookies
+    def __init__(self, url: str, session=None):
+        self.url = url
+        self.session = session
+        self.selenium_web_browser = "chrome"
+        self.headless = False
+        self.user_agent = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                           "AppleWebKit/537.36 (KHTML, like Gecko) "
+                           "Chrome/128.0.0.0 Safari/537.36")
+        self.driver = None
+        self.use_browser_cookies = False
         self._import_selenium()  # Import only if used to avoid unnecessary dependencies
-        self.cookie_filename: str = f"{self._generate_random_string(8)}.pkl"
+        self.cookie_filename = f"{self._generate_random_string(8)}.pkl"
 
     def scrape(self) -> tuple:
-        if not self.url or not self.url.strip():
-            self.logger.error("URL not specified")
+        if not self.url:
+            print("URL not specified")
             return "A URL was not specified, cancelling request to browse website.", [], ""
 
         try:
@@ -73,46 +47,43 @@ class BrowserScraper:
             self._add_header()
 
             text, image_urls, title = self.scrape_text_with_selenium()
-        except Exception as e:
-            self.logger.exception(f"An error occurred during scraping: {str(e)}")
-            return (
-                f"An error occurred: {e.__class__.__name__}: {e}\n\nStack trace:\n{traceback.format_exc()}",
-                [],
-                "",
-            )
-        else:
             return text, image_urls, title
-
+        except Exception as e:
+            print(f"An error occurred during scraping: {str(e)}")
+            print("Full stack trace:")
+            print(traceback.format_exc())
+            return f"An error occurred: {str(e)}\n\nStack trace:\n{traceback.format_exc()}", [], ""
         finally:
-            if self.driver is not None:
+            if self.driver:
                 self.driver.quit()
             self._cleanup_cookie_file()
 
-    def _import_selenium(self) -> None:
+    def _import_selenium(self):
         try:
             global webdriver, By, EC, WebDriverWait, TimeoutException, WebDriverException
             from selenium import webdriver
-            from selenium.common.exceptions import TimeoutException, WebDriverException
             from selenium.webdriver.common.by import By
             from selenium.webdriver.support import expected_conditions as EC
             from selenium.webdriver.support.wait import WebDriverWait
+            from selenium.common.exceptions import TimeoutException, WebDriverException
 
             global ChromeOptions, FirefoxOptions, SafariOptions
             from selenium.webdriver.chrome.options import Options as ChromeOptions
             from selenium.webdriver.firefox.options import Options as FirefoxOptions
             from selenium.webdriver.safari.options import Options as SafariOptions
         except ImportError as e:
-            self.logger.exception("Failed to import Selenium")
-            self.logger.error("Please install Selenium and its dependencies to use BrowserScraper.")
-            self.logger.error("You can install Selenium using pip:")
-            self.logger.error("    pip install selenium")
-            self.logger.error("If you're using a virtual environment, make sure it's activated.")
-            raise ImportError("Selenium is required but not installed. See error message above for installation instructions.") from e
+            print(f"Failed to import Selenium: {str(e)}")
+            print("Please install Selenium and its dependencies to use BrowserScraper.")
+            print("You can install Selenium using pip:")
+            print("    pip install selenium")
+            print("If you're using a virtual environment, make sure it's activated.")
+            raise ImportError(
+                "Selenium is required but not installed. See error message above for installation instructions.") from e
 
     def setup_driver(self) -> None:
         # print(f"Setting up {self.selenium_web_browser} driver...")
 
-        options_available: dict[str, Any] = {
+        options_available = {
             "chrome": ChromeOptions,
             "firefox": FirefoxOptions,
             "safari": SafariOptions,
@@ -147,123 +118,116 @@ class BrowserScraper:
             print(traceback.format_exc())
             raise
 
-    def _load_saved_cookies(self) -> None:
-        """Load saved cookies before visiting the target URL."""
+    def _load_saved_cookies(self):
+        """Load saved cookies before visiting the target URL"""
         cookie_file = Path(self.cookie_filename)
         if cookie_file.exists():
-            cookies: list[dict[str, Any]] = pickle.load(open(self.cookie_filename, "rb"))
+            cookies = pickle.load(open(self.cookie_filename, "rb"))
             for cookie in cookies:
-                self.driver.add_cookie(cookie)  # type: ignore[attr-defined]
+                self.driver.add_cookie(cookie)
         else:
-            self.logger.warning("No saved cookies found.")
+            print("No saved cookies found.")
 
-    def _load_browser_cookies(self) -> None:
-        """Load cookies directly from the browser."""
+    def _load_browser_cookies(self):
+        """Load cookies directly from the browser"""
         try:
             import browser_cookie3
         except ImportError:
-            self.logger.exception("browser_cookie3 is not installed. Please install it using: pip install browser_cookie3")
+            print("browser_cookie3 is not installed. Please install it using: pip install browser_cookie3")
             return
 
         if self.selenium_web_browser == "chrome":
-            cookies: CookieJar = browser_cookie3.chrome()
+            cookies = browser_cookie3.chrome()
         elif self.selenium_web_browser == "firefox":
             cookies = browser_cookie3.firefox()
         else:
-            self.logger.error(f"Cookie loading not supported for {self.selenium_web_browser}")
+            print(f"Cookie loading not supported for {self.selenium_web_browser}")
             return
 
-        assert self.driver is not None
         for cookie in cookies:
-            self.driver.add_cookie({"name": cookie.name, "value": cookie.value, "domain": cookie.domain})
+            self.driver.add_cookie({'name': cookie.name, 'value': cookie.value, 'domain': cookie.domain})
 
     def _cleanup_cookie_file(self):
-        """Remove the cookie file."""
+        """Remove the cookie file"""
         cookie_file = Path(self.cookie_filename)
         if cookie_file.exists():
             try:
                 os.remove(self.cookie_filename)
             except Exception as e:
-                self.logger.exception(f"Failed to remove cookie file: {e.__class__.__name__}: {e}")
+                print(f"Failed to remove cookie file: {str(e)}")
         else:
-            self.logger.warning("No cookie file found to remove.")
+            print("No cookie file found to remove.")
 
-    def _generate_random_string(self, length: int) -> str:
-        """Generate a random string of specified length."""
-        return "".join(random.choices(string.ascii_letters + string.digits, k=length))
+    def _generate_random_string(self, length):
+        """Generate a random string of specified length"""
+        return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
-    def _get_domain(self) -> str:
-        """Extract domain from URL."""
+    def _get_domain(self):
+        """Extract domain from URL"""
         from urllib.parse import urlparse
-
         """Get domain from URL, removing 'www' if present"""
         domain = urlparse(self.url).netloc
-        return domain[4:] if domain.startswith("www.") else domain
+        return domain[4:] if domain.startswith('www.') else domain
 
-    def _visit_google_and_save_cookies(self) -> None:
-        """Visit Google and save cookies before navigating to the target URL."""
+    def _visit_google_and_save_cookies(self):
+        """Visit Google and save cookies before navigating to the target URL"""
         try:
-            assert self.driver is not None
             self.driver.get("https://www.google.com")
             time.sleep(2)  # Wait for cookies to be set
 
             # Save cookies to a file
-            cookies: list[dict[str, Any]] = self.driver.get_cookies()
+            cookies = self.driver.get_cookies()
             pickle.dump(cookies, open(self.cookie_filename, "wb"))
 
-            self.logger.debug("Google cookies saved successfully.")
+            # print("Google cookies saved successfully.")
         except Exception as e:
-            self.logger.exception(f"Failed to visit Google and save cookies: {str(e)}")
+            print(f"Failed to visit Google and save cookies: {str(e)}")
+            print("Full stack trace:")
+            print(traceback.format_exc())
 
-    def scrape_text_with_selenium(self) -> tuple[str, list[dict[str, Any]], str]:
-        assert self.driver is not None
+    def scrape_text_with_selenium(self) -> tuple:
         self.driver.get(self.url)
 
         try:
-            WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-        except TimeoutException:
-            self.logger.exception("Timed out waiting for page to load")
+            WebDriverWait(self.driver, 20).until(
+                EC.presence_of_element_located((By.TAG_NAME, "body"))
+            )
+        except TimeoutException as e:
+            print("Timed out waiting for page to load")
+            print(f"Full stack trace:\n{traceback.format_exc()}")
             return "Page load timed out", [], ""
 
         self._scroll_to_bottom()
 
-        if self.url.casefold().endswith(".pdf"):
+        if self.url.endswith(".pdf"):
             text = scrape_pdf_with_pymupdf(self.url)
             return text, [], ""
-        elif "arxiv" in self.url.casefold():
+        elif "arxiv" in self.url:
             doc_num = self.url.split("/")[-1]
             text = scrape_pdf_with_arxiv(doc_num)
             return text, [], ""
         else:
-            from bs4 import Tag
-
-            page_source: Any = self.driver.execute_script("return document.body.outerHTML;")  # type: ignore[attr-defined]
+            page_source = self.driver.execute_script("return document.body.outerHTML;")
             soup = BeautifulSoup(page_source, "html.parser")
+
             for script in soup(["script", "style"]):
-                assert isinstance(script, Tag)
                 script.extract()
 
-            text: str = self.get_text(soup)
-            image_urls: list[dict[str, Any]] = get_relevant_images(soup, self.url)
-            title: str = extract_title(soup) or ""
+            text = self.get_text(soup)
+            image_urls = get_relevant_images(soup, self.url)
+            title = extract_title(soup)
 
-        lines: list[str] = list(line.strip() for line in text.splitlines())
-        chunks: list[str] = list(phrase.strip() for line in lines for phrase in line.split("  "))
-        text: str = "\n".join(chunk for chunk in chunks if chunk)
+        lines = (line.strip() for line in text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        text = "\n".join(chunk for chunk in chunks if chunk)
         return text, image_urls, title
 
-    def get_text(
-        self,
-        soup: BeautifulSoup,
-    ) -> str:
-        """Get the relevant text from the soup with improved filtering."""
-        text_elements: list[str] = []
-        tags: list[str] = ["h1", "h2", "h3", "h4", "h5", "p", "li", "div", "span"]
-        from bs4 import Tag
+    def get_text(self, soup: BeautifulSoup) -> str:
+        """Get the relevant text from the soup with improved filtering"""
+        text_elements = []
+        tags = ["h1", "h2", "h3", "h4", "h5", "p", "li", "div", "span"]
 
         for element in soup.find_all(tags):
-            if not isinstance(element, Tag):
-                continue
             # Skip empty elements
             if not element.text.strip():
                 continue
@@ -273,34 +237,36 @@ class BrowserScraper:
                 continue
 
             # Check if the element is likely to be navigation or a menu
-            assert isinstance(element.parent, Tag), "Element parent is not a Tag"
-            parent_classes: list[str] | str = element.parent.get("class", [])
-            assert not isinstance(parent_classes, (type(None), str)), "Parent classes are not a list or string"
-            if any(cls in ["nav", "menu", "sidebar", "footer"] for cls in parent_classes):
+            parent_classes = element.parent.get('class', [])
+            if any(cls in ['nav', 'menu', 'sidebar', 'footer'] for cls in parent_classes):
                 continue
 
             # Remove excess whitespace and join lines
-            cleaned_text: str = " ".join(element.text.split())
+            cleaned_text = ' '.join(element.text.split())
 
             # Add the cleaned text to our list of elements
             text_elements.append(cleaned_text)
 
         # Join all text elements with newlines
-        return "\n\n".join(text_elements)
+        return '\n\n'.join(text_elements)
 
-    def _scroll_to_bottom(self) -> None:
-        """Scroll to the bottom of the page to load all content."""
-        assert self.driver is not None
-        last_height: int = self.driver.execute_script("return document.body.scrollHeight")
+    def _scroll_to_bottom(self):
+        """Scroll to the bottom of the page to load all content"""
+        last_height = self.driver.execute_script("return document.body.scrollHeight")
         while True:
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)  # Wait for content to load
-            new_height: int = self.driver.execute_script("return document.body.scrollHeight")
+            new_height = self.driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height:
                 break
             last_height = new_height
 
+    def _scroll_to_percentage(self, ratio: float) -> None:
+        """Scroll to a percentage of the page"""
+        if ratio < 0 or ratio > 1:
+            raise ValueError("Percentage should be between 0 and 1")
+        self.driver.execute_script(f"window.scrollTo(0, document.body.scrollHeight * {ratio});")
+
     def _add_header(self) -> None:
-        """Add a header to the website."""
-        assert self.driver is not None
-        self.driver.execute_script(open(f"{FILE_DIR}/browser/js/overlay.js").read())
+        """Add a header to the website"""
+        self.driver.execute_script(open(f"{FILE_DIR}/browser/js/overlay.js", "r").read())

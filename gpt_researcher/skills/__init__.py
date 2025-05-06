@@ -1,13 +1,13 @@
-from .browser import BrowserManager
 from .context_manager import ContextManager
-from .curator import SourceCurator
 from .researcher import ResearchConductor
 from .writer import ReportGenerator
+from .browser import BrowserManager
+from .curator import SourceCurator
 
 __all__ = [
-    "BrowserManager",
-    "ContextManager",
-    "ReportGenerator",
-    "ResearchConductor",
-    "SourceCurator",
+    'ResearchConductor',
+    'ReportGenerator',
+    'ContextManager',
+    'BrowserManager',
+    'SourceCurator'
 ]

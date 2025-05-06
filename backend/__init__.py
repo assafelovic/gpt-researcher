@@ -1,3 +1,1 @@
-from .chat import ChatAgentWithMemory
-
-__all__ = ["ChatAgentWithMemory"]
+from multi_agents import agents

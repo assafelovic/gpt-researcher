@@ -1,8 +1,5 @@
-from __future__ import annotations
-
-from enum import Enum
-
 from colorama import Fore, Style
+from enum import Enum
 
 
 class AgentColor(Enum):
@@ -15,5 +12,5 @@ class AgentColor(Enum):
     MASTER = Fore.LIGHTYELLOW_EX
 
 
-def print_agent_output(output: str, agent: str = "RESEARCHER"):
+def print_agent_output(output:str, agent: str="RESEARCHER"):
     print(f"{AgentColor[agent].value}{agent}: {output}{Style.RESET_ALL}")

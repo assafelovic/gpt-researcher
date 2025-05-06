@@ -8,9 +8,9 @@ import click
 TRACE_LOG_LEVEL = 5
 
 
-def get_formatted_logger(name: str | None = None):
+def get_formatted_logger():
     """Return a formatted logger."""
-    logger = logging.getLogger("scraper" if name is None else name)
+    logger = logging.getLogger("scraper")
     # Set the logging level
     logger.setLevel(logging.INFO)
 

@@ -1,19 +1,21 @@
-from __future__ import annotations
+from typing import TypedDict, List, Annotated
+import operator
 
-from typing import Any, TypedDict
 
 class ResearchState(TypedDict):
-    human_feedback: str
+    task: dict
     initial_research: str
-    research_data: list[dict[str, Any]]
-    sections: list[str]
-    task: dict[str, Any]
+    sections: List[str]
+    research_data: List[dict]
+    human_feedback: str
     # Report layout
-    conclusion: str
-    date: str
-    headers: dict
-    introduction: str
-    report: str
-    sources: list[str]
-    table_of_contents: str
     title: str
+    headers: dict
+    date: str
+    table_of_contents: str
+    introduction: str
+    conclusion: str
+    sources: List[str]
+    report: str
+
+

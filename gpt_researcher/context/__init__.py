@@ -1,5 +1,4 @@
 from .compression import ContextCompressor
+from .retriever import SearchAPIRetriever
 
-# from .retriever import SearchAPIRetriever
-
-__all__ = ["ContextCompressor"]
+__all__ = ['ContextCompressor', 'SearchAPIRetriever']

@@ -1,37 +1,17 @@
-from __future__ import annotations
-
 import json
 import re
-
-from typing import TYPE_CHECKING, Any, Callable
-
 import json_repair
-
-from gpt_researcher.prompts import auto_agent_instructions
-from gpt_researcher.utils.llm import create_chat_completion
-
-if TYPE_CHECKING:
-    import logging
-
-    from gpt_researcher.config import Config
-
-from gpt_researcher.utils.logger import get_formatted_logger
-
-logger: logging.Logger = get_formatted_logger(__name__)
-
+from ..utils.llm import create_chat_completion
+from ..prompts import auto_agent_instructions
 
 async def choose_agent(
-    query: str,
-    cfg: Config,
-    parent_query: str | None = None,
-    cost_callback: Callable[[float], None] | None = None,
-    headers: dict[str, Any] | None = None
-) -> tuple[str, str]:
+    query, cfg, parent_query=None, cost_callback: callable = None, headers=None
+):
     """
     Chooses the agent automatically
     Args:
         parent_query: In some cases the research is conducted on a subtopic from the main query.
-            The parent query allows the agent to know the main context for better reasoning.
+        The parent query allows the agent to know the main context for better reasoning.
         query: original query
         cfg: Config
         cost_callback: callback for calculating llm costs
@@ -44,14 +24,14 @@ async def choose_agent(
     response = None  # Initialize response to ensure it's defined
 
     try:
-        response: str = await create_chat_completion(
-            model=cfg.SMART_LLM_MODEL,
+        response = await create_chat_completion(
+            model=cfg.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{auto_agent_instructions()}"},
                 {"role": "user", "content": f"task: {query}"},
             ],
             temperature=0.15,
-            llm_provider=cfg.SMART_LLM_PROVIDER,
+            llm_provider=cfg.smart_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
         )
@@ -59,37 +39,36 @@ async def choose_agent(
         agent_dict = json.loads(response)
         return agent_dict["server"], agent_dict["agent_role_prompt"]
 
-    except Exception:
+    except Exception as e:
+        print("⚠️ Error in reading JSON, attempting to repair JSON")
         return await handle_json_error(response)
 
 
-async def handle_json_error(response: str) -> tuple[str, str]:
+async def handle_json_error(response):
     try:
         agent_dict = json_repair.loads(response)
         if agent_dict.get("server") and agent_dict.get("agent_role_prompt"):
             return agent_dict["server"], agent_dict["agent_role_prompt"]
     except Exception as e:
-        logger.debug(f"⚠️ Error in reading JSON and failed to repair with json_repair: {e.__class__.__name__}: {e}")
-        logger.debug(f"⚠️ LLM Response: `{response}`")
+        print(f"Error using json_repair: {e}")
 
-    json_string: str | None = extract_json_with_regex(response)
-    if json_string and json_string.strip():
+    json_string = extract_json_with_regex(response)
+    if json_string:
         try:
             json_data = json.loads(json_string)
             return json_data["server"], json_data["agent_role_prompt"]
         except json.JSONDecodeError as e:
-            logger.debug(f"Error decoding JSON: {e.__class__.__name__}: {e}")
-            logger.debug(f"⚠️ LLM Response: `{response}`")
+            print(f"Error decoding JSON: {e}")
 
-    logger.debug("No JSON found in the string. Falling back to Default Agent.")
+    print("No JSON found in the string. Falling back to Default Agent.")
     return "Default Agent", (
         "You are an AI critical thinker research assistant. Your sole purpose is to write well written, "
         "critically acclaimed, objective and structured reports on given text."
     )
 
 
-def extract_json_with_regex(response: str) -> str | None:
-    json_match: re.Match[str] | None = re.search(r"{.*?}", response, re.DOTALL)
+def extract_json_with_regex(response):
+    json_match = re.search(r"{.*?}", response, re.DOTALL)
     if json_match:
         return json_match.group(0)
     return None

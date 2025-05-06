@@ -5,6 +5,7 @@
 </h1>-->
 <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
 
+
 ####
 
 [![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=0891b2)](https://gptr.dev)
@@ -39,32 +40,30 @@
 - 只使用部分资源可能会在确定研究问题或任务的正确结论时产生偏差。
 
 ## 架构
-
-主要思想是运行“**计划者**”和“**执行**”代理，而**计划者**生成问题进行研究，“**执行**”代理根据每个生成的研究问题寻找最相关的信息。最后，“**计划者**”过滤和聚合所有相关信息并创建研究报告。<br /> <br />
+主要思想是运行“**计划者**”和“**执行**”代理，而**计划者**生成问题进行研究，“**执行**”代理根据每个生成的研究问题寻找最相关的信息。最后，“**计划者**”过滤和聚合所有相关信息并创建研究报告。<br /> <br /> 
 代理同时利用 gpt-40-mini 和 gpt-4o（128K 上下文）来完成一项研究任务。我们仅在必要时使用这两种方法对成本进行优化。**研究任务平均耗时约 3 分钟，成本约为 ~0.1 美元**。
 
 <div align="center">
 <img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
 </div>
 
+
 详细说明:
-- 根据研究搜索或任务创建特定领域的代理。
-- 生成一组研究问题，这些问题共同形成答案对任何给定任务的客观意见。
-- 针对每个研究问题，触发一个爬虫代理，从在线资源中搜索与给定任务相关的信息。
-- 对于每一个抓取的资源，根据相关信息进行汇总，并跟踪其来源。
-- 最后，对所有汇总的资料来源进行过滤和汇总，并生成最终研究报告。
+* 根据研究搜索或任务创建特定领域的代理。
+* 生成一组研究问题，这些问题共同形成答案对任何给定任务的客观意见。
+* 针对每个研究问题，触发一个爬虫代理，从在线资源中搜索与给定任务相关的信息。
+* 对于每一个抓取的资源，根据相关信息进行汇总，并跟踪其来源。
+* 最后，对所有汇总的资料来源进行过滤和汇总，并生成最终研究报告。
 
 ## 演示
-<https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0-b58d-098a31c40fda>
+https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0-b58d-098a31c40fda
 
 ## 教程
-
-- [运行原理](https://docs.gptr.dev/blog/building-gpt-researcher)
-- [如何安装](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
-- [现场演示](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
+ - [运行原理](https://docs.gptr.dev/blog/building-gpt-researcher)
+ - [如何安装](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
+ - [现场演示](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
 ## 特性
-
 - 📝 生成研究问题、大纲、资源和课题报告
 - 🌐 每项研究汇总超过20个网络资源，形成客观和真实的结论
 - 🖥️ 包括易于使用的web界面 (HTML/CSS/JS)
@@ -82,7 +81,6 @@
 - Tavily 应用程序接口集成（核心概念的高级解释）
 
 ## 快速开始
->
 > **步骤 0** - 安装 Python 3.11 或更高版本。[参见此处](https://www.tutorialsteacher.com/python/install-python) 获取详细指南。
 
 <br />
@@ -90,28 +88,25 @@
 > **步骤 1** - 下载项目
 
 ```bash
-git clone https://github.com/assafelovic/gpt-researcher.git
-cd gpt-researcher
+$ git clone https://github.com/assafelovic/gpt-researcher.git
+$ cd gpt-researcher
 ```
 
 <br />
 
 > **步骤2** -安装依赖项
-
 ```bash
-pip install -r requirements.txt
+$ pip install -r requirements.txt
 ```
-
 <br />
 
 > **第 3 步** - 使用 OpenAI 密钥和 Tavily API 密钥创建 .env 文件，或直接导出该文件
 
 ```bash
-export OPENAI_API_KEY={Your OpenAI API Key here}
+$ export OPENAI_API_KEY={Your OpenAI API Key here}
 ```
-
 ```bash
-export TAVILY_API_KEY={Your Tavily API Key here}
+$ export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 - **LLM，我们推荐使用 [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**，但您也可以使用 [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai) 支持的任何其他 LLM 模型（包括开源），只需在 config/config.py 中更改 llm 模型和提供者即可。请按照 [这份指南](https://python.langchain.com/docs/integrations/llms/) 学习如何将 LLM 与 Langchain 集成。
@@ -122,33 +117,29 @@ export TAVILY_API_KEY={Your Tavily API Key here}
 > **第 4 步** - 使用 FastAPI 运行代理
 
 ```bash
-uvicorn main:app --reload
+$ uvicorn main:app --reload
 ```
-
 <br />
 
-> **第 5 步** - 在任何浏览器上访问 <http://localhost:8000，享受研究乐趣！>
+> **第 5 步** - 在任何浏览器上访问 http://localhost:8000，享受研究乐趣！
 
 要了解如何开始使用 Docker 或了解有关功能和服务的更多信息，请访问 [documentation](https://docs.gptr.dev) 页面。
 
 ## 🚀 贡献
-
 我们非常欢迎您的贡献！如果您感兴趣，请查看 [contributing](CONTRIBUTING.md)。
 
 如果您有兴趣加入我们的任务，请查看我们的 [路线图](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) 页面，并通过我们的 [Discord 社区](https://discord.gg/QgZXvJAccX) 联系我们。
 
 ## ✉️ 支持 / 联系我们
-
 - [社区讨论区](https://discord.gg/spBgZmm3Xe)
-- 我们的邮箱: <support@tavily.com>
+- 我们的邮箱: support@tavily.com
 
 ## 🛡 免责声明
 
-本项目 "GPT Researcher "是一个实验性应用程序，按 "现状 "提供，不做任何明示或暗示的保证。我们根据 GPLv3 许可分享用于学术目的的代码。本文不提供任何学术建议，也不建议在学术或研究论文中使用。
+本项目 "GPT Researcher "是一个实验性应用程序，按 "现状 "提供，不做任何明示或暗示的保证。我们根据 MIT 许可分享用于学术目的的代码。本文不提供任何学术建议，也不建议在学术或研究论文中使用。
 
 我们对客观研究主张的看法：
-
-1. 我们抓取系统的全部目的是减少不正确的事实。如何解决？我们抓取的网站越多，错误数据的可能性就越小。我们每项研究都会收集20条信息，它们全部错误的可能性极低。
+1.  我们抓取系统的全部目的是减少不正确的事实。如何解决？我们抓取的网站越多，错误数据的可能性就越小。我们每项研究都会收集20条信息，它们全部错误的可能性极低。
 2. 我们的目标不是消除偏见，而是尽可能减少偏见。**作为一个社区，我们在这里探索最有效的人机互动**。
 3. 在研究过程中，人们也容易产生偏见，因为大多数人对自己研究的课题都有自己的看法。这个工具可以搜罗到许多观点，并均匀地解释各种不同的观点，而有偏见的人是绝对读不到这些观点的。
 

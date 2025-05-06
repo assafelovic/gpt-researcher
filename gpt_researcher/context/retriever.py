@@ -1,26 +1,21 @@
-from __future__ import annotations
+import os
+from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from typing import TYPE_CHECKING, Any, ClassVar
-
+from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain.schema import Document
 from langchain.schema.retriever import BaseRetriever
-
-if TYPE_CHECKING:
-    from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 
 
 class SearchAPIRetriever(BaseRetriever):
     """Search API retriever."""
-
-    pages: ClassVar[list[dict[str, Any]]] = []
+    pages: List[Dict] = []
 
     def _get_relevant_documents(
-        self,
-        query: str,
-        *,
-        run_manager: CallbackManagerForRetrieverRun,
-    ) -> list[Document]:
-        docs: list[Document] = [
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> List[Document]:
+
+        docs = [
             Document(
                 page_content=page.get("raw_content", ""),
                 metadata={
@@ -33,14 +28,12 @@ class SearchAPIRetriever(BaseRetriever):
 
         return docs
 
-
 class SectionRetriever(BaseRetriever):
-    """SectionRetriever:
-
+    """
+    SectionRetriever:
     This class is used to retrieve sections while avoiding redundant subtopics.
     """
-
-    sections: ClassVar[list[dict[str, Any]]] = []
+    sections: List[Dict] = []
     """
     sections example:
     [
@@ -51,21 +44,19 @@ class SectionRetriever(BaseRetriever):
         ...
     ]
     """
-
+    
     def _get_relevant_documents(
-        self,
-        query: str,
-        *,
-        run_manager: CallbackManagerForRetrieverRun,
-    ) -> list[Document]:
-        docs: list[Document] = [
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> List[Document]:
+
+        docs = [
             Document(
                 page_content=page.get("written_content", ""),
                 metadata={
                     "section_title": page.get("section_title", ""),
                 },
             )
-            for page in self.sections
+            for page in self.sections  # Changed 'self.pages' to 'self.sections'
         ]
 
         return docs

@@ -2,7 +2,6 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useWebSocket } from '@/hooks/useWebSocket';
-import { useResearchHistory } from '@/hooks/useResearchHistory';
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
 import { Data, ChatBoxSettings, QuestionData } from '../types/data';
@@ -15,7 +14,6 @@ import Footer from "@/components/Footer";
 import InputArea from "@/components/ResearchBlocks/elements/InputArea";
 import HumanFeedback from "@/components/HumanFeedback";
 import LoadingDots from "@/components/LoadingDots";
-import ResearchSidebar from "@/components/ResearchSidebar";
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
@@ -25,9 +23,7 @@ export default function Home() {
   const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({ 
     report_source: 'web', 
     report_type: 'research_report', 
-    tone: 'Objective',
-    domains: [],
-    defaultReportType: 'research_report'
+    tone: 'Objective' 
   });
   const [question, setQuestion] = useState("");
   const [orderedData, setOrderedData] = useState<Data[]>([]);
@@ -38,14 +34,6 @@ export default function Home() {
   const [isStopped, setIsStopped] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const { 
-    history, 
-    saveResearch, 
-    getResearchById, 
-    deleteResearch 
-  } = useResearchHistory();
 
   const { socket, initializeWebSocket } = useWebSocket(
     setOrderedData,
@@ -111,26 +99,10 @@ export default function Home() {
   };
 
   const reset = () => {
-    // Reset UI states
     setShowResult(false);
     setPromptValue("");
-    setIsStopped(false);
-    
-    // Clear previous research data
     setQuestion("");
     setAnswer("");
-    setOrderedData([]);
-    setAllLogs([]);
-
-    // Reset feedback states
-    setShowHumanFeedback(false);
-    setQuestionForHuman(false);
-    
-    // Clean up connections
-    if (socket) {
-      socket.close();
-    }
-    setLoading(false);
   };
 
   const handleClickSuggestion = (value: string) => {
@@ -163,42 +135,26 @@ export default function Home() {
    * - Closes any existing WebSocket connections
    */
   const handleStartNewResearch = () => {
-    reset();
-    setSidebarOpen(false);
-  };
-
-  // Save completed research to history
-  useEffect(() => {
-    // Only save when research is complete and not loading
-    if (showResult && !loading && answer && question && orderedData.length > 0) {
-      // Check if this is a new research (not loaded from history)
-      const isNewResearch = !history.some(item => 
-        item.question === question && item.answer === answer
-      );
-      
-      if (isNewResearch) {
-        saveResearch(question, answer, orderedData);
-      }
+    // Reset UI states
+    setShowResult(false);
+    setPromptValue("");
+    setIsStopped(false);
+    
+    // Clear previous research data
+    setQuestion("");
+    setAnswer("");
+    setOrderedData([]);
+    setAllLogs([]);
+    
+    // Reset feedback states
+    setShowHumanFeedback(false);
+    setQuestionForHuman(false);
+    
+    // Clean up connections
+    if (socket) {
+      socket.close();
     }
-  }, [showResult, loading, answer, question, orderedData, history, saveResearch]);
-
-  // Handle selecting a research from history
-  const handleSelectResearch = (id: string) => {
-    const research = getResearchById(id);
-    if (research) {
-      setShowResult(true);
-      setQuestion(research.question);
-      setPromptValue("");
-      setAnswer(research.answer);
-      setOrderedData(research.orderedData);
-      setLoading(false);
-      setSidebarOpen(false);
-    }
-  };
-
-  // Toggle sidebar
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+    setLoading(false);
   };
 
   /**
@@ -207,7 +163,7 @@ export default function Home() {
    */
   useEffect(() => {
     const groupedData = preprocessOrderedData(orderedData);
-    const statusReports = ["agent_generated", "starting_research", "planning_research", "error"];
+    const statusReports = ["agent_generated", "starting_research", "planning_research"];
     
     const newLogs = groupedData.reduce((acc: any[], data) => {
       // Process accordion blocks (grouped data)
@@ -247,21 +203,20 @@ export default function Home() {
 
   // Add ResizeObserver to watch for content changes
   useEffect(() => {
-    const mainContentElement = mainContentRef.current;
     const resizeObserver = new ResizeObserver(() => {
       handleScroll();
     });
 
-    if (mainContentElement) {
-      resizeObserver.observe(mainContentElement);
+    if (mainContentRef.current) {
+      resizeObserver.observe(mainContentRef.current);
     }
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleScroll);
     
     return () => {
-      if (mainContentElement) {
-        resizeObserver.unobserve(mainContentElement);
+      if (mainContentRef.current) {
+        resizeObserver.unobserve(mainContentRef.current);
       }
       resizeObserver.disconnect();
       window.removeEventListener('scroll', handleScroll);
@@ -277,7 +232,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col">
+    <>
       <Header 
         loading={loading}
         isStopped={isStopped}
@@ -285,20 +240,7 @@ export default function Home() {
         onStop={handleStopResearch}
         onNewResearch={handleStartNewResearch}
       />
-      
-      <ResearchSidebar
-        history={history}
-        onSelectResearch={handleSelectResearch}
-        onNewResearch={handleStartNewResearch}
-        onDeleteResearch={deleteResearch}
-        isOpen={sidebarOpen}
-        toggleSidebar={toggleSidebar}
-      />
-      
-      <div 
-        ref={mainContentRef}
-        className="min-h-[100vh] pt-[120px]"
-      >
+      <main ref={mainContentRef} className="min-h-[100vh] pt-[120px]">
         {!showResult && (
           <Hero
             promptValue={promptValue}
@@ -320,7 +262,7 @@ export default function Home() {
                 />
               </div>
 
-              {showHumanFeedback && false &&(
+              {showHumanFeedback && (
                 <HumanFeedback
                   questionForHuman={questionForHuman}
                   websocket={socket}
@@ -347,7 +289,7 @@ export default function Home() {
             </div>
           </div>
         )}
-      </div>
+      </main>
       {showScrollButton && showResult && (
         <button
           onClick={scrollToBottom}
@@ -370,6 +312,6 @@ export default function Home() {
         </button>
       )}
       <Footer setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
-    </main>
+    </>
   );
 }

@@ -23,24 +23,20 @@ GPT Researcher offers multiple ways to leverage its capabilities:
 The PIP package is ideal for leveraging GPT Researcher as an agent in your preferred environment and code.
 
 **Pros:**
-
 - Easy integration into existing projects
 - Flexible usage in multi-agent systems, chains, or workflows
 - Optimized for production performance
 
 **Cons:**
-
 - Requires some coding knowledge
 - May need additional setup for advanced features
 
 **Installation:**
-
 ```
 pip install gpt-researcher
 ```
 
 **System Requirements:**
-
 - Python 3.10+
 - pip package manager
 
@@ -51,23 +47,19 @@ pip install gpt-researcher
 For a complete out-of-the-box experience, including a sleek frontend, you can clone our repository.
 
 **Pros:**
-
 - Ready-to-use frontend and backend services
 - Includes advanced use cases like detailed report generation
 - Optimal user experience
 
 **Cons:**
-
 - Less flexible than the PIP package for custom integrations
 - Requires setting up the entire application
 
 **Getting Started:**
-
 1. Clone the repository: `git clone https://github.com/assafelovic/gpt-researcher.git`
 2. Follow the [installation instructions](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)
 
 **System Requirements:**
-
 - Git
 - Python 3.10+
 - Node.js and npm (for frontend)
@@ -79,19 +71,16 @@ For a complete out-of-the-box experience, including a sleek frontend, you can cl
 We've collaborated with LangChain to support multi-agents with LangGraph and GPT Researcher, offering the most complex and comprehensive version of GPT Researcher.
 
 **Pros:**
-
 - Very detailed, customized research reports
 - Inner AI agent loops and reasoning
 
 **Cons:**
-
 - More expensive and time-consuming
 - Heavyweight for production use
 
 This version is recommended for local, experimental, and educational use. We're working on providing a lighter version soon!
 
 **System Requirements:**
-
 - Python 3.10+
 - LangGraph library
 
@@ -113,15 +102,15 @@ Please note that all options have been optimized and refined for production use.
 
 To learn more about each of the options, check out these docs and code snippets:
 
-1. **PIP Package**:
+1. **PIP Package**: 
    - Install: `pip install gpt-researcher`
    - [Integration guide](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package)
 
-2. **End-to-End Application**:
+2. **End-to-End Application**: 
    - Clone the repository: `git clone https://github.com/assafelovic/gpt-researcher.git`
    - [Installation instructions](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)
 
-3. **Multi-Agent System**:
+3. **Multi-Agent System**: 
    - [Multi-Agents code](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents)
    - [LangGraph documentation](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph)
    - [Blog](https://docs.gptr.dev/blog/gptr-langgraph)

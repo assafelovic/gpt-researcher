@@ -18,11 +18,9 @@ const GPTResearcher = (() => {
     }
   }
 
-  let dispose_socket = null
   const startResearch = () => {
     document.getElementById('output').innerHTML = ''
     document.getElementById('reportContainer').innerHTML = ''
-    dispose_socket?.()
 
     const imageContainer = document.getElementById('selectedImagesContainer')
     imageContainer.innerHTML = ''
@@ -31,10 +29,10 @@ const GPTResearcher = (() => {
     updateState('in_progress')
 
     addAgentResponse({
-      output: '🤔 Thinking about research questions for the task...',
+      output: '🧙‍♂️ Gathering information and analyzing your research topic...',
     })
 
-    dispose_socket = listenToSockEvents()
+    listenToSockEvents()
   }
 
   const listenToSockEvents = () => {
@@ -77,14 +75,6 @@ const GPTResearcher = (() => {
         source_urls = source_urls.slice(0, source_urls.length - 1)
       }
 
-      const query_domains_str = document.querySelector('input[name="query_domains"]').value
-      let query_domains = []
-      if (query_domains_str) {
-        query_domains = query_domains_str.split(',')
-          .map((domain) => domain.trim())
-          .filter((domain) => domain.length > 0);
-      }
-
       const requestData = {
         task: task,
         report_type: report_type,
@@ -92,22 +82,10 @@ const GPTResearcher = (() => {
         source_urls: source_urls,
         tone: tone,
         agent: agent,
-        query_domains: query_domains,
       }
 
       socket.send(`start ${JSON.stringify(requestData)}`)
     }
-
-    // return dispose function
-    return () => {
-      try {
-        if (socket.readyState !== WebSocket.CLOSED && socket.readyState !== WebSocket.CLOSING) {
-          socket.close();
-        }
-      } catch (e) {
-        console.error('Error closing socket:', e)
-      }
-    };
   }
 
   const addAgentResponse = (data) => {
@@ -130,20 +108,16 @@ const GPTResearcher = (() => {
         console.error('No output data received');
         return;
     }
-
-    // Parse the output if it's a string, otherwise use it directly
-    const paths = typeof data.output === 'string' ? JSON.parse(data.output) : data.output;
-    const { pdf, docx, md, json } = paths;
+    
+    const { pdf, docx, md, json } = data.output;
     console.log('Received paths:', { pdf, docx, md, json });
-
+    
     // Helper function to safely update link
     const updateLink = (id, path) => {
         const element = document.getElementById(id);
         if (element && path) {
-            // Ensure the path starts with /
-            const downloadPath = path.startsWith('/') ? path : `/${path}`;
-            console.log(`Setting ${id} href to:`, downloadPath);
-            element.setAttribute('href', downloadPath);
+            console.log(`Setting ${id} href to:`, path);
+            element.setAttribute('href', path);
             element.classList.remove('disabled');
         } else {
             console.warn(`Either element ${id} not found or path not provided`);
@@ -170,21 +144,29 @@ const GPTResearcher = (() => {
     selector.select()
     document.execCommand('copy')
     document.body.removeChild(textarea)
+    
+    // Show a temporary success message
+    const copyBtn = document.getElementById('copyToClipboard');
+    const originalText = copyBtn.textContent;
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => {
+      copyBtn.textContent = originalText;
+    }, 2000);
   }
 
   const updateState = (state) => {
     var status = ''
     switch (state) {
       case 'in_progress':
-        status = 'Research in progress...'
+        status = 'Research in progress... Please wait'
         setReportActionsStatus('disabled')
         break
       case 'finished':
-        status = 'Research finished!'
+        status = 'Research complete! Your report is ready'
         setReportActionsStatus('enabled')
         break
       case 'error':
-        status = 'Research failed!'
+        status = 'Research failed. Please try again'
         setReportActionsStatus('disabled')
         break
       case 'initial':
@@ -258,13 +240,11 @@ const GPTResearcher = (() => {
     const images = JSON.parse(data.output)
     console.log("Received images:", images);  // Debug log
     if (images && images.length > 0) {
+      imageContainer.innerHTML = '<h3>Research Images</h3>'
       images.forEach(imageUrl => {
         const imgElement = document.createElement('img')
         imgElement.src = imageUrl
         imgElement.alt = 'Research Image'
-        imgElement.style.maxWidth = '200px'
-        imgElement.style.margin = '5px'
-        imgElement.style.cursor = 'pointer'
         imgElement.onclick = () => showImageDialog(imageUrl)
         imageContainer.appendChild(imgElement)
       })
@@ -275,29 +255,29 @@ const GPTResearcher = (() => {
   }
 
   const showImageDialog = (imageUrl) => {
-    const dialog = document.createElement('div');
-    dialog.className = 'image-dialog';
-
-    const img = document.createElement('img');
-    img.src = imageUrl;
-    img.alt = 'Full-size Research Image';
-
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Close';
-    closeBtn.onclick = () => document.body.removeChild(dialog);
-
-    dialog.appendChild(img);
-    dialog.appendChild(closeBtn);
-    document.body.appendChild(dialog);
+    const dialog = document.createElement('div')
+    dialog.className = 'image-dialog'
+    
+    const img = document.createElement('img')
+    img.src = imageUrl
+    img.alt = 'Full Size Image'
+    
+    const closeButton = document.createElement('button')
+    closeButton.textContent = 'Close'
+    closeButton.onclick = () => document.body.removeChild(dialog)
+    
+    dialog.appendChild(img)
+    dialog.appendChild(closeButton)
+    document.body.appendChild(dialog)
   }
 
-  document.addEventListener('DOMContentLoaded', init)
   return {
-    startResearch,
-    copyToClipboard,
+    init,
     changeSource,
+    startResearch,
     addTag,
-    displaySelectedImages,
-    showImageDialog,
+    copyToClipboard
   }
 })()
+
+window.addEventListener('DOMContentLoaded', GPTResearcher.init)

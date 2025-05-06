@@ -1,50 +1,54 @@
-
-.cursorrules
-.docusaurus
-.DS_Store
+#Ignore env containing secrets
 .env
-.envrc
-.history
-.idea
-.langgraph-data/
-.mypy_cache/
-.next/
 .venv
-.venv/
-.vscode/launch.json
-*.lock
-*.log
-*.orig
-*.swp
-**/__pycache__/
-**/.history
-**/.history/
-all_models.json
-build
-CURSOR_RULES.md
-dist/
-docs/build
-env.bak/
+.envrc
+
+#Ignore Virtual Env
 env/
-ENV/
-free_models.json
-gpt_researcher_desktop/resources/extra_themes
-gpt_researcher_desktop/widgets/theme_dialog.py
-gpt_researcher.egg-info/
-litellm_config_free.yaml
-litellm_config.yaml
-litellm_documentation
-logs/
-my-docs/
-node_modules
-outputs/
-package-lock.json
-server_log.txt
-tmp/
-venv.bak/
 venv/
-reports
-custom_providers.json
-free_chat_models.json
-config/default_config.json
-config/user_config.json
+.venv/
+
+# Other Environments
+ENV/
+env.bak/
+venv.bak/
+
+#Ignore generated outputs
+outputs/
+*.lock
+dist/
+gpt_researcher.egg-info/
+
+#Ignore my local docs
+my-docs/
+
+#Ignore pycache
+**/__pycache__/
+
+#Ignore mypy cache
+.mypy_cache/
+node_modules
+.idea
+.DS_Store
+.docusaurus
+build
+docs/build
+
+.vscode/launch.json
+.langgraph-data/
+.next/
+package-lock.json
+
+#Vim swp files
+*.swp
+
+# Log files
+logs/
+*.orig
+*.log
+server_log.txt
+
+#Cursor Rules
+.cursorrules
+CURSOR_RULES.md
+/.history

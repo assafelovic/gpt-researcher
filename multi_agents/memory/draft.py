@@ -1,10 +1,10 @@
-from __future__ import annotations
+from typing import TypedDict, List, Annotated
+import operator
 
-from typing import Any, TypedDict
 
 class DraftState(TypedDict):
-    task: dict[str, Any]
+    task: dict
     topic: str
-    draft: dict[str, Any]
+    draft: dict
     review: str
     revision_notes: str

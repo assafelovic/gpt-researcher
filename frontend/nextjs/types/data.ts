@@ -31,21 +31,7 @@ export interface ChatData extends BaseData {
 export type Data = BasicData | LanggraphButtonData | DifferencesData | QuestionData | ChatData;
 
 export interface ChatBoxSettings {
-  report_type: string;
   report_source: string;
+  report_type: string;
   tone: string;
-  domains: string[];
-  defaultReportType: string;
-}
-
-export interface Domain {
-  value: string;
-}
-
-export interface ResearchHistoryItem {
-  id: string;
-  question: string;
-  answer: string;
-  timestamp: number;
-  orderedData: Data[];
 } 
