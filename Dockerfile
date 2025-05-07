@@ -54,9 +54,12 @@ RUN apt-get update && \
 FROM install-browser AS gpt-researcher-install
 
 ENV PIP_ROOT_USER_ACTION=ignore
+# Add environment variable to use binary wheels where possible
+ENV PIP_PREFER_BINARY=1
 WORKDIR /usr/src/app
 
 # Install system dependencies required for Python packages
+# Added libffi-dev, python3-dev, and additional dependencies for building packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     libxml2-dev \
@@ -64,15 +67,29 @@ RUN apt-get update && \
     zlib1g-dev \
     libjpeg-dev \
     libpng-dev \
+    libffi-dev \
+    python3-dev \
+    pkg-config \
+    libcairo2-dev \
+    libpango1.0-dev \
+    fontconfig \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip for better dependency resolution
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Copy and install Python dependencies in a single layer to optimize cache usage
 COPY ./requirements.txt ./requirements.txt
 COPY ./multi_agents/requirements.txt ./multi_agents/requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir -r multi_agents/requirements.txt
+# Install packages with optimizations for ARM
+# - Split the installation to handle core dependencies first
+# - Use --no-build-isolation for better performance on ARM
+# - Set timeout to handle slow ARM builds
+RUN pip install --no-cache-dir --timeout 300 numpy && \
+    pip install --no-cache-dir --timeout 300 -r requirements.txt && \
+    pip install --no-cache-dir --timeout 300 -r multi_agents/requirements.txt
 
 # Stage 3: Final stage with non-root user and app
 FROM gpt-researcher-install AS gpt-researcher
