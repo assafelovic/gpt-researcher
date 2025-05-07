@@ -25,15 +25,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
-          - linux/arm/v7
-          - linux/arm/v6
-          - linux/386
-          - linux/ppc64le
-          - linux/s390x
-          - linux/riscv64
+        include:
+          - platform: linux/amd64
+            arch: amd64
+          - platform: linux/arm64
+            arch: arm64
+          - platform: linux/arm/v7
+            arch: armv7
+          - platform: linux/arm/v6
+            arch: armv6
+          - platform: linux/386
+            arch: 386
+          - platform: linux/ppc64le
+            arch: ppc64le
+          - platform: linux/s390x
+            arch: s390x
+          - platform: linux/riscv64
+            arch: riscv64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -74,6 +82,7 @@ jobs:
 
       - name: Build & push image for ${{ matrix.platform }}
         id: build
+        continue-on-error: true
         uses: docker/build-push-action@v5
         with:
           context: ./frontend/nextjs
@@ -81,11 +90,11 @@ jobs:
           push: true
           platforms: ${{ matrix.platform }}
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ matrix.platform }}
-            ${{ env.REGISTRY_IMAGE }}:${{ matrix.platform }}
+            ${{ env.IMAGE_NAME }}:${{ matrix.arch }}
+            ${{ env.REGISTRY_IMAGE }}:${{ matrix.arch }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=gptr-nextjs-${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=gptr-nextjs-${{ matrix.platform }}
+          cache-from: type=gha,scope=gptr-nextjs-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=gptr-nextjs-${{ matrix.arch }}
 
       - name: Export digest
         if: ${{ always() && steps.build.outputs.digest }}
@@ -95,7 +104,7 @@ jobs:
         if: ${{ always() && steps.build.outputs.digest }}
         uses: actions/upload-artifact@v4
         with:
-          name: digest-${{ matrix.platform }}
+          name: digest-${{ matrix.arch }}
           path: digest.txt
 
       - name: Update multi-arch manifest with ${{ matrix.platform }}
@@ -105,7 +114,7 @@ jobs:
           REGISTRY_IMAGE: ${{ env.REGISTRY_IMAGE }}
         run: |
           set -euo pipefail
-          platforms=(linux/amd64 linux/arm64 linux/arm/v7 linux/arm/v6 linux/386 linux/ppc64le linux/s390x linux/riscv64)
+          platforms=(amd64 arm64 armv7 armv6 386 ppc64le s390x riscv64)
           refs=""
           for p in "${platforms[@]}"; do
             if docker manifest inspect "$IMAGE_NAME:$p" >/dev/null 2>&1; then
@@ -113,12 +122,12 @@ jobs:
             fi
           done
 
-          [ -z "$refs" ] && refs="$IMAGE_NAME:${{ matrix.platform }}"
+          [ -z "$refs" ] && refs="$IMAGE_NAME:${{ matrix.arch }}"
 
           IFS=$'\n' read -rd '' -a tags <<< "${{ steps.meta.outputs.tags }}"
           for t in "${tags[@]}"; do
             echo "Updating manifest $t with refs: $refs"
-            docker buildx imagetools create --push -t "$t" $refs
+            docker buildx imagetools create --push --append -t "$t" $refs
           done
 
   manifest:
@@ -170,7 +179,7 @@ jobs:
           REGISTRY_IMAGE: ${{ env.REGISTRY_IMAGE }}
         run: |
           set -euo pipefail
-          platforms=(linux/amd64 linux/arm64 linux/arm/v7 linux/arm/v6 linux/386 linux/ppc64le linux/s390x linux/riscv64)
+          platforms=(amd64 arm64 armv7 armv6 386 ppc64le s390x riscv64)
           refs=""
           for p in "${platforms[@]}"; do
             if docker manifest inspect "$IMAGE_NAME:$p" >/dev/null 2>&1; then

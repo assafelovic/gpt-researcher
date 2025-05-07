@@ -25,15 +25,23 @@ jobs:
     strategy:
       fail-fast: false                # do **not** cancel the whole matrix if one build fails
       matrix:
-        platform:
-          - linux/amd64
-          - linux/arm64
-          - linux/arm/v7
-          - linux/arm/v6
-          - linux/386
-          - linux/ppc64le
-          - linux/s390x
-          - linux/riscv64
+        include:
+          - platform: linux/amd64   # GitHub hosted runner native arch
+            arch: amd64
+          - platform: linux/arm64
+            arch: arm64
+          - platform: linux/arm/v7
+            arch: armv7
+          - platform: linux/arm/v6
+            arch: armv6
+          - platform: linux/386
+            arch: 386
+          - platform: linux/ppc64le
+            arch: ppc64le
+          - platform: linux/s390x
+            arch: s390x
+          - platform: linux/riscv64
+            arch: riscv64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -75,17 +83,18 @@ jobs:
 
       - name: Build & push image for ${{ matrix.platform }}
         id: build
+        continue-on-error: true
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           platforms: ${{ matrix.platform }}
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ matrix.platform }}
-            ${{ env.REGISTRY_IMAGE }}:${{ matrix.platform }}
+            ${{ env.IMAGE_NAME }}:${{ matrix.arch }}
+            ${{ env.REGISTRY_IMAGE }}:${{ matrix.arch }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=gpt-researcher-${{ matrix.platform }}
-          cache-to: type=gha,mode=max,scope=gpt-researcher-${{ matrix.platform }}
+          cache-from: type=gha,scope=gpt-researcher-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=gpt-researcher-${{ matrix.arch }}
 
       # Export the digest – will be used by the manifest job; failure here must not cancel the matrix
       - name: Export digest
@@ -96,7 +105,7 @@ jobs:
         if: ${{ always() && steps.build.outputs.digest }}
         uses: actions/upload-artifact@v4
         with:
-          name: digest-${{ matrix.platform }}
+          name: digest-${{ matrix.arch }}
           path: digest.txt
 
       # Update the multi-arch manifest right away so that this platform is available immediately
@@ -108,7 +117,7 @@ jobs:
         run: |
           set -euo pipefail
           # Collect every per-arch image that already exists in the registry
-          platforms=(linux/amd64 linux/arm64 linux/arm/v7 linux/arm/v6 linux/386 linux/ppc64le linux/s390x linux/riscv64)
+          platforms=(amd64 arm64 armv7 armv6 386 ppc64le s390x riscv64)
           refs=""
           for p in "${platforms[@]}"; do
             if docker manifest inspect "$IMAGE_NAME:$p" >/dev/null 2>&1; then
@@ -117,13 +126,13 @@ jobs:
           done
 
           # Nothing yet? then just include the current arch.
-          [ -z "$refs" ] && refs="$IMAGE_NAME:${{ matrix.platform }}"
+          [ -z "$refs" ] && refs="$IMAGE_NAME:${{ matrix.arch }}"
 
           # Re-use the same tag list used earlier
           IFS=$'\n' read -rd '' -a tags <<< "${{ steps.meta.outputs.tags }}"
           for t in "${tags[@]}"; do
             echo "Updating manifest $t with refs: $refs"
-            docker buildx imagetools create --push -t "$t" $refs
+            docker buildx imagetools create --push --append -t "$t" $refs
           done
 
   # ---------------------------------------------------------------------------
@@ -186,7 +195,7 @@ jobs:
           ls -1 digests || true
 
           # Build arrays of per-arch references that actually exist in the registry.
-          platforms=(linux/amd64 linux/arm64 linux/arm/v7 linux/arm/v6 linux/386 linux/ppc64le linux/s390x linux/riscv64)
+          platforms=(amd64 arm64 armv7 armv6 386 ppc64le s390x riscv64)
           refs=""
           for p in "${platforms[@]}"; do
             if docker manifest inspect "$IMAGE_NAME:$p" >/dev/null 2>&1; then
