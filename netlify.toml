@@ -32,6 +32,7 @@
 
 [dev]
   framework = "#custom"
-  command = "python -m uvicorn main:app --reload"
-  port = 8000
+  command = "python -m uvicorn backend.server.server:app --host 0.0.0.0 --port 8000"
+  port = 3000
   targetPort = 8000
+  autoLaunch = true

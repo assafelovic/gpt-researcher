@@ -56,6 +56,17 @@ FROM install-browser AS gpt-researcher-install
 ENV PIP_ROOT_USER_ACTION=ignore
 WORKDIR /usr/src/app
 
+# Install system dependencies required for Python packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libxml2-dev \
+    libxslt-dev \
+    zlib1g-dev \
+    libjpeg-dev \
+    libpng-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy and install Python dependencies in a single layer to optimize cache usage
 COPY ./requirements.txt ./requirements.txt
 COPY ./multi_agents/requirements.txt ./multi_agents/requirements.txt

@@ -9,7 +9,8 @@ const proxy = createProxyMiddleware({
   changeOrigin: true,
   pathRewrite: {
     '^/.netlify/functions/api': '/'
-  }
+  },
+  logLevel: 'debug'
 });
 
 app.use('*', proxy);
