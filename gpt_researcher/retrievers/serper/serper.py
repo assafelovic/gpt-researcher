@@ -66,7 +66,7 @@ class SerperSearch():
         if search_results is None:
             return
 
-        results = search_results["organic"]
+        results = search_results.get("organic", [])
         search_results = []
 
         # Normalize the results to match the format of the other search APIs
