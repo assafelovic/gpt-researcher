@@ -1,6 +1,10 @@
 name: NextJS Docker Build and Push (per-architecture)
 run-name: Building and pushing NextJS Docker images – matrix
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   packages: write # Needed for pushing to GHCR
