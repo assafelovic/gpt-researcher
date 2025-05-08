@@ -14,14 +14,15 @@ beautifulsoup4 = ">=4.12.2"
 colorama = ">=0.4.6"
 duckduckgo_search = ">=4.1.1"
 fastapi = ">=0.104.1"
+firecrawl-py = "^1.12.0"
 htmldocx = "^0.0.6"
 jinja2 = ">=3.1.2"
 json-repair = "^0.29.8"
 json5 = "^0.9.25"
-langchain = "^0.2"
+langchain = ">=0.2.17,<0.3"
 langchain_community = "^0.2"
 langchain-gigachat = "^0.3.3"
-langchain-openai = "^0.1"
+langchain-openai = "^0.3.6"
 langgraph = ">=0.0.29,<0.3"
 loguru = "^0.7.2"
 lxml = { version = ">=4.9.2", extras = ["html_clean"] }
@@ -43,6 +44,10 @@ tiktoken = ">=0.7.0"
 unstructured = ">=0.13,<0.16"
 uvicorn = ">=0.24.0.post1"
 websockets = "^13.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+pytest-asyncio = "^0.25.3"
 
 [build-system]
 requires = ["poetry-core"]
