@@ -30,10 +30,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: linux/amd64
+          - platform: linux/amd64   # GitHub hosted runner native arch
             arch: amd64
           - platform: linux/arm64
             arch: arm64
+          - platform: linux/arm64/v8
+            arch: arm64v8
+          - platform: linux/arm64/v7
+            arch: arm64v7
+          - platform: linux/arm64/v6
+            arch: arm64v6
+          - platform: linux/arm
+            arch: arm
+          - platform: linux/arm/v8
+            arch: armv8
           - platform: linux/arm/v7
             arch: armv7
           - platform: linux/arm/v6
