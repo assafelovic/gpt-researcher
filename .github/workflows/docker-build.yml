@@ -34,9 +34,11 @@ jobs:
             arch: amd64
           - platform: linux/arm64
             arch: arm64
-          - platform: linux/arm/v7
+          - platform: linux/arm64/v8
+            arch: armv8
+          - platform: linux/arm64/v7
             arch: armv7
-          - platform: linux/arm/v6
+          - platform: linux/arm64/v6
             arch: armv6
           - platform: linux/386
             arch: 386
