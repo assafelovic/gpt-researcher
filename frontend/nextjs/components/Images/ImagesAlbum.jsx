@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ImageModal from './ImageModal';
+import Image from 'next/image';
 
 export default function ImagesAlbum({ images }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,16 +47,19 @@ export default function ImagesAlbum({ images }) {
         <div className="w-full h-full min-h-[200px] max-h-[400px]">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 pb-4">
                 {validImages.map((image, index) => (
-                    <div 
-                        key={index} 
+                    <div
+                        key={index}
                         className="relative aspect-square bg-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300"
                     >
-                        <img
+                        <Image
                             src={image}
                             alt={`Image ${index + 1}`}
-                            className="absolute inset-0 w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity duration-300"
+                            fill
+                            style={{ objectFit: 'cover' }}
+                            className="cursor-pointer hover:opacity-90 transition-opacity duration-300"
                             onClick={() => openModal(image, index)}
                             onError={() => handleImageError(image)}
+                            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 25vw"
                         />
                     </div>
                 ))}

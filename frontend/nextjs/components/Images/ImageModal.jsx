@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
+import Image from 'next/image';
 
 export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }) {
-    if (!isOpen) return null;
-
-    // Set up keyboard event listeners
     useEffect(() => {
+        if (!isOpen) return;
+
         const handleKeyDown = (e) => {
             if (e.key === 'ArrowLeft') {
                 onPrev();
@@ -17,7 +17,9 @@ export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [onClose, onNext, onPrev]);
+    }, [isOpen, onClose, onNext, onPrev]);
+
+    if (!isOpen) return null;
 
     // Swipe detection for mobile
     let touchStartX = 0;
@@ -60,11 +62,15 @@ export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }
                 >
                     ←
                 </button>
-                <img
-                    src={imageSrc}
-                    alt="Modal view"
-                    className="max-h-[90vh] max-w-[90vw] object-contain"
-                />
+                <div style={{ width: 'auto', height: 'auto', maxWidth: '90vw', maxHeight: '90vh', position: 'relative' }}>
+                    <Image
+                        src={imageSrc}
+                        alt="Modal view"
+                        fill
+                        style={{ objectFit: 'contain' }}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                </div>
                 <button
                     onClick={onNext}
                     className="absolute right-4 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75"

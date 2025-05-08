@@ -129,7 +129,7 @@ jobs:
           REGISTRY_IMAGE: ${{ env.REGISTRY_IMAGE }}
         run: |
           set -euo pipefail
-          platforms=(amd64 arm64 armv7 armv6 386 ppc64le s390x riscv64)
+          platforms=(amd64 arm64 arm64v8 arm64v7 arm64v6 arm armv8 armv7 armv6 386 ppc64le s390x riscv64)
           refs=""
           for p in "${platforms[@]}"; do
             if docker manifest inspect "$IMAGE_NAME:$p" >/dev/null 2>&1; then
@@ -194,7 +194,7 @@ jobs:
           REGISTRY_IMAGE: ${{ env.REGISTRY_IMAGE }}
         run: |
           set -euo pipefail
-          platforms=(amd64 arm64 armv7 armv6 386 ppc64le s390x riscv64)
+          platforms=(amd64 arm64 arm64v8 arm64v7 arm64v6 arm armv8 armv7 armv6 386 ppc64le s390x riscv64)
           refs=""
           for p in "${platforms[@]}"; do
             if docker manifest inspect "$IMAGE_NAME:$p" >/dev/null 2>&1; then

@@ -132,7 +132,7 @@ jobs:
         run: |
           set -euo pipefail
           # Collect every per-arch image that already exists in the registry
-          platforms=(amd64 arm64 armv7 armv6 386 ppc64le s390x riscv64)
+          platforms=(amd64 arm64 arm64v8 arm64v7 arm64v6 arm armv8 armv7 armv6 386 ppc64le s390x riscv64)
           refs=""
           for p in "${platforms[@]}"; do
             if docker manifest inspect "$IMAGE_NAME:$p" >/dev/null 2>&1; then
@@ -210,7 +210,7 @@ jobs:
           ls -1 digests || true
 
           # Build arrays of per-arch references that actually exist in the registry.
-          platforms=(amd64 arm64 armv7 armv6 386 ppc64le s390x riscv64)
+          platforms=(amd64 arm64 arm64v8 arm64v7 arm64v6 arm armv8 armv7 armv6 386 ppc64le s390x riscv64)
           refs=""
           for p in "${platforms[@]}"; do
             if docker manifest inspect "$IMAGE_NAME:$p" >/dev/null 2>&1; then
