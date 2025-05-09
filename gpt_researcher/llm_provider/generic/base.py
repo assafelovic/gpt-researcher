@@ -46,7 +46,7 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
 
 SUPPORT_REASONING_EFFORT_MODELS = [
     "o3-mini",
-    "o3-mini-2025-01-31"
+    "o3-mini-2025-01-31",
     "o4-mini"
 ]
 
