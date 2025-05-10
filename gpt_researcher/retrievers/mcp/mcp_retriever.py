@@ -62,7 +62,6 @@ class MCPRetriever:
         server_env: Optional[Dict[str, str]] = None,
         resource_uri_template: Optional[str] = None,
         tool_name: Optional[str] = None,
-        tool_args: Optional[Dict[str, Any]] = None,
         connection_type: Optional[str] = None,
         connection_url: Optional[str] = None,
         connection_token: Optional[str] = None,
@@ -82,12 +81,16 @@ class MCPRetriever:
             server_env (dict, optional): Environment variables for the server.
             resource_uri_template (str, optional): URI template for accessing a resource.
             tool_name (str, optional): Name of the MCP tool to invoke.
-            tool_args (dict, optional): Arguments to pass to the MCP tool.
             connection_type (str, optional): Type of connection (stdio, websocket, http).
             connection_url (str, optional): URL for WebSocket or HTTP connection.
             connection_token (str, optional): Authentication token for remote connections.
             llm_provider (object, optional): LLM provider for generating arguments.
             websocket: WebSocket for stream logging.
+        
+        Note:
+            Following MCP best practices, this retriever doesn't accept static tool arguments.
+            Instead, it dynamically generates appropriate arguments for each MCP tool call
+            based on the query context using the LLM provider.
         """
         self.query = query
         self.headers = headers or {}
@@ -115,22 +118,23 @@ class MCPRetriever:
         # Resource or tool configuration
         self.resource_uri_template = resource_uri_template or self.headers.get("mcp_resource_uri")
         self.tool_name = tool_name or self.headers.get("mcp_tool_name")
-        self.tool_args = tool_args or {}
-        
-        # Parse tool arguments from headers
-        for key, value in self.headers.items():
-            if key.startswith("mcp_tool_arg_"):
-                arg_name = key[13:]  # Remove 'mcp_tool_arg_' prefix
-                self.tool_args[arg_name] = value
                 
-        # If query is provided and not in tool_args, add it
-        if "query" not in self.tool_args and self.query:
-            self.tool_args["query"] = self.query
-            
         # Connection configuration
-        self.connection_type = connection_type or self.headers.get("mcp_connection_type", "stdio")
         self.connection_url = connection_url or self.headers.get("mcp_connection_url")
         self.connection_token = connection_token or self.headers.get("mcp_connection_token")
+        
+        # Auto-detect connection type from URL if provided
+        if self.connection_url:
+            if self.connection_url.startswith(("ws://", "wss://")):
+                self.connection_type = "websocket"
+            elif self.connection_url.startswith(("http://", "https://")):
+                self.connection_type = "http"
+            else:
+                # Use specified connection type or default to stdio
+                self.connection_type = connection_type or self.headers.get("mcp_connection_type", "stdio")
+        else:
+            # No URL, use specified connection type or default to stdio
+            self.connection_type = connection_type or self.headers.get("mcp_connection_type", "stdio")
             
         # Check if MCP is installed
         if not HAS_MCP:
@@ -148,11 +152,10 @@ class MCPRetriever:
             
         # Configure LLM-based argument generation and tool selection
         self.use_auto_tool_selection = os.getenv("MCP_AUTO_TOOL_SELECTION", "false").lower() in ["true", "1", "yes"]
-        self.use_llm_args = os.getenv("MCP_USE_LLM_ARGS", "true").lower() in ["true", "1", "yes"]
         self.llm_provider = llm_provider
         
         # If llm_provider is not provided, try to get it from the global config
-        if self.use_llm_args and not self.llm_provider:
+        if not self.llm_provider:
             try:
                 from gpt_researcher.config import Config
                 cfg = Config()
@@ -160,7 +163,6 @@ class MCPRetriever:
                 self.llm_provider = GenericLLMProvider(cfg)
             except Exception as e:
                 logger.warning(f"Failed to initialize LLM provider for argument generation: {e}")
-                self.use_llm_args = False
         
         # Log initialization
         self._stream_log(f"🔧 Initializing MCP retriever for query: {self.query}")
@@ -300,24 +302,30 @@ Return only the exact tool name with no additional text or explanation.
         """
         Generate appropriate arguments for an MCP tool using LLM.
         
+        In line with MCP protocol design, this method dynamically generates
+        parameters for MCP tools based on the current query context, rather
+        than using static predefined arguments. This allows the LLM to adapt
+        the parameters based on the specific research needs.
+        
         Args:
             tool: The tool definition from the MCP server.
             query (str): The search query.
             
         Returns:
-            Dict[str, Any]: Generated arguments for the tool.
+            Dict[str, Any]: Dynamically generated arguments for the tool.
         """
-        if not self.use_llm_args or not tool:
-            return self.tool_args
+        # If tool is not provided, return minimal default args
+        if not tool:
+            return {"query": self.query} if self.query else {}
             
         try:
             # Extract parameter information from the tool
             parameters = getattr(tool, "parameters", [])
             
             if not parameters:
-                # If no parameters defined, use default args
-                await self._stream_log(f"ℹ️ Tool {tool.name} has no parameters, using default arguments")
-                return self.tool_args
+                # If no parameters defined, just use query as default
+                await self._stream_log(f"ℹ️ Tool {tool.name} has no parameters, using query as default")
+                return {"query": self.query} if self.query else {}
                 
             # Create parameter information string
             param_info = "\n".join([
@@ -351,21 +359,18 @@ Return ONLY a valid JSON object with parameter names and values, nothing else.
                 # Parse the JSON response
                 generated_args = json.loads(response)
                 
-                # Merge with existing arguments, prioritizing explicitly provided args
-                merged_args = {**generated_args, **self.tool_args}
-                
-                logger.info(f"Generated arguments for tool {tool.name}: {merged_args}")
-                await self._stream_log(f"✅ Generated arguments for tool {tool.name}", merged_args)
-                return merged_args
+                logger.info(f"Generated arguments for tool {tool.name}: {generated_args}")
+                await self._stream_log(f"✅ Generated arguments for tool {tool.name}", generated_args)
+                return generated_args
             except Exception as e:
-                logger.warning(f"Failed to parse LLM-generated arguments: {e}. Using default arguments.")
-                await self._stream_log(f"⚠️ Failed to parse LLM-generated arguments: {e}. Using default arguments.")
-                return self.tool_args
+                logger.warning(f"Failed to parse LLM-generated arguments: {e}. Using query as default argument.")
+                await self._stream_log(f"⚠️ Failed to parse LLM-generated arguments: {e}. Using query as default.")
+                return {"query": self.query} if self.query else {}
                 
         except Exception as e:
             logger.error(f"Error generating arguments: {e}")
             await self._stream_log(f"❌ Error generating arguments: {str(e)}")
-            return self.tool_args
+            return {"query": self.query} if self.query else {}
 
     async def _connect_to_server(self) -> Tuple[ClientSession, Any]:
         """

@@ -28,30 +28,13 @@ class Config:
 
         # MCP support configuration
         self.mcp_servers = []  # List of MCP server configurations
-        self.mcp_env_vars = {}  # Environment variables for MCP servers
         self.mcp_allowed_root_paths = []  # Allowed root paths for MCP servers
 
         # Read from config
         if hasattr(self, 'mcp_servers'):
             self.mcp_servers = self.mcp_servers
-        if hasattr(self, 'mcp_env_vars'):
-            self.mcp_env_vars = self.mcp_env_vars
         if hasattr(self, 'mcp_allowed_root_paths'):
             self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
-
-        # Override from environment variables
-        if os.getenv("MCP_SERVERS"):
-            try:
-                self.mcp_servers = json.loads(os.getenv("MCP_SERVERS"))
-            except Exception as e:
-                print(f"Warning: Failed to parse MCP_SERVERS environment variable: {e}")
-
-        if os.getenv("MCP_ALLOWED_ROOT_PATHS"):
-            try:
-                self.mcp_allowed_root_paths = json.loads(os.getenv("MCP_ALLOWED_ROOT_PATHS"))
-            except Exception as e:
-                # Try comma-separated format as fallback
-                self.mcp_allowed_root_paths = os.getenv("MCP_ALLOWED_ROOT_PATHS").split(",")
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         for key, value in config.items():

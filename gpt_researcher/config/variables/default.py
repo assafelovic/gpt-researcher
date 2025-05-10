@@ -37,7 +37,6 @@ DEFAULT_CONFIG: BaseConfig = {
     
     # MCP retriever specific settings
     "MCP_SERVERS": [],  # List of predefined MCP server configurations
-    "MCP_AUTO_TOOL_SELECTION": True,  # Whether to automatically select the best tool for a query
-    "MCP_USE_LLM_ARGS": True,  # Whether to use LLM to generate tool arguments
+    "MCP_AUTO_TOOL_SELECTION": False,  # Whether to automatically select the best tool for a query
     "MCP_ALLOWED_ROOT_PATHS": [],  # List of allowed root paths for local file access
 }
