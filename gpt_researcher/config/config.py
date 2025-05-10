@@ -26,6 +26,39 @@ class Config:
         if config_to_use['REPORT_SOURCE'] != 'web':
           self._set_doc_path(config_to_use)
 
+        # MCP support configuration
+        self.mcp_servers = []  # Default list of MCP servers to support
+        self.mcp_env_vars = {}  # Default environment variables for MCP servers
+        self.mcp_allowed_root_paths = []  # Default allowed root paths for MCP servers
+        self.mcp_default_server = None  # Default MCP server to use if not specified
+
+        # Read from config
+        if hasattr(self, 'mcp_servers'):
+            self.mcp_servers = self.mcp_servers
+        if hasattr(self, 'mcp_env_vars'):
+            self.mcp_env_vars = self.mcp_env_vars
+        if hasattr(self, 'mcp_allowed_root_paths'):
+            self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
+        if hasattr(self, 'mcp_default_server'):
+            self.mcp_default_server = self.mcp_default_server
+
+        # Override from environment variables
+        if os.getenv("MCP_SERVERS"):
+            try:
+                self.mcp_servers = json.loads(os.getenv("MCP_SERVERS"))
+            except Exception as e:
+                print(f"Warning: Failed to parse MCP_SERVERS environment variable: {e}")
+
+        if os.getenv("MCP_DEFAULT_SERVER"):
+            self.mcp_default_server = os.getenv("MCP_DEFAULT_SERVER")
+
+        if os.getenv("MCP_ALLOWED_ROOT_PATHS"):
+            try:
+                self.mcp_allowed_root_paths = json.loads(os.getenv("MCP_ALLOWED_ROOT_PATHS"))
+            except Exception as e:
+                # Try comma-separated format as fallback
+                self.mcp_allowed_root_paths = os.getenv("MCP_ALLOWED_ROOT_PATHS").split(",")
+
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         for key, value in config.items():
             env_value = os.getenv(key)
@@ -234,3 +267,26 @@ class Config:
     def set_verbose(self, verbose: bool) -> None:
         """Set the verbosity level."""
         self.llm_kwargs["verbose"] = verbose
+
+    def get_mcp_server_config(self, server_name: str = None) -> dict:
+        """
+        Get the configuration for an MCP server.
+        
+        Args:
+            server_name (str, optional): The name of the MCP server to get the config for.
+                If not provided, the default server will be used.
+                
+        Returns:
+            dict: The server configuration, or an empty dict if the server is not found.
+        """
+        if not server_name:
+            server_name = self.mcp_default_server
+        
+        if not server_name or not self.mcp_servers:
+            return {}
+        
+        for server in self.mcp_servers:
+            if isinstance(server, dict) and server.get("name") == server_name:
+                return server
+            
+        return {}
