@@ -20,42 +20,19 @@ The MCP retriever requires the `mcp` Python package. It's listed as an optional 
 pip install "mcp>=1.0.0"
 ```
 
-## Usage
+## Usage Scenarios
 
-### Basic Configuration
+The MCP retriever can be used in two different ways:
 
-To use an MCP server as a data source, set `RETRIEVER=mcp` in your environment variables or specify it when creating a GPT Researcher instance:
+### 1. Standalone Retriever
 
-```python
-researcher = GPTResearcher(
-    query="your query",
-    report_type="research_report",
-    retriever="mcp",
-    # MCP-specific configuration can be passed via headers
-    headers={
-        "mcp_server_command": "python",
-        "mcp_server_args": "-m my_mcp_server",
-        # ... other MCP configuration
-    }
-)
-```
-
-### Connection Types
-
-The MCP Retriever supports three types of connections:
-
-1. **Stdio** (default): Spawns a local MCP server process and communicates via standard input/output
-2. **WebSocket**: Connects to a remote MCP server via WebSocket
-3. **HTTP**: Connects to a remote MCP server via HTTP
-
-#### Local MCP Server (Stdio)
+When "mcp" is the only retriever specified, it completely replaces web search. All research context comes from MCP servers.
 
 ```python
 researcher = GPTResearcher(
     query="your query",
     headers={
-        "retriever": "mcp",
-        "mcp_connection_type": "stdio",  # This is the default
+        "retriever": "mcp",  # Only MCP, no web search
         "mcp_server_command": "python",
         "mcp_server_args": "-m my_mcp_server",
         "mcp_tool_name": "search"
@@ -63,37 +40,23 @@ researcher = GPTResearcher(
 )
 ```
 
-#### Remote MCP Server (WebSocket)
+### 2. Multi-Retriever Mode
+
+When "mcp" is specified alongside other retrievers, both run in parallel and their results are combined.
 
 ```python
 researcher = GPTResearcher(
     query="your query",
     headers={
-        "retriever": "mcp",
-        "mcp_connection_type": "websocket",
-        "mcp_connection_url": "wss://my-mcp-server.example.com/ws",
-        "mcp_connection_token": "your_auth_token",  # Optional
+        "retrievers": "mcp,tavily",  # Both MCP and web search
+        "mcp_server_command": "python",
+        "mcp_server_args": "-m my_mcp_server",
         "mcp_tool_name": "search"
     }
 )
 ```
 
-#### Remote MCP Server (HTTP)
-
-```python
-researcher = GPTResearcher(
-    query="your query",
-    headers={
-        "retriever": "mcp",
-        "mcp_connection_type": "http",
-        "mcp_connection_url": "https://my-mcp-server.example.com/api",
-        "mcp_connection_token": "your_auth_token",  # Optional
-        "mcp_tool_name": "search"
-    }
-)
-```
-
-### Configuration Options
+## Configuration
 
 The MCP Retriever accepts the following configuration parameters:
 
@@ -110,7 +73,78 @@ The MCP Retriever accepts the following configuration parameters:
 | `mcp_connection_url` | URL for WebSocket or HTTP connection | `"wss://example.com/ws"` |
 | `mcp_connection_token` | Authentication token for remote connections | `"your_auth_token"` |
 
-### Example: Using GitHub MCP Server
+## Connection Types
+
+The MCP Retriever supports three types of connections:
+
+1. **Stdio** (default): Spawns a local MCP server process and communicates via standard input/output
+2. **WebSocket**: Connects to a remote MCP server via WebSocket
+3. **HTTP**: Connects to a remote MCP server via HTTP
+
+### Local MCP Server (Stdio)
+
+```python
+researcher = GPTResearcher(
+    query="your query",
+    headers={
+        "retriever": "mcp",
+        "mcp_connection_type": "stdio",  # This is the default
+        "mcp_server_command": "python",
+        "mcp_server_args": "-m my_mcp_server",
+        "mcp_tool_name": "search"
+    }
+)
+```
+
+### Remote MCP Server (WebSocket)
+
+```python
+researcher = GPTResearcher(
+    query="your query",
+    headers={
+        "retriever": "mcp",
+        "mcp_connection_type": "websocket",
+        "mcp_connection_url": "wss://my-mcp-server.example.com/ws",
+        "mcp_connection_token": "your_auth_token",  # Optional
+        "mcp_tool_name": "search"
+    }
+)
+```
+
+### Remote MCP Server (HTTP)
+
+```python
+researcher = GPTResearcher(
+    query="your query",
+    headers={
+        "retriever": "mcp",
+        "mcp_connection_type": "http",
+        "mcp_connection_url": "https://my-mcp-server.example.com/api",
+        "mcp_connection_token": "your_auth_token",  # Optional
+        "mcp_tool_name": "search"
+    }
+)
+```
+
+## Advanced Features
+
+### Tool Selection
+
+By default, the MCP retriever will use the tool specified in `mcp_tool_name`. However, if you set the `MCP_AUTO_TOOL_SELECTION` environment variable to `true`, the retriever will use an LLM to select the most appropriate tool based on the query.
+
+```bash
+export MCP_AUTO_TOOL_SELECTION=true
+```
+
+### Argument Generation
+
+The MCP retriever can use an LLM to generate arguments for MCP tools. This is enabled by default, but can be disabled by setting the `MCP_USE_LLM_ARGS` environment variable to `false`.
+
+```bash
+export MCP_USE_LLM_ARGS=false
+```
+
+## Example: Using GitHub MCP Server
 
 ```python
 from gpt_researcher import GPTResearcher
@@ -133,7 +167,7 @@ report = await researcher.write_report()
 print(report)
 ```
 
-### Example: Using a Cloud-Hosted MCP Server
+## Example: Using a Cloud-Hosted MCP Server
 
 ```python
 from gpt_researcher import GPTResearcher
@@ -155,35 +189,6 @@ context = await researcher.conduct_research()
 report = await researcher.write_report()
 print(report)
 ```
-
-### Using Multiple Retrievers
-
-You can use MCP alongside other retrievers:
-
-```python
-researcher = GPTResearcher(
-    query="How does React.js useState hook work?",
-    headers={
-        "retrievers": "mcp,tavily",  # Use both MCP and Tavily
-        # MCP configuration
-        "mcp_server_command": "...",
-        # ... other config
-    }
-)
-```
-
-## Available MCP Servers
-
-You can use any MCP-compatible server with this retriever. Some popular options include:
-
-- **GitHub**: Code searching and repository management
-- **Filesystem**: Access to local files and directories
-- **Google Drive**: File storage and search
-- **PostgreSQL**: Database access
-- **Memory**: Knowledge graph persistence
-- **Tavily Search**: Web search capabilities
-
-For a comprehensive list, check the [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) repository, which includes hundreds of MCP server implementations for various services and data sources.
 
 ## Creating Custom MCP Servers
 
@@ -223,6 +228,24 @@ researcher = GPTResearcher(
 )
 ```
 
+## References
+
+- [MCP Documentation](https://modelcontextprotocol.io/)
+- [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
+
+## Available MCP Servers
+
+You can use any MCP-compatible server with this retriever. Some popular options include:
+
+- **GitHub**: Code searching and repository management
+- **Filesystem**: Access to local files and directories
+- **Google Drive**: File storage and search
+- **PostgreSQL**: Database access
+- **Memory**: Knowledge graph persistence
+- **Tavily Search**: Web search capabilities
+
+For a comprehensive list, check the [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) repository, which includes hundreds of MCP server implementations for various services and data sources.
+
 ## Hosting Your Own MCP Server
 
 You can host your MCP server remotely and use it with GPT Researcher:
@@ -242,11 +265,4 @@ researcher = GPTResearcher(
         "mcp_tool_name": "search"
     }
 )
-```
-
-## References
-
-- [MCP Documentation](https://modelcontextprotocol.io/)
-- [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
-- [MCP Example Servers](https://modelcontextprotocol.io/examples)
-- [Awesome MCP Servers](https://github.com/punkpeye/awesome-mcp-servers) 
+``` 

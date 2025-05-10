@@ -5,8 +5,9 @@ import os
 from ..actions.utils import stream_output
 from ..actions.query_processing import plan_research_outline, get_search_results
 from ..document import DocumentLoader, OnlineDocumentLoader, LangChainDocumentLoader
-from ..utils.enum import ReportSource
+from ..utils.enum import ReportSource, ReportType
 from ..utils.logging_config import get_json_handler
+from ..actions.agent_creator import choose_agent
 
 
 class ResearchConductor:
@@ -549,3 +550,121 @@ class ResearchConductor:
             self.researcher.vector_store.load(scraped_content)
 
         return scraped_content
+
+    async def _search(self, retriever, query):
+        """
+        Perform a search using the specified retriever.
+        
+        Args:
+            retriever: The retriever class to use
+            query: The search query
+            
+        Returns:
+            list: Search results
+        """
+        self.logger.info(f"Searching with {retriever.__name__} for query: {query}")
+        
+        try:
+            # Instantiate the retriever
+            retriever_instance = retriever(
+                query=query, 
+                headers=self.researcher.headers,
+                query_domains=self.researcher.query_domains
+            )
+            
+            # Perform the search
+            if hasattr(retriever_instance, 'search'):
+                results = retriever_instance.search(
+                    max_results=self.researcher.cfg.max_search_results_per_query
+                )
+                return results
+            else:
+                self.logger.error(f"Retriever {retriever.__name__} does not have a search method")
+                return []
+        except Exception as e:
+            self.logger.error(f"Error searching with {retriever.__name__}: {str(e)}")
+            return []
+            
+    async def _extract_content(self, results):
+        """
+        Extract content from search results using the browser manager.
+        
+        Args:
+            results: Search results
+            
+        Returns:
+            list: Extracted content
+        """
+        self.logger.info(f"Extracting content from {len(results)} search results")
+        
+        # Get the URLs from the search results
+        urls = []
+        for result in results:
+            if isinstance(result, dict) and "href" in result:
+                urls.append(result["href"])
+        
+        # Skip if no URLs found
+        if not urls:
+            return []
+            
+        # Make sure we don't visit URLs we've already visited
+        new_urls = [url for url in urls if url not in self.researcher.visited_urls]
+        
+        # Return empty if no new URLs
+        if not new_urls:
+            return []
+            
+        # Scrape the content from the URLs
+        scraped_content = await self.researcher.scraper_manager.browse_urls(new_urls)
+        
+        # Add the URLs to visited_urls
+        self.researcher.visited_urls.update(new_urls)
+        
+        return scraped_content
+        
+    async def _summarize_content(self, query, content):
+        """
+        Summarize the extracted content.
+        
+        Args:
+            query: The search query
+            content: The extracted content
+            
+        Returns:
+            str: Summarized content
+        """
+        self.logger.info(f"Summarizing content for query: {query}")
+        
+        # Skip if no content
+        if not content:
+            return ""
+            
+        # Summarize the content using the context manager
+        summary = await self.researcher.context_manager.get_similar_content_by_query(
+            query, content
+        )
+        
+        return summary
+        
+    async def _update_search_progress(self, current, total):
+        """
+        Update the search progress.
+        
+        Args:
+            current: Current number of sub-queries processed
+            total: Total number of sub-queries
+        """
+        if self.researcher.verbose and self.researcher.websocket:
+            progress = int((current / total) * 100)
+            await stream_output(
+                "logs",
+                "research_progress",
+                f"📊 Research Progress: {progress}%",
+                self.researcher.websocket,
+                True,
+                {
+                    "current": current,
+                    "total": total,
+                    "progress": progress
+                }
+            )
