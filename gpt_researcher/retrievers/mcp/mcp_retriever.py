@@ -46,9 +46,15 @@ class MCPRetriever:
        When "mcp" is specified alongside other retrievers (e.g., "mcp,tavily"),
        both retrievers run in parallel, and their results are combined.
        
-    In either case, the MCP server and tool configuration must be explicitly
-    provided via headers or environment variables. There is no default MCP
-    server configuration.
+    Multiple MCP servers:
+    
+    The retriever supports connecting to multiple MCP servers in parallel. When
+    multiple server configurations are provided, the retriever queries all servers
+    and combines their results.
+    
+    Server configurations are expected in headers as follows:
+    - Single server: mcp_server_command, mcp_server_args, etc.
+    - Multiple servers: mcp1_server_command, mcp1_server_args, mcp2_server_command, etc.
     """
 
     def __init__(
@@ -88,8 +94,7 @@ class MCPRetriever:
             websocket: WebSocket for stream logging.
         
         Note:
-            Following MCP best practices, this retriever doesn't accept static tool arguments.
-            Instead, it dynamically generates appropriate arguments for each MCP tool call
+            Tool arguments are dynamically generated for each MCP tool call
             based on the query context using the LLM provider.
         """
         self.query = query
@@ -100,81 +105,197 @@ class MCPRetriever:
         # Extract websocket from headers if available
         if self.headers.get("websocket") and not self.websocket:
             self.websocket = self.headers.get("websocket")
-        
-        # MCP server configuration
-        self.server_name = server_name or self.headers.get("mcp_server_name")
-        self.server_command = server_command or self.headers.get("mcp_server_command")
-        self.server_args = server_args or (
-            self.headers.get("mcp_server_args", "").split() if self.headers.get("mcp_server_args") else []
-        )
-        self.server_env = server_env or {}
-        
-        # Get environment variables from headers
-        for key, value in self.headers.items():
-            if key.startswith("mcp_env_"):
-                env_name = key[8:]  # Remove 'mcp_env_' prefix
-                self.server_env[env_name] = value
-        
-        # Resource or tool configuration
-        self.resource_uri_template = resource_uri_template or self.headers.get("mcp_resource_uri")
-        self.tool_name = tool_name or self.headers.get("mcp_tool_name")
-                
-        # Connection configuration
-        self.connection_url = connection_url or self.headers.get("mcp_connection_url")
-        self.connection_token = connection_token or self.headers.get("mcp_connection_token")
-        
-        # Auto-detect connection type from URL if provided
-        if self.connection_url:
-            if self.connection_url.startswith(("ws://", "wss://")):
-                self.connection_type = "websocket"
-            elif self.connection_url.startswith(("http://", "https://")):
-                self.connection_type = "http"
-            else:
-                # Use specified connection type or default to stdio
-                self.connection_type = connection_type or self.headers.get("mcp_connection_type", "stdio")
-        else:
-            # No URL, use specified connection type or default to stdio
-            self.connection_type = connection_type or self.headers.get("mcp_connection_type", "stdio")
             
+        # Configure LLM-based argument generation and tool selection
+        self.use_auto_tool_selection = os.getenv("MCP_AUTO_TOOL_SELECTION", "false").lower() in ["true", "1", "yes"]
+        self.llm_provider = llm_provider
+        
         # Check if MCP is installed
         if not HAS_MCP:
             logger.warning(
                 "The MCP Python package is not installed. Install it with 'pip install mcp' to use the MCP retriever."
             )
             self._stream_log("🔌 MCP package not installed. Install with 'pip install mcp'.")
-        # Check if remote MCP support is available
-        elif self.connection_type in ["websocket", "http"] and not HAS_REMOTE_MCP:
-            logger.warning(
-                f"The MCP Python package does not support {self.connection_type} connections. "
-                "Make sure you have the latest version installed."
-            )
-            self._stream_log(f"🔌 MCP package doesn't support {self.connection_type} connections. Update your MCP package.")
-            
-        # Configure LLM-based argument generation and tool selection
-        self.use_auto_tool_selection = os.getenv("MCP_AUTO_TOOL_SELECTION", "false").lower() in ["true", "1", "yes"]
-        self.llm_provider = llm_provider
+        # Check if remote MCP support is available for required connection types
+        elif not self._check_remote_mcp_support():
+            pass  # Warning logged in _check_remote_mcp_support method
         
-        # If llm_provider is not provided, try to get it from the global config
-        if not self.llm_provider:
-            try:
-                from gpt_researcher.config import Config
-                cfg = Config()
-                from gpt_researcher.llm_provider import GenericLLMProvider
-                self.llm_provider = GenericLLMProvider(cfg)
-            except Exception as e:
-                logger.warning(f"Failed to initialize LLM provider for argument generation: {e}")
+        # Discover server configurations (including multiple servers if present)
+        self.server_configs = self._discover_server_configs()
         
         # Log initialization
         self._stream_log(f"🔧 Initializing MCP retriever for query: {self.query}")
-        if self.server_command:
-            self._stream_log(f"🔧 MCP server command: {self.server_command} {' '.join(self.server_args)}")
-        elif self.connection_url:
-            self._stream_log(f"🔧 MCP server URL: {self.connection_url} (via {self.connection_type})")
+        self._stream_log(f"🔧 Found {len(self.server_configs)} MCP server configurations")
+        
+        for i, config in enumerate(self.server_configs):
+            if config.get("server_command"):
+                self._stream_log(f"🔧 MCP server {i+1}: {config['server_command']} {' '.join(config.get('server_args', []))}")
+            elif config.get("connection_url"):
+                self._stream_log(f"🔧 MCP server {i+1}: {config['connection_url']} (via {config.get('connection_type', 'stdio')})")
         
         if self.use_auto_tool_selection:
             self._stream_log("🔍 Auto tool selection is enabled")
-        if self.tool_name:
-            self._stream_log(f"🔧 Configured to use tool: {self.tool_name}")
+
+    def _check_remote_mcp_support(self) -> bool:
+        """Check if remote MCP connections are supported."""
+        # Gather all connection types across all potential servers
+        connection_types = set()
+        
+        # Check unprefixed connection type
+        if connection_type := self.headers.get("mcp_connection_type"):
+            connection_types.add(connection_type)
+            
+        # Check prefixed connection types (mcp1_, mcp2_, etc.)
+        for key in self.headers:
+            if key.startswith("mcp") and "_connection_type" in key and key != "mcp_connection_type":
+                if connection_type := self.headers.get(key):
+                    connection_types.add(connection_type)
+        
+        # Check URLs in headers that might imply connection types
+        for key, value in self.headers.items():
+            if "_connection_url" in key and value:
+                if value.startswith(("ws://", "wss://")):
+                    connection_types.add("websocket")
+                elif value.startswith(("http://", "https://")):
+                    connection_types.add("http")
+        
+        # Check if any remote connection types are needed but not supported
+        remote_types = {"websocket", "http"} & connection_types
+        if remote_types and not HAS_REMOTE_MCP:
+            logger.warning(
+                f"The MCP Python package does not support {', '.join(remote_types)} connections. "
+                "Make sure you have the latest version installed."
+            )
+            self._stream_log(f"🔌 MCP package doesn't support {', '.join(remote_types)} connections. Update your MCP package.")
+            return False
+            
+        return True
+
+    def _discover_server_configs(self) -> List[Dict[str, Any]]:
+        """
+        Discover all MCP server configurations from headers.
+        
+        This method supports both single server configuration (mcp_server_command)
+        and multiple server configurations (mcp1_server_command, mcp2_server_command, etc.)
+        
+        Returns:
+            List[Dict[str, Any]]: List of server configuration dictionaries.
+        """
+        configs = []
+        
+        # Process prefix-based configurations (mcp1_, mcp2_, etc.)
+        prefix_configs = {}
+        for key, value in self.headers.items():
+            # Skip non-MCP headers
+            if not key.startswith("mcp"):
+                continue
+                
+            # Extract server index and parameter name
+            parts = key.split("_", 2)
+            if len(parts) < 2:
+                continue
+                
+            # Handle case where there's a numeric prefix like mcp1_, mcp2_
+            prefix = parts[0]
+            if len(prefix) > 3 and prefix.startswith("mcp") and prefix[3:].isdigit():
+                index = prefix[3:]  # Extract the numeric part
+                param_name = "_".join(parts[1:])  # Join the rest as parameter name
+                
+                # Initialize server config if needed
+                if index not in prefix_configs:
+                    prefix_configs[index] = {}
+                    
+                # Add parameter to server config
+                prefix_configs[index][param_name] = value
+        
+        # Convert prefix configs to server configs
+        for index, params in prefix_configs.items():
+            config = self._create_server_config(params)
+            if config:
+                configs.append(config)
+        
+        # Check for a traditional single server configuration without numeric prefix
+        single_config = {}
+        for key, value in self.headers.items():
+            if key.startswith("mcp_") and not any(c.isdigit() for c in key.split("_")[0]):
+                param_name = key[4:]  # Remove 'mcp_' prefix
+                single_config[param_name] = value
+        
+        # Add the single server config if it doesn't overlap with prefix configs
+        if single_config:
+            config = self._create_server_config(single_config)
+            if config:
+                configs.append(config)
+        
+        # If no configs found in headers, use the constructor parameters if available
+        if not configs and (self.server_command or self.connection_url):
+            config = {
+                "server_name": server_name,
+                "server_command": server_command,
+                "server_args": server_args or [],
+                "server_env": server_env or {},
+                "resource_uri_template": resource_uri_template,
+                "tool_name": tool_name,
+                "connection_type": connection_type,
+                "connection_url": connection_url,
+                "connection_token": connection_token,
+            }
+            
+            # Remove None values
+            config = {k: v for k, v in config.items() if v is not None}
+            
+            if config:
+                configs.append(config)
+        
+        return configs
+
+    def _create_server_config(self, params: Dict[str, str]) -> Dict[str, Any]:
+        """
+        Create a server configuration from parameters.
+        
+        Args:
+            params: Dictionary of parameter key-value pairs.
+            
+        Returns:
+            Dict[str, Any]: Server configuration, or None if invalid.
+        """
+        # Skip if no server command or connection URL
+        if not params.get("server_command") and not params.get("connection_url"):
+            return None
+            
+        config = {}
+        
+        # Process standard parameters
+        for key, value in params.items():
+            # Skip env parameters, will handle separately
+            if key.startswith("env_"):
+                continue
+                
+            # Handle server_args as a list
+            if key == "server_args":
+                config[key] = value.split() if isinstance(value, str) else value
+            else:
+                config[key] = value
+        
+        # Process environment variables
+        server_env = {}
+        for key, value in params.items():
+            if key.startswith("env_"):
+                env_name = key[4:]  # Remove 'env_' prefix
+                server_env[env_name] = value
+                
+        if server_env:
+            config["server_env"] = server_env
+            
+        # Auto-detect connection type from URL if not explicitly set
+        if config.get("connection_url") and not config.get("connection_type"):
+            url = config["connection_url"]
+            if url.startswith(("ws://", "wss://")):
+                config["connection_type"] = "websocket"
+            elif url.startswith(("http://", "https://")):
+                config["connection_type"] = "http"
+                
+        return config
 
     async def _stream_log(self, message: str, data: Any = None):
         """Stream a log message to the websocket if available."""
@@ -248,389 +369,474 @@ class MCPRetriever:
                 logger.warning("No tools available on the MCP server")
                 await self._stream_log("⚠️ No tools available on the MCP server")
                 return None
-                
-            # Log available tools
-            tool_names = [t.name for t in tools]
-            await self._stream_log(f"🔍 Found {len(tools)} available tools", tool_names)
-                
+
+            # If there's only one tool, use it
             if len(tools) == 1:
-                # If only one tool is available, use it
-                await self._stream_log(f"🔧 Auto-selected the only available tool: {tools[0].name}")
+                await self._stream_log(f"✓ Using the only available tool: {tools[0].name}")
                 return tools[0]
                 
-            # Use LLM to select the most appropriate tool
+            # Format tool descriptions for LLM
             tool_descriptions = "\n".join([
-                f"- {t.name}: {getattr(t, 'description', 'No description')}" 
-                for t in tools
+                f"Tool: {tool.name}\n"
+                f"Description: {tool.description}\n"
+                f"Arguments: {', '.join([param.name + (' (required)' if param.required else '') for param in tool.parameters])}\n"
+                for tool in tools
             ])
             
+            # Generate prompt for tool selection
             prompt = f"""
-You are helping to select the most appropriate tool to answer a research query.
+Given the following MCP tools and a research query, select the most appropriate tool for obtaining relevant information.
 
-Query: {query}
-
-Available MCP tools:
+AVAILABLE TOOLS:
 {tool_descriptions}
 
-Which ONE tool would be most appropriate to use for this query? 
-Return only the exact tool name with no additional text or explanation.
+RESEARCH QUERY:
+{query}
+
+Return only the name of the single most appropriate tool (exactly as written above) and nothing else.
 """
+            # Call LLM to select the best tool
+            tool_name = await self._call_llm(prompt)
+            tool_name = tool_name.strip()
             
-            await self._stream_log("🧠 Using LLM to select the best tool for the query")
-            response = await self._call_llm(prompt)
-            selected_tool_name = response.strip()
+            # Find the selected tool
+            selected_tool = next((tool for tool in tools if tool.name == tool_name), None)
             
-            # Find the tool in the available tools
-            tool = next((t for t in tools if t.name == selected_tool_name), None)
-            
-            if tool:
-                logger.info(f"Auto-selected MCP tool: {tool.name}")
-                await self._stream_log(f"✅ Auto-selected tool: {tool.name}")
-                return tool
+            if selected_tool:
+                await self._stream_log(f"✓ Selected tool: {selected_tool.name}")
+                return selected_tool
             else:
-                # If no matching tool found, use the first one
-                logger.warning(f"Could not find tool '{selected_tool_name}', using first available tool")
-                await self._stream_log(f"⚠️ Could not find tool '{selected_tool_name}', using {tools[0].name} instead")
+                # Fallback to the first tool if LLM selection failed
+                await self._stream_log(f"⚠️ Could not find tool '{tool_name}', using first available tool: {tools[0].name}")
                 return tools[0]
                 
         except Exception as e:
             logger.error(f"Error selecting MCP tool: {e}")
-            await self._stream_log(f"❌ Error selecting MCP tool: {str(e)}")
+            await self._stream_log(f"❌ Error selecting tool: {str(e)}")
             return None
 
     async def _generate_tool_arguments(self, tool: Any, query: str) -> Dict[str, Any]:
         """
-        Generate appropriate arguments for an MCP tool using LLM.
-        
-        In line with MCP protocol design, this method dynamically generates
-        parameters for MCP tools based on the current query context, rather
-        than using static predefined arguments. This allows the LLM to adapt
-        the parameters based on the specific research needs.
+        Generate arguments for an MCP tool using the LLM.
         
         Args:
-            tool: The tool definition from the MCP server.
-            query (str): The search query.
+            tool: The MCP tool definition.
+            query: The search query.
             
         Returns:
-            Dict[str, Any]: Dynamically generated arguments for the tool.
+            Dict[str, Any]: The generated arguments.
         """
-        # If tool is not provided, return minimal default args
-        if not tool:
-            return {"query": self.query} if self.query else {}
-            
         try:
-            # Extract parameter information from the tool
-            parameters = getattr(tool, "parameters", [])
-            
-            if not parameters:
-                # If no parameters defined, just use query as default
-                await self._stream_log(f"ℹ️ Tool {tool.name} has no parameters, using query as default")
-                return {"query": self.query} if self.query else {}
-                
-            # Create parameter information string
-            param_info = "\n".join([
-                f"- {p.name} ({getattr(p, 'type', 'string')}): {getattr(p, 'description', 'No description')}" 
-                for p in parameters
+            # Format parameter descriptions for LLM
+            param_descriptions = "\n".join([
+                f"- {param.name}: {param.description} (Type: {param.type}, Required: {param.required}, Default: {getattr(param, 'default', 'None')})"
+                for param in tool.parameters
             ])
             
-            param_names = [p.name for p in parameters]
-            await self._stream_log(f"🔍 Generating arguments for {len(parameters)} parameters", param_names)
-            
-            # Create prompt for LLM
+            # Generate prompt for argument generation
             prompt = f"""
-You are generating arguments for an MCP tool that will be used to answer a research query.
+Generate valid arguments for an MCP tool based on the research query and tool definition.
 
-Query: {query}
+TOOL INFORMATION:
+Name: {tool.name}
+Description: {tool.description}
 
-Tool: {tool.name}
-Tool Description: {getattr(tool, 'description', 'No description')}
+PARAMETERS:
+{param_descriptions}
 
-Parameters:
-{param_info}
+RESEARCH QUERY:
+{query}
 
-Generate appropriate values for these parameters to best answer the query.
-Return ONLY a valid JSON object with parameter names and values, nothing else.
+Generate appropriate values for all required parameters and any optional parameters that would help the tool provide useful results.
+Return a JSON object where keys are parameter names and values are appropriate parameter values.
+Only include parameters that are defined for this tool.
 """
-            
             # Call LLM to generate arguments
-            response = await self._call_llm(prompt)
+            args_text = await self._call_llm(prompt)
             
+            # Parse the JSON response
             try:
-                # Parse the JSON response
-                generated_args = json.loads(response)
-                
-                logger.info(f"Generated arguments for tool {tool.name}: {generated_args}")
-                await self._stream_log(f"✅ Generated arguments for tool {tool.name}", generated_args)
-                return generated_args
-            except Exception as e:
-                logger.warning(f"Failed to parse LLM-generated arguments: {e}. Using query as default argument.")
-                await self._stream_log(f"⚠️ Failed to parse LLM-generated arguments: {e}. Using query as default.")
-                return {"query": self.query} if self.query else {}
-                
+                args = json.loads(args_text)
+            except json.JSONDecodeError:
+                # Try to extract JSON from text
+                import re
+                json_match = re.search(r"{.*}", args_text, re.DOTALL)
+                if json_match:
+                    args = json.loads(json_match.group(0))
+                else:
+                    await self._stream_log("⚠️ Failed to parse LLM-generated arguments as JSON, using empty arguments")
+                    args = {}
+            
+            # Validate arguments against tool parameters
+            valid_args = {}
+            for param in tool.parameters:
+                if param.name in args:
+                    valid_args[param.name] = args[param.name]
+                elif param.required:
+                    # For required parameters, use a reasonable default based on the query
+                    if param.type == "string" and param.name.lower() in ["query", "search", "q", "input", "text"]:
+                        valid_args[param.name] = query
+                    elif param.type == "integer" and param.name.lower() in ["max_results", "limit", "count"]:
+                        valid_args[param.name] = 10
+                    else:
+                        await self._stream_log(f"⚠️ Missing required parameter '{param.name}' for tool '{tool.name}'")
+            
+            await self._stream_log(f"✓ Generated arguments for tool '{tool.name}': {json.dumps(valid_args)}")
+            return valid_args
+            
         except Exception as e:
-            logger.error(f"Error generating arguments: {e}")
+            logger.error(f"Error generating tool arguments: {e}")
             await self._stream_log(f"❌ Error generating arguments: {str(e)}")
-            return {"query": self.query} if self.query else {}
+            
+            # Fallback: use query for anything that looks like a query parameter
+            fallback_args = {}
+            for param in tool.parameters:
+                if param.required and param.type == "string" and param.name.lower() in ["query", "search", "q", "input", "text"]:
+                    fallback_args[param.name] = query
+                elif param.required and param.type == "integer" and param.name.lower() in ["max_results", "limit", "count"]:
+                    fallback_args[param.name] = 10
+            
+            await self._stream_log(f"⚠️ Using fallback arguments: {json.dumps(fallback_args)}")
+            return fallback_args
 
-    async def _connect_to_server(self) -> Tuple[ClientSession, Any]:
+    async def _connect_to_server(self, server_config: Dict[str, Any]) -> Tuple[Optional[ClientSession], Any]:
         """
-        Connect to an MCP server and return a session.
+        Connect to an MCP server using the specified configuration.
         
+        Args:
+            server_config: Server configuration dictionary.
+            
         Returns:
-            Tuple[ClientSession, Any]: The MCP client session and additional context
+            Tuple[Optional[ClientSession], Any]: The MCP session and server details, or (None, None) on failure.
         """
         if not HAS_MCP:
-            raise ImportError("The MCP Python package is not installed. Install it with 'pip install mcp'.")
-        
-        await self._stream_log(f"🔌 Connecting to MCP server via {self.connection_type}")
-        
-        # Use the appropriate connection method based on connection_type
-        if self.connection_type == "websocket":
-            if not HAS_REMOTE_MCP:
-                raise ImportError("WebSocket connection requires mcp package with websocket support. Update your mcp package.")
+            await self._stream_log("❌ MCP package not installed, cannot connect to server")
+            return None, None
             
-            if not self.connection_url:
-                raise ValueError("WebSocket connection requires a URL. Set the 'mcp_connection_url' header.")
-            
-            # Connect to the WebSocket server
-            await self._stream_log(f"🔌 Connecting to WebSocket server at {self.connection_url}")
-            read_stream, write_stream = await websocket_client(self.connection_url, token=self.connection_token)
-            
-        elif self.connection_type == "http":
-            if not HAS_REMOTE_MCP:
-                raise ImportError("HTTP connection requires mcp package with HTTP support. Update your mcp package.")
-            
-            if not self.connection_url:
-                raise ValueError("HTTP connection requires a URL. Set the 'mcp_connection_url' header.")
-            
-            # Connect to the HTTP server
-            await self._stream_log(f"🔌 Connecting to HTTP server at {self.connection_url}")
-            read_stream, write_stream = await http_client(self.connection_url, token=self.connection_token)
-            
-        else:  # Default to stdio
-            if not self.server_command:
-                raise ValueError("No MCP server command specified. Set the 'mcp_server_command' header.")
-            
-            # Set up server parameters
-            server_params = StdioServerParameters(
-                command=self.server_command,
-                args=self.server_args,
-                env=self.server_env,
-            )
-            
-            # Connect to the server
-            await self._stream_log(f"🔌 Starting MCP server process: {self.server_command} {' '.join(self.server_args)}")
-            read_stream, write_stream = await stdio_client(server_params)
-        
-        # Create a client session
-        session = ClientSession(read_stream, write_stream)
-        
-        # Initialize the session
-        await self._stream_log("🔌 Initializing MCP session")
-        await session.initialize()
-        await self._stream_log("✅ MCP session initialized successfully")
-        
-        return session, None
-
-    async def _get_data_from_resource(self, session: ClientSession) -> List[Dict[str, str]]:
-        """
-        Retrieve data from an MCP resource.
-        
-        Args:
-            session (ClientSession): The active MCP session
-            
-        Returns:
-            List[Dict[str, str]]: The search results formatted for GPT Researcher
-        """
-        if not self.resource_uri_template:
-            return []
-        
-        # Format the resource URI with the query if needed
-        resource_uri = self.resource_uri_template
-        if "{query}" in resource_uri:
-            resource_uri = resource_uri.replace("{query}", self.query)
-        
         try:
-            # Read the resource
-            await self._stream_log(f"📚 Reading resource from {resource_uri}")
-            content, mime_type = await session.read_resource(resource_uri)
-            await self._stream_log(f"✅ Retrieved resource ({mime_type}, {len(content)} bytes)")
+            connection_type = server_config.get("connection_type", "stdio")
             
-            # Return the content as a search result
-            return [{
-                "href": resource_uri,
-                "body": content
-            }]
-        except Exception as e:
-            logger.error(f"Error reading MCP resource {resource_uri}: {e}")
-            await self._stream_log(f"❌ Error reading MCP resource {resource_uri}: {str(e)}")
-            return []
-
-    async def _get_data_from_tool(self, session: ClientSession) -> List[Dict[str, str]]:
-        """
-        Retrieve data by invoking an MCP tool.
-        
-        Args:
-            session (ClientSession): The active MCP session
-            
-        Returns:
-            List[Dict[str, str]]: The search results formatted for GPT Researcher
-        """
-        try:
-            # If auto tool selection is enabled, select the best tool
-            selected_tool = None
-            if self.use_auto_tool_selection:
-                selected_tool = await self._select_best_mcp_tool(session, self.query)
-                if selected_tool:
-                    self.tool_name = selected_tool.name
+            if connection_type == "websocket":
+                if not HAS_REMOTE_MCP:
+                    await self._stream_log("❌ MCP WebSocket support not available")
+                    return None, None
+                    
+                connection_url = server_config.get("connection_url")
+                if not connection_url:
+                    await self._stream_log("❌ Missing WebSocket URL")
+                    return None, None
+                    
+                await self._stream_log(f"🔌 Connecting to MCP server via WebSocket: {connection_url}")
                 
-            # If no tool name is available, can't proceed
-            if not self.tool_name:
-                logger.error("No tool name specified and auto tool selection failed")
-                await self._stream_log("❌ No tool name specified and auto tool selection failed")
+                # Connect using WebSocket
+                headers = {}
+                if token := server_config.get("connection_token"):
+                    headers["Authorization"] = f"Bearer {token}"
+                    
+                read, write, _ = await websocket_client(connection_url, headers=headers)
+                session = ClientSession(read, write)
+                await session.initialize()
+                
+                return session, {"connection_type": "websocket", "url": connection_url}
+                
+            elif connection_type == "http":
+                if not HAS_REMOTE_MCP:
+                    await self._stream_log("❌ MCP HTTP support not available")
+                    return None, None
+                    
+                connection_url = server_config.get("connection_url")
+                if not connection_url:
+                    await self._stream_log("❌ Missing HTTP URL")
+                    return None, None
+                    
+                await self._stream_log(f"🔌 Connecting to MCP server via HTTP: {connection_url}")
+                
+                # Connect using HTTP
+                headers = {}
+                if token := server_config.get("connection_token"):
+                    headers["Authorization"] = f"Bearer {token}"
+                    
+                read, write, _ = await http_client(connection_url, headers=headers)
+                session = ClientSession(read, write)
+                await session.initialize()
+                
+                return session, {"connection_type": "http", "url": connection_url}
+                
+            else:  # Default to stdio
+                server_command = server_config.get("server_command")
+                server_args = server_config.get("server_args", [])
+                server_env = server_config.get("server_env", {})
+                
+                if not server_command:
+                    await self._stream_log("❌ Missing server command")
+                    return None, None
+                    
+                await self._stream_log(f"🔌 Starting MCP server: {server_command} {' '.join(server_args)}")
+                
+                # Create server parameters
+                server_params = StdioServerParameters(
+                    command=server_command,
+                    args=server_args,
+                    env=server_env,
+                )
+                
+                # Connect using stdio
+                read, write = await stdio_client(server_params)
+                session = ClientSession(read, write)
+                await session.initialize()
+                
+                return session, {"connection_type": "stdio", "command": server_command, "args": server_args}
+                
+        except Exception as e:
+            logger.error(f"Error connecting to MCP server: {e}")
+            await self._stream_log(f"❌ Error connecting to MCP server: {str(e)}")
+            return None, None
+
+    async def _get_data_from_resource(self, session: ClientSession, server_config: Dict[str, Any]) -> List[Dict[str, str]]:
+        """
+        Get data from an MCP resource.
+        
+        Args:
+            session: The MCP client session.
+            server_config: Server configuration dictionary.
+            
+        Returns:
+            List[Dict[str, str]]: The retrieved data formatted as search results.
+        """
+        try:
+            resource_uri = server_config.get("resource_uri_template", "").format(query=self.query)
+            if not resource_uri:
+                await self._stream_log("⚠️ No resource URI template specified")
                 return []
                 
-            # Get tool definition if we don't already have it
-            if not selected_tool:
-                await self._stream_log(f"🔍 Looking for tool: {self.tool_name}")
+            await self._stream_log(f"📂 Reading resource: {resource_uri}")
+            
+            content, mime_type = await session.read_resource(resource_uri)
+            
+            # Create a search result format
+            result = [{
+                "title": f"Resource: {resource_uri}",
+                "href": resource_uri,
+                "body": content[:1000] + ("..." if len(content) > 1000 else ""),
+                "content": content,
+                "mime_type": mime_type
+            }]
+            
+            await self._stream_log(f"✓ Retrieved resource: {len(content)} characters, mime type: {mime_type}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error reading MCP resource: {e}")
+            await self._stream_log(f"❌ Error reading resource: {str(e)}")
+            return []
+
+    async def _get_data_from_tool(self, session: ClientSession, server_config: Dict[str, Any]) -> List[Dict[str, str]]:
+        """
+        Get data from an MCP tool.
+        
+        Args:
+            session: The MCP client session.
+            server_config: Server configuration dictionary.
+            
+        Returns:
+            List[Dict[str, str]]: The retrieved data formatted as search results.
+        """
+        try:
+            # Get tool name from config or auto-select
+            tool_name = server_config.get("tool_name")
+            selected_tool = None
+            
+            if tool_name:
+                # Get the tool by name
                 tools = await session.list_tools()
-                selected_tool = next((t for t in tools if t.name == self.tool_name), None)
+                selected_tool = next((t for t in tools if t.name == tool_name), None)
                 
-                if selected_tool:
-                    await self._stream_log(f"✅ Found tool: {self.tool_name}")
-                else:
-                    await self._stream_log(f"❌ Tool not found: {self.tool_name}")
+                if not selected_tool:
+                    await self._stream_log(f"❌ Tool '{tool_name}' not found on the server")
+                    available_tools = [t.name for t in tools]
+                    await self._stream_log(f"Available tools: {', '.join(available_tools) if available_tools else 'none'}")
                     return []
+            else:
+                # Auto-select the best tool
+                selected_tool = await self._select_best_mcp_tool(session, self.query)
                 
+                if not selected_tool:
+                    await self._stream_log("❌ No suitable tool found on the server")
+                    return []
+                    
+                tool_name = selected_tool.name
+            
             # Generate arguments for the tool
             args = await self._generate_tool_arguments(selected_tool, self.query)
             
-            # Call the tool with the generated/provided arguments
-            await self._stream_log(f"🧰 Calling tool: {self.tool_name}", args)
-            result = await session.call_tool(self.tool_name, args)
-            
-            # Log the result type
-            if isinstance(result, list):
-                await self._stream_log(f"✅ Tool returned {len(result)} results")
-            else:
-                await self._stream_log(f"✅ Tool returned a single result")
+            # Call the tool
+            await self._stream_log(f"🔧 Calling tool: {tool_name} with arguments: {json.dumps(args)}")
+            result = await session.call_tool(tool_name, args)
             
             # Process the result based on its type
+            search_results = []
+            
             if isinstance(result, list):
-                # If the result is already a list, ensure each item has href and body
-                search_results = []
+                # If the result is already a list, process each item
                 for item in result:
                     if isinstance(item, dict):
-                        # Convert the item to the expected format
-                        search_result = {
-                            "href": item.get("url", item.get("href", f"mcp://tool/{self.tool_name}")),
-                            "body": item.get("content", item.get("body", str(item)))
-                        }
-                        search_results.append(search_result)
-                    else:
-                        # Simple string or other type
-                        search_results.append({
-                            "href": f"mcp://tool/{self.tool_name}",
-                            "body": str(item)
-                        })
-                return search_results
+                        # Use the item as is if it has required fields
+                        if "title" in item and ("content" in item or "body" in item):
+                            search_result = {
+                                "title": item.get("title", ""),
+                                "href": item.get("href", item.get("url", f"mcp://{tool_name}/{hash(str(item))}")),
+                                "body": item.get("body", item.get("content", str(item))),
+                            }
+                            search_results.append(search_result)
+                        else:
+                            # Create a search result with a generic title
+                            search_result = {
+                                "title": f"Result from {tool_name}",
+                                "href": f"mcp://{tool_name}/{hash(str(item))}",
+                                "body": str(item),
+                            }
+                            search_results.append(search_result)
+            elif isinstance(result, dict):
+                # If the result is a dictionary, use it as a single search result
+                search_result = {
+                    "title": result.get("title", f"Result from {tool_name}"),
+                    "href": result.get("href", result.get("url", f"mcp://{tool_name}")),
+                    "body": result.get("body", result.get("content", str(result))),
+                }
+                search_results.append(search_result)
             else:
-                # For a single result, return it as one item
-                return [{
-                    "href": f"mcp://tool/{self.tool_name}",
-                    "body": str(result)
-                }]
+                # For any other type, convert to string and use as a single search result
+                search_result = {
+                    "title": f"Result from {tool_name}",
+                    "href": f"mcp://{tool_name}",
+                    "body": str(result),
+                }
+                search_results.append(search_result)
+            
+            await self._stream_log(f"✓ Retrieved {len(search_results)} results from tool: {tool_name}")
+            return search_results
+            
         except Exception as e:
-            logger.error(f"Error calling MCP tool {self.tool_name}: {e}")
-            await self._stream_log(f"❌ Error calling MCP tool {self.tool_name}: {str(e)}")
+            logger.error(f"Error calling MCP tool: {e}")
+            await self._stream_log(f"❌ Error calling tool: {str(e)}")
             return []
 
     async def _search_with_mcp(self) -> List[Dict[str, str]]:
         """
-        Perform a search using an MCP server.
+        Search using MCP servers.
         
         Returns:
-            List[Dict[str, str]]: The search results
+            List[Dict[str, str]]: The search results from all MCP servers.
         """
-        try:
-            # Connect to the MCP server
-            session, _ = await self._connect_to_server()
-            
-            try:
-                results = []
-                
-                # If a resource URI is specified, get data from the resource
-                if self.resource_uri_template:
-                    await self._stream_log(f"📚 Retrieving resource using template: {self.resource_uri_template}")
-                    resource_results = await self._get_data_from_resource(session)
-                    results.extend(resource_results)
-                
-                # Get data from tool (with auto-selection if enabled)
-                tool_results = await self._get_data_from_tool(session)
-                results.extend(tool_results)
-                
-                # If no results were found, try to list available resources and tools
-                if not results:
-                    await self._stream_log("⚠️ No results found, listing available resources and tools")
-                    
-                    # Try to list available resources
-                    try:
-                        resources = await session.list_resources()
-                        if resources:
-                            resource_names = [r.name for r in resources]
-                            await self._stream_log(f"📚 Available MCP resources: {len(resources)}", resource_names)
-                            results.append({
-                                "href": "mcp://resources",
-                                "body": f"Available MCP resources: {', '.join(resource_names)}"
-                            })
-                    except Exception as e:
-                        logger.debug(f"Could not list MCP resources: {e}")
-                    
-                    # Try to list available tools
-                    try:
-                        tools = await session.list_tools()
-                        if tools:
-                            tool_names = [t.name for t in tools]
-                            await self._stream_log(f"🧰 Available MCP tools: {len(tools)}", tool_names)
-                            results.append({
-                                "href": "mcp://tools",
-                                "body": f"Available MCP tools: {', '.join(tool_names)}"
-                            })
-                    except Exception as e:
-                        logger.debug(f"Could not list MCP tools: {e}")
-                
-                await self._stream_log(f"✅ MCP search completed, found {len(results)} results")
-                return results
-            finally:
-                # Ensure the session is closed properly
-                await self._stream_log("🔌 Closing MCP session")
-                await session.close()
-        except Exception as e:
-            logger.error(f"Error performing MCP search: {e}")
-            await self._stream_log(f"❌ Error performing MCP search: {str(e)}")
+        if not HAS_MCP:
+            await self._stream_log("❌ MCP package not installed, cannot search")
             return []
+            
+        if not self.server_configs:
+            await self._stream_log("❌ No MCP server configurations found")
+            return []
+            
+        all_results = []
+        
+        # Process each server configuration in parallel
+        tasks = []
+        
+        for server_config in self.server_configs:
+            task = asyncio.create_task(self._search_with_server(server_config))
+            tasks.append(task)
+            
+        # Wait for all tasks to complete
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Process results
+        for result in results:
+            if isinstance(result, list):
+                all_results.extend(result)
+            elif isinstance(result, Exception):
+                logger.error(f"Error in MCP search: {result}")
+                await self._stream_log(f"❌ Error in MCP search: {str(result)}")
+                
+        await self._stream_log(f"✓ Retrieved {len(all_results)} total results from all MCP servers")
+        return all_results
+
+    async def _search_with_server(self, server_config: Dict[str, Any]) -> List[Dict[str, str]]:
+        """
+        Search using a single MCP server.
+        
+        Args:
+            server_config: Server configuration dictionary.
+            
+        Returns:
+            List[Dict[str, str]]: The search results from this server.
+        """
+        session, server_details = await self._connect_to_server(server_config)
+        
+        if not session:
+            return []
+            
+        try:
+            # Log server connection
+            server_name = server_config.get("server_name", "MCP Server")
+            if server_details.get("connection_type") == "stdio":
+                await self._stream_log(f"✓ Connected to {server_name} via stdio: {server_details.get('command')}")
+            else:
+                await self._stream_log(f"✓ Connected to {server_name} via {server_details.get('connection_type')}: {server_details.get('url')}")
+            
+            results = []
+            
+            # Try to get data from a resource if configured
+            if server_config.get("resource_uri_template"):
+                resource_results = await self._get_data_from_resource(session, server_config)
+                results.extend(resource_results)
+                
+            # Try to get data from a tool
+            tool_results = await self._get_data_from_tool(session, server_config)
+            results.extend(tool_results)
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error searching with MCP server: {e}")
+            await self._stream_log(f"❌ Error searching with MCP server: {str(e)}")
+            return []
+            
+        finally:
+            # Close the session
+            if session:
+                await session.close()
 
     def search(self, max_results: int = 10) -> List[Dict[str, str]]:
         """
-        Perform a search using an MCP server.
+        Perform a search using MCP.
         
         Args:
-            max_results (int, optional): Maximum number of results to return.
+            max_results: Maximum number of results to return.
             
         Returns:
-            List[Dict[str, str]]: The search results
+            List[Dict[str, str]]: The search results.
         """
         if not HAS_MCP:
-            logger.error("The MCP Python package is not installed. Install it with 'pip install mcp'.")
+            logger.warning("MCP package not installed, cannot search")
             return []
-        
+            
         try:
-            # Run the asynchronous search function
             loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # Create a new event loop if none exists
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            
+        try:
+            # Run the MCP search
             results = loop.run_until_complete(self._search_with_mcp())
             
-            # Limit results if needed
-            return results[:max_results] if max_results > 0 else results
+            # Limit the number of results
+            if len(results) > max_results:
+                logger.info(f"Limiting {len(results)} MCP results to {max_results}")
+                results = results[:max_results]
+                
+            return results
+            
         except Exception as e:
-            logger.error(f"Error performing MCP search: {e}")
+            logger.error(f"Error in MCP search: {e}")
             return [] 
