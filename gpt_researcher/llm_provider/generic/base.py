@@ -214,27 +214,27 @@ class GenericLLMProvider:
         return cls(llm, chat_log, verbose=verbose)
 
 
-    async def get_chat_response(self, messages, stream, websocket=None):
+    async def get_chat_response(self, messages, stream, websocket=None, **kwargs):
         if not stream:
             # Getting output from the model chain using ainvoke for asynchronous invoking
-            output = await self.llm.ainvoke(messages)
+            output = await self.llm.ainvoke(messages, **kwargs)
 
             res = output.content
 
         else:
-            res = await self.stream_response(messages, websocket)
+            res = await self.stream_response(messages, websocket, **kwargs)
 
         if self.chat_logger:
             await self.chat_logger.log_request(messages, res)
 
         return res
 
-    async def stream_response(self, messages, websocket=None):
+    async def stream_response(self, messages, websocket=None, **kwargs):
         paragraph = ""
         response = ""
 
         # Streaming the response using the chain astream method from langchain
-        async for chunk in self.llm.astream(messages):
+        async for chunk in self.llm.astream(messages, **kwargs):
             content = chunk.content
             if content is not None:
                 response += content
