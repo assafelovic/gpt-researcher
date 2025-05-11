@@ -69,10 +69,7 @@ class FireCrawl:
         """
 
         try:
-            response: dict[str, Any] = self.firecrawl.scrape_url(
-                url=self.link,
-                params={"formats": ["markdown"]},
-            )
+            response = self.firecrawl.scrape_url(url=self.link, formats=["markdown"])
 
             # Check if the page has been scraped success
             if "error" in response:
@@ -83,8 +80,8 @@ class FireCrawl:
                 return "", [], ""
 
             # Extract the content (markdown) and title from FireCrawl response
-            content: str = response["markdown"]
-            title: str = response["metadata"]["title"]
+            content = response.data.markdown
+            title = response["metadata"]["title"]
 
             # Parse the HTML content of the response to create a BeautifulSoup object for the utility functions
             assert self.session is not None

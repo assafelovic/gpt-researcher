@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { FC, useRef } from "react";
+import React, { FC, useRef } from "react";
 import TypeAnimation from "../../TypeAnimation";
 
 type TInputAreaProps = {
@@ -34,16 +34,16 @@ const InputArea: FC<TInputAreaProps> = ({
   reset,
   isStopped,
 }) => {
-  // Hooks and non-conditional logic must be at the top level
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const placeholder = handleSecondary
-    ? "Any questions about this report?"
-    : "What would you like to research next?";
-
   // Only show input if not stopped
   if (isStopped) {
     return null;
   }
+
+  const placeholder = handleSecondary
+    ? "Any questions about this report?"
+    : "What would you like me to research next?";
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const resetHeight = () => {
     if (textareaRef.current) {
@@ -79,7 +79,9 @@ const InputArea: FC<TInputAreaProps> = ({
     setPromptValue(target.value);
   };
 
-  return (
+  return handleSecondary ? (
+    <span></span>
+  ) : (
     <form
       className="mx-auto flex pt-2 pb-2 w-full items-center justify-between rounded-lg border bg-white px-3 shadow-[2px_2px_38px_0px_rgba(0,0,0,0.25),0px_-2px_4px_0px_rgba(0,0,0,0.25)_inset,1px_2px_4px_0px_rgba(0,0,0,0.25)_inset]"
       onSubmit={(e) => {
@@ -96,18 +98,18 @@ const InputArea: FC<TInputAreaProps> = ({
         ref={textareaRef}
         className="focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal]
         text-[#1B1B16]/30 text-black outline-none focus-visible:ring-0 focus-visible:ring-offset-0
-        sm:text-xl min-h-[3em] resize-none"
+        sm:text-xl min-h-[4em] resize-none"
         disabled={disabled}
         value={promptValue}
         required
-        rows={2}
+        rows={3}
         onKeyDown={handleKeyDown}
         onChange={handleTextareaChange}
       />
       <button
         disabled={disabled}
         type="submit"
-        className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-[linear-gradient(154deg,#1B1B16_23.37%,#565646_91.91%)] disabled:pointer-events-none disabled:opacity-75"
+        className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[3px] bg-teal-500 hover:bg-gradient-to-br hover:from-[#0cdbb6] hover:via-[#1fd0f0] hover:to-[#06dbee] transition-all duration-300 disabled:opacity-75 disabled:hover:bg-teal-500/75"
       >
         {disabled && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -115,14 +117,15 @@ const InputArea: FC<TInputAreaProps> = ({
           </div>
         )}
 
-        <Image
-          unoptimized
-          src={"/img/arrow-narrow-right.svg"}
-          alt="search"
-          width={24}
-          height={24}
-          className={disabled ? "invisible" : ""}
-        />
+        <div className="relative p-2 cursor-pointer">
+          <img
+            src={"/img/arrow-narrow-right.svg"}
+            alt="search"
+            width={24}
+            height={24}
+            className={`${disabled ? "invisible" : ""} transition-all duration-300 hover:scale-110 hover:brightness-110 hover:filter hover:drop-shadow-[0_0_3px_rgba(255,255,255,0.7)]`}
+          />
+        </div>
       </button>
     </form>
   );

@@ -43,7 +43,7 @@ class ChiefEditorAgent:
     def _initialize_agents(self):
         return {
             "writer": WriterAgent(self.websocket, self.stream_output, self.headers),
-            "editor": EditorAgent(self.websocket, self.stream_output, self.headers),
+            "editor": EditorAgent(self.websocket, self.stream_output, self.tone, self.headers),
             "research": ResearchAgent(self.websocket, self.stream_output, self.tone, self.headers),
             "publisher": PublisherAgent(self.output_dir, self.websocket, self.stream_output, self.headers),
             "human": HumanAgent(self.websocket, self.stream_output, self.headers)

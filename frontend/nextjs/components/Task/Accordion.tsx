@@ -1,5 +1,7 @@
 // Accordion.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { addTargetBlankToLinks } from '../../helpers/markdownHelper';
+import '../../styles/markdown.css'; // Import global markdown styles
 
 type ProcessedData = {
   field: string;
@@ -20,6 +22,30 @@ interface AccordionProps {
 const plainTextFields = ['task', 'sections', 'headers', 'sources', 'research_data'];
 
 const Accordion: React.FC<AccordionProps> = ({ logs }) => {
+  // State to store processed HTML content
+  const [processedLogs, setProcessedLogs] = useState<Log[]>(logs);
+
+  useEffect(() => {
+    // Process any markdown HTML content to add target="_blank" to links
+    if (logs && logs.length > 0) {
+      const newLogs = logs.map(log => {
+        if (log.processedData) {
+          const newProcessedData = log.processedData.map(data => {
+            if (data.isMarkdown && typeof data.htmlContent === 'string') {
+              return {
+                ...data,
+                htmlContent: addTargetBlankToLinks(data.htmlContent)
+              };
+            }
+            return data;
+          });
+          return { ...log, processedData: newProcessedData };
+        }
+        return log;
+      });
+      setProcessedLogs(newLogs);
+    }
+  }, [logs]);
 
   const getLogHeaderText = (log: Log): string => {
     const regex = /📃 Source: (https?:\/\/[^\s]+)/;
@@ -47,58 +73,6 @@ const Accordion: React.FC<AccordionProps> = ({ logs }) => {
               {typeof data.htmlContent === 'object' ? JSON.stringify(data.htmlContent) : data.htmlContent}
             </p>
           )}
-          <style jsx>{`
-            .markdown-content {
-              margin: 0;
-              padding: 0;
-              h1, h2, h3, h4, h5, h6 {
-                font-size: inherit;
-                font-weight: bold;
-                margin-top: 1em;
-                margin-bottom: 0.2em;
-                line-height: 1.2;
-              }
-              h1 {
-                font-size: 2.5em;
-                color: #333;
-              }
-              h2 {
-                font-size: 2em;
-                color: #555;
-              }
-              h3 {
-                font-size: 1.5em;
-                color: #777;
-              }
-              h4 {
-                font-size: 1.2em;
-                color: #999;
-              }
-              ul {
-                list-style-type: none;
-                padding-left: 0;
-                margin-top: 1em;
-                margin-bottom: 1em;
-              }
-              ul > li {
-                margin-bottom: 0.5em;
-              }
-              ul > li > ul {
-                margin-left: 1em;
-                list-style-type: disc;
-              }
-              ul > li > ul > li {
-                margin-bottom: 0.3em;
-              }
-              ul > li > ul > li > ul {
-                margin-left: 1em;
-                list-style-type: circle;
-              }
-              ul > li > ul > li > ul > li {
-                margin-bottom: 0.2em;
-              }
-            }
-          `}</style>
         </div>
       ));
     } else {
@@ -114,7 +88,7 @@ const Accordion: React.FC<AccordionProps> = ({ logs }) => {
 
   return (
     <div id="accordion-collapse" data-accordion="collapse" className="mt-4 bg-gray-900 rounded-lg">
-      {logs.map((log, index) => (
+      {processedLogs.map((log, index) => (
         <div key={index}>
           <h2 id={`accordion-collapse-heading-${index}`}>
             <button

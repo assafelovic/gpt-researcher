@@ -8,8 +8,24 @@
   100% {background-position: 0% 50%;}
 }
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  50% {
+    transform: translateY(-10px) translateX(-15px);
+  }
+  75% {
+    transform: translateY(-25px) translateX(5px);
+  }
+}
+
 html {
   scroll-behavior: smooth;
+  height: 100%;
 }
 
 textarea {
@@ -28,9 +44,52 @@ textarea {
 body {
   font-family: 'Montserrat', sans-serif;
   line-height: 1.6;
-  background-size: 200% 200%;
-  background-image: linear-gradient(170deg, #151A2D, #036f73, #151A2D);
-  /*animation: gradientBG 10s ease infinite;*/
+  margin: 0px !important;
+  min-height: 100%;
+  position: relative;
+  background: #0C111F;
+  overflow-x: hidden;
+}
+
+/* Background gradient orbs - static version */
+body::before {
+  content: "";
+  position: fixed;
+  top: -25%;
+  left: -10%;
+  width: 60%;
+  height: 60%;
+  border-radius: 9999px;
+  background-color: rgba(13, 148, 136, 0.12);
+  filter: blur(120px);
+  z-index: -10;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  bottom: -25%;
+  right: -10%;
+  width: 60%;
+  height: 60%;
+  border-radius: 9999px;
+  background-color: rgba(8, 145, 178, 0.12);
+  filter: blur(120px);
+  z-index: -10;
+}
+
+/* Additional orb */
+.app-container::before {
+  content: "";
+  position: fixed;
+  top: 40%;
+  right: 20%;
+  width: 35%;
+  height: 35%;
+  border-radius: 9999px;
+  background-color: rgba(37, 99, 235, 0.06);
+  filter: blur(80px);
+  z-index: -10;
 }
 
 .landing {
@@ -99,10 +158,6 @@ body {
   }
 }
 
-body {
-  margin: 0px !important;
-}
-
 /* Add these styles for the scrollbar */
 .scrollbar-thin {
   scrollbar-width: thin;
@@ -119,4 +174,45 @@ body {
 
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
+}
+
+/* Sidebar styles */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 40;
+  transition: opacity 0.3s ease;
+}
+
+/* Sidebar backdrop blur */
+.sidebar-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Scrollbar styling for the sidebar */
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+  border-radius: 3px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
+}
+
+/* Ensure sidebar is above other content */
+.sidebar-z-index {
+  z-index: 50;
 }

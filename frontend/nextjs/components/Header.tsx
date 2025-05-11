@@ -1,3 +1,4 @@
+import React from 'react';
 import Image from "next/image";
 
 interface HeaderProps {
@@ -11,15 +12,15 @@ interface HeaderProps {
 const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: HeaderProps) => {
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
-      {/* Original gradient background with blur effect */}
-      <div className="absolute inset-0 backdrop-blur-sm bg-gradient-to-b to-transparent"></div>
+      {/* Pure transparent blur background */}
+      <div className="absolute inset-0 backdrop-blur-sm bg-transparent"></div>
       
       {/* Header container */}
       <div className="container relative h-[60px] px-4 lg:h-[80px] lg:px-0 pt-4 pb-4">
         <div className="flex flex-col items-center">
           {/* Logo/Home link */}
           <a href="/">
-            <Image
+            <img
               src="/img/gptr-logo.png"
               alt="logo"
               width={60}
@@ -34,7 +35,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: Heade
             {loading && !isStopped && (
               <button
                 onClick={onStop}
-                className="flex items-center justify-center px-6 h-8 text-sm text-white bg-red-500 rounded-full hover:bg-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap"
+                className="flex items-center justify-center px-4 sm:px-6 h-9 sm:h-10 text-sm text-white bg-red-500 rounded-full hover:bg-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap min-w-[80px]"
               >
                 Stop
               </button>
@@ -43,7 +44,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: Heade
             {(isStopped || !loading) && showResult && (
               <button
                 onClick={onNewResearch}
-                className="flex items-center justify-center px-6 h-8 text-sm text-white bg-[rgb(168,85,247)] rounded-full hover:bg-[rgb(147,51,234)] transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap"
+                className="flex items-center justify-center px-4 sm:px-6 h-9 sm:h-10 text-sm text-white bg-teal-500 rounded-full hover:bg-teal-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap min-w-[120px]"
               >
                 New Research
               </button>

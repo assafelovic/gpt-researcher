@@ -52,7 +52,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
   const imageComponents = groupedData
     .filter(data => data.type === 'imagesBlock')
     .map((data, index) => (
-      <ImageSection key={`images-${index}`} metadata={data.metadata} />
+      <ImageSection key={`images-${index}-${data.metadata?.length || 0}`} metadata={data.metadata} />
     ));
 
   const initialReport = groupedData.find(data => data.type === 'reportBlock');

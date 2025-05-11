@@ -9,7 +9,7 @@ const SubQuestions: React.FC<SubQuestionsProps> = ({ metadata, handleClickSugges
   return (
     <div className="container flex w-full items-start gap-3 pt-5 pb-2">
       <div className="flex w-fit items-center gap-4">
-        <Image
+        <img
           src={"/img/thinking.svg"}
           alt="thinking"
           width={30}

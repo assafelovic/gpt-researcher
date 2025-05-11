@@ -2,10 +2,15 @@ import json
 import re
 import json_repair
 from ..utils.llm import create_chat_completion
-from ..prompts import auto_agent_instructions
+from ..prompts import PromptFamily
 
 async def choose_agent(
-    query, cfg, parent_query=None, cost_callback: callable = None, headers=None
+    query,
+    cfg,
+    parent_query=None,
+    cost_callback: callable = None,
+    headers=None,
+    prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
 ):
     """
     Chooses the agent automatically
@@ -15,6 +20,7 @@ async def choose_agent(
         query: original query
         cfg: Config
         cost_callback: callback for calculating llm costs
+        prompt_family: Family of prompts
 
     Returns:
         agent: Agent name
@@ -27,7 +33,7 @@ async def choose_agent(
         response = await create_chat_completion(
             model=cfg.smart_llm_model,
             messages=[
-                {"role": "system", "content": f"{auto_agent_instructions()}"},
+                {"role": "system", "content": f"{prompt_family.auto_agent_instructions()}"},
                 {"role": "user", "content": f"task: {query}"},
             ],
             temperature=0.15,

@@ -2,9 +2,11 @@
     0% {
         background-position: 0 50%;
     }
+
     50% {
         background-position: 100% 50%;
     }
+
     100% {
         background-position: 0 50%;
     }
@@ -71,7 +73,10 @@ body {
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
 }
 
-input, select, #output, #reportContainer {
+input,
+select,
+#output,
+#reportContainer {
     background-color: rgba(30, 30, 30, 0.7);
     border: 1px solid rgba(100, 100, 100, 0.3);
     border-radius: 8px;
@@ -80,7 +85,10 @@ input, select, #output, #reportContainer {
     padding: 12px;
 }
 
-input:hover, input:focus, select:hover, select:focus {
+input:hover,
+input:focus,
+select:hover,
+select:focus {
     background-color: rgba(40, 40, 40, 0.8);
     border: 1px solid #9d4edd;
     box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
@@ -97,7 +105,8 @@ input:hover, input:focus, select:hover, select:focus {
     box-shadow: 0 4px 15px rgba(90, 24, 154, 0.3);
 }
 
-.btn-secondary, .btn-action {
+.btn-secondary,
+.btn-action {
     background: rgba(60, 60, 60, 0.8);
     border: 1px solid rgba(157, 78, 221, 0.3);
     border-radius: 30px;
@@ -152,11 +161,13 @@ footer p {
     border: 1px solid rgba(100, 100, 100, 0.2);
 }
 
-.research-output-container, .report-container {
+.research-output-container,
+.report-container {
     position: relative;
 }
 
-.research-output-container h2, .report-container h2 {
+.research-output-container h2,
+.report-container h2 {
     color: #ffffff;
     font-weight: 600;
     font-size: 1.8rem;
@@ -406,7 +417,9 @@ a:hover {
         padding: 20px;
     }
 
-    .btn-primary, .btn-secondary, .btn-action {
+    .btn-primary,
+    .btn-secondary,
+    .btn-action {
         padding: 10px 20px;
         margin-bottom: 10px;
     }

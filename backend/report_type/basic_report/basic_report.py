@@ -26,10 +26,11 @@ class BasicReport:
         self.config_path = config_path
         self.websocket = websocket
         self.headers = headers or {}
+        self.researcher = None
 
     async def run(self):
         # Initialize researcher
-        researcher = GPTResearcher(
+        self.researcher = GPTResearcher(
             query=self.query,
             report_type=self.report_type,
             report_source=self.report_source,
@@ -38,9 +39,10 @@ class BasicReport:
             tone=self.tone,
             config_path=self.config_path,
             websocket=self.websocket,
-            headers=self.headers
+            headers=self.headers,
+            visited_urls=set()  # Initialize visited_urls as an empty set
         )
 
-        await researcher.conduct_research()
-        report = await researcher.write_report()
+        await self.researcher.conduct_research()
+        report = await self.researcher.write_report()
         return report

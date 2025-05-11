@@ -7,7 +7,7 @@ Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `goo
 
 Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `nomic` ,`voyageai` and `bedrock`.
 
-To learn more about support customization options see [here](/gpt-researcher/config).
+To learn more about support customization options see [here](/docs/gpt-researcher/gptr/config).
 
 **Please note**: GPT Researcher is optimized and heavily tested on GPT models. Some other models might run into context limit errors, and unexpected responses.
 Please provide any feedback in our [Discord community](https://discord.gg/DUmbTebB) channel, so we can better improve the experience and performance.
@@ -16,17 +16,17 @@ Below you can find examples for how to configure the various supported LLMs.
 
 ## OpenAI
 
-```bash
+```env
 # set the custom OpenAI API key
 OPENAI_API_KEY=[Your Key]
 
 # specify llms
-FAST_LLM="openai:gpt-4o-mini"
-SMART_LLM="openai:gpt-4o"
-STRATEGIC_LLM="openai:o1-preview"
+FAST_LLM=openai:gpt-4o-mini
+SMART_LLM=openai:gpt-4.1
+STRATEGIC_LLM=openai:o4-mini
 
 # specify embedding
-EMBEDDING="openai:text-embedding-3-small"
+EMBEDDING=openai:text-embedding-3-small
 ```
 
 
@@ -34,28 +34,28 @@ EMBEDDING="openai:text-embedding-3-small"
 
 Create a local OpenAI API using [llama.cpp Server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md#quick-start).
 
-For custom LLM, specify "openai:{your-llm}"
-```bash
+For custom LLM, specify "openai:&#123;your-llm&#125;"
+```env
 # set the custom OpenAI API url
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL=http://localhost:1234/v1
 # set the custom OpenAI API key
-OPENAI_API_KEY="dummy_key"
+OPENAI_API_KEY=dummy_key
 
 # specify custom llms  
-FAST_LLM="openai:your_fast_llm"
-SMART_LLM="openai:your_smart_llm"
-STRATEGIC_LLM="openai:your_strategic_llm"
+FAST_LLM=openai:your_fast_llm
+SMART_LLM=openai:your_smart_llm
+STRATEGIC_LLM=openai:your_strategic_llm
 ```
 
-For custom embedding, set "custom:{your-embedding}"
-```bash
+For custom embedding, set "custom:&#123;your-embedding&#125;"
+```env
 # set the custom OpenAI API url
-OPENAI_BASE_URL="http://localhost:1234/v1"
+OPENAI_BASE_URL=http://localhost:1234/v1
 # set the custom OpenAI API key
-OPENAI_API_KEY="dummy_key"
+OPENAI_API_KEY=dummy_key
 
 # specify the custom embedding model   
-EMBEDDING="custom:your_embedding"
+EMBEDDING=custom:your_embedding
 ```
 
 
@@ -73,7 +73,7 @@ Please then specify the model names/deployment names in your `.env` file.
 
 **Required Precondition** 
 
-- Ypur endpoint can have any valid name.
+- Your endpoint can have any valid name.
 - A model's deployment name *must be the same* as the model name.
 - You need to deploy an *Embedding Model*: To ensure optimal performance, GPT Researcher requires the 'text-embedding-3-large' model. Please deploy this specific model to your Azure Endpoint.
 
@@ -81,34 +81,50 @@ Please then specify the model names/deployment names in your `.env` file.
 
 - Quota increase: You should also request a quota increase especially for the embedding model, as the default quota is not sufficient. 
 
-```bash
+```env
 # set the azure api key and deployment as you have configured it in Azure Portal. There is no default access point unless you configure it yourself!
-AZURE_OPENAI_API_KEY="[Your Key]"
-AZURE_OPENAI_ENDPOINT="https://{your-endpoint}.openai.azure.com/"
-OPENAI_API_VERSION="2024-05-01-preview"
+AZURE_OPENAI_API_KEY=[Your Key]
+AZURE_OPENAI_ENDPOINT=https://&#123;your-endpoint&#125;.openai.azure.com/
+OPENAI_API_VERSION=2024-05-01-preview
 
 # each string is "azure_openai:deployment_name". ensure that your deployment have the same name as the model you use!
-FAST_LLM="azure_openai:gpt-4o-mini" 
-SMART_LLM="azure_openai:gpt-4o"
-STRATEGIC_LLM="azure_openai:o1-preview"
+FAST_LLM=azure_openai:gpt-4o-mini
+SMART_LLM=azure_openai:gpt-4o
+STRATEGIC_LLM=azure_openai:o1-preview
 
 # specify embedding
-EMBEDDING="azure_openai:text-embedding-3-large"
+EMBEDDING=azure_openai:text-embedding-3-large
 ```
 
+Add `langchain-azure-dynamic-sessions` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Ollama
 
 GPT Researcher supports both Ollama LLMs and embeddings. You can choose each or both.
 To use [Ollama](http://www.ollama.com) you can set the following environment variables
 
-```bash
+```env
 OLLAMA_BASE_URL=http://localhost:11434
-FAST_LLM="ollama:llama3"
-SMART_LLM="ollama:llama3"
-STRATEGIC_LLM="ollama:llama3"
+FAST_LLM=ollama:llama3
+SMART_LLM=ollama:llama3
+STRATEGIC_LLM=ollama:llama3
 
-EMBEDDING="ollama:nomic-embed-text"
+EMBEDDING=ollama:nomic-embed-text
+```
+
+Add `langchain-ollama` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
+
+### Granite with Ollama
+
+GPT Researcher has custom prompt formatting for the [Granite family of models](https://ollama.com/search?q=granite). To use
+the right formatting, you can set the following environment variables:
+
+```env
+OLLAMA_BASE_URL=http://localhost:11434
+FAST_LLM=ollama:granite3.3:2b
+SMART_LLM=ollama:granite3.3:8b
+STRATEGIC_LLM=ollama:granite3.3:8b
+PROMPT_FAMILY=granite
 ```
 
 ## Groq
@@ -121,19 +137,21 @@ To leverage Groq in GPT-Researcher, you will need a GroqCloud account and an API
 - Once you are logged in, you can get an API Key here: [https://console.groq.com/keys](https://console.groq.com/keys)
 
 - Once you have an API key, you will need to add it to your `systems environment` using the variable name:
-`GROQ_API_KEY="*********************"`
+`GROQ_API_KEY=*********************`
 
 ### Update env vars
 And finally, you will need to configure the GPT-Researcher Provider and Model variables:
 
-```bash
+```env
 GROQ_API_KEY=[Your Key]
 
 # Set one of the LLM models supported by Groq
-FAST_LLM="groq:Mixtral-8x7b-32768"
-SMART_LLM="groq:Mixtral-8x7b-32768"
-STRATEGIC_LLM="groq:Mixtral-8x7b-32768"
+FAST_LLM=groq:Mixtral-8x7b-32768
+SMART_LLM=groq:Mixtral-8x7b-32768
+STRATEGIC_LLM=groq:Mixtral-8x7b-32768
 ```
+
+Add `langchain-groq` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 __NOTE:__ As of the writing of this Doc (May 2024), the available Language Models from Groq are:
 
@@ -146,141 +164,165 @@ __NOTE:__ As of the writing of this Doc (May 2024), the available Language Model
 ## Anthropic
 
 Refer to Anthropic [Getting started page](https://docs.anthropic.com/en/api/getting-started) to obtain Anthropic API key. Update the corresponding env vars, for example:
-```bash
-ANTHROPIC_API_KEY=[Your key]
-FAST_LLM="anthropic:claude-2.1"
-SMART_LLM="anthropic:claude-3-opus-20240229"
-STRATEGIC_LLM="anthropic:claude-3-opus-20240229"
+```env
+ANTHROPIC_API_KEY=[Your Key]
+FAST_LLM=anthropic:claude-2.1
+SMART_LLM=anthropic:claude-3-opus-20240229
+STRATEGIC_LLM=anthropic:claude-3-opus-20240229
 ```
 
-Anthropic does not offer its own embedding model. 
+Add `langchain-anthropic` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
+
+Anthropic does not offer its own embedding model, therefore, you'll want to either default to the OpenAI embedding model, or find another.
 
 
 ## Mistral AI
 
 Sign up for a [Mistral API key](https://console.mistral.ai/users/api-keys/). 
 Then update the corresponding env vars, for example:
-```bash
-MISTRAL_API_KEY=[Your key]
-FAST_LLM="mistralai:open-mistral-7b"
-SMART_LLM="mistralai:mistral-large-latest"
-STRATEGIC_LLM="mistralai:mistral-large-latest"
+```env
+MISTRAL_API_KEY=[Your Key]
+FAST_LLM=mistralai:open-mistral-7b
+SMART_LLM=mistralai:mistral-large-latest
+STRATEGIC_LLM=mistralai:mistral-large-latest
 
-EMBEDDING="mistralai:mistral-embed"
+EMBEDDING=mistralai:mistral-embed
 ```
 
+Add `langchain-mistralai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Together AI
 [Together AI](https://www.together.ai/) offers an API to query [50+ leading open-source models](https://docs.together.ai/docs/inference-models) in a couple lines of code.
 Then update corresponding env vars, for example:
-```bash
-TOGETHER_API_KEY=[Your key]
-FAST_LLM="together:meta-llama/Llama-3-8b-chat-hf"
-SMART_LLM="together:meta-llama/Llama-3-70b-chat-hf"
-STRATEGIC_LLM="together:meta-llama/Llama-3-70b-chat-hf"
+```env
+TOGETHER_API_KEY=[Your Key]
+FAST_LLM=together:meta-llama/Llama-3-8b-chat-hf
+SMART_LLM=together:meta-llama/Llama-3-70b-chat-hf
+STRATEGIC_LLM=together:meta-llama/Llama-3-70b-chat-hf
 
-EMBEDDING="mistralai:nomic-ai/nomic-embed-text-v1.5"
+EMBEDDING=mistralai:nomic-ai/nomic-embed-text-v1.5
 ```
 
+Add `langchain-together` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## HuggingFace
 
 This integration requires a bit of extra work. Follow [this guide](https://python.langchain.com/v0.1/docs/integrations/chat/huggingface/) to learn more.
 After you've followed the tutorial above, update the env vars:
-```bash
-HUGGINGFACE_API_KEY=[Your key]
-FAST_LLM="huggingface:HuggingFaceH4/zephyr-7b-beta"
-SMART_LLM="huggingface:HuggingFaceH4/zephyr-7b-beta"
-STRATEGIC_LLM="huggingface:HuggingFaceH4/zephyr-7b-beta"
+```env
+HUGGINGFACE_API_KEY=[Your Key]
+FAST_LLM=huggingface:HuggingFaceH4/zephyr-7b-beta
+SMART_LLM=huggingface:HuggingFaceH4/zephyr-7b-beta
+STRATEGIC_LLM=huggingface:HuggingFaceH4/zephyr-7b-beta
 
-EMBEDDING="sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING=huggingface:sentence-transformers/all-MiniLM-L6-v2
 ```
 
+Add `langchain-huggingface` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Google Gemini
 
 Sign up [here](https://ai.google.dev/gemini-api/docs/api-key) for obtaining a Google Gemini API Key and update the following env vars:
-```bash
-GOOGLE_API_KEY=[Your key]
-FAST_LLM="google_genai:gemini-1.5-flash"
-SMART_LLM="google_genai:gemini-1.5-pro"
-STRATEGIC_LLM="google_genai:gemini-1.5-pro"
+```env
+GOOGLE_API_KEY=[Your Key]
+FAST_LLM=google_genai:gemini-1.5-flash
+SMART_LLM=google_genai:gemini-1.5-pro
+STRATEGIC_LLM=google_genai:gemini-1.5-pro
 
-EMBEDDING="google_genai:models/text-embedding-004"
+EMBEDDING=google_genai:models/text-embedding-004
 ```
 
+Add `langchain-google-genai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Google VertexAI
 
-```bash
-FAST_LLM="google_vertexai:gemini-1.5-flash-001"
-SMART_LLM="google_vertexai:gemini-1.5-pro-001"
-STRATEGIC_LLM="google_vertexai:gemini-1.5-pro-001"
+```env
+FAST_LLM=google_vertexai:gemini-1.5-flash-001
+SMART_LLM=google_vertexai:gemini-1.5-pro-001
+STRATEGIC_LLM=google_vertexai:gemini-1.5-pro-001
 
-EMBEDDING="google_vertexai:text-embedding-004"
+EMBEDDING=google_vertexai:text-embedding-004
 ```
 
+Add `langchain-google-vertexai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Cohere
 
-```bash
-COHERE_API_KEY=[Your key]
-FAST_LLM="cohere:command"
-SMART_LLM="cohere:command-nightly"
-STRATEGIC_LLM="cohere:command-nightly"
+```env
+COHERE_API_KEY=[Your Key]
+FAST_LLM=cohere:command
+SMART_LLM=cohere:command-nightly
+STRATEGIC_LLM=cohere:command-nightly
 
-EMBEDDING="cohere:embed-english-v3.0"
+EMBEDDING=cohere:embed-english-v3.0
 ```
 
+Add `langchain-cohere` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Fireworks
 
-```bash
-FIREWORKS_API_KEY=[Your key]
-base_url="https://api.fireworks.ai/inference/v1/completions"
-FAST_LLM="fireworks:accounts/fireworks/models/mixtral-8x7b-instruct"
-SMART_LLM="fireworks:accounts/fireworks/models/mixtral-8x7b-instruct"
-STRATEGIC_LLM="fireworks:accounts/fireworks/models/mixtral-8x7b-instruct"
+```env
+FIREWORKS_API_KEY=[Your Key]
+base_url=https://api.fireworks.ai/inference/v1/completions
+FAST_LLM=fireworks:accounts/fireworks/models/mixtral-8x7b-instruct
+SMART_LLM=fireworks:accounts/fireworks/models/mixtral-8x7b-instruct
+STRATEGIC_LLM=fireworks:accounts/fireworks/models/mixtral-8x7b-instruct
 
-EMBEDDING="fireworks:nomic-ai/nomic-embed-text-v1.5"
+EMBEDDING=fireworks:nomic-ai/nomic-embed-text-v1.5
 ```
 
+Add `langchain-fireworks` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Bedrock
 
-```bash
-FAST_LLM="bedrock:anthropic.claude-3-sonnet-20240229-v1:0"
-SMART_LLM="bedrock:anthropic.claude-3-sonnet-20240229-v1:0"
-STRATEGIC_LLM="bedrock:anthropic.claude-3-sonnet-20240229-v1:0"
+```env
+FAST_LLM=bedrock:anthropic.claude-3-sonnet-20240229-v1:0
+SMART_LLM=bedrock:anthropic.claude-3-sonnet-20240229-v1:0
+STRATEGIC_LLM=bedrock:anthropic.claude-3-sonnet-20240229-v1:0
 
-EMBEDDING="bedrock:amazon.titan-embed-text-v2:0"
+EMBEDDING=bedrock:amazon.titan-embed-text-v2:0
 ```
 
+Add `langchain_aws` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## LiteLLM
 
-```bash
-FAST_LLM="litellm:perplexity/pplx-7b-chat"
-SMART_LLM="litellm:perplexity/pplx-70b-chat"
-STRATEGIC_LLM="litellm:perplexity/pplx-70b-chat"
+```env
+FAST_LLM=litellm:perplexity/pplx-7b-chat
+SMART_LLM=litellm:perplexity/pplx-70b-chat
+STRATEGIC_LLM=litellm:perplexity/pplx-70b-chat
 ```
 
+Add `langchain_community` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## xAI
 
-```bash
-FAST_LLM="xai:grok-beta"
-SMART_LLM="xai:grok-beta"
-STRATEGIC_LLM="xai:grok-beta"
+```env
+FAST_LLM=xai:grok-beta
+SMART_LLM=xai:grok-beta
+STRATEGIC_LLM=xai:grok-beta
 ```
 
+Add `langchain_xai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## DeepSeek
-```bash
-DEEPSEEK_API_KEY=[Your key]
-FAST_LLM="deepseek:deepseek-chat"
-SMART_LLM="deepseek:deepseek-chat"
-STRATEGIC_LLM="deepseek:deepseek-chat"
+```env
+DEEPSEEK_API_KEY=[Your Key]
+FAST_LLM=deepseek:deepseek-chat
+SMART_LLM=deepseek:deepseek-chat
+STRATEGIC_LLM=deepseek:deepseek-chat
+```
+## Openrouter.ai
+
+```env
+OPENROUTER_API_KEY=[Your openrouter.ai key]
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+FAST_LLM=openrouter:google/gemini-2.0-flash-lite-001
+SMART_LLM=openrouter:google/gemini-2.0-flash-001
+STRATEGIC_LLM=openrouter:google/gemini-2.5-pro-exp-03-25
+OPENROUTER_LIMIT_RPS=1  # Ratelimit request per secound
+EMBEDDING=google_genai:models/text-embedding-004 # openrouter doesn't support embedding models, use google instead its free
+GOOGLE_API_KEY=[Your *google gemini* key]
 ```
 
 
@@ -288,13 +330,15 @@ STRATEGIC_LLM="deepseek:deepseek-chat"
 
 ### Nomic
 
-```bash
-EMBEDDING="nomic:nomic-embed-text-v1.5"
+```env
+EMBEDDING=nomic:nomic-embed-text-v1.5
 ```
 
 ### VoyageAI
 
-```bash
+```env
 VOYAGE_API_KEY=[Your Key]
-EMBEDDING="voyageai:voyage-law-2"
+EMBEDDING=voyageai:voyage-law-2
 ```
+
+Add `langchain-voyageai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it

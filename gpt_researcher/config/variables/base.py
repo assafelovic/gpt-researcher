@@ -1,4 +1,5 @@
-from typing import Union
+from __future__ import annotations
+
 from typing_extensions import TypedDict
 
 
@@ -24,8 +25,14 @@ class BaseConfig(TypedDict):
     CURATE_SOURCES: bool
     MAX_ITERATIONS: int
     LANGUAGE: str
-    AGENT_ROLE: Union[str, None]
+    AGENT_ROLE: str | None
     SCRAPER: str
     MAX_SUBTOPICS: int
-    REPORT_SOURCE: Union[str, None]
+    REPORT_SOURCE: str | None
     DOC_PATH: str
+    PROMPT_FAMILY: str
+    LLM_KWARGS: dict
+    EMBEDDING_KWARGS: dict
+    DEEP_RESEARCH_CONCURRENCY: int
+    DEEP_RESEARCH_DEPTH: int
+    DEEP_RESEARCH_BREADTH: int

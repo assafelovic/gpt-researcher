@@ -353,10 +353,11 @@ class DeepResearch:
         )
 
         # Combine query and Q&A
-        combined_query: str = f"""
+        follow_up_qa = ' '.join([f'Q: {q}\nA: {a}' for q, a in zip(follow_up_questions, answers)])
+        combined_query = f"""
         Initial Query: {self.query}
         Follow-up Questions and Answers:
-        {" ".join([f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers)])}
+        {follow_up_qa}
         """
 
         # Run deep research

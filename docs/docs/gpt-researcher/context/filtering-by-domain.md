@@ -21,4 +21,39 @@ GOOGLE_CX_KEY=
 
 docker-compose up -- build
 
-> **Step 3** -  from the frontend input box in localhost:3000, you can append any google search filter (such as filtering by domain names)
+```python
+report = GPTResearcher(
+    query="Latest AI Startups",
+    report_type="research_report",
+    report_source="web",
+    domains=["forbes.com", "techcrunch.com"]
+)
+```
+
+## Using the NextJS Frontend
+
+When using the NextJS frontend, you can pass a list of domains to filter results via the Settings Modal:
+
+![Settings Modal](./img/nextjs-filter-by-domain.JPG)
+
+## Using the Vanilla JS Frontend
+
+When using the Vanilla JS frontend, you can pass a list of domains to filter results via the relevant input field:
+
+![Filter by Domain](./img/vanilla-filter-by-domains.png)
+
+## Filtering by Domain based on URL Param
+
+If you'd like to show off for your work pals how GPTR is the ultra-customizable Deep Research Agent, you can send them a link to your hosted GPTR app with the domain filter included in the URL itself.
+
+This can be handle for demonstrating a proof of concept of the Research Agent tailored to a specific domain. Some examples below:
+
+### Single Domain:
+
+https://app.gptr.dev/?domains=wikipedia.org
+
+### Multiple Domains:
+
+https://app.gptr.dev/?domains=wired.com,forbes.com,wikipedia.org
+
+The `https://app.gptr.dev` part of the URL can be replaces with [the domain that you deployed GPTR on](https://docs.gptr.dev/docs/gpt-researcher/getting-started/linux-deployment).

@@ -10,7 +10,7 @@ class PublisherAgent:
     def __init__(self, output_dir: str, websocket=None, stream_output=None, headers=None):
         self.websocket = websocket
         self.stream_output = stream_output
-        self.output_dir = output_dir
+        self.output_dir = output_dir.strip()
         self.headers = headers or {}
         
     async def publish_research_report(self, research_state: dict, publish_formats: dict):

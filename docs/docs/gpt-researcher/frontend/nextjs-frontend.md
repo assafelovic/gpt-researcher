@@ -46,7 +46,7 @@ If, for some reason, you don't want to run the GPTR API Server on localhost:8000
 
 For example:
 ```
-NEXT_PUBLIC_GPTR_API_URL=https://gptr.app
+NEXT_PUBLIC_GPTR_API_URL=https://app.gptr.dev
 ```
 
 Or: 

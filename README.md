@@ -1,6 +1,9 @@
 <a href="https://elest.io">
   <img src="https://elest.io/images/th3w1zard1.svg" alt="elest.io" width="150" height="75">
 </a>
+## ✉️ Support / Contact us
+- [Community Discord](https://discord.gg/spBgZmm3Xe)
+- Author Email: assaf.elovic@gmail.com
 
 [![Discord](https://img.shields.io/static/v1.svg?logo=discord&color=f78A38&labelColor=083468&logoColor=ffffff&style=for-the-badge&label=Discord&message=community)](https://discord.gg/4T4JGaMYrD "Get instant assistance and engage in live discussions with both the community and team through our chat feature.")
 [![th3w1zard1 examples](https://img.shields.io/static/v1.svg?logo=github&color=f78A38&labelColor=083468&logoColor=ffffff&style=for-the-badge&label=github&message=open%20source)](https://github.com/th3w1zard1-examples "Access the source code for all our repositories by viewing them.")
@@ -8,11 +11,23 @@
 
 # GPT researcher, verified and packaged by th3w1zard1
 
-[GPT researcher](https://github.com/assafelovic/gpt-researcher), GPT based autonomous agent that does online comprehensive research on any given topic.
+Our view on unbiased research claims:
 
-<img src="https://github.com/th3w1zard1-examples/gpt-researcher/raw/main/gpt-researcher.png" alt="gpt researcher" width="800">
+1. The main goal of GPT Researcher is to reduce incorrect and biased facts. How? We assume that the more sites we scrape the less chances of incorrect data. By scraping multiple sites per research, and choosing the most frequent information, the chances that they are all wrong is extremely low.
+2. We do not aim to eliminate biases; we aim to reduce it as much as possible. **We are here as a community to figure out the most effective human/llm interactions.**
+3. In research, people also tend towards biases as most have already opinions on the topics they research about. This tool scrapes many opinions and will evenly explain diverse views that a biased person would never have read.
 
-Deploy a <a target="_blank" href="https://elest.io/open-source/gpt-researcher">fully managed neko</a> on <a target="_blank" href="https://elest.io/">elest.io</a> if you want automated backups, reverse proxy with SSL termination, firewall, automated OS & Software updates, and a team of Linux experts and open source enthusiasts to ensure your services are always safe, and functional.
+---
+
+<p align="center">
+<a href="https://star-history.com/#assafelovic/gpt-researcher">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=assafelovic/gpt-researcher&type=Date" />
+  </picture>
+</a>
+</p>
 
 [![deploy](https://github.com/th3w1zard1-examples/gpt-researcher/raw/main/deploy-on-th3w1zard1.png)](https://dash.elest.io/deploy?source=cicd&social=dockerCompose&url=https://github.com/th3w1zard1-examples/gpt-researcher)
 
@@ -100,5 +115,3 @@ That's it! With these simple steps, you can easily backup and restore your data 
 # Links
 
 - <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GPT researcher Github repository</a>
-
-- <a target="_blank" href="https://github.com/th3w1zard1-examples/gpt-researcher">th3w1zard1/GPT researcher Github repository</a>

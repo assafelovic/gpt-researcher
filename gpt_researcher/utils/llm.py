@@ -1,34 +1,43 @@
 # libraries
 from __future__ import annotations
 
-import json
 import logging
-from typing import Optional, Any, Dict
+import os
 
-from colorama import Fore, Style
+from typing import Any, Callable, Dict, Optional, TYPE_CHECKING
+
+from langchain.llms.base import BaseLLM
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 
-from ..prompts import generate_subtopics_prompt
+from gpt_researcher.config.config import Config
+
+from ..prompts import PromptFamily
 from .costs import estimate_llm_cost
 from .validators import Subtopics
 
+if TYPE_CHECKING:
+    from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 
-def get_llm(llm_provider, **kwargs):
-    from gpt_researcher.llm_provider import GenericLLMProvider
+
+def get_llm(llm_provider: str, **kwargs) -> GenericLLMProvider:
+    from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
+
     return GenericLLMProvider.from_provider(llm_provider, **kwargs)
 
 
 async def create_chat_completion(
-        messages: list,  # type: ignore
-        model: Optional[str] = None,
-        temperature: Optional[float] = 0.4,
-        max_tokens: Optional[int] = 4000,
-        llm_provider: Optional[str] = None,
-        stream: Optional[bool] = False,
-        websocket: Any | None = None,
-        llm_kwargs: Dict[str, Any] | None = None,
-        cost_callback: callable = None
+    messages: list,  # type: ignore
+    model: Optional[str] = None,
+    temperature: Optional[float] = 0.4,
+    max_tokens: Optional[int] = 4000,
+    llm_provider: Optional[str] = None,
+    stream: Optional[bool] = False,
+    websocket: Any | None = None,
+    llm_kwargs: Dict[str, Any] | None = None,
+    cost_callback: Callable | None = None,
+    reasoning_effort: Optional[ReasoningEfforts] = None,
+    **kwargs,
 ) -> str:
     """Create a chat completion using the OpenAI API
     Args:
@@ -46,23 +55,44 @@ async def create_chat_completion(
     # validate input
     if model is None:
         raise ValueError("Model cannot be None")
-    if max_tokens is not None and max_tokens > 16001:
-        raise ValueError(
-            f"Max tokens cannot be more than 16,000, but got {max_tokens}")
+    if max_tokens is not None and max_tokens > 32001:
+        raise ValueError(f"Max tokens cannot be more than 16,000, but got {max_tokens}")
 
     # Get the provider from supported providers
-    provider = get_llm(llm_provider, model=model, temperature=temperature,
-                       max_tokens=max_tokens, **(llm_kwargs or {}))
+    provider = get_llm(llm_provider, model=model, temperature=temperature, max_tokens=max_tokens, **(llm_kwargs or {}))
 
-    response = ""
+    from gpt_researcher.llm_provider.generic.base import (
+        NO_SUPPORT_TEMPERATURE_MODELS,
+        SUPPORT_REASONING_EFFORT_MODELS,
+    )
+
+    if model in SUPPORT_REASONING_EFFORT_MODELS:
+        kwargs["reasoning_effort"] = reasoning_effort
+
+    if model not in NO_SUPPORT_TEMPERATURE_MODELS:
+        kwargs["temperature"] = temperature
+        kwargs["max_tokens"] = max_tokens
+    else:
+        kwargs["temperature"] = None
+        kwargs["max_tokens"] = None
+
+    if llm_provider == "openai":
+        base_url: str | None = os.environ.get("OPENAI_BASE_URL", None)
+        if base_url:
+            kwargs["openai_api_base"] = base_url
+
+    provider: GenericLLMProvider = get_llm(llm_provider, **kwargs)
+    response: str = ""
     # create response
     for _ in range(10):  # maximum of 10 attempts
-        response = await provider.get_chat_response(
-            messages, stream, websocket
+        response: str = await provider.get_chat_response(
+            messages,
+            stream,
+            websocket,
         )
 
         if cost_callback:
-            llm_costs = estimate_llm_cost(str(messages), response)
+            llm_costs: float = estimate_llm_cost(str(messages), response)
             cost_callback(llm_costs)
 
         return response
@@ -71,32 +101,37 @@ async def create_chat_completion(
     raise RuntimeError(f"Failed to get response from {llm_provider} API")
 
 
-async def construct_subtopics(task: str, data: str, config, subtopics: list = []) -> list:
-    """
-    Construct subtopics based on the given task and data.
+async def construct_subtopics(
+    task: str,
+    data: str,
+    config: Config,
+    subtopics: list[str] | None = None,
+    prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+) -> list[str]:
+    """Construct subtopics based on the given task and data.
 
     Args:
         task (str): The main task or topic.
         data (str): Additional data for context.
         config: Configuration settings.
         subtopics (list, optional): Existing subtopics. Defaults to [].
+        prompt_family (PromptFamily): Family of prompts
 
     Returns:
-        list: A list of constructed subtopics.
+        list[str]: A list of constructed subtopics.
     """
     try:
         parser = PydanticOutputParser(pydantic_object=Subtopics)
 
         prompt = PromptTemplate(
-            template=generate_subtopics_prompt(),
+            template=prompt_family.generate_subtopics_prompt(),
             input_variables=["task", "data", "subtopics", "max_subtopics"],
-            partial_variables={
-                "format_instructions": parser.get_format_instructions()},
+            partial_variables={"format_instructions": parser.get_format_instructions()},
         )
 
         print(f"\n🤖 Calling {config.smart_llm_model}...\n")
 
-        temperature = config.temperature
+        temperature: float = config.temperature
         # temperature = 0 # Note: temperature throughout the code base is currently set to Zero
         provider = get_llm(
             config.smart_llm_provider,
@@ -105,19 +140,21 @@ async def construct_subtopics(task: str, data: str, config, subtopics: list = []
             max_tokens=config.smart_token_limit,
             **config.llm_kwargs,
         )
-        model = provider.llm
+        model: BaseLLM = provider.llm
 
         chain = prompt | model | parser
 
-        output = chain.invoke({
-            "task": task,
-            "data": data,
-            "subtopics": subtopics,
-            "max_subtopics": config.max_subtopics
-        })
+        output: list[str] = chain.invoke(
+            {
+                "task": task,
+                "data": data,
+                "subtopics": subtopics or [],
+                "max_subtopics": config.max_subtopics,
+            }
+        )
 
         return output
 
     except Exception as e:
         print("Exception in parsing subtopics : ", e)
-        return subtopics
+        return subtopics or []

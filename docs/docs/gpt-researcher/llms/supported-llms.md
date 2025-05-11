@@ -9,6 +9,7 @@ The following LLMs are supported by GPTR. Please note that you'll need to instal
 - google_vertexai
 - google_genai
 - fireworks
+- gigachat
 - ollama
 - together
 - mistralai

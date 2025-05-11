@@ -120,17 +120,7 @@ const GPTResearcher = (() => {
 
   const writeReport = (data, converter) => {
     const reportContainer = document.getElementById('reportContainer')
-
-    // Ensure code blocks maintain formatting
-    let processedOutput = data.output;
-
-    // Process code blocks to preserve formatting
-    processedOutput = processedOutput.replace(/```(\w*)\n([\s\S]*?)\n```/g, function(match, lang, code) {
-      // Preserve newlines and indentation in code blocks
-      return '```' + lang + '\n' + code + '\n```';
-    });
-
-    const markdownOutput = converter.makeHtml(processedOutput)
+    const markdownOutput = converter.makeHtml(data.output)
     reportContainer.innerHTML += markdownOutput
   }
 

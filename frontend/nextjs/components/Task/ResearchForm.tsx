@@ -2,12 +2,7 @@ import React, { useState, useEffect } from "react";
 import FileUpload from "../Settings/FileUpload";
 import ToneSelector from "../Settings/ToneSelector";
 import { useAnalytics } from "../../hooks/useAnalytics";
-
-interface ChatBoxSettings {
-  report_type: string;
-  report_source: string;
-  tone: string;
-}
+import { ChatBoxSettings, Domain } from '@/types/data';
 
 interface ResearchFormProps {
   chatBoxSettings: ChatBoxSettings;
@@ -119,6 +114,54 @@ export default function ResearchForm({
       {/* ToneSelector for changing the tone */}
       <ToneSelector tone={tone} onToneChange={onToneChange} />
 
+      {/** TODO: move the below to its own component */}
+      {(chatBoxSettings.report_source === "web" || chatBoxSettings.report_source === "hybrid") && (
+        <div className="mt-4 domain_filters">
+          <div className="flex gap-2 mb-4">
+          <label htmlFor="domain_filters" className="agent_question">
+          Filter by domain{" "}
+        </label>
+            <input
+              type="text"
+              value={newDomain}
+              onChange={(e) => setNewDomain(e.target.value)}
+              placeholder="Filter by domain (e.g., techcrunch.com)"
+              className="input-static"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddDomain(e);
+                }
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleAddDomain}
+              className="button-static"
+            >
+              Add Domain
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {domains.map((domain, index) => (
+              <div
+                key={index}
+                className="domain-tag-static"
+              >
+                <span className="domain-text-static">{domain.value}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveDomain(domain.value)}
+                  className="domain-button-static"
+                >
+                  X
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </form>
   );
 }

@@ -12,8 +12,6 @@ markdown
 langchain
 langchain_community
 langchain-openai
-langchain-ollama
-langgraph
 tiktoken
 arxiv
 PyMuPDF
@@ -29,6 +27,7 @@ unstructured
 json_repair
 json5
 loguru
+langgraph
 
 # uncomment for testing
 # pytest
