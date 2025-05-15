@@ -1,31 +1,47 @@
+from __future__ import annotations
+
 import json
+import logging
 import os
 import re
-import time
 import shutil
-from typing import Dict, List, Any
-from fastapi.responses import JSONResponse, FileResponse
-from gpt_researcher.document.document import DocumentLoader
-from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
-from pathlib import Path
+import time
 from datetime import datetime
-from fastapi import HTTPException
-import logging
+from typing import Any, TYPE_CHECKING
+
+from fastapi.responses import JSONResponse
+from starlette.websockets import WebSocket
+
+from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
+from gpt_researcher.actions.utils import stream_output
+from gpt_researcher.agent import GPTResearcher
+from gpt_researcher.document.document import DocumentLoader
+from multi_agents.main import run_research_task
+
+if TYPE_CHECKING:
+    from fastapi import WebSocket
+    from backend.server.websocket_manager import WebSocketManager
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 class CustomLogsHandler:
     """Custom handler to capture streaming logs from the research process"""
-    def __init__(self, websocket, task: str):
-        self.logs = []
-        self.websocket = websocket
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
-        self.log_file = os.path.join("outputs", f"{sanitized_filename}.json")
-        self.timestamp = datetime.now().isoformat()
+    def __init__(
+        self,
+        websocket: WebSocket | None,
+        task: str,
+    ):
+        self.logs: list = []
+        self.websocket: WebSocket | None = websocket
+
+        sanitized_filename: str = sanitize_filename(f"task_{int(time.time())}_{task}")
+        self.log_file: str = os.path.join("outputs", f"{sanitized_filename}.json")
+
+        self.timestamp: str = datetime.now().isoformat()
         # Initialize log file with metadata
         os.makedirs("outputs", exist_ok=True)
-        with open(self.log_file, 'w') as f:
+        with open(self.log_file, "w") as f:
             json.dump({
                 "timestamp": self.timestamp,
                 "events": [],
@@ -38,39 +54,43 @@ class CustomLogsHandler:
                 }
             }, f, indent=2)
 
-    async def send_json(self, data: Dict[str, Any]) -> None:
+    async def send_json(self, data: dict[str, Any]) -> None:
         """Store log data and send to websocket"""
         # Send to websocket for real-time display
         if self.websocket:
             await self.websocket.send_json(data)
-            
+
         # Read current log file
-        with open(self.log_file, 'r') as f:
-            log_data = json.load(f)
-            
+        with open(self.log_file, "r") as f:
+            log_data: dict[str, Any] = json.load(f)
+
         # Update appropriate section based on data type
-        if data.get('type') == 'logs':
-            log_data['events'].append({
+        if data.get("type") == "logs":
+            log_data["events"].append({
                 "timestamp": datetime.now().isoformat(),
                 "type": "event",
                 "data": data
             })
         else:
             # Update content section for other types of data
-            log_data['content'].update(data)
-            
+            log_data["content"].update(data)
+
         # Save updated log file
-        with open(self.log_file, 'w') as f:
+        with open(self.log_file, "w") as f:
             json.dump(log_data, f, indent=2)
         logger.debug(f"Log entry written to: {self.log_file}")
 
 
 class Researcher:
-    def __init__(self, query: str, report_type: str = "research_report"):
-        self.query = query
-        self.report_type = report_type
+    def __init__(
+        self,
+        query: str,
+        report_type: str = "research_report",
+    ):
+        self.query: str = query
+        self.report_type: str = report_type
         # Generate unique ID for this research task
-        self.research_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(query)}"
+        self.research_id: str = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(query)}"
         # Initialize logs handler with research ID
         self.logs_handler = CustomLogsHandler(self.research_id)
         self.researcher = GPTResearcher(
@@ -82,15 +102,15 @@ class Researcher:
     async def research(self) -> dict:
         """Conduct research and return paths to generated files"""
         await self.researcher.conduct_research()
-        report = await self.researcher.write_report()
-        
+        report: str = await self.researcher.write_report()
+
         # Generate the files
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{self.query}")
-        file_paths = await generate_report_files(report, sanitized_filename)
-        
+        sanitized_filename: str = sanitize_filename(f"task_{int(time.time())}_{self.query}")
+        file_paths: dict[str, str] = await generate_report_files(report, sanitized_filename)
+
         # Get the JSON log path that was created by CustomLogsHandler
-        json_relative_path = os.path.relpath(self.logs_handler.log_file)
-        
+        json_relative_path: str = os.path.relpath(self.logs_handler.log_file)
+
         return {
             "output": {
                 **file_paths,  # Include PDF, DOCX, and MD paths
@@ -100,25 +120,36 @@ class Researcher:
 
 def sanitize_filename(filename: str) -> str:
     # Split into components
-    prefix, timestamp, *task_parts = filename.split('_')
-    task = '_'.join(task_parts)
-    
+    prefix, timestamp, *task_parts = filename.split("_")
+    task: str = "_".join(task_parts)
+
     # Calculate max length for task portion
     # 255 - len("outputs/") - len("task_") - len(timestamp) - len("_.json") - safety_margin
     max_task_length = 255 - 8 - 5 - 10 - 6 - 10  # ~216 chars for task
-    
+
     # Truncate task if needed
-    truncated_task = task[:max_task_length] if len(task) > max_task_length else task
-    
+    truncated_task: str = task[:max_task_length] if len(task) > max_task_length else task
+
     # Reassemble and clean the filename
-    sanitized = f"{prefix}_{timestamp}_{truncated_task}"
+    sanitized: str = f"{prefix}_{timestamp}_{truncated_task}"
     return re.sub(r"[^\w\s-]", "", sanitized).strip()
 
 
-async def handle_start_command(websocket, data: str, manager):
-    json_data = json.loads(data[6:])
-    task, report_type, source_urls, document_urls, tone, headers, report_source = extract_command_data(
-        json_data)
+async def handle_start_command(
+    websocket: WebSocket,
+    data: str,
+    manager: WebSocketManager,
+):
+    json_data: str = json.loads(data[6:])
+    (
+        task,
+        report_type,
+        source_urls,
+        document_urls,
+        tone,
+        headers,
+        report_source,
+    ) = extract_command_data(json_data)
 
     if not task or not report_type:
         print("Error: Missing task or report_type")
@@ -134,43 +165,52 @@ async def handle_start_command(websocket, data: str, manager):
         "report": ""
     })
 
-    sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
+    sanitized_filename: str = sanitize_filename(f"task_{int(time.time())}_{task}")
 
-    report = await manager.start_streaming(
-        task, 
-        report_type, 
-        report_source, 
-        source_urls, 
+    report: str = await manager.start_streaming(
+        task,
+        report_type,
+        report_source,
+        source_urls,
         document_urls,
-        tone, 
+        tone,
         websocket,
         headers
     )
-    report = str(report)
-    file_paths = await generate_report_files(report, sanitized_filename)
+    file_paths: dict[str, str] = await generate_report_files(str(report), sanitized_filename)
     # Add JSON log path to file_paths
     file_paths["json"] = os.path.relpath(logs_handler.log_file)
     await send_file_paths(websocket, file_paths)
 
 
 async def handle_human_feedback(data: str):
-    feedback_data = json.loads(data[14:])  # Remove "human_feedback" prefix
+    feedback_data: Any = json.loads(data[14:])  # Remove "human_feedback" prefix
     print(f"Received human feedback: {feedback_data}")
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
 
-async def handle_chat(websocket, data: str, manager):
-    json_data = json.loads(data[4:])
+async def handle_chat(
+    websocket: WebSocket,
+    data: str,
+    manager: WebSocketManager,
+):
+    json_data: dict[str, Any] = json.loads(data[4:])
     print(f"Received chat message: {json_data.get('message')}")
     await manager.chat(json_data.get("message"), websocket)
 
-async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
-    pdf_path = await write_md_to_pdf(report, filename)
-    docx_path = await write_md_to_word(report, filename)
-    md_path = await write_text_to_md(report, filename)
+async def generate_report_files(
+    report: str,
+    filename: str,
+) -> dict[str, str]:
+    pdf_path: str = await write_md_to_pdf(report, filename)
+    docx_path: str = await write_md_to_word(report, filename)
+    md_path: str = await write_text_to_md(report, filename)
     return {"pdf": pdf_path, "docx": docx_path, "md": md_path}
 
 
-async def send_file_paths(websocket, file_paths: Dict[str, str]):
+async def send_file_paths(
+    websocket: WebSocket,
+    file_paths: dict[str, str],
+):
     await websocket.send_json({"type": "path", "output": file_paths})
 
 
@@ -178,7 +218,7 @@ def get_config_dict(
     langchain_api_key: str, openai_api_key: str, tavily_api_key: str,
     google_api_key: str, google_cx_key: str, bing_api_key: str,
     searchapi_api_key: str, serpapi_api_key: str, serper_api_key: str, searx_url: str
-) -> Dict[str, str]:
+) -> dict[str, str]:
     return {
         "LANGCHAIN_API_KEY": langchain_api_key or os.getenv("LANGCHAIN_API_KEY", ""),
         "OPENAI_API_KEY": openai_api_key or os.getenv("OPENAI_API_KEY", ""),
@@ -197,13 +237,16 @@ def get_config_dict(
     }
 
 
-def update_environment_variables(config: Dict[str, str]):
+def update_environment_variables(config: dict[str, str]):
     for key, value in config.items():
         os.environ[key] = value
 
 
-async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
-    file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
+async def handle_file_upload(
+    file,
+    DOC_PATH: str,
+) -> dict[str, str]:
+    file_path: str = os.path.join(DOC_PATH, os.path.basename(file.filename))
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     print(f"File uploaded to {file_path}")
@@ -215,7 +258,7 @@ async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
 
 
 async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
-    file_path = os.path.join(DOC_PATH, os.path.basename(filename))
+    file_path: str = os.path.join(DOC_PATH, os.path.basename(filename))
     if os.path.exists(file_path):
         os.remove(file_path)
         print(f"File deleted: {file_path}")
@@ -225,8 +268,8 @@ async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
         return JSONResponse(status_code=404, content={"message": "File not found"})
 
 
-async def execute_multi_agents(manager) -> Any:
-    websocket = manager.active_connections[0] if manager.active_connections else None
+async def execute_multi_agents(manager: WebSocketManager) -> Any:
+    websocket: WebSocket | None = manager.active_connections[0] if manager.active_connections else None
     if websocket:
         report = await run_research_task("Is AI in a hype cycle?", websocket, stream_output)
         return {"report": report}
@@ -234,7 +277,10 @@ async def execute_multi_agents(manager) -> Any:
         return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
 
 
-async def handle_websocket_communication(websocket, manager):
+async def handle_websocket_communication(
+    websocket: WebSocket,
+    manager: WebSocketManager,
+):
     while True:
         data = await websocket.receive_text()
         if data.startswith("start"):
@@ -247,7 +293,7 @@ async def handle_websocket_communication(websocket, manager):
             print("Error: Unknown command or not enough parameters provided.")
 
 
-def extract_command_data(json_data: Dict) -> tuple:
+def extract_command_data(json_data: dict[str, Any]) -> tuple:
     return (
         json_data.get("task"),
         json_data.get("report_type"),

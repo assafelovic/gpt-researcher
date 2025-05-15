@@ -1,24 +1,30 @@
-import json
-import os
-from typing import Dict, List
+from __future__ import annotations
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile, Header
+import logging
+import os
+from typing import Any
+
+from fastapi import (
+    FastAPI,
+    File,
+    Request,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
-from backend.server.websocket_manager import WebSocketManager
 from backend.server.server_utils import (
-    get_config_dict,
-    update_environment_variables, handle_file_upload, handle_file_deletion,
-    execute_multi_agents, handle_websocket_communication
+    execute_multi_agents,
+    handle_file_deletion,
+    handle_file_upload,
+    handle_websocket_communication,
 )
-
-
-from gpt_researcher.utils.logging_config import setup_research_logging
-
-import logging
+from backend.server.websocket_manager import WebSocketManager
 
 # Get logger instance
 logger = logging.getLogger(__name__)
@@ -51,13 +57,13 @@ class ConfigRequest(BaseModel):
     OPENAI_API_KEY: str
     DOC_PATH: str
     RETRIEVER: str
-    GOOGLE_API_KEY: str = ''
-    GOOGLE_CX_KEY: str = ''
-    BING_API_KEY: str = ''
-    SEARCHAPI_API_KEY: str = ''
-    SERPAPI_API_KEY: str = ''
-    SERPER_API_KEY: str = ''
-    SEARX_URL: str = ''
+    GOOGLE_API_KEY: str = ""
+    GOOGLE_CX_KEY: str = ""
+    BING_API_KEY: str = ""
+    SEARCHAPI_API_KEY: str = ""
+    SERPAPI_API_KEY: str = ""
+    SERPER_API_KEY: str = ""
+    SEARX_URL: str = ""
     XAI_API_KEY: str
     DEEPSEEK_API_KEY: str
 
@@ -83,7 +89,7 @@ app.add_middleware(
 )
 
 # Constants
-DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
+DOC_PATH: str = os.getenv("DOC_PATH", "./my-docs")
 
 # Startup event
 
@@ -93,35 +99,41 @@ def startup_event():
     os.makedirs("outputs", exist_ok=True)
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
     os.makedirs(DOC_PATH, exist_ok=True)
-    
+
 
 # Routes
 
 
 @app.get("/")
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "report": None})
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "report": None,
+        },
+    )
 
 
 @app.get("/files/")
-async def list_files():
-    files = os.listdir(DOC_PATH)
+async def list_files() -> dict[str, list[str]]:
+    files: list[str] = os.listdir(DOC_PATH)
     print(f"Files in {DOC_PATH}: {files}")
     return {"files": files}
 
 
 @app.post("/api/multi_agents")
-async def run_multi_agents():
+async def run_multi_agents() -> dict[str, Any]:
     return await execute_multi_agents(manager)
 
 
 @app.post("/upload/")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(file: UploadFile = File(...)) -> dict[str, str]:
     return await handle_file_upload(file, DOC_PATH)
 
 
 @app.delete("/files/{filename}")
-async def delete_file(filename: str):
+async def delete_file(filename: str) -> JSONResponse:
     return await handle_file_deletion(filename, DOC_PATH)
 
 

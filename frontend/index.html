@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/site/styles.css" />
     <style>
         body {
@@ -36,7 +37,7 @@
             width: 100px;
             height: 100px;
             border-radius: 10px;
-            border: 2px solid #9d4edd;
+            border: 2px solid #9D4EDD;
             box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
         }
 
@@ -63,6 +64,89 @@
 </head>
 
 <body>
+    <!-- Left Feature Panel -->
+    <div class="feature-panel left-panel">
+        <div class="feature-card primary" data-highlight="task">
+            <div class="feature-icon">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <h3 class="feature-title">Fast Results</h3>
+            <p class="feature-text">Get comprehensive research in minutes instead of hours with AI-powered analysis</p>
+        </div>
+        <div class="feature-card info" data-highlight="report_type">
+            <div class="feature-icon">
+                <i class="fas fa-magnifying-glass-chart"></i>
+            </div>
+            <h3 class="feature-title">Precise Research</h3>
+            <p class="feature-text">Customizable parameters for targeted results tailored to your needs</p>
+        </div>
+        <div class="feature-card success" data-highlight="report_source">
+            <div class="feature-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <h3 class="feature-title">Multiple Sources</h3>
+            <p class="feature-text">Aggregates information from various reliable sources for balanced insights</p>
+        </div>
+    </div>
+
+    <!-- Right Feature Panel -->
+    <div class="feature-panel right-panel">
+        <div class="feature-card warning" data-highlight="format">
+            <div class="feature-icon">
+                <i class="fas fa-file-export"></i>
+            </div>
+            <h3 class="feature-title">Multiple Formats</h3>
+            <p class="feature-text">Support for various output formats including PDF, Word, and Markdown</p>
+        </div>
+        <div class="feature-card primary" data-highlight="tone">
+            <div class="feature-icon">
+                <i class="fas fa-pen-fancy"></i>
+            </div>
+            <h3 class="feature-title">Custom Style</h3>
+            <p class="feature-text">Choose the writing style that best fits your needs and audience</p>
+        </div>
+        <div class="feature-card info" data-highlight="query_domains">
+            <div class="feature-icon">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <h3 class="feature-title">Flexible Sources</h3>
+            <p class="feature-text">Research from web, academic papers, documents, and custom data sources</p>
+        </div>
+    </div>
+
+    <!-- Download Panel Left -->
+    <div class="download-panel download-panel-left">
+        <div class="download-card">
+            <div class="download-title">Download Report</div>
+            <a id="downloadLink" href="#" class="download-btn disabled" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-file-pdf"></i> PDF Document
+            </a>
+            <a id="downloadLinkWord" href="#" class="download-btn disabled" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-file-word"></i> Word Document
+            </a>
+        </div>
+    </div>
+
+    <!-- Download Panel Right -->
+    <div class="download-panel download-panel-right">
+        <div class="download-card">
+            <div class="download-title">Other Options</div>
+            <a id="downloadLinkMd" href="#" class="download-btn disabled" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-file-lines"></i> Markdown File
+            </a>
+            <a id="copyToClipboard" onclick="GPTResearcher.copyToClipboard()" class="download-btn">
+                <i class="fas fa-copy"></i> Copy to Clipboard
+            </a>
+            <a id="downloadLinkJson" href="#" class="download-btn disabled" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-file-code"></i> Research Log (JSON)
+            </a>
+        </div>
+    </div>
+
+    <!-- Scroll to bottom button -->
+    <div class="scroll-to-bottom" id="scrollToBottomBtn">
+        <i class="fas fa-arrow-down"></i>
+    </div>
 
     <section class="landing">
         <div class="max-w-5xl mx-auto text-center">
@@ -71,8 +155,8 @@
                 <span class="gradient-text">In Minutes, Not Hours</span>
             </h1>
             <p class="max-w-6xl mx-auto mt-8" style="font-size:20px">
-                Meet <b>ResearchWizard</b>, your personal AI assistant that turns complex topics into clear insights. <br>
-                Get comprehensive reports with verified sources, organized findings, and professional formatting—all with a single click.
+                Meet <b>ResearchWizard</b>, your personal AI research assistant that turns complex topics into clear insights. <br>
+                Receive thorough reports with verified references, professional layout, and personalized content tailored specifically to your needs—all accomplished with just one click.
             </p>
             <a href="#form" class="btn btn-primary">Start Researching</a>
         </div>
@@ -82,20 +166,17 @@
         <div class="agent-item"><img src="/static/new/wizard-logo.svg" class="avatar" alt="Research Wizard"></div>
         <form method="POST" class="mt-3" onsubmit="GPTResearcher.startResearch(); return false;">
             <div class="form-group">
-                <label for="task" class="agent-question">What would you like me to research for you today?</label>
-                <input id="task" name="task" class="form-control" required placeholder="Enter any topic or question..."></input>
+                <label for="task" class="agent-question">What would you like me to research for you?</label>
+                <textarea id="task" name="task" class="form-control highlight-connection" placeholder="Enter any topic, question, or idea..." required></textarea>
                 <input type="radio" name="agent" id="autoAgent" value="Auto Agent" checked hidden>
             </div>
             <div class="form-group">
-                <div class="row">
-
-
-                </div>
+                <div class="row"></div>
                 <button type="button" id="btnShowAuto" class="btn btn-secondary mt-3 btn-show">Auto Agent</button>
             </div>
             <div class="form-group">
                 <label for="report_type" class="agent-question">What level of detail do you want?</label>
-                <select name="report_type" class="form-control" required>
+                <select name="report_type" id="report_type" class="form-control highlight-connection" required>
                     <option value="research_report">Quick Summary - Fast results (~2 min)</option>
                     <option value="detailed_report">Deep Dive - Comprehensive analysis (~5 min)</option>
                     <option value="resource_report">Resource List - Just the sources</option>
@@ -103,7 +184,7 @@
             </div>
             <div class="form-group">
                 <label for="tone" class="agent-question">How would you like your report to sound?</label>
-                <select name="tone" id="tone" class="form-control" required>
+                <select name="tone" id="tone" class="form-control highlight-connection" required>
                     <option value="Objective">Balanced - Presents information neutrally, without personal bias or emotional coloring</option>
                     <option value="Formal">Academic - Uses scholarly language, precise terminology, and structured argumentation</option>
                     <option value="Analytical">Analytical - Breaks down complex topics systematically, examining evidence and drawing logical conclusions</option>
@@ -121,11 +202,17 @@
                     <option value="Pessimistic">Cautious - Highlights potential challenges, risks, and limitations</option>
                 </select>
             </div>
-            <div class="form-group" style="display: none;">
+            <div class="form-group">
                 <label for="report_source" class="agent-question">Where should I look for information?</label>
-                <select name="report_source" class="form-control" required>
-                    <option value="web" selected>Internet Search</option>
+                <select name="report_source" id="report_source" class="form-control highlight-connection" required>
+                    <option value="web" selected>The Web</option>
+                    <option value="deep">Deep Research</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="queryDomains" class="form-label">Query Domains (Optional)</label>
+                <input type="text" class="form-control highlight-connection" id="queryDomains" name="query_domains" placeholder="Enter domains separated by commas">
+                <small class="text-muted">Example: techcrunch.com, forbes.com</small>
             </div>
             <input type="submit" value="Begin Research" class="btn btn-primary button-padding">
         </form>
@@ -139,15 +226,10 @@
             <div id="selectedImagesContainer" style="display: none;"></div>
         </div>
         <div class="margin-div report-container">
-            <h2>Your Finished Report</h2>
+            <h2>Research Report</h2>
             <div id="reportContainer"></div>
-            <div id="reportActions">
+            <div id="reportActions" style="display: none;">
                 <div class="alert alert-info" role="alert" id="status"></div>
-                <a id="copyToClipboard" onclick="GPTResearcher.copyToClipboard()" class="btn btn-action mt-3" style="margin-right: 10px;">Copy to clipboard</a>
-                <a id="downloadLinkMd" href="#" class="btn btn-action mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download as Markdown</a>
-                <a id="downloadLink" href="#" class="btn btn-action mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download as PDF</a>
-                <a id="downloadLinkWord" href="#" class="btn btn-action mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download as Word Doc</a>
-                <a id="downloadLinkJson" href="#" class="btn btn-action mt-3" style="margin-right: 10px;" target="_blank" rel="noopener noreferrer">Download Research Log</a>
             </div>
         </div>
     </main>
@@ -162,9 +244,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
     <script src="/site/scripts.js"></script>
     <script>
+        // const btnChoose = document.getElementById('btnChoose');
         const btnShowAuto = document.getElementById('btnShowAuto');
         const autoAgentDiv = document.getElementById('autoAgentDiv');
         const agentChoices = document.getElementsByClassName('agent-choices');
+
+        /**
+        btnChoose.addEventListener('click', function () {
+            btnShowAuto.style.display = 'inline-block';
+            btnChoose.style.display = 'none';
+            autoAgentDiv.style.display = 'none';
+            agentChoices[0].style.display = 'flex';
+        });
+        **/
 
         btnShowAuto.addEventListener('click', function () {
             btnShowAuto.style.display = 'none';
@@ -178,13 +270,194 @@
 
         if (input) {
             input.addEventListener('keypress', function (e) {
-            if ((e.key === 'Enter' || e.key === ",") && input.value !== '') {
+            if ((e.key === 'Enter' || e.key === ',') && input.value !== '') {
                 e.preventDefault();
                 GPTResearcher.addTag(input.value);
                 input.value = '';
             }
         });
         }
+
+        // Auto-resize textarea as content grows
+        const taskTextarea = document.getElementById('task');
+        if (taskTextarea) {
+            // Set initial height
+            taskTextarea.setAttribute('style', 'height: 38px; overflow-y: hidden;');
+
+            // Function to resize textarea based on content
+            const resizeTextarea = () => {
+                taskTextarea.style.height = 'auto';
+                taskTextarea.style.height = taskTextarea.scrollHeight + 'px';
+            };
+
+            // Add event listeners for input and focus
+            taskTextarea.addEventListener('input', resizeTextarea);
+            taskTextarea.addEventListener('focus', resizeTextarea);
+        }
+
+        // Implement highlight connection between side panels and form elements
+        const featureCards = document.querySelectorAll('.feature-card');
+        featureCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                const highlightTarget = this.getAttribute('data-highlight');
+                const targetElement = document.getElementById(highlightTarget) ||
+                    document.querySelector(`[name="${highlightTarget}"]`);
+
+                // Special case for Precise Research - highlight the entire container
+                if (highlightTarget === 'report_type' && this.querySelector('.feature-title').textContent === 'Precise Research') {
+                    document.querySelector('.container').classList.add('highlight-glow-container');
+                    return;
+                }
+
+                // Special case for Multiple Sources - highlight both report_source and query_domains
+                if (highlightTarget === 'report_source' && this.querySelector('.feature-title').textContent === 'Multiple Sources') {
+                    const reportSourceEl = document.getElementById('report_source');
+                    const queryDomainsEl = document.querySelector('input[name="query_domains"]');
+
+                    if (reportSourceEl) reportSourceEl.classList.add(`highlight-glow-${highlightTarget}`);
+                    if (queryDomainsEl) queryDomainsEl.classList.add('highlight-glow-query_domains');
+                    return;
+                }
+
+                if (targetElement) {
+                    targetElement.classList.add(`highlight-glow-${highlightTarget}`);
+                }
+            });
+
+            card.addEventListener('mouseleave', function() {
+                const highlightTarget = this.getAttribute('data-highlight');
+                const targetElement = document.getElementById(highlightTarget) ||
+                    document.querySelector(`[name="${highlightTarget}"]`);
+
+                // Special case for Precise Research
+                if (highlightTarget === 'report_type' && this.querySelector('.feature-title').textContent === 'Precise Research') {
+                    document.querySelector('.container').classList.remove('highlight-glow-container');
+                    return;
+                }
+
+                // Special case for Multiple Sources
+                if (highlightTarget === 'report_source' && this.querySelector('.feature-title').textContent === 'Multiple Sources') {
+                    const reportSourceEl = document.getElementById('report_source');
+                    const queryDomainsEl = document.querySelector('input[name="query_domains"]');
+
+                    if (reportSourceEl) reportSourceEl.classList.remove(`highlight-glow-${highlightTarget}`);
+                    if (queryDomainsEl) queryDomainsEl.classList.remove('highlight-glow-query_domains');
+                    return;
+                }
+
+                if (targetElement) {
+                    targetElement.classList.remove(`highlight-glow-${highlightTarget}`);
+                }
+            });
+        });
+
+        // Scroll to bottom button functionality
+        const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+
+        // Show/hide scroll button based on scroll position
+        window.addEventListener('scroll', function() {
+            // Always show the scroll button except when at the very top of the page
+            if (window.scrollY > 100) {
+                scrollToBottomBtn.classList.add('visible');
+            } else {
+                scrollToBottomBtn.classList.remove('visible');
+            }
+
+            // Check if user has scrolled past the form to report area
+            const formElement = document.getElementById('form');
+            const reportElement = document.querySelector('.report-container');
+            const formRect = formElement.getBoundingClientRect();
+
+            // If research is complete and user has scrolled past form
+            if (document.getElementById('status').textContent === 'Research finished!' &&
+                formRect.bottom < 0) {
+                // Hide feature panels and show download panels
+                document.querySelectorAll('.feature-panel').forEach(panel => {
+                    panel.style.opacity = '0';
+                    setTimeout(() => { panel.style.display = 'none'; }, 300);
+                });
+
+                document.querySelectorAll('.download-panel').forEach(panel => {
+                    panel.style.display = 'block';
+                    setTimeout(() => { panel.style.opacity = '1'; }, 100);
+                });
+            } else {
+                // When scrolling back up, show feature panels again if research is not complete
+                if (document.getElementById('status').textContent !== 'Research finished!') {
+                    document.querySelectorAll('.feature-panel').forEach(panel => {
+                        if (window.innerWidth >= 1400) {
+                            panel.style.display = 'block';
+                            setTimeout(() => { panel.style.opacity = '1'; }, 100);
+                        }
+                    });
+
+                    document.querySelectorAll('.download-panel').forEach(panel => {
+                        panel.style.opacity = '0';
+                        setTimeout(() => { panel.style.display = 'none'; }, 300);
+                    });
+                }
+            }
+        });
+
+        // Scroll to bottom button click event
+        scrollToBottomBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        });
+
+        // Handle feature panels visibility based on scroll
+        window.addEventListener('scroll', function() {
+            // This is handled in the scroll event listener above
+        });
+
+        // Ensure feature panels are positioned correctly on window resize
+        window.addEventListener('resize', function() {
+            const viewportWidth = window.innerWidth;
+
+            // Don't show feature panels if download panels are visible
+            if (document.querySelector('.download-panel').style.opacity !== '1') {
+                document.querySelectorAll('.feature-panel').forEach(panel => {
+                    if (viewportWidth >= 1400) {
+                        panel.style.display = 'block';
+                    } else {
+                        panel.style.display = 'none';
+                    }
+                });
+            }
+        });
+
+        // Initialize feature panels visibility
+        window.dispatchEvent(new Event('resize'));
+
+        // Custom function to update download links and show download panels
+        function showDownloadOptions(data) {
+            if (data && data.output) {
+                // Enable download buttons
+                document.querySelectorAll('.download-btn').forEach(btn => {
+                    btn.classList.remove('disabled');
+                });
+
+                // Hide feature panels, show download panels
+                document.querySelectorAll('.feature-panel').forEach(panel => {
+                    panel.style.opacity = '0';
+                    setTimeout(() => { panel.style.display = 'none'; }, 300);
+                });
+
+                document.querySelectorAll('.download-panel').forEach(panel => {
+                    panel.style.display = 'block';
+                    setTimeout(() => { panel.style.opacity = '1'; }, 100);
+                });
+            }
+        }
+
+        // Manually trigger the scroll event once on load to correctly set the scroll button visibility
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                window.dispatchEvent(new Event('scroll'));
+            }, 100);
+        });
     </script>
 </body>
 

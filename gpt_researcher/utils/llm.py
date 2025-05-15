@@ -1,10 +1,11 @@
 # libraries
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
-
-from typing import Any, Callable, Dict, Optional, TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from langchain.llms.base import BaseLLM
 from langchain.output_parsers import PydanticOutputParser
@@ -17,7 +18,10 @@ from .costs import estimate_llm_cost
 from .validators import Subtopics
 
 if TYPE_CHECKING:
-    from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
+    from gpt_researcher.llm_provider.generic.base import (
+        GenericLLMProvider,
+        ReasoningEfforts,
+    )
 
 
 def get_llm(llm_provider: str, **kwargs) -> GenericLLMProvider:
@@ -28,15 +32,15 @@ def get_llm(llm_provider: str, **kwargs) -> GenericLLMProvider:
 
 async def create_chat_completion(
     messages: list,  # type: ignore
-    model: Optional[str] = None,
-    temperature: Optional[float] = 0.4,
-    max_tokens: Optional[int] = 4000,
-    llm_provider: Optional[str] = None,
-    stream: Optional[bool] = False,
+    model: str | None = None,
+    temperature: float | None = 0.4,
+    max_tokens: int | None = 4000,
+    llm_provider: str | None = None,
+    stream: bool | None = False,
     websocket: Any | None = None,
-    llm_kwargs: Dict[str, Any] | None = None,
+    llm_kwargs: dict[str, Any] | None = None,
     cost_callback: Callable | None = None,
-    reasoning_effort: Optional[ReasoningEfforts] = None,
+    reasoning_effort: ReasoningEfforts | None = None,
     **kwargs,
 ) -> str:
     """Create a chat completion using the OpenAI API
@@ -59,7 +63,13 @@ async def create_chat_completion(
         raise ValueError(f"Max tokens cannot be more than 16,000, but got {max_tokens}")
 
     # Get the provider from supported providers
-    provider = get_llm(llm_provider, model=model, temperature=temperature, max_tokens=max_tokens, **(llm_kwargs or {}))
+    provider: GenericLLMProvider = get_llm(
+        llm_provider,
+        model=model,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        **(llm_kwargs or {}),
+    )
 
     from gpt_researcher.llm_provider.generic.base import (
         NO_SUPPORT_TEMPERATURE_MODELS,
@@ -81,24 +91,49 @@ async def create_chat_completion(
         if base_url:
             kwargs["openai_api_base"] = base_url
 
-    provider: GenericLLMProvider = get_llm(llm_provider, **kwargs)
+    # Initialize provider and prepare for retries
+    provider = get_llm(llm_provider, **kwargs)
+    original_max_tokens: int | None = max_tokens
+    MAX_ATTEMPTS: int = 3
     response: str = ""
-    # create response
-    for _ in range(10):  # maximum of 10 attempts
-        response: str = await provider.get_chat_response(
-            messages,
-            stream,
-            websocket,
-        )
-
-        if cost_callback:
-            llm_costs: float = estimate_llm_cost(str(messages), response)
-            cost_callback(llm_costs)
-
-        return response
-
-    logging.error(f"Failed to get response from {llm_provider} API")
-    raise RuntimeError(f"Failed to get response from {llm_provider} API")
+    # Attempt to get a response with fallback for token limits and transient errors
+    for attempt in range(MAX_ATTEMPTS):
+        try:
+            response: str = await provider.get_chat_response(
+                messages, stream, websocket
+            )
+            if cost_callback is not None:
+                llm_costs: float = estimate_llm_cost(str(messages), response)
+                cost_callback(llm_costs)
+            return response
+        except Exception as e:
+            err_msg: str = str(e)
+            # Fallback for max_tokens errors: remove max_tokens if that's the issue
+            if "max_tokens" in err_msg.casefold() and (
+                "too large" in err_msg.casefold()
+                or "supports at most" in err_msg.casefold()
+            ):
+                logging.warning(
+                    f"max_tokens issue ({original_max_tokens}), retrying without max_tokens"
+                )
+                kwargs["max_tokens"] = None
+                provider: GenericLLMProvider = get_llm(llm_provider, **kwargs)
+                continue
+            # Transient errors: retry with exponential backoff
+            if attempt < MAX_ATTEMPTS - 1:
+                backoff: int = 2**attempt
+                logging.warning(
+                    f"Error calling LLM (attempt {attempt + 1}/{MAX_ATTEMPTS}): {e.__class__.__name__}: {e}, retrying in {backoff}s"
+                )
+                await asyncio.sleep(backoff)
+                continue
+            logging.error(
+                f"Failed to get response from '{llm_provider}' API after {MAX_ATTEMPTS} attempts: {e.__class__.__name__}: {e}"
+            )
+            raise
+    # If all retries fail, raise an error
+    logging.error(f"All retries exhausted for '{llm_provider}' API")
+    raise RuntimeError(f"All retries exhausted for '{llm_provider}' API")
 
 
 async def construct_subtopics(
@@ -120,6 +155,7 @@ async def construct_subtopics(
     Returns:
         list[str]: A list of constructed subtopics.
     """
+    subtopics = [] if subtopics is None else subtopics
     try:
         parser = PydanticOutputParser(pydantic_object=Subtopics)
 
@@ -148,7 +184,7 @@ async def construct_subtopics(
             {
                 "task": task,
                 "data": data,
-                "subtopics": subtopics or [],
+                "subtopics": subtopics,
                 "max_subtopics": config.max_subtopics,
             }
         )
@@ -157,4 +193,4 @@ async def construct_subtopics(
 
     except Exception as e:
         print("Exception in parsing subtopics : ", e)
-        return subtopics or []
+        return subtopics

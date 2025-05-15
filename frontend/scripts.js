@@ -1,7 +1,4 @@
 const GPTResearcher = (() => {
-  // Track if initial scroll has been performed
-  let hasScrolledToOutput = false;
-
   const init = () => {
     // Not sure, but I think it would be better to add event handlers here instead of in the HTML
     //document.getElementById("startResearch").addEventListener("click", startResearch);
@@ -21,9 +18,13 @@ const GPTResearcher = (() => {
     }
   }
 
+  // Track if initial scroll has been performed
+  let hasScrolledToOutput = false;
+  let dispose_socket = null
   const startResearch = () => {
     document.getElementById('output').innerHTML = ''
     document.getElementById('reportContainer').innerHTML = ''
+    dispose_socket?.()
 
     const imageContainer = document.getElementById('selectedImagesContainer')
     imageContainer.innerHTML = ''
@@ -41,7 +42,7 @@ const GPTResearcher = (() => {
     // Initial scroll to output area
     scrollToOutput()
 
-    listenToSockEvents()
+    dispose_socket = listenToSockEvents()
   }
 
   const listenToSockEvents = () => {
@@ -83,7 +84,7 @@ const GPTResearcher = (() => {
     }
 
     socket.onopen = (event) => {
-      const task = document.querySelector('input[name="task"]').value
+      const task = document.getElementById('task').value
       const report_type = document.querySelector(
         'select[name="report_type"]'
       ).value
@@ -98,6 +99,14 @@ const GPTResearcher = (() => {
         source_urls = source_urls.slice(0, source_urls.length - 1)
       }
 
+      const query_domains_str = document.querySelector('input[name="query_domains"]').value
+      let query_domains = []
+      if (query_domains_str) {
+        query_domains = query_domains_str.split(',')
+          .map((domain) => domain.trim())
+          .filter((domain) => domain.length > 0);
+      }
+
       const requestData = {
         task: task,
         report_type: report_type,
@@ -105,23 +114,37 @@ const GPTResearcher = (() => {
         source_urls: source_urls,
         tone: tone,
         agent: agent,
+        query_domains: query_domains,
       }
 
       socket.send(`start ${JSON.stringify(requestData)}`)
     }
+
+    // return dispose function
+    return () => {
+      try {
+        if (socket.readyState !== WebSocket.CLOSED && socket.readyState !== WebSocket.CLOSING) {
+          socket.close();
+        }
+      } catch (e) {
+        console.error('Error closing socket:', e)
+      }
+    };
   }
 
   const addAgentResponse = (data) => {
     const output = document.getElementById('output')
     output.innerHTML += '<div class="agent_response">' + data.output + '</div>'
-    output.scrollTop = output.scrollHeight // Auto-scroll within output container
+    output.scrollTop = output.scrollHeight
     output.style.display = 'block'
+    //updateScroll()
   }
 
   const writeReport = (data, converter) => {
     const reportContainer = document.getElementById('reportContainer')
     const markdownOutput = converter.makeHtml(data.output)
     reportContainer.innerHTML += markdownOutput
+    //updateScroll()
   }
 
   const updateDownloadLink = (data) => {
@@ -152,7 +175,7 @@ const GPTResearcher = (() => {
   }
 
   const updateScroll = () => {
-    // Function intentionally left empty to prevent auto-scrolling
+    window.scrollTo(0, document.body.scrollHeight)
   }
 
   const copyToClipboard = () => {
@@ -172,22 +195,22 @@ const GPTResearcher = (() => {
     copyBtn.textContent = 'Copied!';
     setTimeout(() => {
       copyBtn.textContent = originalText;
-    }, 2000);
+    }, 3000);
   }
 
   const updateState = (state) => {
     var status = ''
     switch (state) {
       case 'in_progress':
-        status = 'Research in progress... Please wait'
+        status = 'Research in progress...'
         setReportActionsStatus('disabled')
         break
       case 'finished':
-        status = 'Research complete! Your report is ready'
+        status = 'Research finished!'
         setReportActionsStatus('enabled')
         break
       case 'error':
-        status = 'Research failed. Please try again'
+        status = 'Research failed!'
         setReportActionsStatus('disabled')
         break
       case 'initial':
@@ -261,11 +284,13 @@ const GPTResearcher = (() => {
     const images = JSON.parse(data.output)
     console.log("Received images:", images);  // Debug log
     if (images && images.length > 0) {
-      imageContainer.innerHTML = '<h3>Research Images</h3>'
       images.forEach(imageUrl => {
         const imgElement = document.createElement('img')
         imgElement.src = imageUrl
         imgElement.alt = 'Research Image'
+        imgElement.style.maxWidth = '200px'
+        imgElement.style.margin = '5px'
+        imgElement.style.cursor = 'pointer'
         imgElement.onclick = () => showImageDialog(imageUrl)
         imageContainer.appendChild(imgElement)
       })
@@ -276,23 +301,24 @@ const GPTResearcher = (() => {
   }
 
   const showImageDialog = (imageUrl) => {
-    const dialog = document.createElement('div')
-    dialog.className = 'image-dialog'
+    const dialog = document.createElement('div');
+    dialog.className = 'image-dialog';
 
-    const img = document.createElement('img')
-    img.src = imageUrl
-    img.alt = 'Full Size Image'
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.alt = 'Full-size Research Image';
 
-    const closeButton = document.createElement('button')
-    closeButton.textContent = 'Close'
-    closeButton.onclick = () => document.body.removeChild(dialog)
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.onclick = () => document.body.removeChild(dialog);
 
-    dialog.appendChild(img)
-    dialog.appendChild(closeButton)
-    document.body.appendChild(dialog)
+    dialog.appendChild(img);
+    dialog.appendChild(closeBtn);
+    document.body.appendChild(dialog);
   }
 
-  // Renamed function to be more descriptive and only scroll once
+  //document.addEventListener('DOMContentLoaded', init)
+
   const scrollToOutput = () => {
     if (!hasScrolledToOutput) {
       const outputElement = document.getElementById('output')
