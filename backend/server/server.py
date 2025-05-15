@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 from fastapi import (
     FastAPI,
     File,
     Request,
+    Response,
     UploadFile,
     WebSocket,
     WebSocketDisconnect,
@@ -17,6 +18,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.server.server_utils import (
     execute_multi_agents,
@@ -39,6 +41,26 @@ logging.basicConfig(
         logging.StreamHandler()  # Only log to console
     ]
 )
+
+# Custom middleware to set cache control headers for outputs URLs
+class OutputsCacheMiddleware(BaseHTTPMiddleware):
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
+        response: Response = await call_next(request)
+
+        # Check if this is a request for an output file
+        if request.url.path.startswith('/outputs/'):
+            # Set Cache-Control header for long-term caching (30 days)
+            response.headers['Cache-Control'] = 'public, max-age=2592000'
+            # Also add other cache headers for better browser compatibility
+            response.headers['Expires'] = '30d'
+            # Use ETag for better caching
+            response.headers.setdefault('ETag', f'W/"{hash(request.url.path)}"')
+
+        return response
 
 # Models
 
@@ -71,6 +93,9 @@ class ConfigRequest(BaseModel):
 # App initialization
 app = FastAPI()
 
+# Add the custom middleware for output files caching
+app.add_middleware(OutputsCacheMiddleware)
+
 # Static files and templates
 app.mount("/site", StaticFiles(directory="./frontend"), name="site")
 app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
@@ -97,6 +122,7 @@ DOC_PATH: str = os.getenv("DOC_PATH", "./my-docs")
 @app.on_event("startup")
 def startup_event():
     os.makedirs("outputs", exist_ok=True)
+    # Use the standard StaticFiles mount - our middleware will handle cache control
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
     os.makedirs(DOC_PATH, exist_ok=True)
 
