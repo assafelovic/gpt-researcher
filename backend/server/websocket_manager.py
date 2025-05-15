@@ -72,6 +72,7 @@ class WebSocketManager:
         tone: Tone,
         websocket: WebSocket,
         headers: dict[str, str] | None = None,
+        **kwargs: dict[str, Any],
     ) -> str:
         """Start streaming the output."""
         tone = Tone[tone]
@@ -87,6 +88,7 @@ class WebSocketManager:
             websocket,
             headers=headers,
             config_path=config_path,
+            **kwargs,
         )
         # Create new Chat Agent whenever a new report is written
         self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
@@ -115,6 +117,7 @@ async def run_agent(
     websocket: WebSocket,
     headers: dict[str, str] | None = None,
     config_path: str = "",
+    **kwargs: dict[str, Any],
 ) -> str:
     """Run the agent."""
     start_time: datetime.datetime = datetime.datetime.now()

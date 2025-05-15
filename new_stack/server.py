@@ -19,7 +19,6 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader, Template
 
-
 try:
     from gpt_researcher.config import Config
 except ImportError:
@@ -34,7 +33,6 @@ from backend.server.websocket_manager import WebSocketManager
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.enum import Tone
 from gpt_researcher.utils.logger import get_formatted_logger
-
 
 SCRIPT_DIR: Path = Path(__file__).parent.absolute()
 
@@ -121,10 +119,10 @@ class ResearchAPIHandler:
 
             if config_path and config_path.exists():
                 logger.info(f"Using config from '{config_path}'")
-                config = Config.from_dict(params, Config.from_path(config_path))
+                config = Config(config_path=str(config_path))
             else:
                 logger.info("No config file found, using default config")
-                config = Config.from_dict(params)
+                config = Config(config_path=str(config_path))
                 if config_path is not None:
                     config_path.write_text(config.to_json())
                     logger.info(f"Default config saved to '{config_path}'")
@@ -150,7 +148,8 @@ class ResearchAPIHandler:
             file_paths: dict[str, str] = await generate_report_files(report, sanitized_filename)
 
             # Convert backslashes to forward slashes and ensure proper URL paths
-            file_paths = {k: f"/file/{str(f).replace('\\', '/')}" for k, f in file_paths.items()}
+            backslash: str = "\\"
+            file_paths = {k: f"/file/{str(f).replace(backslash, '/')}" for k, f in file_paths.items()}
             file_paths["json"] = f"/file/logs/{sanitized_filename}.log"
             yield json.dumps({"type": "path", "output": file_paths})
 
@@ -240,7 +239,7 @@ async def read_index() -> HTMLResponse:
     try:
         config_path: Path = SCRIPT_DIR / "config.json"
         if config_path.exists():
-            config: Config = Config.from_path(config_path)
+            config: Config = Config(config_path=str(config_path))
         else:
             config = Config()
 
@@ -356,12 +355,10 @@ async def get_config() -> JSONResponse:
     try:
         config_path: Path = SCRIPT_DIR / "config.json"
         if config_path.exists():
-            config: Config = Config.from_path(config_path)
-            config_dict: dict[str, Any] = config.to_dict()
+            config: Config = Config(config_path=str(config_path))
         else:
             config = Config()
-            config_dict = config.to_dict()
-        return JSONResponse(content=config_dict, status_code=200)
+        return JSONResponse(content=config, status_code=200)
     except Exception as e:
         logger.exception(f"Error handling get_config request! {e.__class__.__name__}: {e}")
         return JSONResponse(

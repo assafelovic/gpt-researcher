@@ -25,7 +25,7 @@ pymupdf>=1.0.0
 # Document processing
 markdown>=3.8.0
 mistune>=3.1.0
-htmldocx==0.0.6
+htmldocx>=0.0.6
 python-docx>=1.1.0
 lxml>=5.0.0
 json-repair>=0.44.0

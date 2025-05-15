@@ -391,9 +391,7 @@ def get_audio_transcription_models() -> dict[str, LiteLLMBaseModelSpec]:
     }
 
 
-def get_audio_speech_models(
-    cost_per_second: float | None = None,
-) -> dict[str, Any]:
+def get_audio_speech_models() -> dict[str, Any]:
     """Get text-to-speech models, optionally filtered by cost.
 
     This function returns models that have mode set to "audio_speech"

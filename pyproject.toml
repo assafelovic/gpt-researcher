@@ -8,41 +8,47 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
-beautifulsoup4 = "*"
-colorama = "*"
-duckduckgo_search = "*"
-md2pdf = "*"
-openai = "*"
-python-dotenv = "*"
-pyyaml = "*"
-uvicorn = "*"
-pydantic = "*"
+# Core dependencies
 fastapi = "*"
+uvicorn = "*"
+python-dotenv = "*"
+pydantic = "*"
 python-multipart = "*"
-markdown = "*"
+jinja2 = "*"
+
+# LLM and vector store integrations
 langchain = "*"
-langgraph = "*"
 langchain_community = "*"
 langchain-openai = "*"
 langchain-gigachat = "*"
+openai = "*"
+tiktoken = "*"
 tavily-python = "*"
-permchain = "*"
+
+# Web scraping and information retrieval
+beautifulsoup4 = "*"
+requests = "*"
+duckduckgo_search = "*"
 arxiv = "*"
 PyMuPDF = "*"
-requests = "*"
-jinja2 = "*"
-aiofiles = "*"
-SQLAlchemy = "*"
+
+# Document processing
+markdown = "*"
 mistune = "*"
 htmldocx = "*"
 python-docx = "*"
 lxml = { version = "*", extras = ["html_clean"] }
-unstructured = "*"
-tiktoken = "*"
 json-repair = "*"
 json5 = "*"
+
+# Utilities
 loguru = "*"
+colorama = "*"
+aiofiles = "*"
+tqdm = "*"
 websockets = "*"
+permchain = "*"
+langgraph = "*"
 
 [build-system]
 requires = ["poetry-core"]
@@ -66,40 +72,45 @@ license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.10,<3.12"
 dependencies = [
-    "arxiv",
-    "beautifulsoup4",
-    "colorama",
-    "duckduckgo_search",
-    "dotenv",
+    # Core dependencies
     "fastapi",
+    "uvicorn",
+    "python-dotenv",
+    "pydantic",
+    "python-multipart",
     "jinja2",
-    "json-repair",
-    "json5",
+
+    # LLM and vector store integrations
     "langchain",
     "langchain_community",
-    "langchain-gigachat",
     "langchain-openai",
-    "langgraph",
-    "loguru",
-    "lxml",
-    "markdown",
-    "md2pdf",
-    "mistune",
+    "langchain-gigachat",
     "openai",
-    "permchain",
-    "pydantic",
-    "PyMuPDF",
-    "python-docx",
-    "python-dotenv",
-    "python-multipart",
-    "pyyaml",
-    "requests",
-    "SQLAlchemy",
-    "tavily-python",
     "tiktoken",
-    "typing-extensions",
-    "unstructured",
-    "uvicorn",
-    "websockets",
+    "tavily-python",
+
+    # Web scraping and information retrieval
+    "beautifulsoup4",
+    "requests",
+    "duckduckgo_search",
+    "arxiv",
+    "PyMuPDF",
+
+    # Document processing
+    "markdown",
+    "mistune",
     "htmldocx>=0.0.6",
+    "python-docx",
+    "lxml",
+    "json-repair",
+    "json5",
+
+    # Utilities
+    "loguru",
+    "colorama",
+    "aiofiles",
+    "tqdm",
+    "websockets",
+    "permchain",
+    "langgraph",
 ]

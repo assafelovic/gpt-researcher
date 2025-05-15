@@ -2,7 +2,7 @@ from __future__ import annotations
 
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from gpt_researcher.utils.validators import BaseModel, Field
 
@@ -37,7 +37,7 @@ class LogHandler(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def on_research_step(self, step: str, details: dict, **kwargs):
+    async def on_research_step(self, step: str, details: dict[str, Any], **kwargs):
         pass
 
 
