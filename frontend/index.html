@@ -13,61 +13,104 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="/site/styles.css" />
     <style>
-        body {
-            position: relative !important;
-            background-color: #121212 !important;
+        /* ... existing styles ... */
+
+        /* Icon button style for inline buttons */
+        .icon-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #7b68ee;
+            padding: 5px;
+            margin-left: 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s, color 0.2s;
         }
 
-        body::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('./static/powerful_wizard.png');
-            background-position: center;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            opacity: 0.4;
-            z-index: -1;
+        .icon-button:hover {
+            background-color: rgba(123, 104, 238, 0.1);
         }
 
-        .avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 10px;
-            border: 2px solid #9D4EDD;
-            box-shadow: 0 0 15px rgba(157, 78, 221, 0.5);
+        .icon-button:active {
+            color: #5f4bbf;
         }
 
-        .agent-name {
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .agent-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .agent-choices {
-            display: none;
-        }
-
-        .btn-show {
-            display: none;
+        /* Ensure buttons are properly aligned in headings */
+        h2 .icon-button, h2 .expand-button {
+            vertical-align: middle;
+            font-size: 0.8em;
         }
     </style>
 </head>
 
 <body>
+    <!-- Top Credits Bar -->
+    <div class="credits-bar top-credits">
+        <div class="credits-content">
+            <p>Created by <a href="https://github.com/th3w1zard1" target="_blank">Boden Crouch (th3w1zard1)</a> | ResearchWizard &copy; 2024</p>
+            <!-- Add history button to top bar -->
+            <div id="historyPanelOpenBtn" class="top-history-button">
+                <i class="fas fa-history"></i> History
+            </div>
+            <!-- Add WebSocket button to the top bar -->
+            <div id="websocketPanelOpenBtn" class="top-websocket-button">
+                <i class="fas fa-network-wired"></i> Status
+            </div>
+        </div>
+    </div>
+
+    <!-- WebSocket Status Panel -->
+    <div class="websocket-panel" id="websocketPanel">
+        <div class="websocket-panel-header">
+            <h3><i class="fas fa-plug"></i> Connection Status</h3>
+            <div class="websocket-panel-actions">
+                <button id="websocketPanelToggle" class="websocket-action-btn" title="Close panel">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+        </div>
+        <div class="websocket-status">
+            <div class="status-item">
+                <span class="status-label">Connection:</span>
+                <span class="status-value" id="connectionStatus">Disconnected</span>
+                <span class="status-indicator" id="connectionIndicator"></span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Research:</span>
+                <span class="status-value" id="researchStatus">Inactive</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Connected for:</span>
+                <span class="status-value" id="connectionDuration">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Last activity:</span>
+                <span class="status-value" id="lastActivity">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">ReadyState:</span>
+                <span class="status-value" id="readyState">-</span>
+            </div>
+            <div class="status-divider"></div>
+            <div class="status-item">
+                <span class="status-label">Connection attempts:</span>
+                <span class="status-value" id="connectionAttempts">0</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Messages received:</span>
+                <span class="status-value" id="messagesReceived">0</span>
+            </div>
+            <div class="status-divider"></div>
+            <div class="status-item">
+                <span class="status-label">Current task:</span>
+                <span class="status-value" id="currentTask">-</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Left Feature Panel -->
     <div class="feature-panel left-panel">
-        <div class="feature-card primary" data-highlight="task">
+        <div class="feature-card primary" data-highlight="task" data-highlight-button="submitButton">
             <div class="feature-icon">
                 <i class="fas fa-bolt"></i>
             </div>
@@ -115,35 +158,6 @@
         </div>
     </div>
 
-    <!-- Download Panel Left -->
-    <div class="download-panel download-panel-left">
-        <div class="download-card">
-            <div class="download-title">Download Report</div>
-            <a id="downloadLink" href="#" class="download-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-pdf"></i> PDF Document
-            </a>
-            <a id="downloadLinkWord" href="#" class="download-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-word"></i> Word Document
-            </a>
-        </div>
-    </div>
-
-    <!-- Download Panel Right -->
-    <div class="download-panel download-panel-right">
-        <div class="download-card">
-            <div class="download-title">Other Options</div>
-            <a id="downloadLinkMd" href="#" class="download-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-lines"></i> Markdown File
-            </a>
-            <a id="copyToClipboard" onclick="GPTResearcher.copyToClipboard()" class="download-btn">
-                <i class="fas fa-copy"></i> Copy to Clipboard
-            </a>
-            <a id="downloadLinkJson" href="#" class="download-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-code"></i> Research Log (JSON)
-            </a>
-        </div>
-    </div>
-
     <!-- Scroll to bottom button -->
     <div class="scroll-to-bottom" id="scrollToBottomBtn">
         <i class="fas fa-arrow-down"></i>
@@ -155,7 +169,7 @@
                 Streamline Your Research <br>
                 <span class="gradient-text">In Minutes, Not Hours</span>
             </h1>
-            <p class="max-w-6xl mx-auto mt-8" style="font-size:20px">
+            <p class="max-w-6xl mx-auto mt-8 landing-description">
                 Meet <b>ResearchWizard</b>, your personal AI research assistant that turns complex topics into clear
                 insights. <br>
                 Receive thorough reports with verified references, professional layout, and personalized content
@@ -167,16 +181,12 @@
 
     <main class="container" id="form">
         <div class="agent-item"><img src="/static/new/wizard-logo.svg" class="avatar" alt="Research Wizard"></div>
-        <form method="POST" class="mt-3" onsubmit="GPTResearcher.startResearch(); return false;">
+        <form method="POST" class="mt-3" id="researchForm">
             <div class="form-group">
                 <label for="task" class="agent-question">What would you like me to research for you?</label>
                 <textarea id="task" name="task" class="form-control highlight-connection"
-                    placeholder="Enter any topic, question, or idea..." required></textarea>
+                    placeholder="Enter any topic, question, or idea..." required autocomplete="on"></textarea>
                 <input type="radio" name="agent" id="autoAgent" value="Auto Agent" checked hidden>
-            </div>
-            <div class="form-group">
-                <div class="row"></div>
-                <button type="button" id="btnShowAuto" class="btn btn-secondary mt-3 btn-show">Auto Agent</button>
             </div>
             <div class="form-group">
                 <label for="report_type" class="agent-question">What level of detail do you want?</label>
@@ -184,7 +194,6 @@
                     <option value="research_report">Quick Summary - Fast results (~2 min)</option>
                     <option value="detailed_report">Deep Dive - Comprehensive analysis (~5 min)</option>
                     <option value="resource_report">Resource List - Just the sources</option>
-                    <option value="deep">Deep Research</option>
                 </select>
             </div>
             <div class="form-group">
@@ -232,74 +241,131 @@
             <div class="form-group">
                 <label for="queryDomains" class="form-label">Query Domains (Optional)</label>
                 <input type="text" class="form-control highlight-connection" id="queryDomains" name="query_domains"
-                    placeholder="Enter domains separated by commas">
+                    placeholder="Enter domains separated by commas" autocomplete="on">
                 <small class="text-muted">Example: techcrunch.com, forbes.com</small>
             </div>
-            <input type="submit" value="Begin Research" class="btn btn-primary button-padding">
+            <input type="submit" value="Begin Research" class="btn btn-primary button-padding" id="submitButton">
         </form>
 
+        <!-- Add JSON button above Research Progress section -->
+        <div class="margin-div" id="jsonButtonContainer" style="display: none; text-align: right; margin-bottom: 10px;">
+            <a id="downloadLinkJsonTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
+                <i class="fas fa-file-code"></i> JSON
+            </a>
+        </div>
+
         <div class="margin-div research-output-container">
-            <h2>Research Progress</h2>
-            <p class="mt-2 text-left" style="font-size: 0.8rem;">Watch as the AI works to gather information and analyze
-                your topic in real-time.</p>
+            <!-- Move spinner to the left side of the text -->
+            <h2><div id="modernSpinner" class="modern-spinner"></div> Research Progress <button id="expandOutputBtn" class="expand-button" title="Expand"><i class="fas fa-expand-alt"></i></button></h2>
+            <p class="mt-2 text-left" style="font-size: 0.8rem;">
+                Watch as the AI works to gather information and analyze your topic in real-time.</p>
             <div id="output"></div>
         </div>
         <div class="images_div">
             <div id="selectedImagesContainer" style="display: none;"></div>
         </div>
         <div class="margin-div report-container">
-            <h2>Research Report</h2>
+            <h2>Research Report
+                <button id="copyToClipboardTop" class="icon-button" title="Copy" style="display: none;">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button id="expandReportBtn" class="expand-button" title="Expand">
+                    <i class="fas fa-expand-alt"></i>
+                </button>
+            </h2>
+            <!-- Add download buttons above the report container -->
+            <div class="report-actions" style="display: none;">
+                <a id="downloadLinkTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a id="downloadLinkWordTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-word"></i> Word
+                </a>
+                <a id="downloadLinkMdTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-lines"></i> Markdown
+                </a>
+            </div>
             <div id="reportContainer"></div>
             <div id="reportActions" style="display: none;">
                 <div class="alert alert-info" role="alert" id="status"></div>
             </div>
         </div>
+
+        <!-- Chat Container -->
+        <div class="margin-div chat-container" id="chatContainer" style="display: none;">
+            <h2><i class="fas fa-comments"></i> Chat with AI about this research <button id="expandChatBtn" class="expand-button" title="Expand"><i class="fas fa-expand-alt"></i></button></h2>
+            <p class="text-muted">Ask questions about the research report to get more insights</p>
+            <div id="chatMessages" class="chat-messages"></div>
+            <div class="chat-input-container">
+                <textarea id="chatInput" class="form-control chat-input" placeholder="Ask a question about this research..." rows="2"></textarea>
+                <button id="voiceInputBtn" class="btn btn-secondary" title="Use voice input">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button id="sendChatBtn" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+
+        <!-- Fixed bottom bar styled like the top credits bar -->
     </main>
 
-    <footer>
-        <p>
-            <a target="_blank" href="https://github.com/th3w1zard1">Created by Boden Crouch (th3w1zard1)</a>
-        </p>
-        <p>ResearchWizard &copy; 2024</p>
-    </footer>
+    <!-- Conversation History Panel -->
+    <div class="history-panel" id="historyPanel">
+        <div class="history-panel-header">
+            <h3><i class="fas fa-history"></i> Research History</h3>
+            <div class="history-panel-actions">
+                <button id="historyPanelToggle" class="history-action-btn" title="Close panel">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="history-panel-search">
+            <input type="text" id="historySearch" placeholder="Search research history...">
+            <button id="historySearchBtn" class="history-action-btn" title="Search">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+        <div class="history-panel-filters">
+            <select id="historySortOrder">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+            </select>
+            <button id="historyClearBtn" class="history-action-btn" title="Clear all history">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+        <div class="history-panel-entries" id="historyEntries">
+            <!-- Entries will be populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Bottom fixed download bar - positioned at the bottom of the body -->
+    <div class="sticky-downloads-bar" id="stickyDownloadsBar">
+        <div class="credits-content">
+            <div class="download-buttons-container">
+                <a id="downloadLink" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a id="downloadLinkWord" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-word"></i> Word
+                </a>
+                <a id="downloadLinkMd" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-lines"></i> Markdown
+                </a>
+                <a id="copyToClipboard" class="download-option-btn disabled">
+                    <i class="fas fa-copy"></i> Copy
+                </a>
+                <a id="downloadLinkJson" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-code"></i> JSON
+                </a>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
     <script src="/site/scripts.js"></script>
     <script>
-        // const btnChoose = document.getElementById('btnChoose');
-        const btnShowAuto = document.getElementById('btnShowAuto');
-        const autoAgentDiv = document.getElementById('autoAgentDiv');
-        const agentChoices = document.getElementsByClassName('agent-choices');
-
-        /**
-        btnChoose.addEventListener('click', function () {
-            btnShowAuto.style.display = 'inline-block';
-            btnChoose.style.display = 'none';
-            autoAgentDiv.style.display = 'none';
-            agentChoices[0].style.display = 'flex';
-        });
-        **/
-
-        btnShowAuto.addEventListener('click', function () {
-            btnShowAuto.style.display = 'none';
-            btnChoose.style.display = 'inline-block';
-            autoAgentDiv.style.display = 'flex';
-            agentChoices[0].style.display = 'none';
-        });
-
-        const tagsInput = document.getElementById('tags-input');
-        const input = document.getElementById('custom_source');
-
-        if (input) {
-            input.addEventListener('keypress', function (e) {
-                if ((e.key === 'Enter' || e.key === ',') && input.value !== '') {
-                    e.preventDefault();
-                    GPTResearcher.addTag(input.value);
-                    input.value = '';
-                }
-            });
-        }
-
         // Auto-resize textarea as content grows
         const taskTextarea = document.getElementById('task');
         if (taskTextarea) {
@@ -322,8 +388,17 @@
         featureCards.forEach(card => {
             card.addEventListener('mouseenter', function () {
                 const highlightTarget = this.getAttribute('data-highlight');
+                const highlightButton = this.getAttribute('data-highlight-button');
                 const targetElement = document.getElementById(highlightTarget) ||
                     document.querySelector(`[name="${highlightTarget}"]`);
+
+                // If there's a button to highlight, handle it
+                if (highlightButton) {
+                    const buttonElement = document.getElementById(highlightButton);
+                    if (buttonElement) {
+                        buttonElement.classList.add('highlight-glow-button');
+                    }
+                }
 
                 // Special case for Precise Research - highlight the entire container
                 if (highlightTarget === 'report_type' && this.querySelector('.feature-title').textContent === 'Precise Research') {
@@ -341,6 +416,22 @@
                     return;
                 }
 
+                // Special case for Custom Style - highlight the tone selection
+                if (highlightTarget === 'tone' && this.querySelector('.feature-title').textContent === 'Custom Style') {
+                    const toneEl = document.getElementById('tone');
+                    if (toneEl) toneEl.classList.add('highlight-glow-tone');
+                    return;
+                }
+
+                // Special case for Multiple Formats - highlight the download buttons
+                if (highlightTarget === 'format' && this.querySelector('.feature-title').textContent === 'Multiple Formats') {
+                    const downloadButtons = document.querySelectorAll('.download-option-btn');
+                    downloadButtons.forEach(button => {
+                        button.classList.add('highlight-glow-download-button');
+                    });
+                    return;
+                }
+
                 if (targetElement) {
                     targetElement.classList.add(`highlight-glow-${highlightTarget}`);
                 }
@@ -348,8 +439,17 @@
 
             card.addEventListener('mouseleave', function () {
                 const highlightTarget = this.getAttribute('data-highlight');
+                const highlightButton = this.getAttribute('data-highlight-button');
                 const targetElement = document.getElementById(highlightTarget) ||
                     document.querySelector(`[name="${highlightTarget}"]`);
+
+                // If there's a button to highlight, handle it
+                if (highlightButton) {
+                    const buttonElement = document.getElementById(highlightButton);
+                    if (buttonElement) {
+                        buttonElement.classList.remove('highlight-glow-button');
+                    }
+                }
 
                 // Special case for Precise Research
                 if (highlightTarget === 'report_type' && this.querySelector('.feature-title').textContent === 'Precise Research') {
@@ -367,6 +467,22 @@
                     return;
                 }
 
+                // Special case for Custom Style
+                if (highlightTarget === 'tone' && this.querySelector('.feature-title').textContent === 'Custom Style') {
+                    const toneEl = document.getElementById('tone');
+                    if (toneEl) toneEl.classList.remove('highlight-glow-tone');
+                    return;
+                }
+
+                // Special case for Multiple Formats - remove highlight from download buttons
+                if (highlightTarget === 'format' && this.querySelector('.feature-title').textContent === 'Multiple Formats') {
+                    const downloadButtons = document.querySelectorAll('.download-option-btn');
+                    downloadButtons.forEach(button => {
+                        button.classList.remove('highlight-glow-download-button');
+                    });
+                    return;
+                }
+
                 if (targetElement) {
                     targetElement.classList.remove(`highlight-glow-${highlightTarget}`);
                 }
@@ -376,103 +492,36 @@
         // Scroll to bottom button functionality
         const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
 
-        // Show/hide scroll button based on scroll position
-        window.addEventListener('scroll', function () {
-            // Always show the scroll button except when at the very top of the page
-            if (window.scrollY > 100) {
-                scrollToBottomBtn.classList.add('visible');
-            } else {
-                scrollToBottomBtn.classList.remove('visible');
-            }
-
-            // Check if user has scrolled past the form to report area
-            const formElement = document.getElementById('form');
-            const reportElement = document.querySelector('.report-container');
-            const formRect = formElement.getBoundingClientRect();
-
-            // If research is complete and user has scrolled past form
-            if (document.getElementById('status').textContent === 'Research finished!' &&
-                formRect.bottom < 0) {
-                // Hide feature panels and show download panels
-                document.querySelectorAll('.feature-panel').forEach(panel => {
-                    panel.style.opacity = '0';
-                    setTimeout(() => { panel.style.display = 'none'; }, 300);
-                });
-
-                document.querySelectorAll('.download-panel').forEach(panel => {
-                    panel.style.display = 'block';
-                    setTimeout(() => { panel.style.opacity = '1'; }, 100);
-                });
-            } else {
-                // When scrolling back up, show feature panels again if research is not complete
-                if (document.getElementById('status').textContent !== 'Research finished!') {
-                    document.querySelectorAll('.feature-panel').forEach(panel => {
-                        if (window.innerWidth >= 1400) {
-                            panel.style.display = 'block';
-                            setTimeout(() => { panel.style.opacity = '1'; }, 100);
-                        }
-                    });
-
-                    document.querySelectorAll('.download-panel').forEach(panel => {
-                        panel.style.opacity = '0';
-                        setTimeout(() => { panel.style.display = 'none'; }, 300);
-                    });
-                }
-            }
+        // Handle scroll events
+        window.addEventListener('scroll', function() {
+            // Other scroll functionality can go here if needed
         });
 
         // Scroll to bottom button click event
-        scrollToBottomBtn.addEventListener('click', function () {
+        scrollToBottomBtn.addEventListener('click', function() {
             window.scrollTo({
                 top: document.body.scrollHeight,
                 behavior: 'smooth'
             });
         });
 
-        // Handle feature panels visibility based on scroll
-        window.addEventListener('scroll', function () {
-            // This is handled in the scroll event listener above
-        });
-
         // Ensure feature panels are positioned correctly on window resize
         window.addEventListener('resize', function () {
+            // Adjust the feature panel width based on screen size
             const viewportWidth = window.innerWidth;
+            const featurePanel = document.querySelector('.feature-panel');
 
-            // Don't show feature panels if download panels are visible
-            if (document.querySelector('.download-panel').style.opacity !== '1') {
-                document.querySelectorAll('.feature-panel').forEach(panel => {
-                    if (viewportWidth >= 1400) {
-                        panel.style.display = 'block';
-                    } else {
-                        panel.style.display = 'none';
-                    }
-                });
+            if (featurePanel) {
+                if (viewportWidth < 1400) {
+                    featurePanel.style.display = 'none';
+                } else {
+                    featurePanel.style.display = 'block';
+                    // Adjust width based on screen size
+                    const panelWidth = Math.min(280, Math.max(200, viewportWidth * 0.15));
+                    featurePanel.style.width = `${panelWidth}px`;
+                }
             }
         });
-
-        // Initialize feature panels visibility
-        window.dispatchEvent(new Event('resize'));
-
-        // Custom function to update download links and show download panels
-        function showDownloadOptions(data) {
-            if (data && data.output) {
-                // Enable download buttons
-                document.querySelectorAll('.download-btn').forEach(btn => {
-                    btn.classList.remove('disabled');
-                });
-
-                // Hide feature panels, show download panels
-                document.querySelectorAll('.feature-panel').forEach(panel => {
-                    panel.style.opacity = '0';
-                    setTimeout(() => { panel.style.display = 'none'; }, 300);
-                });
-
-                document.querySelectorAll('.download-panel').forEach(panel => {
-                    panel.style.display = 'block';
-                    setTimeout(() => { panel.style.opacity = '1'; }, 100);
-                });
-            }
-        }
 
         // Manually trigger the scroll event once on load to correctly set the scroll button visibility
         window.addEventListener('DOMContentLoaded', function () {
