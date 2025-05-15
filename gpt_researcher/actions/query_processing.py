@@ -100,8 +100,15 @@ async def generate_sub_queries(
             )
 
     result = json_repair.loads(response)
-    assert isinstance(result, list), "Sub-queries must be a list, got %s" % type(result)
-    return result
+    if isinstance(result, str):
+        return [query.strip() for query in result.split("\n")]
+    if isinstance(result, list):
+        return result
+    if isinstance(result, dict):
+        return [str(query).strip() for query in result.values()]
+    if isinstance(result, (int, float, bool)):
+        return [str(result)]
+    raise ValueError(f"Invalid result type: `{result.__class__.__name__}`, expected `list`")
 
 
 async def plan_research_outline(
