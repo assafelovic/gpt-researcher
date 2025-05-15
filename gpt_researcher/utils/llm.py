@@ -109,7 +109,6 @@ async def create_chat_completion(
             if cost_callback is not None:
                 llm_costs: float = estimate_llm_cost(str(messages), response)
                 cost_callback(llm_costs)
-            return response
         except Exception as e:
             err_msg: str = str(e)
             # Fallback for max_tokens errors: remove max_tokens if that's the issue
@@ -135,6 +134,8 @@ async def create_chat_completion(
                 f"Failed to get response from '{llm_provider}' API after {MAX_ATTEMPTS} attempts: {e.__class__.__name__}: {e}"
             )
             raise
+        else:
+            return response
     # If all retries fail, raise an error
     logging.error(f"All retries exhausted for '{llm_provider}' API")
     raise RuntimeError(f"All retries exhausted for '{llm_provider}' API")
@@ -173,7 +174,7 @@ async def construct_subtopics(
 
         temperature: float = config.temperature
         # temperature = 0 # Note: temperature throughout the code base is currently set to Zero
-        provider = get_llm(
+        provider     = get_llm(
             config.smart_llm_provider,
             model=config.smart_llm_model,
             temperature=temperature,

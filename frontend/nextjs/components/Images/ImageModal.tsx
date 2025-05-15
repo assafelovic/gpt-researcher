@@ -1,6 +1,14 @@
 import React, { useEffect } from 'react';
 import { TouchEventHandler } from 'react';
 
+<<<<<<<< HEAD:frontend/nextjs/components/Images/ImageModal.jsx
+export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }) {
+    if (!isOpen) return null;
+
+    // Set up keyboard event listeners
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+========
 interface ImageModalProps {
     imageSrc: any;
     isOpen: boolean;
@@ -13,8 +21,9 @@ interface ImageModalProps {
 export default function ImageModal({ imageSrc, isOpen, onClose, onNext, onPrev }: ImageModalProps) {
     useEffect(() => {
         if (!isOpen) return;
-
+        
         const handleKeyDown = (e: KeyboardEvent) => {
+>>>>>>>> upstream/master:frontend/nextjs/components/Images/ImageModal.tsx
             if (e.key === 'ArrowLeft') {
                 onPrev?.();
             } else if (e.key === 'ArrowRight') {

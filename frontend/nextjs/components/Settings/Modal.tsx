@@ -9,27 +9,18 @@ interface ChatBoxProps {
   chatBoxSettings: ChatBoxSettings;
   setChatBoxSettings: React.Dispatch<React.SetStateAction<ChatBoxSettings>>;
 }
-export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxProps) {
+
+interface Domain {
+  value: string;
+}
+
+const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) => {
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState('report_settings');
   const [mounted, setMounted] = useState(false);
-
+  
   const [apiVariables, setApiVariables] = useState({
-    ANTHROPIC_API_KEY: '',
-    TAVILY_API_KEY: '',
-    LANGCHAIN_TRACING_V2: 'true',
-    LANGCHAIN_API_KEY: '',
-    OPENAI_API_KEY: '',
     DOC_PATH: './my-docs',
-    RETRIEVER: 'tavily', // Set default retriever to Tavily
-    GOOGLE_API_KEY: '',
-    GOOGLE_CX_KEY: '',
-    BING_API_KEY: '',
-    SEARCHAPI_API_KEY: '',
-    SERPAPI_API_KEY: '',
-    SERPER_API_KEY: '',
-    SEARX_URL: '',
-    LANGGRAPH_HOST_URL: ''
   });
 
   // Mount the component
@@ -54,7 +45,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
     } else {
       document.body.style.overflow = '';
     }
-
+    
     // Cleanup function
     return () => {
       document.body.style.overflow = '';
@@ -62,14 +53,16 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
   }, [showModal]);
 
   const handleSaveChanges = () => {
-    setChatBoxSettings(chatBoxSettings);
+    setChatBoxSettings({
+      ...chatBoxSettings
+    });
     localStorage.setItem('apiVariables', JSON.stringify(apiVariables));
     setShowModal(false);
   };
 
   const handleInputChange = (e: { target: { name: any; value: any; }; }) => {
     const { name, value } = e.target;
-    setApiVariables((prevState: any) => ({
+    setApiVariables(prevState => ({
       ...prevState,
       [name]: value
     }));
@@ -93,26 +86,26 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
   // Create modal content
   const modalContent = showModal && (
     <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 z-[1000] flex items-center justify-center overflow-auto"
+      <motion.div 
+        className="fixed inset-0 z-[1000] flex items-center justify-center overflow-auto" 
         initial="hidden"
         animate="visible"
         exit="hidden"
         variants={fadeIn}
         style={{ backdropFilter: 'blur(5px)' }}
-        onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+        onClick={(e) => {
           // Close when clicking the backdrop, not the modal content
           if (e.target === e.currentTarget) setShowModal(false);
         }}
       >
-        <motion.div
+        <motion.div 
           className="relative w-auto max-w-3xl z-[1001] mx-6 my-8 md:mx-auto"
           variants={slideUp}
         >
           <div className="relative">
             {/* Subtle border with hint of glow */}
             <div className="absolute -inset-0.5 bg-gradient-to-r from-teal-500/20 via-cyan-500/15 to-blue-500/20 rounded-xl blur-sm opacity-50 shadow-sm"></div>
-
+            
             {/* Modal content */}
             <div className="relative flex flex-col rounded-lg overflow-hidden bg-gray-900 border border-gray-800/60 shadow-md hover:shadow-teal-400/10 transition-shadow duration-300">
               {/* Header with subtler accent */}
@@ -132,7 +125,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
                   </button>
                 </div>
               </div>
-
+              
               {/* Body with content */}
               <div className="relative p-6 flex-auto bg-gray-900/95 modal-content">
                 {false && (<div className="tabs mb-4">
@@ -147,7 +140,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
                   </div>
                 )}
               </div>
-
+              
               {/* Footer with actions */}
               <div className="flex items-center justify-end p-4 border-t border-gray-800 bg-gray-900/80">
                 <button
@@ -167,7 +160,7 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
           </div>
         </motion.div>
       </motion.div>
-      <motion.div
+      <motion.div 
         className="fixed inset-0 z-[999] bg-black"
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.6 }}
@@ -194,4 +187,6 @@ export default function Modal({ setChatBoxSettings, chatBoxSettings }: ChatBoxPr
       {mounted && showModal && createPortal(modalContent, document.body)}
     </div>
   );
-}
+};
+
+export default Modal;

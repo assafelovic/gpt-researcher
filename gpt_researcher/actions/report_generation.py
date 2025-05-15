@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ..config.config import Config
 from ..prompts import PromptFamily, get_prompt_by_report_type
@@ -43,14 +43,11 @@ async def write_report_introduction(
             model=config.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
-                {
-                    "role": "user",
-                    "content": prompt_family.generate_report_introduction(
-                        question=query,
-                        research_summary=context,
-                        language=config.language,
-                    ),
-                },
+                {"role": "user", "content": prompt_family.generate_report_introduction(
+                    question=query,
+                    research_summary=context,
+                    language=config.language
+                )},
             ],
             temperature=0.25,
             llm_provider=config.smart_llm_provider,
@@ -97,7 +94,9 @@ async def write_conclusion(
                 {
                     "role": "user",
                     "content": prompt_family.generate_report_conclusion(
-                        query=query, report_content=context, language=config.language
+                        query=query,
+                        report_content=context,
+                        language=config.language
                     ),
                 },
             ],
@@ -189,12 +188,8 @@ async def generate_draft_section_titles(
             model=config.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{role}"},
-                {
-                    "role": "user",
-                    "content": prompt_family.generate_draft_titles_prompt(
-                        current_subtopic, query, context
-                    ),
-                },
+                {"role": "user", "content": prompt_family.generate_draft_titles_prompt(
+                    current_subtopic, query, context)},
             ],
             temperature=0.25,
             llm_provider=config.smart_llm_provider,
@@ -248,7 +243,7 @@ async def generate_report(
     """
     existing_headers = [] if existing_headers is None else existing_headers
     relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
-    generate_prompt: PromptFamily = get_prompt_by_report_type(
+    generate_prompt: Any = get_prompt_by_report_type(
         report_type,
         prompt_family,
     )

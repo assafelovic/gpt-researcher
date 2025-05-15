@@ -319,6 +319,7 @@ footer a {
 
 a:hover {
     text-decoration: underline;
+    color: #0d9488;
 }
 
 /* Images container styles */

@@ -11,7 +11,7 @@ class GPTResearcher {
   }
 
   async initializeWebSocket() {
-    if (!this.socket) {
+    if (!this.socket) {      
       const protocol = this.host.includes('https') ? 'wss:' : 'ws:';
       const cleanHost = this.host.replace('http://', '').replace('https://', '');
       const ws_uri = `${protocol}//${cleanHost}/ws`;
@@ -24,7 +24,7 @@ class GPTResearcher {
 
       this.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-
+        
         // Handle logs with custom listener if provided
         if (this.logListener) {
           this.logListener(data);
@@ -33,7 +33,7 @@ class GPTResearcher {
         }
 
         const callback = this.responseCallbacks.get('current');
-
+        
       };
 
       this.socket.onclose = () => {
@@ -51,7 +51,7 @@ class GPTResearcher {
     task,
     useHTTP = false,
     reportType = 'research_report',
-    reportSource = 'web',
+    reportSource = 'web', 
     queryDomains = [],
     tone = 'Reflective',
     query,

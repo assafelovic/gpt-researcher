@@ -1,14 +1,10 @@
+import React from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import Modal from './Settings/Modal';
+import { ChatBoxSettings } from '@/types/data';
 
-interface ChatBoxSettings {
-  report_source: string;
-  report_type: string;
-  tone: string;
-}
-
-interface ChatBoxProps {
+interface FooterProps {
   chatBoxSettings: ChatBoxSettings;
   setChatBoxSettings: React.Dispatch<React.SetStateAction<ChatBoxSettings>>;
 }
@@ -36,14 +32,14 @@ const Footer: React.FC<FooterProps> = ({ chatBoxSettings, setChatBoxSettings }) 
         </div>
         <div className="flex items-center gap-4 order-1 sm:order-2 mb-2 sm:mb-0">
           <Link href={"https://gptr.dev"} target="_blank" className="p-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
                 className="w-6 h-6 sm:w-7 sm:h-7 text-white hover:text-teal-400 transition-colors duration-300"
               >
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />

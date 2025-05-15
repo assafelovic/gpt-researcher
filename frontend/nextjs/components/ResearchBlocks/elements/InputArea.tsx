@@ -34,50 +34,47 @@ const InputArea: FC<TInputAreaProps> = ({
   reset,
   isStopped,
 }) => {
-  // Only show input if not stopped
-  if (isStopped) {
-    return null;
-  }
-
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const placeholder = handleSecondary
     ? "Any questions about this report?"
     : "What would you like me to research next?";
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   const resetHeight = () => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = '3em'; // Reset to base height
+      textareaRef.current.style.height = '3em';
     }
+  };
+
+  const adjustHeight = debounce((target: HTMLTextAreaElement) => {
+    target.style.height = 'auto';
+    target.style.height = `${target.scrollHeight}px`;
+  }, 100);
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const target = e.target;
+    adjustHeight(target);
+    setPromptValue(target.value);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter') {
       if (e.shiftKey) {
-        return; // Allow new line on Shift+Enter
+        return;
       } else {
         e.preventDefault();
         if (!disabled) {
           if (reset) reset();
           handleSubmit(promptValue);
-          setPromptValue(''); // Clear prompt value
-          resetHeight(); // Reset height after submit
+          setPromptValue('');
+          resetHeight();
         }
       }
     }
   };
 
-  // Debounced version of the height adjustment function
-  const adjustHeight = debounce((target: HTMLTextAreaElement) => {
-    target.style.height = 'auto'; // Reset height to auto to allow shrinking
-    target.style.height = `${target.scrollHeight}px`; // Adjust height
-  }, 100); // Adjust the delay as needed
-
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const target = e.target;
-    adjustHeight(target); // Use debounced function
-    setPromptValue(target.value);
-  };
+  if (isStopped) {
+    return null;
+  }
 
   return handleSecondary ? (
     <span></span>
@@ -88,16 +85,15 @@ const InputArea: FC<TInputAreaProps> = ({
         e.preventDefault();
         if (reset) reset();
         handleSubmit(promptValue);
-        setPromptValue(''); // Clear prompt value
+        setPromptValue('');
         resetHeight();
       }}
     >
-
       <textarea
         placeholder={placeholder}
         ref={textareaRef}
-        className="focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal]
-        text-[#1B1B16]/30 text-black outline-none focus-visible:ring-0 focus-visible:ring-offset-0
+        className="focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal] 
+        text-[#1B1B16]/30 text-black outline-none focus-visible:ring-0 focus-visible:ring-offset-0 
         sm:text-xl min-h-[4em] resize-none"
         disabled={disabled}
         value={promptValue}

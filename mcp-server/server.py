@@ -92,20 +92,64 @@ async def research_resource(topic: str) -> str:
 async def deep_research(query: str) -> dict[str, Any]:
     """Conduct a deep web research on a given query using GPT Researcher.
 
-    Use this tool when you need time-sensitive, real-time information like stock prices, news, people, specific knowledge, etc.
-    You must include citations that back your responses when using this tool.
-
     Args:
         query: The research query or topic
 
     Returns:
         Dict containing research status, ID, and the actual research context and sources
         that can be used directly by LLMs for context enrichment
-    """
-    logger.info(f"Conducting research on query: {query}...")
 
+    Use this tool when you need time-sensitive, real-time information like stock prices, news, people, specific knowledge, etc.
+    You must include citations that back your responses when using this tool.
+    """
+    # Generate a unique ID for this research session
+    research_id: str = str(uuid.uuid4())
+
+    logger.info(f"Conducting research on query: {research_id}...")
+
+    # Initialize GPT Researcher
+    researcher = GPTResearcher(query)
+
+    try:
+        # Conduct the research
+        await researcher.conduct_research()
+
+        # Get the context and sources
+        context: str = researcher.get_research_context()
+        sources: list[str] = researcher.get_research_sources()
+        source_urls: list[str] = researcher.get_source_urls()
+
+        # Format with sources included
+        formatted_context: str = format_context_with_sources(query, context, sources)
+
+        # Store for future use
+        store_research_results(query, context, sources, source_urls, formatted_context)
+
+    except Exception as e:
+        return f"Error conducting research on '{query}': {str(e)}"
+
+    else:
+        return formatted_context
+
+
+@mcp.tool()
+async def write_report(
+    query: str,
+    custom_prompt: str | None = None,
+) -> dict[str, Any]:
+    """Generate a report based on previously conducted research.
+
+    Args:
+        query (str): The research query or topic
+        custom_prompt (str | None): Optional custom prompt for report generation
+
+    Returns:
+        dict[str, Any] containing the report content and metadata
+    """
     # Generate a unique ID for this research session
     research_id = str(uuid.uuid4())
+
+    logger.info(f"Generating report for research ID: {research_id}")
 
     # Initialize GPT Researcher
     researcher = GPTResearcher(query)
@@ -117,9 +161,9 @@ async def deep_research(query: str) -> dict[str, Any]:
         logger.info(f"Research completed for ID: {research_id}")
 
         # Get the research context and sources
-        context = researcher.get_research_context()
-        sources = researcher.get_research_sources()
-        source_urls = researcher.get_source_urls()
+        context: list[dict[str, Any]] = researcher.get_research_context()
+        sources: list[str] = researcher.get_research_sources()
+        source_urls: list[str] = researcher.get_source_urls()
 
         # Store in the research store for the resource API
         store_research_results(query, context, sources, source_urls)
@@ -150,7 +194,7 @@ async def write_report(
         custom_prompt: Optional custom prompt for report generation
 
     Returns:
-        Dict containing the report content and metadata
+        dict[str, Any] containing the report content and metadata
     """
     success, researcher, error = get_researcher_by_id(mcp.researchers, research_id)
     if not success:
@@ -166,9 +210,11 @@ async def write_report(
         sources: list[str] = researcher.get_research_sources()
         costs: float = researcher.get_costs()
 
-        return create_success_response(
-            {"report": report, "source_count": len(sources), "costs": costs}
-        )
+        return create_success_response({
+            "report": report,
+            "source_count": len(sources),
+            "costs": costs
+        })
     except Exception as e:
         return handle_exception(e, "Report generation")
 
@@ -200,10 +246,10 @@ async def get_research_context(research_id: str) -> dict[str, Any]:
     """Get the full context of the research.
 
     Args:
-        research_id: The ID of the research session
+        research_id (str): The ID of the research session
 
     Returns:
-        Dict containing the research context
+        dict[str, Any] containing the research context
     """
     success, researcher, error = get_researcher_by_id(mcp.researchers, research_id)
     if not success:
@@ -226,7 +272,6 @@ def research_query(
         topic: The topic to research
         goal: The goal or specific question to answer
         report_format: The format of the report to generate
-
     Returns:
         A formatted prompt for research
     """
@@ -255,7 +300,6 @@ def run_server():
         logger.error(f"Error running MCP server: {str(e)}")
         print(f"❌ MCP Server error: {str(e)}")
         return
-
     print("✅ MCP Server stopped")
 
 

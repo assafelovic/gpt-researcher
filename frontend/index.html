@@ -33,6 +33,7 @@
             opacity: 0.4;
             z-index: -1;
         }
+
         .avatar {
             width: 100px;
             height: 100px;
@@ -155,8 +156,10 @@
                 <span class="gradient-text">In Minutes, Not Hours</span>
             </h1>
             <p class="max-w-6xl mx-auto mt-8" style="font-size:20px">
-                Meet <b>ResearchWizard</b>, your personal AI research assistant that turns complex topics into clear insights. <br>
-                Receive thorough reports with verified references, professional layout, and personalized content tailored specifically to your needs—all accomplished with just one click.
+                Meet <b>ResearchWizard</b>, your personal AI research assistant that turns complex topics into clear
+                insights. <br>
+                Receive thorough reports with verified references, professional layout, and personalized content
+                tailored specifically to your needs—all accomplished with just one click.
             </p>
             <a href="#form" class="btn btn-primary">Start Researching</a>
         </div>
@@ -167,7 +170,8 @@
         <form method="POST" class="mt-3" onsubmit="GPTResearcher.startResearch(); return false;">
             <div class="form-group">
                 <label for="task" class="agent-question">What would you like me to research for you?</label>
-                <textarea id="task" name="task" class="form-control highlight-connection" placeholder="Enter any topic, question, or idea..." required></textarea>
+                <textarea id="task" name="task" class="form-control highlight-connection"
+                    placeholder="Enter any topic, question, or idea..." required></textarea>
                 <input type="radio" name="agent" id="autoAgent" value="Auto Agent" checked hidden>
             </div>
             <div class="form-group">
@@ -180,26 +184,42 @@
                     <option value="research_report">Quick Summary - Fast results (~2 min)</option>
                     <option value="detailed_report">Deep Dive - Comprehensive analysis (~5 min)</option>
                     <option value="resource_report">Resource List - Just the sources</option>
+                    <option value="deep">Deep Research</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="tone" class="agent-question">How would you like your report to sound?</label>
                 <select name="tone" id="tone" class="form-control highlight-connection" required>
-                    <option value="Objective">Balanced - Presents information neutrally, without personal bias or emotional coloring</option>
-                    <option value="Formal">Academic - Uses scholarly language, precise terminology, and structured argumentation</option>
-                    <option value="Analytical">Analytical - Breaks down complex topics systematically, examining evidence and drawing logical conclusions</option>
-                    <option value="Persuasive">Persuasive - Constructs a compelling argument to influence the reader's perspective</option>
-                    <option value="Informative">Informative - Delivers clear, concise information with direct explanations</option>
-                    <option value="Explanatory">Beginner-friendly - Breaks down complex concepts into easily understandable language</option>
-                    <option value="Descriptive">Vivid - Uses rich, sensory language to create a detailed and immersive understanding</option>
-                    <option value="Critical">Critical - Provides in-depth evaluation, highlighting both strengths and potential weaknesses</option>
-                    <option value="Comparative">Compare & Contrast - Explores nuanced relationships between different ideas or subjects</option>
-                    <option value="Speculative">Forward-looking - Explores potential future scenarios and emerging trends</option>
-                    <option value="Reflective">Thoughtful - Offers deep personal insights and philosophical considerations</option>
-                    <option value="Narrative">Storytelling - Presents information as an engaging, coherent narrative</option>
-                    <option value="Humorous">Light-hearted - Incorporates wit and playful language to make the content more enjoyable</option>
-                    <option value="Optimistic">Positive - Emphasizes potential solutions and promising opportunities</option>
-                    <option value="Pessimistic">Cautious - Highlights potential challenges, risks, and limitations</option>
+                    <option value="Objective">Balanced - Presents information neutrally, without personal bias or
+                        emotional coloring</option>
+                    <option value="Formal">Academic - Uses scholarly language, precise terminology, and structured
+                        argumentation</option>
+                    <option value="Analytical">Analytical - Breaks down complex topics systematically, examining
+                        evidence and drawing logical conclusions</option>
+                    <option value="Persuasive">Persuasive - Constructs a compelling argument to influence the reader's
+                        perspective</option>
+                    <option value="Informative">Informative - Delivers clear, concise information with direct
+                        explanations</option>
+                    <option value="Explanatory">Beginner-friendly - Breaks down complex concepts into easily
+                        understandable language</option>
+                    <option value="Descriptive">Vivid - Uses rich, sensory language to create a detailed and immersive
+                        understanding</option>
+                    <option value="Critical">Critical - Provides in-depth evaluation, highlighting both strengths and
+                        potential weaknesses</option>
+                    <option value="Comparative">Compare & Contrast - Explores nuanced relationships between different
+                        ideas or subjects</option>
+                    <option value="Speculative">Forward-looking - Explores potential future scenarios and emerging
+                        trends</option>
+                    <option value="Reflective">Thoughtful - Offers deep personal insights and philosophical
+                        considerations</option>
+                    <option value="Narrative">Storytelling - Presents information as an engaging, coherent narrative
+                    </option>
+                    <option value="Humorous">Light-hearted - Incorporates wit and playful language to make the content
+                        more enjoyable</option>
+                    <option value="Optimistic">Positive - Emphasizes potential solutions and promising opportunities
+                    </option>
+                    <option value="Pessimistic">Cautious - Highlights potential challenges, risks, and limitations
+                    </option>
                 </select>
             </div>
             <div class="form-group">
@@ -211,7 +231,8 @@
             </div>
             <div class="form-group">
                 <label for="queryDomains" class="form-label">Query Domains (Optional)</label>
-                <input type="text" class="form-control highlight-connection" id="queryDomains" name="query_domains" placeholder="Enter domains separated by commas">
+                <input type="text" class="form-control highlight-connection" id="queryDomains" name="query_domains"
+                    placeholder="Enter domains separated by commas">
                 <small class="text-muted">Example: techcrunch.com, forbes.com</small>
             </div>
             <input type="submit" value="Begin Research" class="btn btn-primary button-padding">
@@ -219,7 +240,8 @@
 
         <div class="margin-div research-output-container">
             <h2>Research Progress</h2>
-            <p class="mt-2 text-left" style="font-size: 0.8rem;">Watch as the AI works to gather information and analyze your topic in real-time.</p>
+            <p class="mt-2 text-left" style="font-size: 0.8rem;">Watch as the AI works to gather information and analyze
+                your topic in real-time.</p>
             <div id="output"></div>
         </div>
         <div class="images_div">
@@ -270,12 +292,12 @@
 
         if (input) {
             input.addEventListener('keypress', function (e) {
-            if ((e.key === 'Enter' || e.key === ',') && input.value !== '') {
-                e.preventDefault();
-                GPTResearcher.addTag(input.value);
-                input.value = '';
-            }
-        });
+                if ((e.key === 'Enter' || e.key === ',') && input.value !== '') {
+                    e.preventDefault();
+                    GPTResearcher.addTag(input.value);
+                    input.value = '';
+                }
+            });
         }
 
         // Auto-resize textarea as content grows
@@ -298,7 +320,7 @@
         // Implement highlight connection between side panels and form elements
         const featureCards = document.querySelectorAll('.feature-card');
         featureCards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
+            card.addEventListener('mouseenter', function () {
                 const highlightTarget = this.getAttribute('data-highlight');
                 const targetElement = document.getElementById(highlightTarget) ||
                     document.querySelector(`[name="${highlightTarget}"]`);
@@ -324,7 +346,7 @@
                 }
             });
 
-            card.addEventListener('mouseleave', function() {
+            card.addEventListener('mouseleave', function () {
                 const highlightTarget = this.getAttribute('data-highlight');
                 const targetElement = document.getElementById(highlightTarget) ||
                     document.querySelector(`[name="${highlightTarget}"]`);
@@ -355,7 +377,7 @@
         const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
 
         // Show/hide scroll button based on scroll position
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', function () {
             // Always show the scroll button except when at the very top of the page
             if (window.scrollY > 100) {
                 scrollToBottomBtn.classList.add('visible');
@@ -400,7 +422,7 @@
         });
 
         // Scroll to bottom button click event
-        scrollToBottomBtn.addEventListener('click', function() {
+        scrollToBottomBtn.addEventListener('click', function () {
             window.scrollTo({
                 top: document.body.scrollHeight,
                 behavior: 'smooth'
@@ -408,12 +430,12 @@
         });
 
         // Handle feature panels visibility based on scroll
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', function () {
             // This is handled in the scroll event listener above
         });
 
         // Ensure feature panels are positioned correctly on window resize
-        window.addEventListener('resize', function() {
+        window.addEventListener('resize', function () {
             const viewportWidth = window.innerWidth;
 
             // Don't show feature panels if download panels are visible
@@ -453,7 +475,7 @@
         }
 
         // Manually trigger the scroll event once on load to correctly set the scroll button visibility
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => {
                 window.dispatchEvent(new Event('scroll'));
             }, 100);

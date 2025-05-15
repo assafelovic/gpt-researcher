@@ -3,8 +3,7 @@ from __future__ import annotations
 import json
 import os
 import warnings
-
-from typing import Any, List, Type, Union, get_args, get_origin
+from typing import Any, ClassVar, List, Type, Union, get_args, get_origin
 
 from ..retrievers.utils import get_all_retriever_names
 from .variables.base import BaseConfig
@@ -14,7 +13,7 @@ from .variables.default import DEFAULT_CONFIG
 class Config:
     """Config class for GPT Researcher."""
 
-    CONFIG_DIR = os.path.join(os.path.dirname(__file__), "variables")
+    CONFIG_DIR: ClassVar[str] = os.path.join(os.path.dirname(__file__), "variables")
 
     def __init__(self, config_path: str | None = None):
         """Initialize the config class."""

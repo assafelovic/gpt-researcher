@@ -4,29 +4,31 @@ import asyncio
 import logging
 import math
 import random
-
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, AsyncGenerator, ClassVar, Literal, Tuple, cast
 from urllib.parse import urlparse
 
 import requests
-
 from bs4 import BeautifulSoup
 
-from gpt_researcher.scraper.utils import clean_soup, extract_title, get_relevant_images, get_text_from_soup
+from gpt_researcher.scraper.utils import (
+    clean_soup,
+    extract_title,
+    get_relevant_images,
+    get_text_from_soup,
+)
 from gpt_researcher.utils.logger import get_formatted_logger
 
 if TYPE_CHECKING:
     import logging
 
     import requests
-
     from zendriver import Tab
 
 
 class NoDriverScraper:
-    logger: ClassVar[logging.Logger] = get_formatted_logger(__name__)
+    logger: ClassVar[logging.Logger] = get_formatted_logger(__name__)  # pyright: ignore[reportCallIssue]
     max_browsers: ClassVar[int] = 3
     browser_load_threshold: ClassVar[int] = 5
     browsers: ClassVar[set[NoDriverScraper.Browser]] = set()
@@ -107,7 +109,10 @@ class NoDriverScraper:
             except asyncio.TimeoutError:
                 NoDriverScraper.logger.debug(f"timeout waiting for {until} after {timeout} seconds")
 
-        async def close_page(self, page: "zendriver.Tab"):
+        async def close_page(
+            self,
+            page: "zendriver.Tab",
+        ):
             try:
                 await page.close()
             except Exception as e:
@@ -153,7 +158,7 @@ class NoDriverScraper:
         async def create_browser() -> NoDriverScraper.Browser:
             try:
                 global zendriver
-                import zendriver
+                import zendriver  # pyright: ignore[reportMissingImports]
             except ImportError:
                 raise ImportError("The zendriver package is required to use NoDriverScraper. Please install it with: pip install zendriver")
 
@@ -245,7 +250,7 @@ class NoDriverScraper:
                     await page.save_screenshot(screenshot_path)
                     self.logger.warning(f"check screenshot at [{screenshot_path}] for more details.")
 
-            return text, image_urls, title or ""
+            return str(text), image_urls, str(title or "")
         except Exception as e:
             self.logger.exception(f"An error occurred during scraping: {e.__class__.__name__}: {e}")
             return f"{e.__class__.__name__}: {e}", [], ""

@@ -87,9 +87,9 @@
   box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.2);
 }
 
-.settings input,
-.settings select,
-.settings #output,
+.settings input, 
+.settings select, 
+.settings #output, 
 .settings #reportContainer {
   background-color: rgba(0, 0, 0, 0.5); /* Darker background color */
   border: none;
@@ -97,9 +97,9 @@
   transition: all .3s ease-in-out;
 }
 
-.settings input:hover,
-.settings input:focus,
-.settings select:hover,
+.settings input:hover, 
+.settings input:focus, 
+.settings select:hover, 
 .settings select:focus {
   background-color: #333; /* Darker hover/focus background color */
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -215,6 +215,8 @@
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease-in-out;
 }
+<<<<<<<< HEAD:frontend/nextjs/components/Settings/App.css
+========
 
 .report_settings_static {
   width: 100%;
@@ -334,3 +336,4 @@
 .modal-content .form-group input {
   width: 100%;
 }
+>>>>>>>> upstream/master:frontend/nextjs/components/Settings/Settings.css

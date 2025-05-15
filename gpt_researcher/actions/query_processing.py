@@ -1,20 +1,23 @@
 from __future__ import annotations
 
 import logging
-
 from typing import Any, Callable
 
 import json_repair
 
-from ..config import Config
-from ..llm_provider.generic.base import ReasoningEfforts
-from ..prompts import PromptFamily
-from ..utils.llm import create_chat_completion
+from gpt_researcher.config import Config
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
+from gpt_researcher.prompts import PromptFamily
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
+from gpt_researcher.utils.llm import create_chat_completion
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
-async def get_search_results(query: str, retriever: Any) -> list[dict[str, Any]]:
+async def get_search_results(
+    query: str,
+    retriever: Callable[[str], RetrieverABC] | type[RetrieverABC],
+) -> list[dict[str, Any]]:
     """Get web search results for a given query.
 
     Args:
@@ -24,8 +27,8 @@ async def get_search_results(query: str, retriever: Any) -> list[dict[str, Any]]
     Returns:
         A list of search results
     """
-    search_retriever = retriever(query)
-    return search_retriever.search()
+    search_retriever: RetrieverABC = retriever(query)
+    return search_retriever.search()  # pyright: ignore[reportCallIssue]  # TODO: actually inherit RetrieverABC everywhere.
 
 
 async def generate_sub_queries(
@@ -34,11 +37,10 @@ async def generate_sub_queries(
     report_type: str,
     context: list[dict[str, Any]],
     cfg: Config,
-    cost_callback: Callable | None = None,
+    cost_callback: Callable[[float], None] | None = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
 ) -> list[str]:
-    """
-    Generate sub-queries using the specified LLM model.
+    """Generate sub-queries using the specified LLM model.
 
     Args:
         query: The original query
@@ -53,7 +55,7 @@ async def generate_sub_queries(
     Returns:
         A list of sub-queries
     """
-    gen_queries_prompt = prompt_family.generate_search_queries_prompt(
+    gen_queries_prompt: str = prompt_family.generate_search_queries_prompt(
         query,
         parent_query,
         report_type,
@@ -62,7 +64,7 @@ async def generate_sub_queries(
     )
 
     try:
-        response = await create_chat_completion(
+        response: str = await create_chat_completion(
             model=cfg.strategic_llm_model,
             messages=[{"role": "user", "content": gen_queries_prompt}],
             llm_provider=cfg.strategic_llm_provider,
@@ -109,7 +111,7 @@ async def plan_research_outline(
     cfg: Config,
     parent_query: str,
     report_type: str,
-    cost_callback: Callable | None = None,
+    cost_callback: Callable[[float], None] | None = None,
 ) -> list[str]:
     """Plan the research outline by generating sub-queries.
 
@@ -126,6 +128,13 @@ async def plan_research_outline(
         A list of sub-queries
     """
 
-    sub_queries = await generate_sub_queries(query, parent_query, report_type, search_results, cfg, cost_callback)
+    sub_queries: list[str] = await generate_sub_queries(
+        query,
+        parent_query,
+        report_type,
+        search_results,
+        cfg,
+        cost_callback,
+    )
 
     return sub_queries

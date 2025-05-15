@@ -3,17 +3,15 @@ from __future__ import annotations
 import asyncio
 import importlib.util
 import json
-import os
 import subprocess
 import sys
 import traceback
-
+from colorama import Fore, Style, init
+import os
 from enum import Enum
+
 from typing import Any
 
-import aiofiles
-
-from colorama import Fore, Style, init
 
 _SUPPORTED_PROVIDERS: set[str] = {
     "openai",
@@ -44,11 +42,14 @@ NO_SUPPORT_TEMPERATURE_MODELS: list[str] = [
     "o3-mini",
     "o3-mini-2025-01-31",
     "o4-mini",
-    "o1-preview",
+    "o1-preview"
 ]
 
-SUPPORT_REASONING_EFFORT_MODELS: list[str] = ["o3-mini", "o3-mini-2025-01-31o4-mini"]
-
+SUPPORT_REASONING_EFFORT_MODELS: list[str] = [
+    "o3-mini",
+    "o3-mini-2025-01-31",
+    "o4-mini"
+]
 
 class ReasoningEfforts(Enum):
     High = "high"
@@ -65,7 +66,11 @@ class ChatLogger:
         self.fname: str = fname
         self._lock: asyncio.Lock = asyncio.Lock()
 
-    async def log_request(self, messages: list[dict[str, str]], response: str):
+    async def log_request(
+        self,
+        messages: list[dict[str, str]],
+        response: str,
+    ) -> None:
         async with self._lock:
             async with aiofiles.open(self.fname, mode="a", encoding="utf-8") as handle:
                 await handle.write(json.dumps({"messages": messages, "response": response, "stacktrace": traceback.format_exc()}) + "\n")
@@ -74,16 +79,22 @@ class ChatLogger:
 class GenericLLMProvider:
     def __init__(
         self,
-        llm,
+        llm: Any,
         chat_log: str | None = None,
         verbose: bool = True,
     ):
-        self.llm = llm
+        self.llm: Any = llm
         self.chat_logger: ChatLogger | None = ChatLogger(chat_log) if chat_log else None
         self.verbose: bool = verbose
 
     @classmethod
-    def from_provider(cls, provider: str, chat_log: str | None = None, verbose: bool = True, **kwargs: Any) -> GenericLLMProvider:
+    def from_provider(
+        cls,
+        provider: str,
+        chat_log: str | None = None,
+        verbose: bool = True,
+        **kwargs: Any,
+    ) -> GenericLLMProvider:
         if provider == "openai":
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
@@ -194,7 +205,7 @@ class GenericLLMProvider:
             from langchain_core.rate_limiters import InMemoryRateLimiter
             from langchain_openai import ChatOpenAI
 
-            rps = float(os.environ["OPENROUTER_LIMIT_RPS"]) if "OPENROUTER_LIMIT_RPS" in os.environ else 1.0
+            rps: float = float(os.environ["OPENROUTER_LIMIT_RPS"]) if "OPENROUTER_LIMIT_RPS" in os.environ else 1.0
 
             rate_limiter = InMemoryRateLimiter(
                 requests_per_second=rps,
@@ -210,32 +221,41 @@ class GenericLLMProvider:
             )
 
         else:
-            supported = ", ".join(_SUPPORTED_PROVIDERS)
+            supported: str = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(f"Unsupported {provider}.\n\nSupported model providers are: {supported}")
         return cls(llm, chat_log, verbose=verbose)
 
-    async def get_chat_response(self, messages, stream, websocket=None):
+    async def get_chat_response(
+        self,
+        messages: list[dict[str, str]],
+        stream: bool,
+        websocket: Any | None = None,
+    ) -> str:
         if not stream:
             # Getting output from the model chain using ainvoke for asynchronous invoking
-            output = await self.llm.ainvoke(messages)
+            output: Any = await self.llm.ainvoke(messages)
 
-            res = output.content
+            res: str = output.content
 
         else:
-            res = await self.stream_response(messages, websocket)
+            res: str = await self.stream_response(messages, websocket)
 
-        if self.chat_logger:
+        if self.chat_logger is not None:
             await self.chat_logger.log_request(messages, res)
 
         return res
 
-    async def stream_response(self, messages, websocket=None):
-        paragraph = ""
-        response = ""
+    async def stream_response(
+        self,
+        messages: list[dict[str, str]],
+        websocket: Any | None = None,
+    ) -> str:
+        paragraph: str = ""
+        response: str = ""
 
         # Streaming the response using the chain astream method from langchain
         async for chunk in self.llm.astream(messages):
-            content = chunk.content
+            content: str = chunk.content
             if content is not None:
                 response += content
                 paragraph += content
@@ -248,7 +268,11 @@ class GenericLLMProvider:
 
         return response
 
-    async def _send_output(self, content, websocket=None):
+    async def _send_output(
+        self,
+        content: str,
+        websocket: Any | None = None,
+    ) -> None:
         if websocket is not None:
             await websocket.send_json({"type": "report", "output": content})
         elif self.verbose:
@@ -257,7 +281,7 @@ class GenericLLMProvider:
 
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
-        pkg_kebab = pkg.replace("_", "-")
+        pkg_kebab: str = pkg.replace("_", "-")
         # Import colorama and initialize it
         init(autoreset=True)
 
