@@ -98,6 +98,7 @@ app.add_middleware(OutputsCacheMiddleware)
 
 # Static files and templates
 app.mount("/site", StaticFiles(directory="./frontend"), name="site")
+app.mount("/frontend", StaticFiles(directory="./frontend"), name="frontend")
 app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
 templates = Jinja2Templates(directory="./frontend")
 
