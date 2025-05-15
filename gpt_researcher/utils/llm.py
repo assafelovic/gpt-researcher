@@ -31,7 +31,7 @@ def get_llm(llm_provider: str, **kwargs) -> GenericLLMProvider:
 
 
 async def create_chat_completion(
-    messages: list,  # type: ignore
+    messages: list[dict[str, str]],  # type: ignore
     model: str | None = None,
     temperature: float | None = 0.4,
     max_tokens: int | None = 4000,
@@ -44,6 +44,7 @@ async def create_chat_completion(
     **kwargs,
 ) -> str:
     """Create a chat completion using the OpenAI API
+
     Args:
         messages (list[dict[str, str]]): The messages to send to the chat completion
         model (str, optional): The model to use. Defaults to None.
@@ -53,6 +54,9 @@ async def create_chat_completion(
         llm_provider (str, optional): The LLM Provider to use.
         webocket (WebSocket): The websocket used in the currect request,
         cost_callback: Callback function for updating cost
+        reasoning_effort: The reasoning effort to use.
+        **kwargs: Additional keyword arguments.
+
     Returns:
         str: The response from the chat completion
     """
