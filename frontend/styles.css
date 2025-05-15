@@ -2382,3 +2382,29 @@ textarea#task {
         padding: 15px !important;
     }
 }
+/* Icon button style for inline buttons */
+.icon-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #7b68ee;
+    padding: 5px;
+    margin-left: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.icon-button:hover {
+    background-color: rgba(123, 104, 238, 0.1);
+}
+
+.icon-button:active {
+    color: #5f4bbf;
+}
+
+/* Ensure buttons are properly aligned in headings */
+h2 .icon-button,
+h2 .expand-button {
+    vertical-align: middle;
+    font-size: 0.8em;
+}
