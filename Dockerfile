@@ -108,18 +108,6 @@ WORKDIR /usr/src/app
 # Copy the rest of the application files with proper ownership
 COPY --chown=gpt-researcher:gpt-researcher ./ ./
 
-# Make sure frontend static files are properly organized
-# Create static directories if they don't exist
-RUN mkdir -p /usr/src/app/frontend/static/new
-
-# Copy frontend files specifically to ensure they're in the right place
-COPY --chown=gpt-researcher:gpt-researcher ./frontend/index.html /usr/src/app/frontend/
-COPY --chown=gpt-researcher:gpt-researcher ./frontend/styles.css /usr/src/app/frontend/
-COPY --chown=gpt-researcher:gpt-researcher ./frontend/scripts.js /usr/src/app/frontend/
-COPY --chown=gpt-researcher:gpt-researcher ./frontend/pdf_styles.css /usr/src/app/frontend/
-COPY --chown=gpt-researcher:gpt-researcher ./frontend/static/* /usr/src/app/frontend/static/
-COPY --chown=gpt-researcher:gpt-researcher ./frontend/static/new/* /usr/src/app/frontend/static/new/
-
 # Expose the application's port
 EXPOSE 8000
 
