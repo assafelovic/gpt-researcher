@@ -79,7 +79,7 @@ class MCPRetriever:
         
         Args:
             query (str): The search query string.
-            headers (dict, optional): Additional headers for configuration.
+            headers (dict, optional): Headers for general configuration, not used for MCP configuration anymore.
             query_domains (list, optional): List of domains to search (not directly used in MCP).
             server_name (str, optional): Name of the MCP server to connect to.
             server_command (str, optional): Command to start the MCP server.
@@ -96,6 +96,11 @@ class MCPRetriever:
         Note:
             Tool arguments are dynamically generated for each MCP tool call
             based on the query context using the LLM provider.
+            
+            For multiple MCP servers, use the `mcp_configs` parameter in GPTResearcher
+            instead of this direct constructor.
+            
+            Headers-based configuration is no longer supported.
         """
         self.query = query
         self.headers = headers or {}
@@ -110,142 +115,74 @@ class MCPRetriever:
         self.use_auto_tool_selection = os.getenv("MCP_AUTO_TOOL_SELECTION", "false").lower() in ["true", "1", "yes"]
         self.llm_provider = llm_provider
         
-        # Check if MCP is installed
-        if not HAS_MCP:
-            logger.warning(
-                "The MCP Python package is not installed. Install it with 'pip install mcp' to use the MCP retriever."
-            )
-            self._stream_log("🔌 MCP package not installed. Install with 'pip install mcp'.")
-        # Check if remote MCP support is available for required connection types
-        elif not self._check_remote_mcp_support():
-            pass  # Warning logged in _check_remote_mcp_support method
+        # Store constructor parameters for later use in _discover_server_configs
+        self.constructor_params = {
+            "server_name": server_name,
+            "server_command": server_command,
+            "server_args": server_args,
+            "server_env": server_env,
+            "resource_uri_template": resource_uri_template,
+            "tool_name": tool_name,
+            "connection_type": connection_type,
+            "connection_url": connection_url,
+            "connection_token": connection_token,
+        }
         
-        # Discover server configurations (including multiple servers if present)
+        # Check if any deprecated header-based MCP configuration is present
+        if any(key.startswith("mcp_") or key.startswith("mcp1_") for key in self.headers):
+            logger.warning("MCP configuration via headers is deprecated and no longer supported. Use mcp_configs parameter instead.")
+            self._stream_log_sync("⚠️ MCP configuration via headers is deprecated and will be ignored. Please use the mcp_configs parameter instead.")
+        
+        # Discover server configurations (constructor parameters only)
         self.server_configs = self._discover_server_configs()
         
         # Log initialization
-        self._stream_log(f"🔧 Initializing MCP retriever for query: {self.query}")
-        self._stream_log(f"🔧 Found {len(self.server_configs)} MCP server configurations")
-        
-        for i, config in enumerate(self.server_configs):
-            if config.get("server_command"):
-                self._stream_log(f"🔧 MCP server {i+1}: {config['server_command']} {' '.join(config.get('server_args', []))}")
-            elif config.get("connection_url"):
-                self._stream_log(f"🔧 MCP server {i+1}: {config['connection_url']} (via {config.get('connection_type', 'stdio')})")
-        
-        if self.use_auto_tool_selection:
-            self._stream_log("🔍 Auto tool selection is enabled")
-
-    def _check_remote_mcp_support(self) -> bool:
-        """Check if remote MCP connections are supported."""
-        # Gather all connection types across all potential servers
-        connection_types = set()
-        
-        # Check unprefixed connection type
-        if connection_type := self.headers.get("mcp_connection_type"):
-            connection_types.add(connection_type)
+        if self.server_configs:
+            self._stream_log_sync(f"🔧 Initializing MCP retriever for query: {self.query}")
+            self._stream_log_sync(f"🔧 Found {len(self.server_configs)} MCP server configurations")
             
-        # Check prefixed connection types (mcp1_, mcp2_, etc.)
-        for key in self.headers:
-            if key.startswith("mcp") and "_connection_type" in key and key != "mcp_connection_type":
-                if connection_type := self.headers.get(key):
-                    connection_types.add(connection_type)
-        
-        # Check URLs in headers that might imply connection types
-        for key, value in self.headers.items():
-            if "_connection_url" in key and value:
-                if value.startswith(("ws://", "wss://")):
-                    connection_types.add("websocket")
-                elif value.startswith(("http://", "https://")):
-                    connection_types.add("http")
-        
-        # Check if any remote connection types are needed but not supported
-        remote_types = {"websocket", "http"} & connection_types
-        if remote_types and not HAS_REMOTE_MCP:
-            logger.warning(
-                f"The MCP Python package does not support {', '.join(remote_types)} connections. "
-                "Make sure you have the latest version installed."
-            )
-            self._stream_log(f"🔌 MCP package doesn't support {', '.join(remote_types)} connections. Update your MCP package.")
-            return False
+            for i, config in enumerate(self.server_configs):
+                if config.get("server_command"):
+                    self._stream_log_sync(f"🔧 MCP server {i+1}: {config['server_command']} {' '.join(config.get('server_args', []))}")
+                elif config.get("connection_url"):
+                    self._stream_log_sync(f"🔧 MCP server {i+1}: {config['connection_url']} (via {config.get('connection_type', 'stdio')})")
             
-        return True
+            if self.use_auto_tool_selection:
+                self._stream_log_sync("🔍 Auto tool selection is enabled")
+        else:
+            logger.error("No MCP server configurations found. The retriever will fail during search.")
+            self._stream_log_sync("❌ CRITICAL: No MCP server configurations found. The research process will fail. Please check documentation at https://docs.gptr.dev/gpt-researcher/retrievers/mcp-configs for proper configuration.")
 
     def _discover_server_configs(self) -> List[Dict[str, Any]]:
         """
-        Discover all MCP server configurations from headers.
+        Get MCP server configurations.
         
-        This method supports both single server configuration (mcp_server_command)
-        and multiple server configurations (mcp1_server_command, mcp2_server_command, etc.)
+        This method only uses the constructor parameters provided via mcp_configs.
+        Header-based configuration is no longer supported.
         
         Returns:
             List[Dict[str, Any]]: List of server configuration dictionaries.
         """
         configs = []
         
-        # Process prefix-based configurations (mcp1_, mcp2_, etc.)
-        prefix_configs = {}
-        for key, value in self.headers.items():
-            # Skip non-MCP headers
-            if not key.startswith("mcp"):
-                continue
-                
-            # Extract server index and parameter name
-            parts = key.split("_", 2)
-            if len(parts) < 2:
-                continue
-                
-            # Handle case where there's a numeric prefix like mcp1_, mcp2_
-            prefix = parts[0]
-            if len(prefix) > 3 and prefix.startswith("mcp") and prefix[3:].isdigit():
-                index = prefix[3:]  # Extract the numeric part
-                param_name = "_".join(parts[1:])  # Join the rest as parameter name
-                
-                # Initialize server config if needed
-                if index not in prefix_configs:
-                    prefix_configs[index] = {}
-                    
-                # Add parameter to server config
-                prefix_configs[index][param_name] = value
-        
-        # Convert prefix configs to server configs
-        for index, params in prefix_configs.items():
-            config = self._create_server_config(params)
-            if config:
-                configs.append(config)
-        
-        # Check for a traditional single server configuration without numeric prefix
-        single_config = {}
-        for key, value in self.headers.items():
-            if key.startswith("mcp_") and not any(c.isdigit() for c in key.split("_")[0]):
-                param_name = key[4:]  # Remove 'mcp_' prefix
-                single_config[param_name] = value
-        
-        # Add the single server config if it doesn't overlap with prefix configs
-        if single_config:
-            config = self._create_server_config(single_config)
-            if config:
-                configs.append(config)
-        
-        # If no configs found in headers, use the constructor parameters if available
-        if not configs and (self.server_command or self.connection_url):
-            config = {
-                "server_name": server_name,
-                "server_command": server_command,
-                "server_args": server_args or [],
-                "server_env": server_env or {},
-                "resource_uri_template": resource_uri_template,
-                "tool_name": tool_name,
-                "connection_type": connection_type,
-                "connection_url": connection_url,
-                "connection_token": connection_token,
-            }
+        # Only use constructor parameters, headers are no longer supported
+        if self.constructor_params:
+            # Filter out None values
+            params = {k: v for k, v in self.constructor_params.items() if v is not None}
             
-            # Remove None values
-            config = {k: v for k, v in config.items() if v is not None}
-            
-            if config:
-                configs.append(config)
+            # Check if we have either server_command or connection_url
+            if params.get("server_command") or params.get("connection_url"):
+                config = self._create_server_config(params)
+                if config:
+                    configs.append(config)
+        
+        # If no configs found, log a helpful message for the user
+        if not configs:
+            logger.warning("No MCP server configurations found. Please provide proper mcp_configs.")
+            try:
+                self._stream_log_sync("⚠️ No MCP server configurations found. Headers-based configuration is no longer supported. Please provide proper mcp_configs parameter. See documentation at https://docs.gptr.dev/gpt-researcher/retrievers/mcp-configs")
+            except Exception as e:
+                logger.error(f"Error streaming log: {e}")
         
         return configs
 
@@ -299,6 +236,9 @@ class MCPRetriever:
 
     async def _stream_log(self, message: str, data: Any = None):
         """Stream a log message to the websocket if available."""
+        # Log to logger regardless of websocket
+        logger.info(message)
+        
         if self.websocket:
             try:
                 await stream_output(
@@ -311,7 +251,28 @@ class MCPRetriever:
                 )
             except Exception as e:
                 logger.error(f"Error streaming log: {e}")
+                
+    def _stream_log_sync(self, message: str, data: Any = None):
+        """Synchronous version of _stream_log for use in sync contexts."""
+        # Log to logger regardless of websocket
         logger.info(message)
+        
+        if self.websocket:
+            try:
+                # Try to run in event loop if one exists
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # Schedule the coroutine to run in the event loop
+                        asyncio.create_task(self._stream_log(message, data))
+                    else:
+                        # Run the coroutine directly in the loop
+                        loop.run_until_complete(self._stream_log(message, data))
+                except RuntimeError:
+                    # If no event loop exists or it's closed, just log and move on
+                    logger.debug("Could not stream log: no running event loop")
+            except Exception as e:
+                logger.error(f"Error in sync log streaming: {e}")
 
     async def _call_llm(self, prompt: str) -> str:
         """
@@ -509,18 +470,10 @@ Only include parameters that are defined for this tool.
         Returns:
             Tuple[Optional[ClientSession], Any]: The MCP session and server details, or (None, None) on failure.
         """
-        if not HAS_MCP:
-            await self._stream_log("❌ MCP package not installed, cannot connect to server")
-            return None, None
-            
         try:
             connection_type = server_config.get("connection_type", "stdio")
             
             if connection_type == "websocket":
-                if not HAS_REMOTE_MCP:
-                    await self._stream_log("❌ MCP WebSocket support not available")
-                    return None, None
-                    
                 connection_url = server_config.get("connection_url")
                 if not connection_url:
                     await self._stream_log("❌ Missing WebSocket URL")
@@ -540,10 +493,6 @@ Only include parameters that are defined for this tool.
                 return session, {"connection_type": "websocket", "url": connection_url}
                 
             elif connection_type == "http":
-                if not HAS_REMOTE_MCP:
-                    await self._stream_log("❌ MCP HTTP support not available")
-                    return None, None
-                    
                 connection_url = server_config.get("connection_url")
                 if not connection_url:
                     await self._stream_log("❌ Missing HTTP URL")
@@ -728,10 +677,6 @@ Only include parameters that are defined for this tool.
         Returns:
             List[Dict[str, str]]: The search results from all MCP servers.
         """
-        if not HAS_MCP:
-            await self._stream_log("❌ MCP package not installed, cannot search")
-            return []
-            
         if not self.server_configs:
             await self._stream_log("❌ No MCP server configurations found")
             return []
@@ -814,10 +759,21 @@ Only include parameters that are defined for this tool.
             
         Returns:
             List[Dict[str, str]]: The search results.
+            
+        Raises:
+            ValueError: If no MCP server configurations are available.
         """
-        if not HAS_MCP:
-            logger.warning("MCP package not installed, cannot search")
-            return []
+        # Check if we have any server configurations
+        if not self.server_configs:
+            error_msg = "No MCP server configurations available. Please provide proper MCP configuration."
+            logger.error(error_msg)
+            self._stream_log_sync("❌ MCP retriever cannot proceed without server configurations. Please check the documentation at https://docs.gptr.dev/gpt-researcher/retrievers/mcp-configs")
+            
+            # Raise an exception to stop the process
+            raise ValueError(error_msg + " See documentation at https://docs.gptr.dev/gpt-researcher/retrievers/mcp-configs")
+            
+        # Log to help debug the integration flow
+        logger.info(f"MCPRetriever.search called for query: {self.query}")
             
         try:
             loop = asyncio.get_event_loop()
@@ -834,9 +790,14 @@ Only include parameters that are defined for this tool.
             if len(results) > max_results:
                 logger.info(f"Limiting {len(results)} MCP results to {max_results}")
                 results = results[:max_results]
+            
+            # Log result summary    
+            logger.info(f"MCPRetriever returning {len(results)} results")
                 
             return results
             
         except Exception as e:
             logger.error(f"Error in MCP search: {e}")
-            return [] 
+            self._stream_log_sync(f"❌ Error in MCP search: {str(e)}")
+            # Raise the exception to stop the process
+            raise ValueError(f"MCP search failed: {str(e)}") 
