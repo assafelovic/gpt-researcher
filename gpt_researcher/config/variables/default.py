@@ -30,6 +30,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "PROMPT_FAMILY": "default",
     "LLM_KWARGS": {},
     "EMBEDDING_KWARGS": {},
+    "VERBOSE": False,
     # Deep research specific settings
     "DEEP_RESEARCH_BREADTH": 3,
     "DEEP_RESEARCH_DEPTH": 2,
@@ -37,6 +38,6 @@ DEFAULT_CONFIG: BaseConfig = {
     
     # MCP retriever specific settings
     "MCP_SERVERS": [],  # List of predefined MCP server configurations
-    "MCP_AUTO_TOOL_SELECTION": False,  # Whether to automatically select the best tool for a query
+    "MCP_AUTO_TOOL_SELECTION": True,  # Whether to automatically select the best tool for a query
     "MCP_ALLOWED_ROOT_PATHS": [],  # List of allowed root paths for local file access
 }

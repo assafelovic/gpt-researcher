@@ -80,11 +80,17 @@ class ResearchConductor:
         # Check if any of the retrievers is an MCP retriever
         has_mcp_retriever = any("mcpretriever" in r.__name__.lower() for r in self.researcher.retrievers)
         
-        # Get list of retriever names for planning
-        retriever_names = [r.__name__ for r in self.researcher.retrievers]
+        # Check if we have proper MCP configurations in the headers
+        has_mcp_configs = False
+        if has_mcp_retriever:
+            # Look for MCP-specific configuration keys in headers
+            mcp_config_keys = [key for key in self.researcher.headers.keys() if key.startswith('mcp_')]
+            has_mcp_configs = len(mcp_config_keys) > 0
+            if not has_mcp_configs:
+                self.logger.warning("MCP retriever specified but no MCP configurations found in headers")
         
         # If using MCP retrievers exclusively or with others, use the specialized web research handler
-        if has_mcp_retriever and self.researcher.report_source == ReportSource.Web.value:
+        if has_mcp_retriever and has_mcp_configs:
             self.logger.info("Using MCP-enabled web research")
             research_data = await self._conduct_web_research()
         # Otherwise, continue with standard research flow
