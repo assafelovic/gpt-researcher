@@ -1,10 +1,10 @@
-# GPT Researcher MCP Server
+# 🔍 GPT Researcher MCP Server
 
 > **Note:** This content has been moved to a dedicated repository: [https://github.com/assafelovic/gptr-mcp](https://github.com/assafelovic/gptr-mcp)
 
 ## Overview
 
-The GPT Researcher MCP Server enables AI assistants to conduct comprehensive web research and generate detailed reports via the Machine Conversation Protocol (MCP).
+The GPT Researcher MCP Server enables AI assistants like Claude to conduct comprehensive web research and generate detailed reports via the Machine Conversation Protocol (MCP).
 
 ## Why GPT Researcher MCP?
 
@@ -16,6 +16,18 @@ GPT Researcher autonomously explores and validates numerous sources, focusing on
 * 📊 Optimized context usage
 * 🔎 Comprehensive results
 * 🧠 Better reasoning for LLMs
+
+## Features
+
+### Resources
+* `research_resource`: Get web resources related to a given task via research.
+
+### Primary Tools
+* `deep_research`: Performs deep web research on a topic, finding reliable and relevant information
+* `quick_search`: Performs a fast web search optimized for speed over quality 
+* `write_report`: Generate a report based on research results
+* `get_research_sources`: Get the sources used in the research
+* `get_research_context`: Get the full context of the research
 
 ## Installation
 
@@ -45,4 +57,10 @@ Quick start:
    python server.py
    ```
 
-Please refer to the [full documentation](https://github.com/assafelovic/gptr-mcp) for more details on configuration, integration with Claude, and advanced usage. :-)
+For Docker deployment, Claude Desktop integration, example usage, and troubleshooting, please refer to the [full documentation](https://github.com/assafelovic/gptr-mcp).
+
+## Support & Contact
+
+* Website: [gptr.dev](https://gptr.dev)
+* Email: assaf.elovic@gmail.com
+* GitHub: [assafelovic/gptr-mcp](https://github.com/assafelovic/gptr-mcp) :-)

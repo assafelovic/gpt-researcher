@@ -181,6 +181,21 @@ Step 2:
  - If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/guides/gpt-researcher/gpt-researcher#pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
 
 
+## 🤖 MCP Server
+
+We've moved our MCP server to a dedicated repository: [gptr-mcp](https://github.com/assafelovic/gptr-mcp).
+
+The GPT Researcher MCP Server enables AI applications like Claude to conduct deep research. While LLM apps can access web search tools with MCP, GPT Researcher MCP delivers deeper, more reliable research results.
+
+Features:
+- Deep research capabilities for AI assistants
+- Higher quality information with optimized context usage
+- Comprehensive results with better reasoning for LLMs
+- Claude Desktop integration
+
+For detailed installation and usage instructions, please visit the [official repository](https://github.com/assafelovic/gptr-mcp).
+
+
 ## 👪 Multi-Agent Assistant
 As AI evolves from prompt engineering and RAG to multi-agent systems, we're excited to introduce our new multi-agent assistant built with [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/).
 
