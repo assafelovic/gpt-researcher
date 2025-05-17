@@ -57,6 +57,55 @@ class GPTResearcher:
         prompt_family: str | None = None,
         mcp_configs: list[dict] | None = None,
     ):
+        """
+        Initialize a GPT Researcher instance.
+        
+        Args:
+            query (str): The research query or question.
+            report_type (str): Type of report to generate.
+            report_format (str): Format of the report (markdown, pdf, etc).
+            report_source (str): Source of information for the report (web, local, etc).
+            tone (Tone): Tone of the report.
+            source_urls (list[str], optional): List of specific URLs to use as sources.
+            document_urls (list[str], optional): List of document URLs to use as sources.
+            complement_source_urls (bool): Whether to complement source URLs with web search.
+            query_domains (list[str], optional): List of domains to restrict search to.
+            documents: Document objects for LangChain integration.
+            vector_store: Vector store for document retrieval.
+            vector_store_filter: Filter for vector store queries.
+            config_path: Path to configuration file.
+            websocket: WebSocket for streaming output.
+            agent: Pre-defined agent type.
+            role: Pre-defined agent role.
+            parent_query: Parent query for subtopic reports.
+            subtopics: List of subtopics to research.
+            visited_urls: Set of already visited URLs.
+            verbose (bool): Whether to output verbose logs.
+            context: Pre-loaded research context.
+            headers (dict, optional): Additional headers for requests and configuration.
+            max_subtopics (int): Maximum number of subtopics to generate.
+            log_handler: Handler for logging events.
+            prompt_family: Family of prompts to use.
+            mcp_configs (list[dict], optional): List of MCP server configurations.
+                Each dictionary can contain:
+                - server_name (str): Name of the MCP server
+                - server_command (str): Command to start the server
+                - server_args (list[str]): Arguments for the server command
+                - tool_name (str): Specific tool to use on the MCP server
+                - env (dict): Environment variables for the server
+                - connection_url (str): URL for WebSocket or HTTP connection
+                - connection_type (str): Connection type (stdio, websocket, http)
+                - connection_token (str): Authentication token for remote connections
+                
+                Example:
+                ```python
+                mcp_configs=[{
+                    "server_command": "python",
+                    "server_args": ["my_mcp_server.py"],
+                    "tool_name": "search"
+                }]
+                ```
+        """
         self.query = query
         self.report_type = report_type
         self.cfg = Config(config_path)

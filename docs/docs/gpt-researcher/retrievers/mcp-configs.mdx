@@ -1,11 +1,11 @@
 ---
 title: MCP Configurations
-description: How to configure and use MCP (Model Context Protocol) servers more efficiently with GPT Researcher
+description: How to configure and use MCP (Model Context Protocol) servers with GPT Researcher
 ---
 
 # Using MCP Configurations in GPT Researcher
 
-The Model Context Protocol (MCP) allows GPT Researcher to connect with a wide variety of data sources and tools through a standardized interface. This guide explains how to use the improved `mcp_configs` parameter for more scalable and maintainable MCP integration.
+The Model Context Protocol (MCP) allows GPT Researcher to connect with a wide variety of data sources and tools through a standardized interface. This guide explains how to use the `mcp_configs` parameter for MCP integration.
 
 ## MCP Configuration Basics
 
@@ -146,10 +146,8 @@ from gpt_researcher import GPTResearcher
 
 researcher = GPTResearcher(
     query="Impact of climate change on agriculture",
-    headers={
-        "retrievers": "mcp,tavily",  # Use both MCP and Tavily
-        "tavily_api_key": "your_tavily_api_key"
-    },
+    retrievers=["mcp", "tavily"],  # Use both MCP and Tavily
+    tavily_api_key="your_tavily_api_key",
     mcp_configs=[
         {
             "server_command": "python",
@@ -221,39 +219,6 @@ mcp_configs=[{
 
 You can still explicitly set the `connection_type` if needed to override the automatic detection.
 
-## Migrating from Header-Based Configuration
+## Important Note About Configuration Method
 
-If you're currently using the header-based approach for MCP configuration, here's how to migrate:
-
-### Old approach:
-
-```python
-researcher = GPTResearcher(
-    query="your query",
-    headers={
-        "retriever": "mcp",
-        "mcp_server_command": "python",
-        "mcp_server_args": "path/to/server.py",
-        "mcp_tool_name": "search",
-        "mcp_tool_arg_max_results": "5"  # This is no longer needed
-    }
-)
-```
-
-### New approach:
-
-```python
-researcher = GPTResearcher(
-    query="your query",
-    mcp_configs=[
-        {
-            "server_command": "python",
-            "server_args": ["path/to/server.py"],
-            "tool_name": "search"
-            # No static tool_args - arguments are generated dynamically
-        }
-    ]
-)
-```
-
-The new approach is much more maintainable, especially when working with multiple MCP servers or complex configurations. 
+Headers-based configuration (using `mcp_server_command`, etc. in the headers parameter) is no longer supported. All MCP configuration must be done through the `mcp_configs` parameter. This change improves consistency and makes multi-server configurations more maintainable. 
