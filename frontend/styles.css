@@ -10,8 +10,14 @@
     }
 }
 
-html {
+/* Animate the global background with subtle gradient */
+html, body {
+    /* Keep smooth scrolling */
     scroll-behavior: smooth;
+    /* Replace radial dark gray with animated multi-stop gradient */
+    background: linear-gradient(45deg, #1a1a2e, #08192f, #0f2351, #1a1a2e);
+    background-size: 400% 400%;
+    animation: gradientBG 20s ease infinite;
 }
 
 body {
@@ -19,14 +25,37 @@ body {
     color: #fff;
     line-height: 1.6;
     background-color: #1e272e;
+    background-image: radial-gradient(circle at 30% 20%, #151520 0%, #080808 80%);
+    background-attachment: fixed;
+    position: relative !important;
+    background-color: #121212 !important;
+    padding-top: 40px;
+}
+
+body::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('./static/powerful_wizard.png');
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    opacity: 0.4;
+    z-index: -1;
 }
 
 .landing {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: calc(100vh - 40px);
     text-align: center;
+    padding: 0 20px;
+    margin-top: 0; /* Removed top margin that compensated for the top bar */
 }
 
 .landing h1 {
@@ -35,12 +64,24 @@ body {
     margin-bottom: 2rem;
 }
 
+.gradient-text {
+    background-image: linear-gradient(to right, #4E9DDD, #1A5A98);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+}
+
 .landing p {
     font-size: 1.5rem;
     font-weight: 400;
     max-width: 1000px;
     padding: 0 25px 0 25px;
     margin: auto auto 2rem auto;
+}
+
+.landing-description {
+    font-size: 20px;
 }
 
 .container {
@@ -53,10 +94,13 @@ body {
 }
 
 .container:hover {
-    transform: scale(1.01);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    /* Uncomment this to enable hover zoom effect (transform scale effect).
+        This is not recommended because it can be obnoxious on desktop, and straight up unusable on mobile. */
+    /* transform: scale(1.01); */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
 }
 
+/* Glass-style inputs, selects, output areas */
 input, select, #output, #reportContainer {
     background-color: rgba(255, 255, 255, 0.1);
     border: none;
@@ -75,21 +119,38 @@ input:hover, input:focus, select:hover, select:focus {
     background: linear-gradient(to right, #0062cc, #007bff);
     border: none;
     transition: all .3s ease-in-out;
+    font-size: 1.1rem;
+    padding: 12px 30px;
+    border-radius: 30px;
+    min-width: 180px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    font-weight: 600;
 }
 
 .btn-secondary {
     background: linear-gradient(to right, #6c757d, #6c757d);
     border: none;
     transition: all .3s ease-in-out;
+    font-size: 1.1rem;
+    padding: 12px 30px;
+    border-radius: 30px;
+    min-width: 180px;
+    text-align: center;
+}
+
+.btn-action {
+    background: rgba(40, 40, 40, 0.8);
+    border: 1px solid rgba(78, 157, 221, 0.5);
 }
 
 .btn:hover {
-    opacity: 0.8;
-    transform: scale(1.1);
+    opacity: 0.9;
+    transform: translateY(-3px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
-.agent_question {
+.agent-question {
     font-size: 1.4rem;
     font-weight: 500;
     margin-bottom: 0.2rem;
@@ -114,6 +175,40 @@ footer p {
     margin-top: 20px;
     margin-bottom: 20px;
     padding: 25px;
+    background-color: rgba(20, 20, 28, 0.8);
+    border-radius: 16px;
+    border: 1px solid rgba(100, 100, 130, 0.2);
+    transition: all 0.3s ease;
+}
+
+.research-output-container, .report-container {
+    position: relative;
+}
+
+.research-output-container h2, .report-container h2 {
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 1.8rem;
+    margin-bottom: 1.2rem;
+    border-bottom: 2px solid rgba(78, 157, 221, 0.3);
+    padding-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Explicitly override any icon that might be added before the h2 */
+.research-output-container h2::before {
+    content: none !important;
+    display: none !important;
+}
+
+.report-container h2::before {
+    content: '\f15c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    margin-right: 12px;
+    color: #4E9DDD;
+    font-size: 1.4rem;
 }
 
 .images_div {
@@ -125,6 +220,13 @@ footer p {
     margin: 10px;
     padding: 10px;
     border-radius: 12px;
+/*    border-left: 3px solid #4E9DDD;*/
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 #output {
@@ -134,6 +236,25 @@ footer p {
     margin-bottom: 10px;
     margin-top: 10px;
     border-radius: 12px;
+    /*background-color: rgba(16, 16, 24, 0.9);
+    scrollbar-width: thin;
+    scrollbar-color: #4e9ddd rgba(40, 40, 50, 0.7);
+    font-size: 15px;
+    line-height: 1.6;*/
+}
+
+#output::-webkit-scrollbar {
+    width: 8px;
+}
+
+#output::-webkit-scrollbar-track {
+    background: rgba(60, 60, 60, 0.7);
+    border-radius: 10px;
+}
+
+#output::-webkit-scrollbar-thumb {
+    background-color: #4e9ddd;
+    border-radius: 10px;
 }
 
 #reportContainer {
@@ -146,6 +267,28 @@ footer p {
     transition: all .3s ease-in-out;
     padding: 25px;
     border-radius: 12px;
+}
+
+#reportContainer h1,
+#reportContainer h2,
+#reportContainer h3 {
+    color: #FFFFFF;
+}
+
+#reportContainer a {
+    color: #7DC7FF;
+    text-decoration: none;
+}
+
+#reportContainer a:hover {
+    text-decoration: underline;
+}
+
+#reportContainer blockquote {
+    border-left: 3px solid #4e9ddd;
+    padding-left: 15px;
+    color: #B8B8B8;
+    font-style: italic;
 }
 
 .tags-input {
@@ -189,7 +332,7 @@ a:hover {
     color: #0d9488;
 }
 
-/* Add or modify these styles at the end of the file */
+/* Images container styles */
 #selectedImagesContainer {
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
@@ -247,16 +390,2043 @@ a:hover {
 
 .image-dialog button {
     margin-top: 20px;
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
+    padding: 10px 25px;
+    background: linear-gradient(to right, #4E9DDD, #1A5A98);
+    color: #FFFFFF;
     border: none;
-    border-radius: 5px;
+    border-radius: 30px;
     cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
 .image-dialog button:hover {
-    background-color: #0056b3;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Alert styling */
+.alert-info {
+    background-color: rgba(30, 30, 30, 0.7);
+    color: #E4E4E4;
+    border: 1px solid rgba(78, 157, 221, 0.3);
+    border-left: 4px solid #4E9DDD;
+}
+
+textarea#task {
+    min-height: 38px;
+    overflow-y: hidden;
+    resize: none;
+}
+
+/* Top Credits Bar */
+.credits-bar {
+    background: rgba(18, 18, 18, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 8px 0;
+    width: 100%;
+    border-bottom: 1px solid rgba(78, 157, 221, 0.3);
+    z-index: 100;
+}
+
+.top-credits {
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+/* Bottom credits bar (download bar) */
+.sticky-downloads-bar.credits-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+}
+
+.credits-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.credits-bar p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #B8B8B8;
+    text-align: center;
+    flex: 1;
+}
+
+/* Top history button styling */
+.top-history-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(78, 157, 221, 0.2);
+    color: #7DC7FF;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.top-history-button:hover {
+    background: rgba(78, 157, 221, 0.3);
+    transform: translateY(-2px);
+}
+
+.top-history-button i {
+    font-size: 1rem;
+}
+
+/* Top WebSocket button styling */
+.top-websocket-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(78, 174, 221, 0.2);
+    color: #4EAEDD;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    justify-content: center;
+    margin-left: 10px;
+}
+
+.top-websocket-button:hover {
+    background: rgba(78, 174, 221, 0.3);
+    transform: translateY(-2px);
+}
+
+.top-websocket-button i {
+    font-size: 1rem;
+}
+
+/* Side feature panels */
+.feature-panel {
+    position: fixed;
+    top: 80px;
+    width: auto;
+    max-width: 320px;
+    z-index: 90;
+    display: none;
+    max-height: calc(100vh - 150px);
+    overflow-y: visible;
+    background: transparent;
+    /* Add transition for smooth fading effect when panels appear */
+    transition: opacity 0.5s ease;
+}
+
+.left-panel {
+    left: 20px;
+    right: auto;
+}
+
+.right-panel {
+    right: 20px;
+    left: auto;
+}
+
+.feature-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.feature-panel::-webkit-scrollbar-track {
+    background: rgba(40, 40, 50, 0.7);
+    border-radius: 10px;
+}
+
+.feature-panel::-webkit-scrollbar-thumb {
+    background-color: #4e9ddd;
+    border-radius: 10px;
+}
+
+.feature-card {
+    background: rgba(20, 20, 30, 0.4); /* Even more transparent */
+    backdrop-filter: blur(5px); /* Lighter blur for better blending */
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(78, 157, 221, 0.1); /* Even more subtle border */
+    border-left: 3px solid; /* Slightly thinner accent border */
+    transition: all 0.3s ease;
+    cursor: pointer;
+    min-height: 160px;
+    width: 100%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08); /* Even lighter shadow */
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at top right, rgba(25, 25, 35, 0.3), transparent 70%);
+    z-index: -1;
+    opacity: 0.7;
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    background: rgba(30, 30, 40, 0.6); /* More transparent on hover too */
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+    border-color: rgba(78, 157, 221, 0.25);
+}
+
+/* Adjust card colors to match background better */
+.feature-card.primary {
+    border-left-color: rgba(78, 157, 221, 0.7); /* More transparent colors */
+}
+
+.feature-card.success {
+    border-left-color: rgba(78, 221, 152, 0.7);
+}
+
+.feature-card.info {
+    border-left-color: rgba(78, 174, 221, 0.7);
+}
+
+.feature-card.warning {
+    border-left-color: rgba(237, 189, 78, 0.7);
+}
+
+.feature-card.danger {
+    border-left-color: rgba(237, 78, 78, 0.7);
+}
+
+.feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px; /* Increased from 50px */
+    height: 60px; /* Increased from 50px */
+    border-radius: 15px; /* Increased from 12px */
+    margin-bottom: 18px; /* Increased from 15px */
+    font-size: 26px; /* Increased from 22px */
+    color: #FFF;
+    position: relative; /* Needed for the ::after pseudo-element */
+}
+
+.feature-icon::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px; /* Match the parent */
+    transform: scale(0);
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon::after {
+    transform: scale(1);
+}
+
+.feature-card.primary .feature-icon {
+    background: linear-gradient(135deg, #4E9DDD, #2C7BBF);
+}
+
+.feature-card.success .feature-icon {
+    background: linear-gradient(135deg, #4EDD98, #2CBF7B);
+}
+
+.feature-card.info .feature-icon {
+    background: linear-gradient(135deg, #4EAEDD, #2C7BBF);
+}
+
+.feature-card.warning .feature-icon {
+    background: linear-gradient(135deg, #EDBD4E, #BF962C);
+}
+
+.feature-card.danger .feature-icon {
+    background: linear-gradient(135deg, #ED4E4E, #BF2C2C);
+}
+
+.feature-title {
+    font-weight: 600;
+    font-size: 20px; /* Increased from 18px */
+    margin-bottom: 12px; /* Increased from 10px */
+    color: #FFF;
+}
+
+.feature-text {
+    color: #CCC;
+    font-size: 15px; /* Increased from 14px */
+    line-height: 1.6; /* Increased from 1.5 */
+}
+
+.feature-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.05));
+    border-radius: 50%;
+    transform: translate(50%, -50%);
+    z-index: -1;
+}
+
+/* Animation for feature cards */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.left-panel .feature-card {
+    animation: fadeInLeft 0.6s ease forwards;
+    opacity: 0;
+}
+
+.right-panel .feature-card {
+    animation: fadeInRight 0.6s ease forwards;
+    opacity: 0;
+}
+
+.feature-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.feature-card:nth-child(2) {
+    animation-delay: 0.25s;
+}
+
+.feature-card:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Highlight connection between side panels and form elements */
+.highlight-connection {
+    transition: box-shadow 0.5s ease;
+    position: relative;
+    z-index: 1;
+}
+
+/* Button glow effect for feature cards interaction */
+.highlight-glow-button {
+    box-shadow: 0 0 25px 10px rgba(78, 157, 221, 0.7) !important;
+    border-color: rgba(78, 157, 221, 0.9) !important;
+    transform: translateY(-3px) !important;
+    transition: all 0.3s ease !important;
+}
+
+/* Intensify highlight glows for feature-panel interactions */
+.highlight-glow-container {
+    box-shadow: 0 0 30px 15px rgba(78, 174, 221, 0.6) !important;
+    border: 1px solid rgba(78, 174, 221, 0.8) !important;
+}
+.highlight-glow-report_source,
+.highlight-glow-query_domains {
+    box-shadow: 0 0 20px 10px rgba(78, 221, 152, 0.7) !important;
+}
+.highlight-glow-tone {
+    box-shadow: 0 0 20px 10px rgba(78, 157, 221, 0.7) !important;
+    border: 1px solid rgba(78, 157, 221, 0.8) !important;
+}
+
+/* Ensure subtle transitions for all glows */
+.highlight-connection,
+.highlight-glow-container,
+.highlight-glow-report_source,
+.highlight-glow-query_domains,
+.highlight-glow-tone {
+    transition: box-shadow 0.5s ease;
+}
+
+/* Scroll to bottom button */
+.scroll-to-bottom {
+    position: fixed;
+    bottom: 90px;
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Center horizontally */
+    right: auto; /* Override any right positioning */
+    background: linear-gradient(135deg, #4E9DDD, #2C7BBF);
+    width: 70px; /* Bigger */
+    height: 70px; /* Bigger */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFF;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    opacity: 1;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.scroll-to-bottom:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transform: translateX(-50%) translateY(-5px); /* Keep centered while lifting */
+}
+
+.scroll-to-bottom i {
+    font-size: 28px; /* Bigger icon */
+}
+
+/* Responsive adjustments */
+@media (min-width: 1400px) {
+    .feature-panel {
+        display: block;
+    }
+
+    .container {
+        max-width: 900px !important;
+    }
+}
+
+/* Medium devices (tablets, less than 1400px) */
+@media (max-width: 1399px) {
+    .feature-panel {
+        display: none !important; /* Always hide feature panels on medium devices */
+    }
+}
+
+@media (max-width: 991px) {
+    .landing h1 {
+        font-size: 2.5rem;
+    }
+
+    .landing p {
+        font-size: 1.2rem;
+    }
+
+    .landing {
+        margin-top: 50px; /* Add space below the top bar */
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .btn-primary, .btn-secondary, .btn-action {
+        padding: 10px 20px;
+        margin-bottom: 10px;
+    }
+
+    #selectedImagesContainer img {
+        width: 140px;
+        height: 140px;
+    }
+
+    .scroll-to-bottom {
+        width: 60px;
+        height: 60px;
+        bottom: 70px;
+    }
+
+    /* Credits bar and history button adjustments */
+    .credits-content {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .credits-bar p {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 5px;
+    }
+
+    .top-history-button,
+    .top-websocket-button {
+        margin: 5px;
+    }
+
+    /* Sticky downloads bar adjustments */
+    .sticky-downloads-bar {
+        padding: 8px 10px;
+        bottom: 50px;
+    }
+
+    .download-option-btn {
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+
+    /* History panel adjustments */
+    .history-panel {
+        width: 100%;
+    }
+
+    .history-panel-toggle {
+        right: 20px;
+        bottom: 120px;
+        top: auto;
+    }
+
+    /* For mobile, stack the download panels at the bottom of the screen */
+    .download-panel {
+        position: fixed;
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 60px; /* Position above footer */
+        width: 100%;
+        transform: none;
+        padding: 0 15px;
+        z-index: 99;
+    }
+
+    .download-panel-left, .download-panel-right {
+        transform: none;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        max-width: 300px;
+    }
+
+    /* Only show one panel at a time on mobile */
+    .download-panel-right {
+        bottom: 180px; /* Position above the left panel */
+    }
+
+    .download-card {
+        margin-bottom: 10px;
+    }
+
+    .download-options {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0 20px;
+    }
+
+    footer {
+        padding: 10px 0;
+    }
+
+    .feature-panel {
+        width: 100%; /* Full width on small screens */
+        max-width: none;
+        left: 0;
+        right: 0;
+        padding: 0 20px;
+    }
+
+    .feature-card {
+        padding: 18px;
+        min-height: auto; /* Let it grow with content */
+    }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Modern spinner styles */
+.modern-spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 3px solid rgba(78, 157, 221, 0.3);
+    border-top-color: #4E9DDD;
+    vertical-align: middle;
+    margin-right: 12px;
+}
+
+/* Only apply spinning animation when the spinning class is added */
+.modern-spinner.spinning {
+    animation: spin 2s linear infinite;
+}
+
+/* Spinner in Research Progress title */
+.research-output-container h2::before {
+    content: '\f110';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    margin-right: 12px;
+    color: #4E9DDD;
+    font-size: 1.4rem;
+}
+
+/* Add the styles from index.html */
+.avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+    border: 2px solid #4E9DDD;
+    box-shadow: 0 0 15px rgba(78, 157, 221, 0.5);
+}
+
+.agent-name {
+    text-align: center;
+    font-weight: 600;
+}
+
+.agent-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Hover effect to make panels reappear */
+.feature-panel:hover {
+    --panel-shift: 0px !important;
+    --panel-opacity: 1 !important;
+    --panel-rotate: 0deg !important;
+    --panel-scale: 1 !important;
+    box-shadow: none;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, box-shadow 0.5s ease;
+}
+
+/* Add 3D shading effect to the panels */
+.feature-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: none; /* Remove the gradient background */
+    z-index: -1;
+    opacity: var(--panel-depth, 0.5);
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.feature-panel:hover::before {
+    opacity: 0; /* Make completely transparent on hover */
+}
+
+/* Add a subtle corner glow on hover */
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at top right, rgba(25, 25, 35, 0.15), transparent 70%);
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.feature-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at top right, transparent, rgba(10, 10, 15, 0.1) 70%);
+    opacity: 1;
+    z-index: -2;
+}
+
+/* Conversation History Panel */
+.history-panel {
+    position: fixed;
+    top: 40px;
+    right: 0;
+    width: 320px;
+    height: calc(100vh - 40px);
+    background: rgba(18, 18, 24, 0.95);
+    backdrop-filter: blur(10px);
+    border-left: 1px solid rgba(78, 157, 221, 0.3);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.4);
+}
+
+.history-panel.open {
+    transform: translateX(0);
+}
+
+.history-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(78, 157, 221, 0.3);
+}
+
+.history-panel-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+}
+
+.history-panel-header h3 i {
+    margin-right: 10px;
+    color: #4E9DDD;
+}
+
+.history-panel-actions {
+    display: flex;
+}
+
+.history-action-btn {
+    background: transparent;
+    border: none;
+    color: #E4E4E4;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.history-action-btn:hover {
+    background: rgba(78, 157, 221, 0.2);
+    color: #FFFFFF;
+}
+
+.history-panel-search, .history-panel-filters {
+    padding: 15px;
+    border-bottom: 1px solid rgba(78, 157, 221, 0.2);
+    display: flex;
+    align-items: center;
+}
+
+.history-panel-search input {
+    flex: 1;
+    background: rgba(30, 30, 40, 0.8);
+    border: 1px solid rgba(78, 157, 221, 0.3);
+    border-radius: 20px;
+    padding: 8px 15px;
+    color: #E4E4E4;
+    font-size: 0.9rem;
+}
+
+.history-panel-search button {
+    margin-left: 8px;
+}
+
+.history-panel-filters select {
+    flex: 1;
+    background: rgba(30, 30, 40, 0.8);
+    border: 1px solid rgba(78, 157, 221, 0.3);
+    border-radius: 20px;
+    padding: 8px 15px;
+    color: #E4E4E4;
+    font-size: 0.9rem;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234E9DDD' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 15px;
+}
+
+.history-panel-entries {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #4e9ddd rgba(40, 40, 50, 0.7);
+}
+
+.history-panel-entries::-webkit-scrollbar {
+    width: 6px;
+}
+
+.history-panel-entries::-webkit-scrollbar-track {
+    background: rgba(40, 40, 50, 0.7);
+    border-radius: 10px;
+}
+
+.history-panel-entries::-webkit-scrollbar-thumb {
+    background-color: #4e9ddd;
+    border-radius: 10px;
+}
+
+.history-entry {
+    background: rgba(30, 30, 40, 0.6);
+    border-radius: 10px;
+    padding: 15px;
+    border-left: 3px solid #4E9DDD;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    animation: fadeInRight 0.3s ease forwards;
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+@keyframes fadeInRight {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.history-entry:hover {
+    background: rgba(40, 40, 50, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.history-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.history-entry-title {
+    font-weight: 600;
+    color: #FFFFFF;
+    font-size: 0.95rem;
+    margin: 0;
+    max-width: 80%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-entry-timestamp {
+    font-size: 0.75rem;
+    color: #B8B8B8;
+}
+
+.history-entry-preview {
+    font-size: 0.85rem;
+    color: #CCCCCC;
+    margin: 0 0 10px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-entry-actions {
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.history-entry:hover .history-entry-actions {
+    opacity: 1;
+    height: 32px;
+    margin-top: 10px;
+}
+
+.history-entry-action {
+    background: rgba(40, 40, 50, 0.8);
+    border: 1px solid rgba(78, 157, 221, 0.3);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    color: #E4E4E4;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.history-entry-action:hover {
+    background: rgba(78, 157, 221, 0.2);
+    border-color: #4E9DDD;
+    color: #FFFFFF;
+}
+
+.history-entry-action i {
+    font-size: 0.8rem;
+}
+
+.history-entry-format {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.history-entry-format span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.7rem;
+    color: #B8B8B8;
+    background: rgba(30, 30, 40, 0.7);
+    padding: 3px 6px;
+    border-radius: 4px;
+}
+
+.history-entry-format span i {
+    color: #4E9DDD;
+}
+
+.history-entry-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.history-entry.expanded .history-entry-details {
+    max-height: 200px; /* Adjust based on expected content */
+    margin-top: 10px;
+}
+
+.history-entry-detail {
+    font-size: 0.8rem;
+    color: #B8B8B8;
+    margin: 3px 0;
+}
+
+.history-panel-toggle {
+    position: fixed;
+    top: 100px;
+    right: 30px; /* Right side to match panel position */
+    left: auto; /* Override any left positioning */
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #4E9DDD, #2C7BBF);
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #FFF;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 999;
+}
+
+.history-panel-toggle:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
+}
+
+.history-panel-toggle i {
+    font-size: 26px;
+    margin-bottom: 5px;
+}
+
+.history-panel-toggle::after {
+    content: 'History';
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Responsive Adjustments for History Panel */
+@media (max-width: 768px) {
+    .history-panel {
+        width: 100%;
+    }
+
+    .history-panel-toggle {
+        right: 20px;
+        bottom: 120px;
+        top: auto;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+    .history-panel {
+        width: 280px;
+    }
+}
+
+/* Sticky Downloads Bar */
+.sticky-downloads-bar {
+    position: fixed !important; /* Force fixed positioning */
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: rgba(18, 18, 18, 0.8) !important;
+    backdrop-filter: blur(10px) !important;
+    z-index: 9999 !important; /* Extremely high z-index to ensure it's on top */
+    padding: 8px 0 !important;
+    display: none !important; /* Hidden by default */
+    justify-content: center !important;
+    border-top: 1px solid rgba(78, 157, 221, 0.3) !important;
+    box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.3) !important;
+    transform: none !important; /* Prevent any transforms */
+    margin: 0 !important; /* Reset any margins */
+    max-height: none !important;
+    min-height: 40px !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
+}
+
+.sticky-downloads-bar.visible {
+    display: flex !important; /* Show when this class is added */
+}
+
+.download-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 10px;
+}
+
+.download-buttons-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.download-option-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(78, 157, 221, 0.2);
+    color: #7DC7FF;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.download-option-btn:hover {
+    background: rgba(78, 157, 221, 0.3);
+    transform: translateY(-2px);
+    text-decoration: none;
+    color: #FFFFFF;
+}
+
+.download-option-btn i {
+    font-size: 1rem;
+}
+
+.download-option-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Adjust for medium screens */
+@media (min-width: 769px) and (max-width: 1200px) {
+    .feature-panel {
+        width: 280px; /* Slightly smaller on medium screens */
+    }
+
+    .feature-card {
+        padding: 20px; /* Reduce padding on medium screens */
+        min-height: 150px; /* Smaller minimum height */
+    }
+
+    .feature-icon {
+        width: 55px; /* Slightly smaller icon */
+        height: 55px;
+        font-size: 24px;
+    }
+}
+
+/* Media query adjustments for mobile */
+/* Styles were merged into the main mobile media query */
+
+.credits-bar a {
+    color: #7DC7FF;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.credits-bar a:hover {
+    text-decoration: underline;
+}
+
+/* Add WebSocket Panel Styles */
+.websocket-panel {
+    position: fixed;
+    top: 40px;
+    left: 0;
+    width: 300px;
+    height: auto;
+    max-height: calc(100vh - 80px);
+    background: rgba(18, 18, 24, 0.95);
+    backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(78, 174, 221, 0.3);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.4);
+    overflow-y: auto;
+}
+
+.websocket-panel.open {
+    transform: translateX(0);
+}
+
+.websocket-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid rgba(78, 157, 221, 0.3);
+}
+
+.websocket-panel-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+}
+
+.websocket-panel-header h3 i {
+    margin-right: 10px;
+    color: #4E9DDD;
+}
+
+.websocket-panel-actions {
+    display: flex;
+}
+
+.websocket-action-btn {
+    background: transparent;
+    border: none;
+    color: #E4E4E4;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.websocket-action-btn:hover {
+    background: rgba(78, 157, 221, 0.2);
+    color: #FFFFFF;
+}
+
+.websocket-status {
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    position: relative;
+}
+
+.status-label {
+    color: #B8B8B8;
+    margin-right: 10px;
+    width: 130px;
+    flex-shrink: 0;
+}
+
+.status-value {
+    color: #FFFFFF;
+    font-weight: 500;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-left: 10px;
+    background-color: #777;
+}
+
+.status-indicator.connected {
+    background-color: #4EDD98;
+    box-shadow: 0 0 10px rgba(78, 221, 152, 0.7);
+}
+
+.status-indicator.connecting {
+    background-color: #EDBD4E;
+    box-shadow: 0 0 10px rgba(237, 189, 78, 0.7);
+}
+
+.status-indicator.disconnected {
+    background-color: #ED4E4E;
+    box-shadow: 0 0 10px rgba(237, 78, 78, 0.7);
+}
+
+.status-divider {
+    height: 1px;
+    background: rgba(78, 157, 221, 0.2);
+    margin: 15px 0 20px;
+}
+
+/* Responsive adjustments for WebSocket panel */
+@media (max-width: 768px) {
+    .websocket-panel {
+        width: 100%;
+    }
+
+    .websocket-panel-toggle-btn {
+        left: 20px;
+        top: 80px;
+        width: 50px;
+        height: 50px;
+    }
+
+    .websocket-panel-toggle-btn i {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile styling for fixed download bar */
+    .sticky-downloads-bar .credits-content {
+        flex-direction: column;
+        padding: 5px 10px;
+    }
+
+    .sticky-downloads-bar p {
+        margin-bottom: 5px;
+        text-align: center;
+    }
+
+    .download-buttons-container {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .download-option-btn {
+        margin: 2px;
+        font-size: 0.8rem;
+        padding: 4px 10px;
+    }
+}
+
+/* Chat UI Styles (moved from inline styles) */
+.chat-container {
+    margin-top: 40px;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.chat-messages {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.2);
+    scrollbar-width: thin;
+    scrollbar-color: #4e9ddd rgba(40, 40, 50, 0.7);
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: rgba(40, 40, 50, 0.7);
+    border-radius: 10px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background-color: #4e9ddd;
+    border-radius: 10px;
+}
+
+.chat-message {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 10px;
+    max-width: 80%;
+    position: relative;
+}
+
+.user-message {
+    background-color: #4a4a5e;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 0;
+}
+
+.ai-message {
+    background-color: #4E9DDD;
+    color: white;
+    margin-right: auto;
+    border-bottom-left-radius: 0;
+}
+
+.chat-input-container {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input {
+    flex-grow: 1;
+    border-radius: 20px;
+    padding: 10px 15px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-weight: 400;
+}
+
+.chat-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.chat-input:focus {
+    background-color: rgba(255, 255, 255, 0.4);
+    border-color: #4E9DDD;
+    box-shadow: 0 0 0 0.2rem rgba(78, 157, 221, 0.25);
+    color: #000000;
+    font-weight: 500;
+}
+
+.chat-timestamp {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 5px;
+    text-align: right;
+}
+
+#sendChatBtn {
+    border-radius: 20px;
+    padding: 10px 20px;
+}
+
+.chat-loading {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.chat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: white;
+    opacity: 0.7;
+    animation: dot-pulse 1.5s infinite;
+}
+
+.chat-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.chat-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes dot-pulse {
+    0%, 100% { transform: scale(0.7); opacity: 0.5; }
+    50% { transform: scale(1); opacity: 1; }
+}
+
+/* Download buttons glow effect */
+.highlight-glow-download-button {
+    box-shadow: 0 0 15px #ffc107, 0 0 25px rgba(255, 193, 7, 0.5) !important;
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+    border-color: #ffc107 !important;
+}
+
+/* --- Enhanced History Panel Styles --- */
+/* Improved layout and organization for history panel */
+.history-panel {
+    /* Keep existing styles */
+    background: rgba(22, 22, 30, 0.97);
+}
+
+/* Improved header with better visibility */
+.history-panel-header {
+    background: rgba(25, 25, 35, 0.95);
+    padding: 16px 20px;
+    border-bottom: 2px solid rgba(78, 157, 221, 0.5);
+}
+
+/* Standardized button container in header */
+.history-panel-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Improved and consistent action buttons */
+.history-action-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(40, 40, 55, 0.8);
+    border: 1px solid rgba(78, 157, 221, 0.3);
+    color: #E4E4E4;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.history-action-btn:hover {
+    background: rgba(78, 157, 221, 0.2);
+    border-color: #4E9DDD;
+    transform: translateY(-2px);
+    color: #FFFFFF;
+}
+
+/* Add labels to buttons on hover for better UX */
+.history-action-btn::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(40, 40, 55, 0.9);
+    color: #FFFFFF;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.history-action-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+    bottom: -25px;
+}
+
+/* Improved search bar */
+.history-panel-search {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(78, 157, 221, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-panel-search input {
+    flex: 1;
+    background: rgba(30, 30, 40, 0.8);
+    border: 1px solid rgba(78, 157, 221, 0.3);
+    border-radius: 20px;
+    padding: 8px 15px;
+    color: #E4E4E4;
+    font-size: 0.9rem;
+    height: 40px;
+}
+
+.history-panel-search input:focus {
+    border-color: #4E9DDD;
+    box-shadow: 0 0 0 2px rgba(78, 157, 221, 0.2);
+    outline: none;
+}
+
+/* Filter area with improved buttons */
+.history-panel-filters {
+    padding: 12px 16px;
+    background: rgba(30, 30, 40, 0.4);
+    border-bottom: 1px solid rgba(78, 157, 221, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.history-panel-filters select {
+    background: rgba(40, 40, 55, 0.8);
+    border: 1px solid rgba(78, 157, 221, 0.3);
+    border-radius: 20px;
+    padding: 8px 15px;
+    color: #E4E4E4;
+    font-size: 0.9rem;
+    max-width: 140px;
+    height: 40px;
+}
+
+/* Improved action buttons container in filters */
+.history-actions-container {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+}
+
+/* Make history entries more visually appealing */
+.history-entry {
+    background: rgba(35, 35, 45, 0.7);
+    border-radius: 10px;
+    padding: 16px;
+    border-left: 3px solid #4E9DDD;
+    transition: all 0.25s ease;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.history-entry:hover {
+    background: rgba(45, 45, 60, 0.8);
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Better formatted entry header */
+.history-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+/* Format link buttons consistently */
+.history-entry-format {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.history-entry-format a.history-entry-action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 30px;
+    background: rgba(78, 157, 221, 0.15);
+    color: #E4E4E4;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(78, 157, 221, 0.3);
+}
+
+.history-entry-format a.history-entry-action:hover {
+    background: rgba(78, 157, 221, 0.3);
+    transform: translateY(-1px);
+    color: #FFFFFF;
+    border-color: rgba(78, 157, 221, 0.5);
+}
+
+/* Consistent icon styles for various file types */
+.history-entry-format a.history-entry-action i {
+    font-size: 0.9rem;
+}
+
+/* PDF icon */
+.history-entry-format a.history-entry-action i.fa-file-pdf {
+    color: #FF5252;
+}
+
+/* Word icon */
+.history-entry-format a.history-entry-action i.fa-file-word {
+    color: #4285F4;
+}
+
+/* Markdown icon */
+.history-entry-format a.history-entry-action i.fa-file-lines {
+    color: #42A5F5;
+}
+
+/* JSON icon */
+.history-entry-format a.history-entry-action i.fa-file-code {
+    color: #FFB300;
+}
+
+/* Improved delete button */
+.history-entry-actions {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.history-entry:hover .history-entry-actions {
+    opacity: 1;
+}
+
+.history-entry-actions .delete-entry {
+    width: 34px;
+    height: 34px;
+    background: rgba(220, 53, 69, 0.2);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    color: #dc3545;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.history-entry-actions .delete-entry:hover {
+    background: rgba(220, 53, 69, 0.3);
+    border-color: rgba(220, 53, 69, 0.5);
+    transform: translateY(-2px);
+}
+
+/* Empty state styling */
+.history-panel-entries p.text-center {
+    padding: 20px;
+    color: #B8B8B8;
+    font-style: italic;
+}
+
+/* Responsive adjustments for history panel */
+@media (max-width: 768px) {
+    .history-panel {
+        width: 100%;
+    }
+
+    .history-action-btn::after {
+        display: none; /* Hide tooltips on mobile */
+    }
+
+    .history-panel-filters {
+        flex-wrap: wrap;
+    }
+
+    .history-actions-container {
+        margin-top: 8px;
+        margin-left: 0;
+    }
+}
+
+/* Report Actions and Download Buttons */
+.report-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: rgba(20, 20, 28, 0.4);
+    border-radius: 8px;
+    border: 1px solid rgba(100, 100, 130, 0.15);
+}
+
+.report-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 15px;
+    border-radius: 6px;
+    background: rgba(35, 35, 45, 0.8);
+    color: #E4E4E4;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    border: 1px solid rgba(78, 157, 221, 0.2);
+}
+
+.report-action-btn:hover {
+    background: rgba(78, 157, 221, 0.2);
+    transform: translateY(-2px);
+    text-decoration: none;
+    color: #FFFFFF;
+    border-color: rgba(78, 157, 221, 0.5);
+}
+
+.report-action-btn i {
+    font-size: 1rem;
+    color: #4E9DDD;
+}
+
+.report-action-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Expand Button */
+.expand-button {
+    background: transparent;
+    border: none;
+    color: #4E9DDD;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 5px;
+    margin-right: 0;
+    margin-left: auto;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+}
+
+.expand-button:hover {
+    background: rgba(78, 157, 221, 0.15);
+    color: #7DC7FF;
+}
+
+.expand-button:focus {
+    outline: none;
+}
+
+/* Expanded view mode - using best practices for centered modals with precise positioning */
+.expanded-view {
+    --modal-top: 50%; /* Default value, will be overridden by JS */
+    --modal-height: 85vh; /* Default value, will be overridden by JS */
+
+    position: fixed !important;
+    top: var(--modal-top) !important;
+    left: 50% !important;
+    height: var(--modal-height) !important;
+    width: 90vw !important;
+    max-width: 1200px !important;
+    transform: translateX(-50%) !important; /* Only transform X since Y is calculated precisely */
+    z-index: 9000 !important;
+    margin: 0 !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    overflow-y: auto !important;
+    background-color: rgba(18, 18, 24, 0.98) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(78, 157, 221, 0.3) !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+/* Animation for modal appearance - modified to only transform X */
+@keyframes modalAppear {
+    from {
+        opacity: 0.8;
+        transform: translateX(-50%) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+/* Ensure the expand toggle button is visible */
+.research-output-container h2,
+.report-container h2,
+#chatContainer h2 {
+    position: relative;
+    padding-right: 50px; /* Make room for the expand button */
+    display: flex;
+    align-items: center;
+}
+
+/* Specific container styles in their normal state */
+#reportContainer,
+#output,
+#chatMessages {
+    transition: all 0.3s ease;
+}
+
+/* Keep content intact when expanding/collapsing */
+.report-container,
+.research-output-container,
+#chatContainer {
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* Ensure expand button stays visible and in the correct position */
+.expand-button {
+    z-index: 100; /* Keep above other content */
+    top: 0;
+    right: 0;
+    transform: none; /* Reset any transform */
+    margin: 10px; /* Add some space */
+    position: absolute;
+}
+
+/* Mobile responsiveness for expanded view */
+@media (max-width: 768px) {
+    .expanded-view {
+        top: 50% !important;
+        left: 50% !important;
+        width: 95vw !important;
+        height: 90vh !important;
+        transform: translate(-50%, -50%) !important;
+        border-radius: 8px !important;
+        padding: 15px !important;
+    }
+
+    .expanded-view #output,
+    .expanded-view #reportContainer,
+    .expanded-view #chatMessages {
+        max-height: 70vh !important;
+        width: 100% !important;
+        padding: 15px !important;
+    }
+}
+
+/* Voice input button styles */
+#voiceInputBtn {
+    margin-right: 8px;
+    border-radius: 20px;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(40, 40, 50, 0.8);
+    border: 1px solid rgba(78, 157, 221, 0.3);
+    padding: 0;
+    transition: all 0.2s ease;
+}
+
+#voiceInputBtn i {
+    font-size: 1.2rem;
+    color: #E4E4E4;
+    transition: all 0.2s ease;
+}
+
+#voiceInputBtn:hover {
+    background-color: rgba(78, 157, 221, 0.2);
+    border-color: rgba(78, 157, 221, 0.5);
+}
+
+#voiceInputBtn.listening {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: rgba(220, 53, 69, 0.5);
+    animation: pulse 1.5s infinite;
+}
+
+#voiceInputBtn.listening i {
+    color: #dc3545;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+/* Toast notification styles */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(40, 40, 50, 0.95);
+    color: #FFF;
+    padding: 12px 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    border-left: 3px solid #4E9DDD;
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translate(-50%, -10px);
+}
+
+/* History panel action buttons container */
+.history-actions-container {
+    display: flex;
+    gap: 8px;
+    margin-left: 10px;
+}
+
+/* Make sure buttons are properly sized and aligned */
+.history-action-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(40, 40, 50, 0.8);
+    border: 1px solid rgba(78, 157, 221, 0.3);
+    color: #E4E4E4;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    font-size: 14px;
+}
+
+.history-action-btn:hover {
+    background: rgba(78, 157, 221, 0.2);
+    border-color: #4E9DDD;
+    transform: translateY(-2px);
+}
+
+/* Style for the file input (hidden) */
+#historyFileInput {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* Task Textarea Auto-resize and Styles */
+#task {
+    min-height: 38px;
+    overflow-y: hidden;
+    resize: none;
+}
+
+.expanded-view h2 {
+    position: relative;
+    padding-right: 40px;
+    margin-bottom: 20px !important;
+}
+
+.expanded-view .expand-button i {
+    transform: rotate(180deg);
+}
+
+/* Adjust specific containers in expanded view mode */
+.expanded-view #reportContainer {
+    padding: 20px !important;
+    font-size: 1.1rem !important;
+    max-height: 75vh !important;
+    overflow-y: auto !important;
+    width: 100% !important;
+    border: none !important;
+    background-color: transparent !important;
+}
+
+.expanded-view #chatMessages {
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+    width: 100% !important;
+}
+
+.expanded-view #output {
+    height: 60vh !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+    width: 100% !important;
+    border: none !important;
+    background-color: transparent !important;
+}
+
+/* Add back animation */
+.expanded-view {
+    animation: modalAppear 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+/* Mobile responsiveness for expanded view - updated with custom properties */
+@media (max-width: 768px) {
+    .expanded-view {
+        /* Keep using the custom properties, with smaller width */
+        top: var(--modal-top) !important;
+        left: 50% !important;
+        height: var(--modal-height) !important;
+        width: 95vw !important;
+        transform: translateX(-50%) !important;
+        border-radius: 8px !important;
+        padding: 15px !important;
+    }
+
+    .expanded-view #output,
+    .expanded-view #reportContainer,
+    .expanded-view #chatMessages {
+        /* Height will be controlled dynamically by JS */
+        width: 100% !important;
+        padding: 15px !important;
+    }
+}
+
+/* Center the Get Started button in the landing section */
+.landing .btn {
+    display: block;
+    margin: 2rem auto;
+    max-width: 220px;
+}
+
+/* Center and enhance the Research submit button */
+#researchForm input[type="submit"] {
+    display: block;
+    margin: 2rem auto;
+    font-size: 1.2rem;
+    padding: 15px 40px;
+    min-width: 220px;
+    box-shadow: 0 6px 18px rgba(0, 123, 255, 0.4);
+}
+
+#researchForm input[type="submit"]:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(0, 123, 255, 0.5);
+}
+
+/* Make sure buttons are responsive on mobile */
+@media (max-width: 768px) {
+    .btn-primary, .btn-secondary {
+        font-size: 1rem;
+        padding: 10px 25px;
+        min-width: 160px;
+    }
+    
+    #researchForm input[type="submit"] {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        min-width: 180px;
+    }
 }
