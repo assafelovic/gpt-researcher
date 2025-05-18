@@ -38,7 +38,6 @@ The agent produces detailed, factual, and unbiased research reports with citatio
 
 <https://github.com/user-attachments/assets/8fcaaa4c-31e5-4814-89b4-94f1433d139d>
 
-
 ## Architecture
 
 The core idea is to utilize 'planner' and 'execution' agents. The planner generates research questions, while the execution agents gather relevant information. The publisher then aggregates all findings into a comprehensive report.

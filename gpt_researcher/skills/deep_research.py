@@ -21,10 +21,7 @@ if TYPE_CHECKING:
     from gpt_researcher.agent import GPTResearcher
     from gpt_researcher.utils.enum import Tone
 
-
-from gpt_researcher.utils.logger import get_formatted_logger
-
-logger: logging.Logger = get_formatted_logger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # Maximum words allowed in context (25k words for safety margin)
 MAX_CONTEXT_WORDS = 25000
@@ -393,10 +390,9 @@ Format each question on a new line starting with 'Question: '""",
                 progress.current_depth += 1
 
                 # Create next query from research goal and follow-up questions
-                next_query = f"""
+                next_query: str = f"""
                 Previous research goal: {result["researchGoal"]}
-                Follow-up questions: {" ".join(result["followUpQuestions"])}
-                """
+                Follow-up questions: {" ".join(result["followUpQuestions"])}"""
 
                 # Recursive research
                 deeper_results: dict[str, Any] = await self.deep_research(
