@@ -1,5 +1,5 @@
 # Stage 1: Browser and build tools installation
-FROM python:3.11.4-slim-bullseye AS install-browser
+FROM python:3.11.12-slim-bullseye AS install-browser
 
 # Configure apt to be more resilient to temporary network issues
 RUN echo "Acquire::Retries \"5\";" > /etc/apt/apt.conf.d/80retries && \
@@ -15,36 +15,36 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential && \
     # Install architecture-appropriate browsers
     if [ "$ARCH" = "amd64" ]; then \
-        # Add Chrome repo and install Chrome on amd64
-        wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-        echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
-        apt-get update && \
-        # Install Chrome and Firefox on x86_64
-        apt-get install -y google-chrome-stable && \
-        apt-get install -y -t bullseye-backports firefox-esr || apt-get install -y firefox-esr && \
-        # Try to install Chromium driver (may not be needed with Chrome)
-        apt-get install -y chromium chromium-driver || echo "Chromium not available, using Chrome" && \
-        # Install geckodriver for Firefox
-        wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz && \
-        tar -xvzf geckodriver-v0.33.0-linux64.tar.gz && \
-        chmod +x geckodriver && \
-        mv geckodriver /usr/local/bin/ && \
-        rm geckodriver-v0.33.0-linux64.tar.gz && \
-        # Print versions
-        google-chrome --version && \
-        firefox --version || firefox-esr --version; \
+    # Add Chrome repo and install Chrome on amd64
+    wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update && \
+    # Install Chrome and Firefox on x86_64
+    apt-get install -y google-chrome-stable && \
+    apt-get install -y -t bullseye-backports firefox-esr || apt-get install -y firefox-esr && \
+    # Try to install Chromium driver (may not be needed with Chrome)
+    apt-get install -y chromium chromium-driver || echo "Chromium not available, using Chrome" && \
+    # Install geckodriver for Firefox
+    wget https://github.com/mozilla/geckodriver/releases/download/v0.33.0/geckodriver-v0.33.0-linux64.tar.gz && \
+    tar -xvzf geckodriver-v0.33.0-linux64.tar.gz && \
+    chmod +x geckodriver && \
+    mv geckodriver /usr/local/bin/ && \
+    rm geckodriver-v0.33.0-linux64.tar.gz && \
+    # Print versions
+    google-chrome --version && \
+    firefox --version || firefox-esr --version; \
     elif [ "$ARCH" = "arm64" ] || [ "$ARCH" = "armhf" ]; then \
-        # ARM architectures - try to install Firefox and Chromium if available
-        # Try backports first for newer versions
-        echo "deb http://deb.debian.org/debian bullseye-backports main" > /etc/apt/sources.list.d/backports.list && \
-        apt-get update && \
-        apt-get install -y -t bullseye-backports firefox-esr || echo "Firefox not available from backports" && \
-        apt-get install -y firefox-esr || echo "Firefox not available" && \
-        apt-get install -y chromium || echo "Chromium not available" && \
-        apt-get install -y chromium-driver || echo "Chromium driver not available" && \
-        # Print versions if available
-        chromium --version || echo "Chromium version check skipped" && \
-        firefox --version || firefox-esr --version || echo "Firefox version check skipped"; \
+    # ARM architectures - try to install Firefox and Chromium if available
+    # Try backports first for newer versions
+    echo "deb http://deb.debian.org/debian bullseye-backports main" > /etc/apt/sources.list.d/backports.list && \
+    apt-get update && \
+    apt-get install -y -t bullseye-backports firefox-esr || echo "Firefox not available from backports" && \
+    apt-get install -y firefox-esr || echo "Firefox not available" && \
+    apt-get install -y chromium || echo "Chromium not available" && \
+    apt-get install -y chromium-driver || echo "Chromium driver not available" && \
+    # Print versions if available
+    chromium --version || echo "Chromium version check skipped" && \
+    firefox --version || firefox-esr --version || echo "Firefox version check skipped"; \
     fi && \
     # Cleanup
     apt-get clean && \
@@ -87,9 +87,9 @@ COPY ./multi_agents/requirements.txt ./multi_agents/requirements.txt
 # - Split the installation to handle core dependencies first
 # - Use --no-build-isolation for better performance on ARM
 # - Set timeout to handle slow ARM builds
-RUN pip install --no-cache-dir --timeout 300 numpy && \
+RUN pip install --no-cache-dir --timeout 300 numpy --only-binary=:all: && \
     pip install --no-cache-dir --timeout 300 -r requirements.txt && \
-    pip install --no-cache-dir --timeout 300 -r multi_agents/requirements.txt
+    pip install --no-cache-dir --timeout 300 -r multi_agents/requirements.txt --only-binary=:all:
 
 # Stage 3: Final stage with non-root user and app
 FROM gpt-researcher-install AS gpt-researcher

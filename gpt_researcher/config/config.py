@@ -48,43 +48,39 @@ class Config:
         if hasattr(self, "mcp_allowed_root_paths"):
             self.mcp_allowed_root_paths: list[str] = self.mcp_allowed_root_paths
 
-    def _set_attributes(self, config: Dict[str, Any]) -> None:
+    def _set_attributes(self, config: dict[str, Any]) -> None:
         """Set the attributes of the config class.
 
         Args:
-            config (Dict[str, Any]): The configuration.
+            config (dict[str, Any]): The configuration.
         """
         for key, value in config.items():
             env_value: str | None = os.getenv(key)
             if env_value is not None:
-                value = self.convert_env_value(
-                    key, env_value, BaseConfig.__annotations__[key]
+                value: Any = self.convert_env_value(
+                    key,
+                    env_value,
+                    BaseConfig.__annotations__[key],
                 )
             setattr(self, key.lower(), value)
 
         # Handle RETRIEVER with default value
-        retriever_env: str = os.environ.get(
-            "RETRIEVER", config.get("RETRIEVER", "tavily")
-        )
+        retriever_env: str | None = os.environ.get("RETRIEVER", config.get("RETRIEVER", "tavily"))
         try:
-            self.retrievers = self.parse_retrievers(retriever_env)
+            self.retrievers: list[str] = self.parse_retrievers(retriever_env)
         except ValueError as e:
-            print(f"Warning: {str(e)}. Defaulting to 'tavily' retriever.")
-            self.retrievers = ["tavily"]
+            print(f"Warning: {e.__class__.__name__}: {e}. Defaulting to 'tavily' retriever.")
+            self.retrievers: list[str] = ["tavily"]
 
     def _set_embedding_attributes(self) -> None:
         """Set the embedding attributes of the config class."""
-        self.embedding_provider, self.embedding_model = self.parse_embedding(
-            self.embedding
-        )
+        self.embedding_provider, self.embedding_model = self.parse_embedding(self.embedding)
 
     def _set_llm_attributes(self) -> None:
         """Set the llm attributes of the config class."""
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
-        self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(
-            self.strategic_llm
-        )
+        self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
 
     def _handle_deprecated_attributes(self) -> None:
         """Handle deprecated attributes of the config class."""
@@ -94,9 +90,7 @@ class Config:
                 FutureWarning,
                 stacklevel=2,
             )
-            self.embedding_provider: str | None = (
-                os.environ["EMBEDDING_PROVIDER"] or self.embedding_provider
-            )
+            self.embedding_provider: str | None = os.environ["EMBEDDING_PROVIDER"] or self.embedding_provider
 
             match os.environ["EMBEDDING_PROVIDER"]:
                 case "ollama":
@@ -116,43 +110,33 @@ class Config:
                 case _:
                     raise Exception("Embedding provider not found.")
 
-        _deprecation_warning = (
+        _deprecation_warning: str = (
             "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
             "will be removed soon. Use FAST_LLM and SMART_LLM instead."
         )
         if os.getenv("LLM_PROVIDER") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.fast_llm_provider: str | None = (
-                os.environ["LLM_PROVIDER"] or self.fast_llm_provider
-            )
-            self.smart_llm_provider: str | None = (
-                os.environ["LLM_PROVIDER"] or self.smart_llm_provider
-            )
+            self.fast_llm_provider: str | None = os.environ["LLM_PROVIDER"] or self.fast_llm_provider
+            self.smart_llm_provider: str | None = os.environ["LLM_PROVIDER"] or self.smart_llm_provider
         if os.getenv("FAST_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.fast_llm_model: str | None = (
-                os.environ["FAST_LLM_MODEL"] or self.fast_llm_model
-            )
+            self.fast_llm_model: str | None = os.environ["FAST_LLM_MODEL"] or self.fast_llm_model
         if os.getenv("SMART_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.smart_llm_model: str | None = (
-                os.environ["SMART_LLM_MODEL"] or self.smart_llm_model
-            )
+            self.smart_llm_model: str | None = os.environ["SMART_LLM_MODEL"] or self.smart_llm_model
 
     def _set_doc_path(self, config: dict[str, Any]) -> None:
         """Set the document path.
 
         Args:
-            config (Dict[str, Any]): The configuration.
+            config (dict[str, Any]): The configuration.
         """
-        self.doc_path: str = config["DOC_PATH"]
+        self.doc_path: str | None = config["DOC_PATH"]
         if self.doc_path:
             try:
                 self.validate_doc_path()
             except Exception as e:
-                print(
-                    f"Warning: Error validating doc_path: {str(e)}. Using default doc_path."
-                )
+                print(f"Warning: Error validating doc_path: {e.__class__.__name__}: {e}. Using default doc_path.")
                 self.doc_path = DEFAULT_CONFIG["DOC_PATH"]
 
     @classmethod
@@ -163,26 +147,23 @@ class Config:
             config_path (str | None): The path to the configuration file.
 
         Returns:
-            Dict[str, Any]: The loaded configuration.
+            dict[str, Any]: The loaded configuration.
         """
         if config_path is None:
             return json.loads(DEFAULT_CONFIG)
 
-        # config_path = os.path.join(cls.CONFIG_DIR, config_path)
         if not os.path.exists(config_path):
             if config_path and config_path != "default":
-                print(
-                    f"Warning: Configuration not found at '{config_path}'. Using default configuration."
-                )
-                if not config_path.endswith(".json"):
+                print(f"Warning: Configuration not found at '{config_path}'. Using default configuration.")
+                if not config_path.casefold().endswith(".json"):
                     print(f"Do you mean '{config_path}.json'?")
             return json.loads(DEFAULT_CONFIG)
 
-        with open(config_path, "r") as f:
-            custom_config = json.load(f)
+        with open(config_path, "r", encoding="utf-8") as f:
+            custom_config: dict[str, Any] = json.load(f)
 
         # Merge with default config to ensure all keys are present
-        merged_config: dict[str, Any] = json.loads(DEFAULT_CONFIG.copy())
+        merged_config: dict[str, Any] = DEFAULT_CONFIG.copy()
         merged_config.update(custom_config)
         return merged_config
 
@@ -191,12 +172,13 @@ class Config:
         """List all available configuration names.
 
         Returns:
-            List[str]: The list of available configuration names.
+            list[str]: The list of available configuration names.
         """
         configs: list[str] = ["default"]
         for file in os.listdir(cls.CONFIG_DIR):
-            if file.endswith(".json"):
-                configs.append(file[:-5])  # Remove .json extension
+            if not file.casefold().endswith(".json"):
+                continue
+            configs.append(file[:-5])  # Remove .json extension
         return configs
 
     def parse_retrievers(self, retriever_str: str) -> list[str]:
@@ -206,14 +188,17 @@ class Config:
             retriever_str (str): The retriever string to parse.
 
         Returns:
-            List[str]: The list of retrievers.
+            list[str]: The list of retrievers.
         """
         retrievers: list[str] = [
-            retriever.strip() for retriever in retriever_str.split(",")
+            retriever.strip()
+            for retriever in retriever_str.split(",")
         ]
         valid_retrievers: list[str] = get_all_retriever_names() or []
         invalid_retrievers: list[str] = [
-            r for r in retrievers if r not in valid_retrievers
+            r
+            for r in retrievers
+            if r not in valid_retrievers
         ]
         if invalid_retrievers:
             raise ValueError(
@@ -322,7 +307,7 @@ class Config:
             return env_value
         elif origin is list or origin is List:
             return json.loads(env_value)
-        elif type_hint is dict:
+        elif type_hint is dict or type_hint is Dict:
             return json.loads(env_value)
         else:
             raise ValueError(f"Unsupported type {type_hint} for key {key}")
@@ -335,14 +320,14 @@ class Config:
         """
         self.llm_kwargs["verbose"] = verbose
 
-    def get_mcp_server_config(self, server_name: str) -> dict:
+    def get_mcp_server_config(self, server_name: str) -> dict[str, Any]:
         """Get the configuration for an MCP server.
 
         Args:
             server_name (str): The name of the MCP server to get the config for.
 
         Returns:
-            dict: The server configuration, or an empty dict if the server is not found.
+            dict[str, Any]: The server configuration, or an empty dict if the server is not found.
         """
         if not server_name or not self.mcp_servers:
             return {}

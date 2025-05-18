@@ -1,41 +1,36 @@
-# Core dependencies
-fastapi>=0.115.0
-uvicorn>=0.34.0
-python-dotenv>=1.0.0
-pydantic>=2.0.0
-python-multipart>=0.0.6
-jinja2>=3.0.0
+# dependencies
+beautifulsoup4
+colorama
+md2pdf
+python-dotenv
+pyyaml
+uvicorn
+pydantic
+fastapi
+python-multipart
+markdown
+langchain
+langchain_community
+langchain-openai
 
-# LLM and vector store integrations
-langchain>=0.3.0
-langchain_community>=0.3.0
-langchain-openai>=0.3.0
-langchain-gigachat>=0.3.0
-openai>=1.0.0
-tiktoken>=0.6.0
-tavily-python>=0.7.0
+tiktoken
+gpt-researcher
+arxiv
+PyMuPDF
+requests
+jinja2
+aiofiles
+mistune
+python-docx
+htmldocx
+lxml_html_clean
+websockets
+unstructured
+json_repair
+json5
+loguru
+langgraph==0.2.76
 
-# Web scraping and information retrieval
-beautifulsoup4>=4.13.0
-requests>=2.30.0
-duckduckgo-search>=8.0.0
-arxiv>=2.0.0
-pymupdf>=1.0.0
-
-# Document processing
-markdown>=3.8.0
-mistune>=3.1.0
-htmldocx==0.0.6
-python-docx>=1.1.0
-lxml>=5.0.0
-json-repair>=0.44.0
-json5>=0.12.0
-
-# Utilities
-loguru>=0.7.0
-colorama>=0.4.0
-aiofiles>=24.0.0
-tqdm>=4.60.0
-websockets>=15.0.0
-permchain>=0.0.8
-langgraph>=0.4.3
+# uncomment for testing
+# pytest
+# pytest-asyncio
