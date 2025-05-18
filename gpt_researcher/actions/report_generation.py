@@ -218,9 +218,9 @@ async def generate_report(
     existing_headers: list[str] | None = None,
     relevant_written_contents: list[str] | None = None,
     cost_callback: Callable | None = None,
+    custom_prompt: str | None = None,
     headers: dict[str, str] | None = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
-    custom_prompt: str | None = None,
     **kwargs: dict[str, Any],
 ) -> str:
     """Generates the final report.
@@ -238,8 +238,9 @@ async def generate_report(
         existing_headers: The existing headers of the report.
         relevant_written_contents: The relevant written contents of the report.
         cost_callback: The callback for calculating the cost of the report.
-        prompt_family: The family of prompts.
         custom_prompt: A custom prompt for the report.
+        headers: The headers of the report.
+        prompt_family: The family of prompts.
         **kwargs: Additional keyword arguments.
 
     Returns:

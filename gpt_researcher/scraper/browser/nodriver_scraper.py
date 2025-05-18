@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import traceback
 import asyncio
 import logging
 import math
 import random
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, AsyncGenerator, ClassVar, Literal, Tuple, cast
+from typing import TYPE_CHECKING, Any, AsyncGenerator, ClassVar, Dict, Literal, cast, Tuple, List
 from urllib.parse import urlparse
 
 import requests
@@ -208,7 +209,7 @@ class NoDriverScraper:
         self.session: requests.Session | None = session
         self.debug: bool = False
 
-    async def scrape_async(self) -> Tuple[str, list[dict], str]:
+    async def scrape_async(self) -> Tuple[str, list[str], str]:
         """Returns tuple of (text, image_urls, title)"""
         if not self.url:
             return (

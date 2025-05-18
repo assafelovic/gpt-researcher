@@ -12,10 +12,9 @@ from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 
 from gpt_researcher.config.config import Config
-
-from ..prompts import PromptFamily
-from .costs import estimate_llm_cost
-from .validators import Subtopics
+from gpt_researcher.prompts import PromptFamily
+from gpt_researcher.utils.costs import estimate_llm_cost
+from gpt_researcher.utils.validators import Subtopics
 
 if TYPE_CHECKING:
     from gpt_researcher.llm_provider.generic.base import (
@@ -172,13 +171,13 @@ async def construct_subtopics(
 
         print(f"\n🤖 Calling {config.smart_llm_model}...\n")
 
-        temperature: float = config.temperature
+        temperature: float = config.llm_kwargs.get("temperature", getattr(config, "temperature", 0.4))
         # temperature = 0 # Note: temperature throughout the code base is currently set to Zero
         provider     = get_llm(
             config.smart_llm_provider,
             model=config.smart_llm_model,
             temperature=temperature,
-            max_tokens=config.smart_token_limit,
+            max_tokens=config.llm_kwargs.get("smart_token_limit", getattr(config, "smart_token_limit", 4000)),
             **config.llm_kwargs,
         )
         model: BaseLLM = provider.llm
@@ -190,7 +189,7 @@ async def construct_subtopics(
                 "task": task,
                 "data": data,
                 "subtopics": subtopics,
-                "max_subtopics": config.max_subtopics,
+                "max_subtopics": config.llm_kwargs.get("max_subtopics", getattr(config, "max_subtopics", 5)),
             }
         )
 

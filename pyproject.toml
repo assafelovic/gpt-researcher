@@ -65,10 +65,8 @@ asyncio_fixture_loop_scope = "function"
 name = "gpt-researcher"
 version = "0.8.5"
 description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
-authors = [
-    {name = "Assaf Elovic", email = "assaf.elovic@gmail.com"}
-]
-license = {text = "MIT"}
+authors = [{ name = "Assaf Elovic", email = "assaf.elovic@gmail.com" }]
+license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.10,<3.12"
 dependencies = [

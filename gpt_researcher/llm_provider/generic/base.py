@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import importlib.util
+import aiofiles
+import asyncio
+import importlib
 import json
 import subprocess
 import sys
 import traceback
+from typing import Any
 from colorama import Fore, Style, init
 import os
 from enum import Enum
@@ -42,14 +46,11 @@ NO_SUPPORT_TEMPERATURE_MODELS: list[str] = [
     "o3-mini",
     "o3-mini-2025-01-31",
     "o4-mini",
-    "o1-preview"
+    "o1-preview",
 ]
 
-SUPPORT_REASONING_EFFORT_MODELS: list[str] = [
-    "o3-mini",
-    "o3-mini-2025-01-31",
-    "o4-mini"
-]
+SUPPORT_REASONING_EFFORT_MODELS: list[str] = ["o3-mini", "o3-mini-2025-01-31", "o4-mini"]
+
 
 class ReasoningEfforts(Enum):
     High = "high"
@@ -58,9 +59,7 @@ class ReasoningEfforts(Enum):
 
 
 class ChatLogger:
-    """Helper utility to log all chat requests and their corresponding responses
-    plus the stack trace leading to the call.
-    """
+    """Helper utility to log all chat requests and their corresponding responses plus the stack trace leading to the call."""
 
     def __init__(self, fname: str):
         self.fname: str = fname

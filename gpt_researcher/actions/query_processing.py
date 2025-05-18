@@ -17,6 +17,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 async def get_search_results(
     query: str,
     retriever: Callable[[str], RetrieverABC] | type[RetrieverABC],
+    query_domains: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Get web search results for a given query.
 
@@ -123,13 +124,13 @@ async def plan_research_outline(
     """Plan the research outline by generating sub-queries.
 
     Args:
-        query: Original query
-        retriever: Retriever instance
-        agent_role_prompt: Agent role prompt
-        cfg: Configuration object
-        parent_query: Parent query
-        report_type: Report type
-        cost_callback: Callback for cost calculation
+        query (str): Original query
+        search_results (list[dict[str, Any]]): Search results
+        agent_role_prompt (str): Agent role prompt
+        cfg (Config): Configuration object
+        parent_query (str): Parent query
+        report_type (str): Report type
+        cost_callback (Callable[[float], None] | None): Callback for cost calculation
 
     Returns:
         A list of sub-queries

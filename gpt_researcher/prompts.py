@@ -50,7 +50,7 @@ class PromptFamily:
         parent_query: str,
         report_type: str,
         max_iterations: int = 3,
-        context: list[dict[str, Any]] = [],
+        context: list[dict[str, Any]] | None = None,
     ) -> str:
         """Generates the search queries prompt for the given question.
         Args:
@@ -62,6 +62,7 @@ class PromptFamily:
 
         Returns: str: The search queries prompt for the given question
         """
+        context = [] if context is None else context
 
         if (
             report_type == ReportType.DetailedReport.value

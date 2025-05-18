@@ -38,6 +38,7 @@ The agent produces detailed, factual, and unbiased research reports with citatio
 
 <https://github.com/user-attachments/assets/8fcaaa4c-31e5-4814-89b4-94f1433d139d>
 
+
 ## Architecture
 
 The core idea is to utilize 'planner' and 'execution' agents. The planner generates research questions, while the execution agents gather relevant information. The publisher then aggregates all findings into a comprehensive report.
@@ -184,6 +185,21 @@ Step 2:
 
 - If you're running the frontend app on localhost:8000, simply select "My Documents" from the "Report Source" Dropdown Options.
 - If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/guides/gpt-researcher/gpt-researcher#pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
+
+## 🤖 MCP Server
+
+We've moved our MCP server to a dedicated repository: [gptr-mcp](https://github.com/assafelovic/gptr-mcp).
+
+The GPT Researcher MCP Server enables AI applications like Claude to conduct deep research. While LLM apps can access web search tools with MCP, GPT Researcher MCP delivers deeper, more reliable research results.
+
+Features:
+
+- Deep research capabilities for AI assistants
+- Higher quality information with optimized context usage
+- Comprehensive results with better reasoning for LLMs
+- Claude Desktop integration
+
+For detailed installation and usage instructions, please visit the [official repository](https://github.com/assafelovic/gptr-mcp).
 
 ## 👪 Multi-Agent Assistant
 

@@ -87,6 +87,16 @@
   box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.2);
 }
 
+.settings .static-container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  max-height: 80vh; /* Fixed maximum height */
+  overflow-y: auto; /* Enable scrolling if content overflows */
+}
+
 .settings input, 
 .settings select, 
 .settings #output, 
@@ -215,8 +225,6 @@
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease-in-out;
 }
-<<<<<<<< HEAD:frontend/nextjs/components/Settings/App.css
-========
 
 .report_settings_static {
   width: 100%;
@@ -336,4 +344,3 @@
 .modal-content .form-group input {
   width: 100%;
 }
->>>>>>>> upstream/master:frontend/nextjs/components/Settings/Settings.css

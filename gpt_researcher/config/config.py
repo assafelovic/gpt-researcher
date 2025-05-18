@@ -38,9 +38,7 @@ class Config:
 
         # MCP support configuration
         self.mcp_servers: list[dict[str, Any]] = []  # List of MCP server configurations
-        self.mcp_allowed_root_paths: list[
-            str
-        ] = []  # Allowed root paths for MCP servers
+        self.mcp_allowed_root_paths: list[str] = []  # Allowed root paths for MCP servers
 
         # Read from config
         if hasattr(self, "mcp_servers"):
