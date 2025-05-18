@@ -33,3 +33,6 @@ langgraph
 # uncomment for testing
 # pytest
 # pytest-asyncio
+
+# Model Context Protocol support (optional)
+mcp>=1.0.0;platform_system!="Windows"  # MCP SDK for Python
