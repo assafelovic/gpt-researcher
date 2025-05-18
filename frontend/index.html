@@ -163,7 +163,8 @@
                 <label for="report_type" class="agent-question">What level of detail do you want?</label>
                 <select name="report_type" id="report_type" class="form-control highlight-connection" required>
                     <option value="research_report">Quick Summary - Fast results (~2 min)</option>
-                    <option value="detailed_report">Deep Dive - Comprehensive analysis (~5 min)</option>
+                    <option value="detailed_report">Detailed Report - Comprehensive analysis (~5 min)</option>
+                    <option value="deep">Deep Research - Scrape the depths of the internet (~30 min)</option>
                     <option value="resource_report">Resource List - Just the sources</option>
                 </select>
             </div>
@@ -202,13 +203,8 @@
                     </option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="report_source" class="agent-question">Where should I look for information?</label>
-                <select name="report_source" id="report_source" class="form-control highlight-connection" required>
-                    <option value="web" selected>The Web</option>
-                    <option value="deep">Deep Research</option>
-                </select>
-            </div>
+            <!-- Hidden input for report_source with default value 'web' -->
+            <input type="hidden" name="report_source" id="report_source" value="web">
             <div class="form-group">
                 <label for="queryDomains" class="form-label">Query Domains (Optional)</label>
                 <input type="text" class="form-control highlight-connection" id="queryDomains" name="query_domains"
