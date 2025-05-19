@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, TYPE_CHECKING
 import json
 
-
-# Research skills
-
-from .actions import (
+from gpt_researcher.actions import (
     add_references,
     choose_agent,
     extract_headers,
@@ -17,8 +14,8 @@ from .actions import (
 )
 from gpt_researcher.config import Config
 from gpt_researcher.llm_provider import GenericLLMProvider
-from gpt_researcher.memory import Memory
-from gpt_researcher.prompts import get_prompt_family
+from gpt_researcher.memory.embeddings import Memory, FallbackMemory
+from gpt_researcher.prompts import PromptFamily, get_prompt_family
 from gpt_researcher.skills.browser import BrowserManager
 from gpt_researcher.skills.context_manager import ContextManager
 from gpt_researcher.skills.curator import SourceCurator
@@ -30,15 +27,18 @@ from gpt_researcher.skills.writer import ReportGenerator
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.vector_store import VectorStoreWrapper
 
+if TYPE_CHECKING:
+    from fastapi import WebSocket
+
 
 class GPTResearcher:
     def __init__(
         self,
         query: str,
-        report_type: str = ReportType.ResearchReport.value,
+        report_type: ReportType | str = ReportType.ResearchReport.value,
         report_format: str = "markdown",
-        report_source: str = ReportSource.Web.value,
-        tone: Tone = Tone.Objective,
+        report_source: ReportSource | str = ReportSource.Web.value,
+        tone: Tone | str = Tone.Objective,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
         complement_source_urls: bool = False,
@@ -47,7 +47,7 @@ class GPTResearcher:
         vector_store: VectorStoreWrapper | None = None,
         vector_store_filter: list[str] | None = None,
         config_path: str | None = None,
-        websocket: Any | None = None,
+        websocket: WebSocket | None = None,
         agent: str | None = None,
         role: str | None = None,
         parent_query: str = "",
@@ -61,19 +61,23 @@ class GPTResearcher:
         prompt_family: str | None = None,
     ):
         self.query: str = query
-        self.report_type: str = report_type
+        self.report_type: ReportType | str = report_type
         self.cfg: Config = Config(config_path)
         self.cfg.set_verbose(verbose)
         self.llm: GenericLLMProvider = GenericLLMProvider(self.cfg)
-        self.report_source: str = (
+        self.report_source: ReportSource | str = (
             report_source
             if report_source
             else getattr(self.cfg, "report_source", "")
         )
         self.report_format: str = report_format
         self.max_subtopics: int = max_subtopics
-        self.tone: Tone = (
-            tone if isinstance(tone, Tone) else Tone.Objective
+        self.tone: Tone | str = (
+            Tone.Objective
+            if tone is None
+            else tone
+            if isinstance(tone, Tone)
+            else Tone(tone)
         )
         self.source_urls: list[str] = [] if source_urls is None else source_urls
         self.document_urls: list[str] = [] if document_urls is None else document_urls
@@ -84,24 +88,40 @@ class GPTResearcher:
         self.documents: list[dict[str, Any]] = [] if documents is None else documents
         self.vector_store: VectorStoreWrapper | None = VectorStoreWrapper(vector_store) if vector_store else None
         self.vector_store_filter: list[str] | None = vector_store_filter
-        self.websocket: Any | None = websocket
+        self.websocket: WebSocket | None = websocket
         self.agent: str | None = agent
         self.role: str | None = role
         self.parent_query: str = parent_query
         self.subtopics: list[str] | None = subtopics
         self.visited_urls: set[str] = set() if visited_urls is None else visited_urls
         self.verbose: bool = verbose
-        self.context: list[str] | None = context
+        self.context: list[str] | None = [] if context is None else context
         self.headers: dict[str, Any] | None = headers
         self.research_costs: float = 0.0
         self.retrievers: list[Any] = get_retrievers(self.headers, self.cfg)
-        self.memory: Memory = Memory(
-            self.cfg.embedding_provider,
-            self.cfg.embedding_model,
-            **self.cfg.embedding_kwargs,
-        )
+
+        # Use FallbackMemory if embedding fallbacks are configured
+        if hasattr(self.cfg, 'embedding_fallback_list') and self.cfg.embedding_fallback_list:
+            import logging
+            logging.info(f"Using {self.cfg.embedding_provider}:{self.cfg.embedding_model} with fallbacks: {', '.join(self.cfg.embedding_fallback_list)}")
+            self.memory: Memory = FallbackMemory(
+                self.cfg.embedding_provider,
+                self.cfg.embedding_model,
+                self.cfg.embedding_fallback_list,
+                **self.cfg.embedding_kwargs,
+            )
+        else:
+            self.memory: Memory = Memory(
+                self.cfg.embedding_provider,
+                self.cfg.embedding_model,
+                **self.cfg.embedding_kwargs,
+            )
+
         self.log_handler: Any | None = log_handler
-        self.prompt_family: Any = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
+        self.prompt_family: PromptFamily = get_prompt_family(
+            prompt_family or self.cfg.prompt_family,  # pyright: ignore[reportAttributeAccessIssue]
+            self.cfg,
+        )
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
@@ -109,13 +129,19 @@ class GPTResearcher:
         self.context_manager: ContextManager = ContextManager(self)
         self.scraper_manager: BrowserManager = BrowserManager(self)
         self.source_curator: SourceCurator = SourceCurator(self)
-        self.deep_researcher: DeepResearchSkill | None = None
-        if report_type == ReportType.DeepResearch.value:
-            self.deep_researcher = DeepResearchSkill(self)
+        self.deep_researcher: DeepResearchSkill | None = (
+            DeepResearchSkill(self)
+            if report_type == ReportType.DeepResearch.value
+            else None
+        )
 
-    async def _log_event(self, event_type: str, **kwargs) -> None:
+    async def _log_event(
+        self,
+        event_type: str,
+        **kwargs: Any
+    ) -> None:
         """Helper method to handle logging events"""
-        if self.log_handler:
+        if self.log_handler is not None:
             try:
                 if event_type == "tool":
                     await self.log_handler.on_tool_start(kwargs.get('tool_name', ''), **kwargs)
@@ -127,15 +153,21 @@ class GPTResearcher:
                 # Add direct logging as backup
                 import logging
 
-                research_logger = logging.getLogger("research")
+                research_logger: logging.Logger = logging.getLogger("research")
                 research_logger.info(f"{event_type}: {json.dumps(kwargs, default=str)}")
 
             except Exception as e:
                 import logging
 
-                logging.getLogger("research").error(f"Error in _log_event: {e.__class__.__name__}: {e}", exc_info=True)
+                logging.getLogger("research").error(
+                    f"Error in _log_event: {e.__class__.__name__}: {e}",
+                    exc_info=True,
+                )
 
-    async def conduct_research(self, on_progress: Callable[[str], None] | None = None) -> list[str]:
+    async def conduct_research(
+        self,
+        on_progress: Callable[[str], None] | None = None,
+    ) -> list[str]:
         await self._log_event(
             "research",
             step="start",
@@ -148,10 +180,13 @@ class GPTResearcher:
         )
 
         # Handle deep research separately
-        if self.report_type == ReportType.DeepResearch.value and self.deep_researcher:
+        if (
+            self.report_type == ReportType.DeepResearch.value
+            and self.deep_researcher is not None
+        ):
             return await self._handle_deep_research(on_progress)
 
-        if not (self.agent and self.role):
+        if not (self.agent and self.role or "").strip():
             await self._log_event("action", action="choose_agent")
             self.agent, self.role = await choose_agent(
                 query=self.query,
@@ -161,18 +196,24 @@ class GPTResearcher:
                 headers=self.headers,
                 prompt_family=self.prompt_family,
             )
-            await self._log_event("action", action="agent_selected", details={
-                "agent": self.agent,
-                "role": self.role
-            })
+            await self._log_event(
+                "action",
+                action="agent_selected",
+                details={"agent": self.agent, "role": self.role},
+            )
 
-        await self._log_event("research", step="conducting_research", details={
-            "agent": self.agent,
-            "role": self.role
-        })
+        await self._log_event(
+            "research",
+            step="conducting_research",
+            details={"agent": self.agent, "role": self.role},
+        )
         self.context = await self.research_conductor.conduct_research()
 
-        await self._log_event("research", step="research_completed", details={"context_length": len(self.context)})
+        await self._log_event(
+            "research",
+            step="research_completed",
+            details={"context_length": len(self.context)},
+        )
         return [] if self.context is None else self.context
 
     async def _handle_deep_research(
@@ -181,40 +222,56 @@ class GPTResearcher:
     ) -> list[str]:
         """Handle deep research execution and logging."""
         # Log deep research configuration
-        await self._log_event("research", step="deep_research_initialize", details={
-            "type": "deep_research",
-            "breadth": self.deep_researcher.breadth,
-            "depth": self.deep_researcher.depth,
-            "concurrency": self.deep_researcher.concurrency_limit
-        })
+        await self._log_event(
+            "research",
+            step="deep_research_initialize",
+            details={
+                "type": "deep_research",
+                "breadth": self.deep_researcher.breadth,
+                "depth": self.deep_researcher.depth,
+                "concurrency": self.deep_researcher.concurrency_limit,
+            },
+        )
 
         # Log deep research start
-        await self._log_event("research", step="deep_research_start", details={
-            "query": self.query,
-            "breadth": self.deep_researcher.breadth,
-            "depth": self.deep_researcher.depth,
-            "concurrency": self.deep_researcher.concurrency_limit
-        })
+        await self._log_event(
+            "research",
+            step="deep_research_start",
+            details={
+                "query": self.query,
+                "breadth": self.deep_researcher.breadth,
+                "depth": self.deep_researcher.depth,
+                "concurrency": self.deep_researcher.concurrency_limit,
+            },
+        )
 
         # Run deep research and get context
         self.context = await self.deep_researcher.run(on_progress=on_progress)
 
         # Get total research costs
-        total_costs = self.get_costs()
+        total_costs: float = self.get_costs()
 
         # Log deep research completion with costs
-        await self._log_event("research", step="deep_research_complete", details={
-            "context_length": len(self.context),
-            "visited_urls": len(self.visited_urls),
-            "total_costs": total_costs
-        })
+        await self._log_event(
+            "research",
+            step="deep_research_complete",
+            details={
+                "context_length": len(self.context),
+                "visited_urls": len(self.visited_urls),
+                "total_costs": total_costs,
+            },
+        )
 
         # Log final cost update
-        await self._log_event("research", step="cost_update", details={
-            "cost": total_costs,
-            "total_cost": total_costs,
-            "research_type": "deep_research"
-        })
+        await self._log_event(
+            "research",
+            step="cost_update",
+            details={
+                "cost": total_costs,
+                "total_cost": total_costs,
+                "research_type": "deep_research",
+            },
+        )
 
         # Return the research context
         return self.context
@@ -226,10 +283,16 @@ class GPTResearcher:
         ext_context: list[dict[str, Any]] | None = None,
         custom_prompt: str = "",
     ) -> str:
-        await self._log_event("research", step="writing_report", details={
-            "existing_headers": existing_headers,
-            "context_source": "external" if ext_context else "internal"
-        })
+        await self._log_event(
+            "research",
+            step="writing_report",
+            details={
+                "existing_headers": existing_headers,
+                "context_source": "external"
+                if ext_context
+                else "internal",
+            },
+        )
 
         report: str = await self.report_generator.write_report(
             existing_headers=existing_headers,
@@ -245,7 +308,10 @@ class GPTResearcher:
         )
         return report
 
-    async def write_report_conclusion(self, report_body: str) -> str:
+    async def write_report_conclusion(
+        self,
+        report_body: str,
+    ) -> str:
         await self._log_event("research", step="writing_conclusion")
         conclusion: str = await self.report_generator.write_report_conclusion(report_body)
         await self._log_event("research", step="conclusion_completed")
@@ -271,7 +337,10 @@ class GPTResearcher:
     async def get_subtopics(self) -> list[str]:
         return await self.report_generator.get_subtopics()
 
-    async def get_draft_section_titles(self, current_subtopic: str) -> list[str]:
+    async def get_draft_section_titles(
+        self,
+        current_subtopic: str,
+    ) -> list[str]:
         return await self.report_generator.get_draft_section_titles(current_subtopic)
 
     async def get_similar_written_contents_by_draft_section_titles(
@@ -289,10 +358,16 @@ class GPTResearcher:
         )
 
     # Utility methods
-    def get_research_images(self, top_k: int = 10) -> list[dict[str, Any]]:
+    def get_research_images(
+        self,
+        top_k: int = 10,
+    ) -> list[dict[str, Any]]:
         return self.research_images[:top_k]
 
-    def add_research_images(self, images: list[dict[str, Any]]) -> None:
+    def add_research_images(
+        self,
+        images: list[dict[str, Any]],
+    ) -> None:
         self.research_images.extend(images)
 
     def get_research_sources(self) -> list[dict[str, Any]]:
@@ -308,13 +383,22 @@ class GPTResearcher:
     ) -> str:
         return add_references(report_markdown, visited_urls)
 
-    def extract_headers(self, markdown_text: str) -> list[dict[str, Any]]:
+    def extract_headers(
+        self,
+        markdown_text: str,
+    ) -> list[dict[str, Any]]:
         return extract_headers(markdown_text)
 
-    def extract_sections(self, markdown_text: str) -> list[dict[str, Any]]:
+    def extract_sections(
+        self,
+        markdown_text: str,
+    ) -> list[dict[str, Any]]:
         return extract_sections(markdown_text)
 
-    def table_of_contents(self, markdown_text: str) -> str:
+    def table_of_contents(
+        self,
+        markdown_text: str,
+    ) -> str:
         return table_of_contents(markdown_text)
 
     def get_source_urls(self) -> list[str]:
@@ -326,14 +410,18 @@ class GPTResearcher:
     def get_costs(self) -> float:
         return self.research_costs
 
-    def set_verbose(self, verbose: bool):
+    def set_verbose(
+        self,
+        verbose: bool,
+    ) -> None:
         self.verbose = verbose
 
-    def add_costs(self, cost: float) -> None:
-        if not isinstance(cost, (float, int)):
-            raise ValueError("Cost must be an integer or float")
+    def add_costs(
+        self,
+        cost: float,
+    ) -> None:
         self.research_costs += cost
-        if self.log_handler:
+        if self.log_handler is not None:
             _ = self._log_event(
                 "research",
                 step="cost_update",

@@ -77,7 +77,7 @@ class WebSocketManager:
         """Start streaming the output."""
         tone = Tone[tone]
         # add customized JSON config file path here
-        config_path = "default"
+        config_path = ""
         report: str = await run_agent(
             task,
             report_type,
@@ -125,6 +125,17 @@ async def run_agent(
     # Create logs handler for this research task
     logs_handler = CustomLogsHandler(websocket, task)
 
+    # Validate report_type against known values
+    valid_report_types: list[str] = [r.value for r in ReportType]
+
+    if report_type not in valid_report_types and report_type != "multi_agents":
+        error_message: str = f"Invalid report_type: '{report_type}'. Valid options are: {', '.join(valid_report_types + ['multi_agents'])}"
+        await websocket.send_json({
+            "type": "logs",
+            "output": f'<div class="error-message">⚠️ {error_message}</div>'
+        })
+        raise ValueError(error_message)
+
     # Initialize researcher based on report type
     if report_type == "multi_agents":
         report: dict[str, Any] = await run_research_task(
@@ -150,7 +161,24 @@ async def run_agent(
         )
         report_content = await researcher.run()
 
+    elif report_type == ReportType.DeepResearch.value:
+        # For deep research, we use the BasicReport to pass through to the GPTResearcher
+        # which handles deep research through its internal mechanism
+        researcher = BasicReport(
+            query=task,
+            report_type=report_type,  # Pass the DeepResearch value correctly
+            report_source=report_source,
+            source_urls=source_urls,
+            document_urls=document_urls,
+            tone=tone,
+            config_path=config_path,
+            websocket=logs_handler,
+            headers=headers,
+        )
+        report_content = await researcher.run()
+
     else:
+        # For other standard report types (research_report, resource_report, etc.)
         researcher = BasicReport(
             query=task,
             report_type=report_type,

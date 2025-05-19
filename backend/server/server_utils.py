@@ -32,7 +32,7 @@ class CustomLogsHandler:
         websocket: WebSocket | None,
         task: str,
     ):
-        self.logs: list = []
+        self.logs: list[str] = []
         self.websocket: WebSocket | None = websocket
 
         sanitized_filename: str = sanitize_filename(f"task_{int(time.time())}_{task}")
@@ -92,14 +92,18 @@ class Researcher:
         # Generate unique ID for this research task
         self.research_id: str = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(query)}"
         # Initialize logs handler with research ID
-        self.logs_handler = CustomLogsHandler(self.research_id)
-        self.researcher = GPTResearcher(
+        try:
+            self.logs_handler: CustomLogsHandler = CustomLogsHandler(self.research_id)
+        except Exception as e:
+            logger.error(f"Error initializing logs handler: {e}")
+            self.logs_handler = CustomLogsHandler(self.research_id, query)
+        self.researcher: GPTResearcher = GPTResearcher(
             query=query,
             report_type=report_type,
             websocket=self.logs_handler
         )
 
-    async def research(self) -> dict:
+    async def research(self) -> dict[str, Any]:
         """Conduct research and return paths to generated files"""
         await self.researcher.conduct_research()
         report: str = await self.researcher.write_report()
@@ -201,6 +205,7 @@ async def generate_report_files(
     report: str,
     filename: str,
 ) -> dict[str, str]:
+    filename = filename.replace(" ", "_")
     pdf_path: str = await write_md_to_pdf(report, filename)
     docx_path: str = await write_md_to_word(report, filename)
     md_path: str = await write_text_to_md(report, filename)
@@ -239,7 +244,7 @@ def get_config_dict(
 
 def update_environment_variables(config: dict[str, str]):
     for key, value in config.items():
-        os.environ[key] = value
+        os.environ[key.upper()] = value
 
 
 async def handle_file_upload(
@@ -271,7 +276,7 @@ async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
 async def execute_multi_agents(manager: WebSocketManager) -> Any:
     websocket: WebSocket | None = manager.active_connections[0] if manager.active_connections else None
     if websocket:
-        report = await run_research_task("Is AI in a hype cycle?", websocket, stream_output)
+        report: str = await run_research_task("Is AI in a hype cycle?", websocket, stream_output)
         return {"report": report}
     else:
         return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
@@ -282,7 +287,7 @@ async def handle_websocket_communication(
     manager: WebSocketManager,
 ):
     while True:
-        data = await websocket.receive_text()
+        data: str = await websocket.receive_text()
         if data.startswith("start"):
             await handle_start_command(websocket, data, manager)
         elif data.startswith("human_feedback"):

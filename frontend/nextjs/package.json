@@ -31,6 +31,7 @@
     "date-fns": "^4.1.0",
     "eventsource-parser": "^1.1.2",
     "framer-motion": "^9.0.2",
+    "gpt-researcher-ui": "^0.1.75",
     "next": "^14.2.0",
     "next-plausible": "^3.12.0",
     "react": "^18.0.0",

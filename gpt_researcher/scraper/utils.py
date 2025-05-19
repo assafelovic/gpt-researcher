@@ -8,6 +8,7 @@ from urllib.parse import ParseResult, parse_qs, urljoin, urlparse
 
 import bs4
 from bs4 import BeautifulSoup
+from bs4.element import PageElement
 
 
 def get_relevant_images(
@@ -22,16 +23,16 @@ def get_relevant_images(
         all_images = soup.find_all('img', src=True)
 
         for img in all_images:
-            img_src: str = urljoin(url, img['src'])
+            img_src: str = urljoin(url, img['src'])  # pyright: ignore[reportIndexIssue]
             if img_src.startswith(('http://', 'https://')):
                 score = 0
                 # Check for relevant classes
-                if any(cls in img.get('class', []) for cls in ['header', 'featured', 'hero', 'thumbnail', 'main', 'content']):
+                if any(cls in img.get('class', []) for cls in ['header', 'featured', 'hero', 'thumbnail', 'main', 'content']):  # pyright: ignore[reportOperatorIssue, reportAttributeAccessIssue]
                     score = 4  # Higher score
                 # Check for size attributes
-                elif img.get('width') and img.get('height'):
-                    width: int = parse_dimension(img['width'])
-                    height: int = parse_dimension(img['height'])
+                elif img.get('width') and img.get('height'):  # pyright: ignore[reportAttributeAccessIssue]
+                    width: int = parse_dimension(img['width'])  # pyright: ignore[reportIndexIssue]
+                    height: int = parse_dimension(img['height'])  # pyright: ignore[reportIndexIssue]
                     if width and height:
                         if width >= 2000 and height >= 1000:
                             score = 3  # Medium score (very large images)
@@ -75,7 +76,7 @@ def extract_title(soup: BeautifulSoup) -> str:
     return str(soup.title.string) if soup.title else ""
 
 def get_image_hash(image_url: str) -> str | None:
-    """Calculate a simple hash based on the image filename and essential query parameters"""
+    """Calculate a simple hash based on the image filename and essential query parameters."""
     try:
         parsed_url: ParseResult = urlparse(image_url)
 
@@ -97,7 +98,7 @@ def get_image_hash(image_url: str) -> str | None:
 
 
 def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
-    """Clean the soup by removing unwanted tags"""
+    """Clean the soup by removing unwanted tags."""
     for tag in soup.find_all(
         [
             "script",
@@ -115,11 +116,11 @@ def clean_soup(soup: BeautifulSoup) -> BeautifulSoup:
     disallowed_class_set: set[str] = {"nav", "menu", "sidebar", "footer"}
 
     # clean tags with certain classes
-    def does_tag_have_disallowed_class(elem) -> bool:
+    def does_tag_have_disallowed_class(elem: bs4.Tag | Any) -> bool:
         if not isinstance(elem, bs4.Tag):
             return False
 
-        return any(cls_name in disallowed_class_set for cls_name in elem.get("class", []))
+        return any(cls_name in disallowed_class_set for cls_name in elem.get("class", []) or [])
 
     for tag in soup.find_all(does_tag_have_disallowed_class):
         tag.decompose()

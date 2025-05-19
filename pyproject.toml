@@ -77,7 +77,6 @@ dependencies = [
     "pydantic",
     "python-multipart",
     "jinja2",
-
     # LLM and vector store integrations
     "langchain",
     "langchain_community",
@@ -86,14 +85,12 @@ dependencies = [
     "openai",
     "tiktoken",
     "tavily-python",
-
     # Web scraping and information retrieval
     "beautifulsoup4",
     "requests",
     "duckduckgo_search",
     "arxiv",
     "PyMuPDF",
-
     # Document processing
     "markdown",
     "mistune",
@@ -102,7 +99,6 @@ dependencies = [
     "lxml",
     "json-repair",
     "json5",
-
     # Utilities
     "loguru",
     "colorama",
@@ -111,4 +107,16 @@ dependencies = [
     "websockets",
     "permchain",
     "langgraph",
+    "md2pdf>=1.0.1",
+    "langgraph-cli>=0.2.10",
+    "langchain-xai>=0.2.3",
+    "langchain-dashscope>=0.1.8",
+    "langchain-aws>=0.2.23",
+    "langchain-groq>=0.3.2",
+    "langchain-huggingface>=0.2.0",
+    "langchain-google-genai>=2.1.4",
+    "langchain-google-vertexai>=2.0.24",
+    "langchain-ollama>=0.3.3",
+    "langchain-mistralai>=0.2.10",
+    "langchain-cohere>=0.4.4",
 ]

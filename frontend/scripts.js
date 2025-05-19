@@ -7,6 +7,7 @@ const GPTResearcher = (() => {
   let allReports = ''; // Store all reports cumulatively
   let currentReport = ''; // Store the current report (will be overwritten)
   let isFirstReport = true; // Flag to track if this is the first report
+  let reportCounter = 0; // Counter to track number of report generations
   let chatContainer = null; // Global reference to chat container
   let lastRequestData = null; // Store the last request data for reconnection
 
@@ -717,14 +718,27 @@ const GPTResearcher = (() => {
   };
 
   const startResearch = () => {
+    // Reset error state and UI
     document.getElementById('output').innerHTML = ''
     document.getElementById('reportContainer').innerHTML = ''
+
+    // Reset reconnect attempts for a fresh research session
+    reconnectAttempts = 0;
+
+    // If a socket is already open, properly close it without triggering reconnect
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      // Mark research as inactive before closing to prevent auto reconnect
+      isResearchActive = false;
+      socket.close(1000, "Starting fresh research");
+    }
+
     dispose_socket?.() // Call previous dispose function if it exists
 
     // Reset report variables
     allReports = '';
     currentReport = '';
     isFirstReport = true;
+    reportCounter = 0; // Reset the report counter
 
     // Hide the download bar
     const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
@@ -742,6 +756,7 @@ const GPTResearcher = (() => {
     imageContainer.innerHTML = ''
     imageContainer.style.display = 'none'
 
+    // Mark research as in progress AFTER closing any existing sockets
     updateState('in_progress')
 
     addAgentResponse({
@@ -754,7 +769,27 @@ const GPTResearcher = (() => {
       behavior: 'smooth'
     });
 
+    // Set up new socket connection with a timeout
     dispose_socket = listenToSockEvents() // Assign the new dispose function
+
+    // Set a failsafe timeout - if nothing happens within 30 seconds, show error
+    const researchTimeout = setTimeout(() => {
+      if (isResearchActive && (!socket || socket.readyState !== WebSocket.OPEN)) {
+        console.error("Research timed out - no server response");
+        addAgentResponse({
+          output: '<div class="error-message">⚠️ Research timed out. Server not responding. Please try again later.</div>'
+        });
+        updateState('error');
+        isResearchActive = false;
+      }
+    }, 30000);
+
+    // Add the timeout to the dispose function chain
+    const originalDispose = dispose_socket;
+    dispose_socket = () => {
+      clearTimeout(researchTimeout);
+      originalDispose?.();
+    };
   }
 
   const listenToSockEvents = () => {
@@ -825,19 +860,28 @@ const GPTResearcher = (() => {
           // Add to allReports for final display
           allReports += data.output;
 
-          // Handle currentReport differently based on if it's the first report
+          // Increment the report counter for each new report
+          reportCounter++;
+
+          // Handle currentReport differently based on conditions
           if (isFirstReport) {
+            // For the first report, always append
             currentReport = data.output;
             isFirstReport = false;
-
-            // For the first report, write directly
             const reportData = { output: currentReport, type: 'report' };
             writeReport(reportData, converter, false, true); // Use append=true
-          } else {
-            // For subsequent reports in detailed_report, replace with just this report
+          } else if (reportCounter % 4 === 0) {
+            // Every 4th report (4, 8, 12, etc.), overwrite the content
             currentReport = data.output;
             const reportData = { output: currentReport, type: 'report' };
-            writeReport(reportData, converter, false, false); // Use append=false
+            writeReport(reportData, converter, false, false); // Use append=false (overwrite)
+            console.log("Overwriting report (report #" + reportCounter + ")");
+          } else {
+            // For other reports (2, 3, 5, 6, 7, etc.), append
+            currentReport = data.output;
+            const reportData = { output: currentReport, type: 'report' };
+            writeReport(reportData, converter, false, true); // Use append=true
+            console.log("Appending report (report #" + reportCounter + ")");
           }
         } else {
           // For all other report types, always append
@@ -867,6 +911,7 @@ const GPTResearcher = (() => {
           allReports = '';
           currentReport = '';
           isFirstReport = true;
+          reportCounter = 0; // Reset the counter
         }
 
         // Update WebSocket status
@@ -901,21 +946,18 @@ const GPTResearcher = (() => {
       // Ensure the research icon is spinning when connection is established
       updateResearchIcon(true);
 
-      // If this is a reconnection and we're in research mode, don't send a new start command
-      if (isResearchActive && lastRequestData) {
-        console.log("Reconnected during active research, not sending new start command");
-        return;
-      }
-
       const task = document.getElementById('task').value
       const report_type = document.querySelector(
         'select[name="report_type"]'
       ).value
       const report_source = document.querySelector(
-        'select[name="report_source"]'
+        'input[name="report_source"]'
       ).value
       const tone = document.querySelector('select[name="tone"]').value
-      const agent = document.querySelector('input[name="agent"]:checked').value
+
+      // Just use the hardcoded default value without trying to access the DOM
+      const agent = 'Auto Agent';
+
       let source_urls = tags
 
       if (report_source !== 'sources' && source_urls.length > 0) {
@@ -947,15 +989,47 @@ const GPTResearcher = (() => {
     }
 
     socket.onclose = (event) => {
+      console.log("WebSocket closed:", event);
       // Update metrics and status when connection closes
       connectionStartTime = null;
       updateWebSocketStatus();
 
       console.log("WebSocket connection closed", event);
 
-      // If research is active, try to automatically reconnect
-      if (isResearchActive) {
+      // If the connection closes very quickly after a message, it might be a server error
+      // Check if we just received a message and the server closed immediately after
+      const serverError = event.code === 1006 && (Date.now() - lastActivityTime < 1000);
+
+      // Only try to reconnect if:
+      // 1. Research is active - we're in the middle of a research session
+      // 2. AND the socket wasn't closed intentionally as part of starting fresh research
+      // 3. AND it wasn't a clean closure with code 1000 "Normal Closure" or "Starting fresh research"
+      // 4. AND we haven't hit the maximum consecutive reconnects for the same error
+      const consecutiveErrors = event.code === 1006 && reconnectAttempts >= 2;
+
+      if (isResearchActive &&
+          event.code !== 1000 &&
+          event.reason !== "Starting fresh research" &&
+          event.reason !== "Closing reconnected socket to start fresh research" &&
+          !consecutiveErrors) {
+        console.log("Attempting to reconnect dropped WebSocket...");
         reconnectWebSocket();
+      } else {
+        console.log("Not reconnecting WebSocket - intentional close, research inactive, or too many failures");
+
+        // If we're stopping because of too many errors, show a message to the user
+        if (consecutiveErrors) {
+          isResearchActive = false; // Stop research activity
+          updateState('error');
+
+          // Add error message to the output
+          addAgentResponse({
+            output: '<div class="error-message">⚠️ The server is experiencing technical difficulties. Please try again later or check the server logs.</div>'
+          });
+
+          // Reset reconnect attempts
+          reconnectAttempts = 0;
+        }
       }
     }
 
@@ -1736,21 +1810,41 @@ const GPTResearcher = (() => {
 
   // Create a new function to handle WebSocket reconnection
   const reconnectWebSocket = (message = null) => {
+    // Don't attempt reconnection if research is no longer active
+    if (!isResearchActive) {
+      console.log("Not reconnecting - research is no longer active");
+      return false;
+    }
+
     // Don't attempt too many reconnections
     if (reconnectAttempts >= maxReconnectAttempts) {
       console.error(`Failed to reconnect after ${maxReconnectAttempts} attempts`);
-      addChatMessage(`Unable to reconnect after ${maxReconnectAttempts} attempts. Please refresh the page.`, false);
+
+      // Show error to user
+      addAgentResponse({
+        output: `<div class="error-message">⚠️ Connection lost. Unable to reconnect after ${maxReconnectAttempts} attempts. Please refresh the page and try again.</div>`
+      });
+
+      // Update UI to reflect error state
+      updateState('error');
+      isResearchActive = false; // Stop research activity
+
       return false;
     }
 
     reconnectAttempts++;
 
     // Calculate backoff time (exponential backoff)
-    const backoff = reconnectInterval * Math.pow(1.5, reconnectAttempts - 1);
+    const backoff = Math.min(30000, reconnectInterval * Math.pow(1.5, reconnectAttempts - 1));
     console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts}) in ${backoff}ms...`);
 
     // Show reconnection status to user
-    addChatMessage(`Connection lost. Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`, false);
+    if (reconnectAttempts === 1) {
+      // Only show message on first attempt to avoid spam
+      addAgentResponse({
+        output: `<div class="warning-message">⚠️ Connection lost. Attempting to reconnect...</div>`
+      });
+    }
 
     // Try to reconnect after delay
     setTimeout(() => {
@@ -1972,7 +2066,7 @@ const GPTResearcher = (() => {
     const button = element.querySelector('.expand-button i');
     if (button) {
       if (element.classList.contains('expanded-view')) {
-        button.classList.remove('fa-expand-alt');
+        button.classList.remove('fa-compress-alt');
         button.classList.add('fa-compress-alt');
 
         // Find content containers and expand their height

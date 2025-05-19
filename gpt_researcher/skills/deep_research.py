@@ -13,7 +13,6 @@ from gpt_researcher.utils.llm import create_chat_completion
 
 if TYPE_CHECKING:
     import logging
-    from pathlib import Path
 
     from backend.server.server_utils import CustomLogsHandler
     from fastapi import WebSocket
@@ -45,7 +44,8 @@ def trim_context_to_word_limit(
         words: int = count_words(item)
         if total_words + words <= max_words:
             trimmed_context.insert(
-                0, item
+                0,
+                item,
             )  # Insert at start to maintain original order
             total_words += words
         else:
@@ -77,26 +77,17 @@ class DeepResearchSkill:
         researcher: GPTResearcher,
     ):
         self.researcher: GPTResearcher = researcher
-        self.breadth: int = researcher.cfg.DEEP_RESEARCH_BREADTH
-        self.concurrency_limit: int = getattr(
-            researcher.cfg, "DEEP_RESEARCH_CONCURRENCY", 2
-        )
-        self.config_path: Path | None = (
-            researcher.cfg.config_path
-            if hasattr(researcher.cfg, "config_path")
-            else None
-        )
-        self.context: list[str] = []  # Track all context
-        self.depth: int = researcher.cfg.DEEP_RESEARCH_DEPTH
-        self.headers: dict[str, str] = researcher.headers or {}
+        self.breadth: int = getattr(researcher.cfg, 'deep_research_breadth', 4)
+        self.depth: int = getattr(researcher.cfg, 'deep_research_depth', 2)
+        self.concurrency_limit: int = getattr(researcher.cfg, 'deep_research_concurrency', 2)
+        self.websocket: WebSocket | CustomLogsHandler | None = researcher.websocket
+        self.tone: Tone | str = researcher.tone
+        self.config_path: str | None = researcher.cfg.config_path if hasattr(researcher.cfg, 'config_path') else None
+        self.headers: dict[str, Any] = researcher.headers or {}
+        self.visited_urls: set[str] = researcher.visited_urls
         self.learnings: list[str] = []
         self.research_sources: list[dict[str, Any]] = []  # Track all research sources
-        self.tone: Tone = researcher.tone
-        self.visited_urls: set[str] = researcher.visited_urls
-        self.websocket: WebSocket | CustomLogsHandler | None = researcher.websocket
-        self.max_context_words: int = researcher.cfg.MAX_CONTEXT_WORDS
-        self.num_queries: int = researcher.cfg.DEEP_RESEARCH_NUM_QUERIES
-        self.num_learnings: int = researcher.cfg.DEEP_RESEARCH_NUM_LEARNINGS
+        self.context: list[str] = []  # Track all context
 
     async def generate_search_queries(
         self,
@@ -105,7 +96,7 @@ class DeepResearchSkill:
     ) -> list[dict[str, str]]:
         """Generate SERP queries for research."""
         if num_queries is None:
-            num_queries = self.num_queries
+            num_queries = 3
 
         messages: list[dict[str, str]] = [
             {
@@ -120,24 +111,24 @@ class DeepResearchSkill:
 
         response: str = await create_chat_completion(
             messages=messages,
-            llm_provider=self.researcher.cfg.STRATEGIC_LLM_PROVIDER,
-            model=self.researcher.cfg.STRATEGIC_LLM_MODEL,
-            reasoning_effort="medium",
-            temperature=0.4,
+            llm_provider=self.researcher.cfg.strategic_llm_provider,
+            model=self.researcher.cfg.strategic_llm_model,
+            reasoning_effort=ReasoningEfforts.Medium.value,
+            temperature=0.4
         )
 
-        lines: list[str] = response.split("\n")
+        lines: list[str] = response.split('\n')
         queries: list[dict[str, str]] = []
         current_query: dict[str, str] = {}
 
         for line in lines:
-            line = line.strip()
-            if line.startswith("Query:"):
+            line: str = line.strip()
+            if line.startswith('Query:'):
                 if current_query:
                     queries.append(current_query)
-                current_query = {"query": line.replace("Query:", "").strip()}
-            elif line.startswith("Goal:") and current_query:
-                current_query["researchGoal"] = line.replace("Goal:", "").strip()
+                current_query = {'query': line.replace('Query:', '').strip()}
+            elif line.startswith('Goal:') and current_query:
+                current_query['researchGoal'] = line.replace('Goal:', '').strip()
 
         if current_query:
             queries.append(current_query)
@@ -151,7 +142,7 @@ class DeepResearchSkill:
     ) -> list[str]:
         """Generate follow-up questions to clarify research direction."""
         if num_questions is None:
-            num_questions = self.num_queries
+            num_questions = 3
 
         # Get initial search results to inform query generation
         search_results: list[dict[str, Any]] = await get_search_results(
@@ -184,10 +175,10 @@ Format each question on a new line starting with 'Question: '""",
 
         response: str = await create_chat_completion(
             messages=messages,
-            llm_provider=self.researcher.cfg.STRATEGIC_LLM_PROVIDER,
-            model=self.researcher.cfg.STRATEGIC_LLM_MODEL,
+            llm_provider=self.researcher.cfg.strategic_llm_provider,
+            model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=ReasoningEfforts.High.value,
-            temperature=0.4,
+            temperature=0.4
         )
 
         questions: list[str] = [
@@ -205,7 +196,7 @@ Format each question on a new line starting with 'Question: '""",
     ) -> dict[str, Any]:
         """Process research results to extract learnings and follow-up questions."""
         if num_learnings is None:
-            num_learnings = self.num_learnings
+            num_learnings = 3
 
         messages: list[dict[str, str]] = [
             {
@@ -220,11 +211,11 @@ Format each question on a new line starting with 'Question: '""",
 
         response: str = await create_chat_completion(
             messages=messages,
-            llm_provider=self.researcher.cfg.STRATEGIC_LLM_PROVIDER,
-            model=self.researcher.cfg.STRATEGIC_LLM_MODEL,
+            llm_provider=self.researcher.cfg.strategic_llm_provider,
+            model=self.researcher.cfg.strategic_llm_model,
             temperature=0.4,
             reasoning_effort=ReasoningEfforts.High.value,
-            max_tokens=1000,
+            max_tokens=1000
         )
 
         lines: list[str] = response.split("\n")
@@ -237,8 +228,8 @@ Format each question on a new line starting with 'Question: '""",
             if line.startswith("Learning"):
                 import re
 
-                url_match = re.search(r"\[(.*?)\]:", line)
-                if url_match:
+                url_match: re.Match[str] | None = re.search(r"\[(.*?)\]:", line)
+                if url_match is not None:
                     url: str = url_match.group(1)
                     learning: str = line.split(":", 1)[1].strip()
                     learnings.append(learning)
@@ -251,9 +242,7 @@ Format each question on a new line starting with 'Question: '""",
                     )
                     if url_match:
                         url = url_match.group(0)
-                        learning = (
-                            line.replace(url, "").replace("Learning:", "").strip()
-                        )
+                        learning = line.replace(url, "").replace("Learning:", "").strip()
                         learnings.append(learning)
                         citations[learning] = url
                     else:
@@ -292,7 +281,8 @@ Format each question on a new line starting with 'Question: '""",
 
         # Generate search queries
         serp_queries: list[dict[str, str]] = await self.generate_search_queries(
-            query, num_queries=breadth
+            query,
+            num_queries=breadth,
         )
         progress.total_queries = len(serp_queries)
 
@@ -336,7 +326,6 @@ Format each question on a new line starting with 'Question: '""",
                     results: dict[str, Any] = await self.process_research_results(
                         query=serp_query["query"],
                         context="\n".join(context),
-                        num_learnings=self.num_learnings,
                     )
 
                     # Update progress
@@ -418,12 +407,8 @@ Format each question on a new line starting with 'Question: '""",
         self.research_sources.extend(all_sources)
 
         # Trim context to stay within word limits
-        trimmed_context: list[str] = trim_context_to_word_limit(
-            all_context, max_words=self.max_context_words
-        )
-        logger.info(
-            f"Trimmed context from {len(all_context)} items to {len(trimmed_context)} items to stay within word limit"
-        )
+        trimmed_context: list[str] = trim_context_to_word_limit(all_context)
+        logger.info(f"Trimmed context from {len(all_context)} items to {len(trimmed_context)} items to stay within word limit")
 
         return {
             "learnings": list(set(all_learnings)),
@@ -443,19 +428,14 @@ Format each question on a new line starting with 'Question: '""",
         # Log initial costs
         initial_costs: float = self.researcher.get_costs()
 
-        follow_up_questions: list[str] = await self.generate_research_plan(
-            self.researcher.query
-        )
-        answers: list[str] = ["Automatically proceeding with research"] * len(
-            follow_up_questions
-        )
+        follow_up_questions: list[str] = await self.generate_research_plan(self.researcher.query)
+        answers: list[str] = ["Automatically proceeding with research"] * len(follow_up_questions)
 
-        qa_pairs: list[str] = [
-            f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers)
-        ]
         combined_query: str = f"""
-        Initial Query: {self.researcher.query}\nFollow - up Questions and Answers:\n
-        """ + "\n".join(qa_pairs)
+Initial Query: {self.researcher.query}\nFollow - up Questions and Answers:\n
+""" + "\n".join(
+            f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers)
+        )
 
         results: dict[str, Any] = await self.deep_research(
             query=combined_query,

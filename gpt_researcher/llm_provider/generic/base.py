@@ -1,55 +1,68 @@
 from __future__ import annotations
 
+from typing import Any, TYPE_CHECKING
 import asyncio
-import importlib.util
 import aiofiles
-import asyncio
 import importlib
+import importlib.util
 import json
+import os
 import subprocess
 import sys
 import traceback
-from typing import Any
+
 from colorama import Fore, Style, init
-import os
 from enum import Enum
 
-from typing import Any
+
+if TYPE_CHECKING:
+    from fastapi import WebSocket
 
 
 _SUPPORTED_PROVIDERS: set[str] = {
-    "openai",
     "anthropic",
     "azure_openai",
-    "cohere",
-    "google_vertexai",
-    "google_genai",
-    "fireworks",
-    "ollama",
-    "together",
-    "mistralai",
-    "huggingface",
-    "groq",
     "bedrock",
+    "cohere",
     "dashscope",
-    "xai",
     "deepseek",
+    "fireworks",
+    "google_genai",
+    "google_vertexai",
+    "groq",
+    "huggingface",
     "litellm",
+    "mistralai",
+    "ollama",
+    "openai",
+    "openrouter",
+    "together",
+    "xai",
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS: list[str] = [
     "deepseek/deepseek-reasoner",
-    "o1-mini",
     "o1-mini-2024-09-12",
-    "o1",
+    "o1-mini",
+    "o1-preview",
     "o1-2024-12-17",
+    "o1",
+    "o3-mini-2025-01-31",
+    "o3-mini",
+    "o4-mini",
+]
+
+SUPPORT_REASONING_EFFORT_MODELS: list[str] = [
     "o3-mini",
     "o3-mini-2025-01-31",
     "o4-mini",
-    "o1-preview",
+    "perplexity/sonar-deep-research",
+    "qwen/qwq-32b:free",
+    "qwen/qwq-32b",
+    "anthropic/claude-3.7-sonnet:thinking",
+    "claude-3.7-sonnet:thinking",
+    "r1-1776",
 ]
-
-SUPPORT_REASONING_EFFORT_MODELS: list[str] = ["o3-mini", "o3-mini-2025-01-31", "o4-mini"]
 
 
 class ReasoningEfforts(Enum):
@@ -72,7 +85,16 @@ class ChatLogger:
     ) -> None:
         async with self._lock:
             async with aiofiles.open(self.fname, mode="a", encoding="utf-8") as handle:
-                await handle.write(json.dumps({"messages": messages, "response": response, "stacktrace": traceback.format_exc()}) + "\n")
+                await handle.write(
+                    json.dumps(
+                        {
+                            "messages": messages,
+                            "response": response,
+                            "stacktrace": traceback.format_exc(),
+                        }
+                    )
+                    + "\n"
+                )
 
 
 class GenericLLMProvider:
@@ -184,8 +206,8 @@ class GenericLLMProvider:
             from langchain_openai import ChatOpenAI
 
             llm = ChatOpenAI(
-                openai_api_base="https://api.deepseek.com",
-                openai_api_key=os.environ["DEEPSEEK_API_KEY"],
+                openai_api_base="https://api.deepseek.com",  # pyright: ignore[reportCallIssue]
+                openai_api_key=os.environ["DEEPSEEK_API_KEY"],  # pyright: ignore[reportCallIssue]
                 **kwargs,
             )
         elif provider == "litellm":
@@ -213,8 +235,8 @@ class GenericLLMProvider:
             )
 
             llm = ChatOpenAI(
-                openai_api_base="https://openrouter.ai/api/v1",
-                openai_api_key=os.environ["OPENROUTER_API_KEY"],
+                openai_api_base="https://openrouter.ai/api/v1",  # pyright: ignore[reportCallIssue]
+                openai_api_key=os.environ["OPENROUTER_API_KEY"],  # pyright: ignore[reportCallIssue]
                 rate_limiter=rate_limiter,
                 **kwargs,
             )
@@ -270,7 +292,7 @@ class GenericLLMProvider:
     async def _send_output(
         self,
         content: str,
-        websocket: Any | None = None,
+        websocket: WebSocket | None = None,
     ) -> None:
         if websocket is not None:
             await websocket.send_json({"type": "report", "output": content})

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import logging
 
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable, ClassVar, Iterable
@@ -10,17 +11,13 @@ if __name__ == "__main__":
 
     sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
-from gpt_researcher.utils.logger import get_formatted_logger
-
 from llm_fallbacks.core import (
     calculate_cost_per_token,
     get_litellm_models,
     sort_models_by_cost_and_limits,
 )
 
-if TYPE_CHECKING:
-    import logging
-logger: logging.Logger = get_formatted_logger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from typing_extensions import Literal, TypedDict
@@ -118,9 +115,7 @@ if TYPE_CHECKING:
         global_max_parallel_requests: int  # Global maximum parallel requests
         health_check_interval: int  # Health check interval
         infer_model_from_keys: bool  # Infer model from keys
-        key_management_settings: list[
-            dict[str, Any]
-        ]  # Settings for key management system (e.g. AWS KMS, Azure Key Vault). Doc on key management: https://docs.litellm.ai/docs/secret
+        key_management_settings: list[dict[str, Any]]  # Settings for key management system (e.g. AWS KMS, Azure Key Vault). Doc on key management: https://docs.litellm.ai/docs/secret
         key_management_system: str  # Key management system
         master_key: str  # Master key
         max_parallel_requests: int  # Maximum parallel requests
@@ -263,9 +258,7 @@ class CustomProviderConfig(BaseProviderConfig):
     api_key: str | None = None
     api_key_required: bool = False
     api_version: str | None = None  # e.g. "2024-10-21"
-    custom_get_models_from_api: (
-        Callable[[str | None], list[str] | dict[str, LiteLLMBaseModelSpec | dict[str, Any]]] | None
-    ) = None
+    custom_get_models_from_api: Callable[[str | None], list[str] | dict[str, LiteLLMBaseModelSpec | dict[str, Any]]] | None = None
     parse_models_function: Callable[[str, dict[str, Any]]] | None = None
     auto_fetch_models: bool = True
     model_specs: dict[str, LiteLLMBaseModelSpec] = field(default_factory=dict)
@@ -288,7 +281,7 @@ class CustomProviderConfig(BaseProviderConfig):
         }
 
     def _parse_api_key(self):
-        env_key_name = self.api_env_key_name
+        env_key_name: str | None = self.api_env_key_name
         if not env_key_name or not env_key_name.strip():
             self.api_env_key_name = f"{self.provider_name.upper()}_API_KEY"
         else:
@@ -308,11 +301,12 @@ class CustomProviderConfig(BaseProviderConfig):
         provider_name: str,
         requested_models: dict[str, Any],
     ) -> dict[str, LiteLLMBaseModelSpec]:
-        data = requested_models.get("data", [])
+        data: list[dict[str, Any]] = requested_models.get("data", [])
         if not isinstance(data, list):
             return {}
         parsed_requested_models: dict[str, LiteLLMBaseModelSpec] = {
-            f"{provider_name}/{model['id']}": {"litellm_provider": provider_name} for model in data
+            f"{provider_name}/{model['id']}": {"litellm_provider": provider_name}
+            for model in data
         }
         return parsed_requested_models
 
@@ -321,9 +315,9 @@ class CustomProviderConfig(BaseProviderConfig):
         models: dict[str, LiteLLMBaseModelSpec],
     ):
         for model_name, model_spec in models.items():
-            model_key = model_name if f"{self.provider_name}/" in model_name else f"{self.provider_name}/{model_name}"
+            model_key: str = model_name if f"{self.provider_name}/" in model_name else f"{self.provider_name}/{model_name}"
             try:
-                key = model_key if model_key in self.ALL_KNOWN_MODELS else model_name
+                key: str = model_key if model_key in self.ALL_KNOWN_MODELS else model_name
                 entry: LiteLLMBaseModelSpec = self.ALL_KNOWN_MODELS.setdefault(key, model_spec.copy())
                 self.model_specs.setdefault(model_name, entry.copy()).update(model_spec)
                 entry.update(model_spec)
@@ -338,14 +332,15 @@ class CustomProviderConfig(BaseProviderConfig):
         models: dict[str, LiteLLMBaseModelSpec],
     ):
         for model_name, model_spec in models.items():
-            self.model_specs[model_name].setdefault(  # pyright: ignore[reportCallIssue]
+            free_modelspec: LiteLLMBaseModelSpec = self.model_specs[model_name].setdefault(  # pyright: ignore[reportCallIssue]
                 model_name,  # pyright: ignore[reportArgumentType]
                 model_spec.copy(),  # pyright: ignore[reportArgumentType]
-            ).update(model_spec)
+            )
+            free_modelspec.update(model_spec)
             if model_name in self.free_models:
-                model_spec.update(self.FREE_COSTS)
-            if calculate_cost_per_token(model_spec) == 0.0:
-                self.free_models.setdefault(model_name, model_spec.copy()).update(model_spec)
+                free_modelspec.update(self.FREE_COSTS)
+            if calculate_cost_per_token(free_modelspec) == 0.0:
+                self.free_models.setdefault(model_name, free_modelspec.copy()).update(free_modelspec)
 
     def _process_requested_models(
         self,
@@ -358,14 +353,14 @@ class CustomProviderConfig(BaseProviderConfig):
             )
             models.update(parsed_requested_models)
         elif isinstance(self._requested_models, list) and self._requested_models:
-            first_entry = next(iter(self._requested_models))
+            first_entry: Any = next(iter(self._requested_models))
             if not isinstance(first_entry, str):
                 print(repr(models))
                 print(f"unsupported format from '{self.base_url}' ({self.provider_name}) see above")
                 return
             models.update({model.get("name", model.get("model_name")): {} for model in self._requested_models})
         elif isinstance(self._requested_models, dict):
-            object_models_list = self._requested_models.get("object")
+            object_models_list: str | None = self._requested_models.get("object")
             if object_models_list == "list":
                 models.update(self._parse_standard_model_response(self.provider_name, self._requested_models))
             else:
@@ -400,7 +395,7 @@ class CustomProviderConfig(BaseProviderConfig):
         try:
             import requests
 
-            response = requests.get(
+            response: requests.Response = requests.get(
                 f"{self.base_url}/models",
                 headers={"Authorization": f"Bearer {self.api_key}"},
             )
@@ -418,13 +413,13 @@ def _parse_openrouter_models_response(
     provider_name: str,
     requested_models: dict[str, Any],
 ) -> dict[str, LiteLLMBaseModelSpec]:
-    data = requested_models.get("data", [])
+    data: list[dict[str, Any]] | Any = requested_models.get("data", [])
     if not isinstance(data, list):
         return {}
 
     parsed_requested_models: dict[str, LiteLLMBaseModelSpec] = {}
     for model in data:
-        model_id = model.get("id", "")
+        model_id: str = (model.get("id", "") or "").strip()
         if not model_id:
             continue
 
@@ -432,32 +427,32 @@ def _parse_openrouter_models_response(
         model_spec: LiteLLMBaseModelSpec = get_litellm_models().get(model_id, {})
 
         # Parse pricing information
-        pricing = model.get("pricing", {})
+        pricing: dict[str, Any] = model.get("pricing", {})
         if pricing:
-            prompt_cost = pricing.get("prompt", 0)
+            prompt_cost: float = pricing.get("prompt", 0)
             if prompt_cost:
                 model_spec["input_cost_per_token"] = float(prompt_cost)
-            completion_cost = pricing.get("completion", 0)
+            completion_cost: float = pricing.get("completion", 0)
             if completion_cost:
                 model_spec["output_cost_per_token"] = float(completion_cost)
-            image_cost = pricing.get("image", 0)
+            image_cost: float = pricing.get("image", 0)
             if image_cost:
                 model_spec["input_cost_per_image"] = float(image_cost)
-            request_cost = pricing.get("request", 0)
+            request_cost: float = pricing.get("request", 0)
             if request_cost:
                 model_spec["input_cost_per_query"] = float(request_cost)
 
         # Parse architecture and modality details
-        arch = model.get("architecture", {})
-        top_provider = model.get("top_provider", {})
-        modality = arch.get("modality", "")
+        arch: dict[str, Any] = model.get("architecture", {})
+        top_provider: dict[str, Any] = model.get("top_provider", {})
+        modality: str = (arch.get("modality", "") or "").strip()
 
         # Context length and max tokens
         if top_provider:
-            context_length = top_provider.get("context_length")
+            context_length: int | None = top_provider.get("context_length")
             if context_length:
                 model_spec["max_input_tokens"] = int(context_length)
-            max_completion_tokens = top_provider.get("max_completion_tokens")
+            max_completion_tokens: int | None = top_provider.get("max_completion_tokens")
             if max_completion_tokens:
                 model_spec["max_output_tokens"] = int(max_completion_tokens)
 
@@ -476,7 +471,7 @@ def _parse_openrouter_models_response(
         if arch.get("instruct_type") == "Function":
             model_spec["supports_function_calling"] = True
 
-        description = model.get("description", "")
+        description: str = (model.get("description", "") or "").strip()
         if description:
             model_spec["metadata"] = {"notes": description}
             if "function call" in description.lower():
@@ -488,58 +483,48 @@ def _parse_openrouter_models_response(
     return parsed_requested_models
 
 
-if "CUSTOM_PROVIDERS" not in globals():
-    CUSTOM_PROVIDERS: list[CustomProviderConfig] = [
-        #        CustomProviderConfig(
-        #            provider_name="arliai",
-        #            base_url="https://api.arliai.com/v1",
-        #            api_key_required=True,
-        #        ),
-        #        CustomProviderConfig(
-        #            provider_name="awanllm",
-        #            base_url="https://api.awanllm.com/v1",
-        #            api_key_required=True,
-        #        ),
-        CustomProviderConfig(
-            provider_name="openrouter",
-            base_url="https://openrouter.ai/api/v1",
-            api_key_required=True,
-            parse_models_function=_parse_openrouter_models_response,
-        ),
-        CustomProviderConfig(
-            provider_name="vertexai",
-            base_url="https://us-central1-aiplatform.googleapis.com/v1",
-            api_key_required=False,
-            auto_fetch_models=False,
-        ),
-        CustomProviderConfig(
-            provider_name="yandex",
-            base_url="https://llm.api.cloud.yandex.net",
-            api_key_required=False,
-            auto_fetch_models=False,
-        ),
-    ]
+CUSTOM_PROVIDERS: list[CustomProviderConfig] = [
+    CustomProviderConfig(
+        provider_name="openrouter",
+        base_url="https://openrouter.ai/api/v1",
+        api_key_required=True,
+        parse_models_function=_parse_openrouter_models_response,
+    ),
+    CustomProviderConfig(
+        provider_name="vertexai",
+        base_url="https://us-central1-aiplatform.googleapis.com/v1",
+        api_key_required=False,
+        auto_fetch_models=False,
+    ),
+    CustomProviderConfig(
+        provider_name="yandex",
+        base_url="https://llm.api.cloud.yandex.net",
+        api_key_required=False,
+        auto_fetch_models=False,
+    ),
+]
 
-if "FREE_MODELS" not in globals():  # don't waste time and energy redefining these anytime config.py is imported.
-    all_configs: dict[str, LiteLLMBaseModelSpec] = {
-        model_name: config for provider in CUSTOM_PROVIDERS for model_name, config in provider.model_specs.items()
+all_configs: dict[str, LiteLLMBaseModelSpec] = {
+    model_name: config
+    for provider in CUSTOM_PROVIDERS
+    for model_name, config in provider.model_specs.items()
+}
+all_configs.update(
+    {
+        model_name: config
+        for model_name, config in BaseProviderConfig.ALL_KNOWN_MODELS.items()
+        if model_name not in all_configs
     }
-    all_configs.update(
-        {
-            model_name: config
-            for model_name, config in BaseProviderConfig.ALL_KNOWN_MODELS.items()
-            if model_name not in all_configs
-        }
-    )
-    ALL_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(all_configs)
-    FREE_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
-        all_configs,
-        free_only=True,
-    )
-    ALL_EMBEDDING_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
-        {k: v for k, v in all_configs.items() if v.get("mode") == "embedding"},
-    )
-    FREE_EMBEDDING_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
-        {k: v for k, v in all_configs.items() if v.get("mode") == "embedding"},
-        free_only=True,
-    )
+)
+ALL_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(all_configs)
+FREE_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
+    all_configs,
+    free_only=True,
+)
+ALL_EMBEDDING_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
+    {k: v for k, v in all_configs.items() if v.get("mode") == "embedding"},
+)
+FREE_EMBEDDING_MODELS: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(
+    {k: v for k, v in all_configs.items() if v.get("mode") == "embedding"},
+    free_only=True,
+)

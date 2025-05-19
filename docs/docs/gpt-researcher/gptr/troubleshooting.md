@@ -3,11 +3,12 @@
 We're constantly working to provide a more stable version. If you're running into any issues, please first check out the resolved issues or ask us via our [Discord community](https://discord.gg/QgZXvJAccX).
 
 ### model: gpt-4 does not exist
+
 This relates to not having permission to use gpt-4 yet. Based on OpenAI, it will be [widely available for all by end of July](https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4).
 
 ### cannot load library 'gobject-2.0-0'
 
-The issue relates to the library WeasyPrint (which is used to generate PDFs from the research report). Please follow this guide to resolve it: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
+The issue relates to the library WeasyPrint (which is used to generate PDFs from the research report). Please follow this guide to resolve it: <https://doc.courtbouillon.org/weasyprint/stable/first_steps.html>
 
 Or you can install this package manually
 
@@ -29,6 +30,7 @@ In case of Linux you can install this lib using
 **Workaround for Mac M chip users**
 
 If the above solutions don't work, you can try the following:
+
 - Install a fresh version of Python 3.11 pointed to brew:
 `brew install python@3.11`
 - Install the required libraries:
@@ -41,7 +43,6 @@ If the above solutions don't work, you can try the following:
 ### Error processing the url
 
 We're using [Selenium](https://www.selenium.dev) for site scraping. Some sites fail to be scraped. In these cases, restart and try running again.
-
 
 ### Chrome version issues
 

@@ -36,8 +36,8 @@ async def generate_sub_queries(
     query: str,
     parent_query: str,
     report_type: str,
-    context: list[dict[str, Any]],
-    cfg: Config,
+    context: list[dict[str, Any]] | None = None,
+    cfg: Config | None = None,
     cost_callback: Callable[[float], None] | None = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
 ) -> list[str]:
@@ -47,7 +47,6 @@ async def generate_sub_queries(
         query: The original query
         parent_query: The parent query
         report_type: The type of report
-        max_iterations: Maximum number of research iterations
         context: Search results context
         cfg: Configuration object
         cost_callback: Callback for cost calculation
@@ -56,11 +55,12 @@ async def generate_sub_queries(
     Returns:
         A list of sub-queries
     """
+    cfg = Config() if cfg is None else cfg
     gen_queries_prompt: str = prompt_family.generate_search_queries_prompt(
         query,
         parent_query,
         report_type,
-        max_iterations=cfg.max_iterations or 3,
+        max_iterations=3,
         context=context,
     )
 
@@ -75,26 +75,26 @@ async def generate_sub_queries(
             cost_callback=cost_callback,
         )
     except Exception as e:
-        logger.warning(f"Error with strategic LLM: {e.__class__.__name__}: {e}. Retrying with max_tokens={cfg.strategic_token_limit}.")
+        logger.warning(f"Error with strategic LLM: {e.__class__.__name__}: {e}. Retrying with max_tokens={cfg.strategic_token_limit}.")  # pyright: ignore[reportAttributeAccessIssue]
         logger.warning("See https://github.com/assafelovic/gpt-researcher/issues/1022")
         try:
             response = await create_chat_completion(
                 model=cfg.strategic_llm_model,
                 messages=[{"role": "user", "content": gen_queries_prompt}],
-                max_tokens=cfg.strategic_token_limit,
+                max_tokens=cfg.strategic_token_limit,  # pyright: ignore[reportAttributeAccessIssue]
                 llm_provider=cfg.strategic_llm_provider,
                 llm_kwargs=cfg.llm_kwargs,
                 cost_callback=cost_callback,
             )
-            logger.warning(f"Retrying with max_tokens={cfg.strategic_token_limit} successful.")
+            logger.warning(f"Retrying with max_tokens={cfg.strategic_token_limit} successful.")  # pyright: ignore[reportAttributeAccessIssue]
         except Exception as e:
-            logger.warning(f"Retrying with max_tokens={cfg.strategic_token_limit} failed.")
+            logger.warning(f"Retrying with max_tokens={cfg.strategic_token_limit} failed.")  # pyright: ignore[reportAttributeAccessIssue]
             logger.warning(f"Error with strategic LLM: {e.__class__.__name__}: {e}. Falling back to smart LLM.")
             response = await create_chat_completion(
                 model=cfg.smart_llm_model,
                 messages=[{"role": "user", "content": gen_queries_prompt}],
-                temperature=cfg.temperature,
-                max_tokens=cfg.smart_token_limit,
+                temperature=cfg.temperature,  # pyright: ignore[reportAttributeAccessIssue]
+                max_tokens=cfg.smart_token_limit,  # pyright: ignore[reportAttributeAccessIssue]
                 llm_provider=cfg.smart_llm_provider,
                 llm_kwargs=cfg.llm_kwargs,
                 cost_callback=cost_callback,

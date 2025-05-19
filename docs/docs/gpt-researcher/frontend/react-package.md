@@ -41,4 +41,3 @@ If you'd like to build and publish the package into your own private npm registr
  npm run build:types
  npm publish
  ```
- 

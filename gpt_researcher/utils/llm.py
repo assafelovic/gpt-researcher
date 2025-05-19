@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import tiktoken
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
@@ -24,9 +25,175 @@ if TYPE_CHECKING:
 
 
 def get_llm(llm_provider: str, **kwargs) -> GenericLLMProvider:
-    from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
+    """Initialize an LLM provider with fallback support.
 
+    Args:
+        llm_provider: Provider name (e.g., 'openai')
+        **kwargs: Additional keyword arguments for the provider
+
+    Returns:
+        LLM provider instance with fallback support if fallbacks are configured
+    """
+    from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
+    from gpt_researcher.llm_provider.generic.fallback import FallbackGenericLLMProvider
+
+    # Check if this LLM has fallbacks configured
+    cfg: Config = Config()
+    fallback_list: list[str] = []
+    if 'model' in kwargs:
+        model_name: str = kwargs.get('model')
+
+        # Determine which fallback list to use based on the model
+        if cfg.fast_llm_model == model_name and cfg.fast_llm_provider == llm_provider:
+            fallback_list = cfg.fast_llm_fallback_list
+        elif cfg.smart_llm_model == model_name and cfg.smart_llm_provider == llm_provider:
+            fallback_list = cfg.smart_llm_fallback_list
+        elif cfg.strategic_llm_model == model_name and cfg.strategic_llm_provider == llm_provider:
+            fallback_list = cfg.strategic_llm_fallback_list
+
+    # If fallbacks are configured, use fallback provider
+    if fallback_list:
+        # Log fallback models when fallbacks are enabled
+        logging.info(f"Using {llm_provider}:{kwargs.get('model', '')} with fallbacks: {', '.join(fallback_list)}")
+
+        return FallbackGenericLLMProvider.from_provider_with_fallbacks(llm_provider, fallback_list, **kwargs)
+
+    # Otherwise, use standard provider
     return GenericLLMProvider.from_provider(llm_provider, **kwargs)
+
+
+def estimate_token_count(
+    messages: list[dict[str, str]],
+    model: str = "gpt-4.1",
+) -> int:
+    """Estimate the number of tokens in a list of messages.
+
+    Args:
+        messages (list[dict[str, str]]): The messages to estimate tokens for
+        model (str, optional): The model to use for estimation. Defaults to "gpt-4.1".
+
+    Returns:
+        int: Estimated number of tokens
+    """
+    try:
+        encoding: tiktoken.Encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        # Fall back to cl100k_base encoding for models not in the tiktoken registry
+        encoding = tiktoken.get_encoding("cl100k_base")
+
+    total_tokens = 0
+
+    for message in messages:
+        # Add message overhead (4 tokens per message)
+        total_tokens += 4
+
+        # Add content token count
+        if "content" in message and message["content"]:
+            total_tokens += len(encoding.encode(message["content"]))
+
+        # Add role token count
+        if "role" in message:
+            total_tokens += len(encoding.encode(message["role"]))
+
+    # Add final overhead (3 tokens)
+    total_tokens += 3
+
+    return total_tokens
+
+
+def truncate_messages_to_fit(
+    messages: list[dict[str, str]],
+    max_context_tokens: int,
+    model: str = "gpt-4.1",
+) -> list[dict[str, str]]:
+    """Truncate messages to fit within token limit by removing or shortening content.
+
+    Args:
+        messages (list[dict[str, str]]): Messages to truncate
+        max_context_tokens (int): Maximum context token limit
+        model (str, optional): Model to use for token estimation. Defaults to "gpt-4.1".
+
+    Returns:
+        list[dict[str, str]]: Truncated messages
+    """
+    # Don't modify system message or the most recent user message
+    if len(messages) <= 2:
+        return messages
+
+    try:
+        encoding: tiktoken.Encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        encoding = tiktoken.get_encoding("cl100k_base")
+
+    # Make a copy to avoid modifying original
+    truncated_messages: list[dict[str, str]] = messages.copy()
+
+    # Reserve tokens for system message and the last user message
+    reserved_tokens: int = 0
+    system_message: dict[str, str] | None = None
+    last_user_message: dict[str, str] | None = None
+
+    # Find system message and last user message
+    for i in range(len(truncated_messages)):
+        if truncated_messages[i]["role"] == "system":
+            system_message = truncated_messages[i]
+            reserved_tokens += 4 + len(encoding.encode(system_message["content"]))
+        if truncated_messages[i]["role"] == "user" and i == len(truncated_messages) - 1:
+            last_user_message = truncated_messages[i]
+            reserved_tokens += 4 + len(encoding.encode(last_user_message["content"]))
+
+    # Available tokens for other messages
+    available_tokens: int = max_context_tokens - reserved_tokens - 3  # 3 for final overhead
+
+    # Identify messages that can be truncated (not system or last user message)
+    truncatable_indices: list[int] = []
+    for i in range(len(truncated_messages)):
+        if (truncated_messages[i] != system_message and
+            truncated_messages[i] != last_user_message):
+            truncatable_indices.append(i)
+
+    # If there are no truncatable messages, return original
+    if not truncatable_indices:
+        return messages
+
+    # Start removing content from oldest messages first
+    current_tokens: int = estimate_token_count(truncated_messages, model) - reserved_tokens
+
+    while current_tokens > available_tokens and truncatable_indices:
+        # Get the oldest message to truncate
+        index: int = truncatable_indices[0]
+        message: dict[str, str] = truncated_messages[index]
+
+        # Calculate current tokens in this message
+        message_tokens: int = 4 + len(encoding.encode(message["content"]))
+
+        # Remove this message entirely
+        truncated_messages.pop(index)
+        for i in range(len(truncatable_indices)):
+            if truncatable_indices[i] > index:
+                truncatable_indices[i] -= 1
+        truncatable_indices.pop(0)
+
+        current_tokens -= message_tokens
+
+    # Create a new message list with system message, filtered messages, and last user message
+    final_messages: list[dict[str, str]] = []
+
+    for msg in truncated_messages:
+        if msg == system_message:
+            final_messages.append(msg)
+        elif msg == last_user_message:
+            continue  # Skip for now, will add at the end
+        else:
+            final_messages.append(msg)
+
+    # Add the last user message at the end
+    if last_user_message:
+        final_messages.append(last_user_message)
+
+    logging.info(f"Truncated messages from {estimate_token_count(messages, model)} to {estimate_token_count(final_messages, model)} tokens")
+
+    return final_messages
 
 
 async def create_chat_completion(
@@ -86,8 +253,10 @@ async def create_chat_completion(
         kwargs["temperature"] = temperature
         kwargs["max_tokens"] = max_tokens
     else:
-        kwargs["temperature"] = None
-        kwargs["max_tokens"] = None
+        if "temperature" in kwargs:
+            del kwargs["temperature"]
+        if "max_tokens" in kwargs:
+            del kwargs["max_tokens"]
 
     if llm_provider == "openai":
         base_url: str | None = os.environ.get("OPENAI_BASE_URL", None)
@@ -99,12 +268,30 @@ async def create_chat_completion(
     original_max_tokens: int | None = max_tokens
     MAX_ATTEMPTS: int = 3
     response: str = ""
+
+    # Check token count and truncate if needed
+    model_max_tokens: int = 16000  # Default max context length
+    if "gpt-4" in model and "gpt-4.1" not in model:
+        model_max_tokens = 8000 if "8k" in model else 16000
+        if "32k" in model:
+            model_max_tokens = 32000
+
+    # Estimate token count of messages
+    token_count: int = estimate_token_count(messages, model)
+
+    # Reserve tokens for completion
+    completion_tokens: int = max_tokens or 4000
+    max_context_tokens: int = model_max_tokens - completion_tokens
+
+    # If messages exceed context limit, truncate them
+    if token_count > max_context_tokens:
+        logging.warning(f"Messages exceed token limit ({token_count} > {max_context_tokens}), truncating content")
+        messages = truncate_messages_to_fit(messages, max_context_tokens, model)
+
     # Attempt to get a response with fallback for token limits and transient errors
     for attempt in range(MAX_ATTEMPTS):
         try:
-            response: str = await provider.get_chat_response(
-                messages, stream, websocket
-            )
+            response: str = await provider.get_chat_response(messages, stream, websocket)
             if cost_callback is not None:
                 llm_costs: float = estimate_llm_cost(str(messages), response)
                 cost_callback(llm_costs)
@@ -115,23 +302,32 @@ async def create_chat_completion(
                 "too large" in err_msg.casefold()
                 or "supports at most" in err_msg.casefold()
             ):
-                logging.warning(
-                    f"max_tokens issue ({original_max_tokens}), retrying without max_tokens"
-                )
-                kwargs["max_tokens"] = None
+                logging.warning(f"max_tokens issue ({original_max_tokens}), retrying without max_tokens")
+                if "max_tokens" in kwargs:
+                    del kwargs["max_tokens"]
                 provider: GenericLLMProvider = get_llm(llm_provider, **kwargs)
                 continue
+            if "'unrecognized request argument supplied: reasoning_effort'" in err_msg.casefold():
+                logging.warning(f"reasoning_effort={reasoning_effort} not supported by this model, retrying without reasoning_effort")
+                if "reasoning_effort" in kwargs:
+                    del kwargs["reasoning_effort"]
+                provider: GenericLLMProvider = get_llm(llm_provider, **kwargs)
+                continue
+
+            # Context length error: truncate messages further and retry
+            if "context length" in err_msg.casefold() or "context_length_exceeded" in err_msg.casefold():
+                logging.warning(f"Context length exceeded, further truncating messages")
+                # Cut the context limit in half for more aggressive truncation
+                messages = truncate_messages_to_fit(messages, max_context_tokens // 2, model)
+                continue
+
             # Transient errors: retry with exponential backoff
             if attempt < MAX_ATTEMPTS - 1:
                 backoff: int = 2**attempt
-                logging.warning(
-                    f"Error calling LLM (attempt {attempt + 1}/{MAX_ATTEMPTS}): {e.__class__.__name__}: {e}, retrying in {backoff}s"
-                )
+                logging.warning(f"Error calling LLM (attempt {attempt + 1}/{MAX_ATTEMPTS}): {e.__class__.__name__}: {e}, retrying in {backoff}s")
                 await asyncio.sleep(backoff)
                 continue
-            logging.error(
-                f"Failed to get response from '{llm_provider}' API after {MAX_ATTEMPTS} attempts: {e.__class__.__name__}: {e}"
-            )
+            logging.error(f"Failed to get response from '{llm_provider}' API after {MAX_ATTEMPTS} attempts: {e.__class__.__name__}: {e}")
             raise
         else:
             return response
@@ -173,7 +369,7 @@ async def construct_subtopics(
 
         temperature: float = config.llm_kwargs.get("temperature", getattr(config, "temperature", 0.4))
         # temperature = 0 # Note: temperature throughout the code base is currently set to Zero
-        provider     = get_llm(
+        provider: GenericLLMProvider = get_llm(
             config.smart_llm_provider,
             model=config.smart_llm_model,
             temperature=temperature,
@@ -196,5 +392,5 @@ async def construct_subtopics(
         return output
 
     except Exception as e:
-        print("Exception in parsing subtopics : ", e)
+        print(f"Exception in parsing subtopics: {e.__class__.__name__}: {e}")
         return subtopics

@@ -39,7 +39,7 @@ class DetailedReport:
         self.subtopics: list[dict[str, Any]] | None = subtopics
         self.headers: dict[str, Any] | None = {} if headers is None else headers
 
-        self.gpt_researcher = GPTResearcher(
+        self.gpt_researcher: GPTResearcher = GPTResearcher(
             query=self.query,
             report_type="research_report",
             report_source=self.report_source,
@@ -66,22 +66,25 @@ class DetailedReport:
 
     async def _initial_research(self) -> None:
         await self.gpt_researcher.conduct_research()
-        self.global_context = self.gpt_researcher.context
+        self.global_context = self.gpt_researcher.context or []
         self.global_urls = self.gpt_researcher.visited_urls
 
     async def _get_all_subtopics(self) -> list[dict[str, Any]]:
-        subtopics_data = await self.gpt_researcher.get_subtopics()
+        subtopics_data: list[str] = await self.gpt_researcher.get_subtopics()
 
-        all_subtopics = []
-        if subtopics_data and subtopics_data.subtopics:
-            for subtopic in subtopics_data.subtopics:
-                all_subtopics.append({"task": subtopic.task})
+        all_subtopics: list[dict[str, Any]] = []
+        if subtopics_data:
+            for subtopic in subtopics_data:
+                all_subtopics.append({"task": subtopic})
         else:
-            print(f"Unexpected subtopics data format: {subtopics_data}")
+            raise ValueError(f"Unexpected subtopics data format: {subtopics_data} (type {subtopics_data.__class__.__name__})")
 
         return all_subtopics
 
-    async def _generate_subtopic_reports(self, subtopics: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], str]:
+    async def _generate_subtopic_reports(
+        self,
+        subtopics: list[dict[str, Any]],
+    ) -> tuple[list[dict[str, Any]], str]:
         subtopic_reports: list[dict[str, Any]] = []
         subtopics_report_body: str = ""
 
@@ -93,7 +96,10 @@ class DetailedReport:
 
         return subtopic_reports, subtopics_report_body
 
-    async def _get_subtopic_report(self, subtopic: dict[str, Any]) -> dict[str, str]:
+    async def _get_subtopic_report(
+        self,
+        subtopic: dict[str, Any],
+    ) -> dict[str, Any]:
         current_subtopic_task: str = subtopic.get("task")
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
@@ -129,10 +135,13 @@ class DetailedReport:
             self.global_written_sections,
         )
 
-        subtopic_report: str = await subtopic_assistant.write_report(self.existing_headers, relevant_contents)
+        subtopic_report: str = await subtopic_assistant.write_report(
+            self.existing_headers,
+            relevant_contents,
+        )
 
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
-        self.global_context: list[str] = list(set(subtopic_assistant.context))
+        self.global_context = list(set(subtopic_assistant.context))
         self.global_urls.update(subtopic_assistant.visited_urls)
 
         self.existing_headers.append({
@@ -142,10 +151,16 @@ class DetailedReport:
 
         return {"topic": subtopic, "report": subtopic_report}
 
-    async def _construct_detailed_report(self, introduction: str, report_body: str) -> str:
+    async def _construct_detailed_report(
+        self,
+        introduction: str,
+        report_body: str,
+    ) -> str:
         toc: str = self.gpt_researcher.table_of_contents(report_body)
         conclusion: str = await self.gpt_researcher.write_report_conclusion(report_body)
         conclusion_with_references: str = self.gpt_researcher.add_references(
-            conclusion, self.gpt_researcher.visited_urls)
+            conclusion,
+            self.gpt_researcher.visited_urls,
+        )
         report: str = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
         return report

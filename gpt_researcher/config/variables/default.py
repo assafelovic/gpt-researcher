@@ -3,10 +3,14 @@ from .base import BaseConfig
 DEFAULT_CONFIG: BaseConfig = {
     "RETRIEVER": "tavily",
     "EMBEDDING": "openai:text-embedding-3-small",
+    "EMBEDDING_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
     "SIMILARITY_THRESHOLD": 0.42,
-    "FAST_LLM": "openai:gpt-4o-mini",
-    "SMART_LLM": "openai:gpt-4.1",  # Has support for long responses (2k+ words).
-    "STRATEGIC_LLM": "openai:o4-mini",  # Can be used with o1 or o3, please note it will make tasks slower.
+    "FAST_LLM": "openrouter:mistralai/mistral-small-3.1-24b-instruct:free",
+    "SMART_LLM": "openrouter:google/gemini-2.0-flash-exp:free",  # Has support for long responses (2k+ words).
+    "STRATEGIC_LLM": "openrouter:moonshotai/kimi-vl-a3b-thinking:free",  # please note it will make tasks slower.
+    "FAST_LLM_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
+    "SMART_LLM_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
+    "STRATEGIC_LLM_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
     "FAST_TOKEN_LIMIT": 3000,
     "SMART_TOKEN_LIMIT": 6000,
     "STRATEGIC_TOKEN_LIMIT": 4000,
@@ -18,11 +22,12 @@ DEFAULT_CONFIG: BaseConfig = {
     "USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
     "MAX_SEARCH_RESULTS_PER_QUERY": 5,
     "MEMORY_BACKEND": "local",
-    "TOTAL_WORDS": 1000,
+    "TOTAL_WORDS": 1200,
     "REPORT_FORMAT": "APA",
     "MAX_ITERATIONS": 3,
     "AGENT_ROLE": None,
     "SCRAPER": "bs",
+    "MAX_SCRAPER_WORKERS": 15,
     "MAX_SUBTOPICS": 3,
     "LANGUAGE": "english",
     "REPORT_SOURCE": "web",

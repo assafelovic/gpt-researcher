@@ -1,18 +1,25 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any
+import logging
+from typing import Any, TYPE_CHECKING
 
 from fastapi import WebSocket
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.tools import Tool, tool
+from langchain.tools import BaseTool, tool
 from langchain_community.vectorstores import InMemoryVectorStore
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import create_react_agent
 
 from gpt_researcher.config.config import Config
-from gpt_researcher.memory import Memory
+from gpt_researcher.memory.embeddings import Memory, FallbackMemory
 from gpt_researcher.utils.llm import get_llm
+
+
+if TYPE_CHECKING:
+    from langchain_core.documents.base import Document
+    from langchain_core.vectorstores.base import VectorStoreRetriever
 
 
 class ChatAgentWithMemory:
@@ -27,37 +34,54 @@ class ChatAgentWithMemory:
         self.headers: dict[str, str] = headers
         self.config: Config = Config(config_path)
         self.vector_store: InMemoryVectorStore | None = vector_store
-        self.graph: Any = self.create_agent()
+        self.graph: CompiledGraph = self.create_agent()
 
-    def create_agent(self):
+    def create_agent(self) -> CompiledGraph:
         """Create React Agent Graph"""
         cfg = Config()
+
+        # Get the maximum token limit from config
+        max_tokens: int = cfg.llm_kwargs.get(
+            "smart_token_limit",
+            getattr(cfg, "smart_token_limit", 4000),
+        )
 
         # Retrieve LLM using get_llm with settings from config
         provider: Any = get_llm(
             llm_provider=cfg.smart_llm_provider,
             model=cfg.smart_llm_model,
             temperature=0.35,
-            max_tokens=cfg.smart_token_limit,
+            max_tokens=max_tokens,
             **self.config.llm_kwargs,
         ).llm
 
         # If vector_store is not initialized, process documents and add to vector_store
         if self.vector_store is None:
             documents: list[str] = self._process_document(self.report)
-            self.chat_config: dict[str, dict[str, str]] = {
-                "configurable": {"thread_id": str(uuid.uuid4())}
-            }
-            self.embedding: Any = Memory(
-                cfg.embedding_provider,
-                cfg.embedding_model,
-                **cfg.embedding_kwargs,
-            ).get_embeddings()
+            self.chat_config: dict[str, dict[str, str]] = {"configurable": {"thread_id": str(uuid.uuid4())}}
+
+            # Use FallbackMemory if embedding fallbacks are configured
+            if cfg.embedding_fallback_list:  # pyright: ignore[reportAttributeAccessIssue]
+                logging.info(f"Using {cfg.embedding_provider}:{cfg.embedding_model} with fallbacks: {', '.join(cfg.embedding_fallback_list)}")
+                embedding_provider = FallbackMemory(
+                    cfg.embedding_provider,
+                    cfg.embedding_model,
+                    cfg.embedding_fallback_list,
+                    **cfg.embedding_kwargs,
+                )
+            else:
+                embedding_provider = Memory(
+                    cfg.embedding_provider,
+                    cfg.embedding_model,
+                    **cfg.embedding_kwargs,
+                )
+
+            self.embedding: Any = embedding_provider.get_embeddings()
             self.vector_store = InMemoryVectorStore(self.embedding)
             self.vector_store.add_texts(documents)
 
         # Create the React Agent Graph with the configured provider
-        graph = create_react_agent(
+        graph: CompiledGraph = create_react_agent(
             provider,
             tools=[self.vector_store_tool(self.vector_store)],
             checkpointer=MemorySaver(),
@@ -68,21 +92,23 @@ class ChatAgentWithMemory:
     def vector_store_tool(
         self,
         vector_store: InMemoryVectorStore,
-    ) -> Tool:
+    ) -> BaseTool:
         """Create Vector Store Tool.
 
         Args:
             vector_store (InMemoryVectorStore): The vector store to use.
 
         Returns:
-            Tool: The vector store tool.
+            BaseTool: The vector store tool.
         """
 
         @tool
         def retrieve_info(query: str) -> str:
             """Consult the report for relevant contexts whenever you don't know something."""
-            retriever = vector_store.as_retriever(k=4)
-            return retriever.invoke(query)
+            retriever: VectorStoreRetriever = vector_store.as_retriever(k=4)
+            # Cast the result to str to satisfy the return type
+            result: list[Document] = retriever.invoke(query)
+            return str(result)
 
         return retrieve_info
 
