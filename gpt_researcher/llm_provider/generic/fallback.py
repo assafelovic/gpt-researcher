@@ -60,6 +60,8 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
             for fallback_model in fallback_models:
                 try:
                     provider_name, model_name = fallback_model.split(":", 1)
+                    if provider_name == "gemini":
+                        provider_name = "google_vertexai"
                     # Copy kwargs and update model name
                     fallback_kwargs: dict[str, Any] = kwargs.copy()
                     fallback_kwargs["model"] = model_name

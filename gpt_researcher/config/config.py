@@ -307,7 +307,7 @@ class Config:
                 # Extract model names from free_models_list
                 free_models: list[str] = [f"{spec.get('litellm_provider', 'openrouter')}:{model_name}" for model_name, spec in free_models_list]
 
-                return free_models[:10]  # Limit to top 10 models
+                return free_models
             except ImportError:
                 print("Warning: llm_fallbacks module not available. Auto fallbacks disabled.")
                 return []
