@@ -849,58 +849,13 @@ const GPTResearcher = (() => {
         // Add to reportContent for history
         reportContent += data.output;
 
-        // Get the current report_type
-        const report_type = document.querySelector('select[name="report_type"]').value;
-
-        // Determine if we're using detailed_report (the only one that needs special handling)
-        const isDetailedReport = report_type === 'detailed_report';
-
-        if (isDetailedReport) {
-          // Special handling for detailed_report
-          // Add to allReports for final display
-          allReports += data.output;
-
-          // Increment the report counter for each new report
-          reportCounter++;
-
-          // Handle currentReport differently based on conditions
-          if (isFirstReport) {
-            // For the first report, always append
-            currentReport = data.output;
-            isFirstReport = false;
-            const reportData = { output: currentReport, type: 'report' };
-            writeReport(reportData, converter, false, true); // Use append=true
-          } else if (reportCounter % 4 === 0) {
-            // Every 4th report (4, 8, 12, etc.), overwrite the content
-            currentReport = data.output;
-            const reportData = { output: currentReport, type: 'report' };
-            writeReport(reportData, converter, false, false); // Use append=false (overwrite)
-            console.log("Overwriting report (report #" + reportCounter + ")");
-          } else {
-            // For other reports (2, 3, 5, 6, 7, etc.), append
-            currentReport = data.output;
-            const reportData = { output: currentReport, type: 'report' };
-            writeReport(reportData, converter, false, true); // Use append=true
-            console.log("Appending report (report #" + reportCounter + ")");
-          }
-        } else {
-          // For all other report types, always append
-          const reportData = { output: data.output, type: 'report' };
-          writeReport(reportData, converter, false, true); // Use append=true
-        }
+        // Always append reports regardless of type or count
+        const reportData = { output: data.output, type: 'report' };
+        writeReport(reportData, converter);
       } else if (data.type === 'path') {
         updateState('finished')
         downloadLinkData = updateDownloadLink(data)
         isResearchActive = false;
-
-        // Get the current report_type
-        const report_type = document.querySelector('select[name="report_type"]').value;
-
-        // Only for detailed_report, show the complete accumulated report at the end
-        if (report_type === 'detailed_report' && allReports) {
-          const finalData = { output: allReports, type: 'report' };
-          writeReport(finalData, converter, true, false); // isFinal=true, append=false
-        }
 
         // Save to history now that research is complete
         if (reportContent && downloadLinkData) {
@@ -1062,23 +1017,14 @@ const GPTResearcher = (() => {
     output.style.display = 'block'
   }
 
-  const writeReport = (data, converter, isFinal = false, append = false) => {
+  const writeReport = (data, converter) => {
     const reportContainer = document.getElementById('reportContainer');
 
     // Convert markdown to HTML
     const markdownOutput = converter.makeHtml(data.output);
 
-    // If this is the final report or we should append
-    if (isFinal) {
-      // For final reports, always replace content
-      reportContainer.innerHTML = markdownOutput;
-    } else if (append) {
-      // Append mode - add to existing content
-      reportContainer.innerHTML += markdownOutput;
-    } else {
-      // Replace mode - overwrite existing content
-      reportContainer.innerHTML = markdownOutput;
-    }
+    // Always append content to existing content
+    reportContainer.innerHTML += markdownOutput;
 
     // Auto-scroll to the bottom of the container
     reportContainer.scrollTop = reportContainer.scrollHeight;
