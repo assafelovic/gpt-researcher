@@ -17,6 +17,7 @@ async def write_report_introduction(
     websocket=None,
     cost_callback: callable = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    **kwargs
 ) -> str:
     """
     Generate an introduction for the report.
@@ -51,6 +52,7 @@ async def write_report_introduction(
             max_tokens=config.smart_token_limit,
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,
+            **kwargs
         )
         return introduction
     except Exception as e:
@@ -66,6 +68,7 @@ async def write_conclusion(
     websocket=None,
     cost_callback: callable = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    **kwargs
 ) -> str:
     """
     Write a conclusion for the report.
@@ -101,6 +104,7 @@ async def write_conclusion(
             max_tokens=config.smart_token_limit,
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,
+            **kwargs
         )
         return conclusion
     except Exception as e:
@@ -114,7 +118,8 @@ async def summarize_url(
     role: str,
     config: Config,
     websocket=None,
-    cost_callback: callable = None
+    cost_callback: callable = None,
+    **kwargs
 ) -> str:
     """
     Summarize the content of a URL.
@@ -144,6 +149,7 @@ async def summarize_url(
             max_tokens=config.smart_token_limit,
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,
+            **kwargs
         )
         return summary
     except Exception as e:
@@ -160,6 +166,7 @@ async def generate_draft_section_titles(
     websocket=None,
     cost_callback: callable = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    **kwargs
 ) -> List[str]:
     """
     Generate draft section titles for the report.
@@ -191,6 +198,7 @@ async def generate_draft_section_titles(
             max_tokens=config.smart_token_limit,
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,
+            **kwargs
         )
         return section_titles.split("\n")
     except Exception as e:
@@ -214,6 +222,7 @@ async def generate_report(
     custom_prompt: str = "", # This can be any prompt the user chooses with the context
     headers=None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    **kwargs
 ):
     """
     generates the final report
@@ -258,6 +267,7 @@ async def generate_report(
             max_tokens=cfg.smart_token_limit,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
+            **kwargs
         )
     except:
         try:
@@ -273,6 +283,7 @@ async def generate_report(
                 max_tokens=cfg.smart_token_limit,
                 llm_kwargs=cfg.llm_kwargs,
                 cost_callback=cost_callback,
+                **kwargs
             )
         except Exception as e:
             print(f"Error in generate_report: {e}")
