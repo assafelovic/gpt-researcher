@@ -325,6 +325,14 @@ EMBEDDING=google_genai:models/text-embedding-004 # openrouter doesn't support em
 GOOGLE_API_KEY=[Your *google gemini* key]
 ```
 
+## vLLM
+```env
+VLLM_OPENAI_API_KEY=[Your Key] # you can set this to 'EMPTY' or anything
+VLLM_OPENAI_API_BASE=[Your base url] # for example http://localhost:8000/v1/
+FAST_LLM=vllm_openai:Qwen/Qwen3-8B-AWQ
+SMART_LLM=vllm_openai:Qwen/Qwen3-8B-AWQ
+STRATEGIC_LLM=vllm_openai:Qwen/Qwen3-8B-AWQ
+```
 
 ## Other Embedding Models
 
