@@ -106,39 +106,57 @@ Assume that the current date is {date.today()}.
 """
 
 def curate_sources(query, sources, max_results=10):
-    return f"""Your goal is to evaluate and curate the provided scraped content for the research task: "{query}" 
-    while prioritizing the inclusion of relevant and high-quality information, especially sources containing statistics, numbers, or concrete data.
+    return f"""Your goal is to evaluate and curate the provided list of sources for the research task: "{query}".
+The research task is focused on academic and valid medical literature. You must prioritize sources that align with this focus.
 
-The final curated list will be used as context for creating a research report, so prioritize:
-- Retaining as much original information as possible, with extra emphasis on sources featuring quantitative data or unique insights
-- Including a wide range of perspectives and insights
-- Filtering out only clearly irrelevant or unusable content
+Each source in the list is a JSON object that may contain fields such as:
+- `title`: Original title from the retriever.
+- `scraped_title`: Title found during web scraping.
+- `href`: URL of the source.
+- `body`: Original abstract or summary from the retriever.
+- `raw_content`: Full text content scraped from the web page.
+- `retriever_name`: Identifier for the search service that found this source (e.g., "semantic_scholar", "pubmed_central", "arxiv", "google").
+- `citation_count`: Number of citations (primarily from "semantic_scholar").
+- `venue`: Publication venue (e.g., journal name from "semantic_scholar").
+- `year`: Publication year.
+- `journal_title`: Journal title (primarily from "pubmed_central").
 
-EVALUATION GUIDELINES:
-1. Assess each source based on:
-   - Relevance: Include sources directly or partially connected to the research query. Err on the side of inclusion.
-   - Credibility: Favor authoritative sources but retain others unless clearly untrustworthy.
-   - Currency: Prefer recent information unless older data is essential or valuable.
-   - Objectivity: Retain sources with bias if they provide a unique or complementary perspective.
-   - Quantitative Value: Give higher priority to sources with statistics, numbers, or other concrete data.
-2. Source Selection:
-   - Include as many relevant sources as possible, up to {max_results}, focusing on broad coverage and diversity.
-   - Prioritize sources with statistics, numerical data, or verifiable facts.
-   - Overlapping content is acceptable if it adds depth, especially when data is involved.
-   - Exclude sources only if they are entirely irrelevant, severely outdated, or unusable due to poor content quality.
-3. Content Retention:
-   - DO NOT rewrite, summarize, or condense any source content.
-   - Retain all usable information, cleaning up only clear garbage or formatting issues.
-   - Keep marginally relevant or incomplete sources if they contain valuable data or insights.
+EVALUATION AND CURATION GUIDELINES FOR ACADEMIC/MEDICAL RESEARCH:
+
+1.  **Prioritize by Retriever Source:**
+    *   Strongly prefer sources where `retriever_name` is "semantic_scholar", "pubmed_central", or "arxiv". These are primary academic/medical databases.
+    *   Treat sources from general web retrievers (e.g., "google", "bing", "duckduckgo") with caution. Only include them if their content is exceptionally relevant, clearly academic or medical in nature (e.g., a direct link to a university research paper or a well-known medical institution's publication), and supports the primary academic sources.
+
+2.  **Assess Academic Validity and Quality:**
+    *   **For "semantic_scholar" sources:** Give very high priority to sources with a high `citation_count`. Also, consider the `venue` and `year`; more recent, highly cited articles in reputable venues are generally better.
+    *   **For "pubmed_central" sources:** These are generally strong. Consider the `journal_title` for potential journal quality if available.
+    *   **For "arxiv" sources:** These are pre-prints. They can be valuable for cutting-edge research but may not be peer-reviewed. Include if highly relevant.
+    *   Evaluate the `raw_content` (or `body` if `raw_content` is minimal) for scientific rigor, appropriate methodology (if applicable), and clarity.
+    *   Filter out sources that are clearly non-academic (e.g., news articles unless reporting on research, blog posts, forum discussions, commercial product pages) unless they provide specific, verifiable data or context directly supporting an academic point.
+
+3.  **Relevance to Query:**
+    *   The source must be highly relevant to the research task: "{query}".
+
+4.  **Content Richness & Uniqueness:**
+    *   Prefer sources with substantial `raw_content` that provides in-depth information.
+    *   Among relevant and high-quality sources, aim for a diversity of information and perspectives.
+
+5.  **Source Selection and Filtering:**
+    *   Include up to {max_results} of the best sources based on the above criteria.
+    *   Be prepared to filter aggressively if many sources are from general web retrievers or are of low academic quality. The goal is a curated list of high-quality academic/medical literature.
+    *   If a source has both `body` (abstract) and `raw_content` (full text), your evaluation should primarily be based on the `raw_content` as it's more comprehensive.
+
+6.  **Content Retention (Important for Output Format):**
+    *   DO NOT rewrite, summarize, or condense any part of the source objects.
+    *   Your task is to SELECT and REORDER the sources from the provided list.
 
 SOURCES LIST TO EVALUATE:
 {sources}
 
-You MUST return your response in the EXACT sources JSON list format as the original sources.
-The response MUST not contain any markdown format or additional text (like ```json), just the JSON list!
+You MUST return your response as a JSON list of source objects, in the EXACT SAME FORMAT as they were provided in the input sources list.
+The returned list should only contain the sources you've selected and prioritized, up to {max_results}.
+The response MUST not contain any markdown format or additional text (like ```json), just the JSON list itself!
 """
-
-
 
 
 def generate_resource_report_prompt(
@@ -529,4 +547,3 @@ def get_prompt_by_report_type(report_type):
         )
         prompt_by_type = report_type_mapping.get(default_report_type)
     return prompt_by_type
-

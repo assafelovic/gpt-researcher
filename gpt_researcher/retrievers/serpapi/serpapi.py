@@ -72,6 +72,7 @@ class SerpApiSearch():
                             "title": result["title"],
                             "href": result["link"],
                             "body": result["snippet"],
+                            "retriever_name": "serpapi",
                         }
                         search_response.append(search_result)
                         results_processed += 1

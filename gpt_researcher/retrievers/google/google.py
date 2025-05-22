@@ -92,8 +92,9 @@ class GoogleSearch:
                     "title": result["title"],
                     "href": result["link"],
                     "body": result["snippet"],
+                    "retriever_name": "google",
                 }
-            except:
+            except KeyError: # More specific exception
                 continue
             search_results.append(search_result)
 

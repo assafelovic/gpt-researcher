@@ -74,6 +74,7 @@ class SearchApiSearch():
                             "title": result["title"],
                             "href": result["link"],
                             "body": result["snippet"],
+                            "retriever_name": "searchapi",
                         }
                         search_response.append(search_result)
                         results_processed += 1

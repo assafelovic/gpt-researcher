@@ -22,7 +22,11 @@ class Duckduckgo:
         """
         # TODO: Add support for query domains
         try:
-            search_response = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
+            results = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
+            if results:
+                for result in results:
+                    result["retriever_name"] = "duckduckgo"
+            search_response = results if results else []
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []

@@ -69,12 +69,15 @@ class PubMedCentralSearch:
             if self.has_body_content(xml_content):
                 article_data = self.parse_xml(xml_content)
                 if article_data:
-                    search_response.append(
-                        {
-                            "href": f"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{article_id}/",
-                            "body": f"{article_data['title']}\n\n{article_data['abstract']}\n\n{article_data['body'][:500]}...",
-                        }
-                    )
+                    response_item = {
+                        "href": f"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{article_id}/",
+                        "body": f"{article_data.get('title', 'No Title')}\n\n{article_data.get('abstract', 'Abstract not available')}\n\n{article_data.get('body', '')[:500]}...",
+                        "retriever_name": "pubmed_central"
+                    }
+                    if "journal_title" in article_data:
+                        response_item["journal_title"] = article_data["journal_title"]
+                    
+                    search_response.append(response_item)
 
             if len(search_response) >= max_results:
                 break
@@ -151,12 +154,19 @@ class PubMedCentralSearch:
             return None
 
         title = article.findtext(
-            ".//title-group/article-title", default="", namespaces=ns
+            ".//title-group/article-title", default="No Title", namespaces=ns
         )
+
+        journal_meta = article.find(".//journal-meta", namespaces=ns)
+        journal_title = None
+        if journal_meta is not None:
+            journal_title_element = journal_meta.find(".//journal-title", namespaces=ns)
+            if journal_title_element is not None and journal_title_element.text:
+                journal_title = journal_title_element.text.strip()
 
         abstract = article.find(".//abstract", namespaces=ns)
         abstract_text = (
-            "".join(abstract.itertext()).strip() if abstract is not None else ""
+            "".join(abstract.itertext()).strip() if abstract is not None else "Abstract not available"
         )
 
         body = []
@@ -166,9 +176,14 @@ class PubMedCentralSearch:
                 if p.text:
                     body.append(p.text.strip())
         else:
+            # Fallback if body directly under article is not found, check sections
             for sec in article.findall(".//sec", namespaces=ns):
                 for p in sec.findall(".//p", namespaces=ns):
                     if p.text:
                         body.append(p.text.strip())
-
-        return {"title": title, "abstract": abstract_text, "body": "\n".join(body)}
+        
+        parsed_data = {"title": title, "abstract": abstract_text, "body": "\n".join(body)}
+        if journal_title:
+            parsed_data["journal_title"] = journal_title
+            
+        return parsed_data

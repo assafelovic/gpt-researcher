@@ -78,6 +78,7 @@ class SerperSearch():
                 "title": result["title"],
                 "href": result["link"],
                 "body": result["snippet"],
+                "retriever_name": "serper",
             }
             search_results.append(search_result)
 

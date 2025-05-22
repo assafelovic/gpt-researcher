@@ -247,23 +247,38 @@ class ResearchConductor:
 
         # Using asyncio.gather to process the sub_queries asynchronously
         try:
-            context = await asyncio.gather(
+            # context will be a list of lists of dictionaries
+            # e.g., [[{src1_q1}, {src2_q1}], [{src1_q2}], []]
+            context_per_sub_query = await asyncio.gather(
                 *[
-                    self._process_sub_query(sub_query, scraped_data, query_domains)
-                    for sub_query in sub_queries
+                    self._process_sub_query(sub_query, scraped_data if i == 0 else [], query_domains) # Pass scraped_data only to the first sub_query
+                    for i, sub_query in enumerate(sub_queries)
                 ]
             )
-            self.logger.info(f"Gathered context from {len(context)} sub-queries")
-            # Filter out empty results and join the context
-            context = [c for c in context if c]
-            if context:
-                combined_context = " ".join(context)
-                self.logger.info(f"Combined context size: {len(combined_context)}")
-                return combined_context
-            return []
+            self.logger.info(f"Gathered results from {len(context_per_sub_query)} sub-queries.")
+
+            # Flatten the list of lists into a single list of dictionaries
+            # and filter out any None items that might result from errors in _process_sub_query
+            all_sources = [item for sublist in context_per_sub_query if sublist for item in sublist if item]
+            
+            # Remove duplicate sources based on 'href' or a unique ID if available, preserving order
+            # This is a simple way to deduplicate if retrievers return overlapping results for different sub-queries
+            seen_hrefs = set()
+            unique_sources = []
+            for source in all_sources:
+                href = source.get('href')
+                if href and href not in seen_hrefs:
+                    unique_sources.append(source)
+                    seen_hrefs.add(href)
+                elif not href: # Keep sources without href for now, or decide on a different ID
+                    unique_sources.append(source)
+
+
+            self.logger.info(f"Total unique sources found: {len(unique_sources)}")
+            return unique_sources # Return the list of dictionaries
         except Exception as e:
             self.logger.error(f"Error during web search: {e}", exc_info=True)
-            return []
+            return [] # Return empty list on error
 
     async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context."""
@@ -282,30 +297,40 @@ class ResearchConductor:
             )
 
         try:
-            if not scraped_data:
-                scraped_data = await self._scrape_data_by_urls(sub_query, query_domains)
-                self.logger.info(f"Scraped data size: {len(scraped_data)}")
+            enriched_sources = []
+            if not scraped_data: # If no pre-scraped data is provided
+                enriched_sources = await self._scrape_data_by_urls(sub_query, query_domains)
+                self.logger.info(f"Scraped and enriched {len(enriched_sources)} sources for sub-query '{sub_query}'.")
+            else: # If pre-scraped data is provided (e.g. from a main query's initial scrape)
+                # This path assumes scraped_data is already in the enriched format (list of dicts)
+                # If it's not, this part of the logic might need adjustment based on what _get_context_by_web_search passes.
+                # For now, assuming it's already enriched or doesn't need further processing if passed.
+                # The plan implies scraped_data might be empty or the result of _scrape_data_by_urls.
+                # So, if scraped_data is provided, it's already the "enriched_sources".
+                enriched_sources = scraped_data 
+                self.logger.info(f"Using {len(enriched_sources)} provided sources for sub-query '{sub_query}'.")
 
-            content = await self.researcher.context_manager.get_similar_content_by_query(sub_query, scraped_data)
-            self.logger.info(f"Content found for sub-query: {len(str(content)) if content else 0} chars")
-
-            if not content and self.researcher.verbose:
-                await stream_output(
+            # The plan is to return the list of dictionaries directly.
+            # The summarization/similarity search previously done by get_similar_content_by_query
+            # will be handled differently or by the SourceCurator/ReportGenerator.
+            
+            if not enriched_sources and self.researcher.verbose:
+                 await stream_output(
                     "logs",
-                    "subquery_context_not_found",
-                    f"🤷 No content found for '{sub_query}'...",
+                    "subquery_sources_not_found", # Changed log event name
+                    f"🤷 No sources found or scraped for '{sub_query}'...",
                     self.researcher.websocket,
                 )
-            if content:
-                if self.json_handler:
-                    self.json_handler.log_event("content_found", {
-                        "sub_query": sub_query,
-                        "content_size": len(content)
-                    })
-            return content
+            
+            if enriched_sources and self.json_handler:
+                self.json_handler.log_event("sources_processed_for_sub_query", { # Changed log event name
+                    "sub_query": sub_query,
+                    "num_sources": len(enriched_sources)
+                })
+            return enriched_sources
         except Exception as e:
             self.logger.error(f"Error processing sub-query {sub_query}: {e}", exc_info=True)
-            return ""
+            return [] # Return empty list on error
 
     async def _process_sub_query_with_vectorstore(self, sub_query: str, filter: dict | None = None):
         """Takes in a sub query and gathers context from the user provided vector store
@@ -352,7 +377,7 @@ class ResearchConductor:
         return new_urls
 
     async def _search_relevant_source_urls(self, query, query_domains: list | None = None):
-        new_search_urls = []
+        full_search_results = []
         if query_domains is None:
             query_domains = []
 
@@ -365,45 +390,77 @@ class ResearchConductor:
             search_results = await asyncio.to_thread(
                 retriever.search, max_results=self.researcher.cfg.max_search_results_per_query
             )
+            if search_results:
+                full_search_results.extend(search_results)
 
-            # Collect new URLs from search results
-            search_urls = [url.get("href") for url in search_results]
-            new_search_urls.extend(search_urls)
+        # Extract hrefs and get unique new hrefs
+        hrefs = [res.get("href") for res in full_search_results if res.get("href")]
+        unique_new_hrefs = await self._get_new_urls(hrefs)
+        
+        # Filter full_search_results to keep only those whose 'href' is in unique_new_hrefs
+        filtered_results = [res for res in full_search_results if res.get("href") in unique_new_hrefs]
+        
+        random.shuffle(filtered_results)
 
-        # Get unique URLs
-        new_search_urls = await self._get_new_urls(new_search_urls)
-        random.shuffle(new_search_urls)
-
-        return new_search_urls
+        return filtered_results
 
     async def _scrape_data_by_urls(self, sub_query, query_domains: list | None = None):
         """
-        Runs a sub-query across multiple retrievers and scrapes the resulting URLs.
+        Runs a sub-query across multiple retrievers, scrapes the resulting URLs,
+        and enriches the initial retriever outputs with scraped content.
 
         Args:
             sub_query (str): The sub-query to search for.
+            query_domains (list | None): Optional list of domains to query.
 
         Returns:
-            list: A list of scraped content results.
+            list: A list of enriched dictionaries, where each dictionary is a retriever
+                  output augmented with 'raw_content' and 'scraped_title'.
         """
         if query_domains is None:
             query_domains = []
 
-        new_search_urls = await self._search_relevant_source_urls(sub_query, query_domains)
+        retriever_outputs = await self._search_relevant_source_urls(sub_query, query_domains)
+        urls_to_scrape = [item.get('href') for item in retriever_outputs if item.get('href')]
 
         # Log the research process if verbose mode is on
-        if self.researcher.verbose:
+        if self.researcher.verbose and urls_to_scrape:
             await stream_output(
                 "logs",
                 "researching",
-                f"🤔 Researching for relevant information across multiple sources...\n",
+                f"🤔 Researching for relevant information from {len(urls_to_scrape)} URLs...\n",
                 self.researcher.websocket,
             )
 
         # Scrape the new URLs
-        scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
+        # scraped_pages is expected to be a list of dicts, each like 
+        # {'url': '...', 'raw_content': '...', 'title': '...' (optional), ...}
+        scraped_pages = await self.researcher.scraper_manager.browse_urls(urls_to_scrape)
+        
+        scraped_content_map = {page['url']: page for page in scraped_pages if page.get('url')}
 
-        if self.researcher.vector_store:
-            self.researcher.vector_store.load(scraped_content)
+        enriched_outputs = []
+        for item in retriever_outputs:
+            href = item.get('href')
+            if href:
+                scraped_page_data = scraped_content_map.get(href)
+                if scraped_page_data:
+                    item['raw_content'] = scraped_page_data.get('raw_content') # In Scraper, content is under raw_content
+                    if 'title' in scraped_page_data:
+                         item['scraped_title'] = scraped_page_data.get('title')
+                enriched_outputs.append(item) # Add item even if not scraped, to keep all sources
 
-        return scraped_content
+        if self.researcher.vector_store and enriched_outputs:
+            # Assuming vector_store.load expects a list of dicts with 'raw_content'
+            # We might need to adapt what we pass to vector_store.load if it expects a different format
+            # For now, passing the enriched outputs directly if they have 'raw_content'
+            # Or consider passing only scraped_pages if that's what it's trained for.
+            # Based on previous usage, it seems to expect objects with 'raw_content'.
+            
+            # Filter items that have raw_content for vector store loading
+            content_for_vector_store = [item for item in enriched_outputs if item.get('raw_content')]
+            if content_for_vector_store:
+                 self.researcher.vector_store.load(content_for_vector_store)
+
+
+        return enriched_outputs

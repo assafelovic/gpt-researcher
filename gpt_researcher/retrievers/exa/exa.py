@@ -59,7 +59,8 @@ class ExaSearch:
         )
 
         search_response = [
-            {"href": result.url, "body": result.text} for result in results.results
+            {"href": result.url, "body": result.text, "retriever_name": "exa"}
+            for result in results.results
         ]
         return search_response
 

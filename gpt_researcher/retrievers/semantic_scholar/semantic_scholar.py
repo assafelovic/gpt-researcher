@@ -47,13 +47,22 @@ class SemanticScholarSearch:
         search_result = []
 
         for result in results:
+            href = None
             if result.get("isOpenAccess") and result.get("openAccessPdf"):
-                search_result.append(
-                    {
-                        "title": result.get("title", "No Title"),
-                        "href": result["openAccessPdf"].get("url", "No URL"),
-                        "body": result.get("abstract", "Abstract not available"),
-                    }
-                )
+                href = result["openAccessPdf"].get("url")
+            if not href:
+                href = result.get("url", "No URL")
+
+            search_result.append(
+                {
+                    "title": result.get("title", "No Title"),
+                    "href": href,
+                    "body": result.get("abstract", "Abstract not available"),
+                    "citation_count": result.get("citationCount"),
+                    "venue": result.get("venue"),
+                    "year": result.get("year"),
+                    "retriever_name": "semantic_scholar",
+                }
+            )
 
         return search_result

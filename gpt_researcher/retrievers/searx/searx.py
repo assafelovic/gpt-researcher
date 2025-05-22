@@ -67,7 +67,8 @@ class SearxSearch():
             for result in results.get('results', [])[:max_results]:
                 search_response.append({
                     "href": result.get('url', ''),
-                    "body": result.get('content', '')
+                    "body": result.get('content', ''),
+                    "retriever_name": "searx"
                 })
 
             return search_response

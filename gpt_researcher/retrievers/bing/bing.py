@@ -89,6 +89,7 @@ class BingSearch():
                 "title": result["name"],
                 "href": result["url"],
                 "body": result["snippet"],
+                "retriever_name": "bing",
             }
             search_results.append(search_result)
 

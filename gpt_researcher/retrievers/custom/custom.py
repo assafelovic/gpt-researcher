@@ -46,7 +46,14 @@ class CustomRetriever:
         try:
             response = requests.get(self.endpoint, params={**self.params, 'query': self.query})
             response.raise_for_status()
-            return response.json()
+            results = response.json()
+            if results:
+                for result in results:
+                    result["retriever_name"] = "custom"
+            return results
         except requests.RequestException as e:
             print(f"Failed to retrieve search results: {e}")
+            return None
+        except json.JSONDecodeError as e:
+            print(f"Failed to parse JSON response: {e}")
             return None

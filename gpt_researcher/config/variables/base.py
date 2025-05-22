@@ -21,6 +21,7 @@ class BaseConfig(TypedDict):
     TOTAL_WORDS: int
     REPORT_FORMAT: str
     CURATE_SOURCES: bool
+    FOCUS_ACADEMIC_MEDICAL_SOURCES: bool
     MAX_ITERATIONS: int
     LANGUAGE: str
     AGENT_ROLE: Union[str, None]
