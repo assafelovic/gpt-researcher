@@ -9,7 +9,10 @@ from typing import Any, AsyncGenerator
 
 
 class WorkerPool:
-    def __init__(self, max_workers: int):
+    def __init__(
+        self,
+        max_workers: int = (os.cpu_count() or 1) * 5,
+    ):
         self.max_workers: int = max_workers
         self.executor: ThreadPoolExecutor = ThreadPoolExecutor(max_workers=max_workers)
         self.semaphore: asyncio.Semaphore = asyncio.Semaphore(max_workers)

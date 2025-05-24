@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-import traceback
 import asyncio
 import logging
 import math
 import random
+
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, AsyncGenerator, ClassVar, Dict, Literal, cast, Tuple, List
+from typing import TYPE_CHECKING, Any, AsyncGenerator, ClassVar, Literal, cast
 from urllib.parse import urlparse
 
 import requests
+
 from bs4 import BeautifulSoup
 
 from gpt_researcher.scraper.utils import (
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
     import logging
 
     import requests
+
     from zendriver import Tab
 
 
@@ -209,8 +211,8 @@ class NoDriverScraper:
         self.session: requests.Session | None = session
         self.debug: bool = False
 
-    async def scrape_async(self) -> Tuple[str, list[str], str]:
-        """Returns tuple of (text, image_urls, title)"""
+    async def scrape_async(self) -> tuple[str, list[str], str]:
+        """Returns tuple of (text, image_urls, title)."""
         if not self.url:
             return (
                 "A URL was not specified, cancelling request to browse website.",

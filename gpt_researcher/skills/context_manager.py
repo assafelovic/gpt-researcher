@@ -69,7 +69,7 @@ class ContextManager:
     ) -> list[str]:
         all_queries: list[str] = [current_subtopic] + draft_section_titles
 
-        async def process_query(query: str) -> Set[str]:
+        async def process_query(query: str) -> set[str]:
             return set(await self.__get_similar_written_contents_by_query(query, written_contents))
 
         results: list[set[str]] = await asyncio.gather(*[process_query(query) for query in all_queries])
@@ -100,3 +100,4 @@ class ContextManager:
         written_content_compressor = WrittenContentCompressor(
             documents=written_contents, embeddings=self.researcher.memory.get_embeddings(), similarity_threshold=similarity_threshold
         )
+        return await written_content_compressor.async_get_context(query=query, max_results=max_results, cost_callback=self.researcher.add_costs)

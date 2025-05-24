@@ -35,7 +35,7 @@ class BrowserScraper:
         self.driver: webdriver.WebDriver | None = None
         self.use_browser_cookies: bool = False
         self._import_selenium()  # Import only if used to avoid unnecessary dependencies
-        self.cookie_filename = f"{self._generate_random_string(8)}.pkl"
+        self.cookie_filename: str = f"{self._generate_random_string(8)}.pkl"
 
     def scrape(self) -> tuple:
         if not self.url:

@@ -19,7 +19,7 @@ class DetailedReport:
         tone: Tone | str | None = Tone.Objective,
         websocket: WebSocket | None = None,
         subtopics: list[dict[str, Any]] | None = None,
-        headers: dict[str, Any] | None = None
+        headers: dict[str, Any] | None = None,
     ):
         self.query: str = query
         self.report_type: str = report_type
@@ -41,7 +41,7 @@ class DetailedReport:
             config_path=self.config_path,
             tone=self.tone,
             websocket=self.websocket,
-            headers=self.headers
+            headers=self.headers,
         )
         self.existing_headers: list[dict[str, Any]] = []
         self.global_context: list[str] = []
