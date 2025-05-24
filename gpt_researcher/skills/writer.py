@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+
+from typing import TYPE_CHECKING, Any
 
 from gpt_researcher.actions import (
     generate_draft_section_titles,
@@ -12,15 +13,21 @@ from gpt_researcher.actions import (
 )
 from gpt_researcher.utils.llm import construct_subtopics
 
+if TYPE_CHECKING:
+    from gpt_researcher.agent import GPTResearcher
+
 
 class ReportGenerator:
     """Generates reports based on research data."""
 
-    def __init__(self, researcher: Any):
-        self.researcher: Any = researcher
+    def __init__(self, researcher: GPTResearcher):
+        self.researcher: GPTResearcher = researcher
         self.research_params: dict[str, Any] = {
             "query": self.researcher.query,
-            "agent_role_prompt": self.researcher.cfg.agent_role or self.researcher.role,
+            "agent_role_prompt": (
+                self.researcher.cfg.agent_role  # pyright: ignore[reportAttributeAccessIssue]
+                or self.researcher.role
+            ),
             "report_type": self.researcher.report_type,
             "report_source": self.researcher.report_source,
             "tone": self.researcher.tone,
@@ -54,14 +61,7 @@ class ReportGenerator:
         # send the selected images prior to writing report
         research_images: list[dict[str, Any]] | None = self.researcher.get_research_images()
         if research_images:
-            await stream_output(
-                "images",
-                "selected_images",
-                json.dumps(research_images),
-                self.researcher.websocket,
-                True,
-                research_images
-            )
+            await stream_output("images", "selected_images", json.dumps(research_images), self.researcher.websocket, True, research_images)
 
         context: list[dict[str, Any]] = ext_context or self.researcher.context
         if self.researcher.verbose:
@@ -76,13 +76,15 @@ class ReportGenerator:
         report_params["context"] = context
 
         if self.researcher.report_type == "subtopic_report":
-            report_params.update({
-                "main_topic": self.researcher.parent_query,
-                "existing_headers": existing_headers,
-                "relevant_written_contents": relevant_written_contents,
-                "cost_callback": self.researcher.add_costs,
-                "custom_prompt": custom_prompt,
-            })
+            report_params.update(
+                {
+                    "main_topic": self.researcher.parent_query,
+                    "existing_headers": existing_headers,
+                    "relevant_written_contents": relevant_written_contents,
+                    "cost_callback": self.researcher.add_costs,
+                    "custom_prompt": custom_prompt,
+                }
+            )
         else:
             report_params["cost_callback"] = self.researcher.add_costs
 
@@ -122,7 +124,10 @@ class ReportGenerator:
             query=self.researcher.query,
             context=report_content,
             config=self.researcher.cfg,
-            agent_role_prompt=self.researcher.cfg.agent_role or self.researcher.role,
+            agent_role_prompt=(
+                self.researcher.cfg.agent_role  # pyright: ignore[reportAttributeAccessIssue]
+                or self.researcher.role
+            ),
             cost_callback=self.researcher.add_costs,
             websocket=self.researcher.websocket,
             prompt_family=self.researcher.prompt_family,
@@ -151,7 +156,10 @@ class ReportGenerator:
         introduction: str = await write_report_introduction(
             query=self.researcher.query,
             context=self.researcher.context,
-            agent_role_prompt=self.researcher.cfg.agent_role or self.researcher.role,
+            agent_role_prompt=(
+                self.researcher.cfg.agent_role  # pyright: ignore[reportAttributeAccessIssue]
+                or self.researcher.role
+            ),
             config=self.researcher.cfg,
             websocket=self.researcher.websocket,
             cost_callback=self.researcher.add_costs,
@@ -220,7 +228,10 @@ class ReportGenerator:
             query=self.researcher.query,
             current_subtopic=current_subtopic,
             context=self.researcher.context,
-            role=self.researcher.cfg.agent_role or self.researcher.role,
+            role=(
+                self.researcher.cfg.agent_role  # pyright: ignore[reportAttributeAccessIssue]
+                or self.researcher.role
+            ),
             websocket=self.researcher.websocket,
             config=self.researcher.cfg,
             cost_callback=self.researcher.add_costs,

@@ -1,6 +1,7 @@
-import os
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+
+from typing import Any
 
 from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain.schema import Document
@@ -9,13 +10,25 @@ from langchain.schema.retriever import BaseRetriever
 
 class SearchAPIRetriever(BaseRetriever):
     """Search API retriever."""
-    pages: List[Dict] = []
+
+    pages: list[dict[str, Any]] = []
 
     def _get_relevant_documents(
-        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
-    ) -> List[Document]:
+        self,
+        query: str,
+        *,
+        run_manager: CallbackManagerForRetrieverRun | None = None,
+    ) -> list[Document]:
+        """Retrieve relevant documents from the pages.
 
-        docs = [
+        Args:
+            query (str): The query to retrieve relevant documents from.
+            run_manager (CallbackManagerForRetrieverRun): The callback manager for the retriever run.
+
+        Returns:
+            list[Document]: The relevant documents.
+        """
+        docs: list[Document] = [
             Document(
                 page_content=page.get("raw_content", ""),
                 metadata={
@@ -28,14 +41,15 @@ class SearchAPIRetriever(BaseRetriever):
 
         return docs
 
+
 class SectionRetriever(BaseRetriever):
-    """
-    SectionRetriever:
+    """SectionRetriever:
+
     This class is used to retrieve sections while avoiding redundant subtopics.
     """
-    sections: List[Dict] = []
-    """
-    sections example:
+
+    sections: list[dict[str, Any]] = []
+    """Sections example:
     [
         {
             "section_title": "Example Title",
@@ -44,12 +58,23 @@ class SectionRetriever(BaseRetriever):
         ...
     ]
     """
-    
-    def _get_relevant_documents(
-        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
-    ) -> List[Document]:
 
-        docs = [
+    def _get_relevant_documents(
+        self,
+        query: str,
+        *,
+        run_manager: CallbackManagerForRetrieverRun | None = None,
+    ) -> list[Document]:
+        """Retrieve relevant documents from the sections.
+
+        Args:
+            query (str): The query to retrieve relevant documents from.
+            run_manager (CallbackManagerForRetrieverRun): The callback manager for the retriever run.
+
+        Returns:
+            list[Document]: The relevant documents.
+        """
+        docs: list[Document] = [
             Document(
                 page_content=page.get("written_content", ""),
                 metadata={

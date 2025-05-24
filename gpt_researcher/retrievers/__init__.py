@@ -25,5 +25,5 @@ __all__ = [
     "ArxivSearch",
     "SemanticScholarSearch",
     "PubMedCentralSearch",
-    "ExaSearch"
+    "ExaSearch",
 ]

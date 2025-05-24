@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import WebSocket
-
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import Tone
 
@@ -28,13 +27,7 @@ class DetailedReport:
         self.source_urls: list[str] | None = source_urls
         self.document_urls: list[str] | None = document_urls
         self.config_path: str | None = config_path
-        self.tone: Tone = (
-            tone
-            if isinstance(tone, Tone)
-            else Tone.Objective
-            if tone is None
-            else Tone(tone)
-        )
+        self.tone: Tone = tone if isinstance(tone, Tone) else Tone.Objective if tone is None else Tone(tone)
         self.websocket: WebSocket | None = websocket
         self.subtopics: list[dict[str, Any]] | None = subtopics
         self.headers: dict[str, Any] | None = {} if headers is None else headers
@@ -66,8 +59,8 @@ class DetailedReport:
 
     async def _initial_research(self) -> None:
         await self.gpt_researcher.conduct_research()
-        self.global_context = self.gpt_researcher.context or []
-        self.global_urls = self.gpt_researcher.visited_urls
+        self.global_context = [] if self.gpt_researcher.context is None else self.gpt_researcher.context
+        self.global_urls = set() if self.gpt_researcher.visited_urls is None else self.gpt_researcher.visited_urls
 
     async def _get_all_subtopics(self) -> list[dict[str, Any]]:
         subtopics_data: list[str] = await self.gpt_researcher.get_subtopics()
@@ -77,7 +70,7 @@ class DetailedReport:
             for subtopic in subtopics_data:
                 all_subtopics.append({"task": subtopic})
         else:
-            raise ValueError(f"Unexpected subtopics data format: {subtopics_data} (type {subtopics_data.__class__.__name__})")
+            print(f"Unexpected subtopics data format: {subtopics_data} (type {subtopics_data.__class__.__name__})")
 
         return all_subtopics
 
@@ -124,10 +117,7 @@ class DetailedReport:
             draft_section_titles = str(draft_section_titles)
 
         parse_draft_section_titles: list[dict[str, Any]] = self.gpt_researcher.extract_headers(draft_section_titles)
-        parse_draft_section_titles_text: list[str] = [
-            header.get("text", "")
-            for header in parse_draft_section_titles
-        ]
+        parse_draft_section_titles_text: list[str] = [header.get("text", "") for header in parse_draft_section_titles]
 
         relevant_contents: list[str] = await subtopic_assistant.get_similar_written_contents_by_draft_section_titles(
             current_subtopic_task,
@@ -144,10 +134,12 @@ class DetailedReport:
         self.global_context = list(set(subtopic_assistant.context))
         self.global_urls.update(subtopic_assistant.visited_urls)
 
-        self.existing_headers.append({
-            "subtopic task": current_subtopic_task,
-            "headers": self.gpt_researcher.extract_headers(subtopic_report),
-        })
+        self.existing_headers.append(
+            {
+                "subtopic task": current_subtopic_task,
+                "headers": self.gpt_researcher.extract_headers(subtopic_report),
+            }
+        )
 
         return {"topic": subtopic, "report": subtopic_report}
 

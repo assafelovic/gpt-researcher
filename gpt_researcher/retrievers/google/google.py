@@ -1,93 +1,109 @@
-# Tavily API Retriever
+# Google Search API Retriever
 
 # libraries
-import os
-import requests
-import json
+from __future__ import annotations
 
+import json
+import os
+
+from typing import Any
+
+import requests
+
+
+
+    """Google API Retriever."""
+
+    def __init__(
+        self,
+        query: str,
+        headers: dict[str, Any] | None = None,
+    ):
+        """Initializes the GoogleSearch object.
 
 class GoogleSearch:
-    """
-    Google API Retriever
-    """
-    def __init__(self, query, headers=None):
-        """
-        Initializes the TavilySearch object
         Args:
-            query:
+            query (str): The query to search for.
+            headers (dict[str, Any], optional): The headers to use for the request.
         """
-        self.query = query
-        self.headers = headers or {}
-        self.api_key = self.headers.get("google_api_key") or self.get_api_key()  # Use the passed api_key or fallback to environment variable
-        self.cx_key = self.headers.get("google_cx_key") or self.get_cx_key()  # Use the passed cx_key or fallback to environment variable
+        self.query: str = query
+        self.headers: dict[str, Any] = {} if headers is None else headers
+        self.api_key: str = self.headers.get("google_api_key") or self.get_api_key()  # Use the passed api_key or fallback to environment variable
+        self.cx_key: str = self.headers.get("google_cx_key") or self.get_cx_key()  # Use the passed cx_key or fallback to environment variable
 
     def get_api_key(self):
-        """
-        Gets the Google API key
-        Returns:
+        """Gets the Google API key.
 
+        Returns:
+            str: The Google API key.
+        """
+
+        # Get the API key
+        try:
+            api_key: str = os.environ["GOOGLE_API_KEY"]
+        except KeyError:
+            raise Exception(
+                "Google API key not found. Please set the GOOGLE_API_KEY environment variable. " "You can get a key at https://developers.google.com/custom-search/v1/overview"
+            )
+        return api_key  # pyright: ignore[reportReturnStatementIssue]
+
+    def get_cx_key(self) -> str:
+        """Gets the Google CX key.
+
+        Returns:
+            str: The Google CX key.
         """
         # Get the API key
         try:
-            api_key = os.environ["GOOGLE_API_KEY"]
-        except:
-            raise Exception("Google API key not found. Please set the GOOGLE_API_KEY environment variable. "
-                            "You can get a key at https://developers.google.com/custom-search/v1/overview")
-        return api_key
+            api_key: str = os.environ["GOOGLE_CX_KEY"]
+        except KeyError:
+            raise Exception(
+                "Google CX key not found. Please set the GOOGLE_CX_KEY environment variable. " "You can get a key at https://developers.google.com/custom-search/v1/overview"
+            )
+        return api_key  # pyright: ignore[reportReturnStatementIssue]
 
-    def get_cx_key(self):
-        """
-        Gets the Google CX key
+    def search(self, max_results: int = 7) -> list[dict[str, Any]]:
+        """Searches the query.
+
+        Args:
+            max_results (int): The maximum number of results to return.
+
         Returns:
-
-        """
-        # Get the API key
-        try:
-            api_key = os.environ["GOOGLE_CX_KEY"]
-        except:
-            raise Exception("Google CX key not found. Please set the GOOGLE_CX_KEY environment variable. "
-                            "You can get a key at https://developers.google.com/custom-search/v1/overview")
-        return api_key
-
-    def search(self, max_results=7):
-        """
-        Searches the query
-        Returns:
-
+            list[dict[str, Any]]: The search results.
         """
         """Useful for general internet search queries using the Google API."""
-        print("Searching with query {0}...".format(self.query))
-        url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={self.query}&start=1"
-        resp = requests.get(url)
+        print(f"Searching with query {self.query}...")
+        url: str = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={self.query}&start=1"
+        resp: requests.Response | None = requests.get(url)
 
         if resp.status_code < 200 or resp.status_code >= 300:
             print("Google search: unexpected response status: ", resp.status_code)
 
         if resp is None:
-            return
+            return []
         try:
-            search_results = json.loads(resp.text)
+            search_results: dict[str, Any] = json.loads(resp.text)
         except Exception:
-            return
+            return []
         if search_results is None:
-            return
+            return []
 
-        results = search_results.get("items", [])
-        search_results = []
+        results: list[dict[str, Any]] = search_results.get("items", [])
+        search_results_list: list[dict[str, Any]] = []
 
         # Normalizing results to match the format of the other search APIs
         for result in results:
             # skip youtube results
-            if "youtube.com" in result["link"]:
+            if "youtube.com" in str(result.get("link", "")).casefold():
                 continue
             try:
-                search_result = {
+                search_result: dict[str, Any] = {
                     "title": result["title"],
                     "href": result["link"],
                     "body": result["snippet"],
                 }
-            except:
+            except Exception:
                 continue
-            search_results.append(search_result)
+            search_results_list.append(search_result)
 
-        return search_results[:max_results]
+        return search_results_list[:max_results]

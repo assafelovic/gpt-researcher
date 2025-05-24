@@ -1,16 +1,24 @@
-from .base import BaseConfig
+from __future__ import annotations
+
+from gpt_researcher.config.variables.base import BaseConfig
 
 DEFAULT_CONFIG: BaseConfig = {
     "RETRIEVER": "tavily",
     "EMBEDDING": "openai:text-embedding-3-small",
     "EMBEDDING_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
     "SIMILARITY_THRESHOLD": 0.42,
-    "FAST_LLM": "openrouter:mistralai/mistral-small-3.1-24b-instruct:free",
-    "SMART_LLM": "openrouter:google/gemini-2.0-flash-exp:free",  # Has support for long responses (2k+ words).
-    "STRATEGIC_LLM": "openrouter:moonshotai/kimi-vl-a3b-thinking:free",  # please note it will make tasks slower.
+    #    "FAST_LLM": "openrouter:mistralai/mistral-small-3.1-24b-instruct:free",
+    #    "SMART_LLM": "openrouter:google/gemini-2.0-flash-exp:free",
+    #    "STRATEGIC_LLM": "openrouter:moonshotai/kimi-vl-a3b-thinking:free",
+    "FAST_LLM": "openai:gpt-4o-mini",
+    "SMART_LLM": "openai:gpt-4.1",  # Has support for long responses (2k+ words).
+    "STRATEGIC_LLM": "openai:o4-mini",  # Please note reasoning models may make tasks slower.
     "FAST_LLM_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
     "SMART_LLM_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
     "STRATEGIC_LLM_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
+    #    "FAST_LLM_FALLBACKS": "openrouter:mistralai/mistral-small-3.1-24b-instruct:free",
+    #    "SMART_LLM_FALLBACKS": "openrouter:google/gemini-2.0-flash-exp:free",
+    #    "STRATEGIC_LLM_FALLBACKS": "openrouter:moonshotai/kimi-vl-a3b-thinking:free",
     "FAST_TOKEN_LIMIT": 3000,
     "SMART_TOKEN_LIMIT": 6000,
     "STRATEGIC_TOKEN_LIMIT": 4000,
@@ -35,8 +43,13 @@ DEFAULT_CONFIG: BaseConfig = {
     "PROMPT_FAMILY": "default",
     "LLM_KWARGS": {},
     "EMBEDDING_KWARGS": {},
+    "VERBOSE": True,
     # Deep research specific settings
     "DEEP_RESEARCH_BREADTH": 3,
     "DEEP_RESEARCH_DEPTH": 2,
     "DEEP_RESEARCH_CONCURRENCY": 4,
+    # MCP retriever specific settings
+    "MCP_SERVERS": [],  # List of predefined MCP server configurations
+    "MCP_AUTO_TOOL_SELECTION": True,  # Whether to automatically select the best tool for a query
+    "MCP_ALLOWED_ROOT_PATHS": [],  # List of allowed root paths for local file access
 }

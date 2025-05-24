@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
 import json
 
+from typing import TYPE_CHECKING, Any
+
+from gpt_researcher.actions import stream_output
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.llm import create_chat_completion
-from gpt_researcher.actions import stream_output
 
 if TYPE_CHECKING:
     from gpt_researcher.agent import GPTResearcher
@@ -38,7 +39,7 @@ class SourceCurator:
             await stream_output(
                 "logs",
                 "research_plan",
-                f"⚖️ Evaluating and curating sources by credibility and relevance...",
+                "⚖️ Evaluating and curating sources by credibility and relevance...",
                 self.researcher.websocket,
             )
 
@@ -48,8 +49,7 @@ class SourceCurator:
                 model=self.researcher.cfg.smart_llm_model,
                 messages=[
                     {"role": "system", "content": f"{self.researcher.role}"},
-                    {"role": "user", "content": self.researcher.prompt_family.curate_sources(
-                        self.researcher.query, source_data, max_results)},
+                    {"role": "user", "content": self.researcher.prompt_family.curate_sources(self.researcher.query, source_data, max_results)},
                 ],
                 temperature=0.2,
                 max_tokens=8000,

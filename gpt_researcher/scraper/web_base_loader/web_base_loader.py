@@ -1,43 +1,45 @@
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-import requests
-from ..utils import get_relevant_images, extract_title
+from __future__ import annotations
 
+from typing import Any
+
+import requests
 class WebBaseLoaderScraper:
 
-    def __init__(self, link, session=None):
-        self.link = link
-        self.session = session or requests.Session()
+from bs4 import BeautifulSoup
+from langchain_core.documents import Document
 
-    def scrape(self) -> tuple:
-        """
-        This Python function scrapes content from a webpage using a WebBaseLoader object and returns the
-        concatenated page content.
-        
-        Returns:
-          The `scrape` method is returning a string variable named `content` which contains the
-        concatenated page content from the documents loaded by the `WebBaseLoader`. If an exception
-        occurs during the process, an error message is printed and an empty string is returned.
-        """
+from gpt_researcher.scraper.utils import extract_title, get_relevant_images
+
+
+    def __init__(
+        self,
+        link: str,
+        session: requests.Session | None = None,
+    ):
+        self.link: str = link
+        self.session: requests.Session | None = session
+
+    def scrape(self) -> tuple[str, list[dict[str, Any]], str]:
         try:
             from langchain_community.document_loaders import WebBaseLoader
-            loader = WebBaseLoader(self.link)
+
+            loader: WebBaseLoader = WebBaseLoader(self.link)
             loader.requests_kwargs = {"verify": False}
-            docs = loader.load()
-            content = ""
+            docs: list[Document] = loader.load()
+            content: str = ""
 
             for doc in docs:
                 content += doc.page_content
 
-            response = self.session.get(self.link)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            image_urls = get_relevant_images(soup, self.link)
-            
+            response: requests.Response = self.session.get(self.link)
+            soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
+            image_urls: list[dict[str, Any]] = get_relevant_images(soup, self.link)
+
             # Extract the title using the utility function
-            title = extract_title(soup)
+            title: str = extract_title(soup)
 
             return content, image_urls, title
 
         except Exception as e:
-            print("Error! : " + str(e))
+            print(f"Error! : {e.__class__.__name__}: {e}")
             return "", [], ""

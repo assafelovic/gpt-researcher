@@ -4,10 +4,7 @@ import os
 import logging
 from typing import Any
 
-OPENAI_EMBEDDING_MODEL: str = os.environ.get(
-    "OPENAI_EMBEDDING_MODEL",
-    "text-embedding-3-small",
-)
+OPENAI_EMBEDDING_MODEL: str = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -78,9 +75,7 @@ class Memory:
             case "google_genai":
                 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-                _embeddings = GoogleGenerativeAIEmbeddings(
-                    model=model, **embdding_kwargs
-                )
+                _embeddings = GoogleGenerativeAIEmbeddings(model=model, **embdding_kwargs)
             case "fireworks":
                 from langchain_fireworks import FireworksEmbeddings
 
@@ -92,11 +87,7 @@ class Memory:
             case "ollama":
                 from langchain_ollama import OllamaEmbeddings
 
-                _embeddings = OllamaEmbeddings(
-                    model=model,
-                    base_url=os.environ["OLLAMA_BASE_URL"],
-                    **embdding_kwargs,
-                )
+                _embeddings = OllamaEmbeddings(model=model, base_url=os.environ["OLLAMA_BASE_URL"], **embdding_kwargs)
             case "together":
                 from langchain_together import TogetherEmbeddings
 
@@ -116,11 +107,7 @@ class Memory:
             case "voyageai":
                 from langchain_voyageai import VoyageAIEmbeddings
 
-                _embeddings = VoyageAIEmbeddings(
-                    voyage_api_key=os.environ["VOYAGE_API_KEY"],
-                    model=model,
-                    **embdding_kwargs,
-                )
+                _embeddings = VoyageAIEmbeddings(voyage_api_key=os.environ["VOYAGE_API_KEY"], model=model, **embdding_kwargs)
             case "dashscope":
                 from langchain_community.embeddings import DashScopeEmbeddings
 

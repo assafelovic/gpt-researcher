@@ -107,7 +107,7 @@ async def main(num_examples: int):
             query = example["problem"]
             print(f"\nEvaluating query: {query}")
             try:
-                result: dict[str, Any ] = await evaluate_single_query(query, evaluator)
+                result: dict[str, Any] = await evaluate_single_query(query, evaluator)
                 results.append(result)
 
                 print("✓ Completed research and evaluation")

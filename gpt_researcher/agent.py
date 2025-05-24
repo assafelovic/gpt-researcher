@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Callable, TYPE_CHECKING
 import json
+
+from typing import TYPE_CHECKING, Any, Callable
 
 from gpt_researcher.actions import (
     add_references,
@@ -60,25 +61,62 @@ class GPTResearcher:
         log_handler: Any | None = None,
         prompt_family: str | None = None,
     ):
+        """Initialize a GPT Researcher instance.
+
+        Args:
+            query (str): The research query or question.
+            report_type (str): Type of report to generate.
+            report_format (str): Format of the report (markdown, pdf, etc).
+            report_source (str): Source of information for the report (web, local, etc).
+            tone (Tone): Tone of the report.
+            source_urls (list[str], optional): List of specific URLs to use as sources.
+            document_urls (list[str], optional): List of document URLs to use as sources.
+            complement_source_urls (bool): Whether to complement source URLs with web search.
+            query_domains (list[str], optional): List of domains to restrict search to.
+            documents: Document objects for LangChain integration.
+            vector_store: Vector store for document retrieval.
+            vector_store_filter: Filter for vector store queries.
+            config_path: Path to configuration file.
+            websocket: WebSocket for streaming output.
+            agent: Pre-defined agent type.
+            role: Pre-defined agent role.
+            parent_query: Parent query for subtopic reports.
+            subtopics: List of subtopics to research.
+            visited_urls: Set of already visited URLs.
+            verbose (bool): Whether to output verbose logs.
+            context: Pre-loaded research context.
+            headers (dict, optional): Additional headers for requests and configuration.
+            max_subtopics (int): Maximum number of subtopics to generate.
+            log_handler: Handler for logging events.
+            prompt_family: Family of prompts to use.
+            mcp_configs (list[dict], optional): List of MCP server configurations.
+                Each dictionary can contain:
+                - server_name (str): Name of the MCP server
+                - server_command (str): Command to start the server
+                - server_args (list[str]): Arguments for the server command
+                - tool_name (str): Specific tool to use on the MCP server
+                - env (dict): Environment variables for the server
+                - connection_url (str): URL for WebSocket or HTTP connection
+                - connection_type (str): Connection type (stdio, websocket, http)
+                - connection_token (str): Authentication token for remote connections
+
+                Example:
+                ```python
+                mcp_configs=[{
+                    "server_command": "python",
+                    "server_args": ["my_mcp_server.py"],
+                    "tool_name": "search"
+                }]
+                ```
+        """
         self.query: str = query
         self.report_type: ReportType | str = report_type
         self.cfg: Config = Config(config_path)
         self.cfg.set_verbose(verbose)
-        self.llm: GenericLLMProvider = GenericLLMProvider(self.cfg)
-        self.report_source: ReportSource | str = (
-            report_source
-            if report_source
-            else getattr(self.cfg, "report_source", "")
-        )
+        self.report_source: ReportSource | str = report_source or getattr(self.cfg, "report_source", "")
         self.report_format: str = report_format
         self.max_subtopics: int = max_subtopics
-        self.tone: Tone | str = (
-            Tone.Objective
-            if tone is None
-            else tone
-            if isinstance(tone, Tone)
-            else Tone(tone)
-        )
+        self.tone: Tone | str = Tone.Objective if tone is None else tone if isinstance(tone, Tone) else Tone(tone)
         self.source_urls: list[str] = [] if source_urls is None else source_urls
         self.document_urls: list[str] = [] if document_urls is None else document_urls
         self.complement_source_urls: bool = complement_source_urls
@@ -96,7 +134,7 @@ class GPTResearcher:
         self.visited_urls: set[str] = set() if visited_urls is None else visited_urls
         self.verbose: bool = verbose
         self.context: list[str] | None = [] if context is None else context
-        self.headers: dict[str, Any] | None = headers
+        self.headers: dict[str, Any] | None = {} if headers is None else headers
         self.research_costs: float = 0.0
         self.retrievers: list[Any] = get_retrievers(self.headers, self.cfg)
 
@@ -144,11 +182,11 @@ class GPTResearcher:
         if self.log_handler is not None:
             try:
                 if event_type == "tool":
-                    await self.log_handler.on_tool_start(kwargs.get('tool_name', ''), **kwargs)
+                    await self.log_handler.on_tool_start(kwargs.get("tool_name", ""), **kwargs)
                 elif event_type == "action":
-                    await self.log_handler.on_agent_action(kwargs.get('action', ''), **kwargs)
+                    await self.log_handler.on_agent_action(kwargs.get("action", ""), **kwargs)
                 elif event_type == "research":
-                    await self.log_handler.on_research_step(kwargs.get('step', ''), kwargs.get('details', {}))
+                    await self.log_handler.on_research_step(kwargs.get("step", ""), kwargs.get("details", {}))
 
                 # Add direct logging as backup
                 import logging
@@ -180,13 +218,11 @@ class GPTResearcher:
         )
 
         # Handle deep research separately
-        if (
-            self.report_type == ReportType.DeepResearch.value
-            and self.deep_researcher is not None
-        ):
+        if self.report_type == ReportType.DeepResearch.value and self.deep_researcher is not None:
             return await self._handle_deep_research(on_progress)
 
-        if not (self.agent and self.role or "").strip():
+        has_agent_and_role: bool = bool((self.agent or "").strip() and (self.role or "").strip())
+        if not has_agent_and_role:
             await self._log_event("action", action="choose_agent")
             self.agent, self.role = await choose_agent(
                 query=self.query,
@@ -199,13 +235,19 @@ class GPTResearcher:
             await self._log_event(
                 "action",
                 action="agent_selected",
-                details={"agent": self.agent, "role": self.role},
+                details={
+                    "agent": self.agent,
+                    "role": self.role,
+                },
             )
 
         await self._log_event(
             "research",
             step="conducting_research",
-            details={"agent": self.agent, "role": self.role},
+            details={
+                "agent": self.agent,
+                "role": self.role,
+            },
         )
         self.context = await self.research_conductor.conduct_research()
 
@@ -288,9 +330,7 @@ class GPTResearcher:
             step="writing_report",
             details={
                 "existing_headers": existing_headers,
-                "context_source": "external"
-                if ext_context
-                else "internal",
+                "context_source": "external" if ext_context else "internal",
             },
         )
 
@@ -298,7 +338,7 @@ class GPTResearcher:
             existing_headers=existing_headers,
             relevant_written_contents=relevant_written_contents,
             ext_context=ext_context or self.context,
-            custom_prompt=custom_prompt
+            custom_prompt=custom_prompt,
         )
 
         await self._log_event(
@@ -425,5 +465,8 @@ class GPTResearcher:
             _ = self._log_event(
                 "research",
                 step="cost_update",
-                details={"cost": cost, "total_cost": self.research_costs},
+                details={
+                    "cost": cost,
+                    "total_cost": self.research_costs,
+                },
             )

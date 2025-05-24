@@ -1,8 +1,10 @@
-from fastapi import WebSocket
+from __future__ import annotations
+
 from typing import Any
 
+from fastapi import WebSocket
 from gpt_researcher import GPTResearcher
-from gpt_researcher.utils.enum import Tone, ReportType, ReportSource
+from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 
 
 class BasicReport:
@@ -16,7 +18,7 @@ class BasicReport:
         tone: Tone | str,
         config_path: str,
         websocket: WebSocket,
-        headers: dict[str, Any] | None = None
+        headers: dict[str, Any] | None = None,
     ):
         self.query: str = query
         self.report_type: ReportType | str = report_type

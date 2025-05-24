@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import importlib.util
 import os
 
-VALID_RETRIEVERS = [
+VALID_RETRIEVERS: list[str] = [
     "arxiv",
     "bing",
     "custom",
@@ -19,24 +21,28 @@ VALID_RETRIEVERS = [
 
 
 def check_pkg(pkg: str) -> None:
+    """Checks if a package is installed.
+
+    Args:
+        pkg: The name of the package to check.
+    """
     if not importlib.util.find_spec(pkg):
-        pkg_kebab = pkg.replace("_", "-")
-        raise ImportError(
-            f"Unable to import {pkg_kebab}. Please install with "
-            f"`pip install -U {pkg_kebab}`"
-        )
+        pkg_kebab: str = pkg.replace("_", "-")
+        raise ImportError(f"Unable to import {pkg_kebab}. Please install with " f"`pip install -U {pkg_kebab}`")
+
 
 # Get a list of all retriever names to be used as validators for supported retrievers
-def get_all_retriever_names() -> list:
+def get_all_retriever_names() -> list[str]:
+    """Gets a list of all retriever names to be used as validators for supported retrievers."""
     try:
-        current_dir = os.path.dirname(__file__)
+        current_dir: str = os.path.dirname(__file__)
 
-        all_items = os.listdir(current_dir)
+        all_items: list[str] = os.listdir(current_dir)
 
         # Filter out only the directories, excluding __pycache__
-        retrievers = [item for item in all_items if os.path.isdir(os.path.join(current_dir, item))]
+        retrievers: list[str] = [item for item in all_items if os.path.isdir(os.path.join(current_dir, item))]
     except Exception as e:
         print(f"Error in get_all_retriever_names: {e}")
-        retrievers = VALID_RETRIEVERS
-    
-    return retrievers
+        return VALID_RETRIEVERS
+    else:
+        return retrievers

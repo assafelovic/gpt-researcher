@@ -3,11 +3,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from ..config.config import Config
-from ..prompts import PromptFamily, get_prompt_by_report_type
-from ..utils.enum import Tone
-from ..utils.llm import create_chat_completion
-from ..utils.logger import get_formatted_logger
+from gpt_researcher.config.config import Config
+from gpt_researcher.prompts import PromptFamily, get_prompt_by_report_type
+from gpt_researcher.utils.enum import Tone
+from gpt_researcher.utils.llm import create_chat_completion
+from gpt_researcher.utils.logger import get_formatted_logger
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
@@ -43,11 +43,7 @@ async def write_report_introduction(
             model=config.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": prompt_family.generate_report_introduction(
-                    question=query,
-                    research_summary=context,
-                    language=config.language
-                )},
+                {"role": "user", "content": prompt_family.generate_report_introduction(question=query, research_summary=context, language=config.language)},
             ],
             temperature=0.25,
             llm_provider=config.smart_llm_provider,
@@ -93,11 +89,7 @@ async def write_conclusion(
                 {"role": "system", "content": f"{agent_role_prompt}"},
                 {
                     "role": "user",
-                    "content": prompt_family.generate_report_conclusion(
-                        query=query,
-                        report_content=context,
-                        language=config.language
-                    ),
+                    "content": prompt_family.generate_report_conclusion(query=query, report_content=context, language=config.language),
                 },
             ],
             temperature=0.25,
@@ -188,8 +180,7 @@ async def generate_draft_section_titles(
             model=config.smart_llm_model,
             messages=[
                 {"role": "system", "content": f"{role}"},
-                {"role": "user", "content": prompt_family.generate_draft_titles_prompt(
-                    current_subtopic, query, context)},
+                {"role": "user", "content": prompt_family.generate_draft_titles_prompt(current_subtopic, query, context)},
             ],
             temperature=0.25,
             llm_provider=config.smart_llm_provider,
@@ -253,11 +244,30 @@ async def generate_report(
         prompt_family,
     )
     report: str = ""
-
+    generated_prompt: str = ""
     if report_type == "subtopic_report":
-        content: str = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
+        generated_prompt = generate_prompt(
+            query,
+            existing_headers,
+            relevant_written_contents,
+            main_topic,
+            context,
+            report_format=cfg.report_format,
+            tone=tone,
+            total_words=cfg.total_words,
+            language=cfg.language,
+        )
     else:
-        content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
+        generated_prompt = generate_prompt(
+            query,
+            context,
+            report_source,
+            report_format=cfg.report_format,
+            tone=tone,
+            total_words=cfg.total_words,
+            language=cfg.language,
+        )
+    content: str = f"{generated_prompt}"
     try:
         report = await create_chat_completion(
             model=cfg.smart_llm_model,

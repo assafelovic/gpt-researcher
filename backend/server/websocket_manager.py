@@ -2,16 +2,17 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+
 from typing import TYPE_CHECKING, Any
 
 from fastapi import WebSocket
+from gpt_researcher.actions import stream_output  # Import stream_output
+from gpt_researcher.utils.enum import ReportType, Tone
+from multi_agents.main import run_research_task
 
 from backend.chat import ChatAgentWithMemory
 from backend.report_type import BasicReport, DetailedReport
 from backend.server.server_utils import CustomLogsHandler
-from gpt_researcher.actions import stream_output  # Import stream_output
-from gpt_researcher.utils.enum import ReportType, Tone
-from multi_agents.main import run_research_task
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
@@ -29,7 +30,7 @@ class WebSocketManager:
 
     async def start_sender(self, websocket: WebSocket):
         """Start the sender task."""
-        queue: asyncio.Queue | None = self.message_queues.get(websocket)
+        queue: asyncio.Queue[str | None] | None = self.message_queues.get(websocket)
         if not queue:
             return
 
@@ -69,15 +70,15 @@ class WebSocketManager:
         report_source: str,
         source_urls: list[str],
         document_urls: list[str],
-        tone: Tone,
+        tone: Tone | str,
         websocket: WebSocket,
         headers: dict[str, str] | None = None,
-        **kwargs: dict[str, Any],
+        **kwargs,
     ) -> str:
         """Start streaming the output."""
-        tone = Tone[tone]
+        tone = Tone[tone] if isinstance(tone, str) else tone
         # add customized JSON config file path here
-        config_path = ""
+        config_path: str = "default"
         report: str = await run_agent(
             task,
             report_type,
@@ -94,7 +95,11 @@ class WebSocketManager:
         self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
         return report
 
-    async def chat(self, message: str, websocket: WebSocket):
+    async def chat(
+        self,
+        message: str,
+        websocket: WebSocket,
+    ):
         """Chat with the agent based message diff"""
         if self.chat_agent:
             await self.chat_agent.chat(message, websocket)
@@ -117,23 +122,20 @@ async def run_agent(
     websocket: WebSocket,
     headers: dict[str, str] | None = None,
     config_path: str = "",
-    **kwargs: dict[str, Any],
 ) -> str:
+    **kwargs,
     """Run the agent."""
     start_time: datetime.datetime = datetime.datetime.now()
 
     # Create logs handler for this research task
-    logs_handler = CustomLogsHandler(websocket, task)
+    logs_handler: CustomLogsHandler = CustomLogsHandler(websocket, task)
 
     # Validate report_type against known values
     valid_report_types: list[str] = [r.value for r in ReportType]
 
     if report_type not in valid_report_types and report_type != "multi_agents":
         error_message: str = f"Invalid report_type: '{report_type}'. Valid options are: {', '.join(valid_report_types + ['multi_agents'])}"
-        await websocket.send_json({
-            "type": "logs",
-            "output": f'<div class="error-message">⚠️ {error_message}</div>'
-        })
+        await websocket.send_json({"type": "logs", "output": f'<div class="error-message">⚠️ {error_message}</div>'})
         raise ValueError(error_message)
 
     # Initialize researcher based on report type
@@ -194,6 +196,6 @@ async def run_agent(
 
     end_time: datetime.datetime = datetime.datetime.now()
     duration: datetime.timedelta = end_time - start_time
-    print(f"Research completed in {duration}")
+    print(f"Research for task: {task} completed in {duration}")
 
     return report_content

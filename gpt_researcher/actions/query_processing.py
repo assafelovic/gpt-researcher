@@ -16,7 +16,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 async def get_search_results(
     query: str,
-    retriever: Callable[[str], RetrieverABC] | type[RetrieverABC],
+    retriever: Callable[[str, dict[str, Any] | None], RetrieverABC] | type[RetrieverABC],
     query_domains: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Get web search results for a given query.
@@ -60,7 +60,7 @@ async def generate_sub_queries(
         query,
         parent_query,
         report_type,
-        max_iterations=3,
+        max_iterations=cfg.max_iterations or 3,  # pyright: ignore[reportAttributeAccessIssue]
         context=context,
     )
 
@@ -100,7 +100,7 @@ async def generate_sub_queries(
                 cost_callback=cost_callback,
             )
 
-    result = json_repair.loads(response)
+    result: str | list[str] | dict[str, str] | int | float | bool = json_repair.loads(response)
     if isinstance(result, str):
         return [query.strip() for query in result.split("\n")]
     if isinstance(result, list):

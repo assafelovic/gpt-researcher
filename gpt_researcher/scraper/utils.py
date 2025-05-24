@@ -3,12 +3,13 @@ from __future__ import annotations
 import hashlib
 import logging
 import re
+
 from typing import Any
 from urllib.parse import ParseResult, parse_qs, urljoin, urlparse
 
 import bs4
+
 from bs4 import BeautifulSoup
-from bs4.element import PageElement
 
 
 def get_relevant_images(
@@ -20,19 +21,19 @@ def get_relevant_images(
 
     try:
         # Find all img tags with src attribute
-        all_images = soup.find_all('img', src=True)
+        all_images: list[bs4.element.Tag] = soup.find_all("img", src=True)
 
         for img in all_images:
-            img_src: str = urljoin(url, img['src'])  # pyright: ignore[reportIndexIssue]
-            if img_src.startswith(('http://', 'https://')):
+            img_src: str = urljoin(url, img["src"])  # pyright: ignore[reportIndexIssue]
+            if img_src.startswith(("http://", "https://")):
                 score = 0
                 # Check for relevant classes
-                if any(cls in img.get('class', []) for cls in ['header', 'featured', 'hero', 'thumbnail', 'main', 'content']):  # pyright: ignore[reportOperatorIssue, reportAttributeAccessIssue]
+                if any(cls in img.get("class", []) for cls in ["header", "featured", "hero", "thumbnail", "main", "content"]):  # pyright: ignore[reportOperatorIssue, reportAttributeAccessIssue]
                     score = 4  # Higher score
                 # Check for size attributes
-                elif img.get('width') and img.get('height'):  # pyright: ignore[reportAttributeAccessIssue]
-                    width: int = parse_dimension(img['width'])  # pyright: ignore[reportIndexIssue]
-                    height: int = parse_dimension(img['height'])  # pyright: ignore[reportIndexIssue]
+                elif img.get("width") and img.get("height"):  # pyright: ignore[reportAttributeAccessIssue]
+                    width: int = parse_dimension(img["width"])  # pyright: ignore[reportIndexIssue]
+                    height: int = parse_dimension(img["height"])  # pyright: ignore[reportIndexIssue]
                     if width and height:
                         if width >= 2000 and height >= 1000:
                             score = 3  # Medium score (very large images)
@@ -45,25 +46,26 @@ def get_relevant_images(
                         else:
                             continue  # Skip small images
 
-                image_urls.append({'url': img_src, 'score': score})
+                image_urls.append({"url": img_src, "score": score})
 
         # Sort images by score (highest first)
-        sorted_images: list[dict[str, Any]] = sorted(image_urls, key=lambda x: x['score'], reverse=True)
+        sorted_images: list[dict[str, Any]] = sorted(image_urls, key=lambda x: x["score"], reverse=True)
 
         # Select all images with score 3 and 2, then add score 1 images up to a total of 10
-        high_score_images: list[dict[str, Any]] = [img for img in sorted_images if img['score'] in [3, 2]]
-        low_score_images: list[dict[str, Any]] = [img for img in sorted_images if img['score'] == 1]
+        high_score_images: list[dict[str, Any]] = [img for img in sorted_images if img["score"] in [3, 2]]
+        low_score_images: list[dict[str, Any]] = [img for img in sorted_images if img["score"] == 1]
 
-        result: list[dict[str, Any]] = high_score_images + low_score_images[:max(0, 10 - len(high_score_images))]
+        result: list[dict[str, Any]] = high_score_images + low_score_images[: max(0, 10 - len(high_score_images))]
         return result[:10]  # Ensure we don't return more than 10 images in total
 
     except Exception as e:
         logging.error(f"Error in get_relevant_images: {e.__class__.__name__}: {e}")
         return []
 
+
 def parse_dimension(value: str) -> int | None:
     """Parse dimension value, handling px units"""
-    if value.lower().endswith('px'):
+    if value.lower().endswith("px"):
         value = value[:-2]  # Remove 'px' suffix
     try:
         return int(value)  # Convert to float first to handle decimal values
@@ -71,9 +73,11 @@ def parse_dimension(value: str) -> int | None:
         print(f"Error parsing dimension value {value}: {e.__class__.__name__}: {e}")
         return None
 
+
 def extract_title(soup: BeautifulSoup) -> str:
     """Extract the title from the BeautifulSoup object"""
     return str(soup.title.string) if soup.title else ""
+
 
 def get_image_hash(image_url: str) -> str | None:
     """Calculate a simple hash based on the image filename and essential query parameters."""
@@ -81,14 +85,14 @@ def get_image_hash(image_url: str) -> str | None:
         parsed_url: ParseResult = urlparse(image_url)
 
         # Extract the filename
-        filename: str = parsed_url.path.split('/')[-1]
+        filename: str = parsed_url.path.split("/")[-1]
 
         # Extract essential query parameters (e.g., 'url' for CDN-served images)
         query_params: dict[str, list[str]] = parse_qs(parsed_url.query)
-        essential_params: list[str] = query_params.get('url', [])
+        essential_params: list[str] = query_params.get("url", [])
 
         # Combine filename and essential parameters
-        image_identifier: str = filename + ''.join(essential_params)
+        image_identifier: str = filename + "".join(essential_params)
 
         # Calculate hash
         return hashlib.md5(image_identifier.encode()).hexdigest()

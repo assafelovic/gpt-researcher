@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
 import asyncio
-import aiofiles
 import importlib
 import importlib.util
 import json
@@ -11,9 +9,12 @@ import subprocess
 import sys
 import traceback
 
-from colorama import Fore, Style, init
 from enum import Enum
+from typing import TYPE_CHECKING, Any
 
+import aiofiles
+
+from colorama import Fore, Style, init
 
 if TYPE_CHECKING:
     from fastapi import WebSocket

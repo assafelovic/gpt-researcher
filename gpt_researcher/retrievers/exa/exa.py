@@ -1,35 +1,38 @@
+from __future__ import annotations
+
 import os
+from typing import Any
+
 from ..utils import check_pkg
 
 
 class ExaSearch:
-    """
-    Exa API Retriever
-    """
+    """Exa API Retriever."""
 
-    def __init__(self, query):
-        """
-        Initializes the ExaSearch object.
+    def __init__(self, query: str):
+        """Initializes the ExaSearch object.
+
         Args:
-            query: The search query.
+            query (str): The search query.
         """
         # This validation is necessary since exa_py is optional
         check_pkg("exa_py")
         from exa_py import Exa
-        self.query = query
-        self.api_key = self._retrieve_api_key()
-        self.client = Exa(api_key=self.api_key)
+        self.query: str = query
+        self.api_key: str = self._retrieve_api_key()
+        self.client: Exa = Exa(api_key=self.api_key)
 
-    def _retrieve_api_key(self):
-        """
-        Retrieves the Exa API key from environment variables.
+    def _retrieve_api_key(self) -> str:
+        """Retrieves the Exa API key from environment variables.
+
         Returns:
-            The API key.
+            str: The API key.
+
         Raises:
             Exception: If the API key is not found.
         """
         try:
-            api_key = os.environ["EXA_API_KEY"]
+            api_key: str = os.environ["EXA_API_KEY"]
         except KeyError:
             raise Exception(
                 "Exa API key not found. Please set the EXA_API_KEY environment variable. "
@@ -38,19 +41,24 @@ class ExaSearch:
         return api_key
 
     def search(
-        self, max_results=10, use_autoprompt=False, search_type="neural", **filters
-    ):
-        """
-        Searches the query using the Exa API.
+        self,
+        max_results: int = 10,
+        use_autoprompt: bool = False,
+        search_type: str = "neural",
+        **filters: Any,
+    ) -> list[dict[str, Any]]:
+        """Searches the query using the Exa API.
+
         Args:
-            max_results: The maximum number of results to return.
-            use_autoprompt: Whether to use autoprompting.
-            search_type: The type of search (e.g., "neural", "keyword").
-            **filters: Additional filters (e.g., date range, domains).
+            max_results (int): The maximum number of results to return.
+            use_autoprompt (bool): Whether to use autoprompting.
+            search_type (str): The type of search (e.g., "neural", "keyword").
+            **filters (Any): Additional filters (e.g., date range, domains).
+
         Returns:
-            A list of search results.
+            list[dict[str, Any]]: A list of search results.
         """
-        results = self.client.search(
+        results: ExaSearchResults = self.client.search(
             self.query,
             type=search_type,
             use_autoprompt=use_autoprompt,
@@ -58,42 +66,45 @@ class ExaSearch:
             **filters
         )
 
-        search_response = [
+        search_response: list[dict[str, Any]] = [
             {"href": result.url, "body": result.text} for result in results.results
         ]
         return search_response
 
-    def find_similar(self, url, exclude_source_domain=False, **filters):
-        """
-        Finds similar documents to the provided URL using the Exa API.
+    def find_similar(self, url: str, exclude_source_domain: bool = False, **filters: Any) -> list[dict[str, Any]]:
+        """Finds similar documents to the provided URL using the Exa API.
+
         Args:
             url: The URL to find similar documents for.
             exclude_source_domain: Whether to exclude the source domain in the results.
             **filters: Additional filters.
+
         Returns:
-            A list of similar documents.
+            list[dict[str, Any]]: A list of similar documents.
         """
-        results = self.client.find_similar(
+        results: ExaSearchResults = self.client.find_similar(
             url, exclude_source_domain=exclude_source_domain, **filters
         )
 
-        similar_response = [
+        similar_response: list[dict[str, Any]] = [
             {"href": result.url, "body": result.text} for result in results.results
         ]
         return similar_response
 
-    def get_contents(self, ids, **options):
-        """
-        Retrieves the contents of the specified IDs using the Exa API.
+    def get_contents(self, ids: list[str], **options: Any) -> list[dict[str, Any]]:
+        """Retrieves the contents of the specified IDs using the Exa API.
+
         Args:
             ids: The IDs of the documents to retrieve.
             **options: Additional options for content retrieval.
-        Returns:
-            A list of document contents.
-        """
-        results = self.client.get_contents(ids, **options)
 
-        contents_response = [
-            {"id": result.id, "content": result.text} for result in results.results
+        Returns:
+            list[dict[str, Any]]: A list of document contents.
+        """
+        results: Any = self.client.get_contents(ids, **options)
+
+        contents_response: list[dict[str, Any]] = [
+            {"id": result.id, "content": result.text}
+            for result in results.results
         ]
         return contents_response

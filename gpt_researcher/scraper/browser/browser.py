@@ -1,37 +1,39 @@
 from __future__ import annotations
 
-import traceback
+import os
 import pickle
-from pathlib import Path
-from sys import platform
-import time
 import random
 import string
-import os
+import time
+import traceback
+
+from pathlib import Path
+from sys import platform
+from typing import Any
+
+import requests
 
 from bs4 import BeautifulSoup
 
-from .processing.scrape_skills import (scrape_pdf_with_pymupdf,
-                                       scrape_pdf_with_arxiv)
-
-from urllib.parse import urljoin
+from gpt_researcher.scraper.browser.processing.scrape_skills import scrape_pdf_with_arxiv, scrape_pdf_with_pymupdf
+from gpt_researcher.scraper.utils import extract_title, get_relevant_images
 
 FILE_DIR = Path(__file__).parent.parent
 
-from ..utils import get_relevant_images, extract_title
-
 
 class BrowserScraper:
-    def __init__(self, url: str, session=None):
-        self.url = url
-        self.session = session
-        self.selenium_web_browser = "chrome"
-        self.headless = False
-        self.user_agent = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                           "AppleWebKit/537.36 (KHTML, like Gecko) "
-                           "Chrome/128.0.0.0 Safari/537.36")
-        self.driver = None
-        self.use_browser_cookies = False
+    def __init__(
+        self,
+        url: str,
+        session: requests.Session | None = None,
+    ):
+        self.url: str = url
+        self.session: requests.Session | None = session
+        self.selenium_web_browser: str = "chrome"
+        self.headless: bool = False
+        self.user_agent: str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " "AppleWebKit/537.36 (KHTML, like Gecko) " "Chrome/128.0.0.0 Safari/537.36"
+        self.driver: webdriver.WebDriver | None = None
+        self.use_browser_cookies: bool = False
         self._import_selenium()  # Import only if used to avoid unnecessary dependencies
         self.cookie_filename = f"{self._generate_random_string(8)}.pkl"
 
@@ -46,13 +48,16 @@ class BrowserScraper:
             self._load_saved_cookies()
             self._add_header()
 
+            text: str
+            image_urls: list[dict[str, Any]]
+            title: str
             text, image_urls, title = self.scrape_text_with_selenium()
             return text, image_urls, title
         except Exception as e:
-            print(f"An error occurred during scraping: {str(e)}")
+            print(f"An error occurred during scraping: {e.__class__.__name__}: {e}")
             print("Full stack trace:")
             print(traceback.format_exc())
-            return f"An error occurred: {str(e)}\n\nStack trace:\n{traceback.format_exc()}", [], ""
+            return f"An error occurred: {e.__class__.__name__}: {e}\n\nStack trace:\n{traceback.format_exc()}", [], ""
         finally:
             if self.driver:
                 self.driver.quit()
@@ -62,10 +67,10 @@ class BrowserScraper:
         try:
             global webdriver, By, EC, WebDriverWait, TimeoutException, WebDriverException
             from selenium import webdriver
+            from selenium.common.exceptions import TimeoutException, WebDriverException
             from selenium.webdriver.common.by import By
             from selenium.webdriver.support import expected_conditions as EC
             from selenium.webdriver.support.wait import WebDriverWait
-            from selenium.common.exceptions import TimeoutException, WebDriverException
 
             global ChromeOptions, FirefoxOptions, SafariOptions
             from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -77,8 +82,7 @@ class BrowserScraper:
             print("You can install Selenium using pip:")
             print("    pip install selenium")
             print("If you're using a virtual environment, make sure it's activated.")
-            raise ImportError(
-                "Selenium is required but not installed. See error message above for installation instructions.") from e
+            raise ImportError("Selenium is required but not installed. See error message above for installation instructions.") from e
 
     def setup_driver(self) -> None:
         # print(f"Setting up {self.selenium_web_browser} driver...")
@@ -145,7 +149,7 @@ class BrowserScraper:
             return
 
         for cookie in cookies:
-            self.driver.add_cookie({'name': cookie.name, 'value': cookie.value, 'domain': cookie.domain})
+            self.driver.add_cookie({"name": cookie.name, "value": cookie.value, "domain": cookie.domain})
 
     def _cleanup_cookie_file(self):
         """Remove the cookie file"""
@@ -160,14 +164,15 @@ class BrowserScraper:
 
     def _generate_random_string(self, length):
         """Generate a random string of specified length"""
-        return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+        return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
     def _get_domain(self):
         """Extract domain from URL"""
         from urllib.parse import urlparse
+
         """Get domain from URL, removing 'www' if present"""
         domain = urlparse(self.url).netloc
-        return domain[4:] if domain.startswith('www.') else domain
+        return domain[4:] if domain.startswith("www.") else domain
 
     def _visit_google_and_save_cookies(self):
         """Visit Google and save cookies before navigating to the target URL"""
@@ -189,77 +194,75 @@ class BrowserScraper:
         self.driver.get(self.url)
 
         try:
-            WebDriverWait(self.driver, 20).until(
-                EC.presence_of_element_located((By.TAG_NAME, "body"))
-            )
+            WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
         except TimeoutException as e:
-            print("Timed out waiting for page to load")
+            print(f"Timed out waiting for page to load: {e.__class__.__name__}: {e}")
             print(f"Full stack trace:\n{traceback.format_exc()}")
             return "Page load timed out", [], ""
 
         self._scroll_to_bottom()
 
-        if self.url.endswith(".pdf"):
-            text = scrape_pdf_with_pymupdf(self.url)
+        if self.url.casefold().endswith(".pdf"):
+            text: str = scrape_pdf_with_pymupdf(self.url)
             return text, [], ""
         elif "arxiv" in self.url:
-            doc_num = self.url.split("/")[-1]
-            text = scrape_pdf_with_arxiv(doc_num)
+            doc_num: str = self.url.split("/")[-1]
+            text: str = scrape_pdf_with_arxiv(doc_num)
             return text, [], ""
         else:
-            page_source = self.driver.execute_script("return document.body.outerHTML;")
-            soup = BeautifulSoup(page_source, "html.parser")
+            page_source: str = self.driver.execute_script("return document.body.outerHTML;")
+            soup: BeautifulSoup = BeautifulSoup(page_source, "html.parser")
 
             for script in soup(["script", "style"]):
                 script.extract()
 
             text = self.get_text(soup)
-            image_urls = get_relevant_images(soup, self.url)
+            image_urls: list[dict[str, Any]] = get_relevant_images(soup, self.url)
             title = extract_title(soup)
 
-        lines = (line.strip() for line in text.splitlines())
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-        text = "\n".join(chunk for chunk in chunks if chunk)
+        lines: list[str] = [line.strip() for line in text.splitlines()]
+        chunks: list[str] = [phrase.strip() for line in lines for phrase in line.split("  ")]
+        text: str = "\n".join(chunk for chunk in chunks if chunk)
         return text, image_urls, title
 
     def get_text(self, soup: BeautifulSoup) -> str:
         """Get the relevant text from the soup with improved filtering"""
-        text_elements = []
-        tags = ["h1", "h2", "h3", "h4", "h5", "p", "li", "div", "span"]
+        text_elements: list[str] = []
+        tags: list[str] = ["h1", "h2", "h3", "h4", "h5", "p", "li", "div", "span"]
 
         for element in soup.find_all(tags):
             # Skip empty elements
-            if not element.text.strip():
+            if not str(element.text).strip():
                 continue
 
             # Skip elements with very short text (likely buttons or links)
-            if len(element.text.split()) < 3:
+            if len(str(element.text).split()) < 3:
                 continue
 
             # Check if the element is likely to be navigation or a menu
-            parent_classes = element.parent.get('class', [])
-            if any(cls in ['nav', 'menu', 'sidebar', 'footer'] for cls in parent_classes):
+            parent_classes = element.parent.get("class", [])
+            if parent_classes is not None and any(cls in {"nav", "menu", "sidebar", "footer"} for cls in parent_classes):
                 continue
 
             # Remove excess whitespace and join lines
-            cleaned_text = ' '.join(element.text.split())
+            cleaned_text: str = " ".join(str(element.text).split())
 
             # Add the cleaned text to our list of elements
             text_elements.append(cleaned_text)
 
         # Join all text elements with newlines
-        return '\n\n'.join(text_elements)
+        return "\n\n".join(text_elements)
 
     def _scroll_to_bottom(self):
         """Scroll to the bottom of the page to load all content"""
-        last_height = self.driver.execute_script("return document.body.scrollHeight")
+        last_height: int = int(self.driver.execute_script("return document.body.scrollHeight"))
         while True:
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)  # Wait for content to load
-            new_height = self.driver.execute_script("return document.body.scrollHeight")
+            new_height: int = int(self.driver.execute_script("return document.body.scrollHeight"))
             if new_height == last_height:
                 break
-            last_height = new_height
+            last_height: int = new_height
 
     def _scroll_to_percentage(self, ratio: float) -> None:
         """Scroll to a percentage of the page"""

@@ -62,9 +62,7 @@ class ResearchProgress:
     ):
         self.current_depth: int = 1  # Start from 1 and increment up to total_depth
         self.total_depth: int = total_depth
-        self.current_breadth: int = (
-            0  # Start from 0 and count up to total_breadth as queries complete
-        )
+        self.current_breadth: int = 0  # Start from 0 and count up to total_breadth as queries complete
         self.total_breadth: int = total_breadth
         self.current_query: str | None = None
         self.total_queries: int = 0
@@ -77,12 +75,12 @@ class DeepResearchSkill:
         researcher: GPTResearcher,
     ):
         self.researcher: GPTResearcher = researcher
-        self.breadth: int = getattr(researcher.cfg, 'deep_research_breadth', 4)
-        self.depth: int = getattr(researcher.cfg, 'deep_research_depth', 2)
-        self.concurrency_limit: int = getattr(researcher.cfg, 'deep_research_concurrency', 2)
+        self.breadth: int = getattr(researcher.cfg, "deep_research_breadth", 4)
+        self.depth: int = getattr(researcher.cfg, "deep_research_depth", 2)
+        self.concurrency_limit: int = getattr(researcher.cfg, "deep_research_concurrency", 2)
         self.websocket: WebSocket | CustomLogsHandler | None = researcher.websocket
         self.tone: Tone | str = researcher.tone
-        self.config_path: str | None = researcher.cfg.config_path if hasattr(researcher.cfg, 'config_path') else None
+        self.config_path: str | None = researcher.cfg.config_path if hasattr(researcher.cfg, "config_path") else None
         self.headers: dict[str, Any] = researcher.headers or {}
         self.visited_urls: set[str] = researcher.visited_urls
         self.learnings: list[str] = []
@@ -114,21 +112,21 @@ class DeepResearchSkill:
             llm_provider=self.researcher.cfg.strategic_llm_provider,
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=ReasoningEfforts.Medium.value,
-            temperature=0.4
+            temperature=0.4,
         )
 
-        lines: list[str] = response.split('\n')
+        lines: list[str] = response.split("\n")
         queries: list[dict[str, str]] = []
         current_query: dict[str, str] = {}
 
         for line in lines:
             line: str = line.strip()
-            if line.startswith('Query:'):
+            if line.startswith("Query:"):
                 if current_query:
                     queries.append(current_query)
-                current_query = {'query': line.replace('Query:', '').strip()}
-            elif line.startswith('Goal:') and current_query:
-                current_query['researchGoal'] = line.replace('Goal:', '').strip()
+                current_query = {"query": line.replace("Query:", "").strip()}
+            elif line.startswith("Goal:") and current_query:
+                current_query["researchGoal"] = line.replace("Goal:", "").strip()
 
         if current_query:
             queries.append(current_query)
@@ -145,9 +143,7 @@ class DeepResearchSkill:
             num_questions = 3
 
         # Get initial search results to inform query generation
-        search_results: list[dict[str, Any]] = await get_search_results(
-            query, self.researcher.retrievers[0]
-        )
+        search_results: list[dict[str, Any]] = await get_search_results(query, self.researcher.retrievers[0])
         logger.info(f"Initial web knowledge obtained: {len(search_results)} results")
 
         # Get current time for context
@@ -178,14 +174,10 @@ Format each question on a new line starting with 'Question: '""",
             llm_provider=self.researcher.cfg.strategic_llm_provider,
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=ReasoningEfforts.High.value,
-            temperature=0.4
+            temperature=0.4,
         )
 
-        questions: list[str] = [
-            q.replace("Question:", "").strip()
-            for q in response.split("\n")
-            if q.strip().startswith("Question:")
-        ]
+        questions: list[str] = [q.replace("Question:", "").strip() for q in response.split("\n") if q.strip().startswith("Question:")]
         return questions[:num_questions]
 
     async def process_research_results(
@@ -215,7 +207,7 @@ Format each question on a new line starting with 'Question: '""",
             model=self.researcher.cfg.strategic_llm_model,
             temperature=0.4,
             reasoning_effort=ReasoningEfforts.High.value,
-            max_tokens=1000
+            max_tokens=1000,
         )
 
         lines: list[str] = response.split("\n")
@@ -345,15 +337,11 @@ Format each question on a new line starting with 'Question: '""",
                     }
 
                 except Exception as e:
-                    logger.error(
-                        f"Error processing query '{serp_query['query']}': {str(e)}"
-                    )
+                    logger.error(f"Error processing query '{serp_query['query']}': {str(e)}")
                     return None
 
         # Process queries concurrently with limit
-        tasks: list[Coroutine[Any, Any, dict[str, Any] | None]] = [
-            process_query(query) for query in serp_queries
-        ]
+        tasks: list[Coroutine[Any, Any, dict[str, Any] | None]] = [process_query(query) for query in serp_queries]
         results: list[dict[str, Any] | None] = await asyncio.gather(*tasks)
         filtered_results: list[dict[str, Any]] = [r for r in results if r is not None]
 
@@ -433,9 +421,7 @@ Format each question on a new line starting with 'Question: '""",
 
         combined_query: str = f"""
 Initial Query: {self.researcher.query}\nFollow - up Questions and Answers:\n
-""" + "\n".join(
-            f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers)
-        )
+""" + "\n".join(f"Q: {q}\nA: {a}" for q, a in zip(follow_up_questions, answers))
 
         results: dict[str, Any] = await self.deep_research(
             query=combined_query,

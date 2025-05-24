@@ -1,25 +1,33 @@
+from __future__ import annotations
+
 import json
 import re
+
+from typing import Any, Callable
+
 import json_repair
-from ..utils.llm import create_chat_completion
-from ..prompts import PromptFamily
+
+from gpt_researcher.prompts import PromptFamily
+from gpt_researcher.utils.llm import create_chat_completion
+
 
 async def choose_agent(
-    query,
     cfg,
-    parent_query=None,
-    cost_callback: callable = None,
-    headers=None,
+    query: str,
+    parent_query: str | None = None,
+    cost_callback: Callable[[str], None] | None = None,
+    headers: dict[str, str] | None = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
-):
-    """
-    Chooses the agent automatically
+) -> tuple[str, str]:
+    """Chooses the agent automatically.
+
     Args:
-        parent_query: In some cases the research is conducted on a subtopic from the main query.
-        The parent query allows the agent to know the main context for better reasoning.
         query: original query
-        cfg: Config
+        cfg: Config object
+        parent_query: In some cases the research is conducted on a subtopic from the main query.
+            The parent query allows the agent to know the main context for better reasoning.
         cost_callback: callback for calculating llm costs
+        headers: headers for the llm request
         prompt_family: Family of prompts
 
     Returns:
@@ -27,7 +35,7 @@ async def choose_agent(
         agent_role_prompt: Agent role prompt
     """
     query = f"{parent_query} - {query}" if parent_query else f"{query}"
-    response = None  # Initialize response to ensure it's defined
+    response: str | None = None  # Initialize response to ensure it's defined
 
     try:
         response = await create_chat_completion(
@@ -42,29 +50,29 @@ async def choose_agent(
             cost_callback=cost_callback,
         )
 
-        agent_dict = json.loads(response)
+        agent_dict: dict[str, Any] = json.loads(response)
         return agent_dict["server"], agent_dict["agent_role_prompt"]
 
     except Exception as e:
-        print("⚠️ Error in reading JSON, attempting to repair JSON")
+        print(f"⚠️ Error in reading JSON, attempting to repair JSON! {e.__class__.__name__}: {e}")
         return await handle_json_error(response)
 
 
-async def handle_json_error(response):
+async def handle_json_error(response: str | None) -> tuple[str, str]:
     try:
-        agent_dict = json_repair.loads(response)
-        if agent_dict.get("server") and agent_dict.get("agent_role_prompt"):
-            return agent_dict["server"], agent_dict["agent_role_prompt"]
+        agent_dict: dict[str, Any] = json_repair.loads(response)
+        if agent_dict.get("server") and agent_dict.get("agent_role_prompt"):  # pyright: ignore[reportAttributeAccessIssue]
+            return agent_dict["server"], agent_dict["agent_role_prompt"]  # pyright: ignore[reportCallIssue, reportIndexIssue, reportOptionalSubscript]
     except Exception as e:
-        print(f"Error using json_repair: {e}")
+        print(f"Error using json_repair: {e.__class__.__name__}: {e}")
 
-    json_string = extract_json_with_regex(response)
-    if json_string:
+    json_string: str | None = extract_json_with_regex(response)
+    if json_string is not None:
         try:
-            json_data = json.loads(json_string)
+            json_data: dict[str, Any] = json.loads(json_string)
             return json_data["server"], json_data["agent_role_prompt"]
         except json.JSONDecodeError as e:
-            print(f"Error decoding JSON: {e}")
+            print(f"Error decoding JSON: {e.__class__.__name__}: {e}")
 
     print("No JSON found in the string. Falling back to Default Agent.")
     return "Default Agent", (
@@ -73,8 +81,18 @@ async def handle_json_error(response):
     )
 
 
-def extract_json_with_regex(response):
-    json_match = re.search(r"{.*?}", response, re.DOTALL)
-    if json_match:
+def extract_json_with_regex(response: str | None) -> str | None:
+    """Extract JSON with regex from the response.
+
+    Args:
+        response (str | None): The response to extract JSON from.
+
+    Returns:
+        str | None: The extracted JSON.
+    """
+    if response is None:
+        return None
+    json_match: re.Match[str] | None = re.search(r"{.*?}", response, re.DOTALL)
+    if json_match is not None:
         return json_match.group(0)
     return None

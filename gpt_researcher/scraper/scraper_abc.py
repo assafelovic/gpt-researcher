@@ -16,7 +16,7 @@ class BaseScraperABC(ABC):
     def scrape(self) -> tuple[str, list[dict[str, Any]], str]: ...
 
 
-# TODO: Finish this improved cls
+# TODO: Finish this improved class
 class BaseScraper(BaseScraperABC):
     """Base class for all scrapers."""
 

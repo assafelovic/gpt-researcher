@@ -3,11 +3,13 @@ from __future__ import annotations
 import json
 import os
 import warnings
-from typing import Any, List, Union, get_origin, get_args, ClassVar
+
+from typing import Any, ClassVar, List, Union, get_args, get_origin
 
 from llm_fallbacks.config import LiteLLMBaseModelSpec
-from gpt_researcher.config.variables.default import DEFAULT_CONFIG
+
 from gpt_researcher.config.variables.base import BaseConfig
+from gpt_researcher.config.variables.default import DEFAULT_CONFIG
 from gpt_researcher.retrievers.utils import get_all_retriever_names
 
 
@@ -24,21 +26,13 @@ class Config:
         self.config_path: str | None = config_path
         self.llm_kwargs: dict[str, Any] = {}
         self.embedding_kwargs: dict[str, Any] = {}
-        self.embedding: str = ""
-        self.embedding_fallbacks: str = ""
-        self.fast_llm: str = ""
-        self.smart_llm: str = ""
-        self.strategic_llm: str = ""
-        self.fast_llm_fallbacks: str = ""
-        self.smart_llm_fallbacks: str = ""
-        self.strategic_llm_fallbacks: str = ""
 
         config_to_use: BaseConfig = self.load_config(config_path)
         self._set_attributes(config_to_use)
         self._set_embedding_attributes()
         self._set_llm_attributes()
         self._handle_deprecated_attributes()
-        if config_to_use['REPORT_SOURCE'] != 'web':
+        if config_to_use["REPORT_SOURCE"] != "web":
             self._set_doc_path(config_to_use)
 
     def _set_attributes(
@@ -49,7 +43,7 @@ class Config:
             env_value: str | None = os.getenv(key)
             if env_value is not None:
                 value: Any = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
-            setattr(self, key.lower(), value)
+            setattr(self, key.casefold(), value)
             setattr(self, key.upper(), value)
 
         # Handle RETRIEVER with default value
@@ -61,26 +55,24 @@ class Config:
             self.retrievers = ["tavily"]
 
     def _set_embedding_attributes(self) -> None:
-        self.embedding_provider, self.embedding_model = self.parse_embedding(self.embedding)
+        self.embedding_provider, self.embedding_model = self.parse_embedding(self.embedding)  # pyright: ignore[reportAttributeAccessIssue]
 
         # Parse fallbacks for embedding model
-        self.embedding_fallback_list: list[str] = (
-            self.parse_model_fallbacks(
-                self.embedding_fallbacks,
-                "embedding",
-                self.embedding,
-            )
+        self.embedding_fallback_list: list[str] = self.parse_model_fallbacks(
+            self.embedding_fallbacks,  # pyright: ignore[reportAttributeAccessIssue]
+            "embedding",
+            self.embedding,  # pyright: ignore[reportAttributeAccessIssue]
         )
 
     def _set_llm_attributes(self) -> None:
-        self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
-        self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
-        self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
+        self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)  # pyright: ignore[reportAttributeAccessIssue]
+        self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)  # pyright: ignore[reportAttributeAccessIssue]
+        self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)  # pyright: ignore[reportAttributeAccessIssue]
 
         # Parse fallbacks for each LLM type
-        self.fast_llm_fallback_list: list[str] = self.parse_model_fallbacks(self.fast_llm_fallbacks, "chat", self.fast_llm)
-        self.smart_llm_fallback_list: list[str] = self.parse_model_fallbacks(self.smart_llm_fallbacks, "chat", self.smart_llm)
-        self.strategic_llm_fallback_list: list[str] = self.parse_model_fallbacks(self.strategic_llm_fallbacks, "chat", self.strategic_llm)
+        self.fast_llm_fallback_list: list[str] = self.parse_model_fallbacks(self.fast_llm_fallbacks, "chat", self.fast_llm)  # pyright: ignore[reportAttributeAccessIssue]
+        self.smart_llm_fallback_list: list[str] = self.parse_model_fallbacks(self.smart_llm_fallbacks, "chat", self.smart_llm)  # pyright: ignore[reportAttributeAccessIssue]
+        self.strategic_llm_fallback_list: list[str] = self.parse_model_fallbacks(self.strategic_llm_fallbacks, "chat", self.strategic_llm)  # pyright: ignore[reportAttributeAccessIssue]
 
     def _handle_deprecated_attributes(self) -> None:
         if os.getenv("EMBEDDING_PROVIDER") is not None:
@@ -89,9 +81,7 @@ class Config:
                 FutureWarning,
                 stacklevel=2,
             )
-            self.embedding_provider: str | None = (
-                os.environ["EMBEDDING_PROVIDER"] or self.embedding_provider or ""
-            ).strip() or None
+            self.embedding_provider: str | None = (os.environ["EMBEDDING_PROVIDER"] or self.embedding_provider or "").strip() or None
 
             match os.environ["EMBEDDING_PROVIDER"]:
                 case "ollama":
@@ -111,10 +101,7 @@ class Config:
                 case _:
                     raise Exception("Embedding provider not found.")
 
-        _deprecation_warning = (
-            "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
-            "will be removed soon. Use FAST_LLM and SMART_LLM instead."
-        )
+        _deprecation_warning = "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and " "will be removed soon. Use FAST_LLM and SMART_LLM instead."
         if os.getenv("LLM_PROVIDER") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
             self.fast_llm_provider: str | None = (os.environ["LLM_PROVIDER"] or self.fast_llm_provider or "").strip() or None
@@ -127,13 +114,13 @@ class Config:
             self.smart_llm_model: str | None = (os.environ["SMART_LLM_MODEL"] or self.smart_llm_model or "").strip() or None
 
     def _set_doc_path(self, config: dict[str, Any]) -> None:
-        self.doc_path: str = config['DOC_PATH']
+        self.doc_path: str = config["DOC_PATH"]
         if self.doc_path and self.doc_path.strip():
             try:
                 self.validate_doc_path()
             except Exception as e:
                 print(f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
-                self.doc_path = DEFAULT_CONFIG['DOC_PATH']
+                self.doc_path = DEFAULT_CONFIG["DOC_PATH"]
 
     @classmethod
     def load_config(cls, config_path: str | None) -> BaseConfig:
@@ -150,7 +137,7 @@ class Config:
             if config_path.strip().casefold() != "default":
                 print(f"Warning: Configuration not found at '{config_path}'. Using default configuration.")
                 if not config_path.casefold().endswith(".json"):
-                    print(f"Do you mean '{config_path}.json'?")
+                    print(f"Did you mean: '{config_path}.json'?")
             return copied_default_cfg
 
         with open(config_path, "r") as f:
@@ -171,16 +158,11 @@ class Config:
 
     def parse_retrievers(self, retriever_str: str) -> list[str]:
         """Parse the retriever string into a list of retrievers and validate them."""
-        retrievers: list[str] = [
-            retriever.strip() for retriever in retriever_str.strip().split(",")
-        ]
+        retrievers: list[str] = [retriever.strip() for retriever in retriever_str.strip().split(",")]
         valid_retrievers: list[Any] = get_all_retriever_names() or []
         invalid_retrievers: list[str] = [r for r in retrievers if r not in valid_retrievers]
         if invalid_retrievers:
-            raise ValueError(
-                f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. "
-                f"Valid options are: {', '.join(valid_retrievers)}."
-            )
+            raise ValueError(f"Invalid retriever(s) found: {', '.join(invalid_retrievers)}. " f"Valid options are: {', '.join(valid_retrievers)}.")
         return retrievers
 
     @staticmethod
@@ -191,17 +173,11 @@ class Config:
         if llm_str is None:
             return None, None
         try:
-            llm_provider, llm_model = llm_str.strip().split(":", 1)
-            assert llm_provider in _SUPPORTED_PROVIDERS, (
-                f"Unsupported {llm_provider}.\nSupported llm providers are: "
-                + ", ".join(_SUPPORTED_PROVIDERS)
-            )
+            llm_provider, llm_model = llm_str.split(":", 1)
+            assert llm_provider in _SUPPORTED_PROVIDERS, f"Unsupported {llm_provider}.\nSupported llm providers are: " + ", ".join(_SUPPORTED_PROVIDERS)
             return llm_provider, llm_model
         except ValueError:
-            raise ValueError(
-                "Set SMART_LLM or FAST_LLM = '<llm_provider>:<llm_model>' "
-                "Eg 'openai:gpt-4o-mini'"
-            )
+            raise ValueError("Set SMART_LLM or FAST_LLM = '<llm_provider>:<llm_model>' " "e.g. 'openai:gpt-4o-mini'")
 
     @staticmethod
     def parse_embedding(embedding_str: str | None) -> tuple[str | None, str | None]:
@@ -211,19 +187,13 @@ class Config:
         if embedding_str is None:
             return None, None
         try:
-            embedding_provider, embedding_model = embedding_str.strip().split(":", 1)
-            assert embedding_provider in _SUPPORTED_PROVIDERS, (
-                f"Unsupported {embedding_provider}.\nSupported embedding providers are: "
-                + ", ".join(_SUPPORTED_PROVIDERS)
-            )
+            embedding_provider, embedding_model = embedding_str.split(":", 1)
+            assert embedding_provider in _SUPPORTED_PROVIDERS, f"Unsupported {embedding_provider}.\nSupported embedding providers are: " + ", ".join(_SUPPORTED_PROVIDERS)
             return embedding_provider, embedding_model
         except ValueError:
-            raise ValueError(
-                "Set EMBEDDING = '<embedding_provider>:<embedding_model>' "
-                "Eg 'openai:text-embedding-3-large'"
-            )
+            raise ValueError("Set EMBEDDING = '<embedding_provider>:<embedding_model>' " "Eg 'openai:text-embedding-3-large'")
 
-    def validate_doc_path(self) -> None:
+    def validate_doc_path(self):
         """Ensure that the folder exists at the doc path"""
         os.makedirs(self.doc_path, exist_ok=True)
 
@@ -241,7 +211,7 @@ class Config:
             # Handle Union types (e.g., Union[str, None])
             for arg in args:
                 if arg is type(None):
-                    if env_value.lower().strip() in ("none", "null", ""):
+                    if env_value.casefold().strip() in ("none", "null", ""):
                         return None
                 else:
                     try:
@@ -251,7 +221,7 @@ class Config:
             raise ValueError(f"Cannot convert {env_value} to any of {args}")
 
         if type_hint is bool:
-            return env_value.lower().strip() in ("true", "1", "yes", "on")
+            return env_value.casefold().strip() in ("true", "1", "yes", "on")
         elif type_hint is int:
             return int(env_value)
         elif type_hint is float:
@@ -289,7 +259,7 @@ class Config:
             return []
 
         # Check for auto configuration - build fallback list from free models
-        if fallbacks_str.strip().lower() == "auto":
+        if fallbacks_str.strip().casefold() == "auto":
             try:
                 # Import all models and filter for free ones
                 from llm_fallbacks.core import get_litellm_models, sort_models_by_cost_and_limits
@@ -300,6 +270,7 @@ class Config:
                 # For embeddings, we need to get embedding models specifically
                 if model_type == "embedding":
                     from llm_fallbacks.core import get_embedding_models
+
                     all_models = get_embedding_models()
 
                 free_models_list: list[tuple[str, LiteLLMBaseModelSpec]] = sort_models_by_cost_and_limits(all_models, free_only=True)
@@ -313,11 +284,7 @@ class Config:
                 return []
 
         # Parse comma-separated list
-        fallbacks: list[str] = [
-            model.strip()
-            for model in fallbacks_str.split(",")
-            if model.strip()
-        ]
+        fallbacks: list[str] = [model.strip() for model in fallbacks_str.split(",") if model.strip()]
 
         # Remove the primary model from fallbacks if present
         if primary_model in fallbacks:
