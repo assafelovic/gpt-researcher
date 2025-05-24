@@ -9,10 +9,9 @@ from urllib.parse import urljoin
 import requests
 
 
-
+class SearxSearch:
     """SearxNG API Retriever."""
 
-class SearxSearch():
     def __init__(self, query: str):
         """Initializes the SearxSearch object.
 

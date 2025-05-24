@@ -9,7 +9,6 @@ import requests
 
 
 class PubMedCentralSearch:
-
     """PubMed Central API Retriever."""
 
     def __init__(self, query: str):
@@ -41,6 +40,7 @@ class PubMedCentralSearch:
 
         Args:
             max_results: The maximum number of results to return.
+
         Returns:
             A list of search results.
         """
@@ -108,6 +108,7 @@ class PubMedCentralSearch:
 
         Args:
             xml_content: XML content of the article.
+
         Returns:
             Boolean indicating presence of body content.
         """
@@ -135,6 +136,7 @@ class PubMedCentralSearch:
 
         Args:
             xml_content: XML content of the article.
+
         Returns:
             Dictionary containing title, abstract, and body text.
         """

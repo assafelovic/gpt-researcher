@@ -8,13 +8,15 @@ from typing import Any
 import requests
 
 
-
+class SerperSearch:
     """Google Serper Retriever."""
 
-    def __init__(self, query: str):
+    def __init__(
+        self,
+        query: str,
+    ):
         """Initializes the SerperSearch object.
 
-class SerperSearch():
         Args:
             query (str): The query to search for.
         """
@@ -29,10 +31,13 @@ class SerperSearch():
         """
         api_key: str | None = os.environ.get("SERPER_API_KEY")
         if not api_key or not api_key.strip():
-            raise Exception("Serper API key not found. Please set the SERPER_API_KEY environment variable. " "You can get a key at https://serper.dev/")
+            raise Exception("Serper API key not found. Please set the SERPER_API_KEY environment variable. You can get a key at https://serper.dev/")
         return api_key
 
-    def search(self, max_results: int = 7) -> list[dict[str, Any]]:
+    def search(
+        self,
+        max_results: int = 7,
+    ) -> list[dict[str, Any]]:
         """Searches the query.
 
         Args:
@@ -57,7 +62,8 @@ class SerperSearch():
             raise Exception(f"Error: {resp.status_code} {resp.text}")
         try:
             search_results: dict[str, Any] = json.loads(resp.text)
-        except Exception:
+        except Exception as e:
+            print(f"Error: {e.__class__.__name__}: {e}. Failed fetching sources. Resulting in empty response.")
             raise Exception(f"Error: {resp.text}")
 
         results: list[dict[str, Any]] = search_results.get("organic", [])

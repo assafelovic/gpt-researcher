@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import os
-from typing import Any
 
-from ..utils import check_pkg
+from typing import TYPE_CHECKING, Any
+
+from gpt_researcher.retrievers.utils import check_pkg
+
+if TYPE_CHECKING:
+    from exa_py.api import Result, SearchResponse
 
 
 class ExaSearch:
@@ -18,6 +22,7 @@ class ExaSearch:
         # This validation is necessary since exa_py is optional
         check_pkg("exa_py")
         from exa_py import Exa
+
         self.query: str = query
         self.api_key: str = self._retrieve_api_key()
         self.client: Exa = Exa(api_key=self.api_key)
@@ -34,10 +39,7 @@ class ExaSearch:
         try:
             api_key: str = os.environ["EXA_API_KEY"]
         except KeyError:
-            raise Exception(
-                "Exa API key not found. Please set the EXA_API_KEY environment variable. "
-                "You can obtain your key from https://exa.ai/"
-            )
+            raise Exception("Exa API key not found. Please set the EXA_API_KEY environment variable. " "You can obtain your key from https://exa.ai/")
         return api_key
 
     def search(
@@ -58,20 +60,23 @@ class ExaSearch:
         Returns:
             list[dict[str, Any]]: A list of search results.
         """
-        results: ExaSearchResults = self.client.search(
+        results: SearchResponse[Result] = self.client.search(
             self.query,
             type=search_type,
             use_autoprompt=use_autoprompt,
             num_results=max_results,
-            **filters
+            **filters,
         )
 
-        search_response: list[dict[str, Any]] = [
-            {"href": result.url, "body": result.text} for result in results.results
-        ]
+        search_response: list[dict[str, Any]] = [{"href": result.url, "body": result.text or ""} for result in results.results]
         return search_response
 
-    def find_similar(self, url: str, exclude_source_domain: bool = False, **filters: Any) -> list[dict[str, Any]]:
+    def find_similar(
+        self,
+        url: str,
+        exclude_source_domain: bool = False,
+        **filters: Any,
+    ) -> list[dict[str, Any]]:
         """Finds similar documents to the provided URL using the Exa API.
 
         Args:
@@ -82,13 +87,13 @@ class ExaSearch:
         Returns:
             list[dict[str, Any]]: A list of similar documents.
         """
-        results: ExaSearchResults = self.client.find_similar(
-            url, exclude_source_domain=exclude_source_domain, **filters
+        results: SearchResponse[Result] = self.client.find_similar(
+            url,
+            exclude_source_domain=exclude_source_domain,
+            **filters,
         )
 
-        similar_response: list[dict[str, Any]] = [
-            {"href": result.url, "body": result.text} for result in results.results
-        ]
+        similar_response: list[dict[str, Any]] = [{"href": result.url, "body": result.text or ""} for result in results.results]
         return similar_response
 
     def get_contents(self, ids: list[str], **options: Any) -> list[dict[str, Any]]:
@@ -101,10 +106,7 @@ class ExaSearch:
         Returns:
             list[dict[str, Any]]: A list of document contents.
         """
-        results: Any = self.client.get_contents(ids, **options)
+        results: SearchResponse[Result] = self.client.get_contents(ids, **options)
 
-        contents_response: list[dict[str, Any]] = [
-            {"id": result.id, "content": result.text}
-            for result in results.results
-        ]
+        contents_response: list[dict[str, Any]] = [{"id": result.id, "content": result.text or ""} for result in results.results]
         return contents_response

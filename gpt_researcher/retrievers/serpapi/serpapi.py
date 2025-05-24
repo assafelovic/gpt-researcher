@@ -11,13 +11,15 @@ from typing import Any
 import requests
 
 
-
+class SerpApiSearch:
     """SerpApi Retriever."""
 
-    def __init__(self, query: str):
+    def __init__(
+        self,
+        query: str,
+    ):
         """Initializes the SerpApiSearch object.
 
-class SerpApiSearch():
         Args:
             query (str): The query to search for.
         """

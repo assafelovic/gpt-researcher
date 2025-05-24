@@ -6,7 +6,6 @@ import requests
 
 
 class SemanticScholarSearch:
-
     """Semantic Scholar API Retriever."""
 
     BASE_URL: ClassVar[str] = "https://api.semanticscholar.org/graph/v1/paper/search"

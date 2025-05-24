@@ -2,11 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
-class Duckduckgo:
-
 from gpt_researcher.retrievers.utils import check_pkg
 
 
+class Duckduckgo:
     """Duckduckgo API Retriever."""
 
     def __init__(self, query: str):

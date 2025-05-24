@@ -14,9 +14,7 @@ from gpt_researcher.actions import (
     table_of_contents,
 )
 from gpt_researcher.config import Config
-from gpt_researcher.llm_provider import GenericLLMProvider
-from gpt_researcher.memory.embeddings import Memory, FallbackMemory
-from gpt_researcher.memory.embeddings import Memory
+from gpt_researcher.memory.embeddings import FallbackMemory, Memory
 from gpt_researcher.prompts import PromptFamily, get_prompt_family
 from gpt_researcher.skills.browser import BrowserManager
 from gpt_researcher.skills.context_manager import ContextManager
@@ -140,8 +138,9 @@ class GPTResearcher:
         self.research_costs: float = 0.0
 
         # Use FallbackMemory if embedding fallbacks are configured
-        if hasattr(self.cfg, 'embedding_fallback_list') and self.cfg.embedding_fallback_list:
+        if hasattr(self.cfg, "embedding_fallback_list") and self.cfg.embedding_fallback_list:
             import logging
+
             logging.info(f"Using {self.cfg.embedding_provider}:{self.cfg.embedding_model} with fallbacks: {', '.join(self.cfg.embedding_fallback_list)}")
             self.memory: Memory = FallbackMemory(
                 self.cfg.embedding_provider,
@@ -179,11 +178,7 @@ class GPTResearcher:
         self.context_manager: ContextManager = ContextManager(self)
         self.scraper_manager: BrowserManager = BrowserManager(self)
         self.source_curator: SourceCurator = SourceCurator(self)
-        self.deep_researcher: DeepResearchSkill | None = (
-            DeepResearchSkill(self)
-            if report_type == ReportType.DeepResearch.value
-            else None
-        )
+        self.deep_researcher: DeepResearchSkill | None = DeepResearchSkill(self) if report_type == ReportType.DeepResearch.value else None
 
     def _process_mcp_configs(self, mcp_configs: list[dict[str, Any]]) -> None:
         """Process MCP configurations from a list of configuration dictionaries.

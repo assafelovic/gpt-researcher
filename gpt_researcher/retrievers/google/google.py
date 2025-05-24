@@ -11,7 +11,7 @@ from typing import Any
 import requests
 
 
-
+class GoogleSearch:
     """Google API Retriever."""
 
     def __init__(
@@ -21,7 +21,6 @@ import requests
     ):
         """Initializes the GoogleSearch object.
 
-class GoogleSearch:
         Args:
             query (str): The query to search for.
             headers (dict[str, Any], optional): The headers to use for the request.
@@ -31,7 +30,7 @@ class GoogleSearch:
         self.api_key: str = self.headers.get("google_api_key") or self.get_api_key()  # Use the passed api_key or fallback to environment variable
         self.cx_key: str = self.headers.get("google_cx_key") or self.get_cx_key()  # Use the passed cx_key or fallback to environment variable
 
-    def get_api_key(self):
+    def get_api_key(self) -> str:
         """Gets the Google API key.
 
         Returns:
@@ -83,9 +82,10 @@ class GoogleSearch:
             return []
         try:
             search_results: dict[str, Any] = json.loads(resp.text)
-        except Exception:
+        except Exception as e:
+            print(f"Error: {e.__class__.__name__}: {e}. Failed fetching sources. Resulting in empty response.")
             return []
-        if search_results is None:
+        if not search_results:
             return []
 
         results: list[dict[str, Any]] = search_results.get("items", [])
@@ -102,7 +102,8 @@ class GoogleSearch:
                     "href": result["link"],
                     "body": result["snippet"],
                 }
-            except Exception:
+            except Exception as e:
+                print(f"Error: {e.__class__.__name__}: {e}. Failed fetching sources. Resulting in empty response.")
                 continue
             search_results_list.append(search_result)
 

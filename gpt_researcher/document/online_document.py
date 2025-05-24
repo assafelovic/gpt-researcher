@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import os
-import aiohttp
 import tempfile
+
 from typing import Any
+
+import aiohttp
 
 from langchain.schema import Document
 from langchain_community.document_loaders import (
@@ -11,12 +15,11 @@ from langchain_community.document_loaders import (
     UnstructuredExcelLoader,
     UnstructuredMarkdownLoader,
     UnstructuredPowerPointLoader,
-    UnstructuredWordDocumentLoader
+    UnstructuredWordDocumentLoader,
 )
 
 
 class OnlineDocumentLoader:
-
     def __init__(self, urls: list[str]):
         self.urls: list[str] = urls
 
@@ -51,7 +54,7 @@ class OnlineDocumentLoader:
                         tmp_file.write(content)
                         tmp_file_path = tmp_file.name
 
-                    return await self._load_document(tmp_file_path, self._get_extension(url).strip('.'))
+                    return await self._load_document(tmp_file_path, self._get_extension(url).strip("."))
         except aiohttp.ClientError as e:
             print(f"Failed to process {url}")
             print(f"{e.__class__.__name__}: {e}")
@@ -61,7 +64,11 @@ class OnlineDocumentLoader:
             print(f"{e.__class__.__name__}: {e}")
             return []
 
-    async def _load_document(self, file_path: str, file_extension: str) -> list[Document]:
+    async def _load_document(
+        self,
+        file_path: str,
+        file_extension: str,
+    ) -> list[Document]:
         ret_data: list[Document] = []
         try:
             loader_dict: dict[str, Any] = {
@@ -73,7 +80,7 @@ class OnlineDocumentLoader:
                 "csv": UnstructuredCSVLoader(file_path, mode="elements"),
                 "xls": UnstructuredExcelLoader(file_path, mode="elements"),
                 "xlsx": UnstructuredExcelLoader(file_path, mode="elements"),
-                "md": UnstructuredMarkdownLoader(file_path)
+                "md": UnstructuredMarkdownLoader(file_path),
             }
 
             loader: Any = loader_dict.get(file_extension, None)

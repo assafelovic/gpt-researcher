@@ -11,7 +11,6 @@ import numpy as np
 import pytesseract
 
 from langchain.schema import Document
-from langchain_core.retrievers import BaseRetriever
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, sync_playwright
 
 from gpt_researcher.utils.logger import get_formatted_logger
@@ -26,7 +25,7 @@ if TYPE_CHECKING:
 logger: logging.Logger = get_formatted_logger(__name__)
 
 
-class BrowserRetriever(BaseRetriever):
+class BrowserRetriever:
     def __init__(
         self,
         headless: bool = True,

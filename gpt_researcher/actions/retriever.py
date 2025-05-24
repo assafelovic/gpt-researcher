@@ -5,9 +5,9 @@ from typing import Any
 from gpt_researcher.config.config import Config
 
 
+def get_retriever(retriever: str) -> Any:
     """Gets the retriever.
 
-def get_retriever(retriever):
     Args:
         retriever: retriever name
 
@@ -75,7 +75,7 @@ def get_retriever(retriever):
     return retriever_cls
 
 
-def get_retrievers(headers, cfg):
+def get_retrievers(headers: dict[str, Any], cfg: Config) -> list[Any]:
     """Determine which retriever(s) to use based on headers, config, or default.
 
     Args:
@@ -86,6 +86,7 @@ def get_retrievers(headers, cfg):
         list: A list of retriever classes to be used for searching.
     """
     # Check headers first for multiple retrievers
+    retrievers: list[str] = [get_default_retriever().__name__]  # use default retriever if no retrievers are found
     if headers.get("retrievers"):
         retrievers = str(headers.get("retrievers", "")).split(",")
     # If not found, check headers for a single retriever
@@ -97,16 +98,13 @@ def get_retrievers(headers, cfg):
     # If not found, check config for a single retriever
     elif cfg.retriever:  # pyright: ignore[reportAttributeAccessIssue]
         retrievers = [cfg.retriever]  # pyright: ignore[reportAttributeAccessIssue]
-    # If still not set, use default retriever
-    else:
-        retrievers = [get_default_retriever().__name__]
 
     # Convert retriever names to actual retriever classes
     # Use get_default_retriever() as a fallback for any invalid retriever names
     return [get_retriever(r) or get_default_retriever() for r in retrievers]
 
 
-def get_default_retriever(retriever):
+def get_default_retriever(retriever: str | None = None) -> Any:
     """Gets the default retriever."""
     from gpt_researcher.retrievers import TavilySearch
 

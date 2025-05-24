@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import os
+
 from typing import Any
 
 import requests
-
 
 
 class CustomRetriever:
@@ -20,11 +20,7 @@ class CustomRetriever:
 
     def _populate_params(self) -> dict[str, Any]:
         """Populates parameters from environment variables prefixed with 'RETRIEVER_ARG_'."""
-        return {
-            key[len("RETRIEVER_ARG_"):].lower(): value
-            for key, value in os.environ.items()
-            if key.startswith("RETRIEVER_ARG_")
-        }
+        return {key[len("RETRIEVER_ARG_") :].lower(): value for key, value in os.environ.items() if key.startswith("RETRIEVER_ARG_")}
 
     def search(self, max_results: int = 5) -> list[dict[str, Any]]:
         """Performs the search using the custom retriever endpoint.
@@ -35,14 +31,14 @@ class CustomRetriever:
         Returns:
             list[dict[str, Any]]: JSON response in the format:
             [
-              {
-                "url": "http://example.com/page1",
-                "raw_content": "Content of page 1"
-              },
-              {
-                "url": "http://example.com/page2",
-                "raw_content": "Content of page 2"
-              }
+                {
+                    "url": "http://example.com/page1",
+                    "raw_content": "Content of page 1",
+                },
+                {
+                    "url": "http://example.com/page2",
+                    "raw_content": "Content of page 2",
+                },
             ]
         """
         try:

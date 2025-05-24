@@ -1,15 +1,18 @@
 # Bing Search Retriever
 
 # libraries
-import os
-from typing import Any
-import requests
+from __future__ import annotations
+
 import json
 import logging
+import os
+
+from typing import Any
+
+import requests
 
 
-class BingSearch():
-
+class BingSearch:
     """Bing Search Retriever."""
 
     def __init__(self, query: str):
@@ -31,8 +34,7 @@ class BingSearch():
         try:
             api_key: str = os.environ["BING_API_KEY"]
         except KeyError:
-            raise Exception(
-                "Bing API key not found. Please set the BING_API_KEY environment variable.")
+            raise Exception("Bing API key not found. Please set the BING_API_KEY environment variable.")
         return api_key
 
     def search(self, max_results: int = 7) -> list[dict[str, Any]]:
@@ -50,10 +52,7 @@ class BingSearch():
         # Search the query
         url: str = "https://api.bing.microsoft.com/v7.0/search"
 
-        headers: dict[str, str] = {
-            'Ocp-Apim-Subscription-Key': self.api_key,
-            'Content-Type': 'application/json'
-        }
+        headers: dict[str, str] = {"Ocp-Apim-Subscription-Key": self.api_key, "Content-Type": "application/json"}
         params: dict[str, Any] = {
             "responseFilter": "Webpages",
             "q": self.query,
@@ -61,7 +60,7 @@ class BingSearch():
             "setLang": "en-GB",
             "textDecorations": False,
             "textFormat": "HTML",
-            "safeSearch": "Strict"
+            "safeSearch": "Strict",
         }
 
         resp: requests.Response | None = requests.get(url, headers=headers, params=params)
@@ -73,10 +72,9 @@ class BingSearch():
             search_results: dict[str, Any] = json.loads(resp.text)
             results: list[dict[str, Any]] = search_results["webPages"]["value"]
         except Exception as e:
-            self.logger.error(
-                f"Error parsing Bing search results: {e.__class__.__name__}: {e}. Resulting in empty response.")
+            self.logger.error(f"Error parsing Bing search results: {e.__class__.__name__}: {e}. Resulting in empty response.")
             return []
-        if search_results is None:
+        if not search_results:
             self.logger.warning(f"No search results found for query: {self.query}")
             return []
         search_results_list: list[dict[str, Any]] = []

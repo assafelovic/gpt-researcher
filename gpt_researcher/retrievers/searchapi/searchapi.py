@@ -11,13 +11,15 @@ from typing import Any
 import requests
 
 
-
+class SearchApiSearch:
     """SearchApi Retriever."""
 
-    def __init__(self, query: str):
+    def __init__(
+        self,
+        query: str,
+    ):
         """Initializes the SearchApiSearch object.
 
-class SearchApiSearch():
         Args:
             query (str): The query to search for.
         """
@@ -48,7 +50,7 @@ class SearchApiSearch():
         Returns:
             list[dict[str, Any]]: The search results.
         """
-        print("SearchApiSearch: Searching with query {0}...".format(self.query))
+        print(f"SearchApiSearch: Searching with query {self.query}...")
         """Useful for general internet search queries using SearchApi."""
 
         url: str = "https://www.searchapi.io/api/v1/search"
@@ -63,7 +65,7 @@ class SearchApiSearch():
             "X-SearchApi-Source": "gpt-researcher",
         }
 
-        encoded_url: str = url + "?" + urllib.parse.urlencode(params)
+        encoded_url: str = f"{url}?{urllib.parse.urlencode(params)}"
         search_response: list[dict[str, Any]] = []
 
         try:
