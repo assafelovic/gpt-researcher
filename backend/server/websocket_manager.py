@@ -15,7 +15,7 @@ from backend.report_type import BasicReport, DetailedReport
 from backend.server.server_utils import CustomLogsHandler
 
 if TYPE_CHECKING:
-    from fastapi import WebSocket
+    from gpt_researcher.agent import GPTResearcher
 
 
 class WebSocketManager:
@@ -35,33 +35,48 @@ class WebSocketManager:
             return
 
         while True:
-            message: str | None = await queue.get()
-            if websocket in self.active_connections:
-                try:
+            try:
+                message: str | None = await queue.get()
+                if message is None:  # Shutdown signal
+                    break
+
+                if websocket in self.active_connections:
                     if message == "ping":
                         await websocket.send_text("pong")
                     else:
                         await websocket.send_text(message)
-                except Exception:
+                else:
                     break
-            else:
+            except Exception as e:
+                print(f"Error in sender task: {e.__class__.__name__}: {e}")
                 break
 
     async def connect(self, websocket: WebSocket):
         """Connect a websocket."""
-        await websocket.accept()
-        self.active_connections.append(websocket)
-        self.message_queues[websocket] = asyncio.Queue()
-        self.sender_tasks[websocket] = asyncio.create_task(self.start_sender(websocket))
+        try:
+            await websocket.accept()
+            self.active_connections.append(websocket)
+            self.message_queues[websocket] = asyncio.Queue()
+            self.sender_tasks[websocket] = asyncio.create_task(self.start_sender(websocket))
+        except Exception as e:
+            print(f"Error connecting websocket: {e.__class__.__name__}: {e}")
+            if websocket in self.active_connections:
+                await self.disconnect(websocket)
 
     async def disconnect(self, websocket: WebSocket):
         """Disconnect a websocket."""
         if websocket in self.active_connections:
+            if websocket in self.sender_tasks:
+                self.sender_tasks[websocket].cancel()
+                await self.message_queues[websocket].put(None)
+                del self.sender_tasks[websocket]
+            if websocket in self.message_queues:
+                del self.message_queues[websocket]
+            try:
+                await websocket.close()
+            except Exception as e:
+                print(f"Error closing websocket: Connection might already be closed (ignore this error): {e.__class__.__name__}: {e}")
             self.active_connections.remove(websocket)
-            self.sender_tasks[websocket].cancel()
-            await self.message_queues[websocket].put(None)
-            del self.sender_tasks[websocket]
-            del self.message_queues[websocket]
 
     async def start_streaming(
         self,
@@ -73,6 +88,7 @@ class WebSocketManager:
         tone: Tone | str,
         websocket: WebSocket,
         headers: dict[str, str] | None = None,
+        query_domains: list[str] | None = None,
         **kwargs,
     ) -> str:
         """Start streaming the output."""
@@ -89,6 +105,7 @@ class WebSocketManager:
             websocket,
             headers=headers,
             config_path=config_path,
+            query_domains=query_domains,
             **kwargs,
         )
         # Create new Chat Agent whenever a new report is written
@@ -122,8 +139,10 @@ async def run_agent(
     websocket: WebSocket,
     headers: dict[str, str] | None = None,
     config_path: str = "",
-) -> str:
+    query_domains: list[str] | None = None,
+    return_researcher: bool = False,
     **kwargs,
+) -> str | tuple[str, GPTResearcher]:
     """Run the agent."""
     start_time: datetime.datetime = datetime.datetime.now()
 
@@ -152,6 +171,7 @@ async def run_agent(
     elif report_type == ReportType.DetailedReport.value:
         researcher = DetailedReport(
             query=task,
+            query_domains=query_domains,
             report_type=report_type,
             report_source=report_source,
             source_urls=source_urls,
@@ -168,6 +188,7 @@ async def run_agent(
         # which handles deep research through its internal mechanism
         researcher = BasicReport(
             query=task,
+            query_domains=query_domains,
             report_type=report_type,  # Pass the DeepResearch value correctly
             report_source=report_source,
             source_urls=source_urls,
@@ -183,6 +204,7 @@ async def run_agent(
         # For other standard report types (research_report, resource_report, etc.)
         researcher = BasicReport(
             query=task,
+            query_domains=query_domains,
             report_type=report_type,
             report_source=report_source,
             source_urls=source_urls,
@@ -198,4 +220,7 @@ async def run_agent(
     duration: datetime.timedelta = end_time - start_time
     print(f"Research for task: {task} completed in {duration}")
 
-    return report_content
+    if report_type != "multi_agents" and return_researcher:
+        return report_content, researcher.gpt_researcher
+    else:
+        return report_content

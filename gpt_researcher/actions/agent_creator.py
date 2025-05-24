@@ -7,13 +7,14 @@ from typing import Any, Callable
 
 import json_repair
 
+from gpt_researcher.config import Config
 from gpt_researcher.prompts import PromptFamily
 from gpt_researcher.utils.llm import create_chat_completion
 
 
 async def choose_agent(
-    cfg,
     query: str,
+    cfg: Config,
     parent_query: str | None = None,
     cost_callback: Callable[[str], None] | None = None,
     headers: dict[str, str] | None = None,

@@ -11,6 +11,7 @@ class BasicReport:
     def __init__(
         self,
         query: str,
+        query_domains: list[str],
         report_type: ReportType | str,
         report_source: ReportSource | str,
         source_urls: list[str],
@@ -21,6 +22,7 @@ class BasicReport:
         headers: dict[str, Any] | None = None,
     ):
         self.query: str = query
+        self.query_domains: list[str] = query_domains
         self.report_type: ReportType | str = report_type
         self.report_source: ReportSource | str = report_source
         self.source_urls: list[str] = source_urls

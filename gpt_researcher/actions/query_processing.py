@@ -24,11 +24,11 @@ async def get_search_results(
     Args:
         query: The search query
         retriever: The retriever instance
-
+        query_domains: Optional list of domains to search
     Returns:
         A list of search results
     """
-    search_retriever: RetrieverABC = retriever(query)
+    search_retriever: RetrieverABC = retriever(query, query_domains=query_domains)
     return search_retriever.search()  # pyright: ignore[reportCallIssue]  # TODO: actually inherit RetrieverABC everywhere.
 
 
@@ -120,6 +120,7 @@ async def plan_research_outline(
     parent_query: str,
     report_type: str,
     cost_callback: Callable[[float], None] | None = None,
+    retriever_names: list[str] | None = None,
 ) -> list[str]:
     """Plan the research outline by generating sub-queries.
 
@@ -131,10 +132,32 @@ async def plan_research_outline(
         parent_query (str): Parent query
         report_type (str): Report type
         cost_callback (Callable[[float], None] | None): Callback for cost calculation
+        retriever_names (list[str] | None): Names of the retrievers being used
 
     Returns:
         A list of sub-queries
     """
+    retriever_names = [] if retriever_names is None else retriever_names
+
+    # For MCP retrievers, we may want to skip sub-query generation
+    # Check if MCP is the only retriever or one of multiple retrievers
+    if (
+        retriever_names
+        and ("mcp" in retriever_names or "MCPRetriever" in retriever_names)
+    ):
+        mcp_only: bool = (
+            len(retriever_names) == 1
+            and (
+                "mcp" in retriever_names
+                or "MCPRetriever" in retriever_names  # pyright: ignore[dontUnwrapThis]
+            )
+        )
+
+        if mcp_only:
+            logger.info("Using MCP retriever only - skipping sub-query generation")
+            return [query]
+        else:
+            logger.info("Using MCP with other retrievers - generating sub-queries for non-MCP retrievers")
 
     sub_queries: list[str] = await generate_sub_queries(
         query,

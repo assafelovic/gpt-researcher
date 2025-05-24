@@ -25,20 +25,34 @@ def scrape_urls(
     Returns:
         tuple[list[dict[str, Any]], list[dict[str, Any]]]: Tuple containing scraped content and images.
     """
-        cfg.user_agent
-        if cfg
-        else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     scraped_data: list[dict[str, Any]] = []
     images: list[dict[str, Any]] = []
     user_agent: str = (
+        DEFAULT_CONFIG["USER_AGENT"]
+        if cfg is None
+        else cfg.user_agent  # pyright: ignore[reportAttributeAccessIssue]
     )
 
     try:
-        scraper = Scraper(urls, user_agent, cfg.scraper)
-        scraped_data = scraper.run()
-        for item in scraped_data:
-            if 'image_urls' in item:
-                images.extend([img for img in item['image_urls']])
+        scraper_type: str = (
+            DEFAULT_CONFIG["SCRAPER"]
+            if cfg is None
+            else cfg.scraper  # pyright: ignore[reportAttributeAccessIssue]
+        )
+        scraper: Scraper = Scraper(
+            urls,
+            user_agent,
+            scraper_type,
+        )
+        scraped_data: list[dict[str, Any]] = scraper.run()
+        images.extend(
+            [
+                image_url
+                for item in scraped_data
+                if "image_urls" in item
+                for image_url in item["image_urls"]
+            ]
+        )
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e.__class__.__name__}: {e}{Style.RESET_ALL}")
 

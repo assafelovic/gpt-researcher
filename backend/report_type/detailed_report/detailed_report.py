@@ -11,6 +11,7 @@ class DetailedReport:
     def __init__(
         self,
         query: str,
+        query_domains: list[str],
         report_type: str,
         report_source: str,
         source_urls: list[str] | None = None,
@@ -20,20 +21,24 @@ class DetailedReport:
         websocket: WebSocket | None = None,
         subtopics: list[dict[str, Any]] | None = None,
         headers: dict[str, Any] | None = None,
+        complement_source_urls: bool = False,
     ):
         self.query: str = query
         self.report_type: str = report_type
         self.report_source: str = report_source
         self.source_urls: list[str] | None = source_urls
         self.document_urls: list[str] | None = document_urls
+        self.query_domains: list[str] = query_domains
         self.config_path: str | None = config_path
         self.tone: Tone = tone if isinstance(tone, Tone) else Tone.Objective if tone is None else Tone(tone)
         self.websocket: WebSocket | None = websocket
         self.subtopics: list[dict[str, Any]] | None = subtopics
         self.headers: dict[str, Any] | None = {} if headers is None else headers
+        self.complement_source_urls: bool = complement_source_urls
 
         self.gpt_researcher: GPTResearcher = GPTResearcher(
             query=self.query,
+            query_domains=self.query_domains,
             report_type="research_report",
             report_source=self.report_source,
             source_urls=self.source_urls,
@@ -42,6 +47,7 @@ class DetailedReport:
             tone=self.tone,
             websocket=self.websocket,
             headers=self.headers,
+            complement_source_urls=self.complement_source_urls,
         )
         self.existing_headers: list[dict[str, Any]] = []
         self.global_context: list[str] = []
@@ -66,9 +72,9 @@ class DetailedReport:
         subtopics_data: list[str] = await self.gpt_researcher.get_subtopics()
 
         all_subtopics: list[dict[str, Any]] = []
-        if subtopics_data:
-            for subtopic in subtopics_data:
-                all_subtopics.append({"task": subtopic})
+        if subtopics_data and subtopics_data.subtopics:
+            for subtopic in subtopics_data.subtopics:
+                all_subtopics.append({"task": subtopic.task})
         else:
             print(f"Unexpected subtopics data format: {subtopics_data} (type {subtopics_data.__class__.__name__})")
 
@@ -96,6 +102,7 @@ class DetailedReport:
         current_subtopic_task: str = subtopic.get("task")
         subtopic_assistant = GPTResearcher(
             query=current_subtopic_task,
+            query_domains=self.query_domains,
             report_type="subtopic_report",
             report_source=self.report_source,
             websocket=self.websocket,
@@ -106,6 +113,8 @@ class DetailedReport:
             agent=self.gpt_researcher.agent,
             role=self.gpt_researcher.role,
             tone=self.tone,
+            complement_source_urls=self.complement_source_urls,
+            source_urls=self.source_urls,
         )
 
         subtopic_assistant.context = list(set(self.global_context))

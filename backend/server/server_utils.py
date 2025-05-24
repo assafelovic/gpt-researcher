@@ -94,11 +94,7 @@ class Researcher:
         # Generate unique ID for this research task
         self.research_id: str = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(query)}"
         # Initialize logs handler with research ID
-        try:
-            self.logs_handler: CustomLogsHandler = CustomLogsHandler(self.research_id)
-        except Exception as e:
-            logger.error(f"Error initializing logs handler: {e}")
-            self.logs_handler = CustomLogsHandler(self.research_id, query)
+        self.logs_handler: CustomLogsHandler = CustomLogsHandler(None, self.research_id)
         self.researcher: GPTResearcher = GPTResearcher(
             query=query,
             report_type=report_type,
@@ -156,6 +152,7 @@ async def handle_start_command(
         tone,
         headers,
         report_source,
+        query_domains,
     ) = extract_command_data(json_data)
 
     if not (task or "").strip() or not (report_type or "").strip():
@@ -185,6 +182,7 @@ async def handle_start_command(
         tone,
         websocket,
         headers,
+        query_domains=query_domains,
     )
     report = str(report)
     file_paths: dict[str, str] = await generate_report_files(report, sanitized_filename)
@@ -206,7 +204,7 @@ async def handle_chat(
     data: str,
     manager: WebSocketManager,
 ):
-    json_data: dict[str, Any] = json.loads(data[4:])
+    json_data = json.loads(data[4:])
     print(f"Received chat message: {json_data.get('message')}")
     await manager.chat(json_data.get("message"), websocket)
 
@@ -257,7 +255,7 @@ def get_config_dict(
 
 def update_environment_variables(config: dict[str, str]):
     for key, value in config.items():
-        os.environ[key.upper()] = value
+        os.environ[key] = value
 
 
 async def handle_file_upload(
@@ -292,7 +290,13 @@ async def execute_multi_agents(
 ) -> Any:
     websocket: WebSocket | None = manager.active_connections[0] if manager.active_connections else None
     if websocket:
-        report: str = await run_research_task("Is AI in a hype cycle?", websocket, stream_output)
+        from multi_agents.main import run_research_task
+
+        report: str = await run_research_task(
+            "Is AI in a hype cycle?",
+            websocket,
+            stream_output=True,
+        )
         return {"report": report}
     else:
         return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
@@ -302,19 +306,61 @@ async def handle_websocket_communication(
     websocket: WebSocket,
     manager: WebSocketManager,
 ):
-    while True:
-        data: str = await websocket.receive_text()
-        if data.startswith("start"):
-            await handle_start_command(websocket, data, manager)
-        elif data.startswith("human_feedback"):
-            await handle_human_feedback(data)
-        elif data.startswith("chat"):
-            await handle_chat(websocket, data, manager)
-        else:
-            print("Error: Unknown command or not enough parameters provided.")
+    running_task: asyncio.Task | None = None
+
+    def run_long_running_task(awaitable: Awaitable) -> asyncio.Task:
+        async def safe_run():
+            try:
+                await awaitable
+            except asyncio.CancelledError:
+                logger.info("Task cancelled.")
+                raise
+            except Exception as e:
+                logger.error(f"Error running task: {e}\n{traceback.format_exc()}")
+                await websocket.send_json(
+                    {
+                        "type": "logs",
+                        "content": "error",
+                        "output": f"Error: {e}",
+                    }
+                )
+
+        return asyncio.create_task(safe_run())
+
+    try:
+        while True:
+            try:
+                data: str = await websocket.receive_text()
+                if data == "ping":
+                    await websocket.send_text("pong")
+                elif running_task and not running_task.done():
+                    # discard any new request if a task is already running
+                    logger.warning(f"Received request while task is already running. Request data preview: {data[: min(20, len(data))]}...")
+                    _ = websocket.send_json(
+                        {
+                            "types": "logs",
+                            "output": "Task already running. Please wait.",
+                        }
+                    )
+                elif data.startswith("start"):
+                    running_task = run_long_running_task(handle_start_command(websocket, data, manager))
+                elif data.startswith("human_feedback"):
+                    running_task = run_long_running_task(handle_human_feedback(data))
+                elif data.startswith("chat"):
+                    running_task = run_long_running_task(handle_chat(websocket, data, manager))
+                else:
+                    print("Error: Unknown command or not enough parameters provided.")
+            except Exception as e:
+                print(f"WebSocket error: {e}")
+                break
+    finally:
+        if running_task and not running_task.done():
+            running_task.cancel()
 
 
-def extract_command_data(json_data: dict[str, Any]) -> tuple:
+def extract_command_data(
+    json_data: dict[str, Any],
+) -> tuple[str | None, str | None, list[str] | None, list[str] | None, str | None, dict[str, str] | None, str | None, list[str] | None]:
     return (
         json_data.get("task"),
         json_data.get("report_type"),
@@ -323,4 +369,5 @@ def extract_command_data(json_data: dict[str, Any]) -> tuple:
         json_data.get("tone"),
         json_data.get("headers", {}),
         json_data.get("report_source"),
+        json_data.get("query_domains", []),
     )
