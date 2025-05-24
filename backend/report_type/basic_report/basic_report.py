@@ -29,12 +29,11 @@ class BasicReport:
         self.config_path: str = config_path
         self.websocket: WebSocket = websocket
         self.headers: dict[str, Any] = {} if headers is None else headers
-        self.researcher: GPTResearcher | None = None
 
-    async def run(self) -> str:
         # Initialize researcher
-        self.researcher = GPTResearcher(
+        self.gpt_researcher = GPTResearcher(
             query=self.query,
+            query_domains=self.query_domains,
             report_type=self.report_type,
             report_source=self.report_source,
             source_urls=self.source_urls,
@@ -42,9 +41,10 @@ class BasicReport:
             tone=self.tone,
             config_path=self.config_path,
             websocket=self.websocket,
-            headers=self.headers
+            headers=self.headers,
         )
 
-        await self.researcher.conduct_research()
-        report: str = await self.researcher.write_report()
+    async def run(self) -> str:
+        await self.gpt_researcher.conduct_research()
+        report: str = await self.gpt_researcher.write_report()
         return report
