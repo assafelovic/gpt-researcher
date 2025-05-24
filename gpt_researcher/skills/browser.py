@@ -83,15 +83,20 @@ class BrowserManager:
         current_research_images: list[str] = self.researcher.get_research_images()
 
         # First, select all score 2 and 3 images
-
-        for img in high_score_images + images:  # Process high-score images first, then all images
-            img_hash = get_image_hash(img['url'])
-            if img_hash and img_hash not in seen_hashes and img['url'] not in current_research_images:
         high_score_images: list[dict[str, Any]] = [
             img
             for img in images
             if img["score"] >= 2
         ]
+
+        combined_images: list[dict[str, Any]] = high_score_images + images
+        for img in combined_images:  # Process high-score images first, then all images
+            img_hash: str | None = get_image_hash(img["url"])
+            if (
+                (img_hash or "").strip()
+                and img_hash not in seen_hashes
+                and img["url"] not in current_research_images
+            ):
                 seen_hashes.add(img_hash)
                 unique_images.append(img["url"])
 
