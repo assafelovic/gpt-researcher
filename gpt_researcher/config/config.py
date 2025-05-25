@@ -633,11 +633,6 @@ class Config:
 
         for fallback_spec_str in fallback_str_list:
             try:
-                # Expecting format like "litellm:provider/model_name"
-                if not fallback_spec_str.startswith("litellm:"):
-                    print(f"{Fore.YELLOW}WARNING: Fallback spec {fallback_spec_str!r} is not in the expected 'litellm:provider/model_name' format. Skipping.{Style.RESET_ALL}")
-                    continue
-
                 # Split into provider and model name
                 if ":" not in fallback_spec_str:
                     print(f"{Fore.YELLOW}WARNING: Fallback spec {fallback_spec_str!r} is missing the provider/model separator ':'. Skipping.{Style.RESET_ALL}")
