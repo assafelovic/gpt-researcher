@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import traceback
+
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
@@ -52,10 +54,11 @@ async def write_report_introduction(
             max_tokens=config.smart_token_limit,
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,
+            cfg=config,
         )
         return introduction
     except Exception as e:
-        logger.error(f"Error in generating report introduction: {e}")
+        logger.error(f"Error in generating report introduction: {traceback.format_exc()}")
     return ""
 
 
@@ -99,10 +102,11 @@ async def write_conclusion(
             max_tokens=config.smart_token_limit,
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,
+            cfg=config,
         )
         return conclusion
     except Exception as e:
-        logger.error(f"Error in writing conclusion: {e}")
+        logger.error(f"Error in writing conclusion: {traceback.format_exc()}")
     return ""
 
 
@@ -144,10 +148,11 @@ async def summarize_url(
             max_tokens=config.smart_token_limit,
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,
+            cfg=config,
         )
         return summary
     except Exception as e:
-        logger.error(f"Error in summarizing URL: {e}")
+        logger.error(f"Error in summarizing URL: {traceback.format_exc()}")
     return ""
 
 
@@ -189,10 +194,11 @@ async def generate_draft_section_titles(
             max_tokens=config.smart_token_limit,
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,
+            cfg=config,
         )
         return str(section_titles).split("\n")
-    except Exception as e:
-        logger.error(f"Error in generating draft section titles: {e}")
+    except Exception:
+        logger.error(f"Error in generating draft section titles: {traceback.format_exc()}")
     return []
 
 
@@ -237,6 +243,10 @@ async def generate_report(
     Returns:
         report: The final report.
     """
+    # DEBUG: Log function start and params
+    logger.info(f"[DEBUG] Starting generate_report for query: {query[:50]}...")
+    logger.info(f"[DEBUG] Report type: {report_type}, context length: {len(str(context))}, has custom prompt: {custom_prompt is not None}")
+
     existing_headers = [] if existing_headers is None else existing_headers
     relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
     generate_prompt: Any = get_prompt_by_report_type(
@@ -245,36 +255,60 @@ async def generate_report(
     )
     report: str = ""
     generated_prompt: str = ""
-    if report_type == "subtopic_report":
-        generated_prompt = generate_prompt(
-            query,
-            existing_headers,
-            relevant_written_contents,
-            main_topic,
-            context,
-            report_format=cfg.report_format,
-            tone=tone,
-            total_words=cfg.total_words,
-            language=cfg.language,
-        )
-    else:
-        generated_prompt = generate_prompt(
-            query,
-            context,
-            report_source,
-            report_format=cfg.report_format,
-            tone=tone,
-            total_words=cfg.total_words,
-            language=cfg.language,
-        )
-    content: str = f"{generated_prompt}"
+
     try:
+        # DEBUG: Log prompt generation
+        logger.info(f"[DEBUG] Generating prompt with report_type: {report_type}")
+
+        if report_type == "subtopic_report":
+            generated_prompt = generate_prompt(
+                query,
+                existing_headers,
+                relevant_written_contents,
+                main_topic,
+                context,
+                report_format=cfg.report_format,  # pyright: ignore[reportAttributeAccessIssue]
+                tone=tone,
+                total_words=cfg.total_words,  # pyright: ignore[reportAttributeAccessIssue]
+                language=cfg.language,  # pyright: ignore[reportAttributeAccessIssue]
+            )
+        else:
+            generated_prompt = generate_prompt(
+                query,
+                context,
+                report_source,
+                report_format=cfg.report_format,  # pyright: ignore[reportAttributeAccessIssue]
+                tone=tone,
+                total_words=cfg.total_words,  # pyright: ignore[reportAttributeAccessIssue]
+                language=cfg.language,  # pyright: ignore[reportAttributeAccessIssue]
+            )
+
+        # DEBUG: Log prompt generation success and length
+        logger.info(f"[DEBUG] Generated prompt successfully, length: {len(generated_prompt)}")
+        logger.info(f"[DEBUG] Prompt starts with: {generated_prompt[:100]}...")
+
+    except Exception as e:
+        logger.error(f"[DEBUG] Error generating prompt: {e.__class__.__name__}: {e}")
+        logger.error(f"[DEBUG] Traceback: {traceback.format_exc()}")
+        # Default empty prompt in case of error
+        generated_prompt = f"Please generate a report about {query} based on the provided context."
+
+    content: str = f"{generated_prompt}"
+
+    # DEBUG: Log message structure before API call
+    messages: list[dict[str, str]] = [
+        {"role": "system", "content": f"{agent_role_prompt or ''} "},
+        {"role": "user", "content": content},
+    ]
+    logger.info(f"[DEBUG] Preparing to call LLM with model: {cfg.smart_llm_model}, provider: {cfg.smart_llm_provider}")
+    logger.info(f"[DEBUG] System message length: {len(agent_role_prompt or '')}")
+    logger.info(f"[DEBUG] User message length: {len(content)}")
+
+    try:
+        logger.info("[DEBUG] Making first create_chat_completion attempt")
         report = await create_chat_completion(
             model=cfg.smart_llm_model,
-            messages=[
-                {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": content},
-            ],
+            messages=messages,
             temperature=0.35,
             llm_provider=cfg.smart_llm_provider,
             stream=True,
@@ -282,17 +316,34 @@ async def generate_report(
             max_tokens=cfg.smart_token_limit,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
+            cfg=cfg,
         )
-    except Exception:
+        # DEBUG: Log successful completion
+        logger.info(f"[DEBUG] First attempt successful, report length: {len(report)}")
+        logger.info(f"[DEBUG] Report starts with: {report[:100]}...")
+
+        # DEBUG: Check for problematic responses
+        if "I'm sorry, but I cannot provide a response to this task" in report:
+            logger.warning("[DEBUG] Detected error pattern in report response")
+            logger.warning(f"[DEBUG] Full response: {report}")
+
+    except Exception as e:
+        logger.error(f"[DEBUG] First attempt failed: {e.__class__.__name__}: {e}")
+        logger.error(f"[DEBUG] Traceback: {traceback.format_exc()}")
         try:
+            # Try with a simplified approach by combining system and user messages
+            logger.info("[DEBUG] Making fallback create_chat_completion attempt")
+            simplified_messages: list[dict[str, str]] = [
+                {
+                    "role": "user",
+                    "content": f"{agent_role_prompt or ''}\n\n{content}",
+                },
+            ]
+            logger.info(f"[DEBUG] Simplified message length: {len(simplified_messages[0]['content'])}")
+
             report = await create_chat_completion(
                 model=cfg.smart_llm_model,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"{agent_role_prompt}\n\n{content}",
-                    },
-                ],
+                messages=simplified_messages,
                 temperature=0.35,
                 llm_provider=cfg.smart_llm_provider,
                 stream=True,
@@ -300,8 +351,22 @@ async def generate_report(
                 max_tokens=cfg.smart_token_limit,
                 llm_kwargs=cfg.llm_kwargs,
                 cost_callback=cost_callback,
+                cfg=cfg,
             )
-        except Exception as e:
-            print(f"Error in generate_report: {e.__class__.__name__}: {e}")
+            # DEBUG: Log successful fallback completion
+            logger.info(f"[DEBUG] Fallback attempt successful, report length: {len(report)}")
+            logger.info(f"[DEBUG] Report starts with: {report[:100]}...")
 
+            # DEBUG: Check for problematic responses in fallback
+            if "I'm sorry, but I cannot provide a response to this task" in report:
+                logger.warning("[DEBUG] Detected error pattern in fallback report response")
+                logger.warning(f"[DEBUG] Full fallback response: {report}")
+
+        except Exception as e2:
+            print(f"Error in generate_report fallback: {e2.__class__.__name__}: {e2}")
+            logger.error(f"[DEBUG] Fallback attempt also failed: {e2.__class__.__name__}: {e2}")
+            logger.error(f"[DEBUG] Fallback traceback: {traceback.format_exc()}")
+
+    # DEBUG: Log function end
+    logger.info(f"[DEBUG] Finished generate_report, returning report of length: {len(report)}")
     return report

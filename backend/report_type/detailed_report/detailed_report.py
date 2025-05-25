@@ -58,7 +58,9 @@ class DetailedReport:
         await self._initial_research()
         subtopics: list[dict[str, Any]] = await self._get_all_subtopics()
         report_introduction: str = await self.gpt_researcher.write_introduction()
-        _, report_body = await self._generate_subtopic_reports(subtopics)
+        report_body: str = ""
+        if subtopics:
+            _, report_body = await self._generate_subtopic_reports(subtopics)
         self.gpt_researcher.visited_urls.update(self.global_urls)
         report: str = await self._construct_detailed_report(report_introduction, report_body)
         return report
@@ -72,9 +74,9 @@ class DetailedReport:
         subtopics_data: list[str] = await self.gpt_researcher.get_subtopics()
 
         all_subtopics: list[dict[str, Any]] = []
-        if subtopics_data and subtopics_data.subtopics:
-            for subtopic in subtopics_data.subtopics:
-                all_subtopics.append({"task": subtopic.task})
+        if subtopics_data:
+            for subtopic in subtopics_data:
+                all_subtopics.append({"task": subtopic})
         else:
             print(f"Unexpected subtopics data format: {subtopics_data} (type {subtopics_data.__class__.__name__})")
 

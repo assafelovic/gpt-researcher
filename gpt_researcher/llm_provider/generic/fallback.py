@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any, TypeVar
 
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
@@ -54,17 +55,63 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
         Returns:
             FallbackGenericLLMProvider instance
         """
+        # Handle OpenRouter models
+        primary_kwargs: dict[str, Any] = kwargs.copy()
+        if provider == "openrouter":
+            if not os.environ.get("OPENROUTER_API_KEY"):
+                logger.warning("OPENROUTER_API_KEY not set. OpenRouter models may not work.")
+
+            # OpenRouter uses the OpenAI API format with a different base URL
+            # Pass through to the OpenAI provider with proper configuration
+            provider = "openai"
+            primary_kwargs["base_url"] = "https://openrouter.ai/api/v1"
+            primary_kwargs["api_key"] = os.environ.get("OPENROUTER_API_KEY")
+
+            # Log the configuration
+            logger.info(f"Using OpenRouter as {provider} with custom base_url. Model: {primary_kwargs.get('model')}")
+
         # Create fallback providers if specified
         fallback_providers: list[GenericLLMProvider] = []
         if fallback_models:
             for fallback_model in fallback_models:
                 try:
+                    # Standard format "provider:model"
+                    if ":" not in fallback_model:
+                        logger.warning(f"Skipping invalid fallback model format: {fallback_model}. Expected format: 'provider:model'")
+                        continue
+
                     provider_name, model_name = fallback_model.split(":", 1)
+
+                    # Skip vertexai models if not configured properly
+                    if provider_name in ["google_vertexai", "vertexai"]:
+                        if not (os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or os.environ.get("GOOGLE_CLOUD_PROJECT")):
+                            logger.warning(f"Skipping Google VertexAI model {model_name} because Google Cloud is not configured")
+                            continue
+
+                    # Handle provider name mappings and aliases
                     if provider_name == "gemini":
-                        provider_name = "google_vertexai"
-                    # Copy kwargs and update model name
+                        provider_name = "google_genai"
+                        logger.info(f"Mapping 'gemini' to 'google_genai' provider for {model_name}")
+
+                    # Special handling for OpenRouter models
                     fallback_kwargs: dict[str, Any] = kwargs.copy()
+                    if provider_name == "openrouter":
+                        if not os.environ.get("OPENROUTER_API_KEY"):
+                            logger.warning(f"Skipping OpenRouter model {model_name} because OPENROUTER_API_KEY is not set")
+                            continue
+
+                        # OpenRouter models use OpenAI's API with a different base URL
+                        provider_name = "openai"
+                        fallback_kwargs["base_url"] = "https://openrouter.ai/api/v1"
+                        fallback_kwargs["api_key"] = os.environ.get("OPENROUTER_API_KEY")
+                        logger.info(f"Using OpenRouter model {model_name} via OpenAI provider with custom base_url")
+
+                    # Set the model name and create the provider
                     fallback_kwargs["model"] = model_name
+
+                    # Log the fallback configuration
+                    logger.info(f"Initializing fallback provider {provider_name} with model {model_name}")
+
                     fallback_provider: GenericLLMProvider = GenericLLMProvider.from_provider(
                         provider_name,
                         chat_log=chat_log,
@@ -75,12 +122,37 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
                 except (ValueError, ImportError) as e:
                     logger.warning(f"Failed to initialize fallback provider {fallback_model}: {e}")
 
-        return cls(
-            GenericLLMProvider.from_provider(provider, chat_log=chat_log, verbose=verbose, **kwargs).llm,
-            fallback_providers=fallback_providers,
-            chat_log=chat_log,
-            verbose=verbose,
-        )
+        # Initialize the primary provider
+        try:
+            primary_provider = GenericLLMProvider.from_provider(
+                provider,
+                chat_log=chat_log,
+                verbose=verbose,
+                **primary_kwargs
+            )
+
+            return cls(
+                primary_provider.llm,
+                fallback_providers=fallback_providers,
+                chat_log=chat_log,
+                verbose=verbose,
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize primary provider {provider}: {e}")
+
+            # If we have fallbacks, try to use the first one as primary
+            if fallback_providers:
+                logger.warning("Using first fallback provider as primary due to initialization failure")
+                primary: GenericLLMProvider = fallback_providers.pop(0)
+                return cls(
+                    primary.llm,
+                    fallback_providers=fallback_providers,
+                    chat_log=chat_log,
+                    verbose=verbose,
+                )
+            else:
+                # No fallbacks available, re-raise the exception
+                raise
 
     async def get_chat_response(
         self,
