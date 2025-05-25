@@ -61,3 +61,5 @@ CURSOR_RULES.md
 mistralai_models.json
 openai_models.json
 openrouter_models.json
+
+.history

@@ -62,6 +62,7 @@ class GPTResearcher:
         log_handler: Any | None = None,
         prompt_family: str | None = None,
         mcp_configs: list[dict[str, Any]] | None = None,
+        disable_structured_research: bool = False,
     ):
         """Initialize a GPT Researcher instance.
 
@@ -110,6 +111,7 @@ class GPTResearcher:
                     "tool_name": "search"
                 }]
                 ```
+            disable_structured_research (bool): Whether to disable structured research functionality.
         """
         self.query: str = query
         self.report_type: ReportType | str = report_type
@@ -138,6 +140,7 @@ class GPTResearcher:
         self.context: list[str] | None = [] if context is None else context
         self.headers: dict[str, Any] | None = {} if headers is None else headers
         self.research_costs: float = 0.0
+        self.disable_structured_research: bool = disable_structured_research
 
         # Use FallbackMemory if embedding fallbacks are configured
         if hasattr(self.cfg, "embedding_fallback_list") and self.cfg.embedding_fallback_list:
@@ -275,8 +278,8 @@ class GPTResearcher:
         if self.report_type == ReportType.DeepResearch.value and self.deep_researcher is not None:
             return await self._handle_deep_research(on_progress)
 
-        # Analyze query requirements for structured research
-        if not self.query_analysis:
+        # Analyze query requirements for structured research only if not disabled
+        if not self.disable_structured_research and not self.query_analysis:
             await self._log_event("action", action="analyze_query")
             self.query_analysis = await analyze_query_requirements(
                 query=self.query,
@@ -331,8 +334,8 @@ class GPTResearcher:
             details={"context_length": len(self.context)},
         )
 
-        # Initialize structured research pipeline if needed
-        if self.research_config and self.research_config.get("enable_structured_research"):
+        # Initialize structured research pipeline if needed and not disabled
+        if not self.disable_structured_research and self.research_config and self.research_config.get("enable_structured_research"):
             await self._log_event("action", action="initialize_structured_research")
             from gpt_researcher.llm_provider import GenericLLMProvider
 
@@ -414,12 +417,12 @@ class GPTResearcher:
             details={
                 "existing_headers": existing_headers,
                 "context_source": "external" if ext_context else "internal",
-                "structured_research_enabled": self.structured_pipeline is not None,
+                "structured_research_enabled": self.structured_pipeline is not None and not self.disable_structured_research,
             },
         )
 
-        # Use structured research if available and enabled
-        if self.structured_pipeline and self.research_config:
+        # Use structured research if available and enabled and not disabled
+        if not self.disable_structured_research and self.structured_pipeline and self.research_config:
             try:
                 await self._log_event("research", step="running_structured_research")
 
