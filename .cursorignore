@@ -15,7 +15,6 @@ env.bak/
 venv.bak/
 
 #Ignore generated outputs
-outputs/
 *.lock
 dist/
 gpt_researcher.egg-info/
