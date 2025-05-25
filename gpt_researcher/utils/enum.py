@@ -30,7 +30,6 @@ class Tone(Enum):
     Executive = "Executive (concise, strategic, decision-focused)"
     Educational = "Educational (clear, instructive, beginner-friendly)"
     Creative = "Creative (engaging, storytelling, memorable)"
-
     Narrative = "Narrative (telling a story to illustrate research findings or methodologies)"
     Humorous = "Humorous (light-hearted and engaging, usually to make the content more relatable)"
     Optimistic = "Optimistic (highlighting positive findings and potential benefits)"

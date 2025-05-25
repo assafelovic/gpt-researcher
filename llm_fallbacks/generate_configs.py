@@ -50,7 +50,7 @@ def to_litellm_config_yaml(
         },
         "general_settings": {
             "master_key": f"sk-{uuid.uuid4().hex}",
-            #            "alerting": ["slack", "email"],
+#            "alerting": ["slack", "email"],
             "proxy_batch_write_at": 60,  # Batch write spend updates every 60s
             "database_connection_pool_limit": 10,  # limit the number of database connections to = MAX Number of DB Connections/Number of instances of litellm proxy (Around 10-20 is good number)
             "alerting_threshold": 0,

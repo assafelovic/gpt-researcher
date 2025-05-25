@@ -197,6 +197,8 @@ if TYPE_CHECKING:
         router_settings: RouterSettings
 
 else:
+    # Keep these here for runtime use, so that each TypedDict will be treated like a dict
+    # This satisfies both the typechecker and unifies with runtime.
     LiteLLMBaseModelSpec = dict
     LiteLLMYAMLConfig = dict
     RetryPolicy = dict
@@ -419,7 +421,7 @@ def _parse_openrouter_models_response(
 
     parsed_requested_models: dict[str, LiteLLMBaseModelSpec] = {}
     for model in data:
-        model_id: str = (model.get("id", "") or "").strip()
+        model_id: str = (model.get("id", "") or "").strip().casefold()
         if not model_id:
             continue
 
@@ -474,7 +476,7 @@ def _parse_openrouter_models_response(
         description: str = (model.get("description", "") or "").strip()
         if description:
             model_spec["metadata"] = {"notes": description}
-            if "function call" in description.lower():
+            if "function call" in description.casefold():
                 model_spec["supports_function_calling"] = True
 
         model_spec["litellm_provider"] = provider_name
@@ -492,7 +494,7 @@ CUSTOM_PROVIDERS: list[CustomProviderConfig] = [
     ),
     CustomProviderConfig(
         provider_name="vertexai",
-        base_url="https://us-central1-aiplatform.googleapis.com/v1",
+        base_url="https://litellm-proxy.example.com/v1",  # example of a litellm proxy openapi url.
         api_key_required=False,
         auto_fetch_models=False,
     ),
