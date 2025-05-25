@@ -12,8 +12,11 @@ from langchain_core.documents import Document
 
 
 class PyMuPDFScraper:
-
-    def __init__(self, link: str, session: requests.Session | None = None):
+    def __init__(
+        self,
+        link: str,
+        session: requests.Session | None = None,
+    ):
         """Initialize the scraper with a link and an optional session.
 
         Args:
@@ -32,10 +35,11 @@ class PyMuPDFScraper:
         try:
             result: ParseResult = urlparse(self.link)
             return all([result.scheme, result.netloc])  # Check for valid scheme and network location
-        except Exception:
+        except Exception as e:
+            print(f"Error checking if link is URL: '{self.link}' {e.__class__.__name__}: {e}")
             return False
 
-    def scrape(self) -> str:
+    def scrape(self) -> str | None:
         try:
             if self.is_url():
                 response: requests.Response = requests.get(self.link, timeout=5, stream=True)
@@ -56,7 +60,8 @@ class PyMuPDFScraper:
 
             return str(doc)
 
-        except requests.exceptions.Timeout:
-            print(f"Download timed out. Please check the link : {self.link}")
+        except requests.exceptions.Timeout as e:
+            print(f"Download timed out. Please check the link : '{self.link}' : {e.__class__.__name__}: {e}")
         except Exception as e:
-            print(f"Error loading PDF : {self.link} {e}")
+            print(f"Error loading PDF : '{self.link}' : {e.__class__.__name__}: {e}")
+        return None

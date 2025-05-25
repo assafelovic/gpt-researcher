@@ -114,6 +114,7 @@ class DeepResearchSkill:
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=ReasoningEfforts.Medium.value,
             temperature=0.4,
+            cfg=self.researcher.cfg,
         )
 
         lines: list[str] = response.split("\n")
@@ -144,7 +145,12 @@ class DeepResearchSkill:
             num_questions = 3
 
         # Get initial search results to inform query generation
-        search_results: list[dict[str, Any]] = await get_search_results(query, self.researcher.retrievers[0])
+        search_results: list[dict[str, Any]] = await get_search_results(
+            query,
+            self.researcher.retrievers[0],
+            fallback_retrievers=self.researcher.retrievers[1:] if len(self.researcher.retrievers) > 1 else None,
+            min_results=1
+        )
         logger.info(f"Initial web knowledge obtained: {len(search_results)} results")
 
         # Get current time for context
@@ -176,9 +182,14 @@ Format each question on a new line starting with 'Question: '""",
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=ReasoningEfforts.High.value,
             temperature=0.4,
+            cfg=self.researcher.cfg,
         )
 
-        questions: list[str] = [q.replace("Question:", "").strip() for q in response.split("\n") if q.strip().startswith("Question:")]
+        questions: list[str] = [
+            q.replace("Question:", "").strip()
+            for q in response.split("\n")
+            if q.strip().startswith("Question:")
+        ]
         return questions[:num_questions]
 
     async def process_research_results(
@@ -209,6 +220,7 @@ Format each question on a new line starting with 'Question: '""",
             temperature=0.4,
             reasoning_effort=ReasoningEfforts.High.value,
             max_tokens=1000,
+            cfg=self.researcher.cfg,
         )
 
         lines: list[str] = response.split("\n")

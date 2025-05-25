@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from gpt_researcher.scraper.utils import extract_title, get_relevant_images
 
 
-    def __init__(self, link, session=None):
+class BeautifulSoupScraper:
     def __init__(
         self,
         link: str,

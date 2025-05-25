@@ -23,7 +23,7 @@
         "editor.formatOnSave": true,
     },
     "[yaml]": {
-        "editor.defaultFormatter": "redhat.vscode-yaml",
+        "editor.defaultFormatter": "kennylong.kubernetes-yaml-formatter",
         "editor.formatOnSave": false,
     },
     "autoDocstring.generateDocstringOnEnter": true,
@@ -102,6 +102,10 @@
     "workbench.editorAssociations": {
         "*.ipynb": "jupyter-notebook",
         "*.md": "vscode.markdown.preview.editor",
-        "*.svg": "svgPreviewer.customEditor"
+        "*.svg": "svgPreviewer.customEditor",
+        "*.copilotmd": "markdown-preview-enhanced",
+        "*.ui": "default",
+        "{git,gitlens}:/**/*.ui": "default",
+        "*.docx": "default"
     }
 }

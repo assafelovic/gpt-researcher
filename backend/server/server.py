@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import logging
 import os
+
+from datetime import datetime
 from typing import Any, Awaitable, Callable
 
+from colorama import Style
 from fastapi import (
     FastAPI,
     File,
@@ -17,6 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from gpt_researcher.config.config import Config
 from pydantic import BaseModel
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -39,8 +43,9 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler()  # Only log to console
-    ]
+    ],
 )
+
 
 # Custom middleware to set cache control headers for outputs URLs
 class OutputsCacheMiddleware(BaseHTTPMiddleware):
@@ -49,18 +54,31 @@ class OutputsCacheMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
+        """Set cache control headers for outputs URLs.
+
+        Args:
+            request (Request): The request object.
+            call_next (Callable[[Request], Awaitable[Response]]): The next middleware function.
+
+        Returns:
+            Response: The response object.
+        """
+        config: Config = Config("default")
+        cache_expiry: datetime = datetime.now() + config.cache_expiry_time
         response: Response = await call_next(request)
 
         # Check if this is a request for an output file
-        if request.url.path.startswith('/outputs/'):
-            # Set Cache-Control header for long-term caching (30 days)
-            response.headers['Cache-Control'] = 'public, max-age=2592000'
+        if request.url.path.startswith("/outputs/"):
+            # Set Cache-Control header using CACHE_EXPIRY_TIME
+            max_age_seconds: int = int(config.cache_expiry_time.total_seconds())
+            response.headers["Cache-Control"] = f"public, max-age={max_age_seconds}"
             # Also add other cache headers for better browser compatibility
-            response.headers['Expires'] = '30d'
+            response.headers["Expires"] = cache_expiry.strftime("%a, %d %b %Y %H:%M:%S GMT")
             # Use ETag for better caching
-            response.headers.setdefault('ETag', f'W/"{hash(request.url.path)}"')
+            response.headers.setdefault("ETag", f'W/"{hash(request.url.path)}"')
 
         return response
+
 
 # Models
 
@@ -145,7 +163,7 @@ async def read_root(request: Request):
 @app.get("/files/")
 async def list_files() -> dict[str, list[str]]:
     files: list[str] = os.listdir(DOC_PATH)
-    print(f"Files in {DOC_PATH}: {files}")
+    print(f"{Style.BRIGHT}Files in {DOC_PATH}: {files}{Style.RESET_ALL}")
     return {"files": files}
 
 
@@ -169,5 +187,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         await handle_websocket_communication(websocket, manager)
-    except WebSocketDisconnect:
+    except WebSocketDisconnect as e:
+        logger.info(f"WebSocket disconnected: {e.__class__.__name__}: {e}")
+        print(f"WebSocket disconnected: {e.__class__.__name__}: {e}")
         await manager.disconnect(websocket)

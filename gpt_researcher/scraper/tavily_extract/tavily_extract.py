@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from typing import Any
 
-class TavilyExtract:
 import requests
 
 from bs4 import BeautifulSoup
@@ -11,6 +10,7 @@ from bs4 import BeautifulSoup
 from gpt_researcher.scraper.utils import extract_title, get_relevant_images
 
 
+class TavilyExtractScraper:
     def __init__(
         self,
         link: str,
@@ -58,3 +58,5 @@ from gpt_researcher.scraper.utils import extract_title, get_relevant_images
         except Exception as e:
             print(f"Error! : {e.__class__.__name__}: {e}")
             return "", [], ""
+
+TavilyExtract = TavilyExtractScraper

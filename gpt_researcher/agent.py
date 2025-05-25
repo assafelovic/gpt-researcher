@@ -13,6 +13,7 @@ from gpt_researcher.actions import (
     get_search_results,
     table_of_contents,
 )
+from gpt_researcher.actions.report_analyzer import analyze_query_requirements, get_research_configuration
 from gpt_researcher.config import Config
 from gpt_researcher.memory.embeddings import FallbackMemory, Memory
 from gpt_researcher.prompts import PromptFamily, get_prompt_family
@@ -23,6 +24,7 @@ from gpt_researcher.skills.curator import SourceCurator
 # Research skills
 from gpt_researcher.skills.deep_research import DeepResearchSkill
 from gpt_researcher.skills.researcher import ResearchConductor
+from gpt_researcher.skills.structured_research import ResearchResults, StructuredResearchPipeline
 from gpt_researcher.skills.writer import ReportGenerator
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.vector_store import VectorStoreWrapper
@@ -166,11 +168,6 @@ class GPTResearcher:
             self._process_mcp_configs(mcp_configs)
 
         self.retrievers: list[Any] = get_retrievers(self.headers, self.cfg)
-        self.memory = Memory(
-            self.cfg.embedding_provider,
-            self.cfg.embedding_model,
-            **self.cfg.embedding_kwargs,
-        )
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
@@ -178,7 +175,16 @@ class GPTResearcher:
         self.context_manager: ContextManager = ContextManager(self)
         self.scraper_manager: BrowserManager = BrowserManager(self)
         self.source_curator: SourceCurator = SourceCurator(self)
-        self.deep_researcher: DeepResearchSkill | None = DeepResearchSkill(self) if report_type == ReportType.DeepResearch.value else None
+        self.deep_researcher: DeepResearchSkill | None = (
+            DeepResearchSkill(self)
+            if report_type == ReportType.DeepResearch.value
+            else None
+        )
+
+        # Initialize structured research pipeline
+        self.structured_pipeline: StructuredResearchPipeline | None = None
+        self.query_analysis: dict[str, Any] | None = None
+        self.research_config: dict[str, Any] | None = None
 
     def _process_mcp_configs(self, mcp_configs: list[dict[str, Any]]) -> None:
         """Process MCP configurations from a list of configuration dictionaries.
@@ -269,6 +275,26 @@ class GPTResearcher:
         if self.report_type == ReportType.DeepResearch.value and self.deep_researcher is not None:
             return await self._handle_deep_research(on_progress)
 
+        # Analyze query requirements for structured research
+        if not self.query_analysis:
+            await self._log_event("action", action="analyze_query")
+            self.query_analysis = await analyze_query_requirements(
+                query=self.query,
+                cfg=self.cfg,
+                cost_callback=self.add_costs,
+            )
+            self.research_config = get_research_configuration(self.query_analysis)
+
+            await self._log_event(
+                "action",
+                action="query_analyzed",
+                details={
+                    "report_style": self.query_analysis.get("report_style"),
+                    "user_expertise": self.query_analysis.get("user_expertise"),
+                    "enable_structured": self.research_config.get("enable_structured_research"),
+                },
+            )
+
         has_agent_and_role: bool = bool((self.agent or "").strip() and (self.role or "").strip())
         if not has_agent_and_role:
             await self._log_event("action", action="choose_agent")
@@ -304,6 +330,15 @@ class GPTResearcher:
             step="research_completed",
             details={"context_length": len(self.context)},
         )
+
+        # Initialize structured research pipeline if needed
+        if self.research_config and self.research_config.get("enable_structured_research"):
+            await self._log_event("action", action="initialize_structured_research")
+            from gpt_researcher.llm_provider import GenericLLMProvider
+
+            llm_provider: GenericLLMProvider = GenericLLMProvider(self.cfg.smart_llm_provider)
+            self.structured_pipeline = StructuredResearchPipeline(llm_provider, self.cfg)
+
         return [] if self.context is None else self.context
 
     async def _handle_deep_research(
@@ -379,9 +414,50 @@ class GPTResearcher:
             details={
                 "existing_headers": existing_headers,
                 "context_source": "external" if ext_context else "internal",
+                "structured_research_enabled": self.structured_pipeline is not None,
             },
         )
 
+        # Use structured research if available and enabled
+        if self.structured_pipeline and self.research_config:
+            try:
+                await self._log_event("research", step="running_structured_research")
+
+                # Run structured research pipeline
+                results: ResearchResults = await self.structured_pipeline.run_structured_research(
+                    topic=self.query,
+                    sources=self.research_sources,
+                    enable_debate=self.research_config.get("enable_debate", False),
+                    min_confidence=self.research_config.get("min_confidence", 0.5),
+                    max_sections=self.research_config.get("max_sections", 8),
+                )
+
+                # Export as markdown report
+                report: str = self.structured_pipeline.export_results(results, format="markdown")
+
+                await self._log_event(
+                    "research",
+                    step="structured_report_completed",
+                    details={
+                        "report_length": len(report),
+                        "fact_count": results.fact_summary.get("total_facts", 0),
+                        "sections": len(results.narrative.sections),
+                        "overall_quality": results.narrative.overall_quality.value,
+                    },
+                )
+
+                return report
+
+            except Exception as e:
+                await self._log_event(
+                    "research",
+                    step="structured_research_failed",
+                    details={"error": f"{e.__class__.__name__}: {e}"},
+                )
+                # Fall back to regular report generation
+                pass
+
+        # Regular report generation
         report: str = await self.report_generator.write_report(
             existing_headers=existing_headers,
             relevant_written_contents=relevant_written_contents,
@@ -416,10 +492,13 @@ class GPTResearcher:
         query: str,
         query_domains: list[str] | None = None,
     ) -> list[dict[str, Any]]:
+        # Use all retrievers as fallbacks
         return await get_search_results(
             query,
             self.retrievers[0],
             query_domains=query_domains,
+            fallback_retrievers=self.retrievers[1:] if len(self.retrievers) > 1 else None,
+            min_results=1,
         )
 
     async def get_subtopics(self) -> list[str]:
@@ -461,7 +540,10 @@ class GPTResearcher:
     def get_research_sources(self) -> list[dict[str, Any]]:
         return self.research_sources
 
-    def add_research_sources(self, sources: list[dict[str, Any]]) -> None:
+    def add_research_sources(
+        self,
+        sources: list[dict[str, Any]],
+    ) -> None:
         self.research_sources.extend(sources)
 
     def add_references(

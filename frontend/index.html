@@ -79,56 +79,6 @@
         </div>
     </div>
 
-    <!-- Left Feature Panel -->
-    <!--<div class="feature-panel left-panel">
-        <div class="feature-card primary" data-highlight="task" data-highlight-button="submitButton">
-            <div class="feature-icon">
-                <i class="fas fa-bolt"></i>
-            </div>
-            <h3 class="feature-title">Fast Results</h3>
-            <p class="feature-text">Get comprehensive research in minutes instead of hours with AI-powered analysis</p>
-        </div>
-        <div class="feature-card info" data-highlight="report_type">
-            <div class="feature-icon">
-                <i class="fas fa-magnifying-glass-chart"></i>
-            </div>
-            <h3 class="feature-title">Precise Research</h3>
-            <p class="feature-text">Customizable parameters for targeted results tailored to your needs</p>
-        </div>
-        <div class="feature-card success" data-highlight="report_source">
-            <div class="feature-icon">
-                <i class="fas fa-database"></i>
-            </div>
-            <h3 class="feature-title">Multiple Sources</h3>
-            <p class="feature-text">Aggregates information from various reliable sources for balanced insights</p>
-        </div>
-    </div>-->
-
-    <!-- Right Feature Panel -->
-    <!--<div class="feature-panel right-panel">
-        <div class="feature-card warning" data-highlight="format">
-            <div class="feature-icon">
-                <i class="fas fa-file-export"></i>
-            </div>
-            <h3 class="feature-title">Multiple Formats</h3>
-            <p class="feature-text">Support for various output formats including PDF, Word, and Markdown</p>
-        </div>
-        <div class="feature-card primary" data-highlight="tone">
-            <div class="feature-icon">
-                <i class="fas fa-pen-fancy"></i>
-            </div>
-            <h3 class="feature-title">Custom Style</h3>
-            <p class="feature-text">Choose the writing style that best fits your needs and audience</p>
-        </div>
-        <div class="feature-card info" data-highlight="query_domains">
-            <div class="feature-icon">
-                <i class="fas fa-layer-group"></i>
-            </div>
-            <h3 class="feature-title">Flexible Sources</h3>
-            <p class="feature-text">Research from web, academic papers, documents, and custom data sources</p>
-        </div>
-    </div>-->
-
     <!-- Scroll to bottom button -->
     <div class="scroll-to-bottom" id="scrollToBottomBtn">
         <i class="fas fa-arrow-down"></i>
@@ -164,45 +114,27 @@
                 <select name="report_type" id="report_type" class="form-control highlight-connection" required>
                     <option value="research_report">Quick Summary - Fast results (~2 min)</option>
                     <option value="detailed_report">Detailed Report - Comprehensive analysis (~5 min)</option>
-                    <!--FIXME: context length continually exceeds resulting in nothing produced-->
-                    <!--<option value="deep_research">Deep Research - Explores multiple subtopics in-depth with advanced AI (~15 min)</option>-->
-                    <option value="multi_agents">Multi Agents</option>
+                    <option value="deep_research">Deep Research - Explores multiple subtopics in-depth with advanced AI (~15 min)</option>
+                    <option value="multi_agents">Multi Agents - Utilizes chain-prompt techniques to create a more critiqued report</option>
                     <option value="resource_report">Resource List - Just the sources</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="tone" class="agent-question">How would you like your report to sound?</label>
                 <select name="tone" id="tone" class="form-control highlight-connection" required>
-                    <option value="Objective">Balanced - Presents information neutrally, without personal bias or
-                        emotional coloring</option>
-                    <option value="Formal">Academic - Uses scholarly language, precise terminology, and structured
-                        argumentation</option>
-                    <option value="Analytical">Analytical - Breaks down complex topics systematically, examining
-                        evidence and drawing logical conclusions</option>
-                    <option value="Persuasive">Persuasive - Constructs a compelling argument to influence the reader's
-                        perspective</option>
-                    <option value="Informative">Informative - Delivers clear, concise information with direct
-                        explanations</option>
-                    <option value="Explanatory">Beginner-friendly - Breaks down complex concepts into easily
-                        understandable language</option>
-                    <option value="Descriptive">Vivid - Uses rich, sensory language to create a detailed and immersive
-                        understanding</option>
-                    <option value="Critical">Critical - Provides in-depth evaluation, highlighting both strengths and
-                        potential weaknesses</option>
-                    <option value="Comparative">Compare & Contrast - Explores nuanced relationships between different
-                        ideas or subjects</option>
-                    <option value="Speculative">Forward-looking - Explores potential future scenarios and emerging
-                        trends</option>
-                    <option value="Reflective">Thoughtful - Offers deep personal insights and philosophical
-                        considerations</option>
-                    <option value="Narrative">Storytelling - Presents information as an engaging, coherent narrative
-                    </option>
-                    <option value="Humorous">Light-hearted - Incorporates wit and playful language to make the content
-                        more enjoyable</option>
-                    <option value="Optimistic">Positive - Emphasizes potential solutions and promising opportunities
-                    </option>
-                    <option value="Pessimistic">Cautious - Highlights potential challenges, risks, and limitations
-                    </option>
+                    <option value="Objective">Objective (impartial and unbiased presentation of facts and findings)</option>
+                    <option value="Academic">Academic (scholarly, rigorous, evidence-based)</option>
+                    <option value="Conversational">Conversational (friendly, approachable, easy to understand)</option>
+                    <option value="Creative">Creative (engaging, storytelling, memorable)</option>
+                    <option value="Educational">Educational (clear, instructive, beginner-friendly)</option>
+                    <option value="Executive">Executive (concise, strategic, decision-focused)</option>
+                    <option value="Humorous">Humorous (light-hearted and engaging, usually to make the content more relatable)</option>
+                    <option value="Journalistic">Journalistic (investigative, balanced, newsworthy)</option>
+                    <option value="Narrative">Narrative (telling a story to illustrate research findings or methodologies)</option>
+                    <option value="Optimistic">Optimistic (highlighting positive findings and potential benefits)</option>
+                    <option value="Pessimistic">Pessimistic (focusing on limitations, challenges, or potential risks)</option>
+                    <option value="Professional">Professional (formal, authoritative, business-appropriate)</option>
+                    <option value="Technical">Technical (precise, detailed, expert-level)</option>
                 </select>
             </div>
             <!-- Hidden input for report_source with default value 'web' -->
@@ -225,7 +157,7 @@
 
         <div class="margin-div research-output-container">
             <!-- Move spinner to the left side of the text -->
-            <h2><div id="modernSpinner" class="modern-spinner"></div> Research Progress <button id="expandOutputBtn" class="expand-button" title="Expand"><i class="fas fa-expand-alt"></i></button></h2>
+            <h2><div id="modernSpinner" class="modern-spinner"></div> Research Progress </h2>
             <p class="mt-2 text-left" style="font-size: 0.8rem;">
                 Watch as the AI works to gather information and analyze your topic in real-time.</p>
             <div id="output"></div>
@@ -237,9 +169,6 @@
             <h2>Research Report
                 <button id="copyToClipboardTop" class="icon-button" title="Copy" style="display: none;">
                     <i class="fas fa-copy"></i>
-                </button>
-                <button id="expandReportBtn" class="expand-button" title="Expand">
-                    <i class="fas fa-expand-alt"></i>
                 </button>
             </h2>
             <!-- Add download buttons above the report container -->
@@ -262,7 +191,7 @@
 
         <!-- Chat Container -->
         <div class="margin-div chat-container" id="chatContainer" style="display: none;">
-            <h2><i class="fas fa-comments"></i> Chat with AI about this research <button id="expandChatBtn" class="expand-button" title="Expand"><i class="fas fa-expand-alt"></i></button></h2>
+            <h2><i class="fas fa-comments"></i> Chat with AI about this research </h2>
             <p class="text-muted">Ask questions about the research report to get more insights</p>
             <div id="chatMessages" class="chat-messages"></div>
             <div class="chat-input-container">

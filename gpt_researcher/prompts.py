@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import warnings
 
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
+from logging import Logger
 from typing import Any, Callable, ClassVar
 
 from langchain.docstore.document import Document
@@ -12,13 +13,11 @@ from gpt_researcher.utils.enum import PromptFamily as PromptFamilyEnum, ReportSo
 
 
 ## Helper for Tone Descriptions
-def get_tone_description(tone_enum_member: Tone | None) -> str:
+def get_tone_description(
+    tone_enum_member: Tone | None = Tone.Objective,
+) -> str:
     if not tone_enum_member:
-        return (
-            "Maintain a neutral, objective, and unbiased tone throughout the report. "
-            "Focus on presenting facts and evidence without injecting personal opinions or emotions, "
-            "unless the information itself is explicitly opinionated and requires such representation."
-        )
+        tone_enum_member = Tone.Objective
 
     tone_name_lower: str = tone_enum_member.name.lower()
 
@@ -34,53 +33,27 @@ def get_tone_description(tone_enum_member: Tone | None) -> str:
         "formal": (
             "Adopt a Formal tone for this report. Use precise language, proper grammar, and a structured approach. "
             "Avoid colloquialisms, slang, or overly casual phrasing. The writing should be professional and academic in style, "
-            f"adhering to standards suitable for the content. (Enum Value Hint: '{Tone.Formal.value}')"
-        ),
-        "analytical": (
-            "Employ an Analytical tone. Break down complex information from the provided context into its constituent parts. "
-            "Examine relationships between concepts, identify patterns, interpret data, and evaluate arguments critically. "
-            f"The focus is on a deep, reasoned examination of the topic based on the sources. (Enum Value Hint: '{Tone.Analytical.value}')"
+            f"adhering to standards suitable for the content. (Enum Value Hint: '{Tone.Professional.value}')"
         ),
         "persuasive": (
             "Adopt a Persuasive tone. While basing all arguments on the provided context, structure the information to convincingly "
             "support a specific viewpoint or conclusion that can be derived from the sources. Use logical reasoning and evidence from "
-            f"the context to guide the reader towards this viewpoint. (Enum Value Hint: '{Tone.Persuasive.value}')"
+            f"the context to guide the reader towards this viewpoint. (Enum Value Hint: '{Tone.Objective.value}')"
         ),
-        "informative": (
-            "The tone should be primarily Informative. Focus on clearly and concisely conveying facts, details, and explanations "
-            "from the provided context. The main goal is to educate the reader about the topic based on the research, presenting "
-            f"information comprehensively and accurately. (Enum Value Hint: '{Tone.Informative.value}')"
-        ),
-        "explanatory": (
-            "Adopt an Explanatory tone. Focus on making complex concepts, processes, or information from the provided context clear and understandable. "
-            "Use definitions, examples, and logical breakdowns to ensure the reader comprehends the subject matter thoroughly. "
-            f"(Enum Value Hint: '{Tone.Explanatory.value}')"
-        ),
-        "descriptive": (
-            "Use a Descriptive tone. Provide a detailed and vivid account of phenomena, experiments, case studies, or subjects from the provided context. "
+        "journalistic": (
+            "Use a Journalistic tone. Provide a detailed and vivid account of phenomena, experiments, case studies, or subjects from the provided context. "
             "Focus on painting a clear picture for the reader, using specific details and characteristics found in the source material. "
-            f"(Enum Value Hint: '{Tone.Descriptive.value}')"
+            f"(Enum Value Hint: '{Tone.Journalistic.value}')"
         ),
-        "critical": (
-            "A Critical tone is required. This involves analyzing and evaluating the information from the provided context. "
-            "Identify strengths, weaknesses, potential biases, or inconsistencies within the source material. Go beyond mere description "
-            "to offer a reasoned judgment or critique, always basing your assessment on the provided information. "
-            f"(Enum Value Hint: '{Tone.Critical.value}')"
+        "academic": (
+            "Use an Academic tone. Provide a detailed and vivid account of phenomena, experiments, case studies, or subjects from the provided context. "
+            "Focus on painting a clear picture for the reader, using specific details and characteristics found in the source material. "
+            f"(Enum Value Hint: '{Tone.Academic.value}')"
         ),
-        "comparative": (
-            "Employ a Comparative tone. Analyze and juxtapose different theories, data sets, methods, or subjects from the provided context. "
-            "Clearly articulate their similarities and differences, and evaluate their respective strengths and weaknesses based on the source information. "
-            f"(Enum Value Hint: '{Tone.Comparative.value}')"
-        ),
-        "speculative": (
-            "Adopt a Speculative tone when the context supports it. Explore potential hypotheses, implications, or future research directions that arise "
-            "from the information in the provided context. Clearly distinguish speculation from established facts, and base any conjectures on "
-            f"logical extensions of the source material. (Enum Value Hint: '{Tone.Speculative.value}')"
-        ),
-        "reflective": (
-            "Use a Reflective tone if the context involves considering the research process itself, or personal insights/experiences described within the sources. "
-            "Analyze and comment on these aspects thoughtfully, drawing conclusions about their significance or impact as detailed in the context. "
-            f"(Enum Value Hint: '{Tone.Reflective.value}')"
+        "technical": (
+            "Use a Technical tone. Provide a detailed and vivid account of phenomena, experiments, case studies, or subjects from the provided context. "
+            "Focus on painting a clear picture for the reader, using specific details and characteristics found in the source material. "
+            f"(Enum Value Hint: '{Tone.Technical.value}')"
         ),
         "narrative": (
             "Use a Narrative tone if appropriate for the content. Weave the information from the provided context into a coherent story to illustrate research findings or methodologies. "
@@ -101,16 +74,6 @@ def get_tone_description(tone_enum_member: Tone | None) -> str:
             "Employ a Pessimistic tone if the context warrants it. Focus on limitations, challenges, negative outcomes, or potential risks discussed in the provided source material. "
             "Present these aspects clearly and factually, reflecting the concerns raised in the context. "
             f"(Enum Value Hint: '{Tone.Pessimistic.value}')"
-        ),
-        "simple": (
-            "Adopt a Simple tone. Write for an audience that may have limited prior knowledge of the topic (e.g., young readers). "
-            "Use basic vocabulary, short sentences, and clear, straightforward explanations of concepts from the provided context. "
-            f"Avoid jargon where possible, or explain it plainly. (Enum Value Hint: '{Tone.Simple.value}')"
-        ),
-        "casual": (
-            "Use a Casual tone. Adopt a conversational and relaxed writing style suitable for everyday reading. The language can be less formal, "
-            "but should still clearly convey the information from the provided context accurately and avoid slang or unprofessionalism. "
-            f"(Enum Value Hint: '{Tone.Casual.value}')"
         ),
         # Add any other tones from your enum here with their descriptions
     }
@@ -143,7 +106,7 @@ class PromptFamily:
 
     def __init__(
         self,
-        config: Config,
+        config: Config | None = None,
     ):
         """Initialize with a config instance.
 
@@ -153,7 +116,7 @@ class PromptFamily:
         Args:
             config (Config): The config instance
         """
-        self.cfg: Config = config
+        self.cfg: Config = Config() if config is None else config
 
     @staticmethod
     def generate_search_queries_prompt(
@@ -179,42 +142,26 @@ class PromptFamily:
 
         task: str = (
             f"{parent_query} - {question}"
-            if report_type
-            in (
-                ReportType.DetailedReport.value,
-                ReportType.SubtopicReport.value,
+            if (
+                report_type == ReportType.DetailedReport.value
+                or report_type == ReportType.SubtopicReport.value
             )
             else question
         )
 
-        nuance_guidance: str = ""
-        if " " in task:  # Basic check for multi-word task
-            nuance_guidance = f"""
-Task Analysis for Query Generation:
-1.  The research task is: ```{task}```.
-2.  Identify Core Concepts: Break down the task into its fundamental concepts. For example, if the task is 'the impact of AI on renewable energy startups', core concepts are 'AI', 'impact', 'renewable energy', and 'startups'.
-3.  Clarify Nuances: If the task involves a specific term or phrase that could be ambiguous or has close relatives, define the *precise meaning* of ```{task}``` you will be focusing on for research. This definition should guide your query generation.
-4.  Formulate a Research Strategy: Based on your analysis, briefly outline 2-3 key areas of inquiry or questions your search queries will aim to answer to provide a comprehensive understanding of ```{task}```.
-    Example Strategy:
-    - Define <query> and its characteristics.
-    - Find examples or case studies of <query>.
-    - Explore methods for detecting or mitigating <query>."""
+        context_prompt: str = (
+            f"""
+You are a seasoned research assistant tasked with generating search queries to find relevant information for the following task: '''{task}'''
+Context: '''{context}'''
 
-        context_prompt: str = ""
-        if context:
-            context_prompt = f"""
-As an expert research assistant, your goal is to create search queries for the task: ```{task}```.
-Use this context to further refine your search queries:
-```{context}```
-Consider any current events, recent developments, or specific details mentioned that could enhance the search."""
+Use this context to inform and refine your search queries. The context provides real-time web information that can help you generate more specific and relevant queries. Consider any current events, recent developments, or specific details mentioned in the context that could enhance the search queries."""
+            if context
+            else ""
+        )
 
         dynamic_example: str = ", ".join([f'"query {i+1}"' for i in range(max_iterations)])
 
-        return f"""You are an expert in research, search engine optimization, and search queries. Your goal is to generate {max_iterations} highly diverse and effective Google search queries for comprehensive, objective information on the research task.
-
-{nuance_guidance}
-
-Main Research Task: "{task}"
+        return f"""Write {max_iterations} google search queries to search online that form an objective opinion from the following task: '''{task}'''
 
 Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 
@@ -252,7 +199,7 @@ The response should contain ONLY the list, with no other text before or after it
         report_source: str,
         report_format: str = "apa",
         total_words: int = 1000,
-        tone: Tone | None = None,
+        tone: Tone | str | None = None,
         language: str = "english",
     ) -> str:
         """Generates a prompt for creating a standard research report.
@@ -269,7 +216,7 @@ The response should contain ONLY the list, with no other text before or after it
             The report generation prompt.
         """
 
-        ref_prompt_text: str = (
+        reference_prompt: str = (
             f"""
 Regarding Sources and Citations ({report_format.upper()} style):
 -   **References Section:** At the end of the report, list each unique source URL (for web) or document name/identifier (for documents) from the context once.
@@ -286,31 +233,24 @@ heading Sources and Citations ({report_format.upper()} style):
 -   **CRITICAL:** All citation details (author, year, title, URL/identifier) MUST be from the provided context.  DO NOT use generic placeholders."""
         )
 
-        tone_instruction: str = get_tone_description(tone)
+        tone_prompt: str = get_tone_description(tone)
 
-        return f"""Research Information:
-```{context}```
+        return f"""Information: '''{context}'''
 
-Task: Write a detailed, comprehensive report answering: ```{question}```.
+Using the above information, answer the following query or task: '''{question}'''
 
-Guidelines:
-- **Goal:** Thoroughly answer ```{question}```.
-- **Structure & Formatting:**
-    - Use Markdown.
-    - Adhere to *{report_format.upper()}* citation style (in-text and references).
-    - Use Markdown tables for structured data, comparisons, or lists for clarity.
-    - NO Table of Contents. Start directly with the report body.
-- **Content & Analysis:**
-    - Formulate your own concrete, valid opinion/conclusions based *solely* on the provided research context.
-    - Prioritize relevant, reliable, and significant information from the context. Use source credibility/recency clues if available.
-    - Synthesize information thoughtfully if multiple sources exist.
-    - Prefer newer, reliable articles unless older sources are specifically required.
-- **Word Count:** At least {total_words} words.
-- **Language:** Must be *{language}*.
-- **Tone:** {tone_instruction}.
-- **Citations:** {ref_prompt_text}
-
-Ensure high quality. Today's date: {date.today()}."""
+Please follow all of the following guidelines:
+1. Make sure the report is detailed, informative, in-depth, and comprehensive, with facts and numbers if available.
+2. Make sure to use an unbiased and journalistic tone.
+3. Make sure to cite the results using an in-text citation for the sources you use, e.g. ([url website](url)).
+4. Please do your best to write a well-structured report with markdown syntax.
+5. Please write the report in apa format.
+6. Use markdown syntax (## headers) for sections.
+7. Please write a minimum of {total_words} words.
+8. Please write the report in *{language}*.
+{tone_prompt}
+{reference_prompt}
+Please do your best, this is very important to my career."""
 
     @staticmethod
     def curate_sources(
@@ -327,7 +267,7 @@ Ensure high quality. Today's date: {date.today()}."""
         Returns:
             A JSON string list of curated sources in the original format.
         """
-        return f"""Evaluate and select the best web content for the research task: ```{query}```.
+        return f"""Evaluate and select the best web content for the research task: '''{query}'''.
 Objective: Identify high-quality, relevant information. Prioritize sources with statistics, numbers, or concrete data.
 This curated list will form the basis of a research report.
 Prioritize:
@@ -354,9 +294,11 @@ CONTENT PRESERVATION:
 - Retain marginally relevant or incomplete sources if they contain valuable data or unique insights.
 
 SOURCES TO EVALUATE:
-{sources}
+'''{sources}'''
 
-Respond ONLY with a JSON list in the exact same format as 'SOURCES TO EVALUATE'. No Markdown formatting or other text."""
+Please return a JSON list of the selected sources in the exact same format as provided, limiting to a maximum of {max_results} sources.
+
+Return only the JSON list, no additional text."""
 
     @staticmethod
     def generate_resource_report_prompt(
@@ -364,7 +306,7 @@ Respond ONLY with a JSON list in the exact same format as 'SOURCES TO EVALUATE'.
         context: str,
         report_source: str,
         report_format: str = "apa",
-        tone: Tone | None = None,
+        tone: Tone | str | None = None,
         total_words: int = 1000,
         language: str = "english",
     ) -> str:
@@ -383,36 +325,33 @@ Respond ONLY with a JSON list in the exact same format as 'SOURCES TO EVALUATE'.
             The resource report prompt.
         """
 
-        source_instruction: str = (
-            "For each web resource, you MUST include its URL as a hyperlink: [Resource Title/Site Name](url_to_resource)."
+        reference_prompt: str = (
+            """You must write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
+Every url should be hyperlinked: [url website](url)"""
             if report_source == ReportSource.Web.value
-            else "You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
+            else """
+You must write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."""
         )
 
-        tone_instruction: str = get_tone_description(tone)
+        tone_prompt: str = get_tone_description(tone)
 
-        return f"""Context Information:
-```{context}```
+        return f"""Information: '''{context}'''
 
-**Task**: Create a bibliography recommendation report for: ```{question}```.
+Based on the above information, generate a bibliography recommendation report for the following question or topic: '''{question}'''
+The report should provide a detailed analysis of each recommended resource, explaining how each source can contribute to understanding the research question.
+Focus on the relevance, reliability, and significance of each source.
 
-For each recommended resource, provide a detailed analysis explaining:
-- How it helps answer the research question.
-- Its relevance, reliability, and significance.
-
-Report Requirements:
-- Well-structured, informative, in-depth.
-- Markdown syntax, {report_format.upper()} citation style.
-- At least {total_words} words.
-- Language: *{language}*.
-- Tone: {tone_instruction}
-
-Additional Guidelines:
-- Use Markdown tables, lists, or bolding for clarity.
-- Include relevant facts, figures, or numbers from sources in your analysis if available.
-- {source_instruction}
-
-Ensure high quality. Today's date: {date.today()}."""
+Please follow all of the following guidelines:
+1. Make sure the report is detailed, informative, in-depth, and comprehensive, with facts and numbers if available.
+2. Make sure to use an unbiased and journalistic tone.
+3. Please do your best to write a well-structured report with markdown syntax.
+4. Please write the report in apa format.
+5. Use markdown syntax (## headers) for sections.
+6. Please write a minimum of {total_words} words.
+7. Please write the report in the language: *{language}*.
+{tone_prompt}
+{reference_prompt}
+Please do your best, this is very important to my career."""
 
     @staticmethod
     def generate_custom_report_prompt(
@@ -420,7 +359,7 @@ Ensure high quality. Today's date: {date.today()}."""
         context: str,
         report_source: str,  # Not directly used here, but available if query_prompt needs it
         report_format: str = "apa",  # Not directly used here
-        tone: Tone | None = None,  # Not directly used here
+        tone: Tone | str | None = None,  # Not directly used here
         total_words: int = 1000,  # Not directly used here
         language: str = "english",  # Not directly used here
     ) -> str:
@@ -485,7 +424,7 @@ Formatting guidance for the outline:
 - You can use bullet points for key ideas under each heading.
 
 Please ensure the outline is of high quality, as this is very important.
-Assume today's date is {date.today()}."""
+Assume today's date is {datetime.now(timezone.utc).strftime('%B %d, %Y')}."""
 
     @staticmethod
     def generate_deep_research_prompt(
@@ -493,7 +432,7 @@ Assume today's date is {date.today()}."""
         context: str,
         report_source: str,
         report_format: str = "apa",
-        tone: Tone | None = None,
+        tone: Tone | str | None = None,
         total_words: int = 2000,
         language: str = "english",
     ) -> str:
@@ -530,7 +469,7 @@ Regarding Sources and Citations ({report_format.upper()} style):
         tone_instruction: str = get_tone_description(tone)
 
         return f"""Provided hierarchically researched information and citations:
-```{context}```
+'''{context}'''
 
 Task: Write a comprehensive research report answering: ```{question}```
 
@@ -550,12 +489,12 @@ Additional Guidelines:
 -   **Formulate Opinion (Context-Based):** Based *solely* on provided context, state concrete, valid conclusions. No vague statements or external knowledge.
 -   **Source Quality (Context-Based):** If context offers clues, prioritize info from more relevant, reliable, significant sources. Prefer newer articles if comparable.
 -   **Tone:** {tone_instruction}
--   **Language:** *{language}*.
+-   **Language:** Written in the language: *{language}*.
 
 {reference_prompt}
 
 Produce a thorough, well-researched report synthesizing all gathered information from context into a cohesive, insightful document.
-Today's date: {datetime.now(timezone.utc).strftime('%B %d, %Y')}."""
+Please do your best, this is very important to my career."""
 
     @staticmethod
     def auto_agent_instructions() -> str:
@@ -662,10 +601,10 @@ Instructions:
             str: The joined context string
         """
         return f"""Context from local documents:
-```{docs_context}```
+'''{docs_context}'''
 
 Context from web sources:
-```{web_context}```"""
+'''{web_context}'''"""
 
     ################################################################################################
 
@@ -675,88 +614,23 @@ Context from web sources:
     def generate_subtopics_prompt() -> str:
         return """
 I need you to help me structure a detailed report.
-Main Topic: ```{task}```
+Main Topic: '''{task}'''
 
 Available Research Data:
-```{data}```
+'''{data}'''
 
 Your task is to generate a list of subtopics that will serve as the main headers for this report.
 Here's what to keep in mind:
-- You might consider these potential subtopics as a starting point or for ideas: ```{subtopics}```.
+- You might consider these potential subtopics as a starting point or for ideas: '''{subtopics}'''.
 - Ensure there are NO duplicate subtopics in your final list.
 - Please limit the list to a maximum of {max_subtopics} subtopics.
 - Arrange the subtopics in a logical and meaningful order suitable for a comprehensive report.
-- CRITICALLY IMPORTANT: Every subtopic you choose MUST be directly relevant to the Main Topic ("```{task}```")
+- CRITICALLY IMPORTANT: Every subtopic you choose MUST be directly relevant to the Main Topic ("'''{task}'''")
 - CRITICALLY IMPORTANT: Every subtopic you choose MUST be supported by the Available Research Data. Do not invent subtopics that go beyond this scope.
 
 ## FORMATTING INSTRUCTIONS
-```{format_instructions}```
+'''{format_instructions}'''
 Please provide your response according to these formatting instructions:"""
-
-    @staticmethod
-    def generate_subtopic_report_prompt(
-        current_subtopic: str,
-        existing_headers: list[str],
-        relevant_written_contents: list[str],
-        main_topic: str,
-        context: str,
-        report_format: str = "apa",
-        max_subsections: int = 5,
-        total_words: int = 800,
-        tone: Tone = Tone.Objective,
-        language: str = "english",
-    ) -> str:
-        """Generates prompt for writing a specific subtopic section of a larger report.
-        Args:
-            current_subtopic: The subtopic for this section.
-            existing_headers: Headers from other report sections.
-            relevant_written_contents: Content from other report sections.
-            main_topic: The main topic of the overall report.
-            context: Research context for this subtopic.
-            report_format: Citation style.
-            max_subsections: Max subsections within this section.
-            total_words: Target word count for this section.
-            tone: Tone for this section.
-            language: Language for this section.
-        Returns:
-            Prompt for generating the subtopic report section.
-        """
-        return f"""
-Write a section for a larger research report.
-Main Report Topic: ```{main_topic}```
-Current Section Subtopic: ```{current_subtopic}```
-
-Context for this Subtopic:
-```{context}```
-
-Section Requirements:
-1.  **Content:** Write a detailed report on ```{current_subtopic}``` using the "Context for this Subtopic". Be well-structured, informative, in-depth, with facts/figures from context. Max {max_subsections} subsections.
-2.  **Focus on ```{current_subtopic}```:**
-    *   Goal: Comprehensively cover ```{current_subtopic}``` using its specific "Context".
-    *   Awareness: Note `Existing Section Headers` and `Existing Written Contents` (provided below) from other report parts.
-    *   Depth: Thoroughly explore ```{current_subtopic}``` with details, examples, or analysis, even if related concepts are in other sections.
-    *   Originality: Avoid re-writing identical paragraphs from `Existing Written Contents`. Add unique value to this subtopic.
-    *   Headers: Section headers should be specific to ```{current_subtopic}```.
-3.  **Existing Report Info (for reference to avoid duplication):**
-    *   Existing Section Headers: ```{existing_headers}```
-    *   Existing Written Contents: ```{relevant_written_contents}```
-4.  **Structure & Formatting (This Section Only):
-    *   **Standalone Section:** Write ONLY the main body content for "{current_subtopic}". NO introduction, conclusion, summary, or reference list for this part.
-    *   Markdown: Use Markdown. Adhere to {report_format.upper()} citation style if applicable in-text.
-    *   Main Header: H2 (## ```{current_subtopic}```). Subsections: H3 (### Subsection Title). No H1.
-    *   Data: Use Markdown tables for data, comparisons, structured info.
-    *   Links: Use Markdown hyperlinks for source URLs: `Text ([citation](url)).`
-    *   Header Clarification: If a new subsection title is similar to an existing one, clarify distinction (e.g., `### New Header (similar to existing)`\n`This section explores [Topic B], focusing on...`)
-5.  **General Guidelines:**
-    *   Language: *{language}*.
-    *   Tone: {get_tone_description(tone)}
-    *   Length: At least {total_words} words.
-    *   Relevance: Strictly focus on ```{main_topic}``` and ```{current_subtopic}```. Omit unrelated info.
-    *   Date: Assume today is {datetime.now(timezone.utc).strftime('%B %d, %Y')}.
-
-Output ONLY the report section for ```{current_subtopic}``` (no preamble, intro, conclusion, references).
-
-Do NOT add a conclusion section."""
 
     @staticmethod
     def generate_draft_titles_prompt(
@@ -777,18 +651,18 @@ Do NOT add a conclusion section."""
             Prompt for generating draft titles.
         """
         return f"""
-Main Report Topic: ```{main_topic}```
-Subtopic for these Headers: ```{current_subtopic}```
+Main Report Topic: '''{main_topic}'''
+Subtopic for these Headers: '''{current_subtopic}'''
 
 Context for this Subtopic:
-```{context}```
+'''{context}'''
 
-Task: Generate a list of draft section titles (H3 Markdown headers) for the report section about ```{current_subtopic}```, based on the "Context".
+Task: Generate a list of draft section titles (H3 Markdown headers) for the report section about '''{current_subtopic}''', based on the "Context".
 
 Title Guidelines:
-1.  **Relevance & Conciseness:** Concise and directly relevant to ```{current_subtopic}```.
+1.  **Relevance & Conciseness:** Concise and directly relevant to '''{current_subtopic}'''.
 2.  **Specificity:** Detailed enough to indicate specific aspect covered, not too vague.
-3.  **Coverage:** Aim to cover main aspects of ```{current_subtopic}```.
+3.  **Coverage:** Aim to cover main aspects of '''{current_subtopic}'''.
 4.  **Format:** H3 Markdown (e.g., `### My Section Title`). Output as a list of these headers.
     Example:
     ```
@@ -798,8 +672,8 @@ Title Guidelines:
     ```
 
 Constraints:
--   **Focus:** Titles must relate directly to ```{main_topic}``` and ```{current_subtopic}```. NO unrelated titles.
--   **Language:** *{language}*.
+-   **Focus:** Titles must relate directly to '''{main_topic}''' and '''{current_subtopic}'''. NO unrelated titles.
+-   **Language:** Written in the language: *{language}*.
 -   **Limit:** Max {max_subsections} titles.
 
 "IMPORTANT!":
@@ -825,14 +699,17 @@ Constraints:
         Returns:
             Prompt for generating the report introduction.
         """
-        return f"""{research_summary}\n
-Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
+        return f"""
+Research Summary:
+'''{research_summary}'''
+
+Using the above `Research Summary`, prepare a detailed report introduction on the topic -- '''{question}'''
 - The introduction should be succinct, well-structured, informative with markdown syntax.
 - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
 - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
-- You must use in-text citation references in {report_format.upper()} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+- You must use in-text citation references in *{report_format.upper()}* format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
 Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
-- The output must be in {language} language."""
+- The output must be written in the language: *{language}*."""
 
     @staticmethod
     def generate_report_conclusion(
@@ -852,7 +729,7 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
             str: A concise conclusion summarizing the report's main findings and implications."""
         return f"""
 I need you to write a concise conclusion for a research report.
-Research Task/Query: ```{query}```
+Research Task/Query: '''{query}'''
 
 Full Research Report Content:
 <<BEGIN REPORT CONTENT>>{report_content}<<END REPORT CONTENT>>
@@ -871,11 +748,12 @@ Your conclusion should adhere to these points:
 6.  **Language:** The entire conclusion, including the "## Conclusion" heading if you add it, MUST be written in the language: *{language}*.
 
 If there is no "## Conclusion" section title written at the end of the report, please add it to the top of your conclusion.
-You must use in-text citation references in {report_format.upper()} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+You must use in-text citation references in *{report_format.upper()}* format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
 
-IMPORTANT: The entire conclusion MUST be written in {language} language.
+IMPORTANT: The entire conclusion MUST be written in the language: *{language}*.
 
 Write the conclusion:"""
+
 
 class GranitePromptFamily(PromptFamily):
     """Prompts for IBM's granite models"""
@@ -919,7 +797,7 @@ class Granite3PromptFamily(PromptFamily):
     @classmethod
     def pretty_print_docs(
         cls,
-        docs: list[Document],
+        docs: list[Document] | None = None,
         top_n: int | None = None,
     ) -> str:
         """Pretty print the documents.
@@ -955,7 +833,7 @@ class Granite3PromptFamily(PromptFamily):
             docs_context = docs_context[len(cls._DOCUMENTS_PREFIX) :]
         if isinstance(web_context, str) and web_context.endswith(cls._DOCUMENTS_SUFFIX):
             web_context = web_context[: -len(cls._DOCUMENTS_SUFFIX)]
-        combined_context: list[str] = [docs_context, web_context]
+        combined_context: list[str] = [str(docs_context or ""), str(web_context or "")]
         return "".join(
             [
                 cls._DOCUMENTS_PREFIX,
@@ -976,7 +854,7 @@ class Granite33PromptFamily(PromptFamily):
     def _get_content(doc: Document) -> str:
         doc_content: str = doc.page_content
         title: str | None = doc.metadata.get("title")
-        if title and title.strip():
+        if str(title or "").strip():
             doc_content = f"Title: {title}\n{doc_content}"
         return doc_content.strip()
 
@@ -1021,13 +899,13 @@ class Granite33PromptFamily(PromptFamily):
 # This is the function signature for the various prompt generator functions
 PROMPT_GENERATOR = Callable[
     [
-        str,  # question
-        str,  # context
-        str,  # report_source
-        str,  # report_format
+        str,         # question
+        str,         # context
+        str,         # report_source
+        str,         # report_format
         str | None,  # tone
-        int,  # total_words
-        str,  # language
+        int,         # total_words
+        str,         # language
     ],
     str,
 ]
@@ -1055,11 +933,21 @@ def get_prompt_by_report_type(
     Returns:
         Callable[..., Any] | None: The prompt by report type
     """
+    # DEBUG: Log function entry
+    from gpt_researcher.utils.logger import get_formatted_logger
+
+    logger: Logger = get_formatted_logger()
+    logger.info(f"[DEBUG-PROMPTS] Getting prompt for report_type: {report_type}")
+
+    prompt_method_name = report_type_mapping.get(report_type, "")
+    logger.info(f"[DEBUG-PROMPTS] Mapped to prompt method: {prompt_method_name}")
+
     prompt_by_type: Callable[..., Any] | None = getattr(
         prompt_family,
-        report_type_mapping.get(report_type, ""),
+        prompt_method_name,
         None,
     )
+
     default_report_type: str = ReportType.ResearchReport.value
     if not prompt_by_type:
         warnings.warn(
@@ -1068,10 +956,18 @@ def get_prompt_by_report_type(
             f"Using default report type: `{default_report_type}` prompt.",
             UserWarning,
         )
+        logger.warning(f"[DEBUG-PROMPTS] Invalid report type: {report_type}, using default: {default_report_type}")
         prompt_by_type = getattr(
             prompt_family,
             report_type_mapping.get(default_report_type),
         )
+
+    # DEBUG: Log prompt method found
+    if prompt_by_type:
+        logger.info(f"[DEBUG-PROMPTS] Found prompt method: {prompt_by_type.__name__}")
+    else:
+        logger.error(f"[DEBUG-PROMPTS] Failed to find prompt method for {report_type}")
+
     return prompt_by_type
 
 
@@ -1098,9 +994,12 @@ def get_prompt_family(
     Returns:
         PromptFamily: The prompt family
     """
+    if isinstance(prompt_family_name, PromptFamilyEnum):
+        prompt_family_name = prompt_family_name.value
     prompt_family: type[PromptFamily] | None = prompt_family_mapping.get(prompt_family_name)
     if prompt_family is not None:
         return prompt_family(config)
+
     warnings.warn(
         f"Invalid prompt family: `{prompt_family_name}`.\n"
         f"Please use one of the following: [{', '.join(prompt_family_mapping.keys())}]\n"

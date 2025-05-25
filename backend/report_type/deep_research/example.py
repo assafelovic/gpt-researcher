@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import os
+
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from gpt_researcher import GPTResearcher
 from gpt_researcher.config.config import Config
+from gpt_researcher.config.variables.base import BaseConfig
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.llm import create_chat_completion
@@ -18,9 +20,7 @@ if TYPE_CHECKING:
 
     from backend.server.server_utils import CustomLogsHandler
 
-from gpt_researcher.utils.logger import get_formatted_logger
-
-logger: logging.Logger = get_formatted_logger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 class ResearchProgress:
@@ -51,16 +51,18 @@ class DeepResearch:
         concurrency_limit: int = 2,  # Match TypeScript version
         config: Config | None = None,
     ):
-        self.config_path: Path | None = (
-            None if config_path is None else Path(os.path.normpath(config_path))
-        )
-        self.cfg: Config = (
-            Config.from_path(self.config_path)
+        self.config_path: Path | None = None if config_path is None else Path(os.path.normpath(config_path))
+        cfg: BaseConfig | Config = (
+            Config.load_config(self.config_path)
             if self.config_path is not None
             else config
             if config is not None
             else Config()
         )
+        if isinstance(cfg, dict):
+            cfg = Config()
+            cfg._set_attributes(cfg)
+        self.cfg: Config = cfg
         self.query: str = query
         self.breadth: int = breadth
         self.depth: int = depth
@@ -90,19 +92,16 @@ class DeepResearch:
 
         response: str = await create_chat_completion(
             messages=messages,
-            llm_provider=self.cfg.SMART_LLM_PROVIDER,
-            model=self.cfg.SMART_LLM_MODEL,  # Using reasoning model for better question generation
+            llm_provider=self.cfg.strategic_llm_provider,  # pyright: ignore[reportAttributeAccess]
+            model=self.cfg.strategic_llm_model,  # pyright: ignore[reportAttributeAccess]
             temperature=0.7,
-            max_tokens=500,
+#            max_tokens=500,
             reasoning_effort=ReasoningEfforts.High.value,
+            cfg=self.cfg,
         )
 
         # Parse questions from response
-        questions: list[str] = [
-            q.replace("Question:", "").strip()
-            for q in response.split("\n")
-            if q.strip().startswith("Question:")
-        ]
+        questions: list[str] = [q.replace("Question:", "").strip() for q in response.split("\n") if q.strip().startswith("Question:")]
         return questions[:num_questions]
 
     async def generate_serp_queries(
@@ -124,10 +123,11 @@ class DeepResearch:
 
         response: str = await create_chat_completion(
             messages=messages,
-            llm_provider=self.cfg.SMART_LLM_PROVIDER,
-            model=self.cfg.SMART_LLM_MODEL,  # Using GPT-4 for general task
+            llm_provider=self.cfg.smart_llm_provider,  # pyright: ignore[reportAttributeAccess]
+            model=self.cfg.smart_llm_model,  # pyright: ignore[reportAttributeAccess]
             temperature=0.7,
-            max_tokens=1000,
+#            max_tokens=1000,
+            cfg=self.cfg,
         )
 
         # Parse queries and goals from response
@@ -136,12 +136,12 @@ class DeepResearch:
         current_query: dict[str, str] = {}
 
         for line in lines:
-            line = line.strip()
+            line: str = line.strip()
             if line.startswith("Query:"):
                 if current_query:
                     queries.append(current_query)
                 current_query = {"query": line.replace("Query:", "").strip()}
-            elif line.startswith("Goal:") and current_query:
+            elif line.startswith("Goal:"):
                 current_query["researchGoal"] = line.replace("Goal:", "").strip()
 
         if current_query:
@@ -163,17 +163,18 @@ class DeepResearch:
             },
             {
                 "role": "user",
-                "content": f"Given the following research results for the query '{query}', extract key learnings and suggest follow-up questions. For each learning, include a citation to the source URL if available. Format each learning as 'Learning [source_url]: <insight>' and each question as 'Question: <question>':\n\n{context}",
+                "content": f"Given the following research results for the query '''{query}''', extract key learnings and suggest follow-up questions. For each learning, include a citation to the source URL if available. Format each learning as 'Learning [source_url]: <insight>' and each question as 'Question: <question>':\n\n{context}",
             },
         ]
 
         response: str = await create_chat_completion(
             messages=messages,
-            llm_provider=self.cfg.SMART_LLM_PROVIDER,
-            model=self.cfg.SMART_LLM_MODEL,  # Using reasoning model for analysis
+            llm_provider=self.cfg.smart_llm_provider,  # pyright: ignore[reportAttributeAccess]
+            model=self.cfg.smart_llm_model,  # pyright: ignore[reportAttributeAccess]
             temperature=0.7,
-            max_tokens=1000,
+#            max_tokens=1000,
             reasoning_effort=ReasoningEfforts.High.value,
+            cfg=self.cfg,
         )
 
         # Parse learnings and questions with citations
@@ -229,9 +230,7 @@ class DeepResearch:
             on_progress(progress)
 
         # Generate search queries
-        serp_queries: list[dict[str, str]] = await self.generate_serp_queries(
-            query, num_queries=breadth
-        )
+        serp_queries: list[dict[str, str]] = await self.generate_serp_queries(query, num_queries=breadth)
         progress.total_queries = len(serp_queries)
 
         all_learnings: list[str] = learnings.copy()
@@ -255,9 +254,9 @@ class DeepResearch:
                         report_source=ReportSource.Web.value,
                         tone=self.tone,
                         websocket=self.websocket,
-                        config=self.cfg,
                         headers=self.headers,
                     )
+                    researcher.cfg = self.cfg
 
                     # Conduct research
                     await researcher.conduct_research()
@@ -268,14 +267,12 @@ class DeepResearch:
                     # Process results
                     results: dict[str, Any] = await self.process_serp_result(
                         query=serp_query["query"],
-                        context="\n".join(researcher.context)
-                        if isinstance(researcher.context, list)
-                        else researcher.context,
+                        context="\n".join(researcher.context) if isinstance(researcher.context, list) else researcher.context,
                     )
 
                     # Update progress
                     progress.completed_queries += 1
-                    if on_progress:
+                    if on_progress is not None:
                         on_progress(progress)
 
                     return {
@@ -287,19 +284,13 @@ class DeepResearch:
                     }
 
                 except Exception as e:
-                    logger.error(
-                        f"Error processing query '{serp_query['query']}': {str(e)}"
-                    )
+                    logger.error(f"Error processing query '{serp_query['query']}': {str(e)}")
                     return None
 
         # Process queries concurrently with limit
-        tasks: list[Coroutine[Any, Any, dict[str, Any] | None]] = [
-            process_query(query) for query in serp_queries
-        ]
+        tasks: list[Coroutine[Any, Any, dict[str, Any] | None]] = [process_query(query) for query in serp_queries]
         results: list[dict[str, Any] | None] = await asyncio.gather(*tasks)
-        filtered_results: list[dict[str, Any]] = [
-            r for r in results if r is not None
-        ]  # Filter out failed queries
+        filtered_results: list[dict[str, Any]] = [r for r in results if r is not None]  # Filter out failed queries
 
         # Collect all results
         for result in filtered_results:
@@ -315,8 +306,7 @@ class DeepResearch:
                 # Create next query from research goal and follow-up questions
                 next_query: str = f"""
                 Previous research goal: {result["researchGoal"]}
-                Follow-up questions: {" ".join(result["followUpQuestions"])}
-                """
+                Follow-up questions: {" ".join(result["followUpQuestions"])}"""
 
                 # Recursive research
                 deeper_results: dict[str, Any] = await self.deep_research(
@@ -348,17 +338,19 @@ class DeepResearch:
         follow_up_questions: list[str] = await self.generate_feedback(self.query)
 
         # Collect answers (this would normally come from user interaction)
-        answers: list[str] = ["Automatically proceeding with research"] * len(
-            follow_up_questions
-        )
+        answers: list[str] = ["Automatically proceeding with research"] * len(follow_up_questions)
 
         # Combine query and Q&A
-        follow_up_qa = ' '.join([f'Q: {q}\nA: {a}' for q, a in zip(follow_up_questions, answers)])
-        combined_query = f"""
+        follow_up_qa: str = " ".join(
+            [
+                f"Q: {q}\nA: {a}"
+                for q, a in zip(follow_up_questions, answers)
+            ]
+        )
+        combined_query: str = f"""
         Initial Query: {self.query}
         Follow-up Questions and Answers:
-        {follow_up_qa}
-        """
+        {follow_up_qa}"""
 
         # Run deep research
         results: dict[str, Any] = await self.deep_research(
@@ -375,9 +367,9 @@ class DeepResearch:
             report_source=ReportSource.Web.value,
             tone=self.tone,
             websocket=self.websocket,
-            config=self.cfg,
             headers=self.headers,
         )
+        researcher.cfg = self.cfg
 
         # Prepare context with citations
         context_with_citations: list[str] = []

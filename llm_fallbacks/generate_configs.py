@@ -10,10 +10,9 @@ from pathlib import Path
 
 if not importlib.util.find_spec("llm_fallbacks"):
     import sys
+
     sys.path.append(str(Path(__file__).parents[1]))
 from typing import TYPE_CHECKING, Any
-
-from gpt_researcher.utils.logger import get_formatted_logger
 
 from llm_fallbacks.config import ALL_MODELS, CUSTOM_PROVIDERS, FREE_MODELS
 from llm_fallbacks.core import calculate_cost_per_token
@@ -22,7 +21,9 @@ if TYPE_CHECKING:
     import logging
 
     from llm_fallbacks.config import CustomProviderConfig, LiteLLMYAMLConfig
-logger: logging.Logger = get_formatted_logger(__name__)
+
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def to_litellm_config_yaml(
@@ -49,7 +50,7 @@ def to_litellm_config_yaml(
         },
         "general_settings": {
             "master_key": f"sk-{uuid.uuid4().hex}",
-#            "alerting": ["slack", "email"],
+            #            "alerting": ["slack", "email"],
             "proxy_batch_write_at": 60,  # Batch write spend updates every 60s
             "database_connection_pool_limit": 10,  # limit the number of database connections to = MAX Number of DB Connections/Number of instances of litellm proxy (Around 10-20 is good number)
             "alerting_threshold": 0,
@@ -113,14 +114,14 @@ def to_litellm_config_yaml(
 
     for p in providers:
         for model_name, model_spec in (p.free_models if free_only else p.model_specs).items():
-            is_free = calculate_cost_per_token(model_spec) == 0.0
-            is_local = (
-                model_name.casefold().startswith("ollama/")
-                or model_name.casefold().startswith("vllm/")
-                or model_name.casefold().startswith("xinference/")
-                or model_name.casefold().startswith("lmstudio/")
+            is_free: bool = calculate_cost_per_token(model_spec) == 0.0
+            is_local: bool = (
+                model_name.strip().casefold().startswith("ollama/")
+                or model_name.strip().casefold().startswith("vllm/")
+                or model_name.strip().casefold().startswith("xinference/")
+                or model_name.strip().casefold().startswith("lmstudio/")
                 or "127.0.0.1" in p.base_url
-                or "localhost" in p.base_url
+                or "localhost" in p.base_url.strip().casefold()
                 or "0.0.0.0" in p.base_url
             )
             if free_only and (not is_free or is_local):
@@ -130,7 +131,7 @@ def to_litellm_config_yaml(
             model_entry: dict[str, Any] = {
                 "model_name": key_name,
                 "litellm_params": {
-                    "model": (key_name if key_name.startswith("openai/") else f"openai/{key_name}"),
+                    "model": (key_name if key_name.strip().casefold().startswith("openai/") else f"openai/{key_name}"),
                     "api_base": p.base_url,
                     **{"api_key": f"os.environ/{p.api_env_key_name}"},
                     **({} if p.api_version is None else {"api_version": p.api_version}),
@@ -141,43 +142,58 @@ def to_litellm_config_yaml(
 
             # Determine suitable fallbacks based on mode and cost
             suitable_fallbacks: list[str] = []
-            total_fallbacks_found = 0
-            total_fallbacks_required = 25
+            total_fallbacks_found: int = 0
+            total_fallbacks_required: int = 25
             for k, v in FREE_MODELS:
-                k_name = k if k.startswith(f"{v.get('litellm_provider')}/") and k not in suitable_fallbacks else f"{v.get('litellm_provider')}/{k}"
-                if k.casefold() == model_name.casefold():  # Avoid self-referential fallbacks
+                k_name: str = (
+                    k
+                    if k.strip().casefold().startswith(f"{v.get('litellm_provider')}/".strip().casefold()) and k not in suitable_fallbacks
+                    else f"{v.get('litellm_provider')}/{k}"
+                )
+                if k.strip().casefold() == model_name.strip().casefold():  # Avoid self-referential fallbacks
                     continue
-                if v.get("mode") is not None and model_spec.get("mode") is not None and v.get("mode") != model_spec.get("mode"):
+                if (
+                    v.get("mode") is not None
+                    and model_spec.get("mode") is not None
+                    and v.get("mode") != str(model_spec.get("mode")).casefold().strip()
+                ):
                     continue
-                if v.get("supports_vision") is not None and model_spec.get("supports_vision") is not None and v.get("supports_vision") != model_spec.get("supports_vision"):
+                if (
+                    v.get("supports_vision") is not None
+                    and model_spec.get("supports_vision") is not None
+                    and v.get("supports_vision") != str(model_spec.get("supports_vision")).casefold().strip()
+                ):
                     continue
                 if (
                     v.get("supports_embedding_image_input") is not None
                     and model_spec.get("supports_embedding_image_input") is not None
-                    and v.get("supports_embedding_image_input") != model_spec.get("supports_embedding_image_input")
+                    and v.get("supports_embedding_image_input") != str(model_spec.get("supports_embedding_image_input")).casefold().strip()
                 ):
                     continue
                 if (
                     v.get("supports_audio_input") is not None
                     and model_spec.get("supports_audio_input") is not None
-                    and v.get("supports_audio_input") != model_spec.get("supports_audio_input")
+                    and v.get("supports_audio_input") != str(model_spec.get("supports_audio_input")).casefold().strip()
                 ):
                     continue
                 if (
                     v.get("supports_audio_output") is not None
                     and model_spec.get("supports_audio_output") is not None
-                    and v.get("supports_audio_output") != model_spec.get("supports_audio_output")
+                    and v.get("supports_audio_output") != str(model_spec.get("supports_audio_output")).casefold().strip()
                 ):
                     continue
-                if model_spec.get("mode") is not None and model_spec.get("mode") != "chat":
+                if (
+                    model_spec.get("mode") is not None
+                    and str(model_spec.get("mode")).casefold().strip() != "chat"
+                ):
                     total_fallbacks_required = 125
                 if online_only and (
-                    k.casefold().startswith("ollama/")
-                    or k.casefold().startswith("vllm/")
-                    or k.casefold().startswith("xinference/")
-                    or k.casefold().startswith("lmstudio/")
+                    k.strip().casefold().startswith("ollama/")
+                    or k.strip().casefold().startswith("vllm/")
+                    or k.strip().casefold().startswith("xinference/")
+                    or k.strip().casefold().startswith("lmstudio/")
                     or "127.0.0.1" in p.base_url
-                    or "localhost" in p.base_url
+                    or "localhost" in p.base_url.strip().casefold()
                     or "0.0.0.0" in p.base_url
                 ):
                     continue

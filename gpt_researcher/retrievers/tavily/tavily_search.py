@@ -18,6 +18,7 @@ class TavilySearch():
     def __init__(
         self,
         query: str,
+        query_domains: list[str] | None = None,
         headers: dict[str, Any] | None = None,
         topic: str = "general",
     ):
@@ -29,13 +30,14 @@ class TavilySearch():
             topic (str, optional): The topic to search for.
         """
         self.query: str = query
-        self.topic: str = topic
-        self.base_url: str = "https://api.tavily.com/search"
-        self.api_key: str = self.get_api_key()
+        self.query_domains: list[str] | None = query_domains
         self.headers: dict[str, Any] = {
             "Content-Type": "application/json",
             **(headers or {}),
         }
+        self.topic: str = topic
+        self.base_url: str = "https://api.tavily.com/search"
+        self.api_key: str = self.get_api_key()
 
     def get_api_key(self) -> str:
         """Gets the Tavily API key.
@@ -128,6 +130,7 @@ class TavilySearch():
                 search_depth="basic",
                 max_results=max_results,
                 topic=self.topic,
+                include_domains=self.query_domains,
             )
             sources: list[dict[str, Any]] = results.get("results", [])
             if not sources:

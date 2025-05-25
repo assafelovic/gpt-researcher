@@ -52,9 +52,6 @@ const GPTResearcher = (() => {
       topCopyButton.addEventListener('click', copyToClipboard);
     }
 
-    // Initialize expand buttons
-    initExpandButtons();
-
     // Initialize history panel functionality
     initHistoryPanel();
 
@@ -128,9 +125,9 @@ const GPTResearcher = (() => {
     document.addEventListener('click', (e) => {
       // If the panel is open and the click is outside the panel and not on the toggle button
       if (historyPanel.classList.contains('open') &&
-          !historyPanel.contains(e.target) &&
-          e.target !== historyPanelOpenBtn &&
-          !historyPanelOpenBtn.contains(e.target)) {
+        !historyPanel.contains(e.target) &&
+        e.target !== historyPanelOpenBtn &&
+        !historyPanelOpenBtn.contains(e.target)) {
         historyPanel.classList.remove('open');
       }
     });
@@ -243,9 +240,9 @@ const GPTResearcher = (() => {
     document.addEventListener('click', (e) => {
       // If the panel is open and the click is outside the panel and not on the toggle button
       if (websocketPanel.classList.contains('open') &&
-          !websocketPanel.contains(e.target) &&
-          e.target !== websocketPanelOpenBtn &&
-          !websocketPanelOpenBtn.contains(e.target)) {
+        !websocketPanel.contains(e.target) &&
+        e.target !== websocketPanelOpenBtn &&
+        !websocketPanelOpenBtn.contains(e.target)) {
         websocketPanel.classList.remove('open');
       }
     });
@@ -695,7 +692,6 @@ const GPTResearcher = (() => {
     conversationHistory.unshift(historyEntry);
     saveConversationHistory();
     renderHistoryEntries();
-    document.getElementById('historyPanel').classList.add('open');
 
     // Prompt user about storage method
     if (cookiesEnabled) {
@@ -743,13 +739,13 @@ const GPTResearcher = (() => {
     // Hide the download bar
     const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
     if (stickyDownloadsBar) {
-        stickyDownloadsBar.classList.remove('visible');
+      stickyDownloadsBar.classList.remove('visible');
     }
 
     // Hide the chat container
     chatContainer = document.getElementById('chatContainer');
     if (chatContainer) {
-        chatContainer.style.display = 'none';
+      chatContainer.style.display = 'none';
     }
 
     const imageContainer = document.getElementById('selectedImagesContainer')
@@ -1943,103 +1939,6 @@ const GPTResearcher = (() => {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-  }
-
-  // Initialize expand buttons
-  const initExpandButtons = () => {
-    // Report container expand button
-    const expandReportBtn = document.getElementById('expandReportBtn');
-    if (expandReportBtn) {
-      expandReportBtn.addEventListener('click', () => {
-        const reportContainer = document.querySelector('.report-container');
-        toggleExpand(reportContainer);
-      });
-    }
-
-    // Chat container expand button
-    const expandChatBtn = document.getElementById('expandChatBtn');
-    if (expandChatBtn) {
-      expandChatBtn.addEventListener('click', () => {
-        const chatContainer = document.getElementById('chatContainer');
-        toggleExpand(chatContainer);
-      });
-    }
-
-    // Output container expand button
-    const expandOutputBtn = document.getElementById('expandOutputBtn');
-    if (expandOutputBtn) {
-      expandOutputBtn.addEventListener('click', () => {
-        const outputContainer = document.querySelector('.research-output-container');
-        toggleExpand(outputContainer);
-      });
-    }
-
-    // Close expanded view when ESC key is pressed
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        const expandedElements = document.querySelectorAll('.expanded-view');
-        expandedElements.forEach(el => {
-          // Reset the button icon
-          const button = el.querySelector('.expand-button i');
-          if (button) {
-            button.classList.remove('fa-compress-alt');
-            button.classList.add('fa-expand-alt');
-          }
-
-          // Reset content container styles
-          const contentContainers = el.querySelectorAll('#reportContainer, #output, #chatMessages');
-          contentContainers.forEach(container => {
-            if (container) {
-              container.style.maxHeight = '';
-            }
-          });
-
-          // Remove expanded-view class
-          el.classList.remove('expanded-view');
-        });
-      }
-    });
-  }
-
-  // Toggle expand mode for an element
-  const toggleExpand = (element) => {
-    if (!element) return;
-
-    // Toggle expanded-view class
-    element.classList.toggle('expanded-view');
-
-    // Change button icon based on state
-    const button = element.querySelector('.expand-button i');
-    if (button) {
-      if (element.classList.contains('expanded-view')) {
-        button.classList.remove('fa-compress-alt');
-        button.classList.add('fa-compress-alt');
-
-        // Find content containers and expand their height
-        const contentContainers = element.querySelectorAll('#reportContainer, #output, #chatMessages');
-        contentContainers.forEach(container => {
-          if (container) {
-            // Set expanded heights - no positioning changes
-            if (container.id === 'reportContainer') {
-              container.style.maxHeight = '800px'; // Fixed expanded height for report
-            } else {
-              container.style.maxHeight = '600px'; // Fixed expanded height for other content
-            }
-          }
-        });
-      } else {
-        button.classList.remove('fa-compress-alt');
-        button.classList.add('fa-expand-alt');
-
-        // Reset heights back to original when collapsed
-        const contentContainers = element.querySelectorAll('#reportContainer, #output, #chatMessages');
-        contentContainers.forEach(container => {
-          if (container) {
-            container.style.maxHeight = '';
-          }
-        });
-      }
-    }
   }
 
   return {

@@ -16,7 +16,7 @@ async def choose_agent(
     query: str,
     cfg: Config,
     parent_query: str | None = None,
-    cost_callback: Callable[[str], None] | None = None,
+    cost_callback: Callable[[float], None] | None = None,
     headers: dict[str, str] | None = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
 ) -> tuple[str, str]:
@@ -35,10 +35,30 @@ async def choose_agent(
         agent: Agent name
         agent_role_prompt: Agent role prompt
     """
+    parent_query = "" if parent_query is None else parent_query
     query = f"{parent_query} - {query}" if parent_query else f"{query}"
-    response: str | None = None  # Initialize response to ensure it's defined
+    response = None  # Initialize response to ensure it's defined
 
     try:
+        response = await create_chat_completion(
+            model=cfg.strategic_llm_model,
+            messages=[
+                {"role": "system", "content": f"{prompt_family.auto_agent_instructions()}"},
+                {"role": "user", "content": f"task: {query}"},
+            ],
+            llm_provider=cfg.strategic_llm_provider,
+#            max_tokens=cfg.strategic_token_limit,  # pyright: ignore[reportAttributeAccessIssue]
+            llm_kwargs=cfg.llm_kwargs,
+            cost_callback=cost_callback,
+            cfg=cfg,
+        )
+    except Exception as e:
+        # Handle fallback for strategic LLM
+        print(f"Error with strategic LLM, falling back to smart LLM: {e.__class__.__name__}: {e}")
+        # Log to stderr
+        import sys
+
+        sys.stderr.write(f"Error with strategic LLM, falling back to smart LLM: {e.__class__.__name__}: {e}\n")
         response = await create_chat_completion(
             model=cfg.smart_llm_model,
             messages=[
@@ -49,14 +69,22 @@ async def choose_agent(
             llm_provider=cfg.smart_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
+            cfg=cfg,
         )
 
-        agent_dict: dict[str, Any] = json.loads(response)
-        return agent_dict["server"], agent_dict["agent_role_prompt"]
-
-    except Exception as e:
-        print(f"⚠️ Error in reading JSON, attempting to repair JSON! {e.__class__.__name__}: {e}")
-        return await handle_json_error(response)
+    # Split the response to get the agent name and description
+    try:
+        agent_name: str = ""
+        agent_role_prompt: str = ""
+        parts: list[str] = response.strip().split("AGENT ROLE:")
+        if len(parts) >= 2:
+            agent_name = parts[0].strip().replace("AGENT NAME:", "").strip()
+            agent_role_prompt = parts[1].strip()
+    except Exception:
+        # Return default values
+        return "Research Agent", "You are a helpful research agent."
+    else:
+        return agent_name, agent_role_prompt
 
 
 async def handle_json_error(response: str | None) -> tuple[str, str]:

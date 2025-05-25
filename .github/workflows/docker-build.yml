@@ -1,237 +1,262 @@
-name: Docker Build and Push (per-architecture)
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: 'Docker Multi-Arch Build and Push – matrix'
 run-name: Building and pushing Docker images – matrix
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: '${{ github.workflow }}-${{ github.ref }}'
   cancel-in-progress: true
 
 permissions:
-  contents: read
-  packages: write # Needed for pushing to GHCR
+  contents: 'read'
+  packages: 'write'  # Needed for pushing to GHCR
+  pull-requests: 'read'
 
 on:
   push:
     branches:
-      - '**'
+      - 'main'
+      - 'master'
     tags:
       - 'v*'
-  workflow_dispatch:
+  pull_request:
+    branches:
+      - 'main'
+      - 'master'
+  workflow_dispatch: null
 
 env:
-  IMAGE_NAME: ${{ github.repository_owner }}/gpt-researcher
-  REGISTRY_IMAGE: ghcr.io/${{ github.repository }}
+  IMAGE_NAME: '${{ github.repository_owner }}/gpt-researcher'
+  REGISTRY_IMAGE: 'ghcr.io/${{ github.repository }}'
 
 jobs:
-  build:
-    name: Build & push ${{ matrix.platform }}
-    continue-on-error: true
-    runs-on: ubuntu-latest
+  build-push-root:
+    name: 'Build Root Image - ${{ matrix.platform_slash }}'
+    runs-on: '${{ matrix.runner_label }}'
     strategy:
       fail-fast: false                # do **not** cancel the whole matrix if one build fails
       matrix:
         include:
-          - platform: linux/amd64   # GitHub hosted runner native arch
-            arch: amd64
-          - platform: linux/arm64
-            arch: arm64
-          - platform: linux/arm64/v8
-            arch: arm64v8
-          - platform: linux/arm64/v7
-            arch: arm64v7
-          - platform: linux/arm64/v6
-            arch: arm64v6
-          - platform: linux/arm
-            arch: arm
-          - platform: linux/arm/v8
-            arch: armv8
-          - platform: linux/arm/v7
-            arch: armv7
-          - platform: linux/arm/v6
-            arch: armv6
-          - platform: linux/386
-            arch: 386
-          - platform: linux/ppc64le
-            arch: ppc64le
-          - platform: linux/s390x
-            arch: s390x
-          - platform: linux/riscv64
-            arch: riscv64
+          - platform_slash: 'linux/amd64'
+            runner_label: 'ubuntu-latest'
+          - platform_slash: 'linux/arm64'
+            runner_label: 'ubuntu-22.04-arm'
+    env:
+      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}'
+      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}'
+      DOCKERFILE_PATH: './Dockerfile'
+      BUILD_CONTEXT: '.'
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU for cross-architecture emulation
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Buildx builder
-        uses: docker/setup-buildx-action@v3
-
-      # Extract Docker metadata (tags, labels…)
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+# REM: qemu doesn't work in this codebase for some reason.
+#      - name: Set up QEMU for cross-architecture emulation
+#        uses: docker/setup-qemu-action@v3
+      - name: 'Set up Docker Buildx'
+        uses: 'docker/setup-buildx-action@v3'
+      - name: 'Log in to GitHub Container Registry'
+        uses: 'docker/login-action@v3'
+        with:
+          registry: 'ghcr.io'
+          username: '${{ github.repository_owner }}'
+          password: '${{ secrets.GITHUB_TOKEN }}'
+      - name: 'Log in to Docker Hub'
+        if: '${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}'
+        uses: 'docker/login-action@v3'
+        with:
+          username: '${{ secrets.DOCKER_USERNAME }}'
+          password: '${{ secrets.DOCKER_HUB_TOKEN }}'
+      - name: 'Extract Docker metadata'
+        id: 'meta'
+        uses: 'docker/metadata-action@v5'
         with:
           images: |
-            ${{ env.IMAGE_NAME }}
-            ${{ env.REGISTRY_IMAGE }}
+                      ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
+                      ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=sha,prefix=,suffix=,format=short
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') || github.ref == format('refs/heads/{0}', 'master') }}
+                      type=ref,event=branch
+                      type=ref,event=pr
+                      type=raw,value=dev,enable=${{ secrets.DOCKER_USERNAME != '' && env.IMAGE_NAME_DOCKERHUB_SUFFIXED != '' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
-      - name: Login to Docker Hub
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
+      - name: 'Build and push Docker image'
+        uses: 'docker/build-push-action@v5'
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME || github.repository_owner }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to GHCR
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
+          context: '${{ env.BUILD_CONTEXT }}'
+          file: '${{ env.DOCKERFILE_PATH }}'
+          platforms: '${{ matrix.platform_slash }}'
+          tags: '${{ steps.meta.outputs.tags }}'
+          labels: '${{ steps.meta.outputs.labels }}'
+          push: true
+          cache-from: 'type=gha'
+          cache-to: 'type=gha,mode=max'
+  build-push-frontend-nextjs:
+    name: 'Build Frontend Next.js Image - ${{ matrix.platform_slash }}'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform_slash: 'linux/amd64'
+            runner_label: 'ubuntu-latest'
+          - platform_slash: 'linux/arm64'
+            runner_label: 'ubuntu-22.04-arm'
+    runs-on: '${{ matrix.runner_label }}'
+    env:
+      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-frontend-nextjs'
+      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-frontend-nextjs'
+      DOCKERFILE_PATH: './frontend/nextjs/Dockerfile'
+      BUILD_CONTEXT: './frontend/nextjs'
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+      - name: 'Set up Docker Buildx'
+        uses: 'docker/setup-buildx-action@v3'
+      - name: 'Log in to GitHub Container Registry'
+        uses: 'docker/login-action@v3'
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build & push image for ${{ matrix.platform }}
-        id: build
-        continue-on-error: true
-        uses: docker/build-push-action@v5
+          registry: 'ghcr.io'
+          username: '${{ github.repository_owner }}'
+          password: '${{ secrets.GITHUB_TOKEN }}'
+      - name: 'Log in to Docker Hub'
+        if: '${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}'
+        uses: 'docker/login-action@v3'
+        with:
+          username: '${{ secrets.DOCKER_USERNAME }}'
+          password: '${{ secrets.DOCKER_HUB_TOKEN }}'
+      - name: 'Extract Docker metadata'
+        id: 'meta'
+        uses: 'docker/metadata-action@v5'
         if: ${{ success() || failure() }}
         with:
-          context: .
-          push: true
-          platforms: ${{ matrix.platform }}
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ matrix.arch }}
-            ${{ env.REGISTRY_IMAGE }}:${{ matrix.arch }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=gpt-researcher-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=gpt-researcher-${{ matrix.arch }}
-
-      # Export the digest – will be used by the manifest job; failure here must not cancel the matrix
-      - name: Export digest
-        if: ${{ (success() || failure()) && steps.build.outputs.digest }}
-        run: echo "DIGEST=${{ steps.build.outputs.digest }}" > digest.txt
-
-      - name: Upload digest
-        if: ${{ (success() || failure()) && steps.build.outputs.digest }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: digest-${{ matrix.arch }}
-          path: digest.txt
-
-      # Update the multi-arch manifest right away so that this platform is available immediately
-      - name: Update multi-arch manifest with ${{ matrix.platform }}
-        if: ${{ (success() || failure()) && github.event_name != 'pull_request' && steps.build.outcome == 'success' }}
-        env:
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          REGISTRY_IMAGE: ${{ env.REGISTRY_IMAGE }}
-        run: |
-          set -euo pipefail
-          # Collect every per-arch image that already exists in the registry
-          platforms=(amd64 arm64 arm64v8 arm64v7 arm64v6 arm armv8 armv7 armv6 386 ppc64le s390x riscv64)
-          refs=""
-          for p in "${platforms[@]}"; do
-            if docker manifest inspect "$IMAGE_NAME:$p" >/dev/null 2>&1; then
-              refs+=" $IMAGE_NAME:$p"
-            fi
-          done
-
-          # Nothing yet? then just include the current arch.
-          [ -z "$refs" ] && refs="$IMAGE_NAME:${{ matrix.arch }}"
-
-          # Re-use the same tag list used earlier
-          IFS=$'\n' read -rd '' -a tags <<< "${{ steps.meta.outputs.tags }}"
-          for t in "${tags[@]}"; do
-            echo "Updating manifest $t with refs: $refs"
-            docker buildx imagetools create --push --append -t "$t" $refs
-          done
-
-  # ---------------------------------------------------------------------------
-  # Combine the per-architecture images into a single multi-arch manifest.
-  # This job always runs (even if some builds failed) and only includes the
-  # architectures that were pushed successfully.
-  # ---------------------------------------------------------------------------
-  manifest:
-    name: Create & push multi-arch manifest
-    if: success() || failure()
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          pattern: digest-*
-          path: digests
-
-      - name: Set up Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to registries
-        if: ${{ (success() || failure()) && github.event_name != 'pull_request' }}
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # Also login to DockerHub (reuse the same action)
-      - name: Login to Docker Hub (again)
-        if: ${{ (success() || failure()) && github.event_name != 'pull_request' }}
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME || github.repository_owner }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      # Re-run metadata action so we get the canonical list of tags (branch, sha, latest…)
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
           images: |
-            ${{ env.IMAGE_NAME }}
-            ${{ env.REGISTRY_IMAGE }}
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
             type=ref,event=branch
-            type=ref,event=tag
-            type=sha,prefix=,suffix=,format=short
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') || github.ref == format('refs/heads/{0}', 'master') }}
+            type=ref,event=pr
+            type=raw,value=dev,enable=${{ secrets.DOCKER_USERNAME != '' && env.IMAGE_NAME_DOCKERHUB_SUFFIXED != '' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
-      - name: Create manifest list
-        env:
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          REGISTRY_IMAGE: ${{ env.REGISTRY_IMAGE }}
-        run: |
-          set -euo pipefail
-          echo "Digests downloaded:"
-          ls -1 digests || true
+      - name: 'Build and push Docker image'
+        uses: 'docker/build-push-action@v5'
+        if: ${{ success() || failure() }}
+        with:
+          context: '${{ env.BUILD_CONTEXT }}'
+          file: '${{ env.DOCKERFILE_PATH }}'
+          tags: '${{ steps.meta.outputs.tags }}'
+          labels: '${{ steps.meta.outputs.labels }}'
+          push: true
+          cache-from: 'type=gha'
+          cache-to: 'type=gha,mode=max'
+          platforms: '${{ matrix.platform_slash }}'
+  build-push-mcp-server:
+    name: 'Build MCP Server Image - ${{ matrix.platform_slash }}'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform_slash: 'linux/amd64'
+            runner_label: 'ubuntu-latest'
+          - platform_slash: 'linux/arm64'
+            runner_label: 'ubuntu-22.04-arm'
+    runs-on: '${{ matrix.runner_label }}'
+    env:
+      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-mcp-server'
+      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-mcp-server'
+      DOCKERFILE_PATH: './mcp-server/Dockerfile'
+      BUILD_CONTEXT: './mcp-server'
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+      - name: 'Set up Docker Buildx'
+        uses: 'docker/setup-buildx-action@v3'
+      - name: 'Log in to GitHub Container Registry'
+        uses: 'docker/login-action@v3'
+        with:
+          registry: 'ghcr.io'
+          username: '${{ github.repository_owner }}'
+          password: '${{ secrets.GITHUB_TOKEN }}'
+      - name: 'Log in to Docker Hub'
+        if: '${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}'
+        uses: 'docker/login-action@v3'
+        with:
+          username: '${{ secrets.DOCKER_USERNAME }}'
+          password: '${{ secrets.DOCKER_HUB_TOKEN }}'
+      - name: 'Extract Docker metadata'
+        id: 'meta'
+        uses: 'docker/metadata-action@v5'
+        with:
+          images: |
+                      ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
+                      ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+          tags: |
+                      type=ref,event=branch
+                      type=ref,event=pr
+                      type=raw,value=dev,enable=${{ secrets.DOCKER_USERNAME != '' && env.IMAGE_NAME_DOCKERHUB_SUFFIXED != '' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
-          # Build arrays of per-arch references that actually exist in the registry.
-          platforms=(amd64 arm64 arm64v8 arm64v7 arm64v6 arm armv8 armv7 armv6 386 ppc64le s390x riscv64)
-          refs=""
-          for p in "${platforms[@]}"; do
-            if docker manifest inspect "$IMAGE_NAME:$p" >/dev/null 2>&1; then
-              refs+=" $IMAGE_NAME:$p"
-            fi
-          done
+      - name: 'Build and push Docker image'
+        uses: 'docker/build-push-action@v5'
+        if: ${{ success() || failure() }}
+        with:
+          context: '${{ env.BUILD_CONTEXT }}'
+          file: '${{ env.DOCKERFILE_PATH }}'
+          platforms: '${{ matrix.platform_slash }}'
+          tags: '${{ steps.meta.outputs.tags }}'
+          labels: '${{ steps.meta.outputs.labels }}'
+          push: true
+          cache-from: 'type=gha'
+          cache-to: 'type=gha,mode=max'
+  build-push-docs-discord-bot:
+    name: 'Build Docs Discord Bot Image - ${{ matrix.platform_slash }}'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform_slash: 'linux/amd64'
+            runner_label: 'ubuntu-latest'
+          - platform_slash: 'linux/arm64'
+            runner_label: 'ubuntu-22.04-arm'
+    runs-on: '${{ matrix.runner_label }}'
+    env:
+      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-docs-discord-bot'
+      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-docs-discord-bot'
+      DOCKERFILE_PATH: './docs/discord-bot/Dockerfile'
+      BUILD_CONTEXT: './docs/discord-bot'
+    steps:
+      - name: 'Checkout repository'
+        uses: 'actions/checkout@v4'
+      - name: 'Set up Docker Buildx'
+        uses: 'docker/setup-buildx-action@v3'
+      - name: 'Log in to GitHub Container Registry'
+        uses: 'docker/login-action@v3'
+        with:
+          registry: 'ghcr.io'
+          username: '${{ github.repository_owner }}'
+          password: '${{ secrets.GITHUB_TOKEN }}'
+      - name: 'Log in to Docker Hub'
+        if: '${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}'
+        uses: 'docker/login-action@v3'
+        with:
+          username: '${{ secrets.DOCKER_USERNAME }}'
+          password: '${{ secrets.DOCKER_HUB_TOKEN }}'
+      - name: 'Extract Docker metadata'
+        id: 'meta'
+        uses: 'docker/metadata-action@v5'
+        with:
+          images: |
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=dev,enable=${{ secrets.DOCKER_USERNAME != '' && env.IMAGE_NAME_DOCKERHUB_SUFFIXED != '' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
-          if [ -z "$refs" ]; then
-            echo "No per-architecture images found – skipping manifest creation."
-            exit 0
-          fi
-
-          # Create the manifest under every desired tag.
-          echo "$refs" | xargs -n1 -I{} echo "Will include -> {}"
-
-          # metadata-action returns tags separated by newlines; convert to array
-          IFS=$'\n' read -rd '' -a tags <<< "${{ steps.meta.outputs.tags }}"
-
-          for t in "${tags[@]}"; do
-            echo "\n▶ Creating manifest for tag $t"
-            docker buildx imagetools create -t "$t" $refs
-          done
-
-          echo "Manifest creation complete."
+      - name: 'Build and push Docker image'
+        uses: 'docker/build-push-action@v5'
+        with:
+          context: '${{ env.BUILD_CONTEXT }}'
+          file: '${{ env.DOCKERFILE_PATH }}'
+          platforms: '${{ matrix.platform_slash }}'
+          tags: '${{ steps.meta.outputs.tags }}'
+          labels: '${{ steps.meta.outputs.labels }}'
+          push: true
+          cache-from: 'type=gha'
+          cache-to: 'type=gha,mode=max'

@@ -3,14 +3,13 @@ from __future__ import annotations
 from typing import Any
 
 import requests
-class WebBaseLoaderScraper:
 
 from bs4 import BeautifulSoup
 from langchain_core.documents import Document
 
 from gpt_researcher.scraper.utils import extract_title, get_relevant_images
 
-
+class WebBaseLoaderScraper:
     def __init__(
         self,
         link: str,

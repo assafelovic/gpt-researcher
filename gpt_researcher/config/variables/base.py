@@ -6,6 +6,7 @@ from typing_extensions import TypedDict
 class BaseConfig(TypedDict):
     RETRIEVER: str
     EMBEDDING: str
+    EMBEDDING_FALLBACKS: str
     SIMILARITY_THRESHOLD: float
     FAST_LLM: str
     SMART_LLM: str

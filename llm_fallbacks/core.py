@@ -21,10 +21,11 @@ def _get_litellm_models() -> dict[str, Any]:
     def _local_fallback():
         import importlib.resources
 
-        with importlib.resources.open_text(
-            "litellm", "model_prices_and_context_window_backup.json"
-        ) as f:
-            return json.load(f)
+        content: str = importlib.resources.read_text(
+            "litellm",
+            "model_prices_and_context_window_backup.json",
+        )
+        return json.loads(content)
 
     if os.getenv("LITELLM_LOCAL_MODEL_COST_MAP", False) in {True, "True"}:
         return _local_fallback()
@@ -41,25 +42,26 @@ def _get_litellm_models() -> dict[str, Any]:
         return _local_fallback()
 
 
-if "CACHED_LITELLM_MODELS" not in globals():
-    CACHED_LITELLM_MODELS: dict[str, LiteLLMBaseModelSpec] = {}
+CACHED_LITELLM_MODELS: dict[str, LiteLLMBaseModelSpec] = {}
 
 
 def get_litellm_models(
     *,
     test_prepend_provider: bool = False,
+    use_cache: bool = True,
 ) -> dict[str, LiteLLMBaseModelSpec]:
     """Get all available LiteLLM models and their specifications.
 
     Args:
     ----
         test_prepend_provider: Prepends litellm's 'litellm_provider' to the model name. Only useful for testing.
+        use_cache: Whether to use the cached LiteLLM models, or reacquire them.
 
     Returns:
     -------
         dict[str, Any]: Dictionary where keys are model names and values are their specifications
     """
-    if CACHED_LITELLM_MODELS:
+    if CACHED_LITELLM_MODELS and use_cache:
         return CACHED_LITELLM_MODELS
 
     models: dict[str, LiteLLMBaseModelSpec] = {}
@@ -116,16 +118,8 @@ def calculate_cost_per_token(
         ("input_dbu_cost_per_token", "output_dbu_cost_per_token", 1.0),
         ("cache_creation_input_token_cost", None, 1.0),
         ("cache_read_input_token_cost", None, 1.0),
-        (
-            "input_cost_per_character",
-            "output_cost_per_character",
-            4.0,
-        ),  # Assuming 4 chars per token
-        (
-            "input_cost_per_character_above_128k_tokens",
-            "output_cost_per_character_above_128k_tokens",
-            4.0,
-        ),
+        ("input_cost_per_character", "output_cost_per_character", 4.0),  # Assuming 4 chars per token
+        ("input_cost_per_character_above_128k_tokens", "output_cost_per_character_above_128k_tokens", 4.0),
         ("input_cost_per_second", "output_cost_per_second", 0.1),  # Assuming 10 tokens per second
         ("input_cost_per_audio_per_second", None, 0.1),
         ("input_cost_per_audio_per_second_above_128k_tokens", None, 0.1),
@@ -213,7 +207,7 @@ def sort_models_by_cost_and_limits(
     filtered_models: dict[str, LiteLLMBaseModelSpec] = {
         model: spec
         for model, spec in models.items()
-        if not model.startswith("ollama/")
+        if not model.casefold().strip().startswith("ollama/")
         and (
             not free_only
             or all(
@@ -244,8 +238,8 @@ def sort_models_by_cost_and_limits(
     def _sort_key(
         x: tuple[str, LiteLLMBaseModelSpec],
     ) -> tuple[float, float]:
-        max_tokens = model_costs[x[0]]["approx_max_tokens"]
-        sort_value = (
+        max_tokens: float = model_costs[x[0]]["approx_max_tokens"]
+        sort_value: tuple[float | int, float] = (
             _negative_one_to_inf(model_costs[x[0]]["approx_cost_per_token"]),
             float("inf") if max_tokens == -1 else -max_tokens,
         )

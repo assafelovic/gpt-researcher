@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import pprint
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from dotenv import load_dotenv
 from langchain_core.retrievers import BaseRetriever
@@ -50,10 +50,11 @@ async def test_scrape_data_by_query():
     # Iterate through all retrievers
     for retriever_class in retrievers:
         retriever: BaseRetriever | RetrieverABC = retriever_class()
-        if isinstance(retriever, RetrieverABC):
-            search_results = retriever.search(sub_query)
-        else:
-            search_results = await retriever.ainvoke(sub_query)
+        search_results: list[dict[str, Any]] = (
+            retriever.search(sub_query)
+            if isinstance(retriever, RetrieverABC)
+            else await retriever.ainvoke(sub_query)
+        )
 
         print("\033[35mSearch results:\033[0m")
         pprint.pprint(search_results, indent=4, width=80)

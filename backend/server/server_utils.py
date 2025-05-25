@@ -10,18 +10,20 @@ import time
 import traceback
 
 from datetime import datetime
-from typing import Any, Awaitable
+from typing import TYPE_CHECKING, Any, Awaitable
 
 from fastapi import UploadFile, WebSocket
 from fastapi.responses import JSONResponse
 from gpt_researcher import GPTResearcher
 from gpt_researcher.document.document import DocumentLoader
 
-from backend.server.websocket_manager import WebSocketManager
 from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from backend.server.websocket_manager import WebSocketManager
 
 
 class CustomLogsHandler:
@@ -194,7 +196,12 @@ async def handle_start_command(
 async def handle_human_feedback(
     data: str,
 ):
-    feedback_data = json.loads(data[14:])  # Remove "human_feedback" prefix
+    """Handle human feedback.
+
+    Args:
+        data (str): The data to handle.
+    """
+    feedback_data: dict[str, Any] = json.loads(data[14:])  # Remove "human_feedback" prefix
     print(f"Received human feedback: {feedback_data}")
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
 
@@ -204,16 +211,22 @@ async def handle_chat(
     data: str,
     manager: WebSocketManager,
 ):
-    json_data = json.loads(data[4:])
+    json_data: dict[str, Any] = json.loads(data[4:])
     print(f"Received chat message: {json_data.get('message')}")
+    logger.info(f"Received chat message: {json_data.get('message')}")
     await manager.chat(json_data.get("message"), websocket)
 
 
 async def generate_report_files(report: str, filename: str) -> dict[str, str]:
-    pdf_path = await write_md_to_pdf(report, filename)
-    docx_path = await write_md_to_word(report, filename)
-    md_path = await write_text_to_md(report, filename)
-    return {"pdf": pdf_path, "docx": docx_path, "md": md_path}
+    filename = filename.replace(" ", "_")
+    pdf_path: str = await write_md_to_pdf(report, filename)
+    docx_path: str = await write_md_to_word(report, filename)
+    md_path: str = await write_text_to_md(report, filename)
+    return {
+        "pdf": pdf_path,
+        "docx": docx_path,
+        "md": md_path,
+    }
 
 
 async def send_file_paths(
@@ -224,32 +237,39 @@ async def send_file_paths(
 
 
 def get_config_dict(
-    langchain_api_key: str,
-    openai_api_key: str,
-    tavily_api_key: str,
-    google_api_key: str,
-    google_cx_key: str,
-    bing_api_key: str,
-    searchapi_api_key: str,
-    serpapi_api_key: str,
-    serper_api_key: str,
-    searx_url: str,
+    *args,
+    **kwargs: Any,
 ) -> dict[str, str]:
+    positional_argnames: list[str] = [
+        "langchain_api_key",
+        "openai_api_key",
+        "tavily_api_key",
+        "google_api_key",
+        "google_cx_key",
+        "bing_api_key",
+        "searchapi_api_key",
+        "serpapi_api_key",
+        "serper_api_key",
+        "searx_url",
+    ]
+    for i, arg in enumerate(positional_argnames):
+        kwargs[arg] = args[i] if i < len(args) else None
     return {
-        "LANGCHAIN_API_KEY": langchain_api_key or os.getenv("LANGCHAIN_API_KEY", ""),
-        "OPENAI_API_KEY": openai_api_key or os.getenv("OPENAI_API_KEY", ""),
-        "TAVILY_API_KEY": tavily_api_key or os.getenv("TAVILY_API_KEY", ""),
-        "GOOGLE_API_KEY": google_api_key or os.getenv("GOOGLE_API_KEY", ""),
-        "GOOGLE_CX_KEY": google_cx_key or os.getenv("GOOGLE_CX_KEY", ""),
-        "BING_API_KEY": bing_api_key or os.getenv("BING_API_KEY", ""),
-        "SEARCHAPI_API_KEY": searchapi_api_key or os.getenv("SEARCHAPI_API_KEY", ""),
-        "SERPAPI_API_KEY": serpapi_api_key or os.getenv("SERPAPI_API_KEY", ""),
-        "SERPER_API_KEY": serper_api_key or os.getenv("SERPER_API_KEY", ""),
-        "SEARX_URL": searx_url or os.getenv("SEARX_URL", ""),
+        "BING_API_KEY": kwargs.get("bing_api_key", os.getenv("BING_API_KEY", "")),
+        "BRAVE_API_KEY": kwargs.get("brave_api_key", os.getenv("BRAVE_API_KEY", "")),
+        "DOC_PATH": kwargs.get("doc_path", os.getenv("DOC_PATH", "./my-docs")),
+        "EMBEDDING_MODEL": kwargs.get("embedding_model", os.getenv("OPENAI_EMBEDDING_MODEL", "")),
+        "GOOGLE_API_KEY": kwargs.get("google_api_key", os.getenv("GOOGLE_API_KEY", "")),
+        "GOOGLE_CX_KEY": kwargs.get("google_cx_key", os.getenv("GOOGLE_CX_KEY", "")),
+        "LANGCHAIN_API_KEY": kwargs.get("langchain_api_key", os.getenv("LANGCHAIN_API_KEY", "")),
         "LANGCHAIN_TRACING_V2": os.getenv("LANGCHAIN_TRACING_V2", "true"),
-        "DOC_PATH": os.getenv("DOC_PATH", "./my-docs"),
-        "RETRIEVER": os.getenv("RETRIEVER", ""),
-        "EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", ""),
+        "OPENAI_API_KEY": kwargs.get("openai_api_key", os.getenv("OPENAI_API_KEY", "")),
+        "RETRIEVER": kwargs.get("retriever", os.getenv("RETRIEVER", "")),
+        "SEARCHAPI_API_KEY": kwargs.get("searchapi_api_key", os.getenv("SEARCHAPI_API_KEY", "")),
+        "SEARX_URL": kwargs.get("searx_url", os.getenv("SEARX_URL", "")),
+        "SERPAPI_API_KEY": kwargs.get("serpapi_api_key", os.getenv("SERPAPI_API_KEY", "")),
+        "SERPER_API_KEY": kwargs.get("serper_api_key", os.getenv("SERPER_API_KEY", "")),
+        "TAVILY_API_KEY": kwargs.get("tavily_api_key", os.getenv("TAVILY_API_KEY", "")),
     }
 
 
@@ -266,7 +286,7 @@ async def handle_file_upload(
     file_path: str = os.path.join(DOC_PATH, os.path.basename(filename))
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    print(f"File uploaded to {file_path}")
+    print(f"File uploaded to '{file_path}'")
 
     document_loader = DocumentLoader(DOC_PATH)
     await document_loader.load()
@@ -274,22 +294,46 @@ async def handle_file_upload(
     return {"filename": filename, "path": file_path}
 
 
-async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
+async def handle_file_deletion(
+    filename: str,
+    DOC_PATH: str,
+) -> JSONResponse:
+    """Handle file deletion.
+
+    Args:
+        filename (str): The name of the file to delete.
+        DOC_PATH (str): The path to the directory containing the file.
+
+    Returns:
+        JSONResponse: The response to the request.
+    """
     file_path: str = os.path.join(DOC_PATH, os.path.basename(filename))
     if os.path.exists(file_path):
         os.remove(file_path)
-        print(f"File deleted: {file_path}")
+        print(f"File deleted: '{file_path}'")
         return JSONResponse(content={"message": "File deleted successfully"})
     else:
-        print(f"File not found: {file_path}")
+        print(f"File not found: '{file_path}'")
         return JSONResponse(status_code=404, content={"message": "File not found"})
 
 
 async def execute_multi_agents(
     manager: WebSocketManager,
 ) -> Any:
-    websocket: WebSocket | None = manager.active_connections[0] if manager.active_connections else None
-    if websocket:
+    """Execute the multi-agents research task.
+
+    Args:
+        manager (WebSocketManager): The manager for the WebSocket connection.
+
+    Returns:
+        Any: The response to the request.
+    """
+    websocket: WebSocket | None = (
+        manager.active_connections[0]
+        if manager.active_connections
+        else None
+    )
+    if websocket is not None:
         from multi_agents.main import run_research_task
 
         report: str = await run_research_task(
@@ -299,7 +343,10 @@ async def execute_multi_agents(
         )
         return {"report": report}
     else:
-        return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
+        return JSONResponse(
+            status_code=400,
+            content={"message": "No active WebSocket connection"},
+        )
 
 
 async def handle_websocket_communication(
@@ -316,12 +363,13 @@ async def handle_websocket_communication(
                 logger.info("Task cancelled.")
                 raise
             except Exception as e:
-                logger.error(f"Error running task: {e}\n{traceback.format_exc()}")
+                logger.error(f"Error running task: {e.__class__.__name__}: {e}\n{traceback.format_exc()}")
+                print(f"Error running task: {e.__class__.__name__}: {e}\n{traceback.format_exc()}")
                 await websocket.send_json(
                     {
                         "type": "logs",
                         "content": "error",
-                        "output": f"Error: {e}",
+                        "output": f"Error: {e.__class__.__name__}: {e}\n{traceback.format_exc()}",
                     }
                 )
 
@@ -351,7 +399,7 @@ async def handle_websocket_communication(
                 else:
                     print("Error: Unknown command or not enough parameters provided.")
             except Exception as e:
-                print(f"WebSocket error: {e}")
+                print(f"WebSocket error: {e.__class__.__name__}: {e}")
                 break
     finally:
         if running_task and not running_task.done():
@@ -360,7 +408,16 @@ async def handle_websocket_communication(
 
 def extract_command_data(
     json_data: dict[str, Any],
-) -> tuple[str | None, str | None, list[str] | None, list[str] | None, str | None, dict[str, str] | None, str | None, list[str] | None]:
+) -> tuple[
+    str | None,  # task
+    str | None,  # report_type
+    list[str] | None,  # source_urls
+    list[str] | None,  # document_urls
+    str | None,  # tone
+    dict[str, str] | None,  # headers
+    str | None,  # report_source
+    list[str] | None,  # query_domains
+]:
     return (
         json_data.get("task"),
         json_data.get("report_type"),

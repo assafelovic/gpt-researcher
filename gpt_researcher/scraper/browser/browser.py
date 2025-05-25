@@ -9,7 +9,7 @@ import traceback
 
 from pathlib import Path
 from sys import platform
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 import requests
 
@@ -19,6 +19,9 @@ from gpt_researcher.scraper.browser.processing.scrape_skills import scrape_pdf_w
 from gpt_researcher.scraper.utils import extract_title, get_relevant_images
 
 FILE_DIR = Path(__file__).parent.parent
+
+if TYPE_CHECKING:
+    from selenium.webdriver.remote.webdriver import WebDriver
 
 
 class BrowserScraper:
@@ -32,7 +35,7 @@ class BrowserScraper:
         self.selenium_web_browser: str = "chrome"
         self.headless: bool = False
         self.user_agent: str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " "AppleWebKit/537.36 (KHTML, like Gecko) " "Chrome/128.0.0.0 Safari/537.36"
-        self.driver: webdriver.WebDriver | None = None
+        self.driver: WebDriver | None = None
         self.use_browser_cookies: bool = False
         self._import_selenium()  # Import only if used to avoid unnecessary dependencies
         self.cookie_filename: str = f"{self._generate_random_string(8)}.pkl"

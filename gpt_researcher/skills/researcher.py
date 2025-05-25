@@ -4,16 +4,17 @@ import asyncio
 import logging
 import random
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
-from ..actions.query_processing import get_search_results, plan_research_outline
-from ..actions.utils import stream_output
-from ..document import DocumentLoader, LangChainDocumentLoader, OnlineDocumentLoader
-from ..utils.enum import ReportSource
-from ..utils.logging_config import get_json_handler
+from gpt_researcher.actions.query_processing import get_search_results, plan_research_outline
+from gpt_researcher.actions.utils import stream_output
+from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader, OnlineDocumentLoader
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
+from gpt_researcher.utils.enum import ReportSource
+from gpt_researcher.utils.logging_config import get_json_handler
 
 if TYPE_CHECKING:
-    from ..agent import GPTResearcher
+    from gpt_researcher.agent import GPTResearcher
 
 
 class ResearchConductor:
@@ -64,11 +65,7 @@ class ResearchConductor:
         self.logger.info(f"Starting research for query: {self.researcher.query}")
 
         # Reset visited_urls and source_urls at the start of each research task
-        self.researcher.visited_urls = (
-            set()
-            if self.researcher.visited_urls is None
-            else self.researcher.visited_urls
-        )
+        self.researcher.visited_urls = set() if self.researcher.visited_urls is None else self.researcher.visited_urls
         research_data: list[str] = []
 
         if self.researcher.verbose:
@@ -114,9 +111,7 @@ class ResearchConductor:
         # Hybrid search including both local documents and web sources
         elif self.researcher.report_source == ReportSource.Hybrid.value:
             document_data: list[str] = (
-                DocumentLoader(self.researcher.cfg.doc_path)
-                if self.researcher.document_urls is None
-                else OnlineDocumentLoader(self.researcher.document_urls)
+                DocumentLoader(self.researcher.cfg.doc_path) if self.researcher.document_urls is None else OnlineDocumentLoader(self.researcher.document_urls)
             ).load()
             if self.researcher.vector_store is not None:
                 self.researcher.vector_store.load(document_data)
@@ -225,12 +220,7 @@ class ResearchConductor:
             )
 
         # Using asyncio.gather to process the sub_queries asynchronously
-        context = await asyncio.gather(
-            *[
-                self._process_sub_query_with_vectorstore(sub_query, filter)
-                for sub_query in sub_queries
-            ]
-        )
+        context = await asyncio.gather(*[self._process_sub_query_with_vectorstore(sub_query, filter) for sub_query in sub_queries])
         return context
 
     async def _get_context_by_web_search(
@@ -275,9 +265,7 @@ class ResearchConductor:
             # Filter out empty results and join the context
             context = [c for c in context if c]
             if context:
-                combined_context: str = " ".join(context)
-                self.logger.info(f"Combined context size: {len(combined_context)}")
-                return combined_context
+                return context
             return []
         except Exception as e:
             self.logger.error(f"Error during web search: {e.__class__.__name__}: {e}", exc_info=True)
@@ -402,20 +390,28 @@ class ResearchConductor:
         """
         new_search_urls: list[str] = []
 
-        # Iterate through all retrievers
-        for retriever_class in self.researcher.retrievers:
-            # Instantiate the retriever with the sub-query
-            retriever: Any = retriever_class(query)
+        # Use the new fallback mechanism instead of iterating manually
+        if self.researcher.retrievers:
+            try:
+                # Get first retriever as primary, rest as fallbacks
+                primary_retriever: Callable[[str, dict[str, Any] | None], RetrieverABC] | type[RetrieverABC] = self.researcher.retrievers[0]
+                fallback_retrievers: list[Callable[[str, dict[str, Any] | None], RetrieverABC] | type[RetrieverABC]] | None = (
+                    self.researcher.retrievers[1:] if len(self.researcher.retrievers) > 1 else None
+                )
 
-            # Perform the search using the current retriever
-            search_results: list[dict[str, Any]] = await asyncio.to_thread(
-                retriever.search,
-                max_results=self.researcher.cfg.max_search_results_per_query,  # pyright: ignore[reportAttributeAccessIssue]
-            )
+                # Use get_search_results with fallback support
+                search_results: list[dict[str, Any]] = await get_search_results(
+                    query,
+                    primary_retriever,
+                    fallback_retrievers=fallback_retrievers,
+                    min_results=1,
+                )
 
-            # Collect new URLs from search results
-            search_urls: list[str] = [url.get("href") for url in search_results]
-            new_search_urls.extend(search_urls)
+                # Collect URLs from search results
+                search_urls: list[str] = [url.get("href") for url in search_results if url.get("href")]
+                new_search_urls.extend(search_urls)
+            except Exception as e:
+                self.logger.error(f"Error searching with retrievers: {e.__class__.__name__}: {e}")
 
         # Get unique URLs
         new_search_urls: list[str] = await self._get_new_urls(new_search_urls)

@@ -5,10 +5,9 @@ from typing import Any
 import arxiv
 
 
-
+class ArxivSearch:
     """Arxiv API Retriever."""
 
-class ArxivSearch:
     def __init__(self, query: str, sort: str = "Relevance"):
         """Initializes the ArxivSearch object.
 

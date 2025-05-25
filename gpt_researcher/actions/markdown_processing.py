@@ -82,7 +82,10 @@ def table_of_contents(markdown_text: str) -> str:
         str: The generated table of contents.
     """
 
-    def generate_table_of_contents(headers: list[dict[str, Any]], indent_level: int = 0) -> str:
+    def generate_table_of_contents(
+        headers: list[dict[str, Any]],
+        indent_level: int = 0,
+    ) -> str:
         toc: str = ""
         for header in headers:
             toc += " " * (indent_level * 4) + "- " + header["text"] + "\n"

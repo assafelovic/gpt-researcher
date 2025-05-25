@@ -11,5 +11,5 @@ class RetrieverABC(ABC):
         ...
 
     @abstractmethod
-    def search(self, query: str, max_results: int | None = None) -> list[dict[str, Any]]:
+    def search(self, max_results: int | None = None) -> list[dict[str, Any]]:
         ...
