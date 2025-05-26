@@ -28,6 +28,12 @@ jobs:
   build-push-root:
     name: 'Build Root Image - ${{ matrix.platform_slash }}'
     runs-on: '${{ matrix.runner_label }}'
+    env:
+      DOCKERHUB_AUTH: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}
+      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}'
+      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}'
+      DOCKERFILE_PATH: './Dockerfile'
+      BUILD_CONTEXT: '.'
     strategy:
       fail-fast: false
       matrix:
@@ -36,11 +42,6 @@ jobs:
             runner_label: 'ubuntu-latest'
           - platform_slash: 'linux/arm64'
             runner_label: 'ubuntu-22.04-arm'
-    env:
-      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}'
-      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}'
-      DOCKERFILE_PATH: './Dockerfile'
-      BUILD_CONTEXT: '.'
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
@@ -56,8 +57,7 @@ jobs:
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
       - name: 'Log in to Docker Hub (if secrets present)'
-        if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_HUB_TOKEN }}
-        continue-on-error: true
+        if: env.DOCKERHUB_AUTH == 'true'
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -87,6 +87,13 @@ jobs:
 
   build-push-frontend-nextjs:
     name: 'Build Frontend Next.js Image - ${{ matrix.platform_slash }}'
+    runs-on: '${{ matrix.runner_label }}'
+    env:
+      DOCKERHUB_AUTH: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}
+      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-frontend-nextjs'
+      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-frontend-nextjs'
+      DOCKERFILE_PATH: './frontend/nextjs/Dockerfile'
+      BUILD_CONTEXT: './frontend/nextjs'
     strategy:
       fail-fast: false
       matrix:
@@ -95,12 +102,6 @@ jobs:
             runner_label: 'ubuntu-latest'
           - platform_slash: 'linux/arm64'
             runner_label: 'ubuntu-22.04-arm'
-    runs-on: '${{ matrix.runner_label }}'
-    env:
-      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-frontend-nextjs'
-      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-frontend-nextjs'
-      DOCKERFILE_PATH: './frontend/nextjs/Dockerfile'
-      BUILD_CONTEXT: './frontend/nextjs'
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
@@ -116,8 +117,7 @@ jobs:
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
       - name: 'Log in to Docker Hub (if secrets present)'
-        if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_HUB_TOKEN }}
-        continue-on-error: true
+        if: env.DOCKERHUB_AUTH == 'true'
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -138,15 +138,22 @@ jobs:
         with:
           context: '${{ env.BUILD_CONTEXT }}'
           file: '${{ env.DOCKERFILE_PATH }}'
+          platforms: '${{ matrix.platform_slash }}'
           tags: '${{ steps.meta.outputs.tags }}'
           labels: '${{ steps.meta.outputs.labels }}'
           push: true
           cache-from: 'type=gha'
           cache-to: 'type=gha,mode=max'
-          platforms: '${{ matrix.platform_slash }}'
 
   build-push-mcp-server:
     name: 'Build MCP Server Image - ${{ matrix.platform_slash }}'
+    runs-on: '${{ matrix.runner_label }}'
+    env:
+      DOCKERHUB_AUTH: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}
+      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-mcp-server'
+      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-mcp-server'
+      DOCKERFILE_PATH: './mcp-server/Dockerfile'
+      BUILD_CONTEXT: './mcp-server'
     strategy:
       fail-fast: false
       matrix:
@@ -155,12 +162,6 @@ jobs:
             runner_label: 'ubuntu-latest'
           - platform_slash: 'linux/arm64'
             runner_label: 'ubuntu-22.04-arm'
-    runs-on: '${{ matrix.runner_label }}'
-    env:
-      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-mcp-server'
-      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-mcp-server'
-      DOCKERFILE_PATH: './mcp-server/Dockerfile'
-      BUILD_CONTEXT: './mcp-server'
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
@@ -176,8 +177,7 @@ jobs:
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
       - name: 'Log in to Docker Hub (if secrets present)'
-        if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_HUB_TOKEN }}
-        continue-on-error: true
+        if: env.DOCKERHUB_AUTH == 'true'
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -207,6 +207,13 @@ jobs:
 
   build-push-docs-discord-bot:
     name: 'Build Docs Discord Bot Image - ${{ matrix.platform_slash }}'
+    runs-on: '${{ matrix.runner_label }}'
+    env:
+      DOCKERHUB_AUTH: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}
+      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-docs-discord-bot'
+      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-docs-discord-bot'
+      DOCKERFILE_PATH: './docs/discord-bot/Dockerfile'
+      BUILD_CONTEXT: './docs/discord-bot'
     strategy:
       fail-fast: false
       matrix:
@@ -215,12 +222,6 @@ jobs:
             runner_label: 'ubuntu-latest'
           - platform_slash: 'linux/arm64'
             runner_label: 'ubuntu-22.04-arm'
-    runs-on: '${{ matrix.runner_label }}'
-    env:
-      IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-docs-discord-bot'
-      IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-docs-discord-bot'
-      DOCKERFILE_PATH: './docs/discord-bot/Dockerfile'
-      BUILD_CONTEXT: './docs/discord-bot'
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
@@ -236,8 +237,7 @@ jobs:
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
       - name: 'Log in to Docker Hub (if secrets present)'
-        if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_HUB_TOKEN }}
-        continue-on-error: true
+        if: env.DOCKERHUB_AUTH == 'true'
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'

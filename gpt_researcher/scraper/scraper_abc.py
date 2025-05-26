@@ -13,6 +13,10 @@ class BaseScraperABC(ABC):
     """ABC for all scrapers."""
 
     @abstractmethod
+    def __init__(self, link: str | None = None, session: Session | None = None) -> None:
+        ...
+
+    @abstractmethod
     def scrape(self) -> tuple[str, list[dict[str, Any]], str]: ...
 
 

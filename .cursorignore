@@ -1,13 +1,10 @@
 #Ignore env containing secrets
 .history
 .env
-.venv
 .envrc
 
 #Ignore Virtual Env
 env/
-venv/
-.venv/
 
 # Other Environments
 ENV/
@@ -52,7 +49,6 @@ server_log.txt
 .cursorrules
 CURSOR_RULES.md
 .history
-*venv*
 
 .history
 

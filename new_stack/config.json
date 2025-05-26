@@ -1,6 +1,0 @@
-{
-  "EMBEDDING": "google_genai:models/text-embedding-004",
-  "FAST_LLM": "litellm:groq/Mixtral-8x7b-32768",
-  "SMART_LLM": "litellm:groq/llama-3.3-70b-versatile",
-  "STRATEGIC_LLM": "litellm:groq/Mixtral-8x7b-32768"
-}

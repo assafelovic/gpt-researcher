@@ -58,9 +58,7 @@ class DetailedReport:
         await self._initial_research()
         subtopics: list[dict[str, Any]] = await self._get_all_subtopics()
         report_introduction: str = await self.gpt_researcher.write_introduction()
-        report_body: str = ""
-        if subtopics:
-            _, report_body = await self._generate_subtopic_reports(subtopics)
+        _, report_body = await self._generate_subtopic_reports(subtopics)
         self.gpt_researcher.visited_urls.update(self.global_urls)
         report: str = await self._construct_detailed_report(report_introduction, report_body)
         return report
@@ -102,7 +100,7 @@ class DetailedReport:
         subtopic: dict[str, Any],
     ) -> dict[str, Any]:
         current_subtopic_task: str = subtopic.get("task")
-        subtopic_assistant = GPTResearcher(
+        subtopic_assistant: GPTResearcher = GPTResearcher(
             query=current_subtopic_task,
             query_domains=self.query_domains,
             report_type="subtopic_report",
@@ -142,7 +140,21 @@ class DetailedReport:
         )
 
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
-        self.global_context = list(set(subtopic_assistant.context))
+        # Ensure context contains only strings (hashable types) for set operation
+        context_strings: list[str] = []
+        for item in subtopic_assistant.context:
+            if isinstance(item, str):
+                context_strings.append(item)
+            elif isinstance(item, dict) and 'raw_content' in item:
+                # Extract content from dict if it has raw_content key
+                content: str = item['raw_content']
+                if content and isinstance(content, str):
+                    context_strings.append(content)
+            else:
+                # Convert other types to string as fallback
+                context_strings.append(str(item))
+
+        self.global_context = list(set(context_strings))
         self.global_urls.update(subtopic_assistant.visited_urls)
 
         self.existing_headers.append(

@@ -67,6 +67,9 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
             primary_kwargs["base_url"] = "https://openrouter.ai/api/v1"
             primary_kwargs["api_key"] = os.environ.get("OPENROUTER_API_KEY")
 
+            # Set up model_kwargs (removed transforms as it's not supported by OpenAI client)
+            primary_kwargs["model_kwargs"] = primary_kwargs.get("model_kwargs", {})
+
             # Log the configuration
             logger.info(f"Using OpenRouter as {provider} with custom base_url. Model: {primary_kwargs.get('model')}")
 
@@ -104,6 +107,10 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
                         provider_name = "openai"
                         fallback_kwargs["base_url"] = "https://openrouter.ai/api/v1"
                         fallback_kwargs["api_key"] = os.environ.get("OPENROUTER_API_KEY")
+
+                        # Set up model_kwargs (removed transforms as it's not supported by OpenAI client)
+                        fallback_kwargs["model_kwargs"] = fallback_kwargs.get("model_kwargs", {})
+
                         logger.info(f"Using OpenRouter model {model_name} via OpenAI provider with custom base_url")
 
                     # Set the model name and create the provider
@@ -124,7 +131,7 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
 
         # Initialize the primary provider
         try:
-            primary_provider = GenericLLMProvider.from_provider(
+            primary_provider: GenericLLMProvider = GenericLLMProvider.from_provider(
                 provider,
                 chat_log=chat_log,
                 verbose=verbose,

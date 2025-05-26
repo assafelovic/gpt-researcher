@@ -13,11 +13,10 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import aiofiles
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import BaseMessage
 
 from colorama import Fore, Style, init
-from pydantic import SecretStr
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import BaseMessage
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
@@ -271,15 +270,19 @@ class GenericLLMProvider:
                 max_bucket_size=10,
             )
 
+            # Set up model_kwargs
+            model_kwargs = kwargs.pop("model_kwargs", {})
+
             llm = ChatOpenAI(
-                openai_api_base="https://openrouter.ai/api/v1",  # pyright: ignore[reportCallIssue]
-                openai_api_key=os.environ["OPENROUTER_API_KEY"],  # pyright: ignore[reportCallIssue]
+                base_url="https://openrouter.ai/api/v1",  # pyright: ignore[reportCallIssue]
+                api_key=os.environ["OPENROUTER_API_KEY"],  # pyright: ignore[reportCallIssue]
                 rate_limiter=rate_limiter,
+                model_kwargs=model_kwargs,
                 **kwargs,
             )
 
         else:
-            supported = ", ".join(_SUPPORTED_PROVIDERS)
+            supported: str = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(f"Unsupported {provider}.\n\nSupported model providers are: {supported}")
         return cls(llm, chat_log, verbose=verbose)
 

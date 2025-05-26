@@ -27,13 +27,15 @@ logger: logging.Logger = logging.getLogger(__name__)
 MAX_CONTEXT_WORDS = 25000
 
 
-def count_words(text: str) -> int:
+def count_words(text: str | list[str]) -> int:
     """Count words in a text string."""
+    if isinstance(text, list):
+        text = "\n".join(text)
     return len(text.split())
 
 
 def trim_context_to_word_limit(
-    context_list: list[str],
+    context_list: list[str] | list[dict[str, Any]],
     max_words: int = MAX_CONTEXT_WORDS,
 ) -> list[str]:
     """Trim context list to stay within word limit while preserving most recent/relevant items."""
@@ -42,6 +44,8 @@ def trim_context_to_word_limit(
 
     # Process in reverse to keep most recent items
     for item in reversed(context_list):
+        if isinstance(item, dict):
+            item = item.get("content", item.get("raw_content", ""))
         words: int = count_words(item)
         if total_words + words <= max_words:
             trimmed_context.insert(

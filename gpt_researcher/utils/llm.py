@@ -345,7 +345,7 @@ async def create_chat_completion(
     stream: bool | None = False,
     websocket: Any | None = None,
     llm_kwargs: dict[str, Any] | None = None,
-    cost_callback: Callable | None = None,
+    cost_callback: Callable[[float], None] | None = None,
     reasoning_effort: ReasoningEfforts | None = None,
     cfg: Config | None = None,
     **kwargs,

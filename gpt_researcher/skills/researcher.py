@@ -111,7 +111,9 @@ class ResearchConductor:
         # Hybrid search including both local documents and web sources
         elif self.researcher.report_source == ReportSource.Hybrid.value:
             document_data: list[str] = (
-                DocumentLoader(self.researcher.cfg.doc_path) if self.researcher.document_urls is None else OnlineDocumentLoader(self.researcher.document_urls)
+                DocumentLoader(self.researcher.cfg.doc_path)
+                if self.researcher.document_urls is None
+                else OnlineDocumentLoader(self.researcher.document_urls)
             ).load()
             if self.researcher.vector_store is not None:
                 self.researcher.vector_store.load(document_data)
@@ -149,7 +151,22 @@ class ResearchConductor:
         self.researcher.context = research_data
         if self.researcher.cfg.curate_sources:  # pyright: ignore[reportAttributeAccessIssue]
             self.logger.info("Curating sources")
-            self.researcher.context = await self.researcher.source_curator.curate_sources(research_data)
+            self.logger.info(f"Data passed to curate_sources (research_data type: {type(research_data)}, length: {len(research_data) if isinstance(research_data, list) else 'N/A'}): {research_data}")
+            curated_sources: list[dict[str, Any]] = await self.researcher.source_curator.curate_sources(research_data)
+            self.logger.info(f"Data returned from curate_sources (curated_sources type: {type(curated_sources)}, length: {len(curated_sources)}): {curated_sources}")
+
+            # Extract content from curated sources to maintain list[str] format for context
+            # The curated sources are dictionaries with 'raw_content' key, but context should be list[str]
+            if curated_sources and isinstance(curated_sources[0], dict):
+                # Process curated sources through context manager to get string content
+                curated_content: str = await self.researcher.context_manager.get_similar_content_by_query(
+                    self.researcher.query,
+                    curated_sources,
+                )
+                self.researcher.context = [curated_content] if curated_content else research_data
+            else:
+                # Fallback to original research_data if curation didn't return expected format
+                self.researcher.context = research_data
 
         if self.researcher.verbose:
             await stream_output(
@@ -172,19 +189,19 @@ class ResearchConductor:
         new_search_urls: list[str] = await self._get_new_urls(urls)
         self.logger.info(f"New URLs to process: {new_search_urls}")
 
-        scraped_content: list[str] = await self.researcher.scraper_manager.browse_urls(new_search_urls)
+        scraped_content: list[dict[str, Any]] = await self.researcher.scraper_manager.browse_urls(new_search_urls)
         self.logger.info(f"Scraped content from {len(scraped_content)} URLs")
 
         if self.researcher.vector_store:
             self.logger.info("Loading content into vector store")
             self.researcher.vector_store.load(scraped_content)
 
-        context: list[str] = await self.researcher.context_manager.get_similar_content_by_query(
+        context: str = await self.researcher.context_manager.get_similar_content_by_query(
             self.researcher.query,
             scraped_content,
         )
         self.logger.info(f"Generated context length: {len(context)}")
-        return context
+        return [context] if context else []
 
     # Add logging to other methods similarly...
 
@@ -341,7 +358,12 @@ class ResearchConductor:
         )
 
         if content and self.researcher.verbose:
-            await stream_output("logs", "subquery_context_window", f"📃 {content}", self.researcher.websocket)
+            await stream_output(
+                "logs",
+                "subquery_context_window",
+                f"📃 {content}",
+                self.researcher.websocket,
+            )
         elif self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -408,7 +430,11 @@ class ResearchConductor:
                 )
 
                 # Collect URLs from search results
-                search_urls: list[str] = [url.get("href") for url in search_results if url.get("href")]
+                search_urls: list[str] = [
+                    url.get("href")
+                    for url in search_results
+                    if url.get("href")
+                ]
                 new_search_urls.extend(search_urls)
             except Exception as e:
                 self.logger.error(f"Error searching with retrievers: {e.__class__.__name__}: {e}")
@@ -442,7 +468,7 @@ class ResearchConductor:
         # Scrape the new URLs
         scraped_content: list[str] = await self.researcher.scraper_manager.browse_urls(new_search_urls)
 
-        if self.researcher.vector_store:
+        if self.researcher.vector_store is not None:
             self.researcher.vector_store.load(scraped_content)
 
         return scraped_content

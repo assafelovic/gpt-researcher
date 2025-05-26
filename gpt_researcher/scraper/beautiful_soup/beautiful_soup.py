@@ -22,7 +22,14 @@ class BeautifulSoupScraper:
     def scrape(self) -> tuple[str, list[dict[str, Any]], str] | tuple[str, list[dict[str, Any]], str]:
         try:
             response: requests.Response = self.session.get(self.link, timeout=self.timeout)
-            soup: BeautifulSoup = BeautifulSoup(response.content, "lxml", from_encoding=response.encoding)
+
+            # Check if the content is XML based on Content-Type header or content
+            content_type: str = response.headers.get("Content-Type", "").lower()
+            is_xml: bool = "xml" in content_type or response.content.strip().startswith(b"<?xml")
+
+            # Use the appropriate parser based on content type
+            parser: str = "xml" if is_xml else "lxml"
+            soup: BeautifulSoup = BeautifulSoup(response.content, parser, from_encoding=response.encoding)
 
             for script_or_style in soup(["script", "style"]):
                 script_or_style.extract()

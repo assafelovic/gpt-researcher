@@ -12,10 +12,18 @@ import requests
 
 from colorama import Fore, init
 
-from gpt_researcher.scraper import ArxivScraper, BeautifulSoupScraper, BrowserScraper, PyMuPDFScraper, TavilyExtract, WebBaseLoaderScraper
+from gpt_researcher.scraper import (
+    ArxivScraper,
+    BeautifulSoupScraper,
+    BrowserScraper,
+    PyMuPDFScraper,
+    TavilyExtract,
+    WebBaseLoaderScraper,
+)
+from gpt_researcher.scraper.scraper_abc import BaseScraperABC
+
 
 class Scraper:
-
     """Scraper class to extract the content from the links."""
 
     def __init__(

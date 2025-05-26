@@ -40,3 +40,11 @@ class BaseConfig(TypedDict):
     DEEP_RESEARCH_CONCURRENCY: int
     DEEP_RESEARCH_DEPTH: int
     DEEP_RESEARCH_BREADTH: int
+    MCP_SERVERS: list[str]
+    MCP_AUTO_TOOL_SELECTION: bool
+    MCP_ALLOWED_ROOT_PATHS: list[str]
+    # RAG (Retrieval-Augmented Generation) settings
+    ENABLE_RAG_REPORT_GENERATION: bool
+    RAG_CHUNK_SIZE: int
+    RAG_CHUNK_OVERLAP: int
+    RAG_MAX_CHUNKS_PER_SECTION: int

@@ -42,6 +42,7 @@ class ReportGenerator:
         relevant_written_contents: list[str] | None = None,
         ext_context: list[dict[str, Any]] | None = None,
         custom_prompt: str = "",
+        use_rag: bool = True,
     ) -> str:
         """Write a report based on existing headers and relevant contents.
 
@@ -50,6 +51,7 @@ class ReportGenerator:
             relevant_written_contents (list): List of relevant written contents.
             ext_context (Optional): External context, if any.
             custom_prompt (str): Custom prompt, if any.
+            use_rag (bool): Whether to use RAG-based generation for large contexts.
 
         Returns:
             str: The generated report.
@@ -72,33 +74,120 @@ class ReportGenerator:
                 self.researcher.websocket,
             )
 
-        report_params: dict[str, Any] = self.research_params.copy()
-        report_params["context"] = context
+        # Check if we should use RAG-based generation
+        rag_enabled: bool = getattr(self.researcher.cfg, 'enable_rag_report_generation', True)
+        should_use_rag: bool = use_rag and rag_enabled and self._should_use_rag_generation(context)
 
-        if self.researcher.report_type == "subtopic_report":
-            report_params.update(
-                {
-                    "main_topic": self.researcher.parent_query,
-                    "existing_headers": existing_headers,
-                    "relevant_written_contents": relevant_written_contents,
-                    "cost_callback": self.researcher.add_costs,
-                    "custom_prompt": custom_prompt,
-                }
+        if should_use_rag:
+            if self.researcher.verbose:
+                await stream_output(
+                    "logs",
+                    "using_rag_generation",
+                    "🧠 Using RAG-based generation for comprehensive report...",
+                    self.researcher.websocket,
+                )
+
+            # Use the new RAG-based report generation
+            from gpt_researcher.actions.report_generation import generate_report_with_rag
+
+            report: str = await generate_report_with_rag(
+                query=self.researcher.query,
+                context=context,
+                agent_role_prompt=(
+                    self.researcher.cfg.agent_role  # pyright: ignore[reportAttributeAccessIssue]
+                    or self.researcher.role
+                ),
+                report_type=self.researcher.report_type,
+                tone=self.researcher.tone,
+                report_source=self.researcher.report_source,
+                websocket=self.researcher.websocket,
+                cfg=self.researcher.cfg,
+                memory=self.researcher.memory,  # Pass memory for RAG
+                main_topic=getattr(self.researcher, 'parent_query', ''),
+                existing_headers=existing_headers,
+                relevant_written_contents=relevant_written_contents,
+                cost_callback=self.researcher.add_costs,
+                custom_prompt=custom_prompt,
+                headers=self.researcher.headers,
+                prompt_family=self.researcher.prompt_family,
             )
         else:
-            report_params["cost_callback"] = self.researcher.add_costs
+            # Use original method for smaller contexts
+            report_params: dict[str, Any] = self.research_params.copy()
+            report_params["context"] = context
 
-        report: str = await generate_report(**report_params)
+            if self.researcher.report_type == "subtopic_report":
+                report_params.update(
+                    {
+                        "main_topic": self.researcher.parent_query,
+                        "existing_headers": existing_headers,
+                        "relevant_written_contents": relevant_written_contents,
+                        "cost_callback": self.researcher.add_costs,
+                        "custom_prompt": custom_prompt,
+                    }
+                )
+            else:
+                report_params["cost_callback"] = self.researcher.add_costs
+
+            report: str = await generate_report(**report_params)
 
         if self.researcher.verbose:
             await stream_output(
                 "logs",
                 "report_written",
-                f"📝 Report written for '{self.researcher.query}'",
+                f"📝 Report written for '{self.researcher.query}' ({len(report)} characters)",
                 self.researcher.websocket,
             )
 
         return report
+
+    def _should_use_rag_generation(self, context: list[dict[str, Any]]) -> bool:
+        """Determine if RAG-based generation should be used based on context size.
+
+        Args:
+            context: The research context
+
+        Returns:
+            bool: True if RAG should be used, False otherwise
+        """
+        if not context:
+            return False
+
+        # Calculate total context size
+        total_chars = 0
+        total_items = len(context)
+
+        for item in context:
+            if isinstance(item, dict):
+                if 'raw_content' in item:
+                    total_chars += len(str(item['raw_content']))
+                elif 'content' in item:
+                    total_chars += len(str(item['content']))
+                else:
+                    total_chars += len(str(item))
+            else:
+                total_chars += len(str(item))
+
+        # Use RAG if:
+        # 1. We have a lot of research items (>20)
+        # 2. OR total content is large (>50k characters)
+        # 3. OR we're doing a detailed report
+        use_rag = (
+            total_items > 20 or
+            total_chars > 50000 or
+            self.researcher.report_type == "detailed_report"
+        )
+
+        if use_rag and self.researcher.verbose:
+            import asyncio
+            asyncio.create_task(stream_output(
+                "logs",
+                "rag_decision",
+                f"🔍 RAG enabled: {total_items} items, {total_chars:,} chars, type: {self.researcher.report_type}",
+                self.researcher.websocket,
+            ))
+
+        return use_rag
 
     async def write_report_conclusion(
         self,

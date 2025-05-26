@@ -18,8 +18,8 @@ from gpt_researcher.llm_provider import GenericLLMProvider
 from gpt_researcher.llm_provider.generic.base import _SUPPORTED_PROVIDERS
 from gpt_researcher.retrievers.utils import get_all_retriever_names
 
-#from litellm import _logging
-#_logging._turn_on_debug()
+from litellm import _logging
+_logging._turn_on_debug()
 MAX_FALLBACKS: int = 25
 
 
@@ -27,6 +27,12 @@ class Config:
     """Config class for GPT Researcher."""
 
     CONFIG_DIR: ClassVar[str] = os.path.join(os.path.dirname(__file__), "variables")
+
+    # Class-level caching for fallback providers
+    _cached_fast_llm_fallback_providers: ClassVar[list[GenericLLMProvider]] = []
+    _cached_smart_llm_fallback_providers: ClassVar[list[GenericLLMProvider]] = []
+    _cached_strategic_llm_fallback_providers: ClassVar[list[GenericLLMProvider]] = []
+    _fallbacks_initialized: ClassVar[bool] = False
 
     def __init__(
         self,
@@ -59,7 +65,7 @@ class Config:
         self.agent_role: str | None = DEFAULT_CONFIG.get("AGENT_ROLE", None) or None
         self.browse_chunk_max_length: int = DEFAULT_CONFIG.get("BROWSE_CHUNK_MAX_LENGTH", 8192) or 8192
         self.cache_expiry_time: timedelta = DEFAULT_CONFIG.get("CACHE_EXPIRY_TIME", timedelta(days=2)) or timedelta(days=2)
-        self.curate_sources: bool = DEFAULT_CONFIG.get("CURATE_SOURCES", True) or True
+        self.curate_sources: bool = DEFAULT_CONFIG.get("CURATE_SOURCES", False) or False
         self.deep_research_breadth: int = DEFAULT_CONFIG.get("DEEP_RESEARCH_BREADTH", 3) or 3
         self.deep_research_concurrency: int = DEFAULT_CONFIG.get("DEEP_RESEARCH_CONCURRENCY", 4) or 4
         self.deep_research_depth: int = DEFAULT_CONFIG.get("DEEP_RESEARCH_DEPTH", 2) or 2
@@ -199,10 +205,21 @@ class Config:
         if self.strategic_llm and self.strategic_llm in strategic_llm_fallback_str_list:
             strategic_llm_fallback_str_list.remove(self.strategic_llm)
 
-        # Initialize fallback providers
-        self.fast_llm_fallback_providers = self._initialize_fallback_providers_for_type(fast_llm_fallback_str_list, "fast")
-        self.smart_llm_fallback_providers = self._initialize_fallback_providers_for_type(smart_llm_fallback_str_list, "smart")
-        self.strategic_llm_fallback_providers = self._initialize_fallback_providers_for_type(strategic_llm_fallback_str_list, "strategic")
+        # Initialize fallback providers (use cached values if available)
+        if not Config._fallbacks_initialized:
+            # First time initialization - generate and cache the fallback providers
+            Config._cached_fast_llm_fallback_providers = self._initialize_fallback_providers_for_type(fast_llm_fallback_str_list, "fast")
+            Config._cached_smart_llm_fallback_providers = self._initialize_fallback_providers_for_type(smart_llm_fallback_str_list, "smart")
+            Config._cached_strategic_llm_fallback_providers = self._initialize_fallback_providers_for_type(strategic_llm_fallback_str_list, "strategic")
+            Config._fallbacks_initialized = True
+            print("INFO: Initialized and cached fallback providers for first time")
+        else:
+            print("INFO: Using cached fallback providers")
+
+        # Assign the cached providers to this instance
+        self.fast_llm_fallback_providers = Config._cached_fast_llm_fallback_providers
+        self.smart_llm_fallback_providers = Config._cached_smart_llm_fallback_providers
+        self.strategic_llm_fallback_providers = Config._cached_strategic_llm_fallback_providers
 
     def _handle_deprecated_attributes(self) -> None:
         if os.getenv("EMBEDDING_PROVIDER") is not None:
@@ -479,7 +496,12 @@ class Config:
         # For manual fallbacks
         if fallbacks_str.strip().lower() != "auto":
             raw_fallbacks: list[str] = [fb.strip() for fb in fallbacks_str.split(",") if fb.strip()]
-            parsed_fallbacks: list[str] = [fb for fb in raw_fallbacks if clean_primary_model_id and fb != clean_primary_model_id]
+            parsed_fallbacks: list[str] = [
+                fb
+                for fb in raw_fallbacks
+                if not clean_primary_model_id
+                or fb != clean_primary_model_id
+            ]
 
             # Deduplicate
             seen = set()
@@ -523,13 +545,22 @@ class Config:
             # First process free models (preferred)
             for model_id, spec in free_models.items():
                 # Skip blacklisted models
-                if any(re.search(pattern, model_id, re.IGNORECASE) for pattern in blacklisted_patterns):
+                if any(
+                    re.search(pattern, model_id, re.IGNORECASE)
+                    for pattern in blacklisted_patterns
+                ):
                     continue
 
                 # Skip non-matching model types
-                if model_type == "embedding" and spec.get("mode") != "embedding":
+                if (
+                    model_type == "embedding"
+                    and spec.get("mode") != "embedding"
+                ):
                     continue
-                elif model_type in {"chat", "strategic_chat", "fast_chat"} and spec.get("mode") != "chat":
+                elif (
+                    model_type in {"chat", "strategic_chat", "fast_chat"}
+                    and spec.get("mode") != "chat"
+                ):
                     continue
 
                 # Check token capacity for chat models
@@ -545,19 +576,35 @@ class Config:
             if len(final_candidates) < MAX_FALLBACKS:
                 for model_id, spec in all_models.items():
                     # Skip models already processed or blacklisted
-                    if model_id in free_models or model_id in final_candidates:
+                    if (
+                        model_id in free_models
+                        or model_id in final_candidates
+                    ):
                         continue
-                    if any(re.search(pattern, model_id, re.IGNORECASE) for pattern in blacklisted_patterns):
+                    if any(
+                        re.search(pattern, model_id, re.IGNORECASE)
+                        for pattern in blacklisted_patterns
+                    ):
                         continue
 
                     # Skip non-matching model types
-                    if model_type == "embedding" and spec.get("mode") != "embedding":
+                    if (
+                        model_type == "embedding"
+                        and spec.get("mode") != "embedding"
+                    ):
                         continue
-                    elif model_type in {"chat", "strategic_chat", "fast_chat"} and spec.get("mode") != "chat":
+                    elif (
+                        model_type in {"chat", "strategic_chat", "fast_chat"}
+                        and spec.get("mode") != "chat"
+                    ):
                         continue
 
                     # Check token capacity for chat models
-                    if model_type in {"chat", "strategic_chat", "fast_chat"}:
+                    if model_type in {
+                        "chat",
+                        "strategic_chat",
+                        "fast_chat",
+                    }:
                         max_output_tokens = spec.get("max_output_tokens", 0)
                         if max_output_tokens < required_token_limit:
                             continue
@@ -571,7 +618,11 @@ class Config:
 
             # Remove the primary model from fallbacks if present
             if clean_primary_model_id and clean_primary_model_id.strip():
-                final_candidates = [model_id for model_id in final_candidates if model_id != clean_primary_model_id]
+                final_candidates = [
+                    model_id
+                    for model_id in final_candidates
+                    if model_id != clean_primary_model_id
+                ]
 
             # Convert model IDs to correct fallback format
             formatted_fallbacks: list[str] = []
@@ -604,14 +655,17 @@ class Config:
 
             # Final check for environment requirements
             if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or not os.environ.get("GOOGLE_CLOUD_PROJECT"):
-                formatted_fallbacks = [fb for fb in formatted_fallbacks if "google_vertexai" not in fb and "vertex_ai" not in fb]
+                formatted_fallbacks = [
+                    fb
+                    for fb in formatted_fallbacks
+                    if "google_vertexai" not in fb
+                    and "vertex_ai" not in fb
+                ]
 
             final_fallbacks_list: list[str] = formatted_fallbacks[:MAX_FALLBACKS]
 
             if final_fallbacks_list:
-                print(
-                    f"INFO: Generated fallbacks for {clean_primary_model_id or 'unspecified primary model'} (max {MAX_FALLBACKS}): {', '.join(final_fallbacks_list)}"
-                )
+                print(f"INFO: Generated fallbacks for {clean_primary_model_id or 'unspecified primary model'} (max {MAX_FALLBACKS}): {', '.join(final_fallbacks_list)}")
             else:
                 print(f"WARN: No suitable fallbacks found for {clean_primary_model_id or 'unspecified primary model'} with token limit {required_token_limit}")
 

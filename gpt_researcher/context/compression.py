@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 
 from typing import TYPE_CHECKING, Any, Callable
@@ -22,6 +23,7 @@ if TYPE_CHECKING:
     except ModuleNotFoundError:
         from langchain.schema import Document
 
+logger = logging.getLogger(__name__)
 
 class VectorstoreCompressor:
     def __init__(
@@ -57,6 +59,7 @@ class VectorstoreCompressor:
                 cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=results))
         except Exception as e:
             print(f"Error in async_get_context: {e.__class__.__name__}: {e}")
+            logger.error(f"Error in async_get_context: {e.__class__.__name__}: {e}")
         return self.prompt_family.pretty_print_docs(results, max_results)
 
 
@@ -77,10 +80,35 @@ class ContextCompressor:
         self.prompt_family: type[PromptFamily] | PromptFamily = prompt_family
 
     def __get_contextual_retriever(self) -> ContextualCompressionRetriever:
+        # Ensure documents have the raw_content key, which is needed by SearchAPIRetriever
+        valid_documents: list[dict[str, Any]] = []
+        for doc in self.documents:
+            if isinstance(doc, dict):
+                if "raw_content" not in doc or not doc["raw_content"]:
+                    logger.warning(f"Document missing raw_content, adding empty string: {doc}")
+                    doc["raw_content"] = ""
+
+                # Only include documents that have non-empty content
+                if doc["raw_content"].strip():
+                    valid_documents.append(doc)
+                else:
+                    logger.warning(f"Skipping document with empty raw_content: {doc}")
+            else:
+                logger.warning(f"Invalid document format (not a dict): {doc.__class__.__name__}")
+
+        # If no valid documents after filtering, return a retriever that will produce no results
+        if not valid_documents:
+            logger.warning(f"No valid documents with content after filtering. Original count: {len(self.documents)}")
+            # Return a retriever that will produce empty results safely
+            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+            pipeline_compressor = DocumentCompressorPipeline(transformers=[splitter])
+            base_retriever = SearchAPIRetriever(pages=[])
+            return ContextualCompressionRetriever(base_compressor=pipeline_compressor, base_retriever=base_retriever)
+
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         relevance_filter = EmbeddingsFilter(embeddings=self.embeddings, similarity_threshold=self.similarity_threshold)
         pipeline_compressor = DocumentCompressorPipeline(transformers=[splitter, relevance_filter])
-        base_retriever = SearchAPIRetriever(pages=self.documents)
+        base_retriever = SearchAPIRetriever(pages=valid_documents)
         contextual_retriever = ContextualCompressionRetriever(base_compressor=pipeline_compressor, base_retriever=base_retriever)
         return contextual_retriever
 
@@ -90,11 +118,34 @@ class ContextCompressor:
         max_results: int = 5,
         cost_callback: Callable[[float], None] | None = None,
     ) -> str:
+        # Check if there are any documents to process to prevent downstream errors
+        # in LangChain's EmbeddingsFilter when handling empty document lists.
+        if not self.documents:
+            logger.warning("No documents provided to ContextCompressor.async_get_context")
+            return ""
+
+        # Additional check for content quality
+        has_content = False
+        for doc in self.documents:
+            if isinstance(doc, dict) and doc.get("raw_content", "").strip():
+                has_content = True
+                break
+
+        if not has_content:
+            logger.warning("No documents have non-empty raw_content")
+            return ""
+
         compressed_docs: ContextualCompressionRetriever = self.__get_contextual_retriever()
         if cost_callback is not None:
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
-        relevant_docs: list[Document] = await asyncio.to_thread(compressed_docs.invoke, query)
-        return self.prompt_family.pretty_print_docs(relevant_docs, max_results)
+
+        try:
+            relevant_docs: list[Document] = await asyncio.to_thread(compressed_docs.invoke, query)
+            return self.prompt_family.pretty_print_docs(relevant_docs, max_results)
+        except Exception as e:
+            logger.error(f"Error in compress_documents: {e.__class__.__name__}: {e}", exc_info=True)
+            # Return empty string in case of errors to avoid crashing the application
+            return ""
 
 
 class WrittenContentCompressor:
@@ -111,10 +162,35 @@ class WrittenContentCompressor:
         self.similarity_threshold: float = similarity_threshold
 
     def __get_contextual_retriever(self) -> ContextualCompressionRetriever:
+        # Ensure documents have the written_content key needed by SectionRetriever
+        valid_documents: list[dict[str, Any]] = []
+        for doc in self.documents:
+            if isinstance(doc, dict):
+                if "written_content" not in doc or not doc["written_content"]:
+                    logger.warning(f"Document missing written_content, adding empty string: {doc}")
+                    doc["written_content"] = ""
+
+                # Only include documents that have non-empty content
+                if doc["written_content"].strip():
+                    valid_documents.append(doc)
+                else:
+                    logger.warning(f"Skipping document with empty written_content: {doc}")
+            else:
+                logger.warning(f"Invalid document format (not a dict): {doc.__class__.__name__}")
+
+        # If no valid documents after filtering, return a retriever that will produce no results
+        if not valid_documents:
+            logger.warning(f"No valid documents with content after filtering. Original count: {len(self.documents)}")
+            # Return a retriever that will produce empty results safely
+            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+            pipeline_compressor = DocumentCompressorPipeline(transformers=[splitter])
+            base_retriever = SectionRetriever(sections=[])
+            return ContextualCompressionRetriever(base_compressor=pipeline_compressor, base_retriever=base_retriever)
+
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         relevance_filter = EmbeddingsFilter(embeddings=self.embeddings, similarity_threshold=self.similarity_threshold)
         pipeline_compressor = DocumentCompressorPipeline(transformers=[splitter, relevance_filter])
-        base_retriever = SectionRetriever(sections=self.documents)
+        base_retriever = SectionRetriever(sections=valid_documents)
         contextual_retriever = ContextualCompressionRetriever(base_compressor=pipeline_compressor, base_retriever=base_retriever)
         return contextual_retriever
 
@@ -127,8 +203,31 @@ class WrittenContentCompressor:
         max_results: int = 5,
         cost_callback: Callable[[float], None] | None = None,
     ) -> list[str]:
+        # Check if there are any documents to process to prevent downstream errors
+        # in LangChain's EmbeddingsFilter when handling empty document lists.
+        if not self.documents:
+            logger.warning("No documents provided to WrittenContentCompressor.async_get_context")
+            return []
+
+        # Additional check for content quality
+        has_content = False
+        for doc in self.documents:
+            if isinstance(doc, dict) and doc.get("written_content", "").strip():
+                has_content = True
+                break
+
+        if not has_content:
+            logger.warning("No documents have non-empty written_content")
+            return []
+
         compressed_docs: ContextualCompressionRetriever = self.__get_contextual_retriever()
         if cost_callback is not None:
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
-        relevant_docs: list[Document] = await asyncio.to_thread(compressed_docs.invoke, query)
-        return self.__pretty_docs_list(relevant_docs, max_results)
+
+        try:
+            relevant_docs: list[Document] = await asyncio.to_thread(compressed_docs.invoke, query)
+            return self.__pretty_docs_list(relevant_docs, max_results)
+        except Exception as e:
+            logger.error(f"Error in compress_documents: {e.__class__.__name__}: {e}", exc_info=True)
+            # Return empty list in case of errors to avoid crashing the application
+            return []

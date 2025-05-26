@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from typing import TYPE_CHECKING, Any
 
 from gpt_researcher.actions.utils import stream_output
 from gpt_researcher.context.compression import ContextCompressor, VectorstoreCompressor, WrittenContentCompressor
+from gpt_researcher.utils.schemas import Subtopic
 
 if TYPE_CHECKING:
     from gpt_researcher.agent import GPTResearcher
@@ -19,14 +21,40 @@ class ContextManager:
 
     async def get_similar_content_by_query(
         self,
-        query: str,
+        query: Any,
         pages: list[dict[str, Any]],
     ) -> str:
+        actual_query_text: str
+        if isinstance(query, Subtopic):
+            actual_query_text = query.task
+        elif isinstance(query, tuple):
+            if query and isinstance(query[0], str) and query[0] == "subtopics":
+                if len(query) > 1 and isinstance(query[1], list) and query[1] and isinstance(query[1][0], Subtopic):
+                    actual_query_text = query[1][0].task
+                    if len(query[1]) > 1:
+                        logging.warning(
+                            f"Query to get_similar_content_by_query was a tuple {query} containing multiple subtopics. Using task from the first subtopic only: '{actual_query_text}'."
+                        )
+                else:
+                    logging.warning(f"Query to get_similar_content_by_query was an unexpected 'subtopics' tuple structure: {query}. Falling back to string conversion.")
+                    actual_query_text = str(query)
+
+            elif query and isinstance(query[0], Subtopic):
+                actual_query_text = query[0].task
+            else:
+                logging.warning(f"Query to get_similar_content_by_query was an unexpected tuple: {query}. Falling back to string conversion.")
+                actual_query_text = str(query)
+        elif isinstance(query, str):
+            actual_query_text = query
+        else:
+            logging.warning(f"Query to get_similar_content_by_query was of unexpected type {type(query)}: {query}. Falling back to string conversion.")
+            actual_query_text = str(query)
+
         if self.researcher.verbose:
             await stream_output(
                 "logs",
                 "fetching_query_content",
-                f"📚 Getting relevant content based on query: {query}...",
+                f"📚 Getting relevant content based on query: {actual_query_text} (Original query type: {type(query)})...",
                 self.researcher.websocket,
             )
 
@@ -36,7 +64,7 @@ class ContextManager:
             prompt_family=self.researcher.prompt_family,
         )
         return await context_compressor.async_get_context(
-            query=query,
+            query=actual_query_text,
             max_results=10,
             cost_callback=self.researcher.add_costs,
         )

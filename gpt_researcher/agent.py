@@ -56,13 +56,13 @@ class GPTResearcher:
         subtopics: list[str] | None = None,
         visited_urls: set[str] | None = None,
         verbose: bool = True,
-        context: list[str] | None = None,
+        context: list[str] | list[dict[str, Any]] | None = None,
         headers: dict[str, Any] | None = None,
         max_subtopics: int = 5,
         log_handler: Any | None = None,
         prompt_family: str | None = None,
         mcp_configs: list[dict[str, Any]] | None = None,
-        disable_structured_research: bool = False,
+        disable_structured_research: bool = True,
     ):
         """Initialize a GPT Researcher instance.
 
@@ -137,7 +137,7 @@ class GPTResearcher:
         self.subtopics: list[str] | None = subtopics
         self.visited_urls: set[str] = set() if visited_urls is None else visited_urls
         self.verbose: bool = verbose
-        self.context: list[str] | None = [] if context is None else context
+        self.context: list[str] | list[dict[str, Any]] | None = [] if context is None else context
         self.headers: dict[str, Any] | None = {} if headers is None else headers
         self.research_costs: float = 0.0
         self.disable_structured_research: bool = disable_structured_research

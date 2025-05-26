@@ -370,3 +370,244 @@ async def generate_report(
     # DEBUG: Log function end
     logger.info(f"[DEBUG] Finished generate_report, returning report of length: {len(report)}")
     return report
+
+
+async def generate_report_with_rag(
+    query: str,
+    context: str | list[dict[str, Any]],
+    agent_role_prompt: str,
+    report_type: str,
+    tone: Tone,
+    report_source: str,
+    websocket: WebSocket,
+    cfg: Config,
+    memory: Any,  # Memory/VectorStore instance
+    main_topic: str = "",
+    existing_headers: list[str] | None = None,
+    relevant_written_contents: list[str] | None = None,
+    cost_callback: Callable | None = None,
+    custom_prompt: str | None = None,
+    headers: dict[str, str] | None = None,
+    prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    **kwargs: dict[str, Any],
+) -> str:
+    """Generates a comprehensive report using RAG (Retrieval-Augmented Generation).
+
+    This function implements proper RAG architecture by:
+    1. Storing all research data in vector store
+    2. Generating report sections iteratively
+    3. Retrieving relevant context for each section
+    4. Building comprehensive reports without token limit constraints
+
+    Args:
+        query: The research query
+        context: The research context (can be massive)
+        memory: Memory/VectorStore instance for RAG
+        ... (other args same as generate_report)
+
+    Returns:
+        A comprehensive report generated using RAG
+    """
+    import logging
+
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    from langchain_community.vectorstores import InMemoryVectorStore
+
+    from gpt_researcher.context.compression import VectorstoreCompressor
+    from gpt_researcher.vector_store import VectorStoreWrapper
+
+    logger: logging.Logger = logging.getLogger(__name__)
+    logger.info(f"[RAG] Starting RAG-based report generation for query: {query[:50]}...")
+
+    existing_headers = [] if existing_headers is None else existing_headers
+    relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
+
+    # Step 1: Prepare and store all research data in vector store
+    logger.info("[RAG] Preparing vector store with context data...")
+
+    # Convert context to text chunks for vector storage
+    if isinstance(context, str):
+        text_content: str = context
+    elif isinstance(context, list):
+        # Extract text from list of dicts
+        text_parts: list[str] = []
+        for item in context:
+            if isinstance(item, dict):
+                if 'raw_content' in item:
+                    text_parts.append(item['raw_content'])
+                elif 'content' in item:
+                    text_parts.append(item['content'])
+                else:
+                    text_parts.append(str(item))
+            else:
+                text_parts.append(str(item))
+        text_content = "\n\n".join(text_parts)
+    else:
+        text_content = str(context)
+
+    logger.info(f"[RAG] Total context length: {len(text_content)} characters")
+
+    # Create vector store if not provided
+    vector_store = None
+    if hasattr(memory, 'get_embeddings'):
+        embeddings: Any = memory.get_embeddings()
+        vector_store = InMemoryVectorStore(embeddings)
+
+        # Split text into chunks for vector storage
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=getattr(cfg, 'rag_chunk_size', 2000),  # Use config value
+            chunk_overlap=getattr(cfg, 'rag_chunk_overlap', 200),  # Use config value
+            length_function=len,
+        )
+        chunks: list[str] = text_splitter.split_text(text_content)
+        logger.info(f"[RAG] Split context into {len(chunks)} chunks")
+
+        # Add chunks to vector store
+        vector_store.add_texts(chunks)
+        logger.info(f"[RAG] Added {len(chunks)} chunks to vector store")
+
+    # Step 2: Generate report outline/structure
+    logger.info("[RAG] Generating report structure...")
+
+    outline_prompt: str = f"""Based on the research query: "{query}"
+
+Generate a detailed outline for a comprehensive report. Include:
+1. Introduction
+2. 5-8 main sections with descriptive titles
+3. Conclusion
+
+Format as a simple list:
+- Introduction
+- Section 1: [Title]
+- Section 2: [Title]
+...
+- Conclusion
+
+Focus on creating logical, comprehensive coverage of the topic."""
+
+    try:
+        outline_response: str = await create_chat_completion(
+            model=cfg.smart_llm_model,
+            messages=[
+                {"role": "system", "content": agent_role_prompt},
+                {"role": "user", "content": outline_prompt}
+            ],
+            temperature=0.3,
+            llm_provider=cfg.smart_llm_provider,
+            max_tokens=1000,  # Small limit for outline only
+            llm_kwargs=cfg.llm_kwargs,
+            cost_callback=cost_callback,
+            cfg=cfg,
+        )
+
+        # Parse outline into sections
+        sections: list[str] = []
+        for line in outline_response.split('\n'):
+            line: str = line.strip()
+            if line and (line.startswith('-') or line.startswith('•')):
+                section_title = line.lstrip('- •').strip()
+                if section_title:
+                    sections.append(section_title)
+
+        logger.info(f"[RAG] Generated outline with {len(sections)} sections: {sections}")
+
+    except Exception as e:
+        logger.error(f"[RAG] Error generating outline: {e}")
+        # Fallback to basic structure
+        sections = [
+            "Introduction",
+            "Background and Context",
+            "Key Findings",
+            "Analysis and Discussion",
+            "Implications and Impact",
+            "Conclusion"
+        ]
+
+    # Step 3: Generate each section using RAG
+    report_sections: list[str] = []
+
+    for i, section_title in enumerate(sections):
+        logger.info(f"[RAG] Generating section {i+1}/{len(sections)}: {section_title}")
+
+        # Retrieve relevant context for this section
+        if vector_store:
+            try:
+                # Create search query for this section
+                section_query: str = f"{query} {section_title}"
+
+                # Retrieve relevant chunks (more than default)
+                max_chunks: int = getattr(cfg, 'rag_max_chunks_per_section', 10)
+                relevant_docs: list = vector_store.similarity_search(section_query, k=max_chunks)
+                section_context: str = "\n\n".join([doc.page_content for doc in relevant_docs])
+
+                logger.info(f"[RAG] Retrieved {len(relevant_docs)} relevant chunks for section: {section_title}")
+
+            except Exception as e:
+                logger.error(f"[RAG] Error retrieving context for section {section_title}: {e}")
+                # Fallback to truncated original context
+                section_context = text_content[:8000]  # Use first 8k chars as fallback
+        else:
+            # Fallback if no vector store
+            section_context = text_content[:8000]
+
+        # Generate this section
+        section_prompt: str = f"""Write a comprehensive section for a research report.
+
+Section Title: {section_title}
+Main Query: {query}
+Report Type: {report_type}
+
+Context Information:
+{section_context}
+
+Instructions:
+1. Write a detailed, informative section about "{section_title}"
+2. Use the provided context information extensively
+3. Include specific facts, data, and examples from the context
+4. Write 300-800 words for this section
+5. Use markdown formatting with appropriate headers
+6. Cite sources when possible using markdown links
+7. Focus specifically on the "{section_title}" aspect of the topic
+
+Write the section now:"""
+
+        try:
+            section_content = await create_chat_completion(
+                model=cfg.smart_llm_model,
+                messages=[
+                    {"role": "system", "content": agent_role_prompt},
+                    {"role": "user", "content": section_prompt}
+                ],
+                temperature=0.4,
+                llm_provider=cfg.smart_llm_provider,
+                max_tokens=cfg.smart_token_limit,  # Use full token limit per section
+                llm_kwargs=cfg.llm_kwargs,
+                cost_callback=cost_callback,
+                cfg=cfg,
+            )
+
+            if section_content and len(section_content.strip()) > 50:
+                report_sections.append(f"## {section_title}\n\n{section_content}")
+                logger.info(f"[RAG] Generated section '{section_title}': {len(section_content)} characters")
+            else:
+                logger.warning(f"[RAG] Section '{section_title}' generated insufficient content")
+
+        except Exception as e:
+            logger.error(f"[RAG] Error generating section '{section_title}': {e}")
+            continue
+
+    # Step 4: Combine all sections into final report
+    if report_sections:
+        final_report: str = f"# {query}\n\n" + "\n\n".join(report_sections)
+        logger.info(f"[RAG] Generated comprehensive report: {len(final_report)} characters, {len(report_sections)} sections")
+    else:
+        logger.error("[RAG] No sections generated, falling back to original method")
+        # Fallback to original method
+        return await generate_report(
+            query, context, agent_role_prompt, report_type, tone,
+            report_source, websocket, cfg, main_topic, existing_headers,
+            relevant_written_contents, cost_callback, custom_prompt,
+            headers, prompt_family, **kwargs
+        )
+
+    return final_report
