@@ -9,21 +9,16 @@ concurrency:
 
 permissions:
   contents: 'read'
-  packages: 'write'  # Needed for pushing to GHCR
+  packages: 'write'
   pull-requests: 'read'
 
 on:
   push:
-    branches:
-      - 'main'
-      - 'master'
-    tags:
-      - 'v*'
+    branches: [ 'main', 'master' ]
+    tags: [ 'v*' ]
   pull_request:
-    branches:
-      - 'main'
-      - 'master'
-  workflow_dispatch: null
+    branches: [ 'main', 'master' ]
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: '${{ github.repository_owner }}/gpt-researcher'
@@ -34,7 +29,7 @@ jobs:
     name: 'Build Root Image - ${{ matrix.platform_slash }}'
     runs-on: '${{ matrix.runner_label }}'
     strategy:
-      fail-fast: false                # do **not** cancel the whole matrix if one build fails
+      fail-fast: false
       matrix:
         include:
           - platform_slash: 'linux/amd64'
@@ -49,9 +44,9 @@ jobs:
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
-# REM: qemu doesn't work in this codebase for some reason.
-#      - name: Set up QEMU for cross-architecture emulation
-#        uses: docker/setup-qemu-action@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive
       - name: 'Set up Docker Buildx'
         uses: 'docker/setup-buildx-action@v3'
       - name: 'Log in to GitHub Container Registry'
@@ -60,7 +55,9 @@ jobs:
           registry: 'ghcr.io'
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
-      - name: 'Log in to Docker Hub'
+      - name: 'Log in to Docker Hub (if secrets present)'
+        if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_HUB_TOKEN }}
+        continue-on-error: true
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -70,13 +67,12 @@ jobs:
         uses: 'docker/metadata-action@v5'
         with:
           images: |
-                      ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-                      ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
+            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'placeholder' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
-                      type=ref,event=branch
-                      type=ref,event=pr
-                      type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v5'
         with:
@@ -88,6 +84,7 @@ jobs:
           push: true
           cache-from: 'type=gha'
           cache-to: 'type=gha,mode=max'
+
   build-push-frontend-nextjs:
     name: 'Build Frontend Next.js Image - ${{ matrix.platform_slash }}'
     strategy:
@@ -107,6 +104,9 @@ jobs:
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 0
+          submodules: recursive
       - name: 'Set up Docker Buildx'
         uses: 'docker/setup-buildx-action@v3'
       - name: 'Log in to GitHub Container Registry'
@@ -115,7 +115,9 @@ jobs:
           registry: 'ghcr.io'
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
-      - name: 'Log in to Docker Hub'
+      - name: 'Log in to Docker Hub (if secrets present)'
+        if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_HUB_TOKEN }}
+        continue-on-error: true
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -123,19 +125,16 @@ jobs:
       - name: 'Extract Docker metadata'
         id: 'meta'
         uses: 'docker/metadata-action@v5'
-        if: ${{ success() || failure() }}
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'placeholder' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
             type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v5'
-        if: ${{ success() || failure() }}
         with:
           context: '${{ env.BUILD_CONTEXT }}'
           file: '${{ env.DOCKERFILE_PATH }}'
@@ -145,6 +144,7 @@ jobs:
           cache-from: 'type=gha'
           cache-to: 'type=gha,mode=max'
           platforms: '${{ matrix.platform_slash }}'
+
   build-push-mcp-server:
     name: 'Build MCP Server Image - ${{ matrix.platform_slash }}'
     strategy:
@@ -164,6 +164,9 @@ jobs:
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 0
+          submodules: recursive
       - name: 'Set up Docker Buildx'
         uses: 'docker/setup-buildx-action@v3'
       - name: 'Log in to GitHub Container Registry'
@@ -172,7 +175,9 @@ jobs:
           registry: 'ghcr.io'
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
-      - name: 'Log in to Docker Hub'
+      - name: 'Log in to Docker Hub (if secrets present)'
+        if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_HUB_TOKEN }}
+        continue-on-error: true
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -182,16 +187,14 @@ jobs:
         uses: 'docker/metadata-action@v5'
         with:
           images: |
-                      ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-                      ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
+            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'placeholder' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
-                      type=ref,event=branch
-                      type=ref,event=pr
-                      type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v5'
-        if: ${{ success() || failure() }}
         with:
           context: '${{ env.BUILD_CONTEXT }}'
           file: '${{ env.DOCKERFILE_PATH }}'
@@ -201,6 +204,7 @@ jobs:
           push: true
           cache-from: 'type=gha'
           cache-to: 'type=gha,mode=max'
+
   build-push-docs-discord-bot:
     name: 'Build Docs Discord Bot Image - ${{ matrix.platform_slash }}'
     strategy:
@@ -220,6 +224,9 @@ jobs:
     steps:
       - name: 'Checkout repository'
         uses: 'actions/checkout@v4'
+        with:
+          fetch-depth: 0
+          submodules: recursive
       - name: 'Set up Docker Buildx'
         uses: 'docker/setup-buildx-action@v3'
       - name: 'Log in to GitHub Container Registry'
@@ -228,7 +235,9 @@ jobs:
           registry: 'ghcr.io'
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
-      - name: 'Log in to Docker Hub'
+      - name: 'Log in to Docker Hub (if secrets present)'
+        if: ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_HUB_TOKEN }}
+        continue-on-error: true
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -239,12 +248,11 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'placeholder' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
             type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v5'
         with:
