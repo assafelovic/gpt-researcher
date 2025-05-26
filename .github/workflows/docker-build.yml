@@ -61,7 +61,6 @@ jobs:
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
       - name: 'Log in to Docker Hub'
-        if: '${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}'
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -76,7 +75,7 @@ jobs:
           tags: |
                       type=ref,event=branch
                       type=ref,event=pr
-                      type=raw,value=dev,enable=${{ secrets.DOCKER_USERNAME != '' && env.IMAGE_NAME_DOCKERHUB_SUFFIXED != '' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+                      type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v5'
@@ -117,7 +116,6 @@ jobs:
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
       - name: 'Log in to Docker Hub'
-        if: '${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}'
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -133,7 +131,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=raw,value=dev,enable=${{ secrets.DOCKER_USERNAME != '' && env.IMAGE_NAME_DOCKERHUB_SUFFIXED != '' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v5'
@@ -175,7 +173,6 @@ jobs:
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
       - name: 'Log in to Docker Hub'
-        if: '${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}'
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -190,7 +187,7 @@ jobs:
           tags: |
                       type=ref,event=branch
                       type=ref,event=pr
-                      type=raw,value=dev,enable=${{ secrets.DOCKER_USERNAME != '' && env.IMAGE_NAME_DOCKERHUB_SUFFIXED != '' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+                      type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v5'
@@ -232,7 +229,6 @@ jobs:
           username: '${{ github.repository_owner }}'
           password: '${{ secrets.GITHUB_TOKEN }}'
       - name: 'Log in to Docker Hub'
-        if: '${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_HUB_TOKEN != '' }}'
         uses: 'docker/login-action@v3'
         with:
           username: '${{ secrets.DOCKER_USERNAME }}'
@@ -247,7 +243,7 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=raw,value=dev,enable=${{ secrets.DOCKER_USERNAME != '' && env.IMAGE_NAME_DOCKERHUB_SUFFIXED != '' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v5'
