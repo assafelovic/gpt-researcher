@@ -73,4 +73,4 @@ WORKDIR /usr/src/app
 
 # Copy the rest of the application files with proper ownership
 COPY --chown=gpt-researcher:gpt-researcher ./ ./
-CMD ["uvicorn", "main:app", "--host", "${HOST}", "--port", "${PORT}", "--workers", "${WORKERS}"]
+CMD uvicorn main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}
