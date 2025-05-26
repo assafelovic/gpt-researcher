@@ -27,7 +27,8 @@ WORKDIR /usr/src/app
 COPY ./requirements.txt ./requirements.txt
 COPY ./multi_agents/requirements.txt ./multi_agents/requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt && \
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir -r multi_agents/requirements.txt
 
 # Stage 3: Final stage with non-root user and app
@@ -41,15 +42,20 @@ RUN useradd -ms /bin/bash gpt-researcher && \
     mkdir -p /usr/src/app/outputs && \
     chown -R gpt-researcher:gpt-researcher /usr/src/app/outputs && \
     chmod 777 /usr/src/app/outputs
-    
 USER gpt-researcher
 WORKDIR /usr/src/app
 
 # Copy the rest of the application files with proper ownership
 COPY --chown=gpt-researcher:gpt-researcher ./ ./
 
-# Expose the application's port
-EXPOSE 8000
+ARG HOST=0.0.0.0
+ENV HOST=${HOST}
+ARG PORT=8000
+ENV PORT=${PORT}
+EXPOSE ${PORT}
+
+ARG WORKER_COUNT=1
+ENV WORKER_COUNT=${WORKER_COUNT}
 
 # Define the default command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "${HOST}", "--port", "${PORT}", "--workers", "${WORKER_COUNT}"]
