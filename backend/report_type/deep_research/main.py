@@ -18,8 +18,8 @@ async def main(task: str):
         print(f"Depth: {progress.current_depth}/{progress.total_depth}")
         print(f"Breadth: {progress.current_breadth}/{progress.total_breadth}")
         print(f"Queries: {progress.completed_queries}/{progress.total_queries}")
-        if progress.current_query and progress.current_query.strip():
-            print(f"Current query: '''{progress.current_query}'''\n")
+        if progress.current_query:
+            print(f"Current query: {progress.current_query}")
 
     # Initialize researcher with deep research type
     researcher = GPTResearcher(
@@ -29,11 +29,11 @@ async def main(task: str):
 
     # Run research with progress tracking
     print("Starting deep research...")
-    _ = await researcher.conduct_research(on_progress=on_progress)
+    _context = await researcher.conduct_research(on_progress=on_progress)
     print("\nResearch completed. Generating report...")
 
     # Generate the final report
-    report = await researcher.write_report()
+    report: str = await researcher.write_report()
     await write_md_to_pdf(report, "deep_research_report")
     print(f"\nFinal Report: {report}")
 

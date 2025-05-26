@@ -93,7 +93,8 @@ async def handle_json_error(response: str | None) -> tuple[str, str]:
         if agent_dict.get("server") and agent_dict.get("agent_role_prompt"):  # pyright: ignore[reportAttributeAccessIssue]
             return agent_dict["server"], agent_dict["agent_role_prompt"]  # pyright: ignore[reportCallIssue, reportIndexIssue, reportOptionalSubscript]
     except Exception as e:
-        print(f"Error using json_repair: {e.__class__.__name__}: {e}")
+        print(f"⚠️ Error in reading JSON and failed to repair with json_repair: {e}")
+        print(f"⚠️ LLM Response: `{response}`")
 
     json_string: str | None = extract_json_with_regex(response)
     if json_string is not None:

@@ -33,7 +33,7 @@ from backend.server.server_utils import (
 from backend.server.websocket_manager import WebSocketManager
 
 # Get logger instance
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 # Don't override parent logger settings
 logger.propagate = True
@@ -86,7 +86,12 @@ class OutputsCacheMiddleware(BaseHTTPMiddleware):
 class ResearchRequest(BaseModel):
     task: str
     report_type: str
-    agent: str
+    report_source: str
+    tone: str
+    headers: dict | None = None
+    repo_name: str
+    branch_name: str
+    generate_in_background: bool = True
 
 
 class ConfigRequest(BaseModel):
@@ -108,29 +113,41 @@ class ConfigRequest(BaseModel):
     DEEPSEEK_API_KEY: str
 
 
-# App initialization
-app = FastAPI()
+# Get proxy prefix from environment variable
+PROXY_PREFIX = os.getenv("PROXY_PREFIX", "")
+if PROXY_PREFIX:
+    app = FastAPI(root_path=PROXY_PREFIX)
+else:
+    app = FastAPI()
 
 # Add the custom middleware for output files caching
 app.add_middleware(OutputsCacheMiddleware)
 
 # Static files and templates
 app.mount("/site", StaticFiles(directory="./frontend"), name="site")
-app.mount("/frontend", StaticFiles(directory="./frontend"), name="frontend")
+app.mount("/frontend", StaticFiles(directory="./frontend"), name="frontend")  # Mirror /site for clarity.
 app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
 templates = Jinja2Templates(directory="./frontend")
 
 # WebSocket manager
 manager = WebSocketManager()
 
+# CORS configuration from environment variables
+CORS_ENABLED: bool = os.getenv("CORS_ENABLED", "true").lower() == "true"
+CORS_ORIGINS: list[str] = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+CORS_ALLOW_CREDENTIALS: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
+CORS_ALLOW_METHODS: list[str] = os.getenv("CORS_ALLOW_METHODS", "*").split(",")
+CORS_ALLOW_HEADERS: list[str] = os.getenv("CORS_ALLOW_HEADERS", "*").split(",") if os.getenv("CORS_ALLOW_HEADERS", "*") != "*" else ["*"]
+
 # Middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if CORS_ENABLED:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_ORIGINS,
+        allow_credentials=CORS_ALLOW_CREDENTIALS,
+        allow_methods=CORS_ALLOW_METHODS,
+        allow_headers=CORS_ALLOW_HEADERS,
+    )
 
 # Constants
 DOC_PATH: str = os.getenv("DOC_PATH", "./my-docs")
@@ -143,7 +160,7 @@ def startup_event():
     os.makedirs("outputs", exist_ok=True)
     # Use the standard StaticFiles mount - our middleware will handle cache control
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
-    os.makedirs(DOC_PATH, exist_ok=True)
+    # os.makedirs(DOC_PATH, exist_ok=True)  # Commented out to avoid creating the folder if not needed
 
 
 # Routes

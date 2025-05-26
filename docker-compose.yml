@@ -17,6 +17,7 @@ services:
     restart: always
     ports:
       - 8000:8000
+
   gptr-nextjs:
     pull_policy: build
     image: gptresearcher/gptr-nextjs
@@ -53,6 +54,7 @@ services:
       python -m pytest tests/report-types.py &&
       python -m pytest tests/vector-store.py
       "
+
   discord-bot:
     build:
       context: ./docs/discord-bot

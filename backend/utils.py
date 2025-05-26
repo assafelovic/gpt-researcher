@@ -14,6 +14,11 @@ async def write_to_file(
         filename (str): The filename to write to.
         text (str): The text to write.
     """
+    # Ensure text is a string
+    if not isinstance(text, str):
+        text = str(text)
+
+    # Convert text to UTF-8, replacing any problematic characters
     text_utf8: str = str(text).encode("utf-8", errors="replace").decode("utf-8")
 
     async with aiofiles.open(filename.replace(" ", "_"), "w", encoding="utf-8") as file:
@@ -82,9 +87,14 @@ async def write_md_to_word(
     try:
         from docx import Document
         from htmldocx import HtmlToDocx
-        html: str = mistune.html(text)
+        # Convert report markdown to HTML
+        html = mistune.html(text)
+        # Create a document object
         doc = Document()
+        # Convert the html generated from the report to document format
         HtmlToDocx().add_html_to_document(html, doc)
+
+        # Saving the docx document to file_path
         doc.save(file_path)
 
         print(f"Report written to '{file_path}'")

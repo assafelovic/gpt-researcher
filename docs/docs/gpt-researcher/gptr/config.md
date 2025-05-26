@@ -66,48 +66,12 @@ For academic or highly specialized research, consider increasing both breadth an
 To change the default configurations, you can simply add env variables to your `.env` file as named above or export manually in your local project directory.
 
 For example, to manually change the search engine and report format:
-
 ```bash
 export RETRIEVER=bing
 export REPORT_FORMAT=IEEE
 ```
-
 Please note that you might need to export additional env vars and obtain API keys for other supported search retrievers and LLM providers. Please follow your console logs for further assistance.
 To learn more about additional LLM support you can check out the docs [here](/docs/gpt-researcher/llms/llms).
 
 You can also include your own external JSON file `config.json` by adding the path in the `config_file` param.
 
-## Model Fallbacks Configuration
-
-The model fallback parameters allow you to define alternative models that will be tried if the primary model fails. This is useful for handling API rate limits, temporary outages, or other issues:
-
-- **`FAST_LLM_FALLBACKS`**: Comma-separated list of fallback models for fast LLM operations. You can specify a list of models in the format `provider:model`, or set to `auto` to automatically use free models. Example: `openai:gpt-3.5-turbo,anthropic:claude-instant-1.2`.
-
-- **`SMART_LLM_FALLBACKS`**: Comma-separated list of fallback models for smart LLM operations. Functions the same as `FAST_LLM_FALLBACKS` but for more complex tasks.
-
-- **`STRATEGIC_LLM_FALLBACKS`**: Comma-separated list of fallback models for strategic LLM operations. Functions the same as the other fallback settings but specifically for strategic planning tasks.
-
-When using `auto` for any fallback setting, the system will dynamically build a list of free models from the llm_fallbacks module. These models are sorted by cost (free ones first) and performance metrics, so you'll get the best available free models as your fallbacks without having to specify them manually.
-
-To use this feature in your configuration, simply set the fallback settings to "auto" in your .env file or configuration JSON:
-
-```json
-{
-  "FAST_LLM": "openai:gpt-4o-mini",
-  "SMART_LLM": "openai:gpt-4.1",
-  "STRATEGIC_LLM": "openai:o4-mini",
-  "FAST_LLM_FALLBACKS": "auto",
-  "SMART_LLM_FALLBACKS": "auto",
-  "STRATEGIC_LLM_FALLBACKS": "auto"
-}
-```
-
-Or in a .env file:
-
-```shell
-FAST_LLM_FALLBACKS=auto
-SMART_LLM_FALLBACKS=auto
-STRATEGIC_LLM_FALLBACKS=auto
-```
-
-To change the default configurations, you can simply add env variables to your `.env` file as named above or export manually in your local project directory.

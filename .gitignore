@@ -1,5 +1,4 @@
 #Ignore env containing secrets
-.history
 .env
 .venv
 .envrc
@@ -52,10 +51,5 @@ server_log.txt
 #Cursor Rules
 .cursorrules
 CURSOR_RULES.md
-*venv*
-
-mistralai_models.json
-openai_models.json
-openrouter_models.json
 
 .history

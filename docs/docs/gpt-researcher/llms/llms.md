@@ -12,51 +12,6 @@ To learn more about support customization options see [here](/docs/gpt-researche
 **Please note**: GPT Researcher is optimized and heavily tested on GPT models. Some other models might run into context limit errors, and unexpected responses.
 Please provide any feedback in our [Discord community](https://discord.gg/DUmbTebB) channel, so we can better improve the experience and performance.
 
-## Model Fallbacks
-
-GPT Researcher supports model fallbacks, allowing you to define alternative models that will be tried if the primary model fails. This is useful for handling API rate limits, temporary outages, or other issues.
-
-You can configure fallbacks in three ways:
-
-1. **Comma-separated list**: Specify a comma-separated list of models in format `provider:model`
-2. **Auto mode**: Set the value to `auto` to automatically build a list of free models
-3. **Empty string**: Leave empty to disable fallbacks (default)
-
-### Configuration Options
-
-- `FAST_LLM_FALLBACKS`: Fallbacks for the fast LLM
-- `SMART_LLM_FALLBACKS`: Fallbacks for the smart LLM
-- `STRATEGIC_LLM_FALLBACKS`: Fallbacks for the strategic LLM
-
-### Environment Variables Example
-
-```env
-# Primary models
-FAST_LLM=openai:gpt-4o-mini
-SMART_LLM=openai:gpt-4.1
-STRATEGIC_LLM=openai:o4-mini
-
-# Fallback configuration
-FAST_LLM_FALLBACKS=openai:gpt-3.5-turbo,anthropic:claude-3-haiku-20240307
-SMART_LLM_FALLBACKS=anthropic:claude-3-sonnet-20240229,openai:gpt-4-1106-preview
-STRATEGIC_LLM_FALLBACKS=auto
-```
-
-### JSON Configuration Example
-
-You can also specify fallbacks in a JSON configuration file:
-
-```json
-{
-  "FAST_LLM": "openai:gpt-4o-mini",
-  "SMART_LLM": "openai:gpt-4.1",
-  "STRATEGIC_LLM": "openai:o4-mini",
-  "FAST_LLM_FALLBACKS": "openai:gpt-3.5-turbo,anthropic:claude-3-haiku-20240307",
-  "SMART_LLM_FALLBACKS": "anthropic:claude-3-sonnet-20240229,openai:gpt-4-1106-preview",
-  "STRATEGIC_LLM_FALLBACKS": "auto"
-}
-```
-
 Below you can find examples for how to configure the various supported LLMs.
 
 ## OpenAI

@@ -27,9 +27,11 @@ def check_pkg(pkg: str) -> None:
         pkg: The name of the package to check.
     """
     if not importlib.util.find_spec(pkg):
-        pkg_kebab: str = pkg.replace("_", "-")
-        raise ImportError(f"Unable to import {pkg_kebab}. Please install with " f"`pip install -U {pkg_kebab}`")
-
+        pkg_kebab = pkg.replace("_", "-")
+        raise ImportError(
+            f"Unable to import {pkg_kebab}. Please install with "
+            f"`pip install -U {pkg_kebab}`"
+        )
 
 # Get a list of all retriever names to be used as validators for supported retrievers
 def get_all_retriever_names() -> list[str]:

@@ -75,9 +75,7 @@ class CustomLogsHandler:
             log_data["events"] = events
         else:
             # Update content section for other types of data
-            content: dict[str, Any] = log_data.get("content", {})
-            content.update(data)
-            log_data["content"] = content
+            log_data["content"].update(data)
 
         # Save updated log file
         with open(self.log_file, "w") as f:

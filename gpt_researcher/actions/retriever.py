@@ -1,15 +1,10 @@
-from __future__ import annotations
+from ..config.config import Config
 
-from typing import Any
-
-from gpt_researcher.config.config import Config
-
-
-def get_retriever(retriever: str) -> Any:
-    """Gets the retriever.
-
+def get_retriever(retriever: str):
+    """
+    Gets the retriever
     Args:
-        retriever: retriever name
+        retriever (str): retriever name
 
     Returns:
         retriever: Retriever class
@@ -19,64 +14,63 @@ def get_retriever(retriever: str) -> Any:
         case "google":
             from gpt_researcher.retrievers import GoogleSearch
 
-            retriever_cls = GoogleSearch
+            return GoogleSearch
         case "searx":
             from gpt_researcher.retrievers import SearxSearch
 
-            retriever_cls = SearxSearch
+            return SearxSearch
         case "searchapi":
             from gpt_researcher.retrievers import SearchApiSearch
 
-            retriever_cls = SearchApiSearch
+            return SearchApiSearch
         case "serpapi":
             from gpt_researcher.retrievers import SerpApiSearch
 
-            retriever_cls = SerpApiSearch
+            return SerpApiSearch
         case "serper":
             from gpt_researcher.retrievers import SerperSearch
 
-            retriever_cls = SerperSearch
+            return SerperSearch
         case "duckduckgo":
             from gpt_researcher.retrievers import Duckduckgo
 
-            retriever_cls = Duckduckgo
+            return Duckduckgo
         case "bing":
             from gpt_researcher.retrievers import BingSearch
 
-            retriever_cls = BingSearch
+            return BingSearch
         case "arxiv":
             from gpt_researcher.retrievers import ArxivSearch
 
-            retriever_cls = ArxivSearch
+            return ArxivSearch
         case "tavily":
             from gpt_researcher.retrievers import TavilySearch
 
-            retriever_cls = TavilySearch
+            return TavilySearch
         case "exa":
             from gpt_researcher.retrievers import ExaSearch
 
-            retriever_cls = ExaSearch
+            return ExaSearch
         case "semantic_scholar":
             from gpt_researcher.retrievers import SemanticScholarSearch
 
-            retriever_cls = SemanticScholarSearch
+            return SemanticScholarSearch
         case "pubmed_central":
             from gpt_researcher.retrievers import PubMedCentralSearch
 
-            retriever_cls = PubMedCentralSearch
+            return PubMedCentralSearch
         case "custom":
             from gpt_researcher.retrievers import CustomRetriever
 
-            retriever_cls = CustomRetriever
+            return CustomRetriever
 
         case _:
-            retriever_cls = None
-
-    return retriever_cls
+            return None
 
 
-def get_retrievers(headers: dict[str, Any], cfg: Config) -> list[Any]:
-    """Determine which retriever(s) to use based on headers, config, or default.
+def get_retrievers(headers: dict[str, str], cfg: Config):
+    """
+    Determine which retriever(s) to use based on headers, config, or default.
 
     Args:
         headers (dict): The headers dictionary
@@ -86,9 +80,8 @@ def get_retrievers(headers: dict[str, Any], cfg: Config) -> list[Any]:
         list: A list of retriever classes to be used for searching.
     """
     # Check headers first for multiple retrievers
-    retrievers: list[str] = [get_default_retriever().__name__]  # use default retriever if no retrievers are found
     if headers.get("retrievers"):
-        retrievers = str(headers.get("retrievers", "")).split(",")
+        retrievers = headers.get("retrievers").split(",")
     # If not found, check headers for a single retriever
     elif headers.get("retriever"):
         retrievers = [headers.get("retriever")]
@@ -96,16 +89,18 @@ def get_retrievers(headers: dict[str, Any], cfg: Config) -> list[Any]:
     elif cfg.retrievers:
         retrievers = cfg.retrievers
     # If not found, check config for a single retriever
-    elif cfg.retriever:  # pyright: ignore[reportAttributeAccessIssue]
-        retrievers = [cfg.retriever]  # pyright: ignore[reportAttributeAccessIssue]
+    elif cfg.retriever:
+        retrievers = [cfg.retriever]
+    # If still not set, use default retriever
+    else:
+        retrievers = [get_default_retriever().__name__]
 
     # Convert retriever names to actual retriever classes
     # Use get_default_retriever() as a fallback for any invalid retriever names
     return [get_retriever(r) or get_default_retriever() for r in retrievers]
 
 
-def get_default_retriever(retriever: str | None = None) -> Any:
-    """Gets the default retriever."""
+def get_default_retriever():
     from gpt_researcher.retrievers import TavilySearch
 
     return TavilySearch

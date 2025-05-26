@@ -47,6 +47,7 @@ class BasicReport:
         )
 
     async def run(self) -> str:
+        """Conduct research and write report."""
         await self.gpt_researcher.conduct_research()
         report: str = await self.gpt_researcher.write_report()
         return report

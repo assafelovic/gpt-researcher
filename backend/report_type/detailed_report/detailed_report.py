@@ -11,13 +11,13 @@ class DetailedReport:
     def __init__(
         self,
         query: str,
-        query_domains: list[str],
         report_type: str,
         report_source: str,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
+        query_domains: list[str] | None = None,
         config_path: str | None = None,
-        tone: Tone | str | None = Tone.Objective,
+        tone: Tone | str = "",
         websocket: WebSocket | None = None,
         subtopics: list[dict[str, Any]] | None = None,
         headers: dict[str, Any] | None = None,
@@ -26,9 +26,9 @@ class DetailedReport:
         self.query: str = query
         self.report_type: str = report_type
         self.report_source: str = report_source
-        self.source_urls: list[str] | None = source_urls
-        self.document_urls: list[str] | None = document_urls
-        self.query_domains: list[str] = query_domains
+        self.source_urls: list[str] = [] if source_urls is None else source_urls
+        self.document_urls: list[str] = [] if document_urls is None else document_urls
+        self.query_domains: list[str] = [] if query_domains is None else query_domains
         self.config_path: str | None = config_path
         self.tone: Tone = tone if isinstance(tone, Tone) else Tone.Objective if tone is None else Tone(tone)
         self.websocket: WebSocket | None = websocket
@@ -65,16 +65,16 @@ class DetailedReport:
 
     async def _initial_research(self) -> None:
         await self.gpt_researcher.conduct_research()
-        self.global_context = [] if self.gpt_researcher.context is None else self.gpt_researcher.context
-        self.global_urls = set() if self.gpt_researcher.visited_urls is None else self.gpt_researcher.visited_urls
+        self.global_context = self.gpt_researcher.context
+        self.global_urls = self.gpt_researcher.visited_urls
 
     async def _get_all_subtopics(self) -> list[dict[str, Any]]:
-        subtopics_data: list[str] = await self.gpt_researcher.get_subtopics()
+        subtopics_data: list[Any] = await self.gpt_researcher.get_subtopics()
 
         all_subtopics: list[dict[str, Any]] = []
-        if subtopics_data:
-            for subtopic in subtopics_data:
-                all_subtopics.append({"task": subtopic})
+        if subtopics_data and subtopics_data.subtopics:
+            for subtopic in subtopics_data.subtopics:
+                all_subtopics.append({"task": subtopic.task})
         else:
             print(f"Unexpected subtopics data format: {subtopics_data} (type {subtopics_data.__class__.__name__})")
 
@@ -117,10 +117,10 @@ class DetailedReport:
             source_urls=self.source_urls,
         )
 
-        subtopic_assistant.context = list(set(self.global_context))
+        subtopic_assistant.context = list(set(self.global_context))  # type: ignore
         await subtopic_assistant.conduct_research()
 
-        draft_section_titles: str | Any = await subtopic_assistant.get_draft_section_titles(current_subtopic_task)
+        draft_section_titles: str | list[str] = await subtopic_assistant.get_draft_section_titles(current_subtopic_task)
 
         if not isinstance(draft_section_titles, str):
             draft_section_titles = str(draft_section_titles)
@@ -141,20 +141,21 @@ class DetailedReport:
 
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
         # Ensure context contains only strings (hashable types) for set operation
-        context_strings: list[str] = []
-        for item in subtopic_assistant.context:
-            if isinstance(item, str):
-                context_strings.append(item)
-            elif isinstance(item, dict) and 'raw_content' in item:
-                # Extract content from dict if it has raw_content key
-                content: str = item['raw_content']
-                if content and isinstance(content, str):
-                    context_strings.append(content)
-            else:
-                # Convert other types to string as fallback
-                context_strings.append(str(item))
+#        context_strings: list[str] = []
+#        for item in subtopic_assistant.context:
+#            if isinstance(item, str):
+#                context_strings.append(item)
+#            elif isinstance(item, dict) and "raw_content" in item:
+#                # Extract content from dict if it has raw_content key
+#                content: str = item["raw_content"]
+#                if content and isinstance(content, str):
+#                    context_strings.append(content)
+#            else:
+#                # Convert other types to string as fallback
+#                context_strings.append(str(item))
+#        self.global_context = list(set(context_strings))
 
-        self.global_context = list(set(context_strings))
+        self.global_context = list(set(subtopic_assistant.context))
         self.global_urls.update(subtopic_assistant.visited_urls)
 
         self.existing_headers.append(

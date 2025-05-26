@@ -14,6 +14,7 @@ class SerperSearch:
     def __init__(
         self,
         query: str,
+        query_domains: list[str] | None = None,
     ):
         """Initializes the SerperSearch object.
 
@@ -21,6 +22,7 @@ class SerperSearch:
             query (str): The query to search for.
         """
         self.query: str = query
+        self.query_domains: list[str] | None = query_domains or None
         self.api_key: str = self.get_api_key()
 
     def get_api_key(self) -> str:

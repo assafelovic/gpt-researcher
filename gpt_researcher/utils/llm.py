@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+
 def get_llm(
     llm_provider: str,
     cfg: Config | None = None,
@@ -48,8 +49,8 @@ def get_llm(
 
     # Check if this LLM has fallbacks configured
     config_obj: Config = Config() if cfg is None else cfg
-    if 'model' in kwargs:
-        model_name: str = kwargs.get('model')
+    if "model" in kwargs:
+        model_name: str = kwargs.get("model")
 
         # Get appropriate fallback providers based on model configuration
         fallback_provider_objects: list[GenericLLMProvider] = []
@@ -61,8 +62,8 @@ def get_llm(
             fallback_provider_objects = config_obj.strategic_llm_fallback_providers
 
         # Extract the parameters needed for FallbackGenericLLMProvider
-        chat_log: Any | None = kwargs.get('chat_log')
-        verbose: bool = kwargs.get('verbose', True)
+        chat_log: Any | None = kwargs.get("chat_log")
+        verbose: bool = kwargs.get("verbose", True)
 
         # Create primary provider first
         try:
@@ -70,24 +71,14 @@ def get_llm(
 
             # If we have fallback providers, create a fallback wrapper
             if fallback_provider_objects:
-                return FallbackGenericLLMProvider(
-                    primary_provider.llm,
-                    fallback_providers=fallback_provider_objects,
-                    chat_log=chat_log,
-                    verbose=verbose
-                )
+                return FallbackGenericLLMProvider(primary_provider.llm, fallback_providers=fallback_provider_objects, chat_log=chat_log, verbose=verbose)
             return primary_provider
         except Exception as e:
             # If primary provider fails and we have fallbacks, use first fallback as primary
             if fallback_provider_objects:
                 logger.warning(f"Primary provider {llm_provider} failed: {e}. Using first fallback as primary.")
                 primary: GenericLLMProvider = fallback_provider_objects.pop(0)
-                return FallbackGenericLLMProvider(
-                    primary.llm,
-                    fallback_providers=fallback_provider_objects,
-                    chat_log=chat_log,
-                    verbose=verbose
-                )
+                return FallbackGenericLLMProvider(primary.llm, fallback_providers=fallback_provider_objects, chat_log=chat_log, verbose=verbose)
             # No fallbacks available, re-raise the exception
             raise
 
@@ -158,13 +149,14 @@ def truncate_messages_to_fit(
     if not messages:
         return []
 
+    # Ensure max_context_tokens is at least 10 to prevent empty messages
+    if max_context_tokens <= 0:
+        logger.warning(f"[DEBUG-TRUNCATE] max_context_tokens too small ({max_context_tokens}), setting to minimum 10")
+        max_context_tokens = 10
+
     # Separate system messages from user/assistant messages
-    system_messages: list[dict[str, str]] = [
-        msg for msg in messages if msg.get("role", "") == "system"
-    ]
-    user_assistant_messages: list[dict[str, str]] = [
-        msg for msg in messages if msg.get("role", "") != "system"
-    ]
+    system_messages: list[dict[str, str]] = [msg for msg in messages if msg.get("role", "") == "system"]
+    user_assistant_messages: list[dict[str, str]] = [msg for msg in messages if msg.get("role", "") != "system"]
 
     # DEBUG: Log message counts by type
     logger.info(f"[DEBUG-TRUNCATE] System messages: {len(system_messages)}, User/Assistant messages: {len(user_assistant_messages)}")
@@ -235,6 +227,16 @@ def truncate_messages_to_fit(
     # DEBUG: Log final token count
     logger.info(f"[DEBUG-TRUNCATE] Final token count: {final_token_count}/{max_context_tokens}")
 
+    # Ensure we have at least one message with non-empty content
+    if not result_messages:
+        # Create a minimal valid message if everything was filtered out
+        logger.warning("[DEBUG-TRUNCATE] No messages left after truncation, adding a minimal valid message")
+        result_messages = [{"role": "user", "content": "..."}]
+    elif all(not msg.get("content") for msg in result_messages):
+        # If all messages have empty content, add minimal content to one
+        logger.warning("[DEBUG-TRUNCATE] All messages have empty content, adding minimal content to first message")
+        result_messages[0]["content"] = "..."
+
     return result_messages
 
 
@@ -260,14 +262,20 @@ def truncate_message_content(
     truncated_message: dict[str, str] = message.copy()
     content: str = message.get("content", "")
 
+    # Ensure we have at least some minimal content
+    if max_tokens <= 0:
+        logger.warning(f"[DEBUG-TRUNCATE] max_tokens too small ({max_tokens}), setting to minimum 5")
+        max_tokens = 5
+
     # Reserve tokens for message formatting and role
     # These values are rough estimates
     formatting_tokens: int = 4  # Rough estimate for message format
     truncated_tokens: int = max_tokens - formatting_tokens
 
     if truncated_tokens <= 0:
-        logger.warning("[DEBUG-TRUNCATE] Not enough tokens for any content, returning empty message")
-        truncated_message["content"] = ""
+        logger.warning("[DEBUG-TRUNCATE] Not enough tokens for content after formatting, using minimal content")
+        # Instead of empty string, use minimal content that will pass API validation
+        truncated_message["content"] = "..."
         return truncated_message
 
     # Truncate the content
@@ -277,7 +285,11 @@ def truncate_message_content(
     ratio: float = 0.5  # Start with half the content
     while ratio > 0:
         # Try with the current ratio
-        truncated_content: str = content[:int(len(content) * ratio)]
+        truncated_content: str = content[: int(len(content) * ratio)]
+        # Ensure we never have empty content
+        if not truncated_content:
+            truncated_content = "..."
+
         truncated_message["content"] = truncated_content
 
         # Check if it fits
@@ -295,9 +307,9 @@ def truncate_message_content(
         ratio *= 0.75
 
     # If we get here, we couldn't truncate enough
-    # Just return a very small message
-    truncated_message["content"] = content[:100]
-    logger.warning("[DEBUG-TRUNCATE] Couldn't truncate enough, returning first 100 chars")
+    # Just return a very small message with guaranteed non-empty content
+    truncated_message["content"] = "..."
+    logger.warning("[DEBUG-TRUNCATE] Couldn't truncate enough, returning minimal content")
     return truncated_message
 
 
@@ -321,6 +333,11 @@ def truncate_system_messages(
 
     if not system_messages:
         return []
+
+    # Ensure max_tokens is at least 5 to allow for minimal valid content
+    if max_tokens <= 0:
+        logger.warning(f"[DEBUG-TRUNCATE] max_tokens too small ({max_tokens}), setting to minimum 5")
+        max_tokens = 5
 
     if len(system_messages) == 1:
         # Only one system message, truncate its content
@@ -448,6 +465,12 @@ async def create_chat_completion(
     logger.info(f"[DEBUG-LLM] Reserved for completion: {completion_tokens} tokens")
     logger.info(f"[DEBUG-LLM] Max context tokens: {max_context_tokens}")
 
+    # Ensure max_context_tokens is at least 10 to prevent empty messages
+    # This guarantees we'll have at least a minimal valid message
+    if max_context_tokens <= 0:
+        logger.warning(f"[DEBUG-LLM] Max context tokens too small ({max_context_tokens}), setting to minimum 10")
+        max_context_tokens = 10
+
     # If messages exceed context limit, truncate them
     if token_count > max_context_tokens:
         logger.warning(f"[DEBUG-LLM] Messages exceed token limit ({token_count} > {max_context_tokens}), truncating content")
@@ -500,10 +523,7 @@ async def create_chat_completion(
             err_msg: str = str(e)
 
             # Fallback for max_tokens errors: remove max_tokens if that's the issue
-            if "max_tokens" in err_msg.casefold() and (
-                "too large" in err_msg.casefold()
-                or "supports at most" in err_msg.casefold()
-            ):
+            if "max_tokens" in err_msg.casefold() and ("too large" in err_msg.casefold() or "supports at most" in err_msg.casefold()):
                 logger.warning(f"[DEBUG-LLM] max_tokens issue ({original_max_tokens}), retrying without max_tokens: {traceback.format_exc()}")
                 if "max_tokens" in kwargs:
                     del kwargs["max_tokens"]
@@ -598,7 +618,7 @@ async def construct_subtopics(
             cfg=config,
             model=config.smart_llm_model,
             temperature=temperature,
-#            max_tokens=config.llm_kwargs.get("smart_token_limit", getattr(config, "smart_token_limit", 4000)),
+            #            max_tokens=config.llm_kwargs.get("smart_token_limit", getattr(config, "smart_token_limit", 4000)),
             **config.llm_kwargs,
         )
         model: BaseLLM = provider.llm
@@ -666,13 +686,13 @@ def extract_json_from_markdown(response: str) -> str:
         Extracted JSON string or original response if no markdown blocks found
     """
     # Look for JSON in markdown code blocks
-    json_pattern = r'```(?:json)?\s*(\{.*?\})\s*```'
+    json_pattern = r"```(?:json)?\s*(\{.*?\})\s*```"
     match: re.Match[str] | None = re.search(json_pattern, response, re.DOTALL | re.IGNORECASE)
     if match is not None:
         return match.group(1).strip()
 
     # Look for JSON arrays in markdown code blocks
-    json_array_pattern = r'```(?:json)?\s*(\[.*?\])\s*```'
+    json_array_pattern = r"```(?:json)?\s*(\[.*?\])\s*```"
     match = re.search(json_array_pattern, response, re.DOTALL | re.IGNORECASE)
     if match is not None:
         return match.group(1).strip()

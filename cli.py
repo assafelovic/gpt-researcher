@@ -7,6 +7,7 @@ python cli.py "<query>" --report_type <report_type>
 ```
 
 """
+
 from __future__ import annotations
 
 import argparse
@@ -55,6 +56,7 @@ report_type_descriptions: dict[str, str] = {
     ReportType.OutlineReport.value: "",
     ReportType.CustomReport.value: "",
     ReportType.SubtopicReport.value: "",
+    ReportType.DeepResearch.value: "",
 }
 
 cli.add_argument(
@@ -68,6 +70,10 @@ cli.add_argument(
 
 # First, let's see what values are actually in the Tone enum
 print([t.value for t in Tone])
+
+# =====================================
+# Arg: Tone
+# =====================================
 
 cli.add_argument(
     "--tone",
@@ -93,28 +99,56 @@ cli.add_argument(
     default="objective",
 )
 
+# =====================================
+# Arg: Query Domains
+# =====================================
+
+cli.add_argument("--query_domains", type=str, help="A comma-separated list of domains to search for the query.", default="")
+
 # =============================================================================
 # Main
 # =============================================================================
 
 
-async def main(args: argparse.Namespace):
+async def main(args):
     """Conduct research on the given query, generate the report, and write
     it as a markdown file to the output directory."""
+    query_domains: list[str] = args.query_domains.split(",") if args.query_domains else []
+
     if args.report_type == "detailed_report":
         detailed_report = DetailedReport(
             query=args.query,
-            query_domains=None,
+            query_domains=query_domains,
             report_type="research_report",
             report_source="web_search",
         )
 
-        report = await detailed_report.run()
+        report: str = await detailed_report.run()
     else:
+        # Convert the simple keyword to the full Tone enum value
+        tone_map: dict[str, Tone] = {
+            "objective": Tone.Objective,
+            "formal": Tone.Formal,
+            "analytical": Tone.Analytical,
+            "persuasive": Tone.Persuasive,
+            "informative": Tone.Informative,
+            "explanatory": Tone.Explanatory,
+            "descriptive": Tone.Descriptive,
+            "critical": Tone.Critical,
+            "comparative": Tone.Comparative,
+            "speculative": Tone.Speculative,
+            "reflective": Tone.Reflective,
+            "narrative": Tone.Narrative,
+            "humorous": Tone.Humorous,
+            "optimistic": Tone.Optimistic,
+            "pessimistic": Tone.Pessimistic,
+        }
+
         researcher = GPTResearcher(
             query=args.query,
+            query_domains=query_domains,
             report_type=args.report_type,
-            tone=Tone(args.tone.capitalize()),
+            tone=tone_map[args.tone],
         )
 
         await researcher.conduct_research()

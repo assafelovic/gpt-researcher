@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 from fastapi import WebSocket
 from gpt_researcher.actions import stream_output  # Import stream_output
@@ -141,6 +141,7 @@ async def run_agent(
     config_path: str = "",
     query_domains: list[str] | None = None,
     return_researcher: bool = False,
+    stream_output: Callable[[str, WebSocket], Awaitable[None]] | None = stream_output,
     **kwargs,
 ) -> str | tuple[str, GPTResearcher]:
     """Run the agent."""
@@ -148,14 +149,6 @@ async def run_agent(
 
     # Create logs handler for this research task
     logs_handler: CustomLogsHandler = CustomLogsHandler(websocket, task)
-
-    # Validate report_type against known values
-    valid_report_types: list[str] = [r.value for r in ReportType]
-
-    if report_type not in valid_report_types and report_type != "multi_agents":
-        error_message: str = f"Invalid report_type: '{report_type}'. Valid options are: {', '.join(valid_report_types + ['multi_agents'])}"
-        await websocket.send_json({"type": "logs", "output": f'<div class="error-message">⚠️ {error_message}</div>'})
-        raise ValueError(error_message)
 
     # Initialize researcher based on report type
     if report_type == "multi_agents":
@@ -214,7 +207,7 @@ async def run_agent(
             websocket=logs_handler,  # Use logs_handler instead of raw websocket
             headers=headers,
         )
-        report_content = await researcher.run()
+        report_content: str = await researcher.run()
 
     end_time: datetime.datetime = datetime.datetime.now()
     duration: datetime.timedelta = end_time - start_time

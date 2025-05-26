@@ -123,18 +123,22 @@
                 <label for="tone" class="agent-question">How would you like your report to sound?</label>
                 <select name="tone" id="tone" class="form-control highlight-connection" required>
                     <option value="Objective">Objective (impartial and unbiased presentation of facts and findings)</option>
-                    <option value="Academic">Academic (scholarly, rigorous, evidence-based)</option>
-                    <option value="Conversational">Conversational (friendly, approachable, easy to understand)</option>
-                    <option value="Creative">Creative (engaging, storytelling, memorable)</option>
-                    <option value="Educational">Educational (clear, instructive, beginner-friendly)</option>
-                    <option value="Executive">Executive (concise, strategic, decision-focused)</option>
-                    <option value="Humorous">Humorous (light-hearted and engaging, usually to make the content more relatable)</option>
-                    <option value="Journalistic">Journalistic (investigative, balanced, newsworthy)</option>
+                    <option value="Formal">Formal (adheres to academic standards with sophisticated language and structure)</option>
+                    <option value="Analytical">Analytical (critical evaluation and detailed examination of data and theories)</option>
+                    <option value="Persuasive">Persuasive (convincing the audience of a particular viewpoint or argument)</option>
+                    <option value="Informative">Informative (providing clear and comprehensive information on a topic)</option>
+                    <option value="Explanatory">Explanatory (clarifying complex concepts and processes)</option>
+                    <option value="Descriptive">Descriptive (detailed depiction of phenomena, experiments, or case studies)</option>
+                    <option value="Critical">Critical (judging the validity and relevance of the research and its conclusions)</option>
+                    <option value="Comparative">Comparative (juxtaposing different theories, data, or methods to highlight differences and similarities)</option>
+                    <option value="Speculative">Speculative (exploring hypotheses and potential implications or future research directions)</option>
+                    <option value="Reflective">Reflective (considering the research process and personal insights or experiences)</option>
                     <option value="Narrative">Narrative (telling a story to illustrate research findings or methodologies)</option>
+                    <option value="Humorous">Humorous (light-hearted and engaging, usually to make the content more relatable)</option>
                     <option value="Optimistic">Optimistic (highlighting positive findings and potential benefits)</option>
-                    <option value="Pessimistic">Pessimistic (focusing on limitations, challenges, or potential risks)</option>
-                    <option value="Professional">Professional (formal, authoritative, business-appropriate)</option>
-                    <option value="Technical">Technical (precise, detailed, expert-level)</option>
+                    <option value="Pessimistic">Pessimistic (focusing on limitations, challenges, or negative outcomes)</option>
+                    <option value="Simple">Simple (written for young readers, using basic vocabulary and clear explanations)</option>
+                    <option value="Casual">Casual (conversational and relaxed style for easy, everyday reading)</option>
                 </select>
             </div>
             <!-- Hidden input for report_source with default value 'web' -->
@@ -280,112 +284,6 @@
             taskTextarea.addEventListener('input', resizeTextarea);
             taskTextarea.addEventListener('focus', resizeTextarea);
         }
-
-        // Implement highlight connection between side panels and form elements
-        const featureCards = document.querySelectorAll('.feature-card');
-        featureCards.forEach(card => {
-            card.addEventListener('mouseenter', function () {
-                const highlightTarget = this.getAttribute('data-highlight');
-                const highlightButton = this.getAttribute('data-highlight-button');
-                const targetElement = document.getElementById(highlightTarget) ||
-                    document.querySelector(`[name="${highlightTarget}"]`);
-
-                // If there's a button to highlight, handle it
-                if (highlightButton) {
-                    const buttonElement = document.getElementById(highlightButton);
-                    if (buttonElement) {
-                        buttonElement.classList.add('highlight-glow-button');
-                    }
-                }
-
-                // Special case for Precise Research - highlight the entire container
-                if (highlightTarget === 'report_type' && this.querySelector('.feature-title').textContent === 'Precise Research') {
-                    document.querySelector('.container').classList.add('highlight-glow-container');
-                    return;
-                }
-
-                // Special case for Multiple Sources - highlight both report_source and query_domains
-                if (highlightTarget === 'report_source' && this.querySelector('.feature-title').textContent === 'Multiple Sources') {
-                    const reportSourceEl = document.getElementById('report_source');
-                    const queryDomainsEl = document.querySelector('input[name="query_domains"]');
-
-                    if (reportSourceEl) reportSourceEl.classList.add(`highlight-glow-${highlightTarget}`);
-                    if (queryDomainsEl) queryDomainsEl.classList.add('highlight-glow-query_domains');
-                    return;
-                }
-
-                // Special case for Custom Style - highlight the tone selection
-                if (highlightTarget === 'tone' && this.querySelector('.feature-title').textContent === 'Custom Style') {
-                    const toneEl = document.getElementById('tone');
-                    if (toneEl) toneEl.classList.add('highlight-glow-tone');
-                    return;
-                }
-
-                // Special case for Multiple Formats - highlight the download buttons
-                if (highlightTarget === 'format' && this.querySelector('.feature-title').textContent === 'Multiple Formats') {
-                    const downloadButtons = document.querySelectorAll('.download-option-btn');
-                    downloadButtons.forEach(button => {
-                        button.classList.add('highlight-glow-download-button');
-                    });
-                    return;
-                }
-
-                if (targetElement) {
-                    targetElement.classList.add(`highlight-glow-${highlightTarget}`);
-                }
-            });
-
-            card.addEventListener('mouseleave', function () {
-                const highlightTarget = this.getAttribute('data-highlight');
-                const highlightButton = this.getAttribute('data-highlight-button');
-                const targetElement = document.getElementById(highlightTarget) ||
-                    document.querySelector(`[name="${highlightTarget}"]`);
-
-                // If there's a button to highlight, handle it
-                if (highlightButton) {
-                    const buttonElement = document.getElementById(highlightButton);
-                    if (buttonElement) {
-                        buttonElement.classList.remove('highlight-glow-button');
-                    }
-                }
-
-                // Special case for Precise Research
-                if (highlightTarget === 'report_type' && this.querySelector('.feature-title').textContent === 'Precise Research') {
-                    document.querySelector('.container').classList.remove('highlight-glow-container');
-                    return;
-                }
-
-                // Special case for Multiple Sources
-                if (highlightTarget === 'report_source' && this.querySelector('.feature-title').textContent === 'Multiple Sources') {
-                    const reportSourceEl = document.getElementById('report_source');
-                    const queryDomainsEl = document.querySelector('input[name="query_domains"]');
-
-                    if (reportSourceEl) reportSourceEl.classList.remove(`highlight-glow-${highlightTarget}`);
-                    if (queryDomainsEl) queryDomainsEl.classList.remove('highlight-glow-query_domains');
-                    return;
-                }
-
-                // Special case for Custom Style
-                if (highlightTarget === 'tone' && this.querySelector('.feature-title').textContent === 'Custom Style') {
-                    const toneEl = document.getElementById('tone');
-                    if (toneEl) toneEl.classList.remove('highlight-glow-tone');
-                    return;
-                }
-
-                // Special case for Multiple Formats - remove highlight from download buttons
-                if (highlightTarget === 'format' && this.querySelector('.feature-title').textContent === 'Multiple Formats') {
-                    const downloadButtons = document.querySelectorAll('.download-option-btn');
-                    downloadButtons.forEach(button => {
-                        button.classList.remove('highlight-glow-download-button');
-                    });
-                    return;
-                }
-
-                if (targetElement) {
-                    targetElement.classList.remove(`highlight-glow-${highlightTarget}`);
-                }
-            });
-        });
 
         // Scroll to bottom button functionality
         const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');

@@ -3,11 +3,9 @@
 # GPT-Researcher Cursor Rules
 
 ## Project Overview
-
 This project, named GPT-Researcher, is an LLM-based autonomous agent that conducts local and web research on any topic and generates a comprehensive report with citations. It is built using Next.js and TypeScript, integrating various libraries for their strengths.
 
 Your primary goal is to help with:
-
 - Next.js app router patterns
 - TypeScript type safety
 - Tailwind CSS best practices
@@ -15,13 +13,11 @@ Your primary goal is to help with:
 - Python/FastAPI backend optimizations
 
 ## Key URLs
-
-- Project Home Page: <https://gptr.dev/>
-- GitHub Repository: <https://github.com/assafelovic/gpt-researcher>
-- Documentation: <https://docs.gptr.dev/>
+- Project Home Page: https://gptr.dev/
+- GitHub Repository: https://github.com/assafelovic/gpt-researcher
+- Documentation: https://docs.gptr.dev/
 
 ## Project Structure
-
 - Frontend user interface built with Next.js, TypeScript, and Tailwind CSS in `/frontend`
   - Static FastAPI version for lightweight deployments
   - Next.js version for production use with enhanced features
@@ -58,7 +54,6 @@ Your primary goal is to help with:
   - Mock data and fixtures for testing
 
 ## Language Model Configuration
-
 - Default model: gpt-4-turbo
 - Alternative models: gpt-3.5-turbo, claude-3-opus
 - Temperature settings for different tasks
@@ -67,7 +62,6 @@ Your primary goal is to help with:
 - Cost optimization strategies
 
 ## Error Handling
-
 - Research failure recovery
 - API rate limiting
 - Network timeout handling
@@ -76,7 +70,6 @@ Your primary goal is to help with:
 - Report generation failures
 
 ## Performance
-
 - Parallel processing strategies
 - Caching mechanisms
 - Memory management
@@ -85,7 +78,6 @@ Your primary goal is to help with:
 - Query optimization
 
 ## Development Workflow
-
 - Branch naming conventions
 - Commit message format
 - PR review process
@@ -94,7 +86,6 @@ Your primary goal is to help with:
 - Version control guidelines
 
 ## API Documentation
-
 - REST endpoints
 - WebSocket events
 - Request/Response formats
@@ -103,7 +94,6 @@ Your primary goal is to help with:
 - Error codes
 
 ## Monitoring
-
 - Performance metrics
 - Error tracking
 - Usage statistics
@@ -112,33 +102,28 @@ Your primary goal is to help with:
 - User feedback tracking
 
 ## Frontend Components
-
 - Static FastAPI version for lightweight deployments
 - Next.js version for production use with enhanced features
 
 ## Backend Components
-
 - Multi-agent system architecture
 - Document processing pipeline
 - Report generation system
 - Output format handlers
 
 ## Core Research Components
-
 - Web scraping and aggregation
 - Research planning and execution
 - Source validation
 - Query processing
 
 ## Testing
-
 - Unit tests
 - Integration tests
 - End-to-end tests
 - Performance testing
 
 ## Rule Violation Monitoring
-
 - Alert developer when changes conflict with project structure
 - Warn about deviations from coding standards
 - Flag unauthorized framework or library additions
@@ -148,7 +133,6 @@ Your primary goal is to help with:
 - Identify accessibility compliance issues
 
 ## Development Guidelines
-
 - Use TypeScript with strict mode enabled
 - Follow ESLint and Prettier configurations
 - Ensure components are responsive and accessible
@@ -159,7 +143,6 @@ Your primary goal is to help with:
 - Use existing components as reference implementations
 
 ## Important Scripts
-
 - `npm run dev`: Start development server
 - `npm run build`: Build for production
 - `npm run test`: Run test suite
@@ -171,7 +154,6 @@ Your primary goal is to help with:
 - `docker-compose run gpt-researcher-tests`: Run test suite in container
 
 ## AI Integration Guidelines
-
 - Prioritize type safety in all AI interactions
 - Follow LangChain and LangGraph best practices
 - Implement proper error handling for AI responses
@@ -181,7 +163,6 @@ Your primary goal is to help with:
 - Log AI interactions for debugging
 
 ## Lexicon
-
 - **GPT Researcher**: Autonomous research agent system
 - **Multi-Agent System**: Coordinated AI agents for research tasks
 - **Research Pipeline**: End-to-end research workflow
@@ -190,7 +171,6 @@ Your primary goal is to help with:
 - **Report Generation**: Process of creating final research output
 
 ## Additional Resources
-
 - [Next.js Documentation](https://nextjs.org/docs)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
@@ -198,4 +178,4 @@ Your primary goal is to help with:
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Project Documentation](https://docs.gptr.dev/)
 
-_Note: End all your comments with a :-) symbol._
+_Note: End all your comments with a :-) symbol._ 

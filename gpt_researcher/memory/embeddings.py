@@ -88,7 +88,11 @@ class Memory:
             case "ollama":
                 from langchain_ollama import OllamaEmbeddings
 
-                _embeddings = OllamaEmbeddings(model=model, base_url=os.environ["OLLAMA_BASE_URL"], **embedding_kwargs)
+                _embeddings = OllamaEmbeddings(
+                    model=model,
+                    base_url=os.environ["OLLAMA_BASE_URL"],
+                    **embedding_kwargs,
+                )
             case "together":
                 from langchain_together import TogetherEmbeddings
 
@@ -108,7 +112,11 @@ class Memory:
             case "voyageai":
                 from langchain_voyageai import VoyageAIEmbeddings
 
-                _embeddings = VoyageAIEmbeddings(voyage_api_key=os.environ["VOYAGE_API_KEY"], model=model, **embedding_kwargs)
+                _embeddings = VoyageAIEmbeddings(
+                    voyage_api_key=os.environ["VOYAGE_API_KEY"],
+                    model=model,
+                    **embedding_kwargs,
+                )
             case "dashscope":
                 from langchain_community.embeddings import DashScopeEmbeddings
 
@@ -118,7 +126,7 @@ class Memory:
 
                 _embeddings = BedrockEmbeddings(model_id=model, **embedding_kwargs)
             case _:
-                raise Exception(f"Embedding provider {embedding_provider} not found.")
+                raise Exception(f"Embedding provider '{embedding_provider}' not found.")
 
         self._embeddings = _embeddings
 
@@ -197,7 +205,7 @@ class FallbackMemory(Memory):
         # If we get here, either the primary wasn't initialized or failed
         if not self.fallback_configs and not self.fallback_memories:
             # No fallbacks available, raise an error about the primary failing
-            if hasattr(self, '_primary_error'):
+            if hasattr(self, "_primary_error"):
                 raise Exception(f"Primary embedding provider failed and no fallbacks available: {self._primary_error}")
             else:
                 raise Exception("Primary embedding provider failed and no fallbacks available")
@@ -215,7 +223,7 @@ class FallbackMemory(Memory):
                 # Continue to the next fallback
 
         # Try any already initialized fallbacks
-        errors = []
+        errors: list[Exception] = []
         for i, fallback_memory in enumerate(self.fallback_memories):
             try:
                 logger.warning(f"Trying fallback embedding provider {i+1}/{len(self.fallback_memories)}")
@@ -226,7 +234,7 @@ class FallbackMemory(Memory):
 
         # All fallbacks failed
         if errors:
-            last_error = errors[-1]
+            last_error: Exception = errors[-1]
             raise Exception(f"All embedding providers failed. Last error: {last_error.__class__.__name__}: {last_error}") from last_error
         else:
             raise Exception("All embedding providers failed to initialize")

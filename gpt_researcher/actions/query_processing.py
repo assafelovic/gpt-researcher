@@ -175,7 +175,7 @@ async def generate_sub_queries(
         return [str(query).strip() for query in result.values()]
     if isinstance(result, (int, float, bool)):
         return [str(result)]
-    raise ValueError(f"Invalid result type: `{result.__class__.__name__}`, expected `list`")
+    raise TypeError(f"Invalid result type: `{result.__class__.__name__}`, expected `list`")
 
 
 async def plan_research_outline(

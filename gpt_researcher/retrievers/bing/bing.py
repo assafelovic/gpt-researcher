@@ -15,44 +15,47 @@ import requests
 class BingSearch:
     """Bing Search Retriever."""
 
-    def __init__(self, query: str):
+    def __init__(self, query: str, query_domains: list[str] | None = None):
         """Initializes the BingSearch object.
 
         Args:
-            query (str): The query to search for.
+            query:
         """
-        self.query: str = query
-        self.api_key: str = self.get_api_key()
-        self.logger: logging.Logger = logging.getLogger(__name__)
+        self.query = query
+        self.query_domains = query_domains or None
+        self.api_key = self.get_api_key()
+        self.logger = logging.getLogger(__name__)
 
     def get_api_key(self) -> str:
         """Gets the Bing API key.
 
         Returns:
-            str: The Bing API key.
+
         """
         try:
-            api_key: str = os.environ["BING_API_KEY"]
-        except KeyError:
-            raise Exception("Bing API key not found. Please set the BING_API_KEY environment variable.")
+            api_key = os.environ["BING_API_KEY"]
+        except:
+            raise Exception(
+                "Bing API key not found. Please set the BING_API_KEY environment variable.")
         return api_key
 
     def search(self, max_results: int = 7) -> list[dict[str, Any]]:
         """Searches the query.
 
-        Args:
-            max_results (int): The maximum number of results to return.
-
         Returns:
-            list[dict[str, Any]]: The search results.
+            list[dict[str, Any]]: A list of dictionaries containing the search results.
         """
-        print(f"Searching with query '{self.query}'...")
+        print(f"Searching with query {self.query}...".format(self.query))
         """Useful for general internet search queries using the Bing API."""
 
         # Search the query
         url: str = "https://api.bing.microsoft.com/v7.0/search"
 
-        headers: dict[str, str] = {"Ocp-Apim-Subscription-Key": self.api_key, "Content-Type": "application/json"}
+        headers: dict[str, str] = {
+            'Ocp-Apim-Subscription-Key': self.api_key,
+            'Content-Type': 'application/json'
+        }
+        # TODO: Add support for query domains
         params: dict[str, Any] = {
             "responseFilter": "Webpages",
             "q": self.query,
@@ -60,10 +63,10 @@ class BingSearch:
             "setLang": "en-GB",
             "textDecorations": False,
             "textFormat": "HTML",
-            "safeSearch": "Strict",
+            "safeSearch": "Strict"
         }
 
-        resp: requests.Response | None = requests.get(url, headers=headers, params=params)
+        resp: requests.Response = requests.get(url, headers=headers, params=params)
 
         # Preprocess the results
         if resp is None:

@@ -13,18 +13,20 @@ from gpt_researcher.actions import (
     get_search_results,
     table_of_contents,
 )
-from gpt_researcher.actions.report_analyzer import analyze_query_requirements, get_research_configuration
+
+# from gpt_researcher.actions.report_analyzer import analyze_query_requirements, get_research_configuration
 from gpt_researcher.config import Config
-from gpt_researcher.memory.embeddings import FallbackMemory, Memory
+from gpt_researcher.llm_provider import GenericLLMProvider
+
+#from gpt_researcher.memory.embeddings import FallbackMemory
+from gpt_researcher.memory.embeddings import Memory
 from gpt_researcher.prompts import PromptFamily, get_prompt_family
 from gpt_researcher.skills.browser import BrowserManager
 from gpt_researcher.skills.context_manager import ContextManager
 from gpt_researcher.skills.curator import SourceCurator
-
-# Research skills
 from gpt_researcher.skills.deep_research import DeepResearchSkill
 from gpt_researcher.skills.researcher import ResearchConductor
-from gpt_researcher.skills.structured_research import ResearchResults, StructuredResearchPipeline
+from gpt_researcher.skills.structured_research import ResearchResults
 from gpt_researcher.skills.writer import ReportGenerator
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.vector_store import VectorStoreWrapper
@@ -37,10 +39,10 @@ class GPTResearcher:
     def __init__(
         self,
         query: str,
-        report_type: ReportType | str = ReportType.ResearchReport.value,
+        report_type: str = ReportType.ResearchReport.value,
         report_format: str = "markdown",
-        report_source: ReportSource | str = ReportSource.Web.value,
-        tone: Tone | str = Tone.Objective,
+        report_source: str = ReportSource.Web.value,
+        tone: Tone = Tone.Objective,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
         complement_source_urls: bool = False,
@@ -117,7 +119,8 @@ class GPTResearcher:
         self.report_type: ReportType | str = report_type
         self.cfg: Config = Config(config_path)
         self.cfg.set_verbose(verbose)
-        self.report_source: ReportSource | str = report_source or getattr(self.cfg, "report_source", "")
+        self.llm: GenericLLMProvider = GenericLLMProvider(self.cfg)
+        self.report_source: ReportSource | str | None = report_source if report_source else getattr(self.cfg, "report_source", None)
         self.report_format: str = report_format
         self.max_subtopics: int = max_subtopics
         self.tone: Tone | str = Tone.Objective if tone is None else tone if isinstance(tone, Tone) else Tone(tone)
@@ -142,23 +145,11 @@ class GPTResearcher:
         self.research_costs: float = 0.0
         self.disable_structured_research: bool = disable_structured_research
 
-        # Use FallbackMemory if embedding fallbacks are configured
-        if hasattr(self.cfg, "embedding_fallback_list") and self.cfg.embedding_fallback_list:
-            import logging
-
-            logging.info(f"Using {self.cfg.embedding_provider}:{self.cfg.embedding_model} with fallbacks: {', '.join(self.cfg.embedding_fallback_list)}")
-            self.memory: Memory = FallbackMemory(
-                self.cfg.embedding_provider,
-                self.cfg.embedding_model,
-                self.cfg.embedding_fallback_list,
-                **self.cfg.embedding_kwargs,
-            )
-        else:
-            self.memory: Memory = Memory(
-                self.cfg.embedding_provider,
-                self.cfg.embedding_model,
-                **self.cfg.embedding_kwargs,
-            )
+        self.memory: Memory = Memory(
+            self.cfg.embedding_provider,
+            self.cfg.embedding_model,
+            **self.cfg.embedding_kwargs,
+        )
 
         self.log_handler: Any | None = log_handler
         self.prompt_family: PromptFamily = get_prompt_family(
@@ -185,9 +176,9 @@ class GPTResearcher:
         )
 
         # Initialize structured research pipeline
-        self.structured_pipeline: StructuredResearchPipeline | None = None
-        self.query_analysis: dict[str, Any] | None = None
-        self.research_config: dict[str, Any] | None = None
+#        self.structured_pipeline: StructuredResearchPipeline | None = None
+#        self.query_analysis: dict[str, Any] | None = None
+#        self.research_config: dict[str, Any] | None = None
 
     def _process_mcp_configs(self, mcp_configs: list[dict[str, Any]]) -> None:
         """Process MCP configurations from a list of configuration dictionaries.
@@ -298,8 +289,7 @@ class GPTResearcher:
                 },
             )
 
-        has_agent_and_role: bool = bool((self.agent or "").strip() and (self.role or "").strip())
-        if not has_agent_and_role:
+        if not (self.agent and self.role):
             await self._log_event("action", action="choose_agent")
             self.agent, self.role = await choose_agent(
                 query=self.query,
@@ -417,7 +407,7 @@ class GPTResearcher:
             details={
                 "existing_headers": existing_headers,
                 "context_source": "external" if ext_context else "internal",
-                "structured_research_enabled": self.structured_pipeline is not None and not self.disable_structured_research,
+                #                "structured_research_enabled": self.structured_pipeline is not None and not self.disable_structured_research,
             },
         )
 
@@ -593,6 +583,8 @@ class GPTResearcher:
         self,
         cost: float,
     ) -> None:
+        if not isinstance(cost, (float, int)):
+            raise ValueError("Cost must be an integer or float")
         self.research_costs += cost
         if self.log_handler is not None:
             _ = self._log_event(
