@@ -14,8 +14,8 @@ permissions:
 
 on:
   push:
-    branches: [ 'main', 'master' ]
-    tags: [ 'v*' ]
+    branches: [ '*' ]  #  [ 'main', 'master' ]
+    tags: [ '*' ]  # [ 'v*' ]
   pull_request:
     branches: [ 'main', 'master' ]
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
     if: ${{ success() || failure() }}
     runs-on: '${{ matrix.runner_label }}'
     env:
-      DOCKERHUB_AUTH: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+      # Variables for Docker tokens and authentication
       IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}'
       IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}'
       DOCKERFILE_PATH: './Dockerfile'
@@ -55,6 +55,25 @@ jobs:
         uses: 'docker/setup-buildx-action@v3'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
+      # Set token variables with fallbacks
+      - name: 'Set Docker token variables'
+        id: set-tokens
+        run: |
+          # GitHub token with fallbacks
+          echo "GITHUB_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN || secrets.GITHUB_PERSONAL_ACCESS_TOKEN || '' }}" >> $GITHUB_ENV
+
+          # Docker token with fallbacks
+          echo "DOCKER_TOKEN=${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_ACCESS_TOKEN || secrets.DOCKER_HUB_TOKEN || secrets.DOCKER_TOKEN || '' }}" >> $GITHUB_ENV
+
+          # Docker username with fallbacks
+          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME || github.repository_owner }}" >> $GITHUB_ENV
+
+          # Docker auth flag
+          if [[ -n "${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_ACCESS_TOKEN || secrets.DOCKER_HUB_TOKEN || secrets.DOCKER_TOKEN || '' }}" ]]; then
+            echo "DOCKERHUB_AUTH=true" >> $GITHUB_ENV
+          else
+            echo "DOCKERHUB_AUTH=false" >> $GITHUB_ENV
+          fi
       - name: 'Log in to GitHub Container Registry'
         uses: 'docker/login-action@v3'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -62,13 +81,13 @@ jobs:
         with:
           registry: 'ghcr.io'
           username: '${{ github.repository_owner }}'
-          password: '${{ secrets.GITHUB_TOKEN }}'
+          password: '${{ env.GITHUB_AUTH_TOKEN }}'
       - name: 'Log in to Docker Hub (if secrets present)'
         if: env.DOCKERHUB_AUTH == 'true'
         uses: 'docker/login-action@v3'
         with:
-          username: '${{ secrets.DOCKER_USERNAME }}'
-          password: '${{ secrets.DOCKERHUB_TOKEN }}'
+          username: '${{ env.DOCKER_USERNAME }}'
+          password: '${{ env.DOCKER_TOKEN }}'
       - name: 'Extract Docker metadata'
         id: 'meta'
         uses: 'docker/metadata-action@v5'
@@ -77,11 +96,17 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'th3w1zard1' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
+            # For release tags: apply the version tag and mark as latest
+            type=semver,pattern={{version}}
+            type=semver,pattern=latest
+            # For default branch (main/master): apply dev tag
             type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            # For branch pushes: apply the branch name as tag
+            type=ref,event=branch,prefix=
+            # For PRs: apply pr-{number} tag
+            type=ref,event=pr
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v6'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -102,7 +127,7 @@ jobs:
     if: ${{ success() || failure() }}
     runs-on: '${{ matrix.runner_label }}'
     env:
-      DOCKERHUB_AUTH: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+      # Variables for Docker tokens and authentication
       IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-frontend-nextjs'
       IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-frontend-nextjs'
       DOCKERFILE_PATH: './frontend/nextjs/Dockerfile.dev'
@@ -126,6 +151,25 @@ jobs:
         uses: 'docker/setup-buildx-action@v3'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
+      # Set token variables with fallbacks
+      - name: 'Set Docker token variables'
+        id: set-tokens
+        run: |
+          # GitHub token with fallbacks
+          echo "GITHUB_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN || secrets.GITHUB_PERSONAL_ACCESS_TOKEN || '' }}" >> $GITHUB_ENV
+
+          # Docker token with fallbacks
+          echo "DOCKER_TOKEN=${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_ACCESS_TOKEN || secrets.DOCKER_HUB_TOKEN || secrets.DOCKER_TOKEN || '' }}" >> $GITHUB_ENV
+
+          # Docker username with fallbacks
+          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME || github.repository_owner }}" >> $GITHUB_ENV
+
+          # Docker auth flag
+          if [[ -n "${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_ACCESS_TOKEN || secrets.DOCKER_HUB_TOKEN || secrets.DOCKER_TOKEN || '' }}" ]]; then
+            echo "DOCKERHUB_AUTH=true" >> $GITHUB_ENV
+          else
+            echo "DOCKERHUB_AUTH=false" >> $GITHUB_ENV
+          fi
       - name: 'Log in to GitHub Container Registry'
         uses: 'docker/login-action@v3'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -133,13 +177,13 @@ jobs:
         with:
           registry: 'ghcr.io'
           username: '${{ github.repository_owner }}'
-          password: '${{ secrets.GITHUB_TOKEN }}'
+          password: '${{ env.GITHUB_AUTH_TOKEN }}'
       - name: 'Log in to Docker Hub (if secrets present)'
         if: env.DOCKERHUB_AUTH == 'true'
         uses: 'docker/login-action@v3'
         with:
-          username: '${{ secrets.DOCKER_USERNAME }}'
-          password: '${{ secrets.DOCKERHUB_TOKEN }}'
+          username: '${{ env.DOCKER_USERNAME }}'
+          password: '${{ env.DOCKER_TOKEN }}'
       - name: 'Extract Docker metadata'
         id: 'meta'
         uses: 'docker/metadata-action@v5'
@@ -148,11 +192,17 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'th3w1zard1' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
+            # For release tags: apply the version tag and mark as latest
+            type=semver,pattern={{version}}
+            type=semver,pattern=latest
+            # For default branch (main/master): apply dev tag
             type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            # For branch pushes: apply the branch name as tag
+            type=ref,event=branch,prefix=
+            # For PRs: apply pr-{number} tag
+            type=ref,event=pr
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v6'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -173,7 +223,7 @@ jobs:
     if: ${{ success() || failure() }}
     runs-on: '${{ matrix.runner_label }}'
     env:
-      DOCKERHUB_AUTH: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+      # Variables for Docker tokens and authentication
       IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-mcp-server'
       IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-mcp-server'
       DOCKERFILE_PATH: './mcp-server/Dockerfile'
@@ -197,6 +247,25 @@ jobs:
         uses: 'docker/setup-buildx-action@v3'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
+      # Set token variables with fallbacks
+      - name: 'Set Docker token variables'
+        id: set-tokens
+        run: |
+          # GitHub token with fallbacks
+          echo "GITHUB_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN || secrets.GITHUB_PERSONAL_ACCESS_TOKEN || '' }}" >> $GITHUB_ENV
+
+          # Docker token with fallbacks
+          echo "DOCKER_TOKEN=${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_ACCESS_TOKEN || secrets.DOCKER_HUB_TOKEN || secrets.DOCKER_TOKEN || '' }}" >> $GITHUB_ENV
+
+          # Docker username with fallbacks
+          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME || github.repository_owner }}" >> $GITHUB_ENV
+
+          # Docker auth flag
+          if [[ -n "${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_ACCESS_TOKEN || secrets.DOCKER_HUB_TOKEN || secrets.DOCKER_TOKEN || '' }}" ]]; then
+            echo "DOCKERHUB_AUTH=true" >> $GITHUB_ENV
+          else
+            echo "DOCKERHUB_AUTH=false" >> $GITHUB_ENV
+          fi
       - name: 'Log in to GitHub Container Registry'
         uses: 'docker/login-action@v3'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -204,13 +273,13 @@ jobs:
         with:
           registry: 'ghcr.io'
           username: '${{ github.repository_owner }}'
-          password: '${{ secrets.GITHUB_TOKEN }}'
+          password: '${{ env.GITHUB_AUTH_TOKEN }}'
       - name: 'Log in to Docker Hub (if secrets present)'
         if: env.DOCKERHUB_AUTH == 'true'
         uses: 'docker/login-action@v3'
         with:
-          username: '${{ secrets.DOCKER_USERNAME }}'
-          password: '${{ secrets.DOCKERHUB_TOKEN }}'
+          username: '${{ env.DOCKER_USERNAME }}'
+          password: '${{ env.DOCKER_TOKEN }}'
       - name: 'Extract Docker metadata'
         id: 'meta'
         uses: 'docker/metadata-action@v5'
@@ -219,11 +288,17 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'th3w1zard1' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
+            # For release tags: apply the version tag and mark as latest
+            type=semver,pattern={{version}}
+            type=semver,pattern=latest
+            # For default branch (main/master): apply dev tag
             type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            # For branch pushes: apply the branch name as tag
+            type=ref,event=branch,prefix=
+            # For PRs: apply pr-{number} tag
+            type=ref,event=pr
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v6'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -244,7 +319,7 @@ jobs:
     if: ${{ success() || failure() }}
     runs-on: '${{ matrix.runner_label }}'
     env:
-      DOCKERHUB_AUTH: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+      # Variables for Docker tokens and authentication
       IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-docs-discord-bot'
       IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-docs-discord-bot'
       DOCKERFILE_PATH: './docs/discord-bot/Dockerfile'
@@ -268,6 +343,25 @@ jobs:
         uses: 'docker/setup-buildx-action@v3'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
+      # Set token variables with fallbacks
+      - name: 'Set Docker token variables'
+        id: set-tokens
+        run: |
+          # GitHub token with fallbacks
+          echo "GITHUB_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN || secrets.GITHUB_PERSONAL_ACCESS_TOKEN || '' }}" >> $GITHUB_ENV
+
+          # Docker token with fallbacks
+          echo "DOCKER_TOKEN=${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_ACCESS_TOKEN || secrets.DOCKER_HUB_TOKEN || secrets.DOCKER_TOKEN || '' }}" >> $GITHUB_ENV
+
+          # Docker username with fallbacks
+          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME || github.repository_owner }}" >> $GITHUB_ENV
+
+          # Docker auth flag
+          if [[ -n "${{ secrets.DOCKERHUB_TOKEN || secrets.DOCKER_ACCESS_TOKEN || secrets.DOCKER_HUB_TOKEN || secrets.DOCKER_TOKEN || '' }}" ]]; then
+            echo "DOCKERHUB_AUTH=true" >> $GITHUB_ENV
+          else
+            echo "DOCKERHUB_AUTH=false" >> $GITHUB_ENV
+          fi
       - name: 'Log in to GitHub Container Registry'
         uses: 'docker/login-action@v3'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -275,13 +369,13 @@ jobs:
         with:
           registry: 'ghcr.io'
           username: '${{ github.repository_owner }}'
-          password: '${{ secrets.GITHUB_TOKEN }}'
+          password: '${{ env.GITHUB_AUTH_TOKEN }}'
       - name: 'Log in to Docker Hub (if secrets present)'
         if: env.DOCKERHUB_AUTH == 'true'
         uses: 'docker/login-action@v3'
         with:
-          username: '${{ secrets.DOCKER_USERNAME }}'
-          password: '${{ secrets.DOCKERHUB_TOKEN }}'
+          username: '${{ env.DOCKER_USERNAME }}'
+          password: '${{ env.DOCKER_TOKEN }}'
       - name: 'Extract Docker metadata'
         id: 'meta'
         uses: 'docker/metadata-action@v5'
@@ -290,11 +384,17 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'th3w1zard1' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
+            # For release tags: apply the version tag and mark as latest
+            type=semver,pattern={{version}}
+            type=semver,pattern=latest
+            # For default branch (main/master): apply dev tag
             type=raw,value=dev,enable=${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            # For branch pushes: apply the branch name as tag
+            type=ref,event=branch,prefix=
+            # For PRs: apply pr-{number} tag
+            type=ref,event=pr
       - name: 'Build and push Docker image'
         uses: 'docker/build-push-action@v6'
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
