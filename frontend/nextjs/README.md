@@ -23,11 +23,12 @@ A React component library for integrating the GPT Researcher interface into your
 
 # 🔎 GPT Researcher
 
-**GPT Researcher is an open deep research agent designed for both web and local research on any given task.**
+**GPT Researcher is an open deep research agent designed for both web and local research on any given task.** 
 
 The agent produces detailed, factual, and unbiased research reports with citations. GPT Researcher provides a full suite of customization options to create tailor made and domain specific research agents. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses misinformation, speed, determinism, and reliability by offering stable performance and increased speed through parallelized agent work.
 
 **Our mission is to empower individuals and organizations with accurate, unbiased, and factual information through AI.**
+
 
 ## Installation
 

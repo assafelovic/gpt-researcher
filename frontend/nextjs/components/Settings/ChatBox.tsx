@@ -4,12 +4,7 @@ import Report from '../Task/Report';
 import AgentLogs from '../Task/AgentLogs';
 import AccessReport from '../ResearchBlocks/AccessReport';
 import { getHost } from '../../helpers/getHost';
-
-interface ChatBoxSettings {
-  report_source: string;
-  report_type: string;
-  tone: string;
-}
+import { ChatBoxSettings } from '@/types/data';
 
 interface ChatBoxProps {
   chatBoxSettings: ChatBoxSettings;
@@ -68,7 +63,7 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBox
 
   return (
     <div>
-      <main className="container" id="form">
+      <main className="static-container" id="form">
         <ResearchForm 
           chatBoxSettings={chatBoxSettings} 
           setChatBoxSettings={setChatBoxSettings}

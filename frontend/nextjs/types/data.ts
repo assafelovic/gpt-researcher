@@ -48,4 +48,4 @@ export interface ResearchHistoryItem {
   answer: string;
   timestamp: number;
   orderedData: Data[];
-}
+} 

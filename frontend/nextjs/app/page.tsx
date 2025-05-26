@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { useResearchHistory } from '@/hooks/useResearchHistory';
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
 import { Data, ChatBoxSettings, QuestionData } from '../types/data';
@@ -14,16 +15,19 @@ import Footer from "@/components/Footer";
 import InputArea from "@/components/ResearchBlocks/elements/InputArea";
 import HumanFeedback from "@/components/HumanFeedback";
 import LoadingDots from "@/components/LoadingDots";
+import ResearchSidebar from "@/components/ResearchSidebar";
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
   const [showResult, setShowResult] = useState(false);
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({
-    report_source: 'web',
-    report_type: 'research_report',
-    tone: 'Objective'
+  const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({ 
+    report_source: 'web', 
+    report_type: 'research_report', 
+    tone: 'Objective',
+    domains: [],
+    defaultReportType: 'research_report'
   });
   const [question, setQuestion] = useState("");
   const [orderedData, setOrderedData] = useState<Data[]>([]);
@@ -34,6 +38,14 @@ export default function Home() {
   const [isStopped, setIsStopped] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const { 
+    history, 
+    saveResearch, 
+    getResearchById, 
+    deleteResearch 
+  } = useResearchHistory();
 
   const { socket, initializeWebSocket } = useWebSocket(
     setOrderedData,
@@ -59,8 +71,8 @@ export default function Home() {
       setAnswer("");
 
       const questionData: QuestionData = { type: 'question', content: message };
-      setOrderedData((prevOrder: Data[]) => [...prevOrder, questionData]);
-
+      setOrderedData(prevOrder => [...prevOrder, questionData]);
+      
       socket.send(`chat${JSON.stringify({ message })}`);
     }
   };
@@ -71,7 +83,7 @@ export default function Home() {
     setQuestion(newQuestion);
     setPromptValue("");
     setAnswer("");
-    setOrderedData((prevOrder: Data[]) => [...prevOrder, { type: 'question', content: newQuestion }]);
+    setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: newQuestion }]);
 
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
@@ -80,16 +92,16 @@ export default function Home() {
     if (chatBoxSettings.report_type === 'multi_agents' && langgraphHostUrl) {
       let { streamResponse, host, thread_id } = await startLanggraphResearch(newQuestion, chatBoxSettings.report_source, langgraphHostUrl);
       const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
-      setOrderedData((prevOrder: Data[]) => [...prevOrder, { type: 'langgraphButton', link: langsmithGuiLink }]);
+      setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphButton', link: langsmithGuiLink }]);
 
       let previousChunk = null;
       for await (const chunk of streamResponse) {
         if (chunk.data.report != null && chunk.data.report != "Full report content here") {
-          setOrderedData((prevOrder: Data[]) => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
+          setOrderedData((prevOrder) => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
           setLoading(false);
         } else if (previousChunk) {
           const differences = findDifferences(previousChunk, chunk);
-          setOrderedData((prevOrder: Data[]) => [...prevOrder, { type: 'differences', content: 'differences', output: JSON.stringify(differences) }]);
+          setOrderedData((prevOrder) => [...prevOrder, { type: 'differences', content: 'differences', output: JSON.stringify(differences) }]);
         }
         previousChunk = chunk;
       }
@@ -99,10 +111,26 @@ export default function Home() {
   };
 
   const reset = () => {
+    // Reset UI states
     setShowResult(false);
     setPromptValue("");
+    setIsStopped(false);
+    
+    // Clear previous research data
     setQuestion("");
     setAnswer("");
+    setOrderedData([]);
+    setAllLogs([]);
+
+    // Reset feedback states
+    setShowHumanFeedback(false);
+    setQuestionForHuman(false);
+    
+    // Clean up connections
+    if (socket) {
+      socket.close();
+    }
+    setLoading(false);
   };
 
   const handleClickSuggestion = (value: string) => {
@@ -135,26 +163,42 @@ export default function Home() {
    * - Closes any existing WebSocket connections
    */
   const handleStartNewResearch = () => {
-    // Reset UI states
-    setShowResult(false);
-    setPromptValue("");
-    setIsStopped(false);
+    reset();
+    setSidebarOpen(false);
+  };
 
-    // Clear previous research data
-    setQuestion("");
-    setAnswer("");
-    setOrderedData([]);
-    setAllLogs([]);
-
-    // Reset feedback states
-    setShowHumanFeedback(false);
-    setQuestionForHuman(false);
-
-    // Clean up connections
-    if (socket) {
-      socket.close();
+  // Save completed research to history
+  useEffect(() => {
+    // Only save when research is complete and not loading
+    if (showResult && !loading && answer && question && orderedData.length > 0) {
+      // Check if this is a new research (not loaded from history)
+      const isNewResearch = !history.some(item => 
+        item.question === question && item.answer === answer
+      );
+      
+      if (isNewResearch) {
+        saveResearch(question, answer, orderedData);
+      }
     }
-    setLoading(false);
+  }, [showResult, loading, answer, question, orderedData, history, saveResearch]);
+
+  // Handle selecting a research from history
+  const handleSelectResearch = (id: string) => {
+    const research = getResearchById(id);
+    if (research) {
+      setShowResult(true);
+      setQuestion(research.question);
+      setPromptValue("");
+      setAnswer(research.answer);
+      setOrderedData(research.orderedData);
+      setLoading(false);
+      setSidebarOpen(false);
+    }
+  };
+
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
   };
 
   /**
@@ -163,8 +207,8 @@ export default function Home() {
    */
   useEffect(() => {
     const groupedData = preprocessOrderedData(orderedData);
-    const statusReports = ["agent_generated", "starting_research", "planning_research"];
-
+    const statusReports = ["agent_generated", "starting_research", "planning_research", "error"];
+    
     const newLogs = groupedData.reduce((acc: any[], data) => {
       // Process accordion blocks (grouped data)
       if (data.type === 'accordionBlock') {
@@ -175,7 +219,7 @@ export default function Home() {
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
         return [...acc, ...logs];
-      }
+      } 
       // Process status reports
       else if (statusReports.includes(data.content)) {
         return [...acc, {
@@ -187,7 +231,7 @@ export default function Home() {
       }
       return acc;
     }, []);
-
+    
     setAllLogs(newLogs);
   }, [orderedData]);
 
@@ -195,7 +239,7 @@ export default function Home() {
     // Calculate if we're near bottom (within 100px)
     const scrollPosition = window.scrollY + window.innerHeight;
     const nearBottom = scrollPosition >= document.documentElement.scrollHeight - 100;
-
+    
     // Show button if we're not near bottom and page is scrollable
     const isPageScrollable = document.documentElement.scrollHeight > window.innerHeight;
     setShowScrollButton(isPageScrollable && !nearBottom);
@@ -203,22 +247,21 @@ export default function Home() {
 
   // Add ResizeObserver to watch for content changes
   useEffect(() => {
+    const mainContentElement = mainContentRef.current;
     const resizeObserver = new ResizeObserver(() => {
       handleScroll();
     });
 
-    const currentMainContent = mainContentRef.current;
-
-    if (currentMainContent) {
-      resizeObserver.observe(currentMainContent);
+    if (mainContentElement) {
+      resizeObserver.observe(mainContentElement);
     }
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleScroll);
-
+    
     return () => {
-      if (currentMainContent) {
-        resizeObserver.unobserve(currentMainContent);
+      if (mainContentElement) {
+        resizeObserver.unobserve(mainContentElement);
       }
       resizeObserver.disconnect();
       window.removeEventListener('scroll', handleScroll);
@@ -234,15 +277,28 @@ export default function Home() {
   };
 
   return (
-    <>
-      <Header
+    <main className="flex min-h-screen flex-col">
+      <Header 
         loading={loading}
         isStopped={isStopped}
         showResult={showResult}
         onStop={handleStopResearch}
         onNewResearch={handleStartNewResearch}
       />
-      <main ref={mainContentRef} className="min-h-[100vh] pt-[120px]">
+      
+      <ResearchSidebar
+        history={history}
+        onSelectResearch={handleSelectResearch}
+        onNewResearch={handleStartNewResearch}
+        onDeleteResearch={deleteResearch}
+        isOpen={sidebarOpen}
+        toggleSidebar={toggleSidebar}
+      />
+      
+      <div 
+        ref={mainContentRef}
+        className="min-h-[100vh] pt-[120px]"
+      >
         {!showResult && (
           <Hero
             promptValue={promptValue}
@@ -264,7 +320,7 @@ export default function Home() {
                 />
               </div>
 
-              {showHumanFeedback && (
+              {showHumanFeedback && false &&(
                 <HumanFeedback
                   questionForHuman={questionForHuman}
                   websocket={socket}
@@ -291,29 +347,29 @@ export default function Home() {
             </div>
           </div>
         )}
-      </main>
+      </div>
       {showScrollButton && showResult && (
         <button
           onClick={scrollToBottom}
           className="fixed bottom-8 right-8 flex items-center justify-center w-12 h-12 text-white bg-gradient-to-br from-teal-500 to-teal-600 rounded-full hover:from-teal-600 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-lg z-50 backdrop-blur-sm border border-teal-400/20"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-6 w-6" 
+            fill="none" 
+            viewBox="0 0 24 24" 
             stroke="currentColor"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M19 14l-7 7m0 0l-7-7m7 7V3" 
             />
           </svg>
         </button>
       )}
       <Footer setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
-    </>
+    </main>
   );
 }
