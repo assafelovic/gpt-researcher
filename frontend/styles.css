@@ -2408,3 +2408,233 @@ h2 .expand-button {
     vertical-align: middle;
     font-size: 0.8em;
 }
+
+/* About Section Styles */
+.about-section-container {
+    margin: 60px auto 80px auto;
+    max-width: 1000px;
+    padding: 0 20px;
+}
+
+.about-toggle-btn {
+    background: rgba(157, 78, 221, 0.15);
+    border: 1px solid rgba(157, 78, 221, 0.3);
+    border-radius: 25px;
+    padding: 12px 25px;
+    color: #C77DFF;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 auto;
+    min-width: 280px;
+}
+
+.about-toggle-btn:hover {
+    background: rgba(157, 78, 221, 0.25);
+    border-color: rgba(157, 78, 221, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(157, 78, 221, 0.2);
+}
+
+.about-toggle-btn .toggle-icon {
+    transition: transform 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.about-toggle-btn.expanded .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.about-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease, opacity 0.3s ease;
+    opacity: 0;
+    margin-top: 20px;
+}
+
+.about-content.expanded {
+    max-height: 1200px;
+    opacity: 1;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.about-card {
+    background: rgba(25, 25, 35, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 25px;
+    border: 1px solid rgba(157, 78, 221, 0.2);
+    transition: all 0.3s ease;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+}
+
+.about-card:hover {
+    transform: translateY(-5px);
+    background: rgba(35, 35, 45, 0.9);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    border-color: rgba(157, 78, 221, 0.4);
+}
+
+.about-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, transparent, rgba(157, 78, 221, 0.1));
+    border-radius: 50%;
+    transform: translate(50%, -50%);
+    z-index: 0;
+}
+
+.about-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #9D4EDD, #7B2CBF);
+    margin-bottom: 15px;
+    font-size: 20px;
+    color: #FFF;
+    position: relative;
+    z-index: 1;
+}
+
+.about-card h3 {
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.about-card p {
+    color: #CCCCCC;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.about-why-section {
+    background: rgba(20, 20, 30, 0.9);
+    border-radius: 15px;
+    padding: 25px;
+    border: 1px solid rgba(157, 78, 221, 0.3);
+    border-left: 4px solid #9D4EDD;
+    text-align: left;
+}
+
+.about-why-section h3 {
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+}
+
+.about-why-section p {
+    color: #CCCCCC;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.about-why-section p:last-child {
+    margin-bottom: 0;
+}
+
+.about-why-section a {
+    color: #C77DFF;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.about-why-section a:hover {
+    text-decoration: underline;
+    color: #9D4EDD;
+}
+
+.about-quote {
+    background: rgba(30, 30, 40, 0.8);
+    border-left: 4px solid #9D4EDD;
+    margin: 20px 0;
+    padding: 15px 20px;
+    border-radius: 8px;
+    font-style: italic;
+    position: relative;
+}
+
+.about-quote p {
+    margin: 0;
+    color: #E4E4E4;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.about-quote::before {
+    content: '"';
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    font-size: 3rem;
+    color: #9D4EDD;
+    font-family: serif;
+    line-height: 1;
+}
+
+/* Responsive adjustments for about section */
+@media (max-width: 768px) {
+    .about-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .about-card {
+        padding: 20px;
+    }
+
+    .about-toggle-btn {
+        font-size: 0.9rem;
+        padding: 10px 20px;
+        min-width: 250px;
+    }
+
+    .about-why-section {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .about-toggle-btn {
+        font-size: 0.85rem;
+        padding: 8px 16px;
+        min-width: 220px;
+    }
+
+    .about-card h3 {
+        font-size: 1rem;
+    }
+
+    .about-card p {
+        font-size: 0.9rem;
+    }
+}

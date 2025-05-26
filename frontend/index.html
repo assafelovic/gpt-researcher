@@ -96,6 +96,7 @@
                 Receive thorough reports with verified references, professional layout, and personalized content
                 tailored specifically to your needs—all accomplished with just one click.
             </p>
+
             <a href="#form" class="btn btn-primary">Start Researching</a>
         </div>
     </section>
@@ -212,6 +213,68 @@
         <!-- Fixed bottom bar styled like the top credits bar -->
     </main>
 
+    <!-- Learn More About ResearchWizard Section -->
+    <div class="about-section-container">
+        <button class="about-toggle-btn" id="aboutToggleBtn">
+            <i class="fas fa-info-circle"></i> Learn More About ResearchWizard
+            <i class="fas fa-chevron-down toggle-icon"></i>
+        </button>
+        <div class="about-content" id="aboutContent">
+            <div class="about-why-section">
+                <h3>Why choose this over another solution?</h3>
+                <p>Here's what major players like OpenAI are offering to media companies <a href="https://www.adweek.com/media/openai-preferred-publisher-program-deck/" target="_blank" rel="noopener">according to this pitch deck</a>:</p>
+                <blockquote class="about-quote">
+                    <p>Preferred publishers get top placement, "enhanced branding," and better link visibility inside AI-driven chats.</p>
+                </blockquote>
+                <p>If you're not into the idea of having your information filtered by those who pay the most, a more transparent, community-driven tool like <strong>ResearchWizard</strong> might be a better fit for you.</p>
+            </div>
+            <div class="about-grid">
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>🕵️‍♀️ Fully Local Setup</h3>
+                    <p>No external APIs needed, making it much more privacy-respecting. Your data stays on your machine.</p>
+                </div>
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <h3>💸 Affordable Hardware</h3>
+                    <p>Runs on consumer-grade hardware (this demo uses a ~€300 GPU). No expensive cloud costs.</p>
+                </div>
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>🤓 Transparent Results</h3>
+                    <p>Answers include live logs and sources, giving you insight into how results were generated—perfect for deeper exploration.</p>
+                </div>
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>🤔 Natural Conversations</h3>
+                    <p>Supports conversational follow-ups naturally. Ask questions and dig deeper into any topic.</p>
+                </div>
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>📱 Responsive Design</h3>
+                    <p>Responsive UI that works great on mobile devices. Research anywhere, anytime.</p>
+                </div>
+                <div class="about-card">
+                    <div class="about-icon">
+                        <i class="fas fa-palette"></i>
+                    </div>
+                    <h3>🌓 Theme Support</h3>
+                    <p>Light and dark mode included for comfortable viewing in any environment.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Conversation History Panel -->
     <div class="history-panel" id="historyPanel">
         <div class="history-panel-header">
@@ -325,6 +388,26 @@
                 window.dispatchEvent(new Event('scroll'));
             }, 100);
         });
+
+        // About section toggle functionality
+        const aboutToggleBtn = document.getElementById('aboutToggleBtn');
+        const aboutContent = document.getElementById('aboutContent');
+
+        if (aboutToggleBtn && aboutContent) {
+            aboutToggleBtn.addEventListener('click', function() {
+                const isExpanded = aboutContent.classList.contains('expanded');
+
+                if (isExpanded) {
+                    // Collapse
+                    aboutContent.classList.remove('expanded');
+                    aboutToggleBtn.classList.remove('expanded');
+                } else {
+                    // Expand
+                    aboutContent.classList.add('expanded');
+                    aboutToggleBtn.classList.add('expanded');
+                }
+            });
+        }
     </script>
 </body>
 
