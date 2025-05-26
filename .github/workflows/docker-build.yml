@@ -105,7 +105,7 @@ jobs:
       DOCKERHUB_AUTH: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
       IMAGE_NAME_GHCR_SUFFIXED: '${{ github.event.repository.name }}-frontend-nextjs'
       IMAGE_NAME_DOCKERHUB_SUFFIXED: '${{ github.event.repository.name }}-frontend-nextjs'
-      DOCKERFILE_PATH: './frontend/nextjs/Dockerfile'
+      DOCKERFILE_PATH: './frontend/nextjs/Dockerfile.dev'
       BUILD_CONTEXT: './frontend/nextjs'
     strategy:
       fail-fast: false
