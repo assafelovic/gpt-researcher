@@ -67,7 +67,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'placeholder' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'th3w1zard1' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -126,7 +126,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'placeholder' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'th3w1zard1' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -185,7 +185,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'placeholder' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'th3w1zard1' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -244,7 +244,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'placeholder' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+            ${{ secrets.DOCKER_USERNAME && secrets.DOCKER_USERNAME != '' && secrets.DOCKER_USERNAME || 'th3w1zard1' }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
