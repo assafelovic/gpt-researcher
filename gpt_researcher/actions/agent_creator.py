@@ -11,6 +11,7 @@ async def choose_agent(
     cost_callback: callable = None,
     headers=None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    **kwargs
 ):
     """
     Chooses the agent automatically
@@ -40,6 +41,7 @@ async def choose_agent(
             llm_provider=cfg.smart_llm_provider,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
+            **kwargs
         )
 
         agent_dict = json.loads(response)
