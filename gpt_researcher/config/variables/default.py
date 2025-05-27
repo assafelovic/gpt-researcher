@@ -10,9 +10,9 @@ DEFAULT_CONFIG: BaseConfig = {
     #    "FAST_LLM": "openrouter:mistralai/mistral-small-3.1-24b-instruct:free",
     #    "SMART_LLM": "openrouter:google/gemini-2.0-flash-exp:free",
     #    "STRATEGIC_LLM": "openrouter:moonshotai/kimi-vl-a3b-thinking:free",
-    #    "FAST_LLM": "openai:gpt-4o-mini",  # Will use first fallback when empty or "auto"
-    #    "SMART_LLM": "openai:gpt-4.1",
-    #    "STRATEGIC_LLM": "openai:o4-mini",
+    #    "FAST_LLM": "openai:gpt-4o-mini",
+    #    "SMART_LLM": "openai:gpt-4o-2024-11-20",  # Has support for long responses (2k+ words).
+    #    "STRATEGIC_LLM": "openai:o3-mini",  # Can be used with gpt-o1 or gpt-o3
     "FAST_LLM": "auto",  # Will use first fallback when empty or "auto"
     "SMART_LLM": "auto",
     "STRATEGIC_LLM": "auto",
@@ -22,24 +22,24 @@ DEFAULT_CONFIG: BaseConfig = {
     #    "FAST_LLM_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
     #    "SMART_LLM_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
     #    "STRATEGIC_LLM_FALLBACKS": "auto",  # Comma-separated list of model names or "auto" for automatic free models
-    "FAST_TOKEN_LIMIT": 30000,
-    "SMART_TOKEN_LIMIT": 60000,
-    "STRATEGIC_TOKEN_LIMIT": 40000,
-    "BROWSE_CHUNK_MAX_LENGTH": 81920,
+    "FAST_TOKEN_LIMIT": 2000,
+    "SMART_TOKEN_LIMIT": 4000,
+    "STRATEGIC_TOKEN_LIMIT": 4000,
+    "BROWSE_CHUNK_MAX_LENGTH": 8192,
     "CURATE_SOURCES": False,
-    "SUMMARY_TOKEN_LIMIT": 3000,
+    "SUMMARY_TOKEN_LIMIT": 700,
     "TEMPERATURE": 0.55,
     "LLM_TEMPERATURE": 0.55,
     "USER_AGENT": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0",
     "MAX_SEARCH_RESULTS_PER_QUERY": 5,
     "MEMORY_BACKEND": "local",
-    "TOTAL_WORDS": 12000,
+    "TOTAL_WORDS": 1200,
     "REPORT_FORMAT": "APA",
-    "MAX_ITERATIONS": 3,
+    "MAX_ITERATIONS": 4,
     "AGENT_ROLE": None,
     "SCRAPER": "bs",
     "MAX_SCRAPER_WORKERS": 15,
-    "MAX_SUBTOPICS": 15,
+    "MAX_SUBTOPICS": 3,
     "LANGUAGE": "english",
     "REPORT_SOURCE": "web",
     "DOC_PATH": "./my-docs",
