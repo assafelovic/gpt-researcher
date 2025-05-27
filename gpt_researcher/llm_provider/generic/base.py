@@ -30,6 +30,7 @@ _SUPPORTED_PROVIDERS = {
     "litellm",
     "gigachat",
     "openrouter",
+    "vllm_openai",
     "aimlapi",
 }
 
@@ -206,6 +207,14 @@ class GenericLLMProvider:
                      rate_limiter=rate_limiter,
                      **kwargs
                 )
+        elif provider == "vllm_openai":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+            llm = ChatOpenAI(
+                openai_api_key=os.environ["VLLM_OPENAI_API_KEY"],
+                openai_api_base=os.environ["VLLM_OPENAI_API_BASE"],
+                **kwargs
+            )
         elif provider == "aimlapi":
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
