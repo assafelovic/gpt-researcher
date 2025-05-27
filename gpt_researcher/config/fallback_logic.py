@@ -20,8 +20,11 @@ def _log_config_section(
     section_name: str,
     message: str,
     level: str = "INFO",
+    verbose: bool = True,
 ) -> None:
     """Helper function for consistent config logging."""
+    if not verbose:
+        return
     colors: dict[str, str] = {
         "INFO": Fore.CYAN,
         "WARN": Fore.YELLOW,
@@ -37,10 +40,11 @@ def _log_fallback_summary(
     primary_model: str,
     fallbacks: list[str],
     max_display: int = 5,
+    verbose: bool = True,
 ) -> None:
     """Log a concise summary of fallback configuration."""
     if not fallbacks:
-        _log_config_section("FALLBACKS", f"No fallbacks configured for {model_type.upper()}", "WARN")
+        _log_config_section("FALLBACKS", f"No fallbacks configured for {model_type.upper()}", "WARN", verbose)
         return
 
     display_count: int = min(len(fallbacks), max_display)
@@ -49,7 +53,9 @@ def _log_fallback_summary(
 
     _log_config_section(
         "FALLBACKS",
-        f"{model_type.upper()}: {primary_model or 'auto'} → {display_count} fallbacks{more_indicator}"
+        f"{model_type.upper()}: {primary_model or 'auto'} → {display_count} fallbacks{more_indicator}",
+        "INFO",
+        verbose
     )
 
     # Log first few fallbacks with provider grouping
@@ -62,7 +68,7 @@ def _log_fallback_summary(
         model_list: str = ", ".join(models[:3])
         if len(models) > 3:
             model_list += f" (+{len(models) - 3})"
-        _log_config_section("FALLBACKS", f"  └─ {provider}: {model_list}")
+        _log_config_section("FALLBACKS", f"  └─ {provider}: {model_list}", "INFO", verbose)
 
 
 def map_litellm_provider_to_gptr_provider(litellm_provider_name: str | None) -> str | None:
