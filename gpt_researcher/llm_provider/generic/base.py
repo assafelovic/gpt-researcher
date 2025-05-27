@@ -29,7 +29,8 @@ _SUPPORTED_PROVIDERS = {
     "deepseek",
     "litellm",
     "gigachat",
-    "openrouter"
+    "openrouter",
+    "aimlapi",
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS = [
@@ -205,7 +206,14 @@ class GenericLLMProvider:
                      rate_limiter=rate_limiter,
                      **kwargs
                 )
+        elif provider == "aimlapi":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
 
+            llm = ChatOpenAI(openai_api_base='https://api.aimlapi.com/v1',
+                             openai_api_key=os.environ["AIMLAPI_API_KEY"],
+                             **kwargs
+                             )
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
