@@ -31,7 +31,7 @@ class PyMuPDFScraper:
         except Exception:
             return False
 
-    def scrape(self) -> str:
+    def scrape(self) -> tuple[str, list[str], str]:
         """
         The `scrape` function uses PyMuPDFLoader to load a document from the provided link (either URL or local file)
         and returns the document as a string.
@@ -64,5 +64,7 @@ class PyMuPDFScraper:
 
         except requests.exceptions.Timeout:
             print(f"Download timed out. Please check the link : {self.link}")
+            return "", [], ""
         except Exception as e:
             print(f"Error loading PDF : {self.link} {e}")
+            return "", [], ""
