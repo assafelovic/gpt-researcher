@@ -28,7 +28,7 @@ async def write_text_to_md(
     text: str,
     filename: str = "",
 ) -> str:
-    """Write text to a Markdown file and returns the file path.
+    """Writes text to a Markdown file and returns the file path.
 
     Args:
         text (str): Text to write to the Markdown file.
@@ -44,7 +44,7 @@ async def write_md_to_pdf(
     text: str,
     filename: str = "",
 ) -> str:
-    """Convert Markdown text to a PDF file and returns the file path.
+    """Converts Markdown text to a PDF file and returns the file path.
 
     Args:
         text (str): Markdown text to convert.
@@ -59,6 +59,7 @@ async def write_md_to_pdf(
         md2pdf(
             file_path,
             md_content=text,
+            # md_file_path=f"{file_path}.md",
             css_file_path="./frontend/pdf_styles.css",
             base_url=None,
         )
@@ -74,7 +75,7 @@ async def write_md_to_word(
     text: str,
     filename: str = "",
 ) -> str:
-    """Convert Markdown text to a DOCX file and returns the file path.
+    """Converts Markdown text to a DOCX file and returns the file path.
 
     Args:
         text (str): Markdown text to convert.

@@ -10,20 +10,25 @@ from typing import Any
 
 import requests
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class SerpApiSearch:
+
+class SerpApiSearch(RetrieverABC):
     """SerpApi Retriever."""
 
     def __init__(
         self,
         query: str,
+        query_domains: list[str] | None = None,
     ):
         """Initializes the SerpApiSearch object.
 
         Args:
             query (str): The query to search for.
+            query_domains (list[str] | None): Optional list of domains to search within.
         """
         self.query: str = query
+        self.query_domains: list[str] | None = query_domains
         self.api_key: str = self.get_api_key()
 
     def get_api_key(self) -> str:

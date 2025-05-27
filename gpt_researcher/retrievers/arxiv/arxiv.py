@@ -4,25 +4,24 @@ from typing import Any
 
 import arxiv
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class ArxivSearch:
+
+class ArxivSearch(RetrieverABC):
     """Arxiv API Retriever."""
 
-    def __init__(self, query: str, sort: str = "Relevance"):
+    def __init__(self, query: str, sort: str = "Relevance", query_domains: list[str] | None = None):
         """Initializes the ArxivSearch object.
 
         Args:
             query (str): The query to search for.
             sort (str): The sort criterion.
+            query_domains (list[str] | None): Optional list of domains (not used for ArXiv).
         """
         self.arxiv: arxiv.Client = arxiv.Client()
         self.query: str = query
         assert sort in ["Relevance", "SubmittedDate"], "Invalid sort criterion"
-        self.sort: arxiv.SortCriterion | arxiv.SortCriterion = (
-            arxiv.SortCriterion.SubmittedDate
-            if sort == "SubmittedDate"
-            else arxiv.SortCriterion.Relevance
-        )  # pyright: ignore[reportOptionalMemberAccess]
+        self.sort: arxiv.SortCriterion | arxiv.SortCriterion = arxiv.SortCriterion.SubmittedDate if sort == "SubmittedDate" else arxiv.SortCriterion.Relevance  # pyright: ignore[reportOptionalMemberAccess]
 
     def search(self, max_results: int = 5) -> list[dict[str, Any]]:
         """Performs the search.
@@ -36,7 +35,7 @@ class ArxivSearch:
 
         arxiv_gen: list[arxiv.Result] = list(
             self.arxiv.results(
-                self.arxiv.Search(
+                arxiv.Search(
                     query=self.query,
                     max_results=max_results,
                     sort_by=self.sort,

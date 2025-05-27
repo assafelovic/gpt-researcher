@@ -10,8 +10,8 @@ from typing import Any, Literal, Sequence
 
 import requests
 
-
-class TavilySearch():
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
+class TavilySearch(RetrieverABC):
 
     """Tavily API Retriever."""
 

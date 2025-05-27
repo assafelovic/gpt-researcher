@@ -155,21 +155,21 @@ if TYPE_CHECKING:
         max_pdf_size_mb: int  # maximum PDF size in MB
         max_query_tokens: int  # maximum number of tokens for queries
         max_tokens: int  # LEGACY parameter. set to max_output_tokens if provider specifies it. IF not set to max_input_tokens, if provider specifies it.
-        max_video_length: int  # maximum length of video
+        max_video_length: int
         max_videos_per_prompt: int  # maximum number of videos per prompt
         metadata: dict[NotesKey, str]  # metadata associated with the model
         mode: ModelModes  # mode of the model.
-        output_cost_per_audio_token: float  # cost per output audio token
-        output_cost_per_character_above_128k_tokens: float  # cost per output character above 128k tokens
-        output_cost_per_character: float  # cost per output character
-        output_cost_per_image: float  # cost per output image
-        output_cost_per_pixel: float  # cost per output pixel
-        output_cost_per_second: float  # cost per output second
-        output_cost_per_token_above_128k_tokens: float  # cost per output token above 128k tokens
-        output_cost_per_token_batches: float  # cost per output token for batches
-        output_cost_per_token: float  # cost per output token
+        output_cost_per_audio_token: float
+        output_cost_per_character_above_128k_tokens: float
+        output_cost_per_character: float
+        output_cost_per_image: float
+        output_cost_per_pixel: float
+        output_cost_per_second: float
+        output_cost_per_token_above_128k_tokens: float
+        output_cost_per_token_batches: float
+        output_cost_per_token: float
         output_dbu_cost_per_token: float  # cost per output DBU token. Sometimes typo'd to output_db_cost_per_token
-        output_vector_size: int  # size of the output vector for embeddings
+        output_vector_size: int
         rpd: int  # requests per day
         rpm: int  # requests per minute
         source: str  # source URL to the model

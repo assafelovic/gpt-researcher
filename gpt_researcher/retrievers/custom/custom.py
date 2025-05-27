@@ -6,17 +6,20 @@ from typing import Any
 
 import requests
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class CustomRetriever:
+
+class CustomRetriever(RetrieverABC):
     """Custom API Retriever."""
 
-    def __init__(self, query: str):
+    def __init__(self, query: str, query_domains: list[str] | None = None):
         self.endpoint: str = os.getenv("RETRIEVER_ENDPOINT") or ""
         if not self.endpoint or not self.endpoint.strip():
             raise ValueError("RETRIEVER_ENDPOINT environment variable not set")
 
         self.params: dict[str, Any] = self._populate_params()
         self.query: str = query
+        self.query_domains: list[str] | None = query_domains
 
     def _populate_params(self) -> dict[str, Any]:
         """Populates parameters from environment variables prefixed with 'RETRIEVER_ARG_'."""

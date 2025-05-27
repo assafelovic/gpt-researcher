@@ -68,7 +68,7 @@ def parse_dimension(value: str) -> int | None:
     if value.lower().endswith("px"):
         value = value[:-2]  # Remove 'px' suffix
     try:
-        return int(value)  # Convert to float first to handle decimal values
+        return int(float(value))  # Convert to float first to handle decimal values
     except ValueError as e:
         print(f"Error parsing dimension value {value}: {e.__class__.__name__}: {e}")
         return None

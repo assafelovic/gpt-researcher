@@ -8,17 +8,21 @@ from urllib.parse import urljoin
 
 import requests
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class SearxSearch:
+
+class SearxSearch(RetrieverABC):
     """SearxNG API Retriever."""
 
-    def __init__(self, query: str):
+    def __init__(self, query: str, query_domains: list[str] | None = None):
         """Initializes the SearxSearch object.
 
         Args:
             query (str): Search query string
+            query_domains (list[str] | None): Optional list of domains (not used for SearxNG).
         """
         self.query: str = query
+        self.query_domains: list[str] | None = query_domains
         self.base_url: str = self.get_searxng_url()
 
     def get_searxng_url(self) -> str:

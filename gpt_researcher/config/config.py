@@ -7,10 +7,9 @@ import traceback
 import warnings
 
 from datetime import timedelta
-from typing import Any, ClassVar, Dict, List, Literal, Union, get_args, get_origin
+from typing import Any, ClassVar, Dict, List, Literal, Self, Union, get_args, get_origin, TYPE_CHECKING
 
 from colorama import Fore, Style
-from llm_fallbacks.config import ALL_EMBEDDING_MODELS, ALL_MODELS, FREE_EMBEDDING_MODELS, FREE_MODELS
 
 from gpt_researcher.config.variables.base import BaseConfig
 from gpt_researcher.config.variables.default import DEFAULT_CONFIG
@@ -18,7 +17,11 @@ from gpt_researcher.llm_provider import GenericLLMProvider
 from gpt_researcher.llm_provider.generic.base import _SUPPORTED_PROVIDERS
 from gpt_researcher.retrievers.utils import get_all_retriever_names
 
+if TYPE_CHECKING:
+    from llm_fallbacks.config import LiteLLMBaseModelSpec
+
 from litellm import _logging
+
 _logging._turn_on_debug()
 MAX_FALLBACKS: int = 25
 
@@ -27,12 +30,24 @@ class Config:
     """Config class for GPT Researcher."""
 
     CONFIG_DIR: ClassVar[str] = os.path.join(os.path.dirname(__file__), "variables")
+    DefaultConfig: ClassVar[Self] | None = None
 
     # Class-level caching for fallback providers
     _cached_fast_llm_fallback_providers: ClassVar[list[GenericLLMProvider]] = []
     _cached_smart_llm_fallback_providers: ClassVar[list[GenericLLMProvider]] = []
     _cached_strategic_llm_fallback_providers: ClassVar[list[GenericLLMProvider]] = []
     _fallbacks_initialized: ClassVar[bool] = False
+
+    def __new__(cls, *args, **kwargs) -> Self:
+        if cls.DefaultConfig is None:
+            cls.DefaultConfig = super().__new__(cls)
+        if not args and not kwargs:
+            return cls.DefaultConfig
+        if args and args[0] == "default":
+            return cls.DefaultConfig
+        if kwargs and kwargs.get("config_path") == "default":
+            return cls.DefaultConfig
+        return super().__new__(cls)
 
     def __init__(
         self,
@@ -47,6 +62,13 @@ class Config:
         self.strategic_llm_fallback_providers: list[GenericLLMProvider] = []
 
         config_to_use: BaseConfig = self.load_config(config_path)
+        if config_to_use is self.DefaultConfig:
+            for k, v in self.__dict__.items():
+                if k.startswith("__"):
+                    continue
+                setattr(self, k, v)
+            return
+
         self._set_attributes(config_to_use)
         self._set_embedding_attributes()
         self._set_llm_attributes()
@@ -271,14 +293,11 @@ class Config:
                 self.doc_path = DEFAULT_CONFIG["DOC_PATH"]
 
     @classmethod
-    def load_config(cls, config_path: str | None) -> BaseConfig:
+    def load_config(cls, config_path: str | None) -> BaseConfig | Self:
         """Load a configuration by name."""
-        # Merge with default config to ensure all keys are present
-        copied_default_cfg: BaseConfig | dict[str, Any] = DEFAULT_CONFIG.copy()
-
-        if config_path is None or not config_path.strip():
+        if config_path is None or not config_path.strip() and cls.DefaultConfig is not None:
             print("[WARN] config json not provided, loading default!")
-            return copied_default_cfg
+            return cls.DefaultConfig
 
         # config_path = os.path.join(cls.CONFIG_DIR, config_path)
         if not os.path.exists(config_path):
@@ -286,12 +305,13 @@ class Config:
                 print(f"Warning: Configuration not found at '{config_path}'. Using default configuration.")
                 if not config_path.casefold().endswith(".json"):
                     print(f"Did you mean: '{config_path}.json'?")
-            return copied_default_cfg
+            return cls.DefaultConfig
 
         with open(config_path, "r") as f:
             print(f"[INFO] Loading config json from '{os.path.abspath(config_path)}'...")
             custom_config = json.load(f)
 
+        copied_default_cfg: BaseConfig = DEFAULT_CONFIG.copy()
         copied_default_cfg.update(custom_config)
         return copied_default_cfg
 
@@ -336,9 +356,7 @@ class Config:
             return None, None
         try:
             embedding_provider, embedding_model = embedding_str.split(":", 1)
-            assert embedding_provider in _SUPPORTED_EMBEDDING_PROVIDERS_MEM, f"Unsupported {embedding_provider}.\nSupported embedding providers are: " + ", ".join(
-                _SUPPORTED_EMBEDDING_PROVIDERS_MEM
-            )
+            assert embedding_provider in _SUPPORTED_EMBEDDING_PROVIDERS_MEM, f"Unsupported {embedding_provider}.\nSupported embedding providers are: " + ", ".join(_SUPPORTED_EMBEDDING_PROVIDERS_MEM)
             return embedding_provider, embedding_model
         except ValueError:
             raise ValueError("Set EMBEDDING = '<embedding_provider>:<embedding_model>' Eg 'openai:text-embedding-3-large'")
@@ -523,11 +541,11 @@ class Config:
         try:
             # Load model specs from llm_fallbacks package
             if model_type == "embedding":
-                all_models = dict(ALL_EMBEDDING_MODELS)
-                free_models = dict(FREE_EMBEDDING_MODELS)
+                from llm_fallbacks.config import FREE_EMBEDDING_MODELS
+                free_models: list[tuple[str, LiteLLMBaseModelSpec]] = FREE_EMBEDDING_MODELS
             else:
-                all_models = dict(ALL_MODELS)
-                free_models = dict(FREE_MODELS)
+                from llm_fallbacks.config import FREE_MODELS
+                free_models = FREE_MODELS
 
             # Get required token limit based on model type
             required_token_limit: int = 0
@@ -543,7 +561,7 @@ class Config:
             blacklisted_patterns: list[str] = GenericLLMProvider.MODEL_BLACKLIST
 
             # First process free models (preferred)
-            for model_id, spec in free_models.items():
+            for model_id, spec in free_models:
                 # Skip blacklisted models
                 if any(
                     re.search(pattern, model_id, re.IGNORECASE)
@@ -572,50 +590,6 @@ class Config:
                 # Model passed all filters
                 final_candidates.append(model_id)
 
-            # Then add paid models if needed
-            if len(final_candidates) < MAX_FALLBACKS:
-                for model_id, spec in all_models.items():
-                    # Skip models already processed or blacklisted
-                    if (
-                        model_id in free_models
-                        or model_id in final_candidates
-                    ):
-                        continue
-                    if any(
-                        re.search(pattern, model_id, re.IGNORECASE)
-                        for pattern in blacklisted_patterns
-                    ):
-                        continue
-
-                    # Skip non-matching model types
-                    if (
-                        model_type == "embedding"
-                        and spec.get("mode") != "embedding"
-                    ):
-                        continue
-                    elif (
-                        model_type in {"chat", "strategic_chat", "fast_chat"}
-                        and spec.get("mode") != "chat"
-                    ):
-                        continue
-
-                    # Check token capacity for chat models
-                    if model_type in {
-                        "chat",
-                        "strategic_chat",
-                        "fast_chat",
-                    }:
-                        max_output_tokens = spec.get("max_output_tokens", 0)
-                        if max_output_tokens < required_token_limit:
-                            continue
-
-                    # Model passed all filters
-                    final_candidates.append(model_id)
-
-                    # Stop if we have enough models
-                    if len(final_candidates) >= MAX_FALLBACKS:
-                        break
-
             # Remove the primary model from fallbacks if present
             if clean_primary_model_id and clean_primary_model_id.strip():
                 final_candidates = [
@@ -626,8 +600,9 @@ class Config:
 
             # Convert model IDs to correct fallback format
             formatted_fallbacks: list[str] = []
+            all_models_dict = dict(all_models)
             for model_id_key in final_candidates:
-                spec: dict[str, Any] = all_models.get(model_id_key, {})
+                spec = all_models_dict.get(model_id_key, {})
                 provider: str | None = spec.get("litellm_provider") or spec.get("provider")
                 # Determine actual model name
                 if "/" in model_id_key:

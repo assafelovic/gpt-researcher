@@ -9,21 +9,25 @@ from gpt_researcher.retrievers.utils import check_pkg
 if TYPE_CHECKING:
     from exa_py.api import Result, SearchResponse
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class ExaSearch:
+
+class ExaSearch(RetrieverABC):
     """Exa API Retriever."""
 
-    def __init__(self, query: str):
+    def __init__(self, query: str, query_domains: list[str] | None = None):
         """Initializes the ExaSearch object.
 
         Args:
             query (str): The search query.
+            query_domains (list[str] | None): Optional list of domains to search within.
         """
         # This validation is necessary since exa_py is optional
         check_pkg("exa_py")
         from exa_py import Exa
 
         self.query: str = query
+        self.query_domains: list[str] | None = query_domains
         self.api_key: str = self._retrieve_api_key()
         self.client: Exa = Exa(api_key=self.api_key)
 
@@ -60,6 +64,10 @@ class ExaSearch:
         Returns:
             list[dict[str, Any]]: A list of search results.
         """
+        # Add domains to filters if provided
+        if self.query_domains:
+            filters["include_domains"] = self.query_domains
+
         results: SearchResponse[Result] = self.client.search(
             self.query,
             type=search_type,

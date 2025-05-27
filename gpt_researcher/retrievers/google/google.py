@@ -10,22 +10,27 @@ from typing import Any
 
 import requests
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class GoogleSearch:
+
+class GoogleSearch(RetrieverABC):
     """Google API Retriever."""
 
     def __init__(
         self,
         query: str,
         headers: dict[str, Any] | None = None,
+        query_domains: list[str] | None = None,
     ):
         """Initializes the GoogleSearch object.
 
         Args:
             query (str): The query to search for.
             headers (dict[str, Any], optional): The headers to use for the request.
+            query_domains (list[str] | None): Optional list of domains to search within.
         """
         self.query: str = query
+        self.query_domains: list[str] | None = query_domains
         self.headers: dict[str, Any] = {} if headers is None else headers
         self.api_key: str = self.headers.get("google_api_key") or self.get_api_key()  # Use the passed api_key or fallback to environment variable
         self.cx_key: str = self.headers.get("google_cx_key") or self.get_cx_key()  # Use the passed cx_key or fallback to environment variable

@@ -7,17 +7,21 @@ from typing import Any
 
 import requests
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class PubMedCentralSearch:
+
+class PubMedCentralSearch(RetrieverABC):
     """PubMed Central API Retriever."""
 
-    def __init__(self, query: str):
+    def __init__(self, query: str, query_domains: list[str] | None = None):
         """Initializes the PubMedCentralSearch object.
 
         Args:
             query: The search query.
+            query_domains (list[str] | None): Optional list of domains (not used for PubMed Central).
         """
         self.query: str = query
+        self.query_domains: list[str] | None = query_domains
         self.api_key: str = self._retrieve_api_key()
 
     def _retrieve_api_key(self) -> str:

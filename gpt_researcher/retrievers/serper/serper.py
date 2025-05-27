@@ -7,8 +7,8 @@ from typing import Any
 
 import requests
 
-
-class SerperSearch:
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
+class SerperSearch(RetrieverABC):
     """Google Serper Retriever."""
 
     def __init__(

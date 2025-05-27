@@ -4,8 +4,10 @@ from typing import Any, ClassVar
 
 import requests
 
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 
-class SemanticScholarSearch:
+
+class SemanticScholarSearch(RetrieverABC):
     """Semantic Scholar API Retriever."""
 
     BASE_URL: ClassVar[str] = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -15,14 +17,17 @@ class SemanticScholarSearch:
         self,
         query: str,
         sort: str = "relevance",
+        query_domains: list[str] | None = None,
     ):
         """Initializes the SemanticScholarSearch class with a query and sort criterion.
 
         Args:
             query (str): Search query string
             sort (str): Sort criterion ('relevance', 'citationCount', 'publicationDate')
+            query_domains (list[str] | None): Optional list of domains (not used for Semantic Scholar).
         """
         self.query: str = query
+        self.query_domains: list[str] | None = query_domains
         assert sort in self.VALID_SORT_CRITERIA, "Invalid sort criterion"
         self.sort: str = sort.lower()
 

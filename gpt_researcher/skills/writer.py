@@ -63,7 +63,9 @@ class ReportGenerator:
         # send the selected images prior to writing report
         research_images: list[dict[str, Any]] | None = self.researcher.get_research_images()
         if research_images:
-            await stream_output("images", "selected_images", json.dumps(research_images), self.researcher.websocket, True, research_images)
+            # Extract just the URLs from the image objects to match what the frontend expects
+            image_urls = [img.get("url", "") for img in research_images if img.get("url")]
+            await stream_output("images", "selected_images", json.dumps(image_urls), self.researcher.websocket, True, research_images)
 
         context: list[dict[str, Any]] = ext_context or self.researcher.context
         if self.researcher.verbose:

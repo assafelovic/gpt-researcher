@@ -11,8 +11,37 @@ from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from gpt_researcher.prompts import PromptFamily
 from gpt_researcher.retrievers.retriever_abc import RetrieverABC
 from gpt_researcher.utils.llm import create_chat_completion
+import inspect
 
 logger: logging.Logger = logging.getLogger(__name__)
+
+
+def _create_retriever_instance(retriever_class: type[RetrieverABC], query: str, query_domains: list[str] | None = None) -> RetrieverABC:
+    """Create a retriever instance with proper parameter handling.
+
+    Args:
+        retriever_class: The retriever class to instantiate
+        query: The search query
+        query_domains: Optional list of domains to search
+
+    Returns:
+        An instance of the retriever
+    """
+    try:
+        # Get the __init__ signature to see what parameters it accepts
+        init_signature: inspect.Signature = inspect.signature(retriever_class.__init__)
+        init_params: list[str] = list(init_signature.parameters.keys())
+
+        # Always pass query, add query_domains only if supported
+        kwargs: dict[str, Any] = {"query": query}
+        if "query_domains" in init_params and query_domains:
+            kwargs["query_domains"] = query_domains
+
+        return retriever_class(**kwargs)  # type: ignore[reportCallIssue]
+    except Exception as e:
+        logger.warning(f"Failed to create {retriever_class.__name__} with query_domains, trying without: {e}")
+        # Fallback: try without query_domains
+        return retriever_class(query)  # type: ignore[reportCallIssue]
 
 
 async def get_search_results(
@@ -34,21 +63,21 @@ async def get_search_results(
     Returns:
         A list of search results
     """
-    search_retriever: RetrieverABC = retriever(query, query_domains=query_domains)  # type: ignore[reportCallIssue]
-
     # Try the primary retriever first
     try:
+        search_retriever: RetrieverABC = _create_retriever_instance(retriever, query, query_domains)  # type: ignore[reportArgumentType]
         results: list[dict[str, Any]] = search_retriever.search()  # TODO: actually inherit RetrieverABC everywhere.
 
         # If we got results, return them
         if results and len(results) >= min_results:
+            logger.info(f"Primary retriever {retriever.__name__} succeeded with {len(results)} results")
             return results
 
         # Log if no results were found
         if not results or len(results) < min_results:
-            logger.warning(f"Primary retriever returned insufficient results ({len(results) if results else 0}), trying fallbacks...")
+            logger.warning(f"Primary retriever {retriever.__name__} returned insufficient results ({len(results) if results else 0}), trying fallbacks...")
     except Exception as e:
-        logger.warning(f"Primary retriever failed with error: {e.__class__.__name__}: {e}, trying fallbacks...")
+        logger.warning(f"Primary retriever {retriever.__name__} failed with error: {e.__class__.__name__}: {e}, trying fallbacks...")
         results = []
 
     # If we have fallback retrievers and either the primary failed or returned no results
@@ -58,26 +87,27 @@ async def get_search_results(
         # Try each fallback retriever
         for i, fallback in enumerate(fallback_retrievers):
             try:
-                logger.info(f"Trying fallback retriever {i+1}/{len(fallback_retrievers)}...")
-                fallback_retriever: RetrieverABC = fallback(query, query_domains=query_domains)  # type: ignore[reportCallIssue]
+                logger.info(f"Trying fallback retriever {i+1}/{len(fallback_retrievers)}: {fallback.__name__}...")
+                fallback_retriever: RetrieverABC = _create_retriever_instance(fallback, query, query_domains)  # type: ignore[reportArgumentType]
                 fallback_results: list[dict[str, Any]] = fallback_retriever.search()
 
                 # If we got results from the fallback, return them
                 if fallback_results and len(fallback_results) >= min_results:
-                    logger.info(f"Fallback retriever {i+1} succeeded with {len(fallback_results)} results")
+                    logger.info(f"Fallback retriever {fallback.__name__} succeeded with {len(fallback_results)} results")
                     return fallback_results
 
                 # If we got some results but not enough, add them to our collection
                 if fallback_results:
-                    logger.info(f"Fallback retriever {i+1} returned {len(fallback_results)} results (not enough)")
+                    logger.info(f"Fallback retriever {fallback.__name__} returned {len(fallback_results)} results (not enough)")
                     results.extend(fallback_results)
 
                     # If we now have enough results, return them
                     if len(results) >= min_results:
+                        logger.info(f"Combined results from multiple retrievers: {len(results)} total")
                         return results
 
             except Exception as e:
-                error_msg: str = f"Fallback retriever {i+1} failed with error: {e.__class__.__name__}: {e}"
+                error_msg: str = f"Fallback retriever {fallback.__name__} failed with error: {e.__class__.__name__}: {e}"
                 logger.warning(error_msg)
                 all_errors.append(error_msg)
 

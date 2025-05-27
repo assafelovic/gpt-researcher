@@ -11,8 +11,8 @@ from typing import Any
 
 import requests
 
-
-class BingSearch:
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
+class BingSearch(RetrieverABC):
     """Bing Search Retriever."""
 
     def __init__(self, query: str, query_domains: list[str] | None = None):

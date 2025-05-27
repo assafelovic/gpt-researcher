@@ -9,6 +9,7 @@ import traceback
 import tiktoken
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
+import math
 
 from langchain.llms.base import BaseLLM
 from langchain.output_parsers import PydanticOutputParser
@@ -149,10 +150,15 @@ def truncate_messages_to_fit(
     if not messages:
         return []
 
-    # Ensure max_context_tokens is at least 10 to prevent empty messages
-    if max_context_tokens <= 0:
-        logger.warning(f"[DEBUG-TRUNCATE] max_context_tokens too small ({max_context_tokens}), setting to minimum 10")
-        max_context_tokens = 10
+    # Calculate minimum viable tokens for a coherent message
+    # Use message structure to determine minimum
+    min_message = {"role": "user", "content": "..."}
+    min_viable_tokens = estimate_token_count([min_message], model)
+
+    # Ensure we have a workable token limit
+    if max_context_tokens < min_viable_tokens:
+        logger.warning(f"[DEBUG-TRUNCATE] max_context_tokens ({max_context_tokens}) less than minimum needed ({min_viable_tokens}), using minimum")
+        max_context_tokens = min_viable_tokens
 
     # Separate system messages from user/assistant messages
     system_messages: list[dict[str, str]] = [msg for msg in messages if msg.get("role", "") == "system"]
@@ -167,6 +173,27 @@ def truncate_messages_to_fit(
     # DEBUG: Log system message token count
     logger.info(f"[DEBUG-TRUNCATE] System messages token count: {system_token_count}")
 
+    # Allocate tokens dynamically based on message importance
+    # System messages are prioritized but can be truncated if needed
+    system_importance_factor = 0.8  # Higher factor = more importance to system messages
+
+    # Calculate target token allocations
+    if system_token_count > 0:
+        # Allow system to use up to 80% of total, but no less than their minimum viable size
+        max_system_tokens = min(
+            max(int(max_context_tokens * system_importance_factor), min_viable_tokens * len(system_messages)),
+            system_token_count
+        )
+    else:
+        max_system_tokens = 0
+
+    # If system needs truncation
+    if system_token_count > max_system_tokens:
+        logger.warning(f"[DEBUG-TRUNCATE] System messages need truncation ({system_token_count} > {max_system_tokens})")
+        system_messages = truncate_system_messages(system_messages, max_system_tokens, model)
+        system_token_count = estimate_token_count(system_messages, model)
+        logger.info(f"[DEBUG-TRUNCATE] After truncation: System messages token count: {system_token_count}")
+
     # Allocate the remaining tokens to user/assistant messages
     remaining_tokens: int = max_context_tokens - system_token_count
 
@@ -174,10 +201,9 @@ def truncate_messages_to_fit(
     logger.info(f"[DEBUG-TRUNCATE] Remaining tokens for user/assistant messages: {remaining_tokens}")
 
     if remaining_tokens <= 0:
-        # Not enough tokens for any user/assistant messages, truncate system messages
-        # (This should be rare, but handle it just in case)
-        logger.warning("[DEBUG-TRUNCATE] System messages exceed max tokens, truncating system messages")
-        return truncate_system_messages(system_messages, max_context_tokens, model)
+        # Not enough tokens for any user/assistant messages
+        logger.warning("[DEBUG-TRUNCATE] No tokens left for user/assistant messages after system messages")
+        return system_messages
 
     # We need to keep an ordered list of messages for further processing
     result_messages: list[dict[str, str]] = system_messages.copy()
@@ -191,6 +217,7 @@ def truncate_messages_to_fit(
     # DEBUG: Log process start
     logger.info("[DEBUG-TRUNCATE] Starting to add user/assistant messages (newest first)")
 
+    # First pass: determine which messages can be included entirely
     for msg in user_assistant_messages:
         msg_tokens: int = estimate_token_count([msg], model)
         # DEBUG: Log message token estimate
@@ -227,15 +254,17 @@ def truncate_messages_to_fit(
     # DEBUG: Log final token count
     logger.info(f"[DEBUG-TRUNCATE] Final token count: {final_token_count}/{max_context_tokens}")
 
-    # Ensure we have at least one message with non-empty content
+    # Make sure we have at least one valid message
     if not result_messages:
         # Create a minimal valid message if everything was filtered out
         logger.warning("[DEBUG-TRUNCATE] No messages left after truncation, adding a minimal valid message")
         result_messages = [{"role": "user", "content": "..."}]
-    elif all(not msg.get("content") for msg in result_messages):
-        # If all messages have empty content, add minimal content to one
-        logger.warning("[DEBUG-TRUNCATE] All messages have empty content, adding minimal content to first message")
-        result_messages[0]["content"] = "..."
+
+    # Make sure messages have content
+    for i, msg in enumerate(result_messages):
+        if not msg.get("content"):
+            logger.warning(f"[DEBUG-TRUNCATE] Empty content in message {i}, adding minimal content")
+            msg["content"] = "..."
 
     return result_messages
 
@@ -262,52 +291,76 @@ def truncate_message_content(
     truncated_message: dict[str, str] = message.copy()
     content: str = message.get("content", "")
 
-    # Ensure we have at least some minimal content
-    if max_tokens <= 0:
-        logger.warning(f"[DEBUG-TRUNCATE] max_tokens too small ({max_tokens}), setting to minimum 5")
-        max_tokens = 5
+    # Calculate minimum viable token space needed for basic message structure
+    # Estimate role tokens + message format overhead
+    role_tokens = len(message.get("role", "system"))
+    estimated_overhead = role_tokens + 5  # Role + basic formatting overhead
 
-    # Reserve tokens for message formatting and role
-    # These values are rough estimates
-    formatting_tokens: int = 4  # Rough estimate for message format
-    truncated_tokens: int = max_tokens - formatting_tokens
-
-    if truncated_tokens <= 0:
-        logger.warning("[DEBUG-TRUNCATE] Not enough tokens for content after formatting, using minimal content")
-        # Instead of empty string, use minimal content that will pass API validation
+    # If max_tokens is less than the overhead plus minimal content, return minimal message
+    if max_tokens <= estimated_overhead + 1:
+        logger.warning(f"[DEBUG-TRUNCATE] max_tokens ({max_tokens}) too small for content after overhead ({estimated_overhead}), using minimal content")
         truncated_message["content"] = "..."
         return truncated_message
 
-    # Truncate the content
-    # This is a simple truncation, it's not perfect but should work for most cases
-    # A better approach would be to truncate at a sentence or paragraph boundary
-    # Start with a small portion and gradually increase until we hit the limit
-    ratio: float = 0.5  # Start with half the content
-    while ratio > 0:
-        # Try with the current ratio
-        truncated_content: str = content[: int(len(content) * ratio)]
-        # Ensure we never have empty content
-        if not truncated_content:
-            truncated_content = "..."
+    # Reserve tokens for message formatting and role
+    truncated_tokens: int = max_tokens - estimated_overhead
 
+    if truncated_tokens <= 0:
+        logger.warning("[DEBUG-TRUNCATE] Not enough tokens for content after formatting, using minimal content")
+        truncated_message["content"] = "..."
+        return truncated_message
+
+    # More efficient truncation approach using binary search
+    # The number of iterations scales with content size
+    content_length = len(content)
+    start_ratio = 0.0
+    end_ratio = 1.0
+    best_content = "..."  # Default minimal content
+    best_token_count = 0
+
+    # Calculate number of iterations based on content length
+    # Logarithmic scaling to use more iterations for larger content
+    max_iterations = max(3, min(12, int(math.log(content_length + 1, 2))))
+
+    logger.info(f"[DEBUG-TRUNCATE] Binary search with {max_iterations} iterations for content length {content_length}")
+
+    # Binary search phase
+    for iteration in range(max_iterations):
+        mid_ratio = (start_ratio + end_ratio) / 2
+        current_length = int(len(content) * mid_ratio)
+
+        if current_length <= 0:
+            break
+
+        truncated_content = content[:current_length]
         truncated_message["content"] = truncated_content
+        token_count = estimate_token_count([truncated_message], model)
 
-        # Check if it fits
-        token_count: int = estimate_token_count([truncated_message], model)
-        # DEBUG: Log truncation attempt
-        logger.info(f"[DEBUG-TRUNCATE] Truncation attempt - ratio: {ratio}, tokens: {token_count}/{max_tokens}")
+        logger.info(f"[DEBUG-TRUNCATE] Binary search iteration {iteration+1}/{max_iterations} - ratio: {mid_ratio:.4f}, tokens: {token_count}/{max_tokens}")
 
         if token_count <= max_tokens:
-            # It fits, we're done
-            # DEBUG: Log success
-            logger.info(f"[DEBUG-TRUNCATE] Truncation successful. Final content length: {len(truncated_content)}")
-            return truncated_message
+            # This fits, save it and try larger
+            best_content = truncated_content
+            best_token_count = token_count
+            start_ratio = mid_ratio
+        else:
+            # Too large, try smaller
+            end_ratio = mid_ratio
 
-        # It doesn't fit, try a smaller ratio
-        ratio *= 0.75
+        # Determine dynamic termination condition based on context size
+        # For smaller contexts, we can be more precise
+        precision_factor = min(0.01, 10.0 / content_length)
+        if end_ratio - start_ratio < precision_factor:
+            logger.info(f"[DEBUG-TRUNCATE] Terminating binary search early at iteration {iteration+1} - precision reached")
+            break
 
-    # If we get here, we couldn't truncate enough
-    # Just return a very small message with guaranteed non-empty content
+    # If we found a valid content size in binary search
+    if best_token_count > 0:
+        truncated_message["content"] = best_content
+        logger.info(f"[DEBUG-TRUNCATE] Truncation successful. Final content length: {len(best_content)}")
+        return truncated_message
+
+    # If binary search failed, fall back to a minimal content approach
     truncated_message["content"] = "..."
     logger.warning("[DEBUG-TRUNCATE] Couldn't truncate enough, returning minimal content")
     return truncated_message
@@ -334,30 +387,54 @@ def truncate_system_messages(
     if not system_messages:
         return []
 
-    # Ensure max_tokens is at least 5 to allow for minimal valid content
-    if max_tokens <= 0:
-        logger.warning(f"[DEBUG-TRUNCATE] max_tokens too small ({max_tokens}), setting to minimum 5")
-        max_tokens = 5
+    # Calculate minimum viable token count for a valid system message
+    # Role "system" + minimal content + formatting
+    min_system_tokens = estimate_token_count([{"role": "system", "content": "..."}], model)
+
+    # If max_tokens is less than minimum needed, return minimal message
+    if max_tokens <= min_system_tokens:
+        logger.warning(f"[DEBUG-TRUNCATE] max_tokens ({max_tokens}) less than minimum needed for system message ({min_system_tokens}), returning minimal system message")
+        return [{"role": "system", "content": "..."}]
 
     if len(system_messages) == 1:
         # Only one system message, truncate its content
         return [truncate_message_content(system_messages[0], max_tokens, model)]
 
-    # Multiple system messages, prioritize the first one
-    first_message: dict[str, str] = system_messages[0]
-    truncated_first: dict[str, str] = truncate_message_content(first_message, max_tokens, model)
+    # Multiple system messages
+    # Try to keep as many as possible, starting with the first one
+    # which is typically the most important
+    result_messages = []
+    remaining_tokens = max_tokens
 
-    # DEBUG: Log result
-    logger.info(f"[DEBUG-TRUNCATE] Kept only first system message, truncated to {len(truncated_first.get('content', ''))} chars")
+    for i, msg in enumerate(system_messages):
+        msg_tokens = estimate_token_count([msg], model)
+        if msg_tokens <= remaining_tokens:
+            # This message fits entirely
+            result_messages.append(msg)
+            remaining_tokens -= msg_tokens
+        elif i == 0:
+            # First message doesn't fit, truncate it
+            truncated = truncate_message_content(msg, remaining_tokens, model)
+            result_messages.append(truncated)
+            break
+        else:
+            # Subsequent message doesn't fit, stop adding
+            break
 
-    return [truncated_first]
+    # Log the result
+    logger.info(f"[DEBUG-TRUNCATE] Kept {len(result_messages)}/{len(system_messages)} system messages within token limit")
+    for i, msg in enumerate(result_messages):
+        content_len = len(msg.get("content", ""))
+        logger.info(f"[DEBUG-TRUNCATE] System message {i}: {content_len} chars")
+
+    return result_messages
 
 
 async def create_chat_completion(
     messages: list[dict[str, str]],  # type: ignore
     model: str | None = None,
-    temperature: float | None = 0.4,
-    max_tokens: int | None = 4000,
+    temperature: float | None = None,
+    max_tokens: int | None = None,
     llm_provider: str | None = None,
     stream: bool | None = False,
     websocket: Any | None = None,
@@ -367,13 +444,13 @@ async def create_chat_completion(
     cfg: Config | None = None,
     **kwargs,
 ) -> str:
-    """Create a chat completion using the OpenAI API
+    """Create a chat completion using the API
 
     Args:
         messages (list[dict[str, str]]): The messages to send to the chat completion
         model (str, optional): The model to use. Defaults to None.
-        temperature (float, optional): The temperature to use. Defaults to 0.4.
-        max_tokens (int, optional): The max tokens to use. Defaults to 4000.
+        temperature (float, optional): The temperature to use. Defaults to None.
+        max_tokens (int, optional): The max tokens to use. If None, determined dynamically.
         stream (bool, optional): Whether to stream the response. Defaults to False.
         llm_provider (str, optional): The LLM Provider to use.
         webocket (WebSocket): The websocket used in the currect request,
@@ -388,14 +465,16 @@ async def create_chat_completion(
     # validate input
     if model is None:
         raise ValueError("Model cannot be None")
-    if max_tokens is not None and max_tokens > 32001:
-        raise ValueError(f"Max tokens cannot be more than 16,000, but got {max_tokens}")
 
     # DEBUG: Log function entry with basic info
     logger.info(f"[DEBUG-LLM] create_chat_completion called with model={model}, provider={llm_provider}, max_tokens={max_tokens}")
     logger.info(f"[DEBUG-LLM] Number of messages: {len(messages)}")
 
-    # Get the provider from supported providers
+    # Dynamic context limit determination
+    # Instead of hardcoded values, we'll query the model or use a conservative estimate
+    config_obj: Config = cfg or Config()
+
+    # Initialize the provider to get capabilities
     provider: GenericLLMProvider = get_llm(
         llm_provider,
         cfg=cfg,
@@ -404,6 +483,39 @@ async def create_chat_completion(
         max_tokens=max_tokens,
         **(llm_kwargs or {}),
     )
+
+    # Try to get context limits from provider if supported
+    default_context_limit = getattr(provider.llm, "context_length", None)
+    if default_context_limit is None:
+        # If not available, derive from config or use dynamic estimation
+        if model == config_obj.fast_llm_model:
+            default_context_limit = getattr(config_obj, "fast_llm_context_length", None)
+        elif model == config_obj.smart_llm_model:
+            default_context_limit = getattr(config_obj, "smart_llm_context_length", None)
+        elif model == config_obj.strategic_llm_model:
+            default_context_limit = getattr(config_obj, "strategic_llm_context_length", None)
+
+    if default_context_limit is None:
+        # Conservative estimate if no specific info is available
+        # For OpenRouter, extract from model name if possible
+        if model and "32k" in model:
+            default_context_limit = 32000
+        elif model and "16k" in model:
+            default_context_limit = 16000
+        elif model and "8k" in model:
+            default_context_limit = 8000
+        else:
+            # Default to a conservative estimate based on provider
+            if llm_provider == "anthropic" or "claude" in (model or ""):
+                default_context_limit = 100000  # Claude models typically have large contexts
+            elif "gemini" in (model or ""):
+                default_context_limit = 32000  # Gemini models typically have larger contexts
+            elif llm_provider == "openai" or llm_provider == "openrouter":
+                default_context_limit = 8000  # Conservative default for OpenAI
+            else:
+                default_context_limit = 4000  # Ultra-conservative fallback
+
+    logger.info(f"[DEBUG-LLM] Estimated model context limit: {default_context_limit}")
 
     from gpt_researcher.llm_provider.generic.base import (
         NO_SUPPORT_TEMPERATURE_MODELS,
@@ -419,8 +531,10 @@ async def create_chat_completion(
         logger.info(f"[DEBUG-LLM] Added reasoning_effort={reasoning_effort} to kwargs")
 
     if model not in NO_SUPPORT_TEMPERATURE_MODELS:
-        kwargs["temperature"] = temperature
-        kwargs["max_tokens"] = max_tokens
+        if temperature is not None:
+            kwargs["temperature"] = temperature
+        if max_tokens is not None:
+            kwargs["max_tokens"] = max_tokens
     else:
         if "temperature" in kwargs:
             del kwargs["temperature"]
@@ -438,43 +552,60 @@ async def create_chat_completion(
     # Initialize provider and prepare for retries
     provider = get_llm(llm_provider, cfg=cfg, **kwargs)
     original_max_tokens: int | None = max_tokens
-    MAX_ATTEMPTS: int = 3
+
+    # Dynamic retry count based on config or reasonable default
+    MAX_ATTEMPTS: int = getattr(config_obj, "llm_retry_attempts", 3)
     response: str = ""
 
-    # Check token count and truncate if needed
-    model_max_tokens: int = 16000  # Default max context length
-    if "gpt-4" in model and "gpt-4.1" not in model:
-        model_max_tokens = 8000 if "8k" in model else 16000
-        if "32k" in model:
-            model_max_tokens = 32000
+    # Calculate appropriate token values based on context size
+    # Estimate input token count
+    input_token_count: int = estimate_token_count(messages, model)
+    logger.info(f"[DEBUG-LLM] Estimated input token count: {input_token_count}")
 
-    # DEBUG: Log model token limits
-    logger.info(f"[DEBUG-LLM] Model {model} has max_tokens={model_max_tokens}")
+    # Dynamic output token allocation based on context size
+    # If max_tokens is specified, use that, otherwise allocate a portion of context
+    # The portion is inversely proportional to the input size (larger inputs = smaller portion for output)
+    if max_tokens is None:
+        # Calculate a dynamic ratio based on input size
+        input_ratio = min(input_token_count / default_context_limit, 0.9)  # Cap at 90%
+        output_ratio = 1.0 - input_ratio
+        # Ensure output has at least some reasonable space
+        output_tokens = max(int(default_context_limit * output_ratio), int(default_context_limit * 0.1))
+    else:
+        output_tokens = max_tokens
 
-    # Estimate token count of messages
-    token_count: int = estimate_token_count(messages, model)
+    # Special handling for providers with strict token limits
+    if llm_provider == "openrouter":
+        # OpenRouter is sensitive to total tokens, adjust if needed
+        if max_tokens is None or max_tokens > int(default_context_limit * 0.5):
+            # Limit to a reasonable portion of context to avoid errors
+            output_ratio = min(0.3, 1.0 - (input_token_count / default_context_limit))
+            output_tokens = int(default_context_limit * output_ratio)
 
-    # DEBUG: Log token count info
-    logger.info(f"[DEBUG-LLM] Estimated token count: {token_count}")
+            # Update max_tokens in the parameters
+            if "max_tokens" in kwargs:
+                kwargs["max_tokens"] = output_tokens
+                logger.info(f"[DEBUG-LLM] Adjusted OpenRouter max_tokens to {output_tokens}")
 
-    # Reserve tokens for completion
-    completion_tokens: int = max_tokens or 4000
-    max_context_tokens: int = model_max_tokens - completion_tokens
+            # Reinitialize provider with updated parameters
+            provider = get_llm(llm_provider, cfg=cfg, **kwargs)
 
-    # DEBUG: Log token allocation
-    logger.info(f"[DEBUG-LLM] Reserved for completion: {completion_tokens} tokens")
-    logger.info(f"[DEBUG-LLM] Max context tokens: {max_context_tokens}")
+    # Adaptive context window management
+    max_context_tokens = default_context_limit - output_tokens
 
-    # Ensure max_context_tokens is at least 10 to prevent empty messages
-    # This guarantees we'll have at least a minimal valid message
-    if max_context_tokens <= 0:
-        logger.warning(f"[DEBUG-LLM] Max context tokens too small ({max_context_tokens}), setting to minimum 10")
-        max_context_tokens = 10
+    # Ensure context has room for at least a minimal message
+    # Instead of hardcoding, calculate as a percentage of total context
+    min_context_portion = default_context_limit * 0.025  # 2.5% of context
+    max_context_tokens = max(int(min_context_portion), max_context_tokens)
+
+    # Log the calculated limits
+    logger.info(f"[DEBUG-LLM] Reserved for output: {output_tokens} tokens")
+    logger.info(f"[DEBUG-LLM] Available for input context: {max_context_tokens} tokens")
 
     # If messages exceed context limit, truncate them
-    if token_count > max_context_tokens:
-        logger.warning(f"[DEBUG-LLM] Messages exceed token limit ({token_count} > {max_context_tokens}), truncating content")
-        # DEBUG: Log message content sizes before truncation
+    if input_token_count > max_context_tokens:
+        logger.warning(f"[DEBUG-LLM] Messages exceed token limit ({input_token_count} > {max_context_tokens}), truncating content")
+        # Log message content sizes before truncation
         for i, msg in enumerate(messages):
             role = msg.get("role", "unknown")
             content_len = len(msg.get("content", ""))
@@ -482,13 +613,15 @@ async def create_chat_completion(
 
         messages = truncate_messages_to_fit(messages, max_context_tokens, model)
 
-        # DEBUG: Log message content sizes after truncation
+        # Log message content sizes after truncation
         for i, msg in enumerate(messages):
             role = msg.get("role", "unknown")
             content_len = len(msg.get("content", ""))
             logger.info(f"[DEBUG-LLM] After truncation - Message {i} ({role}): {content_len} chars")
-            # Log first 100 chars of each message after truncation
-            content_preview = msg.get("content", "")[:100] + "..." if len(msg.get("content", "")) > 100 else msg.get("content", "")
+            # Log preview of each message after truncation
+            content_preview = msg.get("content", "")
+            if len(content_preview) > 100:
+                content_preview = content_preview[:100] + "..."
             logger.info(f"[DEBUG-LLM] After truncation - Message {i} preview: {content_preview}")
 
     # Attempt to get a response with fallback for token limits and transient errors
@@ -522,6 +655,42 @@ async def create_chat_completion(
         except Exception as e:
             err_msg: str = str(e)
 
+            # Special handling for OpenRouter
+            if llm_provider == "openrouter" and "maximum context length" in err_msg and attempt < MAX_ATTEMPTS - 1:
+                # Extract token limit info if available
+                import re
+                limit_match = re.search(r"maximum context length is (\d+)", err_msg)
+                requested_match = re.search(r"requested about (\d+) tokens", err_msg)
+
+                if limit_match and requested_match:
+                    actual_limit = int(limit_match.group(1))
+                    requested = int(requested_match.group(1))
+
+                    logger.warning(f"[DEBUG-LLM] OpenRouter token limit exceeded. Limit: {actual_limit}, Requested: {requested}")
+
+                    # Update our context limit understanding with the real value
+                    default_context_limit = actual_limit
+
+                    # Allocate tokens dynamically based on actual limit
+                    # Use a small percentage for output to maximize context space
+                    output_ratio = min(0.1, (actual_limit - input_token_count) / actual_limit)
+                    if output_ratio <= 0:
+                        # If we can't fit the input, need to truncate
+                        output_ratio = 0.1  # Reserve 10% for output
+
+                    new_output_tokens = max(int(actual_limit * output_ratio), 1)
+                    new_context_tokens = actual_limit - new_output_tokens
+
+                    # Update parameters
+                    if "max_tokens" in kwargs:
+                        kwargs["max_tokens"] = new_output_tokens
+                        logger.info(f"[DEBUG-LLM] Adjusted max_tokens to {new_output_tokens}")
+
+                    # Reinitialize provider and truncate messages
+                    provider = get_llm(llm_provider, cfg=cfg, **kwargs)
+                    messages = truncate_messages_to_fit(messages, new_context_tokens, model)
+                    continue
+
             # Fallback for max_tokens errors: remove max_tokens if that's the issue
             if "max_tokens" in err_msg.casefold() and ("too large" in err_msg.casefold() or "supports at most" in err_msg.casefold()):
                 logger.warning(f"[DEBUG-LLM] max_tokens issue ({original_max_tokens}), retrying without max_tokens: {traceback.format_exc()}")
@@ -547,8 +716,12 @@ async def create_chat_completion(
                     content_len = len(msg.get("content", ""))
                     logger.info(f"[DEBUG-LLM] Before aggressive truncation - Message {i} ({role}): {content_len} chars")
 
-                # Cut the context limit in half for more aggressive truncation
-                new_max_tokens = max_context_tokens // 2
+                # Reduce context dynamically based on how many attempts we've made
+                # More aggressive truncation with each attempt
+                reduction_factor = 1.0 - (0.3 * (attempt + 1))  # 30% more reduction each attempt
+                reduction_factor = max(reduction_factor, 0.2)  # Don't go below 20% of original
+
+                new_max_tokens = int(max_context_tokens * reduction_factor)
                 logger.info(f"[DEBUG-LLM] Reducing context tokens from {max_context_tokens} to {new_max_tokens}")
                 messages = truncate_messages_to_fit(messages, new_max_tokens, model)
 
@@ -557,8 +730,10 @@ async def create_chat_completion(
                     role = msg.get("role", "unknown")
                     content_len = len(msg.get("content", ""))
                     logger.info(f"[DEBUG-LLM] After aggressive truncation - Message {i} ({role}): {content_len} chars")
-                    # Log first 100 chars of each message after truncation
-                    content_preview = msg.get("content", "")[:100] + "..." if len(msg.get("content", "")) > 100 else msg.get("content", "")
+                    # Log preview of each message after truncation
+                    content_preview = msg.get("content", "")
+                    if len(content_preview) > 100:
+                        content_preview = content_preview[:100] + "..."
                     logger.info(f"[DEBUG-LLM] After aggressive truncation - Message {i} preview: {content_preview}")
                 continue
 
@@ -589,15 +764,8 @@ async def construct_subtopics(
 ) -> list[str]:
     """Construct subtopics based on the given task and data.
 
-    Args:
-        task (str): The main task or topic.
-        data (str): Additional data for context.
-        config: Configuration settings.
-        subtopics (list, optional): Existing subtopics. Defaults to [].
-        prompt_family (PromptFamily): Family of prompts
-
-    Returns:
-        list[str]: A list of constructed subtopics.
+        Args:
+            task (str): The main task or topic. Truncation attempt - ratio: 1e-323, tokens: 9/5
     """
     subtopics = [] if subtopics is None else subtopics
     try:
