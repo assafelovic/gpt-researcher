@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any, ClassVar
 import aiofiles
 import tiktoken
 from colorama import Fore, Style, init
-from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 # Attempt to import specific error types, fallback to general Exception
@@ -141,7 +140,6 @@ class GenericLLMProvider:
         r"^content-filter.*",
         r"^toxicity-classifier.*",
     ]
-    MAX_RETRIES_TOKEN_LIMIT = 2
     SUMMARIZATION_PROMPT_TEMPLATE = (
         "You are an expert summarizer. Please summarize the following text to be approximately {target_tokens} tokens long. "
         "Focus on preserving all key information, entities, facts, and the overall meaning. "
@@ -533,18 +531,18 @@ class GenericLLMProvider:
             if tokens_to_cut <= 0:
                 break
 
-            msg_content = str(mutable_messages[idx].get("content", ""))
-            msg_tokens = self._get_token_count(msg_content, self.llm)
+            msg_content: str = str(mutable_messages[idx].get("content", ""))
+            msg_tokens: int = self._get_token_count(msg_content, self.llm)
 
             if msg_tokens == 0:
                 continue
 
             # Proportion to cut from this message
-            proportion_to_cut_from_msg = min(1.0, tokens_to_cut / trimmable_tokens if trimmable_tokens > 0 else 0.5)
-            chars_to_cut = int(len(msg_content) * proportion_to_cut_from_msg)
+            proportion_to_cut_from_msg: float = min(1.0, tokens_to_cut / trimmable_tokens if trimmable_tokens > 0 else 0.5)
+            chars_to_cut: int = int(len(msg_content) * proportion_to_cut_from_msg)
 
             # Ensure we cut at least some if needed, but not more than the message length
-            tokens_to_cut_this_msg = min(msg_tokens, int(msg_tokens * proportion_to_cut_from_msg) +1)
+            tokens_to_cut_this_msg: int = min(msg_tokens, int(msg_tokens * proportion_to_cut_from_msg) + 1)
 
             if chars_to_cut > 0 and len(msg_content) > chars_to_cut :
 
@@ -616,9 +614,25 @@ class GenericLLMProvider:
         stream: bool = False,
         websocket: WebSocket | None = None,
     ) -> str:
-        processed_messages: list[dict[str, str] | BaseMessage] = messages # Start with original messages
+        """Get chat response with intelligent token handling and fallback support.
 
-        for attempt in range(self.MAX_RETRIES_TOKEN_LIMIT + 1):
+        This method implements smart token limit handling with multiple strategies:
+        1. Minimal trimming for small overflows (<10%)
+        2. Smart summarization for medium overflows (10-50%)
+        3. Aggressive summarization for large overflows (>50%)
+        4. Progressive reduction with fine-tuning
+        5. Automatic fallback to larger models when needed
+        """
+        processed_messages: list[dict[str, str] | BaseMessage] = messages
+        original_messages: list[dict[str, str] | BaseMessage] = messages  # Keep original for reference
+
+        # Track our attempts
+        token_reduction_attempts = 0
+        max_token_reduction_attempts = 10  # More attempts for fine-tuning
+        last_error = None
+        strategies_tried = []
+
+        while True:
             try:
                 if not stream:
                     output: BaseMessage = await self.llm.ainvoke(processed_messages)
@@ -627,108 +641,318 @@ class GenericLLMProvider:
                     res: str = await self.stream_response(processed_messages, websocket)
 
                 if self.chat_logger is not None:
-                    # Log with the messages that were actually sent (processed_messages)
                     loggable_msgs: list[dict[str, str]] = [msg.model_dump() if isinstance(msg, BaseMessage) else msg for msg in processed_messages]
                     await self.chat_logger.log_request(loggable_msgs, res)
+
+                # Validate response quality
+                if len(res.strip()) < 50 or res.strip().startswith(("ate ", "ing ", "ed ", "the ")):
+                    if self.verbose:
+                        print(f"{Fore.YELLOW}[TOKEN-STRATEGY] Response appears truncated or incomplete. Length: {len(res)}{Style.RESET_ALL}")
+                    # If we have more attempts, try a different strategy
+                    if token_reduction_attempts < max_token_reduction_attempts - 2:
+                        token_reduction_attempts += 1
+                        # Force more aggressive reduction
+                        processed_messages = await self._apply_token_reduction_strategy(
+                            original_messages,
+                            strategy="aggressive_summarization",
+                            target_reduction=0.5,
+                            attempt=token_reduction_attempts
+                        )
+                        continue
+
                 return res
 
             except Exception as e:
-                # Check for specific token limit errors first
-                is_token_limit_error = False
-                if OpenAIBadRequestError and isinstance(e, OpenAIBadRequestError):
-                    if "maximum context length" in str(e).lower():
-                        is_token_limit_error = True
-                elif AnthropicAPIError and isinstance(e, AnthropicAPIError): # Example for Anthropic
-                    if "prompt is too long" in str(e).lower() or "too many tokens" in str(e).lower():
-                        is_token_limit_error = True
-                # Add other provider specific error checks here if needed
-                elif "token" in str(e).lower() and ("limit" in str(e).lower() or "maximum" in str(e).lower() or "length" in str(e).lower()): # Generic check
-                    is_token_limit_error = True
+                last_error = e
+                error_str = str(e).lower()
 
-                if is_token_limit_error and attempt < self.MAX_RETRIES_TOKEN_LIMIT:
+                # Check if this is a token limit error
+                is_token_limit_error = any(phrase in error_str for phrase in [
+                    "maximum context length", "token", "limit", "too long",
+                    "too many tokens", "context length", "length is"
+                ])
+
+                if is_token_limit_error:
                     if self.verbose:
-                        print(f"{Fore.YELLOW}Token limit error detected (Attempt {attempt + 1}/{self.MAX_RETRIES_TOKEN_LIMIT}). Error: {str(e)[:500]}{Style.RESET_ALL}")
+                        print(f"{Fore.YELLOW}[TOKEN-STRATEGY] Token limit error detected. Attempt {token_reduction_attempts + 1}/{max_token_reduction_attempts}{Style.RESET_ALL}")
 
+                    # Parse token limits from error
                     limit_tokens, actual_tokens, _ = self._parse_token_limit_error(e)
 
-                    # Determine target tokens for reduction. If limit_tokens is known, use it, else estimate.
-                    # Default target reduction: try to get 10-20% below the perceived limit or current size.
+                    # Calculate current token usage
+                    current_input_tokens = sum(
+                        self._get_token_count(str(msg.get("content", "") if isinstance(msg, dict) else msg.content), self.llm)
+                        for msg in processed_messages
+                    )
+
+                    # Extract max_tokens if configured
+                    max_tokens_requested = getattr(self.llm, 'max_tokens', None)
+                    if hasattr(self.llm, 'model_kwargs'):
+                        model_kwargs = getattr(self.llm, 'model_kwargs', {})
+                        if isinstance(model_kwargs, dict):
+                            max_tokens_requested = model_kwargs.get('max_tokens', max_tokens_requested)
+
+                    if self.verbose:
+                        print(f"{Fore.CYAN}[TOKEN-STRATEGY] Current input: {current_input_tokens}, Limit: {limit_tokens}, Output requested: {max_tokens_requested}{Style.RESET_ALL}")
+
+                    # Check if we've exhausted our attempts
+                    if token_reduction_attempts >= max_token_reduction_attempts:
+                        if self.verbose:
+                            print(f"{Fore.RED}[TOKEN-STRATEGY] Exhausted all {max_token_reduction_attempts} reduction attempts. Strategies tried: {strategies_tried}{Style.RESET_ALL}")
+                            print(f"{Fore.RED}[TOKEN-STRATEGY] This model cannot handle this request. Allowing fallback to a larger model.{Style.RESET_ALL}")
+                        raise  # Let fallback providers handle this
+
+                    # Determine the appropriate strategy based on overflow percentage
                     if limit_tokens:
-                        target_tokens_for_retry = int(limit_tokens * 0.9) # Aim for 90% of limit
-                    elif actual_tokens: # If we only know how many tokens we sent
-                        target_tokens_for_retry = int(actual_tokens * 0.8) # Reduce by 20%
-                    else: # Fallback if no numbers parsed
-                        current_total_tokens = sum(self._get_token_count(str(msg.get("content", "") if isinstance(msg, dict) else msg.content), self.llm) for msg in processed_messages)
-                        target_tokens_for_retry = int(current_total_tokens * 0.75) # Reduce by 25%
+                        total_needed = current_input_tokens + (max_tokens_requested or 2000)
+                        overflow_ratio = total_needed / limit_tokens
 
-                    if self.verbose:
-                        print(f"{Fore.CYAN}Parsed limits: Max={limit_tokens}, Actual={actual_tokens}. Retrying with target tokens: {target_tokens_for_retry}{Style.RESET_ALL}")
-
-                    # Try summarization first if summarizer is available and it's not the first attempt (to give trimming a chance)
-                    # Or if overflow is significant
-                    should_summarize = False
-                    if should_summarize:
                         if self.verbose:
-                            print(f"{Fore.MAGENTA}Attempting summarization to reduce context...{Style.RESET_ALL}")
-                        processed_messages = (
-                            await self._summarize_messages_to_fit(
-                                processed_messages,
-                                target_tokens_for_retry,
+                            print(f"{Fore.CYAN}[TOKEN-STRATEGY] Overflow ratio: {overflow_ratio:.2f} ({total_needed}/{limit_tokens} tokens){Style.RESET_ALL}")
+
+                        # Choose strategy based on overflow
+                        if overflow_ratio < 1.1:  # Less than 10% overflow
+                            strategy = "minimal_trimming"
+                            target_reduction = 0.15  # Trim 15% to leave buffer
+                        elif overflow_ratio < 1.5:  # 10-50% overflow
+                            strategy = "smart_summarization"
+                            target_reduction = 0.4  # Reduce by 40%
+                        elif overflow_ratio < 2.0:  # 50-100% overflow
+                            strategy = "aggressive_summarization"
+                            target_reduction = 0.6  # Reduce by 60%
+                        else:  # More than 100% overflow
+                            strategy = "extreme_compression"
+                            target_reduction = 0.8  # Reduce by 80%
+
+                        # Apply progressive reduction on retries
+                        if token_reduction_attempts > 2:
+                            # Get more aggressive with each attempt
+                            target_reduction = min(0.9, target_reduction + (token_reduction_attempts * 0.1))
+                            if token_reduction_attempts > 5:
+                                strategy = "extreme_compression"
+
+                        if self.verbose:
+                            print(f"{Fore.CYAN}[TOKEN-STRATEGY] Selected strategy: {strategy} with {target_reduction*100:.0f}% reduction{Style.RESET_ALL}")
+
+                        # Apply the selected strategy
+                        try:
+                            processed_messages = await self._apply_token_reduction_strategy(
+                                processed_messages if token_reduction_attempts > 0 else original_messages,
+                                strategy=strategy,
+                                target_reduction=target_reduction,
+                                attempt=token_reduction_attempts,
+                                limit_tokens=limit_tokens,
+                                max_output_tokens=max_tokens_requested
                             )
-                        )
+
+                            strategies_tried.append(f"{strategy}({target_reduction*100:.0f}%)")
+                            token_reduction_attempts += 1
+
+                            # Verify reduction was effective
+                            new_tokens = sum(
+                                self._get_token_count(str(msg.get("content", "") if isinstance(msg, dict) else msg.content), self.llm)
+                                for msg in processed_messages
+                            )
+
+                            if self.verbose:
+                                print(f"{Fore.GREEN}[TOKEN-STRATEGY] Reduction complete. New input tokens: {new_tokens} (was {current_input_tokens}){Style.RESET_ALL}")
+
+                            continue  # Retry with reduced messages
+
+                        except Exception as strategy_error:
+                            if self.verbose:
+                                print(f"{Fore.RED}[TOKEN-STRATEGY] Strategy '{strategy}' failed: {strategy_error}{Style.RESET_ALL}")
+                            token_reduction_attempts += 1
+                            # Try next strategy
+                            continue
+
                     else:
+                        # No clear limit, use progressive reduction
                         if self.verbose:
-                            print(f"{Fore.MAGENTA}Attempting trimming to reduce context...{Style.RESET_ALL}")
-                        processed_messages = self._trim_messages_to_fit(
-                            processed_messages, target_tokens_for_retry
-                        )
+                            print(f"{Fore.YELLOW}[TOKEN-STRATEGY] No clear token limit found. Using progressive reduction.{Style.RESET_ALL}")
 
-                    # After processing, convert dict messages back to Langchain BaseMessage types if needed
-                    # This is important as self.llm.ainvoke expects List[BaseMessage] or compatible.
-                    final_processed_messages: list[BaseMessage] = []
-                    for i, p_msg_data in enumerate(processed_messages):
-                        original_msg_type: type[BaseMessage] = type(messages[i]) if i < len(messages) and isinstance(messages[i], BaseMessage) else HumanMessage
-                        if isinstance(p_msg_data, dict):
-                            # Ensure 'content' key exists, use empty string if not
-                            content_val: str = p_msg_data.get('content', '')
-                            if original_msg_type == SystemMessage:
-                                final_processed_messages.append(SystemMessage(content=str(content_val)))
-                            else: # Default to HumanMessage or try to reconstruct original type if simple
-                                try:
-                                    final_processed_messages.append(original_msg_type(content=str(content_val)))
-                                except Exception: # Fallback
-                                    final_processed_messages.append(HumanMessage(content=str(content_val)))
+                        reduction_factor = 0.8 - (token_reduction_attempts * 0.1)
+                        reduction_factor = max(0.2, reduction_factor)
 
-                        elif isinstance(p_msg_data, BaseMessage):
-                            final_processed_messages.append(p_msg_data)
-                        else: # Should not happen if types are managed
-                            final_processed_messages.append(HumanMessage(content=str(p_msg_data)))
-                    processed_messages = final_processed_messages
+                        try:
+                            processed_messages = await self._apply_token_reduction_strategy(
+                                processed_messages,
+                                strategy="progressive_reduction",
+                                target_reduction=1 - reduction_factor,
+                                attempt=token_reduction_attempts
+                            )
+                            token_reduction_attempts += 1
+                            continue
+                        except Exception:
+                            token_reduction_attempts += 1
+                            continue
 
-
+                else:
+                    # Non-token error - let fallback handle it
                     if self.verbose:
-                        new_total_tokens: int = sum(self._get_token_count(str(msg.content if isinstance(msg, BaseMessage) else msg.get("content","")), self.llm) for msg in processed_messages)
-                        print(f"{Fore.CYAN}Context processed. New total tokens (estimated): {new_total_tokens}. Retrying call...{Style.RESET_ALL}")
-                    continue # Retry the LLM call with modified messages
+                        print(f"{Fore.RED}[TOKEN-STRATEGY] Non-token error: {type(e).__name__}. Allowing fallback.{Style.RESET_ALL}")
+                    raise
 
-                elif isinstance(e, OutputParserException) and attempt < self.MAX_RETRIES_TOKEN_LIMIT:
-                    # Handle output parsing errors, often due to incomplete generation or unexpected format
-                    if self.verbose:
-                        print(f"{Fore.YELLOW}Output parsing error detected (Attempt {attempt + 1}/{self.MAX_RETRIES_TOKEN_LIMIT}). Error: {str(e)[:500]}{Style.RESET_ALL}")
-                        print(f"{Fore.CYAN}Retrying call, hoping for a more complete/correct generation...{Style.RESET_ALL}")
-                    # Optionally, could add a slight modification to the prompt here, e.g., asking for a specific format.
-                    # For now, just retry.
-                    await asyncio.sleep(1) # Small delay before retry
-                    continue
+    async def _apply_token_reduction_strategy(
+        self,
+        messages: list[dict[str, str] | BaseMessage],
+        strategy: str,
+        target_reduction: float,
+        attempt: int,
+        limit_tokens: int | None = None,
+        max_output_tokens: int | None = None
+    ) -> list[dict[str, str] | BaseMessage]:
+        """Apply a specific token reduction strategy to messages.
 
-                # If not a token limit error, or retries exhausted, re-raise
-                if self.verbose and attempt == self.MAX_RETRIES_TOKEN_LIMIT:
-                    print(f"{Fore.RED}Max retries reached for error: {type(e).__name__}. Raising final exception.{Style.RESET_ALL}")
-                raise e # Re-raise the original error if not handled or retries exhausted
+        Strategies:
+        - minimal_trimming: Remove redundancy, clean up formatting
+        - smart_summarization: Use LLM to intelligently summarize
+        - aggressive_summarization: Heavy summarization preserving key points
+        - extreme_compression: Extract only essential information
+        - progressive_reduction: Gradually reduce content
+        """
+        if self.verbose:
+            print(f"{Fore.CYAN}[TOKEN-STRATEGY] Applying {strategy} (attempt {attempt + 1}){Style.RESET_ALL}")
 
-        # Should not be reached if loop is structured correctly, but as a fallback:
-        raise Exception("Failed to get chat response after multiple retries.")
+        # Calculate target tokens
+        current_tokens = sum(
+            self._get_token_count(str(msg.get("content", "") if isinstance(msg, dict) else msg.content), self.llm)
+            for msg in messages
+        )
 
+        if limit_tokens and max_output_tokens:
+            # Reserve space for output
+            available_for_input = limit_tokens - max_output_tokens - 500  # Buffer
+            target_tokens = min(available_for_input, int(current_tokens * (1 - target_reduction)))
+        else:
+            target_tokens = int(current_tokens * (1 - target_reduction))
+
+        if self.verbose:
+            print(f"{Fore.CYAN}[TOKEN-STRATEGY] Target: {target_tokens} tokens (from {current_tokens}){Style.RESET_ALL}")
+
+        # Convert messages to mutable format
+        mutable_messages = [
+            msg.model_dump() if isinstance(msg, BaseMessage) else msg.copy()
+            for msg in messages
+        ]
+
+        # Apply strategy
+        if strategy == "minimal_trimming":
+            # Remove whitespace, redundancy, clean formatting
+            for msg in mutable_messages:
+                if msg.get("role") != "system":  # Preserve system messages
+                    content = str(msg.get("content", ""))
+                    # Remove excessive whitespace
+                    content = " ".join(content.split())
+                    # Remove markdown formatting if present
+                    content = re.sub(r'\*{1,2}([^\*]+)\*{1,2}', r'\1', content)
+                    # Remove redundant punctuation
+                    content = re.sub(r'\.{2,}', '.', content)
+                    content = re.sub(r'\s+([,.!?])', r'\1', content)
+                    msg["content"] = content
+
+            # If still too long, trim from the middle
+            if sum(self._get_token_count(msg.get("content", ""), self.llm) for msg in mutable_messages) > target_tokens:
+                return self._trim_messages_to_fit(messages, target_tokens)
+
+        elif strategy in ["smart_summarization", "aggressive_summarization", "extreme_compression"]:
+            # Use different prompts based on aggressiveness
+            if strategy == "smart_summarization":
+                summary_instruction = "Summarize the following content, preserving all key information, facts, and context:"
+                length_instruction = f"Target length: approximately {target_tokens} tokens"
+            elif strategy == "aggressive_summarization":
+                summary_instruction = "Provide a concise summary focusing on the most important points:"
+                length_instruction = f"Maximum length: {target_tokens} tokens"
+            else:  # extreme_compression
+                summary_instruction = "Extract only the essential information in bullet points:"
+                length_instruction = f"Strict limit: {target_tokens} tokens"
+
+            # Group and summarize user/assistant messages
+            for i, msg in enumerate(mutable_messages):
+                if msg.get("role") in ["user", "assistant", "human"] and len(msg.get("content", "")) > 500:
+                    try:
+                        summary_prompt = f"{summary_instruction}\n\n{msg['content']}\n\n{length_instruction}"
+
+                        # Use a simple completion without streaming
+                        summary_messages = [
+                            SystemMessage(content="You are an expert summarizer. Be concise."),
+                            HumanMessage(content=summary_prompt)
+                        ]
+
+                        # Temporarily reduce verbosity for summarization calls
+                        original_verbose = self.verbose
+                        self.verbose = False
+
+                        summary = await self.get_chat_response(summary_messages, stream=False)
+
+                        self.verbose = original_verbose
+
+                        if summary and len(summary.strip()) > 20:
+                            mutable_messages[i]["content"] = summary.strip()
+                            if self.verbose:
+                                original_len = len(msg.get("content", ""))
+                                new_len = len(summary)
+                                print(f"{Fore.GREEN}[TOKEN-STRATEGY] Summarized message {i}: {original_len} → {new_len} chars{Style.RESET_ALL}")
+
+                    except Exception as e:
+                        if self.verbose:
+                            print(f"{Fore.YELLOW}[TOKEN-STRATEGY] Summarization failed for message {i}: {e}{Style.RESET_ALL}")
+                        # Fall back to trimming
+                        content = msg["content"]
+                        if strategy == "extreme_compression":
+                            # Keep only first and last parts
+                            keep_chars = len(content) // 4
+                            msg["content"] = content[:keep_chars] + "\n...[content compressed]...\n" + content[-keep_chars:]
+                        else:
+                            # Progressive trimming
+                            msg["content"] = content[:int(len(content) * (1 - target_reduction))]
+
+        elif strategy == "progressive_reduction":
+            # Gradually reduce all messages proportionally
+            for msg in mutable_messages:
+                if msg.get("role") != "system":
+                    content = msg.get("content", "")
+                    if len(content) > 100:
+                        # Keep more of the beginning and end
+                        total_len = len(content)
+                        keep_ratio = 1 - target_reduction
+
+                        if keep_ratio < 0.5:
+                            # For aggressive reduction, use beginning/end strategy
+                            keep_start = int(total_len * keep_ratio * 0.6)
+                            keep_end = int(total_len * keep_ratio * 0.4)
+                            msg["content"] = content[:keep_start] + "\n...\n" + content[-keep_end:]
+                        else:
+                            # For mild reduction, trim from middle
+                            keep_total = int(total_len * keep_ratio)
+                            msg["content"] = content[:keep_total]
+
+        # Convert back to appropriate message types
+        final_messages = []
+        for i, new_msg in enumerate(mutable_messages):
+            if i < len(messages) and isinstance(messages[i], BaseMessage):
+                msg_type = type(messages[i])
+                try:
+                    final_messages.append(msg_type(content=new_msg["content"]))
+                except:
+                    final_messages.append(HumanMessage(content=new_msg["content"]))
+            else:
+                final_messages.append(new_msg)
+
+        # Verify we achieved target
+        final_tokens = sum(
+            self._get_token_count(str(msg.get("content", "") if isinstance(msg, dict) else msg.content), self.llm)
+            for msg in final_messages
+        )
+
+        if self.verbose:
+            reduction_achieved = (1 - final_tokens / current_tokens) * 100
+            print(f"{Fore.GREEN}[TOKEN-STRATEGY] Achieved {reduction_achieved:.1f}% reduction: {current_tokens} → {final_tokens} tokens{Style.RESET_ALL}")
+
+            if final_tokens > target_tokens * 1.1:  # More than 10% over target
+                print(f"{Fore.YELLOW}[TOKEN-STRATEGY] Warning: Still over target ({final_tokens} > {target_tokens}). May need another iteration.{Style.RESET_ALL}")
+
+        return final_messages
 
     async def stream_response(
         self,

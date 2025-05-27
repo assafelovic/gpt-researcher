@@ -306,6 +306,28 @@ async def generate_report(
 
     try:
         logger.info("[DEBUG] Making first create_chat_completion attempt")
+
+        # Calculate appropriate max_tokens based on model context limit
+        # Estimate input tokens to leave room for output
+        from gpt_researcher.utils.llm import estimate_token_count
+        input_tokens: int = estimate_token_count(messages, cfg.smart_llm_model)
+
+        # Get model context limit (conservative estimates)
+        model_context_limits: dict[str, int] = {
+            "google/gemini-2.0-flash-exp:free": 16385,
+            "google/gemini-pro": 32000,
+            "gpt-4": 8192,
+            "gpt-4-turbo": 128000,
+            "gpt-3.5-turbo": 4096,
+        }
+
+        model_context_limit: int = model_context_limits.get(cfg.smart_llm_model) or 4096
+
+        # Reserve space for input tokens and some buffer
+        max_output_tokens: int = max(512, min(cfg.smart_token_limit, model_context_limit - input_tokens - 500))
+
+        logger.info(f"[DEBUG] Input tokens: {input_tokens}, Model limit: {model_context_limit}, Max output: {max_output_tokens}")
+
         report = await create_chat_completion(
             model=cfg.smart_llm_model,
             messages=messages,
@@ -313,7 +335,7 @@ async def generate_report(
             llm_provider=cfg.smart_llm_provider,
             stream=True,
             websocket=websocket,
-            max_tokens=cfg.smart_token_limit,
+            max_tokens=max_output_tokens,
             llm_kwargs=cfg.llm_kwargs,
             cost_callback=cost_callback,
             cfg=cfg,
@@ -341,6 +363,11 @@ async def generate_report(
             ]
             logger.info(f"[DEBUG] Simplified message length: {len(simplified_messages[0]['content'])}")
 
+            # Calculate max_tokens for fallback attempt too
+            fallback_input_tokens: int = estimate_token_count(simplified_messages, cfg.smart_llm_model)
+            fallback_max_output_tokens: int = max(512, min(cfg.smart_token_limit, model_context_limit - fallback_input_tokens - 500))
+            logger.info(f"[DEBUG] Fallback input tokens: {fallback_input_tokens}, Max output: {fallback_max_output_tokens}")
+
             report = await create_chat_completion(
                 model=cfg.smart_llm_model,
                 messages=simplified_messages,
@@ -348,7 +375,7 @@ async def generate_report(
                 llm_provider=cfg.smart_llm_provider,
                 stream=True,
                 websocket=websocket,
-                max_tokens=cfg.smart_token_limit,
+                max_tokens=fallback_max_output_tokens,
                 llm_kwargs=cfg.llm_kwargs,
                 cost_callback=cost_callback,
                 cfg=cfg,

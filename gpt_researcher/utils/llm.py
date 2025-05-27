@@ -555,74 +555,6 @@ async def create_chat_completion(
 
     # Dynamic retry count based on config or reasonable default
     MAX_ATTEMPTS: int = getattr(config_obj, "llm_retry_attempts", 3)
-    response: str = ""
-
-    # Calculate appropriate token values based on context size
-    # Estimate input token count
-    input_token_count: int = estimate_token_count(messages, model)
-    logger.info(f"[DEBUG-LLM] Estimated input token count: {input_token_count}")
-
-    # Dynamic output token allocation based on context size
-    # If max_tokens is specified, use that, otherwise allocate a portion of context
-    # The portion is inversely proportional to the input size (larger inputs = smaller portion for output)
-    if max_tokens is None:
-        # Calculate a dynamic ratio based on input size
-        input_ratio = min(input_token_count / default_context_limit, 0.9)  # Cap at 90%
-        output_ratio = 1.0 - input_ratio
-        # Ensure output has at least some reasonable space
-        output_tokens = max(int(default_context_limit * output_ratio), int(default_context_limit * 0.1))
-    else:
-        output_tokens = max_tokens
-
-    # Special handling for providers with strict token limits
-    if llm_provider == "openrouter":
-        # OpenRouter is sensitive to total tokens, adjust if needed
-        if max_tokens is None or max_tokens > int(default_context_limit * 0.5):
-            # Limit to a reasonable portion of context to avoid errors
-            output_ratio = min(0.3, 1.0 - (input_token_count / default_context_limit))
-            output_tokens = int(default_context_limit * output_ratio)
-
-            # Update max_tokens in the parameters
-            if "max_tokens" in kwargs:
-                kwargs["max_tokens"] = output_tokens
-                logger.info(f"[DEBUG-LLM] Adjusted OpenRouter max_tokens to {output_tokens}")
-
-            # Reinitialize provider with updated parameters
-            provider = get_llm(llm_provider, cfg=cfg, **kwargs)
-
-    # Adaptive context window management
-    max_context_tokens = default_context_limit - output_tokens
-
-    # Ensure context has room for at least a minimal message
-    # Instead of hardcoding, calculate as a percentage of total context
-    min_context_portion = default_context_limit * 0.025  # 2.5% of context
-    max_context_tokens = max(int(min_context_portion), max_context_tokens)
-
-    # Log the calculated limits
-    logger.info(f"[DEBUG-LLM] Reserved for output: {output_tokens} tokens")
-    logger.info(f"[DEBUG-LLM] Available for input context: {max_context_tokens} tokens")
-
-    # If messages exceed context limit, truncate them
-    if input_token_count > max_context_tokens:
-        logger.warning(f"[DEBUG-LLM] Messages exceed token limit ({input_token_count} > {max_context_tokens}), truncating content")
-        # Log message content sizes before truncation
-        for i, msg in enumerate(messages):
-            role = msg.get("role", "unknown")
-            content_len = len(msg.get("content", ""))
-            logger.info(f"[DEBUG-LLM] Before truncation - Message {i} ({role}): {content_len} chars")
-
-        messages = truncate_messages_to_fit(messages, max_context_tokens, model)
-
-        # Log message content sizes after truncation
-        for i, msg in enumerate(messages):
-            role = msg.get("role", "unknown")
-            content_len = len(msg.get("content", ""))
-            logger.info(f"[DEBUG-LLM] After truncation - Message {i} ({role}): {content_len} chars")
-            # Log preview of each message after truncation
-            content_preview = msg.get("content", "")
-            if len(content_preview) > 100:
-                content_preview = content_preview[:100] + "..."
-            logger.info(f"[DEBUG-LLM] After truncation - Message {i} preview: {content_preview}")
 
     # Attempt to get a response with fallback for token limits and transient errors
     for attempt in range(MAX_ATTEMPTS):
@@ -652,107 +584,45 @@ async def create_chat_completion(
                 llm_costs: float = estimate_llm_cost(str(messages), response)
                 cost_callback(llm_costs)
 
-        except Exception as e:
-            err_msg: str = str(e)
-
-            # Special handling for OpenRouter
-            if llm_provider == "openrouter" and "maximum context length" in err_msg and attempt < MAX_ATTEMPTS - 1:
-                # Extract token limit info if available
-                import re
-                limit_match = re.search(r"maximum context length is (\d+)", err_msg)
-                requested_match = re.search(r"requested about (\d+) tokens", err_msg)
-
-                if limit_match and requested_match:
-                    actual_limit = int(limit_match.group(1))
-                    requested = int(requested_match.group(1))
-
-                    logger.warning(f"[DEBUG-LLM] OpenRouter token limit exceeded. Limit: {actual_limit}, Requested: {requested}")
-
-                    # Update our context limit understanding with the real value
-                    default_context_limit = actual_limit
-
-                    # Allocate tokens dynamically based on actual limit
-                    # Use a small percentage for output to maximize context space
-                    output_ratio = min(0.1, (actual_limit - input_token_count) / actual_limit)
-                    if output_ratio <= 0:
-                        # If we can't fit the input, need to truncate
-                        output_ratio = 0.1  # Reserve 10% for output
-
-                    new_output_tokens = max(int(actual_limit * output_ratio), 1)
-                    new_context_tokens = actual_limit - new_output_tokens
-
-                    # Update parameters
-                    if "max_tokens" in kwargs:
-                        kwargs["max_tokens"] = new_output_tokens
-                        logger.info(f"[DEBUG-LLM] Adjusted max_tokens to {new_output_tokens}")
-
-                    # Reinitialize provider and truncate messages
-                    provider = get_llm(llm_provider, cfg=cfg, **kwargs)
-                    messages = truncate_messages_to_fit(messages, new_context_tokens, model)
-                    continue
-
-            # Fallback for max_tokens errors: remove max_tokens if that's the issue
-            if "max_tokens" in err_msg.casefold() and ("too large" in err_msg.casefold() or "supports at most" in err_msg.casefold()):
-                logger.warning(f"[DEBUG-LLM] max_tokens issue ({original_max_tokens}), retrying without max_tokens: {traceback.format_exc()}")
-                if "max_tokens" in kwargs:
-                    del kwargs["max_tokens"]
-                provider: GenericLLMProvider = get_llm(llm_provider, cfg=cfg, **kwargs)
-                continue
-            if "'unrecognized request argument supplied: reasoning_effort'" in err_msg.casefold():
-                logger.warning(f"[DEBUG-LLM] reasoning_effort={reasoning_effort} not supported by this model, retrying without reasoning_effort: {traceback.format_exc()}")
-                if "reasoning_effort" in kwargs:
-                    del kwargs["reasoning_effort"]
-                provider: GenericLLMProvider = get_llm(llm_provider, cfg=cfg, **kwargs)
-                continue
-            logger.error(f"[DEBUG-LLM] Error in attempt {attempt+1}: {traceback.format_exc()}")
-
-            # Context length error: truncate messages further and retry
-            if "context length" in err_msg.casefold() or "context_length_exceeded" in err_msg.casefold():
-                logger.warning("[DEBUG-LLM] Context length exceeded, further truncating messages")
-
-                # DEBUG: Log message content sizes before aggressive truncation
-                for i, msg in enumerate(messages):
-                    role = msg.get("role", "unknown")
-                    content_len = len(msg.get("content", ""))
-                    logger.info(f"[DEBUG-LLM] Before aggressive truncation - Message {i} ({role}): {content_len} chars")
-
-                # Reduce context dynamically based on how many attempts we've made
-                # More aggressive truncation with each attempt
-                reduction_factor = 1.0 - (0.3 * (attempt + 1))  # 30% more reduction each attempt
-                reduction_factor = max(reduction_factor, 0.2)  # Don't go below 20% of original
-
-                new_max_tokens = int(max_context_tokens * reduction_factor)
-                logger.info(f"[DEBUG-LLM] Reducing context tokens from {max_context_tokens} to {new_max_tokens}")
-                messages = truncate_messages_to_fit(messages, new_max_tokens, model)
-
-                # DEBUG: Log message content sizes after aggressive truncation
-                for i, msg in enumerate(messages):
-                    role = msg.get("role", "unknown")
-                    content_len = len(msg.get("content", ""))
-                    logger.info(f"[DEBUG-LLM] After aggressive truncation - Message {i} ({role}): {content_len} chars")
-                    # Log preview of each message after truncation
-                    content_preview = msg.get("content", "")
-                    if len(content_preview) > 100:
-                        content_preview = content_preview[:100] + "..."
-                    logger.info(f"[DEBUG-LLM] After aggressive truncation - Message {i} preview: {content_preview}")
-                continue
-
-            # Transient errors: retry with exponential backoff
-            if attempt < MAX_ATTEMPTS - 1:
-                backoff: int = 2**attempt
-                logger.warning(f"[DEBUG-LLM] Error calling LLM (attempt {attempt + 1}/{MAX_ATTEMPTS}): {traceback.format_exc()}, retrying in {backoff}s")
-                await asyncio.sleep(backoff)
-                continue
-            logger.error(f"[DEBUG-LLM] Failed to get response from '{llm_provider}' API after {MAX_ATTEMPTS} attempts: {traceback.format_exc()}")
-            raise
-        else:
-            # DEBUG: Log successful return
-            logger.info(f"[DEBUG-LLM] Successfully returning response from attempt {attempt+1} (response has length {len(response)})")
+            # Success! Return the response
+            logger.info(f"[DEBUG-LLM] Successfully returning response from attempt {attempt+1}")
             return response
 
-    # If all retries fail, raise an error
-    logger.error(f"[DEBUG-LLM] All retries exhausted for '{llm_provider}' API")
-    raise RuntimeError(f"All retries exhausted for '{llm_provider}' API")
+        except Exception as e:
+            err_msg: str = str(e)
+            logger.error(f"[DEBUG-LLM] Error in attempt {attempt+1}: {type(e).__name__}: {err_msg[:300]}...")
+
+            # For non-token errors, try a few times with exponential backoff
+            if attempt < MAX_ATTEMPTS - 1:
+                # Check if this is a transient error worth retrying
+                transient_patterns = [
+                    "rate limit",
+                    "timeout",
+                    "connection",
+                    "network",
+                    "temporary",
+                    "service unavailable",
+                    "internal server error"
+                ]
+
+                is_transient = any(pattern in err_msg.lower() for pattern in transient_patterns)
+
+                if is_transient:
+                    backoff: int = 2**attempt
+                    logger.warning(f"[DEBUG-LLM] Transient error detected, retrying in {backoff}s: {err_msg[:200]}...")
+                    await asyncio.sleep(backoff)
+                    continue
+                else:
+                    # Non-transient error, don't retry at this level - let provider handle it
+                    logger.error(f"[DEBUG-LLM] Non-transient error, not retrying: {err_msg[:200]}...")
+                    raise
+            else:
+                logger.error("[DEBUG-LLM] All attempts exhausted for create_chat_completion")
+                raise
+
+    # Should not reach here
+    logger.error("[DEBUG-LLM] Unexpected end of retry loop")
+    raise RuntimeError(f"Unexpected end of retry loop for '{llm_provider}' API")
 
 
 async def construct_subtopics(

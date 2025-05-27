@@ -182,25 +182,65 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
         Raises:
             Exception: If all providers fail
         """
+        primary_model_name = getattr(self.llm, 'model_name', None) or getattr(self.llm, 'model', 'unknown')
+
+        if self.verbose:
+            logger.info(f"[FALLBACK-DEBUG] Starting fallback-enabled request with primary model: {primary_model_name}")
+            logger.info(f"[FALLBACK-DEBUG] Available fallback providers: {len(self.fallback_providers)}")
+            for i, fb in enumerate(self.fallback_providers):
+                fb_model = getattr(fb.llm, 'model_name', None) or getattr(fb.llm, 'model', 'unknown')
+                logger.info(f"[FALLBACK-DEBUG]   Fallback {i+1}: {fb_model}")
+
         # Try primary provider first
         try:
-            return await super().get_chat_response(messages, stream, websocket)
+            if self.verbose:
+                logger.info(f"[FALLBACK-DEBUG] Attempting primary provider: {primary_model_name}")
+
+            response = await super().get_chat_response(messages, stream, websocket)
+
+            if self.verbose:
+                logger.info(f"[FALLBACK-DEBUG] Primary provider succeeded: {primary_model_name}")
+
+            return response
+
         except Exception as e:
+            if self.verbose:
+                logger.warning(f"[FALLBACK-DEBUG] Primary provider failed: {primary_model_name}")
+                logger.warning(f"[FALLBACK-DEBUG] Primary error: {type(e).__name__}: {str(e)[:300]}...")
+
             if not self.fallback_providers:
-                # No fallbacks available, re-raise the original exception
+                if self.verbose:
+                    logger.error("[FALLBACK-DEBUG] No fallback providers available. Re-raising primary error.")
                 raise
 
-            logger.warning(f"Primary provider failed: {e}. Trying fallbacks...")
+            if self.verbose:
+                logger.info(f"[FALLBACK-DEBUG] Trying {len(self.fallback_providers)} fallback providers...")
 
             # Try each fallback in order
             last_error: Exception = e
             for i, fallback_provider in enumerate(self.fallback_providers):
                 try:
-                    logger.warning(f"Trying fallback provider {i+1}/{len(self.fallback_providers)}: {getattr(fallback_provider.llm, 'model_name', None)}")
-                    return await fallback_provider.get_chat_response(messages, stream, websocket)
+                    fallback_model = getattr(fallback_provider.llm, 'model_name', None) or getattr(fallback_provider.llm, 'model', 'unknown')
+
+                    if self.verbose:
+                        logger.info(f"[FALLBACK-DEBUG] Trying fallback provider {i+1}/{len(self.fallback_providers)}: {fallback_model}")
+
+                    response: str = await fallback_provider.get_chat_response(messages, stream, websocket)
+
+                    if self.verbose:
+                        logger.info(f"[FALLBACK-DEBUG] Fallback provider {i+1} succeeded: {fallback_model}")
+
+                    return response
+
                 except Exception as fallback_error:
-                    logger.warning(f"Fallback provider {i+1} failed: {fallback_error}")
+                    if self.verbose:
+                        logger.warning(f"[FALLBACK-DEBUG] Fallback provider {i+1} failed: {fallback_model}")
+                        logger.warning(f"[FALLBACK-DEBUG] Fallback error: {type(fallback_error).__name__}: {str(fallback_error)[:300]}...")
                     last_error = fallback_error
 
             # All fallbacks failed
-            raise Exception(f"All providers failed. Last error: {last_error}") from last_error
+            if self.verbose:
+                logger.error(f"[FALLBACK-DEBUG] All providers failed. Primary: {primary_model_name}, Fallbacks: {len(self.fallback_providers)}")
+                logger.error(f"[FALLBACK-DEBUG] Last error: {type(last_error).__name__}: {str(last_error)}")
+
+            raise Exception(f"All providers failed. Primary: {primary_model_name}, Fallbacks: {len(self.fallback_providers)}. Last error: {last_error}") from last_error
