@@ -4,7 +4,6 @@ import logging
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.params import Form
 
 from backend.chat.chat import ChatAgentWithMemory
 
@@ -25,10 +24,6 @@ app.add_middleware(
 @app.get("/")
 async def read_root() -> dict[str, str]:
     return {"message": "Welcome to GPT Researcher"}
-
-
-async def handle_root_post(task: str = Form(...), agent: str = Form(...)) -> dict[str, dict[str, str]]:
-    return {"received": {"task": task, "agent": agent}}
 
 
 @app.websocket("/ws")
