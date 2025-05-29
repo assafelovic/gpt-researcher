@@ -50,6 +50,7 @@ Below is a list of current supported options:
 - **`DEEP_RESEARCH_BREADTH`**: Controls the breadth of deep research, defining how many parallel paths to explore. Defaults to `3`.
 - **`DEEP_RESEARCH_DEPTH`**: Controls the depth of deep research, defining how many sequential searches to perform. Defaults to `2`.
 - **`DEEP_RESEARCH_CONCURRENCY`**: Controls the concurrency level for deep research operations. Defaults to `4`.
+- **`REASONING_EFFORT`**: Controls the reasoning effort of strategic models. Default to `medium`.
 
 ## Deep Research Configuration
 

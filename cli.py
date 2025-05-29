@@ -73,8 +73,8 @@ cli.add_argument(
     "--tone",
     type=str,
     help="The tone of the report (optional).",
-    choices=["objective", "formal", "analytical", "persuasive", "informative", 
-            "explanatory", "descriptive", "critical", "comparative", "speculative", 
+    choices=["objective", "formal", "analytical", "persuasive", "informative",
+            "explanatory", "descriptive", "critical", "comparative", "speculative",
             "reflective", "narrative", "humorous", "optimistic", "pessimistic"],
     default="objective"
 )
@@ -95,7 +95,7 @@ cli.add_argument(
 # =============================================================================
 
 async def main(args):
-    """ 
+    """
     Conduct research on the given query, generate the report, and write
     it as a markdown file to the output directory.
     """
