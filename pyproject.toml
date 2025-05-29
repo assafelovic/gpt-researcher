@@ -40,6 +40,9 @@ json-repair = "^0.29.8"
 json5 = "^0.9.25"
 loguru = "^0.7.2"
 websockets = "^13.1"
+# Model Context Protocol support
+mcp = { version = ">=1.0.0", markers = "platform_system != 'Windows'" }
+langchain-mcp-adapters = ">=0.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"

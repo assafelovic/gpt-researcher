@@ -36,3 +36,4 @@ langgraph
 
 # Model Context Protocol support (optional)
 mcp>=1.0.0;platform_system!="Windows"  # MCP SDK for Python
+langchain-mcp-adapters>=0.1.0  # LangChain MCP adapters for tool integration
