@@ -58,7 +58,7 @@ async def create_chat_completion(
 
     # Get the provider from supported providers
     provider_kwargs = {'model': model}
-    
+
     if llm_kwargs:
         provider_kwargs.update(llm_kwargs)
 
