@@ -1,66 +1,97 @@
-# 🔍 GPT Researcher MCP Server
+# GPT Researcher MCP Server
 
-> **Note:** This content has been moved to a dedicated repository: [https://github.com/assafelovic/gptr-mcp](https://github.com/assafelovic/gptr-mcp)
+This directory contains the MCP (Machine Conversation Protocol) server implementation for GPT Researcher, allowing AI assistants to conduct web research and generate reports via the MCP protocol.
 
-## Overview
+## Files Structure
 
-The GPT Researcher MCP Server enables AI assistants like Claude to conduct comprehensive web research and generate detailed reports via the Machine Conversation Protocol (MCP).
+- `server.py` - Main MCP server implementation with endpoint decorators
+- `utils.py` - Utility functions and helpers for the server
 
-## Why GPT Researcher MCP?
+## Architecture
 
-While LLM apps can access web search tools with MCP, **GPT Researcher MCP delivers deep research results.** Standard search tools return raw results requiring manual filtering, often containing irrelevant sources and wasting context window space.
+The code has been organized into a modular structure:
 
-GPT Researcher autonomously explores and validates numerous sources, focusing only on relevant, trusted and up-to-date information. Though slightly slower than standard search (~30 seconds wait), it delivers:
+1. **server.py**: Contains the core MCP server configuration and endpoint handlers with decorators:
+   - `@mcp.resource("research://{topic}")` - Research resource endpoint
+   - `@mcp.tool()` - Tool endpoints for research operations
+   - `@mcp.prompt()` - Prompt template for research queries
+   - Server initialization and running logic
 
-* ✨ Higher quality information
-* 📊 Optimized context usage
-* 🔎 Comprehensive results
-* 🧠 Better reasoning for LLMs
+2. **utils.py**: Contains utility functions and helpers:
+   - Response formatting utilities
+   - Research store management
+   - Source formatting helpers
+   - Exception handling
+   - Research prompt generation
 
 ## Features
 
-### Resources
-* `research_resource`: Get web resources related to a given task via research.
-
-### Primary Tools
-* `deep_research`: Performs deep web research on a topic, finding reliable and relevant information
-* `quick_search`: Performs a fast web search optimized for speed over quality 
-* `write_report`: Generate a report based on research results
-* `get_research_sources`: Get the sources used in the research
-* `get_research_context`: Get the full context of the research
+- Web research capabilities through GPT Researcher
+- MCP protocol support for AI assistants
+- Research report generation in different formats
+- Access to research sources, context, costs, and images
 
 ## Installation
 
-For detailed installation and usage instructions, please visit the [official repository](https://github.com/assafelovic/gptr-mcp).
+1. Clone this repository:
+```bash
+git clone https://github.com/yourusername/researcher-mcp-server.git
+cd researcher-mcp-server
+```
 
-Quick start:
-
-1. Clone the new repository:
-   ```bash
-   git clone https://github.com/assafelovic/gptr-mcp.git
-   cd gptr-mcp
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+2. Install the dependencies:
+```bash
+pip install -r requirements.txt
+```
 
 3. Create a `.env` file with your API keys:
-   ```
-   OPENAI_API_KEY=your_openai_api_key
-   TAVILY_API_KEY=your_tavily_api_key
-   ```
+```bash
+OPENAI_API_KEY=your_openai_api_key
+TAVILY_API_KEY=your_tavily_api_key
+```
 
-4. Run the server:
-   ```bash
-   python server.py
-   ```
+## Usage
 
-For Docker deployment, Claude Desktop integration, example usage, and troubleshooting, please refer to the [full documentation](https://github.com/assafelovic/gptr-mcp).
+To run the MCP server:
 
-## Support & Contact
+```bash
+python server.py
+```
 
-* Website: [gptr.dev](https://gptr.dev)
-* Email: assaf.elovic@gmail.com
-* GitHub: [assafelovic/gptr-mcp](https://github.com/assafelovic/gptr-mcp) :-)
+Make sure you have set up the required environment variables in a `.env` file, including:
+
+- `OPENAI_API_KEY` - Your OpenAI API key for accessing language models
+
+## Dependencies
+
+- `mcp` - Machine Conversation Protocol library
+- `gpt_researcher` - Core GPT Researcher functionality
+- `dotenv` - Environment variable management
+- `loguru` - Logging utilities
+
+## Design Decisions
+
+- **Modularity**: Functions are separated by responsibility to make the code more maintainable
+- **Error Handling**: Consistent error handling pattern across all endpoints
+- **Response Formatting**: Standardized response formats for API consistency
+- **Data Storage**: In-memory storage for research results and session management
+
+## Examples
+
+### Example usage with Claude:
+
+```
+I want to research the latest advancements in quantum computing. Please use the conduct_research tool to find information, then write a report summarizing your findings.
+```
+
+## Development
+
+To contribute to this project:
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
