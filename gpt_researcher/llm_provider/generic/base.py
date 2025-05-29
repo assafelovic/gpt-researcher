@@ -42,8 +42,11 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     "o1-2024-12-17",
     "o3-mini",
     "o3-mini-2025-01-31",
+    "o1-preview",
+    "o3",
+    "o3-2025-04-16",
     "o4-mini",
-    "o1-preview"
+    "o4-mini-2025-04-16",
 ]
 
 SUPPORT_REASONING_EFFORT_MODELS = [
