@@ -2,6 +2,8 @@ import json
 import os
 import warnings
 from typing import Dict, Any, List, Union, Type, get_origin, get_args
+
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from .variables.default import DEFAULT_CONFIG
 from .variables.base import BaseConfig
 from ..retrievers.utils import get_all_retriever_names
@@ -50,6 +52,7 @@ class Config:
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
+        self.reasoning_effort = self.parse_reasoning_effort(os.getenv("REASONING_EFFORT"))
 
     def _handle_deprecated_attributes(self) -> None:
         if os.getenv("EMBEDDING_PROVIDER") is not None:
@@ -98,7 +101,7 @@ class Config:
         if os.getenv("SMART_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
             self.smart_llm_model = os.environ["SMART_LLM_MODEL"] or self.smart_llm_model
-        
+
     def _set_doc_path(self, config: Dict[str, Any]) -> None:
         self.doc_path = config['DOC_PATH']
         if self.doc_path:
@@ -171,6 +174,15 @@ class Config:
                 "Set SMART_LLM or FAST_LLM = '<llm_provider>:<llm_model>' "
                 "Eg 'openai:gpt-4o-mini'"
             )
+
+    @staticmethod
+    def parse_reasoning_effort(reasoning_effort_str: str | None) -> str | None:
+        """Parse reasoning effort string into (reasoning_effort)."""
+        if reasoning_effort_str is None:
+            return ReasoningEfforts.MEDIUM.value
+        if reasoning_effort_str not in [effort.value for effort in ReasoningEfforts]:
+            raise ValueError(f"Invalid reasoning effort: {reasoning_effort_str}. Valid options are: {', '.join([effort.value for effort in REASONING_EFFORTS])}")
+        return reasoning_effort_str
 
     @staticmethod
     def parse_embedding(embedding_str: str | None) -> tuple[str | None, str | None]:
