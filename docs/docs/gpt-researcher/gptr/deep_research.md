@@ -33,10 +33,10 @@ async def main():
         query="What are the latest developments in quantum computing?",
         report_type="deep",  # This triggers deep research modd
     )
-    
+
     # Run research
     research_data = await researcher.conduct_research()
-    
+
     # Generate report
     report = await researcher.write_report()
     print(report)

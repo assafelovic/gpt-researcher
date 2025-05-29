@@ -31,10 +31,10 @@ async def main():
         query="What are the latest developments in quantum computing?",
         report_type="deep",  # This triggers deep research modd
     )
-    
+
     # Run research
     research_data = await researcher.conduct_research()
-    
+
     # Generate report
     report = await researcher.write_report()
     print(report)
@@ -50,6 +50,7 @@ Deep Research behavior can be customized through several parameters:
 - `deep_research_breadth`: Number of parallel research paths at each level (default: 4)
 - `deep_research_depth`: How many levels deep to explore (default: 2)
 - `deep_research_concurrency`: Maximum number of concurrent research operations (default: 2)
+- `reasoning_effort`: Reasoning effort for models that support reasoning effort (basically OpenAI `o` serires)
 
 You can configure these in your config file, pass as environment variables or pass them directly:
 
