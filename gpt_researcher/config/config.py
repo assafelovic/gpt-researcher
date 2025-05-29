@@ -179,9 +179,9 @@ class Config:
     def parse_reasoning_effort(reasoning_effort_str: str | None) -> str | None:
         """Parse reasoning effort string into (reasoning_effort)."""
         if reasoning_effort_str is None:
-            return ReasoningEfforts.MEDIUM.value
+            return ReasoningEfforts.Medium.value
         if reasoning_effort_str not in [effort.value for effort in ReasoningEfforts]:
-            raise ValueError(f"Invalid reasoning effort: {reasoning_effort_str}. Valid options are: {', '.join([effort.value for effort in REASONING_EFFORTS])}")
+            raise ValueError(f"Invalid reasoning effort: {reasoning_effort_str}. Valid options are: {', '.join([effort.value for effort in ReasoningEfforts])}")
         return reasoning_effort_str
 
     @staticmethod
