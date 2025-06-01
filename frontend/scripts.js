@@ -1278,15 +1278,6 @@ const GPTResearcher = (() => {
     document.body.appendChild(dialog);
   }
 
-  //document.addEventListener('DOMContentLoaded', init)
-
-  const scrollToOutput = () => {
-    const outputElement = document.getElementById('output')
-    if (outputElement) {
-      outputElement.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
-
   // Function to show download bar and enable buttons
   const showDownloadPanels = () => {
     // Show the bar by adding the visible class
@@ -1971,7 +1962,7 @@ const GPTResearcher = (() => {
     const button = element.querySelector('.expand-button i');
     if (button) {
       if (element.classList.contains('expanded-view')) {
-        button.classList.remove('fa-expand-alt');
+        button.classList.remove('fa-compress-alt');
         button.classList.add('fa-compress-alt');
 
         // Find content containers and expand their height
