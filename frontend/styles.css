@@ -268,10 +268,9 @@ footer a:hover {
 }
 
 #reportContainer {
-    font-family: 'Georgia', 'Times New Roman', Times, "Courier New", serif;
+    font-family: Georgia, 'Times New Roman', serif;
     font-size: 18px !important;
-    background-color: rgba(255, 255, 255, 0.1);
-    font-family: 'Times New Roman', Times, "Courier New", serif;
+    background-color: transparent;
     border: none;
     color: #fff;
     transition: all .3s ease-in-out;
@@ -1528,7 +1527,7 @@ footer a:hover {
     margin-top: 40px;
     padding: 20px;
     border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1538,7 +1537,7 @@ footer a:hover {
     margin-bottom: 20px;
     padding: 15px;
     border-radius: 8px;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: transparent;
     scrollbar-width: thin;
     scrollbar-color: #14b8a6 rgba(40, 40, 50, 0.7);
 }
@@ -1559,7 +1558,7 @@ footer a:hover {
 
 .chat-message {
     margin-bottom: 15px;
-    padding: 10px 15px;
+    padding: 12px 18px;
     border-radius: 10px;
     max-width: 80%;
     position: relative;
@@ -1736,7 +1735,7 @@ footer a:hover {
     height: var(--modal-height) !important;
     width: 90vw !important;
     max-width: 1200px !important;
-    transform: translateX(-50%) !important;
+    transform: translate(-50%, -50%) !important;
     z-index: 9000 !important;
     margin: 0 !important;
     border-radius: 12px !important;
@@ -1813,36 +1812,32 @@ footer a:hover {
 #voiceInputBtn {
     margin-right: 8px;
     border-radius: 20px;
-    width: 45px;
-    height: 45px;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgba(40, 40, 50, 0.8);
-    border: 1px solid rgba(20, 184, 166, 0.3);
-    padding: 0;
+    background: #EDBF66 !important;
+    border: 1px solid #D8A854 !important;
+    padding: 10px;
+    font-size: 1.1rem;
+    line-height: 1;
     transition: all 0.2s ease;
 }
 
 #voiceInputBtn i {
     font-size: 1.2rem;
-    color: #E4E4E4;
+    color: #FFFFFF;
     transition: all 0.2s ease;
 }
 
 #voiceInputBtn:hover {
-    background-color: rgba(20, 184, 166, 0.2);
-    border-color: rgba(20, 184, 166, 0.5);
+    background: #D8A854 !important;
+    border-color: #C09040 !important;
 }
 
 #voiceInputBtn.listening {
-    background-color: rgba(220, 53, 69, 0.2);
-    border-color: rgba(220, 53, 69, 0.5);
+    background: rgba(220, 53, 69, 0.2) !important;
+    border-color: rgba(220, 53, 69, 0.5) !important;
     animation: pulse 1.5s infinite;
-}
-
-#voiceInputBtn.listening i {
-    color: #dc3545;
 }
 
 @keyframes pulse {
@@ -1932,7 +1927,7 @@ footer a:hover {
 }
 
 .expanded-view .expand-button i {
-    transform: rotate(180deg);
+    /* transform: rotate(180deg); */ /* Removed to prevent icon confusion */
 }
 
 .expanded-view #reportContainer {
@@ -1942,7 +1937,6 @@ footer a:hover {
     overflow-y: auto !important;
     width: 100% !important;
     border: none !important;
-    background-color: transparent !important;
 }
 
 .expanded-view #chatMessages {
