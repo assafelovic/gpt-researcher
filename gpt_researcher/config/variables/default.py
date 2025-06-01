@@ -40,4 +40,5 @@ DEFAULT_CONFIG: BaseConfig = {
     "MCP_SERVERS": [],  # List of predefined MCP server configurations
     "MCP_AUTO_TOOL_SELECTION": True,  # Whether to automatically select the best tool for a query
     "MCP_ALLOWED_ROOT_PATHS": [],  # List of allowed root paths for local file access
+    "REASONING_EFFORT": "medium",
 }

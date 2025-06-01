@@ -132,7 +132,12 @@ async def handle_start_command(websocket, data: str, manager):
     ) = extract_command_data(json_data)
 
     if not task or not report_type:
-        print("Error: Missing task or report_type")
+        print("❌ Error: Missing task or report_type")
+        await websocket.send_json({
+            "type": "logs",
+            "content": "error", 
+            "output": f"Missing required parameters - task: {task}, report_type: {report_type}"
+        })
         return
 
     # Create logs handler with websocket and task
@@ -272,6 +277,7 @@ async def handle_websocket_communication(websocket, manager):
         while True:
             try:
                 data = await websocket.receive_text()
+                
                 if data == "ping":
                     await websocket.send_text("pong")
                 elif running_task and not running_task.done():

@@ -39,3 +39,4 @@ class BaseConfig(TypedDict):
     MCP_AUTO_TOOL_SELECTION: bool
     MCP_USE_LLM_ARGS: bool
     MCP_ALLOWED_ROOT_PATHS: List[str]
+    REASONING_EFFORT: str

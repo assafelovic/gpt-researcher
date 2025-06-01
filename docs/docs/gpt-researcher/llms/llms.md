@@ -324,7 +324,29 @@ OPENROUTER_LIMIT_RPS=1  # Ratelimit request per secound
 EMBEDDING=google_genai:models/text-embedding-004 # openrouter doesn't support embedding models, use google instead its free
 GOOGLE_API_KEY=[Your *google gemini* key]
 ```
+## AI/ML API
+#### AI/ML API provides 300+ AI models including Deepseek, Gemini, ChatGPT. The models run at enterprise-grade rate limits and uptimes.
+You can check provider docs [_here_](https://docs.aimlapi.com/?utm_source=gptr&utm_medium=github&utm_campaign=integration)
 
+And models overview is [_here_](https://aimlapi.com/models/?utm_source=gptr&utm_medium=github&utm_campaign=integration)
+
+```env
+AIMLAPI_API_KEY=[Your aimlapi.com key]
+AIMLAPI_BASE_URL="https://api.aimlapi.com/v1"
+FAST_LLM="aimlapi:claude-3-5-sonnet-20241022"
+SMART_LLM="aimlapi:openai/o4-mini-2025-04-16"
+STRATEGIC_LLM="aimlapi:x-ai/grok-3-mini-beta"
+EMBEDDING="aimlapi:text-embedding-3-small"
+```
+
+## vLLM
+```env
+VLLM_OPENAI_API_KEY=[Your Key] # you can set this to 'EMPTY' or anything
+VLLM_OPENAI_API_BASE=[Your base url] # for example http://localhost:8000/v1/
+FAST_LLM=vllm_openai:Qwen/Qwen3-8B-AWQ
+SMART_LLM=vllm_openai:Qwen/Qwen3-8B-AWQ
+STRATEGIC_LLM=vllm_openai:Qwen/Qwen3-8B-AWQ
+```
 
 ## Other Embedding Models
 

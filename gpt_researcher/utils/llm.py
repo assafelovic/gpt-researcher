@@ -30,7 +30,8 @@ async def create_chat_completion(
         websocket: Any | None = None,
         llm_kwargs: dict[str, Any] | None = None,
         cost_callback: callable = None,
-        reasoning_effort: str | None = ReasoningEfforts.Medium.value
+        reasoning_effort: str | None = ReasoningEfforts.Medium.value,
+        **kwargs
 ) -> str:
     """Create a chat completion using the OpenAI API
     Args:
@@ -44,6 +45,7 @@ async def create_chat_completion(
         llm_kwargs (dict[str, Any], optional): Additional LLM keyword arguments. Defaults to None.
         cost_callback: Callback function for updating cost.
         reasoning_effort (str, optional): Reasoning effort for OpenAI's reasoning models. Defaults to 'low'.
+        **kwargs: Additional keyword arguments.
     Returns:
         str: The response from the chat completion.
     """
@@ -55,32 +57,32 @@ async def create_chat_completion(
             f"Max tokens cannot be more than 16,000, but got {max_tokens}")
 
     # Get the provider from supported providers
-    kwargs = {
-        'model': model,
-        **(llm_kwargs or {})
-    }
+    provider_kwargs = {'model': model}
+
+    if llm_kwargs:
+        provider_kwargs.update(llm_kwargs)
 
     if model in SUPPORT_REASONING_EFFORT_MODELS:
-        kwargs['reasoning_effort'] = reasoning_effort
+        provider_kwargs['reasoning_effort'] = reasoning_effort
 
     if model not in NO_SUPPORT_TEMPERATURE_MODELS:
-        kwargs['temperature'] = temperature
-        kwargs['max_tokens'] = max_tokens
+        provider_kwargs['temperature'] = temperature
+        provider_kwargs['max_tokens'] = max_tokens
     else:
-        kwargs['temperature'] = None
-        kwargs['max_tokens'] = None
+        provider_kwargs['temperature'] = None
+        provider_kwargs['max_tokens'] = None
 
     if llm_provider == "openai":
         base_url = os.environ.get("OPENAI_BASE_URL", None)
         if base_url:
-            kwargs['openai_api_base'] = base_url
+            provider_kwargs['openai_api_base'] = base_url
 
-    provider = get_llm(llm_provider, **kwargs)
+    provider = get_llm(llm_provider, **provider_kwargs)
     response = ""
     # create response
     for _ in range(10):  # maximum of 10 attempts
         response = await provider.get_chat_response(
-            messages, stream, websocket
+            messages, stream, websocket, **kwargs
         )
 
         if cost_callback:
@@ -99,6 +101,7 @@ async def construct_subtopics(
     config,
     subtopics: list = [],
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    **kwargs
 ) -> list:
     """
     Construct subtopics based on the given task and data.
@@ -109,6 +112,7 @@ async def construct_subtopics(
         config: Configuration settings.
         subtopics (list, optional): Existing subtopics. Defaults to [].
         prompt_family (PromptFamily): Family of prompts
+        **kwargs: Additional keyword arguments.
 
     Returns:
         list: A list of constructed subtopics.
@@ -123,18 +127,18 @@ async def construct_subtopics(
                 "format_instructions": parser.get_format_instructions()},
         )
 
-        kwargs = {
-            'model': config.smart_llm_model,
-            **(config.llm_kwargs or {})
-        }
+        provider_kwargs = {'model': config.smart_llm_model}
+
+        if config.llm_kwargs:
+            provider_kwargs.update(config.llm_kwargs)
 
         if config.smart_llm_model in SUPPORT_REASONING_EFFORT_MODELS:
-            kwargs['reasoning_effort'] = ReasoningEfforts.High.value
+            provider_kwargs['reasoning_effort'] = ReasoningEfforts.High.value
         else:
-            kwargs['temperature'] = config.temperature
-            kwargs['max_tokens'] = config.smart_token_limit
+            provider_kwargs['temperature'] = config.temperature
+            provider_kwargs['max_tokens'] = config.smart_token_limit
 
-        provider = get_llm(config.smart_llm_provider, **kwargs)
+        provider = get_llm(config.smart_llm_provider, **provider_kwargs)
 
         model = provider.llm
 
@@ -145,7 +149,7 @@ async def construct_subtopics(
             "data": data,
             "subtopics": subtopics,
             "max_subtopics": config.max_subtopics
-        })
+        }, **kwargs)
 
         return output
 
