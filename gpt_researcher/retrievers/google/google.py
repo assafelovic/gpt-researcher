@@ -8,17 +8,16 @@ import json
 
 class GoogleSearch:
     """
-    Google API Retriever
+    Tavily API Retriever
     """
-    def __init__(self, query, headers=None, query_domains=None):
+    def __init__(self, query, headers=None):
         """
-        Initializes the GoogleSearch object
+        Initializes the TavilySearch object
         Args:
             query:
         """
         self.query = query
         self.headers = headers or {}
-        self.query_domains = query_domains or None
         self.api_key = self.headers.get("google_api_key") or self.get_api_key()  # Use the passed api_key or fallback to environment variable
         self.cx_key = self.headers.get("google_cx_key") or self.get_cx_key()  # Use the passed cx_key or fallback to environment variable
 
@@ -52,23 +51,14 @@ class GoogleSearch:
 
     def search(self, max_results=7):
         """
-        Searches the query using Google Custom Search API, optionally restricting to specific domains
+        Searches the query
         Returns:
-            list: List of search results with title, href and body
+
         """
-        # Build query with domain restrictions if specified
-        search_query = self.query
-        if self.query_domains and len(self.query_domains) > 0:
-            domain_query = " OR ".join([f"site:{domain}" for domain in self.query_domains])
-            search_query = f"({domain_query}) {self.query}"
-
-        print("Searching with query {0}...".format(search_query))
-
-        url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={search_query}&start=1"
+        """Useful for general internet search queries using the Google API."""
+        print("Searching with query {0}...".format(self.query))
+        url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={self.query}&start=1"
         resp = requests.get(url)
-
-        if resp.status_code < 200 or resp.status_code >= 300:
-            print("Google search: unexpected response status: ", resp.status_code)
 
         if resp is None:
             return
@@ -87,14 +77,11 @@ class GoogleSearch:
             # skip youtube results
             if "youtube.com" in result["link"]:
                 continue
-            try:
-                search_result = {
-                    "title": result["title"],
-                    "href": result["link"],
-                    "body": result["snippet"],
-                }
-            except:
-                continue
+            search_result = {
+                "title": result["title"],
+                "href": result["link"],
+                "body": result["snippet"],
+            }
             search_results.append(search_result)
 
-        return search_results[:max_results]
+        return search_results

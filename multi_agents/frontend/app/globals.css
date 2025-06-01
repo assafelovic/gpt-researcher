@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes gradientBG {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  line-height: 1.6;
+  background-size: 200% 200%;
+  background-image: linear-gradient(45deg, #151A2D, #2D284D, #151A2D);
+  animation: gradientBG 10s ease infinite;
+}
+
+.landing {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 30vh;
+  text-align: center;
+  color: white;
+}
+
+.landing h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .loader {
+    text-align: left;
+    display: flex;
+    gap: 3px;
+  }
+
+  .loader span {
+    display: inline-block;
+    vertical-align: middle;
+    width: 7px;
+    height: 7px;
+    /* background: #4b4b4b; */
+    background: white;
+    border-radius: 50%;
+    animation: loader 0.6s infinite alternate;
+  }
+
+  .loader span:nth-of-type(2) {
+    animation-delay: 0.2s;
+  }
+
+  .loader span:nth-of-type(3) {
+    animation-delay: 0.6s;
+  }
+
+  @keyframes loader {
+    0% {
+      opacity: 1;
+      transform: scale(0.6);
+    }
+
+    100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+  }
+}
+
+body {
+  margin: 0px !important;
+}

@@ -11,7 +11,6 @@ sample_revision_notes = """
 }
 """
 
-
 class ReviserAgent:
     def __init__(self, websocket=None, stream_output=None, headers=None):
         self.websocket = websocket
@@ -27,29 +26,22 @@ class ReviserAgent:
         review = draft_state.get("review")
         task = draft_state.get("task")
         draft_report = draft_state.get("draft")
-        prompt = [
-            {
-                "role": "system",
-                "content": "You are an expert writer. Your goal is to revise drafts based on reviewer notes.",
-            },
-            {
-                "role": "user",
-                "content": f"""Draft:\n{draft_report}" + "Reviewer's notes:\n{review}\n\n
+        prompt = [{
+            "role": "system",
+            "content": "You are an expert writer. Your goal is to revise drafts based on reviewer notes."
+        }, {
+            "role": "user",
+            "content": f"""Draft:\n{draft_report}" + "Reviewer's notes:\n{review}\n\n
 You have been tasked by your reviewer with revising the following draft, which was written by a non-expert.
 If you decide to follow the reviewer's notes, please write a new draft and make sure to address all of the points they raised.
 Please keep all other aspects of the draft the same.
 You MUST return nothing but a JSON in the following format:
 {sample_revision_notes}
-""",
-            },
-        ]
+"""
+        }]
 
-        response = await call_model(
-            prompt,
-            model=task.get("model"),
-            response_format="json",
-        )
-        return response
+        response = await call_model(prompt, model=task.get("model"), response_format='json', api_key=self.headers.get("openai_api_key"))
+        return json.loads(response)
 
     async def run(self, draft_state: dict):
         print_agent_output(f"Rewriting draft based on feedback...", agent="REVISOR")
@@ -57,18 +49,9 @@ You MUST return nothing but a JSON in the following format:
 
         if draft_state.get("task").get("verbose"):
             if self.websocket and self.stream_output:
-                await self.stream_output(
-                    "logs",
-                    "revision_notes",
-                    f"Revision notes: {revision.get('revision_notes')}",
-                    self.websocket,
-                )
+                await self.stream_output("logs", "revision_notes", f"Revision notes: {revision.get('revision_notes')}", self.websocket)
             else:
-                print_agent_output(
-                    f"Revision notes: {revision.get('revision_notes')}", agent="REVISOR"
-                )
+                print_agent_output(f"Revision notes: {revision.get('revision_notes')}", agent="REVISOR")
 
-        return {
-            "draft": revision.get("draft"),
-            "revision_notes": revision.get("revision_notes"),
-        }
+        return {"draft": revision.get("draft"),
+                "revision_notes": revision.get("revision_notes")}

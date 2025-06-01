@@ -8,7 +8,7 @@ class CustomRetriever:
     Custom API Retriever
     """
 
-    def __init__(self, query: str, query_domains=None):
+    def __init__(self, query: str):
         self.endpoint = os.getenv('RETRIEVER_ENDPOINT')
         if not self.endpoint:
             raise ValueError("RETRIEVER_ENDPOINT environment variable not set")

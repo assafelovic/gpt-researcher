@@ -10,15 +10,13 @@ class SerperSearch():
     """
     Google Serper Retriever
     """
-    def __init__(self, query, query_domains=None):
+    def __init__(self, query):
         """
         Initializes the SerperSearch object
         Args:
-            query (str): The search query string.
-            query_domains (list, optional): List of domains to include in the search. Defaults to None.
+            query:
         """
         self.query = query
-        self.query_domains = query_domains or None
         self.api_key = self.get_api_key()
 
     def get_api_key(self):
@@ -43,15 +41,14 @@ class SerperSearch():
         print("Searching with query {0}...".format(self.query))
         """Useful for general internet search queries using the Serp API."""
 
+
         # Search the query (see https://serper.dev/playground for the format)
         url = "https://google.serper.dev/search"
 
         headers = {
-            'X-API-KEY': self.api_key,
-            'Content-Type': 'application/json'
+        'X-API-KEY': self.api_key,
+        'Content-Type': 'application/json'
         }
-
-        # TODO: Add support for query domains
         data = json.dumps({"q": self.query, "num": max_results})
 
         resp = requests.request("POST", url, timeout=10, headers=headers, data=data)
@@ -66,7 +63,7 @@ class SerperSearch():
         if search_results is None:
             return
 
-        results = search_results.get("organic", [])
+        results = search_results["organic"]
         search_results = []
 
         # Normalize the results to match the format of the other search APIs
