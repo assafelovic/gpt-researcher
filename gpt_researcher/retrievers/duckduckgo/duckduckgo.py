@@ -6,11 +6,12 @@ class Duckduckgo:
     """
     Duckduckgo API Retriever
     """
-    def __init__(self, query):
+    def __init__(self, query, query_domains=None):
         check_pkg('duckduckgo_search')
         from duckduckgo_search import DDGS
         self.ddg = DDGS()
         self.query = query
+        self.query_domains = query_domains or None
 
     def search(self, max_results=5):
         """
@@ -19,6 +20,7 @@ class Duckduckgo:
         :param max_results:
         :return:
         """
+        # TODO: Add support for query domains
         try:
             search_response = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
         except Exception as e:

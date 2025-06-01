@@ -7,7 +7,7 @@ const FeatureList = [
   {
     title: 'GPT Researcher',
     Svg: require('../../static/img/gptr-logo.png').default,
-    docLink: './docs/gpt-researcher/getting-started',
+    docLink: './docs/gpt-researcher/getting-started/getting-started',
     description: (
       <>
         GPT Researcher is an open source autonomous agent designed for comprehensive online research on a variety of tasks.
@@ -27,7 +27,7 @@ const FeatureList = [
   {
     title: 'Multi-Agent Assistant',
     Svg: require('../../static/img/multi-agent.png').default,
-    docLink: './docs/gpt-researcher/langgraph',
+    docLink: './docs/gpt-researcher/multi_agents/langgraph',
     description: (
       <>
         Learn how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
@@ -40,7 +40,7 @@ const FeatureList = [
     docLink: './docs/examples/examples',
     description: (
       <>
-          Check out Tavily API in action across multiple frameworks and use cases
+          Check out GPT Researcher in action across multiple frameworks and use cases such as hybrid research and long detailed reports.
       </>
     ),
   },

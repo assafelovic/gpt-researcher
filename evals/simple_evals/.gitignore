@@ -1,0 +1,4 @@
+# Override global gitignore to track our evaluation logs
+!logs/
+!logs/*
+!logs/**/* 

@@ -10,4 +10,4 @@ Quickly accessing relevant and trustworthy information is more crucial than ever
 
 This is why we've built the trending open source **[GPT Researcher](https://github.com/assafelovic/gpt-researcher)**. GPT Researcher is an autonomous agent that takes care of the tedious task of research for you, by scraping, filtering and aggregating over 20+ web sources per a single research task. 
 
-To learn more about GPT Researcher, check out the [documentation page](/docs/gpt-researcher/introduction).
+To learn more about GPT Researcher, check out the [documentation page](/docs/gpt-researcher/getting-started/introduction).

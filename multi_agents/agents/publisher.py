@@ -10,7 +10,7 @@ class PublisherAgent:
     def __init__(self, output_dir: str, websocket=None, stream_output=None, headers=None):
         self.websocket = websocket
         self.stream_output = stream_output
-        self.output_dir = output_dir
+        self.output_dir = output_dir.strip()
         self.headers = headers or {}
         
     async def publish_research_report(self, research_state: dict, publish_formats: dict):
@@ -20,11 +20,19 @@ class PublisherAgent:
         return layout
 
     def generate_layout(self, research_state: dict):
-        sections = '\n\n'.join(f"{value}"
-                                 for subheader in research_state.get("research_data")
-                                 for key, value in subheader.items())
-        references = '\n'.join(f"{reference}" for reference in research_state.get("sources"))
-        headers = research_state.get("headers")
+        sections = []
+        for subheader in research_state.get("research_data", []):
+            if isinstance(subheader, dict):
+                # Handle dictionary case
+                for key, value in subheader.items():
+                    sections.append(f"{value}")
+            else:
+                # Handle string case
+                sections.append(f"{subheader}")
+        
+        sections_text = '\n\n'.join(sections)
+        references = '\n'.join(f"{reference}" for reference in research_state.get("sources", []))
+        headers = research_state.get("headers", {})
         layout = f"""# {headers.get('title')}
 #### {headers.get("date")}: {research_state.get('date')}
 
@@ -34,7 +42,7 @@ class PublisherAgent:
 ## {headers.get("table_of_contents")}
 {research_state.get('table_of_contents')}
 
-{sections}
+{sections_text}
 
 ## {headers.get("conclusion")}
 {research_state.get('conclusion')}

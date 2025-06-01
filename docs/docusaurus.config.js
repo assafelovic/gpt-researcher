@@ -10,7 +10,7 @@ module.exports = {
   onBrokenLinks: 'ignore',
   //deploymentBranch: 'master',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/gptr-logo.png',
   organizationName: 'assafelovic',
   trailingSlash: false,
   projectName: 'gpt-researcher',
@@ -96,6 +96,9 @@ module.exports = {
             'https://github.com/assafelovic/gpt-researcher/tree/master/docs',
           remarkPlugins: [math],
           rehypePlugins: [katex],
+        },
+        blog: {
+          onUntruncatedBlogPosts: 'ignore',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),

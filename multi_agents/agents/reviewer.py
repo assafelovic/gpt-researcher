@@ -5,6 +5,7 @@ TEMPLATE = """You are an expert research article reviewer. \
 Your goal is to review research drafts and provide feedback to the reviser only based on specific guidelines. \
 """
 
+
 class ReviewerAgent:
     def __init__(self, websocket=None, stream_output=None, headers=None):
         self.websocket = websocket
@@ -18,7 +19,7 @@ class ReviewerAgent:
         :return:
         """
         task = draft_state.get("task")
-        guidelines = '- '.join(guideline for guideline in task.get("guidelines"))
+        guidelines = "- ".join(guideline for guideline in task.get("guidelines"))
         revision_notes = draft_state.get("revision_notes")
 
         revise_prompt = f"""The reviser has already revised the draft based on your previous review notes with the following feedback:
@@ -35,23 +36,27 @@ If the draft meets all the guidelines, please return None.
 
 Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
 """
-        prompt = [{
-            "role": "system",
-            "content": TEMPLATE
-        }, {
-            "role": "user",
-            "content": review_prompt
-        }]
+        prompt = [
+            {"role": "system", "content": TEMPLATE},
+            {"role": "user", "content": review_prompt},
+        ]
 
-        response = await call_model(prompt, model=task.get("model"), api_key=self.headers.get("openai_api_key"))
+        response = await call_model(prompt, model=task.get("model"))
 
         if task.get("verbose"):
             if self.websocket and self.stream_output:
-                await self.stream_output("logs", "review_feedback", f"Review feedback is: {response}...", self.websocket)
+                await self.stream_output(
+                    "logs",
+                    "review_feedback",
+                    f"Review feedback is: {response}...",
+                    self.websocket,
+                )
             else:
-                print_agent_output(f"Review feedback is: {response}...", agent="REVIEWER")
+                print_agent_output(
+                    f"Review feedback is: {response}...", agent="REVIEWER"
+                )
 
-        if 'None' in response:
+        if "None" in response:
             return None
         return response
 
@@ -64,7 +69,9 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
             print_agent_output(f"Reviewing draft...", agent="REVIEWER")
 
             if task.get("verbose"):
-                print_agent_output(f"Following guidelines {guidelines}...", agent="REVIEWER")
+                print_agent_output(
+                    f"Following guidelines {guidelines}...", agent="REVIEWER"
+                )
 
             review = await self.review_draft(draft_state)
         else:

@@ -1,14 +1,30 @@
-# 🔎 GPT Researcher
+<div align="center">
+<!--<h1 style="display: flex; align-items: center; gap: 10px;">
+  <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/a45bac7c-092c-42e5-8eb6-69acbf20dde5" alt="Logo" width="25">
+  GPT Researcher
+</h1>-->
+<img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
+
+
+####
+
 [![公式サイト](https://img.shields.io/badge/公式サイト-gptr.dev-blue?style=for-the-badge&logo=world&logoColor=white)](https://gptr.dev)
-[![Discord フォロー](https://dcbadge.vercel.app/api/server/QgZXvJAccX?style=for-the-badge)](https://discord.gg/QgZXvJAccX)
+[![Documentation](https://img.shields.io/badge/Documentation-DOCS-f472b6?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
+[![Discord Follow](https://img.shields.io/discord/1127851779011391548?style=for-the-badge&logo=discord&label=Chat%20on%20Discord)](https://discord.gg/QgZXvJAccX)
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/assafelovic/gpt-researcher?style=social)](https://github.com/assafelovic/gpt-researcher)
-[![Twitter フォロー](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
-[![PyPI バージョン](https://badge.fury.io/py/gpt-researcher.svg)](https://badge.fury.io/py/gpt-researcher)
+[![PyPI version](https://img.shields.io/pypi/v/gpt-researcher?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/gpt-researcher)
+![GitHub Release](https://img.shields.io/github/v/release/assafelovic/gpt-researcher?style=flat&logo=github)
+[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/docs/docs/examples/pip-run.ipynb)
+[![Docker Image Version](https://img.shields.io/docker/v/elestio/gpt-researcher/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/gpt-researcher)
+[![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
 
--  [English](README.md)
--  [中文](README-zh_CN.md)
--  [日本語](README-ja_JP.md)
+[English](README.md) |
+[中文](README-zh_CN.md) |
+[日本語](README-ja_JP.md) |
+[한국어](README-ko_KR.md)
+</div>
+
+# 🔎 GPT Researcher
 
 **GPT Researcher は、さまざまなタスクに対する包括的なオンラインリサーチのために設計された自律エージェントです。**
 
@@ -58,7 +74,7 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 
 ## 📖 ドキュメント
 
-完全なドキュメントについては、[こちら](https://docs.gptr.dev/docs/gpt-researcher/getting-started)を参照してください：
+完全なドキュメントについては、[こちら](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)を参照してください：
 
 - 入門（インストール、環境設定、簡単な例）
 - 操作例（デモ、統合、dockerサポート）
@@ -95,7 +111,7 @@ $ export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 - **LLMには、[OpenAI GPT](https://platform.openai.com/docs/guides/gpt) を使用することをお勧めします**が、[Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai) がサポートする他の LLM モデル（オープンソースを含む）を使用することもできます。llm モデルとプロバイダーを config/config.py で変更するだけです。[このガイド](https://python.langchain.com/docs/integrations/llms/) に従って、LLM を Langchain と統合する方法を学んでください。
-- **検索エンジンには、[Tavily Search API](https://app.tavily.com)（LLM 用に最適化されています）を使用することをお勧めします**が、他の検索エンジンを選択することもできます。config/config.py で検索プロバイダーを「duckduckgo」、「googleAPI」、「googleSerp」、「searx」に変更するだけです。次に、config.py ファイルに対応する env API キーを追加します。
+- **検索エンジンには、[Tavily Search API](https://app.tavily.com)（LLM 用に最適化されています）を使用することをお勧めします**が、他の検索エンジンを選択することもできます。config/config.py で検索プロバイダーを「duckduckgo」、「googleAPI」、「googleSerp」、「searchapi」、「searx」に変更するだけです。次に、config.py ファイルに対応する env API キーを追加します。
 - **最適なパフォーマンスを得るために、[OpenAI GPT](https://platform.openai.com/docs/guides/gpt) モデルと [Tavily Search API](https://app.tavily.com) を使用することを強くお勧めします。**
 <br />
 

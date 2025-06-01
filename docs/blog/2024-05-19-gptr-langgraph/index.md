@@ -2,7 +2,7 @@
 slug: gptr-langgraph
 title: How to Build the Ultimate Research Multi-Agent Assistant
 authors: [assafe]
-tags: [multi-agents, gpt-researcher, langchain, langgraph]
+tags: [multi-skills, gpt-researcher, langchain, langgraph]
 ---
 ![Header](./blog-langgraph.jpeg)
 # Introducing the GPT Researcher Multi-Agent Assistant
@@ -114,7 +114,7 @@ As you can see above, we’ve created an instance of the Research agent. Now let
 
 ```python
 def init_research_team(self):
-    # Initialize agents
+    # Initialize skills
     editor_agent = EditorAgent(self.task)
     research_agent = ResearchAgent()
     writer_agent = WriterAgent()

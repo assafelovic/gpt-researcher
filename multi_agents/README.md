@@ -8,7 +8,7 @@ Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this exa
 
 An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 
-Please note: This example uses the OpenAI API only for optimized performance.
+Please note: Multi-agents are utilizing the same configuration of models like GPT-Researcher does. However, only the SMART_LLM is used for the time being. Please refer to the [LLM config pages](https://docs.gptr.dev/docs/gpt-researcher/llms/llms).
 
 ## The Multi Agent Team
 The research team is made up of 8 agents:
@@ -47,15 +47,12 @@ More specifically (as seen in the architecture diagram) the process is as follow
 - Publisher - Publishes the final report to multi formats such as PDF, Docx, Markdown, etc.
 
 ## How to run
-1. Install required packages:
+1. Install required packages found in this root folder including `langgraph`:
     ```bash
     pip install -r requirements.txt
     ```
-3. Update env variables
-   ```bash
-   export OPENAI_API_KEY={Your OpenAI API Key here}
-   export TAVILY_API_KEY={Your Tavily API Key here}
-   ```
+3. Update env variables, see the [GPT-Researcher docs](https://docs.gptr.dev/docs/gpt-researcher/llms/llms) for more details.
+
 2. Run the application:
     ```bash
     python main.py
@@ -105,43 +102,3 @@ langgraph up
 ```
 
 From there, see documentation [here](https://github.com/langchain-ai/langgraph-example) on how to use the streaming and async endpoints, as well as the playground.
-
-## NextJS Frontend App
-
-The React app (located in `frontend` directory) is our Frontend 2.0 which we hope will enable us to display the robustness of the backend on the frontend, as well.
-
-It comes with loads of added features, such as: 
- - a drag-n-drop user interface for uploading and deleting files to be used as local documents by GPTResearcher.
- - a GUI for setting your GPTR environment variables.
- - the ability to trigger the multi_agents flow via the Backend Module or Langgraph Cloud Host (currently in closed beta).
- - stability fixes
- - and more coming soon!
-
-### Run the NextJS React App with Docker
-
-> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started#try-it-with-docker)
-
-> **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
-
-> **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
-
-```bash
-$ docker-compose up --build
-```
-
-> **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
- - the Python server running on localhost:8000<br>
- - the React app running on localhost:3000<br>
-
-Visit localhost:3000 on any browser and enjoy researching!
-
-
-### Run the NextJS React App with NPM
-
-```bash
-cd frontend
-nvm install 18.17.0
-nvm use v18.17.0
-npm install --legacy-peer-deps
-npm run dev
-```
