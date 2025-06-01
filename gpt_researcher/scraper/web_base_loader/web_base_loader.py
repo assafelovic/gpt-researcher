@@ -1,15 +1,11 @@
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-import requests
-from ..utils import get_relevant_images, extract_title
 
 class WebBaseLoaderScraper:
 
     def __init__(self, link, session=None):
         self.link = link
-        self.session = session or requests.Session()
+        self.session = session
 
-    def scrape(self) -> tuple:
+    def scrape(self) -> str:
         """
         This Python function scrapes content from a webpage using a WebBaseLoader object and returns the
         concatenated page content.
@@ -29,15 +25,8 @@ class WebBaseLoaderScraper:
             for doc in docs:
                 content += doc.page_content
 
-            response = self.session.get(self.link)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            image_urls = get_relevant_images(soup, self.link)
-            
-            # Extract the title using the utility function
-            title = extract_title(soup)
-
-            return content, image_urls, title
+            return content
 
         except Exception as e:
             print("Error! : " + str(e))
-            return "", [], ""
+            return ""

@@ -8,16 +8,13 @@ class ReportType(Enum):
     CustomReport = "custom_report"
     DetailedReport = "detailed_report"
     SubtopicReport = "subtopic_report"
-    DeepResearch = "deep"
 
 
 class ReportSource(Enum):
     Web = "web"
     Local = "local"
-    Azure = "azure"
     LangChainDocuments = "langchain_documents"
-    LangChainVectorStore = "langchain_vectorstore"
-    Static = "static"
+    Sources = "sources"
     Hybrid = "hybrid"
 
 
@@ -49,15 +46,3 @@ class Tone(Enum):
     Pessimistic = (
         "Pessimistic (focusing on limitations, challenges, or negative outcomes)"
     )
-    Simple = "Simple (written for young readers, using basic vocabulary and clear explanations)"
-    Casual = "Casual (conversational and relaxed style for easy, everyday reading)"
-
-
-class PromptFamily(Enum):
-    """Supported prompt families by name"""
-    Default = "default"
-    Granite = "granite"
-    Granite3 = "granite3"
-    Granite31 = "granite3.1"
-    Granite32 = "granite3.2"
-    Granite33 = "granite3.3"

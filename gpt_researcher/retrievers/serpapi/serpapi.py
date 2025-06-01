@@ -10,14 +10,13 @@ class SerpApiSearch():
     """
     SerpApi Retriever
     """
-    def __init__(self, query, query_domains=None):
+    def __init__(self, query):
         """
         Initializes the SerpApiSearch object
         Args:
             query:
         """
         self.query = query
-        self.query_domains = query_domains or None
         self.api_key = self.get_api_key()
 
     def get_api_key(self):
@@ -42,15 +41,10 @@ class SerpApiSearch():
         print("SerpApiSearch: Searching with query {0}...".format(self.query))
         """Useful for general internet search queries using SerpApi."""
 
+
         url = "https://serpapi.com/search.json"
-
-        search_query = self.query
-        if self.query_domains:
-            # Add site:domain1 OR site:domain2 OR ... to the search query
-            search_query += " site:" + " OR site:".join(self.query_domains)
-
         params = {
-            "q": search_query,
+            "q": self.query,
             "api_key": self.api_key
         }
         encoded_url = url + "?" + urllib.parse.urlencode(params)

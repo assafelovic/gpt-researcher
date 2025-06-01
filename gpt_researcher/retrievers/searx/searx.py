@@ -1,78 +1,45 @@
+# Tavily API Retriever
+
+# libraries
 import os
-import json
-import requests
-from typing import List, Dict
-from urllib.parse import urljoin
+from langchain_community.utilities import SearxSearchWrapper
 
 
 class SearxSearch():
     """
-    SearxNG API Retriever
+    Tavily API Retriever
     """
-    def __init__(self, query: str, query_domains=None):
+    def __init__(self, query):
         """
-        Initializes the SearxSearch object
+        Initializes the TavilySearch object
         Args:
-            query: Search query string
+            query:
         """
         self.query = query
-        self.query_domains = query_domains or None
-        self.base_url = self.get_searxng_url()
+        self.api_key = self.get_api_key()
 
-    def get_searxng_url(self) -> str:
+    def get_api_key(self):
         """
-        Gets the SearxNG instance URL from environment variables
+        Gets the Tavily API key
         Returns:
-            str: Base URL of SearxNG instance
-        """
-        try:
-            base_url = os.environ["SEARX_URL"]
-            if not base_url.endswith('/'):
-                base_url += '/'
-            return base_url
-        except KeyError:
-            raise Exception(
-                "SearxNG URL not found. Please set the SEARX_URL environment variable. "
-                "You can find public instances at https://searx.space/"
-            )
 
-    def search(self, max_results: int = 10) -> List[Dict[str, str]]:
         """
-        Searches the query using SearxNG API
-        Args:
-            max_results: Maximum number of results to return
+        # Get the API key
+        try:
+            api_key = os.environ["SEARX_URL"]
+        except:
+            raise Exception("Searx URL key not found. Please set the SEARX_URL environment variable. "
+                            "You can get your key from https://searx.space/")
+        return api_key
+
+    def search(self, max_results=7):
+        """
+        Searches the query
         Returns:
-            List of dictionaries containing search results
+
         """
-        search_url = urljoin(self.base_url, "search")
-        # TODO: Add support for query domains
-        params = {
-            # The search query. 
-            'q': self.query, 
-            # Output format of results. Format needs to be activated in searxng config.
-            'format': 'json'
-        }
-
-        try:
-            response = requests.get(
-                search_url,
-                params=params,
-                headers={'Accept': 'application/json'}
-            )
-            response.raise_for_status()
-            results = response.json()
-
-            # Normalize results to match the expected format
-            search_response = []
-            for result in results.get('results', [])[:max_results]:
-                search_response.append({
-                    "href": result.get('url', ''),
-                    "body": result.get('content', '')
-                })
-
-            return search_response
-
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Error querying SearxNG: {str(e)}")
-        except json.JSONDecodeError:
-            raise Exception("Error parsing SearxNG response")
+        searx = SearxSearchWrapper(searx_host=os.environ["SEARX_URL"])
+        results = searx.results(self.query, max_results)
+        # Normalizing results to match the format of the other search APIs
+        search_response = [{"href": obj["link"], "body": obj["snippet"]} for obj in results]
+        return search_response
