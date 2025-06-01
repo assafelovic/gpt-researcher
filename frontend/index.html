@@ -133,11 +133,6 @@
         </div>
     </div>
 
-    <!-- Scroll to bottom button -->
-    <div class="scroll-to-bottom" id="scrollToBottomBtn">
-        <i class="fas fa-arrow-down"></i>
-    </div>
-
     <section class="landing">
         <div class="max-w-5xl mx-auto text-center">
             <h1 class="text-4xl font-extrabold mx-auto lg:text-7xl">
@@ -377,22 +372,6 @@
             taskTextarea.addEventListener('focus', resizeTextarea);
         }
 
-        // Scroll to bottom button functionality
-        const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
-
-        // Handle scroll events
-        window.addEventListener('scroll', function() {
-            // Other scroll functionality can go here if needed
-        });
-
-        // Scroll to bottom button click event
-        scrollToBottomBtn.addEventListener('click', function() {
-            window.scrollTo({
-                top: document.body.scrollHeight,
-                behavior: 'smooth'
-            });
-        });
-
         // Ensure feature panels are positioned correctly on window resize
         window.addEventListener('resize', function () {
             // Adjust the feature panel width based on screen size
@@ -409,13 +388,6 @@
                     featurePanel.style.width = `${panelWidth}px`;
                 }
             }
-        });
-
-        // Manually trigger the scroll event once on load to correctly set the scroll button visibility
-        window.addEventListener('DOMContentLoaded', function () {
-            setTimeout(() => {
-                window.dispatchEvent(new Event('scroll'));
-            }, 100);
         });
     </script>
 </body>
