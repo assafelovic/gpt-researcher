@@ -1527,7 +1527,7 @@ footer a:hover {
     margin-top: 40px;
     padding: 20px;
     border-radius: 10px;
-    background-color: transparent;
+    background-color: rgba(20, 20, 28, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -1587,7 +1587,7 @@ footer a:hover {
     flex-grow: 1;
     border-radius: 20px;
     padding: 10px 15px;
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: #2f3542;
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.2);
     font-weight: 400;
@@ -1598,10 +1598,10 @@ footer a:hover {
 }
 
 .chat-input:focus {
-    background-color: rgba(255, 255, 255, 0.4);
+    background-color: #3b4252;
     border-color: #14b8a6;
     box-shadow: 0 0 0 0.2rem rgba(20, 184, 166, 0.25);
-    color: #000000;
+    color: white;
     font-weight: 500;
 }
 
@@ -2009,4 +2009,62 @@ footer a:hover {
         font-size: 1.1rem;
         min-width: 180px;
     }
+}
+
+/* Image Dialog Styles */
+.image-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75); /* Darker backdrop for better focus */
+    display: flex;
+    flex-direction: column; /* Align button below image */
+    justify-content: center;
+    align-items: center;
+    z-index: 10000; /* Ensure it's on top of everything */
+    padding: 20px; /* Add some padding around */
+    box-sizing: border-box; /* Include padding in width/height */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.image-dialog.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.image-dialog img {
+    max-width: 90%; /* Responsive image width */
+    max-height: 80%; /* Responsive image height */
+    object-fit: contain; /* Ensure image aspect ratio is maintained */
+    border-radius: 8px; /* Slightly rounded corners for the image */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Subtle shadow for depth */
+}
+
+.image-dialog .close-btn {
+    background: linear-gradient(to right, #0d9488, #14b8a6);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 20px; /* Space between image and button */
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3);
+}
+
+.image-dialog .close-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(20, 184, 166, 0.4);
+}
+
+/* Ensure the dialog is not selectable when hidden */
+.image-dialog:not(.visible) {
+    pointer-events: none;
 }

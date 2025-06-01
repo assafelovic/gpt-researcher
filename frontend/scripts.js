@@ -805,11 +805,14 @@ const GPTResearcher = (() => {
       output: '🧙‍♂️ Gathering information and analyzing your research topic...',
     })
 
-    // Directly scroll to the bottom of the page - exactly once per click
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: 'smooth'
-    });
+    // Scroll to the "Research Progress" section
+    const researchOutputContainer = document.querySelector('.research-output-container');
+    if (researchOutputContainer) {
+        researchOutputContainer.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
 
     dispose_socket = listenToSockEvents() // Assign the new dispose function
   }
@@ -873,32 +876,17 @@ const GPTResearcher = (() => {
         // Get the current report_type
         const report_type = document.querySelector('select[name="report_type"]').value;
 
-        // Determine if we're using detailed_report (the only one that needs special handling)
+        // Determine if we're using detailed_report
         const isDetailedReport = report_type === 'detailed_report';
 
         if (isDetailedReport) {
-          // Special handling for detailed_report
-          // Add to allReports for final display
-          allReports += data.output;
-
-          // Handle currentReport differently based on if it's the first report
-          if (isFirstReport) {
-            currentReport = data.output;
-            isFirstReport = false;
-
-            // For the first report, write directly
-            const reportData = { output: currentReport, type: 'report' };
-            writeReport(reportData, converter, false, true); // Use append=true
-          } else {
-            // For subsequent reports in detailed_report, replace with just this report
-            currentReport = data.output;
-            const reportData = { output: currentReport, type: 'report' };
-            writeReport(reportData, converter, false, false); // Use append=false
-          }
+          allReports += data.output; // Accumulate raw markdown
+          // Always render the HTML of *all accumulated markdown* for detailed reports during streaming.
+          // writeReport will replace the container's content.
+          writeReport({ output: allReports, type: 'report' }, converter, false, false);
         } else {
-          // For all other report types, always append
-          const reportData = { output: data.output, type: 'report' };
-          writeReport(reportData, converter, false, true); // Use append=true
+          // For all other report types, append HTML of current chunk to the container.
+          writeReport({ output: data.output, type: 'report' }, converter, false, true); // append = true
         }
       } else if (data.type === 'path') {
         updateState('finished')
@@ -1038,10 +1026,13 @@ const GPTResearcher = (() => {
   }
 
   const addAgentResponse = (data) => {
-    const output = document.getElementById('output')
-    output.innerHTML += '<div class="agent_response">' + data.output + '</div>'
-    output.scrollTop = output.scrollHeight
-    output.style.display = 'block'
+    const output = document.getElementById('output');
+    const responseDiv = document.createElement('div');
+    responseDiv.className = 'agent_response';
+    responseDiv.innerHTML = data.output; // Assuming data.output is safe HTML or simple text from agent
+    output.appendChild(responseDiv);
+    output.scrollTop = output.scrollHeight;
+    output.style.display = 'block';
   }
 
   const writeReport = (data, converter, isFinal = false, append = false) => {
@@ -1319,21 +1310,46 @@ const GPTResearcher = (() => {
   }
 
   const showImageDialog = (imageUrl) => {
-    const dialog = document.createElement('div');
-    dialog.className = 'image-dialog';
+    let dialog = document.querySelector('.image-dialog');
+    if (!dialog) {
+        dialog = document.createElement('div');
+        dialog.className = 'image-dialog';
 
-    const img = document.createElement('img');
-    img.src = imageUrl;
-    img.alt = 'Full-size Research Image';
+        const img = document.createElement('img');
+        img.alt = 'Full-size Research Image';
 
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Close';
-    closeBtn.onclick = () => document.body.removeChild(dialog);
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Close';
+        closeBtn.className = 'close-btn'; // Added class for styling
 
-    dialog.appendChild(img);
-    dialog.appendChild(closeBtn);
-    document.body.appendChild(dialog);
-  }
+        dialog.appendChild(img);
+        dialog.appendChild(closeBtn);
+        document.body.appendChild(dialog);
+
+        closeBtn.onclick = () => {
+            dialog.classList.remove('visible');
+        };
+        // Close on clicking backdrop
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                dialog.classList.remove('visible');
+            }
+        });
+    }
+
+    const imgElement = dialog.querySelector('img');
+    imgElement.src = imageUrl;
+    dialog.classList.add('visible');
+
+    // Close with Escape key
+    const escapeKeyListener = (e) => {
+        if (e.key === 'Escape') {
+            dialog.classList.remove('visible');
+            document.removeEventListener('keydown', escapeKeyListener);
+        }
+    };
+    document.addEventListener('keydown', escapeKeyListener);
+}
 
   // Function to show download bar and enable buttons
   const showDownloadPanels = () => {
