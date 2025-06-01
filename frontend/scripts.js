@@ -551,6 +551,11 @@ const GPTResearcher = (() => {
       entryElement.className = 'history-entry';
       entryElement.setAttribute('data-id', index);
 
+      // Make the entire entry clickable to load it
+      entryElement.addEventListener('click', () => {
+        loadResearchEntry(index);
+      });
+
       // Format timestamp if available
       let timestampHTML = '';
       if (entry.timestamp) {
@@ -606,20 +611,72 @@ const GPTResearcher = (() => {
     if (!entry) return;
 
     // Fill form with the entry data
-    document.getElementById('task').value = entry.task;
-    document.querySelector('select[name="report_type"]').value = entry.reportType;
-    document.querySelector('select[name="report_source"]').value = entry.reportSource;
-    document.querySelector('select[name="tone"]').value = entry.tone;
-
-    if (entry.queryDomains && entry.queryDomains.length > 0) {
-      document.querySelector('input[name="query_domains"]').value = entry.queryDomains.join(', ');
+    document.getElementById('task').value = entry.prompt; // Changed from entry.task for consistency
+    
+    // Check if report_type, report_source, and tone are in entry, otherwise use defaults or skip
+    const reportTypeSelect = document.querySelector('select[name="report_type"]');
+    if (reportTypeSelect && entry.reportType) {
+        reportTypeSelect.value = entry.reportType;
+    } else if (reportTypeSelect) {
+        reportTypeSelect.value = reportTypeSelect.options[0].value; // Default to first option
     }
 
+    const reportSourceSelect = document.querySelector('select[name="report_source"]');
+    if (reportSourceSelect && entry.reportSource) {
+        reportSourceSelect.value = entry.reportSource;
+    } else if (reportSourceSelect) {
+        reportSourceSelect.value = reportSourceSelect.options[0].value; // Default to first option
+    }
+
+    const toneSelect = document.querySelector('select[name="tone"]');
+    if (toneSelect && entry.tone) {
+        toneSelect.value = entry.tone;
+    } else if (toneSelect) {
+        toneSelect.value = toneSelect.options[0].value; // Default to first option
+    }
+
+    const queryDomainsInput = document.querySelector('input[name="query_domains"]');
+    if (queryDomainsInput) {
+        if (entry.queryDomains && Array.isArray(entry.queryDomains) && entry.queryDomains.length > 0) {
+            queryDomainsInput.value = entry.queryDomains.join(', ');
+        } else {
+            queryDomainsInput.value = ''; // Clear if not present
+        }
+    }
+
+    // Clear current research/report areas
+    document.getElementById('output').innerHTML = '';
+    document.getElementById('reportContainer').innerHTML = '';
+    document.getElementById('selectedImagesContainer').innerHTML = '';
+    document.getElementById('selectedImagesContainer').style.display = 'none';
+
+    // Hide download bar and chat
+    const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
+    if (stickyDownloadsBar) {
+        stickyDownloadsBar.classList.remove('visible');
+    }
+    const chatContainer = document.getElementById('chatContainer');
+    if (chatContainer) {
+        chatContainer.style.display = 'none';
+    }
+
+    // Reset UI state and report-specific buttons
+    updateState('initial'); // This will hide copy buttons etc.
+
     // Close the history panel
-    document.getElementById('historyPanel').classList.remove('open');
+    const historyPanel = document.getElementById('historyPanel');
+    if (historyPanel) {
+        historyPanel.classList.remove('open');
+    }
 
     // Scroll to the form
-    document.getElementById('form').scrollIntoView({ behavior: 'smooth' });
+    const formElement = document.getElementById('form');
+    if (formElement) {
+        formElement.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Inform user
+    showToast('Research parameters loaded. You can start the research again.');
   }
 
   // Copy entry content to clipboard
@@ -1958,12 +2015,15 @@ const GPTResearcher = (() => {
     // Toggle expanded-view class
     element.classList.toggle('expanded-view');
 
-    // Change button icon based on state
-    const button = element.querySelector('.expand-button i');
-    if (button) {
+    // Change button icon and title based on state
+    const buttonIcon = element.querySelector('.expand-button i');
+    const button = element.querySelector('.expand-button');
+
+    if (buttonIcon && button) {
       if (element.classList.contains('expanded-view')) {
-        button.classList.remove('fa-compress-alt');
-        button.classList.add('fa-compress-alt');
+        buttonIcon.classList.remove('fa-compress-alt');
+        buttonIcon.classList.add('fa-compress-alt');
+        button.title = 'Collapse'; // Update title to Collapse
 
         // Find content containers and expand their height
         const contentContainers = element.querySelectorAll('#reportContainer, #output, #chatMessages');
@@ -1978,8 +2038,9 @@ const GPTResearcher = (() => {
           }
         });
       } else {
-        button.classList.remove('fa-compress-alt');
-        button.classList.add('fa-expand-alt');
+        buttonIcon.classList.remove('fa-compress-alt');
+        buttonIcon.classList.add('fa-expand-alt');
+        button.title = 'Expand'; // Update title to Expand
 
         // Reset heights back to original when collapsed
         const contentContainers = element.querySelectorAll('#reportContainer, #output, #chatMessages');
