@@ -97,7 +97,7 @@ async def test_mcp_tool_selection():
         # Create MCP retriever
         retriever = MCPRetriever(
             query="How does React's useState hook work?",
-            llm_provider=mock_researcher
+            researcher=mock_researcher
         )
         
         print("✅ MCPRetriever initialized successfully")

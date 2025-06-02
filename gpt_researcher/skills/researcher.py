@@ -440,7 +440,7 @@ class ResearchConductor:
                 headers=self.researcher.headers,
                 query_domains=self.researcher.query_domains,
                 websocket=self.researcher.websocket,
-                llm_provider=self.researcher  # Pass the entire researcher instance
+                researcher=self.researcher  # Pass the entire researcher instance
             )
             
             if self.researcher.verbose:
@@ -676,7 +676,7 @@ class ResearchConductor:
                 headers=self.researcher.headers,
                 query_domains=self.researcher.query_domains,
                 websocket=self.researcher.websocket if is_mcp_retriever else None,
-                llm_provider=self.researcher if is_mcp_retriever else None
+                researcher=self.researcher if is_mcp_retriever else None
             )
             
             # Log MCP server configurations if using MCP retriever

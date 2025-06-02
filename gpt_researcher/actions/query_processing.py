@@ -27,7 +27,7 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
         search_retriever = retriever(
             query, 
             query_domains=query_domains,
-            llm_provider=researcher  # Pass researcher instance for MCP retrievers
+            researcher=researcher  # Pass researcher instance for MCP retrievers
         )
     else:
         search_retriever = retriever(query, query_domains=query_domains)

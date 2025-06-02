@@ -24,6 +24,11 @@ class MCPRetriever:
     
     This approach is more efficient than calling all tools and provides better, 
     more targeted research results.
+    
+    The retriever requires a researcher instance to access:
+    - mcp_configs: List of MCP server configurations
+    - cfg: Configuration object with LLM settings and parameters
+    - add_costs: Method for tracking research costs
     """
 
     def __init__(
@@ -32,7 +37,7 @@ class MCPRetriever:
         headers: Optional[Dict[str, str]] = None,
         query_domains: Optional[List[str]] = None,
         websocket=None,
-        llm_provider=None,
+        researcher=None,
         **kwargs
     ):
         """
@@ -43,14 +48,14 @@ class MCPRetriever:
             headers (dict, optional): Headers containing MCP configuration.
             query_domains (list, optional): List of domains to search (not used in MCP).
             websocket: WebSocket for stream logging.
-            llm_provider: LLM provider (researcher instance) containing mcp_configs and cfg.
+            researcher: Researcher instance containing mcp_configs and cfg.
             **kwargs: Additional arguments (for compatibility).
         """
         self.query = query
         self.headers = headers or {}
         self.query_domains = query_domains or []
         self.websocket = websocket
-        self.researcher = llm_provider  # This is actually the researcher instance
+        self.researcher = researcher
         
         # Extract mcp_configs and config from the researcher instance
         self.mcp_configs = self._get_mcp_configs()
@@ -94,8 +99,8 @@ class MCPRetriever:
             return self.researcher.cfg
         
         # If no config available, this is a critical error
-        logger.error("No config found in researcher instance - this should not happen")
-        raise ValueError("No config available - researcher instance must have cfg attribute")
+        logger.error("No config found in researcher instance. MCPRetriever requires a researcher instance with cfg attribute.")
+        raise ValueError("MCPRetriever requires a researcher instance with cfg attribute containing LLM configuration")
 
     async def _stream_log(self, message: str, data: Any = None):
         """Stream a log message to the websocket if available."""
