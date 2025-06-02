@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def get_search_results(query: str, retriever: Any, query_domains: List[str] = None) -> List[Dict[str, Any]]:
+async def get_search_results(query: str, retriever: Any, query_domains: List[str] = None, researcher=None) -> List[Dict[str, Any]]:
     """
     Get web search results for a given query.
 
@@ -17,11 +17,21 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
         query: The search query
         retriever: The retriever instance
         query_domains: Optional list of domains to search
+        researcher: The researcher instance (needed for MCP retrievers)
 
     Returns:
         A list of search results
     """
-    search_retriever = retriever(query, query_domains=query_domains)
+    # Check if this is an MCP retriever and pass the researcher instance
+    if "mcpretriever" in retriever.__name__.lower():
+        search_retriever = retriever(
+            query, 
+            query_domains=query_domains,
+            llm_provider=researcher  # Pass researcher instance for MCP retrievers
+        )
+    else:
+        search_retriever = retriever(query, query_domains=query_domains)
+    
     return search_retriever.search()
 
 async def generate_sub_queries(
