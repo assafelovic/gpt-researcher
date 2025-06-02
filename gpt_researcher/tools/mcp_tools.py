@@ -181,12 +181,16 @@ class MCPToolsProvider:
         """Close the MCP client and clean up resources."""
         if self.client:
             try:
-                # The MultiServerMCPClient doesn't have an explicit close method
-                # but we can clean up our reference
-                self.client = None
-                await self._stream_log("🔧 MCP client closed")
+                # Since MultiServerMCPClient doesn't support context manager
+                # or explicit close methods in langchain-mcp-adapters 0.1.0,
+                # we just clear the reference and let garbage collection handle it
+                await self._stream_log("🔧 Releasing MCP client reference")
             except Exception as e:
-                logger.error(f"Error closing MCP client: {e}")
+                logger.error(f"Error during MCP client cleanup: {e}")
+                await self._stream_log(f"⚠️ Error during MCP client cleanup: {str(e)}")
+            finally:
+                # Always clear the reference
+                self.client = None
                 
     async def __aenter__(self):
         """Async context manager entry."""

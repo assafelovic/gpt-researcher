@@ -14,7 +14,6 @@ from ..utils import stream_output
 
 logger = logging.getLogger(__name__)
 
-
 class MCPRetriever:
     """
     Model Context Protocol (MCP) Retriever for GPT Researcher using langchain-mcp-adapters
@@ -60,6 +59,10 @@ class MCPRetriever:
         # Initialize tool selection cache
         self._selected_tools_cache = None
         self._all_tools_cache = None
+        
+        # Initialize client management
+        self._client = None
+        self._client_lock = asyncio.Lock()
         
         # Log initialization
         if self.mcp_configs:
@@ -224,6 +227,58 @@ class MCPRetriever:
             await self._stream_log(f"❌ Error calling LLM: {str(e)}")
             return ""
 
+    async def _get_or_create_client(self) -> Optional[object]:
+        """
+        Get or create a MultiServerMCPClient with proper lifecycle management.
+        
+        Returns:
+            MultiServerMCPClient: The client instance or None if creation fails
+        """
+        async with self._client_lock:
+            if self._client is not None:
+                return self._client
+                
+            if not HAS_MCP_ADAPTERS:
+                await self._stream_log("❌ langchain-mcp-adapters not installed")
+                return None
+                
+            if not self.mcp_configs:
+                await self._stream_log("❌ No MCP server configurations found")
+                return None
+                
+            try:
+                # Convert configs to langchain format
+                server_configs = self._convert_configs_to_langchain_format()
+                await self._stream_log(f"🔧 Creating MCP client for {len(server_configs)} server(s)")
+                
+                # Initialize the MultiServerMCPClient
+                self._client = MultiServerMCPClient(server_configs)
+                
+                return self._client
+                
+            except Exception as e:
+                logger.error(f"Error creating MCP client: {e}")
+                await self._stream_log(f"❌ Error creating MCP client: {str(e)}")
+                return None
+
+    async def _close_client(self):
+        """
+        Properly close the MCP client and clean up resources.
+        """
+        async with self._client_lock:
+            if self._client is not None:
+                try:
+                    # Since MultiServerMCPClient doesn't support context manager
+                    # or explicit close methods in langchain-mcp-adapters 0.1.0,
+                    # we just clear the reference and let garbage collection handle it
+                    await self._stream_log("🔧 Releasing MCP client reference")
+                except Exception as e:
+                    logger.error(f"Error during MCP client cleanup: {e}")
+                    await self._stream_log(f"⚠️ Error during MCP client cleanup: {str(e)}")
+                finally:
+                    # Always clear the reference
+                    self._client = None
+
     async def _get_all_tools(self) -> List:
         """
         Get all available tools from MCP servers.
@@ -234,22 +289,11 @@ class MCPRetriever:
         if self._all_tools_cache is not None:
             return self._all_tools_cache
             
-        if not HAS_MCP_ADAPTERS:
-            await self._stream_log("❌ langchain-mcp-adapters not installed")
-            return []
-            
-        if not self.mcp_configs:
-            await self._stream_log("❌ No MCP server configurations found")
+        client = await self._get_or_create_client()
+        if not client:
             return []
             
         try:
-            # Convert configs to langchain format
-            server_configs = self._convert_configs_to_langchain_format()
-            await self._stream_log(f"🔧 Connecting to {len(server_configs)} MCP server(s)")
-            
-            # Initialize the MultiServerMCPClient
-            client = MultiServerMCPClient(server_configs)
-            
             # Get tools from all servers
             all_tools = await client.get_tools()
             
@@ -703,8 +747,13 @@ Please conduct thorough research and provide your findings. Use the tools strate
         except Exception as e:
             logger.error(f"Error in MCP search: {e}")
             await self._stream_log(f"❌ Error in MCP search: {str(e)}")
-            # Return empty results instead of raising to allow research to continue
             return []
+        finally:
+            # Ensure client cleanup after search completes
+            try:
+                await self._close_client()
+            except Exception as e:
+                logger.error(f"Error during client cleanup: {e}")
 
     def search(self, max_results: int = 10) -> List[Dict[str, str]]:
         """
@@ -730,10 +779,6 @@ Please conduct thorough research and provide your findings. Use the tools strate
         logger.info(f"MCPRetriever.search called for query: {self.query}")
         
         try:
-            # Suppress asyncio warnings for HTTP client cleanup
-            import warnings
-            warnings.filterwarnings("ignore", message=".*Event loop is closed.*", category=RuntimeWarning)
-            
             # Handle the async/sync boundary properly
             try:
                 # Try to get the current event loop
@@ -748,33 +793,47 @@ Please conduct thorough research and provide your findings. Use the tools strate
                     new_loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(new_loop)
                     try:
-                        # Suppress asyncio errors during execution
-                        import logging
-                        asyncio_logger = logging.getLogger('asyncio')
-                        original_level = asyncio_logger.level
-                        asyncio_logger.setLevel(logging.CRITICAL)
-                        
                         result = new_loop.run_until_complete(self.search_async(max_results))
-                        
-                        # Restore logging level
-                        asyncio_logger.setLevel(original_level)
                         return result
                     finally:
-                        # Properly close the loop and suppress cleanup errors
+                        # Enhanced cleanup procedure for MCP connections
                         try:
-                            # Cancel all pending tasks
+                            # Cancel all pending tasks with a timeout
                             pending = asyncio.all_tasks(new_loop)
                             for task in pending:
                                 task.cancel()
                             
-                            # Wait for cancelled tasks to complete
+                            # Wait for cancelled tasks to complete with timeout
                             if pending:
-                                new_loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                                try:
+                                    new_loop.run_until_complete(
+                                        asyncio.wait_for(
+                                            asyncio.gather(*pending, return_exceptions=True),
+                                            timeout=5.0  # 5 second timeout for cleanup
+                                        )
+                                    )
+                                except asyncio.TimeoutError:
+                                    logger.debug("Timeout during task cleanup, continuing...")
+                                except Exception:
+                                    pass  # Ignore other cleanup errors
                         except Exception:
                             pass  # Ignore cleanup errors
                         finally:
                             try:
-                                new_loop.close()
+                                # Give the loop a moment to finish any final cleanup
+                                import time
+                                time.sleep(0.1)
+                                
+                                # Force garbage collection to clean up any remaining references
+                                import gc
+                                gc.collect()
+                                
+                                # Additional time for HTTP clients to finish their cleanup
+                                time.sleep(0.2)
+                                
+                                # Close the loop
+                                if not new_loop.is_closed():
+                                    new_loop.close()
                             except Exception:
                                 pass  # Ignore close errors
                 
@@ -785,15 +844,7 @@ Please conduct thorough research and provide your findings. Use the tools strate
                     
             except RuntimeError:
                 # No event loop is running, we can run directly
-                import logging
-                asyncio_logger = logging.getLogger('asyncio')
-                original_level = asyncio_logger.level
-                asyncio_logger.setLevel(logging.CRITICAL)
-                
-                try:
-                    results = asyncio.run(self.search_async(max_results))
-                finally:
-                    asyncio_logger.setLevel(original_level)
+                results = asyncio.run(self.search_async(max_results))
             
             return results
             
