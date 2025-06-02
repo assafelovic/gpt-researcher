@@ -55,14 +55,63 @@ class GPTResearcher:
         max_subtopics: int = 5,
         log_handler=None,
         prompt_family: str | None = None,
+        mcp_configs: list[dict] | None = None,
         **kwargs
     ):
+        """
+        Initialize a GPT Researcher instance.
+        
+        Args:
+            query (str): The research query or question.
+            report_type (str): Type of report to generate.
+            report_format (str): Format of the report (markdown, pdf, etc).
+            report_source (str): Source of information for the report (web, local, etc).
+            tone (Tone): Tone of the report.
+            source_urls (list[str], optional): List of specific URLs to use as sources.
+            document_urls (list[str], optional): List of document URLs to use as sources.
+            complement_source_urls (bool): Whether to complement source URLs with web search.
+            query_domains (list[str], optional): List of domains to restrict search to.
+            documents: Document objects for LangChain integration.
+            vector_store: Vector store for document retrieval.
+            vector_store_filter: Filter for vector store queries.
+            config_path: Path to configuration file.
+            websocket: WebSocket for streaming output.
+            agent: Pre-defined agent type.
+            role: Pre-defined agent role.
+            parent_query: Parent query for subtopic reports.
+            subtopics: List of subtopics to research.
+            visited_urls: Set of already visited URLs.
+            verbose (bool): Whether to output verbose logs.
+            context: Pre-loaded research context.
+            headers (dict, optional): Additional headers for requests and configuration.
+            max_subtopics (int): Maximum number of subtopics to generate.
+            log_handler: Handler for logging events.
+            prompt_family: Family of prompts to use.
+            mcp_configs (list[dict], optional): List of MCP server configurations.
+                Each dictionary can contain:
+                - server_name (str): Name of the MCP server
+                - server_command (str): Command to start the server
+                - server_args (list[str]): Arguments for the server command
+                - tool_name (str): Specific tool to use on the MCP server
+                - env (dict): Environment variables for the server
+                - connection_url (str): URL for WebSocket or HTTP connection
+                - connection_type (str): Connection type (stdio, websocket, http)
+                - connection_token (str): Authentication token for remote connections
+                
+                Example:
+                ```python
+                mcp_configs=[{
+                    "server_command": "python",
+                    "server_args": ["my_mcp_server.py"],
+                    "tool_name": "search"
+                }]
+                ```
+        """
         self.kwargs = kwargs
         self.query = query
         self.report_type = report_type
         self.cfg = Config(config_path)
         self.cfg.set_verbose(verbose)
-        self.llm = GenericLLMProvider(self.cfg)
         self.report_source = report_source if report_source else getattr(self.cfg, 'report_source', None)
         self.report_format = report_format
         self.max_subtopics = max_subtopics
@@ -86,12 +135,18 @@ class GPTResearcher:
         self.context = context or []
         self.headers = headers or {}
         self.research_costs = 0.0
+        self.log_handler = log_handler
+        self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
+        
+        # Process MCP configurations if provided
+        self.mcp_configs = mcp_configs
+        if mcp_configs:
+            self._process_mcp_configs(mcp_configs)
+        
         self.retrievers = get_retrievers(self.headers, self.cfg)
         self.memory = Memory(
             self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
         )
-        self.log_handler = log_handler
-        self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)
@@ -102,6 +157,30 @@ class GPTResearcher:
         self.deep_researcher: Optional[DeepResearchSkill] = None
         if report_type == ReportType.DeepResearch.value:
             self.deep_researcher = DeepResearchSkill(self)
+
+    def _process_mcp_configs(self, mcp_configs: list[dict]) -> None:
+        """
+        Process MCP configurations from a list of configuration dictionaries.
+        
+        This method validates the MCP configurations and ensures the retriever
+        is set to include MCP.
+        
+        Args:
+            mcp_configs (list[dict]): List of MCP server configuration dictionaries.
+        """
+        # Ensure mcp is included in retrievers
+        if hasattr(self.cfg, 'retrievers') and self.cfg.retrievers:
+            # If retrievers is set in config
+            current_retrievers = set(self.cfg.retrievers.split(",")) if isinstance(self.cfg.retrievers, str) else set(self.cfg.retrievers)
+            if "mcp" not in current_retrievers:
+                current_retrievers.add("mcp")
+                self.cfg.retrievers = ",".join(filter(None, current_retrievers))
+        else:
+            # No retrievers configured, use mcp as default
+            self.cfg.retrievers = "mcp"
+        
+        # Store the mcp_configs for use by the MCP retriever
+        self.mcp_configs = mcp_configs
 
     async def _log_event(self, event_type: str, **kwargs):
         """Helper method to handle logging events"""

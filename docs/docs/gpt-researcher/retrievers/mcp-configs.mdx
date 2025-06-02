@@ -1,0 +1,365 @@
+---
+title: MCP Configurations
+description: How to configure and use MCP (Model Context Protocol) servers with GPT Researcher
+---
+
+# Using MCP Configurations in GPT Researcher
+
+The Model Context Protocol (MCP) allows GPT Researcher to connect with a wide variety of data sources and tools through a standardized interface. This guide explains how to use the `mcp_configs` parameter for MCP integration.
+
+## Prerequisites
+
+MCP support is included with GPT Researcher installation. The required dependencies (`langchain-mcp-adapters` and `mcp`) are automatically installed when you install GPT Researcher.
+
+If you're working with the development version, make sure your environment is up to date:
+```bash
+pip install -r requirements.txt
+# or if using poetry
+poetry install
+```
+
+## MCP Configuration Basics
+
+The `mcp_configs` parameter accepts a list of configuration dictionaries, making it easy to connect to multiple MCP servers in a single research session.
+
+```python
+from gpt_researcher import GPTResearcher
+
+researcher = GPTResearcher(
+    query="Your research question",
+    mcp_configs=[
+        {
+            "server_command": "python",
+            "server_args": ["path/to/your/mcp_server.py"],
+            "tool_name": "search"
+        }
+    ]
+)
+```
+
+## Configuration Structure
+
+Each MCP configuration dictionary can include the following keys:
+
+| Key | Description | Example |
+|-----|-------------|---------|
+| `server_name` | Name of the MCP server | `"github"` |
+| `server_command` | Command to start the MCP server | `"python"` |
+| `server_args` | List of arguments for the server command | `["-m", "my_mcp_server"]` |
+| `tool_name` | Name of the MCP tool to invoke | `"search"` |
+| `env` | Dictionary of environment variables | `{"API_KEY": "your_key"}` |
+| `connection_type` | Type of connection (optional, auto-detected from URL) | `"websocket"` |
+| `connection_url` | URL for WebSocket or HTTP connection | `"wss://example.com/mcp"` |
+| `connection_token` | Authentication token | `"your_auth_token"` |
+
+## Understanding Tool Arguments in MCP
+
+In accordance with MCP protocol design principles, tool arguments are **dynamically generated** by the LLM based on the research query context. This means:
+
+1. You don't need to specify static tool arguments in your configuration
+2. The LLM intelligently formulates appropriate arguments for each MCP tool call
+3. Arguments are contextually relevant to the current research topic
+4. Each tool invocation gets fresh, query-specific parameters
+
+This dynamic approach allows the AI to better adapt to different research needs and make more effective use of available MCP tools.
+
+## Examples
+
+### Basic Local MCP Server
+
+```python
+from gpt_researcher import GPTResearcher
+
+researcher = GPTResearcher(
+    query="How does quantum computing work?",
+    mcp_configs=[
+        {
+            "server_command": "python",
+            "server_args": ["path/to/quantum_mcp_server.py"],
+            "tool_name": "search"
+        }
+    ]
+)
+
+context = await researcher.conduct_research()
+report = await researcher.write_report()
+```
+
+### Multiple MCP Servers
+
+```python
+from gpt_researcher import GPTResearcher
+
+researcher = GPTResearcher(
+    query="Analyze the stock performance of Tesla",
+    mcp_configs=[
+        # Financial data MCP server
+        {
+            "server_command": "python",
+            "server_args": ["financial_mcp_server.py"],
+            "tool_name": "get_stock_data"
+        },
+        # News analysis MCP server
+        {
+            "server_command": "python",
+            "server_args": ["news_mcp_server.py"],
+            "tool_name": "search_news"
+        }
+    ]
+)
+```
+
+### Remote MCP Server via WebSocket
+
+```python
+from gpt_researcher import GPTResearcher
+
+researcher = GPTResearcher(
+    query="Latest advancements in AI research",
+    mcp_configs=[
+        {
+            # No need to specify connection_type as it's auto-detected from the URL
+            "connection_url": "wss://your-mcp-server.com/ws",
+            "connection_token": "your_auth_token",
+            "tool_name": "search"
+        }
+    ]
+)
+```
+
+### GitHub MCP Server
+
+```python
+from gpt_researcher import GPTResearcher
+import os
+
+researcher = GPTResearcher(
+    query="How does React's useState hook work?",
+    mcp_configs=[
+        {
+            "server_command": "npx",
+            "server_args": ["-y", "@modelcontextprotocol/server-github"],
+            "tool_name": "searchCode",
+            "env": {
+                "GITHUB_TOKEN": os.getenv("GITHUB_TOKEN")
+            }
+        }
+    ]
+)
+```
+
+## Using Multiple Retrievers
+
+You can combine MCP retrievers with traditional web search retrievers:
+
+```python
+from gpt_researcher import GPTResearcher
+
+researcher = GPTResearcher(
+    query="Impact of climate change on agriculture",
+    retrievers=["mcp", "tavily"],  # Use both MCP and Tavily
+    tavily_api_key="your_tavily_api_key",
+    mcp_configs=[
+        {
+            "server_command": "python",
+            "server_args": ["climate_data_server.py"],
+            "tool_name": "get_climate_data"
+        }
+    ]
+)
+```
+
+## Tool Selection
+
+By default, GPT Researcher will:
+
+1. Use the tool specified in your configuration (`tool_name`)
+2. Use LLM to generate appropriate arguments for the tool based on the current research context
+3. Dynamically adjust arguments to be most relevant to the specific query
+
+To enable automatic tool selection instead of using the predefined tool:
+
+```python
+# Set environment variable
+os.environ["MCP_AUTO_TOOL_SELECTION"] = "true"
+
+# Then create researcher
+researcher = GPTResearcher(
+    query="your query",
+    mcp_configs=[...] 
+)
+```
+
+With auto tool selection, the LLM will:
+1. Examine available tools on the MCP server
+2. Select the most appropriate tool for the current research query
+3. Generate relevant arguments for that tool
+4. Use the tool to retrieve information for the research
+
+## Best Practices
+
+1. **Specify tool names** when you know which specific tool you need
+2. **Enable auto tool selection** for more flexible research on servers with multiple tools
+3. **Combine multiple MCP servers** for complex research questions
+4. **Use environment variables** for sensitive information like API keys
+5. **Create custom MCP servers** for specialized knowledge domains
+
+## Automatic Connection Type Detection
+
+GPT Researcher can automatically detect the appropriate connection type based on the URL pattern:
+
+- URLs starting with `wss://` or `ws://` will use WebSocket connection
+- URLs starting with `https://` or `http://` will use HTTP connection
+- When no URL is provided, stdio connection is used by default (for local servers)
+
+This means you can simply provide the `connection_url` without specifying `connection_type`:
+
+```python
+# WebSocket connection (detected from wss:// prefix)
+mcp_configs=[{
+    "connection_url": "wss://example.com/mcp-ws",
+    "tool_name": "search"
+}]
+
+# HTTP connection (detected from https:// prefix)
+mcp_configs=[{
+    "connection_url": "https://example.com/mcp-api",
+    "tool_name": "search"
+}]
+```
+
+You can still explicitly set the `connection_type` if needed to override the automatic detection.
+
+## Important Note About Configuration Method
+
+Headers-based configuration (using `mcp_server_command`, etc. in the headers parameter) is no longer supported. All MCP configuration must be done through the `mcp_configs` parameter. This change improves consistency and makes multi-server configurations more maintainable.
+
+## Complete Working Example
+
+Here's a full example using the GitHub MCP server:
+
+```python
+import asyncio
+import os
+from gpt_researcher import GPTResearcher
+
+async def main():
+    # Set up environment variables
+    os.environ["GITHUB_TOKEN"] = "your_github_token_here"
+    os.environ["OPENAI_API_KEY"] = "your_openai_key_here"
+    
+    # Create researcher with MCP configuration
+    researcher = GPTResearcher(
+        query="How does React's useState hook work? Show me examples.",
+        mcp_configs=[
+            {
+                "server_name": "github",
+                "server_command": "npx",
+                "server_args": ["-y", "@modelcontextprotocol/server-github"],
+                "tool_name": "searchCode",
+                "env": {
+                    "GITHUB_TOKEN": os.getenv("GITHUB_TOKEN")
+                }
+            }
+        ],
+        verbose=True
+    )
+    
+    # Conduct research and generate report
+    context = await researcher.conduct_research()
+    report = await researcher.write_report()
+    print(report)
+
+# Run the example
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+**Prerequisites for this example:**
+1. Install GitHub MCP server: `npm install -g @modelcontextprotocol/server-github`
+2. Get a GitHub token: https://github.com/settings/tokens
+3. Get an OpenAI API key: https://platform.openai.com/api-keys
+
+## Troubleshooting
+
+### Dependency Issues
+
+**"langchain-mcp-adapters not installed" or "mcp package not found"**
+
+If you encounter missing MCP dependencies, ensure your GPT Researcher installation is complete:
+```bash
+# Reinstall with all dependencies
+pip install -r requirements.txt
+
+# Or if using poetry
+poetry install
+```
+
+If the issue persists, you may need to update your installation:
+```bash
+pip install --upgrade gpt-researcher
+```
+
+### Configuration Issues
+
+**"No MCP server configurations found"**
+- Ensure you're passing the `mcp_configs` parameter to `GPTResearcher()`
+- Verify your configuration format matches the examples above
+- Check that `mcp_configs` is a list of dictionaries
+
+**"Server connection failed"**
+- Verify the server command and arguments are correct
+- Check that required environment variables are set
+- Test the MCP server independently first
+- Ensure the server executable is in your PATH
+
+### Runtime Issues
+
+**"No tools available from MCP server"**
+- Verify the MCP server actually exposes tools
+- Check server logs for startup errors
+- Ensure the `tool_name` exists on the server
+- Try running the MCP server manually to test it
+
+**"Tool execution failed"**
+- Check that required parameters are available
+- Verify authentication tokens and API keys
+- Review server logs for detailed error messages
+
+### Debug Mode
+
+Enable detailed logging to diagnose issues:
+
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Your GPT Researcher code here
+```
+
+This will show detailed information about:
+- MCP server connections
+- Tool loading and execution
+- LLM argument generation
+- Error details and stack traces
+
+### Testing Your Setup
+
+Use this simple test to verify your MCP configuration:
+
+```python
+from gpt_researcher import GPTResearcher
+
+# Test configuration without running full research
+researcher = GPTResearcher(
+    query="test query",
+    mcp_configs=[{
+        "server_name": "test",
+        "server_command": "echo",
+        "server_args": ["hello"],
+        "tool_name": "test"
+    }]
+)
+
+print(f"✅ MCP configs loaded: {len(researcher.mcp_configs)}")
+``` 
