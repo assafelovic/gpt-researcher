@@ -77,7 +77,7 @@ async def test_mcp_tool_selection():
     print("=" * 50)
     
     try:
-        from gpt_researcher.retrievers.mcp.mcp_retriever import MCPRetriever
+        from gpt_researcher.retrievers.mcp import MCPRetriever
         
         # Create test MCP configuration
         mcp_configs = get_mcp_config()

@@ -1,5 +1,3 @@
-from ..config.config import Config
-
 def get_retriever(retriever: str):
     """
     Gets the retriever
@@ -72,13 +70,13 @@ def get_retriever(retriever: str):
             return None
 
 
-def get_retrievers(headers: dict[str, str], cfg: Config):
+def get_retrievers(headers: dict[str, str], cfg):
     """
     Determine which retriever(s) to use based on headers, config, or default.
 
     Args:
         headers (dict): The headers dictionary
-        cfg (Config): The configuration object
+        cfg: The configuration object
 
     Returns:
         list: A list of retriever classes to be used for searching.

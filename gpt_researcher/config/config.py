@@ -6,7 +6,6 @@ from typing import Dict, Any, List, Union, Type, get_origin, get_args
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from .variables.default import DEFAULT_CONFIG
 from .variables.base import BaseConfig
-from ..retrievers.utils import get_all_retriever_names
 
 
 class Config:
@@ -154,6 +153,8 @@ class Config:
 
     def parse_retrievers(self, retriever_str: str) -> List[str]:
         """Parse the retriever string into a list of retrievers and validate them."""
+        from ..retrievers.utils import get_all_retriever_names
+        
         retrievers = [retriever.strip()
                       for retriever in retriever_str.split(",")]
         valid_retrievers = get_all_retriever_names() or []
