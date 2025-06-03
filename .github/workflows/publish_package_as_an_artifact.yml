@@ -1,0 +1,29 @@
+name: Publish package as an Artifact
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_publish_package:
+    name: Build and publish package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+      - name: Install build tools and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade setuptools wheel build twine keyring artifacts-keyring
+      - name: Build package
+        run: python -m build
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@v1.5.1
+        with:
+          user: __token__
+          password: ${{ secrets.AZURE_DEV_OPS_ADMIN_PUBLISH_PACKAGES }}
+          repository_url: https://pkgs.dev.azure.com/USE1-AMH-DIG-NYC572/DIG_DevOps/_packaging/DIG_artifacts/pypi/upload/
