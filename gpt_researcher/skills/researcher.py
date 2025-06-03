@@ -17,6 +17,10 @@ class ResearchConductor:
         self.researcher = researcher
         self.logger = logging.getLogger('research')
         self.json_handler = get_json_handler()
+        # Add cache for MCP results to avoid redundant calls
+        self._mcp_results_cache = None
+        # Track MCP query count for balanced mode
+        self._mcp_query_count = 0
 
     async def plan_research(self, query, query_domains=None):
         self.logger.info(f"Planning research for query: {query}")
@@ -40,6 +44,10 @@ class ResearchConductor:
             self.researcher.websocket,
         )
 
+        # Pass retriever names to optimize sub-query generation for MCP
+        retriever_names = [r.__name__ for r in self.researcher.retrievers]
+        self.logger.info(f"Active retrievers: {retriever_names}")
+
         outline = await plan_research_outline(
             query=query,
             search_results=search_results,
@@ -48,6 +56,7 @@ class ResearchConductor:
             parent_query=self.researcher.parent_query,
             report_type=self.researcher.report_type,
             cost_callback=self.researcher.add_costs,
+            retriever_names=retriever_names,  # Pass retriever names for MCP optimization
             **self.researcher.kwargs
         )
         self.logger.info(f"Research outline planned: {outline}")
@@ -239,6 +248,56 @@ class ResearchConductor:
         if query_domains is None:
             query_domains = []
 
+        # **CONFIGURABLE MCP OPTIMIZATION: Control MCP strategy**
+        mcp_retrievers = [r for r in self.researcher.retrievers if "mcpretriever" in r.__name__.lower()]
+        
+        # Get MCP strategy configuration
+        mcp_strategy = self._get_mcp_strategy()
+        
+        if mcp_retrievers and self._mcp_results_cache is None:
+            if mcp_strategy == "disabled":
+                # MCP disabled - skip MCP research entirely
+                self.logger.info("MCP disabled by strategy, skipping MCP research")
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "mcp_disabled",
+                        f"⚡ MCP research disabled by configuration",
+                        self.researcher.websocket,
+                    )
+            elif mcp_strategy == "fast":
+                # Fast: Run MCP once with original query
+                self.logger.info("MCP fast strategy: Running once with original query")
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "mcp_optimization",
+                        f"🚀 MCP Fast: Running once for main query (performance mode)",
+                        self.researcher.websocket,
+                    )
+                
+                # Execute MCP research once with the original query
+                mcp_context = await self._execute_mcp_research_for_queries([query], mcp_retrievers)
+                self._mcp_results_cache = mcp_context
+                self.logger.info(f"MCP results cached: {len(mcp_context)} total context entries")
+            elif mcp_strategy == "deep":
+                # Deep: Will run MCP for all queries (original behavior) - defer to per-query execution
+                self.logger.info("MCP deep strategy: Will run for all queries")
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "mcp_comprehensive",
+                        f"🔍 MCP Deep: Will run for each sub-query (thorough mode)",
+                        self.researcher.websocket,
+                    )
+                # Don't cache - let each sub-query run MCP individually
+            else:
+                # Unknown strategy - default to fast
+                self.logger.warning(f"Unknown MCP strategy '{mcp_strategy}', defaulting to fast")
+                mcp_context = await self._execute_mcp_research_for_queries([query], mcp_retrievers)
+                self._mcp_results_cache = mcp_context
+                self.logger.info(f"MCP results cached: {len(mcp_context)} total context entries")
+
         # Generate Sub-Queries including original query
         sub_queries = await self.plan_research(query, query_domains)
         self.logger.info(f"Generated sub-queries: {sub_queries}")
@@ -277,6 +336,88 @@ class ResearchConductor:
             self.logger.error(f"Error during web search: {e}", exc_info=True)
             return []
 
+    def _get_mcp_strategy(self) -> str:
+        """
+        Get the MCP strategy configuration.
+        
+        Priority:
+        1. Instance-level setting (self.researcher.mcp_strategy)
+        2. Config file setting (self.researcher.cfg.mcp_strategy) 
+        3. Default value ("fast")
+        
+        Returns:
+            str: MCP strategy
+                "disabled" = Skip MCP entirely
+                "fast" = Run MCP once with original query (default)
+                "deep" = Run MCP for all sub-queries
+        """
+        # Check instance-level setting first
+        if hasattr(self.researcher, 'mcp_strategy') and self.researcher.mcp_strategy is not None:
+            return self.researcher.mcp_strategy
+        
+        # Check config setting
+        if hasattr(self.researcher.cfg, 'mcp_strategy'):
+            return self.researcher.cfg.mcp_strategy
+        
+        # Default to fast mode
+        return "fast"
+
+    async def _execute_mcp_research_for_queries(self, queries: list, mcp_retrievers: list) -> list:
+        """
+        Execute MCP research for a list of queries.
+        
+        Args:
+            queries: List of queries to research
+            mcp_retrievers: List of MCP retriever classes
+            
+        Returns:
+            list: Combined MCP context entries from all queries
+        """
+        all_mcp_context = []
+        
+        for i, query in enumerate(queries, 1):
+            self.logger.info(f"Executing MCP research for query {i}/{len(queries)}: {query}")
+            
+            for retriever in mcp_retrievers:
+                try:
+                    mcp_results = await self._execute_mcp_research(retriever, query)
+                    if mcp_results:
+                        for result in mcp_results:
+                            content = result.get("body", "")
+                            url = result.get("href", "")
+                            title = result.get("title", "")
+                            
+                            if content:
+                                context_entry = {
+                                    "content": content,
+                                    "url": url,
+                                    "title": title,
+                                    "query": query,
+                                    "source_type": "mcp"
+                                }
+                                all_mcp_context.append(context_entry)
+                        
+                        self.logger.info(f"Added {len(mcp_results)} MCP results for query: {query}")
+                        
+                        if self.researcher.verbose:
+                            await stream_output(
+                                "logs",
+                                "mcp_results_cached",
+                                f"✅ Cached {len(mcp_results)} MCP results from query {i}/{len(queries)}",
+                                self.researcher.websocket,
+                            )
+                except Exception as e:
+                    self.logger.error(f"Error in MCP research for query '{query}': {e}")
+                    if self.researcher.verbose:
+                        await stream_output(
+                            "logs",
+                            "mcp_cache_error",
+                            f"⚠️ MCP research error for query {i}, continuing with other sources",
+                            self.researcher.websocket,
+                        )
+        
+        return all_mcp_context
+
     async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context."""
         if self.json_handler:
@@ -302,62 +443,51 @@ class ResearchConductor:
             mcp_context = []
             web_context = ""
             
-            # Process MCP retrievers with new two-stage approach
+            # Get MCP strategy configuration
+            mcp_strategy = self._get_mcp_strategy()
+            
+            # **CONFIGURABLE MCP PROCESSING**
             if mcp_retrievers:
-                await stream_output(
-                    "logs",
-                    "mcp_research_start",
-                    f"🔌 Starting intelligent MCP research for: {sub_query}",
-                    self.researcher.websocket,
-                )
-                
-                for retriever in mcp_retrievers:
-                    try:
-                        # Use the new two-stage MCP approach
-                        mcp_results = await self._execute_mcp_research(
-                            retriever=retriever,
-                            query=sub_query,
+                if mcp_strategy == "disabled":
+                    # MCP disabled - skip entirely
+                    self.logger.info(f"MCP disabled for sub-query: {sub_query}")
+                elif mcp_strategy == "fast" and self._mcp_results_cache is not None:
+                    # Fast: Use cached results
+                    mcp_context = self._mcp_results_cache.copy()
+                    
+                    if self.researcher.verbose:
+                        await stream_output(
+                            "logs",
+                            "mcp_cache_reuse",
+                            f"♻️ Reusing cached MCP results ({len(mcp_context)} sources) for: {sub_query}",
+                            self.researcher.websocket,
                         )
-                        
-                        # Process MCP results into context format
-                        if mcp_results:
-                            for result in mcp_results:
-                                content = result.get("body", "")
-                                url = result.get("href", "")
-                                title = result.get("title", "")
-                                
-                                if content:
-                                    # Create a structured context entry
-                                    context_entry = {
-                                        "content": content,
-                                        "url": url,
-                                        "title": title,
-                                        "query": sub_query,
-                                        "source_type": "mcp"
-                                    }
-                                    mcp_context.append(context_entry)
-                            
-                            self.logger.info(f"Added {len(mcp_results)} MCP results for sub-query: {sub_query}")
-                            
-                            if self.researcher.verbose:
-                                await stream_output(
-                                    "logs",
-                                    "mcp_results_obtained",
-                                    f"✅ Retrieved {len(mcp_results)} results from MCP servers",
-                                    self.researcher.websocket,
-                                )
-                        else:
-                            self.logger.info(f"No MCP results obtained for sub-query: {sub_query}")
-                            
-                    except Exception as e:
-                        self.logger.error(f"Error with MCP retriever {retriever.__name__} for query '{sub_query}': {e}")
-                        if self.researcher.verbose:
-                            await stream_output(
-                                "logs",
-                                "mcp_error",
-                                f"⚠️ MCP research encountered an issue, continuing with other sources",
-                                self.researcher.websocket,
-                            )
+                    
+                    self.logger.info(f"Reused {len(mcp_context)} cached MCP results for sub-query: {sub_query}")
+                elif mcp_strategy == "deep":
+                    # Deep: Run MCP for every sub-query
+                    self.logger.info(f"Running deep MCP research for: {sub_query}")
+                    if self.researcher.verbose:
+                        await stream_output(
+                            "logs",
+                            "mcp_comprehensive_run",
+                            f"🔍 Running deep MCP research for: {sub_query}",
+                            self.researcher.websocket,
+                        )
+                    
+                    mcp_context = await self._execute_mcp_research_for_queries([sub_query], mcp_retrievers)
+                else:
+                    # Fallback: if no cache and not deep mode, run MCP for this query
+                    self.logger.warning("MCP cache not available, falling back to per-sub-query execution")
+                    if self.researcher.verbose:
+                        await stream_output(
+                            "logs",
+                            "mcp_fallback",
+                            f"🔌 MCP cache unavailable, running MCP research for: {sub_query}",
+                            self.researcher.websocket,
+                        )
+                    
+                    mcp_context = await self._execute_mcp_research_for_queries([sub_query], mcp_retrievers)
             
             # Get web search context using non-MCP retrievers (if no scraped data provided)
             if not scraped_data:
@@ -380,10 +510,12 @@ class ResearchConductor:
                 if self.researcher.verbose:
                     mcp_count = len(mcp_context)
                     web_available = bool(web_context)
+                    cache_used = self._mcp_results_cache is not None and mcp_retrievers and mcp_strategy != "deep"
+                    cache_status = " (cached)" if cache_used else ""
                     await stream_output(
                         "logs",
                         "context_combined",
-                        f"📚 Combined research context: {mcp_count} MCP sources, {'web content' if web_available else 'no web content'}",
+                        f"📚 Combined research context: {mcp_count} MCP sources{cache_status}, {'web content' if web_available else 'no web content'}",
                         self.researcher.websocket,
                     )
             else:
@@ -826,3 +958,4 @@ class ResearchConductor:
                     "progress": progress
                 }
             )
+

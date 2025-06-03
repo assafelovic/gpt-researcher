@@ -56,6 +56,8 @@ class GPTResearcher:
         log_handler=None,
         prompt_family: str | None = None,
         mcp_configs: list[dict] | None = None,
+        mcp_max_iterations: int | None = None,
+        mcp_strategy: str | None = None,
         **kwargs
     ):
         """
@@ -106,6 +108,12 @@ class GPTResearcher:
                     "tool_name": "search"
                 }]
                 ```
+            mcp_max_iterations (int, optional): Maximum number of iterations for MCP.
+                Deprecated - use mcp_strategy instead.
+            mcp_strategy (str, optional): MCP execution strategy. Options:
+                - "fast" (default): Run MCP once with original query for best performance
+                - "deep": Run MCP for all sub-queries for maximum thoroughness  
+                - "disabled": Skip MCP entirely, use only web retrievers
         """
         self.kwargs = kwargs
         self.query = query
@@ -157,6 +165,75 @@ class GPTResearcher:
         self.deep_researcher: Optional[DeepResearchSkill] = None
         if report_type == ReportType.DeepResearch.value:
             self.deep_researcher = DeepResearchSkill(self)
+
+        # Handle MCP strategy configuration with backwards compatibility
+        self.mcp_strategy = self._resolve_mcp_strategy(mcp_strategy, mcp_max_iterations)
+
+    def _resolve_mcp_strategy(self, mcp_strategy: str | None, mcp_max_iterations: int | None) -> str:
+        """
+        Resolve MCP strategy from various sources with backwards compatibility.
+        
+        Priority:
+        1. Parameter mcp_strategy (new approach)
+        2. Parameter mcp_max_iterations (backwards compatibility)  
+        3. Config MCP_STRATEGY
+        4. Default "fast"
+        
+        Args:
+            mcp_strategy: New strategy parameter
+            mcp_max_iterations: Legacy parameter for backwards compatibility
+            
+        Returns:
+            str: Resolved strategy ("fast", "deep", or "disabled")
+        """
+        # Priority 1: Use mcp_strategy parameter if provided
+        if mcp_strategy is not None:
+            # Support new strategy names
+            if mcp_strategy in ["fast", "deep", "disabled"]:
+                return mcp_strategy
+            # Support old strategy names for backwards compatibility
+            elif mcp_strategy == "optimized":
+                import logging
+                logging.getLogger(__name__).warning("mcp_strategy 'optimized' is deprecated, use 'fast' instead")
+                return "fast"
+            elif mcp_strategy == "comprehensive":
+                import logging
+                logging.getLogger(__name__).warning("mcp_strategy 'comprehensive' is deprecated, use 'deep' instead")
+                return "deep"
+            else:
+                import logging
+                logging.getLogger(__name__).warning(f"Invalid mcp_strategy '{mcp_strategy}', defaulting to 'fast'")
+                return "fast"
+        
+        # Priority 2: Convert mcp_max_iterations for backwards compatibility
+        if mcp_max_iterations is not None:
+            import logging
+            logging.getLogger(__name__).warning("mcp_max_iterations is deprecated, use mcp_strategy instead")
+            
+            if mcp_max_iterations == 0:
+                return "disabled"
+            elif mcp_max_iterations == 1:
+                return "fast"
+            elif mcp_max_iterations == -1:
+                return "deep"
+            else:
+                # Treat any other number as fast mode
+                return "fast"
+        
+        # Priority 3: Use config setting
+        if hasattr(self.cfg, 'mcp_strategy'):
+            config_strategy = self.cfg.mcp_strategy
+            # Support new strategy names
+            if config_strategy in ["fast", "deep", "disabled"]:
+                return config_strategy
+            # Support old strategy names for backwards compatibility
+            elif config_strategy == "optimized":
+                return "fast"
+            elif config_strategy == "comprehensive":
+                return "deep"
+            
+        # Priority 4: Default to fast
+        return "fast"
 
     def _process_mcp_configs(self, mcp_configs: list[dict]) -> None:
         """
