@@ -1,18 +1,13 @@
----
-title: MCP Configurations
-description: How to configure and use MCP (Model Context Protocol) servers with GPT Researcher
----
-
 # MCP Integration with GPT Researcher
 
-The Model Context Protocol (MCP) enables GPT Researcher to connect with diverse data sources and tools through a standardized interface. GPT Researcher features an intelligent two-stage MCP approach that automatically selects the best tools and generates contextual research, powered by LangChain's MCP adapters for seamless integration.
+The Model Context Protocol (MCP) enables GPT Researcher to connect with diverse data sources and tools through a standardized interface. GPT Researcher features an intelligent two-stage MCP approach that automatically selects the best tools and generates contextual research, powered by LangChain's [MCP adapters](https://github.com/langchain-ai/langchain-mcp-adapters) for seamless integration.
 
 ## How MCP Works in GPT Researcher
 
-GPT Researcher uses a **two-stage intelligent approach** for MCP integration:
+GPT Researcher uses a **two stage intelligent approach** for MCP integration:
 
-1. **Stage 1: Smart Tool Selection** - AI analyzes your query and available MCP servers to select the most relevant tools
-2. **Stage 2: Contextual Research** - AI uses selected tools with dynamically generated, query-specific arguments
+1. **Stage 1: Smart Tool Selection** - LLM analyzes your query and available MCP servers to select the most relevant tools
+2. **Stage 2: Contextual Research** - LLM uses selected tools with dynamically generated, query specific arguments
 
 This happens automatically behind the scenes, optimized for the best balance of speed, cost, and research quality. The integration leverages the [langchain-mcp-adapters](https://github.com/langchain-ai/langchain-mcp-adapters) library, ensuring compatibility with the growing ecosystem of MCP tool servers.
 
@@ -25,13 +20,35 @@ pip install gpt-researcher
 # All MCP dependencies are included automatically
 ```
 
+## Essential Configuration: Enabling MCP
+
+**Important:** To use MCP with GPT Researcher, you must set the `RETRIEVER` environment variable:
+
+### Pure MCP Research
+```bash
+export RETRIEVER=mcp
+```
+
+### Hybrid Strategy (Recommended)
+```bash
+# Combines web search with MCP for comprehensive research
+export RETRIEVER=tavily,mcp
+
+# Alternative hybrid combinations
+export RETRIEVER=tavily,mcp
+export RETRIEVER=google,mcp,arxiv
+```
+
 ## Quick Start
 
 ```python
 from gpt_researcher import GPTResearcher
 import os
 
-# Simple MCP configuration - works automatically with optimal settings
+# Set retriever to enable MCP
+os.environ["RETRIEVER"] = "tavily,mcp"  # Hybrid approach
+
+# Simple MCP configuration - works automatically
 researcher = GPTResearcher(
     query="How does React's useState hook work?",
     mcp_configs=[
@@ -73,6 +90,9 @@ Perfect for current events, market research, and general information gathering:
 from gpt_researcher import GPTResearcher
 import os
 
+# Enable hybrid research: web search + MCP
+os.environ["RETRIEVER"] = "tavily,mcp"
+
 researcher = GPTResearcher(
     query="What are the latest updates in the NBA playoffs?",
     mcp_configs=[
@@ -96,6 +116,9 @@ report = await researcher.write_report()
 Ideal for technical documentation, code examples, and software development research:
 
 ```python
+# Pure MCP research for technical queries
+os.environ["RETRIEVER"] = "mcp"
+
 researcher = GPTResearcher(
     query="What are the key features and implementation of React's useState hook? How has it evolved in recent versions?",
     mcp_configs=[
@@ -111,11 +134,14 @@ researcher = GPTResearcher(
 )
 ```
 
-### Quantum Computing Research (Advanced Example)
+### Academic Research with Hybrid Strategy
 
-Demonstrating specialized domain research with custom MCP servers:
+Combining academic papers with MCP tools:
 
 ```python
+# Academic + MCP hybrid approach
+os.environ["RETRIEVER"] = "arxiv,semantic_scholar,mcp"
+
 researcher = GPTResearcher(
     query="Analyze the latest developments in quantum error correction algorithms",
     mcp_configs=[
@@ -139,6 +165,9 @@ Here's a real-world example combining multiple MCP servers for comprehensive bus
 ```python
 from gpt_researcher import GPTResearcher
 import os
+
+# Multi-retriever hybrid strategy for comprehensive coverage
+os.environ["RETRIEVER"] = "tavily,google,mcp"
 
 # Multi-domain research combining news, code, and financial data
 researcher = GPTResearcher(
@@ -203,6 +232,9 @@ This example demonstrates how GPT Researcher intelligently:
 Another practical multi-server scenario for business research:
 
 ```python
+# Comprehensive hybrid strategy
+os.environ["RETRIEVER"] = "tavily,bing,exa,mcp"
+
 researcher = GPTResearcher(
     query="Comprehensive competitive analysis of sustainable fashion brands in 2024",
     mcp_configs=[
@@ -237,6 +269,9 @@ researcher = GPTResearcher(
 ## Remote MCP Server
 
 ```python
+# Enable MCP with web search fallback
+os.environ["RETRIEVER"] = "tavily,mcp"
+
 researcher = GPTResearcher(
     query="Latest AI research papers on transformer architectures",
     mcp_configs=[
@@ -255,6 +290,9 @@ MCP works seamlessly alongside traditional web search for comprehensive research
 
 ```python
 from gpt_researcher import GPTResearcher
+
+# Hybrid strategy: combines web search with MCP automatically
+os.environ["RETRIEVER"] = "tavily,mcp"
 
 researcher = GPTResearcher(
     query="Impact of AI on software development practices",
@@ -287,6 +325,9 @@ async def main():
     os.environ["GITHUB_PERSONAL_ACCESS_TOKEN"] = "your_github_token"
     os.environ["OPENAI_API_KEY"] = "your_openai_key"
     os.environ["TAVILY_API_KEY"] = "your_tavily_key"
+    
+    # Enable hybrid research strategy
+    os.environ["RETRIEVER"] = "tavily,mcp"
     
     # Create researcher with multi-server MCP configuration
     researcher = GPTResearcher(
@@ -334,6 +375,15 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+## Retriever Strategy Comparison
+
+| Strategy | Use Case | Performance | Coverage |
+|----------|----------|------------|----------|
+| `RETRIEVER=mcp` | Specialized domains, structured data | ⚡ Fast | 🎯 Focused |
+| `RETRIEVER=tavily,mcp` | General research with specialized tools | ⚖️ Balanced | 🌐 Comprehensive |
+| `RETRIEVER=google,arxiv,tavily,mcp` | Maximum coverage, redundancy | 🐌 Slower | 🌍 Extensive |
+| `RETRIEVER=arxiv,mcp` | Academic + specialized research | ⚡ Fast | 🎓 Academic-focused |
+
 ## Advanced Configuration
 
 ### Research Strategies
@@ -348,23 +398,21 @@ For advanced users who need more control over how MCP research is executed:
 
 ```python
 # Default behavior (recommended for most use cases)
+os.environ["RETRIEVER"] = "tavily,mcp"
 researcher = GPTResearcher(
     query="Analyze Tesla's performance",
     mcp_configs=[...]
 )
 
 # For comprehensive analysis (advanced)
+os.environ["MCP_STRATEGY"] = "deep"
 researcher = GPTResearcher(
     query="Comprehensive renewable energy analysis",
-    mcp_strategy="deep",  # Run MCP for each sub-query
     mcp_configs=[...]
 )
 
 # For web-only research (advanced)
-researcher = GPTResearcher(
-    query="Latest news updates",
-    mcp_strategy="disabled"  # Skip MCP entirely
-)
+os.environ["RETRIEVER"] = "tavily"  # Excludes MCP entirely
 ```
 
 ### Environment Variable Configuration
@@ -372,11 +420,16 @@ researcher = GPTResearcher(
 Set global defaults using environment variables:
 
 ```bash
-# Set default strategy (advanced)
-export MCP_STRATEGY="deep"
+# Essential: Enable MCP
+export RETRIEVER=tavily,mcp
+
+# Advanced: Set MCP strategy
+export MCP_STRATEGY=deep
 
 # Or in .env file
+RETRIEVER=tavily,mcp
 MCP_STRATEGY=fast
+MCP_AUTO_TOOL_SELECTION=true
 ```
 
 ### Custom Tool Selection
@@ -386,6 +439,7 @@ Enable automatic tool selection for servers with multiple tools:
 ```python
 # Environment variable approach
 os.environ["MCP_AUTO_TOOL_SELECTION"] = "true"
+os.environ["RETRIEVER"] = "mcp"
 
 researcher = GPTResearcher(
     query="your query",
@@ -417,6 +471,14 @@ GPT Researcher automatically detects connection types:
 ## Troubleshooting
 
 ### Common Issues
+
+**"No retriever specified" or "MCP not working"**
+- **Solution:** Set `RETRIEVER=mcp` or `RETRIEVER=tavily,mcp`
+- Verify environment variable is set: `echo $RETRIEVER`
+
+**"Invalid retriever(s) found"**
+- Check available retrievers: `tavily`, `mcp`, `google`, `bing`, `arxiv`, etc.
+- Ensure no typos in retriever names
 
 **"No MCP server configurations found"**
 - Ensure `mcp_configs` is a list of dictionaries
@@ -456,7 +518,11 @@ logging.basicConfig(level=logging.DEBUG)
 Quick test to verify MCP configuration:
 
 ```python
+import os
 from gpt_researcher import GPTResearcher
+
+# Test retriever configuration
+os.environ["RETRIEVER"] = "mcp"
 
 # Test basic configuration
 researcher = GPTResearcher(
@@ -470,51 +536,20 @@ researcher = GPTResearcher(
     ]
 )
 
+print(f"✅ RETRIEVER set to: {os.environ.get('RETRIEVER')}")
 print(f"✅ MCP configs loaded: {len(researcher.mcp_configs)}")
 ```
 
 ## Best Practices
 
-1. **Use descriptive server names** for easier debugging
-2. **Store sensitive data in environment variables**
-3. **Test MCP servers independently** before integration
-4. **Enable verbose mode** during development
-5. **Combine MCP with web search** for comprehensive research
-6. **Use multiple MCP servers** for complex research domains
-7. **Let the default settings handle optimization** for most use cases
-
-## Migration from Legacy Configuration
-
-If you're upgrading from an older version:
-
-```python
-# Old headers-based configuration (no longer supported)
-researcher = GPTResearcher(
-    query="your query",
-    headers={
-        "mcp_server_command": "python",
-        "mcp_server_args": "server.py"
-    }
-)
-
-# New mcp_configs approach (current)
-researcher = GPTResearcher(
-    query="your query",
-    mcp_configs=[
-        {
-            "server_command": "python",
-            "server_args": ["server.py"]
-        }
-    ]
-)
-```
-
-The new approach provides:
-- ✅ Multi-server support
-- ✅ Better error handling  
-- ✅ Intelligent tool selection
-- ✅ Optimal performance by default
-- ✅ Advanced configuration when needed
+1. **Always set the RETRIEVER environment variable** - This is required for MCP functionality
+2. **Use hybrid strategies** (`tavily,mcp`) for comprehensive research
+3. **Use descriptive server names** for easier debugging
+4. **Store sensitive data in environment variables**
+5. **Test MCP servers independently** before integration
+6. **Enable verbose mode** during development
+7. **Choose appropriate retriever combinations** based on your research domain
+8. **Let the default settings handle optimization** for most use cases
 
 ---
 
