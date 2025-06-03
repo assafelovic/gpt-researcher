@@ -35,7 +35,7 @@ class MCPStreamer:
         
         if self.websocket:
             try:
-                from ...actions.utils import stream_output
+                from ..actions.utils import stream_output
                 await stream_output(
                     "logs", 
                     "mcp_retriever", 

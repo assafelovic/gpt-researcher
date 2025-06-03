@@ -1,7 +1,10 @@
 """
-MCP Retriever Main Module
+MCP-Based Research Retriever
 
-Main retriever class that orchestrates MCP research using modular components.
+A retriever that uses Model Context Protocol (MCP) tools for intelligent research.
+This retriever implements a two-stage approach:
+1. Tool Selection: LLM selects 2-3 most relevant tools from all available MCP tools
+2. Research Execution: LLM uses the selected tools to conduct intelligent research
 """
 import asyncio
 import logging
@@ -13,10 +16,10 @@ try:
 except ImportError:
     HAS_MCP_ADAPTERS = False
 
-from .client import MCPClientManager
-from .tool_selector import MCPToolSelector
-from ...skills.mcp_researcher import MCPResearchSkill
-from .streaming import MCPStreamer
+from ...mcp.client import MCPClientManager
+from ...mcp.tool_selector import MCPToolSelector
+from ...mcp.research import MCPResearchSkill
+from ...mcp.streaming import MCPStreamer
 
 logger = logging.getLogger(__name__)
 

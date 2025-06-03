@@ -60,7 +60,7 @@ class MCPToolSelector:
             tools_info.append(tool_info)
         
         # Import here to avoid circular imports
-        from ...prompts import PromptFamily
+        from ..prompts import PromptFamily
         
         # Create prompt for intelligent tool selection
         prompt = PromptFamily.generate_mcp_tool_selection_prompt(query, tools_info, max_tools)
@@ -138,7 +138,7 @@ class MCPToolSelector:
             return ""
             
         try:
-            from ...utils.llm import create_chat_completion
+            from ..utils.llm import create_chat_completion
             
             # Create messages for the LLM
             messages = [{"role": "user", "content": prompt}]
