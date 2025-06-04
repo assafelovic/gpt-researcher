@@ -11,6 +11,41 @@ GPT Researcher uses a **two stage intelligent approach** for MCP integration:
 
 This happens automatically behind the scenes, optimized for the best balance of speed, cost, and research quality. The integration leverages the [langchain-mcp-adapters](https://github.com/langchain-ai/langchain-mcp-adapters) library, ensuring compatibility with the growing ecosystem of MCP tool servers.
 
+## MCP Research Flow
+
+```mermaid
+graph TD
+    A[Research Task] --> B[Initialize GPT Researcher with mcp_configs]
+    
+    B --> C[Stage 1: Smart Tool Selection]
+    C -->     D[GPTR analyzes query + available MCP servers]
+    D --> E[Select 2-3 most relevant tools]
+    
+    E --> F[Stage 2: Contextual Research]
+    F -->     G[GPTR uses selected tools with dynamic arguments]
+    
+    B --> H[Parallel Web Search]
+    H --> I[Combine MCP + Web Results]
+    G --> I
+    
+    I --> J[Generate Comprehensive Report]
+    
+    style A fill:#e1f5fe,color:#333
+    style C fill:#f3e5f5,color:#333
+    style F fill:#e8f5e8,color:#333
+    style J fill:#fff3e0,color:#333
+```
+
+### Flow Breakdown:
+
+1. **Configuration**: Set `RETRIEVER` environment variable to enable MCP
+2. **Strategy Selection**: Choose pure MCP or hybrid approach
+3. **Initialization**: GPT Researcher loads your `mcp_configs`
+4. **Stage 1**: LLM intelligently selects the most relevant tools from available MCP servers
+5. **Stage 2**: LLM executes research using selected tools with query-specific arguments
+6. **Hybrid Processing**: If using hybrid strategy, combines MCP results with web search
+7. **Report Generation**: Synthesizes all findings into a comprehensive report
+
 ## Prerequisites
 
 MCP support is included with GPT Researcher installation:
