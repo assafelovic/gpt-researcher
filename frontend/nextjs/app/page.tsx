@@ -27,7 +27,9 @@ export default function Home() {
     report_type: 'research_report', 
     tone: 'Objective',
     domains: [],
-    defaultReportType: 'research_report'
+    defaultReportType: 'research_report',
+    mcp_enabled: false,
+    mcp_configs: []
   });
   const [question, setQuestion] = useState("");
   const [orderedData, setOrderedData] = useState<Data[]>([]);

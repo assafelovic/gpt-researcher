@@ -2234,7 +2234,7 @@ footer a:hover {
 }
 
 .mcp-info-content {
-    background: white;
+    background: rgba(0, 0, 0, 0.5);
     padding: 25px;
     border-radius: 12px;
     max-width: 600px;
