@@ -37,12 +37,11 @@ class MCPStreamer:
             try:
                 from ..actions.utils import stream_output
                 await stream_output(
-                    "logs", 
-                    "mcp_retriever", 
-                    message, 
-                    self.websocket,
-                    with_data=bool(data),
-                    data=data
+                    type="logs", 
+                    content="mcp_retriever", 
+                    output=message, 
+                    websocket=self.websocket,
+                    metadata=data
                 )
             except Exception as e:
                 logger.error(f"Error streaming log: {e}")
