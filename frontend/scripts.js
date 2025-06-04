@@ -2283,14 +2283,7 @@ const GPTResearcher = (() => {
           <li>Enable MCP using the checkbox above</li>
           <li>Click a preset to add pre-configured servers to the JSON</li>
           <li>Or paste your own MCP configuration as a JSON array</li>
-          <li>Choose your research strategy (Fast recommended for most cases)</li>
-        </ul>
-
-        <h4 class="highlight">Strategies:</h4>
-        <ul>
-          <li><span class="highlight">Fast:</span> Run MCP once with main query (optimal balance)</li>
-          <li><span class="highlight">Deep:</span> Run MCP for all sub-queries (comprehensive)</li>
-          <li><span class="highlight">Disabled:</span> Skip MCP entirely (web search only)</li>
+          <li>Start your research - MCP will run with optimal settings</li>
         </ul>
 
         <h4 class="highlight">Configuration Format:</h4>
@@ -2399,11 +2392,10 @@ const GPTResearcher = (() => {
       return null;
     }
 
-    const mcpStrategy = document.getElementById('mcpStrategy');
     const mcpConfig = document.getElementById('mcpConfig');
     
-    if (!mcpStrategy || !mcpConfig) {
-      console.warn('MCP elements not found for data collection');
+    if (!mcpConfig) {
+      console.warn('MCP config element not found for data collection');
       return null;
     }
 
@@ -2419,7 +2411,7 @@ const GPTResearcher = (() => {
 
       return {
         mcp_enabled: true,
-        mcp_strategy: mcpStrategy.value,
+        mcp_strategy: "fast", // Always use "fast" strategy as default
         mcp_configs: mcpConfigs
       };
     } catch (error) {
