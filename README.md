@@ -149,9 +149,9 @@ async def mcp_research_example():
         query="What are the top open source web research agents?",
         mcp_configs=[
             {
-                "server_name": "github",
-                "server_command": "npx",
-                "server_args": ["-y", "@modelcontextprotocol/server-github"],
+                "name": "github",
+                "command": "npx",
+                "args": ["-y", "@modelcontextprotocol/server-github"],
                 "env": {"GITHUB_TOKEN": os.getenv("GITHUB_TOKEN")}
             }
         ]

@@ -76,9 +76,9 @@ from gpt_researcher import GPTResearcher
 
 # MCP configuration for a local server
 mcp_configs = [{
-    "server_command": "python",
-    "server_args": ["my_mcp_server.py"],
-    "server_name": "local_server",
+    "command": "python",
+    "args": ["my_mcp_server.py"],
+    "name": "local_server",
     "tool_name": "search"  # Optional: specify specific tool
 }]
 
@@ -100,7 +100,7 @@ report = await researcher.write_report()
 mcp_configs = [{
     "connection_url": "ws://localhost:8080/mcp",
     "connection_type": "websocket",
-    "server_name": "websocket_server"
+    "name": "websocket_server"
 }]
 
 # HTTP MCP server
@@ -108,7 +108,7 @@ mcp_configs = [{
     "connection_url": "https://api.example.com/mcp",
     "connection_type": "http",
     "connection_token": "your-auth-token",
-    "server_name": "http_server"
+    "name": "http_server"
 }]
 ```
 
@@ -117,19 +117,19 @@ mcp_configs = [{
 ```python
 mcp_configs = [
     {
-        "server_command": "python",
-        "server_args": ["database_server.py"],
-        "server_name": "database",
+        "command": "python",
+        "args": ["database_server.py"],
+        "name": "database",
         "env": {"DB_HOST": "localhost"}
     },
     {
         "connection_url": "ws://localhost:8080/search",
-        "server_name": "search_service"
+        "name": "search_service"
     },
     {
         "connection_url": "https://api.knowledge.com/mcp",
         "connection_token": "token123",
-        "server_name": "knowledge_base"
+        "name": "knowledge_base"
     }
 ]
 ```
@@ -140,16 +140,16 @@ mcp_configs = [
 
 Each MCP server configuration supports the following options:
 
-| Field | Type | Description | Example |
-|-------|------|-------------|---------|
-| `server_name` | `str` | Unique name for the server | `"my_server"` |
-| `server_command` | `str` | Command to start stdio server | `"python"` |
-| `server_args` | `list[str]` | Arguments for the command | `["server.py", "--port", "8080"]` |
-| `connection_url` | `str` | URL for websocket/HTTP connection | `"ws://localhost:8080/mcp"` |
-| `connection_type` | `str` | Connection type | `"stdio"`, `"websocket"`, `"http"` |
+| Field              | Type | Description | Example |
+|--------------------|------|-------------|---------|
+| `name`             | `str` | Unique name for the server | `"my_server"` |
+| `command`          | `str` | Command to start stdio server | `"python"` |
+| `args`             | `list[str]` | Arguments for the command | `["server.py", "--port", "8080"]` |
+| `connection_url`   | `str` | URL for websocket/HTTP connection | `"ws://localhost:8080/mcp"` |
+| `connection_type`  | `str` | Connection type | `"stdio"`, `"websocket"`, `"http"` |
 | `connection_token` | `str` | Authentication token | `"your-token"` |
-| `tool_name` | `str` | Specific tool to use (optional) | `"search"` |
-| `env` | `dict` | Environment variables | `{"API_KEY": "secret"}` |
+| `tool_name`        | `str` | Specific tool to use (optional) | `"search"` |
+| `env`              | `dict` | Environment variables | `{"API_KEY": "secret"}` |
 
 ### Auto-Detection Features
 

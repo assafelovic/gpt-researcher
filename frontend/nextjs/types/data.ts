@@ -47,9 +47,9 @@ export interface ChatBoxSettings {
 }
 
 export interface MCPConfig {
-  server_name: string;
-  server_command: string;
-  server_args: string[];
+  name: string;
+  command: string;
+  args: string[];
   env: Record<string, string>;
 }
 

@@ -69,8 +69,9 @@ researcher = GPTResearcher(
     query="How does React's useState hook work?",
     mcp_configs=[
         {
-            "server_command": "npx",
-            "server_args": ["-y", "@modelcontextprotocol/server-github"],
+            "name": "github_api"
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
             "env": {"GITHUB_TOKEN": os.getenv("GITHUB_TOKEN")}
         }
     ]
@@ -86,15 +87,15 @@ Each MCP configuration dictionary supports these keys:
 
 | Key | Description | Example | Required |
 |-----|-------------|---------|----------|
-| `server_name` | Identifier for the MCP server | `"github"` | No |
-| `server_command` | Command to start the server | `"python"` | Yes* |
-| `server_args` | Arguments for the server command | `["-m", "my_server"]` | No |
+| `name` | Identifier for the MCP server | `"github"` | No |
+| `command` | Command to start the server | `"python"` | Yes* |
+| `args` | Arguments for the server command | `["-m", "my_server"]` | No |
 | `env` | Environment variables for the server | `{"API_KEY": "key"}` | No |
 | `connection_url` | URL for remote connections | `"wss://api.example.com"` | Yes* |
 | `connection_type` | Connection type (auto-detected) | `"websocket"` | No |
 | `connection_token` | Authentication token | `"bearer_token"` | No |
 
-*Either `server_command` (for local servers) or `connection_url` (for remote servers) is required.
+*Either `command` (for local servers) or `connection_url` (for remote servers) is required.
 
 ## Examples
 
@@ -113,9 +114,9 @@ researcher = GPTResearcher(
     query="What are the latest updates in the NBA playoffs?",
     mcp_configs=[
         {
-            "server_name": "tavily",
-            "server_command": "npx",
-            "server_args": ["-y", "tavily-mcp@0.1.2"],
+            "name": "tavily",
+            "command": "npx",
+            "args": ["-y", "tavily-mcp@0.1.2"],
             "env": {
                 "TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")
             }
@@ -139,9 +140,9 @@ researcher = GPTResearcher(
     query="What are the key features and implementation of React's useState hook? How has it evolved in recent versions?",
     mcp_configs=[
         {
-            "server_name": "github",
-            "server_command": "npx",
-            "server_args": ["-y", "@modelcontextprotocol/server-github"],
+            "name": "github",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
             "env": {
                 "GITHUB_PERSONAL_ACCESS_TOKEN": os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
             }
@@ -162,9 +163,9 @@ researcher = GPTResearcher(
     query="Analyze the latest developments in quantum error correction algorithms",
     mcp_configs=[
         {
-            "server_name": "quantum_research",
-            "server_command": "python",
-            "server_args": ["quantum_mcp_server.py"],
+            "name": "quantum_research",
+            "command": "python",
+            "args": ["quantum_mcp_server.py"],
             "env": {
                 "ARXIV_API_KEY": os.getenv("ARXIV_API_KEY"),
                 "RESEARCH_DB_PATH": "/path/to/quantum_papers.db"
@@ -191,9 +192,9 @@ researcher = GPTResearcher(
     mcp_configs=[
         # Financial data and stock analysis
         {
-            "server_name": "financial_data",
-            "server_command": "python",
-            "server_args": ["financial_mcp_server.py"],
+            "name": "financial_data",
+            "command": "python",
+            "args": ["financial_mcp_server.py"],
             "env": {
                 "ALPHA_VANTAGE_KEY": os.getenv("ALPHA_VANTAGE_KEY"),
                 "YAHOO_FINANCE_KEY": os.getenv("YAHOO_FINANCE_KEY")
@@ -201,27 +202,27 @@ researcher = GPTResearcher(
         },
         # News and market sentiment
         {
-            "server_name": "news_research",
-            "server_command": "npx",
-            "server_args": ["-y", "tavily-mcp@0.1.2"],
+            "name": "news_research",
+            "command": "npx",
+            "args": ["-y", "tavily-mcp@0.1.2"],
             "env": {
                 "TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")
             }
         },
         # Technical innovations and patents
         {
-            "server_name": "github_research",
-            "server_command": "npx",
-            "server_args": ["-y", "@modelcontextprotocol/server-github"],
+            "name": "github_research",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
             "env": {
                 "GITHUB_PERSONAL_ACCESS_TOKEN": os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
             }
         },
         # Academic research and papers
         {
-            "server_name": "academic_papers",
-            "server_command": "python",
-            "server_args": ["arxiv_mcp_server.py"],
+            "name": "academic_papers",
+            "command": "python",
+            "args": ["arxiv_mcp_server.py"],
             "env": {
                 "ARXIV_API_KEY": os.getenv("ARXIV_API_KEY")
             }
@@ -256,16 +257,16 @@ researcher = GPTResearcher(
     mcp_configs=[
         # Web trends and consumer sentiment
         {
-            "server_name": "web_trends",
-            "server_command": "npx",
-            "server_args": ["-y", "tavily-mcp@0.1.2"],
+            "name": "web_trends",
+            "command": "npx",
+            "args": ["-y", "tavily-mcp@0.1.2"],
             "env": {"TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")}
         },
         # Social media analytics
         {
-            "server_name": "social_analytics",
-            "server_command": "python",
-            "server_args": ["social_mcp_server.py"],
+            "name": "social_analytics",
+            "command": "python",
+            "args": ["social_mcp_server.py"],
             "env": {
                 "TWITTER_BEARER_TOKEN": os.getenv("TWITTER_BEARER_TOKEN"),
                 "INSTAGRAM_ACCESS_TOKEN": os.getenv("INSTAGRAM_ACCESS_TOKEN")
@@ -273,9 +274,9 @@ researcher = GPTResearcher(
         },
         # Patent and innovation research
         {
-            "server_name": "patent_research",
-            "server_command": "python",
-            "server_args": ["patent_mcp_server.py"],
+            "name": "patent_research",
+            "command": "python",
+            "args": ["patent_mcp_server.py"],
             "env": {"USPTO_API_KEY": os.getenv("USPTO_API_KEY")}
         }
     ]
@@ -292,7 +293,7 @@ researcher = GPTResearcher(
     query="Latest AI research papers on transformer architectures",
     mcp_configs=[
         {
-            "server_name": "arxiv_api",
+            "name": "arxiv_api",
             "connection_url": "wss://mcp.arxiv.org/ws",  # Auto-detects WebSocket
             "connection_token": os.getenv("ARXIV_TOKEN"),
         }
@@ -315,9 +316,9 @@ researcher = GPTResearcher(
     # MCP will be used alongside web search automatically
     mcp_configs=[
         {
-            "server_name": "github",
-            "server_command": "npx",
-            "server_args": ["-y", "@modelcontextprotocol/server-github"],
+            "name": "github",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
             "env": {"GITHUB_TOKEN": os.getenv("GITHUB_TOKEN")}
         }
     ]
@@ -351,18 +352,18 @@ async def main():
         mcp_configs=[
             # Code repositories and technical implementations
             {
-                "server_name": "github",
-                "server_command": "npx",
-                "server_args": ["-y", "@modelcontextprotocol/server-github"],
+                "name": "github",
+                "command": "npx",
+                "args": ["-y", "@modelcontextprotocol/server-github"],
                 "env": {
                     "GITHUB_PERSONAL_ACCESS_TOKEN": os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
                 }
             },
             # Current news and industry reports
             {
-                "server_name": "tavily",
-                "server_command": "npx",
-                "server_args": ["-y", "tavily-mcp@0.1.2"],
+                "name": "tavily",
+                "command": "npx",
+                "args": ["-y", "tavily-mcp@0.1.2"],
                 "env": {
                     "TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")
                 }
@@ -461,8 +462,8 @@ researcher = GPTResearcher(
     query="your query",
     mcp_configs=[
         {
-            "server_command": "python",
-            "server_args": ["multi_tool_server.py"]
+            "command": "python",
+            "args": ["multi_tool_server.py"]
             # AI will choose the best tool automatically
         }
     ]
@@ -481,7 +482,7 @@ GPT Researcher automatically detects connection types:
 {"connection_url": "https://api.example.com/mcp"}
 
 # Stdio (default when no URL provided)
-{"server_command": "python", "server_args": ["server.py"]}
+{"command": "python", "args": ["server.py"]}
 ```
 
 ## Troubleshooting
@@ -545,9 +546,9 @@ researcher = GPTResearcher(
     query="test query",
     mcp_configs=[
         {
-            "server_name": "test",
-            "server_command": "echo",
-            "server_args": ["hello world"]
+            "name": "test",
+            "command": "echo",
+            "args": ["hello world"]
         }
     ]
 )

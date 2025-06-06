@@ -2170,11 +2170,11 @@ const GPTResearcher = (() => {
       // Validate each server config
       const errors = [];
       parsed.forEach((server, index) => {
-        if (!server.server_name) {
-          errors.push(`Server ${index + 1}: missing server_name`);
+        if (!server.name) {
+          errors.push(`Server ${index + 1}: missing name`);
         }
-        if (!server.server_command && !server.connection_url) {
-          errors.push(`Server ${index + 1}: missing server_command or connection_url`);
+        if (!server.command && !server.connection_url) {
+          errors.push(`Server ${index + 1}: missing command or connection_url`);
         }
       });
 
@@ -2214,17 +2214,17 @@ const GPTResearcher = (() => {
   const showMCPExample = () => {
     const exampleConfig = [
       {
-        "server_name": "github",
-        "server_command": "npx",
-        "server_args": ["-y", "@modelcontextprotocol/server-github"],
+        "name": "github",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-github"],
         "env": {
           "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
         }
       },
       {
-        "server_name": "filesystem",
-        "server_command": "npx", 
-        "server_args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"],
+        "name": "filesystem",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"],
         "env": {}
       }
     ];
@@ -2289,9 +2289,9 @@ const GPTResearcher = (() => {
         <h4 class="highlight">Configuration Format:</h4>
         <p>Each MCP server should be a JSON object with these properties:</p>
         <ul>
-          <li><span class="highlight">server_name:</span> Unique identifier (e.g., "github", "filesystem")</li>
-          <li><span class="highlight">server_command:</span> Command to run the server (e.g., "npx", "python")</li>
-          <li><span class="highlight">server_args:</span> Array of arguments (e.g., ["-y", "@modelcontextprotocol/server-github"])</li>
+          <li><span class="highlight">name:</span> Unique identifier (e.g., "github", "filesystem")</li>
+          <li><span class="highlight">command:</span> Command to run the server (e.g., "npx", "python")</li>
+          <li><span class="highlight">args:</span> Array of arguments (e.g., ["-y", "@modelcontextprotocol/server-github"])</li>
           <li><span class="highlight">env:</span> Object with environment variables (e.g., {"API_KEY": "your_key"})</li>
         </ul>
       </div>
@@ -2326,25 +2326,25 @@ const GPTResearcher = (() => {
   const addMCPPreset = (preset) => {
     const presets = {
       github: {
-        "server_name": "github",
-        "server_command": "npx",
-        "server_args": ["-y", "@modelcontextprotocol/server-github"],
+        "name": "github",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-github"],
         "env": {
           "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
         }
       },
       tavily: {
-        "server_name": "tavily",
-        "server_command": "npx", 
-        "server_args": ["-y", "tavily-mcp@0.1.2"],
+        "name": "tavily",
+        "command": "npx",
+        "args": ["-y", "tavily-mcp@0.1.2"],
         "env": {
           "TAVILY_API_KEY": "your_tavily_api_key_here"
         }
       },
       filesystem: {
-        "server_name": "filesystem",
-        "server_command": "npx",
-        "server_args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"],
+        "name": "filesystem",
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"],
         "env": {}
       }
     };
@@ -2364,7 +2364,7 @@ const GPTResearcher = (() => {
       }
 
       // Check if server already exists
-      const existingIndex = currentConfig.findIndex(server => server.server_name === config.server_name);
+      const existingIndex = currentConfig.findIndex(server => server.name === config.name);
       
       if (existingIndex !== -1) {
         // Replace existing server

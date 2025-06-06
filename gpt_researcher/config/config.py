@@ -258,21 +258,21 @@ class Config:
         """Set the verbosity level."""
         self.llm_kwargs["verbose"] = verbose
 
-    def get_mcp_server_config(self, server_name: str) -> dict:
+    def get_mcp_server_config(self, name: str) -> dict:
         """
         Get the configuration for an MCP server.
         
         Args:
-            server_name (str): The name of the MCP server to get the config for.
+            name (str): The name of the MCP server to get the config for.
                 
         Returns:
             dict: The server configuration, or an empty dict if the server is not found.
         """
-        if not server_name or not self.mcp_servers:
+        if not name or not self.mcp_servers:
             return {}
         
         for server in self.mcp_servers:
-            if isinstance(server, dict) and server.get("name") == server_name:
+            if isinstance(server, dict) and server.get("name") == name:
                 return server
             
         return {}

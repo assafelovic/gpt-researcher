@@ -41,9 +41,9 @@ def get_mcp_config():
     """Get MCP configuration with environment variables."""
     return [
         {
-            "server_name": "tavily",
-            "server_command": "npx",
-            "server_args": ["-y", "tavily-mcp@0.1.2"],
+            "name": "tavily",
+            "command": "npx",
+            "args": ["-y", "tavily-mcp@0.1.2"],
             "env": {
                 "TAVILY_API_KEY": TAVILY_API_KEY
             }
@@ -54,9 +54,9 @@ def get_github_mcp_config():
     """Get GitHub MCP configuration with environment variables."""
     return [
         {
-            "server_name": "github",
-            "server_command": "npx",
-            "server_args": ["-y", "@modelcontextprotocol/server-github"],
+            "name": "github",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
             "env": {
                 "GITHUB_PERSONAL_ACCESS_TOKEN": GITHUB_TOKEN
             }

@@ -92,9 +92,9 @@ class GPTResearcher:
             prompt_family: Family of prompts to use.
             mcp_configs (list[dict], optional): List of MCP server configurations.
                 Each dictionary can contain:
-                - server_name (str): Name of the MCP server
-                - server_command (str): Command to start the server
-                - server_args (list[str]): Arguments for the server command
+                - name (str): Name of the MCP server
+                - command (str): Command to start the server
+                - args (list[str]): Arguments for the server command
                 - tool_name (str): Specific tool to use on the MCP server
                 - env (dict): Environment variables for the server
                 - connection_url (str): URL for WebSocket or HTTP connection
@@ -104,13 +104,11 @@ class GPTResearcher:
                 Example:
                 ```python
                 mcp_configs=[{
-                    "server_command": "python",
-                    "server_args": ["my_mcp_server.py"],
-                    "tool_name": "search"
+                    "command": "python",
+                    "args": ["my_mcp_server.py"],
+                    "name": "search"
                 }]
                 ```
-            mcp_max_iterations (int, optional): Maximum number of iterations for MCP.
-                Deprecated - use mcp_strategy instead.
             mcp_strategy (str, optional): MCP execution strategy. Options:
                 - "fast" (default): Run MCP once with original query for best performance
                 - "deep": Run MCP for all sub-queries for maximum thoroughness  

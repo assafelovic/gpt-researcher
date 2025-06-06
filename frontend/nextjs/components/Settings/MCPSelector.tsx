@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 interface MCPConfig {
-  server_name: string;
-  server_command: string;
-  server_args: string[];
+  name: string;
+  command: string;
+  args: string[];
   env: Record<string, string>;
 }
 
@@ -48,11 +48,11 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
 
       const errors: string[] = [];
       parsed.forEach((server: any, index: number) => {
-        if (!server.server_name) {
-          errors.push(`Server ${index + 1}: missing server_name`);
+        if (!server.name) {
+          errors.push(`Server ${index + 1}: missing name`);
         }
-        if (!server.server_command && !server.connection_url) {
-          errors.push(`Server ${index + 1}: missing server_command or connection_url`);
+        if (!server.command && !server.connection_url) {
+          errors.push(`Server ${index + 1}: missing command or connection_url`);
         }
       });
 
@@ -118,25 +118,25 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
   const addPreset = (preset: string) => {
     const presets: Record<string, MCPConfig> = {
       github: {
-        server_name: 'github',
-        server_command: 'npx',
-        server_args: ['-y', '@modelcontextprotocol/server-github'],
+        name: 'github',
+        command: 'npx',
+        args: ['-y', '@modelcontextprotocol/server-github'],
         env: {
           GITHUB_PERSONAL_ACCESS_TOKEN: 'your_github_token_here'
         }
       },
       tavily: {
-        server_name: 'tavily',
-        server_command: 'npx',
-        server_args: ['-y', 'tavily-mcp@0.1.2'],
+        name: 'tavily',
+        command: 'npx',
+        args: ['-y', 'tavily-mcp@0.1.2'],
         env: {
           TAVILY_API_KEY: 'your_tavily_api_key_here'
         }
       },
       filesystem: {
-        server_name: 'filesystem',
-        server_command: 'npx',
-        server_args: ['-y', '@modelcontextprotocol/server-filesystem', '/path/to/allowed/directory'],
+        name: 'filesystem',
+        command: 'npx',
+        args: ['-y', '@modelcontextprotocol/server-filesystem', '/path/to/allowed/directory'],
         env: {}
       }
     };
@@ -152,7 +152,7 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
         currentConfig = JSON.parse(currentText);
       }
 
-      const existingIndex = currentConfig.findIndex(server => server.server_name === config.server_name);
+      const existingIndex = currentConfig.findIndex(server => server.name === config.name);
       
       if (existingIndex !== -1) {
         currentConfig[existingIndex] = config;
@@ -170,17 +170,17 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
   const showExample = () => {
     const exampleConfig = [
       {
-        server_name: 'github',
-        server_command: 'npx',
-        server_args: ['-y', '@modelcontextprotocol/server-github'],
+        name: 'github',
+        command: 'npx',
+        args: ['-y', '@modelcontextprotocol/server-github'],
         env: {
           GITHUB_PERSONAL_ACCESS_TOKEN: 'your_github_token_here'
         }
       },
       {
-        server_name: 'filesystem',
-        server_command: 'npx', 
-        server_args: ['-y', '@modelcontextprotocol/server-filesystem', '/path/to/allowed/directory'],
+        name: 'filesystem',
+        command: 'npx',
+        args: ['-y', '@modelcontextprotocol/server-filesystem', '/path/to/allowed/directory'],
         env: {}
       }
     ];
@@ -270,9 +270,9 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
               </div>
               <small className="text-muted" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem', marginTop: '8px', display: 'block', lineHeight: '1.4' }}>
                 Paste your MCP servers configuration as a JSON array. Each server should have properties like{' '}
-                <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>server_name</code>,{' '}
-                <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>server_command</code>,{' '}
-                <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>server_args</code>, and optional{' '}
+                <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>name</code>,{' '}
+                <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>command</code>,{' '}
+                <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>args</code>, and optional{' '}
                 <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>env</code> variables.{' '}
                 <a
                   href="#"
@@ -319,9 +319,9 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
               <h4 className="highlight">Configuration Format:</h4>
               <p>Each MCP server should be a JSON object with these properties:</p>
               <ul>
-                <li><span className="highlight">server_name:</span> Unique identifier (e.g., &quot;github&quot;, &quot;filesystem&quot;)</li>
-                <li><span className="highlight">server_command:</span> Command to run the server (e.g., &quot;npx&quot;, &quot;python&quot;)</li>
-                <li><span className="highlight">server_args:</span> Array of arguments (e.g., [&quot;-y&quot;, &quot;@modelcontextprotocol/server-github&quot;])</li>
+                <li><span className="highlight">name:</span> Unique identifier (e.g., &quot;github&quot;, &quot;filesystem&quot;)</li>
+                <li><span className="highlight">command:</span> Command to run the server (e.g., &quot;npx&quot;, &quot;python&quot;)</li>
+                <li><span className="highlight">args:</span> Array of arguments (e.g., [&quot;-y&quot;, &quot;@modelcontextprotocol/server-github&quot;])</li>
                 <li><span className="highlight">env:</span> Object with environment variables (e.g., {JSON.stringify({API_KEY: "your_key"})})</li>
               </ul>
             </div>

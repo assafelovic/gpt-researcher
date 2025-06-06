@@ -48,7 +48,7 @@ class MCPClientManager:
         
         for i, config in enumerate(self.mcp_configs):
             # Generate server name
-            server_name = config.get("server_name", f"mcp_server_{i+1}")
+            server_name = config.get("name", f"mcp_server_{i+1}")
             
             # Build the server config
             server_config = {}
@@ -75,11 +75,11 @@ class MCPClientManager:
             
             # Handle stdio transport configuration
             if server_config.get("transport") == "stdio":
-                if config.get("server_command"):
-                    server_config["command"] = config["server_command"]
+                if config.get("command"):
+                    server_config["command"] = config["command"]
                     
                     # Handle server_args
-                    server_args = config.get("server_args", [])
+                    server_args = config.get("args", [])
                     if isinstance(server_args, str):
                         server_args = server_args.split()
                     server_config["args"] = server_args
