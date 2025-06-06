@@ -1,4 +1,4 @@
-# MCP Integration with GPT Researcher
+# MCP Integration
 
 The Model Context Protocol (MCP) enables GPT Researcher to connect with diverse data sources and tools through a standardized interface. GPT Researcher features an intelligent two-stage MCP approach that automatically selects the best tools and generates contextual research, powered by LangChain's [MCP adapters](https://github.com/langchain-ai/langchain-mcp-adapters) for seamless integration.
 
@@ -15,28 +15,7 @@ This happens automatically behind the scenes, optimized for the best balance of 
 
 The following diagram illustrates the hybrid strategy using `RETRIEVER=tavily,mcp` as an example:
 
-```mermaid
-graph TD
-    A[Research Task] --> B[Initialize GPT Researcher with mcp_configs]
-    
-    B --> C[Stage 1: Smart Tool Selection]
-    C -->     D[GPTR analyzes query + available MCP servers]
-    D --> E[Select 2-3 most relevant tools]
-    
-    E --> F[Stage 2: Contextual Research]
-    F -->     G[GPTR uses selected tools with dynamic arguments]
-    
-    B --> H[Parallel Web Search]
-    H --> I[Combine MCP + Web Results]
-    G --> I
-    
-    I --> J[Generate Comprehensive Report]
-    
-    style A fill:#e1f5fe,color:#333
-    style C fill:#f3e5f5,color:#333
-    style F fill:#e8f5e8,color:#333
-    style J fill:#fff3e0,color:#333
-```
+<img width="662" alt="Screenshot 2025-06-06 at 14 38 04" src="https://cowriter-images.s3.us-east-1.amazonaws.com/Screenshot+2025-06-06+at+14.38.04.png" />
 
 ### Flow Breakdown:
 
