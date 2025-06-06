@@ -141,6 +141,41 @@ report = await researcher.write_report()
 
 **For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package) page.**
 
+### 🔧 MCP Client
+GPT Researcher supports MCP integration to connect with specialized data sources like GitHub repositories, databases, and custom APIs. This enables research from data sources alongside web search.
+
+```bash
+export RETRIEVER=tavily,mcp  # Enable hybrid web + MCP research
+```
+
+```python
+from gpt_researcher import GPTResearcher
+import asyncio
+import os
+
+async def mcp_research_example():
+    # Enable MCP with web search
+    os.environ["RETRIEVER"] = "tavily,mcp"
+    
+    researcher = GPTResearcher(
+        query="How does React's useState hook work?",
+        report_type="research_report",
+        mcp_configs=[
+            {
+                "server_name": "github",
+                "server_command": "npx",
+                "server_args": ["-y", "@modelcontextprotocol/server-github"],
+                "env": {"GITHUB_TOKEN": os.getenv("GITHUB_TOKEN")}
+            }
+        ]
+    )
+    
+    research_result = await researcher.conduct_research()
+    report = await researcher.write_report()
+    return report
+```
+
+> For comprehensive MCP documentation and advanced examples, visit the [MCP Integration Guide](https://docs.gptr.dev/docs/gpt-researcher/retrievers/mcp-configs).
 
 ## Run with Docker
 
