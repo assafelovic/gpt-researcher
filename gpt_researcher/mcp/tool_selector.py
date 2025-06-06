@@ -46,6 +46,9 @@ class MCPToolSelector:
         """
         if not all_tools:
             return []
+
+        if len(all_tools) < max_tools:
+            max_tools = len(all_tools)
             
         logger.info(f"Using LLM to select {max_tools} most relevant tools from {len(all_tools)} available")
         

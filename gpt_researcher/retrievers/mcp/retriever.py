@@ -144,7 +144,6 @@ class MCPRetriever:
             
             # Stage 2: Select most relevant tools
             await self.streamer.stream_stage_start("Stage 2", "Selecting most relevant tools")
-            await self.streamer.stream_tool_selection(3, len(all_tools))
             selected_tools = await self.tool_selector.select_relevant_tools(self.query, all_tools, max_tools=3)
             
             if not selected_tools:
