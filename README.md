@@ -119,7 +119,7 @@ pip install gpt-researcher
 from gpt_researcher import GPTResearcher
 
 query = "why is Nvidia stock going up?"
-researcher = GPTResearcher(query=query, report_type="research_report")
+researcher = GPTResearcher(query=query)
 # Conduct research on the given query
 research_result = await researcher.conduct_research()
 # Write the report
@@ -146,8 +146,7 @@ async def mcp_research_example():
     os.environ["RETRIEVER"] = "tavily,mcp"
     
     researcher = GPTResearcher(
-        query="How does React's useState hook work?",
-        report_type="research_report",
+        query="What are the top open source web research agents?",
         mcp_configs=[
             {
                 "server_name": "github",
