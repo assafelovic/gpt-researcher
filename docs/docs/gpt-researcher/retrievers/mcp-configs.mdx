@@ -87,15 +87,16 @@ Each MCP configuration dictionary supports these keys:
 
 | Key | Description | Example | Required |
 |-----|-------------|---------|----------|
-| `name` | Identifier for the MCP server | `"github"` | No |
+| `name` | Identifier for the MCP server | `"github"` | Yes |
 | `command` | Command to start the server | `"python"` | Yes* |
-| `args` | Arguments for the server command | `["-m", "my_server"]` | No |
+| `args` | Arguments for the server command | `["-m", "my_server"]` | Yes* |
 | `env` | Environment variables for the server | `{"API_KEY": "key"}` | No |
-| `connection_url` | URL for remote connections | `"wss://api.example.com"` | Yes* |
+| `connection_url` | URL for remote connections | `"wss://api.example.com"` | Yes** |
 | `connection_type` | Connection type (auto-detected) | `"websocket"` | No |
 | `connection_token` | Authentication token | `"bearer_token"` | No |
 
-*Either `command` (for local servers) or `connection_url` (for remote servers) is required.
+**Local servers**: Require `name`, `command`, and `args`  
+**Remote servers**: Require `name` and `connection_url`
 
 ## Examples
 
