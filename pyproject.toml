@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gpt-researcher"
-version = "0.12.18"
+version = "0.13.3"
 description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
 authors = ["Assaf Elovic <assaf.elovic@gmail.com>"]
 license = "MIT"
@@ -40,6 +40,9 @@ tiktoken = ">=0.7.0"
 unstructured = ">=0.13"
 uvicorn = ">=0.24.0.post1"
 websockets = "^13.1"
+# Model Context Protocol support
+mcp = { version = ">=1.0.0", markers = "platform_system != 'Windows'" }
+langchain-mcp-adapters = ">=0.1.0"
 
 [build-system]
 requires = ["poetry-core"]

@@ -2068,3 +2068,247 @@ footer a:hover {
 .image-dialog:not(.visible) {
     pointer-events: none;
 }
+
+/* MCP Configuration Styles */
+.mcp-section {
+    margin-bottom: 1rem;
+}
+
+.mcp-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.mcp-header label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.mcp-toggle {
+    margin: 0;
+}
+
+.mcp-info-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.mcp-info-btn:hover {
+    color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.mcp-config-section {
+    margin-top: 15px;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.mcp-presets {
+    margin-bottom: 10px;
+}
+
+.preset-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 5px;
+}
+
+.preset-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid #6c757d;
+    color: #6c757d;
+    background: white;
+}
+
+.preset-btn:hover {
+    border-color: #007bff;
+    color: #007bff;
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.preset-btn i {
+    font-size: 0.9em;
+}
+
+.mcp-config-group {
+    margin-bottom: 10px;
+}
+
+.mcp-config-textarea {
+    font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    resize: vertical;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px;
+    background-color: #f8f8f8;
+}
+
+.mcp-config-textarea:focus {
+    border-color: #007bff;
+    background-color: white;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.mcp-config-textarea.invalid {
+    border-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+.mcp-config-textarea.valid {
+    border-color: #28a745;
+    background-color: #f0fff4;
+}
+
+.mcp-config-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    margin-bottom: 5px;
+}
+
+.mcp-status-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.mcp-status-text.valid {
+    color: #28a745;
+}
+
+.mcp-status-text.invalid {
+    color: #dc3545;
+}
+
+#mcpFormatBtn {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+}
+
+#mcpExampleLink {
+    color: #007bff;
+    text-decoration: none;
+}
+
+#mcpExampleLink:hover {
+    text-decoration: underline;
+}
+
+/* MCP Info Modal */
+.mcp-info-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.mcp-info-modal.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mcp-info-content {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 25px;
+    border-radius: 12px;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    margin: 20px;
+}
+
+.mcp-info-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.mcp-info-close:hover {
+    background-color: #f8f9fa;
+    color: #dc3545;
+}
+
+.mcp-info-content h3 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.mcp-info-content p {
+    line-height: 1.6;
+    color: #555;
+}
+
+.mcp-info-content ul {
+    padding-left: 20px;
+    line-height: 1.6;
+}
+
+.mcp-info-content li {
+    margin-bottom: 8px;
+}
+
+.mcp-info-content .highlight {
+    color: #007bff;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .preset-buttons {
+        flex-direction: column;
+    }
+    
+    .preset-btn {
+        justify-content: center;
+    }
+    
+    .mcp-info-content {
+        margin: 10px;
+        padding: 20px;
+    }
+    
+    .mcp-config-status {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}

@@ -60,6 +60,9 @@ const GPTResearcher = (() => {
     // Initialize WebSocket monitoring panel
     initWebSocketPanel();
 
+    // Initialize MCP functionality
+    initMCPSection();
+
     // The download bar is now fixed in place with CSS
     // No need to set display property here
 
@@ -982,6 +985,13 @@ const GPTResearcher = (() => {
         tone: tone,
         agent: agent,
         query_domains: query_domains,
+      }
+
+      // Add MCP configuration if enabled
+      const mcpData = collectMCPData();
+      if (mcpData) {
+        Object.assign(requestData, mcpData);
+        console.log('Including MCP configuration:', mcpData);
       }
 
       // Store the request data for potential reconnection
@@ -2068,6 +2078,348 @@ const GPTResearcher = (() => {
       }
     }
   }
+
+  // MCP Configuration Management
+  
+  // Initialize MCP functionality
+  const initMCPSection = () => {
+    const mcpEnabled = document.getElementById('mcpEnabled');
+    const mcpConfigSection = document.getElementById('mcpConfigSection');
+    const mcpInfoBtn = document.getElementById('mcpInfoBtn');
+    const mcpConfig = document.getElementById('mcpConfig');
+    const mcpFormatBtn = document.getElementById('mcpFormatBtn');
+    const mcpExampleLink = document.getElementById('mcpExampleLink');
+
+    if (!mcpEnabled || !mcpConfigSection) {
+      console.warn('MCP elements not found');
+      return;
+    }
+
+    // Toggle MCP config section
+    mcpEnabled.addEventListener('change', () => {
+      if (mcpEnabled.checked) {
+        mcpConfigSection.style.display = 'block';
+        updateRetrieverForMCP(true);
+      } else {
+        mcpConfigSection.style.display = 'none';
+        updateRetrieverForMCP(false);
+      }
+    });
+
+    // MCP info modal
+    if (mcpInfoBtn) {
+      mcpInfoBtn.addEventListener('click', showMCPInfo);
+    }
+
+    // JSON validation and formatting
+    if (mcpConfig) {
+      mcpConfig.addEventListener('input', validateMCPConfig);
+      mcpConfig.addEventListener('blur', validateMCPConfig);
+    }
+
+    if (mcpFormatBtn) {
+      mcpFormatBtn.addEventListener('click', formatMCPConfig);
+    }
+
+    if (mcpExampleLink) {
+      mcpExampleLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        showMCPExample();
+      });
+    }
+
+    // Preset buttons
+    const presetButtons = document.querySelectorAll('.preset-btn');
+    presetButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const preset = e.currentTarget.dataset.preset;
+        addMCPPreset(preset);
+      });
+    });
+
+    // Create MCP info modal
+    createMCPInfoModal();
+
+    // Initial validation
+    validateMCPConfig();
+  };
+
+  // Validate MCP JSON configuration
+  const validateMCPConfig = () => {
+    const mcpConfig = document.getElementById('mcpConfig');
+    const mcpConfigStatus = document.getElementById('mcpConfigStatus');
+    
+    if (!mcpConfig || !mcpConfigStatus) return;
+
+    const configText = mcpConfig.value.trim();
+    
+    if (!configText || configText === '[]') {
+      mcpConfig.className = 'form-control mcp-config-textarea';
+      mcpConfigStatus.textContent = 'Empty configuration';
+      mcpConfigStatus.className = 'mcp-status-text';
+      return true;
+    }
+
+    try {
+      const parsed = JSON.parse(configText);
+      
+      if (!Array.isArray(parsed)) {
+        throw new Error('Configuration must be an array');
+      }
+
+      // Validate each server config
+      const errors = [];
+      parsed.forEach((server, index) => {
+        if (!server.server_name) {
+          errors.push(`Server ${index + 1}: missing server_name`);
+        }
+        if (!server.server_command && !server.connection_url) {
+          errors.push(`Server ${index + 1}: missing server_command or connection_url`);
+        }
+      });
+
+      if (errors.length > 0) {
+        throw new Error(errors.join('; '));
+      }
+
+      mcpConfig.className = 'form-control mcp-config-textarea valid';
+      mcpConfigStatus.textContent = `Valid JSON ✓ (${parsed.length} server${parsed.length !== 1 ? 's' : ''})`;
+      mcpConfigStatus.className = 'mcp-status-text valid';
+      return true;
+
+    } catch (error) {
+      mcpConfig.className = 'form-control mcp-config-textarea invalid';
+      mcpConfigStatus.textContent = `Invalid JSON: ${error.message}`;
+      mcpConfigStatus.className = 'mcp-status-text invalid';
+      return false;
+    }
+  };
+
+  // Format MCP JSON configuration
+  const formatMCPConfig = () => {
+    const mcpConfig = document.getElementById('mcpConfig');
+    if (!mcpConfig) return;
+
+    try {
+      const parsed = JSON.parse(mcpConfig.value.trim() || '[]');
+      mcpConfig.value = JSON.stringify(parsed, null, 2);
+      validateMCPConfig();
+      showToast('JSON formatted successfully!');
+    } catch (error) {
+      showToast('Cannot format invalid JSON');
+    }
+  };
+
+  // Show MCP configuration example
+  const showMCPExample = () => {
+    const exampleConfig = [
+      {
+        "server_name": "github",
+        "server_command": "npx",
+        "server_args": ["-y", "@modelcontextprotocol/server-github"],
+        "env": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
+        }
+      },
+      {
+        "server_name": "filesystem",
+        "server_command": "npx", 
+        "server_args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"],
+        "env": {}
+      }
+    ];
+
+    const mcpConfig = document.getElementById('mcpConfig');
+    if (mcpConfig) {
+      mcpConfig.value = JSON.stringify(exampleConfig, null, 2);
+      validateMCPConfig();
+      showToast('Example configuration loaded!');
+    }
+  };
+
+  // Update retriever configuration for MCP
+  const updateRetrieverForMCP = (enableMCP) => {
+    if (enableMCP) {
+      showToast('MCP enabled - will be included in research process');
+    } else {
+      showToast('MCP disabled - using web search only');
+    }
+  };
+
+  // Show MCP information modal
+  const showMCPInfo = () => {
+    const modal = document.getElementById('mcpInfoModal');
+    if (modal) {
+      modal.classList.add('visible');
+    }
+  };
+
+  // Create MCP info modal
+  const createMCPInfoModal = () => {
+    if (document.getElementById('mcpInfoModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'mcpInfoModal';
+    modal.className = 'mcp-info-modal';
+    
+    modal.innerHTML = `
+      <div class="mcp-info-content">
+        <button class="mcp-info-close" onclick="closeMCPInfo()">
+          <i class="fas fa-times"></i>
+        </button>
+        <h3>Model Context Protocol (MCP)</h3>
+        <p>MCP enables GPT Researcher to connect with external tools and data sources through a standardized protocol.</p>
+        
+        <h4 class="highlight">Benefits:</h4>
+        <ul>
+          <li><span class="highlight">Access Local Data:</span> Connect to databases, file systems, and APIs</li>
+          <li><span class="highlight">Use External Tools:</span> Integrate with web services and third-party tools</li>
+          <li><span class="highlight">Extend Capabilities:</span> Add custom functionality through MCP servers</li>
+          <li><span class="highlight">Maintain Security:</span> Controlled access with proper authentication</li>
+        </ul>
+
+        <h4 class="highlight">Quick Start:</h4>
+        <ul>
+          <li>Enable MCP using the checkbox above</li>
+          <li>Click a preset to add pre-configured servers to the JSON</li>
+          <li>Or paste your own MCP configuration as a JSON array</li>
+          <li>Start your research - MCP will run with optimal settings</li>
+        </ul>
+
+        <h4 class="highlight">Configuration Format:</h4>
+        <p>Each MCP server should be a JSON object with these properties:</p>
+        <ul>
+          <li><span class="highlight">server_name:</span> Unique identifier (e.g., "github", "filesystem")</li>
+          <li><span class="highlight">server_command:</span> Command to run the server (e.g., "npx", "python")</li>
+          <li><span class="highlight">server_args:</span> Array of arguments (e.g., ["-y", "@modelcontextprotocol/server-github"])</li>
+          <li><span class="highlight">env:</span> Object with environment variables (e.g., {"API_KEY": "your_key"})</li>
+        </ul>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.remove('visible');
+      }
+    });
+
+    // Close with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('visible')) {
+        modal.classList.remove('visible');
+      }
+    });
+  };
+
+  // Close MCP info modal
+  window.closeMCPInfo = () => {
+    const modal = document.getElementById('mcpInfoModal');
+    if (modal) {
+      modal.classList.remove('visible');
+    }
+  };
+
+  // Add MCP preset configurations
+  const addMCPPreset = (preset) => {
+    const presets = {
+      github: {
+        "server_name": "github",
+        "server_command": "npx",
+        "server_args": ["-y", "@modelcontextprotocol/server-github"],
+        "env": {
+          "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
+        }
+      },
+      tavily: {
+        "server_name": "tavily",
+        "server_command": "npx", 
+        "server_args": ["-y", "tavily-mcp@0.1.2"],
+        "env": {
+          "TAVILY_API_KEY": "your_tavily_api_key_here"
+        }
+      },
+      filesystem: {
+        "server_name": "filesystem",
+        "server_command": "npx",
+        "server_args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"],
+        "env": {}
+      }
+    };
+
+    const config = presets[preset];
+    if (!config) return;
+
+    const mcpConfig = document.getElementById('mcpConfig');
+    if (!mcpConfig) return;
+
+    try {
+      let currentConfig = [];
+      const currentText = mcpConfig.value.trim();
+      
+      if (currentText && currentText !== '[]') {
+        currentConfig = JSON.parse(currentText);
+      }
+
+      // Check if server already exists
+      const existingIndex = currentConfig.findIndex(server => server.server_name === config.server_name);
+      
+      if (existingIndex !== -1) {
+        // Replace existing server
+        currentConfig[existingIndex] = config;
+        showToast(`Updated ${preset} MCP server configuration`);
+      } else {
+        // Add new server
+        currentConfig.push(config);
+        showToast(`Added ${preset} MCP server configuration`);
+      }
+
+      mcpConfig.value = JSON.stringify(currentConfig, null, 2);
+      validateMCPConfig();
+
+    } catch (error) {
+      console.error('Error adding preset:', error);
+      showToast('Error adding preset configuration');
+    }
+  };
+
+  // Collect MCP configuration data
+  const collectMCPData = () => {
+    const mcpEnabled = document.getElementById('mcpEnabled');
+    if (!mcpEnabled || !mcpEnabled.checked) {
+      return null;
+    }
+
+    const mcpConfig = document.getElementById('mcpConfig');
+    
+    if (!mcpConfig) {
+      console.warn('MCP config element not found for data collection');
+      return null;
+    }
+
+    // Validate configuration before collecting
+    if (!validateMCPConfig()) {
+      showToast('Invalid MCP configuration - please fix errors before submitting');
+      return null;
+    }
+
+    try {
+      const configText = mcpConfig.value.trim();
+      const mcpConfigs = configText && configText !== '[]' ? JSON.parse(configText) : [];
+
+      return {
+        mcp_enabled: true,
+        mcp_strategy: "fast", // Always use "fast" strategy as default
+        mcp_configs: mcpConfigs
+      };
+    } catch (error) {
+      console.error('Error collecting MCP data:', error);
+      showToast('Error processing MCP configuration');
+      return null;
+    }
+  };
 
   return {
     init,

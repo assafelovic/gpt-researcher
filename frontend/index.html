@@ -226,6 +226,57 @@
                 <input type="text" class="form-control highlight-connection" id="queryDomains" name="query_domains" placeholder="Enter domains separated by commas" autocomplete="on">
                 <small class="text-muted">Example: techcrunch.com, forbes.com</small>
             </div>
+
+            <!-- MCP Configuration Section -->
+            <div class="form-group">
+                <div class="mcp-section">
+                    <div class="mcp-header">
+                        <label for="mcpEnabled" class="form-label">
+                            <input type="checkbox" id="mcpEnabled" name="mcp_enabled" class="mcp-toggle">
+                            Enable MCP (Model Context Protocol)
+                        </label>
+                        <button type="button" id="mcpInfoBtn" class="mcp-info-btn" title="Learn about MCP">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
+                    <small class="text-muted">Connect to external tools and data sources through MCP servers</small>
+                    
+                    <div id="mcpConfigSection" class="mcp-config-section" style="display: none;">
+                        <div class="mcp-presets">
+                            <label class="form-label">Quick Presets</label>
+                            <div class="preset-buttons">
+                                <button type="button" class="btn btn-outline-secondary btn-sm preset-btn" data-preset="github">
+                                    <i class="fab fa-github"></i> GitHub
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm preset-btn" data-preset="tavily">
+                                    <i class="fas fa-search"></i> Tavily Web Search
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm preset-btn" data-preset="filesystem">
+                                    <i class="fas fa-folder"></i> Local Files
+                                </button>
+                            </div>
+                            <small class="text-muted">Click a preset to add pre-configured MCP servers to the JSON below</small>
+                        </div>
+
+                        <div class="mcp-config-group">
+                            <label for="mcpConfig" class="form-label">MCP Servers Configuration</label>
+                            <textarea id="mcpConfig" name="mcp_config" class="form-control mcp-config-textarea" rows="8" placeholder="Paste your MCP servers configuration as JSON array...">[]</textarea>
+                            <div class="mcp-config-status">
+                                <span id="mcpConfigStatus" class="mcp-status-text">Valid JSON ✓</span>
+                                <button type="button" id="mcpFormatBtn" class="btn btn-sm btn-secondary">
+                                    <i class="fas fa-code"></i> Format JSON
+                                </button>
+                            </div>
+                            <small class="text-muted">
+                                Paste your MCP servers configuration as a JSON array. Each server should have properties like 
+                                <code>server_name</code>, <code>server_command</code>, <code>server_args</code>, and optional <code>env</code> variables.
+                                <a href="#" id="mcpExampleLink">See example →</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <input type="submit" value="Begin Research" class="btn btn-primary button-padding" id="submitButton">
         </form>
 

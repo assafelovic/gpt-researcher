@@ -59,15 +59,25 @@ export const useWebSocket = (
         
         const domainFilters = JSON.parse(localStorage.getItem('domainFilters') || '[]');
         const domains = domainFilters ? domainFilters.map((domain: any) => domain.value) : [];
-        const { report_type, report_source, tone } = chatBoxSettings;
+        const { report_type, report_source, tone, mcp_enabled, mcp_configs } = chatBoxSettings;
         
-        let data = "start " + JSON.stringify({ 
+        const requestData: any = { 
           task: promptValue,
           report_type, 
           report_source, 
           tone,
           query_domains: domains
-        });
+        };
+
+        // Add MCP configuration if enabled
+        if (mcp_enabled && mcp_configs && mcp_configs.length > 0) {
+          requestData.mcp_enabled = true;
+          requestData.mcp_strategy = "fast"; // Always use fast strategy as default
+          requestData.mcp_configs = mcp_configs;
+          console.log('🔧 Including MCP configuration:', { mcp_enabled, mcp_configs });
+        }
+        
+        let data = "start " + JSON.stringify(requestData);
         
         console.log('📤 Sending WebSocket message:', data);
         newSocket.send(data);

@@ -6,7 +6,6 @@ from typing import Dict, Any, List, Union, Type, get_origin, get_args
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from .variables.default import DEFAULT_CONFIG
 from .variables.base import BaseConfig
-from ..retrievers.utils import get_all_retriever_names
 
 
 class Config:
@@ -27,6 +26,16 @@ class Config:
         self._handle_deprecated_attributes()
         if config_to_use['REPORT_SOURCE'] != 'web':
           self._set_doc_path(config_to_use)
+
+        # MCP support configuration
+        self.mcp_servers = []  # List of MCP server configurations
+        self.mcp_allowed_root_paths = []  # Allowed root paths for MCP servers
+
+        # Read from config
+        if hasattr(self, 'mcp_servers'):
+            self.mcp_servers = self.mcp_servers
+        if hasattr(self, 'mcp_allowed_root_paths'):
+            self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         for key, value in config.items():
@@ -144,6 +153,8 @@ class Config:
 
     def parse_retrievers(self, retriever_str: str) -> List[str]:
         """Parse the retriever string into a list of retrievers and validate them."""
+        from ..retrievers.utils import get_all_retriever_names
+        
         retrievers = [retriever.strip()
                       for retriever in retriever_str.split(",")]
         valid_retrievers = get_all_retriever_names() or []
@@ -246,3 +257,22 @@ class Config:
     def set_verbose(self, verbose: bool) -> None:
         """Set the verbosity level."""
         self.llm_kwargs["verbose"] = verbose
+
+    def get_mcp_server_config(self, server_name: str) -> dict:
+        """
+        Get the configuration for an MCP server.
+        
+        Args:
+            server_name (str): The name of the MCP server to get the config for.
+                
+        Returns:
+            dict: The server configuration, or an empty dict if the server is not found.
+        """
+        if not server_name or not self.mcp_servers:
+            return {}
+        
+        for server in self.mcp_servers:
+            if isinstance(server, dict) and server.get("name") == server_name:
+                return server
+            
+        return {}
