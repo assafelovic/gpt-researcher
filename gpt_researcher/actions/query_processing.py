@@ -17,21 +17,20 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
         query: The search query
         retriever: The retriever instance
         query_domains: Optional list of domains to search
-        researcher: The researcher instance (needed for some retrievers)
+        researcher: The researcher instance (needed for MCP retrievers)
 
     Returns:
         A list of search results
     """
-    # Pass all parameters using kwargs for maximum compatibility
-    kwargs = {
-        'query_domains': query_domains,
-    }
-    
-    # Add researcher parameter if provided
-    if researcher is not None:
-        kwargs['researcher'] = researcher
-    
-    search_retriever = retriever(query, **kwargs)
+    # Check if this is an MCP retriever and pass the researcher instance
+    if "mcpretriever" in retriever.__name__.lower():
+        search_retriever = retriever(
+            query, 
+            query_domains=query_domains,
+            researcher=researcher  # Pass researcher instance for MCP retrievers
+        )
+    else:
+        search_retriever = retriever(query, query_domains=query_domains)
     
     return search_retriever.search()
 
