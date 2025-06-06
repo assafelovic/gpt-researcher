@@ -23,10 +23,12 @@ class ResearchConductor:
         self._mcp_query_count = 0
 
     async def plan_research(self, query, query_domains=None):
-        self.logger.info(f"Planning research for query: {query}")
-        if query_domains:
-            self.logger.info(f"Query domains: {query_domains}")
-        
+        """Gets the sub-queries from the query
+        Args:
+            query: original query
+        Returns:
+            List of queries
+        """
         await stream_output(
             "logs",
             "planning_research",
@@ -44,9 +46,8 @@ class ResearchConductor:
             self.researcher.websocket,
         )
 
-        # Pass retriever names to optimize sub-query generation for MCP
         retriever_names = [r.__name__ for r in self.researcher.retrievers]
-        self.logger.info(f"Active retrievers: {retriever_names}")
+        # Remove duplicate logging - this will be logged once in conduct_research instead
 
         outline = await plan_research_outline(
             query=query,
@@ -68,6 +69,10 @@ class ResearchConductor:
             self.json_handler.update_content("query", self.researcher.query)
         
         self.logger.info(f"Starting research for query: {self.researcher.query}")
+        
+        # Log active retrievers once at the start of research
+        retriever_names = [r.__name__ for r in self.researcher.retrievers]
+        self.logger.info(f"Active retrievers: {retriever_names}")
         
         # Reset visited_urls and source_urls at the start of each research task
         self.researcher.visited_urls.clear()

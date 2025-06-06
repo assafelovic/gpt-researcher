@@ -1,5 +1,6 @@
 from typing import Any, Optional
 import json
+import os
 
 from .config import Config
 from .memory import Memory
@@ -239,22 +240,27 @@ class GPTResearcher:
         """
         Process MCP configurations from a list of configuration dictionaries.
         
-        This method validates the MCP configurations and ensures the retriever
-        is set to include MCP.
+        This method validates the MCP configurations. It only adds MCP to retrievers
+        if no explicit retriever configuration is provided via environment variables.
         
         Args:
             mcp_configs (list[dict]): List of MCP server configuration dictionaries.
         """
-        # Ensure mcp is included in retrievers
-        if hasattr(self.cfg, 'retrievers') and self.cfg.retrievers:
-            # If retrievers is set in config
-            current_retrievers = set(self.cfg.retrievers.split(",")) if isinstance(self.cfg.retrievers, str) else set(self.cfg.retrievers)
-            if "mcp" not in current_retrievers:
-                current_retrievers.add("mcp")
-                self.cfg.retrievers = ",".join(filter(None, current_retrievers))
-        else:
-            # No retrievers configured, use mcp as default
-            self.cfg.retrievers = "mcp"
+        # Check if user explicitly set RETRIEVER environment variable
+        user_set_retriever = os.getenv("RETRIEVER") is not None
+        
+        if not user_set_retriever:
+            # Only auto-add MCP if user hasn't explicitly set retrievers
+            if hasattr(self.cfg, 'retrievers') and self.cfg.retrievers:
+                # If retrievers is set in config (but not via env var)
+                current_retrievers = set(self.cfg.retrievers.split(",")) if isinstance(self.cfg.retrievers, str) else set(self.cfg.retrievers)
+                if "mcp" not in current_retrievers:
+                    current_retrievers.add("mcp")
+                    self.cfg.retrievers = ",".join(filter(None, current_retrievers))
+            else:
+                # No retrievers configured, use mcp as default
+                self.cfg.retrievers = "mcp"
+        # If user explicitly set RETRIEVER, respect their choice and don't auto-add MCP
         
         # Store the mcp_configs for use by the MCP retriever
         self.mcp_configs = mcp_configs
