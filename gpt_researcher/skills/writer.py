@@ -4,6 +4,8 @@ import json
 
 from typing import TYPE_CHECKING, Any
 
+import asyncio
+
 from gpt_researcher.actions import (
     generate_draft_section_titles,
     generate_report,
@@ -64,7 +66,7 @@ class ReportGenerator:
         research_images: list[dict[str, Any]] | None = self.researcher.get_research_images()
         if research_images:
             # Extract just the URLs from the image objects to match what the frontend expects
-            image_urls = [img.get("url", "") for img in research_images if img.get("url")]
+            image_urls: list[str] = [img.get("url", "") for img in research_images if img.get("url")]
             await stream_output("images", "selected_images", json.dumps(image_urls), self.researcher.websocket, True, research_images)
 
         context: list[dict[str, Any]] = ext_context or self.researcher.context
@@ -143,7 +145,10 @@ class ReportGenerator:
 
         return report
 
-    def _should_use_rag_generation(self, context: list[dict[str, Any]]) -> bool:
+    def _should_use_rag_generation(
+        self,
+        context: list[dict[str, Any]],
+    ) -> bool:
         """Determine if RAG-based generation should be used based on context size.
 
         Args:
@@ -156,8 +161,8 @@ class ReportGenerator:
             return False
 
         # Calculate total context size
-        total_chars = 0
-        total_items = len(context)
+        total_chars: int = 0
+        total_items: int = len(context)
 
         for item in context:
             if isinstance(item, dict):
@@ -174,14 +179,13 @@ class ReportGenerator:
         # 1. We have a lot of research items (>20)
         # 2. OR total content is large (>50k characters)
         # 3. OR we're doing a detailed report
-        use_rag = (
+        use_rag: bool = (
             total_items > 20 or
             total_chars > 50000 or
             self.researcher.report_type == "detailed_report"
         )
 
         if use_rag and self.researcher.verbose:
-            import asyncio
             asyncio.create_task(stream_output(
                 "logs",
                 "rag_decision",

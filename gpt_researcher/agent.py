@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import json
-
 from typing import TYPE_CHECKING, Any, Callable
+
+from litellm import cast
 
 from gpt_researcher.actions import (
     add_references,
@@ -15,6 +16,10 @@ from gpt_researcher.actions import (
 )
 
 # from gpt_researcher.actions.report_analyzer import analyze_query_requirements, get_research_configuration
+from gpt_researcher.actions.report_analyzer import (
+    analyze_query_requirements,
+    get_research_configuration,
+)
 from gpt_researcher.config import Config
 from gpt_researcher.llm_provider import GenericLLMProvider
 
@@ -26,7 +31,10 @@ from gpt_researcher.skills.context_manager import ContextManager
 from gpt_researcher.skills.curator import SourceCurator
 from gpt_researcher.skills.deep_research import DeepResearchSkill
 from gpt_researcher.skills.researcher import ResearchConductor
-from gpt_researcher.skills.structured_research import ResearchResults
+from gpt_researcher.skills.structured_research import (
+    ResearchResults,
+    StructuredResearchPipeline,
+)
 from gpt_researcher.skills.writer import ReportGenerator
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.vector_store import VectorStoreWrapper
@@ -272,12 +280,12 @@ class GPTResearcher:
         # Analyze query requirements for structured research only if not disabled
         if not self.disable_structured_research and not self.query_analysis:
             await self._log_event("action", action="analyze_query")
-            self.query_analysis = await analyze_query_requirements(
+            self.query_analysis: dict[str, Any] | None = await analyze_query_requirements(
                 query=self.query,
                 cfg=self.cfg,
                 cost_callback=self.add_costs,
             )
-            self.research_config = get_research_configuration(self.query_analysis)
+            self.research_config: dict[str, Any] | None = get_research_configuration(self.query_analysis)
 
             await self._log_event(
                 "action",
@@ -568,7 +576,7 @@ class GPTResearcher:
         return list(self.visited_urls)
 
     def get_research_context(self) -> list[str]:
-        return [] if self.context is None else self.context
+        return [] if self.context is None else cast(list[str], self.context)
 
     def get_costs(self) -> float:
         return self.research_costs

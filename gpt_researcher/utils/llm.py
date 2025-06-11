@@ -180,7 +180,7 @@ def truncate_messages_to_fit(
     # Calculate target token allocations
     if system_token_count > 0:
         # Allow system to use up to 80% of total, but no less than their minimum viable size
-        max_system_tokens = min(
+        max_system_tokens: int = min(
             max(int(max_context_tokens * system_importance_factor), min_viable_tokens * len(system_messages)),
             system_token_count
         )
@@ -236,7 +236,7 @@ def truncate_messages_to_fit(
                 # Truncate this message to fit
                 truncated_msg: dict[str, str] = truncate_message_content(msg, remaining_tokens, model)
                 current_messages.append(truncated_msg)
-                msg_after_tokens = estimate_token_count([truncated_msg], model)
+                msg_after_tokens: int = estimate_token_count([truncated_msg], model)
                 # DEBUG: Log truncated message
                 logger.info(f"[DEBUG-TRUNCATE] Truncated message from {msg_tokens} to {msg_after_tokens} tokens")
                 logger.info(f"[DEBUG-TRUNCATE] Original content length: {len(msg.get('content', ''))}, Truncated length: {len(truncated_msg.get('content', ''))}")
@@ -250,7 +250,7 @@ def truncate_messages_to_fit(
     result_messages.extend(current_messages)
 
     # Final token count check
-    final_token_count = estimate_token_count(result_messages, model)
+    final_token_count: int = estimate_token_count(result_messages, model)
     # DEBUG: Log final token count
     logger.info(f"[DEBUG-TRUNCATE] Final token count: {final_token_count}/{max_context_tokens}")
 
@@ -293,8 +293,8 @@ def truncate_message_content(
 
     # Calculate minimum viable token space needed for basic message structure
     # Estimate role tokens + message format overhead
-    role_tokens = len(message.get("role", "system"))
-    estimated_overhead = role_tokens + 5  # Role + basic formatting overhead
+    role_tokens: int = len(message.get("role", "system"))
+    estimated_overhead: int = role_tokens + 5  # Role + basic formatting overhead
 
     # If max_tokens is less than the overhead plus minimal content, return minimal message
     if max_tokens <= estimated_overhead + 1:
@@ -312,29 +312,29 @@ def truncate_message_content(
 
     # More efficient truncation approach using binary search
     # The number of iterations scales with content size
-    content_length = len(content)
-    start_ratio = 0.0
-    end_ratio = 1.0
-    best_content = "..."  # Default minimal content
-    best_token_count = 0
+    content_length: int = len(content)
+    start_ratio: float = 0.0
+    end_ratio: float = 1.0
+    best_content: str = "..."  # Default minimal content
+    best_token_count: int = 0
 
     # Calculate number of iterations based on content length
     # Logarithmic scaling to use more iterations for larger content
-    max_iterations = max(3, min(12, int(math.log(content_length + 1, 2))))
+    max_iterations: int = max(3, min(12, int(math.log(content_length + 1, 2))))
 
     logger.info(f"[DEBUG-TRUNCATE] Binary search with {max_iterations} iterations for content length {content_length}")
 
     # Binary search phase
     for iteration in range(max_iterations):
-        mid_ratio = (start_ratio + end_ratio) / 2
-        current_length = int(len(content) * mid_ratio)
+        mid_ratio: float = (start_ratio + end_ratio) / 2
+        current_length: int = int(len(content) * mid_ratio)
 
         if current_length <= 0:
             break
 
-        truncated_content = content[:current_length]
+        truncated_content: str = content[:current_length]
         truncated_message["content"] = truncated_content
-        token_count = estimate_token_count([truncated_message], model)
+        token_count: int = estimate_token_count([truncated_message], model)
 
         logger.info(f"[DEBUG-TRUNCATE] Binary search iteration {iteration+1}/{max_iterations} - ratio: {mid_ratio:.4f}, tokens: {token_count}/{max_tokens}")
 
@@ -349,7 +349,7 @@ def truncate_message_content(
 
         # Determine dynamic termination condition based on context size
         # For smaller contexts, we can be more precise
-        precision_factor = min(0.01, 10.0 / content_length)
+        precision_factor: float = min(0.01, 10.0 / content_length)
         if end_ratio - start_ratio < precision_factor:
             logger.info(f"[DEBUG-TRUNCATE] Terminating binary search early at iteration {iteration+1} - precision reached")
             break
@@ -389,7 +389,7 @@ def truncate_system_messages(
 
     # Calculate minimum viable token count for a valid system message
     # Role "system" + minimal content + formatting
-    min_system_tokens = estimate_token_count([{"role": "system", "content": "..."}], model)
+    min_system_tokens: int = estimate_token_count([{"role": "system", "content": "..."}], model)
 
     # If max_tokens is less than minimum needed, return minimal message
     if max_tokens <= min_system_tokens:
@@ -403,18 +403,18 @@ def truncate_system_messages(
     # Multiple system messages
     # Try to keep as many as possible, starting with the first one
     # which is typically the most important
-    result_messages = []
-    remaining_tokens = max_tokens
+    result_messages: list[dict[str, str]] = []
+    remaining_tokens: int = max_tokens
 
     for i, msg in enumerate(system_messages):
-        msg_tokens = estimate_token_count([msg], model)
+        msg_tokens: int = estimate_token_count([msg], model)
         if msg_tokens <= remaining_tokens:
             # This message fits entirely
             result_messages.append(msg)
             remaining_tokens -= msg_tokens
         elif i == 0:
             # First message doesn't fit, truncate it
-            truncated = truncate_message_content(msg, remaining_tokens, model)
+            truncated: dict[str, str] = truncate_message_content(msg, remaining_tokens, model)
             result_messages.append(truncated)
             break
         else:
@@ -424,7 +424,7 @@ def truncate_system_messages(
     # Log the result
     logger.info(f"[DEBUG-TRUNCATE] Kept {len(result_messages)}/{len(system_messages)} system messages within token limit")
     for i, msg in enumerate(result_messages):
-        content_len = len(msg.get("content", ""))
+        content_len: int = len(msg.get("content", ""))
         logger.info(f"[DEBUG-TRUNCATE] System message {i}: {content_len} chars")
 
     return result_messages
@@ -485,7 +485,7 @@ async def create_chat_completion(
     )
 
     # Try to get context limits from provider if supported
-    default_context_limit = getattr(provider.llm, "context_length", None)
+    default_context_limit: int | None = getattr(provider.llm, "context_length", None)
     if default_context_limit is None:
         # If not available, derive from config or use dynamic estimation
         if model == config_obj.fast_llm_model:
@@ -551,7 +551,6 @@ async def create_chat_completion(
 
     # Initialize provider and prepare for retries
     provider = get_llm(llm_provider, cfg=cfg, **kwargs)
-    original_max_tokens: int | None = max_tokens
 
     # Dynamic retry count based on config or reasonable default
     MAX_ATTEMPTS: int = getattr(config_obj, "llm_retry_attempts", 3)
@@ -573,7 +572,7 @@ async def create_chat_completion(
 
             # Validate the response - this will raise an exception if invalid
             try:
-                validated_response = validate_llm_response(response, f"LLM call to {llm_provider}:{model}")
+                validated_response: str = validate_llm_response(response, f"LLM call to {llm_provider}:{model}")
                 response = validated_response
             except ValueError as validation_error:
                 logger.error(f"[DEBUG-LLM] Response validation failed: {validation_error}")
@@ -588,14 +587,14 @@ async def create_chat_completion(
             logger.info(f"[DEBUG-LLM] Successfully returning response from attempt {attempt+1}")
             return response
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             err_msg: str = str(e)
             logger.error(f"[DEBUG-LLM] Error in attempt {attempt+1}: {type(e).__name__}: {err_msg[:300]}...")
 
             # For non-token errors, try a few times with exponential backoff
             if attempt < MAX_ATTEMPTS - 1:
                 # Check if this is a transient error worth retrying
-                transient_patterns = [
+                transient_patterns: list[str] = [
                     "rate limit",
                     "timeout",
                     "connection",
@@ -605,7 +604,7 @@ async def create_chat_completion(
                     "internal server error"
                 ]
 
-                is_transient = any(pattern in err_msg.lower() for pattern in transient_patterns)
+                is_transient: bool = any(pattern in err_msg.lower() for pattern in transient_patterns)
 
                 if is_transient:
                     backoff: int = 2**attempt
@@ -674,12 +673,15 @@ async def construct_subtopics(
 
         return output
 
-    except Exception as e:
+    except Exception:
         print(f"Exception in parsing subtopics: {traceback.format_exc()}")
         return subtopics
 
 
-def validate_llm_response(response: str, operation: str = "LLM operation") -> str:
+def validate_llm_response(
+    response: str,
+    operation: str = "LLM operation",
+) -> str:
     """Validate LLM response and raise an error if it's invalid.
 
     Args:

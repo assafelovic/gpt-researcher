@@ -57,7 +57,7 @@ async def write_report_introduction(
             cfg=config,
         )
         return introduction
-    except Exception as e:
+    except Exception:
         logger.error(f"Error in generating report introduction: {traceback.format_exc()}")
     return ""
 
@@ -105,7 +105,7 @@ async def write_conclusion(
             cfg=config,
         )
         return conclusion
-    except Exception as e:
+    except Exception:
         logger.error(f"Error in writing conclusion: {traceback.format_exc()}")
     return ""
 
@@ -151,7 +151,7 @@ async def summarize_url(
             cfg=config,
         )
         return summary
-    except Exception as e:
+    except Exception:
         logger.error(f"Error in summarizing URL: {traceback.format_exc()}")
     return ""
 
@@ -439,9 +439,6 @@ async def generate_report_with_rag(
 
     from langchain.text_splitter import RecursiveCharacterTextSplitter
     from langchain_community.vectorstores import InMemoryVectorStore
-
-    from gpt_researcher.context.compression import VectorstoreCompressor
-    from gpt_researcher.vector_store import VectorStoreWrapper
 
     logger: logging.Logger = logging.getLogger(__name__)
     logger.info(f"[RAG] Starting RAG-based report generation for query: {query[:50]}...")
