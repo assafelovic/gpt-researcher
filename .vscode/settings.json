@@ -107,5 +107,14 @@
         "*.ui": "default",
         "{git,gitlens}:/**/*.ui": "default",
         "*.docx": "default"
-    }
+    },
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
 }

@@ -3,28 +3,20 @@ from __future__ import annotations
 import json
 import os
 import warnings
-
 from datetime import timedelta
-from typing import Any, ClassVar, Dict, List, Self, Union, get_args, get_origin, TYPE_CHECKING
+from typing import Any, ClassVar, Dict, List, Self, Union, get_args, get_origin
 
-
-from gpt_researcher.config.variables.base import BaseConfig
-from gpt_researcher.config.variables.default import DEFAULT_CONFIG
-from gpt_researcher.llm_provider import GenericLLMProvider
-from gpt_researcher.retrievers.utils import get_all_retriever_names
+from litellm import _logging
 
 # Import fallback logic from the new module
 from gpt_researcher.config.fallback_logic import (
     _log_config_section,
-    _log_fallback_summary,
-    parse_model_fallbacks,
-    initialize_fallback_providers_for_type,
+    set_llm_attributes,
 )
-
-if TYPE_CHECKING:
-    pass
-
-from litellm import _logging
+from gpt_researcher.config.variables.base import BaseConfig
+from gpt_researcher.config.variables.default import DEFAULT_CONFIG
+from gpt_researcher.llm_provider import GenericLLMProvider
+from gpt_researcher.retrievers.utils import get_all_retriever_names
 
 _logging._turn_on_debug()
 
@@ -67,7 +59,7 @@ class Config:
         config_to_use: BaseConfig = self.load_config(config_path)
         self._set_attributes(config_to_use)
         self._set_embedding_attributes()
-        self._set_llm_attributes()
+        set_llm_attributes(self)
         self._handle_deprecated_attributes()
         if config_to_use["REPORT_SOURCE"] != "web":
             self._set_doc_path(config_to_use)
@@ -142,105 +134,33 @@ class Config:
         for key, value in config.items():
             env_value: str | None = os.getenv(key)
             if env_value is not None:
-                value: Any = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
+                # Handle ForwardRef objects from __future__ annotations
+                type_hint = BaseConfig.__annotations__.get(key)
+                if type_hint is not None:
+                    # Resolve ForwardRef if needed
+                    if hasattr(type_hint, "__forward_arg__"):  # ForwardRef object
+                        # Get the string representation and try to resolve it
+                        try:
+                            import typing
+                            if hasattr(typing, "get_type_hints"):
+                                resolved_hints: dict[str, Any] = typing.get_type_hints(BaseConfig)
+                                type_hint: Any = resolved_hints.get(key, str)  # Default to str if not found
+                            else:
+                                type_hint = str  # Fallback to str
+                        except (NameError, AttributeError, TypeError):
+                            type_hint = str  # Fallback to str if resolution fails
+
+                    value: Any = self.convert_env_value(key, env_value, type_hint)
+                else:
+                    # If no type hint found, keep the env_value as string
+                    value = env_value
             setattr(self, key.casefold(), value)
 
     def _set_embedding_attributes(self) -> None:
         self.embedding_provider, self.embedding_model = self.parse_embedding(self.embedding)
         self.embedding_fallback_list = []
 
-    def _set_llm_attributes(self) -> None:
-        _log_config_section("LLM CONFIG", "Configuring language models and fallbacks...")
 
-        # Parse fallbacks for each LLM type first (list of strings)
-        fast_llm_fallback_str_list: list[str] = parse_model_fallbacks(
-            self.fast_llm_fallbacks,
-            "fast_chat",
-            self.fast_llm or "",
-            self.fast_token_limit,
-            self.smart_token_limit,
-            self.strategic_token_limit,
-        )
-        smart_llm_fallback_str_list: list[str] = parse_model_fallbacks(
-            self.smart_llm_fallbacks,
-            "chat",
-            self.smart_llm or "",
-            self.fast_token_limit,
-            self.smart_token_limit,
-            self.strategic_token_limit,
-        )
-        strategic_llm_fallback_str_list: list[str] = parse_model_fallbacks(
-            self.strategic_llm_fallbacks,
-            "strategic_chat",
-            self.strategic_llm or "",
-            self.fast_token_limit,
-            self.smart_token_limit,
-            self.strategic_token_limit,
-        )
-
-        # If main LLM is empty or "auto", use the first fallback
-        if not self.fast_llm or self.fast_llm.strip().lower() == "auto":
-            if fast_llm_fallback_str_list:
-                self.fast_llm = fast_llm_fallback_str_list[0]
-                _log_config_section("LLM CONFIG", f"Auto-selected FAST_LLM: {self.fast_llm}", "SUCCESS")
-            else:
-                _log_config_section("LLM CONFIG", "No FAST_LLM specified and no fallbacks available", "WARN")
-
-        if not self.smart_llm or self.smart_llm.strip().lower() == "auto":
-            if smart_llm_fallback_str_list:
-                self.smart_llm = smart_llm_fallback_str_list[0]
-                _log_config_section("LLM CONFIG", f"Auto-selected SMART_LLM: {self.smart_llm}", "SUCCESS")
-            else:
-                _log_config_section("LLM CONFIG", "No SMART_LLM specified and no fallbacks available", "WARN")
-
-        if not self.strategic_llm or self.strategic_llm.strip().lower() == "auto":
-            if strategic_llm_fallback_str_list:
-                self.strategic_llm = strategic_llm_fallback_str_list[0]
-                _log_config_section("LLM CONFIG", f"Auto-selected STRATEGIC_LLM: {self.strategic_llm}", "SUCCESS")
-            else:
-                _log_config_section("LLM CONFIG", "No STRATEGIC_LLM specified and no fallbacks available", "WARN")
-
-        # Now parse the main LLMs (which might have been updated from fallbacks)
-        self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
-        self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
-        self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
-
-        # Log primary model configuration
-        _log_config_section("LLM CONFIG", "Primary models configured:")
-        _log_config_section("LLM CONFIG", f"  ├─ FAST: {self.fast_llm or 'None'}")
-        _log_config_section("LLM CONFIG", f"  ├─ SMART: {self.smart_llm or 'None'}")
-        _log_config_section("LLM CONFIG", f"  └─ STRATEGIC: {self.strategic_llm or 'None'}")
-
-        # Remove the main model from fallbacks to avoid duplication
-        if self.fast_llm and self.fast_llm in fast_llm_fallback_str_list:
-            fast_llm_fallback_str_list.remove(self.fast_llm)
-        if self.smart_llm and self.smart_llm in smart_llm_fallback_str_list:
-            smart_llm_fallback_str_list.remove(self.smart_llm)
-        if self.strategic_llm and self.strategic_llm in strategic_llm_fallback_str_list:
-            strategic_llm_fallback_str_list.remove(self.strategic_llm)
-
-        # Log fallback summaries
-        _log_fallback_summary("fast", self.fast_llm, fast_llm_fallback_str_list)
-        _log_fallback_summary("smart", self.smart_llm, smart_llm_fallback_str_list)
-        _log_fallback_summary("strategic", self.strategic_llm, strategic_llm_fallback_str_list)
-
-        # Initialize fallback providers (use cached values if available)
-        if not Config._fallbacks_initialized:
-            _log_config_section("PROVIDERS", "Initializing fallback providers for first time...")
-            Config._cached_fast_llm_fallback_providers = initialize_fallback_providers_for_type(fast_llm_fallback_str_list, "fast", self.llm_kwargs, getattr(self, "chat_log", None), getattr(self, "verbose", True))
-            Config._cached_smart_llm_fallback_providers = initialize_fallback_providers_for_type(smart_llm_fallback_str_list, "smart", self.llm_kwargs, getattr(self, "chat_log", None), getattr(self, "verbose", True))
-            Config._cached_strategic_llm_fallback_providers = initialize_fallback_providers_for_type(strategic_llm_fallback_str_list, "strategic", self.llm_kwargs, getattr(self, "chat_log", None), getattr(self, "verbose", True))
-            Config._fallbacks_initialized = True
-
-            total_providers: int = len(Config._cached_fast_llm_fallback_providers) + len(Config._cached_smart_llm_fallback_providers) + len(Config._cached_strategic_llm_fallback_providers)
-            _log_config_section("PROVIDERS", f"Cached {total_providers} fallback providers", "SUCCESS")
-        else:
-            _log_config_section("PROVIDERS", "Using cached fallback providers")
-
-        # Assign the cached providers to this instance
-        self.fast_llm_fallback_providers = Config._cached_fast_llm_fallback_providers
-        self.smart_llm_fallback_providers = Config._cached_smart_llm_fallback_providers
-        self.strategic_llm_fallback_providers = Config._cached_strategic_llm_fallback_providers
 
     def _handle_deprecated_attributes(self) -> None:
         if os.getenv("EMBEDDING_PROVIDER") is not None:
@@ -281,6 +201,9 @@ class Config:
         if os.getenv("SMART_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
             self.smart_llm_model: str | None = (os.environ["SMART_LLM_MODEL"] or self.smart_llm_model or "").strip() or None
+        if os.getenv("STRATEGIC_LLM_MODEL") is not None:
+            warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
+            self.strategic_llm_model: str | None = (os.environ["STRATEGIC_LLM_MODEL"] or self.strategic_llm_model or "").strip() or None
 
     def _set_doc_path(self, config: dict[str, Any]) -> None:
         self.doc_path: str = config["DOC_PATH"]
@@ -340,11 +263,15 @@ class Config:
         """Parse llm string into (llm_provider, llm_model)."""
         from gpt_researcher.llm_provider.generic.base import _SUPPORTED_PROVIDERS as _SUPPORTED_LLM_PROVIDERS_BASE
 
-        if llm_str is None or not llm_str.strip() or llm_str.strip().lower() == "auto":
+        if (
+            llm_str is None
+            or not llm_str.strip()
+            or llm_str.strip().casefold() == "auto"
+        ):
             return None, None
         try:
             llm_provider, llm_model = llm_str.split(":", 1)
-            assert llm_provider in _SUPPORTED_LLM_PROVIDERS_BASE, f"Unsupported {llm_provider}.\nSupported llm providers are: " + ", ".join(_SUPPORTED_LLM_PROVIDERS_BASE)
+            assert llm_provider in _SUPPORTED_LLM_PROVIDERS_BASE, f"Unsupported `{llm_provider}`.\nSupported llm providers are: " + ", ".join(_SUPPORTED_LLM_PROVIDERS_BASE)
             return llm_provider, llm_model
         except ValueError:
             raise ValueError("Set SMART_LLM or FAST_LLM = '<llm_provider>:<llm_model>' e.g. 'openai:gpt-4o-mini'")
@@ -403,6 +330,7 @@ class Config:
     ) -> Any:
         """Convert environment variable to the appropriate type based on the type hint."""
 
+        casefold_env_value: str = env_value.casefold().strip()
         if key == "CACHE_EXPIRY_TIME":
             try:
                 return Config.parse_duration(env_value)
@@ -417,17 +345,17 @@ class Config:
             # Handle Union types (e.g., Union[str, None])
             for arg in args:
                 if arg is type(None):
-                    if env_value.casefold().strip() in ("none", "null", ""):
+                    if casefold_env_value in ("none", "null", ""):
                         return None
                 else:
                     try:
                         return Config.convert_env_value(key, env_value, arg)
                     except ValueError:
                         continue
-            raise ValueError(f"Cannot convert {env_value} to any of {args}")
+            raise ValueError(f"Cannot convert `{env_value}` to any of {args}")
 
         if type_hint is bool:
-            return env_value.casefold().strip() in ("true", "1", "yes", "on")
+            return casefold_env_value in ("true", "1", "yes", "on")
         elif type_hint is int:
             return int(env_value)
         elif type_hint is float:
@@ -439,7 +367,7 @@ class Config:
         elif type_hint is dict or type_hint is Dict:
             return json.loads(env_value)
         else:
-            raise ValueError(f"Unsupported type {type_hint} for key {key}")
+            raise ValueError(f"Unsupported type `{type_hint}` for key '{key}'")
 
     def set_verbose(self, verbose: bool) -> None:
         """Set the verbosity level."""

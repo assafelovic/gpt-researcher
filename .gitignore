@@ -7,6 +7,7 @@
 env/
 venv/
 .venv/
+.venv*/
 
 # Other Environments
 ENV/
@@ -53,3 +54,9 @@ server_log.txt
 CURSOR_RULES.md
 
 .history
+
+check_config.py
+check_openrouter.py
+debug_modes.py
+debug_openrouter_loss.py
+debug_token_limits.py

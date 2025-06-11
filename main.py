@@ -19,12 +19,10 @@ if sys.platform == "win32":
     # Set console encoding to UTF-8 for Windows
     os.environ["PYTHONIOENCODING"] = "utf-8"
     # Try to set console code page to UTF-8
-    try:
+    with suppress(Exception):  # Ignore if chcp fails
         import subprocess
 
         subprocess.run(["chcp", "65001"], shell=True, capture_output=True)
-    except Exception:
-        pass  # Ignore if chcp fails
 
 
 # Configure logging with proper encoding

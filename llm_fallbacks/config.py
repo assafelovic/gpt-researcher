@@ -341,7 +341,26 @@ class CustomProviderConfig(BaseProviderConfig):
             free_modelspec.update(model_spec)
             if model_name in self.free_models:
                 free_modelspec.update(self.FREE_COSTS)
-            if calculate_cost_per_token(free_modelspec) == 0.0:
+
+            calculated_cost: float = calculate_cost_per_token(free_modelspec)
+
+            # Add logging for OpenRouter models ending with ':free' that aren't detected as free
+            if (
+                self.provider_name.lower() == "openrouter"
+                and model_name.lower().endswith(":free")
+                and calculated_cost != 0.0
+            ):
+                logger.warning(
+                    f"OpenRouter model '{model_name}' ends with ':free' but calculated cost is {calculated_cost} "
+                    f"(not 0.0). Model spec costs: input_cost_per_token={free_modelspec.get('input_cost_per_token')}, "
+                    f"output_cost_per_token={free_modelspec.get('output_cost_per_token')}, "
+                    f"input_cost_per_character={free_modelspec.get('input_cost_per_character')}, "
+                    f"output_cost_per_character={free_modelspec.get('output_cost_per_character')}, "
+                    f"input_cost_per_second={free_modelspec.get('input_cost_per_second')}, "
+                    f"output_cost_per_second={free_modelspec.get('output_cost_per_second')}"
+                )
+
+            if calculated_cost == 0.0:
                 self.free_models.setdefault(model_name, free_modelspec.copy()).update(free_modelspec)
 
     def _process_requested_models(
@@ -457,6 +476,19 @@ def _parse_openrouter_models_response(
             max_completion_tokens: int | None = top_provider.get("max_completion_tokens")
             if max_completion_tokens:
                 model_spec["max_output_tokens"] = int(max_completion_tokens)
+            else:
+                # If max_completion_tokens is missing, set a reasonable default
+                # Most modern LLMs can handle at least 4000 output tokens
+                # For models with large context windows, use a fraction of the context
+                if context_length and context_length > 32000:
+                    # For large context models, use up to 32k output tokens
+                    model_spec["max_output_tokens"] = min(32000, context_length // 4)
+                elif context_length and context_length > 8000:
+                    # For medium context models, use up to 8k output tokens
+                    model_spec["max_output_tokens"] = min(8000, context_length // 4)
+                else:
+                    # Default fallback for all models - ensure they can handle basic tasks
+                    model_spec["max_output_tokens"] = 4000
 
         # Modality-specific capabilities
         if modality == "text+image->text":
@@ -468,6 +500,14 @@ def _parse_openrouter_models_response(
             model_spec["mode"] = "embedding"
         elif modality == "audio->text":
             model_spec["mode"] = "audio_transcription"
+        elif modality in ["text->text", "text", ""]:
+            # Default case for regular chat models with text-only input/output
+            model_spec["mode"] = "chat"
+        else:
+            # For any other modality that might be a chat model, default to "chat"
+            # Most LLMs are chat models unless specifically embedding/image/audio
+            if "embedding" not in modality.lower() and "image" not in modality.lower() and "audio" not in modality.lower():
+                model_spec["mode"] = "chat"
 
         # Function calling support
         if arch.get("instruct_type") == "Function":
@@ -506,11 +546,15 @@ CUSTOM_PROVIDERS: list[CustomProviderConfig] = [
     ),
 ]
 
-all_configs: dict[str, LiteLLMBaseModelSpec] = {
-    model_name: config
-    for provider in CUSTOM_PROVIDERS
-    for model_name, config in provider.model_specs.items()
-}
+all_configs: dict[str, LiteLLMBaseModelSpec] = {}
+for provider in CUSTOM_PROVIDERS:
+    for model_name, config in provider.model_specs.items():
+        # Add provider prefix to model name for consistency
+        prefixed_model_name: str = (
+            model_name if f"{provider.provider_name}/" in model_name
+            else f"{provider.provider_name}/{model_name}"
+        )
+        all_configs[prefixed_model_name] = config
 all_configs.update(
     {
         model_name: config
