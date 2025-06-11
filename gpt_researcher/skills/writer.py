@@ -14,6 +14,7 @@ from gpt_researcher.actions import (
     write_report_introduction,
 )
 from gpt_researcher.utils.llm import construct_subtopics
+from gpt_researcher.skills.llm_visualizer import LLMInteractionVisualizer, get_llm_visualizer
 
 if TYPE_CHECKING:
     from gpt_researcher.agent import GPTResearcher
@@ -58,6 +59,11 @@ class ReportGenerator:
         Returns:
             str: The generated report.
         """
+        # Start visualization for report generation
+        visualizer: LLMInteractionVisualizer = get_llm_visualizer()
+        if visualizer.is_enabled():
+            visualizer.start_report_flow(self.researcher.query, str(self.researcher.report_type))
+
         existing_headers = [] if existing_headers is None else existing_headers
         relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
         ext_context = None if ext_context is None else ext_context
@@ -142,6 +148,19 @@ class ReportGenerator:
                 f"📝 Report written for '{self.researcher.query}' ({len(report)} characters)",
                 self.researcher.websocket,
             )
+
+        # Finish visualization and generate flow diagram
+        if visualizer.is_enabled():
+            mermaid_diagram: str | None = visualizer.finish_flow()
+
+            # Stream the visual diagram to the frontend if websocket available
+            if mermaid_diagram and self.researcher.websocket:
+                await stream_output(
+                    "logs",
+                    "llm_flow_diagram",
+                    f"🎨 LLM Interaction Flow:\n{mermaid_diagram}",
+                    self.researcher.websocket,
+                )
 
         return report
 

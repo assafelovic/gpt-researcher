@@ -462,6 +462,9 @@ async def create_chat_completion(
     Returns:
         str: The response from the chat completion
     """
+    # Import visualization here to avoid circular imports
+    from gpt_researcher.skills.llm_visualizer import get_llm_visualizer
+
     # validate input
     if model is None:
         raise ValueError("Model cannot be None")
@@ -469,6 +472,41 @@ async def create_chat_completion(
     # DEBUG: Log function entry with basic info
     logger.info(f"[DEBUG-LLM] create_chat_completion called with model={model}, provider={llm_provider}, max_tokens={max_tokens}")
     logger.info(f"[DEBUG-LLM] Number of messages: {len(messages)}")
+
+    # Check if visualization is active for report generation
+    visualizer = get_llm_visualizer()
+    is_visualizing = visualizer.is_enabled() and visualizer.is_active()
+
+    # Prepare visualization data
+    interaction_data = None
+    if is_visualizing:
+        # Extract message content for visualization
+        system_message = ""
+        user_message = ""
+
+        for msg in messages:
+            role: str = msg.get("role", "").lower()
+            content: str = str(msg.get("content", ""))
+            if role == "system":
+                system_message += content + "\n"
+            elif role in ["user", "human"]:
+                user_message += content + "\n"
+
+        system_message: str = system_message.strip()
+        user_message: str = user_message.strip()
+
+        # Prepare interaction data for logging
+        interaction_data: dict[str, Any] = {
+            "step_name": "LLM Interaction",  # Will be updated if we can determine the step
+            "model": model,
+            "provider": llm_provider or "unknown",
+            "prompt_type": "chat_completion",
+            "system_message": system_message,
+            "user_message": user_message,
+            "full_messages": messages.copy(),
+            "temperature": temperature or 0.0,
+            "max_tokens": max_tokens,
+        }
 
     # Dynamic context limit determination
     # Instead of hardcoded values, we'll query the model or use a conservative estimate
@@ -555,6 +593,10 @@ async def create_chat_completion(
     # Dynamic retry count based on config or reasonable default
     MAX_ATTEMPTS: int = getattr(config_obj, "llm_retry_attempts", 3)
 
+    # Track retry attempts for visualization
+    retry_attempt: int = 0
+    last_error: Exception | None = None
+
     # Attempt to get a response with fallback for token limits and transient errors
     for attempt in range(MAX_ATTEMPTS):
         try:
@@ -583,12 +625,22 @@ async def create_chat_completion(
                 llm_costs: float = estimate_llm_cost(str(messages), response)
                 cost_callback(llm_costs)
 
+            # Log successful interaction to visualizer
+            if is_visualizing and interaction_data:
+                interaction_data["response"] = response
+                interaction_data["success"] = True
+                interaction_data["retry_attempt"] = retry_attempt
+
+                visualizer.log_interaction(**interaction_data)
+
             # Success! Return the response
             logger.info(f"[DEBUG-LLM] Successfully returning response from attempt {attempt+1}")
             return response
 
         except Exception as e:  # pylint: disable=broad-exception-caught
             err_msg: str = str(e)
+            last_error = e
+            retry_attempt = attempt + 1
             logger.error(f"[DEBUG-LLM] Error in attempt {attempt+1}: {type(e).__name__}: {err_msg[:300]}...")
 
             # For non-token errors, try a few times with exponential backoff
@@ -614,14 +666,26 @@ async def create_chat_completion(
                 else:
                     # Non-transient error, don't retry at this level - let provider handle it
                     logger.error(f"[DEBUG-LLM] Non-transient error, not retrying: {err_msg[:200]}...")
-                    raise
+                    break  # Exit retry loop, will log error and raise
             else:
                 logger.error("[DEBUG-LLM] All attempts exhausted for create_chat_completion")
-                raise
+                break  # Exit retry loop, will log error and raise
 
-    # Should not reach here
-    logger.error("[DEBUG-LLM] Unexpected end of retry loop")
-    raise RuntimeError(f"Unexpected end of retry loop for '{llm_provider}' API")
+    # If we get here, all attempts failed
+    # Log failed interaction to visualizer
+    if is_visualizing and interaction_data:
+        interaction_data["response"] = ""
+        interaction_data["success"] = False
+        interaction_data["error"] = str(last_error) if last_error else "Unknown error"
+        interaction_data["retry_attempt"] = retry_attempt
+
+        visualizer.log_interaction(**interaction_data)
+
+    # Re-raise the last error
+    if last_error:
+        raise last_error
+    else:
+        raise RuntimeError(f"Unexpected end of retry loop for '{llm_provider}' API")
 
 
 async def construct_subtopics(
@@ -655,7 +719,6 @@ async def construct_subtopics(
             cfg=config,
             model=config.smart_llm_model,
             temperature=temperature,
-            #            max_tokens=config.llm_kwargs.get("smart_token_limit", getattr(config, "smart_token_limit", 4000)),
             **config.llm_kwargs,
         )
         model: BaseLLM = provider.llm

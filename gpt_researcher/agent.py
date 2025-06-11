@@ -38,6 +38,7 @@ from gpt_researcher.skills.structured_research import (
 from gpt_researcher.skills.writer import ReportGenerator
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.vector_store import VectorStoreWrapper
+from gpt_researcher.skills.llm_visualizer import enable_llm_visualization
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
@@ -409,6 +410,9 @@ class GPTResearcher:
         ext_context: list[dict[str, Any]] | None = None,
         custom_prompt: str = "",
     ) -> str:
+        # Enable LLM visualization for report generation
+        enable_llm_visualization()
+
         await self._log_event(
             "research",
             step="writing_report",

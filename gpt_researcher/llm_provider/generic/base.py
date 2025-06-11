@@ -56,7 +56,7 @@ _SUPPORTED_PROVIDERS: set[str] = {
     "xai",
 }
 
-NO_SUPPORT_TEMPERATURE_MODELS = [
+NO_SUPPORT_TEMPERATURE_MODELS: list[str] = [
     "deepseek/deepseek-reasoner",
     "o1-mini",
     "o1-mini-2024-09-12",
@@ -68,7 +68,7 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     "o1-preview"
 ]
 
-SUPPORT_REASONING_EFFORT_MODELS = [
+SUPPORT_REASONING_EFFORT_MODELS: list[str] = [
     "o3-mini",
     "o3-mini-2025-01-31",
     "o4-mini"
@@ -296,7 +296,7 @@ class GenericLLMProvider:
             )
 
             # Set up model_kwargs
-            model_kwargs = kwargs.pop("model_kwargs", {})
+            model_kwargs: dict[str, Any] = kwargs.pop("model_kwargs", {})
 
             llm = ChatOpenAI(
                 base_url="https://openrouter.ai/api/v1",  # pyright: ignore[reportCallIssue]
@@ -327,17 +327,18 @@ class GenericLLMProvider:
     def _parse_token_limit_error(self, error: Exception) -> tuple[int | None, int | None, str | None]:
         """Parses error messages for token limit information."""
         error_str = str(error)
-        limit_tokens, actual_tokens = None, None
+        limit_tokens: int | None = None
+        actual_tokens: int | None = None
 
         # OpenAI specific parsing (and some compatible APIs like OpenRouter)
         # Example: "This model's maximum context length is 16385 tokens. However, your messages resulted in 20000 tokens..."
         if (OpenAIBadRequestError and isinstance(error, OpenAIBadRequestError)) or "maximum context length" in error_str.lower():
-            match = re.search(r"maximum context length is (\d+) tokens.*resulted in (\d+) tokens", error_str, re.IGNORECASE)
+            match: re.Match[str] | None = re.search(r"maximum context length is (\d+) tokens.*resulted in (\d+) tokens", error_str, re.IGNORECASE)
             if match:
                 limit_tokens = int(match.group(1))
                 actual_tokens = int(match.group(2))
             else: # Simpler pattern if the above fails
-                match_limit = re.search(r"maximum context length is (\d+) tokens", error_str, re.IGNORECASE)
+                match_limit: re.Match[str] | None = re.search(r"maximum context length is (\d+) tokens", error_str, re.IGNORECASE)
                 if match_limit:
                     limit_tokens = int(match_limit.group(1))
                 # Initialize match_actual here before its potential use for this specific error block
@@ -627,10 +628,10 @@ class GenericLLMProvider:
         original_messages: list[dict[str, str] | BaseMessage] = messages  # Keep original for reference
 
         # Track our attempts
-        token_reduction_attempts = 0
+        token_reduction_attempts: int = 0
         max_token_reduction_attempts = 10  # More attempts for fine-tuning
-        last_error = None
-        strategies_tried = []
+        last_error: Exception | None = None
+        strategies_tried: list[str] = []
 
         while True:
             try:
@@ -663,11 +664,10 @@ class GenericLLMProvider:
                 return res
 
             except Exception as e:
-                last_error = e
-                error_str = str(e).lower()
+                error_str: str = str(e).lower()
 
                 # Check if this is a token limit error
-                is_token_limit_error = any(phrase in error_str for phrase in [
+                is_token_limit_error: bool = any(phrase in error_str for phrase in [
                     "maximum context length", "token", "limit", "too long",
                     "too many tokens", "context length", "length is"
                 ])
@@ -686,11 +686,10 @@ class GenericLLMProvider:
                     )
 
                     # Extract max_tokens if configured
-                    max_tokens_requested = getattr(self.llm, 'max_tokens', None)
-                    if hasattr(self.llm, 'model_kwargs'):
-                        model_kwargs = getattr(self.llm, 'model_kwargs', {})
-                        if isinstance(model_kwargs, dict):
-                            max_tokens_requested = model_kwargs.get('max_tokens', max_tokens_requested)
+                    max_tokens_requested: int | None = getattr(self.llm, "max_tokens", None)
+                    model_kwargs: dict[str, Any] = getattr(self.llm, "model_kwargs", {})
+                    if isinstance(model_kwargs, dict):
+                        max_tokens_requested: int | None = model_kwargs.get("max_tokens", max_tokens_requested)
 
                     if self.verbose:
                         print(f"{Fore.CYAN}[TOKEN-STRATEGY] Current input: {current_input_tokens}, Limit: {limit_tokens}, Output requested: {max_tokens_requested}{Style.RESET_ALL}")
@@ -704,8 +703,8 @@ class GenericLLMProvider:
 
                     # Determine the appropriate strategy based on overflow percentage
                     if limit_tokens:
-                        total_needed = current_input_tokens + (max_tokens_requested or 2000)
-                        overflow_ratio = total_needed / limit_tokens
+                        total_needed: int = current_input_tokens + (max_tokens_requested or 2000)
+                        overflow_ratio: float = total_needed / limit_tokens
 
                         if self.verbose:
                             print(f"{Fore.CYAN}[TOKEN-STRATEGY] Overflow ratio: {overflow_ratio:.2f} ({total_needed}/{limit_tokens} tokens){Style.RESET_ALL}")
@@ -727,7 +726,7 @@ class GenericLLMProvider:
                         # Apply progressive reduction on retries
                         if token_reduction_attempts > 2:
                             # Get more aggressive with each attempt
-                            target_reduction = min(0.9, target_reduction + (token_reduction_attempts * 0.1))
+                            target_reduction: float = min(0.9, target_reduction + (token_reduction_attempts * 0.1))
                             if token_reduction_attempts > 5:
                                 strategy = "extreme_compression"
 
@@ -749,7 +748,7 @@ class GenericLLMProvider:
                             token_reduction_attempts += 1
 
                             # Verify reduction was effective
-                            new_tokens = sum(
+                            new_tokens: int = sum(
                                 self._get_token_count(str(msg.get("content", "") if isinstance(msg, dict) else msg.content), self.llm)
                                 for msg in processed_messages
                             )
@@ -771,7 +770,7 @@ class GenericLLMProvider:
                         if self.verbose:
                             print(f"{Fore.YELLOW}[TOKEN-STRATEGY] No clear token limit found. Using progressive reduction.{Style.RESET_ALL}")
 
-                        reduction_factor = 0.8 - (token_reduction_attempts * 0.1)
+                        reduction_factor: float = 0.8 - (token_reduction_attempts * 0.1)
                         reduction_factor = max(0.2, reduction_factor)
 
                         try:
@@ -815,15 +814,15 @@ class GenericLLMProvider:
             print(f"{Fore.CYAN}[TOKEN-STRATEGY] Applying {strategy} (attempt {attempt + 1}){Style.RESET_ALL}")
 
         # Calculate target tokens
-        current_tokens = sum(
+        current_tokens: int = sum(
             self._get_token_count(str(msg.get("content", "") if isinstance(msg, dict) else msg.content), self.llm)
             for msg in messages
         )
 
         if limit_tokens and max_output_tokens:
             # Reserve space for output
-            available_for_input = limit_tokens - max_output_tokens - 500  # Buffer
-            target_tokens = min(available_for_input, int(current_tokens * (1 - target_reduction)))
+            available_for_input: int = limit_tokens - max_output_tokens - 500  # Buffer
+            target_tokens: int = min(available_for_input, int(current_tokens * (1 - target_reduction)))
         else:
             target_tokens = int(current_tokens * (1 - target_reduction))
 
@@ -831,7 +830,7 @@ class GenericLLMProvider:
             print(f"{Fore.CYAN}[TOKEN-STRATEGY] Target: {target_tokens} tokens (from {current_tokens}){Style.RESET_ALL}")
 
         # Convert messages to mutable format
-        mutable_messages = [
+        mutable_messages: list[dict[str, str] | BaseMessage] = [
             msg.model_dump() if isinstance(msg, BaseMessage) else msg.copy()
             for msg in messages
         ]
@@ -859,7 +858,7 @@ class GenericLLMProvider:
             # Use different prompts based on aggressiveness
             if strategy == "smart_summarization":
                 summary_instruction = "Summarize the following content, preserving all key information, facts, and context:"
-                length_instruction = f"Target length: approximately {target_tokens} tokens"
+                length_instruction: str = f"Target length: approximately {target_tokens} tokens"
             elif strategy == "aggressive_summarization":
                 summary_instruction = "Provide a concise summary focusing on the most important points:"
                 length_instruction = f"Maximum length: {target_tokens} tokens"
@@ -871,37 +870,39 @@ class GenericLLMProvider:
             for i, msg in enumerate(mutable_messages):
                 if msg.get("role") in ["user", "assistant", "human"] and len(msg.get("content", "")) > 500:
                     try:
-                        summary_prompt = f"{summary_instruction}\n\n{msg['content']}\n\n{length_instruction}"
+                        summary_prompt: str = f"{summary_instruction}\n\n{msg['content']}\n\n{length_instruction}"
 
                         # Use a simple completion without streaming
-                        summary_messages = [
+                        summary_messages: list[BaseMessage] = [
                             SystemMessage(content="You are an expert summarizer. Be concise."),
                             HumanMessage(content=summary_prompt)
                         ]
 
                         # Temporarily reduce verbosity for summarization calls
-                        original_verbose = self.verbose
+                        original_verbose: bool = self.verbose
                         self.verbose = False
 
-                        summary = await self.get_chat_response(summary_messages, stream=False)
+                        summary: str = await self.get_chat_response(summary_messages, stream=False)
 
                         self.verbose = original_verbose
 
                         if summary and len(summary.strip()) > 20:
-                            mutable_messages[i]["content"] = summary.strip()
+                            mut_msg: dict[str, str] | BaseMessage = mutable_messages[i]
+                            if isinstance(mut_msg, dict):
+                                mut_msg["content"] = summary.strip()
                             if self.verbose:
-                                original_len = len(msg.get("content", ""))
-                                new_len = len(summary)
+                                original_len: int = len(msg.get("content", ""))
+                                new_len: int = len(summary)
                                 print(f"{Fore.GREEN}[TOKEN-STRATEGY] Summarized message {i}: {original_len} → {new_len} chars{Style.RESET_ALL}")
 
                     except Exception as e:
                         if self.verbose:
                             print(f"{Fore.YELLOW}[TOKEN-STRATEGY] Summarization failed for message {i}: {e}{Style.RESET_ALL}")
                         # Fall back to trimming
-                        content = msg["content"]
+                        content: str = msg["content"]
                         if strategy == "extreme_compression":
                             # Keep only first and last parts
-                            keep_chars = len(content) // 4
+                            keep_chars: int = len(content) // 4
                             msg["content"] = content[:keep_chars] + "\n...[content compressed]...\n" + content[-keep_chars:]
                         else:
                             # Progressive trimming
@@ -914,8 +915,8 @@ class GenericLLMProvider:
                     content = msg.get("content", "")
                     if len(content) > 100:
                         # Keep more of the beginning and end
-                        total_len = len(content)
-                        keep_ratio = 1 - target_reduction
+                        total_len: int = len(content)
+                        keep_ratio: float = 1 - target_reduction
 
                         if keep_ratio < 0.5:
                             # For aggressive reduction, use beginning/end strategy
@@ -928,25 +929,26 @@ class GenericLLMProvider:
                             msg["content"] = content[:keep_total]
 
         # Convert back to appropriate message types
-        final_messages = []
+        final_messages: list[dict[str, str] | BaseMessage] = []
         for i, new_msg in enumerate(mutable_messages):
-            if i < len(messages) and isinstance(messages[i], BaseMessage):
-                msg_type = type(messages[i])
+            msg: dict[str, str] | BaseMessage = messages[i]
+            if i < len(messages) and isinstance(msg, BaseMessage):
+                msg_type = type(msg)
                 try:
-                    final_messages.append(msg_type(content=new_msg["content"]))
-                except:
-                    final_messages.append(HumanMessage(content=new_msg["content"]))
+                    final_messages.append(msg_type(content=msg["content"]))
+                except:  # noqa: E722
+                    final_messages.append(HumanMessage(content=msg["content"]))
             else:
                 final_messages.append(new_msg)
 
         # Verify we achieved target
-        final_tokens = sum(
+        final_tokens: int = sum(
             self._get_token_count(str(msg.get("content", "") if isinstance(msg, dict) else msg.content), self.llm)
             for msg in final_messages
         )
 
         if self.verbose:
-            reduction_achieved = (1 - final_tokens / current_tokens) * 100
+            reduction_achieved: float = (1 - final_tokens / current_tokens) * 100
             print(f"{Fore.GREEN}[TOKEN-STRATEGY] Achieved {reduction_achieved:.1f}% reduction: {current_tokens} → {final_tokens} tokens{Style.RESET_ALL}")
 
             if final_tokens > target_tokens * 1.1:  # More than 10% over target

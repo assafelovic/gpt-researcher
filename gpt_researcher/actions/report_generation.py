@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import traceback
 
 from collections.abc import Callable
@@ -10,11 +11,12 @@ from gpt_researcher.prompts import PromptFamily, get_prompt_by_report_type
 from gpt_researcher.utils.enum import Tone
 from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.logger import get_formatted_logger
+from gpt_researcher.skills.llm_visualizer import LLMInteractionVisualizer, get_llm_visualizer
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
 
-logger = get_formatted_logger()
+logger: logging.Logger = get_formatted_logger()
 
 
 async def write_report_introduction(
@@ -40,12 +42,18 @@ async def write_report_introduction(
     Returns:
         str: The generated introduction.
     """
+    visualizer = get_llm_visualizer()
+    visualizer.start_interaction("Generate Report Introduction")
+
     try:
+        system_msg: str = f"{agent_role_prompt}"
+        user_msg: str = prompt_family.generate_report_introduction(question=query, research_summary=context, language=config.language)
+
         introduction: str = await create_chat_completion(
             model=config.smart_llm_model,
             messages=[
-                {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": prompt_family.generate_report_introduction(question=query, research_summary=context, language=config.language)},
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": user_msg},
             ],
             temperature=0.25,
             llm_provider=config.smart_llm_provider,
@@ -56,9 +64,40 @@ async def write_report_introduction(
             cost_callback=cost_callback,
             cfg=config,
         )
+
+        # Log the interaction for visualization
+        visualizer.log_interaction(
+            step_name="Generate Report Introduction",
+            model=config.smart_llm_model,
+            provider=config.smart_llm_provider,
+            prompt_type="Report Introduction",
+            system_message=system_msg,
+            user_message=user_msg,
+            response=introduction,
+            temperature=0.25,
+            max_tokens=config.smart_token_limit,
+            success=True
+        )
+
         return introduction
-    except Exception:
-        logger.error(f"Error in generating report introduction: {traceback.format_exc()}")
+    except Exception as e:
+        error_msg: str = f"Error in generating report introduction: {traceback.format_exc()}"
+        logger.error(error_msg)
+
+        # Log the failed interaction
+        visualizer.log_interaction(
+            step_name="Generate Report Introduction",
+            model=config.smart_llm_model,
+            provider=config.smart_llm_provider,
+            prompt_type="Report Introduction",
+            system_message=f"{agent_role_prompt}",
+            user_message=prompt_family.generate_report_introduction(question=query, research_summary=context, language=config.language),
+            response="",
+            temperature=0.25,
+            max_tokens=config.smart_token_limit,
+            success=False,
+            error=str(e)
+        )
     return ""
 
 
@@ -85,14 +124,20 @@ async def write_conclusion(
     Returns:
         str: The generated conclusion.
     """
+    visualizer: LLMInteractionVisualizer = get_llm_visualizer()
+    visualizer.start_interaction("Generate Report Conclusion")
+
     try:
+        system_msg: str = f"{agent_role_prompt}"
+        user_msg: str = prompt_family.generate_report_conclusion(query=query, report_content=context, language=config.language)
+
         conclusion: str = await create_chat_completion(
             model=config.smart_llm_model,
             messages=[
-                {"role": "system", "content": f"{agent_role_prompt}"},
+                {"role": "system", "content": system_msg},
                 {
                     "role": "user",
-                    "content": prompt_family.generate_report_conclusion(query=query, report_content=context, language=config.language),
+                    "content": user_msg,
                 },
             ],
             temperature=0.25,
@@ -104,9 +149,40 @@ async def write_conclusion(
             cost_callback=cost_callback,
             cfg=config,
         )
+
+        # Log the interaction for visualization
+        visualizer.log_interaction(
+            step_name="Generate Report Conclusion",
+            model=config.smart_llm_model,
+            provider=config.smart_llm_provider,
+            prompt_type="Report Conclusion",
+            system_message=system_msg,
+            user_message=user_msg,
+            response=conclusion,
+            temperature=0.25,
+            max_tokens=config.smart_token_limit,
+            success=True
+        )
+
         return conclusion
-    except Exception:
-        logger.error(f"Error in writing conclusion: {traceback.format_exc()}")
+    except Exception as e:
+        error_msg = f"Error in writing conclusion: {traceback.format_exc()}"
+        logger.error(error_msg)
+
+        # Log the failed interaction
+        visualizer.log_interaction(
+            step_name="Generate Report Conclusion",
+            model=config.smart_llm_model,
+            provider=config.smart_llm_provider,
+            prompt_type="Report Conclusion",
+            system_message=f"{agent_role_prompt}",
+            user_message=prompt_family.generate_report_conclusion(query=query, report_content=context, language=config.language),
+            response="",
+            temperature=0.25,
+            max_tokens=config.smart_token_limit,
+            success=False,
+            error=str(e)
+        )
     return ""
 
 
@@ -180,12 +256,18 @@ async def generate_draft_section_titles(
     Returns:
         list[str]: A list of generated section titles.
     """
+    visualizer = get_llm_visualizer()
+    visualizer.start_interaction("Generate Draft Section Titles")
+
     try:
-        section_titles: list[str] = await create_chat_completion(
+        system_msg = f"{role}"
+        user_msg = prompt_family.generate_draft_titles_prompt(current_subtopic, query, context)
+
+        section_titles: str = await create_chat_completion(
             model=config.smart_llm_model,
             messages=[
-                {"role": "system", "content": f"{role}"},
-                {"role": "user", "content": prompt_family.generate_draft_titles_prompt(current_subtopic, query, context)},
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": user_msg},
             ],
             temperature=0.25,
             llm_provider=config.smart_llm_provider,
@@ -196,9 +278,42 @@ async def generate_draft_section_titles(
             cost_callback=cost_callback,
             cfg=config,
         )
-        return str(section_titles).split("\n")
-    except Exception:
-        logger.error(f"Error in generating draft section titles: {traceback.format_exc()}")
+
+        result = str(section_titles).split("\n")
+
+        # Log the interaction for visualization
+        visualizer.log_interaction(
+            step_name="Generate Draft Section Titles",
+            model=config.smart_llm_model,
+            provider=config.smart_llm_provider,
+            prompt_type="Draft Section Titles",
+            system_message=system_msg,
+            user_message=user_msg,
+            response=section_titles,
+            temperature=0.25,
+            max_tokens=config.smart_token_limit,
+            success=True
+        )
+
+        return result
+    except Exception as e:
+        error_msg = f"Error in generating draft section titles: {traceback.format_exc()}"
+        logger.error(error_msg)
+
+        # Log the failed interaction
+        visualizer.log_interaction(
+            step_name="Generate Draft Section Titles",
+            model=config.smart_llm_model,
+            provider=config.smart_llm_provider,
+            prompt_type="Draft Section Titles",
+            system_message=f"{role}",
+            user_message=prompt_family.generate_draft_titles_prompt(current_subtopic, query, context),
+            response="",
+            temperature=0.25,
+            max_tokens=config.smart_token_limit,
+            success=False,
+            error=str(e)
+        )
     return []
 
 
@@ -246,6 +361,9 @@ async def generate_report(
     # DEBUG: Log function start and params
     logger.info(f"[DEBUG] Starting generate_report for query: {query[:50]}...")
     logger.info(f"[DEBUG] Report type: {report_type}, context length: {len(str(context))}, has custom prompt: {custom_prompt is not None}")
+
+    visualizer = get_llm_visualizer()
+    visualizer.start_interaction("Generate Main Report")
 
     existing_headers = [] if existing_headers is None else existing_headers
     relevant_written_contents = [] if relevant_written_contents is None else relevant_written_contents
@@ -344,6 +462,20 @@ async def generate_report(
         logger.info(f"[DEBUG] First attempt successful, report length: {len(report)}")
         logger.info(f"[DEBUG] Report starts with: {report[:100]}...")
 
+        # Log the successful interaction for visualization
+        visualizer.log_interaction(
+            step_name="Generate Main Report",
+            model=cfg.smart_llm_model,
+            provider=cfg.smart_llm_provider,
+            prompt_type=f"Main Report ({report_type})",
+            system_message=messages[0]["content"],
+            user_message=messages[1]["content"],
+            response=report,
+            temperature=0.35,
+            max_tokens=max_output_tokens,
+            success=True
+        )
+
         # DEBUG: Check for problematic responses
         if "I'm sorry, but I cannot provide a response to this task" in report:
             logger.warning("[DEBUG] Detected error pattern in report response")
@@ -384,6 +516,20 @@ async def generate_report(
             logger.info(f"[DEBUG] Fallback attempt successful, report length: {len(report)}")
             logger.info(f"[DEBUG] Report starts with: {report[:100]}...")
 
+            # Log the successful fallback interaction for visualization
+            visualizer.log_interaction(
+                step_name="Generate Main Report (Fallback)",
+                model=cfg.smart_llm_model,
+                provider=cfg.smart_llm_provider,
+                prompt_type=f"Main Report Fallback ({report_type})",
+                system_message="",
+                user_message=simplified_messages[0]["content"],
+                response=report,
+                temperature=0.35,
+                max_tokens=fallback_max_output_tokens,
+                success=True
+            )
+
             # DEBUG: Check for problematic responses in fallback
             if "I'm sorry, but I cannot provide a response to this task" in report:
                 logger.warning("[DEBUG] Detected error pattern in fallback report response")
@@ -393,6 +539,21 @@ async def generate_report(
             print(f"Error in generate_report fallback: {e2.__class__.__name__}: {e2}")
             logger.error(f"[DEBUG] Fallback attempt also failed: {e2.__class__.__name__}: {e2}")
             logger.error(f"[DEBUG] Fallback traceback: {traceback.format_exc()}")
+
+            # Log the failed fallback interaction
+            visualizer.log_interaction(
+                step_name="Generate Main Report (Fallback Failed)",
+                model=cfg.smart_llm_model,
+                provider=cfg.smart_llm_provider,
+                prompt_type=f"Main Report Fallback Failed ({report_type})",
+                system_message="",
+                user_message=simplified_messages[0]["content"] if 'simplified_messages' in locals() else "",
+                response="",
+                temperature=0.35,
+                max_tokens=fallback_max_output_tokens,
+                success=False,
+                error=str(e2)
+            )
 
     # DEBUG: Log function end
     logger.info(f"[DEBUG] Finished generate_report, returning report of length: {len(report)}")
@@ -510,6 +671,10 @@ Format as a simple list:
 Focus on creating logical, comprehensive coverage of the topic."""
 
     try:
+        # Log RAG outline generation
+        visualizer: LLMInteractionVisualizer = get_llm_visualizer()
+        visualizer.start_interaction("RAG Report Outline Generation")
+
         outline_response: str = await create_chat_completion(
             model=cfg.smart_llm_model,
             messages=[
@@ -524,12 +689,26 @@ Focus on creating logical, comprehensive coverage of the topic."""
             cfg=cfg,
         )
 
+        # Log the outline interaction
+        visualizer.log_interaction(
+            step_name="RAG Report Outline Generation",
+            model=cfg.smart_llm_model,
+            provider=cfg.smart_llm_provider,
+            prompt_type="RAG Outline",
+            system_message=agent_role_prompt,
+            user_message=outline_prompt,
+            response=outline_response,
+            temperature=0.3,
+            max_tokens=1000,
+            success=True
+        )
+
         # Parse outline into sections
         sections: list[str] = []
         for line in outline_response.split('\n'):
             line: str = line.strip()
             if line and (line.startswith('-') or line.startswith('•')):
-                section_title = line.lstrip('- •').strip()
+                section_title: str = line.lstrip('- •').strip()
                 if section_title:
                     sections.append(section_title)
 
@@ -596,7 +775,10 @@ Instructions:
 Write the section now:"""
 
         try:
-            section_content = await create_chat_completion(
+            # Log RAG section generation
+            visualizer.start_interaction(f"RAG Section: {section_title}")
+
+            section_content: str = await create_chat_completion(
                 model=cfg.smart_llm_model,
                 messages=[
                     {"role": "system", "content": agent_role_prompt},
@@ -610,6 +792,20 @@ Write the section now:"""
                 cfg=cfg,
             )
 
+            # Log the section interaction
+            visualizer.log_interaction(
+                step_name=f"RAG Section: {section_title}",
+                model=cfg.smart_llm_model,
+                provider=cfg.smart_llm_provider,
+                prompt_type="RAG Section",
+                system_message=agent_role_prompt,
+                user_message=section_prompt,
+                response=section_content,
+                temperature=0.4,
+                max_tokens=cfg.smart_token_limit,
+                success=True
+            )
+
             if section_content and len(section_content.strip()) > 50:
                 report_sections.append(f"## {section_title}\n\n{section_content}")
                 logger.info(f"[RAG] Generated section '{section_title}': {len(section_content)} characters")
@@ -618,6 +814,21 @@ Write the section now:"""
 
         except Exception as e:
             logger.error(f"[RAG] Error generating section '{section_title}': {e}")
+
+            # Log the failed section interaction
+            visualizer.log_interaction(
+                step_name=f"RAG Section: {section_title} (Failed)",
+                model=cfg.smart_llm_model,
+                provider=cfg.smart_llm_provider,
+                prompt_type="RAG Section (Failed)",
+                system_message=agent_role_prompt,
+                user_message=section_prompt,
+                response="",
+                temperature=0.4,
+                max_tokens=cfg.smart_token_limit,
+                success=False,
+                error=str(e)
+            )
             continue
 
     # Step 4: Combine all sections into final report

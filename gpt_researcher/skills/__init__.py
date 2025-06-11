@@ -8,6 +8,8 @@ from .curator import SourceCurator
 from .researcher import ResearchConductor
 #from .structured_research import StructuredResearchPipeline
 from .writer import ReportGenerator
+# Removed llm_visualizer import to avoid circular imports
+# from .llm_visualizer import LLMInteractionVisualizer
 
 __all__: list[str] = [
     "ResearchConductor",
