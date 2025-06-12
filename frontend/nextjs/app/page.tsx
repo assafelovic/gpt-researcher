@@ -22,9 +22,9 @@ export default function Home() {
   const [showResult, setShowResult] = useState(false);
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({ 
-    report_source: 'web', 
-    report_type: 'research_report', 
+  const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({
+    report_source: 'web',
+    report_type: 'research_report',
     tone: 'Objective',
     domains: [],
     defaultReportType: 'research_report'
@@ -40,11 +40,11 @@ export default function Home() {
   const mainContentRef = useRef<HTMLDivElement>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { 
-    history, 
-    saveResearch, 
-    getResearchById, 
-    deleteResearch 
+  const {
+    history,
+    saveResearch,
+    getResearchById,
+    deleteResearch
   } = useResearchHistory();
 
   const { socket, initializeWebSocket } = useWebSocket(
@@ -72,7 +72,7 @@ export default function Home() {
 
       const questionData: QuestionData = { type: 'question', content: message };
       setOrderedData(prevOrder => [...prevOrder, questionData]);
-      
+
       socket.send(`chat${JSON.stringify({ message })}`);
     }
   };
@@ -115,7 +115,7 @@ export default function Home() {
     setShowResult(false);
     setPromptValue("");
     setIsStopped(false);
-    
+
     // Clear previous research data
     setQuestion("");
     setAnswer("");
@@ -125,7 +125,7 @@ export default function Home() {
     // Reset feedback states
     setShowHumanFeedback(false);
     setQuestionForHuman(false);
-    
+
     // Clean up connections
     if (socket) {
       socket.close();
@@ -172,10 +172,10 @@ export default function Home() {
     // Only save when research is complete and not loading
     if (showResult && !loading && answer && question && orderedData.length > 0) {
       // Check if this is a new research (not loaded from history)
-      const isNewResearch = !history.some(item => 
+      const isNewResearch = !history.some(item =>
         item.question === question && item.answer === answer
       );
-      
+
       if (isNewResearch) {
         saveResearch(question, answer, orderedData);
       }
@@ -208,7 +208,7 @@ export default function Home() {
   useEffect(() => {
     const groupedData = preprocessOrderedData(orderedData);
     const statusReports = ["agent_generated", "starting_research", "planning_research", "error"];
-    
+
     const newLogs = groupedData.reduce((acc: any[], data) => {
       // Process accordion blocks (grouped data)
       if (data.type === 'accordionBlock') {
@@ -219,7 +219,7 @@ export default function Home() {
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
         return [...acc, ...logs];
-      } 
+      }
       // Process status reports
       else if (statusReports.includes(data.content)) {
         return [...acc, {
@@ -231,7 +231,7 @@ export default function Home() {
       }
       return acc;
     }, []);
-    
+
     setAllLogs(newLogs);
   }, [orderedData]);
 
@@ -239,7 +239,7 @@ export default function Home() {
     // Calculate if we're near bottom (within 100px)
     const scrollPosition = window.scrollY + window.innerHeight;
     const nearBottom = scrollPosition >= document.documentElement.scrollHeight - 100;
-    
+
     // Show button if we're not near bottom and page is scrollable
     const isPageScrollable = document.documentElement.scrollHeight > window.innerHeight;
     setShowScrollButton(isPageScrollable && !nearBottom);
@@ -258,7 +258,7 @@ export default function Home() {
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleScroll);
-    
+
     return () => {
       if (mainContentElement) {
         resizeObserver.unobserve(mainContentElement);
@@ -278,14 +278,14 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col">
-      <Header 
+      <Header
         loading={loading}
         isStopped={isStopped}
         showResult={showResult}
         onStop={handleStopResearch}
         onNewResearch={handleStartNewResearch}
       />
-      
+
       <ResearchSidebar
         history={history}
         onSelectResearch={handleSelectResearch}
@@ -294,8 +294,8 @@ export default function Home() {
         isOpen={sidebarOpen}
         toggleSidebar={toggleSidebar}
       />
-      
-      <div 
+
+      <div
         ref={mainContentRef}
         className="min-h-[100vh] pt-[120px]"
       >
@@ -353,18 +353,18 @@ export default function Home() {
           onClick={scrollToBottom}
           className="fixed bottom-8 right-8 flex items-center justify-center w-12 h-12 text-white bg-gradient-to-br from-teal-500 to-teal-600 rounded-full hover:from-teal-600 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-lg z-50 backdrop-blur-sm border border-teal-400/20"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-6 w-6" 
-            fill="none" 
-            viewBox="0 0 24 24" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
             />
           </svg>
         </button>

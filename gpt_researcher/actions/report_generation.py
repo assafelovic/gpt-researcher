@@ -11,10 +11,10 @@ from gpt_researcher.prompts import PromptFamily, get_prompt_by_report_type
 from gpt_researcher.utils.enum import Tone
 from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.logger import get_formatted_logger
-from gpt_researcher.skills.llm_visualizer import LLMInteractionVisualizer, get_llm_visualizer
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
+    from gpt_researcher.skills.llm_visualizer import LLMInteractionVisualizer
 
 logger: logging.Logger = get_formatted_logger()
 
@@ -42,7 +42,8 @@ async def write_report_introduction(
     Returns:
         str: The generated introduction.
     """
-    visualizer = get_llm_visualizer()
+    from gpt_researcher.skills.llm_visualizer import get_llm_visualizer
+    visualizer: LLMInteractionVisualizer = get_llm_visualizer()
     visualizer.start_interaction("Generate Report Introduction")
 
     try:
@@ -124,6 +125,7 @@ async def write_conclusion(
     Returns:
         str: The generated conclusion.
     """
+    from gpt_researcher.skills.llm_visualizer import get_llm_visualizer
     visualizer: LLMInteractionVisualizer = get_llm_visualizer()
     visualizer.start_interaction("Generate Report Conclusion")
 
@@ -256,7 +258,8 @@ async def generate_draft_section_titles(
     Returns:
         list[str]: A list of generated section titles.
     """
-    visualizer = get_llm_visualizer()
+    from gpt_researcher.skills.llm_visualizer import get_llm_visualizer
+    visualizer: LLMInteractionVisualizer = get_llm_visualizer()
     visualizer.start_interaction("Generate Draft Section Titles")
 
     try:
@@ -362,7 +365,8 @@ async def generate_report(
     logger.info(f"[DEBUG] Starting generate_report for query: {query[:50]}...")
     logger.info(f"[DEBUG] Report type: {report_type}, context length: {len(str(context))}, has custom prompt: {custom_prompt is not None}")
 
-    visualizer = get_llm_visualizer()
+    from gpt_researcher.skills.llm_visualizer import get_llm_visualizer
+    visualizer: LLMInteractionVisualizer = get_llm_visualizer()
     visualizer.start_interaction("Generate Main Report")
 
     existing_headers = [] if existing_headers is None else existing_headers
@@ -672,6 +676,7 @@ Focus on creating logical, comprehensive coverage of the topic."""
 
     try:
         # Log RAG outline generation
+        from gpt_researcher.skills.llm_visualizer import get_llm_visualizer
         visualizer: LLMInteractionVisualizer = get_llm_visualizer()
         visualizer.start_interaction("RAG Report Outline Generation")
 

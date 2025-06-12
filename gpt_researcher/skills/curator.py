@@ -5,7 +5,6 @@ import logging
 
 from typing import TYPE_CHECKING, Any
 
-from gpt_researcher.actions import stream_output
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.llm import create_chat_completion
 
@@ -38,6 +37,7 @@ class SourceCurator:
         """
         print(f"\n\nCurating {len(source_data)} sources: {source_data}")
         if self.researcher.verbose:
+            from gpt_researcher.actions import stream_output
             await stream_output(
                 "logs",
                 "research_plan",
@@ -123,6 +123,7 @@ class SourceCurator:
             curated_sources = non_empty_sources or []
 
             if self.researcher.verbose:
+                from gpt_researcher.actions import stream_output
                 await stream_output(
                     "logs",
                     "research_plan",
@@ -135,6 +136,7 @@ class SourceCurator:
         except (json.JSONDecodeError, ValueError) as e:
             print(f"Error in curate_sources from LLM response: {response}! {e.__class__.__name__}: {e}")
             if self.researcher.verbose:
+                from gpt_researcher.actions import stream_output
                 await stream_output(
                     "logs",
                     "research_plan",
@@ -146,6 +148,7 @@ class SourceCurator:
         except Exception as e:
             print(f"Unexpected error in curate_sources: {e.__class__.__name__}: {e}")
             if self.researcher.verbose:
+                from gpt_researcher.actions import stream_output
                 await stream_output(
                     "logs",
                     "research_plan",

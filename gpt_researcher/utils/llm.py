@@ -3,14 +3,15 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import os
 import re
+import time
 import traceback
-import tiktoken
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
-import math
 
+import tiktoken
 from langchain.llms.base import BaseLLM
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
@@ -19,6 +20,7 @@ from gpt_researcher.config.config import Config
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
 from gpt_researcher.prompts import PromptFamily
 from gpt_researcher.utils.costs import estimate_llm_cost
+from gpt_researcher.utils.llm_debug_logger import LLMDebugLogger, get_llm_debug_logger
 from gpt_researcher.utils.validators import Subtopics
 
 if TYPE_CHECKING:
@@ -26,6 +28,8 @@ if TYPE_CHECKING:
         GenericLLMProvider,
         ReasoningEfforts,
     )
+    from gpt_researcher.skills.llm_visualizer import LLMInteractionVisualizer
+
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -152,8 +156,8 @@ def truncate_messages_to_fit(
 
     # Calculate minimum viable tokens for a coherent message
     # Use message structure to determine minimum
-    min_message = {"role": "user", "content": "..."}
-    min_viable_tokens = estimate_token_count([min_message], model)
+    min_message: dict[str, str] = {"role": "user", "content": "..."}
+    min_viable_tokens: int = estimate_token_count([min_message], model)
 
     # Ensure we have a workable token limit
     if max_context_tokens < min_viable_tokens:
@@ -469,35 +473,60 @@ async def create_chat_completion(
     if model is None:
         raise ValueError("Model cannot be None")
 
+    # Initialize debug logger
+    debug_logger: LLMDebugLogger = get_llm_debug_logger()
+
+    # Extract message content for logging
+    system_message: str = ""
+    user_message: str = ""
+    for msg in messages:
+        role: str = msg.get("role", "").lower()
+        content: str = str(msg.get("content", ""))
+        if role == "system":
+            system_message += content + "\n"
+        elif role in ["user", "human"]:
+            user_message += content + "\n"
+
+    system_message = system_message.strip()
+    user_message = user_message.strip()
+
+    # Start debug logging
+    interaction_id: str = debug_logger.start_interaction(
+        step_name=kwargs.get("step_name", "LLM Chat Completion"),
+        model=model,
+        provider=llm_provider or "unknown",
+        is_fallback=False,
+        fallback_attempt=0,
+        context_info={
+            "stream": stream,
+            "reasoning_effort": str(reasoning_effort) if reasoning_effort else None,
+            "llm_kwargs": llm_kwargs or {}
+        }
+    )
+
+    debug_logger.log_request(
+        system_message=system_message,
+        user_message=user_message,
+        full_messages=messages,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        **kwargs
+    )
+
     # DEBUG: Log function entry with basic info
     logger.info(f"[DEBUG-LLM] create_chat_completion called with model={model}, provider={llm_provider}, max_tokens={max_tokens}")
     logger.info(f"[DEBUG-LLM] Number of messages: {len(messages)}")
 
     # Check if visualization is active for report generation
-    visualizer = get_llm_visualizer()
-    is_visualizing = visualizer.is_enabled() and visualizer.is_active()
+    visualizer: LLMInteractionVisualizer = get_llm_visualizer()
+    is_visualizing: bool = visualizer.is_enabled() and visualizer.is_active()
 
     # Prepare visualization data
-    interaction_data = None
+    interaction_data: dict[str, Any] | None = None
     if is_visualizing:
-        # Extract message content for visualization
-        system_message = ""
-        user_message = ""
-
-        for msg in messages:
-            role: str = msg.get("role", "").lower()
-            content: str = str(msg.get("content", ""))
-            if role == "system":
-                system_message += content + "\n"
-            elif role in ["user", "human"]:
-                user_message += content + "\n"
-
-        system_message: str = system_message.strip()
-        user_message: str = user_message.strip()
-
         # Prepare interaction data for logging
-        interaction_data: dict[str, Any] = {
-            "step_name": "LLM Interaction",  # Will be updated if we can determine the step
+        interaction_data = {
+            "step_name": kwargs.get("step_name", "LLM Interaction"),
             "model": model,
             "provider": llm_provider or "unknown",
             "prompt_type": "chat_completion",
@@ -598,10 +627,19 @@ async def create_chat_completion(
     last_error: Exception | None = None
 
     # Attempt to get a response with fallback for token limits and transient errors
+    start_time: float = time.time()
     for attempt in range(MAX_ATTEMPTS):
         try:
             # DEBUG: Log attempt information
             logger.info(f"[DEBUG-LLM] Attempt {attempt+1}/{MAX_ATTEMPTS} to get chat response")
+
+            # Log retry attempt to debug logger
+            if attempt > 0:
+                debug_logger.log_retry_attempt(
+                    attempt_number=attempt + 1,
+                    reason=f"Previous attempt failed: {str(last_error) if 'last_error' in locals() else 'Unknown error'}",
+                    details={"max_attempts": MAX_ATTEMPTS}
+                )
 
             response: str = await provider.get_chat_response(messages, stream, websocket)
 
@@ -624,6 +662,15 @@ async def create_chat_completion(
             if cost_callback is not None:
                 llm_costs: float = estimate_llm_cost(str(messages), response)
                 cost_callback(llm_costs)
+
+            # Log successful interaction to debug logger
+            duration: float = time.time() - start_time
+            debug_logger.log_response(
+                response=response,
+                success=True,
+                duration_seconds=duration
+            )
+            debug_logger.finish_interaction()
 
             # Log successful interaction to visualizer
             if is_visualizing and interaction_data:
@@ -672,6 +719,17 @@ async def create_chat_completion(
                 break  # Exit retry loop, will log error and raise
 
     # If we get here, all attempts failed
+    # Log failed interaction to debug logger
+    duration: float = time.time() - start_time
+    debug_logger.log_response(
+        response="",
+        success=False,
+        error_message=str(last_error) if last_error else "Unknown error",
+        error_type=type(last_error).__name__ if last_error else "UnknownError",
+        duration_seconds=duration
+    )
+    debug_logger.finish_interaction()
+
     # Log failed interaction to visualizer
     if is_visualizing and interaction_data:
         interaction_data["response"] = ""

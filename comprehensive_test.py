@@ -8,6 +8,7 @@ import logging
 import os
 import sys
 from typing import Any, TYPE_CHECKING
+import traceback
 
 if TYPE_CHECKING:
     from gpt_researcher.config.config import Config
@@ -64,6 +65,7 @@ async def test_llm_fallbacks_loading() -> bool:
 
     except Exception as e:
         print(f"❌ Error loading llm_fallbacks: {e.__class__.__name__}: {e}")
+        traceback.print_exc()
         return False
 
 
@@ -151,7 +153,6 @@ async def test_manual_defaults() -> bool:
 
     except Exception as e:
         print(f"❌ Error loading manual defaults or resolving 'auto': {e.__class__.__name__}: {e}")
-        import traceback
         traceback.print_exc()
         return False
 
@@ -199,6 +200,7 @@ async def test_fallback_conversion(
 
     except Exception as e:
         print(f"❌ Error in fallback conversion: {e.__class__.__name__}: {e}")
+        traceback.print_exc()
         return False
 
 
@@ -290,6 +292,7 @@ async def test_format_conversion() -> bool:
 
     except Exception as e:
         print(f"❌ Error during format conversion test: {e.__class__.__name__}: {e}")
+        traceback.print_exc()
         return False
 
 
@@ -333,6 +336,7 @@ async def test_config_loading() -> tuple[bool, Any]:
 
     except Exception as e:
         print(f"❌ Error during configuration loading: {e.__class__.__name__}: {e}")
+        traceback.print_exc()
         return False, None
 
 
@@ -441,13 +445,14 @@ async def test_fallback_mechanism(
 
             except Exception as e:
                 print(f"❌ All providers failed: {e.__class__.__name__}: {e}")
+                traceback.print_exc()
 
         else:
             print("⚠️ No fallback providers configured!")
 
     except Exception as e:
         print(f"❌ Error in fallback mechanism testing: {e.__class__.__name__}: {e}")
-
+        traceback.print_exc()
     return fallback_results
 
 
@@ -533,7 +538,7 @@ async def test_report_generation(
 
     except Exception as e:
         print(f"❌ Error in report generation testing: {e.__class__.__name__}: {e}")
-
+        traceback.print_exc()
     return report_results
 
 

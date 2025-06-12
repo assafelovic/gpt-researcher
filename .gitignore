@@ -1,13 +1,10 @@
 #Ignore env containing secrets
 .env
-.venv
 .envrc
 
 #Ignore Virtual Env
 env/
-venv/
-.venv/
-.venv*/
+*venv*
 
 # Other Environments
 ENV/
@@ -60,3 +57,5 @@ check_openrouter.py
 debug_modes.py
 debug_openrouter_loss.py
 debug_token_limits.py
+.buildx-cache
+llm_debug_logs

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
 
 @dataclass
@@ -268,6 +268,11 @@ class LLMInteractionVisualizer:
         print("\n📊 MERMAID FLOW DIAGRAM (Static Visual):")
         print("─" * 70)
         print(mermaid)
+
+        # Generate comprehensive exports with exhaustive data
+        print("\n📄 COMPREHENSIVE DATA EXPORTS (with exhaustive prompts & responses):")
+        print("─" * 70)
+        self._generate_comprehensive_exports()
 
         # Generate interactive alternatives since Mermaid clicks don't work in most environments
         print("\n🖱️  INTERACTIVE ALTERNATIVES (Since Mermaid clicks don't work everywhere):")
@@ -612,6 +617,355 @@ class LLMInteractionVisualizer:
         self.enabled = False
         self.is_report_generation_active = False
 
+    def _generate_comprehensive_exports(self) -> None:
+        """Generate comprehensive exports with exhaustive data in multiple formats"""
+        if not self.current_flow or not self.current_flow.interactions:
+            print("  No interactions to export.")
+            return
+
+        # Export options
+        print("  📊 Available Export Formats:")
+        print("    1. 📄 Detailed Text Report (exhaustive_text_export)")
+        print("    2. 🗂️  JSON Export (exhaustive_json_export)")
+        print("    3. 📋 CSV Export (exhaustive_csv_export)")
+        print("    4. 📝 Markdown Report (exhaustive_markdown_export)")
+        print("\n  💡 To generate exports:")
+        print("     get_llm_visualizer().export_exhaustive_data('format')")
+        print("     Available formats: 'text', 'json', 'csv', 'markdown'")
+
+    def export_exhaustive_data(self, format_type: str = 'json') -> str:
+        """Export exhaustive interaction data in specified format"""
+        if not self.current_flow or not self.current_flow.interactions:
+            return "No data to export."
+
+        if format_type.lower() == 'json':
+            return self._export_exhaustive_json()
+        elif format_type.lower() == 'text':
+            return self._export_exhaustive_text()
+        elif format_type.lower() == 'csv':
+            return self._export_exhaustive_csv()
+        elif format_type.lower() == 'markdown':
+            return self._export_exhaustive_markdown()
+        else:
+            return f"Unsupported format: {format_type}. Use 'json', 'text', 'csv', or 'markdown'."
+
+    def _export_exhaustive_json(self) -> str:
+        """Export complete interaction data as JSON"""
+        import json
+
+        export_data: dict[str, Any] = {
+            "flow_metadata": {
+                "query": self.current_flow.query,
+                "report_type": self.current_flow.report_type,
+                "start_time": self.current_flow.start_time,
+                "total_duration": time.time() - self.current_flow.start_time,
+                "total_interactions": len(self.current_flow.interactions),
+                "successful_interactions": self.current_flow.successful_interactions,
+                "failed_interactions": self.current_flow.failed_interactions,
+                "success_rate": (self.current_flow.successful_interactions / len(self.current_flow.interactions) * 100) if self.current_flow.interactions else 0,
+                "total_estimated_tokens": sum(i.token_count_estimate for i in self.current_flow.interactions),
+                "errors": self.current_flow.errors
+            },
+            "interactions": []
+        }
+
+        for i, interaction in enumerate(self.current_flow.interactions):
+            interaction_data: dict[str, Any] = {
+                "sequence_number": i + 1,
+                "interaction_id": interaction.interaction_id,
+                "step_name": interaction.step_name,
+                "model": interaction.model,
+                "provider": interaction.provider,
+                "timestamp": interaction.timestamp,
+                "prompt_type": interaction.prompt_type,
+                "temperature": interaction.temperature,
+                "max_tokens": interaction.max_tokens,
+                "success": interaction.success,
+                "error": interaction.error,
+                "duration": interaction.duration,
+                "retry_attempt": interaction.retry_attempt,
+                "token_count_estimate": interaction.token_count_estimate,
+
+                # EXHAUSTIVE DATA - Full prompts and responses
+                "exhaustive_system_message": interaction.system_message,
+                "exhaustive_user_message": interaction.user_message,
+                "exhaustive_response": interaction.response,
+                "exhaustive_full_messages": interaction.full_messages,
+
+                # Character counts for reference
+                "system_message_length": len(interaction.system_message),
+                "user_message_length": len(interaction.user_message),
+                "response_length": len(interaction.response),
+                "full_messages_count": len(interaction.full_messages)
+            }
+            export_data["interactions"].append(interaction_data)
+
+        json_output: str = json.dumps(export_data, indent=2, default=str)
+
+        # Save to file
+        filename: str = f"llm_interactions_exhaustive_{int(time.time())}.json"
+        try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                f.write(json_output)
+            print(f"✅ Exhaustive JSON export saved to: {filename}")
+        except Exception as e:
+            print(f"❌ Failed to save JSON file: {e}")
+
+        return json_output
+
+    def _export_exhaustive_text(self) -> str:
+        """Export complete interaction data as detailed text report"""
+        report_lines: list[str] = []
+
+        # Header
+        report_lines.extend([
+            "=" * 80,
+            "EXHAUSTIVE LLM INTERACTION REPORT",
+            "=" * 80,
+            f"Query: {self.current_flow.query}",
+            f"Report Type: {self.current_flow.report_type}",
+            f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}",
+            f"Total Duration: {time.time() - self.current_flow.start_time:.2f} seconds",
+            f"Total Interactions: {len(self.current_flow.interactions)}",
+            f"Success Rate: {(self.current_flow.successful_interactions / len(self.current_flow.interactions) * 100):.1f}%",
+            "=" * 80,
+            ""
+        ])
+
+        # Detailed interactions
+        for i, interaction in enumerate(self.current_flow.interactions):
+            status = "✅ SUCCESS" if interaction.success else "❌ FAILED"
+
+            report_lines.extend([
+                f"INTERACTION #{i + 1}: {interaction.step_name}",
+                "-" * 80,
+                f"Status: {status}",
+                f"ID: {interaction.interaction_id}",
+                f"Model: {interaction.model} ({interaction.provider})",
+                f"Type: {interaction.prompt_type}",
+                f"Duration: {interaction.duration:.2f}s" if interaction.duration else "Duration: N/A",
+                f"Temperature: {interaction.temperature}",
+                f"Max Tokens: {interaction.max_tokens}",
+                f"Estimated Tokens: {interaction.token_count_estimate}",
+                f"Retry Attempt: {interaction.retry_attempt}" if interaction.retry_attempt > 0 else "",
+                f"Error: {interaction.error}" if interaction.error else "",
+                "",
+                "EXHAUSTIVE SYSTEM MESSAGE:",
+                "~" * 40,
+                interaction.system_message,
+                "",
+                "EXHAUSTIVE USER MESSAGE:",
+                "~" * 40,
+                interaction.user_message,
+                "",
+                "EXHAUSTIVE LLM RESPONSE:",
+                "~" * 40,
+                interaction.response,
+                ""
+            ])
+
+            if interaction.full_messages:
+                report_lines.extend([
+                    "EXHAUSTIVE FULL MESSAGE HISTORY:",
+                    "~" * 40
+                ])
+                for j, msg in enumerate(interaction.full_messages):
+                    role: str = msg.get("role", "unknown")
+                    content: str = str(msg.get("content", ""))
+                    report_lines.extend([
+                        f"Message {j + 1} ({role.upper()}):",
+                        content,
+                        ""
+                    ])
+
+            report_lines.extend(["=" * 80, ""])
+
+        report_text: str = "\n".join(report_lines)
+
+        # Save to file
+        filename: str = f"llm_interactions_exhaustive_{int(time.time())}.txt"
+        try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                f.write(report_text)
+            print(f"✅ Exhaustive text report saved to: {filename}")
+        except Exception as e:
+            print(f"❌ Failed to save text file: {e}")
+
+        return report_text
+
+    def _export_exhaustive_csv(self) -> str:
+        """Export interaction data as CSV (with truncated content for readability)"""
+        import csv
+        import io
+
+        output: io.StringIO = io.StringIO()
+
+        fieldnames: list[str] = [
+            'sequence_number', 'interaction_id', 'step_name', 'model', 'provider',
+            'prompt_type', 'success', 'duration', 'temperature', 'max_tokens',
+            'token_count_estimate', 'retry_attempt', 'error',
+            'system_message_length', 'user_message_length', 'response_length',
+            'system_message_preview', 'user_message_preview', 'response_preview',
+            'exhaustive_system_message', 'exhaustive_user_message', 'exhaustive_response'
+        ]
+
+        writer: csv.DictWriter = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for i, interaction in enumerate(self.current_flow.interactions):
+            row: dict[str, Any] = {
+                'sequence_number': i + 1,
+                'interaction_id': interaction.interaction_id,
+                'step_name': interaction.step_name,
+                'model': interaction.model,
+                'provider': interaction.provider,
+                'prompt_type': interaction.prompt_type,
+                'success': interaction.success,
+                'duration': interaction.duration,
+                'temperature': interaction.temperature,
+                'max_tokens': interaction.max_tokens,
+                'token_count_estimate': interaction.token_count_estimate,
+                'retry_attempt': interaction.retry_attempt,
+                'error': interaction.error or '',
+                'system_message_length': len(interaction.system_message),
+                'user_message_length': len(interaction.user_message),
+                'response_length': len(interaction.response),
+                'system_message_preview': interaction.system_message[:100] + '...' if len(interaction.system_message) > 100 else interaction.system_message,
+                'user_message_preview': interaction.user_message[:100] + '...' if len(interaction.user_message) > 100 else interaction.user_message,
+                'response_preview': interaction.response[:100] + '...' if len(interaction.response) > 100 else interaction.response,
+
+                # EXHAUSTIVE DATA - Full content
+                'exhaustive_system_message': interaction.system_message,
+                'exhaustive_user_message': interaction.user_message,
+                'exhaustive_response': interaction.response
+            }
+            writer.writerow(row)
+
+        csv_content: str = output.getvalue()
+        output.close()
+
+        # Save to file
+        filename: str = f"llm_interactions_exhaustive_{int(time.time())}.csv"
+        try:
+            with open(filename, 'w', encoding='utf-8', newline='') as f:
+                f.write(csv_content)
+            print(f"✅ Exhaustive CSV export saved to: {filename}")
+        except Exception as e:
+            print(f"❌ Failed to save CSV file: {e}")
+
+        return csv_content
+
+    def _export_exhaustive_markdown(self) -> str:
+        """Export complete interaction data as Markdown report"""
+        md_lines: list[str] = []
+
+        # Header
+        md_lines.extend([
+            "# Exhaustive LLM Interaction Report",
+            "",
+            f"**Query:** {self.current_flow.query}",
+            f"**Report Type:** {self.current_flow.report_type}",
+            f"**Generated:** {time.strftime('%Y-%m-%d %H:%M:%S')}",
+            f"**Total Duration:** {time.time() - self.current_flow.start_time:.2f} seconds",
+            f"**Total Interactions:** {len(self.current_flow.interactions)}",
+            f"**Success Rate:** {(self.current_flow.successful_interactions / len(self.current_flow.interactions) * 100):.1f}%",
+            "",
+            "---",
+            ""
+        ])
+
+        # Table of Contents
+        md_lines.extend([
+            "## Table of Contents",
+            ""
+        ])
+        for i, interaction in enumerate(self.current_flow.interactions):
+            status_emoji: str = "✅" if interaction.success else "❌"
+            md_lines.append(f"{i + 1}. [{status_emoji} {interaction.step_name}](#interaction-{i + 1})")
+        md_lines.extend(["", "---", ""])
+
+        # Detailed interactions
+        for i, interaction in enumerate(self.current_flow.interactions):
+            status_emoji = "✅" if interaction.success else "❌"
+
+            md_lines.extend([
+                f"## Interaction #{i + 1}: {interaction.step_name}",
+                "",
+                f"**Status:** {status_emoji} {'SUCCESS' if interaction.success else 'FAILED'}",
+                f"**ID:** `{interaction.interaction_id}`",
+                f"**Model:** {interaction.model} ({interaction.provider})",
+                f"**Type:** {interaction.prompt_type}",
+                f"**Duration:** {interaction.duration:.2f}s" if interaction.duration else "**Duration:** N/A",
+                f"**Temperature:** {interaction.temperature}",
+                f"**Max Tokens:** {interaction.max_tokens}",
+                f"**Estimated Tokens:** {interaction.token_count_estimate:,}",
+            ])
+
+            if interaction.retry_attempt > 0:
+                md_lines.append(f"**Retry Attempt:** #{interaction.retry_attempt}")
+
+            if interaction.error:
+                md_lines.extend([
+                    f"**Error:** {interaction.error}",
+                    ""
+                ])
+
+            md_lines.extend(
+                [
+                    "",
+                    "### Exhaustive System Message",
+                    "",
+                    "```",
+                    interaction.system_message,
+                    "```",
+                    "",
+                    "### Exhaustive User Message",
+                    "",
+                    "```",
+                    interaction.user_message,
+                    "```",
+                    "",
+                    "### Exhaustive LLM Response",
+                    "",
+                    "```",
+                    interaction.response,
+                    "```",
+                    "",
+                ]
+            )
+
+            if interaction.full_messages:
+                md_lines.extend([
+                    "### Full Message History",
+                    ""
+                ])
+                for j, msg in enumerate(interaction.full_messages):
+                    role: str = msg.get("role", "unknown")
+                    content: str = str(msg.get("content", ""))
+                    md_lines.extend([
+                        f"#### Message {j + 1} ({role.upper()})",
+                        "",
+                        "```",
+                        content,
+                        "```",
+                        ""
+                    ])
+
+            md_lines.extend(["---", ""])
+
+        markdown_content: str = "\n".join(md_lines)
+
+        # Save to file
+        filename: str = f"llm_interactions_exhaustive_{int(time.time())}.md"
+        try:
+            with open(filename, 'w', encoding='utf-8') as f:
+                f.write(markdown_content)
+            print(f"✅ Exhaustive Markdown report saved to: {filename}")
+        except Exception as e:
+            print(f"❌ Failed to save Markdown file: {e}")
+
+        return markdown_content
+
 
 # Global instance
 _global_visualizer: LLMInteractionVisualizer | None = None
@@ -685,8 +1039,8 @@ def list_llm_interactions() -> None:
 
 
 def get_llm_flow_summary() -> dict[str, Any] | None:
-    """Get summary of the current LLM flow"""
-    visualizer = get_llm_visualizer()
+    """Get summary of current LLM flow"""
+    visualizer: LLMInteractionVisualizer = get_llm_visualizer()
     if not visualizer.current_flow:
         return None
 
@@ -696,7 +1050,160 @@ def get_llm_flow_summary() -> dict[str, Any] | None:
         "total_interactions": len(visualizer.current_flow.interactions),
         "successful_interactions": visualizer.current_flow.successful_interactions,
         "failed_interactions": visualizer.current_flow.failed_interactions,
-        "start_time": visualizer.current_flow.start_time,
-        "flow_steps": visualizer.current_flow.flow_steps,
-        "errors": visualizer.current_flow.errors
+        "success_rate": (
+            visualizer.current_flow.successful_interactions / len(visualizer.current_flow.interactions) * 100
+            if visualizer.current_flow.interactions
+            else 0
+        ),
+        "total_duration": time.time() - visualizer.current_flow.start_time,
+        "interactions": [
+            {
+                "id": interaction.interaction_id,
+                "step_name": interaction.step_name,
+                "success": interaction.success,
+                "duration": interaction.duration,
+            }
+            for interaction in visualizer.current_flow.interactions
+        ],
     }
+
+
+def export_exhaustive_llm_data(format_type: str = 'json') -> str:
+    """Export exhaustive LLM interaction data with full prompts and responses
+
+    Args:
+        format_type: Export format - 'json', 'text', 'csv', or 'markdown'
+
+    Returns:
+        Exported data as string, also saves to file
+
+    Example:
+        # Export all data as JSON with full prompts/responses
+        json_data = export_exhaustive_llm_data('json')
+
+        # Export as detailed text report
+        text_report = export_exhaustive_llm_data('text')
+
+        # Export as CSV for analysis
+        csv_data = export_exhaustive_llm_data('csv')
+
+        # Export as Markdown for documentation
+        md_report = export_exhaustive_llm_data('markdown')
+    """
+    visualizer: LLMInteractionVisualizer = get_llm_visualizer()
+    return visualizer.export_exhaustive_data(format_type)
+
+
+def get_exhaustive_interaction_data(interaction_id: str) -> dict[str, Any] | None:
+    """Get complete exhaustive data for a specific interaction including full prompts and responses
+
+    Args:
+        interaction_id: The interaction ID to retrieve
+
+    Returns:
+        Complete interaction data with exhaustive prompts and responses
+    """
+    visualizer: LLMInteractionVisualizer = get_llm_visualizer()
+    if not visualizer.current_flow:
+        return None
+
+    for interaction in visualizer.current_flow.interactions:
+        if interaction.interaction_id == interaction_id:
+            return {
+                "interaction_id": interaction.interaction_id,
+                "step_name": interaction.step_name,
+                "model": interaction.model,
+                "provider": interaction.provider,
+                "prompt_type": interaction.prompt_type,
+                "success": interaction.success,
+                "duration": interaction.duration,
+                "temperature": interaction.temperature,
+                "max_tokens": interaction.max_tokens,
+                "token_count_estimate": interaction.token_count_estimate,
+                "retry_attempt": interaction.retry_attempt,
+                "error": interaction.error,
+
+                # EXHAUSTIVE DATA - Full prompts and responses
+                "exhaustive_system_message": interaction.system_message,
+                "exhaustive_user_message": interaction.user_message,
+                "exhaustive_response": interaction.response,
+                "exhaustive_full_messages": interaction.full_messages,
+
+                # Metadata
+                "system_message_length": len(interaction.system_message),
+                "user_message_length": len(interaction.user_message),
+                "response_length": len(interaction.response),
+                "timestamp": interaction.timestamp
+            }
+
+    return None
+
+
+def print_exhaustive_interaction(interaction_id: str) -> None:
+    """Print complete exhaustive data for a specific interaction
+
+    Args:
+        interaction_id: The interaction ID to display
+    """
+    data: dict[str, Any] | None = get_exhaustive_interaction_data(interaction_id)
+    if not data:
+        print(f"❌ Interaction '{interaction_id}' not found.")
+        return
+
+    print("\n" + "🔍" * 60)
+    print(f"🔍 EXHAUSTIVE INTERACTION DATA: {interaction_id}")
+    print("🔍" * 60)
+
+    # Metadata
+    status: str = "✅ SUCCESS" if data["success"] else "❌ FAILED"
+    print(f"Status: {status}")
+    print(f"Step: {data['step_name']}")
+    print(f"Model: {data['model']} ({data['provider']})")
+    print(f"Type: {data['prompt_type']}")
+    print(f"Duration: {data['duration']:.2f}s" if data['duration'] else "N/A")
+    print(f"Temperature: {data['temperature']}")
+    print(f"Max Tokens: {data['max_tokens']}")
+    print(f"Estimated Tokens: {data['token_count_estimate']:,}")
+
+    if data['retry_attempt'] > 0:
+        print(f"Retry Attempt: #{data['retry_attempt']}")
+
+    if data['error']:
+        print(f"Error: {data['error']}")
+
+    # Exhaustive data
+    print("\n📊 DATA SIZES:")
+    print(f"System Message: {data['system_message_length']:,} characters")
+    print(f"User Message: {data['user_message_length']:,} characters")
+    print(f"Response: {data['response_length']:,} characters")
+    print(f"Full Messages: {len(data['exhaustive_full_messages'])} messages")
+
+    print("\n📝 EXHAUSTIVE SYSTEM MESSAGE:")
+    print("─" * 50)
+    print(data['exhaustive_system_message'])
+
+    print("\n👤 EXHAUSTIVE USER MESSAGE:")
+    print("─" * 50)
+    print(data['exhaustive_user_message'])
+
+    print("\n🤖 EXHAUSTIVE LLM RESPONSE:")
+    print("─" * 50)
+    print(data['exhaustive_response'])
+
+    if data['exhaustive_full_messages']:
+        print("\n📚 EXHAUSTIVE FULL MESSAGE HISTORY:")
+        print("─" * 50)
+        for i, msg in enumerate(data['exhaustive_full_messages']):
+            role: str = msg.get("role", "unknown")
+            content: str = str(msg.get("content", ""))
+            print(f"\nMessage {i + 1} ({role.upper()}):")
+            print(content)
+
+    print("🔍" * 60)
+
+
+# Convenience aliases for easier access
+export_llm_json: Callable[[], str] = lambda: export_exhaustive_llm_data("json")  # noqa: E731
+export_llm_text: Callable[[], str] = lambda: export_exhaustive_llm_data("text")  # noqa: E731
+export_llm_csv: Callable[[], str] = lambda: export_exhaustive_llm_data("csv")  # noqa: E731
+export_llm_markdown: Callable[[], str] = lambda: export_exhaustive_llm_data("markdown")  # noqa: E731

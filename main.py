@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import sys
-
+from contextlib import suppress
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -70,8 +70,9 @@ load_dotenv()
 from backend.server.server import app  # noqa: E402
 
 if __name__ == "__main__":
-    import uvicorn
     from typing import Any, cast
+
+    import uvicorn
 
     # Get all uvicorn configuration from environment variables
     host = os.getenv("HOST", "0.0.0.0")

@@ -52,7 +52,7 @@ async def test_fallback_mechanism():
         print(f"✅ Success! Response: {response}")
 
     except Exception as e:
-        print(f"❌ Failed: {type(e).__name__}: {e}")
+        print(f"❌ Failed: {e.__class__.__name__}: {e}")
 
     print("\n🧪 Test 2: Large Context Request (should trigger token handling)")
     print("-" * 60)
@@ -69,7 +69,7 @@ async def test_fallback_mechanism():
         print(f"✅ Success! Response: {response[:200]}...")
 
     except Exception as e:
-        print(f"❌ Failed: {type(e).__name__}: {e}")
+        print(f"❌ Failed: {e.__class__.__name__}: {e}")
 
     print("\n🧪 Test 3: Invalid Model (should trigger fallback)")
     print("-" * 60)
@@ -79,7 +79,7 @@ async def test_fallback_mechanism():
         print(f"✅ Success with fallback! Response: {response}")
 
     except Exception as e:
-        print(f"❌ All providers failed: {type(e).__name__}: {e}")
+        print(f"❌ All providers failed: {e.__class__.__name__}: {e}")
 
     print("\n" + "=" * 80)
     print("FALLBACK MECHANISM TEST COMPLETE")

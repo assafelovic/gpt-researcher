@@ -7,6 +7,7 @@ import os
 from typing import Any, TypeVar
 
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
+from gpt_researcher.utils.llm_debug_logger import LLMDebugLogger, get_llm_debug_logger
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
     def __init__(
         self,
         llm: Any,
-        fallback_providers: list[GenericLLMProvider] = None,
+        fallback_providers: list[GenericLLMProvider] | None = None,
         chat_log: str | None = None,
         verbose: bool = True,
     ):
@@ -182,21 +183,24 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
         Raises:
             Exception: If all providers fail
         """
-        primary_model_name = getattr(self.llm, 'model_name', None) or getattr(self.llm, 'model', 'unknown')
+        primary_model_name: str = getattr(self.llm, 'model_name', None) or getattr(self.llm, 'model', 'unknown')
 
         if self.verbose:
             logger.info(f"[FALLBACK-DEBUG] Starting fallback-enabled request with primary model: {primary_model_name}")
             logger.info(f"[FALLBACK-DEBUG] Available fallback providers: {len(self.fallback_providers)}")
             for i, fb in enumerate(self.fallback_providers):
-                fb_model = getattr(fb.llm, 'model_name', None) or getattr(fb.llm, 'model', 'unknown')
+                fb_model: str = getattr(fb.llm, 'model_name', None) or getattr(fb.llm, 'model', 'unknown')
                 logger.info(f"[FALLBACK-DEBUG]   Fallback {i+1}: {fb_model}")
+
+        # Get debug logger
+        debug_logger: LLMDebugLogger = get_llm_debug_logger()
 
         # Try primary provider first
         try:
             if self.verbose:
                 logger.info(f"[FALLBACK-DEBUG] Attempting primary provider: {primary_model_name}")
 
-            response = await super().get_chat_response(messages, stream, websocket)
+            response: str = await super().get_chat_response(messages, stream, websocket)
 
             if self.verbose:
                 logger.info(f"[FALLBACK-DEBUG] Primary provider succeeded: {primary_model_name}")
@@ -220,10 +224,28 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
             last_error: Exception = e
             for i, fallback_provider in enumerate(self.fallback_providers):
                 try:
-                    fallback_model = getattr(fallback_provider.llm, 'model_name', None) or getattr(fallback_provider.llm, 'model', 'unknown')
+                    fallback_model: str = getattr(fallback_provider.llm, 'model_name', None) or getattr(fallback_provider.llm, 'model', 'unknown')
 
                     if self.verbose:
                         logger.info(f"[FALLBACK-DEBUG] Trying fallback provider {i+1}/{len(self.fallback_providers)}: {fallback_model}")
+
+                    # Log fallback attempt to debug logger
+                    if debug_logger.current_interaction:
+                        debug_logger.current_interaction.is_fallback = True
+                        debug_logger.current_interaction.fallback_attempt = i + 1
+                        debug_logger.current_interaction.primary_provider = primary_model_name
+                        debug_logger.current_interaction.model = fallback_model
+                        debug_logger.current_interaction.provider = getattr(fallback_provider, 'provider', 'unknown')
+
+                        debug_logger.log_retry_attempt(
+                            attempt_number=i + 1,
+                            reason=f"Primary provider {primary_model_name} failed, trying fallback",
+                            details={
+                                "primary_error": str(e),
+                                "fallback_model": fallback_model,
+                                "total_fallbacks": len(self.fallback_providers)
+                            }
+                        )
 
                     response: str = await fallback_provider.get_chat_response(messages, stream, websocket)
 

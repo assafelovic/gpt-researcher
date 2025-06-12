@@ -14,7 +14,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: Heade
     <div className="fixed top-0 left-0 right-0 z-50">
       {/* Pure transparent blur background */}
       <div className="absolute inset-0 backdrop-blur-sm bg-transparent"></div>
-      
+
       {/* Header container */}
       <div className="container relative h-[60px] px-4 lg:h-[80px] lg:px-0 pt-4 pb-4">
         <div className="flex flex-col items-center">
@@ -28,7 +28,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: Heade
               className="lg:h-16 lg:w-16"
             />
           </a>
-          
+
           {/* Action buttons container */}
           <div className="flex gap-2 mt-2 transition-all duration-300 ease-in-out">
             {/* Stop button - shown only during active research */}
