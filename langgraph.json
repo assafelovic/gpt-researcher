@@ -1,0 +1,10 @@
+{
+  "python_version": "3.11",
+  "dependencies": [
+    "./multi_agents"
+  ],
+  "graphs": {
+    "agent": "./multi_agents/agent.py:graph"
+  },
+  "env": ".env"
+}

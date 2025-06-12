@@ -1,0 +1,45 @@
+name: GPTR tests
+run-name: ${{ github.actor }} ran the GPTR tests flow
+permissions:
+  contents: read
+  pull-requests: write
+on:
+  workflow_dispatch:  # Add this line to enable manual triggering
+  # pull_request:
+  #   types: [opened, synchronize]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    environment: tests  # Specify the environment to use for this job
+    env:
+      # Ensure these environment variables are set for the entire job
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+      LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          driver: docker
+
+      # - name: Build Docker images
+      #   uses: docker/build-push-action@v4
+      #   with:
+      #     push: false
+      #     tags: gptresearcher/gpt-researcher:latest
+      #     file: Dockerfile          
+
+      - name: Set up Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+      - name: Run tests with Docker Compose
+        run: |
+          docker-compose --profile test run --rm gpt-researcher-tests

@@ -1,0 +1,14 @@
+{
+  "env": {
+    "production": {
+      "presets": [
+        "@babel/preset-env",
+        "@babel/preset-react",
+        ["@babel/preset-typescript", { "allowNamespaces": true, "onlyRemoveTypeImports": true }]
+      ],
+      "plugins": [
+        ["@babel/plugin-transform-typescript", { "allowNamespaces": true }]
+      ]
+    }
+  }
+}
