@@ -80,6 +80,17 @@ cli.add_argument(
 )
 
 # =====================================
+# Arg: Encoding
+# =====================================
+
+cli.add_argument(
+    "--encoding",
+    type=str,
+    help="The encoding to use for the output file (default: utf-8).",
+    default="utf-8"
+)
+
+# =====================================
 # Arg: Query Domains
 # =====================================
 
@@ -134,7 +145,8 @@ async def main(args):
             query=args.query,
             query_domains=query_domains,
             report_type=args.report_type,
-            tone=tone_map[args.tone]
+            tone=tone_map[args.tone],
+            encoding=args.encoding
         )
 
         await researcher.conduct_research()
@@ -144,7 +156,7 @@ async def main(args):
     # Write the report to a file
     artifact_filepath = f"outputs/{uuid4()}.md"
     os.makedirs("outputs", exist_ok=True)
-    with open(artifact_filepath, "w") as f:
+    with open(artifact_filepath, "w", encoding="utf-8") as f:
         f.write(report)
 
     print(f"Report written to '{artifact_filepath}'")
