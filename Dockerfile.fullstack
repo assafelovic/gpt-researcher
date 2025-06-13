@@ -61,15 +61,15 @@ RUN pip config set global.timeout 60 && \
     pip install --no-cache-dir -r multi_agents/requirements.txt --upgrade --prefer-binary
 
 ########################################################################
-# Stage 4: Final image with backend, frontend, and supervisor
+# Stage 4: Final image with backend, frontend
 ########################################################################
 FROM backend-builder AS final
 
 WORKDIR /usr/src/app
 
-# Install Node.js and supervisor with retry logic
+# Install Node.js with retry logic
 RUN apt-get update && \
-    apt-get install -y curl supervisor && \
+    apt-get install -y curl && \
     curl -fsSL --retry 3 --retry-delay 10 https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
@@ -97,7 +97,7 @@ COPY --from=frontend-builder /app/frontend/nextjs/package.json ./frontend/nextjs
 # Ensure next.config.mjs and other necessary files are present
 COPY --from=frontend-builder /app/frontend/nextjs/next.config.mjs ./frontend/nextjs/next.config.mjs
 
-# Create a startup script that generates supervisor config with actual port values
+# Start the backend and frontend servers
 CMD /bin/bash -c 'cd /usr/src/app; \
   (uvicorn main:app --host "$HOST" --port "$PORT") & \
   (cd frontend/nextjs && npm run start -- -p "$NEXT_PORT") & \
