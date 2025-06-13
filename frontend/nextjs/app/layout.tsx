@@ -9,7 +9,7 @@ const inter = Lexend({ subsets: ["latin"] });
 let title = "ResearchWizard | Powered by th3w1zard1";
 let description = "Your intelligent AI research assistant that turns complex topics into clear insights. Receive thorough reports with verified references, professional layout, and personalized content—all accomplished with just one click.";
 let url = "https://github.com/th3w1zard1";
-let ogimage = "/wizard-icon-new.svg";
+let ogimage = "/favicon.ico";
 let sitename = "ResearchWizard";
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title,
   description,
   icons: {
-    icon: "/wizard-icon-new.svg",
+    icon: "/favicon.ico",
   },
   openGraph: {
     images: [ogimage],
@@ -41,19 +41,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <html className="gptr-root" lang="en">
       <head>
         {/* Font Awesome Icons */}
-        <link
+        {/*<link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
           integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
-        />
+        />*/}
         <PlausibleProvider domain="localhost:3000" />
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''} />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />
       </head>
       <body
         className={`app-container ${inter.className} flex min-h-screen flex-col justify-between`}

@@ -288,24 +288,19 @@ type suggestionType = {
 const suggestions: suggestionType[] = [
   {
     id: 1,
-    name: "AI in Healthcare",
-    icon: "/img/agents/research.svg",
+    name: "Stock analysis on ",
+    icon: "/img/stock2.svg",
   },
   {
     id: 2,
-    name: "Climate Change",
-    icon: "/img/agents/earth.svg",
+    name: "Help me plan an adventure to ",
+    icon: "/img/hiker.svg",
   },
   {
     id: 3,
-    name: "Space Exploration",
-    icon: "/img/agents/rocket.svg",
+    name: "What are the latest news on ",
+    icon: "/img/news.svg",
   },
-  {
-    id: 4,
-    name: "Quantum Computing",
-    icon: "/img/agents/quantum.svg",
-  }
 ];
 
 export default Hero;
