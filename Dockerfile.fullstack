@@ -6,7 +6,7 @@ WORKDIR /app/frontend/nextjs
 
 # Copy package files and install dependencies
 COPY frontend/nextjs/package.json frontend/nextjs/package-lock.json* ./
-RUN npm install --frozen-lockfile
+RUN npm install --legacy-peer-deps
 
 # Copy the rest of the frontend application and build it
 COPY frontend/nextjs/ ./
