@@ -85,7 +85,7 @@ class ReportGenerator:
             )
 
         # Check if we should use RAG-based generation
-        rag_enabled: bool = getattr(self.researcher.cfg, 'enable_rag_report_generation', True)
+        rag_enabled: bool = getattr(self.researcher.cfg, 'enable_rag_report_generation', False)
         should_use_rag: bool = use_rag and rag_enabled and self._should_use_rag_generation(context)
 
         if should_use_rag:
