@@ -1,0 +1,104 @@
+########################################################################
+# Stage 1: Frontend build
+########################################################################
+FROM node:slim AS frontend-builder
+WORKDIR /app/frontend/nextjs
+
+# Copy package files and install dependencies
+COPY frontend/nextjs/package.json frontend/nextjs/package-lock.json* ./
+RUN npm install --frozen-lockfile
+
+# Copy the rest of the frontend application and build it
+COPY frontend/nextjs/ ./
+RUN npm run build
+
+########################################################################
+# Stage 2: Browser and backend build tools installation
+########################################################################
+FROM python:3.13.3-slim-bookworm AS install-browser
+
+# Configure apt for better reliability
+RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries && \
+    echo 'Acquire::http::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries && \
+    echo 'Acquire::https::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries && \
+    echo 'Acquire::ftp::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries
+
+# Install Chromium, Chromedriver, Firefox, Geckodriver, and build tools in one layer
+RUN apt-get update \
+    && apt-get install -y gnupg wget ca-certificates --no-install-recommends \
+    && ARCH=$(dpkg --print-architecture) \
+    && wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && echo "deb [arch=${ARCH}] http://dl.google.com/linux/chrome/deb/ stable main" \
+        > /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y chromium chromium-driver google-chrome-stable \
+    && chromium --version && chromedriver --version \
+    && apt-get install -y --no-install-recommends firefox-esr build-essential \
+    && GECKO_ARCH=$(case ${ARCH} in amd64) echo "linux64" ;; arm64) echo "linux-aarch64" ;; *) echo "linux64" ;; esac) \
+    && wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
+    && tar -xvzf geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
+    && chmod +x geckodriver \
+    && mv geckodriver /usr/local/bin/ \
+    && rm geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
+    && rm -rf /var/lib/apt/lists/*
+
+########################################################################
+# Stage 3: Python dependencies installation
+########################################################################
+FROM install-browser AS backend-builder
+WORKDIR /usr/src/app
+
+ENV PIP_ROOT_USER_ACTION=ignore
+
+COPY ./requirements.txt ./requirements.txt
+COPY ./multi_agents/requirements.txt ./multi_agents/requirements.txt
+
+# Install Python packages with retry logic and timeout configuration
+RUN pip config set global.timeout 60 && \
+    pip config set global.retries 3 && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt --upgrade --prefer-binary && \
+    pip install --no-cache-dir -r multi_agents/requirements.txt --upgrade --prefer-binary
+
+########################################################################
+# Stage 4: Final image with backend, frontend, and supervisor
+########################################################################
+FROM backend-builder AS final
+
+WORKDIR /usr/src/app
+
+# Install Node.js and supervisor with retry logic
+RUN apt-get update && \
+    apt-get install -y curl supervisor && \
+    curl -fsSL --retry 3 --retry-delay 10 https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set backend server configuration
+ARG HOST=0.0.0.0
+ENV HOST=${HOST}
+
+ARG PORT=8000
+ENV PORT=${PORT}
+EXPOSE ${PORT}
+
+ARG NEXT_PORT=3000
+ENV NEXT_PORT=${NEXT_PORT}
+EXPOSE ${NEXT_PORT}
+
+# Copy application files
+COPY ./ ./
+
+# Copy built frontend from the frontend-builder stage
+COPY --from=frontend-builder /app/frontend/nextjs/.next ./frontend/nextjs/.next
+COPY --from=frontend-builder /app/frontend/nextjs/node_modules ./frontend/nextjs/node_modules
+COPY --from=frontend-builder /app/frontend/nextjs/public ./frontend/nextjs/public
+COPY --from=frontend-builder /app/frontend/nextjs/package.json ./frontend/nextjs/package.json
+# Ensure next.config.mjs and other necessary files are present
+COPY --from=frontend-builder /app/frontend/nextjs/next.config.mjs ./frontend/nextjs/next.config.mjs
+
+# Create a startup script that generates supervisor config with actual port values
+CMD /bin/bash -c 'cd /usr/src/app; \
+  (uvicorn main:app --host "$HOST" --port "$PORT") & \
+  (cd frontend/nextjs && npm run start -- -p "$NEXT_PORT") & \
+  wait'
