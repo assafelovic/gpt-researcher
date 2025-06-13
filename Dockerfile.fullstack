@@ -28,7 +28,8 @@ RUN apt-get update \
     && apt-get install -y gnupg wget ca-certificates --no-install-recommends \
     && ARCH=$(dpkg --print-architecture) \
     && if [ "$ARCH" = "arm64" ]; then \
-        apt-get install -y chromium chromium-driver; \
+        apt-get install -y chromium chromium-driver \
+        && chromium --version && chromedriver --version; \
     else \
         wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
         && echo "deb [arch=${ARCH}] http://dl.google.com/linux/chrome/deb/ stable main" \
@@ -36,7 +37,6 @@ RUN apt-get update \
         && apt-get update \
         && apt-get install -y google-chrome-stable; \
     fi \
-    && chromium --version && chromedriver --version \
     && apt-get install -y --no-install-recommends firefox-esr build-essential \
     && GECKO_ARCH=$(case ${ARCH} in amd64) echo "linux64" ;; arm64) echo "linux-aarch64" ;; *) echo "linux64" ;; esac) \
     && wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
