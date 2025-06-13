@@ -27,11 +27,15 @@ RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries && \
 RUN apt-get update \
     && apt-get install -y gnupg wget ca-certificates --no-install-recommends \
     && ARCH=$(dpkg --print-architecture) \
-    && wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=${ARCH}] http://dl.google.com/linux/chrome/deb/ stable main" \
-        > /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y chromium chromium-driver google-chrome-stable \
+    && if [ "$ARCH" = "arm64" ]; then \
+        apt-get install -y chromium chromium-driver; \
+    else \
+        wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+        && echo "deb [arch=${ARCH}] http://dl.google.com/linux/chrome/deb/ stable main" \
+            > /etc/apt/sources.list.d/google-chrome.list \
+        && apt-get update \
+        && apt-get install -y google-chrome-stable; \
+    fi \
     && chromium --version && chromedriver --version \
     && apt-get install -y --no-install-recommends firefox-esr build-essential \
     && GECKO_ARCH=$(case ${ARCH} in amd64) echo "linux64" ;; arm64) echo "linux-aarch64" ;; *) echo "linux64" ;; esac) \
