@@ -132,22 +132,14 @@ templates = Jinja2Templates(directory="./frontend")
 # WebSocket manager
 manager = WebSocketManager()
 
-# CORS configuration from environment variables
-CORS_ENABLED: bool = os.getenv("CORS_ENABLED", "true").lower() == "true"
-CORS_ORIGINS: list[str] = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
-CORS_ALLOW_CREDENTIALS: bool = os.getenv("CORS_ALLOW_CREDENTIALS", "true").lower() == "true"
-CORS_ALLOW_METHODS: list[str] = os.getenv("CORS_ALLOW_METHODS", "*").split(",")
-CORS_ALLOW_HEADERS: list[str] = os.getenv("CORS_ALLOW_HEADERS", "*").split(",") if os.getenv("CORS_ALLOW_HEADERS", "*") != "*" else ["*"]
-
 # Middleware
-if CORS_ENABLED:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=CORS_ORIGINS,
-        allow_credentials=CORS_ALLOW_CREDENTIALS,
-        allow_methods=CORS_ALLOW_METHODS,
-        allow_headers=CORS_ALLOW_HEADERS,
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Constants
 DOC_PATH: str = os.getenv("DOC_PATH", "./my-docs")

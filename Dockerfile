@@ -53,18 +53,6 @@ EXPOSE ${PORT}
 ARG WORKERS=1
 ENV WORKERS=${WORKERS}
 
-# CORS middleware configuration
-ARG CORS_ENABLED=true
-ENV CORS_ENABLED=${CORS_ENABLED}
-ARG CORS_ORIGINS=http://localhost:3000,http://localhost:${PORT}
-ENV CORS_ORIGINS=${CORS_ORIGINS}
-ARG CORS_ALLOW_CREDENTIALS=true
-ENV CORS_ALLOW_CREDENTIALS=${CORS_ALLOW_CREDENTIALS}
-ARG CORS_ALLOW_METHODS=GET,POST,PUT,DELETE,OPTIONS
-ENV CORS_ALLOW_METHODS=${CORS_ALLOW_METHODS}
-ARG CORS_ALLOW_HEADERS=*
-ENV CORS_ALLOW_HEADERS=${CORS_ALLOW_HEADERS}
-
 # Create a non-root user for security
 # NOTE: Don't use this if you are relying on `_check_pkg` to pip install packages dynamically.
 RUN useradd -ms /bin/bash gpt-researcher && \

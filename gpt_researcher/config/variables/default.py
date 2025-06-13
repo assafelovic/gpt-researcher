@@ -56,7 +56,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "MCP_AUTO_TOOL_SELECTION": True,  # Whether to automatically select the best tool for a query
     "MCP_ALLOWED_ROOT_PATHS": [],  # List of allowed root paths for local file access
     # RAG (Retrieval-Augmented Generation) settings
-    "ENABLE_RAG_REPORT_GENERATION": True,  # Enable RAG-based report generation for large contexts
+    "ENABLE_RAG_REPORT_GENERATION": False,  # Enable RAG-based report generation for large contexts
     "RAG_CHUNK_SIZE": 2000,  # Size of text chunks for vector storage
     "RAG_CHUNK_OVERLAP": 200,  # Overlap between chunks
     "RAG_MAX_CHUNKS_PER_SECTION": 10,  # Maximum chunks to retrieve per report section
