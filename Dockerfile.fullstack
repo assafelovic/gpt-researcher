@@ -19,30 +19,30 @@ FROM python:3.13.3-slim-bookworm AS install-browser
 
 # Install Chromium, Chromedriver, Firefox, Geckodriver, and build tools in one layer
 RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries \
-    && echo 'Acquire::http::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
-    && echo 'Acquire::https::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
-    && echo 'Acquire::ftp::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
-    && apt-get update \
-    && apt-get install -y gnupg wget ca-certificates --no-install-recommends \
-    && ARCH=$(dpkg --print-architecture) \
-    && if [ "$ARCH" = "arm64" ]; then \
-        apt-get install -y chromium chromium-driver \
-        && chromium --version && chromedriver --version; \
-    else \
-        wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-        && echo "deb [arch=${ARCH}] http://dl.google.com/linux/chrome/deb/ stable main" \
-            > /etc/apt/sources.list.d/google-chrome.list \
-        && apt-get update \
-        && apt-get install -y google-chrome-stable; \
-    fi \
-    && apt-get install -y --no-install-recommends firefox-esr build-essential \
-    && GECKO_ARCH=$(case ${ARCH} in amd64) echo "linux64" ;; arm64) echo "linux-aarch64" ;; *) echo "linux64" ;; esac) \
-    && wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
-    && tar -xvzf geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
-    && chmod +x geckodriver \
-    && mv geckodriver /usr/local/bin/ \
-    && rm geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
-    && rm -rf /var/lib/apt/lists/*
+  && echo 'Acquire::http::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
+  && echo 'Acquire::https::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
+  && echo 'Acquire::ftp::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
+  && apt-get update \
+  && apt-get install -y gnupg wget ca-certificates --no-install-recommends \
+  && ARCH=$(dpkg --print-architecture) \
+  && if [ "$ARCH" = "arm64" ]; then \
+  apt-get install -y chromium chromium-driver \
+  && chromium --version && chromedriver --version; \
+  else \
+  wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && echo "deb [arch=${ARCH}] http://dl.google.com/linux/chrome/deb/ stable main" \
+  > /etc/apt/sources.list.d/google-chrome.list \
+  && apt-get update \
+  && apt-get install -y google-chrome-stable; \
+  fi \
+  && apt-get install -y --no-install-recommends firefox-esr build-essential \
+  && GECKO_ARCH=$(case ${ARCH} in amd64) echo "linux64" ;; arm64) echo "linux-aarch64" ;; *) echo "linux64" ;; esac) \
+  && wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
+  && tar -xvzf geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
+  && chmod +x geckodriver \
+  && mv geckodriver /usr/local/bin/ \
+  && rm geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
+  && rm -rf /var/lib/apt/lists/*
 
 ########################################################################
 # Stage 3: Python dependencies installation
@@ -57,10 +57,10 @@ COPY ./multi_agents/requirements.txt ./multi_agents/requirements.txt
 
 # Install Python packages with retry logic and timeout configuration
 RUN pip config set global.timeout 60 && \
-    pip config set global.retries 3 && \
-    pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt --upgrade --prefer-binary && \
-    pip install --no-cache-dir -r multi_agents/requirements.txt --upgrade --prefer-binary
+  pip config set global.retries 3 && \
+  pip install --upgrade pip && \
+  pip install --no-cache-dir -r requirements.txt --upgrade --prefer-binary && \
+  pip install --no-cache-dir -r multi_agents/requirements.txt --upgrade --prefer-binary
 
 ########################################################################
 # Stage 4: Final image with backend, frontend
@@ -69,12 +69,12 @@ FROM backend-builder AS final
 
 WORKDIR /usr/src/app
 
-# Install Node.js with retry logic
+# Install Node.js and supervisord with retry logic
 RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -fsSL --retry 3 --retry-delay 10 https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y nodejs && \
-    rm -rf /var/lib/apt/lists/*
+  apt-get install -y curl supervisor && \
+  curl -fsSL --retry 3 --retry-delay 10 https://deb.nodesource.com/setup_20.x | bash - && \
+  apt-get install -y nodejs && \
+  rm -rf /var/lib/apt/lists/*
 
 # Set backend server configuration
 ARG HOST=0.0.0.0
@@ -99,8 +99,26 @@ COPY --from=frontend-builder /app/frontend/nextjs/package.json ./frontend/nextjs
 # Ensure next.config.mjs and other necessary files are present
 COPY --from=frontend-builder /app/frontend/nextjs/next.config.mjs ./frontend/nextjs/next.config.mjs
 
-# Start the backend and frontend servers
-CMD /bin/bash -c 'cd /usr/src/app; \
-  (uvicorn main:app --host $HOST --port $PORT) & \
-  (cd frontend/nextjs && npm run start -- -p $NEXT_PORT) & \
-  wait'
+# Create supervisord configuration
+RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'nodaemon=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'user=root' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '[program:backend]' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=uvicorn main:app --host %(ENV_HOST)s --port %(ENV_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'directory=/usr/src/app' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile=/var/log/backend.err.log' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile=/var/log/backend.out.log' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '[program:frontend]' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=npm run start -- -p %(ENV_NEXT_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'directory=/usr/src/app/frontend/nextjs' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile=/var/log/frontend.err.log' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile=/var/log/frontend.out.log' >> /etc/supervisor/conf.d/supervisord.conf
+
+# Start supervisord to manage both services
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
