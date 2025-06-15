@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import math
 import os
 import re
 import time
@@ -130,310 +129,6 @@ def estimate_token_count(
     return total_tokens
 
 
-def truncate_messages_to_fit(
-    messages: list[dict[str, str]],
-    max_context_tokens: int,
-    model: str = "gpt-4.1",
-) -> list[dict[str, str]]:
-    """Truncate messages to fit within the max_context_tokens.
-
-    This function preserves system messages and truncates the user and assistant messages.
-    It starts with the oldest messages and gradually moves to the most recent ones.
-
-    Args:
-        messages (list[dict[str, str]]): List of messages to truncate
-        max_context_tokens (int): Maximum context tokens to preserve
-        model (str): The model for token estimation
-
-    Returns:
-        list[dict[str, str]]: Truncated messages
-    """
-    # DEBUG: Log function entry
-    logger.info(f"[DEBUG-TRUNCATE] Starting truncation. Target max tokens: {max_context_tokens}")
-
-    if not messages:
-        return []
-
-    # Calculate minimum viable tokens for a coherent message
-    # Use message structure to determine minimum
-    min_message: dict[str, str] = {"role": "user", "content": "..."}
-    min_viable_tokens: int = estimate_token_count([min_message], model)
-
-    # Ensure we have a workable token limit
-    if max_context_tokens < min_viable_tokens:
-        logger.warning(f"[DEBUG-TRUNCATE] max_context_tokens ({max_context_tokens}) less than minimum needed ({min_viable_tokens}), using minimum")
-        max_context_tokens = min_viable_tokens
-
-    # Separate system messages from user/assistant messages
-    system_messages: list[dict[str, str]] = [msg for msg in messages if msg.get("role", "") == "system"]
-    user_assistant_messages: list[dict[str, str]] = [msg for msg in messages if msg.get("role", "") != "system"]
-
-    # DEBUG: Log message counts by type
-    logger.info(f"[DEBUG-TRUNCATE] System messages: {len(system_messages)}, User/Assistant messages: {len(user_assistant_messages)}")
-
-    # Estimate token count for system messages
-    system_token_count: int = estimate_token_count(system_messages, model)
-
-    # DEBUG: Log system message token count
-    logger.info(f"[DEBUG-TRUNCATE] System messages token count: {system_token_count}")
-
-    # Allocate tokens dynamically based on message importance
-    # System messages are prioritized but can be truncated if needed
-    system_importance_factor = 0.8  # Higher factor = more importance to system messages
-
-    # Calculate target token allocations
-    if system_token_count > 0:
-        # Allow system to use up to 80% of total, but no less than their minimum viable size
-        max_system_tokens: int = min(
-            max(int(max_context_tokens * system_importance_factor), min_viable_tokens * len(system_messages)),
-            system_token_count
-        )
-    else:
-        max_system_tokens = 0
-
-    # If system needs truncation
-    if system_token_count > max_system_tokens:
-        logger.warning(f"[DEBUG-TRUNCATE] System messages need truncation ({system_token_count} > {max_system_tokens})")
-        system_messages = truncate_system_messages(system_messages, max_system_tokens, model)
-        system_token_count = estimate_token_count(system_messages, model)
-        logger.info(f"[DEBUG-TRUNCATE] After truncation: System messages token count: {system_token_count}")
-
-    # Allocate the remaining tokens to user/assistant messages
-    remaining_tokens: int = max_context_tokens - system_token_count
-
-    # DEBUG: Log remaining tokens
-    logger.info(f"[DEBUG-TRUNCATE] Remaining tokens for user/assistant messages: {remaining_tokens}")
-
-    if remaining_tokens <= 0:
-        # Not enough tokens for any user/assistant messages
-        logger.warning("[DEBUG-TRUNCATE] No tokens left for user/assistant messages after system messages")
-        return system_messages
-
-    # We need to keep an ordered list of messages for further processing
-    result_messages: list[dict[str, str]] = system_messages.copy()
-
-    # For user/assistant messages, prioritize the most recent ones
-    # Start from the end (most recent) and keep adding messages until we reach the limit
-    user_assistant_messages.reverse()  # Reverse to prioritize recent messages
-    current_tokens: int = system_token_count
-    current_messages: list[dict[str, str]] = []
-
-    # DEBUG: Log process start
-    logger.info("[DEBUG-TRUNCATE] Starting to add user/assistant messages (newest first)")
-
-    # First pass: determine which messages can be included entirely
-    for msg in user_assistant_messages:
-        msg_tokens: int = estimate_token_count([msg], model)
-        # DEBUG: Log message token estimate
-        logger.info(f"[DEBUG-TRUNCATE] Message ({msg.get('role', 'unknown')}) estimated tokens: {msg_tokens}")
-
-        if current_tokens + msg_tokens <= max_context_tokens:
-            # We can add this message in full
-            current_messages.append(msg)
-            current_tokens += msg_tokens
-            # DEBUG: Log added message
-            logger.info(f"[DEBUG-TRUNCATE] Added full message. New token count: {current_tokens}/{max_context_tokens}")
-        else:
-            # This message would exceed the limit
-            # If it's the first message, we need to truncate it
-            if not current_messages:
-                # Truncate this message to fit
-                truncated_msg: dict[str, str] = truncate_message_content(msg, remaining_tokens, model)
-                current_messages.append(truncated_msg)
-                msg_after_tokens: int = estimate_token_count([truncated_msg], model)
-                # DEBUG: Log truncated message
-                logger.info(f"[DEBUG-TRUNCATE] Truncated message from {msg_tokens} to {msg_after_tokens} tokens")
-                logger.info(f"[DEBUG-TRUNCATE] Original content length: {len(msg.get('content', ''))}, Truncated length: {len(truncated_msg.get('content', ''))}")
-            break
-
-    # DEBUG: Log final message count
-    logger.info(f"[DEBUG-TRUNCATE] Final user/assistant messages kept: {len(current_messages)}")
-
-    # Restore the correct order and combine with system messages
-    current_messages.reverse()
-    result_messages.extend(current_messages)
-
-    # Final token count check
-    final_token_count: int = estimate_token_count(result_messages, model)
-    # DEBUG: Log final token count
-    logger.info(f"[DEBUG-TRUNCATE] Final token count: {final_token_count}/{max_context_tokens}")
-
-    # Make sure we have at least one valid message
-    if not result_messages:
-        # Create a minimal valid message if everything was filtered out
-        logger.warning("[DEBUG-TRUNCATE] No messages left after truncation, adding a minimal valid message")
-        result_messages = [{"role": "user", "content": "..."}]
-
-    # Make sure messages have content
-    for i, msg in enumerate(result_messages):
-        if not msg.get("content"):
-            logger.warning(f"[DEBUG-TRUNCATE] Empty content in message {i}, adding minimal content")
-            msg["content"] = "..."
-
-    return result_messages
-
-
-def truncate_message_content(
-    message: dict[str, str],
-    max_tokens: int,
-    model: str = "gpt-4.1",
-) -> dict[str, str]:
-    """Truncate the content of a message to fit within max_tokens.
-
-    Args:
-        message (dict[str, str]): The message to truncate
-        max_tokens (int): Maximum tokens for the message
-        model (str): The model to use for token estimation
-
-    Returns:
-        dict[str, str]: Truncated message
-    """
-    # DEBUG: Log function entry
-    logger.info(f"[DEBUG-TRUNCATE] Truncating individual message to fit {max_tokens} tokens")
-
-    # Create a copy of the message to avoid modifying the original
-    truncated_message: dict[str, str] = message.copy()
-    content: str = message.get("content", "")
-
-    # Calculate minimum viable token space needed for basic message structure
-    # Estimate role tokens + message format overhead
-    role_tokens: int = len(message.get("role", "system"))
-    estimated_overhead: int = role_tokens + 5  # Role + basic formatting overhead
-
-    # If max_tokens is less than the overhead plus minimal content, return minimal message
-    if max_tokens <= estimated_overhead + 1:
-        logger.warning(f"[DEBUG-TRUNCATE] max_tokens ({max_tokens}) too small for content after overhead ({estimated_overhead}), using minimal content")
-        truncated_message["content"] = "..."
-        return truncated_message
-
-    # Reserve tokens for message formatting and role
-    truncated_tokens: int = max_tokens - estimated_overhead
-
-    if truncated_tokens <= 0:
-        logger.warning("[DEBUG-TRUNCATE] Not enough tokens for content after formatting, using minimal content")
-        truncated_message["content"] = "..."
-        return truncated_message
-
-    # More efficient truncation approach using binary search
-    # The number of iterations scales with content size
-    content_length: int = len(content)
-    start_ratio: float = 0.0
-    end_ratio: float = 1.0
-    best_content: str = "..."  # Default minimal content
-    best_token_count: int = 0
-
-    # Calculate number of iterations based on content length
-    # Logarithmic scaling to use more iterations for larger content
-    max_iterations: int = max(3, min(12, int(math.log(content_length + 1, 2))))
-
-    logger.info(f"[DEBUG-TRUNCATE] Binary search with {max_iterations} iterations for content length {content_length}")
-
-    # Binary search phase
-    for iteration in range(max_iterations):
-        mid_ratio: float = (start_ratio + end_ratio) / 2
-        current_length: int = int(len(content) * mid_ratio)
-
-        if current_length <= 0:
-            break
-
-        truncated_content: str = content[:current_length]
-        truncated_message["content"] = truncated_content
-        token_count: int = estimate_token_count([truncated_message], model)
-
-        logger.info(f"[DEBUG-TRUNCATE] Binary search iteration {iteration+1}/{max_iterations} - ratio: {mid_ratio:.4f}, tokens: {token_count}/{max_tokens}")
-
-        if token_count <= max_tokens:
-            # This fits, save it and try larger
-            best_content = truncated_content
-            best_token_count = token_count
-            start_ratio = mid_ratio
-        else:
-            # Too large, try smaller
-            end_ratio = mid_ratio
-
-        # Determine dynamic termination condition based on context size
-        # For smaller contexts, we can be more precise
-        precision_factor: float = min(0.01, 10.0 / content_length)
-        if end_ratio - start_ratio < precision_factor:
-            logger.info(f"[DEBUG-TRUNCATE] Terminating binary search early at iteration {iteration+1} - precision reached")
-            break
-
-    # If we found a valid content size in binary search
-    if best_token_count > 0:
-        truncated_message["content"] = best_content
-        logger.info(f"[DEBUG-TRUNCATE] Truncation successful. Final content length: {len(best_content)}")
-        return truncated_message
-
-    # If binary search failed, fall back to a minimal content approach
-    truncated_message["content"] = "..."
-    logger.warning("[DEBUG-TRUNCATE] Couldn't truncate enough, returning minimal content")
-    return truncated_message
-
-
-def truncate_system_messages(
-    system_messages: list[dict[str, str]],
-    max_tokens: int,
-    model: str = "gpt-4.1",
-) -> list[dict[str, str]]:
-    """Truncate system messages to fit within max_tokens.
-
-    Args:
-        system_messages (list[dict[str, str]]): List of system messages
-        max_tokens (int): Maximum tokens to fit within
-        model (str): Model to use for token estimation
-
-    Returns:
-        list[dict[str, str]]: Truncated system messages
-    """
-    # DEBUG: Log function entry
-    logger.info(f"[DEBUG-TRUNCATE] Truncating system messages to fit {max_tokens} tokens")
-
-    if not system_messages:
-        return []
-
-    # Calculate minimum viable token count for a valid system message
-    # Role "system" + minimal content + formatting
-    min_system_tokens: int = estimate_token_count([{"role": "system", "content": "..."}], model)
-
-    # If max_tokens is less than minimum needed, return minimal message
-    if max_tokens <= min_system_tokens:
-        logger.warning(f"[DEBUG-TRUNCATE] max_tokens ({max_tokens}) less than minimum needed for system message ({min_system_tokens}), returning minimal system message")
-        return [{"role": "system", "content": "..."}]
-
-    if len(system_messages) == 1:
-        # Only one system message, truncate its content
-        return [truncate_message_content(system_messages[0], max_tokens, model)]
-
-    # Multiple system messages
-    # Try to keep as many as possible, starting with the first one
-    # which is typically the most important
-    result_messages: list[dict[str, str]] = []
-    remaining_tokens: int = max_tokens
-
-    for i, msg in enumerate(system_messages):
-        msg_tokens: int = estimate_token_count([msg], model)
-        if msg_tokens <= remaining_tokens:
-            # This message fits entirely
-            result_messages.append(msg)
-            remaining_tokens -= msg_tokens
-        elif i == 0:
-            # First message doesn't fit, truncate it
-            truncated: dict[str, str] = truncate_message_content(msg, remaining_tokens, model)
-            result_messages.append(truncated)
-            break
-        else:
-            # Subsequent message doesn't fit, stop adding
-            break
-
-    # Log the result
-    logger.info(f"[DEBUG-TRUNCATE] Kept {len(result_messages)}/{len(system_messages)} system messages within token limit")
-    for i, msg in enumerate(result_messages):
-        content_len: int = len(msg.get("content", ""))
-        logger.info(f"[DEBUG-TRUNCATE] System message {i}: {content_len} chars")
-
-    return result_messages
-
-
 async def create_chat_completion(
     messages: list[dict[str, str]],  # type: ignore
     model: str | None = None,
@@ -475,275 +170,240 @@ async def create_chat_completion(
 
     # Initialize debug logger
     debug_logger: LLMDebugLogger = get_llm_debug_logger()
+    interaction_id: str | None = None
 
-    # Extract message content for logging
-    system_message: str = ""
-    user_message: str = ""
-    for msg in messages:
-        role: str = msg.get("role", "").lower()
-        content: str = str(msg.get("content", ""))
-        if role == "system":
-            system_message += content + "\n"
-        elif role in ["user", "human"]:
-            user_message += content + "\n"
+    try:
+        # Extract message content for logging
+        system_message: str = ""
+        user_message: str = ""
+        for msg in messages:
+            role: str = msg.get("role", "").lower()
+            content: str = str(msg.get("content", ""))
+            if role == "system":
+                system_message += content + "\n"
+            elif role in ["user", "human"]:
+                user_message += content + "\n"
 
-    system_message = system_message.strip()
-    user_message = user_message.strip()
+        system_message = system_message.strip()
+        user_message = user_message.strip()
 
-    # Start debug logging
-    interaction_id: str = debug_logger.start_interaction(
-        step_name=kwargs.get("step_name", "LLM Chat Completion"),
-        model=model,
-        provider=llm_provider or "unknown",
-        is_fallback=False,
-        fallback_attempt=0,
-        context_info={
-            "stream": stream,
-            "reasoning_effort": str(reasoning_effort) if reasoning_effort else None,
-            "llm_kwargs": llm_kwargs or {}
-        }
-    )
+        # Start debug logging
+        interaction_id = debug_logger.start_interaction(
+            step_name=kwargs.get("step_name", "LLM Chat Completion"),
+            model=model,
+            provider=llm_provider or "unknown",
+            is_fallback=False,
+            fallback_attempt=0,
+            context_info={
+                "stream": stream,
+                "reasoning_effort": str(reasoning_effort) if reasoning_effort else None,
+                "llm_kwargs": llm_kwargs or {}
+            }
+        )
 
-    debug_logger.log_request(
-        system_message=system_message,
-        user_message=user_message,
-        full_messages=messages,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        **kwargs
-    )
+        debug_logger.log_request(
+            system_message=system_message,
+            user_message=user_message,
+            full_messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs
+        )
 
-    # DEBUG: Log function entry with basic info
-    logger.info(f"[DEBUG-LLM] create_chat_completion called with model={model}, provider={llm_provider}, max_tokens={max_tokens}")
-    logger.info(f"[DEBUG-LLM] Number of messages: {len(messages)}")
+        # DEBUG: Log function entry with basic info
+        logger.info(f"[DEBUG-LLM] create_chat_completion called with model={model}, provider={llm_provider}, max_tokens={max_tokens}")
+        logger.info(f"[DEBUG-LLM] Number of messages: {len(messages)}")
 
-    # Check if visualization is active for report generation
-    visualizer: LLMInteractionVisualizer = get_llm_visualizer()
-    is_visualizing: bool = visualizer.is_enabled() and visualizer.is_active()
+        # Check if visualization is active for report generation
+        visualizer: LLMInteractionVisualizer = get_llm_visualizer()
+        is_visualizing: bool = visualizer.is_enabled() and visualizer.is_active()
 
-    # Prepare visualization data
-    interaction_data: dict[str, Any] | None = None
-    if is_visualizing:
-        # Prepare interaction data for logging
-        interaction_data = {
-            "step_name": kwargs.get("step_name", "LLM Interaction"),
-            "model": model,
-            "provider": llm_provider or "unknown",
-            "prompt_type": "chat_completion",
-            "system_message": system_message,
-            "user_message": user_message,
-            "full_messages": messages.copy(),
-            "temperature": temperature or 0.0,
-            "max_tokens": max_tokens,
-        }
+        # Prepare visualization data
+        interaction_data: dict[str, Any] | None = None
+        if is_visualizing:
+            # Prepare interaction data for logging
+            interaction_data = {
+                "step_name": kwargs.get("step_name", "LLM Interaction"),
+                "model": model,
+                "provider": llm_provider or "unknown",
+                "prompt_type": "chat_completion",
+                "system_message": system_message,
+                "user_message": user_message,
+                "full_messages": messages.copy(),
+                "temperature": temperature or 0.0,
+                "max_tokens": max_tokens,
+            }
 
-    # Dynamic context limit determination
-    # Instead of hardcoded values, we'll query the model or use a conservative estimate
-    config_obj: Config = cfg or Config()
+        # Dynamic context limit determination
+        config_obj: Config = cfg or Config()
 
-    # Initialize the provider to get capabilities
-    provider: GenericLLMProvider = get_llm(
-        llm_provider,
-        cfg=cfg,
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        **(llm_kwargs or {}),
-    )
+        # Initialize the provider to get capabilities
+        provider: GenericLLMProvider = get_llm(
+            llm_provider,
+            cfg=cfg,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **(llm_kwargs or {}),
+        )
 
-    # Try to get context limits from provider if supported
-    default_context_limit: int | None = getattr(provider.llm, "context_length", None)
-    if default_context_limit is None:
-        # If not available, derive from config or use dynamic estimation
-        if model == config_obj.fast_llm_model:
-            default_context_limit = getattr(config_obj, "fast_llm_context_length", None)
-        elif model == config_obj.smart_llm_model:
-            default_context_limit = getattr(config_obj, "smart_llm_context_length", None)
-        elif model == config_obj.strategic_llm_model:
-            default_context_limit = getattr(config_obj, "strategic_llm_context_length", None)
+        # Try to get context limits from provider if supported
+        default_context_limit: int | None = getattr(provider.llm, "context_length", None)
+        if default_context_limit is None:
+            # If not available, derive from config or use dynamic estimation
+            if model == config_obj.fast_llm_model:
+                default_context_limit = getattr(config_obj, "fast_llm_context_length", 4096)
+            elif model == config_obj.smart_llm_model:
+                default_context_limit = getattr(config_obj, "smart_llm_context_length", 8192)
+            elif model == config_obj.strategic_llm_model:
+                default_context_limit = getattr(config_obj, "strategic_llm_context_length", 16385)
 
-    if default_context_limit is None:
-        # Conservative estimate if no specific info is available
-        # For OpenRouter, extract from model name if possible
-        if model and "32k" in model:
-            default_context_limit = 32000
-        elif model and "16k" in model:
-            default_context_limit = 16000
-        elif model and "8k" in model:
-            default_context_limit = 8000
-        else:
-            # Default to a conservative estimate based on provider
-            if llm_provider == "anthropic" or "claude" in (model or ""):
-                default_context_limit = 100000  # Claude models typically have large contexts
-            elif "gemini" in (model or ""):
-                default_context_limit = 32000  # Gemini models typically have larger contexts
-            elif llm_provider == "openai" or llm_provider == "openrouter":
-                default_context_limit = 8000  # Conservative default for OpenAI
+        if default_context_limit is None:
+            # Conservative estimate if no specific info is available
+            # For OpenRouter, extract from model name if possible
+            if model and "32k" in model:
+                default_context_limit = 32000
+            elif model and "16k" in model:
+                default_context_limit = 16000
+            elif model and "8k" in model:
+                default_context_limit = 8000
             else:
-                default_context_limit = 4000  # Ultra-conservative fallback
+                # Default to a conservative estimate based on provider
+                if llm_provider == "anthropic" or "claude" in (model or ""):
+                    default_context_limit = 100000  # Claude models typically have large contexts
+                elif "gemini" in (model or ""):
+                    default_context_limit = 32000  # Gemini models typically have larger contexts
+                elif llm_provider == "openai" or llm_provider == "openrouter":
+                    default_context_limit = 8000  # Conservative default for OpenAI
+                else:
+                    default_context_limit = 4000  # Ultra-conservative fallback
 
-    logger.info(f"[DEBUG-LLM] Estimated model context limit: {default_context_limit}")
+        logger.debug(f"[DEBUG-LLM] Estimated model context limit: {default_context_limit}")
 
-    from gpt_researcher.llm_provider.generic.base import (
-        NO_SUPPORT_TEMPERATURE_MODELS,
-        SUPPORT_REASONING_EFFORT_MODELS,
-    )
+        from gpt_researcher.llm_provider.generic.base import (
+            NO_SUPPORT_TEMPERATURE_MODELS,
+            SUPPORT_REASONING_EFFORT_MODELS,
+        )
 
-    # DEBUG: Log model capabilities
-    logger.info(f"[DEBUG-LLM] Model in NO_SUPPORT_TEMPERATURE_MODELS: {model in NO_SUPPORT_TEMPERATURE_MODELS}")
-    logger.info(f"[DEBUG-LLM] Model in SUPPORT_REASONING_EFFORT_MODELS: {model in SUPPORT_REASONING_EFFORT_MODELS}")
+        # Update kwargs based on model capabilities
+        if model in SUPPORT_REASONING_EFFORT_MODELS:
+            kwargs["reasoning_effort"] = reasoning_effort
+            logger.debug(f"[DEBUG-LLM] Added `reasoning_effort={reasoning_effort}` to kwargs")
 
-    if model in SUPPORT_REASONING_EFFORT_MODELS:
-        kwargs["reasoning_effort"] = reasoning_effort
-        logger.info(f"[DEBUG-LLM] Added reasoning_effort={reasoning_effort} to kwargs")
+        if model not in NO_SUPPORT_TEMPERATURE_MODELS:
+            if temperature is not None:
+                kwargs["temperature"] = temperature
+            if max_tokens is not None:
+                kwargs["max_tokens"] = max_tokens
+        else:
+            if "temperature" in kwargs:
+                del kwargs["temperature"]
+                logger.debug("[DEBUG-LLM] Removed `temperature` from kwargs")
+            if "max_tokens" in kwargs:
+                del kwargs["max_tokens"]
+                logger.debug("[DEBUG-LLM] Removed `max_tokens` from kwargs")
 
-    if model not in NO_SUPPORT_TEMPERATURE_MODELS:
-        if temperature is not None:
-            kwargs["temperature"] = temperature
-        if max_tokens is not None:
-            kwargs["max_tokens"] = max_tokens
-    else:
-        if "temperature" in kwargs:
-            del kwargs["temperature"]
-            logger.info("[DEBUG-LLM] Removed temperature from kwargs")
-        if "max_tokens" in kwargs:
-            del kwargs["max_tokens"]
-            logger.info("[DEBUG-LLM] Removed max_tokens from kwargs")
+        if llm_provider == "openai":
+            base_url: str | None = os.environ.get("OPENAI_BASE_URL", None)
+            if base_url and base_url.strip():
+                kwargs["openai_api_base"] = base_url
 
-    if llm_provider == "openai":
-        base_url: str | None = os.environ.get("OPENAI_BASE_URL", None)
-        if base_url:
-            kwargs["openai_api_base"] = base_url
-            logger.info(f"[DEBUG-LLM] Using custom OpenAI base URL: {base_url}")
+        provider = get_llm(llm_provider, cfg=cfg, **kwargs)
 
-    # Initialize provider and prepare for retries
-    provider = get_llm(llm_provider, cfg=cfg, **kwargs)
+        MAX_ATTEMPTS: int = getattr(config_obj, "llm_retry_attempts", 3)
+        retry_attempt: int = 0
+        last_error: Exception | None = None
 
-    # Dynamic retry count based on config or reasonable default
-    MAX_ATTEMPTS: int = getattr(config_obj, "llm_retry_attempts", 3)
+        start_time: float = time.time()
+        for attempt in range(MAX_ATTEMPTS):
+            try:
+                if attempt > 0:
+                    debug_logger.log_retry_attempt(
+                        attempt_number=attempt + 1,
+                        reason=f"Previous attempt failed: {str(last_error) if 'last_error' in locals() else 'Unknown error'}",
+                        details={"max_attempts": MAX_ATTEMPTS}
+                    )
 
-    # Track retry attempts for visualization
-    retry_attempt: int = 0
-    last_error: Exception | None = None
+                response: str = await provider.get_chat_response(messages, stream, websocket)
 
-    # Attempt to get a response with fallback for token limits and transient errors
-    start_time: float = time.time()
-    for attempt in range(MAX_ATTEMPTS):
-        try:
-            # DEBUG: Log attempt information
-            logger.info(f"[DEBUG-LLM] Attempt {attempt+1}/{MAX_ATTEMPTS} to get chat response")
+                try:
+                    validated_response: str = validate_llm_response(response, f"LLM call to {llm_provider}:{model}")
+                    response = validated_response
+                except ValueError as validation_error:
+                    logger.error(f"[DEBUG-LLM] Response validation failed: {validation_error}")
+                    raise validation_error
 
-            # Log retry attempt to debug logger
-            if attempt > 0:
-                debug_logger.log_retry_attempt(
-                    attempt_number=attempt + 1,
-                    reason=f"Previous attempt failed: {str(last_error) if 'last_error' in locals() else 'Unknown error'}",
-                    details={"max_attempts": MAX_ATTEMPTS}
+                if cost_callback is not None:
+                    llm_costs: float = estimate_llm_cost(str(messages), response)
+                    cost_callback(llm_costs)
+
+                duration: float = time.time() - start_time
+                debug_logger.log_response(
+                    response=response,
+                    success=True,
+                    duration_seconds=duration
                 )
 
-            response: str = await provider.get_chat_response(messages, stream, websocket)
+                if is_visualizing and interaction_data and interaction_data.strip():
+                    interaction_data["response"] = response
+                    interaction_data["success"] = True
+                    interaction_data["retry_attempt"] = retry_attempt
+                    visualizer.log_interaction(**interaction_data)
 
-            # DEBUG: Log successful response
-            logger.info(f"[DEBUG-LLM] Got successful response (length: {len(response)})")
-            if len(response) > 200:
-                logger.info(f"[DEBUG-LLM] Response preview: {response[:200]}...")
-            else:
-                logger.info(f"[DEBUG-LLM] Full response: {response}")
+                logger.info(f"[DEBUG-LLM] Successfully returning response from attempt {attempt+1}")
+                return response
 
-            # Validate the response - this will raise an exception if invalid
-            try:
-                validated_response: str = validate_llm_response(response, f"LLM call to {llm_provider}:{model}")
-                response = validated_response
-            except ValueError as validation_error:
-                logger.error(f"[DEBUG-LLM] Response validation failed: {validation_error}")
-                # Treat validation failure as an error to trigger fallbacks
-                raise validation_error
+            except Exception as e:
+                last_error = e
+                retry_attempt = attempt + 1
+                logger.error(f"[DEBUG-LLM] Error in attempt {attempt+1}: {type(e).__name__}: {str(e)[:300]}...")
 
-            if cost_callback is not None:
-                llm_costs: float = estimate_llm_cost(str(messages), response)
-                cost_callback(llm_costs)
-
-            # Log successful interaction to debug logger
-            duration: float = time.time() - start_time
-            debug_logger.log_response(
-                response=response,
-                success=True,
-                duration_seconds=duration
-            )
-            debug_logger.finish_interaction()
-
-            # Log successful interaction to visualizer
-            if is_visualizing and interaction_data:
-                interaction_data["response"] = response
-                interaction_data["success"] = True
-                interaction_data["retry_attempt"] = retry_attempt
-
-                visualizer.log_interaction(**interaction_data)
-
-            # Success! Return the response
-            logger.info(f"[DEBUG-LLM] Successfully returning response from attempt {attempt+1}")
-            return response
-
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            err_msg: str = str(e)
-            last_error = e
-            retry_attempt = attempt + 1
-            logger.error(f"[DEBUG-LLM] Error in attempt {attempt+1}: {type(e).__name__}: {err_msg[:300]}...")
-
-            # For non-token errors, try a few times with exponential backoff
-            if attempt < MAX_ATTEMPTS - 1:
-                # Check if this is a transient error worth retrying
-                transient_patterns: list[str] = [
-                    "rate limit",
-                    "timeout",
-                    "connection",
-                    "network",
-                    "temporary",
-                    "service unavailable",
-                    "internal server error"
-                ]
-
-                is_transient: bool = any(pattern in err_msg.lower() for pattern in transient_patterns)
-
-                if is_transient:
-                    backoff: int = 2**attempt
-                    logger.warning(f"[DEBUG-LLM] Transient error detected, retrying in {backoff}s: {err_msg[:200]}...")
-                    await asyncio.sleep(backoff)
-                    continue
+                if attempt < MAX_ATTEMPTS - 1:
+                    transient_patterns: list[str] = [
+                        "rate limit",
+                        "timeout",
+                        "connection",
+                        "network",
+                        "temporary",
+                        "service unavailable",
+                        "internal server error",
+                    ]
+                    is_transient: bool = any(pattern in str(e).lower() for pattern in transient_patterns)
+                    if is_transient:
+                        backoff: int = 2**attempt
+                        logger.warning(f"[DEBUG-LLM] Transient error detected, retrying in {backoff}s...")
+                        await asyncio.sleep(backoff)
+                        continue
+                    else:
+                        logger.error("[DEBUG-LLM] Non-transient error, not retrying at this level.")
+                        break
                 else:
-                    # Non-transient error, don't retry at this level - let provider handle it
-                    logger.error(f"[DEBUG-LLM] Non-transient error, not retrying: {err_msg[:200]}...")
-                    break  # Exit retry loop, will log error and raise
-            else:
-                logger.error("[DEBUG-LLM] All attempts exhausted for create_chat_completion")
-                break  # Exit retry loop, will log error and raise
+                    logger.error("[DEBUG-LLM] All attempts exhausted for create_chat_completion")
+                    break
 
-    # If we get here, all attempts failed
-    # Log failed interaction to debug logger
-    duration: float = time.time() - start_time
-    debug_logger.log_response(
-        response="",
-        success=False,
-        error_message=str(last_error) if last_error else "Unknown error",
-        error_type=type(last_error).__name__ if last_error else "UnknownError",
-        duration_seconds=duration
-    )
-    debug_logger.finish_interaction()
+        duration: float = time.time() - start_time
+        debug_logger.log_response(
+            response="",
+            success=False,
+            error_message=str(last_error) if last_error else "Unknown error",
+            error_type=type(last_error).__name__ if last_error else "UnknownError",
+            duration_seconds=duration
+        )
 
-    # Log failed interaction to visualizer
-    if is_visualizing and interaction_data:
-        interaction_data["response"] = ""
-        interaction_data["success"] = False
-        interaction_data["error"] = str(last_error) if last_error else "Unknown error"
-        interaction_data["retry_attempt"] = retry_attempt
+        if is_visualizing and interaction_data and interaction_data.strip():
+            interaction_data["response"] = ""
+            interaction_data["success"] = False
+            interaction_data["error"] = str(last_error) if last_error else "Unknown error"
+            interaction_data["retry_attempt"] = retry_attempt
+            visualizer.log_interaction(**interaction_data)
 
-        visualizer.log_interaction(**interaction_data)
-
-    # Re-raise the last error
-    if last_error:
-        raise last_error
-    else:
+        if last_error is not None:
+            raise last_error
         raise RuntimeError(f"Unexpected end of retry loop for '{llm_provider}' API")
+
+    finally:
+        if interaction_id and interaction_id.strip():
+            debug_logger.finish_interaction()
 
 
 async def construct_subtopics(
@@ -771,7 +431,7 @@ async def construct_subtopics(
         print(f"\n🤖 Calling {config.smart_llm_model}...\n")
 
         temperature: float = config.llm_kwargs.get("temperature", getattr(config, "temperature", 0.4))
-        # temperature = 0 # Note: temperature throughout the code base is currently set to Zero
+        # temperature = 0  # NOTE: temperature throughout the code base is currently set to Zero
         provider: GenericLLMProvider = get_llm(
             config.smart_llm_provider,
             cfg=config,
@@ -779,8 +439,8 @@ async def construct_subtopics(
             temperature=temperature,
             **config.llm_kwargs,
         )
-        model: BaseLLM = provider.llm
 
+        model: BaseLLM = provider.llm
         chain = prompt | model | parser
 
         output: list[str] = chain.invoke(
@@ -788,7 +448,7 @@ async def construct_subtopics(
                 "task": task,
                 "data": data,
                 "subtopics": subtopics,
-                "max_subtopics": config.llm_kwargs.get("max_subtopics", getattr(config, "max_subtopics", 5)),
+                "max_subtopics": config.llm_kwargs.get("max_subtopics", config.max_subtopics),
             }
         )
 
