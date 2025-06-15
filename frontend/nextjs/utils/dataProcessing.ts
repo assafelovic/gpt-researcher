@@ -1,5 +1,6 @@
 import { Data } from '../types/data';
 import { consolidateSourceAndImageBlocks } from './consolidateBlocks';
+import { logSystem, logAgentWork, logResearchProgress, generateRequestId } from './terminalLogger';
 
 export const preprocessOrderedData = (data: Data[]) => {
   let groupedData: any[] = [];
@@ -65,7 +66,7 @@ export const preprocessOrderedData = (data: Data[]) => {
         if (!currentSourceGroup) {
           currentSourceGroup = { type: 'sourceBlock', items: [] };
         }
-      
+
         if (!seenUrls.has(metadata)) {
           seenUrls.add(metadata);
           let hostname = "";
@@ -78,7 +79,7 @@ export const preprocessOrderedData = (data: Data[]) => {
           }
           currentSourceGroup.items.push({ name: hostname, url: metadata });
         }
-      
+
         // Add this block to ensure the source group is added to groupedData
         if (currentSourceGroup.items.length > 0 && !groupedData.includes(currentSourceGroup)) {
           groupedData.push(currentSourceGroup);
@@ -118,4 +119,91 @@ export const preprocessOrderedData = (data: Data[]) => {
 
   groupedData = consolidateSourceAndImageBlocks(groupedData);
   return groupedData;
-}; 
+};
+
+export const addData = (
+  data: Data,
+  setOrderedData: (value: Data[] | ((prevVar: Data[]) => Data[])) => void
+) => {
+  // console.log('websocket data before its processed',data)
+
+  const requestId = generateRequestId();
+  logSystem('Processing WebSocket data', data, requestId);
+
+  setOrderedData((prevOrder) => [...prevOrder, data]);
+};
+
+export const processWebSocketData = (
+  data: any,
+  setOrderedData: React.Dispatch<React.SetStateAction<Data[]>>,
+  setAnswer: React.Dispatch<React.SetStateAction<string>>
+): Data[] | undefined => {
+  const requestId = generateRequestId();
+
+  try {
+    // Log the incoming data
+    logSystem('Processing WebSocket message', {
+      type: data.type,
+      hasOutput: !!data.output,
+      hasContent: !!data.content
+    }, requestId);
+
+    // Extract agent information if present
+    if (data.agent || data.agent_type) {
+      const agentType = data.agent || data.agent_type;
+      const task = data.task || data.content || 'Processing';
+      logAgentWork(agentType, task, undefined, requestId);
+    }
+
+    // Process different message types
+    switch (data.type) {
+      case 'logs':
+        logSystem(`Research Log: ${data.output}`, undefined, requestId);
+        break;
+
+      case 'report':
+        logSystem('Received research report', {
+          length: data.output?.length,
+          preview: data.output?.substring(0, 100)
+        }, requestId);
+
+        if (data.output) {
+          setAnswer((prev: string) => prev + data.output);
+        }
+        break;
+
+      case 'path':
+      case 'chat':
+        logResearchProgress('Research completed', 100, { type: data.type }, requestId);
+        break;
+
+      case 'agent_work':
+        const progress = data.progress || undefined;
+        logAgentWork(data.agent_type || 'Unknown', data.task || 'Processing', progress, requestId);
+        break;
+
+      default:
+        logSystem(`Unknown message type: ${data.type}`, data, requestId);
+    }
+
+    // Add to ordered data if it has content
+    if (data.content || data.output || data.type) {
+      const contentAndType = `${data.content || data.output || ''}-${data.type || 'unknown'}`;
+      const processedData = { ...data, contentAndType };
+
+      setOrderedData((prevOrder) => {
+        const newOrder = [...prevOrder, processedData];
+        logSystem(`Updated data order, total items: ${newOrder.length}`, undefined, requestId);
+        return newOrder;
+      });
+
+      return [processedData];
+    }
+
+    return undefined;
+
+  } catch (error) {
+    logSystem('Error processing WebSocket data', error, requestId);
+    return undefined;
+  }
+};

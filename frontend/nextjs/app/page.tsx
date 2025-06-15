@@ -1,13 +1,25 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import { useWebSocket } from '@/hooks/useWebSocket';
+import { useConnectionManager } from '@/hooks/useConnectionManager';
+import { useConnectionHealth } from '@/hooks/useConnectionHealth';
 import { useResearchHistory } from '@/hooks/useResearchHistory';
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
 import findDifferences from '../helpers/findDifferences';
 import { Data, ChatBoxSettings, QuestionData } from '../types/data';
 import { preprocessOrderedData } from '../utils/dataProcessing';
 import { ResearchResults } from '../components/ResearchResults';
+import { useResilientConnectionContext } from "../hooks/useResilientConnectionContext";
+import {
+  logUserAction,
+  logSystem,
+  logError,
+  logResearchProgress,
+  logResearchComplete,
+  logWarning,
+  generateRequestId,
+  terminalLogger
+} from "../utils/terminalLogger";
 
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
@@ -16,6 +28,7 @@ import InputArea from "@/components/ResearchBlocks/elements/InputArea";
 import HumanFeedback from "@/components/HumanFeedback";
 import LoadingDots from "@/components/LoadingDots";
 import ResearchSidebar from "@/components/ResearchSidebar";
+import ResearchStatusIndicator from "@/components/ResearchStatusIndicator";
 
 export default function Home() {
   const [promptValue, setPromptValue] = useState("");
@@ -49,7 +62,16 @@ export default function Home() {
     deleteResearch
   } = useResearchHistory();
 
-  const { socket, initializeWebSocket } = useWebSocket(
+  const {
+    socket,
+    researchState,
+    startResearch,
+    stopResearch,
+    sendFeedback,
+    getStatusDescription,
+    isConnected,
+    isRetrying
+  } = useConnectionManager(
     setOrderedData,
     setAnswer,
     setLoading,
@@ -57,11 +79,14 @@ export default function Home() {
     setQuestionForHuman
   );
 
+  const {
+    health: connectionHealth,
+    getHealthDescription,
+    getHealthColor
+  } = useConnectionHealth(socket);
+
   const handleFeedbackSubmit = (feedback: string | null) => {
-    if (socket) {
-      socket.send(JSON.stringify({ type: 'human_feedback', content: feedback }));
-    }
-    setShowHumanFeedback(false);
+    sendFeedback(feedback);
   };
 
   const handleChat = async (message: string) => {
@@ -80,6 +105,22 @@ export default function Home() {
   };
 
   const handleDisplayResult = async (newQuestion: string) => {
+    const requestId = generateRequestId();
+    const researchStartTime = Date.now();
+
+    // Log user initiation
+    logUserAction('Research initiated', {
+      question: newQuestion,
+      settings: chatBoxSettings,
+      sessionId: terminalLogger.getSessionId()
+    }, requestId);
+
+    logSystem('Starting research process', {
+      question: newQuestion,
+      chatBoxSettings,
+      requestId
+    }, requestId);
+
     console.log('🔍 Starting research with question:', newQuestion);
     console.log('📋 Current chatBoxSettings:', chatBoxSettings);
 
@@ -94,6 +135,13 @@ export default function Home() {
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
     const langgraphHostUrl = apiVariables.LANGGRAPH_HOST_URL;
 
+    logSystem('Configuration check', {
+      report_type: chatBoxSettings.report_type,
+      langgraphHostUrl: langgraphHostUrl,
+      hasLangGraph: !!langgraphHostUrl,
+      apiVariables: Object.keys(apiVariables)
+    }, requestId);
+
     console.log('🔧 Config check:', {
       report_type: chatBoxSettings.report_type,
       langgraphHostUrl: langgraphHostUrl,
@@ -101,24 +149,70 @@ export default function Home() {
     });
 
     if (chatBoxSettings.report_type === 'multi_agents' && langgraphHostUrl) {
+      logResearchProgress('Starting LangGraph Multi-Agent Research', 5, { langgraphHostUrl }, requestId);
       console.log('🤖 Using LangGraph multi-agents path');
+
       try {
+        logSystem('Initiating LangGraph research stream', {
+          question: newQuestion,
+          source: chatBoxSettings.report_source
+        }, requestId);
+
         let { streamResponse, host, thread_id } = await startLanggraphResearch(newQuestion, chatBoxSettings.report_source, langgraphHostUrl);
+
         const langsmithGuiLink = `https://smith.langchain.com/studio/thread/${thread_id}?baseUrl=${host}`;
+        logSystem('LangGraph research stream initiated', {
+          threadId: thread_id,
+          host,
+          langsmithGuiLink
+        }, requestId);
+
         setOrderedData((prevOrder) => [...prevOrder, { type: 'langgraphButton', link: langsmithGuiLink }]);
 
         let previousChunk = null;
+        let chunkCount = 0;
+        logResearchProgress('Processing LangGraph Stream', 20, undefined, requestId);
+
         for await (const chunk of streamResponse) {
+          chunkCount++;
+          logSystem(`Processing LangGraph chunk ${chunkCount}`, {
+            hasReport: !!chunk.data.report,
+            reportPreview: chunk.data.report ? chunk.data.report.substring(0, 100) : null
+          }, requestId);
+
           if (chunk.data.report != null && chunk.data.report != "Full report content here") {
+            logResearchProgress('LangGraph Report Generated', 90, {
+              chunkCount,
+              reportLength: chunk.data.report.length
+            }, requestId);
+
             setOrderedData((prevOrder) => [...prevOrder, { ...chunk.data, output: chunk.data.report, type: 'report' }]);
             setLoading(false);
+
+            const totalTime = Date.now() - researchStartTime;
+            logResearchComplete(totalTime, {
+              type: 'langgraph',
+              reportLength: chunk.data.report.length,
+              chunkCount,
+              question: newQuestion
+            }, requestId);
+
           } else if (previousChunk) {
             const differences = findDifferences(previousChunk, chunk);
+            logSystem(
+              'Processing LangGraph differences',
+              {
+                differenceCount: Object.keys(differences).length,
+                differences: differences,
+                requestId
+              }
+            );
             setOrderedData((prevOrder) => [...prevOrder, { type: 'differences', content: 'differences', output: JSON.stringify(differences) }]);
           }
           previousChunk = chunk;
         }
       } catch (error) {
+        logError('LangGraph research failed', error, requestId);
         console.error('❌ LangGraph research failed:', error);
         setLoading(false);
         setOrderedData((prevOrder) => [...prevOrder, {
@@ -128,24 +222,49 @@ export default function Home() {
         }]);
       }
     } else {
+      logResearchProgress('Starting WebSocket Research', 5, {
+        connectionManager: 'ResilientConnection'
+      }, requestId);
+
       console.log('🌐 Using WebSocket research path');
-      console.log('📡 Initializing WebSocket with:', { newQuestion, chatBoxSettings });
+      console.log('📡 Starting research with connection manager:', { newQuestion, chatBoxSettings });
 
       try {
-        initializeWebSocket(newQuestion, chatBoxSettings);
+        logSystem('Initiating WebSocket research', {
+          question: newQuestion,
+          settings: chatBoxSettings
+        }, requestId);
+
+        startResearch(newQuestion, chatBoxSettings);
+
+        logSystem('WebSocket research initiated successfully', undefined, requestId);
       } catch (error) {
-        console.error('❌ WebSocket initialization failed:', error);
+        logError('Research initialization failed', error, requestId);
+        console.error('❌ Research initialization failed:', error);
         setLoading(false);
         setOrderedData((prevOrder) => [...prevOrder, {
           type: 'error',
-          content: 'WebSocket Error',
-          output: `Failed to initialize WebSocket: ${(error as Error).message}`
+          content: 'Research Error',
+          output: `Failed to start research: ${(error as Error).message}`
         }]);
       }
     }
   };
 
   const reset = () => {
+    const requestId = generateRequestId();
+    logUserAction('Research reset initiated', {
+      hadResults: showResult,
+      hadAnswer: !!answer,
+      dataItemsCount: orderedData.length
+    }, requestId);
+
+    logSystem('Resetting research state', {
+      previousQuestion: question,
+      answerLength: answer?.length || 0,
+      orderedDataCount: orderedData.length
+    }, requestId);
+
     // Reset UI states
     setShowResult(false);
     setPromptValue("");
@@ -162,13 +281,15 @@ export default function Home() {
     setQuestionForHuman(false);
 
     // Clean up connections
-    if (socket) {
-      socket.close();
-    }
-    setLoading(false);
+    stopResearch();
+
+    logSystem('Research state reset completed', undefined, requestId);
   };
 
   const handleClickSuggestion = (value: string) => {
+    const requestId = generateRequestId();
+    logUserAction('Suggestion clicked', { suggestion: value }, requestId);
+
     setPromptValue(value);
     const element = document.getElementById('input-area');
     if (element) {
@@ -184,11 +305,23 @@ export default function Home() {
    * - Preserves current results
    */
   const handleStopResearch = () => {
-    if (socket) {
-      socket.close();
-    }
-    setLoading(false);
+    const requestId = generateRequestId();
+    logUserAction('Research stop requested', {
+      wasLoading: loading,
+      currentQuestion: question,
+      currentProgress: orderedData.length
+    }, requestId);
+
+    logSystem('Stopping active research', {
+      question,
+      orderedDataCount: orderedData.length,
+      answerLength: answer?.length || 0
+    }, requestId);
+
+    stopResearch();
     setIsStopped(true);
+
+    logSystem('Research stopped successfully', undefined, requestId);
   };
 
   /**
@@ -198,29 +331,70 @@ export default function Home() {
    * - Closes any existing WebSocket connections
    */
   const handleStartNewResearch = () => {
+    const requestId = generateRequestId();
+    logUserAction('New research requested', {
+      previousQuestion: question,
+      sidebarWasOpen: sidebarOpen
+    }, requestId);
+
+    logSystem('Starting new research session', {
+      previousQuestion: question,
+      clearingDataCount: orderedData.length
+    }, requestId);
+
     reset();
     setSidebarOpen(false);
+
+    logSystem('New research session prepared', undefined, requestId);
   };
 
   // Save completed research to history
   useEffect(() => {
     // Only save when research is complete and not loading
     if (showResult && !loading && answer && question && orderedData.length > 0) {
+      const requestId = generateRequestId();
+
       // Check if this is a new research (not loaded from history)
       const isNewResearch = !history.some(item =>
         item.question === question && item.answer === answer
       );
 
       if (isNewResearch) {
+        logSystem('Saving completed research to history', {
+          question,
+          answerLength: answer.length,
+          orderedDataCount: orderedData.length,
+          historyCount: history.length
+        }, requestId);
+
         saveResearch(question, answer, orderedData);
+
+        logSystem('Research saved to history successfully', {
+          newHistoryCount: history.length + 1
+        }, requestId);
+      } else {
+        logSystem('Research already exists in history, skipping save', {
+          question,
+          historyCount: history.length
+        }, requestId);
       }
     }
   }, [showResult, loading, answer, question, orderedData, history, saveResearch]);
 
   // Handle selecting a research from history
   const handleSelectResearch = (id: string) => {
+    const requestId = generateRequestId();
+    logUserAction('Historical research selected', { researchId: id }, requestId);
+
     const research = getResearchById(id);
     if (research) {
+      logSystem('Loading historical research', {
+        researchId: id,
+        question: research.question,
+        answerLength: research.answer.length,
+        dataCount: research.orderedData.length
+      }, requestId);
+
       setShowResult(true);
       setQuestion(research.question);
       setPromptValue("");
@@ -228,11 +402,21 @@ export default function Home() {
       setOrderedData(research.orderedData);
       setLoading(false);
       setSidebarOpen(false);
+
+      logSystem('Historical research loaded successfully', undefined, requestId);
+    } else {
+      logError('Failed to load historical research', { researchId: id }, requestId);
     }
   };
 
   // Toggle sidebar
   const toggleSidebar = () => {
+    const requestId = generateRequestId();
+    logUserAction('Sidebar toggled', {
+      wasOpen: sidebarOpen,
+      willBeOpen: !sidebarOpen
+    }, requestId);
+
     setSidebarOpen(!sidebarOpen);
   };
 
@@ -241,33 +425,47 @@ export default function Home() {
    * Updates whenever orderedData changes
    */
   useEffect(() => {
-    const groupedData = preprocessOrderedData(orderedData);
-    const statusReports = ["agent_generated", "starting_research", "planning_research", "error"];
+    if (orderedData.length > 0) {
+      const requestId = generateRequestId();
+      logSystem('Processing ordered data for display', {
+        orderedDataCount: orderedData.length,
+        dataTypes: Array.from(new Set(orderedData.map(d => d.type)))
+      }, requestId);
 
-    const newLogs = groupedData.reduce((acc: any[], data) => {
-      // Process accordion blocks (grouped data)
-      if (data.type === 'accordionBlock') {
-        const logs = data.items.map((item: any, subIndex: any) => ({
-          header: item.content,
-          text: item.output,
-          metadata: item.metadata,
-          key: `${item.type}-${item.content}-${subIndex}`,
-        }));
-        return [...acc, ...logs];
-      }
-      // Process status reports
-      else if (statusReports.includes(data.content)) {
-        return [...acc, {
-          header: data.content,
-          text: data.output,
-          metadata: data.metadata,
-          key: `${data.type}-${data.content}`,
-        }];
-      }
-      return acc;
-    }, []);
+      const groupedData = preprocessOrderedData(orderedData);
+      const statusReports = ["agent_generated", "starting_research", "planning_research", "error"];
 
-    setAllLogs(newLogs);
+      const newLogs = groupedData.reduce((acc: any[], data) => {
+        // Process accordion blocks (grouped data)
+        if (data.type === 'accordionBlock') {
+          const logs = data.items.map((item: any, subIndex: any) => ({
+            header: item.content,
+            text: item.output,
+            metadata: item.metadata,
+            key: `${item.type}-${item.content}-${subIndex}`,
+          }));
+          return [...acc, ...logs];
+        }
+        // Process status reports
+        else if (statusReports.includes(data.content)) {
+          return [...acc, {
+            header: data.content,
+            text: data.output,
+            metadata: data.metadata,
+            key: `${data.type}-${data.content}`,
+          }];
+        }
+        return acc;
+      }, []);
+
+      setAllLogs(newLogs);
+
+      logSystem('Ordered data processed for display', {
+        processedLogsCount: newLogs.length,
+        accordionBlocks: groupedData.filter(d => d.type === 'accordionBlock').length,
+        statusReports: groupedData.filter(d => statusReports.includes(d.content)).length
+      }, requestId);
+    }
   }, [orderedData]);
 
   const handleScroll = useCallback(() => {
@@ -319,6 +517,17 @@ export default function Home() {
         showResult={showResult}
         onStop={handleStopResearch}
         onNewResearch={handleStartNewResearch}
+        connectionStatus={getStatusDescription(researchState.status)}
+        isRetrying={isRetrying}
+      />
+
+      <ResearchStatusIndicator
+        researchState={researchState}
+        getStatusDescription={getStatusDescription}
+        isVisible={showResult && (loading || isRetrying || researchState.status !== 'idle')}
+        connectionHealth={connectionHealth}
+        getHealthDescription={getHealthDescription}
+        getHealthColor={getHealthColor}
       />
 
       <ResearchSidebar
@@ -355,7 +564,7 @@ export default function Home() {
                 />
               </div>
 
-              {showHumanFeedback && false &&(
+              {showHumanFeedback && false && (
                 <HumanFeedback
                   questionForHuman={questionForHuman}
                   websocket={socket}
@@ -367,7 +576,16 @@ export default function Home() {
             </div>
             <div id="input-area" className="container px-4 lg:px-0">
               {loading ? (
-                <LoadingDots />
+                <LoadingDots
+                  message={researchState.currentTask || getStatusDescription(researchState.status)}
+                  variant={
+                    researchState.status === 'connecting' || researchState.status === 'reconnecting'
+                      ? 'connecting'
+                      : researchState.status === 'processing'
+                        ? 'processing'
+                        : 'default'
+                  }
+                />
               ) : (
                 <InputArea
                   promptValue={promptValue}
@@ -387,6 +605,8 @@ export default function Home() {
         <button
           onClick={scrollToBottom}
           className="fixed bottom-8 right-8 flex items-center justify-center w-12 h-12 text-white bg-gradient-to-br from-teal-500 to-teal-600 rounded-full hover:from-teal-600 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-lg z-50 backdrop-blur-sm border border-teal-400/20"
+          title="Scroll to bottom"
+          aria-label="Scroll to bottom"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

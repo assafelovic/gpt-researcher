@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 type THeroProps = {
   promptValue: string;
   setPromptValue: React.Dispatch<React.SetStateAction<string>>;
-  handleDisplayResult: (query : string) => void;
+  handleDisplayResult: (query: string) => void;
 };
 
 const Hero: FC<THeroProps> = ({
@@ -27,10 +27,10 @@ const Hero: FC<THeroProps> = ({
       const particleCount = window.innerWidth < 768 ? 15 : 30; // Reduce particles on mobile
 
       // Clear any existing particles
-      container.innerHTML = '';
+      container.innerHTML = "";
 
       for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
+        const particle = document.createElement("div");
 
         // Random particle attributes
         const size = Math.random() * 4 + 1;
@@ -41,7 +41,7 @@ const Hero: FC<THeroProps> = ({
         const opacity = Math.random() * 0.3 + 0.1;
 
         // Apply styles
-        particle.className = 'absolute rounded-full bg-white';
+        particle.className = "absolute rounded-full bg-white";
         Object.assign(particle.style, {
           width: `${size}px`,
           height: `${size}px`,
@@ -76,14 +76,17 @@ const Hero: FC<THeroProps> = ({
       lastScrollY = currentScrollY;
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+
+    // Capture the current ref value for cleanup
+    const particlesContainer = particlesContainerRef.current;
 
     // Clean up function
     return () => {
-      if (particlesContainerRef.current) {
-        particlesContainerRef.current.innerHTML = '';
+      if (particlesContainer) {
+        particlesContainer.innerHTML = "";
       }
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -187,9 +190,9 @@ const Hero: FC<THeroProps> = ({
                 animate="visible"
                 transition={{ duration: 0.4, delay: 1 + (index * 0.1) }}
                 className="flex h-[38px] sm:h-[42px] cursor-pointer items-center justify-center gap-[6px] rounded-lg
-                         border border-solid border-purple-500/30 bg-gradient-to-r from-purple-900/30 to-teal-900/30
-                         backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 hover:border-purple-500/60 hover:from-purple-900/40
-                         hover:to-teal-900/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-900/20 min-w-[100px] hover-glow"
+                        border border-solid border-purple-500/30 bg-gradient-to-r from-purple-900/30 to-teal-900/30
+                        backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 hover:border-purple-500/60 hover:from-purple-900/40
+                        hover:to-teal-900/40 transition-all duration-300 hover:shadow-lg hover:shadow-purple-900/20 min-w-[100px] hover-glow"
                 onClick={() => handleClickSuggestion(item?.name)}
               >
                 <Image
@@ -221,8 +224,8 @@ const Hero: FC<THeroProps> = ({
             className="absolute inset-0"
             style={{
               opacity: 0.85,
-              background: 'radial-gradient(ellipse at center, rgba(12, 219, 182, 1) 0%, rgba(6, 219, 238, 0.7) 25%, rgba(6, 219, 238, 0.2) 50%, rgba(0, 0, 0, 0) 75%)',
-              boxShadow: '0 0 30px 6px rgba(12, 219, 182, 0.5), 0 0 60px 10px rgba(6, 219, 238, 0.25)'
+              background: "radial-gradient(ellipse at center, rgba(12, 219, 182, 1) 0%, rgba(6, 219, 238, 0.7) 25%, rgba(6, 219, 238, 0.2) 50%, rgba(0, 0, 0, 0) 75%)",
+              boxShadow: "0 0 30px 6px rgba(12, 219, 182, 0.5), 0 0 60px 10px rgba(6, 219, 238, 0.25)",
             }}
           />
 
@@ -230,9 +233,9 @@ const Hero: FC<THeroProps> = ({
           <div
             className="absolute inset-0"
             style={{
-              animation: 'shimmer 8s ease-in-out infinite alternate',
+              animation: "shimmer 8s ease-in-out infinite alternate",
               opacity: 0.5,
-              background: 'radial-gradient(ellipse at center, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 30%, rgba(255, 255, 255, 0) 60%)'
+              background: "radial-gradient(ellipse at center, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 30%, rgba(255, 255, 255, 0) 60%)",
             }}
           />
 
@@ -241,8 +244,8 @@ const Hero: FC<THeroProps> = ({
             className="absolute inset-0"
             style={{
               opacity: 0.4,
-              animation: 'breathe 7s cubic-bezier(0.4, 0.0, 0.2, 1) infinite',
-              background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 50%)'
+              animation: "breathe 7s cubic-bezier(0.4, 0.0, 0.2, 1) infinite",
+              background: "radial-gradient(circle at center, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 50%)",
             }}
           />
         </div>
