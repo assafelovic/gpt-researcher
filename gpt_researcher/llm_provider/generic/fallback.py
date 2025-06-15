@@ -128,7 +128,7 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
                     )
                     fallback_providers.append(fallback_provider)
                 except (ValueError, ImportError) as e:
-                    logger.warning(f"Failed to initialize fallback provider {fallback_model}: {e}")
+                    logger.warning(f"Failed to initialize fallback provider {fallback_model}: {e.__class__.__name__}: {str(e)}")
 
         # Initialize the primary provider
         try:
@@ -146,7 +146,7 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
                 verbose=verbose,
             )
         except Exception as e:
-            logger.error(f"Failed to initialize primary provider {provider}: {e}")
+            logger.error(f"Failed to initialize primary provider {provider}: {e.__class__.__name__}: {str(e)}")
 
             # If we have fallbacks, try to use the first one as primary
             if fallback_providers:
@@ -210,7 +210,7 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
         except Exception as e:
             if self.verbose:
                 logger.warning(f"[FALLBACK-DEBUG] Primary provider failed: {primary_model_name}")
-                logger.warning(f"[FALLBACK-DEBUG] Primary error: {type(e).__name__}: {str(e)[:300]}...")
+                logger.warning(f"[FALLBACK-DEBUG] Primary error: {e.__class__.__name__}: {str(e)[:300]}...")
 
             if not self.fallback_providers:
                 if self.verbose:
@@ -241,7 +241,7 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
                             attempt_number=i + 1,
                             reason=f"Primary provider {primary_model_name} failed, trying fallback",
                             details={
-                                "primary_error": str(e),
+                                "primary_error": f"{e.__class__.__name__}: {str(e)}",
                                 "fallback_model": fallback_model,
                                 "total_fallbacks": len(self.fallback_providers)
                             }
@@ -257,12 +257,12 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
                 except Exception as fallback_error:
                     if self.verbose:
                         logger.warning(f"[FALLBACK-DEBUG] Fallback provider {i+1} failed: {fallback_model}")
-                        logger.warning(f"[FALLBACK-DEBUG] Fallback error: {type(fallback_error).__name__}: {str(fallback_error)[:300]}...")
+                        logger.warning(f"[FALLBACK-DEBUG] Fallback error: {fallback_error.__class__.__name__}: {str(fallback_error)[:300]}...")
                     last_error = fallback_error
 
             # All fallbacks failed
             if self.verbose:
                 logger.error(f"[FALLBACK-DEBUG] All providers failed. Primary: {primary_model_name}, Fallbacks: {len(self.fallback_providers)}")
-                logger.error(f"[FALLBACK-DEBUG] Last error: {type(last_error).__name__}: {str(last_error)}")
+                logger.error(f"[FALLBACK-DEBUG] Last error: {last_error.__class__.__name__}: {str(last_error)}")
 
             raise Exception(f"All providers failed. Primary: {primary_model_name}, Fallbacks: {len(self.fallback_providers)}. Last error: {last_error}") from last_error

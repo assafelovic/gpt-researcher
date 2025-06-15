@@ -798,6 +798,38 @@ def initialize_fallback_providers_for_type(
 
             provider_name, model_name = fallback_spec_str.split(":", 1)
 
+            # Fix OpenRouter model names to ensure they have the proper provider prefix
+            if provider_name == "openrouter":
+                # Check if model name needs a provider prefix
+                if "/" not in model_name:
+                    # This is likely a model that needs a provider prefix
+                    # Common OpenRouter model patterns that need prefixes
+                    if any(pattern in model_name.lower() for pattern in [
+                        "gemini", "claude", "gpt", "llama", "mistral", "qwen", "deepseek"
+                    ]):
+                        # Try to determine the correct prefix based on model name
+                        if "gemini" in model_name.lower():
+                            model_name = f"google/{model_name}"
+                        elif "claude" in model_name.lower():
+                            model_name = f"anthropic/{model_name}"
+                        elif "gpt" in model_name.lower():
+                            model_name = f"openai/{model_name}"
+                        elif "llama" in model_name.lower():
+                            model_name = f"meta-llama/{model_name}"
+                        elif "mistral" in model_name.lower():
+                            model_name = f"mistralai/{model_name}"
+                        elif "qwen" in model_name.lower():
+                            model_name = f"qwen/{model_name}"
+                        elif "deepseek" in model_name.lower():
+                            model_name = f"deepseek/{model_name}"
+
+                        if i < 3:
+                            _log_config_section(
+                                "PROVIDER INIT",
+                                f"    Fixed OpenRouter model name: {fallback_spec_str.split(':', 1)[1]} → {model_name}",
+                                "INFO",
+                            )
+
             if i < 3:  # Log first few initializations in detail
                 _log_config_section(
                     "PROVIDER INIT",

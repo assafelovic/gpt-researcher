@@ -16,7 +16,7 @@ import aiofiles
 import tiktoken
 from colorama import Fore, Style, init
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage
 
 # Import the LLM debug logger
 try:
@@ -302,14 +302,20 @@ class GenericLLMProvider:
                 max_bucket_size=10,
             )
 
-            # Set up model_kwargs
-            model_kwargs: dict[str, Any] = kwargs.pop("model_kwargs", {})
+            # Set up extra_body with middle-out transform for OpenRouter
+            extra_body: dict[str, Any] = kwargs.pop("extra_body", {})
+
+            # Add middle-out transform for OpenRouter to handle context length issues
+            if "transforms" not in extra_body:
+                extra_body["transforms"] = ["middle-out"]
+            elif "middle-out" not in extra_body["transforms"]:
+                extra_body["transforms"].append("middle-out")
 
             llm = ChatOpenAI(
                 base_url="https://openrouter.ai/api/v1",  # pyright: ignore[reportCallIssue]
                 api_key=os.environ["OPENROUTER_API_KEY"],  # pyright: ignore[reportCallIssue]
                 rate_limiter=rate_limiter,
-                model_kwargs=model_kwargs,  # pyright: ignore[reportCallIssue]
+                extra_body=extra_body,  # pyright: ignore[reportCallIssue]
                 **kwargs,
             )
 
@@ -416,9 +422,7 @@ class GenericLLMProvider:
                     self.debug_logger.finish_interaction()
                 except Exception as e:
                     if self.verbose:
-                        print(
-                            f"{Fore.YELLOW}⚠️ Debug logging response failed: {e.__class__.__name__}: {e}{Style.RESET_ALL}"
-                        )
+                        print(f"{Fore.YELLOW}⚠️ Debug logging response failed: {e.__class__.__name__}: {e}{Style.RESET_ALL}")
 
             if self.chat_logger is not None:
                 loggable_msgs: list[dict[str, str]] = [

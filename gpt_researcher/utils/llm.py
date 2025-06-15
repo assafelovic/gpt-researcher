@@ -80,7 +80,7 @@ def get_llm(
         except Exception as e:
             # If primary provider fails and we have fallbacks, use first fallback as primary
             if fallback_provider_objects:
-                logger.warning(f"Primary provider {llm_provider} failed: {e}. Using first fallback as primary.")
+                logger.warning(f"Primary provider {llm_provider} failed: {e.__class__.__name__}: {e}. Using first fallback as primary.")
                 primary: GenericLLMProvider = fallback_provider_objects.pop(0)
                 return FallbackGenericLLMProvider(primary.llm, fallback_providers=fallback_provider_objects, chat_log=chat_log, verbose=verbose)
             # No fallbacks available, re-raise the exception
@@ -247,6 +247,11 @@ async def create_chat_completion(
             **(llm_kwargs or {}),
         )
 
+        # DEBUG: Check what type of provider we got
+        logger.error(f"[DEBUG-PROVIDER] Provider type: {type(provider)}")
+        logger.error(f"[DEBUG-PROVIDER] Provider class name: {provider.__class__.__name__}")
+        logger.error(f"[DEBUG-PROVIDER] Provider module: {provider.__class__.__module__}")
+
         # Try to get context limits from provider if supported
         default_context_limit: int | None = getattr(provider.llm, "context_length", None)
         if default_context_limit is None:
@@ -308,13 +313,70 @@ async def create_chat_completion(
             if base_url and base_url.strip():
                 kwargs["openai_api_base"] = base_url
 
-        provider = get_llm(llm_provider, cfg=cfg, **kwargs)
-
         MAX_ATTEMPTS: int = getattr(config_obj, "llm_retry_attempts", 3)
         retry_attempt: int = 0
         last_error: Exception | None = None
 
         start_time: float = time.time()
+
+        # Check if this is a fallback provider - if so, let it handle all retries internally
+        from gpt_researcher.llm_provider.generic.fallback import FallbackGenericLLMProvider
+        is_fallback_provider: bool = isinstance(provider, FallbackGenericLLMProvider)
+
+        if is_fallback_provider:
+            # For fallback providers, make a single call and let them handle all retry logic
+            logger.info("[DEBUG-LLM] Using FallbackGenericLLMProvider - delegating all retry logic to fallback provider")
+            try:
+                response: str = await provider.get_chat_response(messages, stream, websocket)
+
+                try:
+                    validated_response: str = validate_llm_response(response, f"LLM call to {llm_provider}:{model}")
+                    response = validated_response
+                except ValueError as validation_error:
+                    logger.error(f"[DEBUG-LLM] Response validation failed: {validation_error}")
+                    raise validation_error
+
+                if cost_callback is not None:
+                    llm_costs: float = estimate_llm_cost(str(messages), response)
+                    cost_callback(llm_costs)
+
+                duration: float = time.time() - start_time
+                debug_logger.log_response(
+                    response=response,
+                    success=True,
+                    duration_seconds=duration
+                )
+
+                if is_visualizing and interaction_data and interaction_data.strip():
+                    interaction_data["response"] = response
+                    interaction_data["success"] = True
+                    interaction_data["retry_attempt"] = 0
+                    visualizer.log_interaction(**interaction_data)
+
+                logger.info("[DEBUG-LLM] Successfully returning response from FallbackGenericLLMProvider")
+                return response
+
+            except Exception as e:
+                duration: float = time.time() - start_time
+                debug_logger.log_response(
+                    response="",
+                    success=False,
+                    error_message=str(e),
+                    error_type=type(e).__name__,
+                    duration_seconds=duration
+                )
+
+                if is_visualizing and interaction_data and interaction_data.strip():
+                    interaction_data["response"] = ""
+                    interaction_data["success"] = False
+                    interaction_data["error"] = str(e)
+                    interaction_data["retry_attempt"] = 0
+                    visualizer.log_interaction(**interaction_data)
+
+                logger.error(f"[DEBUG-LLM] FallbackGenericLLMProvider exhausted all options: {type(e).__name__}: {str(e)}")
+                raise e
+
+        # For non-fallback providers, use the original retry logic
         for attempt in range(MAX_ATTEMPTS):
             try:
                 if attempt > 0:
