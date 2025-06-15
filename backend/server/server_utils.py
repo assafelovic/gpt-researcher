@@ -395,7 +395,7 @@ async def handle_websocket_communication(
                 elif data.startswith("chat"):
                     running_task = run_long_running_task(handle_chat(websocket, data, manager))
                 else:
-                    print("Error: Unknown command or not enough parameters provided.")
+                    print(f"Error: Unknown command or not enough parameters provided. ```\n{data}\n```. Expected: 'start', 'human_feedback', 'chat'")
             except Exception as e:
                 print(f"WebSocket error: {e.__class__.__name__}: {e}")
                 break

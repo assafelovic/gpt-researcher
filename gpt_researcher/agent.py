@@ -39,7 +39,7 @@ from gpt_researcher.skills.structured_research import (
 )
 from gpt_researcher.skills.writer import ReportGenerator
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
-from gpt_researcher.utils.llm_debug_logger import initialize_llm_debug_logger
+from gpt_researcher.utils.llm_debug_logger import get_llm_debug_logger, initialize_llm_debug_logger
 from gpt_researcher.vector_store import VectorStoreWrapper
 
 if TYPE_CHECKING:
@@ -155,6 +155,12 @@ class GPTResearcher:
         self.headers: dict[str, Any] | None = {} if headers is None else headers
         self.research_costs: float = 0.0
         self.disable_structured_research: bool = disable_structured_research
+
+        # Initialize the LLM debug logger
+        session_id: str = f"gptr_{int(time.time())}"
+        initialize_llm_debug_logger(session_id=session_id)
+        self.debug_logger = get_llm_debug_logger()
+        print(f"🔍 LLM Debug Logger initialized for session: {session_id}")
 
         self.memory: Memory = Memory(
             self.cfg.embedding_provider,
@@ -429,11 +435,6 @@ class GPTResearcher:
     ) -> str:
         # Enable LLM visualization for report generation
         enable_llm_visualization()
-
-        # Initialize LLM debug logger for comprehensive interaction logging
-        session_id: str = f"gptr_{int(time.time())}"
-        initialize_llm_debug_logger(session_id=session_id)
-        print(f"🔍 LLM Debug Logger initialized for session: {session_id}")
 
         await self._log_event(
             "research",

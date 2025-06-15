@@ -54,7 +54,15 @@ class Memory:
             case "openai":
                 from langchain_openai import OpenAIEmbeddings
 
-                _embeddings = OpenAIEmbeddings(model=model, **embedding_kwargs)
+                if "api_key" in embedding_kwargs:
+                    _embeddings = OpenAIEmbeddings(model=model, **embedding_kwargs)
+                else:
+                    _embeddings = OpenAIEmbeddings(
+                        model=model,
+                        openai_api_key=os.environ["OPENAI_API_KEY"],  # pyright: ignore[reportCallIssue]
+                        openai_api_base=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
+                        **embedding_kwargs,
+                    )
             case "azure_openai":
                 from langchain_openai import AzureOpenAIEmbeddings
 
