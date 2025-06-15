@@ -100,25 +100,32 @@ COPY --from=frontend-builder /app/frontend/nextjs/package.json ./frontend/nextjs
 COPY --from=frontend-builder /app/frontend/nextjs/next.config.mjs ./frontend/nextjs/next.config.mjs
 
 # Create supervisord configuration
+# stdout/stderr_maxbytes prevents log file rotation and ensures continuous output
 RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
   echo 'nodaemon=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'user=root' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'logfile=/dev/stdout' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '[program:backend]' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'command=uvicorn main:app --host %(ENV_HOST)s --port %(ENV_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'directory=/usr/src/app' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo 'stderr_logfile=/var/log/backend.err.log' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo 'stdout_logfile=/var/log/backend.out.log' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile=/dev/stdout' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile=/dev/stderr' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '[program:frontend]' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'command=npm run start -- -p %(ENV_NEXT_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'directory=/usr/src/app/frontend/nextjs' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo 'stderr_logfile=/var/log/frontend.err.log' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo 'stdout_logfile=/var/log/frontend.out.log' >> /etc/supervisor/conf.d/supervisord.conf
+  echo 'stdout_logfile=/dev/stdout' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile=/dev/stderr' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf
 
 # Start supervisord to manage both services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
