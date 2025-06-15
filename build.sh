@@ -1,1 +1,1 @@
-docker buildx build . --output type=docker,name=th3w1zard1/gpt-researcher:latest | docker load
+docker buildx build -f Dockerfile.fullstack . --tag=th3w1zard1/ai-researchwizard:latest | docker load

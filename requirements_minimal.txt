@@ -1,5 +1,4 @@
 -e .
--e file:///C:/GitHub/wizard-researcher/reference-readonly/ai-web-research/gpt-researcher
 -r ./mcp-server/requirements.txt
 -r ./multi_agents/requirements.txt
 aiofiles>=23.2.1

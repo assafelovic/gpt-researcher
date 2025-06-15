@@ -17,14 +17,12 @@ RUN npm run build
 ########################################################################
 FROM python:3.13.3-slim-bookworm AS install-browser
 
-# Configure apt for better reliability
-RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries && \
-    echo 'Acquire::http::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries && \
-    echo 'Acquire::https::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries && \
-    echo 'Acquire::ftp::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries
-
 # Install Chromium, Chromedriver, Firefox, Geckodriver, and build tools in one layer
-RUN apt-get update \
+RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries \
+    && echo 'Acquire::http::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
+    && echo 'Acquire::https::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
+    && echo 'Acquire::ftp::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
+    && apt-get update \
     && apt-get install -y gnupg wget ca-certificates --no-install-recommends \
     && ARCH=$(dpkg --print-architecture) \
     && if [ "$ARCH" = "arm64" ]; then \
@@ -103,6 +101,6 @@ COPY --from=frontend-builder /app/frontend/nextjs/next.config.mjs ./frontend/nex
 
 # Start the backend and frontend servers
 CMD /bin/bash -c 'cd /usr/src/app; \
-  (uvicorn main:app --host "$HOST" --port "$PORT") & \
-  (cd frontend/nextjs && npm run start -- -p "$NEXT_PORT") & \
+  (uvicorn main:app --host $HOST --port $PORT) & \
+  (cd frontend/nextjs && npm run start -- -p $NEXT_PORT) & \
   wait'

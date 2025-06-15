@@ -2,7 +2,7 @@
 
 # Ignore env containing secrets
 .env
-.venv
+.*venv*
 .envrc
 
 # Ignore Virtual Env
