@@ -217,17 +217,17 @@ jobs:
           cache-from: "type=gha"
           cache-to: "type=gha,mode=max"
 
-  build-push-mcp-server:
-    name: "Build MCP Server Image - ${{ matrix.platform_slash }}"
+  build-push-aio-fullstack:
+    name: "Build AIO Fullstack Image - ${{ matrix.platform_slash }}"
     # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
     if: ${{ success() || failure() }}
     runs-on: "${{ matrix.runner_label }}"
     env:
       # Variables for Docker tokens and authentication
-      IMAGE_NAME_GHCR_SUFFIXED: "${{ github.event.repository.name }}-mcp-server"
-      IMAGE_NAME_DOCKERHUB_SUFFIXED: "${{ github.event.repository.name }}-mcp-server"
-      DOCKERFILE_PATH: "./mcp-server/Dockerfile"
-      BUILD_CONTEXT: "./mcp-server"
+      IMAGE_NAME_GHCR_SUFFIXED: "${{ github.event.repository.name }}-aio-fullstack"
+      IMAGE_NAME_DOCKERHUB_SUFFIXED: "${{ github.event.repository.name }}-aio-fullstack"
+      DOCKERFILE_PATH: "./Dockerfile.fullstack"
+      BUILD_CONTEXT: "."
     strategy:
       fail-fast: false
       matrix:

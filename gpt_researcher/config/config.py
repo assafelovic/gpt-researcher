@@ -3,10 +3,9 @@ from __future__ import annotations
 import json
 import os
 import warnings
+from contextlib import suppress
 from datetime import timedelta
 from typing import Any, ClassVar, Dict, List, Self, Union, get_args, get_origin
-
-from litellm import _logging
 
 # Import fallback logic from the new module
 from gpt_researcher.config.fallback_logic import set_llm_attributes
@@ -15,9 +14,9 @@ from gpt_researcher.config.variables.default import DEFAULT_CONFIG
 from gpt_researcher.llm_provider import GenericLLMProvider
 from gpt_researcher.retrievers.utils import get_all_retriever_names
 
-_logging._turn_on_debug()
-
-
+with suppress(ImportError):
+    from litellm import _logging  # pyright: ignore[reportMissingImports]
+    _logging._turn_on_debug()
 
 
 def _log_config_section(
@@ -76,6 +75,17 @@ class Config:
         self.smart_llm_fallback_providers: list[GenericLLMProvider] = []
         self.strategic_llm_fallback_providers: list[GenericLLMProvider] = []
 
+        # Initialize private attributes for LLM configurations
+        self._smart_llm: str = ""
+        self._smart_llm_model: str | None = None
+        self._smart_llm_provider: str | None = None
+        self._fast_llm: str = ""
+        self._fast_llm_model: str | None = None
+        self._fast_llm_provider: str | None = None
+        self._strategic_llm: str = ""
+        self._strategic_llm_model: str | None = None
+        self._strategic_llm_provider: str | None = None
+
         config_to_use: BaseConfig = self.load_config(config_path)
         self._set_attributes(config_to_use)
         self._set_embedding_attributes()
@@ -90,6 +100,126 @@ class Config:
         # Allowed root paths for MCP servers
         self.mcp_allowed_root_paths: list[str] = config_to_use.get("MCP_ALLOWED_ROOT_PATHS", []) or []
 
+    # Smart LLM properties
+    @property
+    def smart_llm(self) -> str:
+        """Get the smart LLM configuration."""
+        return self._smart_llm
+
+    @smart_llm.setter
+    def smart_llm(self, value: str) -> None:
+        """Set the smart LLM configuration."""
+        self._smart_llm = value
+        self._smart_llm_provider, self._smart_llm_model = self.parse_llm(value)
+
+    @property
+    def smart_llm_model(self) -> str | None:
+        """Get the smart LLM model."""
+        return self._smart_llm_model
+
+    @smart_llm_model.setter
+    def smart_llm_model(self, value: str | None) -> None:
+        """Set the smart LLM model."""
+        self._smart_llm_model = value
+        if self._smart_llm_provider and value:
+            self._smart_llm = f"{self._smart_llm_provider}:{value}"
+        elif not value:
+            self._smart_llm = ""
+
+    @property
+    def smart_llm_provider(self) -> str | None:
+        """Get the smart LLM provider."""
+        return self._smart_llm_provider
+
+    @smart_llm_provider.setter
+    def smart_llm_provider(self, value: str | None) -> None:
+        """Set the smart LLM provider."""
+        self._smart_llm_provider = value
+        if value and self._smart_llm_model:
+            self._smart_llm = f"{value}:{self._smart_llm_model}"
+        elif not value:
+            self._smart_llm = ""
+
+    # Fast LLM properties
+    @property
+    def fast_llm(self) -> str:
+        """Get the fast LLM configuration."""
+        return self._fast_llm
+
+    @fast_llm.setter
+    def fast_llm(self, value: str) -> None:
+        """Set the fast LLM configuration."""
+        self._fast_llm = value
+        self._fast_llm_provider, self._fast_llm_model = self.parse_llm(value)
+
+    @property
+    def fast_llm_model(self) -> str | None:
+        """Get the fast LLM model."""
+        return self._fast_llm_model
+
+    @fast_llm_model.setter
+    def fast_llm_model(self, value: str | None) -> None:
+        """Set the fast LLM model."""
+        self._fast_llm_model = value
+        if self._fast_llm_provider and value:
+            self._fast_llm = f"{self._fast_llm_provider}:{value}"
+        elif not value:
+            self._fast_llm = ""
+
+    @property
+    def fast_llm_provider(self) -> str | None:
+        """Get the fast LLM provider."""
+        return self._fast_llm_provider
+
+    @fast_llm_provider.setter
+    def fast_llm_provider(self, value: str | None) -> None:
+        """Set the fast LLM provider."""
+        self._fast_llm_provider = value
+        if value and self._fast_llm_model:
+            self._fast_llm = f"{value}:{self._fast_llm_model}"
+        elif not value:
+            self._fast_llm = ""
+
+    # Strategic LLM properties
+    @property
+    def strategic_llm(self) -> str:
+        """Get the strategic LLM configuration."""
+        return self._strategic_llm
+
+    @strategic_llm.setter
+    def strategic_llm(self, value: str) -> None:
+        """Set the strategic LLM configuration."""
+        self._strategic_llm = value
+        self._strategic_llm_provider, self._strategic_llm_model = self.parse_llm(value)
+
+    @property
+    def strategic_llm_model(self) -> str | None:
+        """Get the strategic LLM model."""
+        return self._strategic_llm_model
+
+    @strategic_llm_model.setter
+    def strategic_llm_model(self, value: str | None) -> None:
+        """Set the strategic LLM model."""
+        self._strategic_llm_model = value
+        if self._strategic_llm_provider and value:
+            self._strategic_llm = f"{self._strategic_llm_provider}:{value}"
+        elif not value:
+            self._strategic_llm = ""
+
+    @property
+    def strategic_llm_provider(self) -> str | None:
+        """Get the strategic LLM provider."""
+        return self._strategic_llm_provider
+
+    @strategic_llm_provider.setter
+    def strategic_llm_provider(self, value: str | None) -> None:
+        """Set the strategic LLM provider."""
+        self._strategic_llm_provider = value
+        if value and self._strategic_llm_model:
+            self._strategic_llm = f"{value}:{self._strategic_llm_model}"
+        elif not value:
+            self._strategic_llm = ""
+
     def _parse_default_config(self) -> None:
         self.embedding_kwargs: dict[str, Any] = DEFAULT_CONFIG.get("EMBEDDING_KWARGS", {}) or {}
         self.agent_role: str | None = DEFAULT_CONFIG.get("AGENT_ROLE", None) or None
@@ -100,22 +230,11 @@ class Config:
         self.deep_research_concurrency: int = DEFAULT_CONFIG.get("DEEP_RESEARCH_CONCURRENCY", 4) or 4
         self.deep_research_depth: int = DEFAULT_CONFIG.get("DEEP_RESEARCH_DEPTH", 2) or 2
         self.doc_path: str = DEFAULT_CONFIG.get("DOC_PATH", "./my-docs") or "./my-docs"
-        self.embedding_fallback_list: list[str] | str = DEFAULT_CONFIG.get("EMBEDDING_FALLBACKS", "auto") or "auto"
-        self.embedding: str = DEFAULT_CONFIG.get("EMBEDDING", "openai:text-embedding-3-small") or "openai:text-embedding-3-small"
-        self.fast_llm_fallbacks: list[str] | str = DEFAULT_CONFIG.get("FAST_LLM_FALLBACKS", "auto") or "auto"
-        self.fast_llm: str = DEFAULT_CONFIG.get("FAST_LLM", "") or ""
-        self.fast_token_limit: int = DEFAULT_CONFIG.get("FAST_TOKEN_LIMIT", 3000) or 3000
         self.language: str = DEFAULT_CONFIG.get("LANGUAGE", "english") or "english"
-        self.llm_kwargs: dict[str, Any] = DEFAULT_CONFIG.get("LLM_KWARGS", {}) or {}
-        self.llm_temperature: float = DEFAULT_CONFIG.get("LLM_TEMPERATURE", 0.55) or 0.55
         self.max_iterations: int = DEFAULT_CONFIG.get("MAX_ITERATIONS", 3) or 3
         self.max_scraper_workers: int = DEFAULT_CONFIG.get("MAX_SCRAPER_WORKERS", 15) or 15
         self.max_search_results_per_query: int = DEFAULT_CONFIG.get("MAX_SEARCH_RESULTS_PER_QUERY", 5) or 5
         self.max_subtopics: int = DEFAULT_CONFIG.get("MAX_SUBTOPICS", 3) or 3
-        self.mcp_allowed_root_paths: list[str] = DEFAULT_CONFIG.get("MCP_ALLOWED_ROOT_PATHS", []) or []
-        self.mcp_auto_tool_selection: bool = DEFAULT_CONFIG.get("MCP_AUTO_TOOL_SELECTION", True) or True
-        self.mcp_servers: list[str] = DEFAULT_CONFIG.get("MCP_SERVERS", []) or []
-        self.memory_backend: str = DEFAULT_CONFIG.get("MEMORY_BACKEND", "local") or "local"
         self.prompt_family: str = DEFAULT_CONFIG.get("PROMPT_FAMILY", "default") or "default"
         self.report_format: str = DEFAULT_CONFIG.get("REPORT_FORMAT", "APA") or "APA"
         self.report_source: str = DEFAULT_CONFIG.get("REPORT_SOURCE", "web") or "web"
@@ -128,14 +247,6 @@ class Config:
             self.retrievers = ["tavily"]
         self.scraper: str = DEFAULT_CONFIG.get("SCRAPER", "bs") or "bs"
         self.similarity_threshold: float = DEFAULT_CONFIG.get("SIMILARITY_THRESHOLD", 0.42) or 0.42
-        self.smart_llm_fallbacks: list[str] | str = DEFAULT_CONFIG.get("SMART_LLM_FALLBACKS", "auto") or "auto"
-        self.smart_llm: str = DEFAULT_CONFIG.get("SMART_LLM", "") or ""
-        self.smart_token_limit: int = DEFAULT_CONFIG.get("SMART_TOKEN_LIMIT", 6000) or 6000
-        self.strategic_llm_fallbacks: list[str] | str = DEFAULT_CONFIG.get("STRATEGIC_LLM_FALLBACKS", "auto") or "auto"
-        self.strategic_llm: str = DEFAULT_CONFIG.get("STRATEGIC_LLM", "") or ""
-        self.strategic_token_limit: int = DEFAULT_CONFIG.get("STRATEGIC_TOKEN_LIMIT", 4000) or 4000
-        self.summary_token_limit: int = DEFAULT_CONFIG.get("SUMMARY_TOKEN_LIMIT", 700) or 700
-        self.temperature: float = DEFAULT_CONFIG.get("TEMPERATURE", 0.4) or 0.4
         self.total_words: int = DEFAULT_CONFIG.get("TOTAL_WORDS", 1200) or 1200
         self.user_agent: str = (
             DEFAULT_CONFIG.get(
@@ -146,9 +257,32 @@ class Config:
         )
         self.verbose: bool = DEFAULT_CONFIG.get("VERBOSE", True) or True
 
+        self.mcp_allowed_root_paths: list[str] = DEFAULT_CONFIG.get("MCP_ALLOWED_ROOT_PATHS", []) or []
+        self.mcp_auto_tool_selection: bool = DEFAULT_CONFIG.get("MCP_AUTO_TOOL_SELECTION", True) or True
+        self.mcp_servers: list[str] = DEFAULT_CONFIG.get("MCP_SERVERS", []) or []
+
+        self.memory_backend: str = DEFAULT_CONFIG.get("MEMORY_BACKEND", "local") or "local"
+        self.embedding_fallback_list: list[str] | str = DEFAULT_CONFIG.get("EMBEDDING_FALLBACKS", "auto") or "auto"
+        self.embedding: str = DEFAULT_CONFIG.get("EMBEDDING", "openai:text-embedding-3-small") or "openai:text-embedding-3-small"
+
+        self.fast_llm_fallbacks: list[str] | str = DEFAULT_CONFIG.get("FAST_LLM_FALLBACKS", "auto") or "auto"
+        self.fast_llm = DEFAULT_CONFIG.get("FAST_LLM", "") or ""
+        self.fast_token_limit: int = DEFAULT_CONFIG.get("FAST_TOKEN_LIMIT", 3000) or 3000
+        self.smart_llm_fallbacks: list[str] | str = DEFAULT_CONFIG.get("SMART_LLM_FALLBACKS", "auto") or "auto"
+        self.smart_llm = DEFAULT_CONFIG.get("SMART_LLM", "") or ""
+        self.smart_token_limit: int = DEFAULT_CONFIG.get("SMART_TOKEN_LIMIT", 6000) or 6000
+        self.strategic_llm_fallbacks: list[str] | str = DEFAULT_CONFIG.get("STRATEGIC_LLM_FALLBACKS", "auto") or "auto"
+        self.strategic_llm = DEFAULT_CONFIG.get("STRATEGIC_LLM", "") or ""
+        self.strategic_token_limit: int = DEFAULT_CONFIG.get("STRATEGIC_TOKEN_LIMIT", 4000) or 4000
+
+        self.llm_kwargs: dict[str, Any] = DEFAULT_CONFIG.get("LLM_KWARGS", {}) or {}
+        self.llm_temperature: float = DEFAULT_CONFIG.get("LLM_TEMPERATURE", 0.55) or 0.55
+        self.summary_token_limit: int = DEFAULT_CONFIG.get("SUMMARY_TOKEN_LIMIT", 700) or 700
+        self.temperature: float = DEFAULT_CONFIG.get("TEMPERATURE", 0.4) or 0.4
+
     def _set_attributes(
         self,
-        config: dict[str, Any],
+        config: dict[str, Any] | BaseConfig,
     ) -> None:
         self._parse_default_config()
         for key, value in config.items():
@@ -180,8 +314,6 @@ class Config:
         self.embedding_provider, self.embedding_model = self.parse_embedding(self.embedding)
         self.embedding_fallback_list = []
 
-
-
     def _handle_deprecated_attributes(self) -> None:
         if os.getenv("EMBEDDING_PROVIDER") is not None:
             warnings.warn(
@@ -212,25 +344,25 @@ class Config:
         _deprecation_warning = "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and will be removed soon. Use FAST_LLM and SMART_LLM instead."
         if os.getenv("LLM_PROVIDER") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.fast_llm_provider: str | None = (os.environ["LLM_PROVIDER"] or self.fast_llm_provider or "").strip() or None
-            self.smart_llm_provider: str | None = (os.environ["LLM_PROVIDER"] or self.smart_llm_provider or "").strip() or None
-            self.strategic_llm_provider: str | None = (os.environ["LLM_PROVIDER"] or self.strategic_llm_provider or "").strip() or None
+            self.fast_llm_provider = (os.environ["LLM_PROVIDER"] or self.fast_llm_provider or "").strip()
+            self.smart_llm_provider = (os.environ["LLM_PROVIDER"] or self.smart_llm_provider or "").strip()
+            self.strategic_llm_provider = (os.environ["LLM_PROVIDER"] or self.strategic_llm_provider or "").strip()
         if os.getenv("FAST_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.fast_llm_model: str | None = (os.environ["FAST_LLM_MODEL"] or self.fast_llm_model or "").strip() or None
+            self.fast_llm_model = (os.environ["FAST_LLM_MODEL"] or self.fast_llm_model or "").strip() or None
         if os.getenv("SMART_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.smart_llm_model: str | None = (os.environ["SMART_LLM_MODEL"] or self.smart_llm_model or "").strip() or None
+            self.smart_llm_model = (os.environ["SMART_LLM_MODEL"] or self.smart_llm_model or "").strip() or None
         if os.getenv("STRATEGIC_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
-            self.strategic_llm_model: str | None = (os.environ["STRATEGIC_LLM_MODEL"] or self.strategic_llm_model or "").strip() or None
+            self.strategic_llm_model = (os.environ["STRATEGIC_LLM_MODEL"] or self.strategic_llm_model or "").strip() or None
 
-    def _set_doc_path(self, config: dict[str, Any]) -> None:
+    def _set_doc_path(self, config: dict[str, Any] | BaseConfig) -> None:
         self.doc_path: str = config["DOC_PATH"]
         if self.doc_path and self.doc_path.strip():
             try:
                 self.validate_doc_path()
-                _log_config_section("DOC PATH", f"Document path validated: {self.doc_path}")
+                _log_config_section("DOC PATH", f"Document path validated: '{self.doc_path}'")
             except Exception as e:
                 _log_config_section("DOC PATH", f"Error validating doc_path: {e.__class__.__name__}: {e}. Using default", "WARN")
                 self.doc_path = DEFAULT_CONFIG["DOC_PATH"]
@@ -281,7 +413,9 @@ class Config:
     @staticmethod
     def parse_llm(llm_str: str | None) -> tuple[str | None, str | None]:
         """Parse llm string into (llm_provider, llm_model)."""
-        from gpt_researcher.llm_provider.generic.base import _SUPPORTED_PROVIDERS as _SUPPORTED_LLM_PROVIDERS_BASE
+        from gpt_researcher.llm_provider.generic.base import (
+            _SUPPORTED_PROVIDERS as _SUPPORTED_LLM_PROVIDERS_BASE,
+        )
 
         if (
             llm_str is None
@@ -299,7 +433,9 @@ class Config:
     @staticmethod
     def parse_embedding(embedding_str: str | None) -> tuple[str | None, str | None]:
         """Parse embedding string into (embedding_provider, embedding_model)."""
-        from gpt_researcher.memory.embeddings import _SUPPORTED_PROVIDERS as _SUPPORTED_EMBEDDING_PROVIDERS_MEM
+        from gpt_researcher.memory.embeddings import (
+            _SUPPORTED_PROVIDERS as _SUPPORTED_EMBEDDING_PROVIDERS_MEM,
+        )
 
         if embedding_str is None:
             return None, None
