@@ -806,7 +806,7 @@ const GPTResearcher = (() => {
       tables: true,               // Enable tables
       tasklists: true,            // Enable task lists
       smartIndentationFix: true,  // Fix weird indentation
-      simpleLineBreaks: true,     // Treat newlines as <br>
+      simpleLineBreaks: false,    // Don't treat single newlines as <br> - fixes double spacing issue
       openLinksInNewWindow: true, // Open links in new tab
       parseImgDimensions: true    // Parse image dimensions from markdown
     });

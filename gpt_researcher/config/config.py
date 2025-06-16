@@ -9,16 +9,36 @@ from typing import Any, ClassVar, Dict, List, Self, Union, get_args, get_origin
 from litellm import _logging
 
 # Import fallback logic from the new module
-from gpt_researcher.config.fallback_logic import (
-    _log_config_section,
-    set_llm_attributes,
-)
+from gpt_researcher.config.fallback_logic import set_llm_attributes
 from gpt_researcher.config.variables.base import BaseConfig
 from gpt_researcher.config.variables.default import DEFAULT_CONFIG
 from gpt_researcher.llm_provider import GenericLLMProvider
 from gpt_researcher.retrievers.utils import get_all_retriever_names
 
 _logging._turn_on_debug()
+
+
+
+
+def _log_config_section(
+    section_name: str,
+    message: str,
+    level: str = "INFO",
+    verbose: bool = True,
+) -> None:
+    """Helper function for consistent config logging."""
+    if not verbose:
+        return
+    from colorama import Fore, Style
+    colors: dict[str, str] = {
+        "DEBUG": Fore.LIGHTBLACK_EX,
+        "INFO": Fore.CYAN,
+        "WARN": Fore.YELLOW,
+        "ERROR": Fore.RED,
+        "SUCCESS": Fore.GREEN,
+    }
+    color: str = colors.get(level, Fore.WHITE)
+    print(f"{color}[{level}] {section_name}: {message}{Style.RESET_ALL}")
 
 
 class Config:

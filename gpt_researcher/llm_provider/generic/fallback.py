@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import traceback
 from typing import Any, TypeVar
 
 from gpt_researcher.llm_provider.generic.base import GenericLLMProvider
@@ -187,10 +188,10 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
 
         if self.verbose:
             logger.info(f"[FALLBACK-DEBUG] Starting fallback-enabled request with primary model: {primary_model_name}")
-            logger.info(f"[FALLBACK-DEBUG] Available fallback providers: {len(self.fallback_providers)}")
-            for i, fb in enumerate(self.fallback_providers):
-                fb_model: str = getattr(fb.llm, 'model_name', None) or getattr(fb.llm, 'model', 'unknown')
-                logger.info(f"[FALLBACK-DEBUG]   Fallback {i+1}: {fb_model}")
+#            logger.info(f"[FALLBACK-DEBUG] Available fallback providers: {len(self.fallback_providers)}")
+#            for i, fb in enumerate(self.fallback_providers):
+#                fb_model: str = getattr(fb.llm, 'model_name', None) or getattr(fb.llm, 'model', 'unknown')
+#                logger.info(f"[FALLBACK-DEBUG]   Fallback {i+1}: {fb_model}")
 
         # Get debug logger
         debug_logger: LLMDebugLogger = get_llm_debug_logger()
@@ -256,13 +257,12 @@ class FallbackGenericLLMProvider(GenericLLMProvider):
 
                 except Exception as fallback_error:
                     if self.verbose:
-                        logger.warning(f"[FALLBACK-DEBUG] Fallback provider {i+1} failed: {fallback_model}")
-                        logger.warning(f"[FALLBACK-DEBUG] Fallback error: {fallback_error.__class__.__name__}: {str(fallback_error)[:300]}...")
+                        logger.warning(f"[FALLBACK-DEBUG] Fallback provider {i+1} failed: {fallback_model} Fallback error: {fallback_error.__class__.__name__}: {str(fallback_error)[:300] if len(str(fallback_error)) > 300 else str(fallback_error)}")
                     last_error = fallback_error
 
             # All fallbacks failed
             if self.verbose:
                 logger.error(f"[FALLBACK-DEBUG] All providers failed. Primary: {primary_model_name}, Fallbacks: {len(self.fallback_providers)}")
-                logger.error(f"[FALLBACK-DEBUG] Last error: {last_error.__class__.__name__}: {str(last_error)}")
+                logger.error(f"[FALLBACK-DEBUG] Last error: {last_error.__class__.__name__}: {traceback.format_exception(last_error)}")
 
-            raise Exception(f"All providers failed. Primary: {primary_model_name}, Fallbacks: {len(self.fallback_providers)}. Last error: {last_error}") from last_error
+            raise Exception(f"All providers failed. Primary: {primary_model_name}, Fallbacks: {len(self.fallback_providers)}. Last error: {traceback.format_exception(last_error)}") from last_error

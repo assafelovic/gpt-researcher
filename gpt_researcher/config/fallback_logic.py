@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import logging
 import os
-import random
 import re
 import traceback
 from typing import TYPE_CHECKING, Any
 
-from colorama import Fore, Style
 
 from gpt_researcher.llm_provider import GenericLLMProvider
 
@@ -22,26 +20,6 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 MAX_FALLBACKS: int = 25
-
-
-def _log_config_section(
-    section_name: str,
-    message: str,
-    level: str = "INFO",
-    verbose: bool = True,
-) -> None:
-    """Helper function for consistent config logging."""
-    if not verbose:
-        return
-    colors: dict[str, str] = {
-        "DEBUG": Fore.LIGHTBLACK_EX,
-        "INFO": Fore.CYAN,
-        "WARN": Fore.YELLOW,
-        "ERROR": Fore.RED,
-        "SUCCESS": Fore.GREEN,
-    }
-    color: str = colors.get(level, Fore.WHITE)
-    print(f"{color}[{level}] {section_name}: {message}{Style.RESET_ALL}")
 
 def map_litellm_provider_to_gptr_provider(
     litellm_provider_name: str | None,
@@ -179,7 +157,8 @@ def generate_auto_fallbacks_from_free_models(
     # Process OpenRouter models first (to match manual priority)
     prioritized_candidates: list[str] = openrouter_candidates + other_candidates
 
-    for i, model_id_key in enumerate(prioritized_candidates):
+    for model_id_key in prioritized_candidates:
+        model_id_key_lower: str = model_id_key.lower()
         spec: LiteLLMBaseModelSpec = free_models_dict.get(model_id_key, {})
         litellm_provider: str | None = spec.get("litellm_provider") or spec.get("provider")
 
@@ -190,10 +169,10 @@ def generate_auto_fallbacks_from_free_models(
         final_provider: str = mapped_provider or litellm_provider or "unknown"
 
         # Determine actual model name and format according to manual patterns
-        if "/" in model_id_key:
+        if "/" in model_id_key_lower:
             # e.g. "openrouter/meta-llama/llama-3-8b-instruct" -> "openrouter:meta-llama/llama-3-8b-instruct:free"
-            split: list[str] = model_id_key.split("/", 1)
-            provider_from_key, model_name_from_key = split[0], split[1]
+            split: list[str] = model_id_key_lower.split("/", 1)
+            provider_from_key, model_id_key_lower = split[0], split[1]
 
             # If the key starts with a provider name, use the mapped version of that provider
             if provider_from_key in ["openrouter", "litellm"]:
@@ -202,35 +181,22 @@ def generate_auto_fallbacks_from_free_models(
             elif mapped_provider in ["openrouter", "litellm"]:
                 final_provider = mapped_provider
 
-        elif ":" in model_id_key:
-            # Already in provider:model_name format - check if it needs :free suffix
-            if model_id_key.endswith(":free"):
-                # Already has :free suffix, don't add another
-                formatted_fallbacks.append(model_id_key)
-            else:
-                # Add :free suffix to match manual format
-                converted_model: str = f"{model_id_key}:free"
-                formatted_fallbacks.append(converted_model)
+        elif (
+            model_id_key_lower.count(":") == 1 and not model_id_key_lower.endswith(":free")
+            or model_id_key_lower.count(":") == 2 and model_id_key_lower.endswith(":free")
+        ):
+            # Already in provider:model_name format
+            formatted_fallbacks.append(model_id_key)
             continue
-        else:
-            # Simple model name, use the mapped provider
-            model_name_from_key: str = model_id_key
-
-        # Check if model name already ends with :free to avoid double suffix
-        if model_name_from_key.endswith(":free"):
-            model_name_clean: str = model_name_from_key[:-5]  # Remove :free suffix
-            suffix = ":free"
-        else:
-            model_name_clean = model_name_from_key
-            suffix = ":free"
 
         # Format according to manual configuration patterns using mapped providers
-        final_format: str = f"{final_provider}:{model_name_clean}{suffix}"
+        final_format: str = f"{final_provider}:{model_id_key_lower}"
         formatted_fallbacks.append(final_format)
 
     # Final check for environment requirements
-    if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or not os.environ.get(
-        "GOOGLE_CLOUD_PROJECT"
+    if (
+        not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+        or not os.environ.get("GOOGLE_CLOUD_PROJECT")
     ):
         formatted_fallbacks = [
             fb
@@ -337,7 +303,7 @@ def parse_model_fallbacks(
 
         return final_fallbacks_list
 
-    except Exception as e:
+    except Exception:
         if os.getenv("VERBOSE", "").lower() in ("true", "1"):
             traceback.print_exc()
         return []
@@ -404,7 +370,7 @@ def initialize_fallback_providers_for_type(
             )
             initialized_providers.append(fallback_instance)
 
-        except Exception as e:
+        except Exception:
             # Always show the traceback info if DEBUG_FALLBACKS is set
             if os.getenv("DEBUG_FALLBACKS", "").lower() in ("true", "1") or os.getenv(
                 "VERBOSE", ""
