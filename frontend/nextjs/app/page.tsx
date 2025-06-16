@@ -106,6 +106,23 @@ export default function Home() {
     const requestId = generateRequestId();
     const researchStartTime = Date.now();
 
+    // Stop any current research first
+    if (loading) {
+      logSystem('Stopping current research before starting new one', {
+        currentQuestion: question,
+        newQuestion: newQuestion
+      }, requestId);
+
+      stopResearch();
+      setIsStopped(true);
+
+      // Small delay to ensure cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // Reset states for new research
+    setIsStopped(false);
+
     // Log user initiation
     logUserAction('Research initiated', {
       question: newQuestion,
@@ -513,7 +530,6 @@ export default function Home() {
         loading={loading}
         isStopped={isStopped}
         showResult={showResult}
-        onStop={handleStopResearch}
         onNewResearch={handleStartNewResearch}
         connectionStatus={getStatusDescription(researchState.status)}
         isRetrying={isRetrying}

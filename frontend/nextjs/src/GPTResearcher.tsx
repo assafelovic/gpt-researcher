@@ -138,6 +138,18 @@ export const GPTResearcher = ({
   };
 
   const handleDisplayResult = async (newQuestion: string) => {
+    // Stop any current research first
+    if (loading && socket) {
+      socket.close();
+      setIsStopped(true);
+
+      // Small delay to ensure cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // Reset states for new research
+    setIsStopped(false);
+
     setShowResult(true);
     setLoading(true);
     setQuestion(newQuestion);
@@ -285,7 +297,6 @@ export const GPTResearcher = ({
         loading={loading}
         isStopped={isStopped}
         showResult={showResult}
-        onStop={handleStopResearch}
         onNewResearch={handleStartNewResearch}
       />
       <main ref={mainContentRef} className="min-h-[100vh] pt-[120px]">
@@ -307,6 +318,7 @@ export const GPTResearcher = ({
                   allLogs={allLogs}
                   chatBoxSettings={chatBoxSettings}
                   handleClickSuggestion={handleClickSuggestion}
+                  onNewSearch={handleDisplayResult}
                 />
               </div>
 

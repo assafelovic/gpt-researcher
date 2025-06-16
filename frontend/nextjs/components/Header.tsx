@@ -6,13 +6,12 @@ interface HeaderProps {
   loading?: boolean;      // Indicates if research is currently in progress
   isStopped?: boolean;    // Indicates if research was manually stopped
   showResult?: boolean;   // Controls if research results are being displayed
-  onStop?: () => void;    // Handler for stopping ongoing research
   onNewResearch?: () => void;  // Handler for starting fresh research
   connectionStatus?: string; // Current connection status
   isRetrying?: boolean;   // Whether the system is retrying connection
 }
 
-const Header = ({ loading, isStopped, showResult, onStop, onNewResearch, connectionStatus, isRetrying }: HeaderProps) => {
+const Header = ({ loading, isStopped, showResult, onNewResearch, connectionStatus, isRetrying }: HeaderProps) => {
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
       {/* Pure transparent blur background */}
@@ -54,17 +53,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch, connect
               </motion.div>
             )}
 
-            {/* Stop button - shown only during active research */}
-            {loading && !isStopped && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                onClick={onStop}
-                className="flex items-center justify-center px-4 sm:px-6 h-9 sm:h-10 text-sm text-white bg-red-500 rounded-full hover:bg-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap min-w-[80px]"
-              >
-                Stop
-              </motion.button>
-            )}
+
 
             {/* New Research button - shown after stopping or completing research */}
             {(isStopped || !loading) && showResult && (

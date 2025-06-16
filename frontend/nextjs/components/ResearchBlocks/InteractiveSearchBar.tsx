@@ -33,11 +33,6 @@ const InteractiveSearchBar: React.FC<InteractiveSearchBarProps> = ({
     }
   };
 
-  const handleClear = () => {
-    setSearchValue('');
-    inputRef.current?.focus();
-  };
-
   const hasValue = searchValue.trim() !== '';
 
   return (
@@ -104,22 +99,6 @@ const InteractiveSearchBar: React.FC<InteractiveSearchBarProps> = ({
               text-base font-medium leading-relaxed
             "
           />
-
-          {/* Clear Button */}
-          {searchValue && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              type="button"
-              onClick={handleClear}
-              className="flex items-center justify-center w-8 h-8 mr-2 text-gray-400 hover:text-gray-200 rounded-full hover:bg-gray-700/50 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </motion.button>
-          )}
 
           {/* Search/Go Button */}
           <motion.button
