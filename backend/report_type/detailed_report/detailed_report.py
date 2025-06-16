@@ -69,14 +69,14 @@ class DetailedReport:
         self.global_urls = self.gpt_researcher.visited_urls
 
     async def _get_all_subtopics(self) -> list[dict[str, Any]]:
-        subtopics_data: list[Any] = await self.gpt_researcher.get_subtopics()
+        subtopics_data: list[str] = await self.gpt_researcher.get_subtopics()
 
         all_subtopics: list[dict[str, Any]] = []
-        if subtopics_data and subtopics_data.subtopics:
-            for subtopic in subtopics_data.subtopics:
-                all_subtopics.append({"task": subtopic.task})
+        if subtopics_data:
+            for subtopic in subtopics_data:
+                all_subtopics.append({"task": subtopic})
         else:
-            print(f"Unexpected subtopics data format: {subtopics_data} (type {subtopics_data.__class__.__name__})")
+            print(f"WARNING! No subtopics generated for query: '''\n{self.query}\n'''")
 
         return all_subtopics
 

@@ -69,7 +69,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
           onNewSearch={onNewSearch}
         />
       )}
-      {initialQuestion && !onNewSearch }
+      {initialQuestion && !onNewSearch}
       {orderedData.length > 0 && <LogsSection logs={allLogs} />}
       {subqueriesComponent && (
         <SubQuestions
