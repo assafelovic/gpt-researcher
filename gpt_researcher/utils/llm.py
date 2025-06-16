@@ -347,7 +347,7 @@ async def create_chat_completion(
                     duration_seconds=duration
                 )
 
-                if is_visualizing and interaction_data and interaction_data.strip():
+                if is_visualizing and interaction_data:
                     interaction_data["response"] = response
                     interaction_data["success"] = True
                     interaction_data["retry_attempt"] = 0
@@ -366,7 +366,7 @@ async def create_chat_completion(
                     duration_seconds=duration
                 )
 
-                if is_visualizing and interaction_data and interaction_data.strip():
+                if is_visualizing and interaction_data:
                     interaction_data["response"] = ""
                     interaction_data["success"] = False
                     interaction_data["error"] = str(e)
@@ -406,7 +406,7 @@ async def create_chat_completion(
                     duration_seconds=duration
                 )
 
-                if is_visualizing and interaction_data and interaction_data.strip():
+                if is_visualizing and interaction_data:
                     interaction_data["response"] = response
                     interaction_data["success"] = True
                     interaction_data["retry_attempt"] = retry_attempt
@@ -452,7 +452,7 @@ async def create_chat_completion(
             duration_seconds=duration
         )
 
-        if is_visualizing and interaction_data and interaction_data.strip():
+        if is_visualizing and interaction_data:
             interaction_data["response"] = ""
             interaction_data["success"] = False
             interaction_data["error"] = str(last_error) if last_error else "Unknown error"
