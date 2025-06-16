@@ -17,13 +17,13 @@ RUN npm run build
 ########################################################################
 FROM python:3.13.3-slim-bookworm AS install-browser
 
-# Install Chromium, Chromedriver, Firefox, Geckodriver, and build tools in one layer
+# Install Chromium, Chromedriver, Firefox, Geckodriver, nginx, and build tools in one layer
 RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries \
   && echo 'Acquire::http::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
   && echo 'Acquire::https::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
   && echo 'Acquire::ftp::Timeout "60";' >> /etc/apt/apt.conf.d/80-retries \
   && apt-get update \
-  && apt-get install -y gnupg wget ca-certificates --no-install-recommends \
+  && apt-get install -y gnupg wget ca-certificates nginx --no-install-recommends \
   && ARCH=$(dpkg --print-architecture) \
   && if [ "$ARCH" = "arm64" ]; then \
   apt-get install -y chromium chromium-driver \
@@ -63,7 +63,7 @@ RUN pip config set global.timeout 60 && \
   pip install --no-cache-dir -r multi_agents/requirements.txt --upgrade --prefer-binary
 
 ########################################################################
-# Stage 4: Final image with backend, frontend
+# Stage 4: Final image with backend, frontend, and nginx
 ########################################################################
 FROM backend-builder AS final
 
@@ -82,11 +82,14 @@ ENV HOST=${HOST}
 
 ARG PORT=8000
 ENV PORT=${PORT}
-EXPOSE ${PORT}
 
 ARG NEXT_PORT=3000
 ENV NEXT_PORT=${NEXT_PORT}
-EXPOSE ${NEXT_PORT}
+
+# Nginx will serve on port 80 by default, but make it configurable
+ARG NGINX_PORT=80
+ENV NGINX_PORT=${NGINX_PORT}
+EXPOSE ${NGINX_PORT}
 
 # Copy application files
 COPY ./ ./
@@ -99,6 +102,47 @@ COPY --from=frontend-builder /app/frontend/nextjs/package.json ./frontend/nextjs
 # Ensure next.config.mjs and other necessary files are present
 COPY --from=frontend-builder /app/frontend/nextjs/next.config.mjs ./frontend/nextjs/next.config.mjs
 
+# Create nginx configuration for reverse proxy
+RUN mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled && \
+  rm -f /etc/nginx/sites-enabled/default && \
+  echo 'server {' > /etc/nginx/sites-available/gpt-researcher && \
+  echo '    listen %(ENV_NGINX_PORT)s;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    server_name _;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    # WebSocket proxy for /ws endpoint' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    location /ws {' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_pass http://127.0.0.1:%(ENV_PORT)s/ws;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_http_version 1.1;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header Upgrade $http_upgrade;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header Connection "upgrade";' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header Host $host;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header X-Real-IP $remote_addr;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header X-Forwarded-Proto $scheme;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_cache_bypass $http_upgrade;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_read_timeout 86400s;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_send_timeout 86400s;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    }' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    # API proxy for backend endpoints' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    location /api/ {' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_pass http://127.0.0.1:%(ENV_PORT)s/;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header Host $host;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header X-Real-IP $remote_addr;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header X-Forwarded-Proto $scheme;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    }' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    # Serve frontend application' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    location / {' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_pass http://127.0.0.1:%(ENV_NEXT_PORT)s;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header Host $host;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header X-Real-IP $remote_addr;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        proxy_set_header X-Forwarded-Proto $scheme;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    }' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '}' >> /etc/nginx/sites-available/gpt-researcher
+
 # Create supervisord configuration
 # stdout/stderr_maxbytes prevents log file rotation and ensures continuous output
 RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
@@ -108,7 +152,7 @@ RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
   echo 'logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '[program:backend]' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo 'command=uvicorn main:app --host %(ENV_HOST)s --port %(ENV_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=uvicorn main:app --host 127.0.0.1 --port %(ENV_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'directory=/usr/src/app' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
@@ -125,7 +169,16 @@ RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stdout_logfile=/dev/stdout' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stdout_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stderr_logfile=/dev/stderr' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '[program:nginx]' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=sh -c "envsubst < /etc/nginx/sites-available/gpt-researcher > /etc/nginx/sites-enabled/gpt-researcher && nginx -g \"daemon off;\""' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile=/dev/stdout' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile=/dev/stderr' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf
 
-# Start supervisord to manage both services
+# Start supervisord to manage all three services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
