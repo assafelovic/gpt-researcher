@@ -159,11 +159,9 @@ class GenericLLMProvider:
                 self.debug_logger = get_llm_debug_logger()
                 if self.debug_logger is None:
                     self.debug_logger = initialize_llm_debug_logger()
-                if self.verbose:
-                    print(f"{Fore.GREEN}🔍 LLM Debug Logger enabled for detailed interaction logging{Style.RESET_ALL}")
             except Exception as e:
                 if self.verbose:
-                    print(f"{Fore.YELLOW}⚠️ Could not initialize LLM debug logger: {e}{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}⚠️ Could not initialize LLM debug logger: {e.__class__.__name__}: {e}{Style.RESET_ALL}")
                 self.debug_logger = None
 
         try:

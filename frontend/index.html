@@ -107,8 +107,11 @@
         <form method="POST" class="mt-3" id="researchForm">
             <div class="form-group">
                 <label for="task" class="agent-question">What would you like me to research for you?</label>
-                <textarea id="task" name="task" class="form-control highlight-connection"
-                    placeholder="Enter any topic, question, or idea..." required autocomplete="on"></textarea>
+                <div class="autocomplete-container">
+                    <textarea id="task" name="task" class="form-control highlight-connection"
+                        placeholder="Enter any topic, question, or idea..." required autocomplete="on"></textarea>
+                    <ul id="autocomplete-list" class="autocomplete-list"></ul>
+                </div>
                 <input type="radio" name="agent" id="autoAgent" value="Auto Agent" checked hidden>
             </div>
             <div class="form-group">

@@ -82,9 +82,11 @@ ENV HOST=${HOST}
 
 ARG PORT=8000
 ENV PORT=${PORT}
+EXPOSE ${PORT}
 
 ARG NEXT_PORT=3000
 ENV NEXT_PORT=${NEXT_PORT}
+EXPOSE ${NEXT_PORT}
 
 # Nginx will serve on port 80 by default, but make it configurable
 ARG NGINX_PORT=80
@@ -108,6 +110,8 @@ RUN mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled && \
   echo 'server {' > /etc/nginx/sites-available/gpt-researcher && \
   echo '    listen %(ENV_NGINX_PORT)s;' >> /etc/nginx/sites-available/gpt-researcher && \
   echo '    server_name _;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    root /usr/src/app/frontend/nextjs;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    index index.html;' >> /etc/nginx/sites-available/gpt-researcher && \
   echo '' >> /etc/nginx/sites-available/gpt-researcher && \
   echo '    # WebSocket proxy for /ws endpoint' >> /etc/nginx/sites-available/gpt-researcher && \
   echo '    location /ws {' >> /etc/nginx/sites-available/gpt-researcher && \
@@ -133,6 +137,13 @@ RUN mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled && \
   echo '        proxy_set_header X-Forwarded-Proto $scheme;' >> /etc/nginx/sites-available/gpt-researcher && \
   echo '    }' >> /etc/nginx/sites-available/gpt-researcher && \
   echo '' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    # Serve Next.js static files' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    location /_next/static/ {' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        alias /usr/src/app/frontend/nextjs/.next/static/;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        expires 1y;' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '        add_header Cache-Control "public, immutable";' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '    }' >> /etc/nginx/sites-available/gpt-researcher && \
+  echo '' >> /etc/nginx/sites-available/gpt-researcher && \
   echo '    # Serve frontend application' >> /etc/nginx/sites-available/gpt-researcher && \
   echo '    location / {' >> /etc/nginx/sites-available/gpt-researcher && \
   echo '        proxy_pass http://127.0.0.1:%(ENV_NEXT_PORT)s;' >> /etc/nginx/sites-available/gpt-researcher && \
@@ -152,7 +163,7 @@ RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
   echo 'logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '[program:backend]' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo 'command=uvicorn main:app --host 127.0.0.1 --port %(ENV_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=uvicorn main:app --host %(ENV_HOST)s --port %(ENV_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'directory=/usr/src/app' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \

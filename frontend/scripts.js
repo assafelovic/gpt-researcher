@@ -58,6 +58,9 @@ const GPTResearcher = (() => {
     // Initialize WebSocket monitoring panel
     initWebSocketPanel();
 
+    // Initialize autocomplete functionality
+    initAutocomplete();
+
     // The download bar is now fixed in place with CSS
     // No need to set display property here
 
@@ -249,6 +252,59 @@ const GPTResearcher = (() => {
 
     // Start periodic WebSocket status updates
     startWebSocketMonitoring();
+  }
+
+  // Initialize autocomplete functionality for task textarea
+  const initAutocomplete = () => {
+    const textarea = document.getElementById('task');
+    const list = document.getElementById('autocomplete-list');
+
+    if (!textarea || !list) {
+      console.error("Autocomplete elements not found");
+      return;
+    }
+
+    function saveToHistory(value) {
+      const history = JSON.parse(localStorage.getItem('taskHistory') || '[]');
+      if (value.trim() && !history.includes(value)) {
+        history.unshift(value);
+        localStorage.setItem('taskHistory', JSON.stringify(history.slice(0, 10))); // keep last 10
+      }
+    }
+
+    function showSuggestions(input) {
+      const history = JSON.parse(localStorage.getItem('taskHistory') || '[]');
+      const matches = history.filter(item => item.toLowerCase().includes(input.toLowerCase()));
+      list.innerHTML = '';
+      matches.forEach(match => {
+        const item = document.createElement('li');
+        item.textContent = match;
+        item.style.padding = '8px';
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', () => {
+          textarea.value = match;
+          list.innerHTML = '';
+        });
+        list.appendChild(item);
+      });
+    }
+
+    textarea.addEventListener('input', () => {
+      const value = textarea.value;
+      if (value.length > 0) {
+        showSuggestions(value);
+      } else {
+        list.innerHTML = '';
+      }
+    });
+
+    textarea.addEventListener('blur', () => {
+      setTimeout(() => list.innerHTML = '', 200); // slight delay to allow click
+    });
+
+    textarea.form?.addEventListener('submit', () => {
+      saveToHistory(textarea.value);
+    });
   }
 
   // Start WebSocket monitoring
@@ -790,9 +846,8 @@ const GPTResearcher = (() => {
 
   const listenToSockEvents = () => {
     const { protocol, host, pathname } = window.location
-    const ws_uri = `${
-      protocol === 'https:' ? 'wss:' : 'ws:'
-    }//${host}${pathname}ws`
+    const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'
+      }//${host}${pathname}ws`
 
     // Set a timeout for connection - if it takes too long, stop the spinner
     connectionTimeout = setTimeout(() => {
@@ -955,10 +1010,10 @@ const GPTResearcher = (() => {
       const consecutiveErrors = event.code === 1006 && reconnectAttempts >= 2;
 
       if (isResearchActive &&
-          event.code !== 1000 &&
-          event.reason !== "Starting fresh research" &&
-          event.reason !== "Closing reconnected socket to start fresh research" &&
-          !consecutiveErrors) {
+        event.code !== 1000 &&
+        event.reason !== "Starting fresh research" &&
+        event.reason !== "Closing reconnected socket to start fresh research" &&
+        !consecutiveErrors) {
         console.log("Attempting to reconnect dropped WebSocket...");
         reconnectWebSocket();
       } else {
@@ -1026,8 +1081,8 @@ const GPTResearcher = (() => {
 
   const updateDownloadLink = (data) => {
     if (!data.output) {
-        console.error('No output data received');
-        return;
+      console.error('No output data received');
+      return;
     }
 
     const { pdf, docx, md, json } = data.output;
@@ -1038,14 +1093,14 @@ const GPTResearcher = (() => {
 
     // Helper function to safely update link
     const updateLink = (id, path) => {
-        const element = document.getElementById(id);
-        if (element && path) {
-            console.log(`Setting ${id} href to:`, path);
-            element.setAttribute('href', path);
-            element.classList.remove('disabled');
-        } else {
-            console.warn(`Either element ${id} not found or path not provided`);
-        }
+      const element = document.getElementById(id);
+      if (element && path) {
+        console.log(`Setting ${id} href to:`, path);
+        element.setAttribute('href', path);
+        element.classList.remove('disabled');
+      } else {
+        console.warn(`Either element ${id} not found or path not provided`);
+      }
     };
 
     // Update links in sticky download bar
@@ -1246,8 +1301,8 @@ const GPTResearcher = (() => {
     removeButton.className = 'remove-tag';
     removeButton.textContent = 'x';
     removeButton.onclick = function () {
-        tagsInput.removeChild(tagElement);
-        tags.splice(tags.indexOf(url), 1);
+      tagsInput.removeChild(tagElement);
+      tags.splice(tags.indexOf(url), 1);
     };
 
     tagElement.appendChild(removeButton);
@@ -1304,23 +1359,23 @@ const GPTResearcher = (() => {
 
   // Function to show download bar and enable buttons
   const showDownloadPanels = () => {
-      // Show the bar by adding the visible class
-      const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
-      if (stickyDownloadsBar) {
-          stickyDownloadsBar.classList.add('visible');
-      }
+    // Show the bar by adding the visible class
+    const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
+    if (stickyDownloadsBar) {
+      stickyDownloadsBar.classList.add('visible');
+    }
 
-      // Enable all download buttons
-      const downloadButtons = document.querySelectorAll('.download-option-btn, .report-action-btn');
-      downloadButtons.forEach(button => {
-          button.classList.remove('disabled');
-      });
+    // Enable all download buttons
+    const downloadButtons = document.querySelectorAll('.download-option-btn, .report-action-btn');
+    downloadButtons.forEach(button => {
+      button.classList.remove('disabled');
+    });
 
-      // Make top buttons report-actions section visible
-      const reportActions = document.querySelector('.report-actions');
-      if (reportActions) {
-          reportActions.style.display = 'flex';
-      }
+    // Make top buttons report-actions section visible
+    const reportActions = document.querySelector('.report-actions');
+    if (reportActions) {
+      reportActions.style.display = 'flex';
+    }
   }
 
   // --- Storage Helpers (Cookies or LocalStorage) ---
@@ -1497,7 +1552,7 @@ const GPTResearcher = (() => {
       const historyJson = JSON.stringify(conversationHistory, null, 2);
 
       // Create a Blob containing the data
-      const blob = new Blob([historyJson], {type: 'application/json'});
+      const blob = new Blob([historyJson], { type: 'application/json' });
 
       // Create an object URL for the blob
       const url = URL.createObjectURL(blob);
@@ -1560,9 +1615,9 @@ const GPTResearcher = (() => {
         // Check if each entry has the required fields
         const validEntries = importedData.filter(entry => {
           return entry &&
-                 typeof entry === 'object' &&
-                 (entry.prompt || entry.task) && // Allow both prompt and legacy task field
-                 (entry.links || entry.downloadLinks); // Allow both links and legacy downloadLinks
+            typeof entry === 'object' &&
+            (entry.prompt || entry.task) && // Allow both prompt and legacy task field
+            (entry.links || entry.downloadLinks); // Allow both links and legacy downloadLinks
         });
 
         if (validEntries.length === 0) {
@@ -1839,7 +1894,7 @@ const GPTResearcher = (() => {
     const loadingId = addLoadingIndicator();
 
     // Prepare the message to send
-    const messageToSend = `chat ${JSON.stringify({message: message})}`;
+    const messageToSend = `chat ${JSON.stringify({ message: message })}`;
 
     // Send message through WebSocket
     if (socket && socket.readyState === WebSocket.OPEN) {

@@ -2677,3 +2677,62 @@ h2 .expand-button {
 .research-progress-description {
     font-size: 0.8rem;
 }
+
+/* Autocomplete functionality styles */
+.autocomplete-container {
+    position: relative;
+}
+
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(30, 30, 40, 0.95);
+    border: 1px solid rgba(157, 78, 221, 0.3);
+    border-radius: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.autocomplete-list li {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #E4E4E4;
+    transition: all 0.2s ease;
+}
+
+.autocomplete-list li:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-list li:hover {
+    background: rgba(157, 78, 221, 0.2);
+    color: #FFFFFF;
+}
+
+.autocomplete-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.autocomplete-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.autocomplete-list::-webkit-scrollbar-thumb {
+    background: rgba(157, 78, 221, 0.5);
+    border-radius: 4px;
+}
+
+.autocomplete-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(157, 78, 221, 0.7);
+}
