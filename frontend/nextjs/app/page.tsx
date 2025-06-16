@@ -560,7 +560,6 @@ export default function Home() {
                   chatBoxSettings={chatBoxSettings}
                   handleClickSuggestion={handleClickSuggestion}
                   onNewSearch={handleDisplayResult}
-                  loading={loading}
                 />
               </div>
 

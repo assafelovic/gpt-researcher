@@ -17,7 +17,6 @@ interface ResearchResultsProps {
   chatBoxSettings: any;
   handleClickSuggestion: (value: string) => void;
   onNewSearch?: (query: string) => void;
-  loading?: boolean;
 }
 
 export const ResearchResults: React.FC<ResearchResultsProps> = ({
@@ -26,8 +25,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
   allLogs,
   chatBoxSettings,
   handleClickSuggestion,
-  onNewSearch,
-  loading = false
+  onNewSearch
 }) => {
   const groupedData = preprocessOrderedData(orderedData);
   const pathData = groupedData.find(data => data.type === 'path');
@@ -68,11 +66,10 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
 
   return (
     <>
-      {initialQuestion && onNewSearch && (
+            {initialQuestion && onNewSearch && (
         <InteractiveSearchBar
           question={initialQuestion.content}
           onNewSearch={onNewSearch}
-          disabled={loading}
         />
       )}
       {initialQuestion && !onNewSearch && <Question question={initialQuestion.content} />}

@@ -67,10 +67,9 @@ const InteractiveSearchBar: React.FC<InteractiveSearchBarProps> = ({
           className={`
             relative flex items-center w-full rounded-2xl border transition-all duration-300 ease-in-out
             ${isFocused
-              ? 'border-teal-400/60 bg-white/95 shadow-lg shadow-teal-500/20'
-              : 'border-gray-300/40 bg-white/90 hover:bg-white/95 hover:border-gray-300/60'
+              ? 'border-teal-400/60 bg-gray-900/95 shadow-lg shadow-teal-500/20'
+              : 'border-gray-700/40 bg-gray-900/80 hover:bg-gray-900/95 hover:border-gray-600/60'
             }
-            ${disabled ? 'opacity-60 cursor-not-allowed' : ''}
           `}
         >
           {/* Search Icon */}
@@ -99,24 +98,22 @@ const InteractiveSearchBar: React.FC<InteractiveSearchBarProps> = ({
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             onKeyDown={handleKeyDown}
-            disabled={disabled}
             placeholder="Enter your research question..."
             className="
-              flex-1 h-12 px-2 text-gray-800 placeholder-gray-500 bg-transparent border-none outline-none
+              flex-1 h-12 px-2 text-white placeholder-gray-400 bg-transparent border-none outline-none
               text-base font-medium leading-relaxed
-              disabled:cursor-not-allowed
             "
           />
 
           {/* Clear Button */}
-          {searchValue && !disabled && (
+          {searchValue && (
             <motion.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               type="button"
               onClick={handleClear}
-              className="flex items-center justify-center w-8 h-8 mr-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-center w-8 h-8 mr-2 text-gray-400 hover:text-gray-200 rounded-full hover:bg-gray-700/50 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -127,40 +124,19 @@ const InteractiveSearchBar: React.FC<InteractiveSearchBarProps> = ({
           {/* Search/Go Button */}
           <motion.button
             type="submit"
-            disabled={disabled || !hasChanged}
             className={`
               flex items-center justify-center w-10 h-10 mr-1 rounded-xl transition-all duration-200
-              ${hasChanged && !disabled
+              ${hasValue
                 ? 'bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white shadow-md hover:shadow-lg transform hover:scale-105'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50 hover:text-gray-300'
               }
             `}
-            whileTap={hasChanged && !disabled ? { scale: 0.95 } : {}}
+            whileTap={{ scale: 0.95 }}
           >
-            {disabled ? (
-              <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            )}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
           </motion.button>
-        </div>
-
-        {/* Subtle hint text */}
-        <div className="flex items-center justify-between mt-2 px-3">
-          <span className="text-xs text-gray-400">
-            Press Enter or click the arrow to start a new research
-          </span>
-          {hasChanged && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-xs text-teal-500 font-medium"
-            >
-              Ready to search
-            </motion.span>
-          )}
         </div>
       </form>
     </motion.div>
