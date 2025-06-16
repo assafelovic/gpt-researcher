@@ -898,12 +898,8 @@ const GPTResearcher = (() => {
       updateResearchIcon(true);
 
       const task = document.getElementById('task').value
-      const report_type = document.querySelector(
-        'select[name="report_type"]'
-      ).value
-      const report_source = document.querySelector(
-        'input[name="report_source"]'
-      ).value
+      const report_type = document.querySelector('select[name="report_type"]').value
+      const report_source = document.querySelector('input[name="report_source"]').value
       const tone = document.querySelector('select[name="tone"]').value
 
       // Just use the hardcoded default value without trying to access the DOM
@@ -1008,9 +1004,11 @@ const GPTResearcher = (() => {
 
   const addAgentResponse = (data) => {
     const output = document.getElementById('output')
-    output.innerHTML += '<div class="agent_response">' + data.output + '</div>'
-    output.scrollTop = output.scrollHeight
-    output.style.display = 'block'
+    if (data.output && data.output.length > 0 && data.output.trim() !== '') {
+      output.innerHTML += '<div class="agent_response">' + data.output + '</div>'
+      output.scrollTop = output.scrollHeight
+      output.style.display = 'block'
+    }
   }
 
   const writeReport = (data, converter) => {

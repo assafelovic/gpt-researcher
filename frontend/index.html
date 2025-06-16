@@ -2,23 +2,24 @@
 <html lang="en">
 
 <head>
+    <meta charset="utf-8">
     <title>ResearchWizard | Powered by th3w1zard1</title>
     <meta name="description" content="Your intelligent research assistant">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="./static/new/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&amp;display=swap" rel="stylesheet">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="/frontend/styles.css" />
+    <link rel="stylesheet" href="/frontend/styles.css">
 </head>
 
 <body>
     <!-- Top Credits Bar -->
     <div class="credits-bar top-credits">
         <div class="credits-content">
-            <p>Created by <a href="https://github.com/th3w1zard1" target="_blank">Boden Crouch (th3w1zard1)</a> | ResearchWizard &copy; 2024</p>
+            <p>Created by <a href="https://github.com/th3w1zard1" target="_blank" rel="noopener">Boden Crouch (th3w1zard1)</a> | ResearchWizard &copy; 2024</p>
             <!-- Add history button to top bar -->
             <div id="historyPanelOpenBtn" class="top-history-button">
                 <i class="fas fa-history"></i> History
@@ -154,7 +155,7 @@
         </form>
 
         <!-- Add JSON button above Research Progress section -->
-        <div class="margin-div" id="jsonButtonContainer" style="display: none; text-align: right; margin-bottom: 10px;">
+        <div class="margin-div json-button-container" id="jsonButtonContainer">
             <a id="downloadLinkJsonTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
                 <i class="fas fa-file-code"></i> JSON
             </a>
@@ -163,21 +164,21 @@
         <div class="margin-div research-output-container">
             <!-- Move spinner to the left side of the text -->
             <h2><div id="modernSpinner" class="modern-spinner"></div> Research Progress </h2>
-            <p class="mt-2 text-left" style="font-size: 0.8rem;">
+            <p class="mt-2 text-left research-progress-description">
                 Watch as the AI works to gather information and analyze your topic in real-time.</p>
             <div id="output"></div>
         </div>
         <div class="images_div">
-            <div id="selectedImagesContainer" style="display: none;"></div>
+            <div id="selectedImagesContainer" class="selected-images-hidden"></div>
         </div>
         <div class="margin-div report-container">
             <h2>Research Report
-                <button id="copyToClipboardTop" class="icon-button" title="Copy" style="display: none;">
+                <button id="copyToClipboardTop" class="icon-button copy-button-top" title="Copy">
                     <i class="fas fa-copy"></i>
                 </button>
             </h2>
             <!-- Add download buttons above the report container -->
-            <div class="report-actions" style="display: none;">
+            <div class="report-actions report-actions-hidden">
                 <a id="downloadLinkTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-file-pdf"></i> PDF
                 </a>
@@ -189,13 +190,13 @@
                 </a>
             </div>
             <div id="reportContainer"></div>
-            <div id="reportActions" style="display: none;">
+            <div id="reportActions" class="report-actions-hidden">
                 <div class="alert alert-info" role="alert" id="status"></div>
             </div>
         </div>
 
         <!-- Chat Container -->
-        <div class="margin-div chat-container" id="chatContainer" style="display: none;">
+        <div class="margin-div chat-container chat-container-hidden" id="chatContainer">
             <h2><i class="fas fa-comments"></i> Chat with AI about this research </h2>
             <p class="text-muted">Ask questions about the research report to get more insights</p>
             <div id="chatMessages" class="chat-messages"></div>
@@ -292,7 +293,7 @@
             </button>
         </div>
         <div class="history-panel-filters">
-            <select id="historySortOrder">
+            <select id="historySortOrder" title="Sort order for research history">
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
             </select>
@@ -335,7 +336,8 @@
         const taskTextarea = document.getElementById('task');
         if (taskTextarea) {
             // Set initial height
-            taskTextarea.setAttribute('style', 'height: 38px; overflow-y: hidden;');
+            taskTextarea.style.height = '38px';
+            taskTextarea.style.overflowY = 'hidden';
 
             // Function to resize textarea based on content
             const resizeTextarea = () => {
