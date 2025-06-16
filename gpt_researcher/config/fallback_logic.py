@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import logging
 import os
+import random
 import re
 import traceback
 from typing import TYPE_CHECKING, Any
 
+from colorama import Fore, Style
 
 from gpt_researcher.llm_provider import GenericLLMProvider
 
@@ -21,6 +23,25 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 MAX_FALLBACKS: int = 25
 
+
+def _log_config_section(
+    section_name: str,
+    message: str,
+    level: str = "INFO",
+    verbose: bool = True,
+) -> None:
+    """Helper function for consistent config logging."""
+    if not verbose:
+        return
+    colors: dict[str, str] = {
+        "DEBUG": Fore.LIGHTBLACK_EX,
+        "INFO": Fore.CYAN,
+        "WARN": Fore.YELLOW,
+        "ERROR": Fore.RED,
+        "SUCCESS": Fore.GREEN,
+    }
+    color: str = colors.get(level, Fore.WHITE)
+    print(f"{color}[{level}] {section_name}: {message}{Style.RESET_ALL}")
 
 def map_litellm_provider_to_gptr_provider(
     litellm_provider_name: str | None,
@@ -316,7 +337,7 @@ def parse_model_fallbacks(
 
         return final_fallbacks_list
 
-    except Exception:
+    except Exception as e:
         if os.getenv("VERBOSE", "").lower() in ("true", "1"):
             traceback.print_exc()
         return []
@@ -383,7 +404,7 @@ def initialize_fallback_providers_for_type(
             )
             initialized_providers.append(fallback_instance)
 
-        except Exception:
+        except Exception as e:
             # Always show the traceback info if DEBUG_FALLBACKS is set
             if os.getenv("DEBUG_FALLBACKS", "").lower() in ("true", "1") or os.getenv(
                 "VERBOSE", ""
