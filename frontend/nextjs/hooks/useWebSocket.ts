@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { Data, ChatBoxSettings, QuestionData } from "../types/data";
-import { getHost } from "../helpers/getHost";
+import { getHost, HostResult } from "../helpers/getHost";
 import {
   logWebSocketConnection,
   logWebSocketConnected,
@@ -86,11 +86,12 @@ export const useWebSocket = (
       attempt: connectionAttemptRef.current
     }, requestId);
 
-    const host = getHost();
-    const ws_uri = `ws://${host}/ws`;
+    const hostResult: HostResult = getHost();
+    const protocol = hostResult.isSecure ? "wss://" : "ws://";
+    const ws_uri = `${protocol}${hostResult.cleanHost}/ws`;
 
     logWebSocketConnection(ws_uri, requestId);
-    logConnectionStatus("Initializing WebSocket connection", { host, attempt: connectionAttemptRef.current }, requestId);
+    logConnectionStatus("Initializing WebSocket connection", { host: hostResult.cleanHost, attempt: connectionAttemptRef.current }, requestId);
 
     const newSocket = new WebSocket(ws_uri);
 

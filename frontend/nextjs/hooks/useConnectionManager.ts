@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
+import { getHost, HostResult } from "../helpers/getHost";
 import { Data, ChatBoxSettings } from "../types/data";
-import { getHost } from "../helpers/getHost";
 
 export type ConnectionStatus =
   | "idle"
@@ -189,7 +189,7 @@ export const useConnectionManager = (
         isRetrying: false,
       });
     }
-  }, [finalConfig.maxRetries, updateResearchState, setLoading]);
+  }, [finalConfig.maxRetries, updateResearchState, getRetryDelay, setLoading]);
 
   // Process incoming WebSocket messages
   const processMessage = useCallback((data: any) => {
@@ -250,10 +250,9 @@ export const useConnectionManager = (
     });
 
     try {
-      const fullHost = getHost();
-      const protocol = fullHost.includes("https") ? "wss:" : "ws:";
-      const cleanHost = fullHost.replace("http://", "").replace("https://", "");
-      const ws_uri = `${protocol}//${cleanHost}/ws`;
+      const hostResult: HostResult = getHost();
+      const protocol = hostResult.isSecure ? "wss://" : "ws://";
+      const ws_uri = `${protocol}${hostResult.cleanHost}/ws`;
 
       const newSocket = new WebSocket(ws_uri);
       setSocket(newSocket);
@@ -333,7 +332,7 @@ export const useConnectionManager = (
     } catch (error) {
       handleConnectionFailure(`Failed to create connection: ${error}`);
     }
-  }, [finalConfig.connectionTimeout, handleConnectionSuccess, handleConnectionFailure, updateResearchState, processMessage]);
+  }, [updateResearchState, finalConfig.connectionTimeout, handleConnectionFailure, handleConnectionSuccess, processMessage, clearTimers]);
 
   // Start research with connection management
   const startResearch = useCallback((promptValue: string, chatBoxSettings: ChatBoxSettings) => {
