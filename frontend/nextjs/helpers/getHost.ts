@@ -10,14 +10,15 @@ export const getHost = ({ purpose }: GetHostParams = {}): string => {
     const urlParams = new URLSearchParams(window.location.search);
     const apiUrlInUrlParams = urlParams.get("GPTR_API_URL");
 
-    if (apiUrlInLocalStorage) {
-      return apiUrlInLocalStorage;
-    } else if (apiUrlInUrlParams) {
-      return apiUrlInUrlParams;
-    } else if (process.env.NEXT_PUBLIC_GPTR_API_URL) {
+    // Check environment variables first (higher priority)
+    if (process.env.NEXT_PUBLIC_GPTR_API_URL) {
       return process.env.NEXT_PUBLIC_GPTR_API_URL;
     } else if (process.env.REACT_APP_GPTR_API_URL) {
       return process.env.REACT_APP_GPTR_API_URL;
+    } else if (apiUrlInLocalStorage) {
+      return apiUrlInLocalStorage;
+    } else if (apiUrlInUrlParams) {
+      return apiUrlInUrlParams;
     } else if (purpose === 'langgraph-gui') {
       return host.includes('localhost') ? 'http%3A%2F%2F127.0.0.1%3A8123' : `https://${host}`;
     } else {
