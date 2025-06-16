@@ -42,13 +42,11 @@ Before running the MCP server, make sure you have:
 
 1. Clone the GPT Researcher repository:
 ```bash
-git clone https://github.com/assafelovic/gpt-researcher.git
-cd gpt-researcher
+git clone https://github.com/assafelovic/gptr-mcp.git
 ```
 
-2. Install the mcp-server dependencies:
+2. Install the dependencies:
 ```bash
-cd mcp-server
 pip install -r requirements.txt
 ```
 

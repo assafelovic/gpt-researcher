@@ -26,8 +26,7 @@ Make sure you have the GPT Researcher MCP server installed and running:
 
 ```bash
 # Clone the repository (if you haven't already)
-git clone https://github.com/assafelovic/gpt-researcher.git
-cd gpt-researcher/mcp-server
+git clone https://github.com/assafelovic/gptr-mcp.git
 
 # Install dependencies
 pip install -r requirements.txt
@@ -59,13 +58,13 @@ Verify that the server is running properly by checking the console output. The s
   "mcpServers": {
     "gpt-researcher": {
       "command": "/path/to/python",
-      "args": ["/path/to/gpt-researcher/mcp-server/server.py"]
+      "args": ["/path/to/gptr-mcp/server.py"]
     }
   }
 }
 ```
 
-Replace `/path/to/gpt-researcher/mcp-server/server.py` with the absolute path to your server.py file.
+Replace `/path/to/gptr-mcp/server.py` with the absolute path to your server.py file.
 
 Alternatively, if you prefer to manually start the server and just have Claude connect to it:
 
