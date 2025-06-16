@@ -1,5 +1,6 @@
 import React from 'react';
 import Question from './ResearchBlocks/Question';
+import InteractiveSearchBar from './ResearchBlocks/InteractiveSearchBar';
 import Answer from './ResearchBlocks/Answer';
 import Sources from './ResearchBlocks/Sources';
 import ImageSection from './ResearchBlocks/ImageSection';
@@ -15,6 +16,8 @@ interface ResearchResultsProps {
   allLogs: any[];
   chatBoxSettings: any;
   handleClickSuggestion: (value: string) => void;
+  onNewSearch?: (query: string) => void;
+  loading?: boolean;
 }
 
 export const ResearchResults: React.FC<ResearchResultsProps> = ({
@@ -22,7 +25,9 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
   answer,
   allLogs,
   chatBoxSettings,
-  handleClickSuggestion
+  handleClickSuggestion,
+  onNewSearch,
+  loading = false
 }) => {
   const groupedData = preprocessOrderedData(orderedData);
   const pathData = groupedData.find(data => data.type === 'path');
@@ -46,7 +51,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
   const sourceComponents = groupedData
     .filter(data => data.type === 'sourceBlock')
     .map((data, index) => (
-      <Sources key={`sourceBlock-${index}`} sources={data.items}/>
+      <Sources key={`sourceBlock-${index}`} sources={data.items} />
     ));
 
   const imageComponents = groupedData
@@ -63,7 +68,14 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
 
   return (
     <>
-      {initialQuestion && <Question question={initialQuestion.content} />}
+      {initialQuestion && onNewSearch && (
+        <InteractiveSearchBar
+          question={initialQuestion.content}
+          onNewSearch={onNewSearch}
+          disabled={loading}
+        />
+      )}
+      {initialQuestion && !onNewSearch && <Question question={initialQuestion.content} />}
       {orderedData.length > 0 && <LogsSection logs={allLogs} />}
       {subqueriesComponent && (
         <SubQuestions
@@ -78,4 +90,4 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
       {chatComponents}
     </>
   );
-}; 
+};

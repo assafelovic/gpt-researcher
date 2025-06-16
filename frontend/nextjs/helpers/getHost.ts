@@ -26,16 +26,16 @@ export const getHost = ({ purpose }: GetHostParams = {}): HostResult => {
     let selectedUrl: string;
 
     // Check environment variables first (higher priority)
-    if (process.env.NEXT_PUBLIC_GPTR_API_URL) {
-      selectedUrl = process.env.NEXT_PUBLIC_GPTR_API_URL;
+    if (purpose === 'langgraph-gui') {
+        selectedUrl = host.includes('localhost') ? 'http://127.0.0.1:8123' : `https://${host}`;
+    } else if (process.env.NEXT_PUBLIC_GPTR_API_URL) {
+        selectedUrl = process.env.NEXT_PUBLIC_GPTR_API_URL;
     } else if (process.env.REACT_APP_GPTR_API_URL) {
       selectedUrl = process.env.REACT_APP_GPTR_API_URL;
     } else if (apiUrlInLocalStorage) {
       selectedUrl = apiUrlInLocalStorage;
     } else if (apiUrlInUrlParams) {
       selectedUrl = apiUrlInUrlParams;
-    } else if (purpose === 'langgraph-gui') {
-      selectedUrl = host.includes('localhost') ? 'http://127.0.0.1:8123' : `https://${host}`;
     } else {
       selectedUrl = host.includes('localhost') ? 'http://localhost:8000' : `https://${host}`;
     }

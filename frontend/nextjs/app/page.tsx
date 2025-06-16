@@ -10,13 +10,13 @@ import { Data, ChatBoxSettings, QuestionData } from '../types/data';
 import { preprocessOrderedData } from '../utils/dataProcessing';
 import { ResearchResults } from '../components/ResearchResults';
 import {
-    logUserAction,
-    logSystem,
-    logError,
-    logResearchProgress,
-    logResearchComplete,
-    generateRequestId,
-    terminalLogger
+  logUserAction,
+  logSystem,
+  logError,
+  logResearchProgress,
+  logResearchComplete,
+  generateRequestId,
+  terminalLogger
 } from "../utils/terminalLogger";
 
 import Header from "@/components/Header";
@@ -559,6 +559,8 @@ export default function Home() {
                   allLogs={allLogs}
                   chatBoxSettings={chatBoxSettings}
                   handleClickSuggestion={handleClickSuggestion}
+                  onNewSearch={handleDisplayResult}
+                  loading={loading}
                 />
               </div>
 
