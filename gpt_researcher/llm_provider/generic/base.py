@@ -340,62 +340,78 @@ class GenericLLMProvider:
         """
         processed_messages: list[dict[str, str] | BaseMessage] = messages
 
-        # Start debug logging if available
+        # Start debug logging if available and no current interaction exists
         interaction_id: str | None = None
         start_time: float = time.time()
+        should_finish_interaction: bool = False
 
         if self.debug_logger is not None:
             try:
-                # Extract model and provider info
-                model_name: str = getattr(self.llm, "model_name", str(self.llm.__class__.__name__))
-                provider_name: str = (getattr(self.llm.__class__, "__module__") or "unknown").split(".")[-1]
+                # Check if there's already an active interaction (fallback scenario)
+                if self.debug_logger.current_interaction is None:
+                    # Extract model and provider info
+                    model_name: str = getattr(self.llm, "model_name", str(self.llm.__class__.__name__))
+                    provider_name: str = (getattr(self.llm.__class__, "__module__") or "unknown").split(".")[-1]
 
-                # Start logging interaction
-                interaction_id = self.debug_logger.start_interaction(
-                    step_name="chat_response",
-                    model=model_name,
-                    provider=provider_name,
-                    context_info={
-                        "stream": stream,
-                        "has_websocket": websocket is not None,
-                        "message_count": len(messages),
-                    },
-                )
+                    # Start logging interaction
+                    interaction_id = self.debug_logger.start_interaction(
+                        step_name="chat_response",
+                        model=model_name,
+                        provider=provider_name,
+                        context_info={
+                            "stream": stream,
+                            "has_websocket": websocket is not None,
+                            "message_count": len(messages),
+                        },
+                    )
+                    should_finish_interaction = True
 
-                # Log request details
-                system_msg: str = ""
-                user_msg: str = ""
-                if messages:
-                    for msg in messages:
-                        if isinstance(msg, dict):
-                            if msg.get("role") == "system":
-                                system_msg += msg.get("content", "") + "\n"
-                            elif msg.get("role") == "user":
-                                user_msg += msg.get("content", "") + "\n"
-                        elif hasattr(msg, "content"):
-                            if hasattr(msg, "type") and msg.type == "system":
-                                system_msg += str(msg.content) + "\n"
-                            else:
-                                user_msg += str(msg.content) + "\n"
+                    # Log request details
+                    system_msg: str = ""
+                    user_msg: str = ""
+                    if messages:
+                        for msg in messages:
+                            if isinstance(msg, dict):
+                                if msg.get("role") == "system":
+                                    system_msg += msg.get("content", "") + "\n"
+                                elif msg.get("role") == "user":
+                                    user_msg += msg.get("content", "") + "\n"
+                            elif hasattr(msg, "content"):
+                                if hasattr(msg, "type") and msg.type == "system":
+                                    system_msg += str(msg.content) + "\n"
+                                else:
+                                    user_msg += str(msg.content) + "\n"
 
-                # Get model parameters
-                temperature: float | None = getattr(self.llm, "temperature", None)
-                max_tokens: int | None = getattr(self.llm, "max_tokens", None)
-                model_kwargs: dict[str, Any] = getattr(self.llm, "model_kwargs", {})
+                    # Get model parameters
+                    temperature: float | None = getattr(self.llm, "temperature", None)
+                    max_tokens: int | None = getattr(self.llm, "max_tokens", None)
+                    model_kwargs: dict[str, Any] = getattr(self.llm, "model_kwargs", {})
 
-                self.debug_logger.log_request(
-                    system_message=system_msg.strip(),
-                    user_message=user_msg.strip(),
-                    full_messages=[
-                        msg
-                        if isinstance(msg, dict)
-                        else {"role": "user", "content": str(msg.content)}
-                        for msg in messages
-                    ],
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    **model_kwargs,
-                )
+                    self.debug_logger.log_request(
+                        system_message=system_msg.strip(),
+                        user_message=user_msg.strip(),
+                        full_messages=[
+                            msg
+                            if isinstance(msg, dict)
+                            else {"role": "user", "content": str(msg.content)}
+                            for msg in messages
+                        ],
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        **model_kwargs,
+                    )
+                else:
+                    # Reuse existing interaction for fallback scenarios
+                    interaction_id = self.debug_logger.current_interaction.interaction_id
+                    should_finish_interaction = False
+
+                    # Update the current interaction with fallback provider info if needed
+                    if self.debug_logger.current_interaction.is_fallback:
+                        model_name: str = getattr(self.llm, "model_name", str(self.llm.__class__.__name__))
+                        provider_name: str = (getattr(self.llm.__class__, "__module__") or "unknown").split(".")[-1]
+                        self.debug_logger.current_interaction.model = model_name
+                        self.debug_logger.current_interaction.provider = provider_name
+
             except Exception as e:
                 if self.verbose:
                     print(f"{Fore.YELLOW}⚠️ Debug logging start failed: {e.__class__.__name__}: {e}{Style.RESET_ALL}")
@@ -411,6 +427,7 @@ class GenericLLMProvider:
                 self.debug_logger is not None
                 and interaction_id
                 and interaction_id.strip()
+                and should_finish_interaction
             ):
                 try:
                     duration: float = time.time() - start_time
@@ -436,6 +453,7 @@ class GenericLLMProvider:
                 self.debug_logger is not None
                 and interaction_id
                 and interaction_id.strip()
+                and should_finish_interaction
             ):
                 try:
                     duration = time.time() - start_time
