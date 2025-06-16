@@ -1,0 +1,197 @@
+.markdown-content {
+  /* Base styles */
+  color: white;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 18px;
+  line-height: 1.6;
+
+  /* Headings */
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.2;
+    font-weight: 500;
+  }
+
+  h1 { font-size: 2.5em; }
+  h2 { font-size: 2em; }
+  h3 { font-size: 1.5em; }
+  h4 { font-size: 1.2em; }
+  h5 { font-size: 1.1em; }
+  h6 { font-size: 1em; }
+
+  /* Paragraphs and spacing */
+  p {
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* Text formatting */
+  strong, b {
+    font-weight: 600;
+  }
+
+  em, i {
+    font-style: italic;
+  }
+
+  /* Strikethrough - GFM feature */
+  del, s {
+    text-decoration: line-through;
+  }
+
+  /* Lists */
+  ul, ol {
+    margin: 0;
+    padding-left: 2em;
+    line-height: 1.6;
+  }
+
+  li {
+    margin: 0;
+    padding-left: 0.5em;
+  }
+
+  ul li {
+    list-style-type: disc;
+  }
+
+  ol li {
+    list-style-type: decimal;
+  }
+
+  /* Task lists - GFM feature */
+  ul.contains-task-list {
+    list-style-type: none;
+    padding-left: 0;
+  }
+
+  .task-list-item {
+    list-style-type: none;
+    padding-left: 1.5em;
+    position: relative;
+  }
+
+  .task-list-item-checkbox {
+    position: absolute;
+    left: 0;
+    top: 0.25em;
+    margin-right: 0.5em;
+  }
+
+  /* Links */
+  a {
+    color: rgb(20, 184, 166);
+    text-decoration: underline;
+    font-weight: 500;
+    
+    &:hover {
+      opacity: 0.8;
+      color: rgb(13, 148, 136);
+    }
+  }
+
+  /* Code blocks */
+  pre {
+    background-color: #1e1e1e;
+    padding: 1em;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin: 1em 0;
+  }
+
+  code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+    padding: 0 0.4em;
+    background-color: #1e1e1e;
+    border-radius: 3px;
+  }
+
+  /* Blockquotes */
+  blockquote {
+    border-left: 4px solid rgb(20, 184, 166);
+    margin: 0;
+    padding-left: 1em;
+    font-style: italic;
+    background-color: rgba(20, 184, 166, 0.1);
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* Tables - Theme-matching styling */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    background-color: #111827; /* Dark background matching the site theme */
+    border-radius: 4px;
+    overflow: hidden;
+    border: 2px solid #4B5563; /* Slightly thicker and lighter border for better visibility */
+    box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.1); /* Changed from purple to teal */
+  }
+
+  th, td {
+    border: 1px solid #4B5563; /* Lighter border color for better contrast */
+    padding: 0.75em;
+    text-align: left;
+  }
+
+  /* Add a slightly more visible outer border to the table */
+  tr:first-child th {
+    border-top: 2px solid #4B5563;
+  }
+  
+  tr:last-child td {
+    border-bottom: 2px solid #4B5563;
+  }
+  
+  th:first-child, td:first-child {
+    border-left: 2px solid #4B5563;
+  }
+  
+  th:last-child, td:last-child {
+    border-right: 2px solid #4B5563;
+  }
+
+  th {
+    background-color: #1f2937; /* Darker header background */
+    font-weight: 600;
+    color: white; /* Changed from purple to white to match rest of content */
+  }
+
+  tr:nth-child(even) {
+    background-color: #1a202c; /* Slightly lighter for alternating rows */
+  }
+
+  tr:hover {
+    background-color: #282c34; /* Highlight on hover */
+  }
+
+  /* Horizontal rule */
+  hr {
+    border: 0;
+    border-top: 1px solid #444;
+    margin: 1.5em 0;
+  }
+
+  /* Images */
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 1em 0;
+  }
+
+  /* Definition Lists */
+  dl {
+    margin: 1em 0;
+  }
+
+  dt {
+    font-weight: bold;
+    margin-top: 0.5em;
+  }
+
+  dd {
+    margin-left: 2em;
+    margin-bottom: 0.5em;
+  }
+} 
