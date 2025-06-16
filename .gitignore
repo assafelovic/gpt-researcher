@@ -59,3 +59,4 @@ debug_openrouter_loss.py
 debug_token_limits.py
 .buildx-cache
 llm_debug_logs
+frontend/vercel-nextjs
