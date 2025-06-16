@@ -90,7 +90,12 @@ class StructuredResearchPipeline:
 
         # Stage 3: Build structured narrative
         print("📝 Stage 3: Building structured narrative...")
-        narrative: StructuredNarrative = await self.narrative_builder.build_narrative(topic, fact_db, min_confidence, max_sections)
+        narrative: StructuredNarrative = await self.narrative_builder.build_narrative(
+            topic,
+            fact_db,
+            min_confidence,
+            max_sections,
+        )
         print(f"✅ Narrative built with {len(narrative.sections)} sections")
 
         # Stage 4: Generate quality reports
@@ -98,7 +103,11 @@ class StructuredResearchPipeline:
         fact_summary: dict[str, Any] = fact_db.get_fact_summary()
 
         # Assess quality of all narrative sections
-        section_assessments: list[ContentAssessment] = [section.quality_assessment for section in narrative.sections]
+        section_assessments: list[ContentAssessment] = [
+            section.quality_assessment
+            for section in narrative.sections
+            if section.quality_assessment
+        ]
         quality_report: dict[str, Any] = self.fluff_classifier.generate_quality_report(section_assessments)
 
         end_time: datetime = datetime.now()
@@ -154,12 +163,15 @@ class StructuredResearchPipeline:
         paragraphs: list[str] = [p.strip() for p in content.split("\n\n") if p.strip()]
 
         # Assess each paragraph
-        assessments: list[ContentAssessment] = await self.fluff_classifier.assess_paragraph_list(paragraphs, [citations] * len(paragraphs) if citations else None)
+        assessments: list[ContentAssessment] = await self.fluff_classifier.assess_paragraph_list(
+            paragraphs,
+            [citations] * len(paragraphs) if citations else None,
+        )
 
         # Improve low-quality paragraphs
         improved_paragraphs: list[str] = []
         for i, (paragraph, assessment) in enumerate(zip(paragraphs, assessments)):
-            if assessment.quality in [ContentQuality.FLUFF, ContentQuality.LOW]:
+            if assessment.quality in {ContentQuality.FLUFF, ContentQuality.LOW}:
                 print(f"🔧 Improving paragraph {i+1} (quality: {assessment.quality.value})")
                 improved = await self.fluff_classifier.improve_content(paragraph, assessment)
                 improved_paragraphs.append(improved)
@@ -173,7 +185,7 @@ class StructuredResearchPipeline:
             "original_content": content,
             "improved_content": "\n\n".join(improved_paragraphs),
             "quality_report": quality_report,
-            "improvements_made": sum(1 for a in assessments if a.quality in [ContentQuality.FLUFF, ContentQuality.LOW]),
+            "improvements_made": sum(1 for a in assessments if a.quality in {ContentQuality.FLUFF, ContentQuality.LOW}),
         }
 
     def export_results(
@@ -192,7 +204,10 @@ class StructuredResearchPipeline:
         else:
             raise ValueError(f"Unsupported export format: {format}")
 
-    def _export_as_markdown(self, results: ResearchResults) -> str:
+    def _export_as_markdown(
+        self,
+        results: ResearchResults,
+    ) -> str:
         """Export results as comprehensive markdown report."""
 
         md_parts: list[str] = [
@@ -258,7 +273,10 @@ class StructuredResearchPipeline:
 
         return "\n".join(md_parts)
 
-    def _export_as_html(self, results: ResearchResults) -> str:
+    def _export_as_html(
+        self,
+        results: ResearchResults,
+    ) -> str:
         """Export results as HTML report."""
 
         # Convert markdown to HTML (basic conversion)
@@ -312,7 +330,12 @@ class StructuredResearchPipeline:
     ) -> dict[str, Any]:
         """Validate the pipeline with test data."""
 
-        validation_results: dict[str, Any] = {"pipeline_status": "unknown", "components_tested": {}, "errors": [], "performance_metrics": {}}
+        validation_results: dict[str, Any] = {
+            "pipeline_status": "unknown",
+            "components_tested": {},
+            "errors": [],
+            "performance_metrics": {},
+        }
 
         try:
             # Test fact extraction
@@ -321,7 +344,11 @@ class StructuredResearchPipeline:
             facts: list[Fact] = await self.fact_extractor.extract_facts_from_sources(test_sources[:2])
             fact_extraction_time: float = (datetime.now() - start_time).total_seconds()
 
-            validation_results["components_tested"]["fact_extraction"] = {"status": "success", "facts_extracted": len(facts), "time_taken": fact_extraction_time}
+            validation_results["components_tested"]["fact_extraction"] = {
+                "status": "success",
+                "facts_extracted": len(facts),
+                "time_taken": fact_extraction_time,
+            }
 
             if len(facts) > 0:
                 # Test fluff classification
@@ -341,7 +368,12 @@ class StructuredResearchPipeline:
                 print("🧪 Testing narrative building...")
                 start_time: datetime = datetime.now()
                 fact_db: FactDatabase = self.fact_extractor.get_fact_database()
-                narrative: StructuredNarrative = await self.narrative_builder.build_narrative("test topic", fact_db, min_confidence=0.3, max_sections=3)
+                narrative: StructuredNarrative = await self.narrative_builder.build_narrative(
+                    "test topic",
+                    fact_db,
+                    min_confidence=0.3,
+                    max_sections=3,
+                )
                 narrative_building_time: float = (datetime.now() - start_time).total_seconds()
 
                 validation_results["components_tested"]["narrative_building"] = {
@@ -356,7 +388,11 @@ class StructuredResearchPipeline:
                     print("🧪 Testing debate pipeline...")
                     start_time: datetime = datetime.now()
                     try:
-                        verdict: Verdict = await self.debate_pipeline.run_debate("test topic", fact_db, min_confidence=0.3)
+                        verdict: Verdict = await self.debate_pipeline.run_debate(
+                            "test topic",
+                            fact_db,
+                            min_confidence=0.3,
+                        )
                         debate_time: float = (datetime.now() - start_time).total_seconds()
 
                         validation_results["components_tested"]["debate_pipeline"] = {
@@ -370,7 +406,10 @@ class StructuredResearchPipeline:
                             "has_verdict_summary": bool(verdict.verdict_summary),
                         }
                     except Exception as e:
-                        validation_results["components_tested"]["debate_pipeline"] = {"status": "failed", "error": f"{e.__class__.__name__}: {e}"}
+                        validation_results["components_tested"]["debate_pipeline"] = {
+                            "status": "failed",
+                            "error": f"{e.__class__.__name__}: {e}",
+                        }
                         errors: list[str] = validation_results["errors"]
                         errors.append(f"Debate pipeline: {e.__class__.__name__}: {e}")
 
@@ -387,12 +426,28 @@ class StructuredResearchPipeline:
             errors.append(f"Pipeline validation failed: {e.__class__.__name__}: {e}")
 
         # Calculate performance metrics
-        total_time: float = sum(component.get("time_taken", 0) for component in validation_results["components_tested"].values() if isinstance(component, dict))
+        total_time: float = sum(
+            component.get("time_taken", 0)
+            for component in validation_results["components_tested"].values()
+            if isinstance(component, dict)
+        )
 
         validation_results["performance_metrics"] = {
             "total_validation_time": total_time,
-            "components_successful": len([c for c in validation_results["components_tested"].values() if isinstance(c, dict) and c.get("status") == "success"]),
-            "components_failed": len([c for c in validation_results["components_tested"].values() if isinstance(c, dict) and c.get("status") == "failed"]),
+            "components_successful": len(
+                [
+                    c
+                    for c in validation_results["components_tested"].values()
+                    if isinstance(c, dict) and c.get("status") == "success"
+                ]
+            ),
+            "components_failed": len(
+                [
+                    c
+                    for c in validation_results["components_tested"].values()
+                    if isinstance(c, dict) and c.get("status") == "failed"
+                ]
+            ),
         }
 
         return validation_results

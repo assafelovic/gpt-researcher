@@ -71,7 +71,7 @@ WORKDIR /usr/src/app
 
 # Install Node.js and supervisord with retry logic
 RUN apt-get update && \
-  apt-get install -y curl supervisor && \
+  apt-get install -y curl supervisor nginx && \
   curl -fsSL --retry 3 --retry-delay 10 https://deb.nodesource.com/setup_20.x | bash - && \
   apt-get install -y nodejs && \
   rm -rf /var/lib/apt/lists/*
@@ -88,6 +88,10 @@ ARG NEXT_PORT=3000
 ENV NEXT_PORT=${NEXT_PORT}
 EXPOSE ${NEXT_PORT}
 
+# Internal Next.js port (not exposed)
+ARG NEXT_INTERNAL_PORT=3001
+ENV NEXT_INTERNAL_PORT=${NEXT_INTERNAL_PORT}
+
 # Copy application files
 COPY ./ ./
 
@@ -98,6 +102,72 @@ COPY --from=frontend-builder /app/frontend/nextjs/public ./frontend/nextjs/publi
 COPY --from=frontend-builder /app/frontend/nextjs/package.json ./frontend/nextjs/package.json
 # Ensure next.config.mjs and other necessary files are present
 COPY --from=frontend-builder /app/frontend/nextjs/next.config.mjs ./frontend/nextjs/next.config.mjs
+
+# Create nginx configuration
+RUN echo 'events {' > /etc/nginx/nginx.conf && \
+  echo '    worker_connections 1024;' >> /etc/nginx/nginx.conf && \
+  echo '}' >> /etc/nginx/nginx.conf && \
+  echo '' >> /etc/nginx/nginx.conf && \
+  echo 'http {' >> /etc/nginx/nginx.conf && \
+  echo '    include /etc/nginx/mime.types;' >> /etc/nginx/nginx.conf && \
+  echo '    default_type application/octet-stream;' >> /etc/nginx/nginx.conf && \
+  echo '' >> /etc/nginx/nginx.conf && \
+  echo '    # Logging' >> /etc/nginx/nginx.conf && \
+  echo '    access_log /var/log/nginx/access.log;' >> /etc/nginx/nginx.conf && \
+  echo '    error_log /var/log/nginx/error.log;' >> /etc/nginx/nginx.conf && \
+  echo '' >> /etc/nginx/nginx.conf && \
+  echo '    # Gzip compression' >> /etc/nginx/nginx.conf && \
+  echo '    gzip on;' >> /etc/nginx/nginx.conf && \
+  echo '    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;' >> /etc/nginx/nginx.conf && \
+  echo '' >> /etc/nginx/nginx.conf && \
+  echo '    # WebSocket support' >> /etc/nginx/nginx.conf && \
+  echo '    map $http_upgrade $connection_upgrade {' >> /etc/nginx/nginx.conf && \
+  echo '        default upgrade;' >> /etc/nginx/nginx.conf && \
+  echo '        '"'"''"'"' close;' >> /etc/nginx/nginx.conf && \
+  echo '    }' >> /etc/nginx/nginx.conf && \
+  echo '' >> /etc/nginx/nginx.conf && \
+  echo '    server {' >> /etc/nginx/nginx.conf && \
+  echo '        listen 3000;' >> /etc/nginx/nginx.conf && \
+  echo '        server_name _;' >> /etc/nginx/nginx.conf && \
+  echo '' >> /etc/nginx/nginx.conf && \
+  echo '        # Proxy backend routes to FastAPI server' >> /etc/nginx/nginx.conf && \
+  echo '        location /outputs {' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_pass http://127.0.0.1:8000;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header Host $host;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Real-IP $remote_addr;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Forwarded-Proto $scheme;' >> /etc/nginx/nginx.conf && \
+  echo '        }' >> /etc/nginx/nginx.conf && \
+  echo '' >> /etc/nginx/nginx.conf && \
+  echo '        location /reports {' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_pass http://127.0.0.1:8000;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header Host $host;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Real-IP $remote_addr;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Forwarded-Proto $scheme;' >> /etc/nginx/nginx.conf && \
+  echo '        }' >> /etc/nginx/nginx.conf && \
+  echo '' >> /etc/nginx/nginx.conf && \
+  echo '        location /ws {' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_pass http://127.0.0.1:8000;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_http_version 1.1;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header Upgrade $http_upgrade;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header Connection $connection_upgrade;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header Host $host;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Real-IP $remote_addr;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Forwarded-Proto $scheme;' >> /etc/nginx/nginx.conf && \
+  echo '        }' >> /etc/nginx/nginx.conf && \
+  echo '' >> /etc/nginx/nginx.conf && \
+  echo '        # Proxy all other requests to Next.js' >> /etc/nginx/nginx.conf && \
+  echo '        location / {' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_pass http://127.0.0.1:3001;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header Host $host;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Real-IP $remote_addr;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Forwarded-Proto $scheme;' >> /etc/nginx/nginx.conf && \
+  echo '        }' >> /etc/nginx/nginx.conf && \
+  echo '    }' >> /etc/nginx/nginx.conf && \
+  echo '}' >> /etc/nginx/nginx.conf
 
 # Create supervisord configuration
 # stdout/stderr_maxbytes prevents log file rotation and ensures continuous output
@@ -118,8 +188,17 @@ RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '[program:frontend]' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo 'command=npm run start -- -p %(ENV_NEXT_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=npm run start -- -p %(ENV_NEXT_INTERNAL_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'directory=/usr/src/app/frontend/nextjs' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile=/dev/stdout' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile=/dev/stderr' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '[program:nginx]' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=nginx -g "daemon off;"' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stdout_logfile=/dev/stdout' >> /etc/supervisor/conf.d/supervisord.conf && \
