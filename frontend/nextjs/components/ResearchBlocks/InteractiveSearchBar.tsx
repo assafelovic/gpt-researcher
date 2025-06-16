@@ -4,13 +4,11 @@ import { motion } from 'framer-motion';
 interface InteractiveSearchBarProps {
   question: string;
   onNewSearch: (query: string) => void;
-  disabled?: boolean;
 }
 
 const InteractiveSearchBar: React.FC<InteractiveSearchBarProps> = ({
   question,
-  onNewSearch,
-  disabled = false
+  onNewSearch
 }) => {
   const [searchValue, setSearchValue] = useState(question);
   const [isFocused, setIsFocused] = useState(false);
@@ -23,7 +21,7 @@ const InteractiveSearchBar: React.FC<InteractiveSearchBarProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchValue.trim() && searchValue.trim() !== question && !disabled) {
+    if (searchValue.trim()) {
       onNewSearch(searchValue.trim());
     }
   };
@@ -40,7 +38,7 @@ const InteractiveSearchBar: React.FC<InteractiveSearchBarProps> = ({
     inputRef.current?.focus();
   };
 
-  const hasChanged = searchValue.trim() !== question && searchValue.trim() !== '';
+  const hasValue = searchValue.trim() !== '';
 
   return (
     <motion.div
