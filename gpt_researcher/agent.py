@@ -154,6 +154,9 @@ class GPTResearcher:
         self.memory = Memory(
             self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
         )
+        
+        # Set default encoding to utf-8
+        self.encoding = kwargs.get('encoding', 'utf-8')
 
         # Initialize components
         self.research_conductor: ResearchConductor = ResearchConductor(self)

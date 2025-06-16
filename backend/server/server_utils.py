@@ -110,12 +110,20 @@ def sanitize_filename(filename: str) -> str:
     # 255 - len(os.getcwd()) - len("\\gpt-researcher\\outputs\\") - len("task_") - len(timestamp) - len("_.json") - safety_margin
     max_task_length = 255 - len(os.getcwd()) - 24 - 5 - 10 - 6 - 5  # ~189 chars for task
     
-    # Truncate task if needed
-    truncated_task = task[:max_task_length] if len(task) > max_task_length else task
-    
+    # Truncate task if needed (by bytes)
+    truncated_task = ""
+    byte_count = 0
+    for char in task:
+        char_bytes = len(char.encode('utf-8'))
+        if byte_count + char_bytes <= max_task_length:
+            truncated_task += char
+            byte_count += char_bytes
+        else:
+            break
+
     # Reassemble and clean the filename
     sanitized = f"{prefix}_{timestamp}_{truncated_task}"
-    return re.sub(r"[^\w\s-]", "", sanitized).strip()
+    return re.sub(r"[^\w-]", "", sanitized).strip()
 
 
 async def handle_start_command(websocket, data: str, manager):
