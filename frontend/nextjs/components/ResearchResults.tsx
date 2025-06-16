@@ -1,5 +1,4 @@
 import React from 'react';
-import Question from './ResearchBlocks/Question';
 import InteractiveSearchBar from './ResearchBlocks/InteractiveSearchBar';
 import Answer from './ResearchBlocks/Answer';
 import Sources from './ResearchBlocks/Sources';
@@ -39,9 +38,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
       return (data.type === 'question' || data.type === 'chat');
     })
     .map((data, index) => {
-      if (data.type === 'question') {
-        return <Question key={`question-${index}`} question={data.content} />;
-      } else {
+      if (data.type !== 'question') {
         return <Answer key={`chat-${index}`} answer={data.content} />;
       }
     });
@@ -66,13 +63,13 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
 
   return (
     <>
-            {initialQuestion && onNewSearch && (
+      {initialQuestion && onNewSearch && (
         <InteractiveSearchBar
           question={initialQuestion.content}
           onNewSearch={onNewSearch}
         />
       )}
-      {initialQuestion && !onNewSearch && <Question question={initialQuestion.content} />}
+      {initialQuestion && !onNewSearch }
       {orderedData.length > 0 && <LogsSection logs={allLogs} />}
       {subqueriesComponent && (
         <SubQuestions
