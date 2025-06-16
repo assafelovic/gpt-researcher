@@ -61,7 +61,7 @@ class FireCrawl:
 
             # Extract the content (markdown) and title from FireCrawl response
             content = response.data.markdown
-            title = response["metadata"]["title"]
+            title = response.metadata.get("title", "")
 
             # Parse the HTML content of the response to create a BeautifulSoup object for the utility functions
             response_bs = self.session.get(self.link, timeout=4)
