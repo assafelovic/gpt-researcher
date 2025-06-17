@@ -129,9 +129,18 @@ async def write_conclusion(
     visualizer: LLMInteractionVisualizer = get_llm_visualizer()
     visualizer.start_interaction("Generate Report Conclusion")
 
+    # DEBUG: Add logging to track the context parameter
+    print(f"DEBUG write_conclusion: query='{query}'")
+    print(f"DEBUG write_conclusion: context length={len(context) if context else 'None'}")
+    print(f"DEBUG write_conclusion: context preview='{context[:200] if context else 'None'}...'")
+
     try:
         system_msg: str = f"{agent_role_prompt}"
         user_msg: str = prompt_family.generate_report_conclusion(query=query, report_content=context, language=config.language)
+
+        # DEBUG: Log the generated prompt
+        print(f"DEBUG write_conclusion: user_msg length={len(user_msg)}")
+        print(f"DEBUG write_conclusion: user_msg preview='{user_msg[:500]}...'")
 
         conclusion: str = await create_chat_completion(
             model=config.smart_llm_model,
