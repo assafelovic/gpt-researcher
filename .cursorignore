@@ -40,9 +40,7 @@ package-lock.json
 *.swp
 
 # Log files
-logs/
 *.orig
-*.log
 server_log.txt
 
 #Cursor Rules

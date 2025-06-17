@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import WebSocket
+
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import Tone
 
@@ -17,7 +18,7 @@ class DetailedReport:
         document_urls: list[str] | None = None,
         query_domains: list[str] | None = None,
         config_path: str | None = None,
-        tone: Tone | str = "",
+        tone: Tone | str = Tone.Objective,
         websocket: WebSocket | None = None,
         subtopics: list[dict[str, Any]] | None = None,
         headers: dict[str, Any] | None = None,
@@ -30,7 +31,13 @@ class DetailedReport:
         self.document_urls: list[str] = [] if document_urls is None else document_urls
         self.query_domains: list[str] = [] if query_domains is None else query_domains
         self.config_path: str | None = config_path
-        self.tone: Tone = tone if isinstance(tone, Tone) else Tone.Objective if tone is None else Tone(tone)
+        self.tone: Tone = (
+            tone
+            if isinstance(tone, Tone)
+            else Tone.Objective
+            if tone is None
+            else Tone(tone)
+        )
         self.websocket: WebSocket | None = websocket
         self.subtopics: list[dict[str, Any]] | None = subtopics
         self.headers: dict[str, Any] | None = {} if headers is None else headers
@@ -55,17 +62,45 @@ class DetailedReport:
         self.global_urls: set[str] = set() if self.source_urls is None else set(self.source_urls)
 
     async def run(self) -> str:
+        print("DEBUG: Starting detailed report generation")
         await self._initial_research()
+        print("DEBUG: Initial research completed")
+
         subtopics: list[dict[str, Any]] = await self._get_all_subtopics()
+        print(f"DEBUG: Got {len(subtopics)} subtopics: {[s.get('task', 'NO TASK') for s in subtopics]}")
+
         report_introduction: str = await self.gpt_researcher.write_introduction()
+        print(f"DEBUG: Introduction written, length: {len(report_introduction)}")
+
         _, report_body = await self._generate_subtopic_reports(subtopics)
+        print(f"DEBUG: Subtopic reports generated, report_body length: {len(report_body)}")
+
         self.gpt_researcher.visited_urls.update(self.global_urls)
         report: str = await self._construct_detailed_report(report_introduction, report_body)
+        print(f"DEBUG: Final report constructed, length: {len(report)}")
         return report
 
     async def _initial_research(self) -> None:
         await self.gpt_researcher.conduct_research()
-        self.global_context = self.gpt_researcher.context
+
+        # Convert context to strings if it contains dictionaries
+        if self.gpt_researcher.context:
+            context_strings: list[str] = []
+            for item in self.gpt_researcher.context:
+                if isinstance(item, str):
+                    context_strings.append(item)
+                elif isinstance(item, dict) and "raw_content" in item:
+                    # Extract content from dict if it has raw_content key
+                    content: str = item["raw_content"]
+                    if content and isinstance(content, str):
+                        context_strings.append(content)
+                else:
+                    # Convert other types to string as fallback
+                    context_strings.append(str(item))
+            self.global_context = context_strings
+        else:
+            self.global_context = []
+
         self.global_urls = self.gpt_researcher.visited_urls
 
     async def _get_all_subtopics(self) -> list[dict[str, Any]]:
@@ -87,12 +122,19 @@ class DetailedReport:
         subtopic_reports: list[dict[str, Any]] = []
         subtopics_report_body: str = ""
 
-        for subtopic in subtopics:
+        print(f"DEBUG: Processing {len(subtopics)} subtopics")
+        for i, subtopic in enumerate(subtopics):
+            print(f"DEBUG: Processing subtopic {i + 1}/{len(subtopics)}: {subtopic.get('task', 'NO TASK')}")
             result: dict[str, Any] = await self._get_subtopic_report(subtopic)
+            print(f"DEBUG: Subtopic {i + 1} result - report length: {len(result.get('report', ''))}")
             if result["report"]:
                 subtopic_reports.append(result)
                 subtopics_report_body += f"\n\n\n{result['report']}"
+                print(f"DEBUG: Added subtopic {i + 1} to report body. Total body length: {len(subtopics_report_body)}")
+            else:
+                print(f"DEBUG: Subtopic {i + 1} had empty report!")
 
+        print(f"DEBUG: Final report body length: {len(subtopics_report_body)}")
         return subtopic_reports, subtopics_report_body
 
     async def _get_subtopic_report(
@@ -117,7 +159,21 @@ class DetailedReport:
             source_urls=self.source_urls,
         )
 
-        subtopic_assistant.context = list(set(self.global_context))  # type: ignore
+        # Safely assign context, handling both strings and dictionaries
+        if self.global_context:
+            try:
+                # Try to deduplicate if all items are strings
+                if all(isinstance(item, str) for item in self.global_context):
+                    subtopic_assistant.context = list(set(self.global_context))
+                else:
+                    # If there are dictionaries, just assign directly without deduplication
+                    subtopic_assistant.context = self.global_context.copy()
+            except Exception:
+                # Fallback: just assign directly
+                subtopic_assistant.context = self.global_context.copy()
+        else:
+            subtopic_assistant.context = []
+
         await subtopic_assistant.conduct_research()
 
         draft_section_titles: str | list[str] = await subtopic_assistant.get_draft_section_titles(current_subtopic_task)
@@ -141,21 +197,20 @@ class DetailedReport:
 
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
         # Ensure context contains only strings (hashable types) for set operation
-#        context_strings: list[str] = []
-#        for item in subtopic_assistant.context:
-#            if isinstance(item, str):
-#                context_strings.append(item)
-#            elif isinstance(item, dict) and "raw_content" in item:
-#                # Extract content from dict if it has raw_content key
-#                content: str = item["raw_content"]
-#                if content and isinstance(content, str):
-#                    context_strings.append(content)
-#            else:
-#                # Convert other types to string as fallback
-#                context_strings.append(str(item))
-#        self.global_context = list(set(context_strings))
+        context_strings: list[str] = []
+        for item in subtopic_assistant.context:
+            if isinstance(item, str):
+                context_strings.append(item)
+            elif isinstance(item, dict) and "raw_content" in item:
+                # Extract content from dict if it has raw_content key
+                content: str = item["raw_content"]
+                if content and isinstance(content, str):
+                    context_strings.append(content)
+            else:
+                # Convert other types to string as fallback
+                context_strings.append(str(item))
+        self.global_context = list(set(context_strings))
 
-        self.global_context = list(set(subtopic_assistant.context))
         self.global_urls.update(subtopic_assistant.visited_urls)
 
         self.existing_headers.append(
@@ -172,8 +227,14 @@ class DetailedReport:
         introduction: str,
         report_body: str,
     ) -> str:
+        print(f"DEBUG: Constructing detailed report with report_body length: {len(report_body)}")
         toc: str = self.gpt_researcher.table_of_contents(report_body)
+        print(f"DEBUG: TOC generated, length: {len(toc)}")
+
+        print(f"DEBUG: About to call write_report_conclusion with report_body length: {len(report_body)}")
         conclusion: str = await self.gpt_researcher.write_report_conclusion(report_body)
+        print(f"DEBUG: Conclusion generated, length: {len(conclusion)}")
+
         conclusion_with_references: str = self.gpt_researcher.add_references(
             conclusion,
             self.gpt_researcher.visited_urls,

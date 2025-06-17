@@ -101,12 +101,13 @@
     "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
     "workbench.editorAssociations": {
         "*.ipynb": "jupyter-notebook",
-        "*.md": "vscode.markdown.preview.editor",
+        "*.md": "default",
         "*.svg": "svgPreviewer.customEditor",
         "*.copilotmd": "markdown-preview-enhanced",
         "*.ui": "default",
         "{git,gitlens}:/**/*.ui": "default",
-        "*.docx": "default"
+        "*.docx": "default",
+        "*.pdf": "pdf.preview"
     },
     "python.testing.unittestArgs": [
         "-v",
