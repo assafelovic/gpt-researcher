@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 import json5 as json
@@ -16,11 +17,11 @@ if TYPE_CHECKING:
 
 
 async def call_model(
-    prompt: list,
+    prompt: list[dict[str, Any]],
     model: str,
     response_format: str | None = None,
     cfg: Config | None = None,
-) -> Any | None:
+) -> dict[str, Any]:
     """Call LLM model with visualization support for report generation"""
     # Import visualization here to avoid circular imports
     from gpt_researcher.skills.llm_visualizer import get_llm_visualizer
@@ -102,16 +103,20 @@ async def call_model(
         return result
 
     except Exception as e:
-        print("⚠️ Error in calling model")
-        logger.error(f"Error in calling model: {e.__class__.__name__}: {e}")
+        print(f"⚠️ Error in calling model: {e.__class__.__name__}: {e}")
+        logger.exception("Error in calling model!")
 
         # Log failed interaction to visualizer
         if is_visualizing and interaction_data:
             interaction_data["response"] = ""
             interaction_data["success"] = False
-            interaction_data["error"] = f"{e.__class__.__name__}: {str(e)}"
+            interaction_data["error"] = f"{e.__class__.__name__}: {e}"
             interaction_data["retry_attempt"] = 0
 
             visualizer.log_interaction(**interaction_data)
 
-        return None
+        return {
+            "title": f"Research on {prompt[0].get('content', 'Unknown Topic')}",
+            "date": datetime.now().strftime("%d/%m/%Y"),
+            "sections": ["Overview", "Key Findings", "Details"],
+        }

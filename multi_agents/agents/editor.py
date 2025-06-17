@@ -55,11 +55,7 @@ class EditorAgent:
             response_format="json",
         )
 
-        return {
-            "title": plan.get("title"),
-            "date": plan.get("date"),
-            "sections": plan.get("sections"),
-        }
+        return plan
 
     async def run_parallel_research(self, research_state: dict[str, Any]) -> dict[str, list[str]]:
         """Execute parallel research tasks for each section.
