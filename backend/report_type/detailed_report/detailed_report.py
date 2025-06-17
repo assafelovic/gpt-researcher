@@ -232,7 +232,12 @@ class DetailedReport:
         print(f"DEBUG: TOC generated, length: {len(toc)}")
 
         print(f"DEBUG: About to call write_report_conclusion with report_body length: {len(report_body)}")
-        conclusion: str = await self.gpt_researcher.write_report_conclusion(report_body)
+
+        # Fix: If report_body is empty (no subtopics generated), use introduction as context
+        conclusion_context = report_body if report_body.strip() else introduction
+        print(f"DEBUG: Using conclusion_context length: {len(conclusion_context)} (using {'report_body' if report_body.strip() else 'introduction'})")
+
+        conclusion: str = await self.gpt_researcher.write_report_conclusion(conclusion_context)
         print(f"DEBUG: Conclusion generated, length: {len(conclusion)}")
 
         conclusion_with_references: str = self.gpt_researcher.add_references(
