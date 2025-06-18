@@ -67,12 +67,13 @@ For academic or highly specialized research, consider increasing both breadth an
 To change the default configurations, you can simply add env variables to your `.env` file as named above or export manually in your local project directory.
 
 For example, to manually change the search engine and report format:
+
 ```bash
 export RETRIEVER=bing
 export REPORT_FORMAT=IEEE
 ```
+
 Please note that you might need to export additional env vars and obtain API keys for other supported search retrievers and LLM providers. Please follow your console logs for further assistance.
 To learn more about additional LLM support you can check out the docs [here](/docs/gpt-researcher/llms/llms).
 
 You can also include your own external JSON file `config.json` by adding the path in the `config_file` param.
-

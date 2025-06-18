@@ -1,14 +1,43 @@
+from __future__ import annotations
+
 import importlib.util
 import logging
 import os
-import sys
+from typing import Any
+
+from fastapi import WebSocket
 
 logger = logging.getLogger(__name__)
 
-async def stream_output(log_type, step, content, websocket=None, with_data=False, data=None):
+VALID_RETRIEVERS: list[str] = [
+    "arxiv",
+    "bing",
+    "custom",
+    "duckduckgo",
+    "exa",
+    "google",
+    "searchapi",
+    "searx",
+    "semantic_scholar",
+    "serpapi",
+    "serper",
+    "tavily",
+    "pubmed_central",
+    "mcp",
+    "mock"
+]
+
+async def stream_output(
+    log_type: str,
+    step: str,
+    content: str,
+    websocket: WebSocket | None = None,
+    with_data: bool = False,
+    data: Any | None = None,
+):
     """
     Stream output to the client.
-    
+
     Args:
         log_type (str): The type of log
         step (str): The step being performed
@@ -38,10 +67,10 @@ async def stream_output(log_type, step, content, websocket=None, with_data=False
 def check_pkg(pkg: str) -> None:
     """
     Checks if a package is installed and raises an error if not.
-    
+
     Args:
         pkg (str): The package name
-    
+
     Raises:
         ImportError: If the package is not installed
     """
@@ -52,44 +81,24 @@ def check_pkg(pkg: str) -> None:
             f"`pip install -U {pkg_kebab}`"
         )
 
-# Valid retrievers for fallback
-VALID_RETRIEVERS = [
-    "tavily",
-    "custom",
-    "duckduckgo",
-    "searchapi",
-    "serper",
-    "serpapi",
-    "google",
-    "searx",
-    "bing",
-    "arxiv",
-    "semantic_scholar",
-    "pubmed_central",
-    "exa",
-    "mcp",
-    "mock"
-]
-
-def get_all_retriever_names():
-    """
-    Get all available retriever names
-    :return: List of all available retriever names
-    :rtype: list
-    """
+# Get a list of all retriever names to be used as validators for supported retrievers
+def get_all_retriever_names() -> list[str]:
+    """Gets a list of all retriever names to be used as validators for supported retrievers."""
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        
+
         # Get all items in the current directory
         all_items = os.listdir(current_dir)
-        
+
         # Filter out only the directories, excluding __pycache__
         retrievers = [
-            item for item in all_items 
+            item for item in all_items
             if os.path.isdir(os.path.join(current_dir, item)) and not item.startswith('__')
         ]
-        
-        return retrievers
+
     except Exception as e:
-        logger.error(f"Error getting retrievers: {e}")
+        logger.error(f"Error getting retrievers: {e.__class__.__name__}: {e}")
         return VALID_RETRIEVERS
+
+    else:
+        return retrievers

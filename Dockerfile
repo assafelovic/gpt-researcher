@@ -1,16 +1,21 @@
 # Stage 1: Browser and build tools installation
-#FROM python:3.13.3-slim-bookworm AS install-browser
-FROM python:3.11.4-slim-bullseye AS install-browser
+#FROM python:3.11.4-slim-bullseye AS install-browser
+FROM python:3.13.3-slim-bookworm AS install-browser
 
 # Install Chromium, Chromedriver, Firefox, Geckodriver, and build tools in one layer
 RUN apt-get update \
     && apt-get install -y gnupg wget ca-certificates --no-install-recommends \
     && ARCH=$(dpkg --print-architecture) \
-    && wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=${ARCH}] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y chromium chromium-driver \
-    && chromium --version && chromedriver --version \
+    && if [ "$ARCH" = "arm64" ]; then \
+        apt-get install -y chromium chromium-driver \
+        && chromium --version && chromedriver --version; \
+    else \
+        wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+        && echo "deb [arch=${ARCH}] http://dl.google.com/linux/chrome/deb/ stable main" \
+            > /etc/apt/sources.list.d/google-chrome.list \
+        && apt-get update \
+        && apt-get install -y google-chrome-stable; \
+    fi \
     && apt-get install -y --no-install-recommends firefox-esr build-essential \
     && GECKO_ARCH=$(case ${ARCH} in amd64) echo "linux64" ;; arm64) echo "linux-aarch64" ;; *) echo "linux64" ;; esac) \
     && wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
@@ -18,6 +23,7 @@ RUN apt-get update \
     && chmod +x geckodriver \
     && mv geckodriver /usr/local/bin/ \
     && rm geckodriver-v0.36.0-${GECKO_ARCH}.tar.gz \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*  # Clean up apt lists to reduce image size
 
 # Stage 2: Python dependencies installation
@@ -61,4 +67,6 @@ WORKDIR /usr/src/app
 
 # Copy the rest of the application files with proper ownership
 COPY --chown=gpt-researcher:gpt-researcher ./ ./
-CMD uvicorn main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}
+
+# Use shell form for CMD to enable environment variable substitution
+CMD uvicorn main:app --host $HOST --port $PORT --workers $WORKERS

@@ -6,7 +6,7 @@ import sys
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
-from backend.server.server_utils import CustomLogsHandler
+from src.logs_handler import CustomLogsHandler
 
 def test_logs_creation():
     # Print current working directory

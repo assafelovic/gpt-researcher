@@ -6,12 +6,11 @@ import "./globals.css";
 
 const inter = Lexend({ subsets: ["latin"] });
 
-let title = "GPT Researcher";
-let description =
-  "LLM based autonomous agent that conducts local and web research on any topic and generates a comprehensive report with citations.";
-let url = "https://github.com/assafelovic/gpt-researcher";
+let title = "ResearchWizard | Powered by th3w1zard1";
+let description = "Your intelligent AI research assistant that turns complex topics into clear insights. Receive thorough reports with verified references, professional layout, and personalized content—all accomplished with just one click.";
+let url = "https://github.com/th3w1zard1";
 let ogimage = "/favicon.ico";
-let sitename = "GPT Researcher";
+let sitename = "ResearchWizard";
 
 export const metadata: Metadata = {
   metadataBase: new URL(url),
@@ -46,6 +45,14 @@ export default function RootLayout({
   return (
     <html className="gptr-root" lang="en">
       <head>
+        {/* Font Awesome Icons */}
+        {/*<link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
+        />*/}
         <PlausibleProvider domain="localhost:3000" />
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />
       </head>
@@ -53,6 +60,17 @@ export default function RootLayout({
         className={`app-container ${inter.className} flex min-h-screen flex-col justify-between`}
         suppressHydrationWarning
       >
+        {/* Wizard background */}
+        {/*<div
+          className="fixed inset-0 z-[-1] opacity-40"
+          style={{
+            backgroundImage: 'url("/powerful_wizard.png")',
+            backgroundPosition: 'center',
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed'
+          }}
+        />*/}
         {children}
       </body>
     </html>

@@ -1,12 +1,11 @@
-import './index.css';
+import "./index.css";
 
-import React from 'react';
+import React from "react";
 import { useRef, useState, useEffect, useCallback } from "react";
-import { useWebSocket } from '../hooks/useWebSocket';
 
-import { Data, ChatBoxSettings, QuestionData } from '../types/data';
-import { preprocessOrderedData } from '../utils/dataProcessing';
-import { ResearchResults } from '../components/ResearchResults';
+import { Data, ChatBoxSettings, QuestionData } from "../types/data";
+import { preprocessOrderedData } from "../utils/dataProcessing";
+import { ResearchResults } from "../components/ResearchResults";
 
 import Header from "../components/Header";
 import Hero from "../components/Hero";
@@ -14,6 +13,38 @@ import Footer from "../components/Footer";
 import InputArea from "../components/ResearchBlocks/elements/InputArea";
 import HumanFeedback from "../components/HumanFeedback";
 import LoadingDots from "../components/LoadingDots";
+
+// Simple WebSocket hook implementation
+const useWebSocket = (
+  promptValue: string,
+  chatBoxSettings: ChatBoxSettings,
+  setOrderedData: React.Dispatch<React.SetStateAction<Data[]>>,
+  setAnswer: React.Dispatch<React.SetStateAction<string>>,
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>,
+  setShowHumanFeedback: React.Dispatch<React.SetStateAction<boolean>>,
+  setQuestionForHuman: React.Dispatch<React.SetStateAction<boolean | true>>,
+) => {
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const requestIdRef = useRef<string>(`req-${Math.random().toString(36).substring(2, 15)}`);
+  const connectionAttemptRef = useRef<number>(0);
+  const agentActivityRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (promptValue) {
+      // Implementation would go here in a real app
+      console.log('WebSocket would connect with:', promptValue);
+    }
+  }, [promptValue, chatBoxSettings]);
+
+  return {
+    socket,
+    isConnected,
+    requestId: requestIdRef.current,
+    connectionAttempt: connectionAttemptRef.current,
+    agentActivity: Array.from(agentActivityRef.current)
+  };
+};
 
 export interface GPTResearcherProps {
   apiUrl?: string;
@@ -24,27 +55,27 @@ export interface GPTResearcherProps {
 }
 
 export const GPTResearcher = ({
-  apiUrl = '',
-  apiKey = '',
-  defaultPrompt = '',
+  apiUrl = "",
+  apiKey = "",
+  defaultPrompt = "",
   onResultsChange,
-  theme = {}
+  theme = {},
 }: GPTResearcherProps) => {
 
-  localStorage.setItem('apiURL', apiUrl);
+  localStorage.setItem("apiURL", apiUrl);
 
   const [promptValue, setPromptValue] = useState(defaultPrompt);
   const [showResult, setShowResult] = useState(false);
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({ 
-    report_source: 'web', 
-    report_type: 'research_report', 
-    tone: 'Objective',
+  const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({
+    report_source: "web",
+    report_type: "research_report",
+    tone: "Objective",
     domains: [],
-    defaultReportType: 'research_report',
+    defaultReportType: "research_report",
     mcp_enabled: false,
-    mcp_configs: []
+    mcp_configs: [],
   });
   const [question, setQuestion] = useState("");
   const [orderedData, setOrderedData] = useState<Data[]>([]);
@@ -71,17 +102,20 @@ export const GPTResearcher = ({
     }
   }, [orderedData, onResultsChange]);
 
-  const { socket, initializeWebSocket } = useWebSocket(
-    setOrderedData,
-    setAnswer,
-    setLoading,
-    setShowHumanFeedback,
-    setQuestionForHuman
-  );
+  const { socket, isConnected, requestId, connectionAttempt, agentActivity } =
+    useWebSocket(
+      promptValue,
+      chatBoxSettings,
+      setOrderedData,
+      setAnswer,
+      setLoading,
+      setShowHumanFeedback,
+      setQuestionForHuman,
+    );
 
   const handleFeedbackSubmit = (feedback: string | null) => {
     if (socket) {
-      socket.send(JSON.stringify({ type: 'human_feedback', content: feedback }));
+      socket.send(JSON.stringify({ type: "human_feedback", content: feedback }));
     }
     setShowHumanFeedback(false);
   };
@@ -94,36 +128,54 @@ export const GPTResearcher = ({
       setPromptValue("");
       setAnswer("");
 
-      const questionData: QuestionData = { type: 'question', content: message };
-      setOrderedData(prevOrder => [...prevOrder, questionData]);
-      
+      const questionData: QuestionData = {
+        type: "question",
+        content: message,
+      };
+      setOrderedData((prevOrder) => [...prevOrder, questionData]);
+
       socket.send(`chat${JSON.stringify({ message })}`);
     }
   };
 
   const handleDisplayResult = async (newQuestion: string) => {
+    // Stop any current research first
+    if (loading && socket) {
+      socket.close();
+      setIsStopped(true);
+
+      // Small delay to ensure cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // Reset states for new research
+    setIsStopped(false);
+
     setShowResult(true);
     setLoading(true);
     setQuestion(newQuestion);
     setPromptValue("");
     setAnswer("");
-    setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: newQuestion }]);
+    setOrderedData((prevOrder) => [...prevOrder, { type: "question", content: newQuestion }]);
 
-    const storedConfig = localStorage.getItem('apiVariables');
-    const apiVariables = storedConfig ? JSON.parse(storedConfig) : { LANGGRAPH_HOST_URL: '' };
-    
+    const storedConfig = localStorage.getItem("apiVariables");
+    const apiVariables = storedConfig
+      ? JSON.parse(storedConfig)
+      : { LANGGRAPH_HOST_URL: "" };
+
     // Use provided apiUrl if available
     if (apiUrl) {
       apiVariables.API_URL = apiUrl;
     }
-    
     // Use provided apiKey if available
     if (apiKey) {
       apiVariables.API_KEY = apiKey;
     }
-    
-    initializeWebSocket(newQuestion, chatBoxSettings);
 
+    // Initialize WebSocket connection with the question and settings
+    if (socket && isConnected) {
+      socket.send(`start${JSON.stringify({ task: newQuestion, report_type: chatBoxSettings.report_type, report_source: chatBoxSettings.report_source, tone: chatBoxSettings.tone, source_urls: [], document_urls: [], headers: {} })}`);
+    }
   };
 
   const reset = () => {
@@ -135,9 +187,9 @@ export const GPTResearcher = ({
 
   const handleClickSuggestion = (value: string) => {
     setPromptValue(value);
-    const element = document.getElementById('input-area');
+    const element = document.getElementById("input-area");
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -153,15 +205,14 @@ export const GPTResearcher = ({
     setShowResult(false);
     setPromptValue("");
     setIsStopped(false);
-    
     setQuestion("");
     setAnswer("");
     setOrderedData([]);
     setAllLogs([]);
-    
+
     setShowHumanFeedback(false);
     setQuestionForHuman(false);
-    
+
     if (socket) {
       socket.close();
     }
@@ -170,10 +221,15 @@ export const GPTResearcher = ({
 
   useEffect(() => {
     const groupedData = preprocessOrderedData(orderedData);
-    const statusReports = ["agent_generated", "starting_research", "planning_research", "error"];
-    
+    const statusReports = [
+      "agent_generated",
+      "starting_research",
+      "planning_research",
+      "error",
+    ];
+
     const newLogs = groupedData.reduce((acc: any[], data) => {
-      if (data.type === 'accordionBlock') {
+      if (data.type === "accordionBlock") {
         const logs = data.items.map((item: any, subIndex: any) => ({
           header: item.content,
           text: item.output,
@@ -181,25 +237,24 @@ export const GPTResearcher = ({
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
         return [...acc, ...logs];
-      } 
-      else if (statusReports.includes(data.content)) {
+      } else if (statusReports.includes(data.content)) {
         return [...acc, {
-          header: data.content,
-          text: data.output,
-          metadata: data.metadata,
-          key: `${data.type}-${data.content}`,
-        }];
+            header: data.content,
+            text: data.output,
+            metadata: data.metadata,
+            key: `${data.type}-${data.content}`,
+          },
+        ];
       }
       return acc;
     }, []);
-    
+
     setAllLogs(newLogs);
   }, [orderedData]);
 
   const handleScroll = useCallback(() => {
     const scrollPosition = window.scrollY + window.innerHeight;
     const nearBottom = scrollPosition >= document.documentElement.scrollHeight - 100;
-    
     const isPageScrollable = document.documentElement.scrollHeight > window.innerHeight;
     setShowScrollButton(isPageScrollable && !nearBottom);
   }, []);
@@ -214,33 +269,32 @@ export const GPTResearcher = ({
       resizeObserver.observe(mainContentElement);
     }
 
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('resize', handleScroll);
-    
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+
     return () => {
       if (mainContentElement) {
         resizeObserver.unobserve(mainContentElement);
       }
       resizeObserver.disconnect();
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
     };
   }, [handleScroll]);
 
   const scrollToBottom = () => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   };
 
   return (
     <>
-      <Header 
+      <Header
         loading={loading}
         isStopped={isStopped}
         showResult={showResult}
-        onStop={handleStopResearch}
         onNewResearch={handleStartNewResearch}
       />
       <main ref={mainContentRef} className="min-h-[100vh] pt-[120px]">
@@ -262,6 +316,7 @@ export const GPTResearcher = ({
                   allLogs={allLogs}
                   chatBoxSettings={chatBoxSettings}
                   handleClickSuggestion={handleClickSuggestion}
+                  onNewSearch={handleDisplayResult}
                 />
               </div>
 
@@ -296,20 +351,20 @@ export const GPTResearcher = ({
       {showScrollButton && showResult && (
         <button
           onClick={scrollToBottom}
-          className="fixed bottom-8 right-8 flex items-center justify-center w-12 h-12 text-white bg-[rgb(168,85,247)] rounded-full hover:bg-[rgb(147,51,234)] transform hover:scale-105 transition-all duration-200 shadow-lg z-50"
+          className="fixed bottom-8 right-8 flex items-center justify-center w-12 h-12 text-white bg-[rgb(168,85,247)] rounded-full hover:bg-[rgb(147,51,234)] transform hover:scale-105 transition-all duration-200 shadow-lg z-50 aria-label='Scroll to bottom'"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-6 w-6" 
-            fill="none" 
-            viewBox="0 0 24 24" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
             />
           </svg>
         </button>

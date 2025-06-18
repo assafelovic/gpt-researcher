@@ -2,85 +2,32 @@
 <html lang="en">
 
 <head>
-    <title>GPT Researcher</title>
-    <meta name="description" content="A research assistant powered by GPT-4">
+    <meta charset="utf-8">
+    <title>ResearchWizard | Powered by th3w1zard1</title>
+    <meta name="description" content="Your intelligent research assistant">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="./static/favicon.ico">
+    <link rel="icon" href="./static/new/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&amp;display=swap" rel="stylesheet">
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="/site/styles.css" />
-    <style>
-        .avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-        }
-
-        .agent-name {
-            text-align: center;
-        }
-
-        .agent-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .agent-choices {
-            display: none;
-        }
-
-        .btn-show {
-            display: none;
-        }
-
-        /* Icon button style for inline buttons */
-        .icon-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 5px;
-            margin-left: 5px;
-            border-radius: 4px;
-            transition: background-color 0.2s, color 0.2s;
-        }
-
-        .icon-button:hover {
-            background-color: rgba(123, 104, 238, 0.1); /* Placeholder, adjust in styles.css */
-        }
-
-        .icon-button:active {
-        }
-
-        /* Ensure buttons are properly aligned in headings */
-        h2 .icon-button, h2 .expand-button {
-            vertical-align: middle;
-            font-size: 0.8em;
-        }
-        
-        /* New navigation buttons in the top-right corner */
-        .nav-buttons {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-            z-index: 100;
-        }
-    </style>
+    <link rel="stylesheet" href="/frontend/styles.css">
 </head>
 
 <body>
-    <!-- Navigation Buttons (moved from top bar) -->
-    <div class="nav-buttons">
-        <div id="websocketPanelOpenBtn" class="top-websocket-button">
-            <i class="fas fa-network-wired"></i> Status
-        </div>
-        <div id="historyPanelOpenBtn" class="top-history-button">
-            <i class="fas fa-history"></i> History
+    <!-- Top Credits Bar -->
+    <div class="credits-bar top-credits">
+        <div class="credits-content">
+            <p>Created by <a href="https://github.com/th3w1zard1" target="_blank" rel="noopener">Boden Crouch (th3w1zard1)</a> | ResearchWizard &copy; 2024</p>
+            <!-- Add history button to top bar -->
+            <div id="historyPanelOpenBtn" class="top-history-button">
+                <i class="fas fa-history"></i> History
+            </div>
+            <!-- Add WebSocket button to the top bar -->
+            <div id="websocketPanelOpenBtn" class="top-websocket-button">
+                <i class="fas fa-network-wired"></i> Status
+            </div>
         </div>
     </div>
 
@@ -133,94 +80,74 @@
         </div>
     </div>
 
+    <!-- Scroll to bottom button -->
+    <div class="scroll-to-bottom" id="scrollToBottomBtn">
+        <i class="fas fa-arrow-down"></i>
+    </div>
+
     <section class="landing">
         <div class="max-w-5xl mx-auto text-center">
             <h1 class="text-4xl font-extrabold mx-auto lg:text-7xl">
-                Say Goodbye to <br>
-                <span
-                    style="background-image:linear-gradient(to right, #9867F0, #ED4E50); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Hours
-                    of Research</span>
+                Streamline Your Research <br>
+                <span class="gradient-text">In Minutes, Not Hours</span>
             </h1>
-            <p class="max-w-6xl mx-auto text-gray-600 mt-8" style="font-size:20px">
-                Say Hello to <b>GPT Researcher</b>, your AI mate for rapid insights and comprehensive research. <br>
-                GPT Researcher takes care of everything from accurate source gathering and organization of research results to generation of customized reports with citations.
+            <p class="max-w-6xl mx-auto mt-8 landing-description">
+                Meet <b>ResearchWizard</b>, your personal AI research assistant that turns complex topics into clear
+                insights. <br>
+                Receive thorough reports with verified references, professional layout, and personalized content
+                tailored specifically to your needs—all accomplished with just one click.
             </p>
             <a href="#form" class="btn btn-primary">Start Researching</a>
         </div>
     </section>
 
     <main class="container" id="form">
-        <div class="agent-item"><img src="/static/gptr-logo.png" class="avatar" alt="Auto Agent"></div>
+        <div class="agent-item"><img src="/static/new/wizard-logo.svg" class="avatar" alt="Research Wizard"></div>
         <form method="POST" class="mt-3" id="researchForm">
             <div class="form-group">
-                <label for="task" class="agent-question">What would you like me to research next?</label>
-                <textarea id="task" name="task" class="form-control highlight-connection" placeholder="Enter any topic, question, or idea..." required autocomplete="on"></textarea>
+                <label for="task" class="agent-question">What would you like me to research for you?</label>
+                <div class="autocomplete-container">
+                    <textarea id="task" name="task" class="form-control highlight-connection"
+                        placeholder="Enter any topic, question, or idea..." required autocomplete="on"></textarea>
+                    <ul id="autocomplete-list" class="autocomplete-list"></ul>
+                </div>
                 <input type="radio" name="agent" id="autoAgent" value="Auto Agent" checked hidden>
             </div>
             <div class="form-group">
-                <div class="row">
-
-
-                </div>
-                <button type="button" id="btnShowAuto" class="btn btn-secondary mt-3 btn-show">Auto Agent</button>
-            </div>
-            <div class="form-group">
-                <label for="report_type" class="agent-question">What type of report would you like me to
-                    generate?</label>
+                <label for="report_type" class="agent-question">What level of detail do you want?</label>
                 <select name="report_type" id="report_type" class="form-control highlight-connection" required>
-                    <option value="research_report">Summary - Short and fast (~2 min)</option>
-                    <option value="detailed_report">Detailed - In depth and longer (~5 min)</option>
-                    <option value="resource_report">Resource Report</option>
-                    <option value="deep">Deep Research</option>
+                    <option value="research_report">Quick Summary - Fast results (~2 min)</option>
+                    <option value="detailed_report">Detailed Report - Comprehensive analysis (~5 min)</option>
+                    <option value="deep_research">Deep Research - Explores multiple subtopics in-depth with advanced AI (~15 min)</option>
+                    <option value="multi_agents">Multi Agents - Utilizes chain-prompt techniques to create a more critiqued report</option>
+                    <option value="resource_report">Resource List - Just the sources</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="tone" class="agent-question">In which tone would you like the report to be
-                    generated?</label>
+                <label for="tone" class="agent-question">How would you like your report to sound?</label>
                 <select name="tone" id="tone" class="form-control highlight-connection" required>
-                    <option value="Objective">Objective - Impartial and unbiased presentation of facts and findings
-                    </option>
-                    <option value="Formal">Formal - Adheres to academic standards with sophisticated language and
-                        structure</option>
-                    <option value="Analytical">Analytical - Critical evaluation and detailed examination of data and
-                        theories</option>
-                    <option value="Persuasive">Persuasive - Convincing the audience of a particular viewpoint or
-                        argument</option>
-                    <option value="Informative">Informative - Providing clear and comprehensive information on a topic
-                    </option>
-                    <option value="Explanatory">Explanatory - Clarifying complex concepts and processes</option>
-                    <option value="Descriptive">Descriptive - Detailed depiction of phenomena, experiments, or case
-                        studies</option>
-                    <option value="Critical">Critical - Judging the validity and relevance of the research and its
-                        conclusions</option>
-                    <option value="Comparative">Comparative - Juxtaposing different theories, data, or methods to
-                        highlight differences and similarities</option>
-                    <option value="Speculative">Speculative - Exploring hypotheses and potential implications or future
-                        research directions</option>
-                    <option value="Reflective">Reflective - Considering the research process and personal insights or
-                        experiences</option>
-                    <option value="Narrative">Narrative - Telling a story to illustrate research findings or
-                        methodologies</option>
-                    <option value="Humorous">Humorous - Light-hearted and engaging, usually to make the content more
-                        relatable</option>
-                    <option value="Optimistic">Optimistic - Highlighting positive findings and potential benefits
-                    </option>
-                    <option value="Pessimistic">Pessimistic - Focusing on limitations, challenges, or negative outcomes
-                    </option>
+                    <option value="Objective">Objective (impartial and unbiased presentation of facts and findings)</option>
+                    <option value="Formal">Formal (adheres to academic standards with sophisticated language and structure)</option>
+                    <option value="Analytical">Analytical (critical evaluation and detailed examination of data and theories)</option>
+                    <option value="Persuasive">Persuasive (convincing the audience of a particular viewpoint or argument)</option>
+                    <option value="Informative">Informative (providing clear and comprehensive information on a topic)</option>
+                    <option value="Explanatory">Explanatory (clarifying complex concepts and processes)</option>
+                    <option value="Descriptive">Descriptive (detailed depiction of phenomena, experiments, or case studies)</option>
+                    <option value="Critical">Critical (judging the validity and relevance of the research and its conclusions)</option>
+                    <option value="Comparative">Comparative (juxtaposing different theories, data, or methods to highlight differences and similarities)</option>
+                    <option value="Speculative">Speculative (exploring hypotheses and potential implications or future research directions)</option>
+                    <option value="Reflective">Reflective (considering the research process and personal insights or experiences)</option>
+                    <option value="Narrative">Narrative (telling a story to illustrate research findings or methodologies)</option>
+                    <option value="Humorous">Humorous (light-hearted and engaging, usually to make the content more relatable)</option>
+                    <option value="Optimistic">Optimistic (highlighting positive findings and potential benefits)</option>
+                    <option value="Pessimistic">Pessimistic (focusing on limitations, challenges, or negative outcomes)</option>
+                    <option value="Simple">Simple (written for young readers, using basic vocabulary and clear explanations)</option>
+                    <option value="Casual">Casual (conversational and relaxed style for easy, everyday reading)</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="report_source" class="agent-question">What sources would you like me to research
-                    from?</label>
-                <p class="text-left mt-0 pt-0" style="font-size: 0.7rem;">You can now do research on local documents as
-                    well. Please make sure to add the DOC_PATH env variable pointing to your documents folder.</p>
-                <select name="report_source" id="report_source" class="form-control highlight-connection" required>
-                    <option value="web">The Web</option>
-                    <option value="local">My Documents</option>
-                    <option value="hybrid">Hybrid</option>
-                    <option value="azure">Azure storage</option>
-                </select>
-            </div>
+
+            <!-- Hidden input for report_source with default value 'web' -->
+            <input type="hidden" name="report_source" id="report_source" value="web">
             <div class="form-group">
                 <label for="queryDomains" class="form-label">Query Domains (Optional)</label>
                 <input type="text" class="form-control highlight-connection" id="queryDomains" name="query_domains" placeholder="Enter domains separated by commas" autocomplete="on">
@@ -240,8 +167,8 @@
                         </button>
                     </div>
                     <small class="text-muted">Connect to external tools and data sources through MCP servers</small>
-                    
-                    <div id="mcpConfigSection" class="mcp-config-section" style="display: none;">
+
+                    <div id="mcpConfigSection" class="mcp-config-section">
                         <div class="mcp-presets">
                             <label class="form-label">Quick Presets</label>
                             <div class="preset-buttons">
@@ -268,7 +195,7 @@
                                 </button>
                             </div>
                             <small class="text-muted">
-                                Paste your MCP servers configuration as a JSON array. Each server should have properties like 
+                                Paste your MCP servers configuration as a JSON array. Each server should have properties like
                                 <code>name</code>, <code>command</code>, <code>args</code>, and optional <code>env</code> variables.
                                 <a href="#" id="mcpExampleLink">See example →</a>
                             </small>
@@ -281,7 +208,7 @@
         </form>
 
         <!-- Add JSON button above Research Progress section -->
-        <div class="margin-div" id="jsonButtonContainer" style="display: none; text-align: right; margin-bottom: 10px;">
+        <div class="margin-div json-button-container" id="jsonButtonContainer">
             <a id="downloadLinkJsonTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
                 <i class="fas fa-file-code"></i> JSON
             </a>
@@ -289,25 +216,22 @@
 
         <div class="margin-div research-output-container">
             <!-- Move spinner to the left side of the text -->
-            <h2><div id="modernSpinner" class="modern-spinner"></div> Research Progress <button id="expandOutputBtn" class="expand-button" title="Expand"><i class="fas fa-expand-alt"></i></button></h2>
-            <p class="mt-2 text-left" style="font-size: 0.8rem;">
+            <h2><div id="modernSpinner" class="modern-spinner"></div> Research Progress </h2>
+            <p class="mt-2 text-left research-progress-description">
                 Watch as the AI works to gather information and analyze your topic in real-time.</p>
             <div id="output"></div>
         </div>
         <div class="images_div">
-            <div id="selectedImagesContainer" style="display: none;"></div>
+            <div id="selectedImagesContainer" class="selected-images-hidden"></div>
         </div>
         <div class="margin-div report-container">
             <h2>Research Report
-                <button id="copyToClipboardTop" class="icon-button" title="Copy" style="display: none;">
+                <button id="copyToClipboardTop" class="icon-button copy-button-top" title="Copy">
                     <i class="fas fa-copy"></i>
-                </button>
-                <button id="expandReportBtn" class="expand-button" title="Expand">
-                    <i class="fas fa-expand-alt"></i>
                 </button>
             </h2>
             <!-- Add download buttons above the report container -->
-            <div class="report-actions" style="display: none;">
+            <div class="report-actions report-actions-hidden">
                 <a id="downloadLinkTop" href="#" class="report-action-btn disabled" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-file-pdf"></i> PDF
                 </a>
@@ -319,14 +243,14 @@
                 </a>
             </div>
             <div id="reportContainer"></div>
-            <div id="reportActions" style="display: none;">
+            <div id="reportActions" class="report-actions-hidden">
                 <div class="alert alert-info" role="alert" id="status"></div>
             </div>
         </div>
 
         <!-- Chat Container -->
-        <div class="margin-div chat-container" id="chatContainer" style="display: none;">
-            <h2><i class="fas fa-comments"></i> Chat with AI about this research <button id="expandChatBtn" class="expand-button" title="Expand"><i class="fas fa-expand-alt"></i></button></h2>
+        <div class="margin-div chat-container chat-container-hidden" id="chatContainer">
+            <h2><i class="fas fa-comments"></i> Chat with AI about this research </h2>
             <p class="text-muted">Ask questions about the research report to get more insights</p>
             <div id="chatMessages" class="chat-messages"></div>
             <div class="chat-input-container">
@@ -360,11 +284,10 @@
             </button>
         </div>
         <div class="history-panel-filters">
-            <select id="historySortOrder">
+            <select id="historySortOrder" title="Sort order for research history">
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
             </select>
-            <!-- JS will add Import/Export/Debug buttons here -->
             <button id="historyClearBtn" class="history-action-btn" title="Clear all history">
                 <i class="fas fa-trash-alt"></i>
             </button>
@@ -373,44 +296,39 @@
             <!-- Entries will be populated dynamically -->
         </div>
     </div>
-    
+
     <!-- Sticky Downloads Bar -->
     <div class="sticky-downloads-bar" id="stickyDownloadsBar" style="display: none;"> <!-- Initially hidden -->
-        <div class="download-buttons-container">
-            <a id="copyToClipboard" class="download-option-btn disabled">
-                <i class="fas fa-copy"></i> Copy (Markdown)
-            </a>
-            <a id="downloadLinkMd" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-lines"></i> Markdown
-            </a>
-            <a id="downloadLink" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-pdf"></i> PDF
-            </a>
-            <a id="downloadLinkWord" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-word"></i> Word
-            </a>
-            <a id="downloadLinkJson" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-file-code"></i> Log (JSON)
-            </a>
+        <div class="credits-content">
+            <div class="download-buttons-container">
+                <a id="copyToClipboard" class="download-option-btn disabled">
+                    <i class="fas fa-copy"></i> Copy
+                </a>
+                <a id="downloadLinkMd" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-lines"></i> Markdown
+                </a>
+                <a id="downloadLink" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </a>
+                <a id="downloadLinkWord" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-word"></i> Word
+                </a>
+                <a id="downloadLinkJson" href="#" class="download-option-btn disabled" target="_blank" rel="noopener noreferrer">
+                    <i class="fas fa-file-code"></i> JSON
+                </a>
+            </div>
         </div>
     </div>
 
-    <footer>
-        <p>
-            <a target="_blank" href="https://gptr.dev">Homepage</a> |
-            <a target="_blank" href="https://github.com/assafelovic/gpt-researcher">GitHub</a> |
-            <a target="_blank" href="https://discord.gg/spBgZmm3Xe">Discord</a>
-        </p>
-        <p>GPT Researcher &copy; 2024</p>
-    </footer>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
-    <script src="/site/scripts.js"></script>
+    <script src="/frontend/scripts.js"></script>
     <script>
         // Auto-resize textarea as content grows
         const taskTextarea = document.getElementById('task');
         if (taskTextarea) {
             // Set initial height
-            taskTextarea.setAttribute('style', 'height: 38px; overflow-y: hidden;');
+            taskTextarea.style.height = '38px';
+            taskTextarea.style.overflowY = 'hidden';
 
             // Function to resize textarea based on content
             const resizeTextarea = () => {
@@ -422,6 +340,22 @@
             taskTextarea.addEventListener('input', resizeTextarea);
             taskTextarea.addEventListener('focus', resizeTextarea);
         }
+
+        // Scroll to bottom button functionality
+        const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+
+        // Handle scroll events
+        window.addEventListener('scroll', function() {
+            // Other scroll functionality can go here if needed
+        });
+
+        // Scroll to bottom button click event
+        scrollToBottomBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        });
 
         // Ensure feature panels are positioned correctly on window resize
         window.addEventListener('resize', function () {
@@ -440,6 +374,33 @@
                 }
             }
         });
+
+        // Manually trigger the scroll event once on load to correctly set the scroll button visibility
+        window.addEventListener('DOMContentLoaded', function () {
+            setTimeout(() => {
+                window.dispatchEvent(new Event('scroll'));
+            }, 100);
+        });
+
+        // About section toggle functionality
+        const aboutToggleBtn = document.getElementById('aboutToggleBtn');
+        const aboutContent = document.getElementById('aboutContent');
+
+        if (aboutToggleBtn && aboutContent) {
+            aboutToggleBtn.addEventListener('click', function() {
+                const isExpanded = aboutContent.classList.contains('expanded');
+
+                if (isExpanded) {
+                    // Collapse
+                    aboutContent.classList.remove('expanded');
+                    aboutToggleBtn.classList.remove('expanded');
+                } else {
+                    // Expand
+                    aboutContent.classList.add('expanded');
+                    aboutToggleBtn.classList.add('expanded');
+                }
+            });
+        }
     </script>
 </body>
 

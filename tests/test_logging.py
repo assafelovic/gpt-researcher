@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock
 from fastapi import WebSocket
-from backend.server.server_utils import CustomLogsHandler
+from src.logs_handler import CustomLogsHandler
 import os
 import json
 

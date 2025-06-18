@@ -1,5 +1,5 @@
 import React from 'react';
-import {getHost} from '../../helpers/getHost'
+import { getHost, HostResult } from '../../helpers/getHost'
 
 interface AccessReportProps {
   accessData: {
@@ -14,7 +14,8 @@ interface AccessReportProps {
 }
 
 const AccessReport: React.FC<AccessReportProps> = ({ accessData, chatBoxSettings, report }) => {
-  const host = getHost();
+  const hostResult: HostResult = getHost();
+  const host = `${hostResult.isSecure ? 'https://' : 'http://'}${hostResult.cleanHost}`;
 
   const getReportLink = (dataType: 'pdf' | 'docx' | 'json'): string => {
     // Early return if path is not available
@@ -24,17 +25,17 @@ const AccessReport: React.FC<AccessReportProps> = ({ accessData, chatBoxSettings
     }
 
     const path = accessData[dataType] as string;
-    
+
     // Clean the path - remove leading/trailing slashes and handle outputs/ prefix
     const cleanPath = path
       .trim()
       .replace(/^\/+|\/+$/g, ''); // Remove leading/trailing slashes
-    
+
     // Only prepend outputs/ if it's not already there
-    const finalPath = cleanPath.startsWith('outputs/') 
-      ? cleanPath 
+    const finalPath = cleanPath.startsWith('outputs/')
+      ? cleanPath
       : `outputs/${cleanPath}`;
-    
+
     return `${host}/${finalPath}`;
   };
 
@@ -47,10 +48,10 @@ const AccessReport: React.FC<AccessReportProps> = ({ accessData, chatBoxSettings
     <div className="container rounded-lg border border-solid border-gray-700/30 bg-black/30 backdrop-blur-md shadow-lg p-5 my-5">
       <div className="flex flex-col items-center">
         <h3 className="text-lg font-bold mb-4 text-white">Access Your Research Report</h3>
-        
+
         <div className="flex flex-wrap justify-center gap-3">
-          <a 
-            href={getReportLink('pdf')} 
+          <a
+            href={getReportLink('pdf')}
             className="bg-teal-600 text-white font-medium uppercase text-sm px-6 py-3 rounded-lg shadow-md hover:shadow-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-teal-500/50 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
             target="_blank"
             rel="noopener noreferrer">
@@ -59,9 +60,9 @@ const AccessReport: React.FC<AccessReportProps> = ({ accessData, chatBoxSettings
             </svg>
             View as PDF
           </a>
-          
-          <a 
-            href={getReportLink('docx')} 
+
+          <a
+            href={getReportLink('docx')}
             className="bg-blue-500 text-white font-medium uppercase text-sm px-6 py-3 rounded-lg shadow-md hover:shadow-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-400/50 transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
             target="_blank"
             rel="noopener noreferrer">
@@ -70,7 +71,6 @@ const AccessReport: React.FC<AccessReportProps> = ({ accessData, chatBoxSettings
             </svg>
             Download DocX
           </a>
-          
           {chatBoxSettings?.report_type === 'research_report' && (
             <a
               href={getReportLink('json')}

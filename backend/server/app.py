@@ -1,9 +1,13 @@
-from fastapi import FastAPI, WebSocket
-from fastapi.middleware.cors import CORSMiddleware
+from __future__ import annotations
+
 import logging
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+
 from backend.chat.chat import ChatAgentWithMemory
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -16,9 +20,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
-async def read_root():
+async def read_root() -> dict[str, str]:
     return {"message": "Welcome to GPT Researcher"}
+
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

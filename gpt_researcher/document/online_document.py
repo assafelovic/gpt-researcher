@@ -1,6 +1,13 @@
+from __future__ import annotations
+
 import os
-import aiohttp
 import tempfile
+
+from typing import Any
+
+import aiohttp
+
+from langchain.schema import Document
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
     TextLoader,
@@ -8,38 +15,36 @@ from langchain_community.document_loaders import (
     UnstructuredExcelLoader,
     UnstructuredMarkdownLoader,
     UnstructuredPowerPointLoader,
-    UnstructuredWordDocumentLoader
+    UnstructuredWordDocumentLoader,
 )
 
 
 class OnlineDocumentLoader:
+    def __init__(self, urls: list[str]):
+        self.urls: list[str] = urls
 
-    def __init__(self, urls):
-        self.urls = urls
-
-    async def load(self) -> list:
-        docs = []
+    async def load(self) -> list[dict[str, Any]]:
+        docs: list[dict[str, Any]] = []
         for url in self.urls:
-            pages = await self._download_and_process(url)
+            pages: list[Document] = await self._download_and_process(url)
             for page in pages:
-                if page.page_content:
-                    docs.append({
-                        "raw_content": page.page_content,
-                        "url": page.metadata.get("source")
-                    })
+                if page.page_content and str(page.page_content).strip():
+                    docs.append(
+                        {
+                            "raw_content": page.page_content,
+                            "url": page.metadata.get("source"),
+                        }
+                    )
 
         if not docs:
             raise ValueError("🤷 Failed to load any documents!")
 
         return docs
 
-    async def _download_and_process(self, url: str) -> list:
+    async def _download_and_process(self, url: str) -> list[Document]:
         try:
-            headers = {
-                "User-Agent": "Mozilla/5.0"
-            }
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, timeout=6) as response:
+                async with session.get(url, timeout=6) as response:
                     if response.status != 200:
                         print(f"Failed to download {url}: HTTP {response.status}")
                         return []
@@ -49,20 +54,24 @@ class OnlineDocumentLoader:
                         tmp_file.write(content)
                         tmp_file_path = tmp_file.name
 
-                    return await self._load_document(tmp_file_path, self._get_extension(url).strip('.'))
+                    return await self._load_document(tmp_file_path, self._get_extension(url).strip("."))
         except aiohttp.ClientError as e:
             print(f"Failed to process {url}")
-            print(e)
+            print(f"{e.__class__.__name__}: {e}")
             return []
         except Exception as e:
             print(f"Unexpected error processing {url}")
-            print(e)
+            print(f"{e.__class__.__name__}: {e}")
             return []
 
-    async def _load_document(self, file_path: str, file_extension: str) -> list:
-        ret_data = []
+    async def _load_document(
+        self,
+        file_path: str,
+        file_extension: str,
+    ) -> list[Document]:
+        ret_data: list[Document] = []
         try:
-            loader_dict = {
+            loader_dict: dict[str, Any] = {
                 "pdf": PyMuPDFLoader(file_path),
                 "txt": TextLoader(file_path),
                 "doc": UnstructuredWordDocumentLoader(file_path),
@@ -71,16 +80,16 @@ class OnlineDocumentLoader:
                 "csv": UnstructuredCSVLoader(file_path, mode="elements"),
                 "xls": UnstructuredExcelLoader(file_path, mode="elements"),
                 "xlsx": UnstructuredExcelLoader(file_path, mode="elements"),
-                "md": UnstructuredMarkdownLoader(file_path)
+                "md": UnstructuredMarkdownLoader(file_path),
             }
 
-            loader = loader_dict.get(file_extension, None)
+            loader: Any = loader_dict.get(file_extension, None)
             if loader:
-                ret_data = loader.load()
+                ret_data: list[Document] = loader.load()
 
         except Exception as e:
             print(f"Failed to load document : {file_path}")
-            print(e)
+            print(f"{e.__class__.__name__}: {e}")
         finally:
             os.remove(file_path)  # 删除临时文件
 

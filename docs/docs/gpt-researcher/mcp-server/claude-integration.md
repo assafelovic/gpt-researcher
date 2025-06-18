@@ -84,6 +84,7 @@ Close and reopen the Claude application to apply the new configuration.
 ### 4. Verify the Integration
 
 Upon restarting:
+
 - Look for a hammer icon (🔨) in the bottom right corner of the input box in Claude
 - Clicking this icon should display the GPT Researcher tools provided by your MCP server
 - If you don't see the hammer icon, check the Claude application logs for any errors

@@ -1,59 +1,57 @@
-from fastapi import WebSocket
+from __future__ import annotations
+
 from typing import Any
 
+from fastapi import WebSocket
 from gpt_researcher import GPTResearcher
+from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 
 
 class BasicReport:
     def __init__(
         self,
         query: str,
-        query_domains: list,
-        report_type: str,
-        report_source: str,
-        source_urls,
-        document_urls,
-        tone: Any,
+        query_domains: list[str],
+        report_type: ReportType | str,
+        report_source: ReportSource | str,
+        source_urls: list[str],
+        document_urls: list[str],
+        tone: Tone | str,
         config_path: str,
         websocket: WebSocket,
-        headers=None,
-        mcp_configs=None,
-        mcp_strategy=None,
+        headers: dict[str, Any] | None = None,
+        mcp_configs: dict[str, Any] | None = None,
+        mcp_strategy: str | None = None,
     ):
-        self.query = query
-        self.query_domains = query_domains
-        self.report_type = report_type
-        self.report_source = report_source
-        self.source_urls = source_urls
-        self.document_urls = document_urls
-        self.tone = tone
-        self.config_path = config_path
-        self.websocket = websocket
-        self.headers = headers or {}
+        self.query: str = query
+        self.query_domains: list[str] = query_domains
+        self.report_type: ReportType | str = report_type
+        self.report_source: ReportSource | str = report_source
+        self.source_urls: list[str] = source_urls
+        self.document_urls: list[str] = document_urls
+        self.tone: Tone | str = tone
+        self.config_path: str = config_path
+        self.websocket: WebSocket = websocket
+        self.headers: dict[str, Any] = {} if headers is None else headers
 
-        # Initialize researcher with optional MCP parameters
-        gpt_researcher_params = {
-            "query": self.query,
-            "query_domains": self.query_domains,
-            "report_type": self.report_type,
-            "report_source": self.report_source,
-            "source_urls": self.source_urls,
-            "document_urls": self.document_urls,
-            "tone": self.tone,
-            "config_path": self.config_path,
-            "websocket": self.websocket,
-            "headers": self.headers,
-        }
-        
-        # Add MCP parameters if provided
-        if mcp_configs is not None:
-            gpt_researcher_params["mcp_configs"] = mcp_configs
-        if mcp_strategy is not None:
-            gpt_researcher_params["mcp_strategy"] = mcp_strategy
-            
-        self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
+        # Initialize researcher
+        self.gpt_researcher = GPTResearcher(
+            query=self.query,
+            query_domains=self.query_domains,
+            report_type=self.report_type,
+            report_source=self.report_source,
+            source_urls=self.source_urls,
+            document_urls=self.document_urls,
+            tone=self.tone,
+            config_path=self.config_path,
+            websocket=self.websocket,
+            headers=self.headers,
+            mcp_configs=mcp_configs,
+            mcp_strategy=mcp_strategy,
+        )
 
-    async def run(self):
+    async def run(self) -> str:
+        """Conduct research and write report."""
         await self.gpt_researcher.conduct_research()
-        report = await self.gpt_researcher.write_report()
+        report: str = await self.gpt_researcher.write_report()
         return report

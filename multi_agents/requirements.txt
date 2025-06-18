@@ -1,7 +1,6 @@
 json5
 langgraph
-json5
 langgraph-cli
 loguru
 python-dotenv
-weasyprint
+weasyprint; sys_platform != 'win32'

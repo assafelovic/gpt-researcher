@@ -1,6 +1,6 @@
 # Configure LLM
 
-As described in the [introduction](/docs/gpt-researcher/gptr/config), the default LLM and embedding is OpenAI due to its superior performance and speed. 
+As described in the [introduction](/docs/gpt-researcher/gptr/config), the default LLM and embedding is OpenAI due to its superior performance and speed.
 With that said, GPT Researcher supports various open/closed source LLMs and embeddings, and you can easily switch between them by updating the `SMART_LLM`, `FAST_LLM` and `EMBEDDING` env variables. You might also need to include the provider API key and corresponding configuration params.
 
 Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq`, `bedrock` and `litellm`.
@@ -29,12 +29,12 @@ STRATEGIC_LLM=openai:o4-mini
 EMBEDDING=openai:text-embedding-3-small
 ```
 
-
 ## Custom LLM
 
 Create a local OpenAI API using [llama.cpp Server](https://github.com/ggerganov/llama.cpp/blob/master/examples/server/README.md#quick-start).
 
 For custom LLM, specify "openai:&#123;your-llm&#125;"
+
 ```env
 # set the custom OpenAI API url
 OPENAI_BASE_URL=http://localhost:1234/v1
@@ -48,6 +48,7 @@ STRATEGIC_LLM=openai:your_strategic_llm
 ```
 
 For custom embedding, set "custom:&#123;your-embedding&#125;"
+
 ```env
 # set the custom OpenAI API url
 OPENAI_BASE_URL=http://localhost:1234/v1
@@ -58,12 +59,11 @@ OPENAI_API_KEY=dummy_key
 EMBEDDING=custom:your_embedding
 ```
 
-
 ## Azure OpenAI
 
-In Azure OpenAI you have to chose which models you want to use and make deployments for each model. You do this on the [Azure OpenAI Portal](https://portal.azure.com/). 
+In Azure OpenAI you have to chose which models you want to use and make deployments for each model. You do this on the [Azure OpenAI Portal](https://portal.azure.com/).
 
-In January 2025 the models that are recommended to use are: 
+In January 2025 the models that are recommended to use are:
 
 - gpt-4o-mini
 - gpt-4o
@@ -71,7 +71,7 @@ In January 2025 the models that are recommended to use are:
 
 Please then specify the model names/deployment names in your `.env` file.
 
-**Required Precondition** 
+**Required Precondition**
 
 - Your endpoint can have any valid name.
 - A model's deployment name *must be the same* as the model name.
@@ -79,7 +79,7 @@ Please then specify the model names/deployment names in your `.env` file.
 
 **Recommended**:
 
-- Quota increase: You should also request a quota increase especially for the embedding model, as the default quota is not sufficient. 
+- Quota increase: You should also request a quota increase especially for the embedding model, as the default quota is not sufficient.
 
 ```env
 # set the azure api key and deployment as you have configured it in Azure Portal. There is no default access point unless you configure it yourself!
@@ -130,9 +130,10 @@ PROMPT_FAMILY=granite
 ## Groq
 
 GroqCloud provides advanced AI hardware and software solutions designed to deliver amazingly fast AI inference performance.
-To leverage Groq in GPT-Researcher, you will need a GroqCloud account and an API Key. (__NOTE:__ Groq has a very _generous free tier_.)
+To leverage Groq in GPT-Researcher, you will need a GroqCloud account and an API Key. (**NOTE:** Groq has a very *generous free tier*.)
 
 ### Sign up
+
 - You can signup here: [https://console.groq.com/login](https://console.groq.com/login)
 - Once you are logged in, you can get an API Key here: [https://console.groq.com/keys](https://console.groq.com/keys)
 
@@ -140,6 +141,7 @@ To leverage Groq in GPT-Researcher, you will need a GroqCloud account and an API
 `GROQ_API_KEY=*********************`
 
 ### Update env vars
+
 And finally, you will need to configure the GPT-Researcher Provider and Model variables:
 
 ```env
@@ -153,17 +155,17 @@ STRATEGIC_LLM=groq:Mixtral-8x7b-32768
 
 Add `langchain-groq` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
-__NOTE:__ As of the writing of this Doc (May 2024), the available Language Models from Groq are:
+**NOTE:** As of the writing of this Doc (May 2024), the available Language Models from Groq are:
 
-* Llama3-70b-8192
-* Llama3-8b-8192
-* Mixtral-8x7b-32768
-* Gemma-7b-it
-
+- Llama3-70b-8192
+- Llama3-8b-8192
+- Mixtral-8x7b-32768
+- Gemma-7b-it
 
 ## Anthropic
 
 Refer to Anthropic [Getting started page](https://docs.anthropic.com/en/api/getting-started) to obtain Anthropic API key. Update the corresponding env vars, for example:
+
 ```env
 ANTHROPIC_API_KEY=[Your Key]
 FAST_LLM=anthropic:claude-2.1
@@ -175,11 +177,11 @@ Add `langchain-anthropic` to [requirements.txt](https://github.com/assafelovic/g
 
 Anthropic does not offer its own embedding model, therefore, you'll want to either default to the OpenAI embedding model, or find another.
 
-
 ## Mistral AI
 
-Sign up for a [Mistral API key](https://console.mistral.ai/users/api-keys/). 
+Sign up for a [Mistral API key](https://console.mistral.ai/users/api-keys/).
 Then update the corresponding env vars, for example:
+
 ```env
 MISTRAL_API_KEY=[Your Key]
 FAST_LLM=mistralai:open-mistral-7b
@@ -192,8 +194,10 @@ EMBEDDING=mistralai:mistral-embed
 Add `langchain-mistralai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## Together AI
+
 [Together AI](https://www.together.ai/) offers an API to query [50+ leading open-source models](https://docs.together.ai/docs/inference-models) in a couple lines of code.
 Then update corresponding env vars, for example:
+
 ```env
 TOGETHER_API_KEY=[Your Key]
 FAST_LLM=together:meta-llama/Llama-3-8b-chat-hf
@@ -209,6 +213,7 @@ Add `langchain-together` to [requirements.txt](https://github.com/assafelovic/gp
 
 This integration requires a bit of extra work. Follow [this guide](https://python.langchain.com/v0.1/docs/integrations/chat/huggingface/) to learn more.
 After you've followed the tutorial above, update the env vars:
+
 ```env
 HUGGINGFACE_API_KEY=[Your Key]
 FAST_LLM=huggingface:HuggingFaceH4/zephyr-7b-beta
@@ -223,6 +228,7 @@ Add `langchain-huggingface` to [requirements.txt](https://github.com/assafelovic
 ## Google Gemini
 
 Sign up [here](https://ai.google.dev/gemini-api/docs/api-key) for obtaining a Google Gemini API Key and update the following env vars:
+
 ```env
 GOOGLE_API_KEY=[Your Key]
 FAST_LLM=google_genai:gemini-1.5-flash
@@ -306,12 +312,14 @@ STRATEGIC_LLM=xai:grok-beta
 Add `langchain_xai` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
 ## DeepSeek
+
 ```env
 DEEPSEEK_API_KEY=[Your Key]
 FAST_LLM=deepseek:deepseek-chat
 SMART_LLM=deepseek:deepseek-chat
 STRATEGIC_LLM=deepseek:deepseek-chat
 ```
+
 ## Openrouter.ai
 
 ```env
@@ -324,11 +332,14 @@ OPENROUTER_LIMIT_RPS=1  # Ratelimit request per secound
 EMBEDDING=google_genai:models/text-embedding-004 # openrouter doesn't support embedding models, use google instead its free
 GOOGLE_API_KEY=[Your *google gemini* key]
 ```
-## AI/ML API
-#### AI/ML API provides 300+ AI models including Deepseek, Gemini, ChatGPT. The models run at enterprise-grade rate limits and uptimes.
-You can check provider docs [_here_](https://docs.aimlapi.com/?utm_source=gptr&utm_medium=github&utm_campaign=integration)
 
-And models overview is [_here_](https://aimlapi.com/models/?utm_source=gptr&utm_medium=github&utm_campaign=integration)
+## AI/ML API
+
+#### AI/ML API provides 300+ AI models including Deepseek, Gemini, ChatGPT. The models run at enterprise-grade rate limits and uptimes
+
+You can check provider docs [*here*](https://docs.aimlapi.com/?utm_source=gptr&utm_medium=github&utm_campaign=integration)
+
+And models overview is [*here*](https://aimlapi.com/models/?utm_source=gptr&utm_medium=github&utm_campaign=integration)
 
 ```env
 AIMLAPI_API_KEY=[Your aimlapi.com key]
@@ -340,6 +351,7 @@ EMBEDDING="aimlapi:text-embedding-3-small"
 ```
 
 ## vLLM
+
 ```env
 VLLM_OPENAI_API_KEY=[Your Key] # you can set this to 'EMPTY' or anything
 VLLM_OPENAI_API_BASE=[Your base url] # for example http://localhost:8000/v1/

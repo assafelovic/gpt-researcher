@@ -1,18 +1,27 @@
+from __future__ import annotations
+
 import asyncio
-from dotenv import load_dotenv
-from gpt_researcher.config.config import Config
-from gpt_researcher.actions.retriever import get_retrievers
-from gpt_researcher.skills.researcher import ResearchConductor
 import pprint
+
+from typing import Any
+
+from dotenv import load_dotenv
+from gpt_researcher.actions.retriever import get_retrievers
+from gpt_researcher.config.config import Config
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
+from gpt_researcher.skills.researcher import ResearchConductor
+from langchain_core.retrievers import BaseRetriever
+
 # Load environment variables from .env file
 load_dotenv()
+
 
 async def test_scrape_data_by_query():
     # Initialize the Config object
     config = Config()
 
     # Retrieve the retrievers based on the current configuration
-    retrievers = get_retrievers({}, config)
+    retrievers: list[type[BaseRetriever] | type[RetrieverABC]] = get_retrievers({}, config)
     print("Retrievers:", retrievers)
 
     # Create a mock researcher object with necessary attributes
@@ -38,12 +47,11 @@ async def test_scrape_data_by_query():
         retriever = retriever_class(sub_query)
 
         # Perform the search using the current retriever
-        search_results = await asyncio.to_thread(
-            retriever.search, max_results=10
-        )
+        search_results: list[dict[str, Any]] = await asyncio.to_thread(retriever.search, max_results=10)
 
         print("\033[35mSearch results:\033[0m")
         pprint.pprint(search_results, indent=4, width=80)
+
 
 if __name__ == "__main__":
     asyncio.run(test_scrape_data_by_query())

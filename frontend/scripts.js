@@ -7,6 +7,7 @@ const GPTResearcher = (() => {
   let allReports = ''; // Store all reports cumulatively
   let currentReport = ''; // Store the current report (will be overwritten)
   let isFirstReport = true; // Flag to track if this is the first report
+  let reportCounter = 0; // Counter to track number of report generations
   let chatContainer = null; // Global reference to chat container
   let lastRequestData = null; // Store the last request data for reconnection
 
@@ -51,9 +52,6 @@ const GPTResearcher = (() => {
       topCopyButton.addEventListener('click', copyToClipboard);
     }
 
-    // Initialize expand buttons
-    initExpandButtons();
-
     // Initialize history panel functionality
     initHistoryPanel();
 
@@ -62,6 +60,9 @@ const GPTResearcher = (() => {
 
     // Initialize MCP functionality
     initMCPSection();
+
+    // Initialize autocomplete functionality
+    initAutocomplete();
 
     // The download bar is now fixed in place with CSS
     // No need to set display property here
@@ -254,6 +255,59 @@ const GPTResearcher = (() => {
 
     // Start periodic WebSocket status updates
     startWebSocketMonitoring();
+  }
+
+  // Initialize autocomplete functionality for task textarea
+  const initAutocomplete = () => {
+    const textarea = document.getElementById('task');
+    const list = document.getElementById('autocomplete-list');
+
+    if (!textarea || !list) {
+      console.error("Autocomplete elements not found");
+      return;
+    }
+
+    function saveToHistory(value) {
+      const history = JSON.parse(localStorage.getItem('taskHistory') || '[]');
+      if (value.trim() && !history.includes(value)) {
+        history.unshift(value);
+        localStorage.setItem('taskHistory', JSON.stringify(history.slice(0, 10))); // keep last 10
+      }
+    }
+
+    function showSuggestions(input) {
+      const history = JSON.parse(localStorage.getItem('taskHistory') || '[]');
+      const matches = history.filter(item => item.toLowerCase().includes(input.toLowerCase()));
+      list.innerHTML = '';
+      matches.forEach(match => {
+        const item = document.createElement('li');
+        item.textContent = match;
+        item.style.padding = '8px';
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', () => {
+          textarea.value = match;
+          list.innerHTML = '';
+        });
+        list.appendChild(item);
+      });
+    }
+
+    textarea.addEventListener('input', () => {
+      const value = textarea.value;
+      if (value.length > 0) {
+        showSuggestions(value);
+      } else {
+        list.innerHTML = '';
+      }
+    });
+
+    textarea.addEventListener('blur', () => {
+      setTimeout(() => list.innerHTML = '', 200); // slight delay to allow click
+    });
+
+    textarea.form?.addEventListener('submit', () => {
+      saveToHistory(textarea.value);
+    });
   }
 
   // Start WebSocket monitoring
@@ -614,37 +668,28 @@ const GPTResearcher = (() => {
     if (!entry) return;
 
     // Fill form with the entry data
-    document.getElementById('task').value = entry.prompt; // Changed from entry.task for consistency
-    
+    document.getElementById('task').value = entry.prompt || entry.task || ''; // Support both field names
     // Check if report_type, report_source, and tone are in entry, otherwise use defaults or skip
     const reportTypeSelect = document.querySelector('select[name="report_type"]');
-    if (reportTypeSelect && entry.reportType) {
-        reportTypeSelect.value = entry.reportType;
-    } else if (reportTypeSelect) {
-        reportTypeSelect.value = reportTypeSelect.options[0].value; // Default to first option
+    if (reportTypeSelect) {
+      reportTypeSelect.value = entry.reportType || reportTypeSelect.options[0].value; // Default to first option
     }
 
     const reportSourceSelect = document.querySelector('select[name="report_source"]');
-    if (reportSourceSelect && entry.reportSource) {
-        reportSourceSelect.value = entry.reportSource;
-    } else if (reportSourceSelect) {
-        reportSourceSelect.value = reportSourceSelect.options[0].value; // Default to first option
+    if (reportSourceSelect) {
+      reportSourceSelect.value = entry.reportSource || reportSourceSelect.options[0].value;
     }
 
     const toneSelect = document.querySelector('select[name="tone"]');
-    if (toneSelect && entry.tone) {
-        toneSelect.value = entry.tone;
-    } else if (toneSelect) {
-        toneSelect.value = toneSelect.options[0].value; // Default to first option
+    if (toneSelect) {
+      toneSelect.value = entry.tone || toneSelect.options[0].value;
     }
 
     const queryDomainsInput = document.querySelector('input[name="query_domains"]');
     if (queryDomainsInput) {
-        if (entry.queryDomains && Array.isArray(entry.queryDomains) && entry.queryDomains.length > 0) {
-            queryDomainsInput.value = entry.queryDomains.join(', ');
-        } else {
-            queryDomainsInput.value = ''; // Clear if not present
-        }
+      queryDomainsInput.value = Array.isArray(entry.queryDomains) && entry.queryDomains.length > 0
+        ? entry.queryDomains.join(', ')
+        : ''; // Clear if not present
     }
 
     // Clear current research/report areas
@@ -653,34 +698,38 @@ const GPTResearcher = (() => {
     document.getElementById('selectedImagesContainer').innerHTML = '';
     document.getElementById('selectedImagesContainer').style.display = 'none';
 
+    // Close the history panel
+    document.getElementById('historyPanel').classList.remove('open');
+
     // Hide download bar and chat
     const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
     if (stickyDownloadsBar) {
-        stickyDownloadsBar.classList.remove('visible');
+      stickyDownloadsBar.classList.remove('visible');
     }
     const chatContainer = document.getElementById('chatContainer');
     if (chatContainer) {
-        chatContainer.style.display = 'none';
+      chatContainer.style.display = 'none';
     }
 
     // Reset UI state and report-specific buttons
-    updateState('initial'); // This will hide copy buttons etc.
+    updateState('initial');
 
     // Close the history panel
     const historyPanel = document.getElementById('historyPanel');
     if (historyPanel) {
-        historyPanel.classList.remove('open');
+      historyPanel.classList.remove('open');
     }
 
     // Scroll to the form
     const formElement = document.getElementById('form');
     if (formElement) {
-        formElement.scrollIntoView({ behavior: 'smooth' });
+      formElement.scrollIntoView({ behavior: 'smooth' });
     }
 
     // Inform user
     showToast('Research parameters loaded. You can start the research again.');
-  }
+  };
+
 
   // Copy entry content to clipboard
   const copyEntryToClipboard = (index) => {
@@ -754,7 +803,6 @@ const GPTResearcher = (() => {
     conversationHistory.unshift(historyEntry);
     saveConversationHistory();
     renderHistoryEntries();
-    document.getElementById('historyPanel').classList.add('open');
 
     // Prompt user about storage method
     if (cookiesEnabled) {
@@ -777,14 +825,27 @@ const GPTResearcher = (() => {
   };
 
   const startResearch = () => {
+    // Reset error state and UI
     document.getElementById('output').innerHTML = ''
     document.getElementById('reportContainer').innerHTML = ''
+
+    // Reset reconnect attempts for a fresh research session
+    reconnectAttempts = 0;
+
+    // If a socket is already open, properly close it without triggering reconnect
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      // Mark research as inactive before closing to prevent auto reconnect
+      isResearchActive = false;
+      socket.close(1000, "Starting fresh research");
+    }
+
     dispose_socket?.() // Call previous dispose function if it exists
 
     // Reset report variables
     allReports = '';
     currentReport = '';
     isFirstReport = true;
+    reportCounter = 0; // Reset the report counter
 
     // Hide the download bar
     const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
@@ -802,22 +863,49 @@ const GPTResearcher = (() => {
     imageContainer.innerHTML = ''
     imageContainer.style.display = 'none'
 
+    // Mark research as in progress AFTER closing any existing sockets
     updateState('in_progress')
 
     addAgentResponse({
       output: '🧙‍♂️ Gathering information and analyzing your research topic...',
     })
 
+    // Original repo keeps this uncommented. Leave here to know what not to merge in future! This feature is annoying.
+    //
     // Scroll to the "Research Progress" section
-    const researchOutputContainer = document.querySelector('.research-output-container');
-    if (researchOutputContainer) {
-        researchOutputContainer.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-        });
-    }
+    //const researchOutputContainer = document.querySelector('.research-output-container');
+    //if (researchOutputContainer) {
+    //    researchOutputContainer.scrollIntoView({
+    //        behavior: 'smooth',
+    //        block: 'start'
+    //    });
+    //}
+    // Directly scroll to the bottom of the page - exactly once per click
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth'
+    });
 
     dispose_socket = listenToSockEvents() // Assign the new dispose function
+
+    // Set a failsafe timeout - if nothing happens within 30 seconds, show error
+    const researchTimeout = setTimeout(() => {
+      if (isResearchActive && (!socket || socket.readyState !== WebSocket.OPEN)) {
+        console.error("Research timed out - no server response");
+        addAgentResponse({
+          output: '<div class="error-message">⚠️ Research timed out. Server not responding. Please try again later.</div>'
+        });
+        updateState('error');
+        isResearchActive = false;
+      }
+    }, 30000);
+
+    // Add the timeout to the dispose function chain
+    const originalDispose = dispose_socket;
+    dispose_socket = () => {
+      clearTimeout(researchTimeout);
+      originalDispose?.();
+    };
   }
 
   const listenToSockEvents = () => {
@@ -914,6 +1002,7 @@ const GPTResearcher = (() => {
           allReports = '';
           currentReport = '';
           isFirstReport = true;
+          reportCounter = 0; // Reset the counter
         }
 
         // Update WebSocket status
@@ -955,14 +1044,13 @@ const GPTResearcher = (() => {
       }
 
       const task = document.getElementById('task').value
-      const report_type = document.querySelector(
-        'select[name="report_type"]'
-      ).value
-      const report_source = document.querySelector(
-        'select[name="report_source"]'
-      ).value
+      const report_type = document.querySelector('select[name="report_type"]').value
+      const report_source = document.querySelector('input[name="report_source"]').value
       const tone = document.querySelector('select[name="tone"]').value
-      const agent = document.querySelector('input[name="agent"]:checked').value
+
+      // Just use the hardcoded default value without trying to access the DOM
+      const agent = 'Auto Agent';
+
       let source_urls = tags
 
       if (report_source !== 'sources' && source_urls.length > 0) {
@@ -1001,15 +1089,47 @@ const GPTResearcher = (() => {
     }
 
     socket.onclose = (event) => {
+      console.log("WebSocket closed:", event);
       // Update metrics and status when connection closes
       connectionStartTime = null;
       updateWebSocketStatus();
 
       console.log("WebSocket connection closed", event);
 
-      // If research is active, try to automatically reconnect
-      if (isResearchActive) {
+      // If the connection closes very quickly after a message, it might be a server error
+      // Check if we just received a message and the server closed immediately after
+      const serverError = event.code === 1006 && (Date.now() - lastActivityTime < 1000);
+
+      // Only try to reconnect if:
+      // 1. Research is active - we're in the middle of a research session
+      // 2. AND the socket wasn't closed intentionally as part of starting fresh research
+      // 3. AND it wasn't a clean closure with code 1000 "Normal Closure" or "Starting fresh research"
+      // 4. AND we haven't hit the maximum consecutive reconnects for the same error
+      const consecutiveErrors = event.code === 1006 && reconnectAttempts >= 25;
+
+      if (isResearchActive &&
+        event.code !== 1000 &&
+        event.reason !== "Starting fresh research" &&
+        event.reason !== "Closing reconnected socket to start fresh research" &&
+        !consecutiveErrors) {
+        console.log("Attempting to reconnect dropped WebSocket...");
         reconnectWebSocket();
+      } else {
+        console.log("Not reconnecting WebSocket - intentional close, research inactive, or too many failures");
+
+        // If we're stopping because of too many errors, show a message to the user
+        if (consecutiveErrors) {
+          isResearchActive = false; // Stop research activity
+          updateState('error');
+
+          // Add error message to the output
+          addAgentResponse({
+            output: '<div class="error-message">⚠️ The server is experiencing technical difficulties. Please try again later or check the server logs.</div>'
+          });
+
+          // Reset reconnect attempts
+          reconnectAttempts = 0;
+        }
       }
     }
 
@@ -1036,23 +1156,31 @@ const GPTResearcher = (() => {
   }
 
   const addAgentResponse = (data) => {
-    const output = document.getElementById('output');
-    const responseDiv = document.createElement('div');
-    responseDiv.className = 'agent_response';
-    responseDiv.innerHTML = data.output; // Assuming data.output is safe HTML or simple text from agent
-    output.appendChild(responseDiv);
-    output.scrollTop = output.scrollHeight;
-    output.style.display = 'block';
+    if (data.output && data.output.length > 0 && data.output.trim() !== '') {
+      const responseDiv = document.createElement('div');
+      responseDiv.className = 'agent_response';
+      responseDiv.innerHTML = data.output; // Assuming data.output is safe HTML or simple text from agent
+      output.appendChild(responseDiv);
+      output.scrollTop = output.scrollHeight;
+      output.style.display = 'block';
+    }
   }
-
   const writeReport = (data, converter, isFinal = false, append = false) => {
     const reportContainer = document.getElementById('reportContainer');
 
     // Convert markdown to HTML
     const markdownOutput = converter.makeHtml(data.output);
 
-    // If this is the final report or we should append
+    // Always append content to existing content
+    reportContainer.innerHTML += markdownOutput;
     if (isFinal) {
+      // Auto-scroll to the bottom of the container
+      reportContainer.scrollTop = reportContainer.scrollHeight;
+    }
+
+    // Old logic, comment above and uncomment below to use.
+    // If this is the final report or we should append
+    /*if (isFinal) {
       // For final reports, always replace content
       reportContainer.innerHTML = markdownOutput;
     } else if (append) {
@@ -1061,10 +1189,7 @@ const GPTResearcher = (() => {
     } else {
       // Replace mode - overwrite existing content
       reportContainer.innerHTML = markdownOutput;
-    }
-
-    // Auto-scroll to the bottom of the container
-    reportContainer.scrollTop = reportContainer.scrollHeight;
+    }*/
   }
 
   const updateDownloadLink = (data) => {
@@ -1118,7 +1243,7 @@ const GPTResearcher = (() => {
     textarea.value = document.getElementById('reportContainer').innerText
     const selector = document.querySelector('#temp_element')
     selector.select()
-    document.execCommand('copy')
+    navigator.clipboard.writeText(textarea.value)
     document.body.removeChild(textarea)
 
     // Show a temporary success message with icon change and toast notification
@@ -1322,44 +1447,53 @@ const GPTResearcher = (() => {
   const showImageDialog = (imageUrl) => {
     let dialog = document.querySelector('.image-dialog');
     if (!dialog) {
-        dialog = document.createElement('div');
-        dialog.className = 'image-dialog';
+      dialog = document.createElement('div');
+      dialog.className = 'image-dialog';
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.alt = 'Full-size Research Image';
 
-        const img = document.createElement('img');
-        img.alt = 'Full-size Research Image';
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = 'Close';
+      closeBtn.className = 'close-btn';
+      //closeBtn.onclick = () => document.body.removeChild(dialog);
+      closeBtn.onclick = () => {
+        dialog.classList.remove('visible');
+      };
 
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
-        closeBtn.className = 'close-btn'; // Added class for styling
-
-        dialog.appendChild(img);
-        dialog.appendChild(closeBtn);
-        document.body.appendChild(dialog);
-
-        closeBtn.onclick = () => {
-            dialog.classList.remove('visible');
-        };
-        // Close on clicking backdrop
-        dialog.addEventListener('click', (e) => {
-            if (e.target === dialog) {
-                dialog.classList.remove('visible');
-            }
-        });
-    }
-
-    const imgElement = dialog.querySelector('img');
-    imgElement.src = imageUrl;
-    dialog.classList.add('visible');
-
-    // Close with Escape key
-    const escapeKeyListener = (e) => {
-        if (e.key === 'Escape') {
-            dialog.classList.remove('visible');
-            document.removeEventListener('keydown', escapeKeyListener);
+      // Close on clicking backdrop
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) {
+          dialog.classList.remove('visible');
         }
-    };
-    document.addEventListener('keydown', escapeKeyListener);
-}
+      });
+
+      const imgElement = dialog.querySelector('img');
+      imgElement.src = imageUrl;
+      dialog.classList.add('visible');
+
+      // Close with Escape key
+      const escapeKeyListener = (e) => {
+        if (e.key === 'Escape') {
+          dialog.classList.remove('visible');
+          document.removeEventListener('keydown', escapeKeyListener);
+        }
+      };
+      document.addEventListener('keydown', escapeKeyListener);
+      dialog.appendChild(img);
+      dialog.appendChild(closeBtn);
+      document.body.appendChild(dialog);
+    }
+  }
+
+  //document.addEventListener('DOMContentLoaded', init)
+
+  const scrollToOutput = () => {
+    const outputElement = document.getElementById('output')
+    if (outputElement) {
+      outputElement.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
 
   // Function to show download bar and enable buttons
   const showDownloadPanels = () => {
@@ -1809,21 +1943,42 @@ const GPTResearcher = (() => {
 
   // Create a new function to handle WebSocket reconnection
   const reconnectWebSocket = (message = null) => {
+    // Don't attempt reconnection if research is no longer active
+    if (!isResearchActive) {
+      console.log("Not reconnecting - research is no longer active");
+      return false;
+    }
+
     // Don't attempt too many reconnections
     if (reconnectAttempts >= maxReconnectAttempts) {
       console.error(`Failed to reconnect after ${maxReconnectAttempts} attempts`);
-      addChatMessage(`Unable to reconnect after ${maxReconnectAttempts} attempts. Please refresh the page.`, false);
+
+      // Show error to user
+      addAgentResponse({
+        output: `<div class="error-message">⚠️ Connection lost. Unable to reconnect after ${maxReconnectAttempts} attempts. Please refresh the page and try again.</div>`
+      });
+
+      // Update UI to reflect error state
+      updateState('error');
+      isResearchActive = false; // Stop research activity
+
       return false;
     }
 
     reconnectAttempts++;
 
-    // Calculate backoff time (exponential backoff)
-    const backoff = reconnectInterval * Math.pow(1.5, reconnectAttempts - 1);
+    // Calculate backoff time (exponential backoff), maximum of 30 seconds per check.
+    const backoff = Math.min(30000, reconnectInterval * Math.pow(1.5, reconnectAttempts - 1));
     console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts}) in ${backoff}ms...`);
 
     // Show reconnection status to user
-    addChatMessage(`Connection lost. Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`, false);
+    if (reconnectAttempts === 1) {
+      // Only show message on first attempt to avoid spam
+      addAgentResponse({
+        output: `<div class="warning-message">⚠️ Connection lost. Attempting to reconnect...</div>`
+      });
+      //addChatMessage(`Connection lost. Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`, false);
+    }
 
     // Try to reconnect after delay
     setTimeout(() => {
@@ -2080,7 +2235,7 @@ const GPTResearcher = (() => {
   }
 
   // MCP Configuration Management
-  
+
   // Initialize MCP functionality
   const initMCPSection = () => {
     const mcpEnabled = document.getElementById('mcpEnabled');
@@ -2148,11 +2303,11 @@ const GPTResearcher = (() => {
   const validateMCPConfig = () => {
     const mcpConfig = document.getElementById('mcpConfig');
     const mcpConfigStatus = document.getElementById('mcpConfigStatus');
-    
+
     if (!mcpConfig || !mcpConfigStatus) return;
 
     const configText = mcpConfig.value.trim();
-    
+
     if (!configText || configText === '[]') {
       mcpConfig.className = 'form-control mcp-config-textarea';
       mcpConfigStatus.textContent = 'Empty configuration';
@@ -2162,7 +2317,7 @@ const GPTResearcher = (() => {
 
     try {
       const parsed = JSON.parse(configText);
-      
+
       if (!Array.isArray(parsed)) {
         throw new Error('Configuration must be an array');
       }
@@ -2261,7 +2416,7 @@ const GPTResearcher = (() => {
     const modal = document.createElement('div');
     modal.id = 'mcpInfoModal';
     modal.className = 'mcp-info-modal';
-    
+
     modal.innerHTML = `
       <div class="mcp-info-content">
         <button class="mcp-info-close" onclick="closeMCPInfo()">
@@ -2269,7 +2424,7 @@ const GPTResearcher = (() => {
         </button>
         <h3>Model Context Protocol (MCP)</h3>
         <p>MCP enables GPT Researcher to connect with external tools and data sources through a standardized protocol.</p>
-        
+
         <h4 class="highlight">Benefits:</h4>
         <ul>
           <li><span class="highlight">Access Local Data:</span> Connect to databases, file systems, and APIs</li>
@@ -2358,14 +2513,14 @@ const GPTResearcher = (() => {
     try {
       let currentConfig = [];
       const currentText = mcpConfig.value.trim();
-      
+
       if (currentText && currentText !== '[]') {
         currentConfig = JSON.parse(currentText);
       }
 
       // Check if server already exists
       const existingIndex = currentConfig.findIndex(server => server.name === config.name);
-      
+
       if (existingIndex !== -1) {
         // Replace existing server
         currentConfig[existingIndex] = config;
@@ -2393,7 +2548,7 @@ const GPTResearcher = (() => {
     }
 
     const mcpConfig = document.getElementById('mcpConfig');
-    
+
     if (!mcpConfig) {
       console.warn('MCP config element not found for data collection');
       return null;

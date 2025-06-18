@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import re
+
+from typing import Dict, List
+
 import markdown
-from typing import List, Dict
+
 
 def extract_headers(markdown_text: str) -> List[Dict]:
-    """
-    Extract headers from markdown text.
+    """Extract headers from markdown text.
 
     Args:
         markdown_text (str): The markdown text to process.
@@ -38,6 +42,7 @@ def extract_headers(markdown_text: str) -> List[Dict]:
 
     return headers
 
+
 def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
     """
     Extract all written sections from subtopic report.
@@ -51,19 +56,17 @@ def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
     """
     sections = []
     parsed_md = markdown.markdown(markdown_text)
-    
-    pattern = r'<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)'
+
+    pattern = r"<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)"
     matches = re.findall(pattern, parsed_md, re.DOTALL)
-    
+
     for title, content in matches:
-        clean_content = re.sub(r'<.*?>', '', content).strip()
+        clean_content = re.sub(r"<.*?>", "", content).strip()
         if clean_content:
-            sections.append({
-                "section_title": title.strip(),
-                "written_content": clean_content
-            })
-    
+            sections.append({"section_title": title.strip(), "written_content": clean_content})
+
     return sections
+
 
 def table_of_contents(markdown_text: str) -> str:
     """
@@ -75,6 +78,7 @@ def table_of_contents(markdown_text: str) -> str:
     Returns:
         str: The generated table of contents.
     """
+
     def generate_table_of_contents(headers, indent_level=0):
         toc = ""
         for header in headers:
@@ -90,6 +94,7 @@ def table_of_contents(markdown_text: str) -> str:
     except Exception as e:
         print("table_of_contents Exception : ", e)
         return markdown_text
+
 
 def add_references(report_markdown: str, visited_urls: set) -> str:
     """

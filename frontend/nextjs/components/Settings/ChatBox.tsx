@@ -3,7 +3,7 @@ import ResearchForm from '../Task/ResearchForm';
 import Report from '../Task/Report';
 import AgentLogs from '../Task/AgentLogs';
 import AccessReport from '../ResearchBlocks/AccessReport';
-import { getHost } from '../../helpers/getHost';
+import { getHost, HostResult } from '../../helpers/getHost';
 import { ChatBoxSettings } from '@/types/data';
 
 interface ChatBoxProps {
@@ -31,16 +31,15 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBox
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      let fullHost = getHost()
-      const protocol = fullHost.includes('https') ? 'wss:' : 'ws:'
-      const cleanHost = fullHost.replace('http://', '').replace('https://', '')
-      const ws_uri = `${protocol}//${cleanHost}/ws`
+      const hostResult: HostResult = getHost();
+      const protocol = hostResult.isSecure ? 'wss://' : 'ws://';
+      const ws_uri = `${protocol}${hostResult.cleanHost}/ws`;
       const newSocket = new WebSocket(ws_uri);
       setSocket(newSocket);
 
       newSocket.onmessage = (event) => {
         const data = JSON.parse(event.data) as WebSocketMessage;
-        
+
         if (data.type === 'logs') {
           setAgentLogs((prevLogs: any[]) => [...prevLogs, data]);
         } else if (data.type === 'report') {
@@ -64,18 +63,18 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBox
   return (
     <div>
       <main className="static-container" id="form">
-        <ResearchForm 
-          chatBoxSettings={chatBoxSettings} 
+        <ResearchForm
+          chatBoxSettings={chatBoxSettings}
           setChatBoxSettings={setChatBoxSettings}
         />
 
         {agentLogs?.length > 0 ? <AgentLogs agentLogs={agentLogs} /> : ''}
         <div className="margin-div">
           {report ? <Report report={report} /> : ''}
-          {Object.keys(accessData).length > 0 && 
-            <AccessReport 
-              accessData={accessData} 
-              chatBoxSettings={chatBoxSettings} 
+          {Object.keys(accessData).length > 0 &&
+            <AccessReport
+              accessData={accessData}
+              chatBoxSettings={chatBoxSettings}
               report={report}
             />
           }

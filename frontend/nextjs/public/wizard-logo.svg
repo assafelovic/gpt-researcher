@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="wizardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9D4EDD;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#5A189A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#240046;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0CDBB6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1FD0F0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Wizard Hat -->
+  <path d="M50 10 L70 45 L30 45 Z" fill="url(#wizardGradient)" stroke="#E4E4E4" stroke-width="1" />
+
+  <!-- Hat Brim -->
+  <ellipse cx="50" cy="45" rx="22" ry="4" fill="url(#wizardGradient)" stroke="#E4E4E4"
+    stroke-width="1" />
+
+  <!-- Hat Stars -->
+  <g fill="url(#starGradient)">
+    <path d="M45 25 L46 28 L49 28 L47 30 L48 33 L45 31 L42 33 L43 30 L41 28 L44 28 Z" />
+    <path d="M55 20 L56 22 L58 22 L57 23 L58 25 L55 24 L52 25 L53 23 L52 22 L54 22 Z" />
+    <path d="M38 35 L39 37 L41 37 L40 38 L41 40 L38 39 L35 40 L36 38 L35 37 L37 37 Z" />
+  </g>
+
+  <!-- Magic Wand -->
+  <g transform="translate(65,55) rotate(25)">
+    <rect x="0" y="0" width="15" height="2" fill="#8B4513" rx="1" />
+    <circle cx="16" cy="1" r="3" fill="url(#starGradient)" stroke="#E4E4E4" stroke-width="0.5" />
+
+    <!-- Sparkles -->
+    <g fill="url(#starGradient)" opacity="0.8">
+      <circle cx="20" cy="-2" r="0.5" />
+      <circle cx="18" cy="4" r="0.5" />
+      <circle cx="22" cy="2" r="0.5" />
+    </g>
+  </g>
+
+  <!-- Wizard Face -->
+  <circle cx="50" cy="60" r="12" fill="#FFE4C4" stroke="#E4E4E4" stroke-width="1" />
+
+  <!-- Eyes -->
+  <circle cx="46" cy="57" r="1.5" fill="#333" />
+  <circle cx="54" cy="57" r="1.5" fill="#333" />
+
+  <!-- Beard -->
+  <path d="M50 68 Q42 72 40 80 Q45 82 50 80 Q55 82 60 80 Q58 72 50 68 Z" fill="#E4E4E4"
+    stroke="#CCCCCC" stroke-width="0.5" />
+
+  <!-- Mustache -->
+  <path d="M45 63 Q50 65 55 63" stroke="#E4E4E4" stroke-width="2" fill="none" stroke-linecap="round" />
+
+  <!-- Research Scroll -->
+  <g transform="translate(20,70)">
+    <rect x="0" y="0" width="20" height="15" fill="#F5F5DC" stroke="#DDD" stroke-width="1" rx="1" />
+    <line x1="2" y1="3" x2="18" y2="3" stroke="#333" stroke-width="0.5" />
+    <line x1="2" y1="6" x2="15" y2="6" stroke="#333" stroke-width="0.5" />
+    <line x1="2" y1="9" x2="17" y2="9" stroke="#333" stroke-width="0.5" />
+    <line x1="2" y1="12" x2="12" y2="12" stroke="#333" stroke-width="0.5" />
+  </g>
+
+  <!-- Research magnifying glass -->
+  <g transform="translate(75,75)">
+    <circle cx="0" cy="0" r="5" fill="none" stroke="url(#starGradient)" stroke-width="2" />
+    <line x1="4" y1="4" x2="8" y2="8" stroke="url(#starGradient)" stroke-width="2"
+      stroke-linecap="round" />
+  </g>
+</svg>

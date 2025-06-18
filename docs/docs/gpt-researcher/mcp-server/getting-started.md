@@ -15,6 +15,7 @@ GPT Researcher performs autonomous, deep research - not just search. It intellig
 The MCP server exposes the following capabilities to AI assistants:
 
 ### Resources
+
 - `research_resource`: Get web resources related to a given task via research.
 
 ### Primary Tools
@@ -41,21 +42,26 @@ Before running the MCP server, make sure you have:
 ## Installation
 
 1. Clone the GPT Researcher repository:
+
 ```bash
 git clone https://github.com/assafelovic/gptr-mcp.git
 ```
 
 2. Install the dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 3. Set up your environment variables:
    - Copy the `.env.example` file to create a new file named `.env`:
+
    ```bash
    cp .env.example .env
    ```
+
    - Edit the `.env` file and add your API keys and configure other settings:
+
    ```bash
    OPENAI_API_KEY=your_openai_api_key
    TAVILY_API_KEY=your_tavily_api_key
@@ -145,4 +151,4 @@ If you encounter issues while running the MCP server:
 - Learn about [GPT Researcher's core features](../getting-started/introduction) to enhance your research capabilities
 - Check out the [Advanced Usage](./advanced-usage) guide for more configuration options
 
-:-) 
+:-)

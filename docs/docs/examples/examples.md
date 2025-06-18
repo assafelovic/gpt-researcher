@@ -1,6 +1,7 @@
 # Simple Run
 
 ### Run PIP Package
+
 ```python
 from gpt_researcher import GPTResearcher
 import asyncio
