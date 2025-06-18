@@ -6,6 +6,7 @@ import random
 
 from typing import TYPE_CHECKING, Any, Callable
 
+from gpt_researcher.actions.agent_creator import choose_agent
 from gpt_researcher.actions.query_processing import get_search_results, plan_research_outline
 from gpt_researcher.actions.utils import stream_output
 from gpt_researcher.document import DocumentLoader, LangChainDocumentLoader, OnlineDocumentLoader

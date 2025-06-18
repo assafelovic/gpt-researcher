@@ -12,6 +12,7 @@ from gpt_researcher.config.fallback_logic import set_llm_attributes
 from gpt_researcher.config.variables.base import BaseConfig
 from gpt_researcher.config.variables.default import DEFAULT_CONFIG
 from gpt_researcher.llm_provider import GenericLLMProvider
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from gpt_researcher.retrievers.utils import get_all_retriever_names
 
 with suppress(ImportError):
