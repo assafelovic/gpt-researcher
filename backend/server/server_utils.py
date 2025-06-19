@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
 import logging
+import unicodedata
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -233,27 +234,198 @@ def update_environment_variables(config: Dict[str, str]):
         os.environ[key] = value
 
 
+def secure_filename(filename: str) -> str:
+    """
+    Securely sanitize a filename to prevent path traversal attacks.
+    
+    Args:
+        filename: The original filename
+        
+    Returns:
+        A sanitized filename safe for filesystem operations
+        
+    Raises:
+        ValueError: If the filename is invalid or potentially malicious
+    """
+    if not filename:
+        raise ValueError("Filename cannot be empty")
+    
+    # Check for path traversal attempts before any processing
+    if '..' in filename or '/' in filename or '\\' in filename:
+        raise ValueError("Filename contains path traversal sequences")
+    
+    # Remove null bytes and other control characters
+    filename = ''.join(char for char in filename if ord(char) >= 32)
+    
+    # Normalize unicode to prevent unicode-based attacks
+    filename = unicodedata.normalize('NFKC', filename)
+    
+    # Remove tilde characters (home directory references)
+    filename = filename.replace('~', '')
+    
+    # Remove drive letters (Windows)
+    if len(filename) > 1 and filename[1] == ':':
+        filename = filename[2:]
+    
+    # Remove leading dots and spaces
+    filename = filename.lstrip('. ')
+    
+    # Ensure filename is not empty after sanitization
+    if not filename:
+        raise ValueError("Filename becomes empty after sanitization")
+    
+    # Check for reserved names (Windows)
+    reserved_names = {
+        'CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5',
+        'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4',
+        'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
+    }
+    
+    name_without_ext = filename.split('.')[0].upper()
+    if name_without_ext in reserved_names:
+        raise ValueError(f"Filename '{filename}' uses a reserved name")
+    
+    # Limit filename length (most filesystems support 255 chars)
+    if len(filename.encode('utf-8')) > 255:
+        raise ValueError("Filename too long")
+    
+    return filename
+
+def validate_file_path(file_path: str, base_path: str) -> str:
+    """
+    Validate that a file path is within the allowed base directory.
+    
+    Args:
+        file_path: The file path to validate
+        base_path: The base directory that should contain the file
+        
+    Returns:
+        The resolved absolute path if valid
+        
+    Raises:
+        ValueError: If the path is outside the base directory
+    """
+    # Convert to absolute paths and resolve any symlinks/relative components
+    abs_base = os.path.abspath(base_path)
+    abs_file = os.path.abspath(file_path)
+    
+    # Ensure the file path is within the base directory
+    if not abs_file.startswith(abs_base + os.sep) and abs_file != abs_base:
+        raise ValueError(f"File path '{file_path}' is outside allowed directory '{base_path}'")
+    
+    return abs_file
+
 async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
-    file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    print(f"File uploaded to {file_path}")
-
-    document_loader = DocumentLoader(DOC_PATH)
-    await document_loader.load()
-
-    return {"filename": file.filename, "path": file_path}
-
+    """
+    Handle file upload with security validation to prevent path traversal attacks.
+    
+    Args:
+        file: The uploaded file object
+        DOC_PATH: The base directory for file storage
+        
+    Returns:
+        Dict containing filename and path information
+        
+    Raises:
+        HTTPException: If the file upload is invalid or potentially malicious
+    """
+    try:
+        # Validate and sanitize the filename
+        safe_filename = secure_filename(file.filename)
+        
+        # Create the full file path
+        file_path = os.path.join(DOC_PATH, safe_filename)
+        
+        # Validate the path is within the allowed directory
+        validated_path = validate_file_path(file_path, DOC_PATH)
+        
+        # Ensure the DOC_PATH directory exists
+        os.makedirs(DOC_PATH, exist_ok=True)
+        
+        # Check if file already exists and handle accordingly
+        if os.path.exists(validated_path):
+            # Generate a unique filename to avoid conflicts
+            name, ext = os.path.splitext(safe_filename)
+            counter = 1
+            while os.path.exists(validated_path):
+                new_filename = f"{name}_{counter}{ext}"
+                file_path = os.path.join(DOC_PATH, new_filename)
+                validated_path = validate_file_path(file_path, DOC_PATH)
+                counter += 1
+            safe_filename = new_filename
+        
+        # Write the file securely
+        with open(validated_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        logger.info(f"File uploaded securely to {validated_path}")
+        
+        # Load the document
+        document_loader = DocumentLoader(DOC_PATH)
+        await document_loader.load()
+        
+        return {"filename": safe_filename, "path": validated_path}
+        
+    except ValueError as e:
+        logger.error(f"File upload validation error: {e}")
+        raise HTTPException(status_code=400, detail=f"Invalid file: {str(e)}")
+    except Exception as e:
+        logger.error(f"File upload error: {e}")
+        raise HTTPException(status_code=500, detail="File upload failed")
 
 async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
-    file_path = os.path.join(DOC_PATH, os.path.basename(filename))
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        print(f"File deleted: {file_path}")
-        return JSONResponse(content={"message": "File deleted successfully"})
-    else:
-        print(f"File not found: {file_path}")
-        return JSONResponse(status_code=404, content={"message": "File not found"})
+    """
+    Handle file deletion with security validation to prevent path traversal attacks.
+    
+    Args:
+        filename: The filename to delete
+        DOC_PATH: The base directory for file storage
+        
+    Returns:
+        JSONResponse indicating success or failure
+    """
+    try:
+        # Validate and sanitize the filename
+        safe_filename = secure_filename(filename)
+        
+        # Create the full file path
+        file_path = os.path.join(DOC_PATH, safe_filename)
+        
+        # Validate the path is within the allowed directory
+        validated_path = validate_file_path(file_path, DOC_PATH)
+        
+        # Check if file exists and delete it
+        if os.path.exists(validated_path):
+            # Additional security check: ensure it's a file, not a directory
+            if not os.path.isfile(validated_path):
+                logger.error(f"Attempted to delete non-file: {validated_path}")
+                return JSONResponse(
+                    status_code=400, 
+                    content={"message": "Cannot delete: not a file"}
+                )
+            
+            os.remove(validated_path)
+            logger.info(f"File deleted securely: {validated_path}")
+            return JSONResponse(content={"message": "File deleted successfully"})
+        else:
+            logger.warning(f"File not found for deletion: {validated_path}")
+            return JSONResponse(
+                status_code=404, 
+                content={"message": "File not found"}
+            )
+            
+    except ValueError as e:
+        logger.error(f"File deletion validation error: {e}")
+        return JSONResponse(
+            status_code=400, 
+            content={"message": f"Invalid filename: {str(e)}"}
+        )
+    except Exception as e:
+        logger.error(f"File deletion error: {e}")
+        return JSONResponse(
+            status_code=500, 
+            content={"message": "File deletion failed"}
+        )
 
 
 async def execute_multi_agents(manager) -> Any:
