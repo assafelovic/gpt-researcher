@@ -3,7 +3,7 @@ name: Publish Python Package to Azure Artifacts
 on:
   push:
     branches:
-      - '**'
+      - 'main'
 
 jobs:
   build-and-publish:
@@ -15,7 +15,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
       - name: Install build and publishing tools
         run: |
@@ -30,8 +30,6 @@ jobs:
 
       - name: Configure .pypirc for Azure Artifacts
         env:
-          AZURE_FEED_URL: ${{ secrets.AZURE_FEED_URL }}
-          AZURE_USERNAME: ${{ secrets.AZURE_USERNAME }}
           AZURE_TOKEN: ${{ secrets.AZURE_TOKEN }}
         run: |
           echo "Configuring .pypirc for Azure Artifacts"
