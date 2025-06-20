@@ -41,7 +41,7 @@ class Memory:
                 from langchain_openai import AzureOpenAIEmbeddings
 
                 _embeddings = AzureOpenAIEmbeddings(
-                    deployment=os.environ["AZURE_EMBEDDING_MODEL"], chunk_size=16
+                    deployment=os.environ["AZURE_EMBEDDING_MODEL"], chunk_size=1
                 )
             case "huggingface":
                 from langchain.embeddings import HuggingFaceEmbeddings

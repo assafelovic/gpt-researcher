@@ -21,4 +21,3 @@ jobs:
           push: false
           tags: assafelovic/gpt-researcher:latest
           file: Dockerfile
-

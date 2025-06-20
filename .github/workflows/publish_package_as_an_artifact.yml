@@ -1,0 +1,53 @@
+name: Publish Python Package to Azure Artifacts
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install build and publishing tools
+        run: |
+          echo "Installing build and publish dependencies"
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build package
+        run: |
+          echo "Building source and wheel distributions"
+          python -m build --sdist --wheel
+
+      - name: Configure .pypirc for Azure Artifacts
+        env:
+          AZURE_TOKEN: ${{ secrets.AZURE_TOKEN }}
+        run: |
+          echo "Configuring .pypirc for Azure Artifacts"
+          cat <<EOF > ~/.pypirc
+          [distutils]
+          index-servers = azure
+
+          [azure]
+          repository: https://pkgs.dev.azure.com/USE1-AMH-DIG-NYC572/DIG_DevOps/_packaging/DIG_artifacts/pypi/upload/
+          username: __token__
+          password: ${AZURE_TOKEN}
+          EOF
+
+      - name: Publish to Azure Artifacts
+        env:
+          TWINE_NON_INTERACTIVE: true
+        run: |
+          echo "Uploading distributions to Azure Artifacts"
+          ls dist
+          twine upload --repository azure dist/*
+          echo "Upload complete"

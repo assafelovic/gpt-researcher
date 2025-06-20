@@ -11,7 +11,7 @@ class Config:
         self.config_file = os.path.expanduser(config_file) if config_file else os.getenv('CONFIG_FILE')
         self.retrievers = self.parse_retrievers(os.getenv('RETRIEVER', "tavily"))
         self.embedding_provider = os.getenv('EMBEDDING_PROVIDER', 'openai')
-        self.similarity_threshold = int(os.getenv('SIMILARITY_THRESHOLD', 0.38))
+        self.similarity_threshold = float(os.getenv('SIMILARITY_THRESHOLD', 0.2))
         self.llm_provider = os.getenv('LLM_PROVIDER', "openai")
         self.ollama_base_url = os.getenv('OLLAMA_BASE_URL', None)
         self.llm_model = "gpt-4o-mini"  
