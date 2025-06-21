@@ -1,9 +1,11 @@
 """
 Evaluate model outputs for hallucination using the judges library.
 """
+import json
 import logging
+import os
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Optional
 
 from dotenv import load_dotenv
 from judges.classifiers.hallucination import HaluEvalDocumentSummaryNonFactual
@@ -56,24 +58,23 @@ class HallucinationEvaluator:
             raise
 
 def main():
-    # Example test data for single evaluation
-    test_data = {
-        "input_text": "What is the capital of France?",
-        "model_output": "The capital of France is Paris.",
-        "source_text": "France is a country in Europe."
-    }
+    # Example test case
+    input_text = "What is the capital of France?"
+    model_output = "The capital of France is Paris, a city known for its rich history and culture."
+    source_text = "Paris is the capital and largest city of France, located in the northern part of the country."
     
     evaluator = HallucinationEvaluator()
     result = evaluator.evaluate_response(
-        input_text=test_data["input_text"],
-        model_output=test_data["model_output"],
-        source_text=test_data["source_text"]
+        input_text=input_text,
+        model_output=model_output,
+        source_text=source_text
     )
     
-    # Print result
-    print("\nEvaluation Result:")
+    # Print results
+    print("\nEvaluation Results:")
     print(f"Input: {result['input']}")
     print(f"Output: {result['output']}")
+    print(f"Source: {result['source']}")
     print(f"Hallucination: {'Yes' if result['is_hallucination'] else 'No'}")
     print(f"Confidence: {result['confidence_score']:.2f}")
     print(f"Reasoning: {result['reasoning']}")
