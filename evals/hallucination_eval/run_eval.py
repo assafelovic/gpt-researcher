@@ -41,6 +41,7 @@ class ResearchEvaluator:
         Args:
             queries_file: Path to JSONL file containing search queries
         """
+
         self.queries_file = Path(queries_file)
         self.hallucination_evaluator = HallucinationEvaluator()
         
@@ -128,7 +129,6 @@ class ResearchEvaluator:
         else:
             # Evaluate the research report for hallucination
             eval_result = self.hallucination_evaluator.evaluate_response(
-                input_text=research_data["query"],
                 model_output=research_data["report"],
                 source_text=source_text
             )

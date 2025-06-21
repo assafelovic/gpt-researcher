@@ -25,12 +25,11 @@ class HallucinationEvaluator:
             
         self.summary_judge = HaluEvalDocumentSummaryNonFactual(model=model)
         
-    def evaluate_response(self, input_text: str, model_output: str, source_text: str) -> Dict:
+    def evaluate_response(self, model_output: str, source_text: str) -> Dict:
         """
         Evaluate a single model response for hallucination against source documents.
         
         Args:
-            input_text: The input text/query
             model_output: The model's response to evaluate
             source_text: Source text to check summary against
             
@@ -45,11 +44,9 @@ class HallucinationEvaluator:
             )
                 
             return {
-                "input": input_text,
                 "output": model_output,
                 "source": source_text,
-                "is_hallucination": judgment.score > 0.5,
-                "confidence_score": judgment.score,
+                "is_hallucination": judgment.score,
                 "reasoning": judgment.reasoning
             }
             
@@ -59,24 +56,20 @@ class HallucinationEvaluator:
 
 def main():
     # Example test case
-    input_text = "What is the capital of France?"
     model_output = "The capital of France is Paris, a city known for its rich history and culture."
     source_text = "Paris is the capital and largest city of France, located in the northern part of the country."
     
     evaluator = HallucinationEvaluator()
     result = evaluator.evaluate_response(
-        input_text=input_text,
         model_output=model_output,
         source_text=source_text
     )
     
     # Print results
     print("\nEvaluation Results:")
-    print(f"Input: {result['input']}")
     print(f"Output: {result['output']}")
     print(f"Source: {result['source']}")
     print(f"Hallucination: {'Yes' if result['is_hallucination'] else 'No'}")
-    print(f"Confidence: {result['confidence_score']:.2f}")
     print(f"Reasoning: {result['reasoning']}")
 
 if __name__ == "__main__":
