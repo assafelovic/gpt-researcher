@@ -8,39 +8,20 @@ import argparse
 import os
 from pathlib import Path
 from typing import Dict
-from datetime import datetime
-
 from dotenv import load_dotenv
+
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from gpt_researcher.utils.logging_config import get_json_handler
 
 from evaluate import HallucinationEvaluator
 
-# Create logs directory if it doesn't exist
-logs_dir = Path("logs")
-logs_dir.mkdir(exist_ok=True)
-
-# Generate timestamp for log files
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-log_file = logs_dir / f"research_eval_{timestamp}.log"
-json_file = logs_dir / f"research_eval_{timestamp}.json"
-
 # Configure logging
-file_handler = logging.FileHandler(log_file)
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-
-# Get logger and configure it
-logger = logging.getLogger('research_eval')
-logger.setLevel(logging.INFO)
-logger.handlers.clear()  # Remove any existing handlers
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
-logger.propagate = False  # Prevent propagation to root logger
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
