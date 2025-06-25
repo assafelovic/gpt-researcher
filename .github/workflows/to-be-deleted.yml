@@ -1,0 +1,47 @@
+name: Run Python Script & Notify on Dev Branch
+
+on:
+  push:
+    branches:
+      - dev    # ← your test branch
+
+jobs:
+  run-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      # Run your script, but don’t fail the job
+      - name: Run script
+        id: run_script
+        run: python your_script.py
+        continue-on-error: true
+
+      # Comment on the commit you just pushed
+      - name: Notify via GitHub commit comment
+        if: always()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // pull the step outcome (success or failure)
+            const outcome = '${{ steps.run_script.outcome }}';
+            const status  = outcome === 'success' ? '✅ SUCCESS' : '❌ FAILURE';
+            // post a comment on this commit, tagging yourself
+            await github.repos.createCommitComment({
+              owner:      context.repo.owner,
+              repo:       context.repo.repo,
+              commit_sha: context.sha,
+              body:       `@dsharma97 ${status}: \`your_script.py\` has ${outcome === 'success' ? 'completed without errors' : 'failed with errors'}.`
+            });
