@@ -142,3 +142,66 @@ F1 Score: 0.925
 Total cost: $1.2345
 Average cost per query: $0.1371
 ``` 
+
+## Hallucination Evaluation (`hallucination_eval/`)
+
+The `hallucination_eval` directory contains tools for evaluating GPT-Researcher's outputs for hallucination. This evaluation system compares the generated research reports against their source materials to detect non-factual or hallucinated content, ensuring the reliability and accuracy of the research outputs.
+
+### Components
+
+- `run_eval.py`: Script to execute evaluations against GPT-Researcher
+- `evaluate.py`: Core evaluation logic for detecting hallucinations
+- `inputs/`: Directory containing test queries
+  - `search_queries.jsonl`: Collection of research queries for evaluation
+- `results/`: Directory containing evaluation results
+  - `evaluation_records.jsonl`: Detailed per-query evaluation records
+  - `aggregate_results.json`: Summary metrics across all evaluations
+
+### Features
+
+- Evaluates research reports against source materials
+- Provides detailed reasoning for hallucination detection
+
+### Running Evaluations
+
+1. Install dependencies:
+```bash
+cd evals/hallucination_eval
+pip install -r requirements.txt
+```
+
+2. Set up environment variables in `.env` file:
+```bash
+# Use the root .env file
+OPENAI_API_KEY=your_openai_key_here
+TAVILY_API_KEY=your_tavily_key_here
+```
+
+3. Run evaluation:
+```bash
+python run_eval.py -n <number_of_queries>
+```
+
+The `-n` parameter determines how many queries to evaluate from the test set (default: 1).
+
+### Example Output
+```json
+{
+  "total_queries": 1,
+  "successful_queries": 1,
+  "total_responses": 1,
+  "total_evaluated": 1,
+  "total_hallucinated": 0,
+  "hallucination_rate": 0.0,
+  "results": [
+    {
+      "input": "What are the latest developments in quantum computing?",
+      "output": "Research report content...",
+      "source": "Source material content...",
+      "is_hallucination": false,
+      "confidence_score": 0.95,
+      "reasoning": "The summary accurately reflects the source material with proper citations..."
+    }
+  ]
+}
+```
