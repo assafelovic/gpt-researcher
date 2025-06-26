@@ -90,10 +90,22 @@ class GenericLLMProvider:
         self.verbose = verbose
     @classmethod
     def from_provider(cls, provider: str, chat_log: str | None = None, verbose: bool=True, **kwargs: Any):
+        # Get the appropriate base URL from kwargs or environment
+        base_url = kwargs.pop('base_url', None) or os.environ.get(f"{provider.upper()}_BASE_URL")
+        
+        if base_url:
+            kwargs['base_url'] = base_url
+            if verbose:
+                print(f"Using {provider} endpoint: {base_url}")
+                
         if provider == "openai":
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
-
+            
+            # Handle custom endpoints for OpenAI-compatible APIs
+            if 'base_url' in kwargs and 'api_key' not in kwargs:
+                kwargs['api_key'] = 'dummy'  # Some APIs don't require a key
+                
             llm = ChatOpenAI(**kwargs)
         elif provider == "anthropic":
             _check_pkg("langchain_anthropic")
@@ -133,8 +145,13 @@ class GenericLLMProvider:
             _check_pkg("langchain_community")
             _check_pkg("langchain_ollama")
             from langchain_ollama import ChatOllama
-
-            llm = ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
+            
+            # Use provided base_url or fall back to environment variable
+            base_url = kwargs.pop('base_url', os.environ.get("OLLAMA_BASE_URL"))
+            if base_url:
+                kwargs['base_url'] = base_url
+                
+            llm = ChatOllama(**kwargs)
         elif provider == "together":
             _check_pkg("langchain_together")
             from langchain_together import ChatTogether
