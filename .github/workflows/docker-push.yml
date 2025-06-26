@@ -118,6 +118,8 @@ jobs:
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
           push: true
+          provenance: false
+          sbom: false
           cache-from: "type=gha"
           cache-to: "type=gha,mode=max"
 
@@ -214,6 +216,8 @@ jobs:
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
           push: true
+          provenance: false
+          sbom: false
           cache-from: "type=gha"
           cache-to: "type=gha,mode=max"
 
@@ -310,6 +314,8 @@ jobs:
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
           push: true
+          provenance: false
+          sbom: false
           cache-from: "type=gha"
           cache-to: "type=gha,mode=max"
 
@@ -406,5 +412,7 @@ jobs:
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
           push: true
+          provenance: false
+          sbom: false
           cache-from: "type=gha"
           cache-to: "type=gha,mode=max"
