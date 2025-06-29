@@ -86,7 +86,7 @@ export const useWebSocket = (
       attempt: connectionAttemptRef.current
     }, requestId);
 
-    const hostResult: HostResult = getHost();
+    const hostResult = getHost();
     const protocol = hostResult.isSecure ? "wss://" : "ws://";
     const ws_uri = `${protocol}${hostResult.cleanHost}/ws`;
 
