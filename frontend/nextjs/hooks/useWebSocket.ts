@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Data, ChatBoxSettings, QuestionData } from '../types/data';
-import { getHost } from '../helpers/getHost';
+import { getHost, HostResult } from '../helpers/getHost';
 import {
   logWebSocketConnection,
   logWebSocketConnected,
