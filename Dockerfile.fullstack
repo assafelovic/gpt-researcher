@@ -80,10 +80,6 @@ RUN apt-get update && \
 ARG HOST=0.0.0.0
 ENV HOST=${HOST}
 
-ARG PORT=8000
-ENV PORT=${PORT}
-EXPOSE ${PORT}
-
 ARG NEXT_PORT=3000
 ENV NEXT_PORT=${NEXT_PORT}
 EXPOSE ${NEXT_PORT}
@@ -178,7 +174,7 @@ RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
   echo 'logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '[program:backend]' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo 'command=uvicorn main:app --host %(ENV_HOST)s --port %(ENV_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=uvicorn main:app --host 0.0.0.0 --port 8000' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'directory=/usr/src/app' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
