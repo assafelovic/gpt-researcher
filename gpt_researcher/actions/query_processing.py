@@ -1,7 +1,10 @@
 from __future__ import annotations
 from itertools import tee
+from typing import TYPE_CHECKING
 
-from backend.server.server_utils import Researcher
+if TYPE_CHECKING:
+    from backend.server.server_utils import Researcher
+
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from ..utils.llm import create_chat_completion
 from ..prompts import PromptFamily
@@ -54,7 +57,7 @@ async def get_search_results(
     query: str,
     retriever: Callable[[str, dict[str, Any] | None], RetrieverABC] | type[RetrieverABC],
     query_domains: list[str] | None = None,
-    researcher: Researcher | None = None,
+    researcher: "Researcher | None" = None,
     fallback_retrievers: list[Callable[[str, dict[str, Any] | None], RetrieverABC] | type[RetrieverABC]] | None = None,
     min_results: int = 1,
 ) -> list[dict[str, Any]]:
