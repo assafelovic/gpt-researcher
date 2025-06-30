@@ -439,13 +439,16 @@ async def generate_report(
 
     content: str = f"{generated_prompt}"
 
+    # Ensure agent_role_prompt is a string
+    agent_role_str = str(agent_role_prompt) if agent_role_prompt is not None else ""
+
     # DEBUG: Log message structure before API call
     messages: list[dict[str, str]] = [
-        {"role": "system", "content": f"{agent_role_prompt or ''} "},
+        {"role": "system", "content": f"{agent_role_str} "},
         {"role": "user", "content": content},
     ]
     logger.info(f"[DEBUG] Preparing to call LLM with model: {cfg.smart_llm_model}, provider: {cfg.smart_llm_provider}")
-    logger.info(f"[DEBUG] System message length: {len(agent_role_prompt or '')}")
+    logger.info(f"[DEBUG] System message length: {len(agent_role_str)}")
     logger.info(f"[DEBUG] User message length: {len(content)}")
 
     try:
@@ -517,7 +520,7 @@ async def generate_report(
             simplified_messages: list[dict[str, str]] = [
                 {
                     "role": "user",
-                    "content": f"{agent_role_prompt or ''}\n\n{content}",
+                    "content": f"{agent_role_str}\n\n{content}",
                 },
             ]
             logger.info(f"[DEBUG] Simplified message length: {len(simplified_messages[0]['content'])}")

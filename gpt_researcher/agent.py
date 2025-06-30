@@ -155,7 +155,7 @@ class GPTResearcher:
         self.vector_store_filter: list[str] | None = vector_store_filter
         self.websocket: WebSocket | None = websocket
         self.agent: str | None = agent
-        self.role: str | None = roll
+        self.role: str | None = role
         self.parent_query: str = parent_query
         self.subtopics: list[str] | None = subtopics
         self.visited_urls: set[str] = set() if visited_urls is None else visited_urls
