@@ -12,7 +12,13 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.tools import BaseTool, tool
 from langchain_community.vectorstores import InMemoryVectorStore
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph.graph import CompiledGraph
+try:
+    from langgraph.graph import CompiledGraph
+except ImportError:
+    try:
+        from langgraph.graph.graph import CompiledGraph
+    except ImportError:
+        from langgraph import CompiledGraph
 from langgraph.prebuilt import create_react_agent
 
 if TYPE_CHECKING:
