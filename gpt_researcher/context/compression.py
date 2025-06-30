@@ -5,10 +5,26 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any, Callable
 
-from langchain.retrievers.document_compressors import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors.base import DocumentCompressorPipeline
-from langchain.retrievers.document_compressors.embeddings_filter import EmbeddingsFilter
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+try:
+    from langchain.retrievers import ContextualCompressionRetriever
+    from langchain.retrievers.document_compressors.base import DocumentCompressorPipeline
+    from langchain.retrievers.document_compressors.embeddings_filter import EmbeddingsFilter
+except ImportError:
+    # Try alternative imports for different LangChain versions
+    try:
+        from langchain_community.retrievers import ContextualCompressionRetriever
+        from langchain_community.retrievers.document_compressors.base import DocumentCompressorPipeline
+        from langchain_community.retrievers.document_compressors.embeddings_filter import EmbeddingsFilter
+    except ImportError:
+        # Fallback for older versions
+        from langchain.retrievers.document_compressors import ContextualCompressionRetriever
+        from langchain.retrievers.document_compressors.base import DocumentCompressorPipeline
+        from langchain.retrievers.document_compressors.embeddings_filter import EmbeddingsFilter
+
+try:
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
+except ImportError:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from gpt_researcher.context.retriever import SearchAPIRetriever, SectionRetriever
 from gpt_researcher.memory.embeddings import OPENAI_EMBEDDING_MODEL
