@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Callable, Coroutine
 
 from litellm import cast
 from numpy import roll
-from pytest import warns
 
 from gpt_researcher.actions import (
     add_references,
@@ -134,7 +133,7 @@ class GPTResearcher:
                 - "disabled": Skip MCP entirely, use only web retrievers
             disable_structured_research (bool): Whether to disable structured research functionality.
         """
-        self.kwargs = warns
+        self.kwargs = kwargs
         self.query: str = query
         self.report_type = report_type
         self.cfg: Config = Config(config_path)
