@@ -12,13 +12,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.tools import BaseTool, tool
 from langchain_community.vectorstores import InMemoryVectorStore
 from langgraph.checkpoint.memory import MemorySaver
-try:
-    from langgraph.graph import CompiledGraph
-except ImportError:
-    try:
-        from langgraph.graph.graph import CompiledGraph
-    except ImportError:
-        from langgraph import CompiledGraph
+# CompiledGraph type annotation - using Any for compatibility
+from typing import Any
 from langgraph.prebuilt import create_react_agent
 
 if TYPE_CHECKING:
@@ -44,9 +39,9 @@ class ChatAgentWithMemory:
         self.headers: dict[str, Any] = headers
         self.config: Config = Config(config_path)
         self.vector_store: InMemoryVectorStore | None = vector_store
-        self.graph: CompiledGraph = self.create_agent()
+        self.graph: Any = self.create_agent()
 
-    def create_agent(self) -> CompiledGraph:
+    def create_agent(self) -> Any:
         """Create React Agent Graph"""
         cfg = Config()
 
@@ -68,7 +63,7 @@ class ChatAgentWithMemory:
             self.vector_store.add_texts(documents)
 
         # Create the React Agent Graph with the configured provider
-        graph: CompiledGraph = create_react_agent(provider, tools=[self.vector_store_tool(self.vector_store)], checkpointer=MemorySaver())
+        graph: Any = create_react_agent(provider, tools=[self.vector_store_tool(self.vector_store)], checkpointer=MemorySaver())
 
         return graph
 
