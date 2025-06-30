@@ -76,18 +76,6 @@ RUN apt-get update && \
   apt-get install -y nodejs && \
   rm -rf /var/lib/apt/lists/*
 
-# Set backend server configuration
-ARG HOST=0.0.0.0
-ENV HOST=${HOST}
-
-ARG NEXT_PORT=3000
-ENV NEXT_PORT=${NEXT_PORT}
-EXPOSE ${NEXT_PORT}
-
-# Internal Next.js port (not exposed)
-ARG NEXT_INTERNAL_PORT=3001
-ENV NEXT_INTERNAL_PORT=${NEXT_INTERNAL_PORT}
-
 # Copy application files
 COPY ./ ./
 
@@ -184,7 +172,7 @@ RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '[program:frontend]' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo 'command=npm run start -- -p %(ENV_NEXT_INTERNAL_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=npm run start -- -p 3001' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'directory=/usr/src/app/frontend/nextjs' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
