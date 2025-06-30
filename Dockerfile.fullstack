@@ -208,9 +208,3 @@ RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
 
 # Start supervisord to manage both services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
-
-# Without supervisord:
-#CMD bash -c "\
-#  uvicorn main:app --host \$ENV_HOST --port \$ENV_PORT --root-path /api & \
-#  npm run start --prefix /usr/src/app/frontend/nextjs -- -p \$ENV_NEXT_INTERNAL_PORT & \
-#  nginx -g 'daemon off;'"
