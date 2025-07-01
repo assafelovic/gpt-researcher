@@ -327,7 +327,7 @@ class AIAgentQueryPipeline:
         
         return api_structure
 
-# pipeline = AIAgentQueryPipeline("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")    
+# pipeline = AIAgentQueryPipeline("API Key")    
 #     # Test with the provided prompts
 # query = """Conduct a comprehensive analysis of the therapeutic landscape for post-myocardial infarction (MI) treatment, with a focus on agents targeting cardioprotective or remodeling-prevention mechanisms. Include:
 #     • List of active clinical-stage programs (Ph1–Ph3) in post-MI or ischemia-reperfusion settings, segmented by MOA (e.g., mitochondrial protection, anti-inflammatory, anti-fibrotic, stem cell-derived, YAP activators, etc.)
