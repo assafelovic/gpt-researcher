@@ -20,6 +20,8 @@ class DetailedReport:
         subtopics: List[Dict] = [],
         headers: Optional[Dict] = None,
         complement_source_urls: bool = False,
+        mcp_configs=None,
+        mcp_strategy=None,
     ):
         self.query = query
         self.report_type = report_type
@@ -34,19 +36,28 @@ class DetailedReport:
         self.headers = headers or {}
         self.complement_source_urls = complement_source_urls
         
-        self.gpt_researcher = GPTResearcher(
-            query=self.query,
-            query_domains=self.query_domains,
-            report_type="research_report",
-            report_source=self.report_source,
-            source_urls=self.source_urls,
-            document_urls=self.document_urls,
-            config_path=self.config_path,
-            tone=self.tone,
-            websocket=self.websocket,
-            headers=self.headers,
-            complement_source_urls=self.complement_source_urls
-        )
+        # Initialize researcher with optional MCP parameters
+        gpt_researcher_params = {
+            "query": self.query,
+            "query_domains": self.query_domains,
+            "report_type": "research_report",
+            "report_source": self.report_source,
+            "source_urls": self.source_urls,
+            "document_urls": self.document_urls,
+            "config_path": self.config_path,
+            "tone": self.tone,
+            "websocket": self.websocket,
+            "headers": self.headers,
+            "complement_source_urls": self.complement_source_urls,
+        }
+        
+        # Add MCP parameters if provided
+        if mcp_configs is not None:
+            gpt_researcher_params["mcp_configs"] = mcp_configs
+        if mcp_strategy is not None:
+            gpt_researcher_params["mcp_strategy"] = mcp_strategy
+            
+        self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
         self.existing_headers: List[Dict] = []
         self.global_context: List[str] = []
         self.global_written_sections: List[str] = []

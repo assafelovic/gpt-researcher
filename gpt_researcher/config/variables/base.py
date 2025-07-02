@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, List, Dict, Any
 from typing_extensions import TypedDict
 
 
@@ -35,3 +35,9 @@ class BaseConfig(TypedDict):
     DEEP_RESEARCH_CONCURRENCY: int
     DEEP_RESEARCH_DEPTH: int
     DEEP_RESEARCH_BREADTH: int
+    MCP_SERVERS: List[Dict[str, Any]]
+    MCP_AUTO_TOOL_SELECTION: bool
+    MCP_USE_LLM_ARGS: bool
+    MCP_ALLOWED_ROOT_PATHS: List[str]
+    MCP_STRATEGY: str
+    REASONING_EFFORT: str

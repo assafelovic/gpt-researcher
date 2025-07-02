@@ -9,18 +9,29 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def get_search_results(query: str, retriever: Any, query_domains: List[str] = None) -> List[Dict[str, Any]]:
+async def get_search_results(query: str, retriever: Any, query_domains: List[str] = None, researcher=None) -> List[Dict[str, Any]]:
     """
     Get web search results for a given query.
 
     Args:
         query: The search query
         retriever: The retriever instance
+        query_domains: Optional list of domains to search
+        researcher: The researcher instance (needed for MCP retrievers)
 
     Returns:
         A list of search results
     """
-    search_retriever = retriever(query, query_domains=query_domains)
+    # Check if this is an MCP retriever and pass the researcher instance
+    if "mcpretriever" in retriever.__name__.lower():
+        search_retriever = retriever(
+            query, 
+            query_domains=query_domains,
+            researcher=researcher  # Pass researcher instance for MCP retrievers
+        )
+    else:
+        search_retriever = retriever(query, query_domains=query_domains)
+    
     return search_retriever.search()
 
 async def generate_sub_queries(
@@ -31,6 +42,7 @@ async def generate_sub_queries(
     cfg: Config,
     cost_callback: callable = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    **kwargs
 ) -> List[str]:
     """
     Generate sub-queries using the specified LLM model.
@@ -65,6 +77,7 @@ async def generate_sub_queries(
             llm_kwargs=cfg.llm_kwargs,
             reasoning_effort=ReasoningEfforts.Medium.value,
             cost_callback=cost_callback,
+            **kwargs
         )
     except Exception as e:
         logger.warning(f"Error with strategic LLM: {e}. Retrying with max_tokens={cfg.strategic_token_limit}.")
@@ -77,6 +90,7 @@ async def generate_sub_queries(
                 llm_provider=cfg.strategic_llm_provider,
                 llm_kwargs=cfg.llm_kwargs,
                 cost_callback=cost_callback,
+                **kwargs
             )
             logger.warning(f"Retrying with max_tokens={cfg.strategic_token_limit} successful.")
         except Exception as e:
@@ -90,6 +104,7 @@ async def generate_sub_queries(
                 llm_provider=cfg.smart_llm_provider,
                 llm_kwargs=cfg.llm_kwargs,
                 cost_callback=cost_callback,
+                **kwargs
             )
 
     return json_repair.loads(response)
@@ -102,30 +117,53 @@ async def plan_research_outline(
     parent_query: str,
     report_type: str,
     cost_callback: callable = None,
+    retriever_names: List[str] = None,
+    **kwargs
 ) -> List[str]:
     """
     Plan the research outline by generating sub-queries.
 
     Args:
         query: Original query
-        retriever: Retriever instance
+        search_results: Initial search results
         agent_role_prompt: Agent role prompt
         cfg: Configuration object
         parent_query: Parent query
         report_type: Report type
         cost_callback: Callback for cost calculation
+        retriever_names: Names of the retrievers being used
 
     Returns:
         A list of sub-queries
     """
+    # Handle the case where retriever_names is not provided
+    if retriever_names is None:
+        retriever_names = []
+    
+    # For MCP retrievers, we may want to skip sub-query generation
+    # Check if MCP is the only retriever or one of multiple retrievers
+    if retriever_names and ("mcp" in retriever_names or "MCPRetriever" in retriever_names):
+        mcp_only = (len(retriever_names) == 1 and 
+                   ("mcp" in retriever_names or "MCPRetriever" in retriever_names))
+        
+        if mcp_only:
+            # If MCP is the only retriever, skip sub-query generation
+            logger.info("Using MCP retriever only - skipping sub-query generation")
+            # Return the original query to prevent additional search iterations
+            return [query]
+        else:
+            # If MCP is one of multiple retrievers, generate sub-queries for the others
+            logger.info("Using MCP with other retrievers - generating sub-queries for non-MCP retrievers")
 
+    # Generate sub-queries for research outline
     sub_queries = await generate_sub_queries(
         query,
         parent_query,
         report_type,
         search_results,
         cfg,
-        cost_callback
+        cost_callback,
+        **kwargs
     )
 
     return sub_queries

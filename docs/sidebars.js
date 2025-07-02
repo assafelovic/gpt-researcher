@@ -98,12 +98,13 @@
     },
     {
       type: 'category',
-      label: 'Search Engines',
+      label: 'Retrievers',
       collapsible: true,
       collapsed: true,
       items: [
-        'gpt-researcher/search-engines/retrievers',
-        'gpt-researcher/search-engines/test-your-retriever'
+        'gpt-researcher/search-engines/search-engines',
+        'gpt-researcher/retrievers/mcp-configs',
+        'gpt-researcher/search-engines/test-your-retriever',
         ]
     },
     {

@@ -159,6 +159,7 @@ deep_research_breadth: 4    # Number of parallel research paths
 deep_research_depth: 2      # How many levels deep to explore
 deep_research_concurrency: 4  # Maximum concurrent operations
 total_words: 2500           # Word count for final report
+reasoning_effort: medium
 ```
 
 Apply these configurations through environment variables, a config file, or directly in code:

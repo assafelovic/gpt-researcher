@@ -1,6 +1,6 @@
-# Retrievers
+# Search Engines
 
-Retrievers are search engines used to find the most relevant documents for a given research task.
+Search Engines are used to find the most relevant web sources and content for a given research task.
 You can specify your preferred web search or use any custom retriever of your choice.
 
 ## Web Search Engines

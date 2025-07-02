@@ -344,3 +344,632 @@
 .modal-content .form-group input {
   width: 100%;
 }
+
+/* More specific rule that excludes MCP section */
+.modal-content .form-group:not(.mcp-section) input,
+.modal-content .form-group:not(.mcp-section) select {
+  width: 100%;
+}
+
+/* Reset the width for MCP section to allow natural layout - make this more specific */
+.modal-content .form-group.mcp-section input,
+.modal-content .form-group.mcp-section select,
+.modal-content .form-group.mcp-section textarea {
+  width: auto !important;
+}
+
+/* Ensure MCP header layout stays horizontal */
+.modal-content .mcp-section .mcp-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-bottom: 15px !important;
+  justify-content: flex-start !important;
+}
+
+.modal-content .mcp-section .mcp-header label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  flex: 1 !important;
+}
+
+.modal-content .mcp-section .mcp-toggle {
+  width: auto !important;
+  margin: 0 !important;
+}
+
+/* MCP Section Styles for Next.js Settings */
+.settings .mcp-section {
+  margin-bottom: 1.5rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.settings .mcp-section:hover {
+  border-color: rgba(13, 148, 136, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.settings .mcp-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  justify-content: flex-start;
+}
+
+.settings .mcp-header label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  margin: 0;
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  flex: 1;
+}
+
+.settings .mcp-header label:hover {
+  color: #0d9488;
+}
+
+.settings .mcp-toggle {
+  margin: 0;
+  accent-color: #0d9488;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  transform: scale(1.2);
+}
+
+.settings .mcp-info-btn {
+  background: rgba(13, 148, 136, 0.2);
+  border: 1px solid rgba(13, 148, 136, 0.3);
+  color: #0d9488;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  min-width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.settings .mcp-info-btn:hover {
+  background: rgba(13, 148, 136, 0.3);
+  border-color: #0d9488;
+  color: #0cdbb6;
+  transform: scale(1.05);
+}
+
+.settings .mcp-config-section {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(0, 0, 0, 0.2), rgba(13, 148, 136, 0.05));
+  backdrop-filter: blur(5px);
+}
+
+.settings .mcp-presets {
+  margin-bottom: 20px;
+}
+
+.settings .preset-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.settings .preset-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(13, 148, 136, 0.4);
+  color: #fff;
+  background: linear-gradient(145deg, rgba(13, 148, 136, 0.2), rgba(13, 148, 136, 0.1));
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.settings .preset-btn:hover {
+  border-color: #0d9488;
+  color: #0cdbb6;
+  background: linear-gradient(145deg, rgba(13, 148, 136, 0.3), rgba(13, 148, 136, 0.2));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.2);
+}
+
+.settings .preset-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3);
+}
+
+.settings .preset-btn i {
+  font-size: 1rem;
+  color: #0d9488;
+}
+
+.settings .preset-btn:hover i {
+  color: #0cdbb6;
+}
+
+.settings .mcp-config-group {
+  margin-bottom: 15px;
+}
+
+.settings .mcp-config-textarea {
+  font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  width: 100%;
+  min-height: 300px;
+  max-height: 500px;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.settings .mcp-config-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+.settings .mcp-config-textarea:focus {
+  border-color: #0d9488;
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 3px rgba(13, 148, 136, 0.2);
+  outline: none;
+}
+
+.settings .mcp-config-textarea.invalid {
+  border-color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 12px rgba(220, 53, 69, 0.3);
+}
+
+.settings .mcp-config-textarea.valid {
+  border-color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 12px rgba(40, 167, 69, 0.3);
+}
+
+.settings .mcp-config-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
+.settings .mcp-status-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings .mcp-status-text::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #6c757d;
+}
+
+.settings .mcp-status-text.valid {
+  color: #28a745;
+}
+
+.settings .mcp-status-text.valid::before {
+  background-color: #28a745;
+  box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
+}
+
+.settings .mcp-status-text.invalid {
+  color: #dc3545;
+}
+
+.settings .mcp-status-text.invalid::before {
+  background-color: #dc3545;
+  box-shadow: 0 0 8px rgba(220, 53, 69, 0.5);
+}
+
+.settings .mcp-format-btn {
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  background: linear-gradient(145deg, rgba(108, 117, 125, 0.8), rgba(108, 117, 125, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings .mcp-format-btn:hover {
+  background: linear-gradient(145deg, rgba(108, 117, 125, 1), rgba(108, 117, 125, 0.8));
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.settings .mcp-format-btn i {
+  color: #0d9488;
+}
+
+.settings .mcp-example-link {
+  color: #0d9488;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.settings .mcp-example-link:hover {
+  text-decoration: underline;
+  color: #0cdbb6;
+  transform: translateX(2px);
+}
+
+/* MCP Info Modal for Next.js */
+.settings .mcp-info-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s ease;
+}
+
+.settings .mcp-info-modal.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.settings .mcp-info-content {
+  background: linear-gradient(145deg, #1a1a2e, #16213e);
+  padding: 30px;
+  border-radius: 16px;
+  max-width: 650px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  margin: 20px;
+  border: 1px solid rgba(13, 148, 136, 0.3);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  animation: modalSlideIn 0.4s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.settings .mcp-info-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.7);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.settings .mcp-info-close:hover {
+  background: rgba(220, 53, 69, 0.2);
+  border-color: #dc3545;
+  color: #dc3545;
+  transform: scale(1.1);
+}
+
+.settings .mcp-info-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #fff;
+  border-bottom: 2px solid #0d9488;
+  padding-bottom: 12px;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.settings .mcp-info-content h4 {
+  color: #0cdbb6;
+  margin-top: 25px;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.settings .mcp-info-content p {
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 15px;
+}
+
+.settings .mcp-info-content ul {
+  padding-left: 25px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.settings .mcp-info-content li {
+  margin-bottom: 10px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.settings .mcp-info-content .highlight {
+  color: #0cdbb6;
+  font-weight: 600;
+}
+
+.settings .mcp-info-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.settings .mcp-info-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.settings .mcp-info-content::-webkit-scrollbar-thumb {
+  background: #0d9488;
+  border-radius: 4px;
+}
+
+.settings .mcp-info-content::-webkit-scrollbar-thumb:hover {
+  background: #0cdbb6;
+}
+
+/* Mobile responsive for MCP section */
+@media (max-width: 768px) {
+  .settings .preset-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .settings .preset-btn {
+    justify-content: center;
+    padding: 14px 20px;
+    font-size: 0.95rem;
+  }
+  
+  .settings .mcp-info-content {
+    margin: 15px;
+    padding: 25px;
+    max-height: 90vh;
+  }
+  
+  .settings .mcp-config-status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .settings .mcp-config-textarea {
+    min-height: 250px;
+    font-size: 13px;
+  }
+
+  .settings .mcp-section {
+    padding: 15px;
+  }
+
+  .settings .mcp-config-section {
+    padding: 15px;
+  }
+}
+
+.settings .text-muted {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 0.85rem;
+}
+
+/* Modal positioning and height management fixes */
+.modal-container {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  width: auto !important;
+  max-width: 95vw !important;
+  z-index: 1001 !important;
+}
+
+/* Ensure modal content is scrollable when expanded */
+.modal-content {
+  max-height: 85vh !important;
+  overflow-y: auto !important;
+  position: relative !important;
+}
+
+/* Add scrollbar styling for modal content */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #0d9488;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #0cdbb6;
+}
+
+/* Ensure modal backdrop doesn't interfere with positioning */
+.modal-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999 !important;
+}
+
+/* For framer-motion modals, ensure proper centering */
+[class*="fixed"][class*="inset-0"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+}
+
+/* Specific positioning for the settings modal */
+.settings .fixed.inset-0 {
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+}
+
+/* Ensure modal doesn't get too tall */
+.settings .relative.w-auto {
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Make sure modal content scrolls instead of expanding beyond viewport */
+@media (max-height: 800px) {
+  .modal-container {
+    max-height: 85vh !important;
+  }
+  
+  .modal-content {
+    max-height: 75vh !important;
+  }
+  
+  .settings .mcp-config-textarea {
+    min-height: 200px !important;
+    max-height: 250px !important;
+  }
+}
+
+/* For very small screens */
+@media (max-height: 600px) {
+  .modal-container {
+    max-height: 95vh !important;
+    top: 2.5vh !important;
+    transform: translateX(-50%) !important;
+  }
+  
+  .modal-content {
+    max-height: 90vh !important;
+  }
+  
+  .settings .mcp-config-textarea {
+    min-height: 150px !important;
+    max-height: 200px !important;
+  }
+}
+
+/* Framer Motion Modal specific positioning fixes */
+.settings [class*="fixed"][class*="inset-0"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
+}
+
+/* Ensure the modal content wrapper has proper constraints */
+.settings [class*="relative"][class*="w-auto"] {
+  max-height: 90vh !important;
+  width: auto !important;
+  max-width: min(95vw, 768px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Modal content scrollable area */
+.settings .modal-content {
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+  flex: 1 !important;
+  min-height: 0 !important;
+}
+
+/* Prevent the modal from growing too tall */
+.settings .bg-gray-900\/95 {
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+}
+
+/* Ensure MCP textarea doesn't make modal too tall */
+.settings .modal-content .mcp-config-textarea {
+  max-height: 300px !important;
+  overflow-y: auto !important;
+}

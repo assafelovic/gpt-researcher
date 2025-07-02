@@ -110,12 +110,20 @@ def sanitize_filename(filename: str) -> str:
     # 255 - len(os.getcwd()) - len("\\gpt-researcher\\outputs\\") - len("task_") - len(timestamp) - len("_.json") - safety_margin
     max_task_length = 255 - len(os.getcwd()) - 24 - 5 - 10 - 6 - 5  # ~189 chars for task
     
-    # Truncate task if needed
-    truncated_task = task[:max_task_length] if len(task) > max_task_length else task
-    
+    # Truncate task if needed (by bytes)
+    truncated_task = ""
+    byte_count = 0
+    for char in task:
+        char_bytes = len(char.encode('utf-8'))
+        if byte_count + char_bytes <= max_task_length:
+            truncated_task += char
+            byte_count += char_bytes
+        else:
+            break
+
     # Reassemble and clean the filename
     sanitized = f"{prefix}_{timestamp}_{truncated_task}"
-    return re.sub(r"[^\w\s-]", "", sanitized).strip()
+    return re.sub(r"[^\w-]", "", sanitized).strip()
 
 
 async def handle_start_command(websocket, data: str, manager):
@@ -129,10 +137,18 @@ async def handle_start_command(websocket, data: str, manager):
         headers,
         report_source,
         query_domains,
+        mcp_enabled,
+        mcp_strategy,
+        mcp_configs,
     ) = extract_command_data(json_data)
 
     if not task or not report_type:
-        print("Error: Missing task or report_type")
+        print("❌ Error: Missing task or report_type")
+        await websocket.send_json({
+            "type": "logs",
+            "content": "error", 
+            "output": f"Missing required parameters - task: {task}, report_type: {report_type}"
+        })
         return
 
     # Create logs handler with websocket and task
@@ -157,6 +173,9 @@ async def handle_start_command(websocket, data: str, manager):
         websocket,
         headers,
         query_domains,
+        mcp_enabled,
+        mcp_strategy,
+        mcp_configs,
     )
     report = str(report)
     file_paths = await generate_report_files(report, sanitized_filename)
@@ -272,6 +291,7 @@ async def handle_websocket_communication(websocket, manager):
         while True:
             try:
                 data = await websocket.receive_text()
+                
                 if data == "ping":
                     await websocket.send_text("pong")
                 elif running_task and not running_task.done():
@@ -314,4 +334,7 @@ def extract_command_data(json_data: Dict) -> tuple:
         json_data.get("headers", {}),
         json_data.get("report_source"),
         json_data.get("query_domains", []),
+        json_data.get("mcp_enabled", False),
+        json_data.get("mcp_strategy", "fast"),
+        json_data.get("mcp_configs", []),
     )

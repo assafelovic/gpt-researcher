@@ -1,0 +1,574 @@
+# MCP Integration
+
+The Model Context Protocol (MCP) enables GPT Researcher to connect with diverse data sources and tools through a standardized interface. GPT Researcher features an intelligent two-stage MCP approach that automatically selects the best tools and generates contextual research, powered by LangChain's [MCP adapters](https://github.com/langchain-ai/langchain-mcp-adapters) for seamless integration.
+
+## How MCP Works in GPT Researcher
+
+GPT Researcher uses a **two stage intelligent approach** for MCP integration:
+
+1. **Stage 1: Smart Tool Selection** - LLM analyzes your query and available MCP servers to select the most relevant tools
+2. **Stage 2: Contextual Research** - LLM uses selected tools with dynamically generated, query specific arguments
+
+This happens automatically behind the scenes, optimized for the best balance of speed, cost, and research quality. The integration leverages the [langchain-mcp-adapters](https://github.com/langchain-ai/langchain-mcp-adapters) library, ensuring compatibility with the growing ecosystem of MCP tool servers.
+
+## MCP Research Flow
+
+The following diagram illustrates the hybrid strategy using `RETRIEVER=tavily,mcp` as an example:
+
+<img width="662" alt="Screenshot 2025-06-06 at 14 38 04" src="https://cowriter-images.s3.us-east-1.amazonaws.com/Screenshot+2025-06-06+at+14.38.04.png" />
+
+### Flow Breakdown:
+
+1. **Configuration**: Set `RETRIEVER` environment variable to enable MCP
+2. **Strategy Selection**: Choose pure MCP or hybrid approach
+3. **Initialization**: GPT Researcher loads your `mcp_configs`
+4. **Stage 1**: LLM intelligently selects the most relevant tools from available MCP servers
+5. **Stage 2**: LLM executes research using selected tools with query-specific arguments
+6. **Hybrid Processing**: If using hybrid strategy, combines MCP results with web search
+7. **Report Generation**: Synthesizes all findings into a comprehensive report
+
+## Prerequisites
+
+MCP support is included with GPT Researcher installation:
+
+```bash
+pip install gpt-researcher
+# All MCP dependencies are included automatically
+```
+
+## Essential Configuration: Enabling MCP
+
+**Important:** To use MCP with GPT Researcher, you must set the `RETRIEVER` environment variable:
+
+### Pure MCP Research
+```bash
+export RETRIEVER=mcp
+```
+
+### Hybrid Strategy (Recommended)
+```bash
+# Combines web search with MCP for comprehensive research
+export RETRIEVER=tavily,mcp
+
+# Alternative hybrid combinations
+export RETRIEVER=tavily,mcp
+export RETRIEVER=google,mcp,arxiv
+```
+
+## Quick Start
+
+```python
+from gpt_researcher import GPTResearcher
+import os
+
+# Set retriever to enable MCP
+os.environ["RETRIEVER"] = "tavily,mcp"  # Hybrid approach
+
+# Simple MCP configuration - works automatically
+researcher = GPTResearcher(
+    query="How does React's useState hook work?",
+    mcp_configs=[
+        {
+            "name": "github_api"
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
+            "env": {"GITHUB_TOKEN": os.getenv("GITHUB_TOKEN")}
+        }
+    ]
+)
+
+context = await researcher.conduct_research()
+report = await researcher.write_report()
+```
+
+## Configuration Structure
+
+Each MCP configuration dictionary supports these keys:
+
+| Key | Description | Example | Required |
+|-----|-------------|---------|----------|
+| `name` | Identifier for the MCP server | `"github"` | Yes |
+| `command` | Command to start the server | `"python"` | Yes* |
+| `args` | Arguments for the server command | `["-m", "my_server"]` | Yes* |
+| `env` | Environment variables for the server | `{"API_KEY": "key"}` | No |
+| `connection_url` | URL for remote connections | `"wss://api.example.com"` | Yes** |
+| `connection_type` | Connection type (auto-detected) | `"websocket"` | No |
+| `connection_token` | Authentication token | `"bearer_token"` | No |
+
+**Local servers**: Require `name`, `command`, and `args`  
+**Remote servers**: Require `name` and `connection_url`
+
+## Examples
+
+### News and Web Research with Tavily
+
+Perfect for current events, market research, and general information gathering:
+
+```python
+from gpt_researcher import GPTResearcher
+import os
+
+# Enable hybrid research: web search + MCP
+os.environ["RETRIEVER"] = "tavily,mcp"
+
+researcher = GPTResearcher(
+    query="What are the latest updates in the NBA playoffs?",
+    mcp_configs=[
+        {
+            "name": "tavily",
+            "command": "npx",
+            "args": ["-y", "tavily-mcp@0.1.2"],
+            "env": {
+                "TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")
+            }
+        }
+    ]
+)
+
+context = await researcher.conduct_research()
+report = await researcher.write_report()
+```
+
+### Code Research with GitHub
+
+Ideal for technical documentation, code examples, and software development research:
+
+```python
+# Pure MCP research for technical queries
+os.environ["RETRIEVER"] = "mcp"
+
+researcher = GPTResearcher(
+    query="What are the key features and implementation of React's useState hook? How has it evolved in recent versions?",
+    mcp_configs=[
+        {
+            "name": "github",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
+            }
+        }
+    ]
+)
+```
+
+### Academic Research with Hybrid Strategy
+
+Combining academic papers with MCP tools:
+
+```python
+# Academic + MCP hybrid approach
+os.environ["RETRIEVER"] = "arxiv,semantic_scholar,mcp"
+
+researcher = GPTResearcher(
+    query="Analyze the latest developments in quantum error correction algorithms",
+    mcp_configs=[
+        {
+            "name": "quantum_research",
+            "command": "python",
+            "args": ["quantum_mcp_server.py"],
+            "env": {
+                "ARXIV_API_KEY": os.getenv("ARXIV_API_KEY"),
+                "RESEARCH_DB_PATH": "/path/to/quantum_papers.db"
+            }
+        }
+    ]
+)
+```
+
+## Multi-Server Research: Comprehensive Market Analysis
+
+Here's a real-world example combining multiple MCP servers for comprehensive business intelligence:
+
+```python
+from gpt_researcher import GPTResearcher
+import os
+
+# Multi-retriever hybrid strategy for comprehensive coverage
+os.environ["RETRIEVER"] = "tavily,google,mcp"
+
+# Multi-domain research combining news, code, and financial data
+researcher = GPTResearcher(
+    query="Analyze Tesla's Q4 2024 performance, including stock trends, recent innovations, and market sentiment",
+    mcp_configs=[
+        # Financial data and stock analysis
+        {
+            "name": "financial_data",
+            "command": "python",
+            "args": ["financial_mcp_server.py"],
+            "env": {
+                "ALPHA_VANTAGE_KEY": os.getenv("ALPHA_VANTAGE_KEY"),
+                "YAHOO_FINANCE_KEY": os.getenv("YAHOO_FINANCE_KEY")
+            }
+        },
+        # News and market sentiment
+        {
+            "name": "news_research",
+            "command": "npx",
+            "args": ["-y", "tavily-mcp@0.1.2"],
+            "env": {
+                "TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")
+            }
+        },
+        # Technical innovations and patents
+        {
+            "name": "github_research",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
+            }
+        },
+        # Academic research and papers
+        {
+            "name": "academic_papers",
+            "command": "python",
+            "args": ["arxiv_mcp_server.py"],
+            "env": {
+                "ARXIV_API_KEY": os.getenv("ARXIV_API_KEY")
+            }
+        }
+    ]
+)
+
+# GPT Researcher automatically orchestrates all servers
+context = await researcher.conduct_research()
+report = await researcher.write_report()
+
+print(f"Generated comprehensive report using {len(researcher.mcp_configs)} MCP servers")
+print(f"Research cost: ${researcher.get_costs():.4f}")
+```
+
+This example demonstrates how GPT Researcher intelligently:
+- **Selects relevant tools** from each server based on the query
+- **Coordinates multi-domain research** across financial, news, technical, and academic sources
+- **Synthesizes information** from different domains into a cohesive analysis
+- **Optimizes performance** by using only the most relevant tools from each server
+
+### E-commerce Competitive Analysis
+
+Another practical multi-server scenario for business research:
+
+```python
+# Comprehensive hybrid strategy
+os.environ["RETRIEVER"] = "tavily,bing,exa,mcp"
+
+researcher = GPTResearcher(
+    query="Comprehensive competitive analysis of sustainable fashion brands in 2024",
+    mcp_configs=[
+        # Web trends and consumer sentiment
+        {
+            "name": "web_trends",
+            "command": "npx",
+            "args": ["-y", "tavily-mcp@0.1.2"],
+            "env": {"TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")}
+        },
+        # Social media analytics
+        {
+            "name": "social_analytics",
+            "command": "python",
+            "args": ["social_mcp_server.py"],
+            "env": {
+                "TWITTER_BEARER_TOKEN": os.getenv("TWITTER_BEARER_TOKEN"),
+                "INSTAGRAM_ACCESS_TOKEN": os.getenv("INSTAGRAM_ACCESS_TOKEN")
+            }
+        },
+        # Patent and innovation research
+        {
+            "name": "patent_research",
+            "command": "python",
+            "args": ["patent_mcp_server.py"],
+            "env": {"USPTO_API_KEY": os.getenv("USPTO_API_KEY")}
+        }
+    ]
+)
+```
+
+## Remote MCP Server
+
+```python
+# Enable MCP with web search fallback
+os.environ["RETRIEVER"] = "tavily,mcp"
+
+researcher = GPTResearcher(
+    query="Latest AI research papers on transformer architectures",
+    mcp_configs=[
+        {
+            "name": "arxiv_api",
+            "connection_url": "wss://mcp.arxiv.org/ws",  # Auto-detects WebSocket
+            "connection_token": os.getenv("ARXIV_TOKEN"),
+        }
+    ]
+)
+```
+
+## Combining MCP with Web Search
+
+MCP works seamlessly alongside traditional web search for comprehensive research:
+
+```python
+from gpt_researcher import GPTResearcher
+
+# Hybrid strategy: combines web search with MCP automatically
+os.environ["RETRIEVER"] = "tavily,mcp"
+
+researcher = GPTResearcher(
+    query="Impact of AI on software development practices",
+    # MCP will be used alongside web search automatically
+    mcp_configs=[
+        {
+            "name": "github",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github"],
+            "env": {"GITHUB_TOKEN": os.getenv("GITHUB_TOKEN")}
+        }
+    ]
+)
+
+# This uses both MCP (for code examples) and web search (for articles/news)
+context = await researcher.conduct_research()
+```
+
+## Complete Working Example
+
+Here's a production-ready example demonstrating MCP integration:
+
+```python
+import asyncio
+import os
+from gpt_researcher import GPTResearcher
+
+async def main():
+    # Set up environment
+    os.environ["GITHUB_PERSONAL_ACCESS_TOKEN"] = "your_github_token"
+    os.environ["OPENAI_API_KEY"] = "your_openai_key"
+    os.environ["TAVILY_API_KEY"] = "your_tavily_key"
+    
+    # Enable hybrid research strategy
+    os.environ["RETRIEVER"] = "tavily,mcp"
+    
+    # Create researcher with multi-server MCP configuration
+    researcher = GPTResearcher(
+        query="How are leading tech companies implementing AI safety measures in 2024?",
+        mcp_configs=[
+            # Code repositories and technical implementations
+            {
+                "name": "github",
+                "command": "npx",
+                "args": ["-y", "@modelcontextprotocol/server-github"],
+                "env": {
+                    "GITHUB_PERSONAL_ACCESS_TOKEN": os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
+                }
+            },
+            # Current news and industry reports
+            {
+                "name": "tavily",
+                "command": "npx",
+                "args": ["-y", "tavily-mcp@0.1.2"],
+                "env": {
+                    "TAVILY_API_KEY": os.getenv("TAVILY_API_KEY")
+                }
+            }
+        ],
+        verbose=True  # See the intelligent research process
+    )
+    
+    print("🔍 Starting multi-source research...")
+    
+    # Intelligent tool selection and research happens automatically
+    context = await researcher.conduct_research()
+    
+    print("📝 Generating comprehensive report...")
+    report = await researcher.write_report()
+    
+    print("✅ Research complete!")
+    print(f"📊 Report length: {len(report)} characters")
+    print(f"💰 Total cost: ${researcher.get_costs():.4f}")
+    
+    # Save the report
+    with open("ai_safety_research.md", "w") as f:
+        f.write(report)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## Retriever Strategy Comparison
+
+| Strategy | Use Case | Performance | Coverage |
+|----------|----------|------------|----------|
+| `RETRIEVER=mcp` | Specialized domains, structured data | ⚡ Fast | 🎯 Focused |
+| `RETRIEVER=tavily,mcp` | General research with specialized tools | ⚖️ Balanced | 🌐 Comprehensive |
+| `RETRIEVER=google,arxiv,tavily,mcp` | Maximum coverage, redundancy | 🐌 Slower | 🌍 Extensive |
+| `RETRIEVER=arxiv,mcp` | Academic + specialized research | ⚡ Fast | 🎓 Academic-focused |
+
+## Advanced Configuration
+
+### Research Strategies
+
+For advanced users who need more control over how MCP research is executed:
+
+| Strategy | Description | Use Case | Performance |
+|----------|-------------|----------|-------------|
+| `"fast"` | Run MCP once with main query (default) | Most research needs | ⚡ Optimal |
+| `"deep"` | Run MCP for all sub-queries | Comprehensive analysis | 🔍 Thorough |
+| `"disabled"` | Skip MCP entirely | Web-only research | ⚡ Fastest |
+
+```python
+# Default behavior (recommended for most use cases)
+os.environ["RETRIEVER"] = "tavily,mcp"
+researcher = GPTResearcher(
+    query="Analyze Tesla's performance",
+    mcp_configs=[...]
+)
+
+# For comprehensive analysis (advanced)
+os.environ["MCP_STRATEGY"] = "deep"
+researcher = GPTResearcher(
+    query="Comprehensive renewable energy analysis",
+    mcp_configs=[...]
+)
+
+# For web-only research (advanced)
+os.environ["RETRIEVER"] = "tavily"  # Excludes MCP entirely
+```
+
+### Environment Variable Configuration
+
+Set global defaults using environment variables:
+
+```bash
+# Essential: Enable MCP
+export RETRIEVER=tavily,mcp
+
+# Advanced: Set MCP strategy
+export MCP_STRATEGY=deep
+
+# Or in .env file
+RETRIEVER=tavily,mcp
+MCP_STRATEGY=fast
+MCP_AUTO_TOOL_SELECTION=true
+```
+
+### Custom Tool Selection
+
+Enable automatic tool selection for servers with multiple tools:
+
+```python
+# Environment variable approach
+os.environ["MCP_AUTO_TOOL_SELECTION"] = "true"
+os.environ["RETRIEVER"] = "mcp"
+
+researcher = GPTResearcher(
+    query="your query",
+    mcp_configs=[
+        {
+            "command": "python",
+            "args": ["multi_tool_server.py"]
+            # AI will choose the best tool automatically
+        }
+    ]
+)
+```
+
+### Connection Type Detection
+
+GPT Researcher automatically detects connection types:
+
+```python
+# WebSocket (detected from wss:// prefix)
+{"connection_url": "wss://api.example.com/mcp"}
+
+# HTTP (detected from https:// prefix)  
+{"connection_url": "https://api.example.com/mcp"}
+
+# Stdio (default when no URL provided)
+{"command": "python", "args": ["server.py"]}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**"No retriever specified" or "MCP not working"**
+- **Solution:** Set `RETRIEVER=mcp` or `RETRIEVER=tavily,mcp`
+- Verify environment variable is set: `echo $RETRIEVER`
+
+**"Invalid retriever(s) found"**
+- Check available retrievers: `tavily`, `mcp`, `google`, `bing`, `arxiv`, etc.
+- Ensure no typos in retriever names
+
+**"No MCP server configurations found"**
+- Ensure `mcp_configs` is a list of dictionaries
+- Verify at least one configuration is provided
+- Check configuration format matches examples
+
+**"MCP server connection failed"**
+- Verify server command and arguments
+- Check environment variables are set correctly
+- Test the MCP server independently
+- Ensure required dependencies are installed
+
+**"No tools available from MCP server"**
+- Verify the server exposes tools correctly
+- Check server startup logs for errors
+- Try enabling `MCP_AUTO_TOOL_SELECTION=true`
+
+**"Tool execution failed"**
+- Check authentication tokens and API keys
+- Verify tool arguments are valid
+- Review server logs for detailed errors
+- Enable debug logging for more information
+
+### Debug Mode
+
+Enable detailed logging to diagnose issues:
+
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Your research code here - will show detailed MCP operations
+```
+
+### Testing Your Setup
+
+Quick test to verify MCP configuration:
+
+```python
+import os
+from gpt_researcher import GPTResearcher
+
+# Test retriever configuration
+os.environ["RETRIEVER"] = "mcp"
+
+# Test basic configuration
+researcher = GPTResearcher(
+    query="test query",
+    mcp_configs=[
+        {
+            "name": "test",
+            "command": "echo",
+            "args": ["hello world"]
+        }
+    ]
+)
+
+print(f"✅ RETRIEVER set to: {os.environ.get('RETRIEVER')}")
+print(f"✅ MCP configs loaded: {len(researcher.mcp_configs)}")
+```
+
+## Best Practices
+
+1. **Always set the RETRIEVER environment variable** - This is required for MCP functionality
+2. **Use hybrid strategies** (`tavily,mcp`) for comprehensive research
+3. **Use descriptive server names** for easier debugging
+4. **Store sensitive data in environment variables**
+5. **Test MCP servers independently** before integration
+6. **Enable verbose mode** during development
+7. **Choose appropriate retriever combinations** based on your research domain
+8. **Let the default settings handle optimization** for most use cases
+
+---
+
+*For more examples and advanced use cases, check out the [GPT Researcher examples repository](https://github.com/assafelovic/gpt-researcher/tree/master/examples).* :-) 

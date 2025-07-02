@@ -35,6 +35,88 @@ class PromptFamily:
         """
         self.cfg = config
 
+    # MCP-specific prompts
+    @staticmethod
+    def generate_mcp_tool_selection_prompt(query: str, tools_info: List[Dict], max_tools: int = 3) -> str:
+        """
+        Generate prompt for LLM-based MCP tool selection.
+        
+        Args:
+            query: The research query
+            tools_info: List of available tools with their metadata
+            max_tools: Maximum number of tools to select
+            
+        Returns:
+            str: The tool selection prompt
+        """
+        import json
+        
+        return f"""You are a research assistant helping to select the most relevant tools for a research query.
+
+RESEARCH QUERY: "{query}"
+
+AVAILABLE TOOLS:
+{json.dumps(tools_info, indent=2)}
+
+TASK: Analyze the tools and select EXACTLY {max_tools} tools that are most relevant for researching the given query.
+
+SELECTION CRITERIA:
+- Choose tools that can provide information, data, or insights related to the query
+- Prioritize tools that can search, retrieve, or access relevant content
+- Consider tools that complement each other (e.g., different data sources)
+- Exclude tools that are clearly unrelated to the research topic
+
+Return a JSON object with this exact format:
+{{
+  "selected_tools": [
+    {{
+      "index": 0,
+      "name": "tool_name",
+      "relevance_score": 9,
+      "reason": "Detailed explanation of why this tool is relevant"
+    }}
+  ],
+  "selection_reasoning": "Overall explanation of the selection strategy"
+}}
+
+Select exactly {max_tools} tools, ranked by relevance to the research query.
+"""
+
+    @staticmethod
+    def generate_mcp_research_prompt(query: str, selected_tools: List) -> str:
+        """
+        Generate prompt for MCP research execution with selected tools.
+        
+        Args:
+            query: The research query
+            selected_tools: List of selected MCP tools
+            
+        Returns:
+            str: The research execution prompt
+        """
+        # Handle cases where selected_tools might be strings or objects with .name attribute
+        tool_names = []
+        for tool in selected_tools:
+            if hasattr(tool, 'name'):
+                tool_names.append(tool.name)
+            else:
+                tool_names.append(str(tool))
+        
+        return f"""You are a research assistant with access to specialized tools. Your task is to research the following query and provide comprehensive, accurate information.
+
+RESEARCH QUERY: "{query}"
+
+INSTRUCTIONS:
+1. Use the available tools to gather relevant information about the query
+2. Call multiple tools if needed to get comprehensive coverage
+3. If a tool call fails or returns empty results, try alternative approaches
+4. Synthesize information from multiple sources when possible
+5. Focus on factual, relevant information that directly addresses the query
+
+AVAILABLE TOOLS: {tool_names}
+
+Please conduct thorough research and provide your findings. Use the tools strategically to gather the most relevant and comprehensive information."""
+
     @staticmethod
     def generate_search_queries_prompt(
         question: str,

@@ -2,9 +2,10 @@ import json
 import os
 import warnings
 from typing import Dict, Any, List, Union, Type, get_origin, get_args
+
+from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from .variables.default import DEFAULT_CONFIG
 from .variables.base import BaseConfig
-from ..retrievers.utils import get_all_retriever_names
 
 
 class Config:
@@ -25,6 +26,16 @@ class Config:
         self._handle_deprecated_attributes()
         if config_to_use['REPORT_SOURCE'] != 'web':
           self._set_doc_path(config_to_use)
+
+        # MCP support configuration
+        self.mcp_servers = []  # List of MCP server configurations
+        self.mcp_allowed_root_paths = []  # Allowed root paths for MCP servers
+
+        # Read from config
+        if hasattr(self, 'mcp_servers'):
+            self.mcp_servers = self.mcp_servers
+        if hasattr(self, 'mcp_allowed_root_paths'):
+            self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         for key, value in config.items():
@@ -50,6 +61,7 @@ class Config:
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
+        self.reasoning_effort = self.parse_reasoning_effort(os.getenv("REASONING_EFFORT"))
 
     def _handle_deprecated_attributes(self) -> None:
         if os.getenv("EMBEDDING_PROVIDER") is not None:
@@ -98,7 +110,7 @@ class Config:
         if os.getenv("SMART_LLM_MODEL") is not None:
             warnings.warn(_deprecation_warning, FutureWarning, stacklevel=2)
             self.smart_llm_model = os.environ["SMART_LLM_MODEL"] or self.smart_llm_model
-        
+
     def _set_doc_path(self, config: Dict[str, Any]) -> None:
         self.doc_path = config['DOC_PATH']
         if self.doc_path:
@@ -141,6 +153,8 @@ class Config:
 
     def parse_retrievers(self, retriever_str: str) -> List[str]:
         """Parse the retriever string into a list of retrievers and validate them."""
+        from ..retrievers.utils import get_all_retriever_names
+        
         retrievers = [retriever.strip()
                       for retriever in retriever_str.split(",")]
         valid_retrievers = get_all_retriever_names() or []
@@ -171,6 +185,15 @@ class Config:
                 "Set SMART_LLM or FAST_LLM = '<llm_provider>:<llm_model>' "
                 "Eg 'openai:gpt-4o-mini'"
             )
+
+    @staticmethod
+    def parse_reasoning_effort(reasoning_effort_str: str | None) -> str | None:
+        """Parse reasoning effort string into (reasoning_effort)."""
+        if reasoning_effort_str is None:
+            return ReasoningEfforts.Medium.value
+        if reasoning_effort_str not in [effort.value for effort in ReasoningEfforts]:
+            raise ValueError(f"Invalid reasoning effort: {reasoning_effort_str}. Valid options are: {', '.join([effort.value for effort in ReasoningEfforts])}")
+        return reasoning_effort_str
 
     @staticmethod
     def parse_embedding(embedding_str: str | None) -> tuple[str | None, str | None]:
@@ -234,3 +257,22 @@ class Config:
     def set_verbose(self, verbose: bool) -> None:
         """Set the verbosity level."""
         self.llm_kwargs["verbose"] = verbose
+
+    def get_mcp_server_config(self, name: str) -> dict:
+        """
+        Get the configuration for an MCP server.
+        
+        Args:
+            name (str): The name of the MCP server to get the config for.
+                
+        Returns:
+            dict: The server configuration, or an empty dict if the server is not found.
+        """
+        if not name or not self.mcp_servers:
+            return {}
+        
+        for server in self.mcp_servers:
+            if isinstance(server, dict) and server.get("name") == name:
+                return server
+            
+        return {}
