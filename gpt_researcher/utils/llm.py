@@ -144,7 +144,7 @@ async def construct_subtopics(
 
         chain = prompt | model | parser
 
-        output = chain.invoke({
+        output = await chain.ainvoke({
             "task": task,
             "data": data,
             "subtopics": subtopics,
