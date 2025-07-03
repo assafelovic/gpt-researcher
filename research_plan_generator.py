@@ -178,16 +178,93 @@ class AIAgentQueryPipeline:
             }
         }
 
-    def _map_globaldata_apis_to_section(self, section: ReportSection) -> List[str]:
-        """Map relevant GlobalData APIs to a specific section"""
-        section_info = self.section_mapping[section]
-        relevant_apis = []
+
+    def _get_targeted_globaldata_apis(self, query: str, section: ReportSection, keywords: List[str]) -> List[str]:
+        """Get targeted GlobalData APIs based on specific query needs rather than all APIs in a category"""
         
-        for category in section_info["globaldata_api_categories"]:
-            if category in self.globaldata_apis:
-                relevant_apis.extend(self.globaldata_apis[category])
+        # Define API selection logic based on query analysis
+        api_selection_rules = {
+            ReportSection.DISEASE_OVERVIEW: {
+                "primary_apis": ["/api/Poli/GetTherapyAreas", "/api/News/GetNewsDetails"],
+                "conditional_apis": {
+                    "drug": ["/api/Drugs/GetPipelineDrugDetails"],
+                    "therapy": ["/api/Poli/GetPoliTherapyDetails"],
+                    "disease": ["/api/Poli/GetDiseaseStage"]
+                }
+            },
+            ReportSection.EPIDEMIOLOGY: {
+                "primary_apis": ["/api/Poli/GetPoliTherapyDetails", "/api/Epidemiology/GetEpidemiologyDetails"],
+                "conditional_apis": {
+                    "population": ["/api/News/GetNewsDetails"],
+                    "geographic": ["/api/Poli/GetForexCurrencies"]
+                }
+            },
+            ReportSection.COMPETITIVE_LANDSCAPE: {
+                "primary_apis": ["/api/Drugs/GetPipelineDrugDetails", "/api/ClinicalTrials/GetClinicalTrialsDetails"],
+                "conditional_apis": {
+                    "company": ["/api/Company/GetCompanyDetails"],
+                    "marketed": ["/api/Drugs/GetMarketedDrugDetails"],
+                    "sales": ["/api/DrugSales/GetDrugSalesDetails"],
+                    "patent": ["/api/Patents/GetPatentsListing"]
+                }
+            },
+            ReportSection.DEAL_LANDSCAPE: {
+                "primary_apis": ["/api/Deals/GetDealsDetails"],
+                "conditional_apis": {
+                    "company": ["/api/Company/GetCompanyDetails"],
+                    "news": ["/api/News/GetNewsDetails"],
+                    "filing": ["/api/Filings/GetCompanyFilingDetails"]
+                }
+            },
+            ReportSection.TARGET_PRODUCT_PROFILE: {
+                "primary_apis": ["/api/Drugs/GetPipelineDrugDetails", "/api/Biomarker/GetBiomarkersDetails"],
+                "conditional_apis": {
+                    "clinical": ["/api/ClinicalTrials/GetClinicalTrialsDetails"],
+                    "history": ["/api/Drugs/GetHistoryofEvents"]
+                }
+            },
+            ReportSection.MARKET_MODEL: {
+                "primary_apis": ["/api/DrugSales/GetDrugSalesDetails", "/api/NPV/GetNPVDetails"],
+                "conditional_apis": {
+                    "therapy": ["/api/Poli/GetPoliTherapyDetails"],
+                    "currency": ["/api/Poli/GetCurrencyConverter"],
+                    "company": ["/api/Company/GetCompanyDetails"]
+                }
+            },
+            ReportSection.CLINICAL_DEVELOPMENT: {
+                "primary_apis": ["/api/ClinicalTrials/GetClinicalTrialsDetails", "/api/Sites/GetTrialSitesDetails"],
+                "conditional_apis": {
+                    "investigator": ["/api/Investigators/GetInvestigatorsDetails"],
+                    "biomarker": ["/api/Biomarker/GetBiomarkersDetails"],
+                    "contact": ["/api/ClinicalTrials/GetClinicalTrialsLocationsandcontactDetails"]
+                }
+            },
+            ReportSection.KOLS: {
+                "primary_apis": ["/api/Investigators/GetInvestigatorsDetails"],
+                "conditional_apis": {
+                    "trial": ["/api/ClinicalTrials/GetClinicalTrialsDetails"]
+                }
+            }
+        }
         
-        return relevant_apis
+        if section not in api_selection_rules:
+            return []
+        
+        rules = api_selection_rules[section]
+        selected_apis = rules["primary_apis"].copy()
+        
+        # Add conditional APIs based on keywords and query content
+        query_lower = query.lower()
+        keywords_lower = [k.lower() for k in keywords]
+        
+        for condition, apis in rules["conditional_apis"].items():
+            # Check if condition matches query or keywords
+            if (condition in query_lower or 
+                any(condition in keyword for keyword in keywords_lower) or
+                any(keyword in condition for keyword in keywords_lower)):
+                selected_apis.extend(apis)
+        
+        return selected_apis
 
     def analyze_query(self, user_query: str) -> QueryAnalysisResult:
         """
@@ -214,6 +291,7 @@ class AIAgentQueryPipeline:
         
         # Step 4: Assess overall complexity
         complexity = self._assess_complexity(user_query, section_analyses)
+        
         return QueryAnalysisResult(
             original_query=user_query,
             detected_sections=section_analyses,
@@ -272,7 +350,6 @@ class AIAgentQueryPipeline:
         """Generate detailed analysis for a specific section"""
         
         section_info = self.section_mapping[section]
-        relevant_globaldata_apis = self._map_globaldata_apis_to_section(section)
         
         prompt = f"""
         As a {section_info['persona']}, analyze the following query for the {section.value.replace('_', ' ').title()} section.
@@ -282,16 +359,20 @@ class AIAgentQueryPipeline:
         Section Keywords: {', '.join(section_info['keywords'])}
         
         Generate:
-        1. 3-5 specific sub-queries that would need to be answered for this section
-        2. 8-12 relevant keywords for data search/API calls
-        3. Rationale for why this section is relevant (2-3 sentences)
+        1. ONE primary sub-query that captures the main research question for this section
+        2. ONE comprehensive sub-query that covers all remaining aspects and details needed for this section
+        3. Maximum of 3-5 relevant keywords for Global data search/API calls
+           Out of these 5 keywords 1 to 2 keywords should be pointing to relevant desease like "non-small cell lung cancer", "small cell lung cancer", "cancer",
+
+        4. Rationale for why this section is relevant (2-3 sentences)
         
         Focus on the aspects of the original query that relate to this specific section.
-        Make sub-queries specific and actionable for research.
+        Make the primary sub-query direct and actionable, and the comprehensive sub-query should cover all additional details, nuances, and supporting information needed.
         
         Respond in JSON format:
         {{
-            "sub_queries": ["query1", "query2", "query3", ...],
+            "primary_query": "main research question",
+            "comprehensive_query": "detailed query covering all remaining aspects",
             "keywords": ["keyword1", "keyword2", ...],
             "rationale": "explanation of relevance"
         }}
@@ -305,13 +386,18 @@ class AIAgentQueryPipeline:
         
         try:
             analysis = json.loads(response.choices[0].message.content)
+            sub_queries = [analysis["primary_query"], analysis["comprehensive_query"]]
+            
+            # Get targeted APIs for this specific section and query
+            targeted_apis = self._get_targeted_globaldata_apis(query, section, analysis["keywords"])
+            
             return SectionAnalysis(
                 section=section,
                 relevance_score=relevance_score,
-                sub_queries=analysis["sub_queries"],
+                sub_queries=sub_queries,
                 keywords=analysis["keywords"],
                 api_endpoints=section_info["api_endpoints"],
-                relevant_globaldata_apis=relevant_globaldata_apis,
+                relevant_globaldata_apis=targeted_apis,
                 rationale=analysis["rationale"]
             )
         except:
@@ -360,15 +446,18 @@ class AIAgentQueryPipeline:
     def _fallback_section_analysis(self, query: str, section: ReportSection, relevance_score: float) -> SectionAnalysis:
         """Fallback section analysis"""
         section_info = self.section_mapping[section]
-        relevant_globaldata_apis = self._map_globaldata_apis_to_section(section)
+        targeted_apis = self._get_targeted_globaldata_apis(query, section, section_info["keywords"][:8])
+        
+        primary_query = f"What are the key {section.value.replace('_', ' ')} aspects for: {query[:100]}..."
+        comprehensive_query = f"Provide comprehensive analysis of all {section.value.replace('_', ' ')} factors, including detailed information, supporting data, and contextual insights related to the query."
         
         return SectionAnalysis(
             section=section,
             relevance_score=relevance_score,
-            sub_queries=[f"Analyze {section.value.replace('_', ' ')} for the query: {query}"],
+            sub_queries=[primary_query, comprehensive_query],
             keywords=section_info["keywords"][:8],
             api_endpoints=section_info["api_endpoints"],
-            relevant_globaldata_apis=relevant_globaldata_apis,
+            relevant_globaldata_apis=targeted_apis,
             rationale=f"This section is relevant based on keyword matching and query context."
         )
 
@@ -398,15 +487,13 @@ class AIAgentQueryPipeline:
 **Rationale**: {section_analysis.rationale}
 
 **Sub-Queries**:
-"""
-            for j, sub_query in enumerate(section_analysis.sub_queries, 1):
-                plan += f"{j}. {sub_query}\n"
+1. **Primary Query**: {section_analysis.sub_queries[0]}
+2. **Comprehensive Query**: {section_analysis.sub_queries[1]}"""
             
             plan += f"""
-**Keywords**: {', '.join(section_analysis.keywords)}
-**External API Endpoints**: {', '.join(section_analysis.api_endpoints)}
-
-**Relevant GlobalData APIs**:
+            **Keywords**: {', '.join(section_analysis.keywords)}
+            **External API Endpoints**: {', '.join(section_analysis.api_endpoints)}
+            *Relevant GlobalData APIs**:
 """
             for api in section_analysis.relevant_globaldata_apis:
                 plan += f"- {api}\n"
@@ -447,107 +534,106 @@ class AIAgentQueryPipeline:
         
         return apis_by_section
 
-
 # Example usage and testing
-# def main():
-#     # Initialize pipeline (you would use your actual OpenAI API key)
-#     pipeline = AIAgentQueryPipeline("your-openai-api-key-here")
-
-#     # Test with the provided prompts
-#     test_queries = [
-#         """I am working on a project focused on proposing and validating cancer targets for an in-situ CAR-T platform. We are especially interested in cell surface targets relevant to non-small cell lung cancer (NSCLC), small cell lung cancer (SCLC), and colorectal cancer (CRC).
-# AbbVie is our company of interest. Please help with the following research and analysis:
-# 1. Pipeline Review: AbbVie (Oncology focus)
-#     • List all AbbVie pipeline programs from the past 3–5 years in NSCLC, SCLC, and CRC.
-#     • Include current assets, discontinued/terminated programs, and announced preclinical collaborations.
-#     • Focus on programs involving antibody-based therapeutics (e.g., monoclonal antibodies, ADCs, bispecific antibodies).
-
-# 2. Target Identification
-#     • For each pipeline asset, identify the associated antigen/target (e.g., DLL3, CEACAM5, TROP2).
-#     • Expand to include targets AbbVie may have access to via:
-#     • Acquisitions (e.g., full rights as with full M&A deals),
-#     • In-licensing agreements (include the licensing terms and scope if available), or
-#     • Option agreements or collaborations (include any known status of exercised options or remaining rights).
-
-# 3.  Target Rights Classification
-#     • For each target, clearly indicate AbbVie’s ownership status:
-#         ◦ Full rights (via acquisition or full internal development)
-#         ◦ Partial/limited rights (e.g., for a specific indication, territory, or therapeutic modality)
-#         ◦ Optioned/future rights (if AbbVie retains the right to pursue the target under certain conditions)
-#     • Describe the limitations of each access type in practical terms, e.g.:
-#         ◦ Restrictions to ADCs only
-#         ◦ Limited geographic commercialization
-#         ◦ Co-development obligations
-
-# 4. In-Situ CAR-T Suitability & Prioritization
-#  Prioritize identified targets for their potential use in our in-situ CAR-T platform based on:
-#     • Tumor specificity and overexpression in NSCLC, SCLC, or CRC
-#     • Cell surface stability/internalization behavior
-#     • Prior evidence in CAR-T or ADC platforms
-#     • Expression in normal tissues (i.e., toxicity concerns)
-#     • Competitive landscape (how crowded or differentiated the target is)
-
-# 5. Structured Output Format
-# Please return results in a table with these columns:
-#     • Target 
-#     • Tumor Type(s) 
-#     • AbbVie Source (Pipeline/Partner) 
-#     • Partner/Company 
-#     • Rights Type (Acquisition/In-License/Option) 
-#     • Rights Details 
-#     • Platform Type (ADC, mAb, etc.) 
-#     • CAR-T Suitability Score (1-5) 
-#     • Other Notes
-
-# Highlight any underexplored or emerging targets in AbbVie’s ecosystem that might be especially attractive or differentiated for in-situ CAR-T development, particularly those not widely used in current CAR-T pipelines.
-# """,
-        
-#         """My company is evaluating the opportunity for a high dose once monthly injectable GLP-1/GIP/Glucagon receptor triple agonist for long-term weight loss maintenance therapy for obesity. Evaluate the market opportunity and unmet need for long-term obesity maintenance therapies. Focus on segmentation across the following axes:
-#     • BMI categories: Class I (30–35), Class II (35–40), Class III (≥40)
-#     • Patient subgroups: with vs. without Type 2 diabetes, prior bariatric surgery, responders vs. non-responders to induction therapy
-#     • Current standard of care and limitations (e.g., semaglutide, tirzepatide, lifestyle adherence, drop-off rates after weight loss plateau)
-#     • Pipeline therapies explicitly being developed or positioned for maintenance (vs. induction), including mechanisms (e.g., amylin analogs, GLP-1/GIP modulators, FGF21 analogs, etc.)
-#     • Real-world adherence data and discontinuation drivers post-weight loss
-#     • Expected commercial segmentation: e.g., how payers and physicians differentiate between induction and maintenance use (pricing, access hurdles)
-#     • Sales forecasts for therapies with long-term administration profiles (≥12 months)
-#     • Competitive positioning of novel candidates offering less frequent dosing, improved tolerability, or weight regain prevention efficacy
-# """,
-        
-#         """Conduct a comprehensive analysis of the therapeutic landscape for post-myocardial infarction (MI) treatment, with a focus on agents targeting cardioprotective or remodeling-prevention mechanisms. Include:
-#     • List of active clinical-stage programs (Ph1–Ph3) in post-MI or ischemia-reperfusion settings, segmented by MOA (e.g., mitochondrial protection, anti-inflammatory, anti-fibrotic, stem cell-derived, YAP activators, etc.)
-#     • Trial design characteristics (e.g., time to intervention post-MI, target patient population, primary endpoints)
-#     • Unmet needs in early-phase or subacute cardioprotection, especially in the context of modern PCI and dual antiplatelet therapy (DAPT)
-#     • Commercial benchmarks (recent deal terms, partnerships, or exits for post-MI assets)
-#     • Any examples of prior trial failures in this space and why they failed 
-#     • Geographic considerations (e.g., differences in standards of care or trial feasibility across US, EU, China)
-# """
-#     ]
+def main():
+    # Initialize pipeline (you would use your actual OpenAI API key)
+    pipeline = AIAgentQueryPipeline("here_your_openai_api_key_here")
     
-#     for i, query in enumerate(test_queries, 1):
-#         print(f"\n{'='*60}")
-#         print(f"ANALYSIS {i}")
-#         print(f"{'='*60}")
-        
-#         try:
-#             result = pipeline.analyze_query(query)
-#             research_plan = pipeline.generate_research_plan(result)
-#             print(research_plan)
-            
-#             # Show API mapping
-#             api_mapping = pipeline.get_all_globaldata_apis_for_query(result)
-#             print(f"\nGlobalData API Mapping by Section:")
-#             for section, apis in api_mapping.items():
-#                 print(f"\n{section}:")
-#                 for api in apis:
-#                     print(f"  - {api}")
-            
-#             # Also show API export structure
-#             api_data = pipeline.export_for_api_calls(result)
-#             print(f"\nAPI Export Structure:")
-#             print(json.dumps(api_data, indent=2))
-            
-#         except Exception as e:
-#             print(f"Error analyzing query {i}: {str(e)}")
+    # Test with the provided prompts
+    test_queries = [
+        """I am working on a project focused on proposing and validating cancer targets for an in-situ CAR-T platform. We are especially interested in cell surface targets relevant to non-small cell lung cancer (NSCLC), small cell lung cancer (SCLC), and colorectal cancer (CRC).
+            AbbVie is our company of interest. Please help with the following research and analysis:
+            1. Pipeline Review: AbbVie (Oncology focus)
+                • List all AbbVie pipeline programs from the past 3–5 years in NSCLC, SCLC, and CRC.
+                • Include current assets, discontinued/terminated programs, and announced preclinical collaborations.
+                • Focus on programs involving antibody-based therapeutics (e.g., monoclonal antibodies, ADCs, bispecific antibodies).
 
-# if __name__ == "__main__":
-#     main()
+            2. Target Identification
+                • For each pipeline asset, identify the associated antigen/target (e.g., DLL3, CEACAM5, TROP2).
+                • Expand to include targets AbbVie may have access to via:
+                • Acquisitions (e.g., full rights as with full M&A deals),
+                • In-licensing agreements (include the licensing terms and scope if available), or
+                • Option agreements or collaborations (include any known status of exercised options or remaining rights).
+
+            3.  Target Rights Classification
+                • For each target, clearly indicate AbbVie’s ownership status:
+                    ◦ Full rights (via acquisition or full internal development)
+                    ◦ Partial/limited rights (e.g., for a specific indication, territory, or therapeutic modality)
+                    ◦ Optioned/future rights (if AbbVie retains the right to pursue the target under certain conditions)
+                • Describe the limitations of each access type in practical terms, e.g.:
+                    ◦ Restrictions to ADCs only
+                    ◦ Limited geographic commercialization
+                    ◦ Co-development obligations
+
+            4. In-Situ CAR-T Suitability & Prioritization
+            Prioritize identified targets for their potential use in our in-situ CAR-T platform based on:
+                • Tumor specificity and overexpression in NSCLC, SCLC, or CRC
+                • Cell surface stability/internalization behavior
+                • Prior evidence in CAR-T or ADC platforms
+                • Expression in normal tissues (i.e., toxicity concerns)
+                • Competitive landscape (how crowded or differentiated the target is)
+
+            5. Structured Output Format
+            Please return results in a table with these columns:
+                • Target 
+                • Tumor Type(s) 
+                • AbbVie Source (Pipeline/Partner) 
+                • Partner/Company 
+                • Rights Type (Acquisition/In-License/Option) 
+                • Rights Details 
+                • Platform Type (ADC, mAb, etc.) 
+                • CAR-T Suitability Score (1-5) 
+                • Other Notes
+
+            Highlight any underexplored or emerging targets in AbbVie’s ecosystem that might be especially attractive or differentiated for in-situ CAR-T development, particularly those not widely used in current CAR-T pipelines.
+            """,
+                    
+                    """My company is evaluating the opportunity for a high dose once monthly injectable GLP-1/GIP/Glucagon receptor triple agonist for long-term weight loss maintenance therapy for obesity. Evaluate the market opportunity and unmet need for long-term obesity maintenance therapies. Focus on segmentation across the following axes:
+                • BMI categories: Class I (30–35), Class II (35–40), Class III (≥40)
+                • Patient subgroups: with vs. without Type 2 diabetes, prior bariatric surgery, responders vs. non-responders to induction therapy
+                • Current standard of care and limitations (e.g., semaglutide, tirzepatide, lifestyle adherence, drop-off rates after weight loss plateau)
+                • Pipeline therapies explicitly being developed or positioned for maintenance (vs. induction), including mechanisms (e.g., amylin analogs, GLP-1/GIP modulators, FGF21 analogs, etc.)
+                • Real-world adherence data and discontinuation drivers post-weight loss
+                • Expected commercial segmentation: e.g., how payers and physicians differentiate between induction and maintenance use (pricing, access hurdles)
+                • Sales forecasts for therapies with long-term administration profiles (≥12 months)
+                • Competitive positioning of novel candidates offering less frequent dosing, improved tolerability, or weight regain prevention efficacy
+            """,
+                    
+                    """Conduct a comprehensive analysis of the therapeutic landscape for post-myocardial infarction (MI) treatment, with a focus on agents targeting cardioprotective or remodeling-prevention mechanisms. Include:
+                • List of active clinical-stage programs (Ph1–Ph3) in post-MI or ischemia-reperfusion settings, segmented by MOA (e.g., mitochondrial protection, anti-inflammatory, anti-fibrotic, stem cell-derived, YAP activators, etc.)
+                • Trial design characteristics (e.g., time to intervention post-MI, target patient population, primary endpoints)
+                • Unmet needs in early-phase or subacute cardioprotection, especially in the context of modern PCI and dual antiplatelet therapy (DAPT)
+                • Commercial benchmarks (recent deal terms, partnerships, or exits for post-MI assets)
+                • Any examples of prior trial failures in this space and why they failed 
+                • Geographic considerations (e.g., differences in standards of care or trial feasibility across US, EU, China)
+            """
+                ]
+    
+    for i, query in enumerate(test_queries, 1):
+        print(f"\n{'='*60}")
+        print(f"ANALYSIS {i}")
+        print(f"{'='*60}")
+        
+        try:
+            result = pipeline.analyze_query(query)
+            # research_plan = pipeline.generate_research_plan(result)
+            # print(research_plan)
+            
+            # Show API mapping
+            api_mapping = pipeline.get_all_globaldata_apis_for_query(result)
+            print(f"\nGlobalData API Mapping by Section:")
+            for section, apis in api_mapping.items():
+                print(f"\n{section}:")
+                for api in apis:
+                    print(f"  - {api}")
+            
+            # Also show API export structure
+            api_data = pipeline.export_for_api_calls(result)
+            print(f"\nAPI Export Structure:")
+            print(json.dumps(api_data, indent=2))
+            
+        except Exception as e:
+            print(f"Error analyzing query {i}: {str(e)}")
+
+if __name__ == "__main__":
+    main()
