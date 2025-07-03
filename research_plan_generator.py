@@ -1,10 +1,14 @@
+import os
 import openai
 from typing import Dict, List, Optional, Tuple
 import json
 import re
 from dataclasses import dataclass
 from enum import Enum
+from dotenv import load_dotenv
+load_dotenv()
 
+api_key = os.getenv("OPENAI_API_KEY")
 class ReportSection(Enum):
     DISEASE_OVERVIEW = "disease_overview"
     EPIDEMIOLOGY = "epidemiology"
@@ -534,106 +538,106 @@ class AIAgentQueryPipeline:
         
         return apis_by_section
 
-# Example usage and testing
-def main():
-    # Initialize pipeline (you would use your actual OpenAI API key)
-    pipeline = AIAgentQueryPipeline("here_your_openai_api_key_here")
+# # Example usage and testing
+# def main():
+#     # Initialize pipeline (you would use your actual OpenAI API key)
+#     pipeline = AIAgentQueryPipeline(api_key)
     
-    # Test with the provided prompts
-    test_queries = [
-        """I am working on a project focused on proposing and validating cancer targets for an in-situ CAR-T platform. We are especially interested in cell surface targets relevant to non-small cell lung cancer (NSCLC), small cell lung cancer (SCLC), and colorectal cancer (CRC).
-            AbbVie is our company of interest. Please help with the following research and analysis:
-            1. Pipeline Review: AbbVie (Oncology focus)
-                • List all AbbVie pipeline programs from the past 3–5 years in NSCLC, SCLC, and CRC.
-                • Include current assets, discontinued/terminated programs, and announced preclinical collaborations.
-                • Focus on programs involving antibody-based therapeutics (e.g., monoclonal antibodies, ADCs, bispecific antibodies).
+#     # Test with the provided prompts
+#     test_queries = [
+#         """I am working on a project focused on proposing and validating cancer targets for an in-situ CAR-T platform. We are especially interested in cell surface targets relevant to non-small cell lung cancer (NSCLC), small cell lung cancer (SCLC), and colorectal cancer (CRC).
+#             AbbVie is our company of interest. Please help with the following research and analysis:
+#             1. Pipeline Review: AbbVie (Oncology focus)
+#                 • List all AbbVie pipeline programs from the past 3–5 years in NSCLC, SCLC, and CRC.
+#                 • Include current assets, discontinued/terminated programs, and announced preclinical collaborations.
+#                 • Focus on programs involving antibody-based therapeutics (e.g., monoclonal antibodies, ADCs, bispecific antibodies).
 
-            2. Target Identification
-                • For each pipeline asset, identify the associated antigen/target (e.g., DLL3, CEACAM5, TROP2).
-                • Expand to include targets AbbVie may have access to via:
-                • Acquisitions (e.g., full rights as with full M&A deals),
-                • In-licensing agreements (include the licensing terms and scope if available), or
-                • Option agreements or collaborations (include any known status of exercised options or remaining rights).
+#             2. Target Identification
+#                 • For each pipeline asset, identify the associated antigen/target (e.g., DLL3, CEACAM5, TROP2).
+#                 • Expand to include targets AbbVie may have access to via:
+#                 • Acquisitions (e.g., full rights as with full M&A deals),
+#                 • In-licensing agreements (include the licensing terms and scope if available), or
+#                 • Option agreements or collaborations (include any known status of exercised options or remaining rights).
 
-            3.  Target Rights Classification
-                • For each target, clearly indicate AbbVie’s ownership status:
-                    ◦ Full rights (via acquisition or full internal development)
-                    ◦ Partial/limited rights (e.g., for a specific indication, territory, or therapeutic modality)
-                    ◦ Optioned/future rights (if AbbVie retains the right to pursue the target under certain conditions)
-                • Describe the limitations of each access type in practical terms, e.g.:
-                    ◦ Restrictions to ADCs only
-                    ◦ Limited geographic commercialization
-                    ◦ Co-development obligations
+#             3.  Target Rights Classification
+#                 • For each target, clearly indicate AbbVie’s ownership status:
+#                     ◦ Full rights (via acquisition or full internal development)
+#                     ◦ Partial/limited rights (e.g., for a specific indication, territory, or therapeutic modality)
+#                     ◦ Optioned/future rights (if AbbVie retains the right to pursue the target under certain conditions)
+#                 • Describe the limitations of each access type in practical terms, e.g.:
+#                     ◦ Restrictions to ADCs only
+#                     ◦ Limited geographic commercialization
+#                     ◦ Co-development obligations
 
-            4. In-Situ CAR-T Suitability & Prioritization
-            Prioritize identified targets for their potential use in our in-situ CAR-T platform based on:
-                • Tumor specificity and overexpression in NSCLC, SCLC, or CRC
-                • Cell surface stability/internalization behavior
-                • Prior evidence in CAR-T or ADC platforms
-                • Expression in normal tissues (i.e., toxicity concerns)
-                • Competitive landscape (how crowded or differentiated the target is)
+#             4. In-Situ CAR-T Suitability & Prioritization
+#             Prioritize identified targets for their potential use in our in-situ CAR-T platform based on:
+#                 • Tumor specificity and overexpression in NSCLC, SCLC, or CRC
+#                 • Cell surface stability/internalization behavior
+#                 • Prior evidence in CAR-T or ADC platforms
+#                 • Expression in normal tissues (i.e., toxicity concerns)
+#                 • Competitive landscape (how crowded or differentiated the target is)
 
-            5. Structured Output Format
-            Please return results in a table with these columns:
-                • Target 
-                • Tumor Type(s) 
-                • AbbVie Source (Pipeline/Partner) 
-                • Partner/Company 
-                • Rights Type (Acquisition/In-License/Option) 
-                • Rights Details 
-                • Platform Type (ADC, mAb, etc.) 
-                • CAR-T Suitability Score (1-5) 
-                • Other Notes
+#             5. Structured Output Format
+#             Please return results in a table with these columns:
+#                 • Target 
+#                 • Tumor Type(s) 
+#                 • AbbVie Source (Pipeline/Partner) 
+#                 • Partner/Company 
+#                 • Rights Type (Acquisition/In-License/Option) 
+#                 • Rights Details 
+#                 • Platform Type (ADC, mAb, etc.) 
+#                 • CAR-T Suitability Score (1-5) 
+#                 • Other Notes
 
-            Highlight any underexplored or emerging targets in AbbVie’s ecosystem that might be especially attractive or differentiated for in-situ CAR-T development, particularly those not widely used in current CAR-T pipelines.
-            """,
+#             Highlight any underexplored or emerging targets in AbbVie’s ecosystem that might be especially attractive or differentiated for in-situ CAR-T development, particularly those not widely used in current CAR-T pipelines.
+#             """,
                     
-                    """My company is evaluating the opportunity for a high dose once monthly injectable GLP-1/GIP/Glucagon receptor triple agonist for long-term weight loss maintenance therapy for obesity. Evaluate the market opportunity and unmet need for long-term obesity maintenance therapies. Focus on segmentation across the following axes:
-                • BMI categories: Class I (30–35), Class II (35–40), Class III (≥40)
-                • Patient subgroups: with vs. without Type 2 diabetes, prior bariatric surgery, responders vs. non-responders to induction therapy
-                • Current standard of care and limitations (e.g., semaglutide, tirzepatide, lifestyle adherence, drop-off rates after weight loss plateau)
-                • Pipeline therapies explicitly being developed or positioned for maintenance (vs. induction), including mechanisms (e.g., amylin analogs, GLP-1/GIP modulators, FGF21 analogs, etc.)
-                • Real-world adherence data and discontinuation drivers post-weight loss
-                • Expected commercial segmentation: e.g., how payers and physicians differentiate between induction and maintenance use (pricing, access hurdles)
-                • Sales forecasts for therapies with long-term administration profiles (≥12 months)
-                • Competitive positioning of novel candidates offering less frequent dosing, improved tolerability, or weight regain prevention efficacy
-            """,
+#                     """My company is evaluating the opportunity for a high dose once monthly injectable GLP-1/GIP/Glucagon receptor triple agonist for long-term weight loss maintenance therapy for obesity. Evaluate the market opportunity and unmet need for long-term obesity maintenance therapies. Focus on segmentation across the following axes:
+#                 • BMI categories: Class I (30–35), Class II (35–40), Class III (≥40)
+#                 • Patient subgroups: with vs. without Type 2 diabetes, prior bariatric surgery, responders vs. non-responders to induction therapy
+#                 • Current standard of care and limitations (e.g., semaglutide, tirzepatide, lifestyle adherence, drop-off rates after weight loss plateau)
+#                 • Pipeline therapies explicitly being developed or positioned for maintenance (vs. induction), including mechanisms (e.g., amylin analogs, GLP-1/GIP modulators, FGF21 analogs, etc.)
+#                 • Real-world adherence data and discontinuation drivers post-weight loss
+#                 • Expected commercial segmentation: e.g., how payers and physicians differentiate between induction and maintenance use (pricing, access hurdles)
+#                 • Sales forecasts for therapies with long-term administration profiles (≥12 months)
+#                 • Competitive positioning of novel candidates offering less frequent dosing, improved tolerability, or weight regain prevention efficacy
+#             """,
                     
-                    """Conduct a comprehensive analysis of the therapeutic landscape for post-myocardial infarction (MI) treatment, with a focus on agents targeting cardioprotective or remodeling-prevention mechanisms. Include:
-                • List of active clinical-stage programs (Ph1–Ph3) in post-MI or ischemia-reperfusion settings, segmented by MOA (e.g., mitochondrial protection, anti-inflammatory, anti-fibrotic, stem cell-derived, YAP activators, etc.)
-                • Trial design characteristics (e.g., time to intervention post-MI, target patient population, primary endpoints)
-                • Unmet needs in early-phase or subacute cardioprotection, especially in the context of modern PCI and dual antiplatelet therapy (DAPT)
-                • Commercial benchmarks (recent deal terms, partnerships, or exits for post-MI assets)
-                • Any examples of prior trial failures in this space and why they failed 
-                • Geographic considerations (e.g., differences in standards of care or trial feasibility across US, EU, China)
-            """
-                ]
+#                     """Conduct a comprehensive analysis of the therapeutic landscape for post-myocardial infarction (MI) treatment, with a focus on agents targeting cardioprotective or remodeling-prevention mechanisms. Include:
+#                 • List of active clinical-stage programs (Ph1–Ph3) in post-MI or ischemia-reperfusion settings, segmented by MOA (e.g., mitochondrial protection, anti-inflammatory, anti-fibrotic, stem cell-derived, YAP activators, etc.)
+#                 • Trial design characteristics (e.g., time to intervention post-MI, target patient population, primary endpoints)
+#                 • Unmet needs in early-phase or subacute cardioprotection, especially in the context of modern PCI and dual antiplatelet therapy (DAPT)
+#                 • Commercial benchmarks (recent deal terms, partnerships, or exits for post-MI assets)
+#                 • Any examples of prior trial failures in this space and why they failed 
+#                 • Geographic considerations (e.g., differences in standards of care or trial feasibility across US, EU, China)
+#             """
+#                 ]
     
-    for i, query in enumerate(test_queries, 1):
-        print(f"\n{'='*60}")
-        print(f"ANALYSIS {i}")
-        print(f"{'='*60}")
+#     for i, query in enumerate(test_queries, 1):
+#         print(f"\n{'='*60}")
+#         print(f"ANALYSIS {i}")
+#         print(f"{'='*60}")
         
-        try:
-            result = pipeline.analyze_query(query)
-            # research_plan = pipeline.generate_research_plan(result)
-            # print(research_plan)
+#         try:
+#             result = pipeline.analyze_query(query)
+#             # research_plan = pipeline.generate_research_plan(result)
+#             # print(research_plan)
             
-            # Show API mapping
-            api_mapping = pipeline.get_all_globaldata_apis_for_query(result)
-            print(f"\nGlobalData API Mapping by Section:")
-            for section, apis in api_mapping.items():
-                print(f"\n{section}:")
-                for api in apis:
-                    print(f"  - {api}")
+#             # Show API mapping
+#             api_mapping = pipeline.get_all_globaldata_apis_for_query(result)
+#             print(f"\nGlobalData API Mapping by Section:")
+#             for section, apis in api_mapping.items():
+#                 print(f"\n{section}:")
+#                 for api in apis:
+#                     print(f"  - {api}")
             
-            # Also show API export structure
-            api_data = pipeline.export_for_api_calls(result)
-            print(f"\nAPI Export Structure:")
-            print(json.dumps(api_data, indent=2))
+#             # Also show API export structure
+#             api_data = pipeline.export_for_api_calls(result)
+#             print(f"\nAPI Export Structure:")
+#             print(json.dumps(api_data, indent=2))
             
-        except Exception as e:
-            print(f"Error analyzing query {i}: {str(e)}")
+#         except Exception as e:
+#             print(f"Error analyzing query {i}: {str(e)}")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

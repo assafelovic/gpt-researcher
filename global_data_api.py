@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN_ID = os.getenv("GLOBALDATA_TOKEN_ID")
 # Configuration
-BASE_URL = "https://api.globaldata.com"  # Replace with actual base URL
+BASE_URL = "https://apidata.globaldata.com/GlobalDataTSRI"  # Replace with actual base URL
 logger = logging.getLogger(__name__)
 
 def fetch_from_globaldata(endpoint: str, params: dict = None) -> dict:
