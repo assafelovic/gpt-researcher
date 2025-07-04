@@ -62,8 +62,29 @@ class Config:
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
         self.reasoning_effort = self.parse_reasoning_effort(os.getenv("REASONING_EFFORT"))
+        
+        # Set base URLs for LLM and embedding endpoints
+        self.llm_base_url = getattr(self, 'llm_endpoint', 'http://localhost:8080/v1')
+        self.embedding_base_url = getattr(self, 'embedding_endpoint', 'http://localhost:8081/v1')
+        
+        # Update LLM kwargs with the appropriate base URL
+        if not self.llm_kwargs.get('base_url'):
+            self.llm_kwargs['base_url'] = self.llm_base_url
+            
+        # Update embedding kwargs with the appropriate base URL
+        if not self.embedding_kwargs.get('base_url'):
+            self.embedding_kwargs['base_url'] = self.embedding_base_url
 
     def _handle_deprecated_attributes(self) -> None:
+        # Handle environment variables for endpoints
+        if os.getenv("LLM_ENDPOINT"):
+            self.llm_base_url = os.environ["LLM_ENDPOINT"]
+            self.llm_kwargs['base_url'] = self.llm_base_url
+            
+        if os.getenv("EMBEDDING_ENDPOINT"):
+            self.embedding_base_url = os.environ["EMBEDDING_ENDPOINT"]
+            self.embedding_kwargs['base_url'] = self.embedding_base_url
+            
         if os.getenv("EMBEDDING_PROVIDER") is not None:
             warnings.warn(
                 "EMBEDDING_PROVIDER is deprecated and will be removed soon. Use EMBEDDING instead.",
