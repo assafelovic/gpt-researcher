@@ -34,7 +34,7 @@ class GPTResearcher:
         query: str,
         report_type: str = ReportType.ResearchReport.value,
         report_format: str = "markdown",
-        report_source: str = ReportSource.Web.value,
+        report_source: str = ReportSource.Hybrid.value,
         tone: Tone = Tone.Objective,
         source_urls: list[str] | None = None,
         document_urls: list[str] | None = None,
