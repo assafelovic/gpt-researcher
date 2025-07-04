@@ -312,6 +312,20 @@ FAST_LLM=deepseek:deepseek-chat
 SMART_LLM=deepseek:deepseek-chat
 STRATEGIC_LLM=deepseek:deepseek-chat
 ```
+
+## Dashscope
+
+```envs
+DASHSCOPE_API_KEY=[Your Key]
+export FAST_LLM=dashscope:qwen3-32b
+export SMART_LLM=dashscope:qwen-turbo-2025-04-28
+export STRATEGIC_LLM=dashscope:qwen-plus-latest
+
+export EMBEDDING=dashscope:text-embedding-v3
+```
+
+Add `dashscope` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
+
 ## Openrouter.ai
 
 ```env

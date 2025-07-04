@@ -167,10 +167,13 @@ class GenericLLMProvider:
                 kwargs = {"model_id": model_id, "model_kwargs": kwargs}
             llm = ChatBedrock(**kwargs)
         elif provider == "dashscope":
-            _check_pkg("langchain_dashscope")
-            from langchain_dashscope import ChatDashScope
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
 
-            llm = ChatDashScope(**kwargs)
+            llm = ChatOpenAI(openai_api_base='https://dashscope.aliyuncs.com/compatible-mode/v1',
+                     openai_api_key=os.environ["DASHSCOPE_API_KEY"],
+                     **kwargs
+                )
         elif provider == "xai":
             _check_pkg("langchain_xai")
             from langchain_xai import ChatXAI
