@@ -72,7 +72,7 @@ Steps:
 
 ## 📖 Documentation
 
-See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started) for:
+See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) for:
 - Installation and setup guides
 - Configuration and customization options
 - How-To examples
@@ -106,7 +106,7 @@ See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-starte
 
 Visit [http://localhost:8000](http://localhost:8000) to start.
 
-For other setups (e.g., Poetry or virtual environments), check the [Getting Started page](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started).
+For other setups (e.g., Poetry or virtual environments), check the [Getting Started page](https://docs.gptr.dev/docs/gpt-researcher/getting-started).
 
 ## Run as PIP package
 ```bash

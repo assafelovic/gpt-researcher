@@ -76,7 +76,7 @@ https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 
 ## 📖 문서
 
-전체 문서(설치, 환경 설정, 간단한 예시)를 보려면 [여기](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)를 참조하세요.
+전체 문서(설치, 환경 설정, 간단한 예시)를 보려면 [여기](https://docs.gptr.dev/docs/gpt-researcher/getting-started)를 참조하세요.
 
 - 시작하기 (설치, 환경 설정, 간단한 예시)
 - 맞춤 설정 및 구성
@@ -126,7 +126,7 @@ python -m uvicorn main:app --reload
 
 <br />
 
-**[Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#poetry) 또는 [가상 환경](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#virtual-environment)에 대해 배우고 싶다면, [문서](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)를 참조하세요.**
+**[Poetry](https://docs.gptr.dev/docs/gpt-researcher/getting-started#poetry) 또는 [가상 환경](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started#virtual-environment)에 대해 배우고 싶다면, [문서](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)를 참조하세요.**
 
 ### PIP 패키지로 실행하기
 ```bash
