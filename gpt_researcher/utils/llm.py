@@ -144,7 +144,7 @@ async def construct_subtopics(
 
         chain = prompt | model | parser
 
-        output = chain.invoke({
+        output = await chain.ainvoke({
             "task": task,
             "data": data,
             "subtopics": subtopics,
@@ -155,4 +155,5 @@ async def construct_subtopics(
 
     except Exception as e:
         print("Exception in parsing subtopics : ", e)
+        logging.getLogger(__name__).error("Exception in parsing subtopics : \n {e}")
         return subtopics
