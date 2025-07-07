@@ -32,6 +32,7 @@ _SUPPORTED_PROVIDERS = {
     "openrouter",
     "vllm_openai",
     "aimlapi",
+    "netmind",
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS = [
@@ -232,6 +233,11 @@ class GenericLLMProvider:
                              openai_api_key=os.environ["AIMLAPI_API_KEY"],
                              **kwargs
                              )
+        elif provider == 'netmind':
+            _check_pkg("langchain_netmind")
+            from langchain_netmind import ChatNetmind
+
+            llm = ChatNetmind(**kwargs)
         else:
             supported = ", ".join(_SUPPORTED_PROVIDERS)
             raise ValueError(
