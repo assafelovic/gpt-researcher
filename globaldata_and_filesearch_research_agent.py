@@ -612,7 +612,7 @@ def fetch_from_globaldata(endpoint: str, params: dict = None) -> dict:
     
     try:
         logger.info(f"Calling GlobalData API: {url} with params: {params}")
-        resp = requests.get(url, params=params, timeout=60)
+        resp = requests.get(url, params=params, timeout=90)
         print(resp)
         resp.raise_for_status()
         return resp.json()
@@ -1414,6 +1414,7 @@ def call_globaldata_api(content: str, vector_id: str = None):
     Now supports both function tools and file search
     """
     original_data = {}
+    ai_summaries = {}
     
     try:
         # Prepare tools array - separate function tools from file search
@@ -1433,7 +1434,7 @@ def call_globaldata_api(content: str, vector_id: str = None):
         assistant_config = {
             "model": "gpt-4o",
             "messages": [
-                {"role": "system", "content": "You are a pharmaceutical data analyst with access to GlobalData APIs and file search capabilities. Use the appropriate tools to answer user queries about drugs, clinical trials, companies, deals, and market data."},
+                {"role": "system", "content": "You are a pharmaceutical data analyst with access to GlobalData APIs and file search capabilities. Use the appropriate tools to answer user queries about drugs, clinical trials, companies, deals, and market data. When you need to search internal files or documents, use the file_search tool."},
                 {"role": "user", "content": content}
             ],
             "tools": tools_to_use,
@@ -1480,6 +1481,14 @@ def call_globaldata_api(content: str, vector_id: str = None):
                 file_search_summaries = process_file_search_calls(file_search_calls, original_data)
                 all_summaries.extend(file_search_summaries)
             
+            # Generate AI summaries for each tool's data
+            for function_name, data in original_data.items():
+                if not function_name.startswith("file_search_"):
+                    ai_summary = generate_ai_summary(function_name, data)
+                    ai_summaries[function_name] = ai_summary
+                else:
+                    ai_summaries[function_name] = "File search completed - results integrated into analysis"
+            
             # Display results for each tool/function used
             print("\n" + "="*60)
             print("API RESULTS SUMMARY")
@@ -1488,9 +1497,9 @@ def call_globaldata_api(content: str, vector_id: str = None):
             for i, (function_name, data) in enumerate(original_data.items(), 1):
                 print(f"\nSource: {function_name}")
                 
-                # Find corresponding summary
-                summary_data = next((s for s in all_summaries if s['function'] == function_name), {})
-                print(f"Summary: {summary_data.get('summary', 'Data processed successfully')}")
+                # Show AI-generated summary
+                ai_summary = ai_summaries.get(function_name, "Summary not available")
+                print(f"Summary: {ai_summary}")
                 
                 print("API Original Data:")
                 print("_" * 50)
@@ -1519,7 +1528,71 @@ def call_globaldata_api(content: str, vector_id: str = None):
         print(f"Error calling OpenAI API: {e}")
         return None, None, original_data
 
-def process_file_search_calls(file_search_calls, original_data):
+def generate_ai_summary(function_name, data):
+    """Generate AI summary of the original data"""
+    try:
+        # Prepare the data for analysis
+        if isinstance(data, dict) and 'data' in data:
+            api_data = data['data']
+            endpoint = data.get('endpoint', function_name)
+            
+            # Create a structured prompt for analysis
+            analysis_prompt = f"""
+            Analyze the following pharmaceutical data from {endpoint}:
+            
+            Data Structure: {type(api_data).__name__}
+            
+            """
+            
+            # Add data sample for analysis
+            if isinstance(api_data, dict) and 'data' in api_data and isinstance(api_data['data'], list):
+                records = api_data['data']
+                analysis_prompt += f"""
+                Total Records: {len(records)}
+                
+                Sample Data (first 3 records):
+                {json.dumps(records[:3], indent=2, default=str)}
+                
+                Please provide a concise analysis of this data including:
+                1. Key insights from the data
+                2. Notable patterns or trends
+                3. Important findings relevant to pharmaceutical research
+                4. Data quality and completeness assessment
+                
+                Keep the summary under 200 words and focus on actionable insights.
+                """
+            else:
+                analysis_prompt += f"""
+                Data Content:
+                {json.dumps(api_data, indent=2, default=str)[:1000]}...
+                
+                Please provide a concise analysis of this pharmaceutical data including key insights and findings.
+                Keep the summary under 200 words.
+                """
+        else:
+            analysis_prompt = f"""
+            Analyze the following data from {function_name}:
+            {json.dumps(data, indent=2, default=str)[:1000]}...
+            
+            Provide a brief analysis under 200 words.
+            """
+        
+        # Generate AI summary
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a pharmaceutical data analyst. Provide concise, insightful analysis of pharmaceutical data."},
+                {"role": "user", "content": analysis_prompt}
+            ],
+            max_tokens=300,
+            temperature=0.3
+        )
+        
+        return response.choices[0].message.content.strip()
+        
+    except Exception as e:
+        print(f"Error generating AI summary for {function_name}: {e}")
+        return f"AI summary generation failed for {function_name}"
     """Process file search tool calls"""
     summaries = []
     
@@ -1548,22 +1621,87 @@ def process_file_search_calls(file_search_calls, original_data):
 def display_original_data(data):
     """Display original data in a readable format"""
     if isinstance(data, dict):
-        if 'data' in data and isinstance(data['data'], list):
-            print(f"Total Records: {len(data['data'])}")
-            if data['data']:
-                print(f"Sample Record Fields: {list(data['data'][0].keys())}")
-                # Show first few records as sample
-                for j, record in enumerate(data['data'][:3]):  # Show first 3 records
-                    print(f"Record {j+1}: {record}")
+        # Check if this is a file search result
+        if data.get('type') == 'file_search':
+            print("File Search Results:")
+            print(f"Tool Call ID: {data.get('tool_call_id', 'Unknown')}")
+            print(f"Status: {data.get('status', 'Unknown')}")
+            
+            if 'results' in data:
+                results = data['results']
+                if isinstance(results, list):
+                    print(f"Number of results found: {len(results)}")
+                    for i, result in enumerate(results[:3]):  # Show first 3 results
+                        print(f"  Result {i+1}: {result}")
+                else:
+                    print(f"Results: {results}")
+            
+            if 'ranking_options' in data:
+                print(f"Ranking Options: {data['ranking_options']}")
+            
+            if 'error' in data:
+                print(f"Error: {data['error']}")
+        
+        # Check if this is your API response format with 'data' key
+        elif 'data' in data:
+            api_data = data['data']
+            
+            # Show metadata first
+            print(f"Endpoint: {data.get('endpoint', 'Unknown')}")
+            print(f"Timestamp: {data.get('timestamp', 'Unknown')}")
+            print(f"Parameters Used: {data.get('params_used', {})}")
+            print()
+            
+            # Now show the actual data content
+            if isinstance(api_data, dict):
+                if 'data' in api_data and isinstance(api_data['data'], list):
+                    # Handle nested data structure
+                    actual_records = api_data['data']
+                    print(f"Total Records: {len(actual_records)}")
+                    
+                    if actual_records:
+                        print(f"Sample Record Fields: {list(actual_records[0].keys())}")
+                        print("\nFirst 3 Records:")
+                        for j, record in enumerate(actual_records[:3]):
+                            print(f"  Record {j+1}:")
+                            for key, value in record.items():
+                                # Truncate long values for readability
+                                if isinstance(value, str) and len(value) > 100:
+                                    value = value[:100] + "..."
+                                print(f"    {key}: {value}")
+                            print()
+                        
+                        if len(actual_records) > 3:
+                            print(f"... and {len(actual_records) - 3} more records")
+                    else:
+                        print("No data records found")
+                else:
+                    # Handle other data structures within 'data'
+                    print("Data Content:")
+                    for key, value in api_data.items():
+                        if isinstance(value, list):
+                            print(f"  {key}: List with {len(value)} items")
+                            if value and len(value) > 0:
+                                print(f"    Sample items: {value[:2]}")
+                        elif isinstance(value, dict):
+                            print(f"  {key}: Dict with {len(value)} keys")
+                            print(f"    Keys: {list(value.keys())}")
+                        else:
+                            print(f"  {key}: {value}")
             else:
-                print("No data records found")
+                print(f"Data Content: {api_data}")
         else:
             # Display other dict structures
+            print("Data Structure:")
             for key, value in data.items():
                 if isinstance(value, (list, dict)):
-                    print(f"{key}: {type(value).__name__} with {len(value) if hasattr(value, '__len__') else 'N/A'} items")
+                    print(f"  {key}: {type(value).__name__} with {len(value) if hasattr(value, '__len__') else 'N/A'} items")
+                    if isinstance(value, list) and value:
+                        print(f"    Sample: {value[0]}")
+                    elif isinstance(value, dict) and value:
+                        print(f"    Keys: {list(value.keys())}")
                 else:
-                    print(f"{key}: {value}")
+                    print(f"  {key}: {value}")
     else:
         print(f"Data Type: {type(data).__name__}")
         print(f"Data: {data}")
@@ -1571,15 +1709,40 @@ def display_original_data(data):
 def create_data_summary(data, function_name):
     """Create a concise summary of API data for OpenAI processing"""
     if isinstance(data, dict):
-        if 'data' in data and isinstance(data['data'], list):
-            return {
-                "status": "success",
-                "function": function_name,
-                "total_records": len(data['data']),
-                "sample_fields": list(data['data'][0].keys()) if data['data'] else [],
-                "summary": f"Retrieved {len(data['data'])} records from {function_name}"
-            }
+        # Handle your API response format
+        if 'data' in data:
+            api_data = data['data']
+            endpoint = data.get('endpoint', function_name)
+            
+            if isinstance(api_data, dict) and 'data' in api_data and isinstance(api_data['data'], list):
+                # Nested data structure
+                records = api_data['data']
+                return {
+                    "status": "success",
+                    "function": function_name,
+                    "endpoint": endpoint,
+                    "total_records": len(records),
+                    "sample_fields": list(records[0].keys()) if records else [],
+                    "summary": f"Retrieved {len(records)} records from {endpoint} via {function_name}"
+                }
+            elif isinstance(api_data, dict):
+                # Other data structures
+                return {
+                    "status": "success",
+                    "function": function_name,
+                    "endpoint": endpoint,
+                    "data_keys": list(api_data.keys()),
+                    "summary": f"Retrieved structured data from {endpoint} via {function_name}"
+                }
+            else:
+                return {
+                    "status": "success",
+                    "function": function_name,
+                    "endpoint": endpoint,
+                    "summary": f"Retrieved data from {endpoint} via {function_name}"
+                }
         else:
+            # Standard dict structure
             return {
                 "status": "success",
                 "function": function_name,
@@ -1631,7 +1794,6 @@ def synthesize_results(original_query, summaries):
     )
     
     return response
-
 
 
 # Test the implementation
