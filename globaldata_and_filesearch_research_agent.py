@@ -584,11 +584,6 @@ globaldata_tools = [
                 "additionalProperties": False
             }
         }
-    },
-    {
-        "type": "file_search",
-        "vector_store_ids": [vector_id],
-        "max_num_results":10
     }
 ]
 
@@ -1413,37 +1408,108 @@ FUNCTION_MAPPING = {
     'GetCurrencyConverter': GetCurrencyConverter
 }
 
-def call_globaldata_api(content: str):
+def call_globaldata_api(content: str, vector_id: str = None):
     """
     Process tool calls in batches to avoid token limits
+    Now supports both function tools and file search
     """
     original_data = {}
     
     try:
-        # Initial API call
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a pharmaceutical data analyst with access to GlobalData APIs. Use the appropriate tools to answer user queries about drugs, clinical trials, companies, deals, and market data."},
+        # Prepare tools array - separate function tools from file search
+        tools_to_use = []
+        
+        # Add your existing globaldata function tools
+        tools_to_use.extend(globaldata_tools)
+        
+        # Add file search tool if vector_id is provided
+        if vector_id:
+            file_search_tool = {
+                "type": "file_search"
+            }
+            tools_to_use.append(file_search_tool)
+        
+        # Prepare the assistant configuration
+        assistant_config = {
+            "model": "gpt-4o",
+            "messages": [
+                {"role": "system", "content": "You are a pharmaceutical data analyst with access to GlobalData APIs and file search capabilities. Use the appropriate tools to answer user queries about drugs, clinical trials, companies, deals, and market data."},
                 {"role": "user", "content": content}
             ],
-            tools=globaldata_tools,
-            tool_choice="auto"
-        )
+            "tools": tools_to_use,
+            "tool_choice": "auto"
+        }
+        
+        # Add tool_resources if file search is enabled
+        if vector_id:
+            assistant_config["tool_resources"] = {
+                "file_search": {
+                    "vector_store_ids": [vector_id],
+                    "max_num_results": 10
+                }
+            }
+        
+        # Initial API call
+        response = client.chat.completions.create(**assistant_config)
         
         if response.choices[0].message.tool_calls:
             tool_calls = response.choices[0].message.tool_calls
-            batch_size = 2  # Process 2 tool calls at a time
             
+            # Separate function calls from file search calls
+            function_calls = []
+            file_search_calls = []
+            
+            for tool_call in tool_calls:
+                if hasattr(tool_call, 'type') and tool_call.type == 'file_search':
+                    file_search_calls.append(tool_call)
+                else:
+                    function_calls.append(tool_call)
+            
+            batch_size = 2  # Process 2 tool calls at a time
             all_summaries = []
             
-            for i in range(0, len(tool_calls), batch_size):
-                batch = tool_calls[i:i + batch_size]
-                batch_summaries = process_tool_call_batch(batch, original_data)
-                all_summaries.extend(batch_summaries)
+            # Process function calls in batches
+            if function_calls:
+                for i in range(0, len(function_calls), batch_size):
+                    batch = function_calls[i:i + batch_size]
+                    batch_summaries = process_tool_call_batch(batch, original_data)
+                    all_summaries.extend(batch_summaries)
+            
+            # Process file search calls
+            if file_search_calls:
+                file_search_summaries = process_file_search_calls(file_search_calls, original_data)
+                all_summaries.extend(file_search_summaries)
+            
+            # Display results for each tool/function used
+            print("\n" + "="*60)
+            print("API RESULTS SUMMARY")
+            print("="*60)
+            
+            for i, (function_name, data) in enumerate(original_data.items(), 1):
+                print(f"\nSource: {function_name}")
+                
+                # Find corresponding summary
+                summary_data = next((s for s in all_summaries if s['function'] == function_name), {})
+                print(f"Summary: {summary_data.get('summary', 'Data processed successfully')}")
+                
+                print("API Original Data:")
+                print("_" * 50)
+                
+                # Display original data in a readable format
+                display_original_data(data)
+                
+                # Add separator between different tools
+                if i < len(original_data):
+                    print("\n" + "-"*50)
+                    print(f"END OF TOOL {i} OUTPUT")
+                    print("-"*50)
             
             # Create final synthesis
             final_response = synthesize_results(content, all_summaries)
+            
+            print("\n" + "="*60)
+            print("FINAL SYNTHESIS")
+            print("="*60)
             
             return final_response, None, original_data
         else:
@@ -1452,7 +1518,56 @@ def call_globaldata_api(content: str):
     except Exception as e:
         print(f"Error calling OpenAI API: {e}")
         return None, None, original_data
+
+def process_file_search_calls(file_search_calls, original_data):
+    """Process file search tool calls"""
+    summaries = []
     
+    for tool_call in file_search_calls:
+        function_name = f"file_search_{tool_call.id}"
+        
+        # File search results are typically in the tool_call response
+        # You might need to extract the actual search results based on your implementation
+        search_results = {
+            "tool_call_id": tool_call.id,
+            "type": "file_search",
+            "results": "File search completed"  # This would contain actual search results
+        }
+        
+        original_data[function_name] = search_results
+        
+        summary = {
+            "status": "success",
+            "function": function_name,
+            "summary": f"File search completed with tool call ID: {tool_call.id}"
+        }
+        summaries.append(summary)
+    
+    return summaries
+
+def display_original_data(data):
+    """Display original data in a readable format"""
+    if isinstance(data, dict):
+        if 'data' in data and isinstance(data['data'], list):
+            print(f"Total Records: {len(data['data'])}")
+            if data['data']:
+                print(f"Sample Record Fields: {list(data['data'][0].keys())}")
+                # Show first few records as sample
+                for j, record in enumerate(data['data'][:3]):  # Show first 3 records
+                    print(f"Record {j+1}: {record}")
+            else:
+                print("No data records found")
+        else:
+            # Display other dict structures
+            for key, value in data.items():
+                if isinstance(value, (list, dict)):
+                    print(f"{key}: {type(value).__name__} with {len(value) if hasattr(value, '__len__') else 'N/A'} items")
+                else:
+                    print(f"{key}: {value}")
+    else:
+        print(f"Data Type: {type(data).__name__}")
+        print(f"Data: {data}")
+
 def create_data_summary(data, function_name):
     """Create a concise summary of API data for OpenAI processing"""
     if isinstance(data, dict):
@@ -1479,7 +1594,7 @@ def create_data_summary(data, function_name):
         }
     
 def process_tool_call_batch(tool_calls, original_data):
-    """Process a batch of tool calls"""
+    """Process a batch of function tool calls"""
     summaries = []
     
     for tool_call in tool_calls:
@@ -1516,6 +1631,8 @@ def synthesize_results(original_query, summaries):
     )
     
     return response
+
+
 
 # Test the implementation
 if __name__ == "__main__":
@@ -1649,5 +1766,5 @@ if __name__ == "__main__":
     print("Making API call...")
     final_response, _, original_data = call_globaldata_api(user_content)
     
-    print(final_response)
-    print(original_data)
+    # print(final_response)
+    # print(original_data)
