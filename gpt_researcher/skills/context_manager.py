@@ -39,7 +39,7 @@ class ContextManager:
                 self.researcher.websocket,
                 )
         vectorstore_compressor = VectorstoreCompressor(
-            self.researcher.vector_store, filter, prompt_family=self.researcher.prompt_family,
+            self.researcher.vector_store, filter=filter, prompt_family=self.researcher.prompt_family,
             **self.researcher.kwargs
         )
         return await vectorstore_compressor.async_get_context(query=query, max_results=8)
