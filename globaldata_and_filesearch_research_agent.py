@@ -1,9 +1,16 @@
-import os
 import json
+import sys
+import pickle
+import hashlib
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+import os
+from fromat_file_search_tool_results import extract_and_format_data
 import requests
 from openai import OpenAI
 from dotenv import load_dotenv
 from typing import Dict, Any, List
+
 
 load_dotenv()
 vector_id = os.getenv("vector_id")
@@ -17,572 +24,522 @@ client = OpenAI(api_key=api_key)
 globaldata_tools = [
     {
         "type": "function",
-        "function": {
-            "name": "GetBiomarkersDetails",
-            "description": "Get biomarkers data based on from date and to date. Use for biomarker research, diagnostic markers, and therapeutic targets.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for biomarkers"
-                    }
+        "name": "GetBiomarkersDetails",
+        "description": "Get biomarkers data based on from date and to date. Use for biomarker research, diagnostic markers, and therapeutic targets.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for biomarkers"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetBiomarkersDailyUpdates",
-            "description": "Get daily updates for biomarkers data based on from date and to date. Use for recent biomarker developments.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for biomarkers"
-                    }
+        "name": "GetBiomarkersDailyUpdates",
+        "description": "Get daily updates for biomarkers data based on from date and to date. Use for recent biomarker developments.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for biomarkers"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     
     # ===== CLINICAL TRIALS TOOLS =====
     {
         "type": "function",
-        "function": {
-            "name": "GetClinicalTrialsDetails",
-            "description": "Get clinical trial data based on keyword search, Clinical ID, from date and to date. Essential for pipeline analysis, competitive landscape, and development timelines.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for clinical trials"
-                    }
+        "name": "GetClinicalTrialsDetails",
+        "description": "Get clinical trial data based on keyword search, Clinical ID, from date and to date. Essential for pipeline analysis, competitive landscape, and development timelines.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for clinical trials"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetClinicalTrialsLocationsandcontactDetails",
-            "description": "Get clinical trial locations and contact details based on keyword search, Clinical ID, from date and to date. Use for site selection and operational planning.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for clinical trials"
-                    }
+        "name": "GetClinicalTrialsLocationsandcontactDetails",
+        "description": "Get clinical trial locations and contact details based on keyword search, Clinical ID, from date and to date. Use for site selection and operational planning.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for clinical trials"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetClinicalTrialsDailyUpdates",
-            "description": "Get daily updates for clinical trials data based on from date and to date. Use for recent trial developments and status changes.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for clinical trials"
-                    }
+        "name": "GetClinicalTrialsDailyUpdates",
+        "description": "Get daily updates for clinical trials data based on from date and to date. Use for recent trial developments and status changes.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for clinical trials"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     
     # ===== COMPANY TOOLS =====
     {
         "type": "function",
-        "function": {
-            "name": "GetCompanyDetails",
-            "description": "Get company details data based on from date and to date. Essential for competitive landscape, company profiling, and partnership analysis.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for companies"
-                    }
+        "name": "GetCompanyDetails",
+        "description": "Get company details data based on from date and to date. Essential for competitive landscape, company profiling, and partnership analysis.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for companies"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetDailyDeletedCompanies",
-            "description": "Get daily deleted companies data based on from date and to date. Use for database maintenance and recent company changes.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for companies"
-                    }
+        "name": "GetDailyDeletedCompanies",
+        "description": "Get daily deleted companies data based on from date and to date. Use for database maintenance and recent company changes.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for companies"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     
     # ===== DEALS TOOLS =====
     {
         "type": "function",
-        "function": {
-            "name": "GetDealsDetails",
-            "description": "Get deal data based on keyword search or Deal ID. Critical for deal landscape analysis, partnership trends, and market activity.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for deals or Deal ID"
-                    }
+        "name": "GetDealsDetails",
+        "description": "Get deal data based on keyword search or Deal ID. Critical for deal landscape analysis, partnership trends, and market activity.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for deals or Deal ID"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetDealsDailyUpdates",
-            "description": "Get daily updates for deals data based on from date and to date. Use for recent deal activity and market movements.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for deals"
-                    }
+        "name": "GetDealsDailyUpdates",
+        "description": "Get daily updates for deals data based on from date and to date. Use for recent deal activity and market movements.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for deals"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetDailyDeletedDeals",
-            "description": "Get daily updates for deals data based on from date and to date. Use for database maintenance.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for deals"
-                    }
+        "name": "GetDailyDeletedDeals",
+        "description": "Get daily updates for deals data based on from date and to date. Use for database maintenance.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for deals"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     
     # ===== DRUGS TOOLS =====
     {
         "type": "function",
-        "function": {
-            "name": "GetPipelineDrugDetails",
-            "description": "Get pipeline drug data based on keyword search or Drug ID. Essential for competitive landscape and pipeline analysis.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for drugs or Drug ID"
-                    }
+        "name": "GetPipelineDrugDetails",
+        "description": "Get pipeline drug data based on keyword search or Drug ID. Essential for competitive landscape and pipeline analysis.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for drugs or Drug ID"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetMarketedDrugDetails",
-            "description": "Get marketed drug data based on keyword search or Drug ID. Use for market analysis and competitive benchmarking.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for drugs or Drug ID"
-                    }
+        "name": "GetMarketedDrugDetails",
+        "description": "Get marketed drug data based on keyword search or Drug ID. Use for market analysis and competitive benchmarking.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for drugs or Drug ID"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetDrugsDailyUpdates",
-            "description": "Get daily updates for drugs data based on from date and to date. Use for recent drug developments.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for drugs"
-                    }
+        "name": "GetDrugsDailyUpdates",
+        "description": "Get daily updates for drugs data based on from date and to date. Use for recent drug developments.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for drugs"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetHistoryofEvents",
-            "description": "Get drug history events based on DrugID. Use for timeline analysis and development milestones.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "DrugID for history events"
-                    }
+        "name": "GetHistoryofEvents",
+        "description": "Get drug history events based on DrugID. Use for timeline analysis and development milestones.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "DrugID for history events"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetStubDrugs",
-            "description": "Get stub drugs data based on from date and to date. Use for incomplete drug records.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for stub drugs"
-                    }
+        "name": "GetStubDrugs",
+        "description": "Get stub drugs data based on from date and to date. Use for incomplete drug records.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for stub drugs"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     
     # ===== DRUG SALES TOOLS =====
     {
         "type": "function",
-        "function": {
-            "name": "GetDrugSalesDetails",
-            "description": "Get drug sales data based on keyword search or DrugID. Essential for market model, revenue analysis, and commercial performance.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for drug sales or DrugID"
-                    }
+        "name": "GetDrugSalesDetails",
+        "description": "Get drug sales data based on keyword search or DrugID. Essential for market model, revenue analysis, and commercial performance.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for drug sales or DrugID"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetDrugSalesDailyUpdates",
-            "description": "Get daily updates for drug sales data based on from date and to date. Use for recent sales performance.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for drug sales"
-                    }
+        "name": "GetDrugSalesDailyUpdates",
+        "description": "Get daily updates for drug sales data based on from date and to date. Use for recent sales performance.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for drug sales"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     
     # ===== EPIDEMIOLOGY TOOLS =====
     {
         "type": "function",
-        "function": {
-            "name": "GetEpidemiologyDetails",
-            "description": "Get epidemiology data based on keyword search or IndicationID. Essential for patient population analysis, disease prevalence, and market sizing.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "Indication": {
-                        "type": "string",
-                        "description": "Enter Indication to search the Data ex: Pain or Pain"
-                    }
+        "name": "GetEpidemiologyDetails",
+        "description": "Get epidemiology data based on keyword search or IndicationID. Essential for patient population analysis, disease prevalence, and market sizing.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "Indication": {
+                    "type": "string",
+                    "description": "Enter Indication to search the Data ex: Pain or Pain"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     
     # ===== FILINGS TOOLS =====
     {
         "type": "function",
-        "function": {
-            "name": "GetCompanyFilingListing",
-            "description": "Get company filing records based on published date. Use for regulatory analysis and company financial information.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for company filings"
-                    }
+        "name": "GetCompanyFilingListing",
+        "description": "Get company filing records based on published date. Use for regulatory analysis and company financial information.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for company filings"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetCompanyFilingDetails",
-            "description": "Get company filing records based on Company ID. Use for detailed company regulatory and financial analysis.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Company ID for filing details"
-                    }
+        "name": "GetCompanyFilingDetails",
+        "description": "Get company filing records based on Company ID. Use for detailed company regulatory and financial analysis.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Company ID for filing details"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     
     # ===== INVESTIGATORS TOOLS =====
     {
         "type": "function",
-        "function": {
-            "name": "GetInvestigatorsDetails",
-            "description": "Get investigator records based on published date. Essential for KOL identification and clinical trial planning.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for investigators"
-                    }
+        "name": "GetInvestigatorsDetails",
+        "description": "Get investigator records based on published date. Essential for KOL identification and clinical trial planning.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for investigators"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetInvestigatorsDailyUpdates",
-            "description": "Get daily updates for investigators data based on from date and to date. Use for recent investigator activities.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for investigators"
-                    }
+        "name": "GetInvestigatorsDailyUpdates",
+        "description": "Get daily updates for investigators data based on from date and to date. Use for recent investigator activities.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for investigators"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     
     # ===== NEWS TOOLS =====
     {
         "type": "function",
-        "function": {
-            "name": "GetNewsDetails",
-            "description": "Get news data based on keyword search or NewsArticle ID. Use for market intelligence, recent developments, and industry trends.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for news or NewsArticle ID"
-                    }
+        "name": "GetNewsDetails",
+        "description": "Get news data based on keyword search or NewsArticle ID. Use for market intelligence, recent developments, and industry trends.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for news or NewsArticle ID"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     {
         "type": "function",
-        "function": {
-            "name": "GetNewsDailyUpdates",
-            "description": "Get daily updates for news data based on from date and to date. Use for recent news and market developments.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for news"
-                    }
+        "name": "GetNewsDailyUpdates",
+        "description": "Get daily updates for news data based on from date and to date. Use for recent news and market developments.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for news"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     },
     
     # ===== TRIAL SITES TOOLS =====
     {
         "type": "function",
-        "function": {
-            "name": "GetTrialSitesDetails",
-            "description": "Get trial site data based on keyword search or Site ID. Essential for clinical development planning and site selection.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "user_query": {
-                        "type": "string",
-                        "description": "User's original query or request"
-                    },
-                    "keywords": {
-                        "type": "string",
-                        "description": "Search keywords for trial sites or Site ID"
-                    }
+        "name": "GetTrialSitesDetails",
+        "description": "Get trial site data based on keyword search or Site ID. Essential for clinical development planning and site selection.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "user_query": {
+                    "type": "string",
+                    "description": "User's original query or request"
                 },
-                "required": ["user_query", "keywords"],
-                "additionalProperties": False
-            }
+                "keywords": {
+                    "type": "string",
+                    "description": "Search keywords for trial sites or Site ID"
+                }
+            },
+            "required": ["user_query", "keywords"],
+            "additionalProperties": False
         }
     }
 ]
@@ -1367,7 +1324,6 @@ def GetCurrencyConverter( user_query: str, keywords: str) -> dict:
         raise Exception(str(e))
 
 # ===== FUNCTION MAPPING =====
-# Dictionary to map function names to actual functions
 FUNCTION_MAPPING = {
     'GetBiomarkersDetails': GetBiomarkersDetails,
     'GetBiomarkersDailyUpdates': GetBiomarkersDailyUpdates,
@@ -1408,525 +1364,739 @@ FUNCTION_MAPPING = {
     'GetCurrencyConverter': GetCurrencyConverter
 }
 
-def call_globaldata_api(content: str, vector_id: str = None):
+prompt = """
+You are an expert pharmaceutical data analyst with access to comprehensive GlobalData APIs and internal file search capabilities. Your role is to conduct research for each given task and provide accurate, actionable insights by intelligently selecting and utilizing the appropriate tools based on user queries.
+
+## Core Responsibilities
+- Execute assigned research tasks using optimal tool selection
+- Synthesize and validate findings across multiple data sources
+- Present actionable insights with clear evidence and implications
+- Maintain context from original query while addressing specific sub-tasks
+
+## Core Capabilities
+
+### Tool Selection Intelligence
+Automatically identify and select the most appropriate tool based on query intent and keywords:
+
+**Biomarker Research**
+- GetBiomarkersDetails - For biomarker research, diagnostic, or therapeutic applications
+- GetBiomarkersDailyUpdates - For recent biomarker developments
+
+**Clinical Trials**
+- GetClinicalTrialsDetails - For pipeline analysis, competitive landscape, development timelines
+- GetClinicalTrialsLocationsandcontactDetails - For trial locations and contact information
+- GetClinicalTrialsDailyUpdates - For latest trial status changes and activities
+
+**Company Intelligence**
+- GetCompanyDetails - For company profiling, partnership analysis, competitive landscape
+- GetDailyDeletedCompanies - For companies removed from database
+
+**Deals & Partnerships**
+- GetDealsDetails - For deals, market activity, partnership trends
+- GetDealsDailyUpdates - For recent deal activity and market movements
+- GetDailyDeletedDeals - For recently deleted deals
+
+**Drug Information**
+- GetPipelineDrugDetails - For pipeline drugs, competitive landscape, pipeline analysis
+- GetMarketedDrugDetails - For marketed drugs, market analysis, competitive benchmarking
+- GetDrugsDailyUpdates - For recent drug developments
+- GetHistoryofEvents - For drug timeline and development milestones (requires Drug ID)
+- GetStubDrugs - For incomplete drug records
+
+**Drug Sales & Commercial Performance**
+- GetDrugSalesDetails - For drug sales, revenue, commercial performance analysis
+- GetDrugSalesDailyUpdates - For recent sales performance updates
+
+**Epidemiology & Market Sizing**
+- GetEpidemiologyDetails - For patient populations, disease prevalence, market sizing (requires Indication keyword)
+
+**Regulatory & Financial Filings**
+- GetCompanyFilingListing - For company filings and regulatory analysis
+- GetCompanyFilingDetails - For specific filing details (requires Company ID)
+
+**Key Opinion Leaders**
+- GetInvestigatorsDetails - For investigator records, KOL identification, clinical trial planning
+- GetInvestigatorsDailyUpdates - For recent investigator activities
+
+**News & Market Intelligence**
+- GetNewsDetails - For news data, market intelligence, industry trends
+- GetNewsDailyUpdates - For daily news and market developments
+
+**Trial Sites**
+- GetTrialSitesDetails - For trial site data, clinical development planning, site selection
+
+**Internal File Search**
+- file_search - For unstructured data, ad-hoc analyses, or detailed information beyond API capabilities
+
+### Parameter Intelligence
+
+**Keywords Parameter**
+- Direct Usage: Extract specific terms directly from queries (e.g., "clinical trials for diabetes" → "diabetes")
+- Contextual Inference: Infer relevant keywords from implied subjects (e.g., "recent cancer research updates" → "cancer research")
+- ID Recognition: Use provided IDs as keywords (e.g., "Clinical ID NCT01234567" → "NCT01234567")
+
+**Date Parameters**
+- Automatic Range for Daily Updates: Set from_date to one week prior to current date (July 2, 2025) and to_date to current date (July 9, 2025)
+- User-Specified Dates: Honor explicitly provided date ranges in clear, unambiguous format
+- Context-Aware Dating: Interpret relative dates (e.g., "last quarter," "this year") appropriately
+
+**User Query Preservation**
+Always pass the complete original query as user_query parameter to maintain full context and intent.
+
+## Research Methodology
+
+### Multi-Tool Integration
+- Primary Tool Selection: Choose the most relevant tool based on core query intent
+- Supplementary Tools: Utilize additional tools for comprehensive analysis when beneficial
+- Cross-Reference: Validate findings across multiple data sources when appropriate
+
+### Data Synthesis
+- Comprehensive Analysis: Combine data from multiple tools to provide holistic insights
+- Trend Identification: Identify patterns and trends across different data sources
+- Contextual Interpretation: Provide meaningful context and implications for findings
+
+### Quality Assurance
+- Data Validation: Cross-check information across multiple sources
+- Completeness Check: Ensure all relevant aspects of the query are addressed
+- Accuracy Verification: Validate data consistency and reliability
+
+## Response Framework
+
+### Structure
+- Executive Summary: Brief overview of key findings
+- Detailed Analysis: Comprehensive breakdown of research results
+- Data Sources: Clear indication of tools and data sources used
+- Implications: Business or strategic implications of findings
+- Recommendations: Actionable insights based on analysis
+
+### Output Format Requirements
+- **Natural Language Summaries**: For all API data (JSON format) and Excel data, create comprehensive natural language summaries that translate structured data into readable, actionable insights
+- **Data Interpretation**: Transform raw data points into meaningful narratives that highlight key trends, patterns, and implications
+- **Contextual Analysis**: Provide context around numerical data, explaining significance and relevance to the original query
+- **Structured Presentation**: Organize findings in clear, logical sections with appropriate headings and bullet points where beneficial
+
+
+## Example Query Handling
+
+**Query**: "What are the recent clinical trial developments for Alzheimer's disease?"
+- Tool: GetClinicalTrialsDailyUpdates
+- Keywords: "Alzheimer's disease"
+- Date Range: Automatic (July 2-9, 2025)
+
+**Query**: "Show me details for drug ID 54321"
+- Tool: GetPipelineDrugDetails or GetMarketedDrugDetails
+- Keywords: "54321"
+
+**Query**: "Pfizer's recent company filings and partnership activity"
+- Primary Tool: GetCompanyFilingListing
+- Secondary Tool: GetDealsDetails
+- Keywords: "Pfizer"
+
+## Operational Excellence
+
+### Proactive Analysis
+- Anticipate follow-up questions and provide comprehensive initial responses
+- Identify related areas of interest that might be valuable to explore
+- Suggest additional research directions based on findings
+
+### Continuous Learning
+- Adapt tool selection based on query patterns and effectiveness
+- Refine parameter optimization for better results
+
+### User-Centric Approach
+- Tailor responses to user's apparent expertise level and needs
+- Provide appropriate level of detail and technical depth
+- Offer clarification and additional information when beneficial
+
+## Instructions
+Process user queries by analyzing intent, selecting appropriate tools, setting optimal parameters, conducting thorough research, and providing comprehensive, actionable insights. Always maintain the highest standards of accuracy and professionalism in pharmaceutical data analysis.
+
+"""
+
+class DataPreservationManager:
     """
-    Process tool calls in batches to avoid token limits
-    Now supports both function tools and file search
+    Manages preservation of complete API data while providing truncated versions for token management
     """
-    original_data = {}
-    ai_summaries = {}
     
-    try:
-        # Prepare tools array - separate function tools from file search
-        tools_to_use = []
-        
-        # Add your existing globaldata function tools
-        tools_to_use.extend(globaldata_tools)
-        
-        # Add file search tool if vector_id is provided
-        if vector_id:
-            file_search_tool = {
-                "type": "file_search"
-            }
-            tools_to_use.append(file_search_tool)
-        
-        # Prepare the assistant configuration
-        assistant_config = {
-            "model": "gpt-4o",
-            "messages": [
-                {"role": "system", "content": "You are a pharmaceutical data analyst with access to GlobalData APIs and file search capabilities. Use the appropriate tools to answer user queries about drugs, clinical trials, companies, deals, and market data. When you need to search internal files or documents, use the file_search tool."},
-                {"role": "user", "content": content}
-            ],
-            "tools": tools_to_use,
-            "tool_choice": "auto"
+    def __init__(self, storage_path: str = "preserved_data"):
+        self.storage_path = storage_path
+        self.ensure_storage_directory()
+        self.session_data = {}  # In-memory storage for current session
+    
+    def ensure_storage_directory(self):
+        """Create storage directory if it doesn't exist"""
+        if not os.path.exists(self.storage_path):
+            os.makedirs(self.storage_path)
+    
+    def generate_data_id(self, function_name: str, function_args: dict) -> str:
+        """Generate unique ID for data based on function and arguments"""
+        content = f"{function_name}_{json.dumps(function_args, sort_keys=True)}"
+        return hashlib.md5(content.encode()).hexdigest()
+    
+    def preserve_original_data(self, data_id: str, function_name: str, original_data: Any) -> Dict[str, Any]:
+        """
+        Preserve complete original data and return preservation metadata
+        """
+        preservation_info = {
+            "data_id": data_id,
+            "function_name": function_name,
+            "timestamp": datetime.now().isoformat(),
+            "original_size_bytes": sys.getsizeof(json.dumps(original_data, default=str)),
+            "record_count": 0,
+            "preservation_method": "in_memory_and_disk"
         }
         
-        # Add tool_resources if file search is enabled
-        if vector_id:
-            assistant_config["tool_resources"] = {
-                "file_search": {
-                    "vector_store_ids": [vector_id],
-                    "max_num_results": 10
-                }
-            }
+        # Count records if it's API response format
+        if isinstance(original_data, dict) and 'data' in original_data:
+            api_data = original_data['data']
+            if isinstance(api_data, dict) and 'data' in api_data:
+                records = api_data['data']
+                if isinstance(records, list):
+                    preservation_info["record_count"] = len(records)
         
-        # Initial API call
-        response = client.chat.completions.create(**assistant_config)
+        # Store in session memory
+        self.session_data[data_id] = {
+            "original_data": original_data,
+            "preservation_info": preservation_info
+        }
         
-        if response.choices[0].message.tool_calls:
-            tool_calls = response.choices[0].message.tool_calls
-            
-            # Separate function calls from file search calls
-            function_calls = []
-            file_search_calls = []
-            
-            for tool_call in tool_calls:
-                if hasattr(tool_call, 'type') and tool_call.type == 'file_search':
-                    file_search_calls.append(tool_call)
+        # Also save to disk for persistence
+        try:
+            file_path = os.path.join(self.storage_path, f"{data_id}.pkl")
+            with open(file_path, 'wb') as f:
+                pickle.dump({
+                    "original_data": original_data,
+                    "preservation_info": preservation_info
+                }, f)
+        except Exception as e:
+            print(f"Warning: Could not save data to disk: {e}")
+            preservation_info["preservation_method"] = "in_memory_only"
+        
+        return preservation_info
+    
+    def get_original_data(self, data_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieve original data by ID"""
+        # Try session memory first
+        if data_id in self.session_data:
+            return self.session_data[data_id]
+        
+        # Try disk storage
+        try:
+            file_path = os.path.join(self.storage_path, f"{data_id}.pkl")
+            if os.path.exists(file_path):
+                with open(file_path, 'rb') as f:
+                    return pickle.load(f)
+        except Exception as e:
+            print(f"Error loading data from disk: {e}")
+        
+        return None
+    
+    def get_all_preserved_data_ids(self) -> List[str]:
+        """Get all preserved data IDs from current session"""
+        return list(self.session_data.keys())
+
+def smart_truncate_with_preservation(data: Any, max_records: int = 50, max_string_length: int = 500, 
+                                   preservation_info: Dict = None) -> Dict[str, Any]:
+    """
+    Smart truncation that preserves data structure and includes preservation metadata
+    """
+    truncation_info = {
+        "was_truncated": False,
+        "original_record_count": 0,
+        "truncated_record_count": 0,
+        "truncation_details": [],
+        "preservation_available": preservation_info is not None
+    }
+    
+    # Add preservation info if available
+    if preservation_info:
+        truncation_info["preservation_info"] = preservation_info
+    
+    if isinstance(data, dict):
+        if 'data' in data and isinstance(data['data'], dict) and 'data' in data['data']:
+            # Handle nested API response structure
+            records = data['data']['data']
+            if isinstance(records, list):
+                truncation_info["original_record_count"] = len(records)
+                
+                if len(records) > max_records:
+                    # Intelligent truncation - preserve first, middle, and last records
+                    truncated_records = []
+                    
+                    # Take first portion
+                    first_portion = records[:max_records//2]
+                    truncated_records.extend(first_portion)
+                    
+                    # Add separator record to indicate truncation
+                    truncated_records.append({
+                        "_truncation_marker": True,
+                        "_message": f"... {len(records) - max_records} records truncated ...",
+                        "_original_count": len(records),
+                        "_preserved_data_id": preservation_info["data_id"] if preservation_info else None
+                    })
+                    
+                    # Take last portion
+                    last_portion = records[-(max_records//2):]
+                    truncated_records.extend(last_portion)
+                    
+                    truncation_info["was_truncated"] = True
+                    truncation_info["truncated_record_count"] = len(truncated_records) - 1  # Exclude marker
+                    truncation_info["truncation_details"].append(
+                        f"Records truncated from {len(records)} to {max_records} "
+                        f"(showing first {max_records//2} and last {max_records//2})"
+                    )
+                    
+                    # Update the data structure
+                    data_copy = json.loads(json.dumps(data, default=str))
+                    data_copy['data']['data'] = truncated_records
+                    
+                    # Add truncation info to the data
+                    data_copy['_truncation_info'] = truncation_info
+                    
+                    return data_copy
                 else:
-                    function_calls.append(tool_call)
+                    truncation_info["truncated_record_count"] = len(records)
+    
+    # Truncate long strings in the data
+    data_copy = json.loads(json.dumps(data, default=str))
+    data_copy = _truncate_strings_recursive(data_copy, max_string_length, truncation_info)
+    
+    if truncation_info["was_truncated"] or truncation_info["truncation_details"]:
+        data_copy['_truncation_info'] = truncation_info
+    
+    return data_copy
+
+def _truncate_strings_recursive(obj: Any, max_length: int, truncation_info: Dict) -> Any:
+    """Recursively truncate long strings in nested data structures"""
+    if isinstance(obj, dict):
+        return {k: _truncate_strings_recursive(v, max_length, truncation_info) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_truncate_strings_recursive(item, max_length, truncation_info) for item in obj]
+    elif isinstance(obj, str) and len(obj) > max_length:
+        truncation_info["was_truncated"] = True
+        truncation_info["truncation_details"].append(f"String truncated from {len(obj)} to {max_length} characters")
+        return obj[:max_length] + "... [TRUNCATED - Original preserved]"
+    else:
+        return obj
+
+def prepare_data_for_context_with_preservation(data: Any, preservation_info: Dict, 
+                                             max_tokens: int = 8000) -> Dict[str, Any]:
+    """
+    Prepare data for context while preserving original and providing preservation metadata
+    """
+    # Start with smart truncation that includes preservation info
+    truncated_data = smart_truncate_with_preservation(
+        data, max_records=50, max_string_length=500, preservation_info=preservation_info
+    )
+    
+    # Estimate token count
+    data_str = json.dumps(truncated_data, default=str)
+    estimated_tokens = estimate_token_count(data_str)
+    
+    # Progressive truncation with preservation awareness
+    if estimated_tokens > max_tokens:
+        truncated_data = smart_truncate_with_preservation(
+            data, max_records=20, max_string_length=200, preservation_info=preservation_info
+        )
+        data_str = json.dumps(truncated_data, default=str)
+        estimated_tokens = estimate_token_count(data_str)
+        
+        if estimated_tokens > max_tokens:
+            truncated_data = smart_truncate_with_preservation(
+                data, max_records=10, max_string_length=100, preservation_info=preservation_info
+            )
+            data_str = json.dumps(truncated_data, default=str)
+            estimated_tokens = estimate_token_count(data_str)
             
-            batch_size = 2  # Process 2 tool calls at a time
-            all_summaries = []
-            
-            # Process function calls in batches
-            if function_calls:
-                for i in range(0, len(function_calls), batch_size):
-                    batch = function_calls[i:i + batch_size]
-                    batch_summaries = process_tool_call_batch(batch, original_data)
-                    all_summaries.extend(batch_summaries)
-            
-            # Process file search calls
-            if file_search_calls:
-                file_search_summaries = process_file_search_calls(file_search_calls, original_data)
-                all_summaries.extend(file_search_summaries)
-            
-            # Generate AI summaries for each tool's data
-            for function_name, data in original_data.items():
-                if not function_name.startswith("file_search_"):
-                    ai_summary = generate_ai_summary(function_name, data)
-                    ai_summaries[function_name] = ai_summary
-                else:
-                    ai_summaries[function_name] = "File search completed - results integrated into analysis"
-            
-            # Display results for each tool/function used
-            print("\n" + "="*60)
-            print("API RESULTS SUMMARY")
-            print("="*60)
-            
-            for i, (function_name, data) in enumerate(original_data.items(), 1):
-                print(f"\nSource: {function_name}")
+            # Last resort: create enhanced summary with preservation info
+            if estimated_tokens > max_tokens:
+                truncated_data = create_enhanced_summary_with_preservation(data, preservation_info)
+    
+    return truncated_data
+
+def create_enhanced_summary_with_preservation(data: Any, preservation_info: Dict) -> Dict[str, Any]:
+    """Create enhanced summary that includes preservation information"""
+    summary = {
+        "data_summary": True,
+        "original_data_type": type(data).__name__,
+        "summary_reason": "Data too large for context - enhanced summary with preservation info",
+        "preservation_info": preservation_info,
+        "data_access_note": f"Complete original data preserved with ID: {preservation_info['data_id']}"
+    }
+    
+    if isinstance(data, dict):
+        if 'data' in data and isinstance(data['data'], dict) and 'data' in data['data']:
+            records = data['data']['data']
+            if isinstance(records, list):
+                summary.update({
+                    "total_records": len(records),
+                    "sample_fields": list(records[0].keys()) if records else [],
+                    "first_record_sample": records[0] if records else None,
+                    "last_record_sample": records[-1] if len(records) > 1 else None,
+                    "data_structure": "API response with nested data array"
+                })
                 
-                # Show AI-generated summary
-                ai_summary = ai_summaries.get(function_name, "Summary not available")
-                print(f"Summary: {ai_summary}")
-                
-                print("API Original Data:")
-                print("_" * 50)
-                
-                # Display original data in a readable format
-                display_original_data(data)
-                
-                # Add separator between different tools
-                if i < len(original_data):
-                    print("\n" + "-"*50)
-                    print(f"END OF TOOL {i} OUTPUT")
-                    print("-"*50)
-            
-            # Create final synthesis
-            final_response = synthesize_results(content, all_summaries)
-            
-            print("\n" + "="*60)
-            print("FINAL SYNTHESIS")
-            print("="*60)
-            
-            return final_response, None, original_data
+                # Add statistical summary if numeric fields detected
+                if records:
+                    numeric_fields = []
+                    for field, value in records[0].items():
+                        if isinstance(value, (int, float)):
+                            numeric_fields.append(field)
+                    summary["numeric_fields"] = numeric_fields
+            else:
+                summary.update({
+                    "data_structure": "API response with non-array data",
+                    "data_type": type(records).__name__
+                })
         else:
-            return response, None, {}
+            summary.update({
+                "top_level_keys": list(data.keys()),
+                "data_structure": "Dictionary without standard API structure"
+            })
+    else:
+        summary.update({
+            "data_structure": "Non-dictionary data",
+            "data_preview": str(data)[:200] + "..." if len(str(data)) > 200 else str(data)
+        })
+    
+    return summary
+
+def estimate_token_count(text: str) -> int:
+    """Rough estimation of token count (approximately 4 characters per token)"""
+    return len(text) // 4
+
+def research_assistant(user_message: str, task: str, conversation_history: Optional[List] = None, 
+                              vector_id: Optional[str] = None):
+    """
+    Enhanced research assistant with complete data preservation capabilities
+    """
+    if conversation_history is None:
+        conversation_history = []
+    
+    # Initialize data preservation manager
+    preservation_manager = DataPreservationManager()
+    
+    # Add the user's new message to the conversation
+    conversation_history.append({"role": "user", "content": user_message})
+    
+    # Prepare tools array (assuming these are defined elsewhere)
+    tools_to_use = []
+    tools_to_use.extend(globaldata_tools)  # Your existing tools
+    
+    if vector_id:
+        file_search_tool = {
+            "type": "file_search",
+            "vector_store_ids": [vector_id],
+            "max_num_results": 10
+        }
+        tools_to_use.append(file_search_tool)
+    
+    try:
+        # Get initial response
+        response = client.responses.create(
+            model="gpt-4o",
+            instructions=prompt,
+            input=conversation_history,
+            tools=tools_to_use,
+            parallel_tool_calls=True,
+            include=["file_search_call.results"],
+        )
+                
+        # Process tool calls with preservation
+        if response.output and isinstance(response.output, list):
+            tool_calls = [item for item in response.output if hasattr(item, 'type') and item.type in ['function_call', 'file_search_call']]
+            
+            if tool_calls:
+                preserved_data_map = {}
+                ai_summaries = {}
+                
+                # Add tool calls to conversation history
+                for tool_call in tool_calls:
+                    conversation_history.append(tool_call)
+                
+                # Execute tool calls with preservation
+                for tool_call in tool_calls:
+                    try:
+                        if tool_call.type == 'function_call':
+                            function_name = tool_call.name
+                            function_args = json.loads(tool_call.arguments)
+                            print(f"Calling Tool: {function_name}")
+                            # Execute the function
+                            original_result = FUNCTION_MAPPING[function_name](**function_args)
+                            
+                            # Generate unique ID for this data
+                            data_id = preservation_manager.generate_data_id(function_name, function_args)
+                            
+                            # Preserve original data
+                            preservation_info = preservation_manager.preserve_original_data(
+                                data_id, function_name, original_result
+                            )
+                                                        
+                            # Prepare truncated data for context
+                            truncated_result = prepare_data_for_context_with_preservation(
+                                original_result, preservation_info
+                            )
+                            
+                            
+                            # Store preservation mapping
+                            preserved_data_map[function_name] = {
+                                "data_id": data_id,
+                                "original_data": original_result,
+                                "preservation_info": preservation_info
+                            }
+                            
+                            # Add truncated result to conversation
+                            conversation_history.append({
+                                "type": "function_call_output",
+                                "call_id": tool_call.call_id,
+                                "output": json.dumps(truncated_result, default=str)
+                            })
+                            
+                            # Generate AI summary using original data
+                            ai_summary = generate_summary(function_name, original_result, preservation_info, user_message, task)
+                            ai_summaries[function_name] = ai_summary
+                            
+                        elif tool_call.type == 'file_search_call':
+                            # Handle file search calls
+                            function_name = f"file_search_{tool_call.id}"
+                            print(f"Calling Tool: {function_name}")
+                            search_results = {
+                                "tool_call_id": tool_call.id,
+                                "type": "file_search",
+                                "status": tool_call.status,
+                                "queries": tool_call.queries,
+                                "results": tool_call.results
+                            }
+                            
+                            # Preserve file search results too
+                            data_id = preservation_manager.generate_data_id(function_name, {"query": str(tool_call.queries)})
+                            preservation_info = preservation_manager.preserve_original_data(
+                                data_id, function_name, search_results
+                            )
+                            
+                            preserved_data_map[function_name] = {
+                                "data_id": data_id,
+                                "original_data": search_results,
+                                "preservation_info": preservation_info
+                            }
+
+                            formatted_data = extract_and_format_data(tool_call.results)
+                            print(formatted_data)
+                            ai_summary = generate_summary(function_name, formatted_data, preservation_info, user_message, task)
+                            ai_summaries[function_name] = ai_summary
+                    
+                    except Exception as e:
+                        print(f"Error executing tool call: {e}")
+                        if tool_call.type == 'function_call':
+                            conversation_history.append({
+                                "type": "function_call_output",
+                                "call_id": tool_call.call_id,
+                                "output": json.dumps({"error": str(e)})
+                            })
+                
+                # Enhanced final response with preservation awareness
+                enhanced_instructions = """
+                You are a pharmaceutical data analyst with access to complete preserved data. 
+                Synthesize the tool results into a comprehensive response. 
+                
+                Important notes:
+                - All original data has been completely preserved and can be accessed if needed
+                - Some data in the context may be truncated for token management
+                - When you see truncation markers or preservation IDs, acknowledge that complete data is available
+                - Provide analysis based on available data but mention data preservation capabilities
+                
+                Always mention if data was truncated and that complete analysis can be performed on the preserved data.
+                """
+                
+                try:
+                    final_response = client.responses.create(
+                        model="gpt-4o",
+                        instructions=enhanced_instructions,
+                        input=conversation_history,
+                        tools=tools_to_use,
+                    )
+                except Exception as e:
+                    if "maximum context length" in str(e).lower() or "token" in str(e).lower():
+                        print(f"Token limit exceeded, using reduced context: {e}")
+                        reduced_history = conversation_history[-10:]
+                        final_response = client.responses.create(
+                            model="gpt-4o",
+                            instructions=enhanced_instructions,
+                            input=reduced_history,
+                            tools=tools_to_use,
+                        )
+                    else:
+                        raise e
+                
+                # Enhanced results display
+                display_enhanced_results_summary(preserved_data_map, ai_summaries, user_message, preservation_manager)
+                
+                return final_response.output_text, conversation_history, preserved_data_map
+            
+            else:
+                return response.output_text, conversation_history, {}
+        
+        else:
+            return "No response output received", conversation_history, {}
             
     except Exception as e:
-        print(f"Error calling OpenAI API: {e}")
-        return None, None, original_data
+        print(f"Error in enhanced research assistant: {e}")
+        return f"Error: {str(e)}", conversation_history, {}
 
-def generate_ai_summary(function_name, data):
-    """Generate AI summary of the original data"""
-    try:
-        # Prepare the data for analysis
-        if isinstance(data, dict) and 'data' in data:
-            api_data = data['data']
-            endpoint = data.get('endpoint', function_name)
-            
-            # Create a structured prompt for analysis
-            analysis_prompt = f"""
-            Analyze the following pharmaceutical data from {endpoint}:
-            
-            Data Structure: {type(api_data).__name__}
-            
-            """
-            
-            # Add data sample for analysis
-            if isinstance(api_data, dict) and 'data' in api_data and isinstance(api_data['data'], list):
-                records = api_data['data']
-                analysis_prompt += f"""
-                Total Records: {len(records)}
-                
-                Sample Data (first 3 records):
-                {json.dumps(records[:3], indent=2, default=str)}
-                
-                Please provide a concise analysis of this data including:
-                1. Key insights from the data
-                2. Notable patterns or trends
-                3. Important findings relevant to pharmaceutical research
-                4. Data quality and completeness assessment
-                
-                Keep the summary under 200 words and focus on actionable insights.
-                """
-            else:
-                analysis_prompt += f"""
-                Data Content:
-                {json.dumps(api_data, indent=2, default=str)[:1000]}...
-                
-                Please provide a concise analysis of this pharmaceutical data including key insights and findings.
-                Keep the summary under 200 words.
-                """
-        else:
-            analysis_prompt = f"""
-            Analyze the following data from {function_name}:
-            {json.dumps(data, indent=2, default=str)[:1000]}...
-            
-            Provide a brief analysis under 200 words.
-            """
+def display_enhanced_results_summary(preserved_data_map: Dict, ai_summaries: Dict, 
+                                   original_query: str, preservation_manager: DataPreservationManager):
+    """Display enhanced results summary with preservation information"""
+    print("\n" + "="*80)
+    print("ENHANCED DATA PRESERVATION SUMMARY")
+    print(f"Tools Used: {len(preserved_data_map)}")
+    
+    for i, (function_name, preservation_data) in enumerate(preserved_data_map.items(), 1):
+        print(f"\n--- Tool {i}: {function_name} ---")
         
-        # Generate AI summary
+        preservation_info = preservation_data["preservation_info"]
+                
+        # Show AI summary
+        ai_summary = ai_summaries.get(function_name, "Summary not available")
+        print(f"Research Summary: {ai_summary}")
+        
+        print("-" * 60)
+    
+    print(f"Preserved Data IDs: {preservation_manager.get_all_preserved_data_ids()}")
+    print("="*80)
+
+def generate_summary(function_name: str, original_data: Any, preservation_info: Dict, user_message: str, task:str) -> str:
+    """Generate enhanced AI summary with preservation awareness"""
+    try:
+        if isinstance(original_data, str):
+            analysis_prompt = f"""
+            This JSON data represents research data obtained either from the GlobalData API or from a local file, depending on the source specified as '{function_name}'. The research has been conducted to address the user-defined task, which includes a main query and may also include one or more subqueries.
+
+            Your objective is to analyze the research data provided below and generate a comprehensive summary that answers the main query and its subqueries, using only the information present in this research data.
+
+
+            User Task (Query/Subqueries):
+            {task}
+
+            Research Data Snapshot:
+            {original_data}
+            
+            Instructions:
+            - Use only the provided research data to answer the query/subqueries.
+            - Clearly structure the response so it covers each query and subquery aspect.
+            - Mention "{function_name}" as the source in the final summary.
+
+            Begin your summary below:
+            """
+        else:
+        # Use original data for comprehensive analysis
+            if isinstance(original_data, dict) and 'data' in original_data:
+                api_data = original_data['data']
+                endpoint = original_data.get('endpoint', function_name)
+                
+                analysis_prompt = f"""
+                This JSON data represents research data obtained either from the GlobalData API or from a local file, depending on the source specified as '{function_name}'. The research has been conducted to address the user-defined task, which includes a main query and may also include one or more subqueries.
+
+                Your objective is to analyze the research data provided below and generate a comprehensive summary that answers the main query and its subqueries, using only the information present in this research data.
+
+                Research Data Source: {function_name}
+
+                User Task (Query/Subqueries):
+                {task}
+
+                Research Data Snapshot:
+                {json.dumps(api_data, indent=2, default=str)[:2000]}...
+
+                Instructions:
+                - Use only the provided research data to answer the query/subqueries.
+                - Clearly structure the response so it covers each query and subquery aspect.
+                - Mention "{function_name}" as the source in the final summary.
+
+                Begin your summary below:
+                """
+
+            else:
+                analysis_prompt = f"""
+                This JSON data represents research data obtained either from the GlobalData API or from a local file, depending on the source specified as '{function_name}'. The research has been conducted to address the user-defined task, which includes a main query and may also include one or more subqueries.
+
+                Your objective is to analyze the research data provided below and generate a comprehensive summary that answers the main query and its subqueries, using only the information present in this research data.
+
+                Research Data Source: {function_name}
+
+                User Task (Query/Subqueries):
+                {task}
+
+                Research Data Snapshot:
+                {json.dumps(api_data, indent=2, default=str)[:2000]}...
+
+                Instructions:
+                - Use only the provided research data to answer the query/subqueries.
+                - Clearly structure the response so it covers each query and subquery aspect.
+                - Mention "{function_name}" as the source in the final summary.
+
+                Begin your summary below:
+                    """
+        
+        # Generate comprehensive summary
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a pharmaceutical data analyst. Provide concise, insightful analysis of pharmaceutical data."},
+                {"role": "system", "content": "You are a pharmaceutical data analyst with access to complete preserved datasets. Provide comprehensive analysis."},
                 {"role": "user", "content": analysis_prompt}
             ],
-            max_tokens=300,
+            max_tokens=3000,
             temperature=0.3
         )
         
         return response.choices[0].message.content.strip()
         
     except Exception as e:
-        print(f"Error generating AI summary for {function_name}: {e}")
-        return f"AI summary generation failed for {function_name}"
-    """Process file search tool calls"""
-    summaries = []
-    
-    for tool_call in file_search_calls:
-        function_name = f"file_search_{tool_call.id}"
-        
-        # File search results are typically in the tool_call response
-        # You might need to extract the actual search results based on your implementation
-        search_results = {
-            "tool_call_id": tool_call.id,
-            "type": "file_search",
-            "results": "File search completed"  # This would contain actual search results
-        }
-        
-        original_data[function_name] = search_results
-        
-        summary = {
-            "status": "success",
-            "function": function_name,
-            "summary": f"File search completed with tool call ID: {tool_call.id}"
-        }
-        summaries.append(summary)
-    
-    return summaries
+        print(f"Error generating enhanced AI summary: {e}")
+        return f"Comprehensive analysis available for preserved data (ID: {preservation_info['data_id']})"
 
-def display_original_data(data):
-    """Display original data in a readable format"""
-    if isinstance(data, dict):
-        # Check if this is a file search result
-        if data.get('type') == 'file_search':
-            print("File Search Results:")
-            print(f"Tool Call ID: {data.get('tool_call_id', 'Unknown')}")
-            print(f"Status: {data.get('status', 'Unknown')}")
-            
-            if 'results' in data:
-                results = data['results']
-                if isinstance(results, list):
-                    print(f"Number of results found: {len(results)}")
-                    for i, result in enumerate(results[:3]):  # Show first 3 results
-                        print(f"  Result {i+1}: {result}")
-                else:
-                    print(f"Results: {results}")
-            
-            if 'ranking_options' in data:
-                print(f"Ranking Options: {data['ranking_options']}")
-            
-            if 'error' in data:
-                print(f"Error: {data['error']}")
+# Utility functions for data retrieval
+def get_complete_analysis(data_id: str, preservation_manager: DataPreservationManager, user_message: str, task: str) -> str:
+    """Get complete analysis of preserved data"""
+    preserved_data = preservation_manager.get_original_data(data_id)
+    if preserved_data:
+        original_data = preserved_data["original_data"]
+        preservation_info = preserved_data["preservation_info"]
         
-        # Check if this is your API response format with 'data' key
-        elif 'data' in data:
-            api_data = data['data']
-            
-            # Show metadata first
-            print(f"Endpoint: {data.get('endpoint', 'Unknown')}")
-            print(f"Timestamp: {data.get('timestamp', 'Unknown')}")
-            print(f"Parameters Used: {data.get('params_used', {})}")
-            print()
-            
-            # Now show the actual data content
-            if isinstance(api_data, dict):
-                if 'data' in api_data and isinstance(api_data['data'], list):
-                    # Handle nested data structure
-                    actual_records = api_data['data']
-                    print(f"Total Records: {len(actual_records)}")
-                    
-                    if actual_records:
-                        print(f"Sample Record Fields: {list(actual_records[0].keys())}")
-                        print("\nFirst 3 Records:")
-                        for j, record in enumerate(actual_records[:3]):
-                            print(f"  Record {j+1}:")
-                            for key, value in record.items():
-                                # Truncate long values for readability
-                                if isinstance(value, str) and len(value) > 100:
-                                    value = value[:100] + "..."
-                                print(f"    {key}: {value}")
-                            print()
-                        
-                        if len(actual_records) > 3:
-                            print(f"... and {len(actual_records) - 3} more records")
-                    else:
-                        print("No data records found")
-                else:
-                    # Handle other data structures within 'data'
-                    print("Data Content:")
-                    for key, value in api_data.items():
-                        if isinstance(value, list):
-                            print(f"  {key}: List with {len(value)} items")
-                            if value and len(value) > 0:
-                                print(f"    Sample items: {value[:2]}")
-                        elif isinstance(value, dict):
-                            print(f"  {key}: Dict with {len(value)} keys")
-                            print(f"    Keys: {list(value.keys())}")
-                        else:
-                            print(f"  {key}: {value}")
-            else:
-                print(f"Data Content: {api_data}")
-        else:
-            # Display other dict structures
-            print("Data Structure:")
-            for key, value in data.items():
-                if isinstance(value, (list, dict)):
-                    print(f"  {key}: {type(value).__name__} with {len(value) if hasattr(value, '__len__') else 'N/A'} items")
-                    if isinstance(value, list) and value:
-                        print(f"    Sample: {value[0]}")
-                    elif isinstance(value, dict) and value:
-                        print(f"    Keys: {list(value.keys())}")
-                else:
-                    print(f"  {key}: {value}")
-    else:
-        print(f"Data Type: {type(data).__name__}")
-        print(f"Data: {data}")
+        return generate_summary(
+            preservation_info["function_name"], 
+            original_data, 
+            preservation_info,
+            user_message,
+            task
+        )
+    return "Data not found"
 
-def create_data_summary(data, function_name):
-    """Create a concise summary of API data for OpenAI processing"""
-    if isinstance(data, dict):
-        # Handle your API response format
-        if 'data' in data:
-            api_data = data['data']
-            endpoint = data.get('endpoint', function_name)
-            
-            if isinstance(api_data, dict) and 'data' in api_data and isinstance(api_data['data'], list):
-                # Nested data structure
+def export_preserved_data(data_id: str, preservation_manager: DataPreservationManager, 
+                         export_format: str = "json") -> str:
+    """Export preserved data in specified format"""
+    preserved_data = preservation_manager.get_original_data(data_id)
+    if not preserved_data:
+        return "Data not found"
+    
+    original_data = preserved_data["original_data"]
+    
+    if export_format == "json":
+        filename = f"exported_data_{data_id}.json"
+        with open(filename, 'w') as f:
+            json.dump(original_data, f, indent=2, default=str)
+        return f"Data exported to {filename}"
+    
+    elif export_format == "csv":
+        # Handle CSV export for tabular data
+        if isinstance(original_data, dict) and 'data' in original_data:
+            api_data = original_data['data']
+            if isinstance(api_data, dict) and 'data' in api_data:
                 records = api_data['data']
-                return {
-                    "status": "success",
-                    "function": function_name,
-                    "endpoint": endpoint,
-                    "total_records": len(records),
-                    "sample_fields": list(records[0].keys()) if records else [],
-                    "summary": f"Retrieved {len(records)} records from {endpoint} via {function_name}"
-                }
-            elif isinstance(api_data, dict):
-                # Other data structures
-                return {
-                    "status": "success",
-                    "function": function_name,
-                    "endpoint": endpoint,
-                    "data_keys": list(api_data.keys()),
-                    "summary": f"Retrieved structured data from {endpoint} via {function_name}"
-                }
-            else:
-                return {
-                    "status": "success",
-                    "function": function_name,
-                    "endpoint": endpoint,
-                    "summary": f"Retrieved data from {endpoint} via {function_name}"
-                }
-        else:
-            # Standard dict structure
-            return {
-                "status": "success",
-                "function": function_name,
-                "keys": list(data.keys()),
-                "summary": f"Data retrieved from {function_name}"
-            }
-    else:
-        return {
-            "status": "success",
-            "function": function_name,
-            "summary": f"Data retrieved from {function_name} - {type(data).__name__}"
-        }
+                if isinstance(records, list) and records:
+                    import pandas as pd
+                    df = pd.DataFrame(records)
+                    filename = f"exported_data_{data_id}.csv"
+                    df.to_csv(filename, index=False)
+                    return f"Data exported to {filename}"
+        return "Data format not suitable for CSV export"
     
-def process_tool_call_batch(tool_calls, original_data):
-    """Process a batch of function tool calls"""
-    summaries = []
-    
-    for tool_call in tool_calls:
-        function_name = tool_call.function.name
-        function_args = json.loads(tool_call.function.arguments)
-        
-        if function_name in FUNCTION_MAPPING:
-            function_result = FUNCTION_MAPPING[function_name](**function_args)
-            original_data[function_name] = function_result
-            
-            summary = create_data_summary(function_result, function_name)
-            summaries.append(summary)
-    
-    return summaries
-
-def synthesize_results(original_query, summaries):
-    """Create final synthesis from summaries"""
-    synthesis_prompt = f"""
-    Original query: {original_query}
-    
-    Data summaries from API calls:
-    {json.dumps(summaries, indent=2)}
-    
-    Please provide a comprehensive analysis based on the data summaries above.
-    """
-    
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a pharmaceutical data analyst. Synthesize the API data summaries into a comprehensive response."},
-            {"role": "user", "content": synthesis_prompt}
-        ],
-        max_tokens=4000
-    )
-    
-    return response
-
-
-# Test the implementation
-if __name__ == "__main__":
-    query = """My company is evaluating the opportunity for a high dose once monthly injectable GLP-1/GIP/Glucagon receptor triple agonist for long-term weight loss maintenance therapy for obesity. Evaluate the market opportunity and unmet need for long-term obesity maintenance therapies. Focus on segmentation across the following axes:
-                • BMI categories: Class I (30–35), Class II (35–40), Class III (≥40)
-                • Patient subgroups: with vs. without Type 2 diabetes, prior bariatric surgery, responders vs. non-responders to induction therapy
-                • Current standard of care and limitations (e.g., semaglutide, tirzepatide, lifestyle adherence, drop-off rates after weight loss plateau)
-                • Pipeline therapies explicitly being developed or positioned for maintenance (vs. induction), including mechanisms (e.g., amylin analogs, GLP-1/GIP modulators, FGF21 analogs, etc.)
-                • Real-world adherence data and discontinuation drivers post-weight loss
-                • Expected commercial segmentation: e.g., how payers and physicians differentiate between induction and maintenance use (pricing, access hurdles)
-                • Sales forecasts for therapies with long-term administration profiles (≥12 months)
-                • Competitive positioning of novel candidates offering less frequent dosing, improved tolerability, or weight regain prevention efficacy
-    """
-    research_plan = """
-        {
-    "ResearchObjectiveAndScope": {
-        "PrimaryResearchQuestion": "What is the market opportunity and unmet need for long-term obesity maintenance therapies, specifically for a high dose once monthly injectable GLP-1/GIP/Glucagon receptor triple agonist, across varied patient subgroups and BMI categories?",
-        "SuccessCriteriaAndDeliverables": "• A comprehensive segmentation analysis by BMI, diabetes status, prior bariatric surgery, and response to induction therapy.  • Identification of current standard of care limitations and a detailed mapping of pipeline therapies positioned for maintenance.  • Validated sales forecasts and competitive positioning data from internal and GlobalData sources.  • A final report with integrated data insights, charts, and documented cross-validations among multiple datasets.",
-        "TimelineAndResourceNeeds": "The research is estimated to span 4–6 weeks, requiring access to internal knowledge bases, GlobalData pharmaceutical, deals, clinical trials, patent, and competitive intelligence APIs, and a team including a research strategist, data analyst, and subject matter experts in obesity and metabolic therapies."
-    },
-    "PhaseByPhaseResearchStrategy": {
-        "Phase1_KnowledgeBaseAnalysis": {
-        "Objective": "Leverage internal documents and previous research files to collect baseline data on long-term obesity maintenance strategies, patient segmentation, and competitive therapies.",
-        "FileSearchStrategy": {
-            "ExactSearchTerms": [
-            "long-term weight loss maintenance",
-            "obesity BMI segmentation",
-            "GLP-1/GIP/Glucagon receptor triple agonist",
-            "obesity maintenance therapy",
-            "real-world adherence weight loss"
-            ],
-            "QueryPatterns": "Combine key phrases with Boolean operators (AND/OR) to locate relevant slides and documents (e.g., 'pipeline AND obesity maintenance', 'semaglutide OR tirzepatide AND weight loss plateau')"
-        },
-        "KeywordsAndQueryPatterns": {
-            "PrimarySubQuery": "What is the current market opportunity and unmet need for long-term obesity maintenance therapies across BMI categories and patient subsegments?",
-            "ComprehensiveSubQuery": "How do patient segmentation (by BMI class, diabetes presence, prior bariatric surgery, and response to induction therapy), current standard of care limitations (including dropout rates and lifestyle adherence challenges), and competitive pipeline asset profiles (mechanisms, dosing frequency, tolerability) collectively determine the commercial prospects for a once monthly injectable triple agonist therapy for obesity maintenance?",
-            "KeywordsForGlobalDataAPICalls": [
-            "obesity",
-            "Type 2 diabetes",
-            "GLP-1/GIP/Glucagon",
-            "BMI segmentation",
-            "weight loss maintenance"
-            ]
-        },
-        "Rationale": "This phase ensures that all internal data, historical research, and previously identified insights are gathered to form a baseline understanding. It aligns with user insights by covering multiple segmentation axes and clinical endpoints relevant to the market and competitive landscape of obesity maintenance therapies."
-        },
-        "Phase2_GlobalDataIntelligenceCollection": {
-        "Overview": "Utilize GlobalData APIs to extract, filter, and analyze data on pipeline therapies, clinical trials, deals, patents, and competitive positioning in the obesity treatment space with a focus on long-term maintenance.",
-        "APICollectionStrategy": {
-            "PipelineIntelligence": {
-            "APIEndpoint": "Pharma Intelligence API",
-            "Filters": {
-                "Indication": "obesity / weight loss",
-                "MoleculeType": "triple agonist, GLP-1/GIP/Glucagon",
-                "TherapyProfile": "maintenance vs induction",
-                "TimeFrame": "latest 5–10 years"
-            },
-            "FileSearchQueries": "Search internal files for tables/graphs on pipeline programs and slide references (e.g., Slide 6 & 7) to extract MoA and target details."
-            },
-            "DealIntelligence": {
-            "APIEndpoint": "Deals Intelligence API",
-            "Filters": {
-                "DealType": "acquisitions, in-licensing, option agreements, collaborations",
-                "AssetFocus": "obesity, weight loss, metabolic therapies",
-                "DataPoints": "licensing terms, exercised options, remaining rights"
-            },
-            "FileSearchQueries": "Use internal documents (referenced in Fundamental Intelligence > Deals) to cross-check partnership and deal details."
-            },
-            "ClinicalIntelligence": {
-            "APIEndpoint": "Clinical Trials Intelligence API",
-            "Filters": {
-                "Indication": "obesity, weight management",
-                "StudyDuration": "long-term (≥12 months)",
-                "PatientSubgroups": "BMI classes, diabetes status, prior bariatric surgery"
-            },
-            "FileSearchQueries": "Identify slides detailing trial designs, endpoints, and patient population characteristics (e.g., Slide 10 and trial design documents)."
-            },
-            "PatentIntelligence": {
-            "APIEndpoint": "Patent Intelligence API",
-            "Filters": {
-                "Keywords": "GLP-1, triple agonist, obesity maintenance",
-                "Jurisdictions": "global, with focus on major markets (US, EU, China)",
-                "Status": "active patents and expiry dates"
-            }
-            },
-            "CompetitiveIntelligence": {
-            "APIEndpoint": "Competitive Intelligence API",
-            "Filters": {
-                "SearchParameter": "target-based search using MoA details",
-                "MarketComparison": "pipeline and marketed assets for obesity and weight loss",
-                "Differentiators": "dosing frequency, tolerability, weight regain prevention efficacy"
-            }
-            }
-        }
-        },
-        "Phase3_DataIntegrationAndCrossValidation": {
-        "Objective": "Integrate internal file findings with GlobalData API outputs to validate trends, identify data gaps, and ensure consistency across multiple data sources.",
-        "CrossValidationLogic": {
-            "InternalVsAPI": "Match key metrics and trends (e.g., patient segmentation breakdown, sales forecasts, and competitive differentiators) between internal documents and GlobalData API outputs.",
-            "DealTermsValidation": "Confirm licensing terms and deal structures by comparing Deals Intelligence API data with internal partnership documents.",
-            "ClinicalProgressValidation": "Cross-check trial designs, endpoints, and patient subgroup data from the Clinical Trials Intelligence API with internal clinical strategy documents.",
-            "DataGapIdentification": "Highlight discrepancies or missing data points for additional research or follow-up queries."
-        },
-        "ResourceAndIntegrationApproach": "Use data integration tools (e.g., spreadsheets, data visualization software) to map API outputs with internal findings; ensure iterative review meetings with subject matter experts for decision validation."
-        }
-    },
-    "SpecificResearchStrategies": {
-        "PrimarySubQuery": "What is the current market opportunity and unmet need for long-term obesity maintenance therapies across BMI categories and patient subsegments?",
-        "ComprehensiveSubQuery": "How do factors such as BMI segmentation (Class I: 30–35, Class II: 35–40, Class III: ≥40), patient subgroup differences (with vs. without Type 2 diabetes, prior bariatric surgery, responders vs. non-responders), limitations with current standard of care (e.g., semaglutide, tirzepatide, lifestyle adherence issues), and the competitive pipeline (including novel maintenance-focused mechanisms) inform the potential commercial success of a once monthly injectable GLP-1/GIP/Glucagon receptor triple agonist?",
-        "GlobalDataAPICallKeywords": [
-        "obesity",
-        "Type 2 diabetes",
-        "GLP-1/GIP/Glucagon",
-        "BMI segmentation",
-        "weight loss maintenance"
-        ],
-        "Rationale": "This research strategy is tailored to capture both the clinical and commercial nuances of long-term weight loss maintenance therapies. It aligns with user insights by integrating detailed pipeline, partnership, target, competitive, epidemiological, market, clinical trial, and deal analyses, thereby ensuring that all axes of market segmentation and pipeline dynamics are thoroughly examined."
-    }
-    }
-"""
-
-    user_content = f"""
-    **User Query:** {query}
-
-    **Research Plan:** {research_plan}
-
-
-    Please analyze the user query and use the appropriate GlobalData API tools to gather comprehensive information about AbbVie's oncology pipeline, particularly focusing on NSCLC, SCLC, and CRC programs.
-    """
-
-    print("Making API call...")
-    final_response, _, original_data = call_globaldata_api(user_content)
-    
-    # print(final_response)
-    # print(original_data)
+    return "Unsupported export format"
