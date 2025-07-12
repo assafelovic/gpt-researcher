@@ -39,7 +39,7 @@ requests = ">=2.31.0"
 SQLAlchemy = ">=2.0.28"
 tavily-python = ">=0.2.8"
 tiktoken = ">=0.7.0"
-unstructured = ">=0.13"
+unstructured = ">=0.13,<0.19"
 uvicorn = ">=0.24.0.post1"
 websockets = "^13.1"
 # Model Context Protocol support
