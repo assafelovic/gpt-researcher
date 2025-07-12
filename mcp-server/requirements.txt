@@ -1,0 +1,11 @@
+
+
+# GPT Researcher dependencies
+# MCP dependencies
+# Utility dependencies
+fastapi>=0.103.1
+loguru>=0.7.0
+mcp>=1.6.0
+pydantic>=2.3.0
+python-dotenv
+uvicorn>=0.23.2

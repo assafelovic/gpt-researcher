@@ -5,7 +5,7 @@ from gpt_researcher import GPTResearcher
 
 from langchain.text_splitter import CharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS, InMemoryVectorStore
 from langchain_core.documents import Document
 
 
@@ -73,7 +73,7 @@ Which leads to our fifth quality: there needs to be some overall goal. If you're
 
 So in practice your energy and imagination and resilience and good judgement have to be directed toward some fairly specific goal. Not too specific, or you might miss a great discovery adjacent to what you're searching for, but not too general, or it won't work to motivate you. [6]
 
-When you look at the internal structure of persistence, it doesn't resemble obstinacy at all. It's so much more complex. Five distinct qualities — energy, imagination, resilience, good judgement, and focus on a goal — combine to produce a phenomenon that seems a bit like obstinacy in the sense that it causes you not to give up. But the way you don't give up is completely different. Instead of merely resisting change, you're driven toward a goal by energy and resilience, through paths discovered by imagination and optimized by judgement. You'll give way on any point low down in the decision tree, if its expected value drops sufficiently, but energy and resilience keep pushing you toward whatever you chose higher up.
+When you look at the internal structure of persistence, it doesn't resemble obstinacy at all. It's so much more complex. Five distinct qualities — energy, imagination, resilience, good judgement, and focus on a goal — combine to produce a phenomenon that seems a bit like obstinacy in the sense that it causes you not to give up. But the way you don't give up is completely different. Instead of merely resisting change, you're driven toward a goal by energy and resilience, through paths discovered by imagination and optimized by judgement. You'll give way on any point low down in the decision tree, if its expected value drops sufficiently, but energy and resilience keep pushing you toward whatever you choose higher up.
 
 Considering what it's made of, it's not surprising that the right kind of stubbornness is so much rarer than the wrong kind, or that it gets so much better results. Anyone can do obstinacy. Indeed, kids and drunks and fools are best at it. Whereas very few people have enough of all five of the qualities that produce the right kind of stubbornness, but when they do the results are magical.
 
@@ -97,6 +97,17 @@ Notes
 
 [6] Start by erring on the small side. If you're inexperienced you'll inevitably err on one side or the other, and if you err on the side of making the goal too broad, you won't get anywhere. Whereas if you err on the small side you'll at least be moving forward. Then, once you're moving, you expand the goal.
 """
+
+
+def load_document():
+    document = [Document(page_content=essay)]
+    text_splitter = CharacterTextSplitter(chunk_size=200, chunk_overlap=30, separator="\n")
+    return text_splitter.split_documents(documents=document)
+
+
+def create_vectorstore(documents: List[Document]):
+    embeddings = OpenAIEmbeddings()
+    return FAISS.from_documents(documents, embeddings)
 
 @pytest.mark.asyncio
 async def test_gpt_researcher_with_vector_store():
@@ -127,13 +138,99 @@ async def test_gpt_researcher_with_vector_store():
 
     assert report is not None
 
+@pytest.mark.asyncio
+async def test_store_in_vector_store_web():
+    vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
+    query = "Which one is the best LLM"
 
-def load_document():
-    document = [Document(page_content=essay)]
-    text_splitter = CharacterTextSplitter(chunk_size=200, chunk_overlap=30, separator="\n")
-    return text_splitter.split_documents(documents=document)
+    researcher = GPTResearcher(
+        query=query,
+        report_type="research_report",
+        report_source="web",
+        vector_store=vector_store,
+    )
+
+    await researcher.conduct_research()
+
+    related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
+
+    assert len(related_contexts) == 2
+    # Add more assertions as needed to verify the results
 
 
-def create_vectorstore(documents: List[Document]):
-    embeddings = OpenAIEmbeddings()
-    return FAISS.from_documents(documents, embeddings)
+@pytest.mark.asyncio
+async def test_store_in_vector_store_urls():
+    vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
+    query = "Who won the world cup in 2022"
+
+    researcher = GPTResearcher(
+        query=query,
+        report_type="research_report",
+        vector_store=vector_store,
+        source_urls=["https://en.wikipedia.org/wiki/FIFA_World_Cup"]
+    )
+
+    await researcher.conduct_research()
+
+    related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
+
+    assert len(related_contexts) == 2
+
+
+@pytest.mark.asyncio
+async def test_store_in_vector_store_langchain_docs():
+    vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
+    docs = load_document()
+    query = "What does successful people tend to do?"
+
+    researcher = GPTResearcher(
+        query=query,
+        report_type="research_report",
+        vector_store=vector_store,
+        report_source="langchain_documents",
+        documents=docs
+    )
+
+    await researcher.conduct_research()
+
+    related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
+
+    assert len(related_contexts) == 2
+
+@pytest.mark.asyncio
+async def test_store_in_vector_store_locals():
+    vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
+    query = "What is transformer?"
+
+    researcher = GPTResearcher(
+        query=query,
+        report_type="research_report",
+        vector_store=vector_store,
+        report_source="local",
+        config_path= "test_local"
+    )
+
+    await researcher.conduct_research()
+
+    related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
+
+    assert len(related_contexts) == 2
+
+@pytest.mark.asyncio
+async def test_store_in_vector_store_hybrids():
+    vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
+    query = "What is transformer?"
+    
+    researcher = GPTResearcher(
+        query=query,
+        report_type="research_report",
+        vector_store=vector_store,
+        report_source="hybrid",
+        config_path= "test_local"
+    )
+    
+    await researcher.conduct_research()
+    
+    related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
+    
+    assert len(related_contexts) == 2

@@ -1,0 +1,121 @@
+{
+    "Workspace_Formatter.excludePattern": [
+        "**/build",
+        "**/.*",
+        "**/.vscode",
+        "**/html"
+    ],
+    "[markdown]": {
+        "editor.defaultFormatter": "yzhang.markdown-all-in-one",
+        "editor.formatOnSave": false,
+        "files.trimTrailingWhitespace": false
+    },
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "never"
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": false,
+        "editor.formatOnType": false
+    },
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml",
+        "editor.formatOnSave": true,
+    },
+    "[yaml]": {
+        "editor.defaultFormatter": "kennylong.kubernetes-yaml-formatter",
+        "editor.formatOnSave": false,
+    },
+    "autoDocstring.generateDocstringOnEnter": true,
+    "autoDocstring.quoteStyle": "'''",
+    "better-comments.tags": [
+        {
+            "color": "#F8C471",
+            "tag": "XXX"
+        },
+        {
+            "color": "#FF6961",
+            "tag": "WARN"
+        },
+        {
+            "color": "#3498DB",
+            "tag": "NOTE"
+        },
+        {
+            "color": "#77C3EC",
+            "tag": "TODO"
+        }
+    ],
+    "black-formatter.importStrategy": "fromEnvironment",
+    "codesnap.showWindowControls": false,
+    "codesnap.shutterAction": "copy",
+    "editor.renderWhitespace": "trailing",
+    "editor.rulers": [
+        120
+    ],
+    "editor.tabSize": 4,
+    "editor.wordWrap": "off",
+    "editor.wordWrapColumn": 120,
+    "errorLens.delay": 1000,
+    "errorLens.enabled": false,
+    "errorLens.enabledDiagnosticLevels": [
+        "error",
+        "warning"
+    ],
+    "explorer.compactFolders": false,
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    "explorer.copyRelativePathSeparator": "/",
+    "files.associations": {
+        "*.pyx": "cython"
+    },
+    "files.autoSave": "onFocusChange",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+    "git.openRepositoryInParentFolders": "always",
+    "isort.check": true,
+    "isort.importStrategy": "fromEnvironment",
+    "jupyter.askForKernelRestart": false,
+    "jupyter.interactiveWindow.creationMode": "perFile",
+    "jupyter.logging.level": "error",
+    "jupyter.themeMatplotlibPlots": true,
+    "markdown.validate.enabled": true,
+    "mypy-type-checker.importStrategy": "fromEnvironment",
+    "notebook.compactView": false,
+    "notebook.diff.ignoreMetadata": true,
+    "notebook.diff.ignoreOutputs": true,
+    "notebook.formatOnSave.enabled": false,
+    "notebook.output.textLineLimit": 20,
+    "python.analysis.autoFormatStrings": true,
+    "python.analysis.autoImportCompletions": false,
+    "python.analysis.completeFunctionParens": false,
+    "python.analysis.logLevel": "Error",
+    "python.createEnvironment.contentButton": "show",
+    "python.languageServer": "Pylance",
+    "python.missingPackage.severity": "Error",
+    "svg.preview.autoOpen": true,
+    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+    "workbench.editorAssociations": {
+        "*.ipynb": "jupyter-notebook",
+        "*.md": "default",
+        "*.svg": "svgPreviewer.customEditor",
+        "*.copilotmd": "markdown-preview-enhanced",
+        "*.ui": "default",
+        "{git,gitlens}:/**/*.ui": "default",
+        "*.docx": "default",
+        "*.pdf": "pdf.preview"
+    },
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "test_*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": true
+}

@@ -1,12 +1,10 @@
 #Ignore env containing secrets
 .env
-.venv
 .envrc
 
 #Ignore Virtual Env
 env/
-venv/
-.venv/
+*venv*
 
 # Other Environments
 ENV/
@@ -41,3 +39,22 @@ package-lock.json
 
 #Vim swp files
 *.swp
+
+# Log files
+logs/
+*.orig
+*.log
+server_log.txt
+
+#Cursor Rules
+.cursorrules
+CURSOR_RULES.md
+/.history
+check_config.py
+check_openrouter.py
+debug_modes.py
+debug_openrouter_loss.py
+debug_token_limits.py
+.buildx-cache
+/llm_debug_logs
+frontend/vercel-nextjs

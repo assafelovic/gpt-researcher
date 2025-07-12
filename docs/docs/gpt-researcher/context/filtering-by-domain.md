@@ -1,24 +1,61 @@
 # Filtering by Domain
 
-If you set Google as a Retriever, you can filter web results by site.
+You can filter web search results by specific domains when using either the Tavily or Google Search retrievers. This functionality is available across all interfaces - pip package, NextJS frontend, and vanilla JS frontend.
 
-For example, set in the query param you pass the GPTResearcher class instance: `query="site:linkedin.com a python web developer to implement my custom gpt-researcher flow"` will limit the results to linkedin.com
+> Note: We welcome contributions to add domain filtering to other retrievers!
 
-> **Step 1** -  Set these environment variables with a .env file in the root folder
+To set Tavily as a retriever, you'll need to set the `RETRIEVER` environment variable to `tavily` and set the `TAVILY_API_KEY` environment variable to your Tavily API key.
 
 ```bash
-TAVILY_API_KEY=
-LANGCHAIN_TRACING_V2=true
-LANGCHAIN_API_KEY=
-OPENAI_API_KEY=
-DOC_PATH=./my-docs
-RETRIEVER=google
-GOOGLE_API_KEY=
-GOOGLE_CX_KEY=
+RETRIEVER=tavily
+TAVILY_API_KEY=your_tavily_api_key
 ```
 
-> **Step 2** -  from the root project run:
+To set Google as a retriever, you'll need to set the `RETRIEVER` environment variable to `google` and set the `GOOGLE_API_KEY` and `GOOGLE_CX_KEY` environment variables to your Google API key and Google Custom Search Engine ID.
 
-docker-compose up -- build
+```bash
+RETRIEVER=google
+GOOGLE_API_KEY=your_google_api_key
+GOOGLE_CX_KEY=your_google_custom_search_engine_id
+```
 
-> **Step 3** -  from the frontend input box in localhost:3000, you can append any google search filter (such as filtering by domain names)
+## Using the Pip Package
+
+When using the pip package, you can pass a list of domains to filter results:
+
+```python
+report = GPTResearcher(
+    query="Latest AI Startups",
+    report_type="research_report",
+    report_source="web",
+    domains=["forbes.com", "techcrunch.com"]
+)
+```
+
+## Using the NextJS Frontend
+
+When using the NextJS frontend, you can pass a list of domains to filter results via the Settings Modal:
+
+![Settings Modal](./img/nextjs-filter-by-domain.JPG)
+
+## Using the Vanilla JS Frontend
+
+When using the Vanilla JS frontend, you can pass a list of domains to filter results via the relevant input field:
+
+![Filter by Domain](./img/vanilla-filter-by-domains.png)
+
+## Filtering by Domain based on URL Param
+
+If you'd like to show off for your work pals how GPTR is the ultra-customizable Deep Research Agent, you can send them a link to your hosted GPTR app with the domain filter included in the URL itself.
+
+This can be handle for demonstrating a proof of concept of the Research Agent tailored to a specific domain. Some examples below:
+
+### Single Domain:
+
+https://app.gptr.dev/?domains=wikipedia.org
+
+### Multiple Domains:
+
+https://app.gptr.dev/?domains=wired.com,forbes.com,wikipedia.org
+
+The `https://app.gptr.dev` part of the URL can be replaces with [the domain that you deployed GPTR on](https://docs.gptr.dev/docs/gpt-researcher/getting-started/linux-deployment).

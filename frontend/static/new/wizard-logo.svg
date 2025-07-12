@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Gradient definitions -->
+  <defs>
+    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9d4edd;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5a189a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="glowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#c77dff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7b2cbf;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#1a1a1a" />
+  <circle cx="256" cy="256" r="220" fill="#232323" />
+  
+  <!-- Outer glow ring -->
+  <circle cx="256" cy="256" r="210" fill="none" stroke="url(#glowGradient)" stroke-width="4" />
+  
+  <!-- Wizard hat -->
+  <path d="M256 100 L340 280 L172 280 Z" fill="url(#purpleGradient)" />
+  <path d="M172 280 L340 280 L310 330 L202 330 Z" fill="#3a0ca3" />
+  
+  <!-- Stars -->
+  <circle cx="210" cy="180" r="6" fill="#c77dff" />
+  <circle cx="290" cy="190" r="4" fill="white" />
+  <circle cx="250" cy="150" r="5" fill="#f0e6ff" />
+  <circle cx="310" cy="230" r="3" fill="#c77dff" />
+  <circle cx="230" cy="220" r="4" fill="white" />
+  
+  <!-- Magic wand -->
+  <line x1="370" y1="180" x2="300" y2="250" stroke="#9d4edd" stroke-width="8" stroke-linecap="round" />
+  <circle cx="380" cy="170" r="12" fill="#f0e6ff" />
+  
+  <!-- Sparkles around wand -->
+  <circle cx="350" cy="200" r="3" fill="white" />
+  <circle cx="365" cy="185" r="2" fill="#c77dff" />
+  <circle cx="390" cy="160" r="3" fill="white" />
+  
+  <!-- Research elements -->
+  <rect x="150" y="350" width="212" height="30" rx="5" fill="url(#purpleGradient)" />
+  <rect x="170" y="390" width="172" height="10" rx="3" fill="#7b2cbf" />
+  <rect x="170" y="410" width="172" height="10" rx="3" fill="#7b2cbf" />
+  <rect x="170" y="430" width="120" height="10" rx="3" fill="#7b2cbf" />
+  
+  <!-- Magnifying glass -->
+  <circle cx="180" cy="250" r="20" fill="none" stroke="#c77dff" stroke-width="6" />
+  <line x1="195" y1="265" x2="220" y2="290" stroke="#c77dff" stroke-width="6" stroke-linecap="round" />
+</svg> 

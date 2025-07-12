@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 interface HumanFeedbackProps {
   websocket: WebSocket | null;
   onFeedbackSubmit: (feedback: string | null) => void;
+  questionForHuman: boolean;
 }
 
 const HumanFeedback: React.FC<HumanFeedbackProps> = ({ questionForHuman, websocket, onFeedbackSubmit }) => {

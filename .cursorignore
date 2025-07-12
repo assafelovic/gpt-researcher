@@ -1,0 +1,51 @@
+#Ignore env containing secrets
+.history
+.env
+.envrc
+
+#Ignore Virtual Env
+env/
+*venv*
+
+# Other Environments
+ENV/
+env.bak/
+venv.bak/
+
+#Ignore generated outputs
+*.lock
+dist/
+gpt_researcher.egg-info/
+
+#Ignore my local docs
+my-docs/
+
+#Ignore pycache
+**/__pycache__/
+
+#Ignore mypy cache
+.mypy_cache/
+node_modules
+.idea
+.DS_Store
+.docusaurus
+build
+docs/build
+.vscode/launch.json
+.langgraph-data/
+.next/
+package-lock.json
+
+#Vim swp files
+*.swp
+
+# Log files
+*.orig
+server_log.txt
+
+#Cursor Rules
+.cursorrules
+CURSOR_RULES.md
+mistralai_models.json
+openai_models.json
+openrouter_models.json

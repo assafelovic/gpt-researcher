@@ -37,13 +37,18 @@ import os
 os.environ['OPENAI_API_KEY'] = 'your_openai_api_key_here'
 os.environ['TAVILY_API_KEY'] = 'your_tavily_api_key_here'
 ```
+Set the environment variable REPORT_SOURCE to an empty string "" in default.py
+## Preparing Documents
 
-## Preparing Local Documents
-
+### 1. Local Documents
 1. Create a directory named `my-docs` in your project folder.
 2. Place all relevant local documents (PDFs, TXTs, DOCXs, etc.) in this directory.
 
-## Running Hybrid Research
+### 2. Online Documents
+1. Here is an example of your online document URL example: https://xxxx.xxx.pdf (supports file formats like PDFs, TXTs, DOCXs, etc.) 
+
+
+## Running Hybrid Research By "Local Documents"
 
 Here's a basic script to run hybrid research:
 
@@ -62,6 +67,29 @@ if __name__ == "__main__":
     report_source = "hybrid"
 
     report = asyncio.run(get_research_report(query=query, report_type="research_report", report_source=report_source))
+    print(report)
+```
+
+## Running Hybrid Research By "Online Documents"
+
+Here's a basic script to run hybrid research:
+
+```python
+from gpt_researcher import GPTResearcher
+import asyncio
+
+async def get_research_report(query: str, report_type: str, report_source: str) -> str:
+    researcher = GPTResearcher(query=query, report_type=report_type, document_urls=document_urls, report_source=report_source)
+    research = await researcher.conduct_research()
+    report = await researcher.write_report()
+    return report
+
+if __name__ == "__main__":
+    query = "How does our product roadmap compare to emerging market trends in our industry?"
+    report_source = "hybrid"
+    document_urls = ["https://xxxx.xxx.pdf", "https://xxxx.xxx.doc"]
+
+    report = asyncio.run(get_research_report(query=query, report_type="research_report", document_urls=document_urls, report_source=report_source))
     print(report)
 ```
 

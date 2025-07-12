@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="rocketGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0CDBB6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1FD0F0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rocket body -->
+  <path d="M12 2L15 8H9L12 2Z" fill="url(#rocketGrad)" />
+  <rect x="9" y="8" width="6" height="8" fill="url(#rocketGrad)" opacity="0.8" />
+
+  <!-- Rocket fins -->
+  <path d="M9 12L6 16L9 16Z" fill="url(#rocketGrad)" opacity="0.6" />
+  <path d="M15 12L18 16L15 16Z" fill="url(#rocketGrad)" opacity="0.6" />
+
+  <!-- Window -->
+  <circle cx="12" cy="10" r="1.5" fill="#E4E4E4" opacity="0.9" />
+  <circle cx="12" cy="10" r="1" fill="#4ECDC4" />
+
+  <!-- Flames -->
+  <path d="M10 16L11 20L12 18L13 20L14 16" fill="#FF6B6B" opacity="0.8" />
+  <path d="M11 16L11.5 18L12 17L12.5 18L13 16" fill="#FFE066" opacity="0.9" />
+
+  <!-- Stars -->
+  <circle cx="6" cy="4" r="0.5" fill="url(#rocketGrad)" opacity="0.7" />
+  <circle cx="18" cy="6" r="0.5" fill="url(#rocketGrad)" opacity="0.7" />
+  <circle cx="20" cy="10" r="0.5" fill="url(#rocketGrad)" opacity="0.7" />
+  <circle cx="4" cy="8" r="0.5" fill="url(#rocketGrad)" opacity="0.7" />
+</svg>

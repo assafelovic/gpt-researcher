@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "build",
+			"group": "build",
+			"label": "npm: build",
+			"detail": "Run the build script defined in package.json",
+			"cwd": "${workspaceFolder}/frontend/nextjs",
+			"presentation": {
+				"reveal": "silent"
+			}
+		}
+	]
+}
