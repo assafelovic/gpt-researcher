@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <linearGradient id="earthGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0CDBB6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1FD0F0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06DBEE;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Earth outline -->
+  <circle cx="12" cy="12" r="10" fill="url(#earthGrad)" opacity="0.2" stroke="url(#earthGrad)"
+    stroke-width="2" />
+
+  <!-- Continents -->
+  <path d="M6 8C7 7 8 7 9 8C10 9 11 8 12 9C13 10 14 9 15 10C16 11 15 12 14 13"
+    fill="none" stroke="url(#earthGrad)" stroke-width="2" stroke-linecap="round" />
+
+  <path d="M8 14C9 15 10 15 11 16C12 17 13 16 14 17"
+    fill="none" stroke="url(#earthGrad)" stroke-width="1.5" stroke-linecap="round" />
+
+  <path d="M4 12C5 11 6 12 7 11"
+    fill="none" stroke="url(#earthGrad)" stroke-width="1.5" stroke-linecap="round" />
+
+  <path d="M16 6C17 7 18 6 19 7"
+    fill="none" stroke="url(#earthGrad)" stroke-width="1.5" stroke-linecap="round" />
+
+  <!-- Temperature waves/climate indicators -->
+  <path d="M2 18C4 16 6 18 8 16C10 18 12 16 14 18C16 16 18 18 20 16"
+    fill="none" stroke="#FF6B6B" stroke-width="1.5" stroke-linecap="round" opacity="0.8" />
+
+  <!-- Green elements -->
+  <circle cx="8" cy="10" r="0.5" fill="#4ECDC4" />
+  <circle cx="14" cy="8" r="0.5" fill="#4ECDC4" />
+  <circle cx="10" cy="14" r="0.5" fill="#4ECDC4" />
+  <circle cx="16" cy="12" r="0.5" fill="#4ECDC4" />
+</svg>

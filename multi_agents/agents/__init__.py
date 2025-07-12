@@ -7,7 +7,7 @@ from .editor import EditorAgent
 from .human import HumanAgent
 
 # Below import should remain last since it imports all of the above
-from .master import ChiefEditorAgent
+from .orchestrator import ChiefEditorAgent
 
 __all__ = [
     "ChiefEditorAgent",

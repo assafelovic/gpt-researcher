@@ -1,0 +1,9 @@
+/* frontend/nextjs/src/index.css */
+@import './styles/markdown.css';
+@import './app/globals.css';
+@import './components/Settings/Settings.css';
+
+/* Include your Tailwind directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

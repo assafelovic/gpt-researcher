@@ -140,7 +140,7 @@ Visit localhost:3000 on any browser and enjoy researching!
 ### Run the NextJS React App with NPM
 
 ```bash
-cd frontend
+cd frontend/nextjs
 nvm install 18.17.0
 nvm use v18.17.0
 npm install --legacy-peer-deps

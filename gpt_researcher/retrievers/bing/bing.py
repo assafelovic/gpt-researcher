@@ -1,55 +1,63 @@
 # Bing Search Retriever
 
 # libraries
-import os
-import requests
+from __future__ import annotations
+
 import json
+import logging
+import os
 
+from typing import Any
 
-class BingSearch():
-    """
-    Bing Search Retriever
-    """
-    def __init__(self, query):
-        """
-        Initializes the BingSearch object
+import requests
+
+from gpt_researcher.retrievers.retriever_abc import RetrieverABC
+class BingSearch(RetrieverABC):
+    """Bing Search Retriever."""
+
+    def __init__(self, query: str, query_domains: list[str] | None = None):
+        """Initializes the BingSearch object.
+
         Args:
             query:
         """
         self.query = query
+        self.query_domains = query_domains or None
         self.api_key = self.get_api_key()
+        self.logger = logging.getLogger(__name__)
 
-    def get_api_key(self):
-        """
-        Gets the Bing API key
+    def get_api_key(self) -> str:
+        """Gets the Bing API key.
+
         Returns:
 
         """
         try:
             api_key = os.environ["BING_API_KEY"]
         except:
-            raise Exception("Bing API key not found. Please set the BING_API_KEY environment variable.")
+            raise Exception(
+                "Bing API key not found. Please set the BING_API_KEY environment variable.")
         return api_key
 
-    def search(self, max_results=7):
-        """
-        Searches the query
-        Returns:
+    def search(self, max_results: int = 7) -> list[dict[str, Any]]:
+        """Searches the query.
 
+        Returns:
+            list[dict[str, Any]]: A list of dictionaries containing the search results.
         """
-        print("Searching with query {0}...".format(self.query))
+        print(f"Searching with query {self.query}...".format(self.query))
         """Useful for general internet search queries using the Bing API."""
 
-
         # Search the query
-        url = "https://api.bing.microsoft.com/v7.0/search"
+        url: str = "https://api.bing.microsoft.com/v7.0/search"
 
-        headers = {
-        'Ocp-Apim-Subscription-Key': self.api_key,
-        'Content-Type': 'application/json'
+        headers: dict[str, str] = {
+            'Ocp-Apim-Subscription-Key': self.api_key,
+            'Content-Type': 'application/json'
         }
-        params = {
-            "responseFilter" : "Webpages",
+        # TODO: Add support for query domains
+        params: dict[str, Any] = {
+            "responseFilter": "Webpages",
             "q": self.query,
             "count": max_results,
             "setLang": "en-GB",
@@ -57,31 +65,33 @@ class BingSearch():
             "textFormat": "HTML",
             "safeSearch": "Strict"
         }
-        
-        resp = requests.get(url, headers=headers, params=params)
+
+        resp: requests.Response = requests.get(url, headers=headers, params=params)
 
         # Preprocess the results
         if resp is None:
-            return
+            return []
         try:
-            search_results = json.loads(resp.text)
-            results = search_results["webPages"]["value"]
-        except Exception:
-            return
-        if search_results is None:
-            return
-        search_results = []
+            search_results: dict[str, Any] = json.loads(resp.text)
+            results: list[dict[str, Any]] = search_results["webPages"]["value"]
+        except Exception as e:
+            self.logger.error(f"Error parsing Bing search results: {e.__class__.__name__}: {e}. Resulting in empty response.")
+            return []
+        if not search_results:
+            self.logger.warning(f"No search results found for query: {self.query}")
+            return []
+        search_results_list: list[dict[str, Any]] = []
 
         # Normalize the results to match the format of the other search APIs
         for result in results:
             # skip youtube results
-            if "youtube.com" in result["url"]:
+            if "youtube.com" in str(result.get("url", "")).casefold():
                 continue
-            search_result = {
-                "title": result["name"],
-                "href": result["url"],
-                "body": result["snippet"],
+            search_result: dict[str, Any] = {
+                "title": result.get("name", "No Title"),
+                "href": result.get("url", "No URL"),
+                "body": result.get("snippet", "No Snippet"),
             }
-            search_results.append(search_result)
+            search_results_list.append(search_result)
 
-        return search_results
+        return search_results_list
