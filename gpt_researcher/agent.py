@@ -318,6 +318,8 @@ class GPTResearcher:
             "agent": self.agent,
             "role": self.role
         })
+        
+        #DEBUGGING_STEP 1
         self.context = await self.research_conductor.conduct_research()
 
         await self._log_event("research", step="research_completed", details={

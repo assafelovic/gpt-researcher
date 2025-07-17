@@ -26,6 +26,7 @@ class ContextManager:
             prompt_family=self.researcher.prompt_family,
             **self.researcher.kwargs
         )
+        #DEBUGGING_STEP 11
         return await context_compressor.async_get_context(
             query=query, max_results=10, cost_callback=self.researcher.add_costs
         )

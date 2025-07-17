@@ -134,6 +134,7 @@ class ResearchConductor:
                 self.researcher.vector_store.load(document_data)
 
             research_data = await self._get_context_by_web_search(self.researcher.query, document_data, self.researcher.query_domains)
+        #DEBUGGING_STEP 2            
         # Hybrid search including both local documents and web sources
         elif self.researcher.report_source == ReportSource.Hybrid.value:
             if self.researcher.document_urls:
@@ -142,6 +143,7 @@ class ResearchConductor:
                 document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(document_data)
+            #DEBUGGING_STEP 3
             docs_context = await self._get_context_by_web_search(self.researcher.query, document_data, self.researcher.query_domains)
             web_context = await self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains)
             research_data = self.researcher.prompt_family.join_local_web_documents(docs_context, web_context)
@@ -303,6 +305,7 @@ class ResearchConductor:
                 self._mcp_results_cache = mcp_context
                 self.logger.info(f"MCP results cached: {len(mcp_context)} total context entries")
 
+        #DEBUGGING_STEP 4
         # Generate Sub-Queries including original query
         sub_queries = await self.plan_research(query, query_domains)
         self.logger.info(f"Generated sub-queries: {sub_queries}")
@@ -323,6 +326,7 @@ class ResearchConductor:
 
         # Using asyncio.gather to process the sub_queries asynchronously
         try:
+            #DEBUGGING_STEP 5
             context = await asyncio.gather(
                 *[
                     self._process_sub_query(sub_query, scraped_data, query_domains)
@@ -496,11 +500,13 @@ class ResearchConductor:
             
             # Get web search context using non-MCP retrievers (if no scraped data provided)
             if not scraped_data:
+                #DEBUGGING_STEP 6
                 scraped_data = await self._scrape_data_by_urls(sub_query, query_domains)
                 self.logger.info(f"Scraped data size: {len(scraped_data)}")
 
             # Get similar content based on scraped data
             if scraped_data:
+                #DEBUGGING_STEP 10
                 web_context = await self.researcher.context_manager.get_similar_content_by_query(sub_query, scraped_data)
                 self.logger.info(f"Web content found for sub-query: {len(str(web_context)) if web_context else 0} chars")
 
@@ -770,7 +776,7 @@ class ResearchConductor:
         """
         if query_domains is None:
             query_domains = []
-
+        #DEBUGGING_STEP 7
         new_search_urls = await self._search_relevant_source_urls(sub_query, query_domains)
 
         # Log the research process if verbose mode is on
@@ -783,6 +789,7 @@ class ResearchConductor:
             )
 
         # Scrape the new URLs
+        #DEBUGGING_STEP 8
         scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
 
         if self.researcher.vector_store:

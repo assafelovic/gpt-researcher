@@ -29,7 +29,7 @@ class BrowserManager:
                 f"🌐 Scraping content from {len(urls)} URLs...",
                 self.researcher.websocket,
             )
-
+        #DEBUGGING_STEP 9
         scraped_content, images = await scrape_urls(
             urls, self.researcher.cfg, self.worker_pool
         )
