@@ -41,7 +41,7 @@ def deduplicate_context_chunks(context: str) -> str:
             seen.add(chunk)
             deduped_chunks.append(chunk)
 
-    cleaned_context = ' '.join(deduped_chunks)
+    cleaned_context = '\n'.join(deduped_chunks)
 
 
 
