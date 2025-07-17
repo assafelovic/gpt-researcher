@@ -9,6 +9,48 @@ from ..utils.enum import ReportSource, ReportType
 from ..utils.logging_config import get_json_handler
 from ..actions.agent_creator import choose_agent
 
+def deduplicate_context_chunks(context: str) -> str:
+    """
+    Deduplicates chunks in the context string separated by 'SEP_TOKEN'.
+    
+    Args:
+        context (str): The input context string.
+        
+    Returns:
+        str: The cleaned context string with duplicates removed.
+        
+    Raises:
+        TypeError: If context is not a string.
+        ValueError: If context is empty.
+    """
+    if not isinstance(context, str):
+        raise TypeError(f"Context must be a string, but got: {type(context)}")
+
+    if not context.strip():
+        raise ValueError("Context cannot be empty or whitespace only")
+
+    if 'SEP_TOKEN' not in context:
+        return context
+
+    with open("bef.txt", "w") as f:
+        f.write(context)
+
+    chunks = [chunk.strip() for chunk in context.split('SEP_TOKEN') if chunk.strip()]
+    seen = set()
+    deduped_chunks = []
+
+    for chunk in chunks:
+        if chunk not in seen:
+            seen.add(chunk)
+            deduped_chunks.append(chunk)
+
+    cleaned_context = ' '.join(deduped_chunks)
+
+    with open("after.txt", "w") as f:
+        f.write(cleaned_context)
+
+    return cleaned_context
+
 
 class ResearchConductor:
     """Manages and coordinates the research process."""
@@ -169,6 +211,8 @@ class ResearchConductor:
         elif self.researcher.report_source == ReportSource.LangChainVectorStore.value:
             research_data = await self._get_context_by_vectorstore(self.researcher.query, self.researcher.vector_store_filter)
 
+
+        research_data = deduplicate_context_chunks(research_data)
         # Rank and curate the sources
         self.researcher.context = research_data
         if self.researcher.cfg.curate_sources:
@@ -240,6 +284,8 @@ class ResearchConductor:
                 for sub_query in sub_queries
             ]
         )
+        context = " ".join([c for c in context if c])  # Filter out empty results
+
         return context
 
     async def _get_context_by_web_search(self, query, scraped_data: list | None = None, query_domains: list | None = None):

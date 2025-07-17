@@ -435,11 +435,11 @@ response:
     @staticmethod
     def pretty_print_docs(docs: list[Document], top_n: int | None = None) -> str:
         """Compress the list of documents into a context string"""
-        return f"\n".join(f"Source: {d.metadata.get('source')}\n"
+        return f"SEP_TOKEN\n".join(f"Source: {d.metadata.get('source')}\n"
                           f"Title: {d.metadata.get('title')}\n"
                           f"Content: {d.page_content}\n"
                           for i, d in enumerate(docs)
-                          if top_n is None or i < top_n)
+                          if top_n is None or i < top_n) + "\nSEP_TOKEN\n"
 
     @staticmethod
     def join_local_web_documents(docs_context: str, web_context: str) -> str:
@@ -700,14 +700,14 @@ class Granite33PromptFamily(PromptFamily):
 
     @classmethod
     def pretty_print_docs(cls, docs: list[Document], top_n: int | None = None) -> str:
-        return "\n".join([
+        return "SEP_TOKEN\n".join([
             cls._DOCUMENT_TEMPLATE.format(
                 document_id=doc.metadata.get("source", i),
                 document_content=cls._get_content(doc),
             )
             for i, doc in enumerate(docs)
             if top_n is None or i < top_n
-        ])
+        ]) + "SEP_TOKEN\n"
 
     @classmethod
     def join_local_web_documents(cls, docs_context: str | list, web_context: str | list) -> str:
