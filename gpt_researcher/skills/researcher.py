@@ -32,9 +32,6 @@ def deduplicate_context_chunks(context: str) -> str:
     if 'SEP_TOKEN' not in context:
         return context
 
-    with open("bef.txt", "w") as f:
-        f.write(context)
-
     chunks = [chunk.strip() for chunk in context.split('SEP_TOKEN') if chunk.strip()]
     seen = set()
     deduped_chunks = []
@@ -46,8 +43,7 @@ def deduplicate_context_chunks(context: str) -> str:
 
     cleaned_context = ' '.join(deduped_chunks)
 
-    with open("after.txt", "w") as f:
-        f.write(cleaned_context)
+
 
     return cleaned_context
 
