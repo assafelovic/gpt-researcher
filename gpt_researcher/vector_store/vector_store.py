@@ -41,3 +41,8 @@ class VectorStoreWrapper:
         """Return query by vector store"""
         results = await self.vector_store.asimilarity_search(query=query, k=k, filter=filter)
         return results
+    
+    async def asimilarity_search_with_score(self, query, k, filter):
+        """Return query and scores by vector store"""
+        results = await self.vector_store.asimilarity_search_with_score(query=query, k=k, filter=filter)
+        return results

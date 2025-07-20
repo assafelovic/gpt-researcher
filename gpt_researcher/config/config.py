@@ -44,6 +44,9 @@ class Config:
                 value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
             setattr(self, key.lower(), value)
 
+            if key in {"VECTOR_STORE_SIMILARITY_THRESHOLD", "SIMILARITY_THRESHOLD"}:
+                os.environ[key] = str(value)
+
         # Handle RETRIEVER with default value
         retriever_env = os.environ.get("RETRIEVER", config.get("RETRIEVER", "tavily"))
         try:

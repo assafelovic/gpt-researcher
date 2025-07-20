@@ -14,7 +14,7 @@ from ..vector_store import VectorStoreWrapper
 from ..utils.costs import estimate_embedding_cost
 from ..memory.embeddings import OPENAI_EMBEDDING_MODEL
 from ..prompts import PromptFamily
-
+from langchain_community.vectorstores import FAISS 
 
 class VectorstoreCompressor:
     def __init__(
@@ -25,7 +25,6 @@ class VectorstoreCompressor:
         prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
         **kwargs,
     ):
-
         self.vector_store = vector_store
         self.max_results = max_results
         self.filter = filter
@@ -33,9 +32,31 @@ class VectorstoreCompressor:
         self.prompt_family = prompt_family
 
     async def async_get_context(self, query, max_results=5):
-        """Get relevant context from vector store"""
-        results = await self.vector_store.asimilarity_search(query=query, k=max_results, filter=self.filter)
-        return self.prompt_family.pretty_print_docs(results)
+        """Get relevant context from vector store with automatic filtering"""
+
+        # Detect vector store backend type
+        store_obj = self.vector_store.vector_store  # assumes `VectorStoreWrapper.vector_store` holds the raw LC vector store object
+
+        if isinstance(store_obj, FAISS):
+            score_direction = "lower"  # distance metric (e.g., cosine distance)
+            threshold = float(os.environ.get("VECTOR_STORE_SIMILARITY_THRESHOLD", 1.0))
+        else:
+            raise ValueError(f"Unsupported vector store type: {type(store_obj).__name__}. Only FAISS is supported.")
+
+        # Fetch scored results
+        results = await self.vector_store.asimilarity_search_with_score(query=query, k=max_results, filter=self.filter)
+
+        # Apply score-based filtering
+        if score_direction == "lower":
+            filtered = sorted([(doc, score) for doc, score in results if score <= threshold], key=lambda x: x[1])
+        else:
+            filtered = sorted([(doc, score) for doc, score in results if score >= threshold], key=lambda x: -x[1])
+
+        docs_only = [doc for doc, score in filtered]
+
+      
+
+        return self.prompt_family.pretty_print_docs(docs_only)
 
 
 class ContextCompressor:
@@ -51,7 +72,7 @@ class ContextCompressor:
         self.documents = documents
         self.kwargs = kwargs
         self.embeddings = embeddings
-        self.similarity_threshold = os.environ.get("SIMILARITY_THRESHOLD", 0.35)
+        self.similarity_threshold = float(os.environ.get("SIMILARITY_THRESHOLD", 0.35))
         self.prompt_family = prompt_family
 
     def __get_contextual_retriever(self):
