@@ -5,11 +5,11 @@ FROM node:slim AS frontend-builder
 WORKDIR /app/frontend/nextjs
 
 # Copy package files and install dependencies
-COPY frontend/nextjs/package.json frontend/nextjs/package-lock.json* ./
+COPY ./frontend/nextjs/package.json ./
 RUN npm install --legacy-peer-deps
 
 # Copy the rest of the frontend application and build it
-COPY frontend/nextjs/ ./
+COPY ./frontend/nextjs/ ./
 RUN npm run build
 
 ########################################################################

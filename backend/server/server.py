@@ -75,10 +75,15 @@ class ConfigRequest(BaseModel):
 # App initialization
 app = FastAPI()
 
-# Static files and templates
-app.mount("/site", StaticFiles(directory="./frontend"), name="site")
-app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
-templates = Jinja2Templates(directory="./frontend")
+# Static files and templates (only if frontend directory exists)
+frontend_dir = "./frontend"
+if os.path.exists(frontend_dir):
+    app.mount("/site", StaticFiles(directory="./frontend"), name="site")
+    if os.path.exists("./frontend/static"):
+        app.mount("/static", StaticFiles(directory="./frontend/static"), name="static")
+    templates = Jinja2Templates(directory="./frontend")
+else:
+    templates = None
 
 # WebSocket manager
 manager = WebSocketManager()
@@ -110,7 +115,10 @@ def startup_event():
 
 @app.get("/")
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "report": None})
+    if templates:
+        return templates.TemplateResponse("index.html", {"request": request, "report": None})
+    else:
+        return {"message": "GPT Researcher API is running", "status": "healthy", "docs": "/docs"}
 
 
 @app.get("/report/{research_id}")
