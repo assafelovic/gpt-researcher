@@ -28,7 +28,7 @@ Thanks to our community, we have integrated the following web search engines:
 - [Google](https://developers.google.com/custom-search/v1/overview) - Env: `RETRIEVER=google`
 - [SearchApi](https://www.searchapi.io/) - Env: `RETRIEVER=searchapi`
 - [Serp API](https://serpapi.com/) - Env: `RETRIEVER=serpapi`
-- [Serper](https://serper.dev/) - Env: `RETRIEVER=serper` - [Setup Guide](#serper-setup)
+- [Serper](https://serper.dev/) - Env: `RETRIEVER=serper` - [Setup Guide](#serper)
 - [Searx](https://searx.github.io/searx/) - Env: `RETRIEVER=searx`
 - [Duckduckgo](https://pypi.org/project/duckduckgo-search/) - Env: `RETRIEVER=duckduckgo`
 - [Arxiv](https://info.arxiv.org/help/api/index.html) - Env: `RETRIEVER=arxiv`
@@ -72,7 +72,9 @@ For the custom retriever to work correctly, the response from the endpoint shoul
 
 The system assumes this response format and processes the list of sources accordingly.
 
-## Serper Setup
+## Search Engine Configuration
+
+### Serper
 
 To use [Serper](https://serper.dev/) as your search engine:
 
@@ -84,7 +86,7 @@ RETRIEVER=serper
 SERPER_API_KEY=your_api_key_here
 ```
 
-### Optional Configuration
+**Optional Configuration:**
 
 ```bash
 SERPER_REGION=us                    # Country code (us, kr, jp, etc.)
