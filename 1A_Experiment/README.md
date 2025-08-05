@@ -47,7 +47,7 @@ python z_dpoHTML.py
 ## Environment Setup
 
 These experiments require environment variables to be set, particularly:
-
+- GL SDK for DPO HTML Scrapper and Firecrawl Scrapper 
 - `FIRECRAWL_API_KEY` - API key for the Firecrawl service
 
 The scripts use dotenv for loading environment variables, so you can create a `.env` file in the project root with your API keys.
