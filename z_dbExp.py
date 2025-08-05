@@ -2,6 +2,7 @@ from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportType
 from gpt_researcher.config import Config
 from gpt_researcher.skills.deep_research import ResearchProgress
+from gpt_researcher.utils.enum import Tone
 import asyncio
 import time
 import os
@@ -10,6 +11,10 @@ import threading
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
+
+os.environ['SCRAPER'] = 'firecrawl'
+
+# web_scraper_executor_wrapper -> other option for scrapper
 
 class ResourceMonitor:
     def __init__(self):
@@ -157,6 +162,7 @@ async def get_report(query: str):
         researcher = GPTResearcher(
             query=query,
             report_type="deep",
+            tone=Tone.Formal,
             verbose=True,
         )
 
@@ -267,19 +273,68 @@ def save_cost_and_resource_summary(cost_breakdown: list, resource_breakdown: lis
 
 async def main():
     cfg = Config()
-    prompts = [
-        "Apa saja tantangan utama dalam implementasi blockchain di sektor logistik, berdasarkan perkembangan terakhir tahun 2024?",
-        "Bandingkan pendekatan open source dan proprietary LLM dalam hal efisiensi biaya dan kemampuan reasoning berdasarkan artikel atau studi terbaru.",
-        "Buatkan saya rencana riset awal (early stage research roadmap) untuk topik: AI agent orchestration untuk knowledge management di perusahaan teknologi."
-    ]
+    # prompts = [
+    #     "Apa saja tantangan utama dalam implementasi blockchain di sektor logistik, berdasarkan perkembangan terakhir tahun 2024?",
+    #     "Bandingkan pendekatan open source dan proprietary LLM dalam hal efisiensi biaya dan kemampuan reasoning berdasarkan artikel atau studi terbaru.",
+    #     "Buatkan saya rencana riset awal (early stage research roadmap) untuk topik: AI agent orchestration untuk knowledge management di perusahaan teknologi."
+    # ]
 
-    prompt = prompts[1]
+    prompt = """
+    You are an advanced AI assistant with expertise in boat investment opportunities in Bali and Labuan Bajo. Use only the information from below URL as the basis for your responses.
+https://liveaboardindonesia.com
+https://www.liveaboard.com/
+https://www.rainforestcruises.com
+https://nusatour.co.id/rental-boat/
+https://paradiseontheboat.com/yacth
+https://www.boatcrowd.com/yacht-charter/pak-haji-ully-66-splendour
+https://www.zadaliveaboard.com/
+https://aliikai-voyage.com/
+https://theluxury-voyage.com/charter/
+https://eastindonesiatrip.com/
+https://www.komodoluxury.com/
+https://navilaliveaboard.com
+https://capkaroso.com/en/
+https://mutiaralaut.com/
+https://www.theyachtclub-indonesia.com/
+https://linktr.ee/akassa
+https://jinggojanggo.com/
+https://linktr.ee/7adventrip
+https://labuanbajotrip.com/
+https://linkin.bio/amanwana_resort/
+https://linktr.ee/rinjanibay
+https://jakare-liveaboard.com/
+https://beacons.ai/ayanakomodo
+https://www.bluemarlindive.com/
+https://www.mikumbadiving.com/
+https://www.instagram.com/matalesosail/?igsh=NWY2dm4wZng1d2xj
+https://indoseamore.com/
+https://romeotrips.com/
+https://www.instagram.com/godaskyofficial/?igsh=c280Y3l1azIwaDM0
+https://www.ikankayu.com/
+https://www.instagram.com/wanderlustprojectid/?igsh=MTVib3d5dGs0M3gwbw==
+https://www.instagram.com/_araadventure/?igsh=MXRrN2tyd3J0Z3NtMw==
+https://araadventure.id/destinasi-wisata/trip-labuan-bajo/
+
+Please answer the following questions:
+1. Which vessels offer private-chef service and depart Labuan Bajo on weekends?
+2. List boats under USD 2000 per day that still have slots next month.
+3. Rank the top five yachts by star rating and show their day-rates.
+4. Summarise the three most common complaints in 5-star reviews.
+5. What does demand look like throughout the year in Labuan Bajo? (e.g. peak season vs low season, tourist arrival trends, key holidays or events that spike demand).
+6. Describe the ideal luxury customer persona for a one-day yacht charter.
+7. What are the fixed and variable costs of running a luxury yacht charter, and how do they translate into a minimum viable price? (e.g. daily operating cost and break-even price for a charter).
+8. What is the break-even day-rate for a Saxdor 320, given fuel and crew costs?
+9. Provide a SWOT analysis comparing us to The Trans Luxury Yacht.
+10. Which five-star resorts in Labuan Bajo are the best partnership targets?
+    """
+
+    # prompt = "What can you tell me about myself based on my documents?"
 
     print(f"\n{'='*80}")
     print(f"ANALYZING QUERY: {prompt[:60]}...")
     print('='*80)
 
-    OUTPUT_PATH = "./1A_ExplorationMarkdownReport"
+    OUTPUT_PATH = "./1A_ScraperFirecrawl_ExpRes"
     
     # Track costs and resources
     total_cost_sum = 0.0
@@ -288,11 +343,9 @@ async def main():
     cost_breakdown = []
     resource_breakdown = []
     
-    for d in range(2, 6):
-        for b in range(3, 6):
+    for d in range(1, 2):
+        for b in range(1, 2):
 
-            if(d != 2 and b != 3):
-                continue
 
             tmp_depth = str(d)
             tmp_breadth = str(b)

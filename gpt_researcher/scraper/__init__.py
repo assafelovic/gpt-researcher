@@ -7,6 +7,9 @@ from .browser.nodriver_scraper import NoDriverScraper
 from .tavily_extract.tavily_extract import TavilyExtract
 from .firecrawl.firecrawl import FireCrawl
 from .scraper import Scraper
+from .scraper import PlaywrightScraper
+from .web_scraper_executor_wrapper.web_scraper_executor_wrapper import WebScraperExecutorWrapper
+
 
 __all__ = [
     "BeautifulSoupScraper",
@@ -18,4 +21,6 @@ __all__ = [
     "TavilyExtract",
     "Scraper",
     "FireCrawl",
+    "PlaywrightScraper",
+    "WebScraperExecutorWrapper"
 ]

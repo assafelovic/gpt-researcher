@@ -5,6 +5,7 @@ from ..utils.llm import create_chat_completion
 from ..utils.logger import get_formatted_logger
 from ..prompts import PromptFamily, get_prompt_by_report_type
 from ..utils.enum import Tone
+from ..actions.utils import stream_output
 
 logger = get_formatted_logger()
 
@@ -34,6 +35,7 @@ async def write_report_introduction(
     Returns:
         str: The generated introduction.
     """
+
     try:
         introduction = await create_chat_completion(
             model=config.smart_llm_model,
@@ -53,6 +55,7 @@ async def write_report_introduction(
             llm_kwargs=config.llm_kwargs,
             cost_callback=cost_callback,
             **kwargs
+
         )
         return introduction
     except Exception as e:

@@ -60,6 +60,12 @@ class ReportGenerator:
                 f"✍️ Writing report for '{self.researcher.query}'...",
                 self.researcher.websocket,
             )
+        # await stream_output(
+        #     "logs",
+        #     "writing_introduction",
+        #     f"✍️✍️✍️✍️✍️✍️✍️✍️ PROMPT:  '{self.researcher.context}'...",
+        #     self.researcher.websocket,
+        # )
 
         report_params = self.research_params.copy()
         report_params["context"] = context

@@ -20,6 +20,8 @@ from . import (
     FireCrawl,
 )
 
+from .playwright.playwright import PlaywrightScraper
+from .web_scraper_executor_wrapper.web_scraper_executor_wrapper import WebScraperExecutorWrapper
 
 class Scraper:
     """
@@ -39,6 +41,8 @@ class Scraper:
         if self.scraper == "tavily_extract":
             self._check_pkg(self.scraper)
         if self.scraper == "firecrawl":
+            self._check_pkg(self.scraper)
+        if self.scraper == "playwright":
             self._check_pkg(self.scraper)
         self.logger = logging.getLogger(__name__)
         self.worker_pool = worker_pool
@@ -69,6 +73,10 @@ class Scraper:
                 "package_installation_name": "firecrawl-py",
                 "import_name": "firecrawl",
             },
+            "playwright": {
+                "package_installation_name": "playwright",
+                "import_name": "playwright",
+            },
         }
         pkg = pkg_map[scrapper_name]
         if not importlib.util.find_spec(pkg["import_name"]):
@@ -80,6 +88,12 @@ class Scraper:
                     [sys.executable, "-m", "pip", "install", pkg_inst_name]
                 )
                 print(Fore.GREEN + f"{pkg_inst_name} installed successfully.")
+                if scrapper_name == "playwright":
+                    print(Fore.YELLOW + "Installing Playwright browsers...")
+                    subprocess.check_call(
+                        [sys.executable, "-m", "playwright", "install", "chromium"]
+                    )
+                    print(Fore.GREEN + "Playwright browsers installed successfully.")
             except subprocess.CalledProcessError:
                 raise ImportError(
                     Fore.RED
@@ -176,6 +190,8 @@ class Scraper:
             "nodriver": NoDriverScraper,
             "tavily_extract": TavilyExtract,
             "firecrawl": FireCrawl,
+            "playwright":PlaywrightScraper,
+            "web_scraper_executor_wrapper":WebScraperExecutorWrapper
         }
 
         scraper_key = None

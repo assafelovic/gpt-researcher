@@ -5,6 +5,7 @@ from ..actions.web_scraping import scrape_urls
 from ..scraper.utils import get_image_hash
 
 
+
 class BrowserManager:
     """Manages context for the researcher agent."""
 
@@ -33,6 +34,25 @@ class BrowserManager:
         scraped_content, images = await scrape_urls(
             urls, self.researcher.cfg, self.worker_pool
         )
+
+        # Untuk debug
+        for i, page in enumerate(scraped_content):
+            print(f"--- Scraped Page {i+1} ---")
+            if isinstance(page, dict):
+            # Try common keys
+                if "content" in page:
+                    print(page["content"])
+                elif "markdown" in page:
+                    print(page["markdown"])
+                else:
+                    print(str(page))  # Fallback: print the dict as string
+            else:
+                print(str(page))
+            if i == 2: 
+                break
+
+        
+            
         self.researcher.add_research_sources(scraped_content)
         new_images = self.select_top_images(images, k=4)  # Select top 4 images
         self.researcher.add_research_images(new_images)
