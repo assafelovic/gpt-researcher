@@ -15,7 +15,7 @@ FirecrawlAPIKEY = os.getenv("FIRECRAWL_API_KEY")
 url1 = "https://www.backindo.com/karimunjawa-travel-guide/"
 url2 = "https://www.hotels.com/ho551737/breve-azurine-lagoon-retreat-karimunjawa-islands-indonesia/"
 
-output_dir = 'downloader_firecrawldownloader/output/download'
+output_dir = '1A_Experiment/downloader_firecrawldownloader/output/download'
 downloader = HTMLFirecrawlDownloader(api_key=FirecrawlAPIKEY)
 downloader.download(url2,output_dir)
 
@@ -36,7 +36,7 @@ res = parser.parse(loaded_elements)
 print(res)
 
 filename = "firecrawldownloaderResult_url2"
-output_md_path = f"1A_DPO_Firecrawl_vs_HTML/{filename}.md"
+output_md_path = f"1A_Experiment/1A_DPO_Firecrawl_vs_HTML/{filename}.md"
 with open (output_md_path,"a") as f:
     f.write(f"Scraped and Parsed from: {url2}")
     f.write("\n## Result\n")
