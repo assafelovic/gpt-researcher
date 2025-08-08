@@ -14,7 +14,39 @@ As seen below, OpenAI still stands as the superior LLM. We assume it will stay t
 </div>
 
 The default config.py file can be found in `/gpt_researcher/config/`. It supports various options for customizing GPT Researcher to your needs.
-You can also include your own external JSON file `config.json` by adding the path in the `config_file` param. **Please follow the config.py file for additional future support**.
+You can also include your own external JSON file `config.json` by adding the path in the `config_path` param.
+The config JSON should follow the format/keys in the default config. Below is a sample config.json file to help get you started:
+'''bash
+{
+  "RETRIEVER": "tavily",
+  "EMBEDDING": "openai:text-embedding-3-small",
+  "SIMILARITY_THRESHOLD": 0.42,
+  "FAST_LLM": "openai:gpt-4o-mini",
+  "SMART_LLM": "openai:gpt-4.1",
+  "STRATEGIC_LLM": "openai:o4-mini",
+  "LANGUAGE": "english",
+  "CURATE_SOURCES": false,
+  "FAST_TOKEN_LIMIT": 2000,
+  "SMART_TOKEN_LIMIT": 4000,
+  "STRATEGIC_TOKEN_LIMIT": 4000,
+  "BROWSE_CHUNK_MAX_LENGTH": 8192,
+  "SUMMARY_TOKEN_LIMIT": 700,
+  "TEMPERATURE": 0.4,
+  "DOC_PATH": "./my-docs",
+  "REPORT_SOURCE": "web"
+}
+'''
+
+
+For example, to start GPT-Researcher and specify a specific config you would do this:
+```bash
+python gpt_researcher/main.py --config_path my_config.json
+```
+
+
+
+
+ **Please follow the config.py file for additional future support**.
 
 Below is a list of current supported options:
 
@@ -73,6 +105,4 @@ export REPORT_FORMAT=IEEE
 ```
 Please note that you might need to export additional env vars and obtain API keys for other supported search retrievers and LLM providers. Please follow your console logs for further assistance.
 To learn more about additional LLM support you can check out the docs [here](/docs/gpt-researcher/llms/llms).
-
-You can also include your own external JSON file `config.json` by adding the path in the `config_file` param.
 

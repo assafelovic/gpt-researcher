@@ -19,6 +19,7 @@ class ExaSearch:
         self.query = query
         self.api_key = self._retrieve_api_key()
         self.client = Exa(api_key=self.api_key)
+        self.query_domains = query_domains or None
 
     def _retrieve_api_key(self):
         """
@@ -55,6 +56,7 @@ class ExaSearch:
             type=search_type,
             use_autoprompt=use_autoprompt,
             num_results=max_results,
+            include_domains=self.query_domains,
             **filters
         )
 
