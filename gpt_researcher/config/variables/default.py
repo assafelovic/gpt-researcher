@@ -42,4 +42,6 @@ DEFAULT_CONFIG: BaseConfig = {
     "MCP_ALLOWED_ROOT_PATHS": [],  # List of allowed root paths for local file access
     "MCP_STRATEGY": "fast",  # MCP execution strategy: "fast", "deep", "disabled"
     "REASONING_EFFORT": "medium",
+    "LLM_ENDPOINT": "http://localhost:8080/v1",  # LLM endpoint
+    "EMBEDDING_ENDPOINT": "http://localhost:8081/v1",  # Embedding endpoint
 }
