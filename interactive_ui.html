@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepResearch AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-bottom: 1px solid rgba(79, 70, 229, 0.3);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.researching {
+            background: #f59e0b;
+            animation: pulse 1s infinite;
+        }
+
+        .status-dot.failed {
+            background: #ef4444;
+            animation: pulse 1s infinite;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-header {
+            background: rgba(79, 70, 229, 0.2);
+            border: 1px solid rgba(79, 70, 229, 0.5);
+            color: #4f46e5;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-header:hover {
+            background: rgba(79, 70, 229, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: rgba(79, 70, 229, 0.5);
+            border-radius: 3px;
+        }
+
+        .message {
+            margin-bottom: 25px;
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        .message-user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message-assistant {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 20px;
+            border-radius: 18px;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .message-user .message-content {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .message-assistant .message-content {
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .message-meta {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .message-text {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .thinking-indicator {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px;
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-radius: 18px;
+            border-bottom-left-radius: 6px;
+            max-width: 80%;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .thinking-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .thinking-dot {
+            width: 8px;
+            height: 8px;
+            background: #4f46e5;
+            border-radius: 50%;
+            animation: thinking 1.4s infinite;
+        }
+
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .research-progress {
+            background: rgba(79, 70, 229, 0.1);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            width: 0%;
+            transition: width 0.5s ease;
+            animation: shimmer 2s infinite;
+        }
+
+        .research-form {
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-radius: 18px;
+            border-bottom-left-radius: 6px;
+            max-width: 80%;
+            margin-bottom: 25px;
+            backdrop-filter: blur(10px);
+            padding: 20px;
+        }
+
+        .form-title {
+            color: #4f46e5;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+
+        .form-group select {
+            background: rgba(15, 15, 35, 0.8);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .btn-form {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-form:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-form:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-form.secondary {
+            background: rgba(79, 70, 229, 0.2);
+            border: 1px solid rgba(79, 70, 229, 0.5);
+        }
+
+        .input-container {
+            padding: 20px;
+            border-top: 1px solid rgba(79, 70, 229, 0.3);
+            background: rgba(26, 26, 46, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .input-field {
+            flex: 1;
+            background: rgba(26, 26, 46, 0.9);
+            border: 2px solid rgba(79, 70, 229, 0.3);
+            border-radius: 12px;
+            padding: 15px 20px;
+            color: white;
+            font-size: 16px;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+
+        .input-field::placeholder {
+            color: #666;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 12px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            font-size: 20px;
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            color: #a0a0a0;
+            margin-bottom: 30px;
+        }
+
+        .example-queries {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            max-width: 800px;
+        }
+
+        .example-query {
+            background: rgba(26, 26, 46, 0.6);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            backdrop-filter: blur(10px);
+        }
+
+        .example-query:hover {
+            border-color: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+            background: rgba(26, 26, 46, 0.8);
+        }
+
+        .example-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #4f46e5;
+        }
+
+        .example-description {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            line-height: 1.4;
+        }
+
+        .logs-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+
+        .logs-window {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1000px;
+            height: 80%;
+            background: #0f0f23;
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .logs-header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-bottom: 1px solid rgba(79, 70, 229, 0.3);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logs-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #4f46e5;
+        }
+
+        .close-logs {
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .close-logs:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .logs-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            background: #0a0a1a;
+        }
+
+        .log-entry {
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 3px solid #2a2a4a;
+        }
+
+        .log-entry.status { border-left-color: #10b981; }
+        .log-entry.error { border-left-color: #ef4444; }
+        .log-entry.warning { border-left-color: #f59e0b; }
+        .log-entry.info { border-left-color: #3b82f6; }
+
+        .log-timestamp {
+            color: #666;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .log-type {
+            color: #4f46e5;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .log-message {
+            color: #e5e5e5;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes thinking {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: 200px 0; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 15px;
+            }
+            
+            .chat-container {
+                padding: 0 15px;
+            }
+            
+            .message-content, .thinking-indicator, .research-form {
+                max-width: 95%;
+                padding: 15px;
+            }
+            
+            .input-container {
+                padding: 15px;
+            }
+            
+            .example-queries {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .logs-window {
+                width: 95%;
+                height: 90%;
+            }
+
+            .welcome-title {
+                font-size: 2rem;
+            }
+
+            .welcome-icon {
+                font-size: 3rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+        
+        #chatMessages {
+            max-height: 80vh; /* or appropriate height */
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">🔬 DeepResearch AI</div>
+                <div class="status-indicator">
+                    <div class="status-dot" id="statusDot"></div>
+                    <span id="statusText">Ready</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn-header" id="showLogsBtn">View Research Logs</button>
+                <button class="btn-header" id="clearChatBtn">Clear Chat</button>
+                <button class="btn-header" id="configBtn">Research Config</button>
+            </div>
+        </div>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-icon">🔬</div>
+                    <h1 class="welcome-title">DeepResearch AI</h1>
+                    <p class="welcome-subtitle">Advanced AI-powered research with real-time streaming updates</p>
+                    
+                    <div class="example-queries">
+                        <div class="example-query" data-query="What are the latest developments in quantum computing and their potential impact on cryptography?">
+                            <div class="example-title">Quantum Computing & Cryptography</div>
+                            <div class="example-description">Explore cutting-edge quantum developments and security implications</div>
+                        </div>
+                        <div class="example-query" data-query="How is AI transforming healthcare, and what are the current challenges and opportunities?">
+                            <div class="example-title">AI in Healthcare</div>
+                            <div class="example-description">Analyze AI applications, challenges, and future prospects in medicine</div>
+                        </div>
+                        <div class="example-query" data-query="What are the most promising sustainable energy solutions and their market adoption rates?">
+                            <div class="example-title">Sustainable Energy Solutions</div>
+                            <div class="example-description">Research renewable energy technologies and market trends</div>
+                        </div>
+                        <div class="example-query" data-query="What are the emerging cybersecurity threats in 2024 and how can organizations prepare?">
+                            <div class="example-title">Cybersecurity Trends 2024</div>
+                            <div class="example-description">Investigate latest threats and defensive strategies</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        class="input-field" 
+                        placeholder="Ask me anything and I'll conduct deep research for you..."
+                        rows="1"
+                    ></textarea>
+                    <button id="sendButton" class="send-button">
+                        <span>→</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="logs-overlay" id="configOverlay">
+        <div class="logs-window">
+            <div class="logs-header">
+                <div class="logs-title">⚙️ Research Configuration</div>
+                <button class="close-logs" id="closeConfigBtn">×</button>
+            </div>
+            <div class="logs-content" style="background: #0f0f23;">
+                <div class="research-form" style="max-width: 100%; background: rgba(26, 26, 46, 0.6);">
+                    <div class="form-title">
+                        🔬 Research Parameters
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reportType">Report Type</label>
+                            <select id="reportType" name="reportType">
+                                <option value="research_report">Research Report</option>
+                                <option value="resource_report">Resource Report</option>
+                                <option value="outline_report">Outline Report</option>
+                                <option value="custom_report">Custom Report</option>
+                                <option value="subtopic_report">Subtopic Report</option>
+                                <option value="detailed_report">Detailed Report</option>
+                                <option value="multi_agents">Multi-Agent Research</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tone">Report Tone</label>
+                            <select id="tone" name="tone">
+                                <option value="Formal">Formal</option>
+                                <option value="Casual">Casual</option>
+                                <option value="Analytical">Analytical</option>
+                                <option value="Persuasive">Persuasive</option>
+                                <option value="Informative">Informative</option>
+                                <option value="Explanatory">Explanatory</option>
+                                <option value="Critical">Critical</option>
+                                <option value="Comparative">Comparative</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reportSource">Report Source</label>
+                            <select id="reportSource" name="reportSource">
+                                <option value="web">Web Search</option>
+                                <option value="academic">Academic Papers</option>
+                                <option value="hybrid">Hybrid (Web + Academic)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="baseUrl">API Base URL</label>
+                            <select id="baseUrl" name="baseUrl">
+                                <option value="http://localhost:8000">Local (localhost:8000)</option>
+                                <option value="https://api.deepresearch.ai">Production API</option>
+                                <option value="custom">Custom URL</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-form secondary" id="resetConfigBtn">Reset to Default</button>
+                        <button type="button" class="btn-form" id="saveConfigBtn">Save Configuration</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="logs-overlay" id="logsOverlay">
+        <div class="logs-window">
+            <div class="logs-header">
+                <div class="logs-title">🔍 Research Logs</div>
+                <button class="close-logs" id="closeLogsBtn">×</button>
+            </div>
+            <div class="logs-content" id="logsContent">
+                <div class="log-entry info">
+                    <div class="log-timestamp">System initialized</div>
+                    <div class="log-type">INFO</div>
+                    <div class="log-message">DeepResearch AI is ready to assist you</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DeepResearchClient {
+            constructor() {
+                this.baseUrl = 'http://localhost:8000';
+                this.eventSource = null;
+                this.currentTaskId = null;
+                this.isResearching = false;
+                this.messageId = 0;
+                this.currentThinkingElement = null;
+                this.currentProgressElement = null;
+                this.startTime = null;
+                this.messageCount = 0;
+                this.logCount = 0;
+                this.config = this.loadConfig(); // Load initial config
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.setupExampleQueries();
+                this.loadConfigFromStorage();
+                this.addLog('DeepResearch AI initialized successfully', 'info');
+            }
+
+            loadConfig() {
+                const defaultConfig = {
+                    reportType: 'detailed_report',
+                    tone: 'Analytical',
+                    reportSource: 'web',
+                    baseUrl: 'http://localhost:8000'
+                };
+                
+                // Use in-memory storage instead of localStorage for Claude.ai compatibility
+                // If you were deploying, you'd use localStorage.
+                if (!this._inMemoryConfig) {
+                    this._inMemoryConfig = { ...defaultConfig };
+                }
+                return { ...this._inMemoryConfig };
+            }
+
+            saveConfig() {
+                this.config = { // Update the config property
+                    reportType: document.getElementById('reportType').value,
+                    tone: document.getElementById('tone').value,
+                    reportSource: document.getElementById('reportSource').value,
+                    baseUrl: document.getElementById('baseUrl').value
+                };
+                this._inMemoryConfig = { ...this.config }; // Update in-memory config
+                this.baseUrl = this.config.baseUrl; // Update the client's base URL
+                this.addLog('Configuration saved successfully', 'info');
+            }
+
+            loadConfigFromStorage() {
+                if (this.config) { // Refer to the in-memory config
+                    document.getElementById('reportType').value = this.config.reportType;
+                    document.getElementById('tone').value = this.config.tone;
+                    document.getElementById('reportSource').value = this.config.reportSource;
+                    document.getElementById('baseUrl').value = this.config.baseUrl;
+                    this.baseUrl = this.config.baseUrl;
+                }
+            }
+
+            setupEventListeners() {
+                const messageInput = document.getElementById('messageInput');
+                const sendButton = document.getElementById('sendButton');
+                const showLogsBtn = document.getElementById('showLogsBtn');
+                const closeLogsBtn = document.getElementById('closeLogsBtn');
+                const clearChatBtn = document.getElementById('clearChatBtn');
+                const configBtn = document.getElementById('configBtn');
+                const closeConfigBtn = document.getElementById('closeConfigBtn');
+                const saveConfigBtn = document.getElementById('saveConfigBtn');
+                const resetConfigBtn = document.getElementById('resetConfigBtn');
+                const logsOverlay = document.getElementById('logsOverlay');
+                const configOverlay = document.getElementById('configOverlay');
+                const baseUrlSelect = document.getElementById('baseUrl');
+
+                // Auto-resize textarea
+                messageInput.addEventListener('input', () => this.adjustTextareaHeight());
+
+                // Send message handlers
+                sendButton.addEventListener('click', () => this.sendMessage());
+                messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Logs window controls
+                showLogsBtn.addEventListener('click', () => {
+                    logsOverlay.style.display = 'block';
+                });
+
+                closeLogsBtn.addEventListener('click', () => {
+                    logsOverlay.style.display = 'none';
+                });
+
+                // Clear chat
+                clearChatBtn.addEventListener('click', () => this.clearChat());
+
+                // Config window controls
+                configBtn.addEventListener('click', () => {
+                    this.loadConfigFromStorage(); // Load current config into form
+                    configOverlay.style.display = 'block';
+                });
+
+                closeConfigBtn.addEventListener('click', () => {
+                    configOverlay.style.display = 'none';
+                });
+
+                saveConfigBtn.addEventListener('click', () => {
+                    this.saveConfig();
+                    configOverlay.style.display = 'none';
+                });
+
+                resetConfigBtn.addEventListener('click', () => {
+                    // Revert to default config and apply
+                    this._inMemoryConfig = this.loadConfig(); // Get fresh default
+                    this.loadConfigFromStorage(); // Apply to form
+                    this.addLog('Configuration reset to default', 'info');
+                });
+
+                // Handle custom base URL input
+                baseUrlSelect.addEventListener('change', (e) => {
+                    if (e.target.value === 'custom') {
+                        const customUrl = prompt('Enter custom API Base URL:', 'http://');
+                        if (customUrl) {
+                            const newOption = new Option(customUrl, customUrl, true, true);
+                            baseUrlSelect.add(newOption);
+                            this.config.baseUrl = customUrl; // Update in-memory config immediately
+                        } else {
+                            // If user cancels, revert to the previously selected valid option or default
+                            e.target.value = this.config.baseUrl;
+                        }
+                    }
+                });
+            }
+
+            setupExampleQueries() {
+                document.querySelectorAll('.example-query').forEach(item => {
+                    item.addEventListener('click', (event) => {
+                        const query = event.currentTarget.dataset.query;
+                        document.getElementById('messageInput').value = query;
+                        this.adjustTextareaHeight();
+                        this.sendMessage();
+                    });
+                });
+            }
+
+            adjustTextareaHeight() {
+                const textarea = document.getElementById('messageInput');
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            }
+
+            clearChat() {
+                document.getElementById('chatMessages').innerHTML = '';
+                document.getElementById('chatMessages').appendChild(document.getElementById('welcomeScreen'));
+                document.getElementById('welcomeScreen').classList.remove('hidden'); // Ensure welcome screen is visible
+                this.messageCount = 0;
+                this.currentTaskId = null;
+                this.currentThinkingElement = null;
+                this.currentProgressElement = null;
+                if (this.eventSource) {
+                    this.eventSource.close();
+                    this.eventSource = null;
+                }
+                this.updateStatus('Ready');
+                this.addLog('Chat cleared', 'info');
+            }
+
+            updateStatus(status, type = 'ready') {
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+
+                statusText.textContent = status;
+                statusDot.className = 'status-dot'; // Reset classes
+
+                if (type === 'researching') {
+                    statusDot.classList.add('researching');
+                } else if (type === 'failed') {
+                    statusDot.classList.add('failed');
+                }
+            }
+
+            addLog(message, type = 'info', details = {}) {
+                const logsContent = document.getElementById('logsContent');
+                const logEntry = document.createElement('div');
+                logEntry.classList.add('log-entry', type);
+                
+                const timestamp = new Date().toLocaleTimeString();
+                
+                logEntry.innerHTML = `
+                    <div class="log-timestamp">${timestamp}</div>
+                    <div class="log-type">${type.toUpperCase()}</div>
+                    <div class="log-message">${message}</div>
+                `;
+                
+                if (Object.keys(details).length > 0) {
+                    const detailDiv = document.createElement('div');
+                    detailDiv.classList.add('log-details');
+                    detailDiv.style.fontSize = '0.8em';
+                    detailDiv.style.color = '#ccc';
+                    detailDiv.style.marginTop = '5px';
+                    detailDiv.textContent = JSON.stringify(details, null, 2);
+                    logEntry.appendChild(detailDiv);
+                }
+
+                logsContent.appendChild(logEntry);
+                logsContent.scrollTop = logsContent.scrollHeight; // Scroll to bottom
+                this.logCount++;
+            }
+
+            addMessage(message, sender) {
+                const chatMessages = document.getElementById('chatMessages');
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', `message-${sender}`);
+                
+                // Add a unique ID for easier manipulation if needed
+                const currentMessageId = `msg-${this.messageCount++}`;
+                messageElement.id = currentMessageId;
+
+                messageElement.innerHTML = `
+                    <div class="message-content">
+                        <div class="message-meta">
+                            <span>${sender === 'user' ? 'You' : 'DeepResearch AI'}</span>
+                            <span>${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-text">${message}</div>
+                    </div>
+                `;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
+
+                // Hide welcome screen after first message
+                document.getElementById('welcomeScreen').classList.add('hidden');
+            }
+
+            showThinkingIndicator() {
+                const chatMessages = document.getElementById('chatMessages');
+                this.currentThinkingElement = document.createElement('div');
+                this.currentThinkingElement.classList.add('message', 'message-assistant');
+                this.currentThinkingElement.innerHTML = `
+                    <div class="thinking-indicator">
+                        <div class="thinking-header">
+                            <span>DeepResearch AI is thinking</span>
+                            <div class="thinking-dots">
+                                <div class="thinking-dot"></div>
+                                <div class="thinking-dot"></div>
+                                <div class="thinking-dot"></div>
+                            </div>
+                        </div>
+                        <div class="research-progress">
+                            <div class="progress-text" id="thinkingProgressText">Initializing research...</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="thinkingProgressBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatMessages.appendChild(this.currentThinkingElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                this.currentProgressElement = document.getElementById('thinkingProgressBar');
+                this.addLog('Displaying thinking indicator', 'info');
+            }
+
+            updateThinkingIndicator(message, progress = 0) {
+                if (this.currentThinkingElement) {
+                    const progressText = this.currentThinkingElement.querySelector('#thinkingProgressText');
+                    const progressBarFill = this.currentThinkingElement.querySelector('#thinkingProgressBar');
+                    if (progressText) {
+                        progressText.textContent = message;
+                    }
+                    if (progressBarFill) {
+                        progressBarFill.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+                    }
+                }
+            }
+
+            removeThinkingIndicator() {
+                if (this.currentThinkingElement) {
+                    this.currentThinkingElement.remove();
+                    this.currentThinkingElement = null;
+                    this.currentProgressElement = null;
+                }
+            }
+
+            async sendMessage() {
+                const messageInput = document.getElementById('messageInput');
+                const sendButton = document.getElementById('sendButton');
+                const query = messageInput.value.trim();
+
+                if (!query || this.isResearching) {
+                    this.addLog('No query or research already in progress', 'warning');
+                    return;
+                }
+
+                this.addMessage(query, 'user');
+                messageInput.value = '';
+                this.adjustTextareaHeight();
+                sendButton.disabled = true;
+                this.isResearching = true;
+                this.updateStatus('Researching...', 'researching');
+                this.showThinkingIndicator();
+                this.startTime = new Date();
+                this.addLog(`Starting research for: "${query}"`, 'info', { query: query, config: this.config });
+
+                try {
+                    // Step 1: Start the research task
+                    const startResponse = await fetch(`${this.baseUrl}/research/start`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                task: query,
+                                report_type: this.config.reportType,
+                                tone: this.config.tone,
+                                report_source: this.config.reportSource
+                            }),
+                    });
+
+                    
+                    if (!startResponse.ok) {
+                        const errorData = await startResponse.json();
+                        throw new Error(`Failed to start research: ${errorData.detail || startResponse.statusText}`);
+                    }
+
+                    const startData = await startResponse.json();
+                    this.currentTaskId = startData.task_id;
+                    this.addLog(`Research task started. Task ID: ${this.currentTaskId}`, 'info', startData);
+
+                    // Step 2: Stream the research progress
+                    // Replace the entire EventSource handling section in your sendMessage() method
+                    // with this corrected version:
+
+                    this.eventSource = new EventSource(`${this.baseUrl}/research/stream/${this.currentTaskId}`);
+
+                    let accumulatedContent = '';
+                    let currentAssistantMessageElement = null;
+                    let streamEnded = false;
+
+                    this.eventSource.onmessage = (event) => {
+                        if (streamEnded) return;
+                        
+                        try {
+                            const eventData = JSON.parse(event.data);
+                            this.addLog(`Stream event received: ${eventData.type}`, 'debug', eventData);
+
+                            if (eventData.type === 'status') {
+                                const statusMessage = eventData.content || eventData.message || 'Processing...';
+                                const progress = eventData.progress || 0;
+                                
+                                // Don't update thinking indicator if we already have content being displayed
+                                if (!currentAssistantMessageElement) {
+                                    this.updateThinkingIndicator(statusMessage, progress);
+                                }
+                                this.addLog(`Research Status: ${statusMessage}`, 'status', { progress: progress });
+                                
+                                // Check if this is the final completion status
+                                if (statusMessage.toLowerCase().includes('completed') || statusMessage.toLowerCase().includes('finished')) {
+                                    // Don't end stream here, let report handle it
+                                    this.addLog('Research completion status received', 'info');
+                                }
+                            } else if (eventData.type === 'logs') {
+                                const logMessage = eventData.content || eventData.message || 'Research step completed';
+                                this.addLog(`Research Log: ${logMessage}`, 'info', eventData);
+                            } else if (eventData.type === 'report_chunk') {
+                                if (!currentAssistantMessageElement) {
+                                    this.removeThinkingIndicator();
+                                    this.addMessage('', 'assistant');
+                                    const chatMessages = document.getElementById('chatMessages');
+                                    currentAssistantMessageElement = chatMessages.lastElementChild.querySelector('.message-text');
+                                }
+                                
+                                const chunkContent = eventData.content || eventData.data || '';
+                                accumulatedContent += chunkContent;
+                                currentAssistantMessageElement.innerHTML = this.formatMarkdown(accumulatedContent);
+                                
+                                const chatMessages = document.getElementById('chatMessages');
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            } 
+                            else if (eventData.type === 'report') {
+                                this.removeThinkingIndicator();
+
+                                const reportContent = eventData.output || eventData.content || eventData.data || eventData.message || '';
+                                
+                                if (!reportContent.trim()) return;
+
+                                this.addLog(`Final report received chunk: ${reportContent.substring(0, 100)}...`, 'info');
+                                console.log('Appended chunk to accumulatedContent:', reportContent);  // Optional
+                                accumulatedContent += reportContent;
+
+                                const chatMessages = document.getElementById('chatMessages');
+
+                                // Only add assistant message once
+                                if (!currentAssistantMessageElement) {
+                                    this.addMessage('', 'assistant');
+                                    currentAssistantMessageElement = chatMessages?.lastElementChild?.querySelector('.message-text');
+                                }
+
+                                if (!currentAssistantMessageElement) {
+                                    console.error('Assistant message element not found!');
+                                    return;
+                                }
+
+                                // Continuously render the growing report
+                                currentAssistantMessageElement.innerHTML = this.formatMarkdown(accumulatedContent.trim());
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            }
+
+                            else if (eventData.type === 'complete') {
+                                streamEnded = true;
+
+                                if (accumulatedContent.trim()) {
+                                    const chatMessages = document.getElementById('chatMessages');
+
+                                    if (!currentAssistantMessageElement) {
+                                        this.removeThinkingIndicator();
+                                        this.addMessage('', 'assistant');
+                                        currentAssistantMessageElement = chatMessages?.lastElementChild?.querySelector('.message-text');
+                                    }
+
+                                    if (currentAssistantMessageElement) {
+                                        currentAssistantMessageElement.innerHTML = this.formatMarkdown(accumulatedContent.trim());
+                                    } else {
+                                        console.error('Assistant message element not found on complete!');
+                                    }
+                                }
+
+                                this.handleStreamCompletion();
+                            }
+
+
+                            else if (eventData.type === 'error') {
+                                this.handleStreamError(eventData.message || eventData.content || 'Unknown error occurred', currentAssistantMessageElement);
+                            }
+                        } catch (error) {
+                            this.addLog(`Error parsing stream data: ${error.message}`, 'error', { rawData: event.data });
+                            console.error('Stream parsing error:', error, 'Raw data:', event.data);
+                        }
+                    };
+
+                    this.eventSource.onerror = (err) => {
+                        if (streamEnded) return;
+                        this.addLog(`EventSource Error: Connection lost or server error`, 'error', err);
+                        this.handleStreamError('Connection error occurred', currentAssistantMessageElement);
+                    };
+
+                    this.eventSource.onopen = () => {
+                        this.addLog('EventSource connection opened', 'info');
+                    };
+
+                    // Handle end_stream event specifically
+                    this.eventSource.addEventListener('end_stream', (event) => {
+                        if (streamEnded) return;
+                        streamEnded = true;
+                        
+                        try {
+                            const finalData = JSON.parse(event.data);
+                            this.addLog('Research stream ended', 'info', finalData);
+                            
+                            // Check if there's final content to display
+                            const finalContent = finalData.content || finalData.data || '';
+                            if (finalContent && !currentAssistantMessageElement) {
+                                this.removeThinkingIndicator();
+                                this.addMessage('', 'assistant');
+                                const chatMessages = document.getElementById('chatMessages');
+                                currentAssistantMessageElement = chatMessages.lastElementChild.querySelector('.message-text');
+                            }
+                            
+                            if (finalContent) {
+                                accumulatedContent += finalContent;
+                            }
+                            
+                            // Display final accumulated content
+                            if (currentAssistantMessageElement && accumulatedContent.trim()) {
+                                currentAssistantMessageElement.innerHTML = this.formatMarkdown(accumulatedContent);
+                            } else if (!currentAssistantMessageElement && !accumulatedContent.trim()) {
+                                // No content received, show a helpful message
+                                this.removeThinkingIndicator();
+                                this.addMessage('Research completed. Please check the Research Logs for detailed results.', 'assistant');
+                            }
+                            
+                            this.handleStreamCompletion();
+                        } catch (error) {
+                            this.addLog(`Error parsing end_stream data: ${error.message}`, 'error', { rawData: event.data });
+                            this.handleStreamCompletion();
+                        }
+                    });
+
+                    // Add a timeout fallback
+                    setTimeout(() => {
+                        if (this.isResearching && this.eventSource && this.eventSource.readyState === EventSource.OPEN) {
+                            this.addLog('Stream timeout - forcing completion', 'warning');
+                            
+                            // If we have accumulated content but no display, show it
+                            if (accumulatedContent.trim() && !currentAssistantMessageElement) {
+                                this.removeThinkingIndicator();
+                                this.addMessage('', 'assistant');
+                                const chatMessages = document.getElementById('chatMessages');
+                                currentAssistantMessageElement = chatMessages.lastElementChild.querySelector('.message-text');
+                                currentAssistantMessageElement.innerHTML = this.formatMarkdown(accumulatedContent);
+                            }
+                            
+                            this.handleStreamCompletion();
+                        }
+                    }, 300000); // 5 minutes timeout
+                } catch (error) {
+                    this.addLog(`Failed to send message or initiate research: ${error.message}`, 'error', error);
+                    this.removeThinkingIndicator();
+                    this.addMessage(`Sorry, an error occurred: ${error.message}. Please try again or check the logs.`, 'assistant');
+                    this.updateStatus('Failed', 'failed');
+                    this.isResearching = false;
+                    sendButton.disabled = false;
+                }
+            }
+            handleStreamCompletion() {
+                // Close EventSource if it exists
+                if (this.eventSource) {
+                    this.eventSource.close();
+                    this.eventSource = null;
+                }
+                
+                // Remove thinking indicator if still present
+                this.removeThinkingIndicator();
+                
+                // Update UI state
+                this.updateStatus('Ready');
+                this.isResearching = false;
+                document.getElementById('sendButton').disabled = false;
+                
+                // Calculate and log duration
+                if (this.startTime) {
+                    const duration = (new Date() - this.startTime) / 1000;
+                    this.addLog(`Research completed in ${duration.toFixed(2)} seconds`, 'info');
+                    this.startTime = null;
+                } else {
+                    this.addLog('Research completed', 'info');
+                }
+                
+                // Ensure chat scrolls to bottom
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            handleStreamError(errorMessage, currentMessageElement) {
+                this.removeThinkingIndicator();
+                
+                // Display error message
+                const finalErrorMessage = errorMessage || 'An unknown error occurred during research';
+                
+                if (currentMessageElement && !currentMessageElement.innerHTML.trim()) {
+                    currentMessageElement.innerHTML = `<div style="color: #ef4444;">Error: ${finalErrorMessage}</div>`;
+                } else if (!currentMessageElement) {
+                    this.addMessage(`<div style="color: #ef4444;">Error: ${finalErrorMessage}</div>`, 'assistant');
+                }
+                
+                this.updateStatus('Failed', 'failed');
+                
+                // Close EventSource
+                if (this.eventSource) {
+                    this.eventSource.close();
+                    this.eventSource = null;
+                }
+                
+                this.isResearching = false;
+                document.getElementById('sendButton').disabled = false;
+                
+                this.addLog(`Research failed: ${finalErrorMessage}`, 'error');
+            }
+            // Basic Markdown to HTML conversion for displaying results
+            formatMarkdown(markdownText) {
+                if (!markdownText) return '';
+                
+                // Bold text
+                let html = markdownText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                // Italics
+                html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                // Headings (H1)
+                html = html.replace(/^# (.*)$/gm, '<h1 style="color: #4f46e5; margin: 20px 0 10px 0;">$1</h1>');
+                // Headings (H2)
+                html = html.replace(/^## (.*)$/gm, '<h2 style="color: #7c3aed; margin: 15px 0 8px 0;">$1</h2>');
+                // Headings (H3)
+                html = html.replace(/^### (.*)$/gm, '<h3 style="color: #a0a0a0; margin: 12px 0 6px 0;">$1</h3>');
+                // Code blocks
+                html = html.replace(/```([\s\S]*?)```/g, '<pre style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 5px; overflow-x: auto;"><code>$1</code></pre>');
+                // Inline code
+                html = html.replace(/`([^`]+)`/g, '<code style="background: rgba(255,255,255,0.1); padding: 2px 4px; border-radius: 3px;">$1</code>');
+                // Links
+                html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #4f46e5;">$1</a>');
+                // Line breaks for paragraphs
+                html = html.replace(/\n\n/g, '</p><p style="margin: 10px 0;">');
+                html = html.replace(/\n/g, '<br>');
+                // Wrap in paragraph tags
+                html = '<p style="margin: 10px 0;">' + html + '</p>';
+                return html;
+            }
+        }
+
+        // Initialize the client when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new DeepResearchClient();
+        });
+    </script>
+</body>
+</html>
