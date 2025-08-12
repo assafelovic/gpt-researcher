@@ -1,6 +1,6 @@
 # Stage 1: Browser and build tools installation
 #FROM python:3.13.3-slim-bookworm AS install-browser
-FROM python:3.11.4-slim-bullseye AS install-browser
+FROM python:3.13.6-slim-bullseye AS install-browser
 
 # Install Chromium, Chromedriver, Firefox, Geckodriver, and build tools in one layer
 RUN apt-get update \
