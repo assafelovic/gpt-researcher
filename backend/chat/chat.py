@@ -22,7 +22,7 @@ class ChatAgentWithMemory:
     ):
         self.report = report
         self.headers = headers
-        self.config = Config(config_path)
+        self.config = Config(config_path=config_path)
         self.vector_store = vector_store
         self.graph = self.create_agent()
 
