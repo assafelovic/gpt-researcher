@@ -23,6 +23,7 @@ _SUPPORTED_PROVIDERS = {
     "custom",
     "bedrock",
     "aimlapi",
+    "netmind",
 }
 
 
@@ -90,6 +91,10 @@ class Memory:
                 from langchain_together import TogetherEmbeddings
 
                 _embeddings = TogetherEmbeddings(model=model, **embdding_kwargs)
+            case "netmind":
+                from langchain_netmind import NetmindEmbeddings
+
+                _embeddings = NetmindEmbeddings(model=model, **embdding_kwargs)
             case "mistralai":
                 from langchain_mistralai import MistralAIEmbeddings
 
