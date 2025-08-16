@@ -31,13 +31,20 @@ class ChatAgentWithMemory:
         cfg = Config()
 
         # Retrieve LLM using get_llm with settings from config
-        provider = get_llm(
-            llm_provider=cfg.smart_llm_provider,
-            model=cfg.smart_llm_model,
-            temperature=0.35,
-            max_tokens=cfg.smart_token_limit,
-            **self.config.llm_kwargs
-        ).llm
+        # Avoid passing temperature for models that do not support it
+        from gpt_researcher.llm_provider.generic.base import NO_SUPPORT_TEMPERATURE_MODELS
+
+        llm_init_kwargs = {
+            "llm_provider": cfg.smart_llm_provider,
+            "model": cfg.smart_llm_model,
+            **self.config.llm_kwargs,
+        }
+
+        if cfg.smart_llm_model not in NO_SUPPORT_TEMPERATURE_MODELS:
+            llm_init_kwargs["temperature"] = 0.35
+            llm_init_kwargs["max_tokens"] = cfg.smart_token_limit
+
+        provider = get_llm(**llm_init_kwargs).llm
 
         # If vector_store is not initialized, process documents and add to vector_store
         if not self.vector_store:
