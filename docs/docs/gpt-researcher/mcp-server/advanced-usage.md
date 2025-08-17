@@ -66,8 +66,9 @@ Example configuration for Claude:
 
 For deeper research capabilities:
 
-```
 Use the conduct_research tool with these advanced parameters:
+
+```json
 {
   "query": "quantum computing advancements 2024",
   "depth": "deep",
@@ -80,8 +81,9 @@ Use the conduct_research tool with these advanced parameters:
 
 The write_report tool accepts several customization options:
 
-```
 Use the write_report tool with:
+
+```json
 {
   "style": "academic",
   "format": "markdown",
@@ -118,11 +120,11 @@ To secure your MCP server deployment:
    from fastapi import Depends, HTTPException
    from slowapi import Limiter, _rate_limit_exceeded_handler
    from slowapi.util import get_remote_address
-   
+
    limiter = Limiter(key_func=get_remote_address)
    app.state.limiter = limiter
    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-   
+
    @app.post("/mcp")
    @limiter.limit("10/minute")
    async def mcp_endpoint(request: Request, payload: dict):
@@ -228,4 +230,4 @@ def clean_memory():
 - Learn about [creating custom agents](../multi_agents/langgraph) to enhance research capabilities
 - Contribute to the [GPT Researcher project](../../contribute)
 
-:-) 
+:-)
