@@ -95,7 +95,7 @@
     "python.analysis.completeFunctionParens": false,
     "python.analysis.logLevel": "Error",
     "python.createEnvironment.contentButton": "show",
-    "python.languageServer": "Pylance",
+    "python.languageServer": "None",
     "python.missingPackage.severity": "Error",
     "svg.preview.autoOpen": true,
     "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
@@ -117,5 +117,7 @@
         "test_*.py"
     ],
     "python.testing.pytestEnabled": false,
-    "python.testing.unittestEnabled": true
+    "python.testing.unittestEnabled": true,
+    "cursorpyright.analysis.autoImportCompletions": false,
+    "cursorpyright.analysis.logLevel": "Error"
 }
