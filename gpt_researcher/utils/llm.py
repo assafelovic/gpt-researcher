@@ -467,11 +467,14 @@ async def create_chat_completion(
             debug_logger.finish_interaction()
 
 
+import logging
+import traceback
+
 async def construct_subtopics(
     task: str,
     data: str,
     config,
-    subtopics: list = [],
+    subtopics: list = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
     **kwargs
 ) -> list:
@@ -501,18 +504,16 @@ async def construct_subtopics(
         print(f"\n🤖 Calling {config.smart_llm_model}...\n")
 
         temperature: float = config.llm_kwargs.get("temperature", getattr(config, "temperature", 0.4))
-        # temperature = 0  # NOTE: temperature throughout the code base is currently set to Zero
 
-        provider_kwargs = {'model': config.smart_llm_model}
-
+        provider_kwargs = {"model": config.smart_llm_model}
         if config.llm_kwargs:
             provider_kwargs.update(config.llm_kwargs)
 
         if config.smart_llm_model in SUPPORT_REASONING_EFFORT_MODELS:
-            provider_kwargs['reasoning_effort'] = ReasoningEfforts.High.value
+            provider_kwargs["reasoning_effort"] = ReasoningEfforts.High.value
         else:
-            provider_kwargs['temperature'] = config.temperature
-            provider_kwargs['max_tokens'] = config.smart_token_limit
+            provider_kwargs["temperature"] = config.temperature
+            provider_kwargs["max_tokens"] = config.smart_token_limit
 
         provider: GenericLLMProvider = get_llm(
             config.smart_llm_provider,
@@ -525,24 +526,32 @@ async def construct_subtopics(
         model: BaseLLM = provider.llm
         chain = prompt | model | parser
 
-        output: list[str] = chain.invoke(
+        # Flexible handling of max_subtopics (kwargs > llm_kwargs > config)
+        max_subtopics = (
+            kwargs.get("max_subtopics")
+            or config.llm_kwargs.get("max_subtopics")
+            or getattr(config, "max_subtopics", 5)
+        )
+
+        output = await chain.ainvoke(
             {
                 "task": task,
                 "data": data,
                 "subtopics": subtopics,
-                "max_subtopics": config.llm_kwargs.get(
-                    "max_subtopics",
-                    config.max_subtopics,
-                    **kwargs,
-                ),
-            }
+                "max_subtopics": max_subtopics,
+            },
+            **kwargs,
         )
 
         return output
 
-    except Exception:
-        print(f"Exception in parsing subtopics: {traceback.format_exc()}")
+    except Exception as e:
+        print(f"Exception in parsing subtopics: {e}")
+        logging.getLogger(__name__).error(
+            f"Exception in parsing subtopics:\n{traceback.format_exc()}"
+        )
         return subtopics
+
 
 
 def validate_llm_response(

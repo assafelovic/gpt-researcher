@@ -84,6 +84,9 @@ NO_SUPPORT_TEMPERATURE_MODELS: list[str] = [
     "o3",
     "o4-mini-2025-04-16",
     "o4-mini",
+    # GPT-5 family: OpenAI enforces default temperature only
+    "gpt-5",
+    "gpt-5-mini",
 ]
 
 SUPPORT_REASONING_EFFORT_MODELS: list[str] = [
@@ -266,8 +269,10 @@ class GenericLLMProvider:
         elif provider == "dashscope":
             _check_pkg("langchain_dashscope")
             from langchain_dashscope import ChatDashScope  # pyright: ignore[reportMissingImports]
-
-            llm = ChatDashScope(**kwargs)
+            llm = ChatOpenAI(openai_api_base='https://dashscope.aliyuncs.com/compatible-mode/v1',
+                     openai_api_key=os.environ["DASHSCOPE_API_KEY"],
+                     **kwargs
+                )
         elif provider == "xai":
             _check_pkg("langchain_xai")
             from langchain_xai import ChatXAI  # pyright: ignore[reportMissingImports]

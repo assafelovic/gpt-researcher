@@ -73,7 +73,8 @@ class ExaSearch(RetrieverABC):
             type=search_type,
             use_autoprompt=use_autoprompt,
             num_results=max_results,
-            **filters,
+            include_domains=self.query_domains,
+            **filters
         )
 
         search_response: list[dict[str, Any]] = [{"href": result.url, "body": result.text or ""} for result in results.results]

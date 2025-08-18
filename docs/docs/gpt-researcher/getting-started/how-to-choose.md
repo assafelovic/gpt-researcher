@@ -57,7 +57,7 @@ For a complete out-of-the-box experience, including a sleek frontend, you can cl
 
 **Getting Started:**
 1. Clone the repository: `git clone https://github.com/assafelovic/gpt-researcher.git`
-2. Follow the [installation instructions](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)
+2. Follow the [installation instructions](https://docs.gptr.dev/docs/gpt-researcher/getting-started)
 
 **System Requirements:**
 - Git
@@ -108,7 +108,7 @@ To learn more about each of the options, check out these docs and code snippets:
 
 2. **End-to-End Application**: 
    - Clone the repository: `git clone https://github.com/assafelovic/gpt-researcher.git`
-   - [Installation instructions](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)
+   - [Installation instructions](https://docs.gptr.dev/docs/gpt-researcher/getting-started)
 
 3. **Multi-Agent System**: 
    - [Multi-Agents code](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents)

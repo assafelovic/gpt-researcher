@@ -84,7 +84,7 @@ class ContextManager:
             )
         vectorstore_compressor = VectorstoreCompressor(
             self.researcher.vector_store,
-            filter,
+            filter=filter,
             prompt_family=self.researcher.prompt_family,
             **self.researcher.kwargs,
         )

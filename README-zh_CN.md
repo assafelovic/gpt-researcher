@@ -73,7 +73,7 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 
 ## 📖 文档
 
-请参阅[此处](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started)，了解完整文档：
+请参阅[此处](https://docs.gptr.dev/docs/gpt-researcher/getting-started/introduction)，了解完整文档：
 
 - 入门（安装、设置环境、简单示例）
 - 操作示例（演示、集成、docker 支持）

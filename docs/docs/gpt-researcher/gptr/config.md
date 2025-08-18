@@ -14,7 +14,39 @@ As seen below, OpenAI still stands as the superior LLM. We assume it will stay t
 </div>
 
 The default config.py file can be found in `/gpt_researcher/config/`. It supports various options for customizing GPT Researcher to your needs.
-You can also include your own external JSON file `config.json` by adding the path in the `config_file` param. **Please follow the config.py file for additional future support**.
+You can also include your own external JSON file `config.json` by adding the path in the `config_path` param.
+The config JSON should follow the format/keys in the default config. Below is a sample config.json file to help get you started:
+'''bash
+{
+  "RETRIEVER": "tavily",
+  "EMBEDDING": "openai:text-embedding-3-small",
+  "SIMILARITY_THRESHOLD": 0.42,
+  "FAST_LLM": "openai:gpt-4o-mini",
+  "SMART_LLM": "openai:gpt-4.1",
+  "STRATEGIC_LLM": "openai:o4-mini",
+  "LANGUAGE": "english",
+  "CURATE_SOURCES": false,
+  "FAST_TOKEN_LIMIT": 2000,
+  "SMART_TOKEN_LIMIT": 4000,
+  "STRATEGIC_TOKEN_LIMIT": 4000,
+  "BROWSE_CHUNK_MAX_LENGTH": 8192,
+  "SUMMARY_TOKEN_LIMIT": 700,
+  "TEMPERATURE": 0.4,
+  "DOC_PATH": "./my-docs",
+  "REPORT_SOURCE": "web"
+}
+'''
+
+
+For example, to start GPT-Researcher and specify a specific config you would do this:
+```bash
+python gpt_researcher/main.py --config_path my_config.json
+```
+
+
+
+
+ **Please follow the config.py file for additional future support**.
 
 Below is a list of current supported options:
 
@@ -22,8 +54,8 @@ Below is a list of current supported options:
 - **`EMBEDDING`**: Embedding model. Defaults to `openai:text-embedding-3-small`. Options: `ollama`, `huggingface`, `azure_openai`, `custom`.
 - **`SIMILARITY_THRESHOLD`**: Threshold value for similarity comparison when processing documents. Defaults to `0.42`.
 - **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `openai:gpt-4o-mini`.
-- **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-4.1`.
-- **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `openai:o4-mini`.
+- **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-5`.
+- **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `openai:gpt-5-mini`.
 - **`LANGUAGE`**: Language to be used for the final research report. Defaults to `english`.
 - **`CURATE_SOURCES`**: Whether to curate sources for research. This step adds an LLM run which may increase costs and total run time but improves quality of source selection. Defaults to `False`.
 - **`FAST_TOKEN_LIMIT`**: Maximum token limit for fast LLM responses. Defaults to `2000`.
