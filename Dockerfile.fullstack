@@ -54,8 +54,6 @@ ENV PIP_ROOT_USER_ACTION=ignore
 
 COPY ./requirements.txt ./requirements.txt
 COPY ./multi_agents/requirements.txt ./multi_agents/requirements.txt
-git clone https://github.com/assafelovic/gptr-mcp
-COPY ./gptr-mcp/ ./gptr-mcp/
 
 # Install Python packages with retry logic and timeout configuration
 RUN pip config set global.timeout 60 && \
@@ -63,6 +61,7 @@ RUN pip config set global.timeout 60 && \
   pip install --upgrade pip && \
   pip install --no-cache-dir -r requirements.txt --upgrade --prefer-binary && \
   pip install --no-cache-dir -r multi_agents/requirements.txt --upgrade --prefer-binary && \
+  git clone https://github.com/assafelovic/gptr-mcp && \
   pip install --no-cache-dir -r gptr-mcp/requirements.txt --upgrade --prefer-binary
 
 ########################################################################
@@ -76,7 +75,7 @@ WORKDIR /usr/src/app
 RUN apt-get update && \
   apt-get install -y curl supervisor nginx && \
   curl -fsSL --retry 3 --retry-delay 10 https://deb.nodesource.com/setup_20.x | bash - && \
-  apt-get install -y nodejs && \
+  apt-get install -y git nodejs && \
   rm -rf /var/lib/apt/lists/*
 
 # Set backend server configuration
@@ -102,6 +101,7 @@ ARG NEXT_INTERNAL_PORT=3001
 ENV NEXT_INTERNAL_PORT=${NEXT_INTERNAL_PORT}
 
 # Copy application files
+RUN git clone https://github.com/assafelovic/gptr-mcp
 COPY ./ ./
 
 # Copy built frontend from the frontend-builder stage
