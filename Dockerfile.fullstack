@@ -1,7 +1,7 @@
 ########################################################################
 # Stage 1: Frontend build
 ########################################################################
-FROM node:slim AS frontend-builder
+FROM node:current-trixie-slim AS frontend-builder
 WORKDIR /app/frontend/nextjs
 
 # Copy package files and install dependencies
@@ -15,7 +15,7 @@ RUN npm run build
 ########################################################################
 # Stage 2: Browser and backend build tools installation
 ########################################################################
-FROM python:3.13.6-slim-bookworm AS install-browser
+FROM python:3.13-slim-trixie AS install-browser
 
 # Install Chromium, Chromedriver, Firefox, Geckodriver, and build tools in one layer
 RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries \
@@ -75,7 +75,7 @@ WORKDIR /usr/src/app
 RUN apt-get update && \
   apt-get install -y curl supervisor nginx && \
   curl -fsSL --retry 3 --retry-delay 10 https://deb.nodesource.com/setup_20.x | bash - && \
-  apt-get install -y git nodejs && \
+  apt-get install -y nodejs && \
   rm -rf /var/lib/apt/lists/*
 
 # Set backend server configuration

@@ -78,7 +78,7 @@ nltk>=3.9.1
 numpy>=2.2.6
 olefile>=0.47
 ollama>=0.4.8
-openai>=1.82.0
+openai>=1.82.0,<=1.99.9
 orjson>=3.10.18
 ormsgpack>=1.10.0
 packaging>=24.2
