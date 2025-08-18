@@ -54,13 +54,15 @@ ENV PIP_ROOT_USER_ACTION=ignore
 
 COPY ./requirements.txt ./requirements.txt
 COPY ./multi_agents/requirements.txt ./multi_agents/requirements.txt
+COPY ./gptr-mcp/ ./gptr-mcp/
 
 # Install Python packages with retry logic and timeout configuration
 RUN pip config set global.timeout 60 && \
   pip config set global.retries 3 && \
   pip install --upgrade pip && \
   pip install --no-cache-dir -r requirements.txt --upgrade --prefer-binary && \
-  pip install --no-cache-dir -r multi_agents/requirements.txt --upgrade --prefer-binary
+  pip install --no-cache-dir -r multi_agents/requirements.txt --upgrade --prefer-binary && \
+  pip install --no-cache-dir -r gptr-mcp/requirements.txt --upgrade --prefer-binary
 
 ########################################################################
 # Stage 4: Final image with backend, frontend
@@ -87,6 +89,12 @@ EXPOSE ${PORT}
 ARG NEXT_PORT=3000
 ENV NEXT_PORT=${NEXT_PORT}
 EXPOSE ${NEXT_PORT}
+
+# --- ADDED: MCP Server Port Configuration ---
+ARG MCP_PORT=8080
+ENV MCP_PORT=${MCP_PORT}
+EXPOSE ${MCP_PORT}
+ENV DOCKER_CONTAINER=true
 
 # Internal Next.js port (not exposed)
 ARG NEXT_INTERNAL_PORT=3001
@@ -129,6 +137,15 @@ RUN echo 'events {' > /etc/nginx/nginx.conf && \
   echo '    server {' >> /etc/nginx/nginx.conf && \
   echo '        listen 3000;' >> /etc/nginx/nginx.conf && \
   echo '        server_name _;' >> /etc/nginx/nginx.conf && \
+  echo '' >> /etc/nginx/nginx.conf && \
+  echo '        # Proxy backend routes to MCP server' >> /etc/nginx/nginx.conf && \
+  echo '        location /mcp {' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_pass http://127.0.0.1:8000;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header Host $host;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Real-IP $remote_addr;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;' >> /etc/nginx/nginx.conf && \
+  echo '            proxy_set_header X-Forwarded-Proto $scheme;' >> /etc/nginx/nginx.conf && \
+  echo '        }' >> /etc/nginx/nginx.conf && \
   echo '' >> /etc/nginx/nginx.conf && \
   echo '        # Proxy backend routes to FastAPI server' >> /etc/nginx/nginx.conf && \
   echo '        location /outputs {' >> /etc/nginx/nginx.conf && \
@@ -177,6 +194,15 @@ RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
   echo 'logfile=/dev/stdout' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '[program:nginx]' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=nginx -g "daemon off;"' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile=/dev/stdout' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stdout_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile=/dev/stderr' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo '[program:backend]' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'command=uvicorn main:app --host %(ENV_HOST)s --port %(ENV_PORT)s' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'directory=/usr/src/app' >> /etc/supervisor/conf.d/supervisord.conf && \
@@ -196,9 +222,11 @@ RUN echo '[supervisord]' > /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stdout_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stderr_logfile=/dev/stderr' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stderr_logfile_maxbytes=0' >> /etc/supervisor/conf.d/supervisord.conf && \
+  # --- ADDED: Supervisor program for MCP Server ---
   echo '' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo '[program:nginx]' >> /etc/supervisor/conf.d/supervisord.conf && \
-  echo 'command=nginx -g "daemon off;"' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo '[program:mcp]' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'command=python server.py' >> /etc/supervisor/conf.d/supervisord.conf && \
+  echo 'directory=/usr/src/app/gptr-mcp' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autostart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'autorestart=true' >> /etc/supervisor/conf.d/supervisord.conf && \
   echo 'stdout_logfile=/dev/stdout' >> /etc/supervisor/conf.d/supervisord.conf && \
