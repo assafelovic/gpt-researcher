@@ -27,8 +27,8 @@ class SourceCurator:
         Returns:
             str: Ranked list of source URLs with reasoning
         """
-        print(f"\n\nCurating {len(source_data)} sources: {source_data}")
         if self.researcher.verbose:
+            print(f"\n\nCurating {len(source_data)} sources: {source_data}")
             await stream_output(
                 "logs",
                 "research_plan",
@@ -53,9 +53,9 @@ class SourceCurator:
             )
 
             curated_sources = json.loads(response)
-            print(f"\n\nFinal Curated sources {len(source_data)} sources: {curated_sources}")
-
+            
             if self.researcher.verbose:
+                print(f"\n\nFinal Curated sources {len(source_data)} sources: {curated_sources}")
                 await stream_output(
                     "logs",
                     "research_plan",
@@ -66,8 +66,8 @@ class SourceCurator:
             return curated_sources
 
         except Exception as e:
-            print(f"Error in curate_sources from LLM response: {response}")
             if self.researcher.verbose:
+                print(f"Error in curate_sources from LLM response: {response}")
                 await stream_output(
                     "logs",
                     "research_plan",

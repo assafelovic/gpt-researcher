@@ -32,10 +32,10 @@ class JSONResearchHandler:
         self._save_json()
 
     def _save_json(self):
-        with open(self.json_file, 'w') as f:
+        with open(self.json_file, 'w', encoding='utf-8') as f:
             json.dump(self.research_data, f, indent=2)
 
-def setup_research_logging():
+def setup_research_logging(verbose=True):
     # Create logs directory if it doesn't exist
     logs_dir = Path("logs")
     logs_dir.mkdir(exist_ok=True)
@@ -62,10 +62,11 @@ def setup_research_logging():
     # Add file handler
     research_logger.addHandler(file_handler)
     
-    # Add stream handler for console output
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-    research_logger.addHandler(console_handler)
+    # Add stream handler for console output only if verbose is True
+    if verbose:
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+        research_logger.addHandler(console_handler)
     
     # Prevent propagation to root logger to avoid duplicate logs
     research_logger.propagate = False

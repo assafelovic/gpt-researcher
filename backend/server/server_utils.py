@@ -28,7 +28,7 @@ class CustomLogsHandler:
         self.timestamp = datetime.now().isoformat()
         # Initialize log file with metadata
         os.makedirs("outputs", exist_ok=True)
-        with open(self.log_file, 'w') as f:
+        with open(self.log_file, 'w', encoding='utf-8') as f:
             json.dump({
                 "timestamp": self.timestamp,
                 "events": [],
@@ -63,7 +63,7 @@ class CustomLogsHandler:
             log_data['content'].update(data)
             
         # Save updated log file
-        with open(self.log_file, 'w') as f:
+        with open(self.log_file, 'w', encoding='utf-8') as f:
             json.dump(log_data, f, indent=2)
         logger.debug(f"Log entry written to: {self.log_file}")
 

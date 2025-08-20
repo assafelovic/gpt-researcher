@@ -49,7 +49,8 @@ class Config:
         try:
             self.retrievers = self.parse_retrievers(retriever_env)
         except ValueError as e:
-            print(f"Warning: {str(e)}. Defaulting to 'tavily' retriever.")
+            import warnings
+            warnings.warn(f"{str(e)}. Defaulting to 'tavily' retriever.", UserWarning)
             self.retrievers = ["tavily"]
 
     def _set_embedding_attributes(self) -> None:
@@ -117,7 +118,8 @@ class Config:
             try:
                 self.validate_doc_path()
             except Exception as e:
-                print(f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
+                import warnings
+                warnings.warn(f"Error validating doc_path: {str(e)}. Using default doc_path.", UserWarning)
                 self.doc_path = DEFAULT_CONFIG['DOC_PATH']
 
     @classmethod
@@ -129,9 +131,10 @@ class Config:
         # config_path = os.path.join(cls.CONFIG_DIR, config_path)
         if not os.path.exists(config_path):
             if config_path and config_path != "default":
-                print(f"Warning: Configuration not found at '{config_path}'. Using default configuration.")
+                import warnings
+                warnings.warn(f"Configuration not found at '{config_path}'. Using default configuration.", UserWarning)
                 if not config_path.endswith(".json"):
-                    print(f"Do you mean '{config_path}.json'?")
+                    warnings.warn(f"Do you mean '{config_path}.json'?", UserWarning)
             return DEFAULT_CONFIG
 
         with open(config_path, "r") as f:

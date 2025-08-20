@@ -10,7 +10,7 @@ class SerperSearch():
     """
     Google Serper Retriever with support for country, language, and date filtering
     """
-    def __init__(self, query, query_domains=None, country=None, language=None, time_range=None, exclude_sites=None):
+    def __init__(self, query, query_domains=None, country=None, language=None, time_range=None, exclude_sites=None, verbose=True):
         """
         Initializes the SerperSearch object
         Args:
@@ -28,6 +28,7 @@ class SerperSearch():
         self.time_range = time_range or os.getenv("SERPER_TIME_RANGE")
         self.exclude_sites = exclude_sites or self._get_exclude_sites_from_env()
         self.api_key = self.get_api_key()
+        self.verbose = verbose
 
     def _get_exclude_sites_from_env(self):
         """
@@ -60,7 +61,8 @@ class SerperSearch():
         Returns:
             list: List of search results with title, href, and body
         """
-        print("Searching with query {0}...".format(self.query))
+        if self.verbose:
+            print("Searching with query {0}...".format(self.query))
         """Useful for general internet search queries using the Serper API."""
 
         # Search the query (see https://serper.dev/playground for the format)

@@ -53,10 +53,12 @@ class FireCrawl:
 
             # Check if the page has been scraped success
             if "error" in response:
-                print("Scrape failed! : " + str(response["error"]))
+                import logging
+                logging.getLogger(__name__).error("Scrape failed! : " + str(response["error"]))
                 return "", [], ""
             elif response["metadata"]["statusCode"] != 200:
-                print("Scrape failed! : " + str(response))
+                import logging
+                logging.getLogger(__name__).error("Scrape failed! : " + str(response))
                 return "", [], ""
 
             # Extract the content (markdown) and title from FireCrawl response
@@ -75,5 +77,6 @@ class FireCrawl:
             return content, image_urls, title
 
         except Exception as e:
-            print("Error! : " + str(e))
+            import logging
+            logging.getLogger(__name__).error("Error! : " + str(e))
             return "", [], ""

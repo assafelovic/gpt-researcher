@@ -286,6 +286,7 @@ async def generate_report(
                 **kwargs
             )
         except Exception as e:
-            print(f"Error in generate_report: {e}")
+            import logging
+            logging.getLogger(__name__).error(f"Error in generate_report: {e}")
 
     return report

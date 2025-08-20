@@ -169,6 +169,44 @@ class MCPResearchSkill:
         search_results = []
         
         try:
+            # Check for structured_content field first (MCP specification)
+            if isinstance(result, dict) and 'structured_content' in result:
+                structured_content = result['structured_content']
+                
+                # Handle structured content with results array
+                if isinstance(structured_content, dict) and 'results' in structured_content:
+                    for i, item in enumerate(structured_content['results']):
+                        search_result = {
+                            "title": item.get("title", f"Result {i+1} from {tool_name}"),
+                            "href": item.get("href", item.get("url", f"mcp://{tool_name}/{i}")),
+                            "body": item.get("body", item.get("content", str(item))),
+                        }
+                        search_results.append(search_result)
+                    return search_results
+                
+                # Handle other structured content formats
+                elif isinstance(structured_content, list):
+                    for i, item in enumerate(structured_content):
+                        if isinstance(item, dict):
+                            search_result = {
+                                "title": item.get("title", f"Result {i+1} from {tool_name}"),
+                                "href": item.get("href", item.get("url", f"mcp://{tool_name}/{i}")),
+                                "body": item.get("body", item.get("content", str(item))),
+                            }
+                            search_results.append(search_result)
+                    return search_results
+                    
+                # If structured_content is a single dict
+                else:
+                    search_result = {
+                        "title": structured_content.get("title", f"Result from {tool_name}"),
+                        "href": structured_content.get("href", structured_content.get("url", f"mcp://{tool_name}")),
+                        "body": structured_content.get("body", structured_content.get("content", str(structured_content))),
+                    }
+                    search_results.append(search_result)
+                    return search_results
+            
+            # Fall back to regular processing if no structured_content
             if isinstance(result, list):
                 # If the result is already a list, process each item
                 for i, item in enumerate(result):
