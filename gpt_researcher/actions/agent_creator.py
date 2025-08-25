@@ -47,7 +47,7 @@ async def choose_agent(
         agent_dict = json.loads(response)
         return agent_dict["server"], agent_dict["agent_role_prompt"]
 
-    except Exception as e:
+    except Exception:
         return await handle_json_error(response)
 
 

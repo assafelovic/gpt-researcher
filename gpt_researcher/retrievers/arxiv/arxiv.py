@@ -10,7 +10,7 @@ class ArxivSearch:
         self.query = query
         assert sort in ['Relevance', 'SubmittedDate'], "Invalid sort criterion"
         self.sort = arxiv.SortCriterion.SubmittedDate if sort == 'SubmittedDate' else arxiv.SortCriterion.Relevance
-        
+
 
     def search(self, max_results=5):
         """
@@ -36,5 +36,5 @@ class ArxivSearch:
                 "href": result.pdf_url,
                 "body": result.summary,
             })
-        
+
         return search_result

@@ -1,5 +1,4 @@
 import logging
-from typing import List, Dict, Any
 import asyncio
 from gpt_researcher import GPTResearcher
 from backend.server.server_utils import CustomLogsHandler  # Update import

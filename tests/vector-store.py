@@ -1,4 +1,3 @@
-import asyncio
 import pytest
 from typing import List
 from gpt_researcher import GPTResearcher
@@ -220,7 +219,7 @@ async def test_store_in_vector_store_locals():
 async def test_store_in_vector_store_hybrids():
     vector_store = InMemoryVectorStore(embedding=OpenAIEmbeddings())
     query = "What is transformer?"
-    
+
     researcher = GPTResearcher(
         query=query,
         report_type="research_report",
@@ -228,9 +227,9 @@ async def test_store_in_vector_store_hybrids():
         report_source="hybrid",
         config_path= "test_local"
     )
-    
+
     await researcher.conduct_research()
-    
+
     related_contexts = await vector_store.asimilarity_search("GPT-4", k=2)
-    
+
     assert len(related_contexts) == 2

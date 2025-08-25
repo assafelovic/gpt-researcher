@@ -50,7 +50,7 @@ async def write_md_to_pdf(text: str, path: str) -> str:
         # Get the directory of the current file
         current_dir = os.path.dirname(os.path.abspath(__file__))
         css_path = os.path.join(current_dir, "pdf_styles.css")
-        
+
         # Moved imports to inner function to avoid known import errors with gobject-2.0
         from md2pdf.core import md2pdf
         md2pdf(file_path,

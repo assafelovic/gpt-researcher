@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from ..utils.llm import create_chat_completion
-from ..utils.enum import ReportType, ReportSource, Tone
+from ..utils.enum import ReportType, ReportSource
 from ..actions.query_processing import get_search_results
 
 logger = logging.getLogger(__name__)
@@ -268,7 +268,7 @@ Format each question on a new line starting with 'Question: '"""}
                     }
 
                 except Exception as e:
-                    logger.error(f"Error processing query '{serp_query['query']}': {str(e)}")
+                    logger.error(f"Error processing query '{serp_query['query']}': {e!s}")
                     return None
 
         # Process queries concurrently with limit
@@ -385,7 +385,7 @@ Format each question on a new line starting with 'Question: '"""}
 
         # Trim final context to word limit
         final_context = trim_context_to_word_limit(context_with_citations)
-        
+
         # Set enhanced context and visited URLs
         self.researcher.context = "\n".join(final_context)
         self.researcher.visited_urls = results['visited_urls']

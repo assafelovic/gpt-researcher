@@ -5,7 +5,6 @@ import os
 from .config import Config
 from .memory import Memory
 from .utils.enum import ReportSource, ReportType, Tone
-from .llm_provider import GenericLLMProvider
 from .prompts import get_prompt_family
 from .vector_store import VectorStoreWrapper
 
@@ -144,17 +143,17 @@ class GPTResearcher:
         self.research_costs = 0.0
         self.log_handler = log_handler
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
-        
+
         # Process MCP configurations if provided
         self.mcp_configs = mcp_configs
         if mcp_configs:
             self._process_mcp_configs(mcp_configs)
-        
+
         self.retrievers = get_retrievers(self.headers, self.cfg)
         self.memory = Memory(
             self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
         )
-        
+
         # Set default encoding to utf-8
         self.encoding = kwargs.get('encoding', 'utf-8')
 
@@ -206,12 +205,12 @@ class GPTResearcher:
                 import logging
                 logging.getLogger(__name__).warning(f"Invalid mcp_strategy '{mcp_strategy}', defaulting to 'fast'")
                 return "fast"
-        
+
         # Priority 2: Convert mcp_max_iterations for backwards compatibility
         if mcp_max_iterations is not None:
             import logging
             logging.getLogger(__name__).warning("mcp_max_iterations is deprecated, use mcp_strategy instead")
-            
+
             if mcp_max_iterations == 0:
                 return "disabled"
             elif mcp_max_iterations == 1:
@@ -221,7 +220,7 @@ class GPTResearcher:
             else:
                 # Treat any other number as fast mode
                 return "fast"
-        
+
         # Priority 3: Use config setting
         if hasattr(self.cfg, 'mcp_strategy'):
             config_strategy = self.cfg.mcp_strategy
@@ -233,7 +232,7 @@ class GPTResearcher:
                 return "fast"
             elif config_strategy == "comprehensive":
                 return "deep"
-            
+
         # Priority 4: Default to fast
         return "fast"
 
@@ -249,7 +248,7 @@ class GPTResearcher:
         """
         # Check if user explicitly set RETRIEVER environment variable
         user_set_retriever = os.getenv("RETRIEVER") is not None
-        
+
         if not user_set_retriever:
             # Only auto-add MCP if user hasn't explicitly set retrievers
             if hasattr(self.cfg, 'retrievers') and self.cfg.retrievers:
@@ -262,7 +261,7 @@ class GPTResearcher:
                 # No retrievers configured, use mcp as default
                 self.cfg.retrievers = "mcp"
         # If user explicitly set RETRIEVER, respect their choice and don't auto-add MCP
-        
+
         # Store the mcp_configs for use by the MCP retriever
         self.mcp_configs = mcp_configs
 

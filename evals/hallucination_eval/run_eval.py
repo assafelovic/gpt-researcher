@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
-from gpt_researcher.utils.logging_config import get_json_handler
 
 from .evaluate import HallucinationEvaluator
 
@@ -33,7 +32,7 @@ DEFAULT_QUERIES_FILE = "evals/hallucination_eval/inputs/search_queries.jsonl"
 
 class ResearchEvaluator:
     """Runs GPT-Researcher queries and evaluates responses for hallucination."""
-    
+
     def __init__(self, queries_file: str = DEFAULT_QUERIES_FILE):
         """
         Initialize the research evaluator.
@@ -44,7 +43,7 @@ class ResearchEvaluator:
 
         self.queries_file = Path(queries_file)
         self.hallucination_evaluator = HallucinationEvaluator()
-        
+
     def load_queries(self, num_queries: Optional[int] = None) -> List[str]:
         """
         Load and optionally sample queries from the JSONL file.
@@ -60,11 +59,11 @@ class ResearchEvaluator:
             for line in f:
                 data = json.loads(line.strip())
                 queries.append(data["question"])
-            
+
         if num_queries and num_queries < len(queries):
             return random.sample(queries, num_queries)
         return queries
-        
+
     async def run_research(self, query: str) -> Dict:
         """
         Run a single query through GPT-Researcher.
@@ -83,17 +82,17 @@ class ResearchEvaluator:
             tone=Tone.Objective,
             verbose=True
         )
-        
+
         # Run research and get results
         research_result = await researcher.conduct_research()
         report = await researcher.write_report()
-        
+
         return {
             "query": query,
             "report": report,
             "context": research_result,
         }
-        
+
     def evaluate_research(
         self,
         research_data: Dict,
@@ -112,10 +111,10 @@ class ResearchEvaluator:
         # Use default output directory if none provided
         if output_dir is None:
             output_dir = DEFAULT_OUTPUT_DIR
-            
+
         # Use the final combined context as source text
         source_text = research_data.get("context", "")
-        
+
         if not source_text:
             logger.warning("No source text found in research results - skipping evaluation")
             eval_result = {
@@ -132,15 +131,15 @@ class ResearchEvaluator:
                 model_output=research_data["report"],
                 source_text=source_text
             )
-        
+
         # Save to output directory
         os.makedirs(output_dir, exist_ok=True)
-        
+
         # Append to evaluation records
         records_file = Path(output_dir) / "evaluation_records.jsonl"
         with open(records_file, "a") as f:
             f.write(json.dumps(eval_result) + "\n")
-            
+
         return eval_result
 
 async def main(num_queries: int = 5, output_dir: str = DEFAULT_OUTPUT_DIR):
@@ -152,46 +151,46 @@ async def main(num_queries: int = 5, output_dir: str = DEFAULT_OUTPUT_DIR):
         output_dir: Directory to save results
     """
     evaluator = ResearchEvaluator()
-    
+
     # Load and sample queries
     queries = evaluator.load_queries(num_queries)
     logger.info(f"Selected {len(queries)} queries for evaluation")
-    
+
     # Run research and evaluation for each query
     all_results = []
     total_hallucinated = 0
     total_responses = 0
     total_evaluated = 0
-    
+
     for query in queries:
         try:
             logger.info(f"Processing query: {query}")
-            
+
             # Run research
             research_data = await evaluator.run_research(query)
-            
+
             # Evaluate results
             eval_results = evaluator.evaluate_research(
                 research_data,
                 output_dir=output_dir
             )
-            
+
             all_results.append(eval_results)
-            
+
             # Update counters
             total_responses += 1
             if eval_results["is_hallucination"] is not None:
                 total_evaluated += 1
                 if eval_results["is_hallucination"]:
                     total_hallucinated += 1
-                    
+
         except Exception as e:
-            logger.error(f"Error processing query '{query}': {str(e)}")
+            logger.error(f"Error processing query '{query}': {e!s}")
             continue
-            
+
     # Calculate hallucination rate
     hallucination_rate = (total_hallucinated / total_evaluated) if total_evaluated > 0 else None
-    
+
     # Save aggregate results
     aggregate_results = {
         "total_queries": len(queries),
@@ -202,12 +201,12 @@ async def main(num_queries: int = 5, output_dir: str = DEFAULT_OUTPUT_DIR):
         "hallucination_rate": hallucination_rate,
         "results": all_results
     }
-    
+
     aggregate_file = Path(output_dir) / "aggregate_results.json"
     with open(aggregate_file, "w") as f:
         json.dump(aggregate_results, f, indent=2)
     logger.info(f"Saved aggregate results to {aggregate_file}")
-    
+
     # Print summary
     print("\n=== Evaluation Summary ===")
     print(f"Queries processed: {len(queries)}")
@@ -225,5 +224,5 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output-dir", type=str, default=DEFAULT_OUTPUT_DIR,
                       help="Directory to save results")
     args = parser.parse_args()
-    
-    asyncio.run(main(args.num_queries, args.output_dir)) 
+
+    asyncio.run(main(args.num_queries, args.output_dir))

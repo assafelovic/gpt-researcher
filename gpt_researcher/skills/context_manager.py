@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Dict, Optional, Set
+from typing import List, Dict, Set
 
 from ..context.compression import ContextCompressor, WrittenContentCompressor, VectorstoreCompressor
 from ..actions.utils import stream_output

@@ -2,7 +2,7 @@
 
 # libraries
 import os
-from typing import Literal, Sequence, Optional
+from typing import Literal, Sequence
 import requests
 import json
 

@@ -3,13 +3,8 @@ SimpleQA: Measuring short-form factuality in large language models
 Adapted for GPT-Researcher from OpenAI's simple-evals
 """
 
-import os
-import re
-import json
 import pandas
 import random
-from typing import Dict, List, Any
-from langchain_openai import ChatOpenAI
 
 GRADER_TEMPLATE = """
 Your job is to look at a question, a gold target, and a predicted answer, and then assign a grade of either ["CORRECT", "INCORRECT", "NOT_ATTEMPTED"].
@@ -102,17 +97,17 @@ class SimpleQAEval:
     def __init__(self, grader_model, num_examples=1):
         """Initialize the evaluator with a grader model and number of examples."""
         self.grader_model = grader_model
-        
+
         # Load all examples from CSV
         csv_url = "https://openaipublic.blob.core.windows.net/simple-evals/simple_qa_test_set.csv"
         df = pandas.read_csv(csv_url)
         all_examples = df.to_dict('records')
-        
+
         # Randomly select num_examples without replacement
         if num_examples > len(all_examples):
             print(f"Warning: Requested {num_examples} examples but only {len(all_examples)} available")
             num_examples = len(all_examples)
-            
+
         self.examples = random.sample(all_examples, num_examples)
         print(f"Selected {num_examples} random examples for evaluation")
 
@@ -121,9 +116,9 @@ class SimpleQAEval:
         problem = example.get("problem") or example.get("question")
         correct_answer = example["answer"]
         predicted_answer = example["predicted"]
-        
+
         grade = self.grade_response(problem, correct_answer, predicted_answer)
-        
+
         # Calculate metrics based on grade
         metrics = {
             "grade": grade,
@@ -131,7 +126,7 @@ class SimpleQAEval:
             "is_incorrect": 1.0 if grade == "INCORRECT" else 0.0,
             "is_not_attempted": 1.0 if grade == "NOT_ATTEMPTED" else 0.0
         }
-        
+
         return {
             "score": metrics["is_correct"],  # Score is 1.0 for CORRECT, 0.0 otherwise
             "metrics": {"grade": grade},
@@ -147,17 +142,17 @@ class SimpleQAEval:
         print(f"Question: {question}")
         print(f"Gold target: {correct_answer}")
         print(f"Predicted answer: {model_answer}")
-        
+
         prompt = GRADER_TEMPLATE.format(
             question=question,
             target=correct_answer,
             predicted_answer=model_answer
         )
-        
+
         messages = [{"role": "user", "content": prompt}]
         response = self.grader_model.invoke(messages)
         response_text = response.content.strip()
-        
+
         # Convert letter response to grade string
         if response_text in CHOICE_LETTERS:
             grade = CHOICE_LETTER_TO_STRING[response_text]
@@ -167,6 +162,6 @@ class SimpleQAEval:
                 if grade in response_text:
                     return grade
             grade = "NOT_ATTEMPTED"  # Default if no grade found
-            
+
         print(f"\nGrade: {grade}")
-        return grade 
+        return grade

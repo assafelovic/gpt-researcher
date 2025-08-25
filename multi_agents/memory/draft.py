@@ -1,5 +1,4 @@
-from typing import TypedDict, List, Annotated
-import operator
+from typing import TypedDict
 
 
 class DraftState(TypedDict):

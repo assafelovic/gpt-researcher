@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 
 from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
 
@@ -31,7 +30,7 @@ class BeautifulSoupScraper:
             content = get_text_from_soup(soup)
 
             image_urls = get_relevant_images(soup, self.link)
-            
+
             # Extract the title using the utility function
             title = extract_title(soup)
 

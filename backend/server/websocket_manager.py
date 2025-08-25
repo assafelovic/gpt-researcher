@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 from typing import Dict, List
 
 from fastapi import WebSocket
@@ -34,7 +33,7 @@ class WebSocketManager:
                 message = await queue.get()
                 if message is None:  # Shutdown signal
                     break
-                    
+
                 if websocket in self.active_connections:
                     if message == "ping":
                         await websocket.send_text("pong")
@@ -79,14 +78,14 @@ class WebSocketManager:
         tone = Tone[tone]
         # add customized JSON config file path here
         config_path = "default"
-        
+
         # Pass MCP parameters to run_agent
         report = await run_agent(
-            task, report_type, report_source, source_urls, document_urls, tone, websocket, 
+            task, report_type, report_source, source_urls, document_urls, tone, websocket,
             headers=headers, query_domains=query_domains, config_path=config_path,
             mcp_enabled=mcp_enabled, mcp_strategy=mcp_strategy, mcp_configs=mcp_configs
         )
-        
+
         # Create new Chat Agent whenever a new report is written
         self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
         return report
@@ -99,7 +98,7 @@ class WebSocketManager:
             await websocket.send_json({"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"})
 
 async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, stream_output=stream_output, headers=None, query_domains=[], config_path="", return_researcher=False, mcp_enabled=False, mcp_strategy="fast", mcp_configs=[]):
-    """Run the agent."""    
+    """Run the agent."""
     # Create logs handler for this research task
     logs_handler = CustomLogsHandler(websocket, task)
 
@@ -110,10 +109,10 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
         if "mcp" not in current_retriever:
             # Add MCP to existing retrievers
             os.environ["RETRIEVER"] = f"{current_retriever},mcp"
-        
+
         # Set MCP strategy
         os.environ["MCP_STRATEGY"] = mcp_strategy
-        
+
         print(f"🔧 MCP enabled with strategy '{mcp_strategy}' and {len(mcp_configs)} server(s)")
         await logs_handler.send_json({
             "type": "logs",
@@ -124,10 +123,10 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
     # Initialize researcher based on report type
     if report_type == "multi_agents":
         report = await run_research_task(
-            query=task, 
+            query=task,
             websocket=logs_handler,  # Use logs_handler instead of raw websocket
-            stream_output=stream_output, 
-            tone=tone, 
+            stream_output=stream_output,
+            tone=tone,
             headers=headers
         )
         report = report.get("report", "")
@@ -148,7 +147,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
             mcp_strategy=mcp_strategy if mcp_enabled else None,
         )
         report = await researcher.run()
-        
+
     else:
         researcher = BasicReport(
             query=task,

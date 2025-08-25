@@ -1,6 +1,4 @@
-import json
 import os
-from typing import Dict, List
 import time
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile, BackgroundTasks
@@ -12,16 +10,14 @@ from pydantic import BaseModel
 
 from backend.server.websocket_manager import WebSocketManager
 from backend.server.server_utils import (
-    get_config_dict, sanitize_filename,
-    update_environment_variables, handle_file_upload, handle_file_deletion,
+    sanitize_filename,
+    handle_file_upload, handle_file_deletion,
     execute_multi_agents, handle_websocket_communication
 )
 
 from backend.server.websocket_manager import run_agent
 from backend.utils import write_md_to_word, write_md_to_pdf
-from gpt_researcher.utils.logging_config import setup_research_logging
 from gpt_researcher.utils.enum import Tone
-from backend.chat.chat import ChatAgentWithMemory
 
 import logging
 
@@ -103,7 +99,7 @@ def startup_event():
     os.makedirs("outputs", exist_ok=True)
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
     # os.makedirs(DOC_PATH, exist_ok=True)  # Commented out to avoid creating the folder if not needed
-    
+
 
 # Routes
 

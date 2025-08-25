@@ -5,9 +5,9 @@ from .browser import BrowserManager
 from .curator import SourceCurator
 
 __all__ = [
-    'ResearchConductor',
-    'ReportGenerator',
-    'ContextManager',
     'BrowserManager',
+    'ContextManager',
+    'ReportGenerator',
+    'ResearchConductor',
     'SourceCurator'
 ]

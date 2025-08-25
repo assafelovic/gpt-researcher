@@ -17,27 +17,27 @@ try:
     from langchain_mcp_adapters.client import MultiServerMCPClient
     HAS_MCP_ADAPTERS = True
     logger.debug("langchain-mcp-adapters is available")
-    
+
     # Import core MCP components
     from .client import MCPClientManager
     from .tool_selector import MCPToolSelector
     from .research import MCPResearchSkill
     from .streaming import MCPStreamer
-    
+
     __all__ = [
+        "HAS_MCP_ADAPTERS",
         "MCPClientManager",
-        "MCPToolSelector", 
         "MCPResearchSkill",
         "MCPStreamer",
-        "HAS_MCP_ADAPTERS"
+        "MCPToolSelector"
     ]
-    
+
 except ImportError as e:
     logger.warning(f"MCP dependencies not available: {e}")
     HAS_MCP_ADAPTERS = False
     __all__ = ["HAS_MCP_ADAPTERS"]
-    
+
 except Exception as e:
     logger.error(f"Unexpected error importing MCP components: {e}")
     HAS_MCP_ADAPTERS = False
-    __all__ = ["HAS_MCP_ADAPTERS"] 
+    __all__ = ["HAS_MCP_ADAPTERS"]

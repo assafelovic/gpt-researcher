@@ -45,14 +45,14 @@ class MCPClientManager:
             Dict[str, Dict[str, Any]]: Server configurations for MultiServerMCPClient
         """
         server_configs = {}
-        
+
         for i, config in enumerate(self.mcp_configs):
             # Generate server name
             server_name = config.get("name", f"mcp_server_{i+1}")
-            
+
             # Build the server config
             server_config = {}
-            
+
             # Auto-detect transport type from URL if provided
             connection_url = config.get("connection_url")
             if connection_url:
@@ -72,29 +72,29 @@ class MCPClientManager:
                 # No URL provided, use stdio (default) or specified connection_type
                 connection_type = config.get("connection_type", "stdio")
                 server_config["transport"] = connection_type
-            
+
             # Handle stdio transport configuration
             if server_config.get("transport") == "stdio":
                 if config.get("command"):
                     server_config["command"] = config["command"]
-                    
+
                     # Handle server_args
                     server_args = config.get("args", [])
                     if isinstance(server_args, str):
                         server_args = server_args.split()
                     server_config["args"] = server_args
-                    
+
                     # Handle environment variables
                     server_env = config.get("env", {})
                     if server_env:
                         server_config["env"] = server_env
-                        
+
             # Add authentication if provided
             if config.get("connection_token"):
                 server_config["token"] = config["connection_token"]
-                
+
             server_configs[server_name] = server_config
-            
+
         return server_configs
 
     async def get_or_create_client(self) -> Optional[object]:
@@ -107,25 +107,25 @@ class MCPClientManager:
         async with self._client_lock:
             if self._client is not None:
                 return self._client
-                
+
             if not HAS_MCP_ADAPTERS:
                 logger.error("langchain-mcp-adapters not installed")
                 return None
-                
+
             if not self.mcp_configs:
                 logger.error("No MCP server configurations found")
                 return None
-                
+
             try:
                 # Convert configs to langchain format
                 server_configs = self.convert_configs_to_langchain_format()
                 logger.info(f"Creating MCP client for {len(server_configs)} server(s)")
-                
+
                 # Initialize the MultiServerMCPClient
                 self._client = MultiServerMCPClient(server_configs)
-                
+
                 return self._client
-                
+
             except Exception as e:
                 logger.error(f"Error creating MCP client: {e}")
                 return None
@@ -157,18 +157,18 @@ class MCPClientManager:
         client = await self.get_or_create_client()
         if not client:
             return []
-            
+
         try:
             # Get tools from all servers
             all_tools = await client.get_tools()
-            
+
             if all_tools:
                 logger.info(f"Loaded {len(all_tools)} total tools from MCP servers")
                 return all_tools
             else:
                 logger.warning("No tools available from MCP servers")
                 return []
-                
+
         except Exception as e:
             logger.error(f"Error getting MCP tools: {e}")
-            return [] 
+            return []

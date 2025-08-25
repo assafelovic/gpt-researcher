@@ -5,7 +5,7 @@ Handles websocket streaming and logging for MCP operations.
 """
 import asyncio
 import logging
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -32,24 +32,24 @@ class MCPStreamer:
     async def stream_log(self, message: str, data: Any = None):
         """Stream a log message to the websocket if available."""
         logger.info(message)
-        
+
         if self.websocket:
             try:
                 from ..actions.utils import stream_output
                 await stream_output(
-                    type="logs", 
-                    content="mcp_retriever", 
-                    output=message, 
+                    type="logs",
+                    content="mcp_retriever",
+                    output=message,
                     websocket=self.websocket,
                     metadata=data
                 )
             except Exception as e:
                 logger.error(f"Error streaming log: {e}")
-                
+
     def stream_log_sync(self, message: str, data: Any = None):
         """Synchronous version of stream_log for use in sync contexts."""
         logger.info(message)
-        
+
         if self.websocket:
             try:
                 try:
@@ -99,4 +99,4 @@ class MCPStreamer:
 
     async def stream_info(self, info_msg: str):
         """Stream informational messages."""
-        await self.stream_log(f"ℹ️ {info_msg}") 
+        await self.stream_log(f"ℹ️ {info_msg}")

@@ -51,10 +51,10 @@ def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
     """
     sections = []
     parsed_md = markdown.markdown(markdown_text)
-    
+
     pattern = r'<h\d>(.*?)</h\d>(.*?)(?=<h\d>|$)'
     matches = re.findall(pattern, parsed_md, re.DOTALL)
-    
+
     for title, content in matches:
         clean_content = re.sub(r'<.*?>', '', content).strip()
         if clean_content:
@@ -62,7 +62,7 @@ def extract_sections(markdown_text: str) -> List[Dict[str, str]]:
                 "section_title": title.strip(),
                 "written_content": clean_content
             })
-    
+
     return sections
 
 def table_of_contents(markdown_text: str) -> str:

@@ -47,7 +47,7 @@ class WriterAgent:
                 "role": "user",
                 "content": f"Today's date is {datetime.now().strftime('%d/%m/%Y')}\n."
                 f"Query or Topic: {query}\n"
-                f"Research data: {str(data)}\n"
+                f"Research data: {data!s}\n"
                 f"Your task is to write an in depth, well written and detailed "
                 f"introduction and conclusion to the research report based on the provided research data. "
                 f"Do not include headers in the results.\n"
@@ -96,12 +96,12 @@ Headers Data: {headers}\n
             await self.stream_output(
                 "logs",
                 "writing_report",
-                f"Writing final research report based on research data...",
+                "Writing final research report based on research data...",
                 self.websocket,
             )
         else:
             print_agent_output(
-                f"Writing final research report based on research data...",
+                "Writing final research report based on research data...",
                 agent="WRITER",
             )
 

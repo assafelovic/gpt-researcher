@@ -13,12 +13,12 @@ try:
     from langchain_mcp_adapters.client import MultiServerMCPClient
     HAS_MCP_ADAPTERS = True
     logger.debug("langchain-mcp-adapters is available")
-    
+
     # Import the retriever
     from .retriever import MCPRetriever
     __all__ = ["MCPRetriever"]
     logger.debug("MCPRetriever imported successfully")
-    
+
 except ImportError as e:
     # Log the specific import error for debugging
     logger.warning(f"Failed to import MCPRetriever: {e}")
@@ -29,4 +29,4 @@ except Exception as e:
     # Catch any other exception that might occur
     logger.error(f"Unexpected error importing MCPRetriever: {e}")
     MCPRetriever = None
-    __all__ = [] 
+    __all__ = []

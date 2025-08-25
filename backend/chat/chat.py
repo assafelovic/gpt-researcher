@@ -1,4 +1,3 @@
-from fastapi import WebSocket
 import uuid
 
 from gpt_researcher.utils.llm import get_llm
@@ -64,12 +63,12 @@ class ChatAgentWithMemory:
             tools=[self.vector_store_tool(self.vector_store)],
             checkpointer=MemorySaver()
         )
-        
+
         return graph
-    
+
     def vector_store_tool(self, vector_store) -> Tool:
         """Create Vector Store Tool"""
-        @tool 
+        @tool
         def retrieve_info(query):
             """
             Consult the report for relevant contexts whenever you don't know something
@@ -77,7 +76,7 @@ class ChatAgentWithMemory:
             retriever = vector_store.as_retriever(k = 4)
             return retriever.invoke(query)
         return retrieve_info
-        
+
     def _process_document(self, report):
         """Split Report into Chunks"""
         text_splitter = RecursiveCharacterTextSplitter(

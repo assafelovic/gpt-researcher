@@ -10,12 +10,10 @@ import string
 import os
 
 from bs4 import BeautifulSoup
-from typing import Iterable, cast
 
 from .processing.scrape_skills import (scrape_pdf_with_pymupdf,
                                        scrape_pdf_with_arxiv)
 
-from urllib.parse import urljoin
 
 from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
 
@@ -49,10 +47,10 @@ class BrowserScraper:
             text, image_urls, title = self.scrape_text_with_selenium()
             return text, image_urls, title
         except Exception as e:
-            print(f"An error occurred during scraping: {str(e)}")
+            print(f"An error occurred during scraping: {e!s}")
             print("Full stack trace:")
             print(traceback.format_exc())
-            return f"An error occurred: {str(e)}\n\nStack trace:\n{traceback.format_exc()}", [], ""
+            return f"An error occurred: {e!s}\n\nStack trace:\n{traceback.format_exc()}", [], ""
         finally:
             if self.driver:
                 self.driver.quit()
@@ -72,7 +70,7 @@ class BrowserScraper:
             from selenium.webdriver.firefox.options import Options as FirefoxOptions
             from selenium.webdriver.safari.options import Options as SafariOptions
         except ImportError as e:
-            print(f"Failed to import Selenium: {str(e)}")
+            print(f"Failed to import Selenium: {e!s}")
             print("Please install Selenium and its dependencies to use BrowserScraper.")
             print("You can install Selenium using pip:")
             print("    pip install selenium")
@@ -113,7 +111,7 @@ class BrowserScraper:
 
             # print(f"{self.selenium_web_browser.capitalize()} driver set up successfully.")
         except Exception as e:
-            print(f"Failed to set up {self.selenium_web_browser} driver: {str(e)}")
+            print(f"Failed to set up {self.selenium_web_browser} driver: {e!s}")
             print("Full stack trace:")
             print(traceback.format_exc())
             raise
@@ -156,7 +154,7 @@ class BrowserScraper:
             try:
                 os.remove(self.cookie_filename)
             except Exception as e:
-                print(f"Failed to remove cookie file: {str(e)}")
+                print(f"Failed to remove cookie file: {e!s}")
         else:
             print("No cookie file found to remove.")
 
@@ -184,7 +182,7 @@ class BrowserScraper:
 
             # print("Google cookies saved successfully.")
         except Exception as e:
-            print(f"Failed to visit Google and save cookies: {str(e)}")
+            print(f"Failed to visit Google and save cookies: {e!s}")
             print("Full stack trace:")
             print(traceback.format_exc())
 
@@ -195,7 +193,7 @@ class BrowserScraper:
             WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
-        except TimeoutException as e:
+        except TimeoutException:
             print("Timed out waiting for page to load")
             print(f"Full stack trace:\n{traceback.format_exc()}")
             return "Page load timed out", [], ""

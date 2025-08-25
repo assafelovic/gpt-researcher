@@ -1,4 +1,3 @@
-from typing import Dict, Optional
 import json
 
 from ..utils.llm import construct_subtopics

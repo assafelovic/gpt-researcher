@@ -11,11 +11,11 @@ from .orchestrator import ChiefEditorAgent
 
 __all__ = [
     "ChiefEditorAgent",
-    "ResearchAgent",
-    "WriterAgent",
     "EditorAgent",
+    "HumanAgent",
     "PublisherAgent",
-    "ReviserAgent",
+    "ResearchAgent",
     "ReviewerAgent",
-    "HumanAgent"
+    "ReviserAgent",
+    "WriterAgent"
 ]

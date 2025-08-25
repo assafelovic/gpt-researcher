@@ -9,7 +9,7 @@ import asyncio
 async def get_report(query: str, report_type: str, custom_prompt: str = None):
     researcher = GPTResearcher(query, report_type)
     research_result = await researcher.conduct_research()
-    
+
     # Generate report with optional custom prompt
     report = await researcher.write_report(custom_prompt=custom_prompt)
 
@@ -31,14 +31,14 @@ if __name__ == "__main__":
 
     print("Standard Report:")
     print(report)
-    
+
     # Custom report with specific formatting requirements
     custom_prompt = "Answer in short, 2 paragraphs max without citations. Focus on the most important facts for investors."
     custom_report, _, _, _, _ = asyncio.run(get_report(query, report_type, custom_prompt))
-    
+
     print("\nCustomized Short Report:")
     print(custom_report)
-    
+
     print("\nResearch Costs:")
     print(costs)
     print("\nNumber of Research Images:")

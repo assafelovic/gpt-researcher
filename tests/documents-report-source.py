@@ -1,5 +1,4 @@
 import os
-import asyncio
 import pytest
 # Ensure this path is correct
 from gpt_researcher import GPTResearcher

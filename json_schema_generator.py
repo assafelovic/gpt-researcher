@@ -26,7 +26,7 @@ def generate_structured_json(schema: BaseModel, data: Dict[str, Any]) -> str:
         # Convert to JSON string
         return json.dumps(structured_data.dict(), indent=2)
     except Exception as e:
-        return f"Error generating JSON: {str(e)}"
+        return f"Error generating JSON: {e!s}"
 
 # Example usage
 if __name__ == "__main__":
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         "age": 30,
         "is_active": True
     }
-    
+
     json_output = generate_structured_json(UserSchema, sample_data)
     print("Structured JSON Output:")
     print(json_output)

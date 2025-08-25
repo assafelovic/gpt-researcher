@@ -5,7 +5,7 @@ from typing import List, Dict
 from urllib.parse import urljoin
 
 
-class SearxSearch():
+class SearxSearch:
     """
     SearxNG API Retriever
     """
@@ -47,8 +47,8 @@ class SearxSearch():
         search_url = urljoin(self.base_url, "search")
         # TODO: Add support for query domains
         params = {
-            # The search query. 
-            'q': self.query, 
+            # The search query.
+            'q': self.query,
             # Output format of results. Format needs to be activated in searxng config.
             'format': 'json'
         }
@@ -73,6 +73,6 @@ class SearxSearch():
             return search_response
 
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Error querying SearxNG: {str(e)}")
+            raise Exception(f"Error querying SearxNG: {e!s}")
         except json.JSONDecodeError:
             raise Exception("Error parsing SearxNG response")

@@ -5,7 +5,7 @@ import random
 import traceback
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from typing import Dict, Literal, cast, Tuple, List
+from typing import Dict, Literal, cast, Tuple
 import requests
 import asyncio
 import logging
@@ -124,7 +124,7 @@ class NoDriverScraper:
             except Exception as e:
                 # Log error but don't block the request
                 NoDriverScraper.logger.warning(
-                    f"Rate limiting error for {url}: {str(e)}"
+                    f"Rate limiting error for {url}: {e!s}"
                 )
 
         async def stop(self):
@@ -202,7 +202,7 @@ class NoDriverScraper:
             try:
                 browser = await self.get_browser()
             except ImportError as e:
-                self.logger.error(f"Failed to initialize browser: {str(e)}")
+                self.logger.error(f"Failed to initialize browser: {e!s}")
                 return str(e), [], ""
 
             page = await browser.get(self.url)
@@ -239,7 +239,7 @@ class NoDriverScraper:
             return text, image_urls, title
         except Exception as e:
             self.logger.error(
-                f"An error occurred during scraping: {str(e)}\n"
+                f"An error occurred during scraping: {e!s}\n"
                 "Full stack trace:\n"
                 f"{traceback.format_exc()}"
             )

@@ -27,7 +27,7 @@ class DocumentLoader:
                     file_name, file_extension_with_dot = os.path.splitext(filename)
                     file_extension = file_extension_with_dot.strip(".").lower()
                     tasks.append(self._load_document(file_path, file_extension))
-                    
+
         elif isinstance(self.path, (str, bytes, os.PathLike)):
             for root, dirs, files in os.walk(self.path):
                 for file in files:
@@ -35,7 +35,7 @@ class DocumentLoader:
                     file_name, file_extension_with_dot = os.path.splitext(file)
                     file_extension = file_extension_with_dot.strip(".").lower()
                     tasks.append(self._load_document(file_path, file_extension))
-                    
+
         else:
             raise ValueError("Invalid type for path. Expected str, bytes, os.PathLike, or list thereof.")
 
@@ -54,7 +54,7 @@ class DocumentLoader:
                         "raw_content": page.page_content,
                         "url": os.path.basename(page.metadata['source'])
                     })
-                    
+
         if not docs:
             raise ValueError("🤷 Failed to load any documents!")
 

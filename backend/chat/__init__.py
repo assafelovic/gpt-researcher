@@ -1,1 +1,1 @@
-from .chat import ChatAgentWithMemory
+from .chat import ChatAgentWithMemory as ChatAgentWithMemory

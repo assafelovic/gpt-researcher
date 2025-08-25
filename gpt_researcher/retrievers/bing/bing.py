@@ -7,7 +7,7 @@ import json
 import logging
 
 
-class BingSearch():
+class BingSearch:
     """
     Bing Search Retriever
     """

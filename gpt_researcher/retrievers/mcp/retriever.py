@@ -42,8 +42,8 @@ class MCPRetriever:
     """
 
     def __init__(
-        self, 
-        query: str, 
+        self,
+        query: str,
         headers: Optional[Dict[str, str]] = None,
         query_domains: Optional[List[str]] = None,
         websocket=None,
@@ -66,20 +66,20 @@ class MCPRetriever:
         self.query_domains = query_domains or []
         self.websocket = websocket
         self.researcher = researcher
-        
+
         # Extract mcp_configs and config from the researcher instance
         self.mcp_configs = self._get_mcp_configs()
         self.cfg = self._get_config()
-        
+
         # Initialize modular components
         self.client_manager = MCPClientManager(self.mcp_configs)
         self.tool_selector = MCPToolSelector(self.cfg, self.researcher)
         self.mcp_researcher = MCPResearchSkill(self.cfg, self.researcher)
         self.streamer = MCPStreamer(self.websocket)
-        
+
         # Initialize caching
         self._all_tools_cache = None
-        
+
         # Log initialization
         if self.mcp_configs:
             self.streamer.stream_log_sync(f"🔧 Initializing MCP retriever for query: {self.query}")
@@ -108,7 +108,7 @@ class MCPRetriever:
         """
         if self.researcher and hasattr(self.researcher, 'cfg'):
             return self.researcher.cfg
-        
+
         # If no config available, this is a critical error
         logger.error("No config found in researcher instance. MCPRetriever requires a researcher instance with cfg attribute.")
         raise ValueError("MCPRetriever requires a researcher instance with cfg attribute containing LLM configuration")
@@ -129,43 +129,43 @@ class MCPRetriever:
             logger.error(error_msg)
             await self.streamer.stream_error("MCP retriever cannot proceed without server configurations.")
             return []  # Return empty instead of raising to allow research to continue
-            
+
         # Log to help debug the integration flow
         logger.info(f"MCPRetriever.search_async called for query: {self.query}")
-            
+
         try:
             # Stage 1: Get all available tools
             await self.streamer.stream_stage_start("Stage 1", "Getting all available MCP tools")
             all_tools = await self._get_all_tools()
-            
+
             if not all_tools:
                 await self.streamer.stream_warning("No MCP tools available, skipping MCP research")
                 return []
-            
+
             # Stage 2: Select most relevant tools
             await self.streamer.stream_stage_start("Stage 2", "Selecting most relevant tools")
             selected_tools = await self.tool_selector.select_relevant_tools(self.query, all_tools, max_tools=3)
-            
+
             if not selected_tools:
                 await self.streamer.stream_warning("No relevant tools selected, skipping MCP research")
                 return []
-            
+
             # Stage 3: Conduct research with selected tools
             await self.streamer.stream_stage_start("Stage 3", "Conducting research with selected tools")
             results = await self.mcp_researcher.conduct_research_with_tools(self.query, selected_tools)
-            
+
             # Limit the number of results
             if len(results) > max_results:
                 logger.info(f"Limiting {len(results)} MCP results to {max_results}")
                 results = results[:max_results]
-            
+
             # Log result summary with actual content samples
             logger.info(f"MCPRetriever returning {len(results)} results")
-            
+
             # Calculate total content length for summary
             total_content_length = sum(len(result.get("body", "")) for result in results)
             await self.streamer.stream_research_results(len(results), total_content_length)
-            
+
             # Log detailed content samples for debugging
             if results:
                 # Show samples of the first few results
@@ -175,21 +175,21 @@ class MCPRetriever:
                     content = result.get("body", "")
                     content_length = len(content)
                     content_sample = content[:400] + "..." if len(content) > 400 else content
-                    
+
                     logger.debug(f"Result {i+1}/{len(results)}: '{title}'")
                     logger.debug(f"URL: {url}")
                     logger.debug(f"Content ({content_length:,} chars): {content_sample}")
-                    
+
                 if len(results) > 3:
                     remaining_results = len(results) - 3
                     remaining_content = sum(len(result.get("body", "")) for result in results[3:])
                     logger.debug(f"... and {remaining_results} more results ({remaining_content:,} chars)")
-                    
+
             return results
-            
+
         except Exception as e:
             logger.error(f"Error in MCP search: {e}")
-            await self.streamer.stream_error(f"Error in MCP search: {str(e)}")
+            await self.streamer.stream_error(f"Error in MCP search: {e!s}")
             return []
         finally:
             # Ensure client cleanup after search completes
@@ -217,10 +217,10 @@ class MCPRetriever:
             logger.error(error_msg)
             self.streamer.stream_log_sync("❌ MCP retriever cannot proceed without server configurations.")
             return []  # Return empty instead of raising to allow research to continue
-            
+
         # Log to help debug the integration flow
         logger.info(f"MCPRetriever.search called for query: {self.query}")
-        
+
         try:
             # Handle the async/sync boundary properly
             try:
@@ -229,8 +229,7 @@ class MCPRetriever:
                 # If we're in an async context, we need to schedule the coroutine
                 # This is a bit tricky - we'll create a task and let it run
                 import concurrent.futures
-                import threading
-                
+
                 # Create a new event loop in a separate thread
                 def run_in_thread():
                     new_loop = asyncio.new_event_loop()
@@ -245,7 +244,7 @@ class MCPRetriever:
                             pending = asyncio.all_tasks(new_loop)
                             for task in pending:
                                 task.cancel()
-                            
+
                             # Wait for cancelled tasks to complete with timeout
                             if pending:
                                 try:
@@ -266,34 +265,34 @@ class MCPRetriever:
                                 # Give the loop a moment to finish any final cleanup
                                 import time
                                 time.sleep(0.1)
-                                
+
                                 # Force garbage collection to clean up any remaining references
                                 import gc
                                 gc.collect()
-                                
+
                                 # Additional time for HTTP clients to finish their cleanup
                                 time.sleep(0.2)
-                                
+
                                 # Close the loop
                                 if not new_loop.is_closed():
                                     new_loop.close()
                             except Exception:
                                 pass  # Ignore close errors
-                
+
                 # Run in a thread pool to avoid blocking the main event loop
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     future = executor.submit(run_in_thread)
                     results = future.result(timeout=300)  # 5 minute timeout
-                    
+
             except RuntimeError:
                 # No event loop is running, we can run directly
                 results = asyncio.run(self.search_async(max_results))
-            
+
             return results
-            
+
         except Exception as e:
             logger.error(f"Error in MCP search: {e}")
-            self.streamer.stream_log_sync(f"❌ Error in MCP search: {str(e)}")
+            self.streamer.stream_log_sync(f"❌ Error in MCP search: {e!s}")
             # Return empty results instead of raising to allow research to continue
             return []
 
@@ -306,10 +305,10 @@ class MCPRetriever:
         """
         if self._all_tools_cache is not None:
             return self._all_tools_cache
-            
+
         try:
             all_tools = await self.client_manager.get_all_tools()
-            
+
             if all_tools:
                 await self.streamer.stream_log(f"📋 Loaded {len(all_tools)} total tools from MCP servers")
                 self._all_tools_cache = all_tools
@@ -317,8 +316,8 @@ class MCPRetriever:
             else:
                 await self.streamer.stream_warning("No tools available from MCP servers")
                 return []
-                
+
         except Exception as e:
             logger.error(f"Error getting MCP tools: {e}")
-            await self.streamer.stream_error(f"Error getting MCP tools: {str(e)}")
-            return [] 
+            await self.streamer.stream_error(f"Error getting MCP tools: {e!s}")
+            return []

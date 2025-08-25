@@ -1,6 +1,5 @@
 import asyncio
 from gpt_researcher.utils.llm import get_llm
-from gpt_researcher import GPTResearcher
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -8,7 +7,7 @@ async def main():
 
     # Example usage of get_llm function
     llm_provider = "openai"
-    model = "gpt-3.5-turbo" 
+    model = "gpt-3.5-turbo"
     temperature = 0.7
     max_tokens = 1000
 

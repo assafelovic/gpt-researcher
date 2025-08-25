@@ -50,7 +50,7 @@ class PromptFamily:
             str: The tool selection prompt
         """
         import json
-        
+
         return f"""You are a research assistant helping to select the most relevant tools for a research query.
 
 RESEARCH QUERY: "{query}"
@@ -101,7 +101,7 @@ Select exactly {max_tools} tools, ranked by relevance to the research query.
                 tool_names.append(tool.name)
             else:
                 tool_names.append(str(tool))
-        
+
         return f"""You are a research assistant with access to specialized tools. Your task is to research the following query and provide comprehensive, accurate information.
 
 RESEARCH QUERY: "{query}"
@@ -180,7 +180,7 @@ The response should contain ONLY the list.
 
         reference_prompt = ""
         if report_source == ReportSource.Web.value:
-            reference_prompt = f"""
+            reference_prompt = """
 You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
 Every url should be hyperlinked: [url website](url)
 Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report:
@@ -188,7 +188,7 @@ Additionally, you MUST include hyperlinks to the relevant URLs wherever they are
 eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
 """
         else:
-            reference_prompt = f"""
+            reference_prompt = """
 You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
 """
 
@@ -269,12 +269,12 @@ The response MUST not contain any markdown format or additional text (like ```js
 
         reference_prompt = ""
         if report_source == ReportSource.Web.value:
-            reference_prompt = f"""
+            reference_prompt = """
             You MUST include all relevant source urls.
             Every url should be hyperlinked: [url website](url)
             """
         else:
-            reference_prompt = f"""
+            reference_prompt = """
             You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
         """
 
@@ -342,7 +342,7 @@ The response MUST not contain any markdown format or additional text (like ```js
         """
         reference_prompt = ""
         if report_source == ReportSource.Web.value:
-            reference_prompt = f"""
+            reference_prompt = """
 You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
 Every url should be hyperlinked: [url website](url)
 Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report:
@@ -350,7 +350,7 @@ Additionally, you MUST include hyperlinks to the relevant URLs wherever they are
 eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
 """
         else:
-            reference_prompt = f"""
+            reference_prompt = """
 You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
 """
 
@@ -435,7 +435,7 @@ response:
     @staticmethod
     def pretty_print_docs(docs: list[Document], top_n: int | None = None) -> str:
         """Compress the list of documents into a context string"""
-        return f"\n".join(f"Source: {d.metadata.get('source')}\n"
+        return "\n".join(f"Source: {d.metadata.get('source')}\n"
                           f"Title: {d.metadata.get('title')}\n"
                           f"Content: {d.page_content}\n"
                           for i, d in enumerate(docs)

@@ -66,7 +66,7 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
         to_follow_guidelines = task.get("follow_guidelines")
         review = None
         if to_follow_guidelines:
-            print_agent_output(f"Reviewing draft...", agent="REVIEWER")
+            print_agent_output("Reviewing draft...", agent="REVIEWER")
 
             if task.get("verbose"):
                 print_agent_output(
@@ -75,5 +75,5 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
 
             review = await self.review_draft(draft_state)
         else:
-            print_agent_output(f"Ignoring guidelines...", agent="REVIEWER")
+            print_agent_output("Ignoring guidelines...", agent="REVIEWER")
         return {"review": review}

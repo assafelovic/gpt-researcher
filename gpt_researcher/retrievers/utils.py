@@ -1,7 +1,6 @@
 import importlib.util
 import logging
 import os
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -79,16 +78,16 @@ def get_all_retriever_names():
     """
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        
+
         # Get all items in the current directory
         all_items = os.listdir(current_dir)
-        
+
         # Filter out only the directories, excluding __pycache__
         retrievers = [
-            item for item in all_items 
+            item for item in all_items
             if os.path.isdir(os.path.join(current_dir, item)) and not item.startswith('__')
         ]
-        
+
         return retrievers
     except Exception as e:
         logger.error(f"Error getting retrievers: {e}")

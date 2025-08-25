@@ -16,14 +16,12 @@ Default is False, i.e., no additional research will be conducted on newer source
 
 from gpt_researcher.agent import GPTResearcher  # Ensure this path is correct
 import asyncio
-import logging
-from typing import List, Dict, Any
 from backend.server.server_utils import CustomLogsHandler  # Update import
 
 async def get_report(query: str, report_type: str, sources: list) -> str:
     custom_logs_handler = CustomLogsHandler(None, query)  # Pass query parameter
-    researcher = GPTResearcher(query=query, 
-                               report_type=report_type, 
+    researcher = GPTResearcher(query=query,
+                               report_type=report_type,
                                complement_source_urls=False,
                                websocket=custom_logs_handler)
     await researcher.conduct_research()
@@ -85,7 +83,7 @@ if __name__ == "__main__":
 #     print(report)
 
 #     print(f"\nLength of the context = {len(researcher.get_research_context())}") # Must say Non-zero value because the query is UNRELATED to the contents of the page, but the complement_source_urls is set which should make gptr do default web search to gather contexts
-    
+
 
 
 # #### Test case 4 (Furthermore, GPTR will create more context in addition to source_urls if the complement_source_urls parameter is set allowing for a larger research scope)

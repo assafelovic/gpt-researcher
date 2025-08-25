@@ -1,4 +1,3 @@
-import asyncio
 from typing import List, Dict, Set, Optional, Any
 from fastapi import WebSocket
 
@@ -35,7 +34,7 @@ class DetailedReport:
         self.subtopics = subtopics
         self.headers = headers or {}
         self.complement_source_urls = complement_source_urls
-        
+
         # Initialize researcher with optional MCP parameters
         gpt_researcher_params = {
             "query": self.query,
@@ -50,13 +49,13 @@ class DetailedReport:
             "headers": self.headers,
             "complement_source_urls": self.complement_source_urls,
         }
-        
+
         # Add MCP parameters if provided
         if mcp_configs is not None:
             gpt_researcher_params["mcp_configs"] = mcp_configs
         if mcp_strategy is not None:
             gpt_researcher_params["mcp_strategy"] = mcp_strategy
-            
+
         self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
         self.existing_headers: List[Dict] = []
         self.global_context: List[str] = []

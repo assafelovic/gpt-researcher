@@ -1,6 +1,4 @@
-import os
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain.schema import Document
@@ -44,7 +42,7 @@ class SectionRetriever(BaseRetriever):
         ...
     ]
     """
-    
+
     def _get_relevant_documents(
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
     ) -> List[Document]:

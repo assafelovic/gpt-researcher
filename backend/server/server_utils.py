@@ -5,14 +5,12 @@ import re
 import time
 import shutil
 import traceback
-from typing import Awaitable, Dict, List, Any
-from fastapi.responses import JSONResponse, FileResponse
+from typing import Awaitable, Dict, Any
+from fastapi.responses import JSONResponse
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher import GPTResearcher
 from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
-from pathlib import Path
 from datetime import datetime
-from fastapi import HTTPException
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -46,11 +44,11 @@ class CustomLogsHandler:
         # Send to websocket for real-time display
         if self.websocket:
             await self.websocket.send_json(data)
-            
+
         # Read current log file
         with open(self.log_file, 'r') as f:
             log_data = json.load(f)
-            
+
         # Update appropriate section based on data type
         if data.get('type') == 'logs':
             log_data['events'].append({
@@ -61,7 +59,7 @@ class CustomLogsHandler:
         else:
             # Update content section for other types of data
             log_data['content'].update(data)
-            
+
         # Save updated log file
         with open(self.log_file, 'w') as f:
             json.dump(log_data, f, indent=2)
@@ -86,14 +84,14 @@ class Researcher:
         """Conduct research and return paths to generated files"""
         await self.researcher.conduct_research()
         report = await self.researcher.write_report()
-        
+
         # Generate the files
         sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{self.query}")
         file_paths = await generate_report_files(report, sanitized_filename)
-        
+
         # Get the JSON log path that was created by CustomLogsHandler
         json_relative_path = os.path.relpath(self.logs_handler.log_file)
-        
+
         return {
             "output": {
                 **file_paths,  # Include PDF, DOCX, and MD paths
@@ -105,11 +103,11 @@ def sanitize_filename(filename: str) -> str:
     # Split into components
     prefix, timestamp, *task_parts = filename.split('_')
     task = '_'.join(task_parts)
-    
+
     # Calculate max length for task portion
     # 255 - len(os.getcwd()) - len("\\gpt-researcher\\outputs\\") - len("task_") - len(timestamp) - len("_.json") - safety_margin
     max_task_length = 255 - len(os.getcwd()) - 24 - 5 - 10 - 6 - 5  # ~189 chars for task
-    
+
     # Truncate task if needed (by bytes)
     truncated_task = ""
     byte_count = 0
@@ -146,7 +144,7 @@ async def handle_start_command(websocket, data: str, manager):
         print("❌ Error: Missing task or report_type")
         await websocket.send_json({
             "type": "logs",
-            "content": "error", 
+            "content": "error",
             "output": f"Missing required parameters - task: {task}, report_type: {report_type}"
         })
         return
@@ -291,7 +289,7 @@ async def handle_websocket_communication(websocket, manager):
         while True:
             try:
                 data = await websocket.receive_text()
-                
+
                 if data == "ping":
                     await websocket.send_text("pong")
                 elif running_task and not running_task.done():

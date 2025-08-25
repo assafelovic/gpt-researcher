@@ -49,7 +49,7 @@ class Config:
         try:
             self.retrievers = self.parse_retrievers(retriever_env)
         except ValueError as e:
-            print(f"Warning: {str(e)}. Defaulting to 'tavily' retriever.")
+            print(f"Warning: {e!s}. Defaulting to 'tavily' retriever.")
             self.retrievers = ["tavily"]
 
     def _set_embedding_attributes(self) -> None:
@@ -117,7 +117,7 @@ class Config:
             try:
                 self.validate_doc_path()
             except Exception as e:
-                print(f"Warning: Error validating doc_path: {str(e)}. Using default doc_path.")
+                print(f"Warning: Error validating doc_path: {e!s}. Using default doc_path.")
                 self.doc_path = DEFAULT_CONFIG['DOC_PATH']
 
     @classmethod
@@ -154,7 +154,7 @@ class Config:
     def parse_retrievers(self, retriever_str: str) -> List[str]:
         """Parse the retriever string into a list of retrievers and validate them."""
         from ..retrievers.utils import get_all_retriever_names
-        
+
         retrievers = [retriever.strip()
                       for retriever in retriever_str.split(",")]
         valid_retrievers = get_all_retriever_names() or []
@@ -270,9 +270,9 @@ class Config:
         """
         if not name or not self.mcp_servers:
             return {}
-        
+
         for server in self.mcp_servers:
             if isinstance(server, dict) and server.get("name") == name:
                 return server
-            
+
         return {}

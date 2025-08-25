@@ -6,7 +6,7 @@ import requests
 import json
 
 
-class SerperSearch():
+class SerperSearch:
     """
     Google Serper Retriever with support for country, language, and date filtering
     """

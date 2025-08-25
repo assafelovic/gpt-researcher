@@ -1,6 +1,5 @@
-from typing import Dict, Optional, List
+from typing import List
 import json
-from ..config.config import Config
 from ..utils.llm import create_chat_completion
 from ..actions import stream_output
 
@@ -32,7 +31,7 @@ class SourceCurator:
             await stream_output(
                 "logs",
                 "research_plan",
-                f"⚖️ Evaluating and curating sources by credibility and relevance...",
+                "⚖️ Evaluating and curating sources by credibility and relevance...",
                 self.researcher.websocket,
             )
 
@@ -71,7 +70,7 @@ class SourceCurator:
                 await stream_output(
                     "logs",
                     "research_plan",
-                    f"🚫 Source verification failed: {str(e)}",
+                    f"🚫 Source verification failed: {e!s}",
                     self.researcher.websocket,
                 )
             return source_data

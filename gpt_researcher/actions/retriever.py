@@ -106,7 +106,7 @@ def get_retrievers(headers: dict[str, str], cfg):
     # Convert retriever names to actual retriever classes
     # Use get_default_retriever() as a fallback for any invalid retriever names
     retriever_classes = [get_retriever(r) or get_default_retriever() for r in retrievers]
-    
+
     return retriever_classes
 
 

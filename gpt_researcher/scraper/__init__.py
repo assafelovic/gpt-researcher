@@ -9,13 +9,13 @@ from .firecrawl.firecrawl import FireCrawl
 from .scraper import Scraper
 
 __all__ = [
-    "BeautifulSoupScraper",
-    "WebBaseLoaderScraper",
     "ArxivScraper",
-    "PyMuPDFScraper",
+    "BeautifulSoupScraper",
     "BrowserScraper",
-    "NoDriverScraper",
-    "TavilyExtract",
-    "Scraper",
     "FireCrawl",
+    "NoDriverScraper",
+    "PyMuPDFScraper",
+    "Scraper",
+    "TavilyExtract",
+    "WebBaseLoaderScraper",
 ]

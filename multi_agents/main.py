@@ -19,7 +19,7 @@ def open_task():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     # Construct the absolute path to task.json
     task_json_path = os.path.join(current_dir, 'task.json')
-    
+
     with open(task_json_path, 'r') as f:
         task = json.load(f)
 

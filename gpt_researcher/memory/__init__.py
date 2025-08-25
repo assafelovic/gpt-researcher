@@ -1,1 +1,1 @@
-from .embeddings import Memory
+from .embeddings import Memory as Memory

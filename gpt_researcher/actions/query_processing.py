@@ -25,13 +25,13 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
     # Check if this is an MCP retriever and pass the researcher instance
     if "mcpretriever" in retriever.__name__.lower():
         search_retriever = retriever(
-            query, 
+            query,
             query_domains=query_domains,
             researcher=researcher  # Pass researcher instance for MCP retrievers
         )
     else:
         search_retriever = retriever(query, query_domains=query_domains)
-    
+
     return search_retriever.search()
 
 async def generate_sub_queries(
@@ -81,7 +81,7 @@ async def generate_sub_queries(
         )
     except Exception as e:
         logger.warning(f"Error with strategic LLM: {e}. Retrying with max_tokens={cfg.strategic_token_limit}.")
-        logger.warning(f"See https://github.com/assafelovic/gpt-researcher/issues/1022")
+        logger.warning("See https://github.com/assafelovic/gpt-researcher/issues/1022")
         try:
             response = await create_chat_completion(
                 model=cfg.strategic_llm_model,
@@ -139,13 +139,13 @@ async def plan_research_outline(
     # Handle the case where retriever_names is not provided
     if retriever_names is None:
         retriever_names = []
-    
+
     # For MCP retrievers, we may want to skip sub-query generation
     # Check if MCP is the only retriever or one of multiple retrievers
     if retriever_names and ("mcp" in retriever_names or "MCPRetriever" in retriever_names):
-        mcp_only = (len(retriever_names) == 1 and 
+        mcp_only = (len(retriever_names) == 1 and
                    ("mcp" in retriever_names or "MCPRetriever" in retriever_names))
-        
+
         if mcp_only:
             # If MCP is the only retriever, skip sub-query generation
             logger.info("Using MCP retriever only - skipping sub-query generation")

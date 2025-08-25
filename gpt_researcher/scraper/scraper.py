@@ -147,7 +147,7 @@ class Scraper:
                 }
 
             except Exception as e:
-                self.logger.error(f"Error processing {link}: {str(e)}")
+                self.logger.error(f"Error processing {link}: {e!s}")
                 return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
 
     def get_scraper(self, link):
