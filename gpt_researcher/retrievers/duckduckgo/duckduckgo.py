@@ -7,8 +7,8 @@ class Duckduckgo:
     Duckduckgo API Retriever
     """
     def __init__(self, query, query_domains=None):
-        check_pkg('duckduckgo_search')
-        from duckduckgo_search import DDGS
+        check_pkg('ddgs')
+        from ddgs import DDGS
         self.ddg = DDGS()
         self.query = query
         self.query_domains = query_domains or None
