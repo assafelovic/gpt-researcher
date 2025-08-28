@@ -10,7 +10,7 @@ from langchain.prompts import PromptTemplate
 from gpt_researcher.llm_provider.generic.base import NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, ReasoningEfforts
 
 from ..prompts import PromptFamily
-from .costs import estimate_llm_cost
+from .costs import get_llm_token_counts
 from .validators import Subtopics
 import os
 
@@ -86,8 +86,8 @@ async def create_chat_completion(
         )
 
         if cost_callback:
-            llm_costs = estimate_llm_cost(str(messages), response)
-            cost_callback(llm_costs)
+            token_counts = get_llm_token_counts(str(messages), response)
+            await cost_callback(token_counts)
 
         return response
 

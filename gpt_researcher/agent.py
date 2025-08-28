@@ -141,7 +141,7 @@ class GPTResearcher:
         self.verbose = verbose
         self.context = context or []
         self.headers = headers or {}
-        self.research_costs = 0.0
+        self.research_tokens = {"input": 0, "output": 0}
         self.log_handler = log_handler
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
         
@@ -304,7 +304,7 @@ class GPTResearcher:
                 query=self.query,
                 cfg=self.cfg,
                 parent_query=self.parent_query,
-                cost_callback=self.add_costs,
+                cost_callback=self.add_tokens,
                 headers=self.headers,
                 prompt_family=self.prompt_family,
                 **self.kwargs
@@ -347,19 +347,19 @@ class GPTResearcher:
         self.context = await self.deep_researcher.run(on_progress=on_progress)
 
         # Get total research costs
-        total_costs = self.get_costs()
+        total_tokens = self.get_tokens()
 
         # Log deep research completion with costs
         await self._log_event("research", step="deep_research_complete", details={
             "context_length": len(self.context),
             "visited_urls": len(self.visited_urls),
-            "total_costs": total_costs
+            "total_tokens": total_tokens
         })
 
         # Log final cost update
-        await self._log_event("research", step="cost_update", details={
-            "cost": total_costs,
-            "total_cost": total_costs,
+        await self._log_event("research", step="token_update", details={
+            "tokens": total_tokens,
+            "total_tokens": total_tokens,
             "research_type": "deep_research"
         })
 
@@ -450,18 +450,21 @@ class GPTResearcher:
     def get_research_context(self) -> list:
         return self.context
 
-    def get_costs(self) -> float:
-        return self.research_costs
+    def get_tokens(self) -> dict:
+        return self.research_tokens
 
     def set_verbose(self, verbose: bool):
         self.verbose = verbose
 
-    def add_costs(self, cost: float) -> None:
-        if not isinstance(cost, (float, int)):
-            raise ValueError("Cost must be an integer or float")
-        self.research_costs += cost
+    async def add_tokens(self, tokens: tuple[int, int]) -> None:
+        if not isinstance(tokens, tuple) or len(tokens) != 2:
+            raise ValueError("Tokens must be a tuple of two integers")
+        self.research_tokens["input"] += tokens[0]
+        self.research_tokens["output"] += tokens[1]
         if self.log_handler:
-            self._log_event("research", step="cost_update", details={
-                "cost": cost,
-                "total_cost": self.research_costs
+            await self._log_event("research", step="token_update", details={
+                "input_tokens": tokens[0],
+                "output_tokens": tokens[1],
+                "total_input_tokens": self.research_tokens["input"],
+                "total_output_tokens": self.research_tokens["output"]
             })

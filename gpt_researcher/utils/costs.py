@@ -9,12 +9,17 @@ EMBEDDING_COST = 0.02 / 1000000 # Assumes new ada-3-small
 
 
 # Cost estimation is via OpenAI libraries and models. May vary for other models
-def estimate_llm_cost(input_content: str, output_content: str) -> float:
+def get_llm_token_counts(input_content: str, output_content: str) -> tuple[int, int]:
     encoding = tiktoken.get_encoding(ENCODING_MODEL)
-    input_tokens = encoding.encode(input_content)
-    output_tokens = encoding.encode(output_content)
-    input_costs = len(input_tokens) * INPUT_COST_PER_TOKEN
-    output_costs = len(output_tokens) * OUTPUT_COST_PER_TOKEN
+    input_tokens = len(encoding.encode(input_content))
+    output_tokens = len(encoding.encode(output_content))
+    return input_tokens, output_tokens
+
+
+def estimate_llm_cost(input_content: str, output_content: str) -> float:
+    input_tokens, output_tokens = get_llm_token_counts(input_content, output_content)
+    input_costs = input_tokens * INPUT_COST_PER_TOKEN
+    output_costs = output_tokens * OUTPUT_COST_PER_TOKEN
     return input_costs + output_costs
 
 
