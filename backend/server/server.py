@@ -59,6 +59,7 @@ class ConfigRequest(BaseModel):
     LANGCHAIN_TRACING_V2: str
     LANGCHAIN_API_KEY: str
     OPENAI_API_KEY: str
+    OPENAI_BASE_URL: str = ''
     DOC_PATH: str
     RETRIEVER: str
     GOOGLE_API_KEY: str = ''

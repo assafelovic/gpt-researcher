@@ -97,6 +97,10 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
+            # Support custom OpenAI-compatible APIs via OPENAI_BASE_URL
+            if "openai_api_base" not in kwargs and os.environ.get("OPENAI_BASE_URL"):
+                kwargs["openai_api_base"] = os.environ["OPENAI_BASE_URL"]
+
             llm = ChatOpenAI(**kwargs)
         elif provider == "anthropic":
             _check_pkg("langchain_anthropic")

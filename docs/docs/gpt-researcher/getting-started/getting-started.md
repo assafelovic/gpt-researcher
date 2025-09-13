@@ -18,6 +18,12 @@ export OPENAI_API_KEY={Your OpenAI API Key here}
 export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
+For custom OpenAI-compatible APIs (e.g., local models, other providers), you can also set:
+
+```bash
+export OPENAI_BASE_URL={Your custom API base URL here}
+```
+
 For a more permanent setup, create a `.env` file in the current `gpt-researcher` directory and input the env vars (without `export`).
 
 - For LLM provider, we recommend **[OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources). To learn how to change the LLM model, please refer to the [documentation](https://docs.gptr.dev/docs/gpt-researcher/llms/llms) page. 
