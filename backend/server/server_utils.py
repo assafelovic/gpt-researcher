@@ -213,6 +213,7 @@ def get_config_dict(
     return {
         "LANGCHAIN_API_KEY": langchain_api_key or os.getenv("LANGCHAIN_API_KEY", ""),
         "OPENAI_API_KEY": openai_api_key or os.getenv("OPENAI_API_KEY", ""),
+        "OPENAI_BASE_URL": os.getenv("OPENAI_BASE_URL", ""),
         "TAVILY_API_KEY": tavily_api_key or os.getenv("TAVILY_API_KEY", ""),
         "GOOGLE_API_KEY": google_api_key or os.getenv("GOOGLE_API_KEY", ""),
         "GOOGLE_CX_KEY": google_cx_key or os.getenv("GOOGLE_CX_KEY", ""),

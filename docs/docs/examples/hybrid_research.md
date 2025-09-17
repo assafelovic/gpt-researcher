@@ -30,12 +30,19 @@ export OPENAI_API_KEY=your_openai_api_key_here
 export TAVILY_API_KEY=your_tavily_api_key_here
 ```
 
+For custom OpenAI-compatible APIs, you can also set:
+
+```bash
+export OPENAI_BASE_URL=your_custom_api_base_url_here
+```
+
 Alternatively, you can set these in your Python script:
 
 ```python
 import os
 os.environ['OPENAI_API_KEY'] = 'your_openai_api_key_here'
 os.environ['TAVILY_API_KEY'] = 'your_tavily_api_key_here'
+os.environ['OPENAI_BASE_URL'] = 'your_custom_api_base_url_here'  # Optional
 ```
 Set the environment variable REPORT_SOURCE to an empty string "" in default.py
 ## Preparing Documents

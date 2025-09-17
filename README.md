@@ -97,6 +97,12 @@ See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-starte
     export TAVILY_API_KEY={Your Tavily API Key here}
     ```
 
+    For custom OpenAI-compatible APIs (e.g., local models, other providers), you can also set:
+    
+    ```bash
+    export OPENAI_BASE_URL={Your custom API base URL here}
+    ```
+
 4. Install dependencies and start the server:
 
     ```bash
