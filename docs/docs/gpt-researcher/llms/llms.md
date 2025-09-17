@@ -205,6 +205,19 @@ EMBEDDING=mistralai:nomic-ai/nomic-embed-text-v1.5
 
 Add `langchain-together` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
 
+## NetMind
+[NetMind](https://netmind.ai/) provide a variety of [model API](https://www.netmind.ai/modelsLibrary) services—including LLM, image, text, audio, and video—that add limitless possibilities for scaling your application.
+```env
+NETMIND_API_KEY=[Your Key]
+
+FAST_LLM=netmind:deepseek-ai/DeepSeek-V3-0324
+SMART_LLM=netmind:deepseek-ai/DeepSeek-R1-0528
+STRATEGIC_LLM=netmind:deepseek-ai/DeepSeek-V3-0324
+
+EMBEDDING=netmind:nvidia/NV-Embed-v2
+```
+Add langchain-netmind to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or pip install it
+
 ## HuggingFace
 
 This integration requires a bit of extra work. Follow [this guide](https://python.langchain.com/v0.1/docs/integrations/chat/huggingface/) to learn more.
