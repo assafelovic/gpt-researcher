@@ -57,7 +57,7 @@ const Hero: FC<THeroProps> = ({
     
     // Add scroll event listener to show/hide gradient
     let lastScrollY = window.scrollY;
-    const threshold = 100; // Amount of scroll before hiding gradient
+    const threshold = 50; // Amount of scroll before hiding gradient (reduced for quicker response)
     
     const handleScroll = () => {
       const currentScrollY = window.scrollY;

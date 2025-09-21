@@ -56,7 +56,9 @@ const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) 
     setChatBoxSettings({
       ...chatBoxSettings
     });
+    // Save both apiVariables AND chatBoxSettings to localStorage
     localStorage.setItem('apiVariables', JSON.stringify(apiVariables));
+    localStorage.setItem('chatBoxSettings', JSON.stringify(chatBoxSettings));
     setShowModal(false);
   };
 

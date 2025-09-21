@@ -6,6 +6,7 @@ import logging
 import sys
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile, BackgroundTasks, HTTPException
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -34,6 +35,9 @@ logger = logging.getLogger(__name__)
 # Don't override parent logger settings
 logger.propagate = True
 
+# Silence uvicorn reload logs
+logging.getLogger("uvicorn.supervisors.ChangeReload").setLevel(logging.WARNING)
+
 # Models
 
 
@@ -56,8 +60,18 @@ class ChatRequest(BaseModel):
         extra = "allow"  # Allow extra fields in the request
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    os.makedirs("outputs", exist_ok=True)
+    app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
+    logger.info("Research API started - no database required")
+    yield
+    # Shutdown
+    logger.info("Research API shutting down")
+
 # App initialization
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 # Configure allowed origins for CORS
 ALLOWED_ORIGINS = [
@@ -89,16 +103,7 @@ DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 # Startup event
 
 
-@app.on_event("startup")
-async def startup_event():
-    os.makedirs("outputs", exist_ok=True)
-    app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
-    logger.info("Research API started - no database required")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("Research API shutting down")
+# Lifespan events now handled in the lifespan context manager above
 
 
 # Routes

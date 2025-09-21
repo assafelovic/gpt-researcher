@@ -34,29 +34,35 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [isInChatMode, setIsInChatMode] = useState(false);
   const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>(() => {
-    // Try to load layoutType from localStorage
-    let savedLayoutType = 'copilot';
-    if (typeof window !== 'undefined') {
-      const savedSettings = localStorage.getItem('chatBoxSettings');
-      if (savedSettings) {
-        try {
-          const parsedSettings = JSON.parse(savedSettings);
-          if (parsedSettings.layoutType) {
-            savedLayoutType = parsedSettings.layoutType;
-          }
-        } catch (e) {
-          console.error('Error parsing saved settings:', e);
-        }
-      }
-    }
-    return {
+    // Default settings
+    const defaultSettings = {
       report_type: "research_report",
       report_source: "web",
       tone: "Objective",
       domains: [],
       defaultReportType: "research_report",
-      layoutType: savedLayoutType,
+      layoutType: 'copilot',
+      mcp_enabled: false,
+      mcp_configs: [],
+      mcp_strategy: "fast",
     };
+
+    // Try to load all settings from localStorage
+    if (typeof window !== 'undefined') {
+      const savedSettings = localStorage.getItem('chatBoxSettings');
+      if (savedSettings) {
+        try {
+          const parsedSettings = JSON.parse(savedSettings);
+          return {
+            ...defaultSettings,
+            ...parsedSettings, // Override defaults with saved settings
+          };
+        } catch (e) {
+          console.error('Error parsing saved settings:', e);
+        }
+      }
+    }
+    return defaultSettings;
   });
   const [question, setQuestion] = useState("");
   const [orderedData, setOrderedData] = useState<Data[]>([]);
