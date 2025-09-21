@@ -16,9 +16,7 @@ class BasicReport:
         tone: Any,
         config_path: str,
         websocket: WebSocket,
-        headers=None,
-        mcp_configs=None,
-        mcp_strategy=None,
+        headers=None
     ):
         self.query = query
         self.query_domains = query_domains
@@ -31,27 +29,19 @@ class BasicReport:
         self.websocket = websocket
         self.headers = headers or {}
 
-        # Initialize researcher with optional MCP parameters
-        gpt_researcher_params = {
-            "query": self.query,
-            "query_domains": self.query_domains,
-            "report_type": self.report_type,
-            "report_source": self.report_source,
-            "source_urls": self.source_urls,
-            "document_urls": self.document_urls,
-            "tone": self.tone,
-            "config_path": self.config_path,
-            "websocket": self.websocket,
-            "headers": self.headers,
-        }
-        
-        # Add MCP parameters if provided
-        if mcp_configs is not None:
-            gpt_researcher_params["mcp_configs"] = mcp_configs
-        if mcp_strategy is not None:
-            gpt_researcher_params["mcp_strategy"] = mcp_strategy
-            
-        self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
+        # Initialize researcher
+        self.gpt_researcher = GPTResearcher(
+            query=self.query,
+            query_domains=self.query_domains,
+            report_type=self.report_type,
+            report_source=self.report_source,
+            source_urls=self.source_urls,
+            document_urls=self.document_urls,
+            tone=self.tone,
+            config_path=self.config_path,
+            websocket=self.websocket,
+            headers=self.headers
+        )
 
     async def run(self):
         await self.gpt_researcher.conduct_research()

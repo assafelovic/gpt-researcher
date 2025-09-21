@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Lexend } from "next/font/google";
 import PlausibleProvider from "next-plausible";
 import { GoogleAnalytics } from '@next/third-parties/google'
+import { ResearchHistoryProvider } from "@/hooks/ResearchHistoryContext";
 import "./globals.css";
+import Script from 'next/script';
 
 const inter = Lexend({ subsets: ["latin"] });
 
@@ -17,8 +19,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(url),
   title,
   description,
+  manifest: '/manifest.json',
   icons: {
-    icon: "/favicon.ico",
+    icon: "/img/gptr-black-logo.png",
+    apple: '/img/gptr-black-logo.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: title,
   },
   openGraph: {
     images: [ogimage],
@@ -35,6 +44,13 @@ export const metadata: Metadata = {
     title,
     description,
   },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  themeColor: '#111827',
 };
 
 export default function RootLayout({
@@ -44,16 +60,41 @@ export default function RootLayout({
 }>) {
 
   return (
-    <html className="gptr-root" lang="en">
+    <html className="gptr-root" lang="en" suppressHydrationWarning>
       <head>
         <PlausibleProvider domain="localhost:3000" />
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="apple-touch-icon" href="/img/gptr-black-logo.png" />
       </head>
+      <Script
+        id="register-sw"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(
+                  function(registration) {
+                    console.log('Service Worker registration successful');
+                  },
+                  function(err) {
+                    console.log('Service Worker registration failed: ', err);
+                  }
+                );
+              });
+            }
+          `,
+        }}
+      />
       <body
         className={`app-container ${inter.className} flex min-h-screen flex-col justify-between`}
         suppressHydrationWarning
       >
-        {children}
+        <ResearchHistoryProvider>
+          {children}
+        </ResearchHistoryProvider>
       </body>
     </html>
   );

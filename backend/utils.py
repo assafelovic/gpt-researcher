@@ -48,7 +48,7 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
         md2pdf(file_path,
                md_content=text,
                # md_file_path=f"{file_path}.md",
-               css_file_path="./frontend/pdf_styles.css",
+               css_file_path="./styles/pdf_styles.css",
                base_url=None)
         print(f"Report written to {file_path}")
     except Exception as e:
