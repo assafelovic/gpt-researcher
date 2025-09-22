@@ -115,7 +115,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute left-2 sm:left-4 mx-auto top-[8px] sm:top-[12px] w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center rounded-full shadow-sm z-10 overflow-hidden cursor-pointer group"
+                className="absolute left-4 sm:left-6 mx-auto top-1.5 sm:top-3.5 w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center rounded-full shadow-sm z-10 overflow-hidden cursor-pointer group"
                 onClick={toggleSidebar}
                 aria-label="Open sidebar"
               >
@@ -195,18 +195,14 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                       {history.map((item) => (
                         <motion.li 
                           key={item.id}
-                          className="relative rounded-md transition-all duration-200 border-l-2 overflow-hidden group"
-                          style={{
-                            borderColor: hoveredItem === item.id ? '#0cdbb6' : 'rgba(55, 65, 81, 0.5)',
-                            background: hoveredItem === item.id ? 'rgba(17, 24, 39, 0.7)' : 'rgba(17, 24, 39, 0.4)'
-                          }}
+                          className="relative rounded-xl transition-all duration-300 overflow-hidden group bg-gray-900/40 hover:bg-gray-800/60 border border-gray-700/30 hover:border-gray-600/50 backdrop-blur-sm"
                           onMouseEnter={() => setHoveredItem(item.id)}
                           onMouseLeave={() => setHoveredItem(null)}
-                          whileHover={{ x: 3, transition: { duration: 0.2 } }}
                         >
+                          
                           <Link
                             href={`/research/${item.id}`}
-                            className="block w-full text-left p-3 sm:p-4 pr-10 min-h-[56px]"
+                            className="block w-full text-left p-3 sm:p-4 pr-10 min-h-[56px] relative"
                             onClick={(e) => {
                               // Only prevent default if we're just closing the sidebar
                               if (!isOpen) {

@@ -113,7 +113,7 @@ const InputArea: FC<TInputAreaProps> = ({
         <textarea
           placeholder={placeholder}
           ref={textareaRef}
-          className="focus-visible::outline-0 my-1 w-full pl-5 font-light not-italic leading-[normal] 
+          className="focus-visible::outline-0 my-1 w-full pl-2 pr-3 font-light not-italic leading-[normal] 
           text-gray-300 placeholder-gray-400 outline-none focus-visible:ring-0 focus-visible:ring-offset-0 
           text-lg sm:text-xl min-h-[4em] resize-none relative z-10 bg-transparent"
           disabled={disabled}

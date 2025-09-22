@@ -134,6 +134,17 @@ const Hero: FC<THeroProps> = ({
               />
             </div>
           </div>
+          
+          {/* Disclaimer text */}
+          <motion.div
+            variants={fadeInUp}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mt-6 text-center px-4"
+          >
+            <p className="text-gray-400 text-sm font-light">
+              GPT Researcher may make mistakes. Verify important information and check sources.
+            </p>
+          </motion.div>
         </motion.div>
 
         {/* Suggestions section with enhanced styling */}
