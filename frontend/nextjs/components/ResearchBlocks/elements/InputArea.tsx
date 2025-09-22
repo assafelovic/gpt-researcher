@@ -1,5 +1,5 @@
 import Image from "next/image";
-import React, { FC, useRef, useState } from "react";
+import React, { FC, useRef, useState, useEffect } from "react";
 import TypeAnimation from "../../TypeAnimation";
 
 type TInputAreaProps = {
@@ -36,7 +36,14 @@ const InputArea: FC<TInputAreaProps> = ({
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const placeholder = "What would you like me to research next?";
+  const placeholder = "Enter your topic, question, or area of interest...";
+
+  // Auto-focus the textarea when component mounts
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []);
 
   const resetHeight = () => {
     if (textareaRef.current) {
@@ -79,19 +86,19 @@ const InputArea: FC<TInputAreaProps> = ({
     <div className="relative">
       {/* Gradient ring - subtle effect */}
       <div 
-        className={`absolute -inset-0.5 rounded-lg bg-gradient-to-r from-[#0cdbb6]/60 via-[#1fd0f0]/50 to-[#06dbee]/60 blur-md opacity-50 transition-opacity duration-300 ${isFocused || promptValue ? 'opacity-60' : 'opacity-40'}`}
+        className={`absolute -inset-0.5 rounded-xl bg-gradient-to-r from-[#0cdbb6]/50 via-[#1fd0f0]/40 to-[#06dbee]/50 blur-md opacity-45 transition-opacity duration-300 ${isFocused || promptValue ? 'opacity-55' : 'opacity-35'}`}
       />
       
       {/* Ambient glow effect */}
       <div 
-        className="absolute -inset-4 rounded-xl opacity-30"
+        className="absolute -inset-4 rounded-xl opacity-25"
         style={{
-          background: 'radial-gradient(circle at center, rgba(12, 219, 182, 0.2) 0%, rgba(6, 219, 238, 0.1) 40%, rgba(0, 0, 0, 0) 70%)',
+          background: 'radial-gradient(circle at center, rgba(12, 219, 182, 0.15) 0%, rgba(6, 219, 238, 0.08) 40%, rgba(0, 0, 0, 0) 70%)',
         }}
       />
     
       <form
-        className="mx-auto flex pt-2 pb-2 w-full items-center justify-between rounded-lg border border-gray-700/50 bg-gray-900/90 backdrop-blur-sm px-3 shadow-md relative overflow-hidden z-10"
+        className="mx-auto flex pt-2 pb-2 w-full items-center justify-between rounded-xl border border-gray-700/50 bg-gray-900/90 backdrop-blur-sm px-3 shadow-md relative overflow-hidden z-10"
         onSubmit={(e) => {
           e.preventDefault();
           if (reset) reset();
@@ -101,7 +108,7 @@ const InputArea: FC<TInputAreaProps> = ({
         }}
       >
         {/* Inner gradient blur effect */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-teal-400/5 via-indigo-400/5 to-purple-400/5 blur-xl opacity-30 animate-pulse pointer-events-none"></div>
+        <div className="absolute -inset-1 bg-gradient-to-r from-teal-400/4 via-indigo-400/4 to-purple-400/4 blur-xl opacity-25 animate-pulse pointer-events-none"></div>
         
         <textarea
           placeholder={placeholder}
@@ -147,10 +154,10 @@ const InputArea: FC<TInputAreaProps> = ({
       
       {/* Animated glow effect at the bottom */}
       <div 
-        className="absolute bottom-0 left-0 right-0 h-[3px] opacity-40 overflow-hidden"
+        className="absolute bottom-0 left-0 right-0 h-[3px] opacity-35 overflow-hidden"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(12, 219, 182, 0.6) 0%, rgba(6, 219, 238, 0.4) 25%, rgba(6, 219, 238, 0.1) 50%, rgba(0, 0, 0, 0) 75%)',
-          boxShadow: '0 0 10px 1px rgba(12, 219, 182, 0.3), 0 0 20px 2px rgba(6, 219, 238, 0.1)'
+          background: 'radial-gradient(ellipse at center, rgba(12, 219, 182, 0.5) 0%, rgba(6, 219, 238, 0.3) 25%, rgba(6, 219, 238, 0.08) 50%, rgba(0, 0, 0, 0) 75%)',
+          boxShadow: '0 0 8px 1px rgba(12, 219, 182, 0.25), 0 0 16px 2px rgba(6, 219, 238, 0.08)'
         }}
       />
     </div>
