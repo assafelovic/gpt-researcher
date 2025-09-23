@@ -35,8 +35,7 @@ The agent produces detailed, factual, and unbiased research reports with citatio
 - Selective web sources can introduce bias into research tasks.
 
 ## Demo
-<video src="https://cowriter-images.s3.us-east-1.amazonaws.com/gptr-new.mp4" controls width="860"></video>
-
+![gptr-new](https://github.com/user-attachments/assets/0bfa19b7-4fdc-466b-9b07-3504d9adc233)
 
 ## Architecture
 
