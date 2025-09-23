@@ -14,7 +14,8 @@ from ..vector_store import VectorStoreWrapper
 from ..utils.costs import estimate_embedding_cost
 from ..memory.embeddings import OPENAI_EMBEDDING_MODEL
 from ..prompts import PromptFamily
-from langchain_community.vectorstores import FAISS 
+from langchain_community.vectorstores import FAISS
+from langchain_core.vectorstores.in_memory import InMemoryVectorStore
 
 class VectorstoreCompressor:
     def __init__(
@@ -40,6 +41,9 @@ class VectorstoreCompressor:
         if isinstance(store_obj, FAISS):
             score_direction = "lower"  # distance metric (e.g., cosine distance)
             threshold = float(os.environ.get("VECTOR_STORE_SIMILARITY_THRESHOLD", 1.0))
+        elif isinstance(store_obj, InMemoryVectorStore):
+            score_direction = "higher" # Cosine distance
+            threshold = float(os.environ.get("VECTOR_STORE_SIMILARITY_THRESHOLD", 1.0)) 
         else:
             raise ValueError(f"Unsupported vector store type: {type(store_obj).__name__}. Only FAISS is supported.")
 
