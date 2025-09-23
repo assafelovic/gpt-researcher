@@ -57,7 +57,7 @@ const Hero: FC<THeroProps> = ({
     
     // Add scroll event listener to show/hide gradient
     let lastScrollY = window.scrollY;
-    const threshold = 100; // Amount of scroll before hiding gradient
+    const threshold = 50; // Amount of scroll before hiding gradient (reduced for quicker response)
     
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -98,7 +98,7 @@ const Hero: FC<THeroProps> = ({
   };
 
   return (
-    <div className="relative overflow-visible min-h-[80vh] sm:min-h-[85vh] flex items-center pt-[60px] sm:pt-[80px] mt-[-60px] sm:mt-[-130px]">
+    <div className="relative overflow-visible min-h-[100vh] flex items-center pt-[60px] sm:pt-[80px] mt-[-60px] sm:mt-[-130px]">
       {/* Particle background */}
       <div ref={particlesContainerRef} className="absolute inset-0 -z-20"></div>
       
@@ -109,67 +109,24 @@ const Hero: FC<THeroProps> = ({
         transition={{ duration: 0.8 }}
         className="flex flex-col items-center justify-center w-full py-6 sm:py-8 md:py-16 lg:pt-10 lg:pb-20"
       >
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: isVisible ? 1 : 0, scale: isVisible ? 1 : 0.95 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="landing flex flex-col items-center mb-4 sm:mb-6 md:mb-8"
+        {/* Header text */}
+        <motion.h1 
+          variants={fadeInUp}
+          transition={{ duration: 0.8, delay: 0.1 }}
+          className="text-2xl sm:text-3xl md:text-4xl font-medium text-center text-white mb-8 sm:mb-10 md:mb-12 px-4"
         >
-          <motion.h1 
-            className="text-3xl xs:text-4xl sm:text-5xl font-black text-center lg:text-7xl mb-1 sm:mb-2 tracking-tight"
-            variants={fadeInUp}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <div className="mb-2 xs:mb-3 sm:mb-1 md:mb-0">Say Goodbye to</div>
-            <span
-              style={{
-                backgroundImage: 'linear-gradient(to right, #0cdbb6, #1fd0f0, #06dbee)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                display: 'block',
-                lineHeight: '1.2',
-                paddingBottom: '0.1em'
-              }}
-            >
-              Hours of Research
-            </span>
-          </motion.h1>
-          <motion.h2 
-            className="text-base sm:text-xl font-light text-center px-4 mb-6 text-gray-300 max-w-2xl"
-            variants={fadeInUp}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            Say Hello to GPT Researcher, your AI partner for instant insights and comprehensive research
-          </motion.h2>
-          
-          {/* Powered by badge */}
-          {/*<motion.div
-            variants={fadeInUp}
-            transition={{ duration: 0.8, delay: 0.7 }}
-            className="flex items-center justify-center gap-2 py-2 px-4 rounded-full bg-black/30 backdrop-blur-sm border border-teal-500/20 hover:border-teal-500/40 transition-all duration-300 shadow-sm hover:shadow-teal-900/20"
-          >
-            <div className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse mr-0.5"></div>
-            <span className="text-gray-400 text-sm font-medium">Powered by</span>
-            <a 
-              href="https://gptr.dev" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-white text-[15px] font-bold hover:underline"
-            >
-              GPT Researcher
-            </a>
-          </motion.div>*/}
-        </motion.div>
+          What would you like to research next?
+        </motion.h1>
 
         {/* Input section with enhanced styling */}
         <motion.div 
           variants={fadeInUp}
-          transition={{ duration: 0.8, delay: 0.8 }}
-          className="w-full max-w-[760px] pb-6 sm:pb-8 md:pb-10 px-4 mt-4"
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="w-full max-w-[800px] pb-6 sm:pb-8 md:pb-10 px-4"
         >
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-teal-600 via-cyan-500 to-blue-600 rounded-lg blur-md opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-gradient-x"></div>
-            <div className="relative bg-black bg-opacity-20 backdrop-blur-sm rounded-lg ring-1 ring-gray-800/60">
+            <div className="absolute -inset-1 bg-gradient-to-r from-teal-600/70 via-cyan-500/60 to-blue-600/70 rounded-xl blur-md opacity-60 group-hover:opacity-85 transition duration-1000 group-hover:duration-200 animate-gradient-x"></div>
+            <div className="relative bg-black bg-opacity-20 backdrop-blur-sm rounded-xl ring-1 ring-gray-800/60">
               <InputArea
                 promptValue={promptValue}
                 setPromptValue={setPromptValue}
@@ -177,12 +134,23 @@ const Hero: FC<THeroProps> = ({
               />
             </div>
           </div>
+          
+          {/* Disclaimer text */}
+          <motion.div
+            variants={fadeInUp}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mt-6 text-center px-4"
+          >
+            <p className="text-gray-400 text-sm font-light">
+              GPT Researcher may make mistakes. Verify important information and check sources.
+            </p>
+          </motion.div>
         </motion.div>
 
         {/* Suggestions section with enhanced styling */}
         <motion.div 
           variants={fadeInUp}
-          transition={{ duration: 0.8, delay: 1 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
           className="flex flex-wrap items-center justify-center gap-2 xs:gap-3 md:gap-4 pb-6 sm:pb-8 md:pb-10 px-4 lg:flex-nowrap lg:justify-normal"
         >
           <AnimatePresence>
@@ -192,7 +160,7 @@ const Hero: FC<THeroProps> = ({
                 variants={fadeInUp}
                 initial="hidden"
                 animate="visible"
-                transition={{ duration: 0.4, delay: 1 + (index * 0.1) }}
+                transition={{ duration: 0.4, delay: 0.6 + (index * 0.1) }}
                 className="flex h-[38px] sm:h-[42px] cursor-pointer items-center justify-center gap-[6px] rounded-lg 
                          border border-solid border-teal-500/30 bg-gradient-to-r from-teal-900/30 to-cyan-900/30 
                          backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 hover:border-teal-500/60 hover:from-teal-900/40 

@@ -1,0 +1,27 @@
+fastapi>=0.104.1
+uvicorn>=0.24.0
+pydantic>=2.5.1
+httpx>=0.28.1
+python-dotenv>=1.0.0
+websockets>=13.1
+openai>=1.3.3
+langchain>=0.3.18
+tavily-python
+gpt-researcher>=0.14.4
+# Note: gpt-researcher should be installed in development mode from the root directory
+# Run: pip install -e . from the project root
+
+# Added based on import scan (Please Verify)
+aiofiles
+mistune
+md2pdf
+python-docx
+htmldocx
+langchain-community
+python-multipart
+Jinja2
+
+# Add any other dependencies your backend requires below
+# aiohttp # Example if needed for async requests
+# requests # Example if needed for sync requests
+# multi_agents # Verify if this is a local module or pip package 

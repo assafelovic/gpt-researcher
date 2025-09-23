@@ -43,8 +43,10 @@ export const GPTResearcher = ({
     tone: 'Objective',
     domains: [],
     defaultReportType: 'research_report',
+    layoutType: 'default',
     mcp_enabled: false,
-    mcp_configs: []
+    mcp_configs: [],
+    mcp_strategy: 'fast',
   });
   const [question, setQuestion] = useState("");
   const [orderedData, setOrderedData] = useState<Data[]>([]);
@@ -87,17 +89,65 @@ export const GPTResearcher = ({
   };
 
   const handleChat = async (message: string) => {
-    if (socket) {
-      setShowResult(true);
-      setQuestion(message);
-      setLoading(true);
-      setPromptValue("");
-      setAnswer("");
-
-      const questionData: QuestionData = { type: 'question', content: message };
-      setOrderedData(prevOrder => [...prevOrder, questionData]);
+    setShowResult(true);
+    setQuestion(message);
+    setLoading(true);
+    setPromptValue("");
+    
+    // Create a user message
+    const userMessage = {
+      role: 'user',
+      content: message,
+      timestamp: Date.now()
+    };
+    
+    // Add question to display in research results
+    const questionData: QuestionData = { type: 'question', content: message };
+    setOrderedData(prevOrder => [...prevOrder, questionData]);
+    
+    try {
+      // Format message to ensure it only contains role and content
+      const formattedMessage = {
+        role: userMessage.role,
+        content: userMessage.content
+      };
       
-      socket.send(`chat${JSON.stringify({ message })}`);
+      // Call the chat API
+      const apiBaseUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || '';
+      const response = await fetch(`${apiBaseUrl}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          report: answer,
+          messages: [formattedMessage]
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to get chat response');
+      }
+      
+      const data = await response.json();
+      
+      if (data.response) {
+        // Add AI response to display in research results
+        setOrderedData(prevOrder => [...prevOrder, { 
+          type: 'chat', 
+          content: data.response.content 
+        }]);
+      }
+    } catch (error) {
+      console.error('Error during chat:', error);
+      
+      // Add error message to display
+      setOrderedData(prevOrder => [...prevOrder, { 
+        type: 'chat', 
+        content: 'Sorry, there was an error processing your request. Please try again.' 
+      }]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -147,6 +197,9 @@ export const GPTResearcher = ({
     }
     setLoading(false);
     setIsStopped(true);
+    
+    // Reload the page to completely reset the socket connection
+    window.location.reload();
   };
 
   const handleStartNewResearch = () => {
@@ -243,7 +296,7 @@ export const GPTResearcher = ({
         onStop={handleStopResearch}
         onNewResearch={handleStartNewResearch}
       />
-      <main ref={mainContentRef} className="min-h-[100vh] pt-[120px]">
+      <main ref={mainContentRef} className="min-h-[100vh] pt-[70px]">
         {!showResult && (
           <Hero
             promptValue={promptValue}
@@ -262,6 +315,7 @@ export const GPTResearcher = ({
                   allLogs={allLogs}
                   chatBoxSettings={chatBoxSettings}
                   handleClickSuggestion={handleClickSuggestion}
+                  currentResearchId={undefined}
                 />
               </div>
 
@@ -283,7 +337,6 @@ export const GPTResearcher = ({
                   promptValue={promptValue}
                   setPromptValue={setPromptValue}
                   handleSubmit={handleChat}
-                  handleSecondary={handleDisplayResult}
                   disabled={loading}
                   reset={reset}
                   isStopped={isStopped}

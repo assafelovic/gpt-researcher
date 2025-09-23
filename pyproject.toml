@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "gpt-researcher"
-version = "0.14.3"
+version = "0.14.4"
 description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
 authors = ["Assaf Elovic <assaf.elovic@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.11, <4"
+python = ">=3.11, <3.13"
 aiofiles = ">=23.2.1"
 arxiv = ">=2.0.0"
 beautifulsoup4 = ">=4.12.2"
@@ -60,12 +60,12 @@ gpt-researcher = { workspace = true }
 
 [project]
 name = "gpt-researcher"
-version = "0.14.3"
+version = "0.14.4"
 description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
 authors = [{ name = "Assaf Elovic", email = "assaf.elovic@gmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
-requires-python = ">=3.11, <4"
+requires-python = ">=3.11, <3.13"
 dependencies = [
     "aiofiles>=23.2.1",
     # Core dependencies

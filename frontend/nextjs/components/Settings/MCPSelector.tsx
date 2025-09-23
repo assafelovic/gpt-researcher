@@ -19,9 +19,13 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
   onMCPChange,
 }) => {
   const [enabled, setEnabled] = useState(mcpEnabled);
-  const [configText, setConfigText] = useState(
-    JSON.stringify(mcpConfigs, null, 2)
-  );
+  const [configText, setConfigText] = useState(() => {
+    // Initialize with the passed configs, handling empty array case
+    if (Array.isArray(mcpConfigs) && mcpConfigs.length > 0) {
+      return JSON.stringify(mcpConfigs, null, 2);
+    }
+    return '[]';
+  });
   const [validationStatus, setValidationStatus] = useState<{
     isValid: boolean;
     message: string;
@@ -33,6 +37,18 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
     validateConfig(configText);
   }, [configText]);
 
+  // Sync with props when they change (for localStorage loading)
+  useEffect(() => {
+    setEnabled(mcpEnabled);
+  }, [mcpEnabled]);
+
+  useEffect(() => {
+    if (Array.isArray(mcpConfigs)) {
+      const newConfigText = mcpConfigs.length > 0 ? JSON.stringify(mcpConfigs, null, 2) : '[]';
+      setConfigText(newConfigText);
+    }
+  }, [mcpConfigs]);
+
   const validateConfig = (text: string) => {
     if (!text.trim() || text.trim() === '[]') {
       setValidationStatus({ isValid: true, message: 'Empty configuration' });
@@ -41,7 +57,7 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
 
     try {
       const parsed = JSON.parse(text);
-      
+
       if (!Array.isArray(parsed)) {
         throw new Error('Configuration must be an array');
       }
@@ -77,29 +93,37 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
 
   const handleEnabledChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEnabled = e.target.checked;
+    console.log('🔍 DEBUG: MCP enabled changed to:', newEnabled);
     setEnabled(newEnabled);
-    
+
     if (newEnabled && validationStatus.isValid) {
       try {
         const configs = JSON.parse(configText || '[]');
+        console.log('🔍 DEBUG: Calling onMCPChange with configs:', configs);
         onMCPChange(newEnabled, configs);
       } catch {
+        console.log('🔍 DEBUG: JSON parse failed, calling with empty array');
         onMCPChange(newEnabled, []);
       }
     } else {
+      console.log('🔍 DEBUG: Disabled or invalid, calling with empty array');
       onMCPChange(newEnabled, []);
     }
   };
 
   const handleConfigChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
+    console.log('🔍 DEBUG: Config text changed to:', newText);
     setConfigText(newText);
-    
+
     if (enabled && validateConfig(newText)) {
       try {
         const configs = JSON.parse(newText || '[]');
+        console.log('🔍 DEBUG: Parsed configs from textarea:', configs);
+        console.log('🔍 DEBUG: Calling onMCPChange from textarea with:', { enabled, configs });
         onMCPChange(enabled, configs);
       } catch {
+        console.log('🔍 DEBUG: JSON parse failed in textarea change');
         // Invalid JSON, don't update
       }
     }
@@ -115,7 +139,26 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
     }
   };
 
-  const addPreset = (preset: string) => {
+  // Helper function to check if a preset is currently selected
+  const isPresetSelected = (presetName: string): boolean => {
+    try {
+      const currentText = configText.trim();
+      if (!currentText || currentText === '[]') return false;
+      
+      const parsed = JSON.parse(currentText);
+      if (!Array.isArray(parsed)) return false;
+      
+      return parsed.some(server => server.name === presetName);
+    } catch {
+      return false;
+    }
+  };
+
+  const togglePreset = (preset: string) => {
+    console.log('🔍 DEBUG: togglePreset called with:', preset);
+    console.log('🔍 DEBUG: Current configText:', configText);
+    console.log('🔍 DEBUG: MCP enabled:', enabled);
+    
     const presets: Record<string, MCPConfig> = {
       github: {
         name: 'github',
@@ -142,28 +185,47 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
     };
 
     const config = presets[preset];
-    if (!config) return;
+    if (!config) {
+      console.log('🔍 DEBUG: Preset config not found for:', preset);
+      return;
+    }
 
     try {
       let currentConfig: MCPConfig[] = [];
       const currentText = configText.trim();
-      
+
       if (currentText && currentText !== '[]') {
         currentConfig = JSON.parse(currentText);
       }
+      console.log('🔍 DEBUG: Current parsed config:', currentConfig);
 
       const existingIndex = currentConfig.findIndex(server => server.name === config.name);
-      
+      console.log('🔍 DEBUG: Existing index for', config.name, ':', existingIndex);
+
       if (existingIndex !== -1) {
-        currentConfig[existingIndex] = config;
+        // Remove the preset if it exists (deselect)
+        console.log('🔍 DEBUG: Removing preset');
+        currentConfig.splice(existingIndex, 1);
       } else {
+        // Add the preset if it doesn't exist (select)
+        console.log('🔍 DEBUG: Adding preset');
         currentConfig.push(config);
       }
 
       const newText = JSON.stringify(currentConfig, null, 2);
+      console.log('🔍 DEBUG: New config text:', newText);
+      console.log('🔍 DEBUG: Final config array:', currentConfig);
+      
       setConfigText(newText);
+      
+      // IMPORTANT: Also call onMCPChange immediately with the new config
+      if (enabled) {
+        console.log('🔍 DEBUG: Calling onMCPChange from togglePreset with:', { enabled, currentConfig });
+        onMCPChange(enabled, currentConfig);
+      }
+      
     } catch (error) {
-      console.error('Error adding preset:', error);
+      console.error('🔍 DEBUG: Error toggling preset:', error);
     }
   };
 
@@ -213,7 +275,7 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
         <small className="text-muted" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem', marginBottom: '15px', display: 'block' }}>
           Connect to external tools and data sources through MCP servers
         </small>
-        
+
         {enabled && (
           <div className="settings mcp-config-section">
             <div className="settings mcp-presets">
@@ -221,28 +283,28 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
               <div className="settings preset-buttons">
                 <button
                   type="button"
-                  className="settings preset-btn"
-                  onClick={() => addPreset('github')}
+                  className={`settings preset-btn ${isPresetSelected('github') ? 'selected' : ''}`}
+                  onClick={() => togglePreset('github')}
                 >
                   <i className="fab fa-github"></i> GitHub
                 </button>
                 <button
                   type="button"
-                  className="settings preset-btn"
-                  onClick={() => addPreset('tavily')}
+                  className={`settings preset-btn ${isPresetSelected('tavily') ? 'selected' : ''}`}
+                  onClick={() => togglePreset('tavily')}
                 >
                   <i className="fas fa-search"></i> Tavily Web Search
                 </button>
                 <button
                   type="button"
-                  className="settings preset-btn"
-                  onClick={() => addPreset('filesystem')}
+                  className={`settings preset-btn ${isPresetSelected('filesystem') ? 'selected' : ''}`}
+                  onClick={() => togglePreset('filesystem')}
                 >
                   <i className="fas fa-folder"></i> Local Files
                 </button>
               </div>
               <small className="text-muted" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem', marginTop: '8px', display: 'block' }}>
-                Click a preset to add pre-configured MCP servers to the JSON below
+                Click a preset to toggle MCP servers in the configuration below. Selected presets are highlighted.
               </small>
             </div>
 
@@ -299,7 +361,7 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
               </button>
               <h3>Model Context Protocol (MCP)</h3>
               <p>MCP enables GPT Researcher to connect with external tools and data sources through a standardized protocol.</p>
-              
+
               <h4 className="highlight">Benefits:</h4>
               <ul>
                 <li><span className="highlight">Access Local Data:</span> Connect to databases, file systems, and APIs</li>
@@ -332,4 +394,4 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
   );
 };
 
-export default MCPSelector; 
+export default MCPSelector;

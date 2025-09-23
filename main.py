@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-from backend.server.server import app
+from backend.server.app import app
 
 if __name__ == "__main__":
     import uvicorn

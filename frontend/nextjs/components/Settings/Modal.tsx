@@ -56,7 +56,9 @@ const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) 
     setChatBoxSettings({
       ...chatBoxSettings
     });
+    // Save both apiVariables AND chatBoxSettings to localStorage
     localStorage.setItem('apiVariables', JSON.stringify(apiVariables));
+    localStorage.setItem('chatBoxSettings', JSON.stringify(chatBoxSettings));
     setShowModal(false);
   };
 
@@ -87,6 +89,7 @@ const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) 
   const modalContent = showModal && (
     <AnimatePresence>
       <motion.div 
+        key="modal-overlay"
         className="fixed inset-0 z-[1000] flex items-center justify-center overflow-auto" 
         initial="hidden"
         animate="visible"
@@ -161,6 +164,7 @@ const Modal: React.FC<ChatBoxProps> = ({ chatBoxSettings, setChatBoxSettings }) 
         </motion.div>
       </motion.div>
       <motion.div 
+        key="modal-background"
         className="fixed inset-0 z-[999] bg-black"
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.6 }}

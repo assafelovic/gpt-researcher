@@ -42,7 +42,9 @@ textarea {
 }
 
 body {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'GeistSans', sans-serif;
+  /* font-family: 'Inter', sans-serif; */
+  /* font-family: 'Montserrat', sans-serif; */
   line-height: 1.6;
   margin: 0px !important;
   min-height: 100%;

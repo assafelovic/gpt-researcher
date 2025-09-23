@@ -7,9 +7,10 @@ interface HeaderProps {
   showResult?: boolean;   // Controls if research results are being displayed
   onStop?: () => void;    // Handler for stopping ongoing research
   onNewResearch?: () => void;  // Handler for starting fresh research
+  isCopilotMode?: boolean; // Indicates if we are in copilot mode
 }
 
-const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: HeaderProps) => {
+const Header = ({ loading, isStopped, showResult, onStop, onNewResearch, isCopilotMode }: HeaderProps) => {
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
       {/* Pure transparent blur background */}
@@ -40,8 +41,8 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch }: Heade
                 Stop
               </button>
             )}
-            {/* New Research button - shown after stopping or completing research */}
-            {(isStopped || !loading) && showResult && (
+            {/* New Research button - shown after stopping or completing research - but not in copilot mode */}
+            {(isStopped || !loading) && showResult && !isCopilotMode && (
               <button
                 onClick={onNewResearch}
                 className="flex items-center justify-center px-4 sm:px-6 h-9 sm:h-10 text-sm text-white bg-teal-500 rounded-full hover:bg-teal-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap min-w-[120px]"

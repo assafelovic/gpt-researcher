@@ -1,0 +1,52 @@
+{
+  "name": "GPT Researcher",
+  "short_name": "GPT Research",
+  "description": "AI research assistant that helps you find information and answer questions.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#111827",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/img/gptr-black-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/img/gptr-black-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Research",
+      "short_name": "New",
+      "description": "Start a new research query",
+      "url": "/?source=pwa",
+      "icons": [{ "src": "/img/gptr-black-logo.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/img/screenshots/mobile-chat.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Mobile chat interface"
+    },
+    {
+      "src": "/img/screenshots/mobile-home.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Mobile home screen"
+    }
+  ],
+  "prefer_related_applications": false,
+  "dir": "ltr",
+  "categories": ["productivity", "research", "education", "utilities"]
+} 
