@@ -135,9 +135,9 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
               </div>
               <div className="text-gray-300 text-sm">
                 {loading ? (
-                  <p>Working on your research... I'll analyze the results once they're complete.</p>
+                  <p>Working on your research... I&apos;ll analyze the results once they&apos;re complete.</p>
                 ) : (
-                  <p>I've analyzed all the research results and can answer any questions about it. How can I help?</p>
+                  <p>I&apos;ve analyzed all the research results and can answer any questions about it. How can I help?</p>
                 )}
               </div>
             </div>

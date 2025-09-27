@@ -68,26 +68,6 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="apple-touch-icon" href="/img/gptr-black-logo.png" />
       </head>
-      <Script
-        id="register-sw"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            if ('serviceWorker' in navigator) {
-              window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(
-                  function(registration) {
-                    console.log('Service Worker registration successful');
-                  },
-                  function(err) {
-                    console.log('Service Worker registration failed: ', err);
-                  }
-                );
-              });
-            }
-          `,
-        }}
-      />
       <body
         className={`app-container ${inter.className} flex min-h-screen flex-col justify-between`}
         suppressHydrationWarning
