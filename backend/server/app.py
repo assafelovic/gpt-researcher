@@ -65,6 +65,21 @@ async def lifespan(app: FastAPI):
     # Startup
     os.makedirs("outputs", exist_ok=True)
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
+    
+    # Mount frontend static files
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
+    if os.path.exists(frontend_path):
+        app.mount("/site", StaticFiles(directory=frontend_path), name="frontend")
+        logger.info(f"Frontend mounted from: {frontend_path}")
+        
+        # Also mount the static directory directly for assets referenced as /static/
+        static_path = os.path.join(frontend_path, "static")
+        if os.path.exists(static_path):
+            app.mount("/static", StaticFiles(directory=static_path), name="static")
+            logger.info(f"Static assets mounted from: {static_path}")
+    else:
+        logger.warning(f"Frontend directory not found: {frontend_path}")
+    
     logger.info("Research API started - no database required")
     yield
     # Shutdown
@@ -107,6 +122,15 @@ DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 
 
 # Routes
+@app.get("/")
+async def read_root():
+    """Serve the frontend homepage"""
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "index.html")
+    if os.path.exists(frontend_path):
+        return FileResponse(frontend_path)
+    else:
+        return {"message": "GPT Researcher API is running. Frontend not found."}
+
 @app.get("/report/{research_id}")
 async def read_report(request: Request, research_id: str):
     docx_path = os.path.join('outputs', f"{research_id}.docx")
