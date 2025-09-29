@@ -38,6 +38,7 @@ setup(
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     python_requires='>=3.11',

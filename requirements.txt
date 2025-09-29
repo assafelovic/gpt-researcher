@@ -128,3 +128,4 @@ zstandard>=0.23.0
 # Model Context Protocol support (optional)
 mcp>=1.0.0
 langchain-mcp-adapters>=0.1.0  # LangChain MCP adapters for tool integration
+tavily-python>=0.7.12
