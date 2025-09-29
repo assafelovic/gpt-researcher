@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, Uplo
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from pydantic import BaseModel
 
 # Add the parent directory to sys.path to make sure we can import from server
@@ -109,6 +109,14 @@ app.add_middleware(
 
 # Use default JSON response class
 
+# Mount static files for frontend
+# Get the absolute path to the frontend directory
+frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))
+
+# Mount static directories
+app.mount("/static", StaticFiles(directory=os.path.join(frontend_dir, "static")), name="static")
+app.mount("/site", StaticFiles(directory=frontend_dir), name="site")
+
 # WebSocket manager
 manager = WebSocketManager()
 
@@ -122,14 +130,19 @@ DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 
 
 # Routes
-@app.get("/")
-async def read_root():
-    """Serve the frontend homepage"""
-    frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "index.html")
-    if os.path.exists(frontend_path):
-        return FileResponse(frontend_path)
-    else:
-        return {"message": "GPT Researcher API is running. Frontend not found."}
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend():
+    """Serve the main frontend HTML page."""
+    frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))
+    index_path = os.path.join(frontend_dir, "index.html")
+    
+    if not os.path.exists(index_path):
+        raise HTTPException(status_code=404, detail="Frontend index.html not found")
+    
+    with open(index_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    
+    return HTMLResponse(content=content)
 
 @app.get("/report/{research_id}")
 async def read_report(request: Request, research_id: str):
