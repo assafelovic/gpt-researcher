@@ -407,7 +407,7 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
               <img src="/img/gptr-logo.png" alt="AI" className="w-6 h-6" />
             </div>
             <div className="flex-1 ai-message-bubble rounded-2xl p-4 text-sm text-white shadow-lg">
-              <p>Hi there! I'm your research assistant. Type your question and I'll help you find information and insights.</p>
+              <p>Hi there! I&apos;m your research assistant. Type your question and I&apos;ll help you find information and insights.</p>
             </div>
           </div>
         )}
@@ -419,7 +419,7 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
               <img src="/img/gptr-logo.png" alt="AI" className="w-6 h-6" />
             </div>
             <div className="flex-1 ai-message-bubble rounded-2xl p-4 text-sm text-white shadow-lg">
-              <p>I'm researching your question. This may take a moment...</p>
+              <p>I&apos;m researching your question. This may take a moment...</p>
               <div className="mt-2 flex justify-center">
                 <LoadingDots />
               </div>

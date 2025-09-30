@@ -262,7 +262,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
     };
     
     fetchResearch();
-  }, [id]);
+  }, [id, fetchAttempted]);
 
   // Process ordered data into logs for display
   useEffect(() => {

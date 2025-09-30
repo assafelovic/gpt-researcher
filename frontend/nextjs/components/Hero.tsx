@@ -78,10 +78,11 @@ const Hero: FC<THeroProps> = ({
     
     window.addEventListener('scroll', handleScroll);
     
+    const container = particlesContainerRef.current;
     // Clean up function
     return () => {
-      if (particlesContainerRef.current) {
-        particlesContainerRef.current.innerHTML = '';
+      if (container) {
+        container.innerHTML = '';
       }
       window.removeEventListener('scroll', handleScroll);
     };
