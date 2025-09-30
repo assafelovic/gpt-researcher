@@ -40,9 +40,3 @@ EXPOSE 3000
 
 # Start the Next.js production server (serves API routes too)
 CMD ["npm", "run", "start"]
-
-# Notes:
-# - We moved away from the Nginx static approach because the app defines API Route Handlers
-#   (e.g. files in app/api/*) which require the Next.js Node runtime.
-# - If you later decide to produce a fully static export (`next export`), you can reintroduce
-#   an Nginx (or any static) server, but dynamic API routes would no longer work.
