@@ -3,18 +3,26 @@ interface GetHostParams {
 }
 
 export const getHost = ({ purpose }: GetHostParams = {}): string => {
-  // New simplified behavior: Always derive backend URL from current window location
-  // Format: [protocol]//[hostname]:8000
-  // Ignores localStorage, query params, and env vars per user request.
-  if (typeof window === 'undefined') return '';
-
-  try {
-    const { hostname } = window.location;
-    // Always target port 8000 regardless of current page port
-    return `http://${hostname}:8000`;
-  } catch (e) {
-    // Fallback empty string if anything unexpected occurs (e.g. restricted environment)
-    console.error('getHost error:', e);
-    return '';
+  if (typeof window !== 'undefined') {
+    let { host } = window.location;
+    const apiUrlInLocalStorage = localStorage.getItem("GPTR_API_URL");
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const apiUrlInUrlParams = urlParams.get("GPTR_API_URL");
+    
+    if (apiUrlInLocalStorage) {
+      return apiUrlInLocalStorage;
+    } else if (apiUrlInUrlParams) {
+      return apiUrlInUrlParams;
+    } else if (process.env.NEXT_PUBLIC_GPTR_API_URL) {
+      return process.env.NEXT_PUBLIC_GPTR_API_URL;
+    } else if (process.env.REACT_APP_GPTR_API_URL) {
+      return process.env.REACT_APP_GPTR_API_URL;
+    } else if (purpose === 'langgraph-gui') {
+      return host.includes('localhost') ? 'http%3A%2F%2F127.0.0.1%3A8123' : `https://${host}`;
+    } else {
+      return host.includes('localhost') ? 'http://localhost:8000' : `https://${host}`;
+    }
   }
+  return '';
 };
