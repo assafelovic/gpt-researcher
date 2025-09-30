@@ -9,9 +9,9 @@ export const getHost = ({ purpose }: GetHostParams = {}): string => {
   if (typeof window === 'undefined') return '';
 
   try {
-    const { protocol, hostname } = window.location;
+    const { hostname } = window.location;
     // Always target port 8000 regardless of current page port
-    return `${protocol}//${hostname}:8000`;
+    return `http://${hostname}:8000`;
   } catch (e) {
     // Fallback empty string if anything unexpected occurs (e.g. restricted environment)
     console.error('getHost error:', e);
