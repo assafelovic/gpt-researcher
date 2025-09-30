@@ -169,6 +169,57 @@ class MCPResearchSkill:
         search_results = []
         
         try:
+            # 1) First: handle MCP result wrapper with structured_content/content
+            if isinstance(result, dict) and ("structured_content" in result or "content" in result):
+                search_results = []
+                # Prefer structured_content when present
+                structured = result.get("structured_content")
+                if isinstance(structured, dict):
+                    items = structured.get("results")
+                    if isinstance(items, list):
+                        for i, item in enumerate(items):
+                            if isinstance(item, dict):
+                                search_results.append({
+                                    "title": item.get("title", f"Result from {tool_name} #{i+1}"),
+                                    "href": item.get("href", item.get("url", f"mcp://{tool_name}/{i}")),
+                                    "body": item.get("body", item.get("content", str(item)))
+                                })
+                    # If no items array but structured is dict, treat as single
+                    elif isinstance(structured, dict):
+                        search_results.append({
+                            "title": structured.get("title", f"Result from {tool_name}"),
+                            "href": structured.get("href", structured.get("url", f"mcp://{tool_name}")),
+                            "body": structured.get("body", structured.get("content", str(structured)))
+                        })
+                # Fallback to content if provided (MCP spec: list of {type: text, text: ...})
+                if not search_results:
+                    content_field = result.get("content")
+                    if isinstance(content_field, list):
+                        texts = []
+                        for part in content_field:
+                            if isinstance(part, dict):
+                                if part.get("type") == "text" and isinstance(part.get("text"), str):
+                                    texts.append(part["text"])
+                                elif "text" in part:
+                                    texts.append(str(part.get("text")))
+                                else:
+                                    # unknown piece; stringify
+                                    texts.append(str(part))
+                            else:
+                                texts.append(str(part))
+                        body_text = "\n\n".join([t for t in texts if t])
+                    elif isinstance(content_field, str):
+                        body_text = content_field
+                    else:
+                        body_text = str(result)
+                    search_results.append({
+                        "title": f"Result from {tool_name}",
+                        "href": f"mcp://{tool_name}",
+                        "body": body_text,
+                    })
+                return search_results
+
+            # 2) If the result is already a list, process each item normally
             if isinstance(result, list):
                 # If the result is already a list, process each item
                 for i, item in enumerate(result):
@@ -189,6 +240,7 @@ class MCPResearchSkill:
                                 "body": str(item),
                             }
                             search_results.append(search_result)
+            # 3) If the result is a dict (non-MCP wrapper), use it as a single search result
             elif isinstance(result, dict):
                 # If the result is a dictionary, use it as a single search result
                 search_result = {
