@@ -14,7 +14,7 @@ export default function NotFoundContent({ onNewResearch }: NotFoundContentProps)
           </svg>
         </div>
         <h2 className="text-2xl font-bold text-gray-100 mb-2">Research Not Found</h2>
-        <p className="text-gray-400 mb-6">The research report you're looking for doesn't seem to exist or might have been deleted.</p>
+        <p className="text-gray-400 mb-6">The research report you&apos;re looking for doesn&apos;t seem to exist or might have been deleted.</p>
         <button 
           onClick={onNewResearch}
           className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-md transition-colors"
