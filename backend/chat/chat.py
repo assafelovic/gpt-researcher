@@ -5,11 +5,12 @@ import json
 from fastapi import WebSocket
 from typing import List, Dict, Any
 
-from openai import OpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import InMemoryVectorStore
 from gpt_researcher.memory import Memory
 from gpt_researcher.config.config import Config
+from gpt_researcher.utils.llm import create_chat_completion
+from gpt_researcher.utils.tools import create_chat_completion_with_tools, create_search_tool
 from tavily import TavilyClient
 from datetime import datetime
 
@@ -25,11 +26,11 @@ logging.basicConfig(
     ]
 )
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# Note: LLM client is now handled through GPT Researcher's unified LLM system
+# This supports all configured providers (OpenAI, Google Gemini, Anthropic, etc.)
 
 def get_tools():
-    """Define tools for OpenAI to use"""
+    """Define tools for LLM function calling (primarily for OpenAI-compatible providers)"""
     tools = [
         {
             "type": "function",
@@ -130,79 +131,43 @@ class ChatAgentWithMemory:
                 "results": []
             }
 
-    def handle_tool_calls(self, messages, response_message):
-        """Handle tool calls from OpenAI"""
-        tool_calls_metadata = []
+
+    async def process_chat_completion(self, messages: List[Dict[str, str]]):
+        """Process chat completion using configured LLM provider with tool calling support"""
+        # Create a search tool using the utility function
+        search_tool = create_search_tool(self.quick_search)
         
-        # First, add the assistant's message with the tool_calls to the messages
-        messages.append({
-            "role": "assistant",
-            "content": response_message.content if response_message.content else None,
-            "tool_calls": [
-                {
-                    "id": tool_call.id,
-                    "type": "function",
-                    "function": {
-                        "name": tool_call.function.name,
-                        "arguments": tool_call.function.arguments
-                    }
-                }
-                for tool_call in response_message.tool_calls
-            ]
-        })
+        # Use the tool-enabled chat completion utility
+        response, tool_calls_metadata = await create_chat_completion_with_tools(
+            messages=messages,
+            tools=[search_tool],
+            model=self.config.smart_llm_model,
+            llm_provider=self.config.smart_llm_provider,
+            llm_kwargs=self.config.llm_kwargs,
+        )
         
-        # Then process each tool call
-        for tool_call in response_message.tool_calls:
-            function_args = json.loads(tool_call.function.arguments)
-            
-            if tool_call.function.name == "quick_search":
-                query = function_args.get("query")
+        # Process metadata to match the expected format for the chat system
+        processed_metadata = []
+        for metadata in tool_calls_metadata:
+            if metadata.get("tool") == "search_tool":
+                # Extract query from args
+                query = metadata.get("args", {}).get("query", "")
                 
-                # Perform web search
-                search_results = self.quick_search(query)
-                
-                # Add function response to messages
-                messages.append({
-                    "tool_call_id": tool_call.id,
-                    "role": "tool",
-                    "name": "quick_search",
-                    "content": json.dumps(search_results)
-                })
-                
-                # Add metadata for this tool call
-                tool_calls_metadata.append({
+                # Trigger search again to get metadata (the search was already executed by LangChain)
+                if query:
+                    self.quick_search(query)  # This populates self.search_metadata
+                    
+                processed_metadata.append({
                     "tool": "quick_search",
                     "query": query,
                     "search_metadata": self.search_metadata
                 })
         
-        # Get a new response from the model with the tool results
-        second_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages,
-        )
-        
-        return second_response.choices[0].message.content, tool_calls_metadata
+        return response, processed_metadata
 
-    def process_chat_completion(self, messages: List[Dict[str, str]]):
-        """Process chat completion using OpenAI's API"""
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages,
-            tools=get_tools(),
-        )
-
-        response_message = response.choices[0].message
-
-        # Check if the response contains tool calls
-        if hasattr(response_message, 'tool_calls') and response_message.tool_calls:
-            content, tool_calls_metadata = self.handle_tool_calls(messages, response_message)
-            return content, tool_calls_metadata
-
-        return response_message.content, []
 
     async def chat(self, messages, websocket=None):
-        """Chat with OpenAI directly
+        """Chat with configured LLM provider (supports OpenAI, Google Gemini, Anthropic, etc.)
         
         Args:
             messages: List of chat messages with role and content
@@ -253,8 +218,8 @@ class ChatAgentWithMemory:
                 else:
                     logger.warning(f"Skipping message with missing role or content: {msg}")
             
-            # Process the chat using OpenAI
-            ai_message, tool_calls_metadata = self.process_chat_completion(formatted_messages)
+            # Process the chat using configured LLM provider
+            ai_message, tool_calls_metadata = await self.process_chat_completion(formatted_messages)
             
             # Provide fallback response if message is empty
             if not ai_message:

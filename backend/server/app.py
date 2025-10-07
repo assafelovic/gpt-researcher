@@ -4,13 +4,18 @@ from typing import Dict, List, Any
 import time
 import logging
 import sys
+import warnings
+
+# Suppress Pydantic V2 migration warnings
+warnings.filterwarnings("ignore", message="Valid config keys have changed in V2")
+warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile, BackgroundTasks, HTTPException
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 # Add the parent directory to sys.path to make sure we can import from server
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
@@ -53,11 +58,10 @@ class ResearchRequest(BaseModel):
 
 
 class ChatRequest(BaseModel):
+    model_config = ConfigDict(extra="allow")  # Allow extra fields in the request
+    
     report: str
     messages: List[Dict[str, Any]]
-    
-    class Config:
-        extra = "allow"  # Allow extra fields in the request
 
 
 @asynccontextmanager
@@ -70,17 +74,17 @@ async def lifespan(app: FastAPI):
     frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
     if os.path.exists(frontend_path):
         app.mount("/site", StaticFiles(directory=frontend_path), name="frontend")
-        logger.info(f"Frontend mounted from: {frontend_path}")
+        logger.debug(f"Frontend mounted from: {frontend_path}")
         
         # Also mount the static directory directly for assets referenced as /static/
         static_path = os.path.join(frontend_path, "static")
         if os.path.exists(static_path):
             app.mount("/static", StaticFiles(directory=static_path), name="static")
-            logger.info(f"Static assets mounted from: {static_path}")
+            logger.debug(f"Static assets mounted from: {static_path}")
     else:
         logger.warning(f"Frontend directory not found: {frontend_path}")
     
-    logger.info("Research API started - no database required")
+    logger.info("GPT Researcher API ready - local mode (no database persistence)")
     yield
     # Shutdown
     logger.info("Research API shutting down")
@@ -156,15 +160,15 @@ async def read_report(request: Request, research_id: str):
 @app.get("/api/reports")
 async def get_all_reports(report_ids: str = None):
     """Get research reports - returns empty list since no database."""
-    logger.info("No database configured - returning empty reports list")
+    logger.debug("No database configured - returning empty reports list")
     return {"reports": []}
 
 
 @app.get("/api/reports/{research_id}")
 async def get_report_by_id(research_id: str):
     """Get a specific research report by ID - no database configured."""
-    logger.info(f"No database configured - cannot retrieve report {research_id}")
-    raise HTTPException(status_code=404, detail="Report not found - no database configured")
+    logger.debug(f"No database configured - cannot retrieve report {research_id}")
+    raise HTTPException(status_code=404, detail="Report not found")
 
 
 @app.post("/api/reports")
@@ -173,7 +177,7 @@ async def create_or_update_report(request: Request):
     try:
         data = await request.json()
         research_id = data.get("id", "temp_id")
-        logger.info(f"Report creation requested for ID: {research_id} - no database configured, not persisted")
+        logger.debug(f"Report creation requested for ID: {research_id} - no database configured, not persisted")
         return {"success": True, "id": research_id}
     except Exception as e:
         logger.error(f"Error processing report creation: {e}")
@@ -353,11 +357,11 @@ async def research_report_chat(research_id: str, request: Request):
 @app.put("/api/reports/{research_id}")
 async def update_report(research_id: str, request: Request):
     """Update a specific research report by ID - no database configured."""
-    logger.info(f"Update requested for report {research_id} - no database configured, not persisted")
+    logger.debug(f"Update requested for report {research_id} - no database configured, not persisted")
     return {"success": True, "id": research_id}
 
 @app.delete("/api/reports/{research_id}")
 async def delete_report(research_id: str):
     """Delete a specific research report by ID - no database configured."""
-    logger.info(f"Delete requested for report {research_id} - no database configured, nothing to delete")
+    logger.debug(f"Delete requested for report {research_id} - no database configured, nothing to delete")
     return {"success": True, "id": research_id}
