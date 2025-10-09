@@ -97,7 +97,12 @@ class DeepResearchSkill:
     async def generate_research_plan(self, query: str, num_questions: int = 3) -> List[str]:
         """Generate follow-up questions to clarify research direction"""
         # Get initial search results to inform query generation
-        search_results = await get_search_results(query, self.researcher.retrievers[0])
+        # Pass the researcher so MCP retriever receives cfg and mcp_configs
+        search_results = await get_search_results(
+            query,
+            self.researcher.retrievers[0],
+            researcher=self.researcher
+        )
         logger.info(f"Initial web knowledge obtained: {len(search_results)} results")
 
         # Get current time for context
@@ -235,7 +240,10 @@ Format each question on a new line starting with 'Question: '"""}
                         websocket=self.websocket,
                         config_path=self.config_path,
                         headers=self.headers,
-                        visited_urls=self.visited_urls
+                        visited_urls=self.visited_urls,
+                        # Propagate MCP configuration to nested researchers
+                        mcp_configs=self.researcher.mcp_configs,
+                        mcp_strategy=self.researcher.mcp_strategy
                     )
 
                     # Conduct research
