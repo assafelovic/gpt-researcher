@@ -26,24 +26,16 @@ env:
 
 jobs:
   build-push-root:
-    name: "Build Root Image - ${{ matrix.platform_slash }}"
+    name: "Build Root Image"
     # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
     if: ${{ success() || failure() }}
-    runs-on: "${{ matrix.runner_label }}"
+    runs-on: "ubuntu-latest"
     env:
       # Variables for Docker tokens and authentication
       IMAGE_NAME_GHCR_SUFFIXED: "${{ github.event.repository.name }}"
       IMAGE_NAME_DOCKERHUB_SUFFIXED: "${{ github.event.repository.name }}"
       DOCKERFILE_PATH: "./Dockerfile"
       BUILD_CONTEXT: "."
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform_slash: "linux/amd64"
-            runner_label: "ubuntu-latest"
-          - platform_slash: "linux/arm64"
-            runner_label: "ubuntu-22.04-arm"
     steps:
       - name: "Checkout repository"
         uses: "actions/checkout@v4"
@@ -51,6 +43,10 @@ jobs:
         if: ${{ success() || failure() }}
         with:
           fetch-depth: 0
+      - name: "Set up QEMU"
+        uses: "docker/setup-qemu-action@v3"
+        # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
+        if: ${{ success() || failure() }}
       - name: "Set up Docker Buildx"
         uses: "docker/setup-buildx-action@v3"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -114,7 +110,7 @@ jobs:
         with:
           context: "${{ env.BUILD_CONTEXT }}"
           file: "${{ env.DOCKERFILE_PATH }}"
-          platforms: "${{ matrix.platform_slash }}"
+          platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
           push: true
@@ -124,24 +120,16 @@ jobs:
           cache-to: "type=gha,mode=max"
 
   build-push-frontend-nextjs:
-    name: "Build Frontend Next.js Image - ${{ matrix.platform_slash }}"
+    name: "Build Frontend Next.js Image"
     # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
     if: ${{ success() || failure() }}
-    runs-on: "${{ matrix.runner_label }}"
+    runs-on: "ubuntu-latest"
     env:
       # Variables for Docker tokens and authentication
       IMAGE_NAME_GHCR_SUFFIXED: "${{ github.event.repository.name }}-frontend-nextjs"
       IMAGE_NAME_DOCKERHUB_SUFFIXED: "${{ github.event.repository.name }}-frontend-nextjs"
       DOCKERFILE_PATH: "./frontend/nextjs/Dockerfile.dev"
       BUILD_CONTEXT: "./frontend/nextjs"
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform_slash: "linux/amd64"
-            runner_label: "ubuntu-latest"
-          - platform_slash: "linux/arm64"
-            runner_label: "ubuntu-22.04-arm"
     steps:
       - name: "Checkout repository"
         uses: "actions/checkout@v4"
@@ -149,6 +137,10 @@ jobs:
         if: ${{ success() || failure() }}
         with:
           fetch-depth: 0
+      - name: "Set up QEMU"
+        uses: "docker/setup-qemu-action@v3"
+        # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
+        if: ${{ success() || failure() }}
       - name: "Set up Docker Buildx"
         uses: "docker/setup-buildx-action@v3"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -212,7 +204,7 @@ jobs:
         with:
           context: "${{ env.BUILD_CONTEXT }}"
           file: "${{ env.DOCKERFILE_PATH }}"
-          platforms: "${{ matrix.platform_slash }}"
+          platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
           push: true
@@ -222,24 +214,16 @@ jobs:
           cache-to: "type=gha,mode=max"
 
   build-push-mcp-server:
-    name: "Build MCP Server Image - ${{ matrix.platform_slash }}"
+    name: "Build MCP Server Image"
     # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
     if: ${{ success() || failure() }}
-    runs-on: "${{ matrix.runner_label }}"
+    runs-on: "ubuntu-latest"
     env:
       # Variables for Docker tokens and authentication
       IMAGE_NAME_GHCR_SUFFIXED: "${{ github.event.repository.name }}-mcp-server"
       IMAGE_NAME_DOCKERHUB_SUFFIXED: "${{ github.event.repository.name }}-mcp-server"
       DOCKERFILE_PATH: "./mcp-server/Dockerfile"
       BUILD_CONTEXT: "./mcp-server"
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform_slash: "linux/amd64"
-            runner_label: "ubuntu-latest"
-          - platform_slash: "linux/arm64"
-            runner_label: "ubuntu-22.04-arm"
     steps:
       - name: "Checkout repository"
         uses: "actions/checkout@v4"
@@ -247,6 +231,10 @@ jobs:
         if: ${{ success() || failure() }}
         with:
           fetch-depth: 0
+      - name: "Set up QEMU"
+        uses: "docker/setup-qemu-action@v3"
+        # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
+        if: ${{ success() || failure() }}
       - name: "Set up Docker Buildx"
         uses: "docker/setup-buildx-action@v3"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -310,7 +298,7 @@ jobs:
         with:
           context: "${{ env.BUILD_CONTEXT }}"
           file: "${{ env.DOCKERFILE_PATH }}"
-          platforms: "${{ matrix.platform_slash }}"
+          platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
           push: true
@@ -320,24 +308,16 @@ jobs:
           cache-to: "type=gha,mode=max"
 
   build-push-docs-discord-bot:
-    name: "Build Docs Discord Bot Image - ${{ matrix.platform_slash }}"
+    name: "Build Docs Discord Bot Image"
     # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
     if: ${{ success() || failure() }}
-    runs-on: "${{ matrix.runner_label }}"
+    runs-on: "ubuntu-latest"
     env:
       # Variables for Docker tokens and authentication
       IMAGE_NAME_GHCR_SUFFIXED: "${{ github.event.repository.name }}-docs-discord-bot"
       IMAGE_NAME_DOCKERHUB_SUFFIXED: "${{ github.event.repository.name }}-docs-discord-bot"
       DOCKERFILE_PATH: "./docs/discord-bot/Dockerfile"
       BUILD_CONTEXT: "./docs/discord-bot"
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform_slash: "linux/amd64"
-            runner_label: "ubuntu-latest"
-          - platform_slash: "linux/arm64"
-            runner_label: "ubuntu-22.04-arm"
     steps:
       - name: "Checkout repository"
         uses: "actions/checkout@v4"
@@ -345,6 +325,10 @@ jobs:
         if: ${{ success() || failure() }}
         with:
           fetch-depth: 0
+      - name: "Set up QEMU"
+        uses: "docker/setup-qemu-action@v3"
+        # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
+        if: ${{ success() || failure() }}
       - name: "Set up Docker Buildx"
         uses: "docker/setup-buildx-action@v3"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -408,7 +392,7 @@ jobs:
         with:
           context: "${{ env.BUILD_CONTEXT }}"
           file: "${{ env.DOCKERFILE_PATH }}"
-          platforms: "${{ matrix.platform_slash }}"
+          platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
           push: true
