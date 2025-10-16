@@ -41,3 +41,8 @@ class BaseConfig(TypedDict):
     MCP_ALLOWED_ROOT_PATHS: List[str]
     MCP_STRATEGY: str
     REASONING_EFFORT: str
+    PLANNING_TOKEN_BUDGET: Union[int, None]
+    PLANNING_WEB_BUDGET: Union[int, None]
+    PLANNING_COST_BUDGET: Union[float, None]
+    PLANNING_ENFORCE_BUDGET: bool
+    PLAN_TRACE_PATH: Union[str, None]

@@ -42,4 +42,10 @@ DEFAULT_CONFIG: BaseConfig = {
     "MCP_ALLOWED_ROOT_PATHS": [],  # List of allowed root paths for local file access
     "MCP_STRATEGY": "fast",  # MCP execution strategy: "fast", "deep", "disabled"
     "REASONING_EFFORT": "medium",
+    # Planning & budgeting
+    "PLANNING_TOKEN_BUDGET": None,
+    "PLANNING_WEB_BUDGET": None,
+    "PLANNING_COST_BUDGET": None,
+    "PLANNING_ENFORCE_BUDGET": False,
+    "PLAN_TRACE_PATH": None,
 }

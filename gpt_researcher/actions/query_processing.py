@@ -22,6 +22,11 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
     Returns:
         A list of search results
     """
+    if researcher and hasattr(researcher, "plan_manager") and researcher.plan_manager:
+        researcher.plan_manager.record_usage("web_calls", 1)
+        if hasattr(researcher, "update_plan_trace"):
+            researcher.update_plan_trace()
+
     # Check if this is an MCP retriever and pass the researcher instance
     if "mcpretriever" in retriever.__name__.lower():
         search_retriever = retriever(

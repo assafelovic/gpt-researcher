@@ -21,6 +21,7 @@ class ResearchConductor:
         self._mcp_results_cache = None
         # Track MCP query count for balanced mode
         self._mcp_query_count = 0
+        self.plan_manager = researcher.plan_manager
 
     async def plan_research(self, query, query_domains=None):
         """Gets the sub-queries from the query
@@ -38,6 +39,17 @@ class ResearchConductor:
 
         search_results = await get_search_results(query, self.researcher.retrievers[0], query_domains, researcher=self.researcher)
         self.logger.info(f"Initial search results obtained: {len(search_results)} results")
+
+        if self.plan_manager:
+            added = self._ensure_plan_step(query, f"Resolve primary query: {query}")
+            if added:
+                self._update_plan_trace()
+            self.plan_manager.update_step(
+                query,
+                "planned",
+                {"initial_search_results": len(search_results)}
+            )
+            self._update_plan_trace()
 
         await stream_output(
             "logs",
@@ -61,6 +73,18 @@ class ResearchConductor:
             **self.researcher.kwargs
         )
         self.logger.info(f"Research outline planned: {outline}")
+
+        if self.plan_manager:
+            for sub_query in outline:
+                added = self._ensure_plan_step(sub_query, f"Investigate sub-question: {sub_query}")
+                if added:
+                    self._update_plan_trace()
+            self.plan_manager.update_step(
+                query,
+                "ready",
+                {"planned_steps": len(outline)}
+            )
+            self._update_plan_trace()
         return outline
 
     async def conduct_research(self):
@@ -69,10 +93,17 @@ class ResearchConductor:
             self.json_handler.update_content("query", self.researcher.query)
         
         self.logger.info(f"Starting research for query: {self.researcher.query}")
-        
+
         # Log active retrievers once at the start of research
         retriever_names = [r.__name__ for r in self.researcher.retrievers]
         self.logger.info(f"Active retrievers: {retriever_names}")
+
+        if self.plan_manager:
+            added = self._ensure_plan_step(self.researcher.query, f"Resolve primary query: {self.researcher.query}")
+            if added:
+                self._update_plan_trace()
+            self.plan_manager.update_step(self.researcher.query, "in_progress")
+            self._update_plan_trace()
         
         # Reset visited_urls and source_urls at the start of each research task
         self.researcher.visited_urls.clear()
@@ -185,6 +216,14 @@ class ResearchConductor:
                 self.json_handler.update_content("context", self.researcher.context)
 
         self.logger.info(f"Research completed. Context size: {len(str(self.researcher.context))}")
+
+        if self.plan_manager:
+            self.plan_manager.update_step(
+                self.researcher.query,
+                "completed",
+                {"context_length": len(str(self.researcher.context))}
+            )
+            self._update_plan_trace()
         return self.researcher.context
 
     async def _get_context_by_urls(self, urls):
@@ -430,7 +469,23 @@ class ResearchConductor:
                 "query": sub_query,
                 "scraped_data_size": len(scraped_data)
             })
-        
+
+        if self.plan_manager and self.plan_manager.should_halt(self.researcher.enforce_plan_budget):
+            self.logger.warning(f"Budget exhausted, skipping sub-query: {sub_query}")
+            added = self._ensure_plan_step(sub_query, f"Investigate sub-question: {sub_query}")
+            if added:
+                self._update_plan_trace()
+            self.plan_manager.update_step(sub_query, "skipped_budget")
+            self._update_plan_trace()
+            if self.researcher.verbose:
+                await stream_output(
+                    "logs",
+                    "budget_exhausted",
+                    f"⏹️ Skipping '{sub_query}' because the research budget has been reached.",
+                    self.researcher.websocket,
+                )
+            return ""
+
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -442,11 +497,17 @@ class ResearchConductor:
         try:
             # Identify MCP retrievers
             mcp_retrievers = [r for r in self.researcher.retrievers if "mcpretriever" in r.__name__.lower()]
-            non_mcp_retrievers = [r for r in self.researcher.retrievers if "mcpretriever" not in r.__name__.lower()]
-            
+
             # Initialize context components
             mcp_context = []
             web_context = ""
+
+            if self.plan_manager:
+                added = self._ensure_plan_step(sub_query, f"Investigate sub-question: {sub_query}")
+                if added:
+                    self._update_plan_trace()
+                self.plan_manager.update_step(sub_query, "in_progress")
+                self._update_plan_trace()
             
             # Get MCP strategy configuration
             mcp_strategy = self._get_mcp_strategy()
@@ -540,9 +601,19 @@ class ResearchConductor:
                     "mcp_sources": len(mcp_context),
                     "web_content": bool(web_context)
                 })
-                
+
+            if self.plan_manager:
+                metadata = {
+                    "mcp_sources": len(mcp_context),
+                    "web_sources": len(scraped_data),
+                    "context_chars": len(str(combined_context)) if combined_context else 0,
+                }
+                status = "completed" if combined_context else "no_content"
+                self.plan_manager.update_step(sub_query, status, metadata)
+                self._update_plan_trace()
+
             return combined_context
-            
+
         except Exception as e:
             self.logger.error(f"Error processing sub-query {sub_query}: {e}", exc_info=True)
             if self.researcher.verbose:
@@ -552,7 +623,23 @@ class ResearchConductor:
                     f"❌ Error processing '{sub_query}': {str(e)}",
                     self.researcher.websocket,
                 )
+            if self.plan_manager:
+                self.plan_manager.update_step(sub_query, "failed", {"error": str(e)})
+                self._update_plan_trace()
             return ""
+
+    def _update_plan_trace(self) -> None:
+        if hasattr(self.researcher, "update_plan_trace"):
+            self.researcher.update_plan_trace()
+
+    def _ensure_plan_step(self, query: str, rationale: str) -> bool:
+        if not self.plan_manager:
+            return False
+        for step in self.plan_manager.steps:
+            if step.query == query:
+                return False
+        self.plan_manager.add_step(query, rationale)
+        return True
 
     async def _execute_mcp_research(self, retriever, query):
         """
@@ -963,4 +1050,3 @@ class ResearchConductor:
                     "progress": progress
                 }
             )
-
