@@ -6,7 +6,7 @@ This command-line interface (CLI) tool allows you to generate research reports u
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/gpt-researcher.git
+   git clone https://github.com/assafelovic/gpt-researcher.git
    cd gpt-researcher
    ```
 
