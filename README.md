@@ -6,7 +6,7 @@
 
 [![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=0891b2)](https://gptr.dev)
 [![Documentation](https://img.shields.io/badge/Documentation-DOCS-f472b6?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
-[![Discord](https://img.shields.io/discord/1127851779011391548?logo=discord&label=Discord&color=5865F2&style=for-the-badge)](https://discord.gg/QgZXvJAccX)
+[![Discord](https://img.shields.io/discord/1127851779011391548?logo=discord&logoColor=white&label=online&color=34b76a&style=for-the-badge)](https://discord.gg/QgZXvJAccX)
 
 
 [![PyPI version](https://img.shields.io/pypi/v/gpt-researcher?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/gpt-researcher)
