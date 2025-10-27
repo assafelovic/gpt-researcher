@@ -10,7 +10,7 @@ from langchain.prompts import PromptTemplate
 from gpt_researcher.llm_provider.generic.base import NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, ReasoningEfforts
 
 from ..prompts import PromptFamily
-from .costs import estimate_llm_cost
+from .costs import estimate_llm_cost, estimate_token_usage
 from .validators import Subtopics
 import os
 
@@ -88,6 +88,18 @@ async def create_chat_completion(
         if cost_callback:
             llm_costs = estimate_llm_cost(str(messages), response)
             cost_callback(llm_costs)
+            try:
+                input_tokens, output_tokens, total_tokens = estimate_token_usage(str(messages), response)
+            except Exception as token_error:  # pragma: no cover - defensive
+                logging.getLogger(__name__).debug(f"Token estimation failed: {token_error}")
+                input_tokens = output_tokens = total_tokens = None
+
+            callback_owner = getattr(cost_callback, "__self__", None)
+            if callback_owner and hasattr(callback_owner, "register_token_usage") and total_tokens is not None:
+                try:
+                    callback_owner.register_token_usage(total_tokens)
+                except Exception as register_error:  # pragma: no cover - defensive
+                    logging.getLogger(__name__).debug(f"register_token_usage failed: {register_error}")
 
         return response
 

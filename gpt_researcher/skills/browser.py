@@ -30,6 +30,11 @@ class BrowserManager:
                 self.researcher.websocket,
             )
 
+        if hasattr(self.researcher, "plan_manager") and self.researcher.plan_manager:
+            self.researcher.plan_manager.record_usage("web_calls", len(urls))
+            if hasattr(self.researcher, "update_plan_trace"):
+                self.researcher.update_plan_trace()
+
         scraped_content, images = await scrape_urls(
             urls, self.researcher.cfg, self.worker_pool
         )

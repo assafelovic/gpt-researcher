@@ -1,6 +1,8 @@
 from typing import Any, Optional
 import json
 import os
+import re
+from pathlib import Path
 
 from .config import Config
 from .memory import Memory
@@ -8,6 +10,7 @@ from .utils.enum import ReportSource, ReportType, Tone
 from .llm_provider import GenericLLMProvider
 from .prompts import get_prompt_family
 from .vector_store import VectorStoreWrapper
+from .planning import PlanManager
 
 # Research skills
 from .skills.researcher import ResearchConductor
@@ -144,6 +147,18 @@ class GPTResearcher:
         self.research_costs = 0.0
         self.log_handler = log_handler
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
+
+        # Planning & budgeting
+        self.plan_trace_path = getattr(self.cfg, "plan_trace_path", None)
+        self.enforce_plan_budget = getattr(self.cfg, "planning_enforce_budget", False)
+        self.plan_manager = PlanManager(
+            query=self.query,
+            token_limit=getattr(self.cfg, "planning_token_budget", None),
+            web_limit=getattr(self.cfg, "planning_web_budget", None),
+            cost_limit=getattr(self.cfg, "planning_cost_budget", None),
+        )
+        self._plan_trace_file_path: Path | None = None
+        self._last_plan_persist: Path | None = None
         
         # Process MCP configurations if provided
         self.mcp_configs = mcp_configs
@@ -401,7 +416,7 @@ class GPTResearcher:
         return intro
 
     async def quick_search(self, query: str, query_domains: list[str] = None) -> list[Any]:
-        return await get_search_results(query, self.retrievers[0], query_domains=query_domains)
+        return await get_search_results(query, self.retrievers[0], query_domains=query_domains, researcher=self)
 
     async def get_subtopics(self):
         return await self.report_generator.get_subtopics()
@@ -464,8 +479,58 @@ class GPTResearcher:
         if not isinstance(cost, (float, int)):
             raise ValueError("Cost must be an integer or float")
         self.research_costs += cost
+        if self.plan_manager:
+            self.plan_manager.record_usage("cost", float(cost))
+            self.update_plan_trace()
         if self.log_handler:
             self._log_event("research", step="cost_update", details={
                 "cost": cost,
                 "total_cost": self.research_costs
             })
+
+    def register_token_usage(self, tokens: int) -> None:
+        if tokens is None:
+            return
+        if tokens < 0:
+            raise ValueError("Token usage must be non-negative")
+        if self.plan_manager:
+            self.plan_manager.record_usage("tokens", float(tokens))
+            self.update_plan_trace()
+
+    def get_plan_trace(self) -> dict[str, object]:
+        if not self.plan_manager:
+            return {}
+        return self.plan_manager.get_trace()
+
+    def update_plan_trace(self) -> None:
+        if not self.plan_manager:
+            return
+        trace = self.plan_manager.get_trace()
+        # Update JSON handler if available
+        research_conductor = getattr(self, "research_conductor", None)
+        json_handler = getattr(research_conductor, "json_handler", None)
+        if json_handler:
+            json_handler.update_content("plan", trace)
+        self.persist_plan_trace(trace)
+
+    def persist_plan_trace(self, trace: dict | None = None) -> Optional[str]:
+        if not self.plan_trace_path:
+            return None
+        trace = trace or (self.plan_manager.get_trace() if self.plan_manager else {})
+        plan_path = Path(self.plan_trace_path)
+        if plan_path.suffix:
+            output_path = plan_path
+            self._plan_trace_file_path = output_path
+        else:
+            plan_path.mkdir(parents=True, exist_ok=True)
+            if not self._plan_trace_file_path:
+                safe_query = re.sub(r"[^a-zA-Z0-9_-]+", "-", self.query).strip("-") or "plan"
+                output_path = plan_path / f"plan_{safe_query}.json"
+                self._plan_trace_file_path = output_path
+            else:
+                output_path = self._plan_trace_file_path
+        if not output_path.parent.exists():
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(trace, indent=2), encoding="utf-8")
+        self._last_plan_persist = output_path
+        return str(output_path)
