@@ -1,0 +1,23 @@
+{
+  "name": "gpt-researcher",
+  "description": "GPT Researcher - Autonomous AI research agent",
+  "version": "0.14.4",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfile": "Dockerfile"
+  },
+  "deploy": {
+    "restartPolicy": "always",
+    "replicas": 1
+  },
+  "env": {
+    "HOST": "0.0.0.0",
+    "PORT": "8000",
+    "WORKERS": "1"
+  },
+  "healthCheck": {
+    "path": "/",
+    "port": 8000,
+    "interval": 30
+  }
+}
