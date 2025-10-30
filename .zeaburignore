@@ -1,0 +1,69 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+docs/
+*.md
+README*
+
+# Development files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Outputs (will be created at runtime)
+outputs/
+my-docs/
+
+# Test files
+tests/
+pytest.ini
+
+# Docker
+Dockerfile.dev
+docker-compose.yml
+docker-compose.*.yml
+
+# Frontend build artifacts
+frontend/nextjs/.next/
+frontend/nextjs/out/
+frontend/nextjs/dist/
+
+# Temporary files
+*.tmp
+*.temp

@@ -1,7 +1,7 @@
 import warnings
 from datetime import date, datetime, timezone
 
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 
 from .config import Config
 from .utils.enum import ReportSource, ReportType, Tone
