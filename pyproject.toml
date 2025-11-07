@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gpt-researcher"
-version = "0.14.4"
+version = "0.14.5"
 description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
 authors = ["Assaf Elovic <assaf.elovic@gmail.com>"]
 license = "MIT"
@@ -63,7 +63,7 @@ gpt-researcher = { workspace = true }
 
 [project]
 name = "gpt-researcher"
-version = "0.14.4"
+version = "0.14.5"
 description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
 authors = [{ name = "Assaf Elovic", email = "assaf.elovic@gmail.com" }]
 license = { text = "MIT" }

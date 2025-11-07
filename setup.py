@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-LATEST_VERSION = "0.14.4"
+LATEST_VERSION = "0.14.5"
 
 exclude_packages = [
     "selenium",
