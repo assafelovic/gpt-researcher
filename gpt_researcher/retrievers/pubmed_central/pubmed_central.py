@@ -1,174 +1,152 @@
+from typing import List, Dict, Any, Optional
 import os
 import xml.etree.ElementTree as ET
-
 import requests
 
 
 class PubMedCentralSearch:
     """
-    PubMed Central API Retriever
+    PubMed Central Full-Text Search
     """
 
-    def __init__(self, query, query_domains=None):
-        """
-        Initializes the PubMedCentralSearch object.
-        Args:
-            query: The search query.
-        """
+    def __init__(self, query: str, query_domains=None):
+        self.base_search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+        self.base_fetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+        
+        # Get API key from environment
+        self.api_key = os.getenv('NCBI_API_KEY')
+        if not self.api_key:
+            print("Warning: NCBI_API_KEY not set. Requests will be rate-limited.")
+        
         self.query = query
-        self.api_key = self._retrieve_api_key()
+        self.db_type = os.getenv('PUBMED_DB', 'pmc')  # Default to PMC for full text
+        
+        # Optional parameters from environment
+        self.params = self._populate_params()
 
-    def _retrieve_api_key(self):
+    def _populate_params(self) -> Dict[str, Any]:
         """
-        Retrieves the NCBI API key from environment variables.
-        Returns:
-            The API key.
-        Raises:
-            Exception: If the API key is not found.
+        Populates parameters from environment variables prefixed with 'PUBMED_ARG_'
         """
-        try:
-            api_key = os.environ["NCBI_API_KEY"]
-        except KeyError:
-            raise Exception(
-                "NCBI API key not found. Please set the NCBI_API_KEY environment variable. "
-                "You can obtain your key from https://www.ncbi.nlm.nih.gov/account/"
-            )
-        return api_key
-
-    def search(self, max_results=10):
-        """
-        Searches the query using the PubMed Central API.
-        Args:
-            max_results: The maximum number of results to return.
-        Returns:
-            A list of search results.
-        """
-        base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
         params = {
-            "db": "pmc",
-            "term": f"{self.query} AND free fulltext[filter]",
+            key[len('PUBMED_ARG_'):].lower(): value
+            for key, value in os.environ.items()
+            if key.startswith('PUBMED_ARG_')
+        }
+        
+        # Set defaults if not provided
+        params.setdefault('sort', 'relevance')
+        params.setdefault('retmode', 'json')
+        return params
+
+    def _search_articles(self, max_results: int) -> Optional[List[str]]:
+        """
+        Search for article IDs based on query
+        """
+        # Build search query with filters for full text
+        if self.db_type == 'pubmed':
+            search_term = f"{self.query} AND (ffrft[filter] OR pmc[filter])"
+        else:  # PMC always has full text
+            search_term = self.query
+        
+        search_params = {
+            "db": self.db_type,
+            "term": search_term,
             "retmax": max_results,
-            "usehistory": "y",
             "api_key": self.api_key,
-            "retmode": "json",
-            "sort": "relevance"
+            **self.params  # Include custom params
         }
-        response = requests.get(base_url, params=params)
-
-        if response.status_code != 200:
-            raise Exception(
-                f"Failed to retrieve data: {response.status_code} - {response.text}"
-            )
-
-        results = response.json()
-        ids = results["esearchresult"]["idlist"]
-
-        search_response = []
-        for article_id in ids:
-            xml_content = self.fetch([article_id])
-            if self.has_body_content(xml_content):
-                article_data = self.parse_xml(xml_content)
-                if article_data:
-                    search_response.append(
-                        {
-                            "href": f"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{article_id}/",
-                            "body": f"{article_data['title']}\n\n{article_data['abstract']}\n\n{article_data['body'][:500]}...",
-                        }
-                    )
-
-            if len(search_response) >= max_results:
-                break
-
-        return search_response
-
-    def fetch(self, ids):
-        """
-        Fetches the full text content for given article IDs.
-        Args:
-            ids: List of article IDs.
-        Returns:
-            XML content of the articles.
-        """
-        base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-        params = {
-            "db": "pmc",
-            "id": ",".join(ids),
-            "retmode": "xml",
-            "api_key": self.api_key,
-        }
-        response = requests.get(base_url, params=params)
-
-        if response.status_code != 200:
-            raise Exception(
-                f"Failed to retrieve data: {response.status_code} - {response.text}"
-            )
-
-        return response.text
-
-    def has_body_content(self, xml_content):
-        """
-        Checks if the XML content has a body section.
-        Args:
-            xml_content: XML content of the article.
-        Returns:
-            Boolean indicating presence of body content.
-        """
-        root = ET.fromstring(xml_content)
-        ns = {
-            "mml": "http://www.w3.org/1998/Math/MathML",
-            "xlink": "http://www.w3.org/1999/xlink",
-        }
-        article = root.find("article", ns)
-        if article is None:
-            return False
-
-        body_elem = article.find(".//body", namespaces=ns)
-        if body_elem is not None:
-            return True
-        else:
-            for sec in article.findall(".//sec", namespaces=ns):
-                for p in sec.findall(".//p", namespaces=ns):
-                    if p.text:
-                        return True
-        return False
-
-    def parse_xml(self, xml_content):
-        """
-        Parses the XML content to extract title, abstract, and body.
-        Args:
-            xml_content: XML content of the article.
-        Returns:
-            Dictionary containing title, abstract, and body text.
-        """
-        root = ET.fromstring(xml_content)
-        ns = {
-            "mml": "http://www.w3.org/1998/Math/MathML",
-            "xlink": "http://www.w3.org/1999/xlink",
-        }
-
-        article = root.find("article", ns)
-        if article is None:
+        
+        try:
+            response = requests.get(self.base_search_url, params=search_params)
+            response.raise_for_status()
+            data = response.json()
+            
+            id_list = data.get('esearchresult', {}).get('idlist', [])
+            print(f"Found {len(id_list)} articles with full text available")
+            return id_list
+            
+        except requests.RequestException as e:
+            print(f"Failed to search articles: {e}")
             return None
 
-        title = article.findtext(
-            ".//title-group/article-title", default="", namespaces=ns
-        )
+    def _fetch_full_text(self, article_id: str) -> Optional[Dict[str, str]]:
+        """
+        Fetch full text content for a single article
+        """
+        fetch_params = {
+            "db": "pmc" if self.db_type == "pmc" else "pmc",  # Always fetch from PMC for full text
+            "id": article_id,
+            "rettype": "full",
+            "retmode": "xml",
+            "api_key": self.api_key
+        }
+        
+        try:
+            response = requests.get(self.base_fetch_url, params=fetch_params)
+            response.raise_for_status()
+            
+            # Parse XML content
+            try:
+                root = ET.fromstring(response.text)
+                
+                # Extract title
+                title = root.find('.//article-title')
+                title_text = title.text if title is not None else ""
+                
+                # Extract abstract
+                abstract = root.find('.//abstract')
+                abstract_text = " ".join(abstract.itertext()) if abstract is not None else ""
+                
+                # Extract body text
+                body = root.find('.//body')
+                body_text = " ".join(body.itertext()) if body is not None else ""
+                
+                # Combine all text content
+                full_content = f"Title: {title_text}\n\nAbstract: {abstract_text}\n\nBody: {body_text}"
+                
+                # Build URL
+                if self.db_type == "pmc" or article_id.startswith("PMC"):
+                    url = f"https://www.ncbi.nlm.nih.gov/pmc/articles/{article_id}/"
+                else:
+                    url = f"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{article_id}/"
+                
+                return {
+                    "url": url,
+                    "raw_content": full_content,
+                    "title": title_text  # Extra field for convenience
+                }
+                
+            except ET.ParseError as e:
+                return None
+                
+        except requests.RequestException as e:
+            return None
 
-        abstract = article.find(".//abstract", namespaces=ns)
-        abstract_text = (
-            "".join(abstract.itertext()).strip() if abstract is not None else ""
-        )
+    def search(self, max_results: int = 5) -> Optional[List[Dict[str, Any]]]:
+        """
+        Performs the search and retrieves full text content.
 
-        body = []
-        body_elem = article.find(".//body", namespaces=ns)
-        if body_elem is not None:
-            for p in body_elem.findall(".//p", namespaces=ns):
-                if p.text:
-                    body.append(p.text.strip())
-        else:
-            for sec in article.findall(".//sec", namespaces=ns):
-                for p in sec.findall(".//p", namespaces=ns):
-                    if p.text:
-                        body.append(p.text.strip())
-
-        return {"title": title, "abstract": abstract_text, "body": "\n".join(body)}
+        :param max_results: Maximum number of results to return
+        :return: JSON response in the format:
+            [
+              {
+                "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1234567/",
+                "raw_content": "Full text content of the article..."
+              },
+              ...
+            ]
+        """
+        # Step 1: Search for article IDs
+        article_ids = self._search_articles(max_results)
+        if not article_ids:
+            return None
+        
+        # Step 2: Fetch full text for each article
+        results = []
+        for article_id in article_ids:
+            article_content = self._fetch_full_text(article_id)
+            if article_content:
+                results.append(article_content)
+        
+        return results
