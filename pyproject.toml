@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gpt-researcher"
-version = "0.14.4"
+version = "0.14.5"
 description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
 authors = ["Assaf Elovic <assaf.elovic@gmail.com>"]
 license = "MIT"
@@ -18,9 +18,12 @@ htmldocx = "^0.0.6"
 jinja2 = ">=3.1.2"
 json-repair = "^0.29.8"
 json5 = "^0.9.25"
-langchain = "^0.3.18"
-langchain_community = "^0.3.17"
-langchain-openai = "^0.3.6"
+langchain = "^1.0.0"
+langchain-classic = "^1.0.0"
+langchain_community = "^0.4.0"
+langchain-core = "^1.0.0"
+langchain-openai = "^1.0.0"
+langchain-text-splitters = "^1.0.0"
 langgraph = ">=0.2.73,<0.3"
 loguru = "^0.7.2"
 lxml = { version = ">=4.9.2", extras = ["html_clean"] }
@@ -60,7 +63,7 @@ gpt-researcher = { workspace = true }
 
 [project]
 name = "gpt-researcher"
-version = "0.14.4"
+version = "0.14.5"
 description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
 authors = [{ name = "Assaf Elovic", email = "assaf.elovic@gmail.com" }]
 license = { text = "MIT" }
@@ -83,7 +86,7 @@ dependencies = [
     "cffi>=1.17.1",
     "chardet>=5.2.0",
     "charset-normalizer>=3.4.2",
-    "click>=8.2.1",
+    "click>=8.1.0",
     "colorama>=0.4.6",
     "cryptography>=45.0.2",
     "cssselect2>=0.8.0",
@@ -119,12 +122,14 @@ dependencies = [
     "jsonpointer>=3.0.0",
     "jsonschema>=4.23.0",
     "jsonschema-specifications>=2025.4.1",
-    "kiwisolver>=1.4.8",
-    "langchain-community>=0.3.17",
-    "langchain-core>=0.3.61",
-    "langchain-ollama>=0.3.3",
-    "langchain-openai>=0.3.6",
-    "langchain-text-splitters>=0.3.8",
+    "kiwisolver>=1.4.5",
+    "langchain>=1.0.0",
+    "langchain-classic>=1.0.0",
+    "langchain-community>=0.4.0",
+    "langchain-core>=1.0.0",
+    "langchain-ollama>=1.0.0",
+    "langchain-openai>=1.0.0",
+    "langchain-text-splitters>=1.0.0",
     "langdetect>=1.0.9",
     "langgraph>=0.2.76",
     "langgraph-checkpoint>=2.0.26",
@@ -145,7 +150,7 @@ dependencies = [
     "mypy-extensions>=1.1.0",
     "nest-asyncio>=1.6.0",
     "nltk>=3.9.1",
-    "numpy>=2.2.6",
+    "numpy>=2.0.0,<2.3.0",
     "olefile>=0.47",
     "ollama>=0.4.8",
     "openai>=1.82.0",
@@ -155,7 +160,7 @@ dependencies = [
     "pillow>=11.2.1",
     "primp>=0.15.0",
     "propcache>=0.3.1",
-    "psutil>=7.0.0",
+    "psutil>=6.0.0",
     "pycparser>=2.22",
     "pydantic>=2.11.5",
     "pydantic-core>=2.33.2",

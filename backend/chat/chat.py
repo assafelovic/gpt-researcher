@@ -5,7 +5,7 @@ import json
 from fastapi import WebSocket
 from typing import List, Dict, Any
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import InMemoryVectorStore
 from gpt_researcher.memory import Memory
 from gpt_researcher.config.config import Config

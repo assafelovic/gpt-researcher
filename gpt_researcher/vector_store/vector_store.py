@@ -3,9 +3,9 @@ Wrapper for langchain vector store
 """
 from typing import List, Dict
 
-from langchain.docstore.document import Document
-from langchain.vectorstores import VectorStore
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from langchain_community.vectorstores import VectorStore
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 class VectorStoreWrapper:
     """
