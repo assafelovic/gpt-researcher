@@ -10,7 +10,10 @@ class BrowserManager:
 
     def __init__(self, researcher):
         self.researcher = researcher
-        self.worker_pool = WorkerPool(researcher.cfg.max_scraper_workers)
+        self.worker_pool = WorkerPool(
+            researcher.cfg.max_scraper_workers,
+            researcher.cfg.scraper_rate_limit_delay
+        )
 
     async def browse_urls(self, urls: list[str]) -> list[dict]:
         """
