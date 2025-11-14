@@ -2,6 +2,7 @@ import asyncio
 import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
+from .rate_limiter import get_global_rate_limiter
 
 
 class WorkerPool:
@@ -11,35 +12,39 @@ class WorkerPool:
 
         Args:
             max_workers: Maximum number of concurrent workers
-            rate_limit_delay: Minimum seconds between requests (0 = no limit)
-                             Useful for API rate limiting (e.g., 6.0 for 10 req/min)
+            rate_limit_delay: Minimum seconds between requests GLOBALLY (0 = no limit)
+                             This delay is enforced across ALL WorkerPools to prevent
+                             overwhelming rate-limited APIs.
+                             Example: 6.0 for 10 req/min (Firecrawl free tier)
+
+        Note:
+            The rate_limit_delay is enforced GLOBALLY using a singleton rate limiter.
+            This means if you have multiple GPTResearcher instances (e.g., in deep research),
+            they will all share the same rate limit, preventing API overload.
         """
         self.max_workers = max_workers
         self.rate_limit_delay = rate_limit_delay
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.semaphore = asyncio.Semaphore(max_workers)
-        self.last_request_time = 0.0  # Track last request for rate limiting
-        self.rate_limit_lock = asyncio.Lock()  # Ensure thread-safe timing
+
+        # Configure the global rate limiter
+        # All WorkerPools share the same rate limiter instance
+        global_limiter = get_global_rate_limiter()
+        global_limiter.configure(rate_limit_delay)
 
     @asynccontextmanager
     async def throttle(self):
         """
-        Throttle requests with both concurrency limiting and rate limiting.
+        Throttle requests with both concurrency limiting and GLOBAL rate limiting.
 
-        - Semaphore controls concurrent operations (how many at once)
-        - Rate limiting controls request frequency (how many per time period)
+        - Semaphore controls concurrent operations within THIS pool (how many at once)
+        - Global rate limiter controls request frequency ACROSS ALL POOLS (global timing)
+
+        This ensures that even with multiple concurrent GPTResearcher instances
+        (e.g., in deep research), the total request rate stays within limits.
         """
         async with self.semaphore:
-            # Apply rate limiting if configured
-            if self.rate_limit_delay > 0:
-                async with self.rate_limit_lock:
-                    current_time = time.time()
-                    time_since_last = current_time - self.last_request_time
-
-                    if time_since_last < self.rate_limit_delay:
-                        sleep_time = self.rate_limit_delay - time_since_last
-                        await asyncio.sleep(sleep_time)
-
-                    self.last_request_time = time.time()
-
+            # Use global rate limiter (shared across all WorkerPools)
+            global_limiter = get_global_rate_limiter()
+            await global_limiter.wait_if_needed()
             yield
