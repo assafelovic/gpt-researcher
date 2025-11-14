@@ -61,4 +61,6 @@ langchain-mcp-adapters>=0.1.0
 sqlalchemy>=2.0.28
 python-multipart>=0.0.6
 json-repair>=0.29.8
+json5>=0.9.25
+markdown>=3.5.1
 
