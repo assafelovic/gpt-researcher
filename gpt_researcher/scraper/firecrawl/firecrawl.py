@@ -49,19 +49,22 @@ class FireCrawl:
         """
 
         try:
-            response = self.firecrawl.scrape_url(url=self.link, formats=["markdown"])
+            # Fixed: Changed from scrape_url() to scrape() to match FireCrawl SDK v4.6.0+
+            response = self.firecrawl.scrape(url=self.link, formats=["markdown"])
 
-            # Check if the page has been scraped success
-            if "error" in response:
-                print("Scrape failed! : " + str(response["error"]))
+            # Check if the page has been scraped successfully
+            # Fixed: Access metadata attributes directly (not as dict keys)
+            if response.metadata and response.metadata.error:
+                print("Scrape failed! : " + str(response.metadata.error))
                 return "", [], ""
-            elif response["metadata"]["statusCode"] != 200:
-                print("Scrape failed! : " + str(response))
+            elif response.metadata and response.metadata.status_code and response.metadata.status_code != 200:
+                print(f"Scrape failed! Status code: {response.metadata.status_code}")
                 return "", [], ""
 
             # Extract the content (markdown) and title from FireCrawl response
-            content = response.markdown
-            title = response.metadata.get("title", "")
+            # Fixed: Access attributes directly (not as dict keys)
+            content = response.markdown if response.markdown else ""
+            title = response.metadata.title if response.metadata and response.metadata.title else ""
 
             # Parse the HTML content of the response to create a BeautifulSoup object for the utility functions
             response_bs = self.session.get(self.link, timeout=4)
