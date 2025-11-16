@@ -63,3 +63,4 @@ json-repair>=0.29.8
 
 colorama>=0.4.6
 markdown>=3.5.0
+langchain-google-genai
