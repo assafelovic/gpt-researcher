@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Document Analysis & Stakeholder MCP Server
 Comprehensive document processing with stakeholder analysis, funding matching, and reporting
