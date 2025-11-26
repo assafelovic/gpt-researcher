@@ -1,12 +1,16 @@
-def get_retriever(retriever: str):
+from typing import Type, Optional, List, Any
+from ..config.config import Config
+
+
+def get_retriever(retriever: str) -> Optional[Type[Any]]:
     """
-    Gets the retriever
+    Gets the retriever class based on the retriever name.
+
     Args:
-        retriever (str): retriever name
+        retriever (str): The name of the retriever to get (e.g., "google", "tavily", "bing").
 
     Returns:
-        retriever: Retriever class
-
+        Optional[Type[Any]]: The retriever class if found, None otherwise.
     """
     match retriever:
         case "google":
@@ -70,16 +74,16 @@ def get_retriever(retriever: str):
             return None
 
 
-def get_retrievers(headers: dict[str, str], cfg):
+def get_retrievers(headers: dict[str, str], cfg: Config) -> List[Type[Any]]:
     """
     Determine which retriever(s) to use based on headers, config, or default.
 
     Args:
-        headers (dict): The headers dictionary
-        cfg: The configuration object
+        headers (dict[str, str]): The headers dictionary containing retriever configuration.
+        cfg (Config): The configuration object containing retriever settings.
 
     Returns:
-        list: A list of retriever classes to be used for searching.
+        List[Type[Any]]: A list of retriever classes to be used for searching.
     """
     # Check headers first for multiple retrievers
     if headers.get("retrievers"):
@@ -110,7 +114,13 @@ def get_retrievers(headers: dict[str, str], cfg):
     return retriever_classes
 
 
-def get_default_retriever():
+def get_default_retriever() -> Type[Any]:
+    """
+    Get the default retriever class.
+
+    Returns:
+        Type[Any]: The default retriever class (TavilySearch).
+    """
     from gpt_researcher.retrievers import TavilySearch
 
     return TavilySearch
