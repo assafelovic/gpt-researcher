@@ -1,8 +1,11 @@
 import json
 import re
 import json_repair
+import logging
 from ..utils.llm import create_chat_completion
 from ..prompts import PromptFamily
+
+logger = logging.getLogger(__name__)
 
 async def choose_agent(
     query,
@@ -57,8 +60,14 @@ async def handle_json_error(response):
         if agent_dict.get("server") and agent_dict.get("agent_role_prompt"):
             return agent_dict["server"], agent_dict["agent_role_prompt"]
     except Exception as e:
-        print(f"⚠️ Error in reading JSON and failed to repair with json_repair: {e}")
-        print(f"⚠️ LLM Response: `{response}`")
+        error_type = type(e).__name__
+        error_msg = str(e)
+        logger.warning(
+            f"Failed to parse agent JSON with json_repair: {error_type}: {error_msg}",
+            exc_info=True
+        )
+        if response:
+            logger.debug(f"LLM response that failed to parse: {response[:500]}...")
 
     json_string = extract_json_with_regex(response)
     if json_string:
@@ -66,9 +75,12 @@ async def handle_json_error(response):
             json_data = json.loads(json_string)
             return json_data["server"], json_data["agent_role_prompt"]
         except json.JSONDecodeError as e:
-            print(f"Error decoding JSON: {e}")
+            logger.warning(
+                f"Failed to decode JSON from regex extraction: {str(e)}",
+                exc_info=True
+            )
 
-    print("No JSON found in the string. Falling back to Default Agent.")
+    logger.info("No valid JSON found in LLM response. Falling back to default agent.")
     return "Default Agent", (
         "You are an AI critical thinker research assistant. Your sole purpose is to write well written, "
         "critically acclaimed, objective and structured reports on given text."

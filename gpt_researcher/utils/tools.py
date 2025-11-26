@@ -121,8 +121,21 @@ async def create_chat_completion_with_tools(
                                 tool_result = await tool(**tool_args) if asyncio.iscoroutinefunction(tool) else tool(**tool_args)
                             break
                         except Exception as e:
-                            logger.error(f"Error executing tool {tool_name}: {e}")
-                            tool_result = f"Tool error: {str(e)}"
+                            error_type = type(e).__name__
+                            error_msg = str(e)
+                            logger.error(
+                                f"Error executing tool '{tool_name}': {error_type}: {error_msg}",
+                                exc_info=True
+                            )
+                            # Provide user-friendly error message
+                            if "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+                                tool_result = f"Tool '{tool_name}' timed out. The operation took too long to complete. Please try again or check your network connection."
+                            elif "connection" in error_msg.lower() or "network" in error_msg.lower():
+                                tool_result = f"Tool '{tool_name}' failed due to a network issue. Please check your internet connection and try again."
+                            elif "permission" in error_msg.lower() or "access" in error_msg.lower():
+                                tool_result = f"Tool '{tool_name}' failed due to insufficient permissions. Please check your API keys or access credentials."
+                            else:
+                                tool_result = f"Tool '{tool_name}' encountered an error: {error_msg}. Please check the logs for more details."
                 
                 # Add tool result to conversation
                 tool_message = ToolMessage(content=str(tool_result), tool_call_id=tool_id)
@@ -159,7 +172,12 @@ async def create_chat_completion_with_tools(
             return response.content, []
         
     except Exception as e:
-        logger.error(f"Error in tool-enabled chat completion: {str(e)}")
+        error_type = type(e).__name__
+        error_msg = str(e)
+        logger.error(
+            f"Error in tool-enabled chat completion: {error_type}: {error_msg}",
+            exc_info=True
+        )
         logger.info("Falling back to simple chat completion without tools")
         
         # Fallback to simple chat completion without tools
@@ -202,8 +220,21 @@ def create_search_tool(search_function: Callable[[str], Dict]) -> Callable:
             else:
                 return f"No search results found for: {query}"
         except Exception as e:
-            logger.error(f"Search tool error: {str(e)}")
-            return f"Search error: {str(e)}"
+            error_type = type(e).__name__
+            error_msg = str(e)
+            logger.error(
+                f"Search tool error: {error_type}: {error_msg}",
+                exc_info=True
+            )
+            # Provide context-aware error messages
+            if "api" in error_msg.lower() or "key" in error_msg.lower():
+                return f"Search failed: API key issue. Please verify your search API credentials are configured correctly."
+            elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
+                return f"Search timed out. The search request took too long. Please try again with a different query."
+            elif "rate limit" in error_msg.lower() or "quota" in error_msg.lower():
+                return f"Search rate limit exceeded. Please wait a moment before trying again."
+            else:
+                return f"Search encountered an error: {error_msg}. Please check your search provider configuration."
     
     return search_tool
 
@@ -232,8 +263,19 @@ def create_custom_tool(
             result = function(*args, **kwargs)
             return str(result) if result is not None else "Tool executed successfully"
         except Exception as e:
-            logger.error(f"Custom tool '{name}' error: {str(e)}")
-            return f"Tool error: {str(e)}"
+            error_type = type(e).__name__
+            error_msg = str(e)
+            logger.error(
+                f"Custom tool '{name}' error: {error_type}: {error_msg}",
+                exc_info=True
+            )
+            # Provide informative error message without exposing internal details
+            if "validation" in error_msg.lower() or "invalid" in error_msg.lower():
+                return f"Tool '{name}' received invalid input. Please check the parameters and try again."
+            elif "not found" in error_msg.lower() or "missing" in error_msg.lower():
+                return f"Tool '{name}' could not find required resources. Please verify the input data is correct."
+            else:
+                return f"Tool '{name}' encountered an error: {error_msg}. Please check the tool configuration."
     
     # Set tool metadata
     custom_tool.name = name
