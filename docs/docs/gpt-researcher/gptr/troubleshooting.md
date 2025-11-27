@@ -3,7 +3,22 @@
 We're constantly working to provide a more stable version. If you're running into any issues, please first check out the resolved issues or ask us via our [Discord community](https://discord.gg/QgZXvJAccX).
 
 ### model: gpt-4 does not exist
-This relates to not having permission to use gpt-4 yet. Based on OpenAI, it will be [widely available for all by end of July](https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4).
+This usually means that your OpenAI account does not have access to the specific `gpt-4` model name you are trying to use, or that the model has been deprecated/renamed.
+
+GPT Researcher lets you fully control which models are used via the `FAST_LLM`, `SMART_LLM` and `STRATEGIC_LLM` environment variables.
+
+If you see this error:
+
+- Make sure your OpenAI account actually has access to the model name you configured.
+- If not, change your `.env` to use models you *do* have access to, for example:
+
+  ```env
+  FAST_LLM=openai:gpt-4o-mini
+  SMART_LLM=openai:gpt-4.1
+  STRATEGIC_LLM=openai:o4-mini
+  ```
+
+You can find more details and provider-specific examples in the [LLM configuration guide](/docs/gpt-researcher/llms/llms).
 
 ### cannot load library 'gobject-2.0-0'
 
@@ -13,6 +28,7 @@ Or you can install this package manually
 
 In case of MacOS you can install this lib using
 `brew install glib pango`
+
 If you face an issue with linking afterward, you can try running `brew link glib`
 
 In case of Linux you can install this lib using
