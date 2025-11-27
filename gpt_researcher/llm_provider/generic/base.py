@@ -220,6 +220,7 @@ class GenericLLMProvider:
             )
 
             llm = ChatOpenAI(openai_api_base='https://openrouter.ai/api/v1',
+                     request_timeout=180,
                      openai_api_key=os.environ["OPENROUTER_API_KEY"],
                      rate_limiter=rate_limiter,
                      **kwargs
