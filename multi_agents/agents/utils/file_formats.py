@@ -93,7 +93,7 @@ async def write_md_to_word(text: str, path: str) -> str:
 
         print(f"Report written to {file_path}")
 
-        encoded_file_path = urllib.parse.quote(f"{file_path}.docx")
+        encoded_file_path = urllib.parse.quote(file_path)
         return encoded_file_path
 
     except Exception as e:
