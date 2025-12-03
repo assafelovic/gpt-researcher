@@ -17,8 +17,9 @@ import os
 from dotenv import load_dotenv
 
 from gpt_researcher import GPTResearcher
-from gpt_researcher.utils.enum import ReportType, Tone
+from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from backend.report_type import DetailedReport
+from backend.utils import write_md_to_pdf, write_md_to_word
 
 # =============================================================================
 # CLI
@@ -101,6 +102,35 @@ cli.add_argument(
     default=""
 )
 
+# =====================================
+# Arg: Report Source
+# =====================================
+
+cli.add_argument(
+    "--report_source",
+    type=str,
+    help="The source of information for the report.",
+    choices=["web", "local", "hybrid", "azure", "langchain_documents",
+             "langchain_vectorstore", "static"],
+    default="web"
+)
+
+# =====================================
+# Arg: Output Format Flags
+# =====================================
+
+cli.add_argument(
+    "--no-pdf",
+    action="store_true",
+    help="Skip PDF generation (generate markdown and DOCX only)."
+)
+
+cli.add_argument(
+    "--no-docx",
+    action="store_true",
+    help="Skip DOCX generation (generate markdown and PDF only)."
+)
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -145,6 +175,7 @@ async def main(args):
             query=args.query,
             query_domains=query_domains,
             report_type=args.report_type,
+            report_source=args.report_source,
             tone=tone_map[args.tone],
             encoding=args.encoding
         )
@@ -153,13 +184,31 @@ async def main(args):
 
         report = await researcher.write_report()
 
-    # Write the report to a file
-    artifact_filepath = f"outputs/{uuid4()}.md"
+    # Write the report to markdown file
+    task_id = str(uuid4())
+    artifact_filepath = f"outputs/{task_id}.md"
     os.makedirs("outputs", exist_ok=True)
     with open(artifact_filepath, "w", encoding="utf-8") as f:
         f.write(report)
-
     print(f"Report written to '{artifact_filepath}'")
+
+    # Generate PDF if not disabled
+    if not args.no_pdf:
+        try:
+            pdf_path = await write_md_to_pdf(report, task_id)
+            if pdf_path:
+                print(f"PDF written to '{pdf_path}'")
+        except Exception as e:
+            print(f"Warning: PDF generation failed: {e}")
+
+    # Generate DOCX if not disabled
+    if not args.no_docx:
+        try:
+            docx_path = await write_md_to_word(report, task_id)
+            if docx_path:
+                print(f"DOCX written to '{docx_path}'")
+        except Exception as e:
+            print(f"Warning: DOCX generation failed: {e}")
 
 if __name__ == "__main__":
     load_dotenv()

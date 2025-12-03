@@ -45,7 +45,7 @@ Note that when you create the Langchain Documents, you should include as metadat
 
 ```python
 from langchain_core.documents import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 async def transform_to_langchain_docs(self, directory_structure):
     documents = []

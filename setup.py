@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-LATEST_VERSION = "0.14.3"
+LATEST_VERSION = "0.14.5"
 
 exclude_packages = [
     "selenium",
@@ -38,6 +38,7 @@ setup(
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
     python_requires='>=3.11',

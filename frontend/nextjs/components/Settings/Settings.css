@@ -512,6 +512,18 @@
   color: #0cdbb6;
 }
 
+.settings .preset-btn.selected {
+  border-color: #0d9488;
+  color: #0cdbb6;
+  background: linear-gradient(145deg, rgba(13, 148, 136, 0.4), rgba(13, 148, 136, 0.3));
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  transform: translateY(-1px);
+}
+
+.settings .preset-btn.selected i {
+  color: #0cdbb6;
+}
+
 .settings .mcp-config-group {
   margin-bottom: 15px;
 }
@@ -790,19 +802,19 @@
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .settings .preset-btn {
     justify-content: center;
     padding: 14px 20px;
     font-size: 0.95rem;
   }
-  
+
   .settings .mcp-info-content {
     margin: 15px;
     padding: 25px;
     max-height: 90vh;
   }
-  
+
   .settings .mcp-config-status {
     flex-direction: column;
     align-items: flex-start;
@@ -906,11 +918,11 @@
   .modal-container {
     max-height: 85vh !important;
   }
-  
+
   .modal-content {
     max-height: 75vh !important;
   }
-  
+
   .settings .mcp-config-textarea {
     min-height: 200px !important;
     max-height: 250px !important;
@@ -924,11 +936,11 @@
     top: 2.5vh !important;
     transform: translateX(-50%) !important;
   }
-  
+
   .modal-content {
     max-height: 90vh !important;
   }
-  
+
   .settings .mcp-config-textarea {
     min-height: 150px !important;
     max-height: 200px !important;

@@ -2,14 +2,14 @@ import os
 import asyncio
 from typing import Optional
 from .retriever import SearchAPIRetriever, SectionRetriever
-from langchain.retrievers import (
+from langchain_classic.retrievers import (
     ContextualCompressionRetriever,
 )
-from langchain.retrievers.document_compressors import (
+from langchain_classic.retrievers.document_compressors import (
     DocumentCompressorPipeline,
     EmbeddingsFilter,
 )
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from ..vector_store import VectorStoreWrapper
 from ..utils.costs import estimate_embedding_cost
 from ..memory.embeddings import OPENAI_EMBEDDING_MODEL

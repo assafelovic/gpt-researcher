@@ -6,7 +6,8 @@
     "no-console": "off",
     "@next/next/no-img-element": "off",
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-unused-vars": "off"
+    "@typescript-eslint/no-unused-vars": "off",
+    "react/no-unescaped-entities": "off" // Disabled to allow natural apostrophes in JSX text
   },
   "ignorePatterns": ["build/**/*"]
 }

@@ -1,17 +1,19 @@
 import asyncio
 import datetime
+import json
+import logging
+import traceback
 from typing import Dict, List
 
 from fastapi import WebSocket
 
-from backend.report_type import BasicReport, DetailedReport
-from backend.chat import ChatAgentWithMemory
+from report_type import BasicReport, DetailedReport
 
 from gpt_researcher.utils.enum import ReportType, Tone
-from multi_agents.main import run_research_task
 from gpt_researcher.actions import stream_output  # Import stream_output
-from backend.server.server_utils import CustomLogsHandler
+from .server_utils import CustomLogsHandler
 
+logger = logging.getLogger(__name__)
 
 class WebSocketManager:
     """Manage websockets"""
@@ -21,7 +23,6 @@ class WebSocketManager:
         self.active_connections: List[WebSocket] = []
         self.sender_tasks: Dict[WebSocket, asyncio.Task] = {}
         self.message_queues: Dict[WebSocket, asyncio.Queue] = {}
-        self.chat_agent = None
 
     async def start_sender(self, websocket: WebSocket):
         """Start the sender task."""
@@ -61,42 +62,52 @@ class WebSocketManager:
 
     async def disconnect(self, websocket: WebSocket):
         """Disconnect a websocket."""
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-            if websocket in self.sender_tasks:
-                self.sender_tasks[websocket].cancel()
-                await self.message_queues[websocket].put(None)
-                del self.sender_tasks[websocket]
-            if websocket in self.message_queues:
-                del self.message_queues[websocket]
+        try:
+            if websocket in self.active_connections:
+                self.active_connections.remove(websocket)
+                
+                # Cancel sender task if it exists
+                if websocket in self.sender_tasks:
+                    try:
+                        self.sender_tasks[websocket].cancel()
+                        await self.message_queues[websocket].put(None)
+                    except Exception as e:
+                        logger.error(f"Error canceling sender task: {e}")
+                    finally:
+                        # Always try to clean up regardless of errors
+                        if websocket in self.sender_tasks:
+                            del self.sender_tasks[websocket]
+                
+                # Clean up message queue
+                if websocket in self.message_queues:
+                    del self.message_queues[websocket]
+                
+                # Finally close the WebSocket
+                try:
+                    await websocket.close()
+                except Exception as e:
+                    logger.info(f"WebSocket already closed: {e}")
+        except Exception as e:
+            logger.error(f"Error during WebSocket disconnection: {e}")
+            # Still try to close the connection if possible
             try:
                 await websocket.close()
             except:
-                pass  # Connection might already be closed
+                pass  # If this fails too, there's nothing more we can do
 
     async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[], mcp_enabled=False, mcp_strategy="fast", mcp_configs=[]):
         """Start streaming the output."""
         tone = Tone[tone]
         # add customized JSON config file path here
         config_path = "default"
-        
+
         # Pass MCP parameters to run_agent
         report = await run_agent(
             task, report_type, report_source, source_urls, document_urls, tone, websocket, 
             headers=headers, query_domains=query_domains, config_path=config_path,
             mcp_enabled=mcp_enabled, mcp_strategy=mcp_strategy, mcp_configs=mcp_configs
         )
-        
-        # Create new Chat Agent whenever a new report is written
-        self.chat_agent = ChatAgentWithMemory(report, config_path, headers)
         return report
-
-    async def chat(self, message, websocket):
-        """Chat with the agent based message diff"""
-        if self.chat_agent:
-            await self.chat_agent.chat(message, websocket)
-        else:
-            await websocket.send_json({"type": "chat", "content": "Knowledge empty, please run the research first to obtain knowledge"})
 
 async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, stream_output=stream_output, headers=None, query_domains=[], config_path="", return_researcher=False, mcp_enabled=False, mcp_strategy="fast", mcp_configs=[]):
     """Run the agent."""    
@@ -110,10 +121,10 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
         if "mcp" not in current_retriever:
             # Add MCP to existing retrievers
             os.environ["RETRIEVER"] = f"{current_retriever},mcp"
-        
+
         # Set MCP strategy
         os.environ["MCP_STRATEGY"] = mcp_strategy
-        
+
         print(f"🔧 MCP enabled with strategy '{mcp_strategy}' and {len(mcp_configs)} server(s)")
         await logs_handler.send_json({
             "type": "logs",

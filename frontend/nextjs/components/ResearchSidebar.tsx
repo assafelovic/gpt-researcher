@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { ResearchHistoryItem } from '../types/data';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,6 +39,19 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen, toggleSidebar]);
+
+  // Format timestamp for display
+  const formatTimestamp = (timestamp: number | string | Date | undefined) => {
+    if (!timestamp) return 'Unknown time';
+    
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) return 'Unknown time';
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch {
+      return 'Unknown time';
+    }
+  };
 
   // Animation variants
   const sidebarVariants = {
@@ -101,7 +115,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute left-2 sm:left-3 mx-auto top-[20px] sm:top-[24px] w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center rounded-full shadow-sm z-10 overflow-hidden cursor-pointer group"
+                className="absolute left-4 sm:left-6 mx-auto top-1.5 sm:top-3.5 w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center rounded-full shadow-sm z-10 overflow-hidden cursor-pointer group"
                 onClick={toggleSidebar}
                 aria-label="Open sidebar"
               >
@@ -181,51 +195,48 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                       {history.map((item) => (
                         <motion.li 
                           key={item.id}
-                          className="relative rounded-md transition-all duration-200 border-l-2 overflow-hidden group"
-                          style={{
-                            borderColor: hoveredItem === item.id ? '#0cdbb6' : 'rgba(55, 65, 81, 0.5)',
-                            background: hoveredItem === item.id ? 'rgba(17, 24, 39, 0.7)' : 'rgba(17, 24, 39, 0.4)'
-                          }}
+                          className="relative rounded-xl transition-all duration-300 overflow-hidden group bg-gray-900/40 hover:bg-gray-800/60 border border-gray-700/30 hover:border-gray-600/50 backdrop-blur-sm"
                           onMouseEnter={() => setHoveredItem(item.id)}
                           onMouseLeave={() => setHoveredItem(null)}
-                          whileHover={{ x: 3, transition: { duration: 0.2 } }}
                         >
-                          <button
-                            onClick={() => onSelectResearch(item.id)}
-                            className="w-full text-left p-3 sm:p-4 pr-10 min-h-[56px]"
+                          
+                          <Link
+                            href={`/research/${item.id}`}
+                            className="block w-full text-left p-3 sm:p-4 pr-10 min-h-[56px] relative"
+                            onClick={(e) => {
+                              // Only prevent default if we're just closing the sidebar
+                              if (!isOpen) {
+                                e.preventDefault();
+                              }
+                              // Call onSelectResearch only if we're actually navigating
+                              if (isOpen) {
+                                onSelectResearch(item.id);
+                              }
+                              // Always close the sidebar
+                              toggleSidebar();
+                            }}
                           >
                             <h3 className="font-medium truncate text-gray-200 text-sm sm:text-base transition-colors duration-200 group-hover:text-teal-400">{item.question}</h3>
                             <p className="text-xs text-gray-400 mt-1.5 flex items-center">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
-                              {item.timestamp && !isNaN(item.timestamp) 
-                                ? formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })
-                                : 'Unknown time'
-                              }
+                              {formatTimestamp(item.timestamp || (item as any).updated_at || (item as any).created_at)}
                             </p>
-                          </button>
+                          </Link>
                           
-                          <AnimatePresence>
-                            {hoveredItem === item.id && (
-                              <motion.button
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                transition={{ duration: 0.15 }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onDeleteResearch(item.id);
-                                }}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-400 transition-colors duration-300 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-800/80"
-                                aria-label="Delete research"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </motion.button>
-                            )}
-                          </AnimatePresence>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteResearch(item.id);
+                            }}
+                            className="absolute top-2 right-2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-white hover:bg-gray-700"
+                            aria-label="Delete research"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         </motion.li>
                       ))}
                     </ul>
@@ -262,4 +273,4 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
   );
 };
 
-export default ResearchSidebar; 
+export default ResearchSidebar;

@@ -6,10 +6,10 @@ export default function imageTransformPlugin() {
       // Add more patterns to catch different image path formats
       return code.replace(
         /['"]\/img\/([^'"]+)['"]/g,  // Also catch paths starting with /
-        "'https://app.gptr.dev/img/$1'"
+        "'https://gptr.app/img/$1'"
       ).replace(
         /['"]img\/([^'"]+)['"]/g,    // Catch relative paths
-        "'https://app.gptr.dev/img/$1'"
+        "'https://gptr.app/img/$1'"
       );
     }
   };

@@ -26,6 +26,7 @@ class BaseConfig(TypedDict):
     AGENT_ROLE: Union[str, None]
     SCRAPER: str
     MAX_SCRAPER_WORKERS: int
+    SCRAPER_RATE_LIMIT_DELAY: float
     MAX_SUBTOPICS: int
     REPORT_SOURCE: Union[str, None]
     DOC_PATH: str

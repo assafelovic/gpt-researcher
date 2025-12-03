@@ -29,38 +29,6 @@ export default function ChatBox({ chatBoxSettings, setChatBoxSettings }: ChatBox
   const [accessData, setAccessData] = useState({});
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      let fullHost = getHost()
-      const protocol = fullHost.includes('https') ? 'wss:' : 'ws:'
-      const cleanHost = fullHost.replace('http://', '').replace('https://', '')
-      const ws_uri = `${protocol}//${cleanHost}/ws`
-      const newSocket = new WebSocket(ws_uri);
-      setSocket(newSocket);
-
-      newSocket.onmessage = (event) => {
-        const data = JSON.parse(event.data) as WebSocketMessage;
-        
-        if (data.type === 'logs') {
-          setAgentLogs((prevLogs: any[]) => [...prevLogs, data]);
-        } else if (data.type === 'report') {
-          setReport((prevReport: string) => prevReport + (data.output as string));
-        } else if (data.type === 'path') {
-          const output = data.output as OutputData;
-          setAccessData({
-            ...(output.pdf && { pdf: `outputs/${output.pdf}` }),
-            ...(output.docx && { docx: `outputs/${output.docx}` }),
-            ...(output.json && { json: `outputs/${output.json}` })
-          });
-        }
-      };
-
-      return () => {
-        newSocket.close();
-      };
-    }
-  }, []);
-
   return (
     <div>
       <main className="static-container" id="form">

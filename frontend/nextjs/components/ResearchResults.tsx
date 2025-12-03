@@ -1,6 +1,6 @@
 import React from 'react';
 import Question from './ResearchBlocks/Question';
-import Answer from './ResearchBlocks/Answer';
+import Report from './ResearchBlocks/Report';
 import Sources from './ResearchBlocks/Sources';
 import ImageSection from './ResearchBlocks/ImageSection';
 import SubQuestions from './ResearchBlocks/elements/SubQuestions';
@@ -15,6 +15,9 @@ interface ResearchResultsProps {
   allLogs: any[];
   chatBoxSettings: any;
   handleClickSuggestion: (value: string) => void;
+  currentResearchId?: string;
+  isProcessingChat?: boolean;
+  onShareClick?: () => void;
 }
 
 export const ResearchResults: React.FC<ResearchResultsProps> = ({
@@ -22,7 +25,10 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
   answer,
   allLogs,
   chatBoxSettings,
-  handleClickSuggestion
+  handleClickSuggestion,
+  currentResearchId,
+  isProcessingChat = false,
+  onShareClick
 }) => {
   const groupedData = preprocessOrderedData(orderedData);
   const pathData = groupedData.find(data => data.type === 'path');
@@ -39,7 +45,7 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
       if (data.type === 'question') {
         return <Question key={`question-${index}`} question={data.content} />;
       } else {
-        return <Answer key={`chat-${index}`} answer={data.content} />;
+        return <Report key={`chat-${index}`} answer={data.content} />;
       }
     });
 
@@ -73,8 +79,8 @@ export const ResearchResults: React.FC<ResearchResultsProps> = ({
       )}
       {sourceComponents}
       {imageComponents}
-      {finalReport && <Answer answer={finalReport.content} />}
-      {pathData && <AccessReport accessData={pathData.output} report={answer} chatBoxSettings={chatBoxSettings} />}
+      {finalReport && <Report answer={finalReport.content} researchId={currentResearchId} />}
+      {pathData && <AccessReport accessData={pathData.output} report={answer} chatBoxSettings={chatBoxSettings} onShareClick={onShareClick} />}
       {chatComponents}
     </>
   );

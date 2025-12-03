@@ -50,13 +50,13 @@ class DetailedReport:
             "headers": self.headers,
             "complement_source_urls": self.complement_source_urls,
         }
-        
+
         # Add MCP parameters if provided
         if mcp_configs is not None:
             gpt_researcher_params["mcp_configs"] = mcp_configs
         if mcp_strategy is not None:
             gpt_researcher_params["mcp_strategy"] = mcp_strategy
-            
+
         self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
         self.existing_headers: List[Dict] = []
         self.global_context: List[str] = []
@@ -118,7 +118,10 @@ class DetailedReport:
             role=self.gpt_researcher.role,
             tone=self.tone,
             complement_source_urls=self.complement_source_urls,
-            source_urls=self.source_urls
+            source_urls=self.source_urls,
+            # Propagate MCP configuration so follow-up researchers can use MCP
+            mcp_configs=self.gpt_researcher.mcp_configs,
+            mcp_strategy=self.gpt_researcher.mcp_strategy
         )
 
         subtopic_assistant.context = list(set(self.global_context))

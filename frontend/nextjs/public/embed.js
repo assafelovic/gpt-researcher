@@ -12,7 +12,7 @@
 
             // Create iframe
             const iframe = document.createElement("iframe");
-            iframe.src = "https://app.gptr.dev" + (parentApiUrl ? "?GPTR_API_URL=" + parentApiUrl : "");
+            iframe.src = "https://gptr.app" + (parentApiUrl ? "?GPTR_API_URL=" + parentApiUrl : "");
             iframe.style.width = "100%";
             iframe.style.border = "none";
             iframe.style.height = "100%";
