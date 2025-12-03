@@ -46,7 +46,17 @@ async def safe_send_json(websocket: Any, data: Dict[str, Any]) -> None:
     try:
         await websocket.send_json(data)
     except Exception as e:
-        logger.error(f"Error sending JSON through WebSocket: {e}")
+        error_type = type(e).__name__
+        error_msg = str(e)
+        logger.error(
+            f"Error sending JSON through WebSocket: {error_type}: {error_msg}",
+            exc_info=True
+        )
+        # Check for common WebSocket errors and provide helpful context
+        if "closed" in error_msg.lower() or "connection" in error_msg.lower():
+            logger.warning("WebSocket connection appears to be closed. Client may have disconnected.")
+        elif "timeout" in error_msg.lower():
+            logger.warning("WebSocket send operation timed out. The client may be unresponsive.")
 
 
 def calculate_cost(
