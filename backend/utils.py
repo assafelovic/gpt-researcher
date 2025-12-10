@@ -1,6 +1,7 @@
 import aiofiles
 import urllib
 import mistune
+import os
 
 async def write_to_file(filename: str, text: str) -> None:
     """Asynchronously write text to a file in UTF-8 encoding.
@@ -44,11 +45,16 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
     file_path = f"outputs/{filename[:60]}.pdf"
 
     try:
+        # Resolve css path relative to this backend module to avoid
+        # dependency on the current working directory.
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        css_path = os.path.join(current_dir, "styles", "pdf_styles.css")
+
         from md2pdf.core import md2pdf
         md2pdf(file_path,
                md_content=text,
                # md_file_path=f"{file_path}.md",
-               css_file_path="./styles/pdf_styles.css",
+               css_file_path=css_path,
                base_url=None)
         print(f"Report written to {file_path}")
     except Exception as e:
