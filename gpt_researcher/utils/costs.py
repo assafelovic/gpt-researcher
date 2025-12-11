@@ -23,3 +23,10 @@ def estimate_embedding_cost(model, docs):
     total_tokens = sum(len(encoding.encode(str(doc))) for doc in docs)
     return total_tokens * EMBEDDING_COST
 
+
+def estimate_token_usage(input_content: str, output_content: str) -> tuple[int, int, int]:
+    """Return (input_tokens, output_tokens, total_tokens) for the given content."""
+    encoding = tiktoken.get_encoding(ENCODING_MODEL)
+    input_tokens = len(encoding.encode(input_content))
+    output_tokens = len(encoding.encode(output_content))
+    return input_tokens, output_tokens, input_tokens + output_tokens
