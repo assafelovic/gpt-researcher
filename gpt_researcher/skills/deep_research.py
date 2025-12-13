@@ -94,12 +94,34 @@ class DeepResearchSkill:
 
         return queries[:num_queries]
 
+    async def _shorten_query(self, query: str) -> str:
+        """Shorten query to fit within search engine limits"""
+        if len(query) <= 400: # 400 is Tavily limit, but leave room for safety
+            return query
+
+        messages = [
+            {"role": "system", "content": "You are an expert researcher. Your task is to shorten the following search query to be under 400 characters while preserving the main topic and intent. If there are search operators like 'site:', keep them."},
+            {"role": "user", "content": f"Query: {query}"}
+        ]
+
+        response = await create_chat_completion(
+            messages=messages,
+            llm_provider=self.researcher.cfg.fast_llm_provider,
+            model=self.researcher.cfg.fast_llm_model,
+            temperature=0.3
+        )
+
+        return response.strip()
+
     async def generate_research_plan(self, query: str, num_questions: int = 3) -> List[str]:
         """Generate follow-up questions to clarify research direction"""
         # Get initial search results to inform query generation
+        # Shorten query if needed to avoid API limits (e.g. Tavily 400 chars)
+        search_query = await self._shorten_query(query)
+
         # Pass the researcher so MCP retriever receives cfg and mcp_configs
         search_results = await get_search_results(
-            query,
+            search_query,
             self.researcher.retrievers[0],
             researcher=self.researcher
         )
@@ -400,7 +422,7 @@ Format each question on a new line starting with 'Question: '"""}
 
         # Trim final context to word limit
         final_context = trim_context_to_word_limit(context_with_citations)
-        
+
         # Set enhanced context and visited URLs
         self.researcher.context = "\n".join(final_context)
         self.researcher.visited_urls = results['visited_urls']
