@@ -112,9 +112,37 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import AzureChatOpenAI
 
+            # 从环境变量获取 Azure OpenAI 配置
+            if "azure_endpoint" not in kwargs:
+                kwargs["azure_endpoint"] = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
+            if "openai_api_key" not in kwargs:
+                kwargs["openai_api_key"] = os.environ.get("AZURE_OPENAI_API_KEY", "")
+            
+            # 获取部署名称，用于查找对应的 API 版本
+            deployment_name = None
             if "model" in kwargs:
-                model_name = kwargs.get("model", None)
-                kwargs = {"azure_deployment": model_name, **kwargs}
+                deployment_name = kwargs.get("model", None)
+                kwargs = {"azure_deployment": deployment_name, **kwargs}
+            
+            # 支持为每个部署单独配置 API 版本
+            # 格式：AZURE_OPENAI_API_VERSION_<deployment_name>
+            if "api_version" not in kwargs:
+                if deployment_name:
+                    # 先查找部署特定的 API 版本（例如：AZURE_OPENAI_API_VERSION_gpt-4o）
+                    deployment_specific_key = f"AZURE_OPENAI_API_VERSION_{deployment_name.replace('-', '_')}"
+                    api_version = os.environ.get(deployment_specific_key)
+                    if not api_version:
+                        # 如果部署名称包含连字符，也尝试用连字符的版本
+                        deployment_specific_key_hyphen = f"AZURE_OPENAI_API_VERSION_{deployment_name}"
+                        api_version = os.environ.get(deployment_specific_key_hyphen)
+                else:
+                    api_version = None
+                
+                # 如果没有部署特定的版本，使用通用版本
+                if not api_version:
+                    api_version = os.environ.get("AZURE_OPENAI_API_VERSION") or os.environ.get("OPENAI_API_VERSION", "2024-05-01-preview")
+                
+                kwargs["api_version"] = api_version
 
             llm = AzureChatOpenAI(**kwargs)
         elif provider == "cohere":
