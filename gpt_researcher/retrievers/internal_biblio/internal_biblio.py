@@ -12,16 +12,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class InternalBiblioRetriever:
+class BaseInternalBiblioRetriever:
     """
-    Internal API Retriever for accessing user-specific bibliographic data.
+    Base class for Internal API Retrievers.
     
-    This retriever connects to an internal API endpoint to retrieve:
-    - Bibliographic data (type=biblio)
-    - Highlights/notes (type=highlight)
-    - PDF fragments (type=File)
-    
-    The user_id must be provided in the headers when initializing the retriever.
+    This base class provides common functionality for accessing user-specific data
+    from the internal API. Subclasses should set the search_type attribute.
     """
 
     def __init__(
@@ -32,7 +28,7 @@ class InternalBiblioRetriever:
         **kwargs
     ):
         """
-        Initialize the Internal Biblio Retriever.
+        Initialize the Base Internal Biblio Retriever.
 
         Args:
             query (str): The search query string.
@@ -41,8 +37,6 @@ class InternalBiblioRetriever:
                 - user_id: The user ID for accessing user-specific data
                 - internal_api_base_url: Optional base URL for the internal API
                     (default: http://unob.ivy:8080)
-                - internal_api_type: Optional type parameter (biblio, highlight, or File)
-                    (default: biblio)
             query_domains (list, optional): List of domains to search (not used).
             **kwargs: Additional arguments (for compatibility).
         """
@@ -54,7 +48,7 @@ class InternalBiblioRetriever:
         self.user_id = self.headers.get("user_id")
         if not self.user_id:
             raise ValueError(
-                "user_id is required in headers for InternalBiblioRetriever. "
+                f"user_id is required in headers for {self.__class__.__name__}. "
                 "Please provide user_id in the headers when making the request."
             )
         
@@ -64,25 +58,20 @@ class InternalBiblioRetriever:
             os.getenv("INTERNAL_API_BASE_URL", "http://unob.ivy:8080")
         )
         
-        # Get type from headers or use default
-        self.search_type = self.headers.get("internal_api_type", "biblio")
-        
-        # Validate type
-        valid_types = ["biblio", "highlight", "File"]
-        if self.search_type not in valid_types:
-            logger.warning(
-                f"Invalid type '{self.search_type}'. Valid types are: {valid_types}. "
-                f"Using default 'biblio'."
-            )
-            self.search_type = "biblio"
-        
         # Construct the API endpoint
         self.endpoint = f"{self.base_url}/internal/biblios/semantic_search/"
         
         logger.info(
-            f"Initialized InternalBiblioRetriever with user_id={self.user_id}, "
+            f"Initialized {self.__class__.__name__} with user_id={self.user_id}, "
             f"type={self.search_type}, endpoint={self.endpoint}"
         )
+
+    @property
+    def search_type(self) -> str:
+        """
+        Subclasses must override this property to specify the search type.
+        """
+        raise NotImplementedError("Subclasses must implement search_type property")
 
     def search(self, max_results: int = 10) -> List[Dict[str, Any]]:
         """
@@ -131,7 +120,7 @@ class InternalBiblioRetriever:
             # The API response format may vary, so we handle different structures
             results = self._transform_response(data)
             
-            logger.info(f"Retrieved {len(results)} results from internal API")
+            logger.info(f"Retrieved {len(results)} results from internal API (type={self.search_type})")
             
             return results
             
@@ -139,7 +128,7 @@ class InternalBiblioRetriever:
             logger.error(f"Failed to retrieve search results from internal API: {e}")
             return []
         except Exception as e:
-            logger.error(f"Unexpected error in InternalBiblioRetriever.search: {e}")
+            logger.error(f"Unexpected error in {self.__class__.__name__}.search: {e}")
             return []
 
     def _transform_response(self, data: Any) -> List[Dict[str, Any]]:
@@ -202,6 +191,9 @@ class InternalBiblioRetriever:
     def _transform_item(self, item: Any) -> Optional[Dict[str, Any]]:
         """
         Transform a single item from the API response.
+        
+        Subclasses can override this method to handle different field mappings
+        for different types (biblio, highlight, File).
         
         Args:
             item: A single item from the API response
@@ -266,3 +258,41 @@ class InternalBiblioRetriever:
             "body": str(body)
         }
 
+
+class InternalBiblioRetriever(BaseInternalBiblioRetriever):
+    """
+    Internal API Retriever for bibliographic data (type=biblio).
+    
+    This retriever connects to an internal API endpoint to retrieve bibliographic data.
+    The user_id must be provided in the headers when initializing the retriever.
+    """
+    
+    @property
+    def search_type(self) -> str:
+        return "biblio"
+
+
+class InternalHighlightRetriever(BaseInternalBiblioRetriever):
+    """
+    Internal API Retriever for highlights/notes (type=highlight).
+    
+    This retriever connects to an internal API endpoint to retrieve user highlights and notes.
+    The user_id must be provided in the headers when initializing the retriever.
+    """
+    
+    @property
+    def search_type(self) -> str:
+        return "highlight"
+
+
+class InternalFileRetriever(BaseInternalBiblioRetriever):
+    """
+    Internal API Retriever for PDF fragments (type=File).
+    
+    This retriever connects to an internal API endpoint to retrieve PDF fragments.
+    The user_id must be provided in the headers when initializing the retriever.
+    """
+    
+    @property
+    def search_type(self) -> str:
+        return "File"

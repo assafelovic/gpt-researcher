@@ -69,6 +69,18 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import InternalBiblioRetriever
 
             return InternalBiblioRetriever
+        case "internal_highlight":
+            from gpt_researcher.retrievers import InternalHighlightRetriever
+
+            return InternalHighlightRetriever
+        case "internal_file":
+            from gpt_researcher.retrievers import InternalFileRetriever
+
+            return InternalFileRetriever
+        case "noteexpress":
+            from gpt_researcher.retrievers import NoteExpressRetriever
+
+            return NoteExpressRetriever
 
         case _:
             return None

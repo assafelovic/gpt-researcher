@@ -316,9 +316,6 @@ async def generate_report(
         default_retrievers = os.getenv("DEFAULT_RETRIEVERS", None)
         if default_retrievers:
             headers["retrievers"] = default_retrievers
-        elif headers.get("user_id"):
-            # If user_id is provided but no config, use mixed mode by default
-            headers["retrievers"] = "internal_biblio,tavily"
         else:
             # Fall back to default from config or "tavily"
             default_retriever = os.getenv("RETRIEVER", "tavily")
