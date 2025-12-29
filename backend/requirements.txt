@@ -9,6 +9,9 @@ python-dotenv>=1.0.0
 websockets>=13.1
 python-multipart>=0.0.6
 
+# Webhook support
+requests>=2.31.0  # For webhook calls
+
 # LangChain v1
 langchain>=1.0.0
 langchain-classic>=1.0.0

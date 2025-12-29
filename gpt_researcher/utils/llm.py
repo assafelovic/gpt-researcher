@@ -88,6 +88,21 @@ async def create_chat_completion(
         if cost_callback:
             llm_costs = estimate_llm_cost(str(messages), response)
             cost_callback(llm_costs)
+            # Also track token usage - cost_callback is typically add_costs method bound to researcher instance
+            try:
+                from .costs import estimate_token_usage
+                token_usage = estimate_token_usage(str(messages), response)
+                # Check if the callback is a bound method and has access to researcher instance
+                if hasattr(cost_callback, '__self__'):
+                    researcher = cost_callback.__self__
+                    if hasattr(researcher, 'add_token_usage'):
+                        researcher.add_token_usage(
+                            prompt_tokens=token_usage["prompt_tokens"],
+                            completion_tokens=token_usage["completion_tokens"]
+                        )
+            except Exception as e:
+                # Silently fail if token tracking fails - don't break the main flow
+                logging.getLogger(__name__).debug(f"Failed to track token usage: {e}")
 
         return response
 

@@ -155,19 +155,43 @@ async def create_chat_completion_with_tools(
             
             # Track costs if callback provided
             if cost_callback:
-                from .costs import estimate_llm_cost
+                from .costs import estimate_llm_cost, estimate_token_usage
                 # Calculate costs for both calls
                 llm_costs = estimate_llm_cost(str(lc_messages), final_response.content or "")
                 cost_callback(llm_costs)
+                # Also track token usage
+                try:
+                    token_usage = estimate_token_usage(str(lc_messages), final_response.content or "")
+                    if hasattr(cost_callback, '__self__'):
+                        researcher = cost_callback.__self__
+                        if hasattr(researcher, 'add_token_usage'):
+                            researcher.add_token_usage(
+                                prompt_tokens=token_usage["prompt_tokens"],
+                                completion_tokens=token_usage["completion_tokens"]
+                            )
+                except Exception:
+                    pass  # Silently fail if token tracking fails
             
             return final_response.content, tool_calls_metadata
         
         else:
             # No tool calls, return regular response
             if cost_callback:
-                from .costs import estimate_llm_cost
+                from .costs import estimate_llm_cost, estimate_token_usage
                 llm_costs = estimate_llm_cost(str(messages), response.content or "")
                 cost_callback(llm_costs)
+                # Also track token usage
+                try:
+                    token_usage = estimate_token_usage(str(messages), response.content or "")
+                    if hasattr(cost_callback, '__self__'):
+                        researcher = cost_callback.__self__
+                        if hasattr(researcher, 'add_token_usage'):
+                            researcher.add_token_usage(
+                                prompt_tokens=token_usage["prompt_tokens"],
+                                completion_tokens=token_usage["completion_tokens"]
+                            )
+                except Exception:
+                    pass  # Silently fail if token tracking fails
             
             return response.content, []
         

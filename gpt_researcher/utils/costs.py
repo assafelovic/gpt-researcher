@@ -18,6 +18,28 @@ def estimate_llm_cost(input_content: str, output_content: str) -> float:
     return input_costs + output_costs
 
 
+def estimate_token_usage(input_content: str, output_content: str) -> dict:
+    """
+    Estimate token usage for input and output content.
+    
+    Args:
+        input_content: The input/prompt content
+        output_content: The output/completion content
+        
+    Returns:
+        dict with prompt_tokens, completion_tokens, and total_tokens
+    """
+    encoding = tiktoken.get_encoding(ENCODING_MODEL)
+    prompt_tokens = len(encoding.encode(input_content))
+    completion_tokens = len(encoding.encode(output_content))
+    
+    return {
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "total_tokens": prompt_tokens + completion_tokens
+    }
+
+
 def estimate_embedding_cost(model, docs):
     encoding = tiktoken.encoding_for_model(model)
     total_tokens = sum(len(encoding.encode(str(doc))) for doc in docs)

@@ -142,6 +142,12 @@ class GPTResearcher:
         self.context = context or []
         self.headers = headers or {}
         self.research_costs = 0.0
+        # Token usage tracking
+        self.token_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+        }
         self.log_handler = log_handler
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
         
@@ -456,6 +462,18 @@ class GPTResearcher:
 
     def get_costs(self) -> float:
         return self.research_costs
+
+    def get_token_usage(self) -> dict:
+        """Get token usage statistics."""
+        return self.token_usage.copy()
+
+    def add_token_usage(self, prompt_tokens: int = 0, completion_tokens: int = 0) -> None:
+        """Add token usage to the total."""
+        self.token_usage["prompt_tokens"] += prompt_tokens
+        self.token_usage["completion_tokens"] += completion_tokens
+        self.token_usage["total_tokens"] = (
+            self.token_usage["prompt_tokens"] + self.token_usage["completion_tokens"]
+        )
 
     def set_verbose(self, verbose: bool):
         self.verbose = verbose

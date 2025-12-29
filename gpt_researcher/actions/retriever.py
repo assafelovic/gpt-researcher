@@ -65,6 +65,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import MCPRetriever
 
             return MCPRetriever
+        case "internal_biblio":
+            from gpt_researcher.retrievers import InternalBiblioRetriever
+
+            return InternalBiblioRetriever
 
         case _:
             return None

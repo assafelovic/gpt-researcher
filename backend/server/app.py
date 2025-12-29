@@ -5,12 +5,13 @@ import time
 import logging
 import sys
 import warnings
+import httpx
 
 # Suppress Pydantic V2 migration warnings
 warnings.filterwarnings("ignore", message="Valid config keys have changed in V2")
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile, BackgroundTasks, HTTPException
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, UploadFile, HTTPException, BackgroundTasks
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -54,7 +55,9 @@ class ResearchRequest(BaseModel):
     headers: dict | None = None
     repo_name: str
     branch_name: str
-    generate_in_background: bool = True
+    user_id: str | None = None  # User ID (can also be in headers)
+    webhook_url: str | None = None  # Optional webhook URL for completion notification
+    # Generate report directly using async/await
 
 
 class ChatRequest(BaseModel):
@@ -185,54 +188,154 @@ async def create_or_update_report(request: Request):
 
 
 async def write_report(research_request: ResearchRequest, research_id: str = None):
-    report_information = await run_agent(
-        task=research_request.task,
-        report_type=research_request.report_type,
-        report_source=research_request.report_source,
-        source_urls=[],
-        document_urls=[],
-        tone=Tone[research_request.tone],
-        websocket=None,
-        stream_output=None,
-        headers=research_request.headers,
-        query_domains=[],
-        config_path="",
-        return_researcher=True
-    )
+    try:
+        report_information = await run_agent(
+            task=research_request.task,
+            report_type=research_request.report_type,
+            report_source=research_request.report_source,
+            source_urls=[],
+            document_urls=[],
+            tone=Tone[research_request.tone],
+            websocket=None,
+            stream_output=None,
+            headers=research_request.headers,
+            query_domains=[],
+            config_path="",
+            return_researcher=True
+        )
 
-    docx_path = await write_md_to_word(report_information[0], research_id)
-    pdf_path = await write_md_to_pdf(report_information[0], research_id)
-    if research_request.report_type != "multi_agents":
-        report, researcher = report_information
-        response = {
+        docx_path = await write_md_to_word(report_information[0], research_id)
+        pdf_path = await write_md_to_pdf(report_information[0], research_id)
+        if research_request.report_type != "multi_agents":
+            report, researcher = report_information
+            response = {
+                "research_id": research_id,
+                "research_information": {
+                    "source_urls": researcher.get_source_urls(),
+                    "research_costs": researcher.get_costs(),
+                    "token_usage": researcher.get_token_usage(),
+                    "visited_urls": list(researcher.visited_urls),
+                    "research_images": researcher.get_research_images(),
+                    # "research_sources": researcher.get_research_sources(),  # Raw content of sources may be very large
+                },
+                "report": report,
+                "docx_path": docx_path,
+                "pdf_path": pdf_path
+            }
+        else:
+            response = { "research_id": research_id, "report": "", "docx_path": docx_path, "pdf_path": pdf_path }
+
+        # Send webhook notification if webhook_url is provided
+        if research_request.webhook_url:
+            await send_webhook_notification(
+                webhook_url=research_request.webhook_url,
+                research_id=research_id,
+                status="completed",
+                response=response
+            )
+
+        return response
+    except Exception as e:
+        # Send error webhook if webhook_url is provided
+        if research_request.webhook_url:
+            await send_webhook_notification(
+                webhook_url=research_request.webhook_url,
+                research_id=research_id,
+                status="failed",
+                error=str(e)
+            )
+        raise
+
+
+async def send_webhook_notification(
+    webhook_url: str,
+    research_id: str,
+    status: str,
+    response: Dict[str, Any] = None,
+    error: str = None
+):
+    """
+    Send webhook notification when report generation is complete or failed.
+    
+    Args:
+        webhook_url: The webhook URL to send notification to
+        research_id: The research ID
+        status: "completed" or "failed"
+        response: The response data (if completed)
+        error: Error message (if failed)
+    """
+    try:
+        payload = {
             "research_id": research_id,
-            "research_information": {
-                "source_urls": researcher.get_source_urls(),
-                "research_costs": researcher.get_costs(),
-                "visited_urls": list(researcher.visited_urls),
-                "research_images": researcher.get_research_images(),
-                # "research_sources": researcher.get_research_sources(),  # Raw content of sources may be very large
-            },
-            "report": report,
-            "docx_path": docx_path,
-            "pdf_path": pdf_path
+            "status": status,
+            "timestamp": time.time()
         }
-    else:
-        response = { "research_id": research_id, "report": "", "docx_path": docx_path, "pdf_path": pdf_path }
-
-    return response
+        
+        if status == "completed" and response:
+            payload["data"] = {
+                "report": response.get("report", ""),
+                "docx_path": response.get("docx_path"),
+                "pdf_path": response.get("pdf_path"),
+                "research_information": response.get("research_information", {})
+            }
+        elif status == "failed" and error:
+            payload["error"] = error
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            result = await client.post(webhook_url, json=payload)
+            result.raise_for_status()
+            logger.info(f"Webhook notification sent successfully to {webhook_url} for research_id: {research_id}")
+    except Exception as e:
+        logger.error(f"Failed to send webhook notification to {webhook_url}: {e}")
 
 @app.post("/report/")
-async def generate_report(research_request: ResearchRequest, background_tasks: BackgroundTasks):
+async def generate_report(
+    research_request: ResearchRequest,
+    background_tasks: BackgroundTasks
+):
+    """
+    Submit a report generation task.
+    
+    This endpoint immediately returns a task_id and processes the report in the background.
+    When complete, a webhook notification will be sent if webhook_url is provided.
+    """
+    from server.server_utils import sanitize_filename
+    
     research_id = sanitize_filename(f"task_{int(time.time())}_{research_request.task}")
-
-    if research_request.generate_in_background:
-        background_tasks.add_task(write_report, research_request=research_request, research_id=research_id)
-        return {"message": "Your report is being generated in the background. Please check back later.",
-                "research_id": research_id}
-    else:
-        response = await write_report(research_request, research_id)
-        return response
+    
+    # Prepare headers
+    headers = research_request.headers or {}
+    
+    # Ensure user_id is in headers if provided in request
+    if hasattr(research_request, 'user_id') and research_request.user_id:
+        headers["user_id"] = research_request.user_id
+    
+    # If no retriever specified, use default from environment or config
+    if "retriever" not in headers and "retrievers" not in headers:
+        # Check environment variable first
+        default_retrievers = os.getenv("DEFAULT_RETRIEVERS", None)
+        if default_retrievers:
+            headers["retrievers"] = default_retrievers
+        elif headers.get("user_id"):
+            # If user_id is provided but no config, use mixed mode by default
+            headers["retrievers"] = "internal_biblio,tavily"
+        else:
+            # Fall back to default from config or "tavily"
+            default_retriever = os.getenv("RETRIEVER", "tavily")
+            headers["retriever"] = default_retriever
+    
+    # Update request headers
+    research_request.headers = headers
+    
+    # Add background task to generate report
+    background_tasks.add_task(write_report, research_request, research_id)
+    
+    # Return immediately with task_id
+    return {
+        "message": "Report generation task has been submitted.",
+        "research_id": research_id,
+        "status": "processing"
+    }
 
 
 @app.get("/files/")
@@ -365,3 +468,6 @@ async def delete_report(research_id: str):
     """Delete a specific research report by ID - no database configured."""
     logger.debug(f"Delete requested for report {research_id} - no database configured, nothing to delete")
     return {"success": True, "id": research_id}
+
+
+# Task status endpoint removed - no longer using Celery
