@@ -37,7 +37,7 @@ services:
     restart: always
     ports:
       - 8000:8000
-    command: uvicorn server.app:app --host 0.0.0.0 --port 8000 --workers ${WORKERS:-1}
+    command: uvicorn backend.server.app:app --host 0.0.0.0 --port 8000 --workers ${WORKERS:-1}
 
   gptr-nextjs:
     pull_policy: build

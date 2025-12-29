@@ -113,11 +113,13 @@ export INTERNAL_API_BASE_URL=http://unob.ivy:8080
 ```
 
 **优势：**
+
 - 本地数据（internal_biblio）：用户特定的文献、笔记、PDF 片段
 - 外部数据（tavily）：补充最新的网络信息，确保数据全面性
 - 系统会并行调用所有 retriever，然后合并结果
 
 **其他组合示例：**
+
 ```json
 // 三个 retriever 组合
 {
@@ -147,6 +149,7 @@ GET {base_url}/internal/biblios/semantic_search/?type={type}&user_id={user_id}&q
 ```
 
 其中：
+
 - `base_url`: 默认为 `http://unob.ivy:8080`，可通过 headers 或环境变量配置
 - `type`: `biblio`, `highlight`, 或 `File`
 - `user_id`: 从 headers 中获取
@@ -162,14 +165,14 @@ API 需要返回以下格式之一：
 
 ```json
 [
-    {
-        "href": "source_url_or_id",
-        "body": "content_text"
-    },
-    {
-        "id": "another_id",
-        "content": "another_content"
-    }
+  {
+    "href": "source_url_or_id",
+    "body": "content_text"
+  },
+  {
+    "id": "another_id",
+    "content": "another_content"
+  }
 ]
 ```
 
@@ -179,12 +182,12 @@ API 需要返回以下格式之一：
 
 ```json
 {
-    "results": [
-        {
-            "href": "source_url_or_id",
-            "body": "content_text"
-        }
-    ]
+  "results": [
+    {
+      "href": "source_url_or_id",
+      "body": "content_text"
+    }
+  ]
 }
 ```
 
@@ -198,6 +201,7 @@ API 需要返回以下格式之一：
 2. **内容字段**（必需）：`body`, `content`, 或 `text` 之一
 
 **字段映射：**
+
 - 标识符：`href` → `url` → `id` → `source` → `link`
 - 内容：`body` → `content` → `text` → `abstract` → `description` → `snippet`
 
@@ -232,11 +236,13 @@ Retriever 会将所有格式统一转换为：
 **重要说明：**
 
 1. **如果返回的是 ID**（如 `"doc123"`）：
+
    - 引用会显示为：`- [doc123](doc123)`
    - 这不是可点击的 URL，只是一个标识符
    - 建议：如果可能，返回完整的 URL 或可访问的链接
 
 2. **如果返回的是 URL**（如 `"https://example.com/doc123"`）：
+
    - 引用会显示为：`- [https://example.com/doc123](https://example.com/doc123)`
    - 这是可点击的超链接
 
@@ -263,4 +269,3 @@ Retriever 会将所有格式统一转换为：
 2. **网络访问**: 确保服务器可以访问内部 API 端点 (`unob.ivy:8080`)
 3. **超时设置**: API 请求的超时时间为 30 秒
 4. **数据格式**: Retriever 会自动处理不同的 API 响应格式，但建议 API 返回标准格式
-

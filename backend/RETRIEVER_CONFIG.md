@@ -38,10 +38,8 @@ environment:
 
 1. **请求中的 headers**（最高优先级）
    - 如果请求中指定了 `retriever` 或 `retrievers`，使用请求中的值
-   
 2. **环境变量 `DEFAULT_RETRIEVERS`**
    - 如果设置了环境变量，使用环境变量的值
-   
 3. **自动推断**
    - 如果提供了 `user_id`，默认使用 `internal_biblio,tavily`
    - 如果没有 `user_id`，使用 `RETRIEVER` 环境变量或默认值 `tavily`
@@ -51,12 +49,14 @@ environment:
 ### 示例 1: 使用环境变量配置（推荐）
 
 **设置环境变量：**
+
 ```bash
 export DEFAULT_RETRIEVERS="internal_biblio,tavily"
 export INTERNAL_API_BASE_URL="http://unob.ivy:8080"
 ```
 
 **API 请求（不需要指定 retriever）：**
+
 ```json
 {
   "task": "研究任务",
@@ -88,7 +88,7 @@ python backend/scripts/submit_task.py \
   "user_id": "user123",
   "headers": {
     "user_id": "user123",
-    "retrievers": "tavily,google"  // 覆盖默认配置
+    "retrievers": "tavily,google" // 覆盖默认配置
   }
 }
 ```
@@ -98,10 +98,12 @@ python backend/scripts/submit_task.py \
 ### DEFAULT_RETRIEVERS
 
 支持的值：
+
 - 单个 retriever: `"tavily"`, `"internal_biblio"`, `"google"` 等
 - 多个 retriever: `"internal_biblio,tavily"`, `"internal_biblio,tavily,google"` 等
 
 **推荐配置：**
+
 ```bash
 # 混合模式（推荐）：本地数据 + 网络数据
 DEFAULT_RETRIEVERS=internal_biblio,tavily
@@ -154,4 +156,3 @@ environment:
 2. 环境变量配置后需要重启服务才能生效
 3. 如果请求中指定了 retriever，会覆盖环境变量配置
 4. 多个 retriever 用逗号分隔，不要有空格（系统会自动处理空格）
-
