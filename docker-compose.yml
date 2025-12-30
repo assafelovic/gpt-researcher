@@ -25,8 +25,11 @@ services:
       LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
       LOGGING_LEVEL: INFO
       # Retriever 配置（可选，如果不设置则使用默认值）
-      # DEFAULT_RETRIEVERS: ${DEFAULT_RETRIEVERS:-internal_biblio,tavily}
-      # INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://unob.ivy:8080}
+      # 默认值: internal_biblio,internal_highlight,internal_file,noteexpress,tavily
+      # DEFAULT_RETRIEVERS: ${DEFAULT_RETRIEVERS:-internal_biblio,internal_highlight,internal_file,noteexpress,tavily}
+      # Internal API 配置（从 .env 文件读取）
+      # INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-https://www.ivysci.com}
+      # INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       # Uvicorn workers (控制并发数)
       WORKERS: ${WORKERS:-1}
     volumes:

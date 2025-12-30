@@ -53,11 +53,8 @@ class ResearchRequest(BaseModel):
     report_source: str
     tone: str
     headers: dict | None = None
-    repo_name: str
-    branch_name: str
     user_id: str | None = None  # User ID (can also be in headers)
-    webhook_url: str | None = None  # Optional webhook URL for completion notification
-    # Generate report directly using async/await
+    # Webhook URL is configured via environment variable WEBHOOK_URL, not passed in request
 
 
 class ChatRequest(BaseModel):
@@ -225,30 +222,25 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
         else:
             response = { "research_id": research_id, "report": "", "docx_path": docx_path, "pdf_path": pdf_path }
 
-        # Send webhook notification if webhook_url is provided
-        if research_request.webhook_url:
-            await send_webhook_notification(
-                webhook_url=research_request.webhook_url,
-                research_id=research_id,
-                status="completed",
-                response=response
-            )
+        # Send webhook notification (if configured in environment)
+        await send_webhook_notification(
+            research_id=research_id,
+            status="completed",
+            response=response
+        )
 
         return response
     except Exception as e:
-        # Send error webhook if webhook_url is provided
-        if research_request.webhook_url:
-            await send_webhook_notification(
-                webhook_url=research_request.webhook_url,
-                research_id=research_id,
-                status="failed",
-                error=str(e)
-            )
+        # Send error webhook (if configured in environment)
+        await send_webhook_notification(
+            research_id=research_id,
+            status="failed",
+            error=str(e)
+        )
         raise
 
 
 async def send_webhook_notification(
-    webhook_url: str,
     research_id: str,
     status: str,
     response: Dict[str, Any] = None,
@@ -257,13 +249,24 @@ async def send_webhook_notification(
     """
     Send webhook notification when report generation is complete or failed.
     
+    Webhook URL and API key are read from environment variables:
+    - WEBHOOK_URL: The webhook URL to send notification to
+    - WEBHOOK_API_KEY: The API key for authentication (optional)
+    
+    If WEBHOOK_URL is not configured, this function does nothing.
+    
     Args:
-        webhook_url: The webhook URL to send notification to
         research_id: The research ID
         status: "completed" or "failed"
         response: The response data (if completed)
         error: Error message (if failed)
     """
+    # Get webhook URL from environment variable
+    webhook_url = os.getenv("WEBHOOK_URL")
+    if not webhook_url:
+        # Webhook not configured, skip notification
+        return
+    
     try:
         payload = {
             "research_id": research_id,
@@ -281,8 +284,14 @@ async def send_webhook_notification(
         elif status == "failed" and error:
             payload["error"] = error
         
+        # Prepare request headers with API key if configured
+        headers = {}
+        webhook_api_key = os.getenv("WEBHOOK_API_KEY")
+        if webhook_api_key:
+            headers["x-api-key"] = webhook_api_key
+        
         async with httpx.AsyncClient(timeout=10.0) as client:
-            result = await client.post(webhook_url, json=payload)
+            result = await client.post(webhook_url, json=payload, headers=headers)
             result.raise_for_status()
             logger.info(f"Webhook notification sent successfully to {webhook_url} for research_id: {research_id}")
     except Exception as e:
@@ -297,7 +306,7 @@ async def generate_report(
     Submit a report generation task.
     
     This endpoint immediately returns a task_id and processes the report in the background.
-    When complete, a webhook notification will be sent if webhook_url is provided.
+    When complete, a webhook notification will be sent if WEBHOOK_URL is configured in environment.
     """
     from server.server_utils import sanitize_filename
     
@@ -317,9 +326,8 @@ async def generate_report(
         if default_retrievers:
             headers["retrievers"] = default_retrievers
         else:
-            # Fall back to default from config or "tavily"
-            default_retriever = os.getenv("RETRIEVER", "tavily")
-            headers["retriever"] = default_retriever
+            # Fall back to default retrievers: internal_biblio, internal_highlight, internal_file, noteexpress, tavily
+            headers["retrievers"] = "internal_biblio,internal_highlight,internal_file,noteexpress,tavily"
     
     # Update request headers
     research_request.headers = headers
