@@ -6,6 +6,10 @@ import logging
 import sys
 import warnings
 import httpx
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Suppress Pydantic V2 migration warnings
 warnings.filterwarnings("ignore", message="Valid config keys have changed in V2")
@@ -186,6 +190,9 @@ async def create_or_update_report(request: Request):
 
 async def write_report(research_request: ResearchRequest, research_id: str = None):
     try:
+        # Extract user_id from request (can be in user_id field or headers)
+        user_id = research_request.user_id or research_request.headers.get("user_id") if research_request.headers else None
+        
         report_information = await run_agent(
             task=research_request.task,
             report_type=research_request.report_type,
@@ -225,15 +232,20 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
         # Send webhook notification (if configured in environment)
         await send_webhook_notification(
             research_id=research_id,
+            user_id=user_id,
             status="completed",
             response=response
         )
 
         return response
     except Exception as e:
+        # Extract user_id from request for error webhook
+        user_id = research_request.user_id or research_request.headers.get("user_id") if research_request.headers else None
+        
         # Send error webhook (if configured in environment)
         await send_webhook_notification(
             research_id=research_id,
+            user_id=user_id,
             status="failed",
             error=str(e)
         )
@@ -244,7 +256,8 @@ async def send_webhook_notification(
     research_id: str,
     status: str,
     response: Dict[str, Any] = None,
-    error: str = None
+    error: str = None,
+    user_id: str = None
 ):
     """
     Send webhook notification when report generation is complete or failed.
@@ -260,6 +273,7 @@ async def send_webhook_notification(
         status: "completed" or "failed"
         response: The response data (if completed)
         error: Error message (if failed)
+        user_id: The user ID from the research request (optional)
     """
     # Get webhook URL from environment variable
     webhook_url = os.getenv("WEBHOOK_URL")
@@ -273,6 +287,10 @@ async def send_webhook_notification(
             "status": status,
             "timestamp": time.time()
         }
+        
+        # Add user_id if provided
+        if user_id:
+            payload["user_id"] = user_id
         
         if status == "completed" and response:
             payload["data"] = {

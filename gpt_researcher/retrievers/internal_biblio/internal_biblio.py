@@ -55,7 +55,7 @@ class BaseInternalBiblioRetriever:
         # Get API base URL from headers or environment variable, with default
         self.base_url = (
             self.headers.get("internal_api_base_url") or
-            os.getenv("INTERNAL_API_BASE_URL", "https://www.ivysci.com")
+            os.getenv("INTERNAL_API_BASE_URL", "https://www.ivysci.com/api/v2")
         )
         
         # Get API key from headers or environment variable
@@ -65,11 +65,13 @@ class BaseInternalBiblioRetriever:
         )
         
         # Construct the API endpoint
-        self.endpoint = f"{self.base_url}/internal/biblios/semantic_search/"
+        self.endpoint = f"{self.base_url}/internal/biblios/vector_search/"
         
+        # Log initialization details (without exposing full API key)
+        api_key_status = "configured" if self.api_key else "missing"
         logger.info(
             f"Initialized {self.__class__.__name__} with user_id={self.user_id}, "
-            f"type={self.search_type}, endpoint={self.endpoint}"
+            f"type={self.search_type}, endpoint={self.endpoint}, api_key={api_key_status}"
         )
 
     @property
@@ -97,27 +99,35 @@ class BaseInternalBiblioRetriever:
             ]
         """
         try:
-            # Prepare request parameters
-            params = {
+            # Prepare request body (POST request)
+            payload = {
                 "type": self.search_type,
                 "user_id": self.user_id,
                 "query": self.query
             }
             
             logger.info(
-                f"Searching internal API: {self.endpoint} with params: "
+                f"Searching internal API: {self.endpoint} with payload: "
                 f"type={self.search_type}, user_id={self.user_id}, query={self.query[:50]}..."
             )
             
             # Prepare request headers
-            request_headers = {}
+            request_headers = {
+                "Content-Type": "application/json"
+            }
             if self.api_key:
                 request_headers["x-api-key"] = self.api_key
+                logger.debug(f"API key included in request headers (length: {len(self.api_key)})")
+            else:
+                logger.warning(
+                    f"API key not found! Checked headers['internal_api_key'] and INTERNAL_API_KEY env var. "
+                    f"Available env vars starting with INTERNAL: {[k for k in os.environ.keys() if k.startswith('INTERNAL')]}"
+                )
             
-            # Make the API request
-            response = requests.get(
+            # Make the API request (POST)
+            response = requests.post(
                 self.endpoint,
-                params=params,
+                json=payload,
                 headers=request_headers,
                 timeout=30  # 30 second timeout
             )

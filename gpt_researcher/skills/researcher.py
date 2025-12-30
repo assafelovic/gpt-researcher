@@ -738,8 +738,13 @@ class ResearchConductor:
                 continue
                 
             try:
-                # Instantiate the retriever with the sub-query
-                retriever = retriever_class(query, query_domains=query_domains)
+                # Instantiate the retriever with the sub-query and headers
+                # Pass headers for retrievers that need them (e.g., InternalBiblioRetriever)
+                headers = self.researcher.headers if hasattr(self.researcher, 'headers') else None
+                if headers:
+                    retriever = retriever_class(query, headers=headers, query_domains=query_domains)
+                else:
+                    retriever = retriever_class(query, query_domains=query_domains)
 
                 # Perform the search using the current retriever
                 search_results = await asyncio.to_thread(

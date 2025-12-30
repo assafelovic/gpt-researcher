@@ -17,11 +17,16 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
         query: The search query
         retriever: The retriever instance
         query_domains: Optional list of domains to search
-        researcher: The researcher instance (needed for MCP retrievers)
+        researcher: The researcher instance (needed for MCP retrievers and headers)
 
     Returns:
         A list of search results
     """
+    # Get headers from researcher if available
+    headers = None
+    if researcher and hasattr(researcher, 'headers'):
+        headers = researcher.headers
+    
     # Check if this is an MCP retriever and pass the researcher instance
     if "mcpretriever" in retriever.__name__.lower():
         search_retriever = retriever(
@@ -30,7 +35,11 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
             researcher=researcher  # Pass researcher instance for MCP retrievers
         )
     else:
-        search_retriever = retriever(query, query_domains=query_domains)
+        # Pass headers to retrievers that need them (e.g., InternalBiblioRetriever)
+        if headers:
+            search_retriever = retriever(query, headers=headers, query_domains=query_domains)
+        else:
+            search_retriever = retriever(query, query_domains=query_domains)
     
     return search_retriever.search()
 
