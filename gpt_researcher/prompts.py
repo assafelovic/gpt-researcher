@@ -508,6 +508,7 @@ IMPORTANT:Content and Sections Uniqueness:
 - Do not repeat any information already covered in the existing written contents or closely related variations to avoid duplicates.
 - If you have nested subsections, ensure they are unique and not covered in the existing written contents.
 - Ensure that your content is entirely new and does not overlap with any information already covered in the previous subtopic reports.
+- **Headers in different sections shouldn't overlap and keep concise**: Ensure your headers are distinct from headers in other sections and avoid redundancy.
 
 "Existing Subtopic Reports":
 - Existing subtopic reports and their section headers:
@@ -583,6 +584,70 @@ Provide the draft headers in a list format using markdown syntax, for example:
 - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
 - Must NOT have any introduction, conclusion, summary or reference section.
 - Focus solely on creating headers, not content.
+- Headers in different sections shouldn't overlap and keep concise.
+"""
+
+    @staticmethod
+    def generate_reorganize_subtopics_prompt(
+        main_topic: str,
+        research_context: str,
+        subtopics_with_headers: str
+    ) -> str:
+        """
+        Generate a prompt for reorganizing subtopics and headers into a logical structure.
+        This directly generates the final subtopics list that the writer will use.
+        This requires logical reasoning and should use a high-quality model.
+        
+        Args:
+            main_topic: The main research topic
+            research_context: Combined research context
+            subtopics_with_headers: Formatted string of subtopics with their headers
+            
+        Returns:
+            str: The reorganization prompt
+        """
+        return f"""
+You are an expert academic editor reorganizing a literature review report.
+
+Main Topic: {main_topic}
+
+Research Context:
+{research_context}
+
+Current Subtopics with Headers:
+{subtopics_with_headers}
+
+Your task is to reorganize these subtopics and their headers into a logical structure for the final report.
+
+Guidelines:
+1. **Logical ordering**: Ensure subtopics follow a logical flow (e.g., Input → Process → Output, or Broad → Specific)
+2. **Merge related concepts**: If multiple subtopics cover similar themes, merge them into one subtopic with combined headers
+3. **Avoid fragmentation**: Group related concepts together instead of scattering them
+4. **Separate mechanisms from moderators**: Keep mediators (mechanisms) separate from moderators (boundary conditions)
+5. **Save implications for end**: Move any "implications", "applications", or "future directions" to later subtopics
+6. **Headers in different subtopics shouldn't overlap and keep concise**: Ensure headers across different subtopics are distinct and non-overlapping. Avoid redundant or similar headers.
+7. **Refine headers**: If merging subtopics, combine and refine their headers to avoid duplication
+
+Output format (JSON):
+{{
+  "reorganized_subtopics": [
+    {{
+      "task": "Final subtopic task (may be merged or refined)",
+      "headers": [
+        {{"text": "Header 1", "level": 3}},
+        {{"text": "Header 2", "level": 3}}
+      ],
+      "order": 1
+    }}
+  ]
+}}
+
+Important:
+- Return ONLY the final subtopics list that the writer will use
+- Each subtopic should have a clear "task" and a list of "headers"
+- Headers should be in the format: {{"text": "Header text", "level": 3}}
+- Order subtopics logically
+- If merging, combine headers and remove duplicates
 """
 
     @staticmethod

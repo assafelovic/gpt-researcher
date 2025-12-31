@@ -61,6 +61,13 @@ class Config:
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
+        # LOGICAL_LLM: Use for logical reasoning tasks. Falls back to SMART_LLM if not configured.
+        if self.logical_llm and self.logical_llm.strip():
+            self.logical_llm_provider, self.logical_llm_model = self.parse_llm(self.logical_llm)
+        else:
+            # Fallback to SMART_LLM if LOGICAL_LLM is not configured
+            self.logical_llm_provider = self.smart_llm_provider
+            self.logical_llm_model = self.smart_llm_model
         self.reasoning_effort = self.parse_reasoning_effort(os.getenv("REASONING_EFFORT"))
 
     def _handle_deprecated_attributes(self) -> None:

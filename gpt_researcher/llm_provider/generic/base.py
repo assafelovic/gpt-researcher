@@ -112,29 +112,68 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import AzureChatOpenAI
 
-            # 从环境变量获取 Azure OpenAI 配置
-            if "azure_endpoint" not in kwargs:
-                kwargs["azure_endpoint"] = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
-            if "openai_api_key" not in kwargs:
-                kwargs["openai_api_key"] = os.environ.get("AZURE_OPENAI_API_KEY", "")
-            
-            # 获取部署名称，用于查找对应的 API 版本
+            # 获取部署名称，用于查找对应的 endpoint 和 API 版本
             deployment_name = None
             if "model" in kwargs:
                 deployment_name = kwargs.get("model", None)
                 kwargs = {"azure_deployment": deployment_name, **kwargs}
             
+            # 支持为每个部署单独配置 endpoint（如果不同部署在不同的 Azure 资源上）
+            # 格式：AZURE_OPENAI_ENDPOINT_<deployment_name>
+            if "azure_endpoint" not in kwargs:
+                if deployment_name:
+                    # 尝试多种格式：
+                    # 1. 连字符替换为下划线，点号保留：gpt-5.2-chat -> gpt_5.2_chat
+                    # 2. 连字符和点号都替换为下划线：gpt-5.2-chat -> gpt_5_2_chat
+                    # 3. 原始格式（带连字符）：gpt-5.2-chat
+                    deployment_name_underscore = deployment_name.replace('-', '_')  # gpt_5.2_chat
+                    deployment_name_all_underscore = deployment_name.replace('-', '_').replace('.', '_')  # gpt_5_2_chat
+                    
+                    azure_endpoint = (
+                        os.environ.get(f"AZURE_OPENAI_ENDPOINT_{deployment_name_underscore}") or
+                        os.environ.get(f"AZURE_OPENAI_ENDPOINT_{deployment_name_all_underscore}") or
+                        os.environ.get(f"AZURE_OPENAI_ENDPOINT_{deployment_name}")
+                    )
+                    if azure_endpoint:
+                        kwargs["azure_endpoint"] = azure_endpoint
+                
+                # 如果没有部署特定的 endpoint，使用通用 endpoint
+                if "azure_endpoint" not in kwargs:
+                    kwargs["azure_endpoint"] = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
+            
+            # 支持为每个部署单独配置 API Key（如果不同部署使用不同的 key）
+            # 格式：AZURE_OPENAI_API_KEY_<deployment_name>
+            if "openai_api_key" not in kwargs:
+                if deployment_name:
+                    # 尝试多种格式（与 endpoint 相同）
+                    deployment_name_underscore = deployment_name.replace('-', '_')  # gpt_5.2_chat
+                    deployment_name_all_underscore = deployment_name.replace('-', '_').replace('.', '_')  # gpt_5_2_chat
+                    
+                    api_key = (
+                        os.environ.get(f"AZURE_OPENAI_API_KEY_{deployment_name_underscore}") or
+                        os.environ.get(f"AZURE_OPENAI_API_KEY_{deployment_name_all_underscore}") or
+                        os.environ.get(f"AZURE_OPENAI_API_KEY_{deployment_name}")
+                    )
+                    if api_key:
+                        kwargs["openai_api_key"] = api_key
+                
+                # 如果没有部署特定的 key，使用通用 key
+                if "openai_api_key" not in kwargs:
+                    kwargs["openai_api_key"] = os.environ.get("AZURE_OPENAI_API_KEY", "")
+            
             # 支持为每个部署单独配置 API 版本
             # 格式：AZURE_OPENAI_API_VERSION_<deployment_name>
             if "api_version" not in kwargs:
                 if deployment_name:
-                    # 先查找部署特定的 API 版本（例如：AZURE_OPENAI_API_VERSION_gpt-4o）
-                    deployment_specific_key = f"AZURE_OPENAI_API_VERSION_{deployment_name.replace('-', '_')}"
-                    api_version = os.environ.get(deployment_specific_key)
-                    if not api_version:
-                        # 如果部署名称包含连字符，也尝试用连字符的版本
-                        deployment_specific_key_hyphen = f"AZURE_OPENAI_API_VERSION_{deployment_name}"
-                        api_version = os.environ.get(deployment_specific_key_hyphen)
+                    # 尝试多种格式（与 endpoint 相同）
+                    deployment_name_underscore = deployment_name.replace('-', '_')  # gpt_5.2_chat
+                    deployment_name_all_underscore = deployment_name.replace('-', '_').replace('.', '_')  # gpt_5_2_chat
+                    
+                    api_version = (
+                        os.environ.get(f"AZURE_OPENAI_API_VERSION_{deployment_name_underscore}") or
+                        os.environ.get(f"AZURE_OPENAI_API_VERSION_{deployment_name_all_underscore}") or
+                        os.environ.get(f"AZURE_OPENAI_API_VERSION_{deployment_name}")
+                    )
                 else:
                     api_version = None
                 
@@ -149,6 +188,11 @@ class GenericLLMProvider:
                 kwargs["timeout"] = 180  # 3分钟超时
             if "request_timeout" not in kwargs:
                 kwargs["request_timeout"] = 180  # 3分钟请求超时
+            
+            # Some models (e.g., gpt-5.2-chat) don't support custom temperature, only default (1)
+            # Remove temperature from kwargs if model doesn't support it
+            if deployment_name and "gpt-5.2" in deployment_name.lower():
+                kwargs.pop("temperature", None)
             
             llm = AzureChatOpenAI(**kwargs)
         elif provider == "cohere":

@@ -4,19 +4,26 @@ services:
     pull_policy: build
     image: gptresearcher/gpt-researcher
     build: ./
+    env_file:
+      - .env
     environment:
-      # Azure OpenAI 配置
+      # Azure OpenAI 配置（基础配置，部署特定的配置通过 env_file 从 .env 加载）
       AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY}
       AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT}
       # 通用 API 版本（如果所有部署使用相同版本）
       AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION:-}
-      # 如果不同部署需要不同的 API 版本，可以在 .env 中设置：
-      # AZURE_OPENAI_API_VERSION_gpt_4o=2024-11-20
-      # AZURE_OPENAI_API_VERSION_gpt_4o_mini=2024-05-01-preview
+      # 部署特定的配置（从 .env 文件自动加载）：
+      # - AZURE_OPENAI_ENDPOINT_gpt_5_2_chat
+      # - AZURE_OPENAI_API_KEY_gpt_5_2_chat
+      # - AZURE_OPENAI_API_VERSION_gpt_5_2_chat
+      # - AZURE_OPENAI_API_VERSION_gpt_4o
+      # - AZURE_OPENAI_API_VERSION_gpt_4o_mini
+      # - AZURE_OPENAI_API_VERSION_text_embedding_3_large
       # 注意：部署名称中的连字符会被替换为下划线
       # LLM 模型配置
       FAST_LLM: ${FAST_LLM:-azure_openai:gpt-4o-mini}
       SMART_LLM: ${SMART_LLM:-azure_openai:gpt-4o}
+      LOGICAL_LLM: ${LOGICAL_LLM:-} # Optional: Use a more powerful model for logical reasoning (e.g., "azure_openai:gpt-5.2"). If empty, falls back to SMART_LLM.
       EMBEDDING: ${EMBEDDING:-azure_openai:text-embedding-3-large}
       # 其他配置（保留原有配置作为备选）
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}

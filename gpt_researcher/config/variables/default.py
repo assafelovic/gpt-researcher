@@ -7,6 +7,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "FAST_LLM": "openai:gpt-4o-mini",
     "SMART_LLM": "openai:gpt-4.1",  # Has support for long responses (2k+ words).
     "STRATEGIC_LLM": "openai:o4-mini",  # Can be used with o1 or o3, please note it will make tasks slower.
+    "LOGICAL_LLM": "",  # Optional: Use a more powerful model for logical reasoning tasks (e.g., "openai:gpt-5.2"). If empty, falls back to SMART_LLM.
     "FAST_TOKEN_LIMIT": 3000,
     "SMART_TOKEN_LIMIT": 6000,
     "STRATEGIC_TOKEN_LIMIT": 4000,

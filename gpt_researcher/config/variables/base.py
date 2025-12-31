@@ -9,6 +9,7 @@ class BaseConfig(TypedDict):
     FAST_LLM: str
     SMART_LLM: str
     STRATEGIC_LLM: str
+    LOGICAL_LLM: str
     FAST_TOKEN_LIMIT: int
     SMART_TOKEN_LIMIT: int
     STRATEGIC_TOKEN_LIMIT: int
