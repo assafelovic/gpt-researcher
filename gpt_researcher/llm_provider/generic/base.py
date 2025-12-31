@@ -144,6 +144,12 @@ class GenericLLMProvider:
                 
                 kwargs["api_version"] = api_version
 
+            # 添加超时设置，避免网络问题导致无限等待
+            if "timeout" not in kwargs:
+                kwargs["timeout"] = 180  # 3分钟超时
+            if "request_timeout" not in kwargs:
+                kwargs["request_timeout"] = 180  # 3分钟请求超时
+            
             llm = AzureChatOpenAI(**kwargs)
         elif provider == "cohere":
             _check_pkg("langchain_cohere")

@@ -192,7 +192,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
     try:
         # Extract user_id from request (can be in user_id field or headers)
         user_id = research_request.user_id or research_request.headers.get("user_id") if research_request.headers else None
-        
+
         report_information = await run_agent(
             task=research_request.task,
             report_type=research_request.report_type,
@@ -322,21 +322,21 @@ async def generate_report(
 ):
     """
     Submit a report generation task.
-    
+
     This endpoint immediately returns a task_id and processes the report in the background.
     When complete, a webhook notification will be sent if WEBHOOK_URL is configured in environment.
     """
     from server.server_utils import sanitize_filename
-    
+
     research_id = sanitize_filename(f"task_{int(time.time())}_{research_request.task}")
-    
+
     # Prepare headers
     headers = research_request.headers or {}
-    
+
     # Ensure user_id is in headers if provided in request
     if hasattr(research_request, 'user_id') and research_request.user_id:
         headers["user_id"] = research_request.user_id
-    
+
     # If no retriever specified, use default from environment or config
     if "retriever" not in headers and "retrievers" not in headers:
         # Check environment variable first
@@ -346,13 +346,13 @@ async def generate_report(
         else:
             # Fall back to default retrievers: internal_biblio, internal_highlight, internal_file, noteexpress, tavily
             headers["retrievers"] = "internal_biblio,internal_highlight,internal_file,noteexpress,tavily"
-    
+
     # Update request headers
     research_request.headers = headers
-    
+
     # Add background task to generate report
     background_tasks.add_task(write_report, research_request, research_id)
-    
+
     # Return immediately with task_id
     return {
         "message": "Report generation task has been submitted.",

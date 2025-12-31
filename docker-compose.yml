@@ -26,7 +26,7 @@ services:
       LOGGING_LEVEL: INFO
       # Retriever 配置（可选，如果不设置则使用默认值）
       # 默认值: internal_biblio,internal_highlight,internal_file,noteexpress,tavily
-      # DEFAULT_RETRIEVERS: ${DEFAULT_RETRIEVERS:-internal_biblio,internal_highlight,internal_file,noteexpress,tavily}
+      DEFAULT_RETRIEVERS: ${DEFAULT_RETRIEVERS:-internal_biblio,internal_highlight,internal_file,noteexpress,tavily}
       # Internal API 配置（从 .env 文件读取）
       INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-https://www.ivysci.com/api/v2}
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}

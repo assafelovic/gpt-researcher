@@ -135,10 +135,10 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
     # Initialize researcher based on report type
     if report_type == "multi_agents":
         report = await run_research_task(
-            query=task, 
+            query=task,
             websocket=logs_handler,  # Use logs_handler instead of raw websocket
-            stream_output=stream_output, 
-            tone=tone, 
+            stream_output=stream_output,
+            tone=tone,
             headers=headers
         )
         report = report.get("report", "")
