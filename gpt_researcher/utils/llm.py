@@ -86,12 +86,12 @@ async def create_chat_completion(
         )
 
         if cost_callback:
-            llm_costs = estimate_llm_cost(str(messages), response)
+            llm_costs = estimate_llm_cost(str(messages), response, model=model)
             cost_callback(llm_costs)
             # Also track token usage - cost_callback is typically add_costs method bound to researcher instance
             try:
                 from .costs import estimate_token_usage
-                token_usage = estimate_token_usage(str(messages), response)
+                token_usage = estimate_token_usage(str(messages), response, model=model)
                 # Check if the callback is a bound method and has access to researcher instance
                 if hasattr(cost_callback, '__self__'):
                     researcher = cost_callback.__self__

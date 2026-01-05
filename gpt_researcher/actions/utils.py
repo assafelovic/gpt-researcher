@@ -75,26 +75,13 @@ def calculate_cost(
     Returns:
         float: The calculated cost in USD.
     """
-    # Define cost per 1k tokens for different models
-    costs = {
-        "gpt-3.5-turbo": 0.002,
-        "gpt-4": 0.03,
-        "gpt-4-32k": 0.06,
-        "gpt-4o": 0.00001,
-        "gpt-4o-mini": 0.000001,
-        "o3-mini": 0.0000005,
-        # Add more models and their costs as needed
-    }
-
-    model = model.lower()
-    if model not in costs:
-        logger.warning(
-            f"Unknown model: {model}. Cost calculation may be inaccurate.")
-        return 0.0001 # Default avg cost if model is unknown
-
-    cost_per_1k = costs[model]
-    total_tokens = prompt_tokens + completion_tokens
-    return (total_tokens / 1000) * cost_per_1k
+    # Use the unified, model-aware pricing logic (supports env-configured pricing)
+    from gpt_researcher.utils.costs import calculate_llm_cost
+    return calculate_llm_cost(
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        model=model,
+    )
 
 
 def format_token_count(count: int) -> str:

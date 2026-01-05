@@ -157,11 +157,11 @@ async def create_chat_completion_with_tools(
             if cost_callback:
                 from .costs import estimate_llm_cost, estimate_token_usage
                 # Calculate costs for both calls
-                llm_costs = estimate_llm_cost(str(lc_messages), final_response.content or "")
+                llm_costs = estimate_llm_cost(str(lc_messages), final_response.content or "", model=model)
                 cost_callback(llm_costs)
                 # Also track token usage
                 try:
-                    token_usage = estimate_token_usage(str(lc_messages), final_response.content or "")
+                    token_usage = estimate_token_usage(str(lc_messages), final_response.content or "", model=model)
                     if hasattr(cost_callback, '__self__'):
                         researcher = cost_callback.__self__
                         if hasattr(researcher, 'add_token_usage'):
@@ -178,11 +178,11 @@ async def create_chat_completion_with_tools(
             # No tool calls, return regular response
             if cost_callback:
                 from .costs import estimate_llm_cost, estimate_token_usage
-                llm_costs = estimate_llm_cost(str(messages), response.content or "")
+                llm_costs = estimate_llm_cost(str(messages), response.content or "", model=model)
                 cost_callback(llm_costs)
                 # Also track token usage
                 try:
-                    token_usage = estimate_token_usage(str(messages), response.content or "")
+                    token_usage = estimate_token_usage(str(messages), response.content or "", model=model)
                     if hasattr(cost_callback, '__self__'):
                         researcher = cost_callback.__self__
                         if hasattr(researcher, 'add_token_usage'):
