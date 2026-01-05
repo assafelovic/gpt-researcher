@@ -55,7 +55,7 @@ class BaseInternalBiblioRetriever:
         # Get API base URL from headers or environment variable, with default
         self.base_url = (
             self.headers.get("internal_api_base_url") or
-            os.getenv("INTERNAL_API_BASE_URL", "https://www.ivysci.com/api/v2")
+            os.getenv("INTERNAL_API_BASE_URL", "https://www.ivysci.com")
         )
         
         # Get API key from headers or environment variable
@@ -65,13 +65,11 @@ class BaseInternalBiblioRetriever:
         )
         
         # Construct the API endpoint
-        self.endpoint = f"{self.base_url}/internal/biblios/vector_search/"
+        self.endpoint = f"{self.base_url}/internal/biblios/semantic_search/"
         
-        # Log initialization details (without exposing full API key)
-        api_key_status = "configured" if self.api_key else "missing"
         logger.info(
             f"Initialized {self.__class__.__name__} with user_id={self.user_id}, "
-            f"type={self.search_type}, endpoint={self.endpoint}, api_key={api_key_status}"
+            f"type={self.search_type}, endpoint={self.endpoint}"
         )
 
     @property
@@ -99,35 +97,27 @@ class BaseInternalBiblioRetriever:
             ]
         """
         try:
-            # Prepare request body (POST request)
-            payload = {
+            # Prepare request parameters
+            params = {
                 "type": self.search_type,
                 "user_id": self.user_id,
                 "query": self.query
             }
             
             logger.info(
-                f"Searching internal API: {self.endpoint} with payload: "
+                f"Searching internal API: {self.endpoint} with params: "
                 f"type={self.search_type}, user_id={self.user_id}, query={self.query[:50]}..."
             )
             
             # Prepare request headers
-            request_headers = {
-                "Content-Type": "application/json"
-            }
+            request_headers = {}
             if self.api_key:
                 request_headers["x-api-key"] = self.api_key
-                logger.debug(f"API key included in request headers (length: {len(self.api_key)})")
-            else:
-                logger.warning(
-                    f"API key not found! Checked headers['internal_api_key'] and INTERNAL_API_KEY env var. "
-                    f"Available env vars starting with INTERNAL: {[k for k in os.environ.keys() if k.startswith('INTERNAL')]}"
-                )
             
-            # Make the API request (POST)
-            response = requests.post(
+            # Make the API request
+            response = requests.get(
                 self.endpoint,
-                json=payload,
+                params=params,
                 headers=request_headers,
                 timeout=30  # 30 second timeout
             )
@@ -214,7 +204,7 @@ class BaseInternalBiblioRetriever:
         """
         Transform a single item from the API response.
         
-        Subclasses must implement this method to handle different field mappings
+        Subclasses can override this method to handle different field mappings
         for different types (biblio, highlight, File).
         
         Args:
@@ -225,10 +215,60 @@ class BaseInternalBiblioRetriever:
             
         Note:
             Each item must have:
-            - href: URL in format https://www.ivysci.com/biblio/{biblio_id}
-            - body: Combined title + content text
+            - href/id field: identifier or URL for the source
+            - body/content/text field: the actual content text
         """
-        raise NotImplementedError("Subclasses must implement _transform_item method")
+        if not isinstance(item, dict):
+            return None
+        
+        # Try to extract href/url/id (required)
+        href = (
+            item.get("href") or
+            item.get("url") or
+            item.get("id") or
+            item.get("source") or
+            item.get("link") or
+            None
+        )
+        
+        # Try to extract body/content/text (required)
+        body = (
+            item.get("body") or
+            item.get("content") or
+            item.get("text") or
+            item.get("abstract") or
+            item.get("description") or
+            item.get("snippet") or
+            None
+        )
+        
+        # Both href/id and body/content/text are required
+        if not body:
+            logger.warning(
+                f"Item missing content field (body/content/text). "
+                f"Item keys: {list(item.keys())}. Skipping item."
+            )
+            return None
+        
+        if not href:
+            logger.warning(
+                f"Item missing identifier field (href/url/id). "
+                f"Item keys: {list(item.keys())}. Skipping item."
+            )
+            return None
+        
+        # Convert href to string and format for display
+        href_str = str(href)
+        
+        # If href looks like an ID (not a URL), we can optionally format it
+        # For internal biblios, IDs are typically used as-is
+        # The href will be displayed in references as: [id](id)
+        # If you want a clickable link, provide a full URL in the href field
+        
+        return {
+            "href": href_str,
+            "body": str(body)
+        }
 
 
 class InternalBiblioRetriever(BaseInternalBiblioRetriever):
@@ -242,70 +282,6 @@ class InternalBiblioRetriever(BaseInternalBiblioRetriever):
     @property
     def search_type(self) -> str:
         return "biblio"
-    
-    def _transform_item(self, item: Any) -> Optional[Dict[str, Any]]:
-        """
-        Transform a biblio item from the API response.
-        
-        Expected format:
-        {
-            "content": "...",
-            "metadata": {
-                "biblio_id": 123,
-                "structured_data": {
-                    "title": "...",
-                    ...
-                }
-            }
-        }
-        
-        Returns:
-            {
-                "href": "https://www.ivysci.com/biblio/{biblio_id}",
-                "body": "{title}\n\n{content}"
-            }
-        """
-        if not isinstance(item, dict):
-            return None
-        
-        # Extract biblio_id from metadata
-        metadata = item.get("metadata", {})
-        biblio_id = metadata.get("biblio_id")
-        
-        if not biblio_id:
-            logger.warning(
-                f"Biblio item missing biblio_id in metadata. "
-                f"Item keys: {list(item.keys())}. Skipping item."
-            )
-            return None
-        
-        # Extract title from metadata.structured_data.title
-        structured_data = metadata.get("structured_data", {})
-        title = structured_data.get("title", "")
-        
-        # Extract content
-        content = item.get("content", "")
-        
-        if not content:
-            logger.warning(
-                f"Biblio item missing content field. "
-                f"Item keys: {list(item.keys())}. Skipping item."
-            )
-            return None
-        
-        # Combine title and content
-        if title:
-            body = f"{title}\n\n{content}"
-        else:
-            body = content
-        
-        # Format href
-        href = f"https://www.ivysci.com/biblio/{biblio_id}"
-        
-        return {
-            "href": href,
-            "body": body
-        }
 
 
 class InternalHighlightRetriever(BaseInternalBiblioRetriever):
@@ -319,59 +295,6 @@ class InternalHighlightRetriever(BaseInternalBiblioRetriever):
     @property
     def search_type(self) -> str:
         return "highlight"
-    
-    def _transform_item(self, item: Any) -> Optional[Dict[str, Any]]:
-        """
-        Transform a highlight item from the API response.
-        
-        Expected format:
-        {
-            "content": "**高亮内容**: ...\n**笔记**: ...",
-            "metadata": {
-                "biblio_id": 123,
-                "highlight_id": 456
-            }
-        }
-        
-        Returns:
-            {
-                "href": "https://www.ivysci.com/biblio/{biblio_id}",
-                "body": "{content}"
-            }
-        """
-        if not isinstance(item, dict):
-            return None
-        
-        # Extract biblio_id from metadata
-        metadata = item.get("metadata", {})
-        biblio_id = metadata.get("biblio_id")
-        
-        if not biblio_id:
-            logger.warning(
-                f"Highlight item missing biblio_id in metadata. "
-                f"Item keys: {list(item.keys())}. Skipping item."
-            )
-            return None
-        
-        # Extract content (contains highlight and note)
-        content = item.get("content", "")
-        
-        if not content:
-            logger.warning(
-                f"Highlight item missing content field. "
-                f"Item keys: {list(item.keys())}. Skipping item."
-            )
-            return None
-        
-        # Format href
-        href = f"https://www.ivysci.com/biblio/{biblio_id}"
-        
-        # For highlights, content already contains formatted text (高亮内容 + 笔记)
-        # No need to add title, use content as-is
-        return {
-            "href": href,
-            "body": content
-        }
 
 
 class InternalFileRetriever(BaseInternalBiblioRetriever):
@@ -385,64 +308,3 @@ class InternalFileRetriever(BaseInternalBiblioRetriever):
     @property
     def search_type(self) -> str:
         return "File"
-    
-    def _transform_item(self, item: Any) -> Optional[Dict[str, Any]]:
-        """
-        Transform a file item from the API response.
-        
-        Expected format:
-        {
-            "content": "...",
-            "metadata": {
-                "biblio_id": 123,
-                "Header 1": "标题",
-                ...
-            }
-        }
-        
-        Returns:
-            {
-                "href": "https://www.ivysci.com/biblio/{biblio_id}",
-                "body": "{Header 1}\n\n{content}"
-            }
-        """
-        if not isinstance(item, dict):
-            return None
-        
-        # Extract biblio_id from metadata
-        metadata = item.get("metadata", {})
-        biblio_id = metadata.get("biblio_id")
-        
-        if not biblio_id:
-            logger.warning(
-                f"File item missing biblio_id in metadata. "
-                f"Item keys: {list(item.keys())}. Skipping item."
-            )
-            return None
-        
-        # Extract title from metadata["Header 1"]
-        title = metadata.get("Header 1", "")
-        
-        # Extract content
-        content = item.get("content", "")
-        
-        if not content:
-            logger.warning(
-                f"File item missing content field. "
-                f"Item keys: {list(item.keys())}. Skipping item."
-            )
-            return None
-        
-        # Combine title and content
-        if title:
-            body = f"{title}\n\n{content}"
-        else:
-            body = content
-        
-        # Format href
-        href = f"https://www.ivysci.com/biblio/{biblio_id}"
-        
-        return {
-            "href": href,
-            "body": body
-        }

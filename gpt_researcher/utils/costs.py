@@ -10,48 +10,34 @@ EMBEDDING_COST = 0.02 / 1000000 # Assumes new ada-3-small
 
 # Cost estimation is via OpenAI libraries and models. May vary for other models
 def estimate_llm_cost(input_content: str, output_content: str) -> float:
-    try:
-        encoding = tiktoken.get_encoding(ENCODING_MODEL)
-        input_tokens = encoding.encode(input_content)
-        output_tokens = encoding.encode(output_content)
-        input_costs = len(input_tokens) * INPUT_COST_PER_TOKEN
-        output_costs = len(output_tokens) * OUTPUT_COST_PER_TOKEN
-        return input_costs + output_costs
-    except Exception as e:
-        # If tiktoken fails (e.g., network issues downloading encoding), return 0
-        logging.getLogger(__name__).warning(f"Failed to estimate LLM cost: {e}")
-        return 0.0
+    encoding = tiktoken.get_encoding(ENCODING_MODEL)
+    input_tokens = encoding.encode(input_content)
+    output_tokens = encoding.encode(output_content)
+    input_costs = len(input_tokens) * INPUT_COST_PER_TOKEN
+    output_costs = len(output_tokens) * OUTPUT_COST_PER_TOKEN
+    return input_costs + output_costs
 
 
 def estimate_token_usage(input_content: str, output_content: str) -> dict:
     """
     Estimate token usage for input and output content.
-
+    
     Args:
         input_content: The input/prompt content
         output_content: The output/completion content
-
+        
     Returns:
         dict with prompt_tokens, completion_tokens, and total_tokens
     """
-    try:
-        encoding = tiktoken.get_encoding(ENCODING_MODEL)
-        prompt_tokens = len(encoding.encode(input_content))
-        completion_tokens = len(encoding.encode(output_content))
-
-        return {
-            "prompt_tokens": prompt_tokens,
-            "completion_tokens": completion_tokens,
-            "total_tokens": prompt_tokens + completion_tokens
-        }
-    except Exception as e:
-        # If tiktoken fails, return default estimates
-        logging.getLogger(__name__).warning(f"Failed to estimate token usage: {e}")
-        return {
-            "prompt_tokens": len(input_content) // 4,  # Rough estimate: ~4 chars per token
-            "completion_tokens": len(output_content) // 4,
-            "total_tokens": (len(input_content) + len(output_content)) // 4
-        }
+    encoding = tiktoken.get_encoding(ENCODING_MODEL)
+    prompt_tokens = len(encoding.encode(input_content))
+    completion_tokens = len(encoding.encode(output_content))
+    
+    return {
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "total_tokens": prompt_tokens + completion_tokens
+    }
 
 
 def estimate_embedding_cost(model, docs):

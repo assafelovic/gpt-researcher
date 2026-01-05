@@ -56,9 +56,9 @@ class Memory:
 
                 _embeddings = AzureOpenAIEmbeddings(
                     model=model,
-                    azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT", ""),
-                    openai_api_key=os.environ.get("AZURE_OPENAI_API_KEY", ""),
-                    openai_api_version=os.environ.get("AZURE_OPENAI_API_VERSION", os.environ.get("OPENAI_API_VERSION", "2024-05-01-preview")),
+                    azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+                    openai_api_key=os.environ["AZURE_OPENAI_API_KEY"],
+                    openai_api_version=os.environ["AZURE_OPENAI_API_VERSION"],
                     **embedding_kwargs,
                 )
             case "cohere":

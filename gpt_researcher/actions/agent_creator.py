@@ -88,10 +88,6 @@ async def handle_json_error(response):
 
 
 def extract_json_with_regex(response):
-    if response is None:
-        logger.warning("Response is None in extract_json_with_regex")
-        return None
-
     json_match = re.search(r"{.*?}", response, re.DOTALL)
     if json_match:
         return json_match.group(0)

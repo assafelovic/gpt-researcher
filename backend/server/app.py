@@ -6,10 +6,6 @@ import logging
 import sys
 import warnings
 import httpx
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Suppress Pydantic V2 migration warnings
 warnings.filterwarnings("ignore", message="Valid config keys have changed in V2")
@@ -33,9 +29,21 @@ from server.server_utils import (
 )
 
 from server.websocket_manager import run_agent
-from utils import write_md_to_word, write_md_to_pdf
+from utils import write_md_to_word, write_md_to_pdf, write_text_to_md
 from gpt_researcher.utils.enum import Tone
 from chat.chat import ChatAgentWithMemory
+
+# Output file controls
+def _env_bool(name: str, default: bool) -> bool:
+    val = os.getenv(name)
+    if val is None:
+        return default
+    return str(val).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+# Default behavior: keep markdown for processing and PDF for preview; skip DOCX unless explicitly enabled.
+SAVE_MD = _env_bool("OUTPUT_SAVE_MD", True)
+SAVE_PDF = _env_bool("OUTPUT_SAVE_PDF", True)
+SAVE_DOCX = _env_bool("OUTPUT_SAVE_DOCX", False)
 
 # MongoDB services removed - no database persistence needed
 
@@ -57,7 +65,9 @@ class ResearchRequest(BaseModel):
     report_source: str
     tone: str
     headers: dict | None = None
-    user_id: str | None = None  # User ID (can also be in headers)
+    repo_name: str
+    branch_name: str
+    user_id: int | None = None  # User ID (can also be in headers)
     # Webhook URL is configured via environment variable WEBHOOK_URL, not passed in request
 
 
@@ -190,8 +200,16 @@ async def create_or_update_report(request: Request):
 
 async def write_report(research_request: ResearchRequest, research_id: str = None):
     try:
-        # Extract user_id from request (can be in user_id field or headers)
-        user_id = research_request.user_id or research_request.headers.get("user_id") if research_request.headers else None
+        # Determine user_id early so we can include it in webhook notifications as well
+        user_id: int | None = None
+        if hasattr(research_request, "user_id") and research_request.user_id:
+            user_id = research_request.user_id
+        elif research_request.headers and isinstance(research_request.headers, dict):
+            header_user_id = research_request.headers.get("user_id")
+            try:
+                user_id = int(header_user_id) if header_user_id is not None else None
+            except (TypeError, ValueError):
+                user_id = None
 
         report_information = await run_agent(
             task=research_request.task,
@@ -208,12 +226,14 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
             return_researcher=True
         )
 
-        docx_path = await write_md_to_word(report_information[0], research_id)
-        pdf_path = await write_md_to_pdf(report_information[0], research_id)
+        md_path = await write_text_to_md(report_information[0], research_id) if SAVE_MD else None
+        pdf_path = await write_md_to_pdf(report_information[0], research_id) if SAVE_PDF else None
+        docx_path = await write_md_to_word(report_information[0], research_id) if SAVE_DOCX else None
         if research_request.report_type != "multi_agents":
             report, researcher = report_information
             response = {
                 "research_id": research_id,
+                "user_id": user_id,
                 "research_information": {
                     "source_urls": researcher.get_source_urls(),
                     "research_costs": researcher.get_costs(),
@@ -223,11 +243,27 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
                     # "research_sources": researcher.get_research_sources(),  # Raw content of sources may be very large
                 },
                 "report": report,
+                "md_path": md_path,
                 "docx_path": docx_path,
                 "pdf_path": pdf_path
             }
         else:
-            response = { "research_id": research_id, "report": "", "docx_path": docx_path, "pdf_path": pdf_path }
+            # Keep schema stable even for multi_agents, since some webhook receivers validate fields strictly
+            response = {
+                "research_id": research_id,
+                "user_id": user_id,
+                "research_information": {
+                    "source_urls": [],
+                    "research_costs": 0.0,
+                    "token_usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+                    "visited_urls": [],
+                    "research_images": [],
+                },
+                "report": "",
+                "md_path": md_path,
+                "docx_path": docx_path,
+                "pdf_path": pdf_path
+            }
 
         # Send webhook notification (if configured in environment)
         await send_webhook_notification(
@@ -239,13 +275,10 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
 
         return response
     except Exception as e:
-        # Extract user_id from request for error webhook
-        user_id = research_request.user_id or research_request.headers.get("user_id") if research_request.headers else None
-        
         # Send error webhook (if configured in environment)
         await send_webhook_notification(
             research_id=research_id,
-            user_id=user_id,
+            user_id=research_request.user_id if hasattr(research_request, "user_id") else None,
             status="failed",
             error=str(e)
         )
@@ -254,10 +287,10 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
 
 async def send_webhook_notification(
     research_id: str,
+    user_id: str | None,
     status: str,
     response: Dict[str, Any] = None,
-    error: str = None,
-    user_id: str = None
+    error: str = None
 ):
     """
     Send webhook notification when report generation is complete or failed.
@@ -273,7 +306,6 @@ async def send_webhook_notification(
         status: "completed" or "failed"
         response: The response data (if completed)
         error: Error message (if failed)
-        user_id: The user ID from the research request (optional)
     """
     # Get webhook URL from environment variable
     webhook_url = os.getenv("WEBHOOK_URL")
@@ -284,20 +316,48 @@ async def send_webhook_notification(
     try:
         payload = {
             "research_id": research_id,
+            "user_id": user_id,
             "status": status,
             "timestamp": time.time()
         }
         
-        # Add user_id if provided
-        if user_id:
-            payload["user_id"] = user_id
-        
         if status == "completed" and response:
+            research_information = response.get("research_information") or {}
+            if not isinstance(research_information, dict):
+                research_information = {}
+            # Ensure commonly validated keys exist to avoid 400 from strict webhook receivers
+            research_information.setdefault("research_costs", 0.0)
+            research_information.setdefault(
+                "token_usage",
+                {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            )
+            research_information.setdefault("source_urls", [])
+            research_information.setdefault("visited_urls", [])
+            research_information.setdefault("research_images", [])
+
+            # Ensure token_usage is shaped correctly
+            token_usage = research_information.get("token_usage")
+            if not isinstance(token_usage, dict):
+                token_usage = {}
+            token_usage.setdefault("prompt_tokens", 0)
+            token_usage.setdefault("completion_tokens", 0)
+            token_usage.setdefault(
+                "total_tokens",
+                token_usage.get("prompt_tokens", 0) + token_usage.get("completion_tokens", 0),
+            )
+            research_information["token_usage"] = token_usage
+
+            # Ensure research_costs is numeric
+            try:
+                research_information["research_costs"] = float(research_information.get("research_costs", 0.0))
+            except (TypeError, ValueError):
+                research_information["research_costs"] = 0.0
+
             payload["data"] = {
                 "report": response.get("report", ""),
                 "docx_path": response.get("docx_path"),
                 "pdf_path": response.get("pdf_path"),
-                "research_information": response.get("research_information", {})
+                "research_information": research_information
             }
         elif status == "failed" and error:
             payload["error"] = error
@@ -322,21 +382,21 @@ async def generate_report(
 ):
     """
     Submit a report generation task.
-
+    
     This endpoint immediately returns a task_id and processes the report in the background.
     When complete, a webhook notification will be sent if WEBHOOK_URL is configured in environment.
     """
     from server.server_utils import sanitize_filename
-
+    
     research_id = sanitize_filename(f"task_{int(time.time())}_{research_request.task}")
-
+    
     # Prepare headers
     headers = research_request.headers or {}
-
+    
     # Ensure user_id is in headers if provided in request
     if hasattr(research_request, 'user_id') and research_request.user_id:
         headers["user_id"] = research_request.user_id
-
+    
     # If no retriever specified, use default from environment or config
     if "retriever" not in headers and "retrievers" not in headers:
         # Check environment variable first
@@ -346,13 +406,13 @@ async def generate_report(
         else:
             # Fall back to default retrievers: internal_biblio, internal_highlight, internal_file, noteexpress, tavily
             headers["retrievers"] = "internal_biblio,internal_highlight,internal_file,noteexpress,tavily"
-
+    
     # Update request headers
     research_request.headers = headers
-
+    
     # Add background task to generate report
     background_tasks.add_task(write_report, research_request, research_id)
-
+    
     # Return immediately with task_id
     return {
         "message": "Report generation task has been submitted.",

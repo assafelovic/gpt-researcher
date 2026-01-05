@@ -24,6 +24,11 @@ my-docs/
 
 #Ignore pycache
 **/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.pycache_tmp/
 
 #Ignore mypy cache
 .mypy_cache/

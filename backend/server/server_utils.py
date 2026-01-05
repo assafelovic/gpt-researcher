@@ -10,6 +10,17 @@ from fastapi.responses import JSONResponse, FileResponse
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher import GPTResearcher
 from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
+
+def _env_bool(name: str, default: bool) -> bool:
+    val = os.getenv(name)
+    if val is None:
+        return default
+    return str(val).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+# Default behavior: keep markdown for processing and PDF for preview; skip DOCX unless explicitly enabled.
+SAVE_MD = _env_bool("OUTPUT_SAVE_MD", True)
+SAVE_PDF = _env_bool("OUTPUT_SAVE_PDF", True)
+SAVE_DOCX = _env_bool("OUTPUT_SAVE_DOCX", False)
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
@@ -175,9 +186,9 @@ async def handle_human_feedback(data: str):
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
 
 async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
-    pdf_path = await write_md_to_pdf(report, filename)
-    docx_path = await write_md_to_word(report, filename)
-    md_path = await write_text_to_md(report, filename)
+    pdf_path = await write_md_to_pdf(report, filename) if SAVE_PDF else ""
+    docx_path = await write_md_to_word(report, filename) if SAVE_DOCX else ""
+    md_path = await write_text_to_md(report, filename) if SAVE_MD else ""
     return {"pdf": pdf_path, "docx": docx_path, "md": md_path}
 
 
