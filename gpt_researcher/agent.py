@@ -59,6 +59,7 @@ class GPTResearcher:
         mcp_configs: list[dict] | None = None,
         mcp_max_iterations: int | None = None,
         mcp_strategy: str | None = None,
+        custom_prompts: CustomPrompts | None = None,
         **kwargs
     ):
         """
@@ -113,12 +114,16 @@ class GPTResearcher:
                 - "fast" (default): Run MCP once with original query for best performance
                 - "deep": Run MCP for all sub-queries for maximum thoroughness  
                 - "disabled": Skip MCP entirely, use only web retrievers
+            custom_prompts (CustomPrompts, optional): Custom prompt overrides. If provided,
+                overrides the custom_prompts setting from config.
         """
         self.kwargs = kwargs
         self.query = query
         self.report_type = report_type
         self.cfg = Config(config_path)
         self.cfg.set_verbose(verbose)
+        if custom_prompts is not None:
+            self.cfg.custom_prompts = custom_prompts
         self.report_source = report_source if report_source else getattr(self.cfg, 'report_source', None)
         self.report_format = report_format
         self.max_subtopics = max_subtopics
