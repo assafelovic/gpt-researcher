@@ -17,6 +17,7 @@ async def write_report_introduction(
     websocket=None,
     cost_callback: callable = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    research_gap: str = "",
     **kwargs
 ) -> str:
     """
@@ -30,6 +31,7 @@ async def write_report_introduction(
         websocket: WebSocket connection for streaming output.
         cost_callback (callable, optional): Callback for calculating LLM costs.
         prompt_family: Family of prompts
+        research_gap: Identified research gap
 
     Returns:
         str: The generated introduction.
@@ -42,7 +44,8 @@ async def write_report_introduction(
                 {"role": "user", "content": prompt_family.generate_report_introduction(
                     question=query,
                     research_summary=context,
-                    language=config.language
+                    language=config.language,
+                    research_gap=research_gap
                 )},
             ],
             temperature=0.25,
@@ -109,6 +112,55 @@ async def write_conclusion(
         return conclusion
     except Exception as e:
         logger.error(f"Error in writing conclusion: {e}")
+    return ""
+
+
+async def write_research_gap(
+    query: str,
+    context: str,
+    config: Config,
+    websocket=None,
+    cost_callback: callable = None,
+    prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    **kwargs
+) -> str:
+    """
+    Write the research gap section.
+
+    Args:
+        query (str): The research query.
+        context (str): Context for the report.
+        config (Config): Configuration object.
+        websocket: WebSocket connection.
+        cost_callback: Callback for costs.
+        prompt_family: Family of prompts
+
+    Returns:
+        str: The generated research gap section.
+    """
+    try:
+        gap_section = await create_chat_completion(
+            model=config.smart_llm_model,
+            messages=[
+                {"role": "system", "content": "You are a research analyst expert in identifying gaps in existing literature."},
+                {"role": "user", "content": prompt_family.generate_research_gap_prompt(
+                    question=query,
+                    context=context,
+                    language=config.language
+                )},
+            ],
+            temperature=0.25,
+            llm_provider=config.smart_llm_provider,
+            stream=True,
+            websocket=websocket,
+            max_tokens=config.smart_token_limit,
+            llm_kwargs=config.llm_kwargs,
+            cost_callback=cost_callback,
+            **kwargs
+        )
+        return gap_section
+    except Exception as e:
+        logger.error(f"Error in writing research gap: {e}")
     return ""
 
 

@@ -655,13 +655,46 @@ Important:
 """
 
     @staticmethod
-    def generate_report_introduction(question: str, research_summary: str = "", language: str = "english", report_format: str = "apa") -> str:
+    def generate_research_gap_prompt(
+        question: str,
+        context: str,
+        total_words=500,
+        language: str = "english"
+    ) -> str:
+        """
+        Generates a prompt to identify research gaps based on the research context.
+        """
+        return f"""
+"{context}"
+
+Using the above research information, identify and analyze the key research gaps related to the topic: "{question}".
+
+Your task is to write a "## Research Gap" section for the final report.
+
+The section should:
+1.  Clearly identify 1-2 distinct areas where the current literature/information is missing, contradictory, or under-explored.
+2.  Explain WHY these gaps are significant.
+3.  Be specific to the provided context—do not invent generic gaps.
+4.  If the context is very comprehensive, focus on future implications or emerging trends that are not yet fully understood.
+5.  Be approximately {total_words} words.
+6.  Use proper markdown formatting.
+7.  Write in {language}.
+
+Return ONLY the markdown section content.
+"""
+
+    @staticmethod
+    def generate_report_introduction(question: str, research_summary: str = "", language: str = "english", report_format: str = "apa", research_gap: str = "") -> str:
+        gap_instruction = ""
+        if research_gap:
+            gap_instruction = f"Briefly mention the following identified research gap to highlight the report's value/motivation: {research_gap}\n"
+
         return f"""{research_summary}\n
 Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
 - The introduction should be succinct, well-structured, informative with markdown syntax.
 - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
 - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
-- You must use in-text citations in {report_format.upper()} format as markdown hyperlinks. 
+{gap_instruction}- You must use in-text citations in {report_format.upper()} format as markdown hyperlinks. 
 - Use in-text citations ONLY in this canonical form: **([Source](url))**.
 - The link label MUST be exactly "Source" (case-sensitive) to support downstream citation processing.
 Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.

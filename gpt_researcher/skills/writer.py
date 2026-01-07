@@ -200,7 +200,7 @@ class ReportGenerator:
 
         return conclusion
 
-    async def write_introduction(self):
+    async def write_introduction(self, research_gap: str = ""):
         """Write the introduction section of the report."""
         if self.researcher.verbose:
             await stream_output(
@@ -218,6 +218,7 @@ class ReportGenerator:
             websocket=self.researcher.websocket,
             cost_callback=self.researcher.add_costs,
             prompt_family=self.researcher.prompt_family,
+            research_gap=research_gap,
             **self.researcher.kwargs
         )
 
@@ -230,6 +231,38 @@ class ReportGenerator:
             )
 
         return introduction
+
+    async def write_research_gap(self):
+        """Write the research gap section of the report."""
+        if self.researcher.verbose:
+            await stream_output(
+                "logs",
+                "writing_research_gap",
+                f"🕵️ Writing research gap section for '{self.researcher.query}'...",
+                self.researcher.websocket,
+            )
+            
+        from ..actions.report_generation import write_research_gap
+        
+        gap_section = await write_research_gap(
+            query=self.researcher.query,
+            context=self.researcher.context,
+            config=self.researcher.cfg,
+            websocket=self.researcher.websocket,
+            cost_callback=self.researcher.add_costs,
+            prompt_family=self.researcher.prompt_family,
+            **self.researcher.kwargs
+        )
+
+        if self.researcher.verbose:
+            await stream_output(
+                "logs",
+                "research_gap_written",
+                f"📝 Research gap section written for '{self.researcher.query}'",
+                self.researcher.websocket,
+            )
+
+        return gap_section
 
     async def get_subtopics(self):
         """Retrieve subtopics for the research."""

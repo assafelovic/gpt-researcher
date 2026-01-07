@@ -400,11 +400,17 @@ class GPTResearcher:
         await self._log_event("research", step="conclusion_completed")
         return conclusion
 
-    async def write_introduction(self):
+    async def write_introduction(self, research_gap: str = ""):
         await self._log_event("research", step="writing_introduction")
-        intro = await self.report_generator.write_introduction()
+        intro = await self.report_generator.write_introduction(research_gap)
         await self._log_event("research", step="introduction_completed")
         return intro
+
+    async def write_research_gap(self):
+        await self._log_event("research", step="writing_research_gap")
+        gap = await self.report_generator.write_research_gap()
+        await self._log_event("research", step="research_gap_completed")
+        return gap
 
     async def quick_search(self, query: str, query_domains: list[str] = None) -> list[Any]:
         return await get_search_results(query, self.retrievers[0], query_domains=query_domains)

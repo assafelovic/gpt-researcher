@@ -109,9 +109,14 @@ class DetailedReport:
             logger.info(f"  {idx}. {subtopic.get('task', '')}")
         logger.info("-" * 80)
         
+        # Step 5: Generate Research Gap
+        logger.info("[Step 5] Identifying Research Gap...")
+        research_gap_content = await self.gpt_researcher.write_research_gap()
+        logger.info(f"[Step 5] Research Gap identified: {len(research_gap_content)} chars")
+
         # Step 6: Generate introduction
         logger.info("[Step 6] Writing introduction...")
-        report_introduction = await self.gpt_researcher.write_introduction()
+        report_introduction = await self.gpt_researcher.write_introduction(research_gap=research_gap_content)
         logger.info("[Step 6] Introduction completed")
         
         # Step 7: Generate full reports for reorganized subtopics
@@ -122,7 +127,7 @@ class DetailedReport:
         # Step 8: Construct final report
         logger.info("[Step 8] Constructing final detailed report...")
         self.gpt_researcher.visited_urls.update(self.global_urls)
-        report = await self._construct_detailed_report(report_introduction, report_body)
+        report = await self._construct_detailed_report(report_introduction, report_body, research_gap_content)
         logger.info("[Step 8] Final report constructed")
         logger.info("=" * 80)
         logger.info("Detailed report generation completed successfully")
@@ -543,10 +548,11 @@ class DetailedReport:
             logger.error(f"Error generating subtopic report for {current_subtopic_task}: {e}")
             return {"topic": {"task": current_subtopic_task}, "report": f"# {current_subtopic_task}\n\n*Error: {str(e)}*"}
 
-    async def _construct_detailed_report(self, introduction: str, report_body: str) -> str:
+    async def _construct_detailed_report(self, introduction: str, report_body: str, research_gap: str = "") -> str:
         toc = self.gpt_researcher.table_of_contents(report_body)
         conclusion = await self.gpt_researcher.write_report_conclusion(report_body)
         conclusion_with_references = self.gpt_researcher.add_references(
             conclusion, self.gpt_researcher.visited_urls)
-        report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
+        # Place Research Gap before Conclusion
+        report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{research_gap}\n\n{conclusion_with_references}"
         return report
