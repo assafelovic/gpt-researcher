@@ -726,7 +726,15 @@ class ResearchConductor:
         return new_urls
 
     async def _search_relevant_source_urls(self, query, query_domains: list | None = None):
-        new_search_urls = []
+        """
+        Run retrievers to obtain candidate source URLs and/or inline content.
+
+        Some retrievers (e.g. internal vector search) return content directly and may
+        provide non-resolvable identifiers in `href`. For those, we keep them for
+        references but skip URL scraping.
+        """
+        new_search_urls: list[str] = []
+        inline_results: list[dict] = []
         if query_domains is None:
             query_domains = []
 
@@ -739,7 +747,15 @@ class ResearchConductor:
                 
             try:
                 # Instantiate the retriever with the sub-query
-                retriever = retriever_class(query, query_domains=query_domains)
+                try:
+                    retriever = retriever_class(
+                        query,
+                        headers=self.researcher.headers,
+                        query_domains=query_domains,
+                    )
+                except TypeError:
+                    # Compatibility: some retrievers may not accept `headers`
+                    retriever = retriever_class(query, query_domains=query_domains)
 
                 # Perform the search using the current retriever
                 search_results = await asyncio.to_thread(
@@ -747,8 +763,26 @@ class ResearchConductor:
                 )
 
                 # Collect new URLs from search results
-                search_urls = [url.get("href") for url in search_results if url.get("href")]
-                new_search_urls.extend(search_urls)
+                for item in search_results or []:
+                    if not isinstance(item, dict):
+                        continue
+                    url = item.get("url") or item.get("href")
+                    if not url:
+                        continue
+
+                    # Some results include inline content and should not be scraped by URL.
+                    if item.get("skip_scrape") and item.get("raw_content"):
+                        if url not in self.researcher.visited_urls:
+                            self.researcher.visited_urls.add(url)
+                        # Keep SearchAPI-shaped keys for downstream compressors
+                        inline_results.append({
+                            "url": url,
+                            "title": item.get("title", ""),
+                            "raw_content": item.get("raw_content", ""),
+                        })
+                        continue
+
+                    new_search_urls.append(url)
             except Exception as e:
                 self.logger.error(f"Error searching with {retriever_class.__name__}: {e}")
 
@@ -756,7 +790,7 @@ class ResearchConductor:
         new_search_urls = await self._get_new_urls(new_search_urls)
         random.shuffle(new_search_urls)
 
-        return new_search_urls
+        return new_search_urls, inline_results
 
     async def _scrape_data_by_urls(self, sub_query, query_domains: list | None = None):
         """
@@ -771,7 +805,7 @@ class ResearchConductor:
         if query_domains is None:
             query_domains = []
 
-        new_search_urls = await self._search_relevant_source_urls(sub_query, query_domains)
+        new_search_urls, inline_results = await self._search_relevant_source_urls(sub_query, query_domains)
 
         # Log the research process if verbose mode is on
         if self.researcher.verbose:
@@ -786,9 +820,10 @@ class ResearchConductor:
         scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
 
         if self.researcher.vector_store:
-            self.researcher.vector_store.load(scraped_content)
+            # Include inline results in the vector store and similarity selection
+            self.researcher.vector_store.load(scraped_content + inline_results)
 
-        return scraped_content
+        return scraped_content + inline_results
 
     async def _search(self, retriever, query):
         """

@@ -63,8 +63,6 @@ export INTERNAL_API_BASE_URL="http://unob.ivy:8080"
   "report_type": "research_report",
   "report_source": "web",
   "tone": "objective",
-  "repo_name": "",
-  "branch_name": "",
   "user_id": "user123"
   // 不需要指定 retriever，会自动使用 DEFAULT_RETRIEVERS
 }

@@ -27,6 +27,7 @@ from server.server_utils import (
     update_environment_variables, handle_file_upload, handle_file_deletion,
     execute_multi_agents, handle_websocket_communication
 )
+from server.server_utils import CustomLogsHandler
 
 from server.websocket_manager import run_agent
 from utils import write_md_to_word, write_md_to_pdf, write_text_to_md
@@ -65,8 +66,6 @@ class ResearchRequest(BaseModel):
     report_source: str
     tone: str
     headers: dict | None = None
-    repo_name: str
-    branch_name: str
     user_id: int | None = None  # User ID (can also be in headers)
     # Webhook URL is configured via environment variable WEBHOOK_URL, not passed in request
 
@@ -198,7 +197,7 @@ async def create_or_update_report(request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-async def write_report(research_request: ResearchRequest, research_id: str = None):
+async def write_report(research_request: ResearchRequest, research_id: str = None, logs_handler: CustomLogsHandler | None = None):
     try:
         # Determine user_id early so we can include it in webhook notifications as well
         user_id: int | None = None
@@ -218,8 +217,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
             source_urls=[],
             document_urls=[],
             tone=Tone[research_request.tone],
-            websocket=None,
-            stream_output=None,
+            websocket=logs_handler,
             headers=research_request.headers,
             query_domains=[],
             config_path="",
@@ -265,6 +263,26 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
                 "pdf_path": pdf_path
             }
 
+        # Persist a final snapshot into outputs/{research_id}.json when invoked via HTTP (/report/)
+        if logs_handler is not None:
+            try:
+                await logs_handler.send_json({
+                    "query": research_request.task,
+                    "report": response.get("report", ""),
+                    "costs": response.get("research_information", {}).get("research_costs", 0.0),
+                    "token_usage": response.get("research_information", {}).get("token_usage", {}),
+                    "sources": response.get("research_information", {}).get("source_urls", []),
+                    "context": [],  # keep as empty to avoid huge dumps; events contain details if streamed
+                    "output": {
+                        "md": response.get("md_path") or "",
+                        "pdf": response.get("pdf_path") or "",
+                        "docx": response.get("docx_path") or "",
+                        "json": logs_handler.log_file,
+                    }
+                })
+            except Exception as e:
+                logger.warning(f"Failed to write final JSON log snapshot: {e}")
+
         # Send webhook notification (if configured in environment)
         await send_webhook_notification(
             research_id=research_id,
@@ -287,7 +305,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
 
 async def send_webhook_notification(
     research_id: str,
-    user_id: str | None,
+    user_id: int | None,
     status: str,
     response: Dict[str, Any] = None,
     error: str = None
@@ -314,11 +332,14 @@ async def send_webhook_notification(
         return
     
     try:
+        # Normalize timestamps and payload types to satisfy strict webhook schemas
+        timestamp = int(time.time())
+
         payload = {
             "research_id": research_id,
             "user_id": user_id,
             "status": status,
-            "timestamp": time.time()
+            "timestamp": timestamp
         }
         
         if status == "completed" and response:
@@ -355,22 +376,72 @@ async def send_webhook_notification(
 
             payload["data"] = {
                 "report": response.get("report", ""),
-                "docx_path": response.get("docx_path"),
-                "pdf_path": response.get("pdf_path"),
+                # Keep paths as strings (some receivers reject null)
+                "md_path": response.get("md_path") or "",
+                "docx_path": response.get("docx_path") or "",
+                "pdf_path": response.get("pdf_path") or "",
                 "research_information": research_information
             }
         elif status == "failed" and error:
+            # Some receivers validate `data.research_information` even for failures.
             payload["error"] = error
+            payload["data"] = {
+                "report": "",
+                "md_path": "",
+                "docx_path": "",
+                "pdf_path": "",
+                "research_information": {
+                    "research_costs": 0.0,
+                    "token_usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+                    "source_urls": [],
+                    "visited_urls": [],
+                    "research_images": [],
+                },
+            }
+
+        # Log payload (redact markdown report content to avoid huge logs)
+        try:
+            log_payload = json.loads(json.dumps(payload))  # deep copy via json-serialize (payload is json-safe)
+            data = log_payload.get("data")
+            if isinstance(data, dict) and "report" in data:
+                report_text = data.get("report") or ""
+                if not isinstance(report_text, str):
+                    report_text = str(report_text)
+                preview_len = 240
+                data["report"] = report_text[:preview_len]
+                data["report_preview_len"] = min(len(report_text), preview_len)
+                data["report_total_len"] = len(report_text)
+            logger.info(f"Webhook outgoing payload (report truncated): {json.dumps(log_payload, ensure_ascii=False)}")
+        except Exception as e:
+            logger.warning(f"Failed to log webhook payload preview: {e}")
         
         # Prepare request headers with API key if configured
         headers = {}
         webhook_api_key = os.getenv("WEBHOOK_API_KEY")
         if webhook_api_key:
             headers["x-api-key"] = webhook_api_key
+        # Some webhook receivers enforce host allow-lists and may reject `host.docker.internal`.
+        # Allow overriding the Host header for compatibility (e.g. set to "localhost:8081").
+        webhook_host_header = os.getenv("WEBHOOK_HOST_HEADER")
+        if webhook_host_header:
+            headers["Host"] = webhook_host_header
         
         async with httpx.AsyncClient(timeout=10.0) as client:
             result = await client.post(webhook_url, json=payload, headers=headers)
-            result.raise_for_status()
+            try:
+                result.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                # Log receiver response body for fast debugging (especially on 400)
+                resp_text = ""
+                try:
+                    resp_text = e.response.text
+                except Exception:
+                    resp_text = "<unable to read response body>"
+                logger.error(
+                    f"Webhook receiver returned {e.response.status_code} for research_id={research_id}. "
+                    f"Response body: {resp_text}"
+                )
+                raise
             logger.info(f"Webhook notification sent successfully to {webhook_url} for research_id: {research_id}")
     except Exception as e:
         logger.error(f"Failed to send webhook notification to {webhook_url}: {e}")
@@ -389,6 +460,14 @@ async def generate_report(
     from server.server_utils import sanitize_filename
     
     research_id = sanitize_filename(f"task_{int(time.time())}_{research_request.task}")
+
+    # Create per-request JSON log file (even for HTTP /report/ calls)
+    logs_handler = CustomLogsHandler(None, research_request.task, sanitized_filename=research_id)
+    # Seed basic metadata
+    try:
+        await logs_handler.send_json({"query": research_request.task})
+    except Exception as e:
+        logger.warning(f"Failed to initialize JSON log file: {e}")
     
     # Prepare headers
     headers = research_request.headers or {}
@@ -411,13 +490,14 @@ async def generate_report(
     research_request.headers = headers
     
     # Add background task to generate report
-    background_tasks.add_task(write_report, research_request, research_id)
+    background_tasks.add_task(write_report, research_request, research_id, logs_handler)
     
     # Return immediately with task_id
     return {
         "message": "Report generation task has been submitted.",
         "research_id": research_id,
-        "status": "processing"
+        "status": "processing",
+        "json_path": os.path.relpath(logs_handler.log_file)
     }
 
 

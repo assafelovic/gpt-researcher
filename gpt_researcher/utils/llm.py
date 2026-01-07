@@ -10,7 +10,7 @@ from langchain_core.prompts import PromptTemplate
 from gpt_researcher.llm_provider.generic.base import NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, ReasoningEfforts
 
 from ..prompts import PromptFamily
-from .costs import estimate_llm_cost
+from .costs import estimate_llm_cost, calculate_llm_cost
 from .validators import Subtopics
 import os
 
@@ -86,23 +86,71 @@ async def create_chat_completion(
         )
 
         if cost_callback:
-            llm_costs = estimate_llm_cost(str(messages), response, model=model)
-            cost_callback(llm_costs)
-            # Also track token usage - cost_callback is typically add_costs method bound to researcher instance
-            try:
+            # Prefer provider-reported usage when available (more accurate than estimation)
+            usage = getattr(provider, "last_usage", None)
+            if isinstance(usage, dict) and isinstance(usage.get("prompt_tokens"), int) and isinstance(usage.get("completion_tokens"), int):
+                llm_costs = calculate_llm_cost(
+                    prompt_tokens=int(usage["prompt_tokens"]),
+                    completion_tokens=int(usage["completion_tokens"]),
+                    model=model,
+                )
+                token_usage = {
+                    "prompt_tokens": int(usage["prompt_tokens"]),
+                    "completion_tokens": int(usage["completion_tokens"]),
+                    "total_tokens": int(usage.get("total_tokens", int(usage["prompt_tokens"]) + int(usage["completion_tokens"]))),
+                }
+            else:
+                llm_costs = estimate_llm_cost(str(messages), response, model=model)
                 from .costs import estimate_token_usage
                 token_usage = estimate_token_usage(str(messages), response, model=model)
-                # Check if the callback is a bound method and has access to researcher instance
-                if hasattr(cost_callback, '__self__'):
-                    researcher = cost_callback.__self__
-                    if hasattr(researcher, 'add_token_usage'):
-                        researcher.add_token_usage(
-                            prompt_tokens=token_usage["prompt_tokens"],
-                            completion_tokens=token_usage["completion_tokens"]
-                        )
+
+            # Sanity check: if provider usage looks implausibly small vs text estimation, prefer estimation
+            # (some streaming providers expose partial/delta usage metadata).
+            try:
+                from .costs import estimate_token_usage
+                est = estimate_token_usage(str(messages), response, model=model)
+                
+                provider_completion = token_usage.get("completion_tokens", 0)
+                est_completion = est.get("completion_tokens", 0)
+                
+                # If estimate is significantly larger than provider usage, trust estimate.
+                if (
+                    isinstance(provider_completion, int)
+                    and isinstance(est_completion, int)
+                    and est_completion > provider_completion * 1.25
+                ):
+                    logging.getLogger(__name__).warning(
+                        f"Token usage mismatch (provider vs estimate). "
+                        f"provider={token_usage} estimate={est} model={model}. Using estimate."
+                    )
+                    token_usage = est
+                    llm_costs = calculate_llm_cost(
+                        prompt_tokens=int(token_usage["prompt_tokens"]),
+                        completion_tokens=int(token_usage["completion_tokens"]),
+                        model=model,
+                    )
             except Exception as e:
-                # Silently fail if token tracking fails - don't break the main flow
-                logging.getLogger(__name__).debug(f"Failed to track token usage: {e}")
+                logging.getLogger(__name__).warning(f"Error validating token usage: {e}")
+
+            # Track cost and token usage
+            try:
+                if cost_callback:
+                    # Try passing both cost and token_usage
+                    cost_callback(llm_costs, token_usage=token_usage)
+            except TypeError:
+                # Fallback for callbacks that don't support token_usage arg
+                if cost_callback:
+                    cost_callback(llm_costs)
+            except Exception as e:
+                logging.getLogger(__name__).warning(f"Error in cost_callback: {e}")
+
+            # Log usage
+            logging.getLogger("research").info(
+                f"LLM Call Usage: model={model} "
+                f"prompt={token_usage.get('prompt_tokens', 0)} "
+                f"completion={token_usage.get('completion_tokens', 0)} "
+                f"total={token_usage.get('total_tokens', 0)}"
+            )
 
         return response
 
@@ -115,6 +163,7 @@ async def construct_subtopics(
     data: str,
     config,
     subtopics: list = [],
+    cost_callback: callable | None = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
     **kwargs
 ) -> list:
@@ -142,31 +191,27 @@ async def construct_subtopics(
                 "format_instructions": parser.get_format_instructions()},
         )
 
-        provider_kwargs = {'model': config.smart_llm_model}
+        rendered = prompt.format(
+            task=task,
+            data=data,
+            subtopics=subtopics,
+            max_subtopics=config.max_subtopics,
+        )
 
-        if config.llm_kwargs:
-            provider_kwargs.update(config.llm_kwargs)
+        # Use the unified create_chat_completion path so token/cost accounting is consistent.
+        response = await create_chat_completion(
+            messages=[{"role": "user", "content": rendered}],
+            model=config.smart_llm_model,
+            llm_provider=config.smart_llm_provider,
+            llm_kwargs=getattr(config, "llm_kwargs", None),
+            max_tokens=config.smart_token_limit,
+            temperature=getattr(config, "temperature", 0.4),
+            reasoning_effort=ReasoningEfforts.High.value if config.smart_llm_model in SUPPORT_REASONING_EFFORT_MODELS else ReasoningEfforts.Medium.value,
+            cost_callback=cost_callback,
+            **kwargs,
+        )
 
-        if config.smart_llm_model in SUPPORT_REASONING_EFFORT_MODELS:
-            provider_kwargs['reasoning_effort'] = ReasoningEfforts.High.value
-        else:
-            provider_kwargs['temperature'] = config.temperature
-            provider_kwargs['max_tokens'] = config.smart_token_limit
-
-        provider = get_llm(config.smart_llm_provider, **provider_kwargs)
-
-        model = provider.llm
-
-        chain = prompt | model | parser
-
-        output = await chain.ainvoke({
-            "task": task,
-            "data": data,
-            "subtopics": subtopics,
-            "max_subtopics": config.max_subtopics
-        }, **kwargs)
-
-        return output
+        return parser.parse(response)
 
     except Exception as e:
         print("Exception in parsing subtopics : ", e)

@@ -30,10 +30,11 @@ logger = logging.getLogger(__name__)
 
 class CustomLogsHandler:
     """Custom handler to capture streaming logs from the research process"""
-    def __init__(self, websocket, task: str):
+    def __init__(self, websocket, task: str, sanitized_filename: str | None = None):
         self.logs = []
         self.websocket = websocket
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
+        if not sanitized_filename:
+            sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
         self.log_file = os.path.join("outputs", f"{sanitized_filename}.json")
         self.timestamp = datetime.now().isoformat()
         # Initialize log file with metadata
@@ -47,7 +48,8 @@ class CustomLogsHandler:
                     "sources": [],
                     "context": [],
                     "report": "",
-                    "costs": 0.0
+                    "costs": 0.0,
+                    "token_usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
                 }
             }, f, indent=2)
 

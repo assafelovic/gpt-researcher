@@ -65,7 +65,9 @@ class BaseInternalBiblioRetriever:
         )
         
         # Construct the API endpoint
-        self.endpoint = f"{self.base_url}/internal/biblios/semantic_search/"
+        base = str(self.base_url).rstrip("/")
+        # Current internal API expects: POST /api/v2/internal/biblios/vector_search/
+        self.endpoint = f"{base}/internal/biblios/vector_search/"
         
         logger.info(
             f"Initialized {self.__class__.__name__} with user_id={self.user_id}, "
@@ -97,9 +99,17 @@ class BaseInternalBiblioRetriever:
             ]
         """
         try:
+            # Determine request type:
+            # - allow callers to override via headers["internal_api_type"]
+            # - normalize to match internal API enum expectations (commonly lowercase)
+            req_type = self.headers.get("internal_api_type") or self.search_type
+            if isinstance(req_type, str):
+                req_type = req_type.strip()
+                req_type = req_type.lower()
+
             # Prepare request parameters
             params = {
-                "type": self.search_type,
+                "type": req_type,
                 "user_id": self.user_id,
                 "query": self.query
             }
@@ -115,9 +125,10 @@ class BaseInternalBiblioRetriever:
                 request_headers["x-api-key"] = self.api_key
             
             # Make the API request
-            response = requests.get(
+            # Internal API expects POST (JSON body). Do not fall back to GET.
+            response = requests.post(
                 self.endpoint,
-                params=params,
+                json=params,
                 headers=request_headers,
                 timeout=30  # 30 second timeout
             )
@@ -220,16 +231,39 @@ class BaseInternalBiblioRetriever:
         """
         if not isinstance(item, dict):
             return None
+
+        # Many internal endpoints (e.g. vector_search) return:
+        # { "content": "...", "metadata": {...}, "score": ... }
+        metadata = item.get("metadata")
+        if not isinstance(metadata, dict):
+            metadata = {}
+        structured = metadata.get("structured_data")
+        if not isinstance(structured, dict):
+            structured = {}
         
         # Try to extract href/url/id (required)
-        href = (
+        # Prefer DOI link if available (most useful stable identifier)
+        doi = structured.get("doi")
+        if isinstance(doi, str):
+            doi = doi.strip()
+        if doi:
+            href = f"https://doi.org/{doi}"
+        else:
+            href = (
             item.get("href") or
             item.get("url") or
             item.get("id") or
             item.get("source") or
             item.get("link") or
+            # Internal IDs commonly live under metadata
+            metadata.get("biblio_id") or
+            metadata.get("highlight_id") or
+            metadata.get("file_id") or
+            metadata.get("doc_id") or
+            metadata.get("document_id") or
+            metadata.get("id") or
             None
-        )
+            )
         
         # Try to extract body/content/text (required)
         body = (
@@ -239,6 +273,9 @@ class BaseInternalBiblioRetriever:
             item.get("abstract") or
             item.get("description") or
             item.get("snippet") or
+            # Some internal endpoints use metadata for text fields, too
+            metadata.get("content") or
+            metadata.get("text") or
             None
         )
         
@@ -259,15 +296,51 @@ class BaseInternalBiblioRetriever:
         
         # Convert href to string and format for display
         href_str = str(href)
+
+        # If we only have a biblio_id and no DOI, provide a deterministic (but possibly non-resolvable) URL
+        if href_str.isdigit():
+            try:
+                biblio_id = metadata.get("biblio_id")
+                if biblio_id is not None:
+                    href_str = f"https://www.ivysci.com/biblio/{biblio_id}"
+            except Exception:
+                pass
         
         # If href looks like an ID (not a URL), we can optionally format it
         # For internal biblios, IDs are typically used as-is
         # The href will be displayed in references as: [id](id)
         # If you want a clickable link, provide a full URL in the href field
         
+        title = (
+            structured.get("title")
+            or metadata.get("title")
+            or structured.get("paper_title")
+            or ""
+        )
+        year = structured.get("year") if isinstance(structured.get("year"), (str, int)) else ""
+        doi_for_note = structured.get("doi") if isinstance(structured.get("doi"), str) else ""
+        citation_hint_parts = []
+        if title:
+            citation_hint_parts.append(str(title))
+        if year:
+            citation_hint_parts.append(str(year))
+        if doi_for_note:
+            citation_hint_parts.append(f"doi:{doi_for_note.strip()}")
+        citation_hint = " | ".join([p for p in citation_hint_parts if p]).strip()
+        if citation_hint:
+            raw_content = f"Citation: {citation_hint}\n\n{str(body)}"
+        else:
+            raw_content = str(body)
+
+        # IMPORTANT: downstream context compressors expect SearchAPI-shaped keys:
+        # - url/raw_content/title (see gpt_researcher/context/retriever.py)
         return {
-            "href": href_str,
-            "body": str(body)
+            "url": href_str,
+            "title": str(title) if title is not None else "",
+            "raw_content": raw_content,
+            # Internal vector_search results already contain the relevant content;
+            # avoid treating url as a URL to be scraped again.
+            "skip_scrape": True,
         }
 
 
@@ -307,4 +380,4 @@ class InternalFileRetriever(BaseInternalBiblioRetriever):
     
     @property
     def search_type(self) -> str:
-        return "File"
+        return "file"

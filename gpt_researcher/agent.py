@@ -474,11 +474,27 @@ class GPTResearcher:
         self.token_usage["total_tokens"] = (
             self.token_usage["prompt_tokens"] + self.token_usage["completion_tokens"]
         )
+        # Log token usage update to JSON handler
+        if self.log_handler:
+            # We need to use create_task because _log_event is async and add_token_usage is sync
+            import asyncio
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self._log_event("research", step="token_usage_update", details={
+                    "added_prompt_tokens": prompt_tokens,
+                    "added_completion_tokens": completion_tokens,
+                    "total_prompt_tokens": self.token_usage["prompt_tokens"],
+                    "total_completion_tokens": self.token_usage["completion_tokens"],
+                    "total_tokens": self.token_usage["total_tokens"]
+                }))
+            except RuntimeError:
+                # In case there is no running loop (e.g. strict sync context), we verify if we can just skip or warn
+                pass
 
     def set_verbose(self, verbose: bool):
         self.verbose = verbose
 
-    def add_costs(self, cost: float) -> None:
+    def add_costs(self, cost: float, **kwargs) -> None:
         if not isinstance(cost, (float, int)):
             raise ValueError("Cost must be an integer or float")
         self.research_costs += cost
@@ -487,3 +503,13 @@ class GPTResearcher:
                 "cost": cost,
                 "total_cost": self.research_costs
             })
+            
+        # Check for token usage in kwargs to update metrics without relying on reflection
+        if "token_usage" in kwargs:
+            usage = kwargs["token_usage"]
+            if isinstance(usage, dict):
+                self.add_token_usage(
+                    prompt_tokens=usage.get("prompt_tokens", 0),
+                    completion_tokens=usage.get("completion_tokens", 0)
+                )
+

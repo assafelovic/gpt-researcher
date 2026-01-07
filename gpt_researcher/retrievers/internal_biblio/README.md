@@ -145,8 +145,20 @@ export INTERNAL_API_BASE_URL=http://unob.ivy:8080
 Retriever 会调用以下 API 端点：
 
 ```
-GET {base_url}/internal/biblios/semantic_search/?type={type}&user_id={user_id}&query={query}
+POST {base_url}/internal/biblios/vector_search/
 ```
+
+返回项可能是向量检索格式，例如：
+
+```json
+{
+  "content": "....",
+  "metadata": { "biblio_id": 123 },
+  "score": 0.87
+}
+```
+
+Retriever 会优先从 `href/url/id` 取标识符；如果不存在，会从 `metadata.biblio_id`（以及 `highlight_id/file_id/...`）取 **id** 作为标识符（不会强行拼不可访问的 URL）。 
 
 其中：
 

@@ -226,6 +226,14 @@ class DetailedReport:
                 self.global_context = list(set(subtopic_assistant.context))
                 self.global_urls.update(subtopic_assistant.visited_urls)
 
+                # Aggregate costs and tokens from subtopic assistant
+                self.gpt_researcher.add_costs(subtopic_assistant.get_costs())
+                sub_token_usage = subtopic_assistant.get_token_usage()
+                self.gpt_researcher.add_token_usage(
+                    prompt_tokens=sub_token_usage.get("prompt_tokens", 0),
+                    completion_tokens=sub_token_usage.get("completion_tokens", 0)
+                )
+
                 # Store subtopic with its headers and context
                 subtopics_with_headers.append({
                     "task": current_subtopic_task,
@@ -515,6 +523,14 @@ class DetailedReport:
             self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
             self.global_context = list(set(subtopic_assistant.context))
             self.global_urls.update(subtopic_assistant.visited_urls)
+
+            # Aggregate costs and tokens from subtopic assistant
+            self.gpt_researcher.add_costs(subtopic_assistant.get_costs())
+            sub_token_usage = subtopic_assistant.get_token_usage()
+            self.gpt_researcher.add_token_usage(
+                prompt_tokens=sub_token_usage.get("prompt_tokens", 0),
+                completion_tokens=sub_token_usage.get("completion_tokens", 0)
+            )
 
             self.existing_headers.append({
                 "subtopic task": current_subtopic_task,

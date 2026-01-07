@@ -1,7 +1,10 @@
 from typing import Dict, Optional
 import json
+import os
+import logging
 
 from ..utils.llm import construct_subtopics
+from ..utils.costs import estimate_token_usage
 from ..actions import (
     stream_output,
     generate_report,
@@ -9,6 +12,21 @@ from ..actions import (
     write_report_introduction,
     write_conclusion
 )
+from ..actions.markdown_processing import (
+    sanitize_citation_links,
+    canonicalize_intext_citations,
+    prune_unsupported_citation_claims,
+)
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    val = os.getenv(name)
+    if val is None:
+        return default
+    return str(val).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
+logger = logging.getLogger(__name__)
 
 
 class ReportGenerator:
@@ -53,6 +71,23 @@ class ReportGenerator:
             )
 
         context = ext_context or self.researcher.context
+        allowed_urls = set()
+        try:
+            allowed_urls = set(getattr(self.researcher, "visited_urls", set()) or set())
+        except Exception:
+            allowed_urls = set()
+
+        # Add an allow-list of sources into the prompt context to reduce hallucinated citations.
+        if allowed_urls and _env_bool("INCLUDE_ALLOWED_SOURCES_IN_CONTEXT", True):
+            limit = int(os.getenv("ALLOWED_SOURCES_LIMIT", "200"))
+            allowed_list = list(allowed_urls)[: max(0, limit)]
+            allowed_block = (
+                "\n\nALLOWED_SOURCES (cite ONLY these URLs; do NOT invent papers/authors/domains; "
+                "if you cannot support a claim with these sources, omit the claim):\n"
+                + "\n".join(f"- {u}" for u in allowed_list)
+            )
+            context = f"{context}{allowed_block}"
+
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -76,6 +111,45 @@ class ReportGenerator:
             report_params["cost_callback"] = self.researcher.add_costs
 
         report = await generate_report(**report_params, **self.researcher.kwargs)
+        report = sanitize_citation_links(report, allowed_urls=allowed_urls if allowed_urls else None)
+        report = canonicalize_intext_citations(report, allowed_urls=allowed_urls if allowed_urls else None)
+        # Optional stricter guard: drop uncited "study found X%" style hallucination sentences
+        if _env_bool("STRICT_CITATIONS", True):
+            report = prune_unsupported_citation_claims(report)
+
+        # Token/cost snapshot right after markdown is produced (helps debugging accounting gaps)
+        try:
+            log_subtopic = _env_bool("LOG_TOKEN_USAGE_SUBTOPIC", False)
+            should_log = _env_bool("LOG_TOKEN_USAGE_SNAPSHOT", True) and (
+                log_subtopic or self.researcher.report_type != "subtopic_report"
+            )
+            if should_log:
+                total_usage = self.researcher.get_token_usage()
+                total_cost = self.researcher.get_costs()
+                # Estimate the report's own size in tokens (rough, but good sanity check)
+                report_est = estimate_token_usage("", report or "", model=self.researcher.cfg.smart_llm_model)
+                snapshot = {
+                    "phase": "report_generated",
+                    "report_type": self.researcher.report_type,
+                    "model": self.researcher.cfg.smart_llm_model,
+                    "report_chars": len(report or ""),
+                    "report_bytes": len((report or "").encode("utf-8")),
+                    "report_estimated_tokens": report_est,
+                    "total_token_usage": total_usage,
+                    "total_costs": total_cost,
+                }
+                logger.info(f"TOKEN_USAGE_SNAPSHOT: {json.dumps(snapshot, ensure_ascii=False)}")
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "token_usage_snapshot",
+                        json.dumps(snapshot, ensure_ascii=False),
+                        self.researcher.websocket,
+                        True,
+                        snapshot,
+                    )
+        except Exception as e:
+            logger.debug(f"Failed to log token usage snapshot: {e}")
 
         if self.researcher.verbose:
             await stream_output(
@@ -172,6 +246,7 @@ class ReportGenerator:
             data=self.researcher.context,
             config=self.researcher.cfg,
             subtopics=self.researcher.subtopics,
+            cost_callback=self.researcher.add_costs,
             prompt_family=self.researcher.prompt_family,
             **self.researcher.kwargs
         )

@@ -182,10 +182,10 @@ The response should contain ONLY the list.
         if report_source == ReportSource.Web.value:
             reference_prompt = f"""
 You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
-Every url should be hyperlinked: [url website](url)
+Every URL you cite MUST be a real source URL taken from the provided information (see the ALLOWED_SOURCES list if present). Do NOT invent domains.
 Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report:
 
-eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
+If you reference a source, hyperlink it using a real URL from the provided sources.
 """
         else:
             reference_prompt = f"""
@@ -207,10 +207,13 @@ Please follow all of the following guidelines in your report:
 - You MUST write the report with markdown syntax and {report_format} format.
 - Structure your report with clear markdown headers: use # for the main title, ## for major sections, and ### for subsections.
 - Use markdown tables when presenting structured data or comparisons to enhance readability.
+- Avoid repetitive phrasing (e.g., don't start every paragraph with "A study found..." or end every section with the same "reported X%..." cadence). Vary sentence structure by embedding numbers mid-sentence, using different subject constructions, and alternating between active/passive voice when appropriate.
 - You MUST prioritize the relevance, reliability, and significance of the sources you use. Choose trusted sources over less reliable ones.
 - You must also prioritize new articles over older articles if the source can be trusted.
 - You MUST NOT include a table of contents, but DO include proper markdown headers (# ## ###) to structure your report clearly.
-- Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+- Use in-text citations ONLY in this canonical form: **([Source](url))**.
+- The link label MUST be exactly "Source" (case-sensitive) to support downstream citation processing.
+- Only link to URLs that appear in the provided sources (do not fabricate new URLs). If you cannot cite a claim, omit it.
 - Don't forget to add a reference list at the end of the report in {report_format} format and full url links without hyperlinks.
 - {reference_prompt}
 - {tone_prompt}
@@ -381,7 +384,8 @@ Additional requirements:
 - You MUST determine your own concrete and valid opinion based on the given information. Do NOT defer to general and meaningless conclusions.
 - You MUST prioritize the relevance, reliability, and significance of the sources you use. Choose trusted sources over less reliable ones.
 - You must also prioritize new articles over older articles if the source can be trusted.
-- Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+- Use in-text citations ONLY in this canonical form: **([Source](url))** (placed at the end of the sentence/paragraph).
+- The link label MUST be exactly "Source" (case-sensitive). Do not use author/year/title as the link label.
 - {tone_prompt}
 - Write in {language}
 
@@ -526,7 +530,7 @@ IMPORTANT:Content and Sections Uniqueness:
 
     ### Section Header
 
-    This is a sample text ([in-text citation](url)).
+    This is a sample text ([Source](https://example.org)).
 
 - Use H2 for the main subtopic header (##) and H3 for subsections (###).
 - Use smaller Markdown headers (e.g., H2 or H3) for content structure, avoiding the largest header (H1) as it will be used for the larger report's heading.
@@ -544,7 +548,7 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if
 - You MUST write the report in the following language: {language}.
 - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
 - Must NOT have any introduction, conclusion, summary or reference section.
-- You MUST use in-text citation references in {report_format.upper()} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+- You MUST use in-text citations in {report_format.upper()} format as markdown hyperlinks. NEVER use "in-text citation" as link text; use "Source" if author/year are unknown.
 - You MUST mention the difference between the existing content and the new content in the report if you are adding the similar or same subsections wherever necessary.
 - The report should have a minimum length of {total_words} words.
 - Use an {tone.value} tone throughout the report.
@@ -657,7 +661,7 @@ Using the above latest information, Prepare a detailed report introduction on th
 - The introduction should be succinct, well-structured, informative with markdown syntax.
 - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
 - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
-- You must use in-text citation references in {report_format.upper()} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+- You must use in-text citations in {report_format.upper()} format as markdown hyperlinks. 
 Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 - The output must be in {language} language.
 """
@@ -690,7 +694,7 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
     4. Be approximately 2-3 paragraphs long
 
     If there is no "## Conclusion" section title written at the end of the report, please add it to the top of your conclusion.
-    You must use in-text citation references in {report_format.upper()} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+    You must use in-text citations in {report_format.upper()} format as markdown hyperlinks. 
 
     IMPORTANT: The entire conclusion MUST be written in {language} language.
 

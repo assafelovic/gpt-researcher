@@ -22,15 +22,23 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
     Returns:
         A list of search results
     """
+    # Most retrievers accept `headers` (some require it, e.g. internal_* retrievers).
+    # Keep compatibility with retrievers that don't accept `headers` by retrying without it.
+    init_kwargs: Dict[str, Any] = {"query_domains": query_domains}
+    if researcher is not None and hasattr(researcher, "headers"):
+        init_kwargs["headers"] = getattr(researcher, "headers")
+
     # Check if this is an MCP retriever and pass the researcher instance
     if "mcpretriever" in retriever.__name__.lower():
-        search_retriever = retriever(
-            query, 
-            query_domains=query_domains,
-            researcher=researcher  # Pass researcher instance for MCP retrievers
-        )
-    else:
-        search_retriever = retriever(query, query_domains=query_domains)
+        init_kwargs["researcher"] = researcher  # required for MCP retrievers
+
+    try:
+        search_retriever = retriever(query, **init_kwargs)
+    except TypeError:
+        # Fallback for retrievers that don't accept `headers`/extra kwargs
+        init_kwargs.pop("headers", None)
+        init_kwargs.pop("researcher", None)
+        search_retriever = retriever(query, **init_kwargs)
     
     return search_retriever.search()
 

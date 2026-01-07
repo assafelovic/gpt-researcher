@@ -16,6 +16,28 @@ from .llm import create_chat_completion
 
 logger = logging.getLogger(__name__)
 
+def _extract_usage_metadata(msg: Any) -> dict[str, int] | None:
+    """
+    Best-effort extraction of token usage from LangChain message objects.
+    Returns dict with prompt_tokens/completion_tokens/total_tokens when available.
+    """
+    try:
+        usage = getattr(msg, "usage_metadata", None)
+        if not isinstance(usage, dict):
+            return None
+        pt = usage.get("prompt_tokens")
+        ct = usage.get("completion_tokens")
+        tt = usage.get("total_tokens")
+        if isinstance(pt, int) and isinstance(ct, int):
+            return {
+                "prompt_tokens": pt,
+                "completion_tokens": ct,
+                "total_tokens": int(tt) if isinstance(tt, int) else (pt + ct),
+            }
+        return None
+    except Exception:
+        return None
+
 
 async def create_chat_completion_with_tools(
     messages: List[Dict[str, str]],
@@ -155,13 +177,26 @@ async def create_chat_completion_with_tools(
             
             # Track costs if callback provided
             if cost_callback:
-                from .costs import estimate_llm_cost, estimate_token_usage
-                # Calculate costs for both calls
-                llm_costs = estimate_llm_cost(str(lc_messages), final_response.content or "", model=model)
-                cost_callback(llm_costs)
-                # Also track token usage
-                try:
+                from .costs import calculate_llm_cost, estimate_llm_cost, estimate_token_usage
+
+                # Prefer provider-reported token usage (usage_metadata) if available.
+                usage = _extract_usage_metadata(final_response)
+                if usage:
+                    llm_costs = calculate_llm_cost(
+                        prompt_tokens=usage["prompt_tokens"],
+                        completion_tokens=usage["completion_tokens"],
+                        model=model,
+                    )
+                    token_usage = usage
+                else:
+                    # Fallback: estimate from text
+                    llm_costs = estimate_llm_cost(str(lc_messages), final_response.content or "", model=model)
                     token_usage = estimate_token_usage(str(lc_messages), final_response.content or "", model=model)
+
+                cost_callback(llm_costs)
+
+                # Also track token usage (global accumulation on researcher if available)
+                try:
                     if hasattr(cost_callback, '__self__'):
                         researcher = cost_callback.__self__
                         if hasattr(researcher, 'add_token_usage'):
@@ -177,12 +212,24 @@ async def create_chat_completion_with_tools(
         else:
             # No tool calls, return regular response
             if cost_callback:
-                from .costs import estimate_llm_cost, estimate_token_usage
-                llm_costs = estimate_llm_cost(str(messages), response.content or "", model=model)
+                from .costs import calculate_llm_cost, estimate_llm_cost, estimate_token_usage
+
+                usage = _extract_usage_metadata(response)
+                if usage:
+                    llm_costs = calculate_llm_cost(
+                        prompt_tokens=usage["prompt_tokens"],
+                        completion_tokens=usage["completion_tokens"],
+                        model=model,
+                    )
+                    token_usage = usage
+                else:
+                    llm_costs = estimate_llm_cost(str(messages), response.content or "", model=model)
+                    token_usage = estimate_token_usage(str(messages), response.content or "", model=model)
+
                 cost_callback(llm_costs)
+
                 # Also track token usage
                 try:
-                    token_usage = estimate_token_usage(str(messages), response.content or "", model=model)
                     if hasattr(cost_callback, '__self__'):
                         researcher = cost_callback.__self__
                         if hasattr(researcher, 'add_token_usage'):

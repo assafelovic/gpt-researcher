@@ -30,7 +30,7 @@ ENV PIP_ROOT_USER_ACTION=ignore
 ENV PATH="/root/.cargo/bin:${PATH}"
 WORKDIR /usr/src/app
 
-# Copy and install Python dependencies in a single layer to optimize cache usage
+# Copy only the files needed for pip install first
 COPY ./requirements.txt ./requirements.txt
 COPY ./multi_agents/requirements.txt ./multi_agents/requirements.txt
 
@@ -64,6 +64,7 @@ RUN useradd -ms /bin/bash gpt-researcher && \
 USER gpt-researcher
 WORKDIR /usr/src/app
 
-# Copy the rest of the application files with proper ownership
+# Copy the rest of the application files LAST
+# This ensures that changing python code doesn't invalidate the pip install layer
 COPY --chown=gpt-researcher:gpt-researcher ./ ./
 CMD uvicorn main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}

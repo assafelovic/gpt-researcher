@@ -92,6 +92,39 @@ class GenericLLMProvider:
         self.llm = llm
         self.chat_logger = ChatLogger(chat_log) if chat_log else None
         self.verbose = verbose
+        # Best-effort usage tracking (prompt/completion/total tokens) from LangChain responses
+        self.last_usage: dict[str, int] | None = None
+        # Provider name (e.g. "openai", "azure_openai") for provider-specific behaviors
+        self.provider_name: str | None = None
+
+    def _set_last_usage_from_message(self, msg: Any) -> None:
+        """
+        Try to extract token usage from LangChain message objects.
+        Supports both non-stream (AIMessage) and stream chunks (AIMessageChunk).
+        """
+        def _set(pt: Any, ct: Any, tt: Any = None) -> None:
+            if isinstance(pt, int) and isinstance(ct, int):
+                self.last_usage = {
+                    "prompt_tokens": pt,
+                    "completion_tokens": ct,
+                    "total_tokens": int(tt) if isinstance(tt, int) else (pt + ct),
+                }
+
+        try:
+            usage = getattr(msg, "usage_metadata", None)
+            if isinstance(usage, dict):
+                _set(usage.get("prompt_tokens"), usage.get("completion_tokens"), usage.get("total_tokens"))
+                if self.last_usage:
+                    return
+
+            # Some LangChain integrations attach usage in response_metadata
+            resp_meta = getattr(msg, "response_metadata", None)
+            if isinstance(resp_meta, dict):
+                token_usage = resp_meta.get("token_usage") or resp_meta.get("usage") or resp_meta.get("usage_metadata")
+                if isinstance(token_usage, dict):
+                    _set(token_usage.get("prompt_tokens"), token_usage.get("completion_tokens"), token_usage.get("total_tokens"))
+        except Exception:
+            return
     @classmethod
     def from_provider(cls, provider: str, chat_log: str | None = None, verbose: bool=True, **kwargs: Any):
         if provider == "openai":
@@ -329,15 +362,24 @@ class GenericLLMProvider:
             raise ValueError(
                 f"Unsupported {provider}.\n\nSupported model providers are: {supported}"
             )
-        return cls(llm, chat_log, verbose=verbose)
+        inst = cls(llm, chat_log, verbose=verbose)
+        inst.provider_name = provider
+        return inst
 
 
     async def get_chat_response(self, messages, stream, websocket=None, **kwargs):
+        # Reset usage per call
+        self.last_usage = None
+        # For OpenAI-compatible providers, request usage data in streaming mode when supported.
+        # LangChain OpenAI supports stream_options={"include_usage": True}.
+        if stream and self.provider_name in {"openai", "azure_openai"}:
+            kwargs.setdefault("stream_options", {"include_usage": True})
         if not stream:
             # Getting output from the model chain using ainvoke for asynchronous invoking
             output = await self.llm.ainvoke(messages, **kwargs)
 
             res = output.content
+            self._set_last_usage_from_message(output)
 
         else:
             res = await self.stream_response(messages, websocket, **kwargs)
@@ -360,6 +402,8 @@ class GenericLLMProvider:
                 if "\n" in paragraph:
                     await self._send_output(paragraph, websocket)
                     paragraph = ""
+            # Some providers may only attach usage metadata on the final chunk
+            self._set_last_usage_from_message(chunk)
 
         if paragraph:
             await self._send_output(paragraph, websocket)
