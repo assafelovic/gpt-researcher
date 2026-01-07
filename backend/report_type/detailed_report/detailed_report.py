@@ -550,9 +550,11 @@ class DetailedReport:
 
     async def _construct_detailed_report(self, introduction: str, report_body: str, research_gap: str = "") -> str:
         toc = self.gpt_researcher.table_of_contents(report_body)
-        conclusion = await self.gpt_researcher.write_report_conclusion(report_body)
-        conclusion_with_references = self.gpt_researcher.add_references(
-            conclusion, self.gpt_researcher.visited_urls)
-        # Place Research Gap before Conclusion
-        report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{research_gap}\n\n{conclusion_with_references}"
+        conclusion = await self.gpt_researcher.write_report_conclusion(report_body, research_gap)
+        
+        # User requested to remove references as this is an intermediate report
+        # conclusion_with_references = self.gpt_researcher.add_references(conclusion, self.gpt_researcher.visited_urls)
+        
+        # Research Gap is integrated into Introduction and Conclusion, not shown as a separate section
+        report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion}"
         return report

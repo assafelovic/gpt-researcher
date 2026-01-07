@@ -703,7 +703,7 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
 
 
     @staticmethod
-    def generate_report_conclusion(query: str, report_content: str, language: str = "english", report_format: str = "apa") -> str:
+    def generate_report_conclusion(query: str, report_content: str, language: str = "english", report_format: str = "apa", research_gap: str = "") -> str:
         """
         Generate a concise conclusion summarizing the main findings and implications of a research report.
 
@@ -711,10 +711,15 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
             query (str): The research task or question.
             report_content (str): The content of the research report.
             language (str): The language in which the conclusion should be written.
+            research_gap (str): Identified research gap to reference.
 
         Returns:
             str: A concise conclusion summarizing the report's main findings and implications.
         """
+        gap_instruction = ""
+        if research_gap:
+            gap_instruction = f"Briefly call back to the identified research gap: {research_gap} to show how the findings address it.\n"
+
         prompt = f"""
     Based on the research report below and research task, please write a concise conclusion that summarizes the main findings and their implications:
 
@@ -726,7 +731,8 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
     1. Recap the main points of the research
     2. Highlight the most important findings
     3. Discuss any implications or next steps
-    4. Be approximately 2-3 paragraphs long
+    4. {gap_instruction}
+    5. Be approximately 2-3 paragraphs long
 
     If there is no "## Conclusion" section title written at the end of the report, please add it to the top of your conclusion.
     You must use in-text citations in {report_format.upper()} format as markdown hyperlinks. 

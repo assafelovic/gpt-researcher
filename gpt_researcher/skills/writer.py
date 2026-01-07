@@ -161,12 +161,13 @@ class ReportGenerator:
 
         return report
 
-    async def write_report_conclusion(self, report_content: str) -> str:
+    async def write_report_conclusion(self, report_content: str, research_gap: str = "") -> str:
         """
         Write the conclusion for the report.
 
         Args:
             report_content (str): The content of the report.
+            research_gap (str): Identified research gap.
 
         Returns:
             str: The generated conclusion.
@@ -187,6 +188,7 @@ class ReportGenerator:
             cost_callback=self.researcher.add_costs,
             websocket=self.researcher.websocket,
             prompt_family=self.researcher.prompt_family,
+            research_gap=research_gap,
             **self.researcher.kwargs
         )
 

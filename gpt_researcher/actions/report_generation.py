@@ -71,6 +71,7 @@ async def write_conclusion(
     websocket=None,
     cost_callback: callable = None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    research_gap: str = "",
     **kwargs
 ) -> str:
     """
@@ -95,9 +96,12 @@ async def write_conclusion(
                 {"role": "system", "content": f"{agent_role_prompt}"},
                 {
                     "role": "user",
-                    "content": prompt_family.generate_report_conclusion(query=query,
-                                                                        report_content=context,
-                                                                        language=config.language),
+                    "content": prompt_family.generate_report_conclusion(
+                        query=query,
+                        report_content=context,
+                        language=config.language,
+                        research_gap=research_gap
+                    ),
                 },
             ],
             temperature=0.25,

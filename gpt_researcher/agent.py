@@ -394,9 +394,9 @@ class GPTResearcher:
         })
         return report
 
-    async def write_report_conclusion(self, report_body: str) -> str:
+    async def write_report_conclusion(self, report_body: str, research_gap: str = "") -> str:
         await self._log_event("research", step="writing_conclusion")
-        conclusion = await self.report_generator.write_report_conclusion(report_body)
+        conclusion = await self.report_generator.write_report_conclusion(report_body, research_gap)
         await self._log_event("research", step="conclusion_completed")
         return conclusion
 
