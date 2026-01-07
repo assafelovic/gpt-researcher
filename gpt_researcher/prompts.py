@@ -662,6 +662,8 @@ Using the above latest information, Prepare a detailed report introduction on th
 - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
 - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
 - You must use in-text citations in {report_format.upper()} format as markdown hyperlinks. 
+- Use in-text citations ONLY in this canonical form: **([Source](url))**.
+- The link label MUST be exactly "Source" (case-sensitive) to support downstream citation processing.
 Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 - The output must be in {language} language.
 """
@@ -695,6 +697,9 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
 
     If there is no "## Conclusion" section title written at the end of the report, please add it to the top of your conclusion.
     You must use in-text citations in {report_format.upper()} format as markdown hyperlinks. 
+
+    Use in-text citations ONLY in this canonical form: **([Source](url))**.
+    The link label MUST be exactly "Source" (case-sensitive) to support downstream citation processing.
 
     IMPORTANT: The entire conclusion MUST be written in {language} language.
 
