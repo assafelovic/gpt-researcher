@@ -28,6 +28,26 @@ class PromptFamily:
     override individual methods.
     """
 
+    def _check_custom_override(self, method_name: str, **kwargs):
+        """Check if a custom prompt override exists and return it if so.
+
+        Args:
+            method_name: Name of the prompt method to check for override
+            **kwargs: Arguments to pass to callable or format into string template
+
+        Returns:
+            The custom prompt string if override exists, None otherwise
+        """
+        custom = getattr(self.cfg, 'custom_prompts', None)
+        if custom:
+            override = getattr(custom, method_name, None)
+            if override:
+                if callable(override):
+                    return override(**kwargs)
+                elif isinstance(override, str):
+                    return override.format(**kwargs)
+        return None
+
     def __init__(self, config: Config):
         """Initialize with a config instance. This may be used by derived
         classes to select the correct prompting based on configured models and/
@@ -117,8 +137,8 @@ AVAILABLE TOOLS: {tool_names}
 
 Please conduct thorough research and provide your findings. Use the tools strategically to gather the most relevant and comprehensive information."""
 
-    @staticmethod
     def generate_search_queries_prompt(
+        self,
         question: str,
         parent_query: str,
         report_type: str,
@@ -135,7 +155,12 @@ Please conduct thorough research and provide your findings. Use the tools strate
 
         Returns: str: The search queries prompt for the given question
         """
-
+        if result := self._check_custom_override(
+            'generate_search_queries_prompt',
+            question=question, parent_query=parent_query, report_type=report_type,
+            max_iterations=max_iterations, context=context
+        ):
+            return result
         if (
             report_type == ReportType.DetailedReport.value
             or report_type == ReportType.SubtopicReport.value
@@ -162,8 +187,8 @@ You must respond with a list of strings in the following format: [{dynamic_examp
 The response should contain ONLY the list.
 """
 
-    @staticmethod
     def generate_report_prompt(
+        self,
         question: str,
         context,
         report_source: str,
@@ -177,6 +202,12 @@ The response should contain ONLY the list.
                 research_summary (str): The research summary to generate the report prompt for
         Returns: str: The report prompt for the given question and research summary
         """
+        if result := self._check_custom_override(
+            'generate_report_prompt',
+            question=question, context=context, report_source=report_source,
+            report_format=report_format, tone=tone, total_words=total_words, language=language
+        ):
+            return result
 
         reference_prompt = ""
         if report_source == ReportSource.Web.value:
@@ -220,8 +251,12 @@ Please do your best, this is very important to my career.
 Assume that the current date is {date.today()}.
 """
 
-    @staticmethod
-    def curate_sources(query, sources, max_results=10):
+    def curate_sources(self, query, sources, max_results=10):
+        if result := self._check_custom_override(
+            'curate_sources', query=query, sources=sources, max_results=max_results
+        ):
+            return result
+
         return f"""Your goal is to evaluate and curate the provided scraped content for the research task: "{query}"
     while prioritizing the inclusion of relevant and high-quality information, especially sources containing statistics, numbers, or concrete data.
 
@@ -254,9 +289,8 @@ You MUST return your response in the EXACT sources JSON list format as the origi
 The response MUST not contain any markdown format or additional text (like ```json), just the JSON list!
 """
 
-    @staticmethod
     def generate_resource_report_prompt(
-        question, context, report_source: str, report_format="apa", tone=None, total_words=1000, language="english"
+        self, question, context, report_source: str, report_format="apa", tone=None, total_words=1000, language="english"
     ):
         """Generates the resource report prompt for the given question and research summary.
 
@@ -267,6 +301,12 @@ The response MUST not contain any markdown format or additional text (like ```js
         Returns:
             str: The resource report prompt for the given question and research summary.
         """
+        if result := self._check_custom_override(
+            'generate_resource_report_prompt',
+            question=question, context=context, report_source=report_source,
+            report_format=report_format, tone=tone, total_words=total_words, language=language
+        ):
+            return result
 
         reference_prompt = ""
         if report_source == ReportSource.Web.value:
@@ -294,21 +334,32 @@ The response MUST not contain any markdown format or additional text (like ```js
             f"{reference_prompt}"
         )
 
-    @staticmethod
     def generate_custom_report_prompt(
-        query_prompt, context, report_source: str, report_format="apa", tone=None, total_words=1000, language: str = "english"
+        self, query_prompt, context, report_source: str, report_format="apa", tone=None, total_words=1000, language: str = "english"
     ):
+        if result := self._check_custom_override(
+            'generate_custom_report_prompt',
+            query_prompt=query_prompt, context=context, report_source=report_source,
+            report_format=report_format, tone=tone, total_words=total_words, language=language
+        ):
+            return result
+
         return f'"{context}"\n\n{query_prompt}'
 
-    @staticmethod
     def generate_outline_report_prompt(
-        question, context, report_source: str, report_format="apa", tone=None,  total_words=1000, language: str = "english"
+        self, question, context, report_source: str, report_format="apa", tone=None,  total_words=1000, language: str = "english"
     ):
         """Generates the outline report prompt for the given question and research summary.
         Args: question (str): The question to generate the outline report prompt for
                 research_summary (str): The research summary to generate the outline report prompt for
         Returns: str: The outline report prompt for the given question and research summary
         """
+        if result := self._check_custom_override(
+            'generate_outline_report_prompt',
+            question=question, context=context, report_source=report_source,
+            report_format=report_format, tone=tone, total_words=total_words, language=language
+        ):
+            return result
 
         return (
             f'"""{context}""" Using the above information, generate an outline for a research report in Markdown syntax'
@@ -319,8 +370,8 @@ The response MUST not contain any markdown format or additional text (like ```js
             " Consider using markdown tables and other formatting features where they would enhance the presentation of information."
         )
 
-    @staticmethod
     def generate_deep_research_prompt(
+        self,
         question: str,
         context: str,
         report_source: str,
@@ -341,6 +392,13 @@ The response MUST not contain any markdown format or additional text (like ```js
         Returns:
             str: The deep research report prompt
         """
+        if result := self._check_custom_override(
+            'generate_deep_research_prompt',
+            question=question, context=context, report_source=report_source,
+            report_format=report_format, tone=tone, total_words=total_words, language=language
+        ):
+            return result
+
         reference_prompt = ""
         if report_source == ReportSource.Web.value:
             reference_prompt = f"""
@@ -391,8 +449,10 @@ Please write a thorough, well-researched report that synthesizes all the gathere
 Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')}.
 """
 
-    @staticmethod
-    def auto_agent_instructions():
+    def auto_agent_instructions(self):
+        if result := self._check_custom_override('auto_agent_instructions'):
+            return result
+
         return """
 This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer. The research is conducted by a specific server, defined by its type and role, with each server requiring distinct instructions.
 Agent
@@ -419,13 +479,14 @@ response:
 }
 """
 
-    @staticmethod
-    def generate_summary_prompt(query, data):
+    def generate_summary_prompt(self, query, data):
         """Generates the summary prompt for the given question and text.
         Args: question (str): The question to generate the summary prompt for
                 text (str): The text to generate the summary prompt for
         Returns: str: The summary prompt for the given question and text
         """
+        if result := self._check_custom_override('generate_summary_prompt', query=query, data=data):
+            return result
 
         return (
             f'{data}\n Using the above text, summarize it based on the following task or query: "{query}".\n If the '
@@ -451,8 +512,10 @@ response:
 
     # DETAILED REPORT PROMPTS
 
-    @staticmethod
-    def generate_subtopics_prompt() -> str:
+    def generate_subtopics_prompt(self) -> str:
+        if result := self._check_custom_override('generate_subtopics_prompt'):
+            return result
+
         return """
 Provided the main topic:
 
@@ -474,8 +537,8 @@ and research data:
 {format_instructions}
 """
 
-    @staticmethod
     def generate_subtopic_report_prompt(
+        self,
         current_subtopic,
         existing_headers: list,
         relevant_written_contents: list,
@@ -487,6 +550,15 @@ and research data:
         tone: Tone = Tone.Objective,
         language: str = "english",
     ) -> str:
+        if result := self._check_custom_override(
+            'generate_subtopic_report_prompt',
+            current_subtopic=current_subtopic, existing_headers=existing_headers,
+            relevant_written_contents=relevant_written_contents, main_topic=main_topic,
+            context=context, report_format=report_format, max_subsections=max_subsections,
+            total_words=total_words, tone=tone, language=language
+        ):
+            return result
+
         return f"""
 Context:
 "{context}"
@@ -551,13 +623,20 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if
 Do NOT add a conclusion section.
 """
 
-    @staticmethod
     def generate_draft_titles_prompt(
+        self,
         current_subtopic: str,
         main_topic: str,
         context: str,
         max_subsections: int = 5
     ) -> str:
+        if result := self._check_custom_override(
+            'generate_draft_titles_prompt',
+            current_subtopic=current_subtopic, main_topic=main_topic,
+            context=context, max_subsections=max_subsections
+        ):
+            return result
+
         return f"""
 "Context":
 "{context}"
@@ -585,8 +664,14 @@ Provide the draft headers in a list format using markdown syntax, for example:
 - Focus solely on creating headers, not content.
 """
 
-    @staticmethod
-    def generate_report_introduction(question: str, research_summary: str = "", language: str = "english", report_format: str = "apa") -> str:
+    def generate_report_introduction(self, question: str, research_summary: str = "", language: str = "english", report_format: str = "apa") -> str:
+        if result := self._check_custom_override(
+            'generate_report_introduction',
+            question=question, research_summary=research_summary,
+            language=language, report_format=report_format
+        ):
+            return result
+
         return f"""{research_summary}\n
 Using the above latest information, Prepare a detailed report introduction on the topic -- {question}.
 - The introduction should be succinct, well-structured, informative with markdown syntax.
@@ -598,8 +683,7 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
 """
 
 
-    @staticmethod
-    def generate_report_conclusion(query: str, report_content: str, language: str = "english", report_format: str = "apa") -> str:
+    def generate_report_conclusion(self, query: str, report_content: str, language: str = "english", report_format: str = "apa") -> str:
         """
         Generate a concise conclusion summarizing the main findings and implications of a research report.
 
@@ -611,6 +695,13 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
         Returns:
             str: A concise conclusion summarizing the report's main findings and implications.
         """
+        if result := self._check_custom_override(
+            'generate_report_conclusion',
+            query=query, report_content=report_content,
+            language=language, report_format=report_format
+        ):
+            return result
+
         prompt = f"""
     Based on the research report below and research task, please write a concise conclusion that summarizes the main findings and their implications:
 

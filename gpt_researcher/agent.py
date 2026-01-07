@@ -3,6 +3,7 @@ import json
 import os
 
 from .config import Config
+from .config.custom_prompts import CustomPrompts
 from .memory import Memory
 from .utils.enum import ReportSource, ReportType, Tone
 from .llm_provider import GenericLLMProvider
@@ -59,6 +60,8 @@ class GPTResearcher:
         mcp_configs: list[dict] | None = None,
         mcp_max_iterations: int | None = None,
         mcp_strategy: str | None = None,
+        language: str | None = None,
+        custom_prompts: CustomPrompts | None = None,
         **kwargs
     ):
         """
@@ -111,14 +114,22 @@ class GPTResearcher:
                 ```
             mcp_strategy (str, optional): MCP execution strategy. Options:
                 - "fast" (default): Run MCP once with original query for best performance
-                - "deep": Run MCP for all sub-queries for maximum thoroughness  
+                - "deep": Run MCP for all sub-queries for maximum thoroughness
                 - "disabled": Skip MCP entirely, use only web retrievers
+            language (str, optional): Language for the report. If provided, overrides
+                the language setting from config.
+            custom_prompts (CustomPrompts, optional): Custom prompt overrides. If provided,
+                overrides the custom_prompts setting from config.
         """
         self.kwargs = kwargs
         self.query = query
         self.report_type = report_type
         self.cfg = Config(config_path)
         self.cfg.set_verbose(verbose)
+        if language is not None:
+            self.cfg.language = language
+        if custom_prompts is not None:
+            self.cfg.custom_prompts = custom_prompts
         self.report_source = report_source if report_source else getattr(self.cfg, 'report_source', None)
         self.report_format = report_format
         self.max_subtopics = max_subtopics
