@@ -533,6 +533,9 @@ IMPORTANT:Content and Sections Uniqueness:
     This is a sample text ([Source](https://example.org)).
 
 - Use H2 for the main subtopic header (##) and H3 for subsections (###).
+    - **Important**: Do NOT use H4 headers (####) or lower. Limit the hierarchy to H2 and H3 only.
+    - **Paragraphs**: Write in well-developed, full paragraphs. Avoid using bullet points unless absolutely necessary for listing specific data points or statistics.
+    - **Length**: Ensure each section is substantial (at least 3 paragraphs). Do not create headers for very short content.
 - Use smaller Markdown headers (e.g., H2 or H3) for content structure, avoiding the largest header (H1) as it will be used for the larger report's heading.
 - Organize your content into distinct sections that complement but do not overlap with existing reports.
 - When adding similar or identical subsections to your report, you should clearly indicate the differences between and the new content and the existing written content from previous subtopic reports. For example:
@@ -576,6 +579,8 @@ Using the latest information available, construct a draft section title headers 
 3. The header should't be too high level, but detailed enough to cover the main aspects of the subtopic.
 4. Use markdown syntax for the headers, using H3 (###) as H1 and H2 will be used for the larger report's heading.
 5. Ensure the headers cover main aspects of the subtopic.
+6. **Limit Granularity**: Do not create headers for very specific details. Group related information under broader H3 headers.
+7. **No H4**: Do NOT use H4 (####) or lower level headers.
 
 "Structure and Formatting":
 Provide the draft headers in a list format using markdown syntax, for example:
