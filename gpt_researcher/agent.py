@@ -141,6 +141,13 @@ class GPTResearcher:
         self.verbose = verbose
         self.context = context or []
         self.headers = headers or {}
+        
+        # Overwrite config attributes from headers if they exist
+        # This allows per-request configuration (e.g. LANGUAGE, REPORT_FORMAT)
+        for key, value in self.headers.items():
+            if hasattr(self.cfg, key.lower()):
+                setattr(self.cfg, key.lower(), value)
+
         self.research_costs = 0.0
         # Token usage tracking
         self.token_usage = {

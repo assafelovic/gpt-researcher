@@ -67,6 +67,9 @@ class ResearchRequest(BaseModel):
     tone: str
     headers: dict | None = None
     user_id: int | None = None  # User ID (can also be in headers)
+    research_id: str | None = None # Unique ID for the research request
+    language: str | None = None  # Language for the report
+    project_id: str | None = None  # Project ID to pass through to webhook
     # Webhook URL is configured via environment variable WEBHOOK_URL, not passed in request
 
 
@@ -209,6 +212,17 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
                 user_id = int(header_user_id) if header_user_id is not None else None
             except (TypeError, ValueError):
                 user_id = None
+        
+        # Determine project_id
+        project_id: str | None = None
+        if hasattr(research_request, "project_id") and research_request.project_id:
+            project_id = research_request.project_id
+
+        # Inject language into headers if provided
+        if hasattr(research_request, "language") and research_request.language:
+            if research_request.headers is None:
+                research_request.headers = {}
+            research_request.headers["LANGUAGE"] = research_request.language
 
         report_information = await run_agent(
             task=research_request.task,
@@ -232,6 +246,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
             response = {
                 "research_id": research_id,
                 "user_id": user_id,
+                "project_id": project_id,
                 "research_information": {
                     "source_urls": researcher.get_source_urls(),
                     "research_costs": researcher.get_costs(),
@@ -250,6 +265,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
             response = {
                 "research_id": research_id,
                 "user_id": user_id,
+                "project_id": project_id,
                 "research_information": {
                     "source_urls": [],
                     "research_costs": 0.0,
@@ -287,6 +303,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
         await send_webhook_notification(
             research_id=research_id,
             user_id=user_id,
+            project_id=project_id,
             status="completed",
             response=response
         )
@@ -297,6 +314,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
         await send_webhook_notification(
             research_id=research_id,
             user_id=research_request.user_id if hasattr(research_request, "user_id") else None,
+            project_id=research_request.project_id if hasattr(research_request, "project_id") else None,
             status="failed",
             error=str(e)
         )
@@ -306,6 +324,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
 async def send_webhook_notification(
     research_id: str,
     user_id: int | None,
+    project_id: str | None,
     status: str,
     response: Dict[str, Any] = None,
     error: str = None
@@ -337,7 +356,9 @@ async def send_webhook_notification(
 
         payload = {
             "research_id": research_id,
+            "research_id": research_id,
             "user_id": user_id,
+            "project_id": project_id,
             "status": status,
             "timestamp": timestamp
         }
@@ -458,8 +479,16 @@ async def generate_report(
     When complete, a webhook notification will be sent if WEBHOOK_URL is configured in environment.
     """
     from server.server_utils import sanitize_filename
+    import re
     
-    research_id = sanitize_filename(f"task_{int(time.time())}_{research_request.task}")
+    if research_request.research_id:
+        # Basic sanitization for custom ID: allow alphanumeric, underscores, and dashes
+        research_id = re.sub(r"[^a-zA-Z0-9_\-]", "", research_request.research_id)
+        if not research_id:
+            # Fallback if sanitization results in empty string
+            research_id = sanitize_filename(f"task_{int(time.time())}_{research_request.task}")
+    else:
+        research_id = sanitize_filename(f"task_{int(time.time())}_{research_request.task}")
 
     # Create per-request JSON log file (even for HTTP /report/ calls)
     logs_handler = CustomLogsHandler(None, research_request.task, sanitized_filename=research_id)
