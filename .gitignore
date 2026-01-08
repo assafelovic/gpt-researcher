@@ -57,3 +57,6 @@ server_log.txt
 .cursorrules
 CURSOR_RULES.md
 /.history
+
+# Kubernetes Secrets
+settings.yaml

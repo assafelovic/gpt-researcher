@@ -1,0 +1,66 @@
+name: Merge Request Deploy
+run-name: ${{ github.actor }} - Merge Request Deploy (Edge Testing)
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+env:
+  IMAGE_REPO: registry.cn-shanghai.aliyuncs.com/ivysci/gpt-researcher
+  NAMESPACE: ivy-testing
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Aliyun Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: registry.cn-shanghai.aliyuncs.com
+          username: ${{ secrets.ALIYUN_REGISTRY_USER }}
+          password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_REPO }}:${{ github.sha }}
+          platforms: linux/amd64
+
+      - name: Setup kubectl
+        env:
+          KUBERNETES_SERVER: ${{ secrets.KUBERNETES_SERVER }}
+          KUBERNETES_TOKEN: ${{ secrets.KUBERNETES_TOKEN }}
+        run: |
+          # Configure kubectl context for edge environment
+          kubectl config set-cluster k8s --server=$KUBERNETES_SERVER --insecure-skip-tls-verify=true
+          kubectl config set-credentials k8s-user --token=$KUBERNETES_TOKEN
+          kubectl config set-context edge --cluster=k8s --user=k8s-user
+          kubectl config use-context edge
+
+      - name: Update Image Tag
+        run: |
+          # Use make set-tag to update kustomization.yaml
+          make set-tag env=edge-testing tag=${{ github.sha }}
+
+      - name: Deploy to Edge Testing
+        run: |
+          echo "🚀 Deploying to edge-testing..."
+          kubectl apply -k .k8s/overlays/edge-testing
+          
+          echo "⏳ Waiting for rollout to complete in namespace: ${{ env.NAMESPACE }}"
+          kubectl rollout status deployment/researcher -n ${{ env.NAMESPACE }} --timeout=300s
+          
+          echo "✅ Rollout completed successfully!"
+          echo "=== Deployment Status ==="
+          kubectl get deployments -n ${{ env.NAMESPACE }} -l app=researcher
+          echo "=== Pod Status ==="
+          kubectl get pods -n ${{ env.NAMESPACE }} -l app=researcher

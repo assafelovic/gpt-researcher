@@ -1,0 +1,104 @@
+name: Manual Deploy
+run-name: ${{ github.actor }} deploying to ${{ inputs.environment }} (${{ inputs.ref || github.ref_name }})
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        type: choice
+        options:
+        - testing
+        - production
+        - edge-testing
+        - edge-production
+      ref:
+        description: 'Git Ref (Branch/Tag/SHA)'
+        required: false
+        default: ''
+
+env:
+  IMAGE_REPO: registry.cn-shanghai.aliyuncs.com/ivysci/gpt-researcher
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Determine Context
+        id: context
+        run: |
+          if [[ "${{ inputs.environment }}" == *"edge"* ]]; then
+            echo "ctx=edge" >> $GITHUB_OUTPUT
+            echo "Selected Context: edge"
+          else
+            echo "ctx=ivy" >> $GITHUB_OUTPUT
+            echo "Selected Context: ivy"
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Aliyun Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: registry.cn-shanghai.aliyuncs.com
+          username: ${{ secrets.ALIYUN_REGISTRY_USER }}
+          password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_REPO }}:${{ github.sha }}
+          platforms: linux/amd64
+
+      - name: Setup kubectl
+        env:
+          KUBERNETES_SERVER: ${{ secrets.KUBERNETES_SERVER }}
+          KUBERNETES_TOKEN: ${{ secrets.KUBERNETES_TOKEN }}
+        run: |
+          # Configure kubectl context based on environment
+          # Note: We name the context 'ivy' or 'edge' to match Makefile expectations if needed, 
+          # though direct kubectl apply doesn't strictly depend on it unless we use 'make deploy'
+          
+          if [[ "${{ inputs.environment }}" == *"edge"* ]]; then
+             CTX_NAME="edge"
+          else
+             CTX_NAME="ivy"
+          fi
+          
+          # Configuration
+          kubectl config set-cluster k8s --server=$KUBERNETES_SERVER --insecure-skip-tls-verify=true
+          kubectl config set-credentials k8s-user --token=$KUBERNETES_TOKEN
+          kubectl config set-context $CTX_NAME --cluster=k8s --user=k8s-user
+          kubectl config use-context $CTX_NAME
+
+      - name: Run Deploy
+        run: |
+          # Update local kustomization file with the new tag
+          make set-tag env=${{ inputs.environment }} tag=${{ github.sha }}
+          
+          echo "🚀 Deploying to ${{ inputs.environment }}..."
+          kubectl apply -k .k8s/overlays/${{ inputs.environment }}
+          
+          # Determine namespace for verification
+          case "${{ inputs.environment }}" in
+            production|edge-production) NAMESPACE="ivy" ;;
+            testing|edge-testing) NAMESPACE="ivy-testing" ;;
+          esac
+          
+          echo "⏳ Waiting for rollout to complete in namespace: $NAMESPACE"
+          kubectl rollout status deployment/researcher -n $NAMESPACE --timeout=300s
+          
+          echo "✅ Rollout completed successfully!"
+          echo "=== Deployment Status ==="
+          kubectl get deployments -n $NAMESPACE -l app=researcher
+          echo "=== Pod Status ==="
+          kubectl get pods -n $NAMESPACE -l app=researcher

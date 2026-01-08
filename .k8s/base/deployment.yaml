@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: researcher
+  labels:
+    app: researcher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: researcher
+  template:
+    metadata:
+      labels:
+        app: researcher
+    spec:
+      containers:
+        - name: researcher
+          image: registry.cn-shanghai.aliyuncs.com/ivysci/gpt-researcher:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: researcher-settings
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"

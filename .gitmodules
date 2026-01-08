@@ -1,0 +1,3 @@
+[submodule "scripts/common-makefile"]
+	path = scripts/common-makefile
+	url = https://github.com/IvyScience/makefile.git
