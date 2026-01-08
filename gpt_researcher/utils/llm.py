@@ -1,21 +1,38 @@
-# libraries
+"""LLM utilities for GPT Researcher.
+
+This module provides utility functions for interacting with various
+LLM providers through a unified interface.
+"""
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
 
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 
-from gpt_researcher.llm_provider.generic.base import NO_SUPPORT_TEMPERATURE_MODELS, SUPPORT_REASONING_EFFORT_MODELS, ReasoningEfforts
+from gpt_researcher.llm_provider.generic.base import (
+    NO_SUPPORT_TEMPERATURE_MODELS,
+    SUPPORT_REASONING_EFFORT_MODELS,
+    ReasoningEfforts,
+)
 
 from ..prompts import PromptFamily
 from .costs import estimate_llm_cost
 from .validators import Subtopics
-import os
 
 
-def get_llm(llm_provider, **kwargs):
+def get_llm(llm_provider: str, **kwargs):
+    """Get an LLM provider instance.
+
+    Args:
+        llm_provider: The name of the LLM provider (e.g., 'openai', 'anthropic').
+        **kwargs: Additional keyword arguments passed to the provider.
+
+    Returns:
+        A GenericLLMProvider instance configured for the specified provider.
+    """
     from gpt_researcher.llm_provider import GenericLLMProvider
     return GenericLLMProvider.from_provider(llm_provider, **kwargs)
 
