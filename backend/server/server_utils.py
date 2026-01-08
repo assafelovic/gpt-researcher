@@ -13,6 +13,7 @@ from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
+from starlette.websockets import WebSocketDisconnect
 import logging
 
 logger = logging.getLogger(__name__)
@@ -305,6 +306,10 @@ async def handle_websocket_communication(websocket, manager):
                         "content": "error",
                         "output": "Unknown command received by server"
                     })
+            except WebSocketDisconnect:
+                # Re-raise WebSocketDisconnect to be handled by the outer handler in app.py
+                # which properly cleans up the connection via WebSocketManager
+                raise
             except Exception as e:
                 logger.error(f"WebSocket error: {str(e)}\n{traceback.format_exc()}")
                 print(f"WebSocket error: {e}")
