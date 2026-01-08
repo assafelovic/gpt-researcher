@@ -1,0 +1,23 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=120, --ignore=E203,E402,W503]
+
+  - repo: local
+    hooks:
+      - id: check-sealed-secrets
+        name: Check Sealed Secrets Freshness
+        entry: ./scripts/check-sealed-secrets.sh
+        language: script
+        pass_filenames: false
+        files: ^.k8s/.*settings\.yaml$
