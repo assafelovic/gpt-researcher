@@ -5,11 +5,19 @@ import re
 import time
 import shutil
 import traceback
-from typing import Awaitable, Dict, List, Any
-from fastapi.responses import JSONResponse, FileResponse
+import logging
+from datetime import datetime
+from typing import Dict, Any, Awaitable
+
+from fastapi.responses import JSONResponse
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher import GPTResearcher
 from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
+from multi_agents.main import run_research_task
+from gpt_researcher.actions.utils import stream_output
+
+logger = logging.getLogger(__name__)
+
 
 def _env_bool(name: str, default: bool) -> bool:
     val = os.getenv(name)
@@ -17,16 +25,12 @@ def _env_bool(name: str, default: bool) -> bool:
         return default
     return str(val).strip().lower() in {"1", "true", "yes", "y", "on"}
 
+
 # Default behavior: keep markdown for processing and PDF for preview; skip DOCX unless explicitly enabled.
 SAVE_MD = _env_bool("OUTPUT_SAVE_MD", True)
 SAVE_PDF = _env_bool("OUTPUT_SAVE_PDF", True)
 SAVE_DOCX = _env_bool("OUTPUT_SAVE_DOCX", False)
-from pathlib import Path
-from datetime import datetime
-from fastapi import HTTPException
-import logging
 
-logger = logging.getLogger(__name__)
 
 class CustomLogsHandler:
     """Custom handler to capture streaming logs from the research process"""
@@ -58,11 +62,11 @@ class CustomLogsHandler:
         # Send to websocket for real-time display
         if self.websocket:
             await self.websocket.send_json(data)
-            
+
         # Read current log file
         with open(self.log_file, 'r') as f:
             log_data = json.load(f)
-            
+
         # Update appropriate section based on data type
         if data.get('type') == 'logs':
             log_data['events'].append({
@@ -73,7 +77,7 @@ class CustomLogsHandler:
         else:
             # Update content section for other types of data
             log_data['content'].update(data)
-            
+
         # Save updated log file
         with open(self.log_file, 'w') as f:
             json.dump(log_data, f, indent=2)
@@ -97,14 +101,14 @@ class Researcher:
         """Conduct research and return paths to generated files"""
         await self.researcher.conduct_research()
         report = await self.researcher.write_report()
-        
+
         # Generate the files
         sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{self.query}")
         file_paths = await generate_report_files(report, sanitized_filename)
-        
+
         # Get the JSON log path that was created by CustomLogsHandler
         json_relative_path = os.path.relpath(self.logs_handler.log_file)
-        
+
         return {
             "output": {
                 **file_paths,  # Include PDF, DOCX, and MD paths
@@ -112,18 +116,20 @@ class Researcher:
             }
         }
 
+
 def sanitize_filename(filename: str) -> str:
     # Split into components
     prefix, timestamp, *task_parts = filename.split('_')
     task = '_'.join(task_parts)
-    
+
     # Calculate max length for task portion
-    # 255 - len(os.getcwd()) - len("\\gpt-researcher\\outputs\\") - len("task_") - len(timestamp) - len("_.json") - safety_margin
+    # 255 - len(os.getcwd()) - len("\\gpt-researcher\\outputs\\") - len("task_") - len(timestamp)
+    # - len("_.json") - margin
     max_task_length = 255 - len(os.getcwd()) - 24 - 5 - 10 - 6 - 5  # ~189 chars for task
-    
+
     # Truncate task if needed
     truncated_task = task[:max_task_length] if len(task) > max_task_length else task
-    
+
     # Reassemble and clean the filename
     sanitized = f"{prefix}_{timestamp}_{truncated_task}"
     return re.sub(r"[^\w\s-]", "", sanitized).strip()
@@ -181,11 +187,68 @@ async def handle_start_command(websocket, data: str, manager):
     file_paths["json"] = os.path.relpath(logs_handler.log_file)
     await send_file_paths(websocket, file_paths)
 
+    # Clean up old tasks to strictly maintain the 10 most recent
+    await cleanup_old_tasks(limit=10)
+
+
+async def cleanup_old_tasks(limit: int = 10):
+    """
+    Keep only the N most recent tasks in the outputs directory.
+    Deletes all files associated with older tasks.
+    """
+    output_dir = "outputs"
+    if not os.path.exists(output_dir):
+        return
+
+    # 1. Group files by task ID
+    # Pattern: task_{timestamp}_{taskname}.{ext}
+    # We use the timestamp as the sort key
+    tasks = {}  # {timestamp: [filepaths]}
+
+    try:
+        for filename in os.listdir(output_dir):
+            if not filename.startswith("task_"):
+                continue
+
+            parts = filename.split('_')
+            if len(parts) < 2:
+                continue
+
+            timestamp = parts[1]
+            if not timestamp.isdigit():
+                continue
+
+            # Use timestamp as key to group all files for this task (pdf, md, json, etc)
+            if timestamp not in tasks:
+                tasks[timestamp] = []
+            tasks[timestamp].append(os.path.join(output_dir, filename))
+
+        # 2. Sort by timestamp descending (newest first)
+        sorted_timestamps = sorted(tasks.keys(), key=lambda x: int(x), reverse=True)
+
+        # 3. Identify old tasks to delete
+        if len(sorted_timestamps) > limit:
+            timestamps_to_delete = sorted_timestamps[limit:]
+            print(f"🧹 Cleanup: Found {len(sorted_timestamps)} tasks. Deleting {len(timestamps_to_delete)} old tasks...")
+
+            for ts in timestamps_to_delete:
+                files = tasks[ts]
+                for f in files:
+                    try:
+                        os.remove(f)
+                        print(f"   Deleted: {f}")
+                    except Exception as e:
+                        print(f"   Error deleting {f}: {e}")
+
+    except Exception as e:
+        print(f"Error during cleanup: {e}")
+
 
 async def handle_human_feedback(data: str):
     feedback_data = json.loads(data[14:])  # Remove "human_feedback" prefix
     print(f"Received human feedback: {feedback_data}")
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
+
 
 async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
     pdf_path = await write_md_to_pdf(report, filename) if SAVE_PDF else ""
@@ -285,13 +348,14 @@ async def handle_websocket_communication(websocket, manager):
             try:
                 data = await websocket.receive_text()
                 logger.info(f"Received WebSocket message: {data[:50]}..." if len(data) > 50 else data)
-                
+
                 if data == "ping":
                     await websocket.send_text("pong")
                 elif running_task and not running_task.done():
                     # discard any new request if a task is already running
                     logger.warning(
-                        f"Received request while task is already running. Request data preview: {data[: min(20, len(data))]}..."
+                        f"Received request while task is already running. "
+                        f"Request data preview: {data[: min(20, len(data))]}..."
                     )
                     await websocket.send_json(
                         {
@@ -302,15 +366,17 @@ async def handle_websocket_communication(websocket, manager):
                     )
                 # Normalize command detection by checking startswith after stripping whitespace
                 elif data.strip().startswith("start"):
-                    logger.info(f"Processing start command")
+                    logger.info("Processing start command")
                     running_task = run_long_running_task(
                         handle_start_command(websocket, data, manager)
                     )
                 elif data.strip().startswith("human_feedback"):
-                    logger.info(f"Processing human_feedback command")
+                    logger.info("Processing human_feedback command")
                     running_task = run_long_running_task(handle_human_feedback(data))
                 else:
-                    error_msg = f"Error: Unknown command or not enough parameters provided. Received: '{data[:100]}...'" if len(data) > 100 else f"Error: Unknown command or not enough parameters provided. Received: '{data}'"
+                    error_msg = f"Error: Unknown command or not enough parameters provided. Received: '{data[:100]}...'"
+                    if len(data) <= 100:
+                        error_msg = f"Error: Unknown command or not enough parameters provided. Received: '{data}'"
                     logger.error(error_msg)
                     print(error_msg)
                     await websocket.send_json({
@@ -325,6 +391,7 @@ async def handle_websocket_communication(websocket, manager):
     finally:
         if running_task and not running_task.done():
             running_task.cancel()
+
 
 def extract_command_data(json_data: Dict) -> tuple:
     return (

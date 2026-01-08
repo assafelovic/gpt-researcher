@@ -11,7 +11,9 @@ repos:
     rev: 6.0.0
     hooks:
       - id: flake8
-        args: [--max-line-length=120, --ignore=E203,E402,W503]
+        args:
+          - "--max-line-length=120"
+          - "--ignore=E203,E402,W503"
 
   - repo: local
     hooks:
@@ -20,4 +22,4 @@ repos:
         entry: ./scripts/check-sealed-secrets.sh
         language: script
         pass_filenames: false
-        files: ^.k8s/.*settings\.yaml$
+        always_run: true
