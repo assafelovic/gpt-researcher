@@ -1,10 +1,14 @@
-# Tavily API Retriever
+"""Tavily API search retriever for GPT Researcher.
 
-# libraries
-import os
-from typing import Literal, Sequence, Optional
-import requests
+This module provides the TavilySearch class for performing web searches
+using the Tavily API.
+"""
+
 import json
+import os
+from typing import Literal, Optional, Sequence
+
+import requests
 
 
 class TavilySearch:

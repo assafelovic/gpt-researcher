@@ -1,9 +1,17 @@
+"""Agent creation and selection utilities for GPT Researcher.
+
+This module provides functions to automatically select and configure
+the appropriate research agent based on the query type.
+"""
+
 import json
-import re
-import json_repair
 import logging
-from ..utils.llm import create_chat_completion
+import re
+
+import json_repair
+
 from ..prompts import PromptFamily
+from ..utils.llm import create_chat_completion
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +62,19 @@ async def choose_agent(
         return await handle_json_error(response)
 
 
-async def handle_json_error(response):
+async def handle_json_error(response: str | None):
+    """Handle JSON parsing errors from LLM responses.
+
+    Attempts to recover agent information from malformed JSON responses
+    using json_repair and regex extraction as fallbacks.
+
+    Args:
+        response: The LLM response string that failed initial JSON parsing.
+
+    Returns:
+        A tuple of (agent_name, agent_role_prompt). Returns default agent
+        if all parsing attempts fail.
+    """
     try:
         agent_dict = json_repair.loads(response)
         if agent_dict.get("server") and agent_dict.get("agent_role_prompt"):
@@ -87,7 +107,19 @@ async def handle_json_error(response):
     )
 
 
-def extract_json_with_regex(response):
+def extract_json_with_regex(response: str | None) -> str | None:
+    """Extract JSON object from a string using regex.
+
+    Attempts to find the first JSON object pattern in the response string.
+
+    Args:
+        response: The string to search for JSON content.
+
+    Returns:
+        The extracted JSON string if found, None otherwise.
+    """
+    if not response:
+        return None
     json_match = re.search(r"{.*?}", response, re.DOTALL)
     if json_match:
         return json_match.group(0)

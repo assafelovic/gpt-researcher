@@ -1,3 +1,9 @@
+"""Utility functions for GPT Researcher retrievers.
+
+This module provides helper functions and constants used by the
+various search retriever implementations.
+"""
+
 import importlib.util
 import logging
 import os
