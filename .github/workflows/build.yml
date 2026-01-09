@@ -1,0 +1,106 @@
+name: Build-Push and Update Image Tag
+
+on:
+    push: 
+        branches: [ master ]
+        paths-ignore:
+        - 'terraform/**' 
+    
+env:
+    REPO_FULL_NAME: ${{ github.repository }}
+    AWS_REGION: us-east-1
+
+jobs:
+    build-and-update:
+        runs-on: ubuntu-latest
+        outputs:
+            image-tag: ${{ steps.image-tag.outputs.image_tag }}
+        permissions:
+            contents: write
+            id-token: write
+            actions: write
+
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v5
+          with:
+            token: ${{ secrets.GITHUB_TOKEN }}
+            fetch-depth: 0
+
+        - name: Extract repository name
+          id: extract_short_name_repo
+          run: |
+            REPO_NAME="${REPO_FULL_NAME##*/}"
+            echo "Repository Short name: $REPO_NAME"
+            echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+
+        - name: Configure Git
+          run: |
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        - name: Generate image tag
+          id: image-tag
+          run: |
+            SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+            TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+            IMAGE_TAG="${TIMESTAMP}-${SHORT_SHA}"
+            echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+            echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+        
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+            role-to-assume: arn:aws:iam::908027381725:role/${{ steps.extract_short_name_repo.outputs.REPO_NAME }}-github-actions-role
+            aws-region: ${{ env.AWS_REGION }}
+        
+        - name: Login to ECR
+          id: login-ecr
+          uses: aws-actions/amazon-ecr-login@v2
+        
+        - name: Build Docker image
+          working-directory: .
+          run: |
+            docker build --build-arg VITE_API_URL="${{ vars.VITE_API_URL }}" -t ${{ steps.login-ecr.outputs.registry }}/${{ steps.extract_short_name_repo.outputs.REPO_NAME }}:${{ steps.image-tag.outputs.tag }} . 
+            docker push ${{ steps.login-ecr.outputs.registry }}/${{ steps.extract_short_name_repo.outputs.REPO_NAME }}:${{ steps.image-tag.outputs.tag }}
+        
+        - name: Update image tag
+          run: |
+            echo "image_tag=${{ steps.image-tag.outputs.tag }}" >> $GITHUB_OUTPUT
+
+        - name: Trigger deployment workflow
+          run: |
+            echo "Triggering deployment workflow with image tag: ${{ steps.image-tag.outputs.tag }}"
+            
+            # Try GitHub CLI first
+            if gh workflow run .github/workflows/deploy.yml \
+            --ref master \
+            --field image_tag="${{ steps.image-tag.outputs.tag }}"; then
+            echo "✅ Successfully triggered deployment workflows via GitHub CLI"
+            else
+            echo "⚠️ GitHub CLI failed, trying API directly..."
+            # Fallback to direct API call
+            curl -X POST \
+                -H "Accept: application/vnd.github.v3+json" \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                https://api.github.com/repos/${{ github.repository }}/actions/workflows/deploy.yml/dispatches \
+                -d '{"ref":"master","inputs":{"image_tag":"${{ steps.image-tag.outputs.tag }}"}}'
+            echo "✅ Triggered deployment workflow via API"
+            fi
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+        - name: Create deployment summary
+          run: |
+            echo "## 🚀 Build Summary" >> $GITHUB_STEP_SUMMARY
+            echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| **Image Tag** | \`${{ steps.image-tag.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| **ECR Repository** | \`${{ steps.extract_short_name_repo.outputs.REPO_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| **Commit SHA** | \`${{ steps.image-tag.outputs.short_sha }}\` |" >> $GITHUB_STEP_SUMMARY
+            echo "| **Build Status** | ✅ Complete |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Deployment workflow triggered with image tag: \`${{ steps.image-tag.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Monitor the **Terraform Deploy** workflow for completion" >> $GITHUB_STEP_SUMMARY
+            echo "- Service will be available at \`${{ steps.extract_short_name_repo.outputs.REPO_NAME }}.ggai:3535\`" >> $GITHUB_STEP_SUMMARY

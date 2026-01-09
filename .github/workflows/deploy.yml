@@ -1,0 +1,254 @@
+name: Terraform Deploy
+on:
+    push:
+        branches: [ master ]
+        paths:
+        - 'terraform/**'
+    pull_request:
+        branches: [ master ]
+        paths:
+        - 'terraform/**'
+    workflow_dispatch:
+        inputs:
+            image_tag:
+                description: 'Docker image tag to deploy'
+                required: false
+                default: 'latest'
+                type: string
+env:
+    AWS_REGION: us-east-1
+    TF_VAR_image_tag: us-east-1
+    REPO_FULL_NAME: ${{ github.repository }}
+
+jobs:
+  terraform-plan:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Extract repository name
+      id: extract_short_name_repo
+      run: |
+        REPO_NAME="${REPO_FULL_NAME##*/}"
+        echo "Repository Short name: $REPO_NAME"
+        echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+
+    - name: Set default image tag for PR
+      id: pr-image-tag
+      run: |
+        # Use defaults if inputs are empty or not provided
+        IMAGE_TAG="${{ inputs.image_tag }}"
+        
+        # Set to 'latest' if empty, null, or not provided
+        if [ -z "$IMAGE_TAG" ] || [ "$IMAGE_TAG" = "null" ]; then
+          IMAGE_TAG="latest"
+        fi
+        
+        echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        echo "Using image tag: $IMAGE_TAG"
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ~1.5
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::908027381725:role/${{ steps.extract_short_name_repo.outputs.REPO_NAME }}-github-actions-role
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Configure Git for private modules
+      run: |
+        git config --global url."https://${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+    - name: Terraform Init
+      working-directory: ./terraform
+      run: terraform init
+
+    - name: Terraform Validate
+      working-directory: ./terraform
+      run: terraform validate
+
+    - name: Terraform Plan
+      id: plan
+      working-directory: ./terraform
+      run: |
+        terraform plan -input=false -lock=false -no-color -out=tfplan
+        terraform show -no-color tfplan > plan_output.txt
+      env:
+        TF_VAR_image_tag: ${{ steps.pr-image-tag.outputs.image_tag }}
+
+    - name: Update Pull Request
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const planOutput = fs.readFileSync('./terraform/plan_output.txt', 'utf8');
+          const output = `## 🏗️ Terraform Plan for ${{ steps.extract_short_name_repo.outputs.REPO_SHORT_NAME }}
+          <details>
+          <summary>Click to expand plan</summary>
+          \`\`\`hcl
+          ${planOutput}
+          \`\`\`
+          </details>
+          **Plan Status:** ${{ steps.plan.outcome }}
+          **Service:** ${{ steps.extract_short_name_repo.outputs.REPO_SHORT_NAME }}.ggai:8000
+          `;
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          });
+
+  terraform-apply:
+    if: github.ref == 'refs/heads/master' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Extract repository name
+      id: extract_short_name_repo
+      run: |
+        REPO_NAME="${REPO_FULL_NAME##*/}"
+        echo "Repository Short name: $REPO_NAME"
+        echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::908027381725:role/${{ steps.extract_short_name_repo.outputs.REPO_NAME }}-github-actions-role
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Determine image tag
+      id: get-image-tag
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.image_tag }}" ]; then
+          # Priority 1: Manual input from workflow_dispatch (triggered by build workflow or manual)
+          IMAGE_TAG="${{ inputs.image_tag }}"
+          echo "source=manual" >> $GITHUB_OUTPUT
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "Using provided image tag: ${IMAGE_TAG}"
+        else
+          # Priority 2: Direct terraform push (no application changes)
+          # Check if commit contains application changes (non-terraform files)
+          APP_CHANGES=$(git diff --name-only HEAD~1 HEAD | grep -v "^terraform/" | grep -v "^\.github/workflows/deploy\.yml" | wc -l)
+          if [ "$APP_CHANGES" -gt 0 ]; then
+            # Application changes detected but deploy workflow was triggered directly
+            echo "⚠️ Application changes detected but no image tag provided!"
+            echo "This deployment may fail because build workflow should have run first."
+            echo "Attempting to get current image tag from ECS task definition..."
+          fi
+          # Get current image tag FE and BE from ECS task definition
+          CURRENT_IMAGE=$(aws ecs describe-task-definition \
+            --task-definition ${{ steps.extract_short_name_repo.outputs.REPO_NAME }}-prod-task-def \
+            --query 'taskDefinition.containerDefinitions[0].image' \
+            --output text 2>/dev/null || echo "")
+          if [ -n "$CURRENT_IMAGE" ] && [[ "$CURRENT_IMAGE" != "None" ]]; then
+            # Extract tag from image URL (format: 908027381725.dkr.ecr.us-east-1.amazonaws.com/${{ steps.extract_short_name_repo.outputs.REPO_NAME }}:TAG)
+            IMAGE_TAG=$(echo "$CURRENT_IMAGE" | cut -d':' -f2)
+            echo "source=current_ecs" >> $GITHUB_OUTPUT
+            echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+            echo "Using current ECS image tag: ${IMAGE_TAG} (extracted from task definition)"
+          else
+            # Fallback to latest if we can't get current task definition
+            echo "Could not retrieve current task definition, falling back to 'latest'"
+            IMAGE_TAG="latest"
+            echo "source=fallback" >> $GITHUB_OUTPUT
+            echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+            echo "Using fallback image tag: ${IMAGE_TAG}"
+          fi
+        fi
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ~1.5
+
+    - name: Configure Git for private modules
+      run: |
+        git config --global url."https://${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+    - name: Terraform Init
+      working-directory: ./terraform
+      run: terraform init
+
+    - name: Terraform Validate
+      working-directory: ./terraform
+      run: terraform validate
+
+    - name: Terraform Plan
+      working-directory: ./terraform
+      run: terraform plan -no-color
+      env:
+        TF_VAR_image_tag: ${{ steps.get-image-tag.outputs.image_tag }}
+
+    - name: Terraform Apply
+      working-directory: ./terraform
+      run: terraform apply -auto-approve
+      env:
+        TF_VAR_image_tag: ${{ steps.get-image-tag.outputs.image_tag }}
+
+    - name: Get deployment outputs
+      id: terraform-output
+      working-directory: ./terraform
+      run: |
+        SERVICE_URL=$(terraform output -raw service_discovery_endpoint 2>/dev/null || echo '${{ steps.extract_short_name_repo.outputs.REPO_NAME }}.ggai')
+        ECR_REPO=$(terraform output -raw ecr_repository_url 2>/dev/null || echo 'N/A')
+        delimiter=$(openssl rand -hex 8)
+        echo "service_url<<${delimiter}" >> $GITHUB_OUTPUT
+        echo "${SERVICE_URL}" >> $GITHUB_OUTPUT
+        echo "${delimiter}" >> $GITHUB_OUTPUT
+        echo "ecr_repository<<${delimiter}" >> $GITHUB_OUTPUT
+        echo "${ECR_REPO}" >> $GITHUB_OUTPUT
+        echo "${delimiter}" >> $GITHUB_OUTPUT
+
+    - name: Create deployment summary
+      run: |
+        echo "## 🚀 ${{ steps.extract_short_name_repo.outputs.REPO_NAME }} Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| **Terraform Init** | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Terraform Validate** | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Terraform Apply** | ✅ Success |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Service Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **Service URL**: ${{ steps.terraform-output.outputs.service_url }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Container Port**: 3535" >> $GITHUB_STEP_SUMMARY
+        echo "- **ECR Repository**: ${{ steps.terraform-output.outputs.ecr_repository }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Image Tag**: \`${{ steps.get-image-tag.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Tag Source**: ${{ steps.get-image-tag.outputs.source }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Deployment Time**: $(date)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        # Add deployment trigger notice
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ steps.get-image-tag.outputs.source }}" = "manual" ]; then
+            echo "### 🎯 Manual Deployment" >> $GITHUB_STEP_SUMMARY
+            echo "This deployment was triggered manually with image tag: \`${{ steps.get-image-tag.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### 🤖 Build-Triggered Deployment" >> $GITHUB_STEP_SUMMARY
+            echo "This deployment was triggered automatically by the build workflow with image tag: \`${{ steps.get-image-tag.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+        fi
+        
+        echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+        echo "- Service will be available at \`${{ steps.extract_short_name_repo.outputs.REPO_NAME }}.ggai:8000\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Check ECS console for service health" >> $GITHUB_STEP_SUMMARY
+        echo "- Monitor CloudWatch logs: \`/ecs/${{ steps.extract_short_name_repo.outputs.REPO_NAME }}\`" >> $GITHUB_STEP_SUMMARY
+        
