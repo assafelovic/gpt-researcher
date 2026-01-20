@@ -5,6 +5,7 @@ import time
 import logging
 import sys
 import warnings
+from pathlib import Path
 
 # Suppress Pydantic V2 migration warnings
 warnings.filterwarnings("ignore", message="Valid config keys have changed in V2")
@@ -31,6 +32,8 @@ from server.websocket_manager import run_agent
 from utils import write_md_to_word, write_md_to_pdf
 from gpt_researcher.utils.enum import Tone
 from chat.chat import ChatAgentWithMemory
+
+from server.report_store import ReportStore
 
 # MongoDB services removed - no database persistence needed
 
@@ -124,6 +127,8 @@ app.mount("/site", StaticFiles(directory=frontend_dir), name="site")
 # WebSocket manager
 manager = WebSocketManager()
 
+report_store = ReportStore(Path(os.getenv('REPORT_STORE_PATH', os.path.join('data', 'reports.json'))))
+
 # Constants
 DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 
@@ -159,29 +164,106 @@ async def read_report(request: Request, research_id: str):
 # Simplified API routes - no database persistence
 @app.get("/api/reports")
 async def get_all_reports(report_ids: str = None):
-    """Get research reports - returns empty list since no database."""
-    logger.debug("No database configured - returning empty reports list")
-    return {"reports": []}
+    report_ids_list = report_ids.split(",") if report_ids else None
+    reports = await report_store.list_reports(report_ids_list)
+    return {"reports": reports}
 
 
 @app.get("/api/reports/{research_id}")
 async def get_report_by_id(research_id: str):
-    """Get a specific research report by ID - no database configured."""
-    logger.debug(f"No database configured - cannot retrieve report {research_id}")
-    raise HTTPException(status_code=404, detail="Report not found")
+    report = await report_store.get_report(research_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return {"report": report}
 
 
 @app.post("/api/reports")
 async def create_or_update_report(request: Request):
-    """Create or update a research report - no database persistence."""
     try:
         data = await request.json()
         research_id = data.get("id", "temp_id")
-        logger.debug(f"Report creation requested for ID: {research_id} - no database configured, not persisted")
+
+        now_ms = int(time.time() * 1000)
+        existing = await report_store.get_report(research_id)
+        incoming_timestamp = data.get("timestamp")
+        timestamp = incoming_timestamp if isinstance(incoming_timestamp, int) else now_ms
+        if existing and isinstance(existing.get("timestamp"), int):
+            timestamp = max(timestamp, existing["timestamp"])
+
+        report = {
+            "id": research_id,
+            "question": data.get("question"),
+            "answer": data.get("answer"),
+            "orderedData": data.get("orderedData") or [],
+            "chatMessages": data.get("chatMessages") or [],
+            "timestamp": timestamp,
+        }
+
+        await report_store.upsert_report(research_id, report)
         return {"success": True, "id": research_id}
     except Exception as e:
         logger.error(f"Error processing report creation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/api/reports/{research_id}")
+async def update_report(research_id: str, request: Request):
+    existing = await report_store.get_report(research_id)
+    if existing is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    data = await request.json()
+    now_ms = int(time.time() * 1000)
+
+    updated = {
+        **existing,
+        **{k: v for k, v in data.items() if v is not None},
+        "id": research_id,
+        "timestamp": now_ms,
+    }
+
+    await report_store.upsert_report(research_id, updated)
+    return {"success": True, "id": research_id}
+
+
+@app.delete("/api/reports/{research_id}")
+async def delete_report(research_id: str):
+    existed = await report_store.delete_report(research_id)
+    if not existed:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return {"success": True}
+
+
+@app.get("/api/reports/{research_id}/chat")
+async def get_report_chat(research_id: str):
+    report = await report_store.get_report(research_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return {"chatMessages": report.get("chatMessages") or []}
+
+
+@app.post("/api/reports/{research_id}/chat")
+async def add_report_chat_message(research_id: str, request: Request):
+    report = await report_store.get_report(research_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+
+    message = await request.json()
+    chat_messages = report.get("chatMessages") or []
+    if isinstance(chat_messages, list):
+        chat_messages = [*chat_messages, message]
+    else:
+        chat_messages = [message]
+
+    now_ms = int(time.time() * 1000)
+    updated = {
+        **report,
+        "chatMessages": chat_messages,
+        "timestamp": now_ms,
+    }
+
+    await report_store.upsert_report(research_id, updated)
+    return {"success": True, "id": research_id}
 
 
 async def write_report(research_request: ResearchRequest, research_id: str = None):
