@@ -1,20 +1,42 @@
+"""Configuration management for GPT Researcher.
+
+This module provides the Config class that manages all configuration
+settings for GPT Researcher including LLM providers, embeddings,
+retrievers, and various operational parameters.
+"""
+
 import json
 import os
 import warnings
-from typing import Dict, Any, List, Union, Type, get_origin, get_args
+from typing import Any, Dict, List, Type, Union, get_args, get_origin
 
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
-from .variables.default import DEFAULT_CONFIG
+
 from .variables.base import BaseConfig
+from .variables.default import DEFAULT_CONFIG
 
 
 class Config:
-    """Config class for GPT Researcher."""
+    """Configuration manager for GPT Researcher.
+
+    Handles loading, parsing, and managing all configuration settings
+    from files, environment variables, and defaults.
+
+    Attributes:
+        CONFIG_DIR: Directory containing configuration files.
+        config_path: Path to the configuration file.
+        llm_kwargs: Additional keyword arguments for LLM.
+        embedding_kwargs: Additional keyword arguments for embeddings.
+    """
 
     CONFIG_DIR = os.path.join(os.path.dirname(__file__), "variables")
 
     def __init__(self, config_path: str | None = None):
-        """Initialize the config class."""
+        """Initialize the config class.
+
+        Args:
+            config_path: Optional path to a JSON configuration file.
+        """
         self.config_path = config_path
         self.llm_kwargs: Dict[str, Any] = {}
         self.embedding_kwargs: Dict[str, Any] = {}
@@ -38,6 +60,14 @@ class Config:
             self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
+        """Set configuration attributes from config dictionary.
+
+        Merges environment variables with config file values, with
+        environment variables taking precedence.
+
+        Args:
+            config: Dictionary of configuration key-value pairs.
+        """
         for key, value in config.items():
             env_value = os.getenv(key)
             if env_value is not None:
@@ -53,17 +83,20 @@ class Config:
             self.retrievers = ["tavily"]
 
     def _set_embedding_attributes(self) -> None:
+        """Parse and set embedding provider and model attributes."""
         self.embedding_provider, self.embedding_model = self.parse_embedding(
             self.embedding
         )
 
     def _set_llm_attributes(self) -> None:
+        """Parse and set LLM provider and model attributes for all LLM types."""
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
         self.reasoning_effort = self.parse_reasoning_effort(os.getenv("REASONING_EFFORT"))
 
     def _handle_deprecated_attributes(self) -> None:
+        """Handle deprecated configuration attributes with warnings."""
         if os.getenv("EMBEDDING_PROVIDER") is not None:
             warnings.warn(
                 "EMBEDDING_PROVIDER is deprecated and will be removed soon. Use EMBEDDING instead.",
