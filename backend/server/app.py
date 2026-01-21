@@ -93,12 +93,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Configure allowed origins for CORS
-ALLOWED_ORIGINS = [
-    "http://localhost:3000",   # Local development
-    "http://127.0.0.1:3000",   # Local development alternative
-    "https://app.gptr.dev",    # Production frontend
-    "*",                      # Allow all origins for testing
-]
+allowed_origins_env = os.getenv("CORS_ALLOW_ORIGINS")
+ALLOWED_ORIGINS = (
+    [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+    if allowed_origins_env
+    else [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://app.gptr.dev",
+    ]
+)
 
 # Standard JSON response - no custom MongoDB encoding needed
 
