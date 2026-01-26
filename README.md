@@ -99,6 +99,13 @@ See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-starte
     export TAVILY_API_KEY={Your Tavily API Key here}
     ```
 
+    (Optional) For enhanced tracing and observability, you can also set:
+    
+    ```bash
+    # export LANGCHAIN_TRACING_V2=true
+    # export LANGCHAIN_API_KEY={Your LangChain API Key here}
+    ```
+
     For custom OpenAI-compatible APIs (e.g., local models, other providers), you can also set:
     
     ```bash
@@ -246,6 +253,19 @@ By using LangGraph, the research process can be significantly improved in depth 
 An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 
 Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our [documentation](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) for more information.
+
+## 🔍 Observability
+
+GPT Researcher supports **LangSmith** for enhanced tracing and observability, making it easier to debug and optimize complex multi-agent workflows.
+
+To enable tracing:
+1. Set the following environment variables:
+   ```bash
+   export LANGCHAIN_TRACING_V2=true
+   export LANGCHAIN_API_KEY=your_api_key
+   export LANGCHAIN_PROJECT="gpt-researcher"
+   ```
+2. Run your research tasks as usual. All LangGraph-based agent interactions will be automatically traced and visualized in your LangSmith dashboard.
 
 ## 🖥️ Frontend Applications
 
