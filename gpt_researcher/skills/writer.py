@@ -1,20 +1,39 @@
-from typing import Dict, Optional
-import json
+"""Report generator skill for GPT Researcher.
 
-from ..utils.llm import construct_subtopics
+This module provides the ReportGenerator class that handles report
+writing, including introductions, conclusions, and subtopic management.
+"""
+
+import json
+from typing import Dict, Optional
+
 from ..actions import (
-    stream_output,
-    generate_report,
     generate_draft_section_titles,
+    generate_report,
+    stream_output,
+    write_conclusion,
     write_report_introduction,
-    write_conclusion
 )
+from ..utils.llm import construct_subtopics
 
 
 class ReportGenerator:
-    """Generates reports based on research data."""
+    """Generates reports based on research data.
+
+    This class handles all aspects of report generation including
+    writing introductions, conclusions, and managing report structure.
+
+    Attributes:
+        researcher: The parent GPTResearcher instance.
+        research_params: Dictionary of parameters for report generation.
+    """
 
     def __init__(self, researcher):
+        """Initialize the ReportGenerator.
+
+        Args:
+            researcher: The GPTResearcher instance that owns this generator.
+        """
         self.researcher = researcher
         self.research_params = {
             "query": self.researcher.query,

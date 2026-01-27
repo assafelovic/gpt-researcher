@@ -67,8 +67,13 @@ class ChatAgentWithMemory:
         self.retriever = None
         self.search_metadata = None
         
-        # Initialize Tavily client
-        self.tavily_client = TavilyClient(api_key=os.environ.get("TAVILY_API_KEY"))
+        # Initialize Tavily client (optional - only if API key is available)
+        tavily_api_key = os.environ.get("TAVILY_API_KEY")
+        if tavily_api_key:
+            self.tavily_client = TavilyClient(api_key=tavily_api_key)
+        else:
+            self.tavily_client = None
+            logger.warning("TAVILY_API_KEY not set - web search in chat will be disabled")
         
         # Process document and create vector store if not provided
         if not self.vector_store and False:
@@ -109,6 +114,19 @@ class ChatAgentWithMemory:
     def quick_search(self, query):
         """Perform a web search for current information using Tavily"""
         try:
+            # Check if Tavily client is available
+            if self.tavily_client is None:
+                logger.warning(f"Tavily client not available, skipping web search for: {query}")
+                self.search_metadata = {
+                    "query": query,
+                    "sources": [],
+                    "error": "Web search is disabled - TAVILY_API_KEY not configured"
+                }
+                return {
+                    "error": "Web search is disabled - TAVILY_API_KEY not configured",
+                    "results": []
+                }
+            
             logger.info(f"Performing web search for: {query}")
             results = self.tavily_client.search(query=query, max_results=5)
             

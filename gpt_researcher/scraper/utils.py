@@ -1,9 +1,17 @@
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse, parse_qs
-import logging
+"""Utility functions for web scraping.
+
+This module provides helper functions for extracting content, images,
+and processing HTML from web pages.
+"""
+
 import hashlib
+import logging
 import re
+from urllib.parse import parse_qs, urljoin, urlparse
+
 import bs4
+from bs4 import BeautifulSoup
+
 
 def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
     """Extract relevant images from the page"""

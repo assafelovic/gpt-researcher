@@ -1,7 +1,23 @@
+"""Enumeration types for GPT Researcher configuration."""
+
 from enum import Enum
 
 
 class ReportType(Enum):
+    """Enumeration of available report types for research output.
+
+    Defines the different types of reports that can be generated
+    by the GPT Researcher agent.
+
+    Attributes:
+        ResearchReport: Standard research report with comprehensive analysis.
+        ResourceReport: Report focused on listing and describing resources.
+        OutlineReport: Report providing a structured outline of the topic.
+        CustomReport: User-defined custom report format.
+        DetailedReport: In-depth detailed analysis report.
+        SubtopicReport: Report focused on a specific subtopic.
+        DeepResearch: Deep research mode with extensive analysis.
+    """
     ResearchReport = "research_report"
     ResourceReport = "resource_report"
     OutlineReport = "outline_report"
@@ -12,6 +28,20 @@ class ReportType(Enum):
 
 
 class ReportSource(Enum):
+    """Enumeration of available data sources for research.
+
+    Defines the different sources from which the researcher
+    can gather information for generating reports.
+
+    Attributes:
+        Web: Search and scrape content from the web.
+        Local: Use local documents and files.
+        Azure: Use Azure blob storage documents.
+        LangChainDocuments: Use LangChain document objects.
+        LangChainVectorStore: Use LangChain vector store for retrieval.
+        Static: Use pre-defined static content.
+        Hybrid: Combine multiple source types.
+    """
     Web = "web"
     Local = "local"
     Azure = "azure"
@@ -22,6 +52,14 @@ class ReportSource(Enum):
 
 
 class Tone(Enum):
+    """Enumeration of available writing tones for reports.
+
+    Defines the different tones that can be used when generating
+    research reports to match the desired style and audience.
+
+    Each tone value includes a description of the writing style
+    it represents.
+    """
     Objective = "Objective (impartial and unbiased presentation of facts and findings)"
     Formal = "Formal (adheres to academic standards with sophisticated language and structure)"
     Analytical = (
