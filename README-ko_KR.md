@@ -103,6 +103,13 @@ export OPENAI_API_KEY={OpenAI API 키 입력}
 export TAVILY_API_KEY={Tavily API 키 입력}
 ```
 
+(선택 사항) 향상된 트레이싱 및 관측 가능성을 위해 다음을 설정할 수도 있습니다:
+
+```bash
+# export LANGCHAIN_TRACING_V2=true
+# export LANGCHAIN_API_KEY={LangChain API 키 입력}
+```
+
 더 영구적인 설정을 원한다면, 현재의 `gpt-researcher` 디렉토리에 `.env` 파일을 생성하고 환경 변수를 입력하세요 (export 없이).
 
 - 기본 LLM은 [GPT](https://platform.openai.com/docs/guides/gpt)이지만, `claude`, `ollama3`, `gemini`, `mistral` 등 다른 LLM도 사용할 수 있습니다. LLM 제공자를 변경하는 방법은 [LLMs 문서](https://docs.gptr.dev/docs/gpt-researcher/llms)를 참조하세요. 이 프로젝트는 OpenAI GPT 모델에 최적화되어 있습니다.
@@ -165,6 +172,19 @@ $ docker-compose up --build
  - localhost:3000에서 실행 중인 React 앱<br>
 
 브라우저에서 localhost:3000으로 이동하여 연구를 시작하세요!
+
+## 🔍 관측 가능성 (Observability)
+
+GPT Researcher는 **LangSmith**를 지원하여 복잡한 다중 에이전트 워크플로우의 트레이싱과 관측 가능성을 향상시키며, 디버깅과 최적화를 용이하게 합니다.
+
+트레이싱을 활성화하려면:
+1. 다음 환경 변수를 설정하십시오:
+   ```bash
+   export LANGCHAIN_TRACING_V2=true
+   export LANGCHAIN_API_KEY=당신의_API_키
+   export LANGCHAIN_PROJECT="gpt-researcher"
+   ```
+2. 평소와 같이 연구 작업을 실행하십시오. 모든 LangGraph 기반 에이전트 상호 작용은 자동으로 추적되며 LangSmith 대시보드에서 시각화됩니다.
 
 ## 📄 로컬 문서로 연구하기
 
