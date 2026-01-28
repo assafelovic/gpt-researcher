@@ -13,6 +13,7 @@
 ![GitHub Release](https://img.shields.io/github/v/release/assafelovic/gpt-researcher?style=flat&logo=github)
 [![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/docs/docs/examples/pip-run.ipynb)
 [![Docker Image Version](https://img.shields.io/docker/v/elestio/gpt-researcher/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/gpt-researcher)
+[![GHCR Image](https://img.shields.io/badge/GHCR-gpt--researcher-blue?logo=github&logoColor=white)](https://github.com/assafelovic/gpt-researcher/pkgs/container/gpt-researcher)
 [![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
 
 [English](README.md) | [中文](README-zh_CN.md) | [日本語](README-ja_JP.md) | [한국어](README-ko_KR.md)
@@ -206,6 +207,14 @@ docker-compose up --build
 If that doesn't work, try running it without the dash:
 ```bash
 docker compose up --build
+```
+
+### Pulling from GitHub Container Registry (GHCR)
+
+You can also pull the Docker image directly from GHCR:
+
+```bash
+docker pull ghcr.io/assafelovic/gpt-researcher:latest
 ```
 
 > **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:

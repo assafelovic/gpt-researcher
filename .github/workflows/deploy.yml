@@ -18,6 +18,7 @@ on:
 env:
     AWS_REGION: us-east-1
     TF_VAR_image_tag: us-east-1
+    TF_VAR_image_repository: ghcr.io/${{ github.repository }}
     REPO_FULL_NAME: ${{ github.repository }}
 
 jobs:
@@ -117,6 +118,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      packages: read
 
     steps:
     - name: Checkout code
@@ -174,6 +176,7 @@ jobs:
             echo "Using fallback image tag: ${IMAGE_TAG}"
           fi
         fi
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:

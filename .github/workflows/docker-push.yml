@@ -84,15 +84,26 @@ jobs:
         with:
           username: "${{ env.DOCKER_USERNAME }}"
           password: "${{ env.DOCKER_TOKEN }}"
+
+      - name: "Prepare target images"
+        id: target-images
+        run: |
+          IMAGES="ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}"
+          if [[ "${{ env.DOCKERHUB_AUTH }}" == "true" ]]; then
+            IMAGES="${IMAGES}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}"
+          fi
+          echo "images<<EOF" >> $GITHUB_OUTPUT
+          echo "$IMAGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: "Extract Docker metadata"
         id: "meta"
         uses: "docker/metadata-action@v5"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
         with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+          images: ${{ steps.target-images.outputs.images }}
           tags: |
             # For release tags: apply the version tag and mark as latest
             type=semver,pattern={{version}}
@@ -103,6 +114,8 @@ jobs:
             type=ref,event=branch,prefix=
             # For PRs: apply pr-{number} tag
             type=ref,event=pr
+            # For commits: apply sha tag
+            type=sha
       - name: "Build and push Docker image"
         uses: "docker/build-push-action@v6"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
@@ -113,7 +126,7 @@ jobs:
           platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
           cache-from: "type=gha"
@@ -178,15 +191,26 @@ jobs:
         with:
           username: "${{ env.DOCKER_USERNAME }}"
           password: "${{ env.DOCKER_TOKEN }}"
+
+      - name: "Prepare target images"
+        id: target-images
+        run: |
+          IMAGES="ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}"
+          if [[ "${{ env.DOCKERHUB_AUTH }}" == "true" ]]; then
+            IMAGES="${IMAGES}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}"
+          fi
+          echo "images<<EOF" >> $GITHUB_OUTPUT
+          echo "$IMAGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: "Extract Docker metadata"
         id: "meta"
         uses: "docker/metadata-action@v5"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
         with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+          images: ${{ steps.target-images.outputs.images }}
           tags: |
             # For release tags: apply the version tag and mark as latest
             type=semver,pattern={{version}}
@@ -207,7 +231,7 @@ jobs:
           platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
           cache-from: "type=gha"
@@ -272,15 +296,26 @@ jobs:
         with:
           username: "${{ env.DOCKER_USERNAME }}"
           password: "${{ env.DOCKER_TOKEN }}"
+
+      - name: "Prepare target images"
+        id: target-images
+        run: |
+          IMAGES="ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}"
+          if [[ "${{ env.DOCKERHUB_AUTH }}" == "true" ]]; then
+            IMAGES="${IMAGES}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}"
+          fi
+          echo "images<<EOF" >> $GITHUB_OUTPUT
+          echo "$IMAGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: "Extract Docker metadata"
         id: "meta"
         uses: "docker/metadata-action@v5"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
         with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+          images: ${{ steps.target-images.outputs.images }}
           tags: |
             # For release tags: apply the version tag and mark as latest
             type=semver,pattern={{version}}
@@ -301,7 +336,7 @@ jobs:
           platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
           cache-from: "type=gha"
@@ -366,15 +401,26 @@ jobs:
         with:
           username: "${{ env.DOCKER_USERNAME }}"
           password: "${{ env.DOCKER_TOKEN }}"
+
+      - name: "Prepare target images"
+        id: target-images
+        run: |
+          IMAGES="ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}"
+          if [[ "${{ env.DOCKERHUB_AUTH }}" == "true" ]]; then
+            IMAGES="${IMAGES}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}"
+          fi
+          echo "images<<EOF" >> $GITHUB_OUTPUT
+          echo "$IMAGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: "Extract Docker metadata"
         id: "meta"
         uses: "docker/metadata-action@v5"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
         with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+          images: ${{ steps.target-images.outputs.images }}
           tags: |
             # For release tags: apply the version tag and mark as latest
             type=semver,pattern={{version}}
@@ -395,8 +441,36 @@ jobs:
           platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
           cache-from: "type=gha"
           cache-to: "type=gha,mode=max"
+
+  verify-images:
+    name: "Verify Root Image"
+    # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
+    if: ${{ (success() || failure()) && github.event_name != 'pull_request' }}
+    needs: build-push-root
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Log in to GitHub Container Registry"
+        uses: "docker/login-action@v3"
+        with:
+          registry: "ghcr.io"
+          username: "${{ github.repository_owner }}"
+          password: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: "Pull and Verify Image"
+        run: |
+          # Calculate short SHA to match the tag generated by metadata-action
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          IMAGE_TAG="sha-${SHORT_SHA}"
+          IMAGE_NAME="ghcr.io/${{ github.repository }}:${IMAGE_TAG}"
+
+          echo "Pulling image: ${IMAGE_NAME}"
+          docker pull "${IMAGE_NAME}"
+
+          echo "Verifying image..."
+          # Just check if python is available as a basic check
+          docker run --rm "${IMAGE_NAME}" python --version
