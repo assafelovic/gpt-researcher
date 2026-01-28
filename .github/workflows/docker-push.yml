@@ -84,15 +84,26 @@ jobs:
         with:
           username: "${{ env.DOCKER_USERNAME }}"
           password: "${{ env.DOCKER_TOKEN }}"
+
+      - name: "Prepare target images"
+        id: target-images
+        run: |
+          IMAGES="ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}"
+          if [[ "${{ env.DOCKERHUB_AUTH }}" == "true" ]]; then
+            IMAGES="${IMAGES}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}"
+          fi
+          echo "images<<EOF" >> $GITHUB_OUTPUT
+          echo "$IMAGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: "Extract Docker metadata"
         id: "meta"
         uses: "docker/metadata-action@v5"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
         with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+          images: ${{ steps.target-images.outputs.images }}
           tags: |
             # For release tags: apply the version tag and mark as latest
             type=semver,pattern={{version}}
@@ -115,7 +126,7 @@ jobs:
           platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
           cache-from: "type=gha"
@@ -180,15 +191,26 @@ jobs:
         with:
           username: "${{ env.DOCKER_USERNAME }}"
           password: "${{ env.DOCKER_TOKEN }}"
+
+      - name: "Prepare target images"
+        id: target-images
+        run: |
+          IMAGES="ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}"
+          if [[ "${{ env.DOCKERHUB_AUTH }}" == "true" ]]; then
+            IMAGES="${IMAGES}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}"
+          fi
+          echo "images<<EOF" >> $GITHUB_OUTPUT
+          echo "$IMAGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: "Extract Docker metadata"
         id: "meta"
         uses: "docker/metadata-action@v5"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
         with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+          images: ${{ steps.target-images.outputs.images }}
           tags: |
             # For release tags: apply the version tag and mark as latest
             type=semver,pattern={{version}}
@@ -209,7 +231,7 @@ jobs:
           platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
           cache-from: "type=gha"
@@ -274,15 +296,26 @@ jobs:
         with:
           username: "${{ env.DOCKER_USERNAME }}"
           password: "${{ env.DOCKER_TOKEN }}"
+
+      - name: "Prepare target images"
+        id: target-images
+        run: |
+          IMAGES="ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}"
+          if [[ "${{ env.DOCKERHUB_AUTH }}" == "true" ]]; then
+            IMAGES="${IMAGES}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}"
+          fi
+          echo "images<<EOF" >> $GITHUB_OUTPUT
+          echo "$IMAGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: "Extract Docker metadata"
         id: "meta"
         uses: "docker/metadata-action@v5"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
         with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+          images: ${{ steps.target-images.outputs.images }}
           tags: |
             # For release tags: apply the version tag and mark as latest
             type=semver,pattern={{version}}
@@ -303,7 +336,7 @@ jobs:
           platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
           cache-from: "type=gha"
@@ -368,15 +401,26 @@ jobs:
         with:
           username: "${{ env.DOCKER_USERNAME }}"
           password: "${{ env.DOCKER_TOKEN }}"
+
+      - name: "Prepare target images"
+        id: target-images
+        run: |
+          IMAGES="ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}"
+          if [[ "${{ env.DOCKERHUB_AUTH }}" == "true" ]]; then
+            IMAGES="${IMAGES}
+            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}"
+          fi
+          echo "images<<EOF" >> $GITHUB_OUTPUT
+          echo "$IMAGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: "Extract Docker metadata"
         id: "meta"
         uses: "docker/metadata-action@v5"
         # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
         if: ${{ success() || failure() }}
         with:
-          images: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME_GHCR_SUFFIXED }}
-            ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME_DOCKERHUB_SUFFIXED }}
+          images: ${{ steps.target-images.outputs.images }}
           tags: |
             # For release tags: apply the version tag and mark as latest
             type=semver,pattern={{version}}
@@ -397,7 +441,7 @@ jobs:
           platforms: "linux/amd64,linux/arm64"
           tags: "${{ steps.meta.outputs.tags }}"
           labels: "${{ steps.meta.outputs.labels }}"
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           provenance: false
           sbom: false
           cache-from: "type=gha"
@@ -406,7 +450,7 @@ jobs:
   verify-images:
     name: "Verify Root Image"
     # This line makes it possible to cancel a workflow in the middle of a step. Otherwise the step needs to complete first.
-    if: ${{ success() || failure() }}
+    if: ${{ (success() || failure()) && github.event_name != 'pull_request' }}
     needs: build-push-root
     runs-on: "ubuntu-latest"
     steps:
