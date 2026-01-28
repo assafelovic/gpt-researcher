@@ -434,6 +434,29 @@ response:
         )
 
     @staticmethod
+    def generate_quick_summary_prompt(query: str, context: str) -> str:
+        """Generates the quick summary prompt for the given question and context.
+        Args:
+            query (str): The query to generate the summary for
+            context (str): The search results to summarize
+        Returns:
+            str: The quick summary prompt
+        """
+        return f"""
+Synthesize a comprehensive answer to the following query based ONLY on the provided search results.
+Query: "{query}"
+
+Search Results:
+{context}
+
+Instructions:
+1. Provide a single, continuous narrative summary.
+2. Cite your sources using numbers [1], [2], etc., corresponding to the search results.
+3. If the results are insufficient to answer the query, state that clearly.
+4. Focus on accuracy and relevance.
+"""
+
+    @staticmethod
     def pretty_print_docs(docs: list[Document], top_n: int | None = None) -> str:
         """Compress the list of documents into a context string"""
         return f"\n".join(f"Source: {d.metadata.get('source')}\n"

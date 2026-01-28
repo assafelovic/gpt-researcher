@@ -28,6 +28,7 @@ from .skills.deep_research import DeepResearchSkill
 from .skills.researcher import ResearchConductor
 from .skills.writer import ReportGenerator
 from .utils.enum import ReportSource, ReportType, Tone
+from .utils.llm import create_chat_completion
 from .vector_store import VectorStoreWrapper
 
 
@@ -459,17 +460,39 @@ class GPTResearcher:
         await self._log_event("research", step="introduction_completed")
         return intro
 
-    async def quick_search(self, query: str, query_domains: list[str] = None) -> list[Any]:
+    async def quick_search(self, query: str, query_domains: list[str] = None, aggregated_summary: bool = False) -> list[Any] | str:
         """Perform a quick search without full research workflow.
 
         Args:
             query: The search query.
             query_domains: Optional list of domains to restrict search to.
+            aggregated_summary: Whether to return an aggregated summary of the search results.
 
         Returns:
-            List of search results.
+            List of search results or a synthesized summary string.
         """
-        return await get_search_results(query, self.retrievers[0], query_domains=query_domains)
+        search_results = await get_search_results(query, self.retrievers[0], query_domains=query_domains)
+
+        if not aggregated_summary:
+            return search_results
+
+        # Format results for summary
+        context = ""
+        for i, result in enumerate(search_results, 1):
+            context += f"[{i}] {result.get('title', '')}: {result.get('content', '')} ({result.get('url', '')})\n\n"
+
+        prompt = self.prompt_family.generate_quick_summary_prompt(query, context)
+
+        summary = await create_chat_completion(
+            model=self.cfg.smart_llm_model,
+            messages=[{"role": "user", "content": prompt}],
+            llm_provider=self.cfg.smart_llm_provider,
+            max_tokens=self.cfg.smart_token_limit,
+            llm_kwargs=self.cfg.llm_kwargs,
+            cost_callback=self.add_costs
+        )
+
+        return summary
 
     async def get_subtopics(self):
         """Generate subtopics for the research query.
