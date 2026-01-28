@@ -9,6 +9,12 @@ variable "image_tag" {
   }
 }
 
+variable "image_repository" {
+  description = "Docker image repository URL (e.g., ghcr.io/owner/repo)"
+  type        = string
+  default     = "ghcr.io/assafelovic/gpt-researcher"
+}
+
 variable "ecr_repository_name" {
   description = "ECR repository name to pull image from (defaults to project_name)"
   type        = string

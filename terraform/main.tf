@@ -1,23 +1,3 @@
-# Remote state to pull ECR repository details managed in terraform/ecr-setup
-data "terraform_remote_state" "ecr" {
-  backend = "s3"
-
-  config = {
-    bucket         = "gg-ai-terraform-states"
-    key            = "production/gpt-researcher/ecr.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "terraform-state-locks"
-    encrypt        = true
-  }
-}
-locals {
-  # Remote ECR url is preferred; fall back to live lookup only when missing
-  use_remote_ecr_url = try(data.terraform_remote_state.ecr.outputs.ecr_repository_url != "", false)
-}
-data "aws_ecr_repository" "app" {
-  count = local.use_remote_ecr_url ? 0 : 1
-  name  = var.ecr_repository_name != "" ? var.ecr_repository_name : var.project_name
-}
 data "aws_secretsmanager_secret" "openwebui_secret_manager" {
   name = var.openwebui_secret_manager
 }
@@ -36,14 +16,10 @@ locals {
   service_name = var.project_name
   environment  = var.environment
 
-  # ECR configuration
-  ecr_repository_name = local.service_name
-  image_tag           = var.image_tag
-  # Prefer remote state output but fall back to querying the repository directly
-  ecr_repository_url = try(
-    data.terraform_remote_state.ecr.outputs.ecr_repository_url,
-    data.aws_ecr_repository.app[0].repository_url,
-  )
+  # Image configuration
+  image_tag = var.image_tag
+  # Use provided image repository or fall back to default
+  image_repository = var.image_repository
 
   # ECS configuration - using common module with validation
   ecs_cluster_name = module.common.available_clusters["general"]
@@ -152,7 +128,7 @@ module "ecs_service" {
   source = "git::https://github.com/Gravity-Global/gg-ai-terraform-common.git//modules/ecs-service?ref=main"
 
   service_name    = local.service_name
-  container_image = "${local.ecr_repository_url}:${var.image_tag}"
+  container_image = "${local.image_repository}:${var.image_tag}"
 
   container_port = local.container_port
   environment    = local.environment

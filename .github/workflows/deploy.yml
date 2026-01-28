@@ -18,6 +18,7 @@ on:
 env:
     AWS_REGION: us-east-1
     TF_VAR_image_tag: us-east-1
+    TF_VAR_image_repository: ghcr.io/${{ github.repository }}
     REPO_FULL_NAME: ${{ github.repository }}
 
 jobs:
@@ -175,31 +176,6 @@ jobs:
             echo "Using fallback image tag: ${IMAGE_TAG}"
           fi
         fi
-
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
-
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Sync image from GHCR to ECR
-      if: steps.get-image-tag.outputs.source == 'manual'
-      run: |
-        GHCR_IMAGE="ghcr.io/${{ github.repository }}:${{ steps.get-image-tag.outputs.image_tag }}"
-        ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
-        ECR_REPO="${{ steps.extract_short_name_repo.outputs.REPO_NAME }}"
-        ECR_IMAGE="${ECR_REGISTRY}/${ECR_REPO}:${{ steps.get-image-tag.outputs.image_tag }}"
-
-        echo "Syncing ${GHCR_IMAGE} to ${ECR_IMAGE}..."
-        docker pull ${GHCR_IMAGE}
-        docker tag ${GHCR_IMAGE} ${ECR_IMAGE}
-        docker push ${ECR_IMAGE}
-        echo "✅ Image synced successfully."
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
