@@ -151,11 +151,10 @@ class DetailedReport:
             current_subtopic_task, parse_draft_section_titles_text, self.global_written_sections
         )
 
-        # Skip image generation for subtopic reports (will generate for final report)
+        # Write subtopic report (images are pre-generated at the main research level)
         subtopic_report = await subtopic_assistant.write_report(
             existing_headers=self.existing_headers,
             relevant_written_contents=relevant_contents,
-            generate_images=False,  # Don't generate images for subtopics
         )
 
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
@@ -176,13 +175,5 @@ class DetailedReport:
             conclusion, self.gpt_researcher.visited_urls)
         report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
         
-        # Generate images for the final combined report if enabled
-        if (self.gpt_researcher.image_generator and 
-            self.gpt_researcher.image_generator.is_enabled()):
-            report, _ = await self.gpt_researcher.image_generator.generate_images_for_report(
-                report=report,
-                query=self.query,
-                research_id=self.research_id,
-            )
-        
+        # Note: Images are now pre-generated during conduct_research() and embedded during write_report()
         return report

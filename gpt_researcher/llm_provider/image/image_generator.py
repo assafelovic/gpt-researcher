@@ -103,6 +103,56 @@ class ImageGeneratorProvider:
         prompt_hash = hashlib.md5(prompt.encode()).hexdigest()[:8]
         return f"img_{prompt_hash}_{index}.png"
     
+    def _crop_to_landscape(self, image_bytes: bytes, target_ratio: float = 16/9) -> bytes:
+        """Crop a square image to landscape format (16:9 by default).
+        
+        This ensures images fit well in article/report layouts.
+        
+        Args:
+            image_bytes: Raw image bytes.
+            target_ratio: Target width/height ratio (default 16:9 ≈ 1.78).
+            
+        Returns:
+            Cropped image bytes in PNG format.
+        """
+        try:
+            from PIL import Image
+            import io
+            
+            # Open the image
+            img = Image.open(io.BytesIO(image_bytes))
+            width, height = img.size
+            
+            # If already landscape or wider, return as-is
+            if width / height >= target_ratio:
+                return image_bytes
+            
+            # Calculate new dimensions for landscape crop
+            # Keep full width, reduce height
+            new_height = int(width / target_ratio)
+            
+            # Center crop vertically
+            top = (height - new_height) // 2
+            bottom = top + new_height
+            
+            # Crop the image
+            cropped = img.crop((0, top, width, bottom))
+            
+            # Save to bytes
+            output = io.BytesIO()
+            cropped.save(output, format='PNG', optimize=True)
+            output.seek(0)
+            
+            logger.info(f"Cropped image from {width}x{height} to {width}x{new_height} (landscape)")
+            return output.getvalue()
+            
+        except ImportError:
+            logger.warning("PIL not available for image cropping, returning original")
+            return image_bytes
+        except Exception as e:
+            logger.warning(f"Failed to crop image to landscape: {e}")
+            return image_bytes
+    
     def _build_enhanced_prompt(self, prompt: str, context: str = "", style: str = "dark") -> str:
         """Build an enhanced prompt with explicit styling instructions.
         
@@ -263,6 +313,10 @@ AVOID:
                                 image_bytes = base64.b64decode(image_data)
                             else:
                                 image_bytes = image_data
+                            
+                            # Note: Keeping original square format from Gemini
+                            # To enable landscape cropping, uncomment:
+                            # image_bytes = self._crop_to_landscape(image_bytes)
                             
                             with open(filepath, 'wb') as f:
                                 f.write(image_bytes)

@@ -66,5 +66,5 @@ class BasicReport:
 
     async def run(self):
         await self.gpt_researcher.conduct_research()
-        report = await self.gpt_researcher.write_report(research_id=self.research_id)
+        report = await self.gpt_researcher.write_report()
         return report

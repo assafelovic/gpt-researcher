@@ -190,9 +190,25 @@ class GPTResearcher:
 
         # Initialize image generator (optional - only if configured)
         self.image_generator: Optional[ImageGenerator] = ImageGenerator(self)
+        self.available_images: list = []  # Pre-generated images ready for embedding
+        self._research_id: str = ""  # Unique ID for this research session
 
         # Handle MCP strategy configuration with backwards compatibility
         self.mcp_strategy = self._resolve_mcp_strategy(mcp_strategy, mcp_max_iterations)
+    
+    def _generate_research_id(self) -> str:
+        """Generate a unique research ID for this session.
+        
+        Returns:
+            A unique string identifier for this research session.
+        """
+        if not self._research_id:
+            import hashlib
+            import time
+            # Create unique ID from query + timestamp
+            unique_str = f"{self.query}_{time.time()}"
+            self._research_id = f"research_{hashlib.md5(unique_str.encode()).hexdigest()[:12]}"
+        return self._research_id
 
     def _resolve_mcp_strategy(self, mcp_strategy: str | None, mcp_max_iterations: int | None) -> str:
         """
@@ -360,6 +376,22 @@ class GPTResearcher:
         await self._log_event("research", step="research_completed", details={
             "context_length": len(self.context)
         })
+        
+        # Pre-generate images if enabled (happens BEFORE report writing for better UX)
+        self.available_images = []
+        if self.image_generator and self.image_generator.is_enabled():
+            await self._log_event("research", step="planning_images")
+            # Convert context list to string for analysis
+            context_str = "\n\n".join(self.context) if isinstance(self.context, list) else str(self.context)
+            self.available_images = await self.image_generator.plan_and_generate_images(
+                context=context_str,
+                query=self.query,
+                research_id=self._generate_research_id(),
+            )
+            await self._log_event("research", step="images_pre_generated", details={
+                "images_count": len(self.available_images)
+            })
+        
         return self.context
 
     async def _handle_deep_research(self, on_progress=None):
@@ -416,8 +448,6 @@ class GPTResearcher:
         relevant_written_contents: list = [],
         ext_context=None,
         custom_prompt="",
-        generate_images: bool = True,
-        research_id: str = "",
     ) -> str:
         """Write the research report.
 
@@ -426,59 +456,31 @@ class GPTResearcher:
             relevant_written_contents: List of previously written content for context.
             ext_context: External context to use instead of internal context.
             custom_prompt: Custom prompt to guide report generation.
-            generate_images: Whether to generate inline images for the report.
-            research_id: Optional research ID for file organization.
 
         Returns:
             The generated report as a string.
         """
-        # Check if image generation is enabled for inline placeholders
-        should_include_image_placeholders = (
-            generate_images and 
-            self.image_generator and 
-            self.image_generator.is_enabled()
-        )
+        # Use pre-generated images if available (generated during conduct_research)
+        has_available_images = bool(self.available_images)
         
         await self._log_event("research", step="writing_report", details={
             "existing_headers": existing_headers,
             "context_source": "external" if ext_context else "internal",
-            "include_image_placeholders": should_include_image_placeholders,
+            "available_images_count": len(self.available_images),
         })
 
-        # Generate report with or without image placeholders
+        # Generate report with available images embedded
         report = await self.report_generator.write_report(
             existing_headers=existing_headers,
             relevant_written_contents=relevant_written_contents,
             ext_context=ext_context or self.context,
             custom_prompt=custom_prompt,
-            include_image_placeholders=should_include_image_placeholders,
+            available_images=self.available_images,  # Pass pre-generated images
         )
 
-        # Process image placeholders and generate actual images
-        if should_include_image_placeholders:
-            await self._log_event("research", step="processing_image_placeholders")
-            report, generated_images = await self.image_generator.process_image_placeholders(
-                report=report,
-                query=self.query,
-                research_id=research_id,
-            )
-            await self._log_event("research", step="images_generated", details={
-                "images_count": len(generated_images)
-            })
-            
-            # Send the complete updated report with images to frontend
-            if generated_images and self.websocket:
-                from .actions.utils import stream_output
-                await stream_output(
-                    type="report_complete",
-                    content="report_with_images",
-                    output=report,
-                    websocket=self.websocket,
-                    metadata={"images": [{"url": img["url"], "alt": img["alt_text"]} for img in generated_images]}
-                )
-
         await self._log_event("research", step="report_completed", details={
-            "report_length": len(report)
+            "report_length": len(report),
+            "images_embedded": len(self.available_images) if has_available_images else 0,
         })
         return report
 

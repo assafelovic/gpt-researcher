@@ -174,7 +174,7 @@
 
   /* Images */
   img {
-    max-width: 100%;
+    max-width: 75%;
     height: auto;
     border-radius: 8px;
     margin: 1.5em auto;
@@ -187,7 +187,7 @@
   img[alt^="Illustration:"],
   img[alt^="Diagram:"],
   img[alt^="Visualization:"] {
-    max-width: 80%;
+    max-width: 65%;
     border: 2px solid rgba(20, 184, 166, 0.3);
     box-shadow: 0 6px 20px rgba(20, 184, 166, 0.15);
   }

@@ -263,12 +263,10 @@ The response should contain ONLY the list.
         total_words=1000,
         tone=None,
         language="english",
-        include_image_placeholders: bool = False,
     ):
         """Generates the report prompt for the given question and research summary.
         Args: question (str): The question to generate the report prompt for
                 research_summary (str): The research summary to generate the report prompt for
-                include_image_placeholders (bool): Whether to include image placeholder instructions
         Returns: str: The report prompt for the given question and research summary
         """
 
@@ -287,31 +285,6 @@ You MUST write all used source document names at the end of the report as refere
 """
 
         tone_prompt = f"Write the report in a {tone.value} tone." if tone else ""
-        
-        # Image placeholder instructions for inline image generation
-        image_prompt = ""
-        if include_image_placeholders:
-            image_prompt = """
-- IMAGES: Include 2-3 image placeholders where visual illustrations would significantly enhance understanding. Use this EXACT format on its own line:
-
-  [IMAGE: Detailed description of the visual - be specific about what should be shown, the layout, and key elements]
-
-  GOOD image placeholder examples:
-  - [IMAGE: A professional infographic showing the three main components of the system: data input on the left, processing engine in the center, and output dashboard on the right, connected by flowing arrows]
-  - [IMAGE: A comparison diagram with two side-by-side panels contrasting traditional approach vs modern approach, with checkmarks and X marks highlighting differences]
-  - [IMAGE: A layered architecture diagram showing frontend, API layer, and backend database, with security shields between each layer]
-  
-  BAD examples (too vague - avoid these):
-  - [IMAGE: A diagram of the system]
-  - [IMAGE: Chart showing data]
-  
-  IMPORTANT:
-  - Be VERY specific and descriptive (at least 20 words per placeholder)
-  - Describe the visual layout, not just the concept
-  - Focus on diagrams, infographics, architecture visuals, comparison charts
-  - Place placeholders after the relevant section header or paragraph
-  - Do NOT include placeholders in introduction or conclusion sections
-"""
 
         return f"""
 Information: "{context}"
@@ -333,7 +306,6 @@ Please follow all of the following guidelines in your report:
 - Don't forget to add a reference list at the end of the report in {report_format} format and full url links without hyperlinks.
 - {reference_prompt}
 - {tone_prompt}
-{image_prompt}
 You MUST write the report in the following language: {language}.
 Please do your best, this is very important to my career.
 Assume that the current date is {date.today()}.

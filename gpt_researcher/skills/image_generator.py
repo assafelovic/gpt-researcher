@@ -69,7 +69,201 @@ class ImageGenerator:
             True if image generation can be used.
         """
         return self.image_provider is not None and self.image_provider.is_available()
-    
+
+    async def plan_and_generate_images(
+        self,
+        context: str,
+        query: str,
+        research_id: str = "",
+    ) -> List[Dict[str, Any]]:
+        """Plan and pre-generate images based on research context.
+        
+        This method analyzes the research context to identify 2-3 concepts
+        that would benefit from visual illustrations, then generates them
+        in parallel BEFORE report writing begins.
+        
+        Args:
+            context: The accumulated research context.
+            query: The main research query.
+            research_id: Optional research ID for file organization.
+            
+        Returns:
+            List of generated image info dictionaries with URLs ready to embed.
+        """
+        if not self.is_enabled():
+            logger.info("Image generation is not enabled, skipping pre-generation")
+            return []
+        
+        if self.researcher.verbose:
+            await stream_output(
+                "logs",
+                "image_planning",
+                "🎨 Analyzing research context for visualization opportunities...",
+                self.researcher.websocket,
+            )
+        
+        # Step 1: Use LLM to identify best visualization opportunities
+        image_concepts = await self._plan_image_concepts(context, query)
+        
+        if not image_concepts:
+            logger.info("No suitable visualization opportunities identified")
+            return []
+        
+        if self.researcher.verbose:
+            await stream_output(
+                "logs",
+                "image_concepts_identified",
+                f"🖼️ Identified {len(image_concepts)} visualization concepts, generating images...",
+                self.researcher.websocket,
+            )
+        
+        # Step 2: Generate all images in parallel
+        image_style = getattr(self.cfg, 'image_generation_style', 'dark')
+        
+        async def generate_single_image(concept: Dict[str, Any], index: int) -> Optional[Dict[str, Any]]:
+            """Generate a single image from a concept."""
+            try:
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "image_generating",
+                        f"🖼️ Generating image {index + 1}/{len(image_concepts)}: {concept['title'][:50]}...",
+                        self.researcher.websocket,
+                    )
+                
+                images = await self.image_provider.generate_image(
+                    prompt=concept['prompt'],
+                    context=concept.get('context', ''),
+                    research_id=research_id,
+                    num_images=1,
+                    style=image_style,
+                )
+                
+                if images:
+                    image_info = images[0]
+                    image_info['title'] = concept['title']
+                    image_info['section_hint'] = concept.get('section_hint', '')
+                    return image_info
+                    
+            except Exception as e:
+                logger.error(f"Failed to generate image for '{concept['title']}': {e}")
+            return None
+        
+        # Generate all images in parallel
+        tasks = [generate_single_image(concept, i) for i, concept in enumerate(image_concepts)]
+        results = await asyncio.gather(*tasks)
+        
+        # Filter out failed generations
+        generated_images = [img for img in results if img is not None]
+        self.generated_images = generated_images
+        
+        if self.researcher.verbose:
+            if generated_images:
+                await stream_output(
+                    "logs",
+                    "images_ready",
+                    f"✅ {len(generated_images)} images ready for report embedding",
+                    self.researcher.websocket,
+                )
+            else:
+                await stream_output(
+                    "logs",
+                    "images_failed",
+                    "⚠️ No images could be generated",
+                    self.researcher.websocket,
+                )
+        
+        return generated_images
+
+    async def _plan_image_concepts(
+        self,
+        context: str,
+        query: str,
+    ) -> List[Dict[str, Any]]:
+        """Use LLM to identify the best visualization opportunities from research context.
+        
+        Args:
+            context: The research context to analyze.
+            query: The main research query.
+            
+        Returns:
+            List of image concept dictionaries with title, prompt, and section_hint.
+        """
+        # Truncate context if too long
+        max_context_length = 6000
+        truncated_context = context[:max_context_length] if len(context) > max_context_length else context
+        
+        planning_prompt = f"""Analyze this research context and identify 2-3 concepts that would significantly benefit from professional diagram/infographic illustrations.
+
+RESEARCH QUERY: {query}
+
+RESEARCH CONTEXT:
+{truncated_context}
+
+For each visualization opportunity, provide:
+1. title: A short descriptive title (e.g., "System Architecture", "Comparison Chart")
+2. prompt: A detailed image generation prompt describing exactly what to visualize, including layout and key elements (minimum 30 words)
+3. section_hint: Which section of the report this image relates to
+
+Focus on:
+- Architecture/system diagrams
+- Process flows and workflows
+- Comparison charts
+- Data visualizations
+- Conceptual illustrations
+
+IMPORTANT: Return ONLY a valid JSON array. No markdown, no explanation.
+
+Example output:
+[
+  {{
+    "title": "System Architecture Overview",
+    "prompt": "A layered architecture diagram showing the frontend application on top, connecting to an API gateway in the middle, which routes to microservices at the bottom. Use clean boxes with connecting arrows, modern tech aesthetic.",
+    "section_hint": "Architecture"
+  }}
+]
+
+Return 2-3 visualization concepts as a JSON array:"""
+
+        try:
+            response = await create_chat_completion(
+                model=self.cfg.fast_llm_model,
+                messages=[
+                    {"role": "system", "content": "You are a visualization expert. Return only valid JSON arrays."},
+                    {"role": "user", "content": planning_prompt}
+                ],
+                temperature=0.4,
+                llm_provider=self.cfg.fast_llm_provider,
+                max_tokens=1000,
+                llm_kwargs=self.cfg.llm_kwargs,
+                cost_callback=self.researcher.add_costs,
+            )
+            
+            # Parse JSON response
+            response = response.strip()
+            # Remove markdown code blocks if present
+            if response.startswith("```"):
+                response = re.sub(r'^```(?:json)?\n?', '', response)
+                response = re.sub(r'\n?```$', '', response)
+            
+            concepts = json.loads(response)
+            
+            # Validate and limit to max_images
+            valid_concepts = []
+            for concept in concepts[:self.max_images]:
+                if isinstance(concept, dict) and 'title' in concept and 'prompt' in concept:
+                    valid_concepts.append(concept)
+            
+            logger.info(f"Planned {len(valid_concepts)} image concepts")
+            return valid_concepts
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse image planning response: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Error during image planning: {e}")
+            return []
+
     async def analyze_report_for_images(
         self,
         report: str,
