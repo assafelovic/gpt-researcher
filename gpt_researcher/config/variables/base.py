@@ -42,3 +42,4 @@ class BaseConfig(TypedDict):
     MCP_ALLOWED_ROOT_PATHS: List[str]
     MCP_STRATEGY: str
     REASONING_EFFORT: str
+    VERBOSE: bool
