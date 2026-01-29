@@ -1,3 +1,8 @@
+---
+sidebar_label: Image Generation
+sidebar_position: 5
+---
+
 # 🖼️ Inline Image Generation
 
 GPT Researcher supports **inline image generation** for research reports using Google's Gemini image generation models. This feature creates contextually relevant illustrations that are embedded directly within your research reports.
