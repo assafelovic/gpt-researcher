@@ -117,6 +117,98 @@ AVAILABLE TOOLS: {tool_names}
 
 Please conduct thorough research and provide your findings. Use the tools strategically to gather the most relevant and comprehensive information."""
 
+    # Image generation prompts
+    @staticmethod
+    def generate_image_analysis_prompt(
+        query: str,
+        sections: List[Dict[str, Any]],
+        max_images: int = 3,
+    ) -> str:
+        """Generate prompt for analyzing which report sections need images.
+        
+        Args:
+            query: The research query.
+            sections: List of report sections with header and content.
+            max_images: Maximum number of images to suggest.
+            
+        Returns:
+            str: The analysis prompt.
+        """
+        sections_text = "\n\n".join([
+            f"### Section {i+1}: {s['header']}\n{s['content'][:500]}..."
+            for i, s in enumerate(sections)
+        ])
+        
+        return f"""Analyze the following research report sections and identify which {max_images} sections would benefit MOST from a visual illustration or diagram.
+
+RESEARCH TOPIC: {query}
+
+REPORT SECTIONS:
+{sections_text}
+
+For each recommended section, provide:
+1. The section number (1-indexed)
+2. A specific, detailed image prompt that would create an informative illustration
+3. A brief explanation of why this section benefits from visualization
+
+IMPORTANT GUIDELINES:
+- Choose sections where visual representation would genuinely aid understanding
+- Focus on concepts, processes, comparisons, data flows, or statistics that are inherently visual
+- Avoid sections that are purely textual analysis, introductions, or conclusions
+- The image prompt should be specific enough to generate a relevant, professional illustration
+- Images should be informative and educational, not decorative
+- Consider diagrams, flowcharts, comparison charts, or conceptual illustrations
+
+Respond in JSON format:
+{{
+    "suggestions": [
+        {{
+            "section_number": 1,
+            "section_header": "Section Title",
+            "image_prompt": "Detailed prompt for generating an informative illustration...",
+            "image_type": "diagram|flowchart|comparison|concept|data_visualization",
+            "reason": "Why this section benefits from visualization"
+        }}
+    ]
+}}
+
+Return ONLY the JSON, no additional text."""
+
+    @staticmethod
+    def generate_image_prompt_enhancement(
+        base_prompt: str,
+        section_content: str,
+        research_topic: str,
+    ) -> str:
+        """Enhance an image prompt with context for better generation.
+        
+        Args:
+            base_prompt: The base image generation prompt.
+            section_content: Content from the report section.
+            research_topic: The main research topic.
+            
+        Returns:
+            str: Enhanced image prompt.
+        """
+        return f"""Create a professional, informative illustration for a research report.
+
+RESEARCH TOPIC: {research_topic}
+
+IMAGE DESCRIPTION: {base_prompt}
+
+CONTEXT FROM REPORT:
+{section_content[:800]}
+
+STYLE REQUIREMENTS:
+- Professional and clean design suitable for academic/business reports
+- Clear, easy-to-understand visual elements
+- Modern, minimalist aesthetic
+- Use a professional color palette (blues, teals, grays)
+- Avoid excessive text in the image
+- High contrast for readability
+- If showing data or comparisons, use clear labels and legends
+- Suitable for both digital viewing and printing"""
+
     @staticmethod
     def generate_search_queries_prompt(
         question: str,
@@ -171,10 +263,12 @@ The response should contain ONLY the list.
         total_words=1000,
         tone=None,
         language="english",
+        include_image_placeholders: bool = False,
     ):
         """Generates the report prompt for the given question and research summary.
         Args: question (str): The question to generate the report prompt for
                 research_summary (str): The research summary to generate the report prompt for
+                include_image_placeholders (bool): Whether to include image placeholder instructions
         Returns: str: The report prompt for the given question and research summary
         """
 
@@ -193,6 +287,31 @@ You MUST write all used source document names at the end of the report as refere
 """
 
         tone_prompt = f"Write the report in a {tone.value} tone." if tone else ""
+        
+        # Image placeholder instructions for inline image generation
+        image_prompt = ""
+        if include_image_placeholders:
+            image_prompt = """
+- IMAGES: Include 2-3 image placeholders where visual illustrations would significantly enhance understanding. Use this EXACT format on its own line:
+
+  [IMAGE: Detailed description of the visual - be specific about what should be shown, the layout, and key elements]
+
+  GOOD image placeholder examples:
+  - [IMAGE: A professional infographic showing the three main components of the system: data input on the left, processing engine in the center, and output dashboard on the right, connected by flowing arrows]
+  - [IMAGE: A comparison diagram with two side-by-side panels contrasting traditional approach vs modern approach, with checkmarks and X marks highlighting differences]
+  - [IMAGE: A layered architecture diagram showing frontend, API layer, and backend database, with security shields between each layer]
+  
+  BAD examples (too vague - avoid these):
+  - [IMAGE: A diagram of the system]
+  - [IMAGE: Chart showing data]
+  
+  IMPORTANT:
+  - Be VERY specific and descriptive (at least 20 words per placeholder)
+  - Describe the visual layout, not just the concept
+  - Focus on diagrams, infographics, architecture visuals, comparison charts
+  - Place placeholders after the relevant section header or paragraph
+  - Do NOT include placeholders in introduction or conclusion sections
+"""
 
         return f"""
 Information: "{context}"
@@ -214,7 +333,7 @@ Please follow all of the following guidelines in your report:
 - Don't forget to add a reference list at the end of the report in {report_format} format and full url links without hyperlinks.
 - {reference_prompt}
 - {tone_prompt}
-
+{image_prompt}
 You MUST write the report in the following language: {language}.
 Please do your best, this is very important to my career.
 Assume that the current date is {date.today()}.

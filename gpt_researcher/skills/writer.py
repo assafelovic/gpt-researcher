@@ -46,7 +46,7 @@ class ReportGenerator:
             "headers": self.researcher.headers,
         }
 
-    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="") -> str:
+    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="", include_image_placeholders: bool = False) -> str:
         """
         Write a report based on existing headers and relevant contents.
 
@@ -55,6 +55,7 @@ class ReportGenerator:
             relevant_written_contents (list): List of relevant written contents.
             ext_context (Optional): External context, if any.
             custom_prompt (str): Custom prompt for the report.
+            include_image_placeholders (bool): Whether to include [IMAGE: ...] placeholders.
 
         Returns:
             str: The generated report.
@@ -83,6 +84,7 @@ class ReportGenerator:
         report_params = self.research_params.copy()
         report_params["context"] = context
         report_params["custom_prompt"] = custom_prompt
+        report_params["include_image_placeholders"] = include_image_placeholders
 
         if self.researcher.report_type == "subtopic_report":
             report_params.update({

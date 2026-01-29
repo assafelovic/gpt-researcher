@@ -222,6 +222,7 @@ async def generate_report(
     custom_prompt: str = "", # This can be any prompt the user chooses with the context
     headers=None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    include_image_placeholders: bool = False,
     **kwargs
 ):
     """
@@ -239,6 +240,7 @@ async def generate_report(
         relevant_written_contents:
         cost_callback:
         prompt_family: Family of prompts
+        include_image_placeholders: Whether to include image placeholder instructions
 
     Returns:
         report:
@@ -252,7 +254,13 @@ async def generate_report(
     elif custom_prompt:
         content = f"{custom_prompt}\n\nContext: {context}"
     else:
-        content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
+        # Check if the generate_prompt function supports include_image_placeholders
+        import inspect
+        sig = inspect.signature(generate_prompt)
+        if 'include_image_placeholders' in sig.parameters:
+            content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language, include_image_placeholders=include_image_placeholders)}"
+        else:
+            content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
     try:
         report = await create_chat_completion(
             model=cfg.smart_llm_model,

@@ -1,6 +1,6 @@
 # Stage 1: Browser and build tools installation
-#FROM python:3.13.3-slim-bookworm AS install-browser
-FROM python:3.11.4-slim-bullseye AS install-browser
+# Python 3.12+ required for LangChain v1
+FROM python:3.12-slim-bookworm AS install-browser
 
 # Install Chromium, Chromedriver, Firefox, Geckodriver, and build tools in one layer
 RUN apt-get update \
