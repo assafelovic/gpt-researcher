@@ -46,7 +46,7 @@ class ReportGenerator:
             "headers": self.researcher.headers,
         }
 
-    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="") -> str:
+    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="", available_images: list = None) -> str:
         """
         Write a report based on existing headers and relevant contents.
 
@@ -55,10 +55,13 @@ class ReportGenerator:
             relevant_written_contents (list): List of relevant written contents.
             ext_context (Optional): External context, if any.
             custom_prompt (str): Custom prompt for the report.
+            available_images (list): Pre-generated images available for embedding.
 
         Returns:
             str: The generated report.
         """
+        available_images = available_images or []
+        
         # send the selected images prior to writing report
         research_images = self.researcher.get_research_images()
         if research_images:
@@ -72,6 +75,16 @@ class ReportGenerator:
             )
 
         context = ext_context or self.researcher.context
+        
+        # Log image availability
+        if available_images and self.researcher.verbose:
+            await stream_output(
+                "logs",
+                "images_available",
+                f"🖼️ {len(available_images)} pre-generated images available for embedding",
+                self.researcher.websocket,
+            )
+        
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -83,6 +96,7 @@ class ReportGenerator:
         report_params = self.research_params.copy()
         report_params["context"] = context
         report_params["custom_prompt"] = custom_prompt
+        report_params["available_images"] = available_images  # Pass pre-generated images
 
         if self.researcher.report_type == "subtopic_report":
             report_params.update({

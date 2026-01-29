@@ -25,6 +25,7 @@ from .skills.browser import BrowserManager
 from .skills.context_manager import ContextManager
 from .skills.curator import SourceCurator
 from .skills.deep_research import DeepResearchSkill
+from .skills.image_generator import ImageGenerator
 from .skills.researcher import ResearchConductor
 from .skills.writer import ReportGenerator
 from .utils.enum import ReportSource, ReportType, Tone
@@ -187,8 +188,27 @@ class GPTResearcher:
         if report_type == ReportType.DeepResearch.value:
             self.deep_researcher = DeepResearchSkill(self)
 
+        # Initialize image generator (optional - only if configured)
+        self.image_generator: Optional[ImageGenerator] = ImageGenerator(self)
+        self.available_images: list = []  # Pre-generated images ready for embedding
+        self._research_id: str = ""  # Unique ID for this research session
+
         # Handle MCP strategy configuration with backwards compatibility
         self.mcp_strategy = self._resolve_mcp_strategy(mcp_strategy, mcp_max_iterations)
+    
+    def _generate_research_id(self) -> str:
+        """Generate a unique research ID for this session.
+        
+        Returns:
+            A unique string identifier for this research session.
+        """
+        if not self._research_id:
+            import hashlib
+            import time
+            # Create unique ID from query + timestamp
+            unique_str = f"{self.query}_{time.time()}"
+            self._research_id = f"research_{hashlib.md5(unique_str.encode()).hexdigest()[:12]}"
+        return self._research_id
 
     def _resolve_mcp_strategy(self, mcp_strategy: str | None, mcp_max_iterations: int | None) -> str:
         """
@@ -356,6 +376,22 @@ class GPTResearcher:
         await self._log_event("research", step="research_completed", details={
             "context_length": len(self.context)
         })
+        
+        # Pre-generate images if enabled (happens BEFORE report writing for better UX)
+        self.available_images = []
+        if self.image_generator and self.image_generator.is_enabled():
+            await self._log_event("research", step="planning_images")
+            # Convert context list to string for analysis
+            context_str = "\n\n".join(self.context) if isinstance(self.context, list) else str(self.context)
+            self.available_images = await self.image_generator.plan_and_generate_images(
+                context=context_str,
+                query=self.query,
+                research_id=self._generate_research_id(),
+            )
+            await self._log_event("research", step="images_pre_generated", details={
+                "images_count": len(self.available_images)
+            })
+        
         return self.context
 
     async def _handle_deep_research(self, on_progress=None):
@@ -406,7 +442,13 @@ class GPTResearcher:
         # Return the research context
         return self.context
 
-    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="") -> str:
+    async def write_report(
+        self,
+        existing_headers: list = [],
+        relevant_written_contents: list = [],
+        ext_context=None,
+        custom_prompt="",
+    ) -> str:
         """Write the research report.
 
         Args:
@@ -418,20 +460,27 @@ class GPTResearcher:
         Returns:
             The generated report as a string.
         """
+        # Use pre-generated images if available (generated during conduct_research)
+        has_available_images = bool(self.available_images)
+        
         await self._log_event("research", step="writing_report", details={
             "existing_headers": existing_headers,
-            "context_source": "external" if ext_context else "internal"
+            "context_source": "external" if ext_context else "internal",
+            "available_images_count": len(self.available_images),
         })
 
+        # Generate report with available images embedded
         report = await self.report_generator.write_report(
             existing_headers=existing_headers,
             relevant_written_contents=relevant_written_contents,
             ext_context=ext_context or self.context,
-            custom_prompt=custom_prompt
+            custom_prompt=custom_prompt,
+            available_images=self.available_images,  # Pass pre-generated images
         )
 
         await self._log_event("research", step="report_completed", details={
-            "report_length": len(report)
+            "report_length": len(report),
+            "images_embedded": len(self.available_images) if has_available_images else 0,
         })
         return report
 

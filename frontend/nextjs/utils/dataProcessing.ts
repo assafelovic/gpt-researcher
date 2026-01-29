@@ -24,6 +24,14 @@ export const preprocessOrderedData = (data: Data[]) => {
         groupedData.push(currentReportGroup);
       }
       currentReportGroup.content += output;
+    } else if (type === 'report_complete') {
+      // Replace entire report content with the complete version (includes images)
+      if (currentReportGroup) {
+        currentReportGroup.content = output;
+      } else {
+        currentReportGroup = { type: 'reportBlock', content: output };
+        groupedData.push(currentReportGroup);
+      }
     } else if (content === 'selected_images') {
       groupedData.push({ type: 'imagesBlock', metadata });
     } else if (type === 'logs' && content === 'research_report') {
