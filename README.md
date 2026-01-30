@@ -65,7 +65,7 @@ Steps:
 
 - 📝 Generate detailed research reports using web and local documents.
 - 🖼️ Smart image scraping and filtering for reports.
-- 🎨 **AI-generated inline images** using Google Gemini for visual illustrations.
+- 🍌 **AI-generated inline images** using Google Gemini (Nano Banana) for visual illustrations.
 - 📜 Generate detailed reports exceeding 2,000 words.
 - 🌐 Aggregate over 20 sources for objective conclusions.
 - 🖥️ Frontend available in lightweight (HTML/CSS/JS) and production-ready (NextJS + Tailwind) versions.
@@ -180,9 +180,9 @@ async def mcp_research_example():
 
 > For comprehensive MCP documentation and advanced examples, visit the [MCP Integration Guide](https://docs.gptr.dev/docs/gpt-researcher/retrievers/mcp-configs).
 
-## 🎨 Inline Image Generation
+## 🍌 Inline Image Generation
 
-GPT Researcher can automatically generate and embed AI-created illustrations in your research reports using Google's Gemini models.
+GPT Researcher can automatically generate and embed AI-created illustrations in your research reports using Google's Gemini models (Nano Banana).
 
 ```bash
 # Enable in your .env file
