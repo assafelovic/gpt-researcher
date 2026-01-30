@@ -406,7 +406,7 @@ class GPTResearcher:
         # Return the research context
         return self.context
 
-    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="") -> str:
+    async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="", custom_instructions="") -> str:
         """Write the research report.
 
         Args:
@@ -414,6 +414,7 @@ class GPTResearcher:
             relevant_written_contents: List of previously written content for context.
             ext_context: External context to use instead of internal context.
             custom_prompt: Custom prompt to guide report generation.
+            custom_instructions: User writing instructions for report style/structure.
 
         Returns:
             The generated report as a string.
@@ -427,7 +428,8 @@ class GPTResearcher:
             existing_headers=existing_headers,
             relevant_written_contents=relevant_written_contents,
             ext_context=ext_context or self.context,
-            custom_prompt=custom_prompt
+            custom_prompt=custom_prompt,
+            custom_instructions=custom_instructions,
         )
 
         await self._log_event("research", step="report_completed", details={
@@ -435,28 +437,34 @@ class GPTResearcher:
         })
         return report
 
-    async def write_report_conclusion(self, report_body: str) -> str:
+    async def write_report_conclusion(self, report_body: str, custom_instructions="") -> str:
         """Write the conclusion section of the report.
 
         Args:
             report_body: The main body of the report to conclude.
+            custom_instructions: User writing instructions for report style/structure.
 
         Returns:
             The generated conclusion text.
         """
         await self._log_event("research", step="writing_conclusion")
-        conclusion = await self.report_generator.write_report_conclusion(report_body)
+        conclusion = await self.report_generator.write_report_conclusion(
+            report_body, custom_instructions=custom_instructions)
         await self._log_event("research", step="conclusion_completed")
         return conclusion
 
-    async def write_introduction(self) -> str:
+    async def write_introduction(self, custom_instructions="") -> str:
         """Write the introduction section of the report.
+
+        Args:
+            custom_instructions: User writing instructions for report style/structure.
 
         Returns:
             The generated introduction text.
         """
         await self._log_event("research", step="writing_introduction")
-        intro = await self.report_generator.write_introduction()
+        intro = await self.report_generator.write_introduction(
+            custom_instructions=custom_instructions)
         await self._log_event("research", step="introduction_completed")
         return intro
 

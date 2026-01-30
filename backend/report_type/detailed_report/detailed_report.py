@@ -22,6 +22,7 @@ class DetailedReport:
         complement_source_urls: bool = False,
         mcp_configs=None,
         mcp_strategy=None,
+        custom_instructions="",
     ):
         self.query = query
         self.report_type = report_type
@@ -35,8 +36,10 @@ class DetailedReport:
         self.subtopics = subtopics
         self.headers = headers or {}
         self.complement_source_urls = complement_source_urls
-        
+        self.custom_instructions = custom_instructions
+
         # Initialize researcher with optional MCP parameters
+        # Note: custom_instructions is NOT passed here to avoid polluting the research phase
         gpt_researcher_params = {
             "query": self.query,
             "query_domains": self.query_domains,
@@ -67,7 +70,8 @@ class DetailedReport:
     async def run(self) -> str:
         await self._initial_research()
         subtopics = await self._get_all_subtopics()
-        report_introduction = await self.gpt_researcher.write_introduction()
+        report_introduction = await self.gpt_researcher.write_introduction(
+            custom_instructions=self.custom_instructions)
         _, report_body = await self._generate_subtopic_reports(subtopics)
         self.gpt_researcher.visited_urls.update(self.global_urls)
         report = await self._construct_detailed_report(report_introduction, report_body)
@@ -140,7 +144,9 @@ class DetailedReport:
             current_subtopic_task, parse_draft_section_titles_text, self.global_written_sections
         )
 
-        subtopic_report = await subtopic_assistant.write_report(self.existing_headers, relevant_contents)
+        subtopic_report = await subtopic_assistant.write_report(
+            self.existing_headers, relevant_contents,
+            custom_instructions=self.custom_instructions)
 
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
         self.global_context = list(set(subtopic_assistant.context))
@@ -155,7 +161,8 @@ class DetailedReport:
 
     async def _construct_detailed_report(self, introduction: str, report_body: str) -> str:
         toc = self.gpt_researcher.table_of_contents(report_body)
-        conclusion = await self.gpt_researcher.write_report_conclusion(report_body)
+        conclusion = await self.gpt_researcher.write_report_conclusion(
+            report_body, custom_instructions=self.custom_instructions)
         conclusion_with_references = self.gpt_researcher.add_references(
             conclusion, self.gpt_researcher.visited_urls)
         report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"

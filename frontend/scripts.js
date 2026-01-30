@@ -985,6 +985,7 @@ const GPTResearcher = (() => {
         tone: tone,
         agent: agent,
         query_domains: query_domains,
+        custom_instructions: document.getElementById('customInstructions')?.value || "",
       }
 
       // Add MCP configuration if enabled

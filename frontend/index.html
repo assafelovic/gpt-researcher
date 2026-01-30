@@ -226,6 +226,15 @@
                 <input type="text" class="form-control highlight-connection" id="queryDomains" name="query_domains" placeholder="Enter domains separated by commas" autocomplete="on">
                 <small class="text-muted">Example: techcrunch.com, forbes.com</small>
             </div>
+            <div class="form-group">
+                <label for="customInstructions" class="agent-question">
+                    Custom writing instructions (Optional)
+                </label>
+                <small class="text-muted">Detailed writing requirements (outline, citation format, section guidelines). Applied during report generation only — does not affect document retrieval.</small>
+                <textarea id="customInstructions" name="custom_instructions" class="form-control highlight-connection"
+                    placeholder="e.g., Write a review following this outline: 1. Introduction 2. Methods..."
+                    rows="4"></textarea>
+            </div>
 
             <!-- MCP Configuration Section -->
             <div class="form-group">
