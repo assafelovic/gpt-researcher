@@ -42,7 +42,7 @@ SQLAlchemy = ">=2.0.28"
 tiktoken = ">=0.7.0"
 unstructured = ">=0.13"
 uvicorn = ">=0.24.0.post1"
-websockets = "^13.1"
+websockets = ">=13.1,<17.0"
 # Model Context Protocol support
 mcp = { version = ">=1.0.0", markers = "platform_system != 'Windows'" }
 langchain-mcp-adapters = ">=0.1.0"
