@@ -34,6 +34,7 @@
       items: [
         'gpt-researcher/gptr/pip-package',
         'gpt-researcher/gptr/npm-package',
+        'gpt-researcher/gptr/claude-skill',
         'gpt-researcher/gptr/example',
         'gpt-researcher/gptr/deep_research',
         'gpt-researcher/gptr/image_generation',
