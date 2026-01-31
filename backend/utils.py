@@ -33,6 +33,32 @@ async def write_text_to_md(text: str, filename: str = "") -> str:
     await write_to_file(file_path, text)
     return urllib.parse.quote(file_path)
 
+def _preprocess_images_for_pdf(text: str) -> str:
+    """Convert web image URLs to absolute file paths for PDF generation.
+    
+    Transforms /outputs/images/... URLs to absolute file:// paths that
+    weasyprint can resolve.
+    """
+    import re
+    
+    base_path = os.path.abspath(".")
+    
+    # Pattern to find markdown images with /outputs/ URLs
+    def replace_image_url(match):
+        alt_text = match.group(1)
+        url = match.group(2)
+        
+        # Convert /outputs/... to absolute path
+        if url.startswith("/outputs/"):
+            abs_path = os.path.join(base_path, url.lstrip("/"))
+            return f"![{alt_text}]({abs_path})"
+        return match.group(0)
+    
+    # Match ![alt text](/outputs/images/...)
+    pattern = r'!\[([^\]]*)\]\((/outputs/[^)]+)\)'
+    return re.sub(pattern, replace_image_url, text)
+
+
 async def write_md_to_pdf(text: str, filename: str = "") -> str:
     """Converts Markdown text to a PDF file and returns the file path.
 
@@ -49,13 +75,19 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
         # dependency on the current working directory.
         current_dir = os.path.dirname(os.path.abspath(__file__))
         css_path = os.path.join(current_dir, "styles", "pdf_styles.css")
+        
+        # Preprocess image URLs for PDF compatibility
+        processed_text = _preprocess_images_for_pdf(text)
+        
+        # Set base_url to current directory for resolving any remaining relative paths
+        base_url = os.path.abspath(".")
 
         from md2pdf.core import md2pdf
         md2pdf(file_path,
-               md_content=text,
+               md_content=processed_text,
                # md_file_path=f"{file_path}.md",
                css_file_path=css_path,
-               base_url=None)
+               base_url=base_url)
         print(f"Report written to {file_path}")
     except Exception as e:
         print(f"Error in converting Markdown to PDF: {e}")

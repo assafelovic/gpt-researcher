@@ -174,10 +174,39 @@
 
   /* Images */
   img {
-    max-width: 100%;
+    max-width: 75%;
     height: auto;
-    border-radius: 4px;
-    margin: 1em 0;
+    border-radius: 8px;
+    margin: 1.5em auto;
+    display: block;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(75, 85, 99, 0.4);
+  }
+
+  /* Generated inline images - special styling */
+  img[alt^="Illustration:"],
+  img[alt^="Diagram:"],
+  img[alt^="Visualization:"] {
+    max-width: 65%;
+    border: 2px solid rgba(20, 184, 166, 0.3);
+    box-shadow: 0 6px 20px rgba(20, 184, 166, 0.15);
+  }
+
+  /* Image captions via figure element */
+  figure {
+    margin: 1.5em 0;
+    text-align: center;
+  }
+
+  figure img {
+    margin-bottom: 0.5em;
+  }
+
+  figcaption {
+    font-size: 0.9em;
+    color: #9CA3AF;
+    font-style: italic;
+    margin-top: 0.5em;
   }
 
   /* Definition Lists */

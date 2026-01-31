@@ -9,8 +9,21 @@ const nextConfig = {
       },
       {
         hostname: 'www.google-analytics.com',
+      },
+      {
+        hostname: 'localhost',
       }
     ],
+  },
+  // Proxy /outputs requests to the backend server for generated images
+  async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    return [
+      {
+        source: '/outputs/:path*',
+        destination: `${backendUrl}/outputs/:path*`,
+      },
+    ];
   },
 };
 

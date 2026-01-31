@@ -110,6 +110,13 @@ $ export OPENAI_API_KEY={Your OpenAI API Key here}
 $ export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
+（オプション）トレースと可観測性を強化するには、以下も設定できます：
+
+```bash
+# $ export LANGCHAIN_TRACING_V2=true
+# $ export LANGCHAIN_API_KEY={Your LangChain API Key here}
+```
+
 - **LLMには、[OpenAI GPT](https://platform.openai.com/docs/guides/gpt) を使用することをお勧めします**が、[Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai) がサポートする他の LLM モデル（オープンソースを含む）を使用することもできます。llm モデルとプロバイダーを config/config.py で変更するだけです。[このガイド](https://python.langchain.com/docs/integrations/llms/) に従って、LLM を Langchain と統合する方法を学んでください。
 - **検索エンジンには、[Tavily Search API](https://app.tavily.com)（LLM 用に最適化されています）を使用することをお勧めします**が、他の検索エンジンを選択することもできます。config/config.py で検索プロバイダーを「duckduckgo」、「googleAPI」、「googleSerp」、「searchapi」、「searx」に変更するだけです。次に、config.py ファイルに対応する env API キーを追加します。
 - **最適なパフォーマンスを得るために、[OpenAI GPT](https://platform.openai.com/docs/guides/gpt) モデルと [Tavily Search API](https://app.tavily.com) を使用することを強くお勧めします。**
@@ -125,6 +132,19 @@ $ uvicorn main:app --reload
 > **ステップ 5** - 任意のブラウザで http://localhost:8000 にアクセスして、リサーチを楽しんでください！
 
 Docker の使い方や機能とサービスの詳細については、[ドキュメント](https://docs.gptr.dev) ページをご覧ください。
+
+## 🔍 可観測性
+
+GPT Researcher は **LangSmith** をサポートしており、複雑なマルチエージェントワークフローのトレースと可観測性を向上させ、デバッグや最適化を容易にします。
+
+トレースを有効にするには：
+1. 以下の環境変数を設定します：
+   ```bash
+   export LANGCHAIN_TRACING_V2=true
+   export LANGCHAIN_API_KEY=あなたのAPIキー
+   export LANGCHAIN_PROJECT="gpt-researcher"
+   ```
+2. 通常通りリサーチタスクを実行します。LangGraph ベースのエージェント間のやり取りは自動的にトレースされ、LangSmith ダッシュボードで可視化されます。
 
 ## 🚀 貢献
 私たちは貢献を大歓迎します！興味がある場合は、[貢献](CONTRIBUTING.md) をご覧ください。

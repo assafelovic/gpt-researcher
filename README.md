@@ -65,6 +65,7 @@ Steps:
 
 - 📝 Generate detailed research reports using web and local documents.
 - 🖼️ Smart image scraping and filtering for reports.
+- 🍌 **AI-generated inline images** using Google Gemini (Nano Banana) for visual illustrations.
 - 📜 Generate detailed reports exceeding 2,000 words.
 - 🌐 Aggregate over 20 sources for objective conclusions.
 - 🖥️ Frontend available in lightweight (HTML/CSS/JS) and production-ready (NextJS + Tailwind) versions.
@@ -97,6 +98,13 @@ See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-starte
     ```bash
     export OPENAI_API_KEY={Your OpenAI API Key here}
     export TAVILY_API_KEY={Your Tavily API Key here}
+    ```
+
+    (Optional) For enhanced tracing and observability, you can also set:
+    
+    ```bash
+    # export LANGCHAIN_TRACING_V2=true
+    # export LANGCHAIN_API_KEY={Your LangChain API Key here}
     ```
 
     For custom OpenAI-compatible APIs (e.g., local models, other providers), you can also set:
@@ -172,6 +180,26 @@ async def mcp_research_example():
 
 > For comprehensive MCP documentation and advanced examples, visit the [MCP Integration Guide](https://docs.gptr.dev/docs/gpt-researcher/retrievers/mcp-configs).
 
+## 🍌 Inline Image Generation
+
+GPT Researcher can automatically generate and embed AI-created illustrations in your research reports using Google's Gemini models (Nano Banana).
+
+```bash
+# Enable in your .env file
+IMAGE_GENERATION_ENABLED=true
+GOOGLE_API_KEY=your_google_api_key
+IMAGE_GENERATION_MODEL=models/gemini-2.5-flash-image
+```
+
+When enabled, the system will:
+1. Analyze your research context to identify visualization opportunities
+2. Pre-generate 2-3 relevant images during the research phase
+3. Embed them inline as the report is written
+
+Images are generated with dark-mode styling that matches the GPT Researcher UI, featuring professional infographic aesthetics with teal accents.
+
+[Learn more about Image Generation](https://docs.gptr.dev/docs/gpt-researcher/gptr/image_generation) in our documentation.
+
 ## ✨ Deep Research
 
 GPT Researcher now includes Deep Research - an advanced recursive research workflow that explores topics with agentic depth and breadth. This feature employs a tree-like exploration pattern, diving deeper into subtopics while maintaining a comprehensive view of the research subject.
@@ -246,6 +274,19 @@ By using LangGraph, the research process can be significantly improved in depth 
 An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
 
 Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our [documentation](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) for more information.
+
+## 🔍 Observability
+
+GPT Researcher supports **LangSmith** for enhanced tracing and observability, making it easier to debug and optimize complex multi-agent workflows.
+
+To enable tracing:
+1. Set the following environment variables:
+   ```bash
+   export LANGCHAIN_TRACING_V2=true
+   export LANGCHAIN_API_KEY=your_api_key
+   export LANGCHAIN_PROJECT="gpt-researcher"
+   ```
+2. Run your research tasks as usual. All LangGraph-based agent interactions will be automatically traced and visualized in your LangSmith dashboard.
 
 ## 🖥️ Frontend Applications
 
