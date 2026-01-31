@@ -1,6 +1,6 @@
 # Claude Skill
 
-GPT Researcher is available as a [Claude Skill](https://skills.sh), allowing you to extend Claude's research capabilities directly within Claude Code and other Claude-powered applications.
+GPT Researcher is available as a [Claude Skill](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher), allowing you to extend Claude's research capabilities directly within Claude Code and other Claude-powered applications.
 
 ## What are Claude Skills?
 
@@ -61,6 +61,6 @@ The skill is located in the `.claude/` directory of the repository:
 
 ## Learn More
 
-- [Skills.sh Registry](https://skills.sh) - Discover more Claude skills
+- [Skills.sh - GPT Researcher](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher) - View on skills.sh registry
 - [Claude Code Documentation](https://docs.claude.com/en/docs/claude-code/skills) - Official skills documentation
 - [GPT Researcher Documentation](https://docs.gptr.dev) - Full project documentation
