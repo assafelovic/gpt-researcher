@@ -1,19 +1,42 @@
+"""Research conductor skill for GPT Researcher.
+
+This module provides the ResearchConductor class that manages and
+coordinates the research process including query planning, web searching,
+and context gathering.
+"""
+
 import asyncio
-import random
 import logging
 import os
+import random
+
+from ..actions.agent_creator import choose_agent
+from ..actions.query_processing import get_search_results, plan_research_outline
 from ..actions.utils import stream_output
-from ..actions.query_processing import plan_research_outline, get_search_results
-from ..document import DocumentLoader, OnlineDocumentLoader, LangChainDocumentLoader
+from ..document import DocumentLoader, LangChainDocumentLoader, OnlineDocumentLoader
 from ..utils.enum import ReportSource, ReportType
 from ..utils.logging_config import get_json_handler
-from ..actions.agent_creator import choose_agent
 
 
 class ResearchConductor:
-    """Manages and coordinates the research process."""
+    """Manages and coordinates the research process.
+
+    This class handles the main research workflow including planning
+    research queries, conducting web searches, managing MCP retrievers,
+    and gathering context from various sources.
+
+    Attributes:
+        researcher: The parent GPTResearcher instance.
+        logger: Logger for research events.
+        json_handler: Handler for JSON logging.
+    """
 
     def __init__(self, researcher):
+        """Initialize the ResearchConductor.
+
+        Args:
+            researcher: The GPTResearcher instance that owns this conductor.
+        """
         self.researcher = researcher
         self.logger = logging.getLogger('research')
         self.json_handler = get_json_handler()

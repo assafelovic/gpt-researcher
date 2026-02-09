@@ -119,6 +119,10 @@ export const useWebSocket = (
 
             if (data.type === 'report') {
               setAnswer((prev: string) => prev + data.output);
+            } else if (data.type === 'report_complete') {
+              // Replace entire report with the complete version (includes images)
+              console.log('Received complete report with images');
+              setAnswer(data.output);
             } else if (data.type === 'path') {
               setLoading(false);
             }

@@ -1,14 +1,33 @@
-from typing import Dict, Optional, List
+"""Source curator skill for GPT Researcher.
+
+This module provides the SourceCurator class that evaluates and ranks
+research sources based on relevance, credibility, and reliability.
+"""
+
 import json
+from typing import Dict, List, Optional
+
+from ..actions import stream_output
 from ..config.config import Config
 from ..utils.llm import create_chat_completion
-from ..actions import stream_output
 
 
 class SourceCurator:
-    """Ranks sources and curates data based on their relevance, credibility and reliability."""
+    """Ranks and curates sources based on relevance, credibility and reliability.
+
+    This class uses LLM-based evaluation to assess research sources
+    and select the most appropriate ones for report generation.
+
+    Attributes:
+        researcher: The parent GPTResearcher instance.
+    """
 
     def __init__(self, researcher):
+        """Initialize the SourceCurator.
+
+        Args:
+            researcher: The GPTResearcher instance that owns this curator.
+        """
         self.researcher = researcher
 
     async def curate_sources(

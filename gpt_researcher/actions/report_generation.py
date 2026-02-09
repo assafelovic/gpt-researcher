@@ -222,6 +222,7 @@ async def generate_report(
     custom_prompt: str = "", # This can be any prompt the user chooses with the context
     headers=None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
+    available_images: list = None,
     **kwargs
 ):
     """
@@ -239,11 +240,13 @@ async def generate_report(
         relevant_written_contents:
         cost_callback:
         prompt_family: Family of prompts
+        available_images: Pre-generated images to embed in the report
 
     Returns:
         report:
 
     """
+    available_images = available_images or []
     generate_prompt = get_prompt_by_report_type(report_type, prompt_family)
     report = ""
 
@@ -253,6 +256,21 @@ async def generate_report(
         content = f"{custom_prompt}\n\nContext: {context}"
     else:
         content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
+    
+    # Add available images instruction if images were pre-generated
+    if available_images:
+        images_info = "\n".join([
+            f"- Image {i+1}: ![{img.get('title', img.get('alt_text', 'Illustration'))}]({img['url']}) - {img.get('section_hint', 'General')}"
+            for i, img in enumerate(available_images)
+        ])
+        content += f"""
+
+AVAILABLE IMAGES:
+You have the following pre-generated images available. Embed them in relevant sections of your report using the exact markdown syntax provided:
+
+{images_info}
+
+Place each image on its own line after the relevant section header or paragraph. Use all available images where they add value to the content."""
     try:
         report = await create_chat_completion(
             model=cfg.smart_llm_model,

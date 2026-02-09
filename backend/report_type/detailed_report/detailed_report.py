@@ -1,4 +1,6 @@
 import asyncio
+import hashlib
+import time
 from typing import List, Dict, Set, Optional, Any
 from fastapi import WebSocket
 
@@ -36,6 +38,9 @@ class DetailedReport:
         self.headers = headers or {}
         self.complement_source_urls = complement_source_urls
         
+        # Generate a unique research ID for this report
+        self.research_id = self._generate_research_id(query)
+        
         # Initialize researcher with optional MCP parameters
         gpt_researcher_params = {
             "query": self.query,
@@ -63,6 +68,12 @@ class DetailedReport:
         self.global_written_sections: List[str] = []
         self.global_urls: Set[str] = set(
             self.source_urls) if self.source_urls else set()
+
+    def _generate_research_id(self, query: str) -> str:
+        """Generate a unique research ID from query and timestamp."""
+        timestamp = str(int(time.time()))
+        query_hash = hashlib.md5(query.encode()).hexdigest()[:8]
+        return f"detailed_{timestamp}_{query_hash}"
 
     async def run(self) -> str:
         await self._initial_research()
@@ -140,7 +151,11 @@ class DetailedReport:
             current_subtopic_task, parse_draft_section_titles_text, self.global_written_sections
         )
 
-        subtopic_report = await subtopic_assistant.write_report(self.existing_headers, relevant_contents)
+        # Write subtopic report (images are pre-generated at the main research level)
+        subtopic_report = await subtopic_assistant.write_report(
+            existing_headers=self.existing_headers,
+            relevant_written_contents=relevant_contents,
+        )
 
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
         self.global_context = list(set(subtopic_assistant.context))
@@ -159,4 +174,6 @@ class DetailedReport:
         conclusion_with_references = self.gpt_researcher.add_references(
             conclusion, self.gpt_researcher.visited_urls)
         report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
+        
+        # Note: Images are now pre-generated during conduct_research() and embedded during write_report()
         return report

@@ -16,7 +16,7 @@ As seen below, OpenAI still stands as the superior LLM. We assume it will stay t
 The default config.py file can be found in `/gpt_researcher/config/`. It supports various options for customizing GPT Researcher to your needs.
 You can also include your own external JSON file `config.json` by adding the path in the `config_path` param.
 The config JSON should follow the format/keys in the default config. Below is a sample config.json file to help get you started:
-'''bash
+```json
 {
   "RETRIEVER": "tavily",
   "EMBEDDING": "openai:text-embedding-3-small",
@@ -35,7 +35,7 @@ The config JSON should follow the format/keys in the default config. Below is a 
   "DOC_PATH": "./my-docs",
   "REPORT_SOURCE": "web"
 }
-'''
+```
 
 
 For example, to start GPT-Researcher and specify a specific config you would do this:
