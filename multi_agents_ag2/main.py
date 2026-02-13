@@ -5,14 +5,9 @@ import sys
 import uuid
 import json
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 from multi_agents_ag2.agents import ChiefEditorAgent
 from gpt_researcher.utils.enum import Tone
 
-
-if os.environ.get("LANGCHAIN_API_KEY"):
-    os.environ["LANGCHAIN_TRACING_V2"] = "true"
 
 load_dotenv()
 

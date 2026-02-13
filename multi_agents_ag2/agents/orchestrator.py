@@ -9,14 +9,12 @@ from autogen import ConversableAgent, GroupChat, GroupChatManager, UserProxyAgen
 from multi_agents.agents.utils.views import print_agent_output
 from multi_agents.agents.utils.utils import sanitize_filename
 from .editor import EditorAgent
-from . import (
-    HumanAgent,
-    PublisherAgent,
-    ResearchAgent,
-    ReviewerAgent,
-    ReviserAgent,
-    WriterAgent,
-)
+from multi_agents.agents.human import HumanAgent
+from multi_agents.agents.publisher import PublisherAgent
+from multi_agents.agents.researcher import ResearchAgent
+from multi_agents.agents.reviewer import ReviewerAgent
+from multi_agents.agents.reviser import ReviserAgent
+from multi_agents.agents.writer import WriterAgent
 
 
 class ChiefEditorAgent:
