@@ -13,6 +13,7 @@ from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
+from starlette.websockets import WebSocketDisconnect
 import logging
 import hashlib
 
@@ -383,6 +384,11 @@ async def handle_websocket_communication(websocket, manager):
                         "content": "error",
                         "output": "Unknown command received by server"
                     })
+            except WebSocketDisconnect as e:
+                # Handle client disconnect gracefully (e.g., close code 1005 = NO_STATUS_RCVD)
+                # This is normal behavior when client closes browser/tab without proper close handshake
+                logger.info(f"WebSocket disconnected by client: code={e.code}")
+                break
             except Exception as e:
                 logger.error(f"WebSocket error: {str(e)}\n{traceback.format_exc()}")
                 print(f"WebSocket error: {e}")
