@@ -36,7 +36,15 @@ class Config:
 
         Args:
             config_path: Optional path to a JSON configuration file.
+                         If not provided, will attempt to load from
+                         GPT_RESEARCHER_CONFIG_PATH environment variable.
         """
+        # If no config_path provided, try to get it from environment variable
+        if config_path is None:
+            env_config_path = os.getenv("GPT_RESEARCHER_CONFIG_PATH")
+            # Treat empty string as None (use default config)
+            if env_config_path:
+                config_path = env_config_path
         self.config_path = config_path
         self.llm_kwargs: Dict[str, Any] = {}
         self.embedding_kwargs: Dict[str, Any] = {}
