@@ -57,10 +57,15 @@ class PyMuPDFScraper:
                 loader = PyMuPDFLoader(self.link)
                 doc = loader.load()
 
-            # Extract the content, image (if any), and title from the document.
+            # Extract content from all pages, images (if any), and title from the document.
             image = []
-            # Retrieve the content of the first page to minimize embedding costs.
-            return doc[0].page_content, image, doc[0].metadata["title"]
+            # Concatenate all pages to ensure sufficient content for downstream processing.
+            content = "\n\n".join([page.page_content for page in doc])
+
+            # Handle edge case where metadata might be missing
+            title = doc[0].metadata.get("title", "") if doc else ""
+
+            return content, image, title
 
         except requests.exceptions.Timeout:
             print(f"Download timed out. Please check the link : {self.link}")
