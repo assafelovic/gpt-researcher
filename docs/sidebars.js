@@ -116,6 +116,7 @@
       collapsible: true,
       collapsed: true,
       items: [
+        'gpt-researcher/multi_agents/ag2',
         'gpt-researcher/multi_agents/langgraph',
         ]
     },
