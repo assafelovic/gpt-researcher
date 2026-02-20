@@ -15,7 +15,7 @@ RUN npm run build
 ########################################################################
 # Stage 2: Browser and backend build tools installation
 ########################################################################
-FROM python:3.13.3-slim-bookworm AS install-browser
+FROM python:3.14.2-slim-bookworm AS install-browser
 
 # Install Chromium, Chromedriver, Firefox, Geckodriver, and build tools in one layer
 RUN echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries \
