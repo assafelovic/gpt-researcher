@@ -65,7 +65,17 @@ class DeepResearchSkill:
         messages = [
             {"role": "system", "content": "You are an expert researcher generating search queries."},
             {"role": "user",
-             "content": f"Given the following prompt, generate {num_queries} unique search queries to research the topic thoroughly. For each query, provide a research goal. Format as 'Query: <query>' followed by 'Goal: <goal>' for each pair: {query}"}
+             "content": f"""Given the following prompt, generate {num_queries} unique search queries to research the topic thoroughly. For each query, provide a research goal. Format as 'Query: <query>' followed by 'Goal: <goal>' for each pair: {query}
+
+Example queries:
+Query: What are the benefits of green tea?
+Goal: To explore the health benefits of green tea and its impact on weight loss.
+
+Query: How does climate change affect coral reefs?
+Goal: To investigate the impact of climate change on coral reefs and the potential solutions to protect them.
+
+Query: What are the latest trends in artificial intelligence?
+Goal: To analyze the current trends in AI research and applications."""}
         ]
 
         response = await create_chat_completion(
@@ -82,10 +92,10 @@ class DeepResearchSkill:
 
         for line in lines:
             line = line.strip()
-            if line.startswith('Query:'):
+            if line.startswith('Query'):
                 if current_query:
                     queries.append(current_query)
-                current_query = {'query': line.replace('Query:', '').strip()}
+                current_query = {'query': line.replace('Query', '').strip()}
             elif line.startswith('Goal:') and current_query:
                 current_query['researchGoal'] = line.replace('Goal:', '').strip()
 
