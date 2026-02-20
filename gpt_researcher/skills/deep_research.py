@@ -14,9 +14,11 @@ logger = logging.getLogger(__name__)
 # Maximum words allowed in context (25k words for safety margin)
 MAX_CONTEXT_WORDS = 25000
 
-def count_words(text: str) -> int:
-    """Count words in a text string"""
-    return len(text.split())
+def count_words(text) -> int:
+    """Count words in a text string. Handles both strings and lists."""
+    if isinstance(text, list):
+        text = " ".join(str(item) for item in text)
+    return len(str(text).split())
 
 def trim_context_to_word_limit(context_list: List[str], max_words: int = MAX_CONTEXT_WORDS) -> List[str]:
     """Trim context list to stay within word limit while preserving most recent/relevant items"""
@@ -274,7 +276,7 @@ Format each question on a new line starting with 'Question: '"""}
                         'followUpQuestions': results['followUpQuestions'],
                         'researchGoal': serp_query['researchGoal'],
                         'citations': results['citations'],
-                        'context': context if context else "",
+                        'context': "\n".join(context) if isinstance(context, list) else (context or ""),
                         'sources': sources if sources else []
                     }
 
