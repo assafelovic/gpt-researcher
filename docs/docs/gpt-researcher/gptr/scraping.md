@@ -161,6 +161,7 @@ Setup (with self-hosted server):
 
 Note: `FIRECRAWL_API_KEY` can be empty if you not setup authentication for your self host server (`FIRECRAWL_API_KEY=""`).
 There will be some difference between their cloud service and open source service. To understand differences between FireCrawl option read [here](https://docs.firecrawl.dev/contributing/open-source-or-cloud).
+
 Note 2: `FIRECRAWL_SERVER_URL` must be set for self-hosted server, otherwise it will default to FireCrawl's cloud url.
 
 Usage Considerations:
