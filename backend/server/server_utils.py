@@ -16,6 +16,8 @@ from fastapi import HTTPException
 import logging
 import hashlib
 
+from .multi_agent_runner import run_multi_agent_task
+
 # Import chat agent
 try:
     import sys
@@ -314,7 +316,7 @@ async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
 async def execute_multi_agents(manager) -> Any:
     websocket = manager.active_connections[0] if manager.active_connections else None
     if websocket:
-        report = await run_research_task("Is AI in a hype cycle?", websocket, stream_output)
+        report = await run_multi_agent_task("Is AI in a hype cycle?", websocket, stream_output)
         return {"report": report}
     else:
         return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
