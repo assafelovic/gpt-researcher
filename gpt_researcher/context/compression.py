@@ -23,6 +23,7 @@ from langchain_classic.retrievers.document_compressors import (
     DocumentCompressorPipeline,
     EmbeddingsFilter,
 )
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from ..memory.embeddings import OPENAI_EMBEDDING_MODEL
@@ -160,7 +161,6 @@ class ContextCompressor:
         # If total content is small, skip expensive compression and return directly
         if total_chars < chunk_threshold and len(self.documents) <= max_results:
             # Fast path: no compression needed
-            from langchain_core.documents import Document
             direct_docs = [
                 Document(
                     page_content=doc.get('raw_content', ''),
