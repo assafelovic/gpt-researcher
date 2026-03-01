@@ -11,6 +11,7 @@ from report_type import BasicReport, DetailedReport
 
 from gpt_researcher.utils.enum import ReportType, Tone
 from gpt_researcher.actions import stream_output  # Import stream_output
+from .multi_agent_runner import run_multi_agent_task
 from .server_utils import CustomLogsHandler
 
 logger = logging.getLogger(__name__)
@@ -134,7 +135,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
 
     # Initialize researcher based on report type
     if report_type == "multi_agents":
-        report = await run_research_task(
+        report = await run_multi_agent_task(
             query=task, 
             websocket=logs_handler,  # Use logs_handler instead of raw websocket
             stream_output=stream_output, 
