@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
 import logging
+import hashlib
 
 # Import chat agent
 try:
@@ -113,16 +114,10 @@ def sanitize_filename(filename: str) -> str:
     # Split into components
     prefix, timestamp, *task_parts = filename.split('_')
     task = '_'.join(task_parts)
-    
-    # Calculate max length for task portion
-    # 255 - len(os.getcwd()) - len("\\gpt-researcher\\outputs\\") - len("task_") - len(timestamp) - len("_.json") - safety_margin
-    max_task_length = 255 - len(os.getcwd()) - 24 - 5 - 10 - 6 - 5  # ~189 chars for task
-    
-    # Truncate task if needed
-    truncated_task = task[:max_task_length] if len(task) > max_task_length else task
-    
+    task_hash = hashlib.md5(task.encode('utf-8', errors='ignore')).hexdigest()[:10]
+            
     # Reassemble and clean the filename
-    sanitized = f"{prefix}_{timestamp}_{truncated_task}"
+    sanitized = f"{prefix}_{timestamp}_{task_hash}"
     return re.sub(r"[^\w\s-]", "", sanitized).strip()
 
 

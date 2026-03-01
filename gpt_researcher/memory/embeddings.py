@@ -48,6 +48,7 @@ _SUPPORTED_PROVIDERS = {
     "bedrock",
     "aimlapi",
     "netmind",
+    "openrouter",
 }
 
 
@@ -186,6 +187,15 @@ class Memory:
                     model=model,
                     openai_api_key=os.getenv("AIMLAPI_API_KEY"),
                     openai_api_base=os.getenv("AIMLAPI_BASE_URL", "https://api.aimlapi.com/v1"),
+                    **embedding_kwargs,
+                )
+            case "openrouter":
+                from langchain_openai import OpenAIEmbeddings
+
+                _embeddings = OpenAIEmbeddings(
+                    model=model,
+                    openai_api_key=os.getenv("OPENROUTER_API_KEY"),
+                    openai_api_base="https://openrouter.ai/api/v1",
                     **embedding_kwargs,
                 )
             case _:

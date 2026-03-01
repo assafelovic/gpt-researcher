@@ -156,7 +156,8 @@ class Config:
     @classmethod
     def load_config(cls, config_path: str | None) -> Dict[str, Any]:
         """Load a configuration by name."""
-        if config_path is None:
+        config_path = config_path or os.environ.get("CONFIG_PATH")
+        if not config_path:
             return DEFAULT_CONFIG
 
         # config_path = os.path.join(cls.CONFIG_DIR, config_path)

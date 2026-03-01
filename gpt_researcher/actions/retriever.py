@@ -59,6 +59,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import BingSearch
 
             return BingSearch
+        case "bocha":
+            from gpt_researcher.retrievers import BoChaSearch
+
+            return BoChaSearch
         case "arxiv":
             from gpt_researcher.retrievers import ArxivSearch
 

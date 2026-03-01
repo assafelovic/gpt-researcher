@@ -66,9 +66,9 @@ For a complete out-of-the-box experience, including a sleek frontend, you can cl
 
 **Advanced Usage Example:** [Detailed Report Implementation](https://github.com/assafelovic/gpt-researcher/tree/master/backend/report_type/detailed_report)
 
-### 3. Multi Agent System with LangGraph
+### 3. Multi Agent System with LangGraph or AG2
 
-We've collaborated with LangChain to support multi-agents with LangGraph and GPT Researcher, offering the most complex and comprehensive version of GPT Researcher.
+We've collaborated with LangChain and AG2 to support multi-agent workflows with GPT Researcher, offering the most complex and comprehensive version of GPT Researcher.
 
 **Pros:**
 - Very detailed, customized research reports
@@ -82,9 +82,11 @@ This version is recommended for local, experimental, and educational use. We're 
 
 **System Requirements:**
 - Python 3.10+
-- LangGraph library
+- LangGraph or AG2 library
 
-**Learn More:** [GPT Researcher x LangGraph](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph)
+**Learn More:**
+- [GPT Researcher x LangGraph](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph)
+- [GPT Researcher x AG2](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2)
 
 ## Comparison Table
 
@@ -113,6 +115,7 @@ To learn more about each of the options, check out these docs and code snippets:
 3. **Multi-Agent System**: 
    - [Multi-Agents code](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents)
    - [LangGraph documentation](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph)
+   - [AG2 documentation](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2)
    - [Blog](https://docs.gptr.dev/blog/gptr-langgraph)
 
 ## Versioning and Updates
@@ -121,7 +124,7 @@ GPT Researcher is actively maintained and updated. To ensure you're using the la
 
 - For the PIP package: `pip install --upgrade gpt-researcher`
 - For the End-to-End Application: Pull the latest changes from the GitHub repository
-- For the Multi-Agent System: Check the documentation for compatibility with the latest LangChain and LangGraph versions
+- For the Multi-Agent System: Check the documentation for compatibility with the latest LangGraph and AG2 versions
 
 ## Troubleshooting and FAQs
 

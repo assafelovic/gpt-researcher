@@ -351,6 +351,19 @@ OPENROUTER_LIMIT_RPS=1  # Ratelimit request per secound
 EMBEDDING=google_genai:models/text-embedding-004 # openrouter doesn't support embedding models, use google instead its free
 GOOGLE_API_KEY=[Your *google gemini* key]
 ```
+## Forge
+
+[Forge](https://github.com/TensorBlock/forge) is an open-source LLM router that provides unified access to 40+ AI providers through a single API.
+
+```env
+FORGE_API_KEY=[Your Key]
+FAST_LLM=forge:OpenAI/gpt-4o-mini
+SMART_LLM=forge:OpenAI/gpt-4o
+STRATEGIC_LLM=forge:OpenAI/gpt-4o
+```
+
+Model names use the `Provider/model-name` format (e.g., `OpenAI/gpt-4o`, `Anthropic/claude-sonnet-4-5`).
+
 ## AI/ML API
 #### AI/ML API provides 300+ AI models including Deepseek, Gemini, ChatGPT. The models run at enterprise-grade rate limits and uptimes.
 You can check provider docs [_here_](https://docs.aimlapi.com/?utm_source=gptr&utm_medium=github&utm_campaign=integration)
