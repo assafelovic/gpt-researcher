@@ -985,6 +985,7 @@ const GPTResearcher = (() => {
         tone: tone,
         agent: agent,
         query_domains: query_domains,
+        max_search_results: parseInt(document.getElementById('maxSearchResults').value, 10) || 5,
       }
 
       // Add MCP configuration if enabled
