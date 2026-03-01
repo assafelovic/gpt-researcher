@@ -48,3 +48,4 @@ class BaseConfig(TypedDict):
     IMAGE_GENERATION_MAX_IMAGES: int
     IMAGE_GENERATION_ENABLED: bool
     IMAGE_GENERATION_STYLE: str  # Image style: "dark", "light", or "auto"
+    IMAGE_GENERATION_PROVIDER: str  # Image provider: "google" or "modelslab"
