@@ -93,7 +93,7 @@ class WebSocketManager:
             # Still try to close the connection if possible
             try:
                 await websocket.close()
-            except:
+            except Exception:
                 pass  # If this fails too, there's nothing more we can do
 
     async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[], mcp_enabled=False, mcp_strategy="fast", mcp_configs=[]):
