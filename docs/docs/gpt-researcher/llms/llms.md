@@ -10,7 +10,7 @@ Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_ver
 To learn more about support customization options see [here](/docs/gpt-researcher/gptr/config).
 
 **Please note**: GPT Researcher is optimized and heavily tested on GPT models. Some other models might run into context limit errors, and unexpected responses.
-Please provide any feedback in our [Discord community](https://discord.gg/DUmbTebB) channel, so we can better improve the experience and performance.
+Please provide any feedback in our [Discord community](https://discord.gg/QgZXvJAccX) channel, so we can better improve the experience and performance.
 
 Below you can find examples for how to configure the various supported LLMs.
 
