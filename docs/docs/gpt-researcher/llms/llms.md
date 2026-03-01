@@ -379,6 +379,25 @@ STRATEGIC_LLM="aimlapi:x-ai/grok-3-mini-beta"
 EMBEDDING="aimlapi:text-embedding-3-small"
 ```
 
+## Avian
+
+[Avian](https://avian.io) provides an OpenAI-compatible API with access to cost-effective frontier models including DeepSeek-V3.2, Kimi-K2.5, GLM-5, and MiniMax-M2.5.
+
+Sign up at [avian.io](https://avian.io) to get an API key, then set the following environment variables:
+
+```env
+AVIAN_API_KEY=[Your Key]
+FAST_LLM=avian:deepseek/deepseek-v3.2
+SMART_LLM=avian:moonshotai/kimi-k2.5
+STRATEGIC_LLM=avian:z-ai/glm-5
+```
+
+Available models:
+- `deepseek/deepseek-v3.2` — 164K context, $0.26/$0.38 per 1M tokens
+- `moonshotai/kimi-k2.5` — 131K context, $0.45/$2.20 per 1M tokens
+- `z-ai/glm-5` — 131K context, $0.30/$2.55 per 1M tokens
+- `minimax/minimax-m2.5` — 1M context, $0.30/$1.10 per 1M tokens
+
 ## vLLM
 ```env
 VLLM_OPENAI_API_KEY=[Your Key] # you can set this to 'EMPTY' or anything
