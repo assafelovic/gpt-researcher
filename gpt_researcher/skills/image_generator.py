@@ -11,7 +11,7 @@ import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..actions.utils import stream_output
-from ..llm_provider.image import ImageGeneratorProvider
+from ..llm_provider.image import ImageGeneratorProvider, ModelsLabImageGeneratorProvider
 from ..utils.llm import create_chat_completion
 
 logger = logging.getLogger(__name__)
@@ -47,21 +47,25 @@ class ImageGenerator:
     
     def _init_provider(self):
         """Initialize the image generation provider from config."""
-        model = getattr(self.cfg, 'image_generation_model', None)
-        enabled = getattr(self.cfg, 'image_generation_enabled', False)
-        
-        if model and enabled:
-            try:
-                self.image_provider = ImageGeneratorProvider(model_name=model)
-                if self.image_provider.is_available():
-                    logger.info(f"Image generation enabled with model: {model}")
-                else:
-                    logger.warning("Image generation provider not available (missing API key?)")
-                    self.image_provider = None
-            except Exception as e:
-                logger.error(f"Failed to initialize image provider: {e}")
-                self.image_provider = None
-    
+        try:
+            enabled = getattr(self.cfg, 'IMAGE_GENERATION_ENABLED', False)
+            if not enabled:
+                return
+            provider_name = getattr(self.cfg, 'IMAGE_GENERATION_PROVIDER', 'google')
+            model = getattr(self.cfg, 'IMAGE_GENERATION_MODEL', None)
+            if provider_name == 'modelslab':
+                provider = ModelsLabImageGeneratorProvider(model_id=model)
+            else:
+                provider = ImageGeneratorProvider(model_name=model)
+            if provider.is_available():
+                self.image_provider = provider
+                logger.info(f"Image generation provider initialized: {provider_name}")
+            else:
+                logger.warning(f"Image generation provider '{provider_name}' not available (missing API key?)")
+        except Exception as e:
+            logger.error(f"Failed to initialize image provider: {e}")
+            self.image_provider = None
+
     def is_enabled(self) -> bool:
         """Check if image generation is enabled and available.
         
