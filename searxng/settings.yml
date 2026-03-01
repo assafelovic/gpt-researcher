@@ -1,0 +1,55 @@
+# SearXNG configuration for GPT-Researcher integration
+# Docs: https://docs.searxng.org/admin/settings/index.html
+
+use_default_settings: true
+
+general:
+  debug: false
+  instance_name: "gptr-searxng"
+  privacypolicy_url: false
+  donation_url: false
+  contact_url: false
+  enable_metrics: false
+
+server:
+  # Secret key — change this to a random string in production
+  secret_key: "gptr-local-dev-secret-change-me"
+  bind_address: "0.0.0.0"
+  port: 8080
+  base_url: false
+  limiter: false
+  public_instance: false
+
+ui:
+  static_use_hash: false
+  default_locale: "en"
+  query_in_title: false
+  infinite_scroll: false
+  default_theme: simple
+
+# Enable JSON output — REQUIRED for GPT-Researcher API use
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "en-US"
+  formats:
+    - html
+    - json      # ← Required by GPT-Researcher
+
+# Enable search engines
+engines:
+  - name: google
+    engine: google
+    use_mobile_ui: false
+    disabled: false
+    weight: 2
+
+  - name: bing
+    engine: bing
+    disabled: false
+    weight: 1
+
+  - name: duckduckgo
+    engine: duckduckgo
+    disabled: false
+    weight: 1
