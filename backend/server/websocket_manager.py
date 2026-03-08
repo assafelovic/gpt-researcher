@@ -100,7 +100,7 @@ class WebSocketManager:
         """Start streaming the output."""
         tone = Tone[tone]
         # add customized JSON config file path here
-        config_path = "default"
+        config_path = os.environ.get("CONFIG_PATH", "default")
 
         # Pass MCP parameters to run_agent
         report = await run_agent(
