@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from ..utils.llm import create_chat_completion
 from ..utils.enum import ReportType, ReportSource, Tone
+from ..utils.checkpoint import ResearchCheckpoint
 from ..actions.query_processing import get_search_results
 
 logger = logging.getLogger(__name__)
@@ -355,10 +356,45 @@ Format each question on a new line starting with 'Question: '"""}
         }
 
     async def run(self, on_progress=None) -> str:
-        """Run the deep research process and generate final report"""
+        """Run the deep research process and generate final report.
+
+        If checkpoints are enabled and a valid checkpoint exists for this query,
+        research is skipped and state is restored from the checkpoint. Otherwise,
+        full research runs and a checkpoint is saved afterward.
+        """
         print(f"\n🔍 DEEP RESEARCH: Starting with breadth={self.breadth}, depth={self.depth}, concurrency={self.concurrency_limit}", flush=True)
         start_time = time.time()
 
+        # Initialize checkpoint manager if enabled
+        checkpoints_enabled = getattr(self.researcher.cfg, 'enable_checkpoints', True)
+        checkpoint_mgr = None
+        checkpoint_path = None
+
+        if checkpoints_enabled:
+            checkpoint_dir = getattr(self.researcher.cfg, 'checkpoint_dir', None)
+            max_age = getattr(self.researcher.cfg, 'checkpoint_max_age_hours', 168)
+            checkpoint_mgr = ResearchCheckpoint(output_dir=checkpoint_dir)
+
+            # Check for existing checkpoint
+            existing = checkpoint_mgr.find(self.researcher.query, max_age_hours=max_age)
+            if existing and existing.get("status") in ("research_complete", "report_failed"):
+                checkpoint_path = existing.get("_filepath")
+                timestamp = existing.get("created_at", existing.get("timestamp", "unknown"))
+                n_sources = len(existing.get("research_sources", []))
+                prior_cost = existing.get("research_costs", 0)
+                print(
+                    f"\n📂 Found checkpoint from {timestamp}, skipping research phase "
+                    f"({n_sources} sources, ${prior_cost:.2f} prior cost)",
+                    flush=True
+                )
+                checkpoint_mgr.restore(self.researcher, existing)
+
+                # Clean up old checkpoints in background
+                checkpoint_mgr.cleanup(max_age_hours=max_age)
+
+                return self.researcher.context
+
+        # --- Full research path ---
         # Log initial costs
         initial_costs = self.researcher.get_costs()
 
@@ -402,7 +438,7 @@ Format each question on a new line starting with 'Question: '"""}
 
         # Trim final context to word limit
         final_context = trim_context_to_word_limit(context_with_citations)
-        
+
         # Set enhanced context and visited URLs
         self.researcher.context = "\n".join(final_context)
         self.researcher.visited_urls = results['visited_urls']
@@ -411,11 +447,36 @@ Format each question on a new line starting with 'Question: '"""}
         if results.get('sources'):
             self.researcher.research_sources = results['sources']
 
+        # Save checkpoint after successful research
+        if checkpoint_mgr:
+            try:
+                checkpoint_path = checkpoint_mgr.save(self.researcher, status="research_complete")
+                n_sources = len(self.researcher.research_sources)
+                print(
+                    f"\n💾 Research checkpoint saved ({n_sources} sources, "
+                    f"${research_costs:.2f} research cost)",
+                    flush=True
+                )
+                # Store path on researcher for write_report to update on failure
+                self.researcher._checkpoint_path = checkpoint_path
+                self.researcher._checkpoint_mgr = checkpoint_mgr
+            except Exception as e:
+                logger.warning(f"Failed to save checkpoint: {e}")
+                print(f"\n⚠️ Checkpoint save failed: {e}", flush=True)
+
         # Log total execution time
         end_time = time.time()
         execution_time = timedelta(seconds=end_time - start_time)
         logger.info(f"Total research execution time: {execution_time}")
         logger.info(f"Total research costs: ${research_costs:.2f}")
+
+        # Clean up old checkpoints
+        if checkpoint_mgr:
+            try:
+                max_age = getattr(self.researcher.cfg, 'checkpoint_max_age_hours', 168)
+                checkpoint_mgr.cleanup(max_age_hours=max_age)
+            except Exception:
+                pass
 
         # Return the context - don't generate report here as it will be done by the main agent
         return self.researcher.context
