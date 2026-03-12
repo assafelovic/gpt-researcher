@@ -462,6 +462,7 @@ Format each question on a new line starting with 'Question: '"""}
                 self.researcher._checkpoint_mgr = checkpoint_mgr
             except Exception as e:
                 logger.warning(f"Failed to save checkpoint: {e}")
+                print(f"\n⚠️ Checkpoint save failed: {e}", flush=True)
 
         # Log total execution time
         end_time = time.time()

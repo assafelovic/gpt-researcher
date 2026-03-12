@@ -109,7 +109,7 @@ class ResearchCheckpoint:
         )
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
-                json.dump(checkpoint_data, f, indent=2, ensure_ascii=False)
+                json.dump(checkpoint_data, f, indent=2, ensure_ascii=False, default=str)
             os.replace(tmp_path, filepath)
         except Exception:
             # Clean up temp file on failure
