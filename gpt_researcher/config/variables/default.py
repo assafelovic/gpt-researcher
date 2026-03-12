@@ -51,4 +51,11 @@ DEFAULT_CONFIG: BaseConfig = {
     "IMAGE_GENERATION_MAX_IMAGES": 3,  # Maximum number of images to generate per report
     "IMAGE_GENERATION_ENABLED": False,  # Master switch for inline image generation
     "IMAGE_GENERATION_STYLE": "dark",  # Image style: "dark" (matches app theme), "light", or "auto"
+
+    # Checkpoint and retry settings for deep research resilience
+    "ENABLE_CHECKPOINTS": True,  # Persist intermediate research state for crash recovery
+    "CHECKPOINT_DIR": None,  # Default: ~/.gpt-researcher/checkpoints/
+    "CHECKPOINT_MAX_AGE_HOURS": 168,  # Auto-cleanup threshold (7 days)
+    "SMART_LLM_FALLBACK": None,  # Fallback model for report generation (e.g. "openai:gpt-4.1-mini")
+    "REPORT_GENERATION_RETRIES": 3,  # Max retries on rate limit errors during report generation
 }

@@ -95,6 +95,14 @@ class Config:
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
         self.reasoning_effort = self.parse_reasoning_effort(os.getenv("REASONING_EFFORT"))
 
+        # Parse fallback LLM if configured
+        self.smart_llm_fallback_provider = None
+        self.smart_llm_fallback_model = None
+        if hasattr(self, 'smart_llm_fallback') and self.smart_llm_fallback:
+            self.smart_llm_fallback_provider, self.smart_llm_fallback_model = self.parse_llm(
+                self.smart_llm_fallback
+            )
+
     def _handle_deprecated_attributes(self) -> None:
         """Handle deprecated configuration attributes with warnings."""
         if os.getenv("EMBEDDING_PROVIDER") is not None:

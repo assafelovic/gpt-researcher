@@ -451,6 +451,10 @@ class GPTResearcher:
     ) -> str:
         """Write the research report.
 
+        If report generation fails and a checkpoint exists, the checkpoint
+        status is updated to 'report_failed' so the next run can skip
+        research and retry only the report.
+
         Args:
             existing_headers: List of existing headers to avoid duplication.
             relevant_written_contents: List of previously written content for context.
@@ -462,27 +466,60 @@ class GPTResearcher:
         """
         # Use pre-generated images if available (generated during conduct_research)
         has_available_images = bool(self.available_images)
-        
+
         await self._log_event("research", step="writing_report", details={
             "existing_headers": existing_headers,
             "context_source": "external" if ext_context else "internal",
             "available_images_count": len(self.available_images),
         })
 
-        # Generate report with available images embedded
-        report = await self.report_generator.write_report(
-            existing_headers=existing_headers,
-            relevant_written_contents=relevant_written_contents,
-            ext_context=ext_context or self.context,
-            custom_prompt=custom_prompt,
-            available_images=self.available_images,  # Pass pre-generated images
-        )
+        try:
+            # Generate report with available images embedded
+            report = await self.report_generator.write_report(
+                existing_headers=existing_headers,
+                relevant_written_contents=relevant_written_contents,
+                ext_context=ext_context or self.context,
+                custom_prompt=custom_prompt,
+                available_images=self.available_images,  # Pass pre-generated images
+            )
 
-        await self._log_event("research", step="report_completed", details={
-            "report_length": len(report),
-            "images_embedded": len(self.available_images) if has_available_images else 0,
-        })
-        return report
+            # Update checkpoint to report_complete on success
+            checkpoint_path = getattr(self, '_checkpoint_path', None)
+            checkpoint_mgr = getattr(self, '_checkpoint_mgr', None)
+            if checkpoint_path and checkpoint_mgr and report:
+                try:
+                    checkpoint_mgr.update_status(checkpoint_path, "report_complete")
+                except Exception:
+                    pass
+
+            await self._log_event("research", step="report_completed", details={
+                "report_length": len(report),
+                "images_embedded": len(self.available_images) if has_available_images else 0,
+            })
+            return report
+
+        except Exception as e:
+            # Update checkpoint status to report_failed
+            checkpoint_path = getattr(self, '_checkpoint_path', None)
+            checkpoint_mgr = getattr(self, '_checkpoint_mgr', None)
+            if checkpoint_path and checkpoint_mgr:
+                try:
+                    checkpoint_mgr.update_status(
+                        checkpoint_path, "report_failed", error=str(e)
+                    )
+                    import logging
+                    logging.getLogger(__name__).warning(
+                        f"Report generation failed. Checkpoint preserved at {checkpoint_path} "
+                        f"for recovery on next run."
+                    )
+                except Exception:
+                    pass
+
+            await self._log_event("research", step="report_failed", details={
+                "error": str(e),
+                "checkpoint_preserved": bool(checkpoint_path),
+            })
+            raise
 
     async def write_report_conclusion(self, report_body: str) -> str:
         """Write the conclusion section of the report.

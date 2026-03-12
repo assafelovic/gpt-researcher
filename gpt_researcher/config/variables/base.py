@@ -48,3 +48,9 @@ class BaseConfig(TypedDict):
     IMAGE_GENERATION_MAX_IMAGES: int
     IMAGE_GENERATION_ENABLED: bool
     IMAGE_GENERATION_STYLE: str  # Image style: "dark", "light", or "auto"
+    # Checkpoint and retry settings for deep research resilience
+    ENABLE_CHECKPOINTS: bool
+    CHECKPOINT_DIR: Union[str, None]
+    CHECKPOINT_MAX_AGE_HOURS: int
+    SMART_LLM_FALLBACK: Union[str, None]
+    REPORT_GENERATION_RETRIES: int
