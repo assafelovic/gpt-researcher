@@ -33,7 +33,7 @@ def open_task():
         model_name = strategic_llm.split(":", 1)[1]
         task["model"] = model_name
     elif strategic_llm:
-        task["model"] = model_name
+        task["model"] = strategic_llm
 
     return task
 
