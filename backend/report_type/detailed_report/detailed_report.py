@@ -24,6 +24,7 @@ class DetailedReport:
         complement_source_urls: bool = False,
         mcp_configs=None,
         mcp_strategy=None,
+        max_search_results=None,
     ):
         self.query = query
         self.report_type = report_type
@@ -37,6 +38,7 @@ class DetailedReport:
         self.subtopics = subtopics
         self.headers = headers or {}
         self.complement_source_urls = complement_source_urls
+        self.max_search_results = max_search_results
         
         # Generate a unique research ID for this report
         self.research_id = self._generate_research_id(query)
@@ -63,6 +65,10 @@ class DetailedReport:
             gpt_researcher_params["mcp_strategy"] = mcp_strategy
 
         self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
+
+        # Override max_search_results_per_query if provided by user
+        if max_search_results is not None:
+            self.gpt_researcher.cfg.max_search_results_per_query = int(max_search_results)
         self.existing_headers: List[Dict] = []
         self.global_context: List[str] = []
         self.global_written_sections: List[str] = []
@@ -150,6 +156,10 @@ class DetailedReport:
             mcp_configs=self.gpt_researcher.mcp_configs,
             mcp_strategy=self.gpt_researcher.mcp_strategy
         )
+
+        # Propagate max_search_results override to subtopic researcher
+        if self.max_search_results is not None:
+            subtopic_assistant.cfg.max_search_results_per_query = int(self.max_search_results)
 
         subtopic_assistant.context = list(set(self._hashable_context(self.global_context)))
         await subtopic_assistant.conduct_research()
