@@ -96,6 +96,7 @@ class Scraper:
                 subprocess.check_call(
                     [sys.executable, "-m", "pip", "install", pkg_inst_name]
                 )
+                importlib.invalidate_caches()
                 print(Fore.GREEN + f"{pkg_inst_name} installed successfully.")
             except subprocess.CalledProcessError:
                 raise ImportError(
