@@ -868,6 +868,9 @@ const GPTResearcher = (() => {
       updateWebSocketStatus();
 
       if (data.type === 'logs') {
+        if (data.content === 'subqueries' && data.metadata && Array.isArray(data.metadata)) {
+          displaySubQuestions(data.metadata)
+        }
         addAgentResponse(data)
       } else if (data.type === 'images') {
         console.log("Received images:", data);  // Debug log
@@ -1042,6 +1045,31 @@ const GPTResearcher = (() => {
     responseDiv.className = 'agent_response';
     responseDiv.innerHTML = data.output; // Assuming data.output is safe HTML or simple text from agent
     output.appendChild(responseDiv);
+    output.scrollTop = output.scrollHeight;
+    output.style.display = 'block';
+  }
+
+  const displaySubQuestions = (questions) => {
+    const output = document.getElementById('output');
+    const container = document.createElement('div');
+    container.className = 'sub-questions';
+
+    const heading = document.createElement('p');
+    heading.className = 'sub-questions-heading';
+    heading.textContent = '🤔 Pondering your question from several angles';
+    container.appendChild(heading);
+
+    const list = document.createElement('div');
+    list.className = 'sub-questions-list';
+    questions.forEach((q) => {
+      const pill = document.createElement('span');
+      pill.className = 'sub-question-pill';
+      pill.textContent = q;
+      list.appendChild(pill);
+    });
+    container.appendChild(list);
+
+    output.appendChild(container);
     output.scrollTop = output.scrollHeight;
     output.style.display = 'block';
   }
