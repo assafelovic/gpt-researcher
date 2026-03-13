@@ -301,6 +301,30 @@ footer a:hover {
     font-style: italic;
 }
 
+#reportContainer table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+    overflow-x: auto;
+    display: block;
+}
+
+#reportContainer th,
+#reportContainer td {
+    border: 1px solid #444;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+#reportContainer th {
+    background-color: rgba(255, 255, 255, 0.08);
+    font-weight: bold;
+}
+
+#reportContainer tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
 .tags-input {
     display: flex;
     flex-wrap: wrap;
