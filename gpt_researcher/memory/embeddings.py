@@ -49,6 +49,7 @@ _SUPPORTED_PROVIDERS = {
     "aimlapi",
     "netmind",
     "openrouter",
+    "minimax",
 }
 
 
@@ -199,6 +200,15 @@ class Memory:
                     model=model,
                     openai_api_key=os.getenv("OPENROUTER_API_KEY"),
                     openai_api_base="https://openrouter.ai/api/v1",
+                    **embedding_kwargs,
+                )
+            case "minimax":
+                from langchain_openai import OpenAIEmbeddings
+
+                _embeddings = OpenAIEmbeddings(
+                    model=model,
+                    openai_api_key=os.getenv("MINIMAX_API_KEY"),
+                    openai_api_base="https://api.minimax.io/v1",
                     **embedding_kwargs,
                 )
             case _:
