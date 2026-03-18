@@ -381,21 +381,23 @@ EMBEDDING="aimlapi:text-embedding-3-small"
 
 ## MiniMax
 
-[MiniMax](https://www.minimaxi.com) offers powerful large language models with an OpenAI-compatible API. MiniMax-M2.5 features a 204K context window and competitive pricing.
+[MiniMax](https://www.minimaxi.com) offers powerful large language models with an OpenAI-compatible API. The latest MiniMax-M2.7 features improved reasoning and competitive pricing.
 
 Sign up at [minimaxi.com](https://www.minimaxi.com) to get an API key, then set the following environment variables:
 
 ```env
 MINIMAX_API_KEY=[Your Key]
-FAST_LLM=minimax:MiniMax-M2.5-highspeed
-SMART_LLM=minimax:MiniMax-M2.5
-STRATEGIC_LLM=minimax:MiniMax-M2.5
+FAST_LLM=minimax:MiniMax-M2.7-highspeed
+SMART_LLM=minimax:MiniMax-M2.7
+STRATEGIC_LLM=minimax:MiniMax-M2.7
 
 EMBEDDING=minimax:embo-01
 ```
 
 Available models:
-- `MiniMax-M2.5` — 204K context, high-quality general-purpose model
+- `MiniMax-M2.7` — latest flagship model with improved reasoning
+- `MiniMax-M2.7-highspeed` — optimized for speed
+- `MiniMax-M2.5` — 204K context, general-purpose model
 - `MiniMax-M2.5-highspeed` — 204K context, optimized for speed
 
 ## Avian
