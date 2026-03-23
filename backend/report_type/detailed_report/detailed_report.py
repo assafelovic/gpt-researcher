@@ -145,7 +145,15 @@ class DetailedReport:
         if self.max_search_results is not None:
             subtopic_assistant.cfg.max_search_results_per_query = int(self.max_search_results)
 
-        subtopic_assistant.context = list(set(self.global_context))
+        #subtopic_assistant.context = list(set(self.global_context))
+        
+        # Dictionary-safe deduplication
+        unique_context = []
+        for item in self.global_context:
+            if item not in unique_context:
+                unique_context.append(item)
+        subtopic_assistant.context = unique_context
+        
         await subtopic_assistant.conduct_research()
 
         draft_section_titles = await subtopic_assistant.get_draft_section_titles(current_subtopic_task)
@@ -168,7 +176,16 @@ class DetailedReport:
         )
 
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
-        self.global_context = list(set(subtopic_assistant.context))
+        
+        #self.global_context = list(set(subtopic_assistant.context))
+        
+        # Dictionary-safe deduplication (Reverse direction)
+        updated_context = []
+        for item in subtopic_assistant.context:
+            if item not in updated_context:
+                updated_context.append(item)
+        self.global_context = updated_context
+
         self.global_urls.update(subtopic_assistant.visited_urls)
 
         self.existing_headers.append({
