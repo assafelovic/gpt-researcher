@@ -100,13 +100,24 @@ $ pip install -r requirements.txt
 ```
 <br />
 
-> **第 3 步** - 使用 OpenAI 密钥和 Tavily API 密钥创建 .env 文件，或直接导出该文件
+> **第 3 步** - 创建 `.env` 并配置 LLM 与搜索 API（中国版推荐 GLM-5）
 
 ```bash
-$ export OPENAI_API_KEY={Your OpenAI API Key here}
+$ export AVIAN_API_KEY={Your Avian API Key here}
 ```
 ```bash
 $ export TAVILY_API_KEY={Your Tavily API Key here}
+```
+```bash
+$ export FAST_LLM=avian:z-ai/glm-5
+$ export SMART_LLM=avian:z-ai/glm-5
+$ export STRATEGIC_LLM=avian:z-ai/glm-5
+```
+
+如果你使用的是其它 OpenAI 兼容网关，也可以直接设置：
+```bash
+$ export OPENAI_API_KEY={Your OpenAI-Compatible API Key here}
+$ export OPENAI_BASE_URL={Your OpenAI-Compatible Base URL here}
 ```
 
 （可选）如需开启全链路追踪和可观测性，可设置：
@@ -116,9 +127,9 @@ $ export TAVILY_API_KEY={Your Tavily API Key here}
 # $ export LANGCHAIN_API_KEY={Your LangChain API Key here}
 ```
 
-- **LLM，我们推荐使用 [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**，但您也可以使用 [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai) 支持的任何其他 LLM 模型（包括开源），只需在 config/config.py 中更改 llm 模型和提供者即可。请按照 [这份指南](https://python.langchain.com/docs/integrations/llms/) 学习如何将 LLM 与 Langchain 集成。
+- **LLM（中国版默认）推荐使用 GLM-5**：建议通过 `Avian` 提供商接入（`avian:z-ai/glm-5`），并把 `FAST_LLM/SMART_LLM/STRATEGIC_LLM` 都设置为同一模型，开箱即可运行。
 - **对于搜索引擎，我们推荐使用 [Tavily Search API](https://app.tavily.com)（已针对 LLM 进行优化）**，但您也可以选择其他搜索引擎，只需将 config/config.py 中的搜索提供程序更改为 "duckduckgo"、"googleAPI"、"searchapi"、"googleSerp "或 "searx "即可。然后在 config.py 文件中添加相应的 env API 密钥。
-- **我们强烈建议使用 [OpenAI GPT](https://platform.openai.com/docs/guides/gpt) 模型和 [Tavily Search API](https://app.tavily.com) 以获得最佳性能。**
+- **中国网络环境建议优先使用 GLM-5 + Tavily（或可用替代搜索）**，并根据实际延迟与成本调整模型和并发参数。
 <br />
 
 > **第 4 步** - 使用 FastAPI 运行代理
