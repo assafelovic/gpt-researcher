@@ -83,6 +83,8 @@ def calculate_cost(
         "gpt-4o": 0.00001,
         "gpt-4o-mini": 0.000001,
         "o3-mini": 0.0000005,
+        "z-ai/glm-5": 0.00000285,  # Approximation from public pricing ($0.30/$2.55 per 1M tokens)
+        "glm-5": 0.00000285,
         # Add more models and their costs as needed
     }
 

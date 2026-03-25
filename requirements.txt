@@ -25,7 +25,7 @@ google-genai>=1.0.0  # For image generation with Imagen
 
 # Search & Research
 tavily-python>=0.7.12
-duckduckgo-search>=4.1.1
+ddgs>=9.0.0
 arxiv>=2.0.0
 
 # Document Processing
@@ -64,4 +64,3 @@ python-multipart>=0.0.6
 json-repair>=0.29.8
 json5>=0.9.25
 markdown>=3.5.1
-

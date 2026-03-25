@@ -67,13 +67,15 @@ class ChatAgentWithMemory:
         self.retriever = None
         self.search_metadata = None
         
-        # Initialize Tavily client (optional - only if API key is available)
+        # Initialize web search clients.
         tavily_api_key = os.environ.get("TAVILY_API_KEY")
         if tavily_api_key:
             self.tavily_client = TavilyClient(api_key=tavily_api_key)
+            self.search_provider = "tavily"
         else:
             self.tavily_client = None
-            logger.warning("TAVILY_API_KEY not set - web search in chat will be disabled")
+            self.search_provider = "duckduckgo"
+            logger.warning("TAVILY_API_KEY not set - falling back to DuckDuckGo for chat web search")
         
         # Process document and create vector store if not provided
         if not self.vector_store and False:
@@ -111,28 +113,42 @@ class ChatAgentWithMemory:
         documents = text_splitter.split_text(report)
         return documents
 
-    def quick_search(self, query):
-        """Perform a web search for current information using Tavily"""
+    def _search_with_duckduckgo(self, query: str) -> Dict[str, Any]:
+        """Fallback web search provider using DuckDuckGo."""
         try:
-            # Check if Tavily client is available
-            if self.tavily_client is None:
-                logger.warning(f"Tavily client not available, skipping web search for: {query}")
-                self.search_metadata = {
-                    "query": query,
-                    "sources": [],
-                    "error": "Web search is disabled - TAVILY_API_KEY not configured"
-                }
-                return {
-                    "error": "Web search is disabled - TAVILY_API_KEY not configured",
-                    "results": []
-                }
-            
-            logger.info(f"Performing web search for: {query}")
-            results = self.tavily_client.search(query=query, max_results=5)
+            from ddgs import DDGS
+        except ImportError as exc:
+            logger.error("DuckDuckGo fallback requested but `ddgs` is not installed")
+            return {
+                "error": "DuckDuckGo search requires `ddgs` package. Install with `pip install -U ddgs`.",
+                "results": [],
+            }
+
+        results: List[Dict[str, str]] = []
+        with DDGS() as ddgs:
+            for row in ddgs.text(query, max_results=5):
+                results.append(
+                    {
+                        "title": row.get("title", ""),
+                        "url": row.get("href", ""),
+                        "content": row.get("body", ""),
+                    }
+                )
+        return {"results": results}
+
+    def quick_search(self, query):
+        """Perform a web search for current information."""
+        try:
+            logger.info(f"Performing web search for: {query} (provider={self.search_provider})")
+            if self.tavily_client is not None:
+                results = self.tavily_client.search(query=query, max_results=5)
+            else:
+                results = self._search_with_duckduckgo(query)
             
             # Store search metadata for frontend
             self.search_metadata = {
                 "query": query,
+                "provider": self.search_provider,
                 "sources": [
                     {"title": result.get("title", ""), 
                      "url": result.get("url", ""),
