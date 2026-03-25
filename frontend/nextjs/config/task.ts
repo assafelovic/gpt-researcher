@@ -2,7 +2,7 @@ export const task = {
   "task": {
     "query": "Is AI in a hype cycle?",
     "include_human_feedback": false,
-    "model": "gpt-4o",
+    "model": "z-ai/glm-5",
     "max_sections": 3,
     "publish_formats": {
       "markdown": true,

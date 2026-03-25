@@ -8,13 +8,13 @@ DEFAULT_LANGUAGE = "zh_CN"
 DEFAULT_LOCALE = "zh_CN.UTF-8"
 
 # Retriever providers
-RETRIEVER_PROVIDER = "tavily"  # Options: tavily, google, bing, serpapi, serper, duckduckgo, searx
+RETRIEVER_PROVIDER = "duckduckgo"  # Options: tavily, google, bing, serpapi, serper, duckduckgo, searx
 
 # LLM providers
-FAST_LLM_PROVIDER = "openai"
-FAST_LLM_MODEL = "gpt-4o-mini"
-SMART_LLM_PROVIDER = "openai"
-SMART_LLM_MODEL = "gpt-4o"
+FAST_LLM_PROVIDER = "avian"
+FAST_LLM_MODEL = "z-ai/glm-5"
+SMART_LLM_PROVIDER = "avian"
+SMART_LLM_MODEL = "z-ai/glm-5"
 
 # Embeddings providers
-EMBEDDING_PROVIDER = "openai"  # Options: openai, cohere, google, huggingface, azure_openai
+EMBEDDING_PROVIDER = "avian"  # Options: openai, cohere, google, huggingface, azure_openai, avian
