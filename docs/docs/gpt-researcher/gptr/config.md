@@ -9,6 +9,8 @@ In this China-focused branch, GPT Researcher defaults to [Avian](https://avian.i
 
 Model quality and cost profiles change quickly. Choose the provider that best fits your region, latency, and budget constraints.
 
+Avian now accepts both `AVIAN_*` and `OPENAI_*` environment variable names, so existing OpenAI-compatible setups can keep working while you migrate.
+
 <div style={{ marginBottom: '10px' }}>
 <img align="center" height="350" src="/img/leaderboard.png" />
 </div>

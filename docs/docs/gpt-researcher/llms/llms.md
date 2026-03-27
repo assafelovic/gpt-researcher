@@ -392,6 +392,8 @@ SMART_LLM=avian:moonshotai/kimi-k2.5
 STRATEGIC_LLM=avian:z-ai/glm-5
 ```
 
+If you already use generic OpenAI-compatible environment names, Avian will also fall back to `OPENAI_API_KEY` and `OPENAI_BASE_URL` when the Avian-specific variables are missing.
+
 Available models:
 - `deepseek/deepseek-v3.2` — 164K context, $0.26/$0.38 per 1M tokens
 - `moonshotai/kimi-k2.5` — 131K context, $0.45/$2.20 per 1M tokens

@@ -123,6 +123,8 @@ $ export OPENAI_API_KEY={Your OpenAI-Compatible API Key here}
 $ export OPENAI_BASE_URL={Your OpenAI-Compatible Base URL here}
 ```
 
+如果你继续沿用 `avian` 作为默认 provider，它现在也会优先读取 `AVIAN_API_KEY` / `AVIAN_BASE_URL`，并在缺省时回退到 `OPENAI_API_KEY` / `OPENAI_BASE_URL`。
+
 （可选）如需开启全链路追踪和可观测性，可设置：
 
 ```bash
