@@ -10,9 +10,8 @@ from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 logger = logging.getLogger(__name__)
 
 # Constants for models
-GPT4_MODEL = "gpt-4o"  # For standard tasks
-O3_MINI_MODEL = "o3-mini"  # For reasoning tasks
-LLM_PROVIDER = "openai"
+GLM5_MODEL = "z-ai/glm-5"  # Unified model for standard and reasoning tasks
+LLM_PROVIDER = "avian"
 
 class ResearchProgress:
     def __init__(self, total_depth: int, total_breadth: int):
@@ -57,7 +56,7 @@ class DeepResearch:
         response = await create_chat_completion(
             messages=messages,
             llm_provider=LLM_PROVIDER,
-            model=O3_MINI_MODEL,  # Using reasoning model for better question generation
+            model=GLM5_MODEL,
             temperature=0.7,
             max_tokens=500,
             reasoning_effort=ReasoningEfforts.High.value
@@ -79,7 +78,7 @@ class DeepResearch:
         response = await create_chat_completion(
             messages=messages,
             llm_provider=LLM_PROVIDER,
-            model=GPT4_MODEL,  # Using GPT-4 for general task
+            model=GLM5_MODEL,
             temperature=0.7,
             max_tokens=1000
         )
@@ -113,7 +112,7 @@ class DeepResearch:
         response = await create_chat_completion(
             messages=messages,
             llm_provider=LLM_PROVIDER,
-            model=O3_MINI_MODEL,  # Using reasoning model for analysis
+            model=GLM5_MODEL,
             temperature=0.7,
             max_tokens=1000,
             reasoning_effort=ReasoningEfforts.High.value

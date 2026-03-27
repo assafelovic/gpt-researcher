@@ -70,6 +70,14 @@ class ReasoningEfforts(Enum):
     Low = "low"
 
 
+def _env_with_fallback(*names: str, default: str = "") -> str:
+    for name in names:
+        value = os.getenv(name)
+        if value:
+            return value
+    return default
+
+
 class ChatLogger:
     """Helper utility to log all chat requests and their corresponding responses
     plus the stack trace leading to the call.
@@ -255,10 +263,21 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
-            llm = ChatOpenAI(openai_api_base='https://api.avian.io/v1',
-                     openai_api_key=os.environ["AVIAN_API_KEY"],
-                     **kwargs
+            api_key = _env_with_fallback("AVIAN_API_KEY", "OPENAI_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "Avian provider requires AVIAN_API_KEY or OPENAI_API_KEY to be set"
                 )
+
+            llm = ChatOpenAI(
+                openai_api_base=_env_with_fallback(
+                    "AVIAN_BASE_URL",
+                    "OPENAI_BASE_URL",
+                    default="https://api.avian.io/v1",
+                ),
+                openai_api_key=api_key,
+                **kwargs,
+            )
         elif provider == 'netmind':
             _check_pkg("langchain_netmind")
             from langchain_netmind import ChatNetmind

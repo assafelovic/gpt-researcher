@@ -119,7 +119,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
     # Set up MCP configuration if enabled
     if mcp_enabled and mcp_configs:
         import os
-        current_retriever = os.getenv("RETRIEVER", "tavily")
+        current_retriever = os.getenv("RETRIEVER", "duckduckgo")
         if "mcp" not in current_retriever:
             # Add MCP to existing retrievers
             os.environ["RETRIEVER"] = f"{current_retriever},mcp"

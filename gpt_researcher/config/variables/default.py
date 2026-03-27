@@ -1,12 +1,13 @@
 from .base import BaseConfig
 
 DEFAULT_CONFIG: BaseConfig = {
-    "RETRIEVER": "tavily",
-    "EMBEDDING": "openai:text-embedding-3-small",
+    # China-first defaults: GLM-5 via Avian, with no mandatory search API key.
+    "RETRIEVER": "duckduckgo",
+    "EMBEDDING": "avian:text-embedding-3-small",
     "SIMILARITY_THRESHOLD": 0.42,
-    "FAST_LLM": "openai:gpt-4o-mini",
-    "SMART_LLM": "openai:gpt-4.1",  # Has support for long responses (2k+ words).
-    "STRATEGIC_LLM": "openai:o4-mini",  # Can be used with o1 or o3, please note it will make tasks slower.
+    "FAST_LLM": "avian:z-ai/glm-5",
+    "SMART_LLM": "avian:z-ai/glm-5",
+    "STRATEGIC_LLM": "avian:z-ai/glm-5",
     "FAST_TOKEN_LIMIT": 3000,
     "SMART_TOKEN_LIMIT": 6000,
     "STRATEGIC_TOKEN_LIMIT": 4000,
@@ -25,7 +26,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "MAX_SCRAPER_WORKERS": 15,
     "SCRAPER_RATE_LIMIT_DELAY": 0.0,  # Minimum seconds between scraper requests (0 = no limit, useful for API rate limiting)
     "MAX_SUBTOPICS": 3,
-    "LANGUAGE": "english",
+    "LANGUAGE": "chinese",
     "REPORT_SOURCE": "web",
     "DOC_PATH": "./my-docs",
     "PROMPT_FAMILY": "default",

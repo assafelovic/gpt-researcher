@@ -5,9 +5,11 @@ The config.py enables you to customize GPT Researcher to your specific needs and
 Thanks to our amazing community and contributions, GPT Researcher supports multiple LLMs and Retrievers.
 In addition, GPT Researcher can be tailored to various report formats (such as APA), word count, research iterations depth, etc.
 
-GPT Researcher defaults to our recommended suite of integrations: [OpenAI](https://platform.openai.com/docs/overview) for LLM calls and [Tavily API](https://app.tavily.com) for retrieving real-time web information.
+In this China-focused branch, GPT Researcher defaults to [Avian](https://avian.io) + `z-ai/glm-5` for LLM calls and `duckduckgo` for keyless web retrieval.
 
-As seen below, OpenAI still stands as the superior LLM. We assume it will stay this way for some time, and that prices will only continue to decrease, while performance and speed increase over time.
+Model quality and cost profiles change quickly. Choose the provider that best fits your region, latency, and budget constraints.
+
+Avian now accepts both `AVIAN_*` and `OPENAI_*` environment variable names, so existing OpenAI-compatible setups can keep working while you migrate.
 
 <div style={{ marginBottom: '10px' }}>
 <img align="center" height="350" src="/img/leaderboard.png" />
@@ -18,13 +20,13 @@ You can also include your own external JSON file `config.json` by adding the pat
 The config JSON should follow the format/keys in the default config. Below is a sample config.json file to help get you started:
 ```json
 {
-  "RETRIEVER": "tavily",
-  "EMBEDDING": "openai:text-embedding-3-small",
+  "RETRIEVER": "duckduckgo",
+  "EMBEDDING": "avian:text-embedding-3-small",
   "SIMILARITY_THRESHOLD": 0.42,
-  "FAST_LLM": "openai:gpt-4o-mini",
-  "SMART_LLM": "openai:gpt-4.1",
-  "STRATEGIC_LLM": "openai:o4-mini",
-  "LANGUAGE": "english",
+  "FAST_LLM": "avian:z-ai/glm-5",
+  "SMART_LLM": "avian:z-ai/glm-5",
+  "STRATEGIC_LLM": "avian:z-ai/glm-5",
+  "LANGUAGE": "chinese",
   "CURATE_SOURCES": false,
   "FAST_TOKEN_LIMIT": 2000,
   "SMART_TOKEN_LIMIT": 4000,
@@ -50,13 +52,13 @@ python gpt_researcher/main.py --config_path my_config.json
 
 Below is a list of current supported options:
 
-- **`RETRIEVER`**: Web search engine used for retrieving sources. Defaults to `tavily`. Options: `duckduckgo`, `bing`, `google`, `searchapi`, `serper`, `searx`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
-- **`EMBEDDING`**: Embedding model. Defaults to `openai:text-embedding-3-small`. Options: `ollama`, `huggingface`, `azure_openai`, `custom`.
+- **`RETRIEVER`**: Web search engine used for retrieving sources. Defaults to `duckduckgo` in this branch. Options: `duckduckgo`, `tavily`, `bing`, `google`, `searchapi`, `serper`, `searx`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
+- **`EMBEDDING`**: Embedding model. Defaults to `avian:text-embedding-3-small` in this branch. Options include `avian`, `openai`, `ollama`, `huggingface`, `azure_openai`, `custom`.
 - **`SIMILARITY_THRESHOLD`**: Threshold value for similarity comparison when processing documents. Defaults to `0.42`.
-- **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `openai:gpt-4o-mini`.
-- **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-5`.
-- **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `openai:gpt-5-mini`.
-- **`LANGUAGE`**: Language to be used for the final research report. Defaults to `english`.
+- **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `avian:z-ai/glm-5` in this branch.
+- **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `avian:z-ai/glm-5` in this branch.
+- **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `avian:z-ai/glm-5` in this branch.
+- **`LANGUAGE`**: Language to be used for the final research report. Defaults to `chinese` in this branch.
 - **`CURATE_SOURCES`**: Whether to curate sources for research. This step adds an LLM run which may increase costs and total run time but improves quality of source selection. Defaults to `False`.
 - **`FAST_TOKEN_LIMIT`**: Maximum token limit for fast LLM responses. Defaults to `2000`.
 - **`SMART_TOKEN_LIMIT`**: Maximum token limit for smart LLM responses. Defaults to `4000`.
@@ -105,4 +107,3 @@ export REPORT_FORMAT=IEEE
 ```
 Please note that you might need to export additional env vars and obtain API keys for other supported search retrievers and LLM providers. Please follow your console logs for further assistance.
 To learn more about additional LLM support you can check out the docs [here](/docs/gpt-researcher/llms/llms).
-
