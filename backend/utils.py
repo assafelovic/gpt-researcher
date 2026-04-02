@@ -81,13 +81,13 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
         
         # Set base_url to current directory for resolving any remaining relative paths
         base_url = os.path.abspath(".")
-
         from md2pdf.core import md2pdf
-        md2pdf(file_path,
-               md_content=processed_text,
-               # md_file_path=f"{file_path}.md",
-               css_file_path=css_path,
-               base_url=base_url)
+        md2pdf(
+               file_path,
+               raw=processed_text,
+               css=css_path,
+               base_url=base_url,
+            )
         print(f"Report written to {file_path}")
     except Exception as e:
         print(f"Error in converting Markdown to PDF: {e}")
