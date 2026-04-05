@@ -1,0 +1,24 @@
+{
+  "name": "gpt-researcher",
+  "version": "0.1.0",
+  "description": "Autonomous deep research from Codex via MCP",
+  "author": {
+    "name": "assafelovic",
+    "url": "https://github.com/assafelovic/gpt-researcher"
+  },
+  "homepage": "https://github.com/assafelovic/gpt-researcher",
+  "repository": "https://github.com/assafelovic/gpt-researcher",
+  "keywords": [
+    "mcp",
+    "codex"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "GPT Researcher",
+    "shortDescription": "Autonomous deep research from Codex via MCP",
+    "longDescription": "An autonomous agent that conducts deep research on any data using any LLM providers.",
+    "category": "Research",
+    "websiteURL": "https://github.com/assafelovic/gpt-researcher"
+  },
+  "skills": "./skills/"
+}
