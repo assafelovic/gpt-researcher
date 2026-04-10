@@ -74,6 +74,7 @@ VALID_RETRIEVERS = [
     "pubmed_central",
     "exa",
     "mcp",
+    "xquik",
     "mock"
 ]
 
