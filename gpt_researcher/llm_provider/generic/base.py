@@ -303,12 +303,13 @@ class GenericLLMProvider:
         # Streaming the response using the chain astream method from langchain
         async for chunk in self.llm.astream(messages, **kwargs):
             content = chunk.content
-            if content is not None:
-                response += content
-                paragraph += content
-                if "\n" in paragraph:
-                    await self._send_output(paragraph, websocket)
-                    paragraph = ""
+            if not content:
+                continue
+            response += content
+            paragraph += content
+            if "\n" in paragraph:
+                await self._send_output(paragraph, websocket)
+                paragraph = ""
 
         if paragraph:
             await self._send_output(paragraph, websocket)
@@ -319,7 +320,7 @@ class GenericLLMProvider:
         if websocket is not None:
             await websocket.send_json({"type": "report", "output": content})
         elif self.verbose:
-            print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}{content}{Style.RESET_ALL}", flush=True)
 
 
 def _check_pkg(pkg: str) -> None:
