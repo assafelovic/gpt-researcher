@@ -4,7 +4,7 @@ from ..utils import check_pkg
 
 class ExaSearch:
     """
-    Exa API Retriever
+    Exa API Retriever - web search API for AI
     """
 
     def __init__(self, query, query_domains=None):
@@ -39,7 +39,7 @@ class ExaSearch:
         return api_key
 
     def search(
-        self, max_results=10, use_autoprompt=False, search_type="neural", **filters
+        self, max_results=10, use_autoprompt=False, search_type="auto", **filters
     ):
         """
         Searches the query using the Exa API.
