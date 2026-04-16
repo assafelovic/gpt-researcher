@@ -35,6 +35,7 @@ _SUPPORTED_PROVIDERS = {
     "netmind",
     "forge",
     "avian",
+    "minimax",
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS = [
@@ -257,6 +258,14 @@ class GenericLLMProvider:
 
             llm = ChatOpenAI(openai_api_base='https://api.avian.io/v1',
                      openai_api_key=os.environ["AVIAN_API_KEY"],
+                     **kwargs
+                )
+        elif provider == "minimax":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(openai_api_base='https://api.minimax.io/v1',
+                     openai_api_key=os.environ["MINIMAX_API_KEY"],
                      **kwargs
                 )
         elif provider == 'netmind':
