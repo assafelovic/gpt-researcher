@@ -13,6 +13,7 @@ from .tavily.tavily_search import TavilySearch
 from .exa.exa import ExaSearch
 from .mcp import MCPRetriever
 from .bocha.bocha import BoChaSearch
+from .xquik.xquik import XquikSearch
 
 __all__ = [
     "TavilySearch",
@@ -29,5 +30,6 @@ __all__ = [
     "PubMedCentralSearch",
     "ExaSearch",
     "MCPRetriever",
-    "BoChaSearch"
+    "BoChaSearch",
+    "XquikSearch"
 ]
