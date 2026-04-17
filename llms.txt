@@ -1,0 +1,60 @@
+# GPT Researcher (HLT fork) — llms.txt
+
+Deep web research service for HLT agents. Fork of the OSS `assafelovic/gpt-researcher`, adapted for HLT's deployment + integration patterns.
+
+## What this repo is
+
+A FastAPI + uvicorn service that runs autonomous web research using OpenAI + Tavily + (optionally) other search backends. Two main endpoints:
+
+- `POST /api/quick_search` — fast cited web search (2-5s) returning a synthesized answer with sources.
+- `POST /report/` — deep autonomous research (30-90s) returning a full markdown report with citations.
+
+FastAPI app entrypoint: **`backend.server.app:app`** (the upstream Procfile incorrectly references `backend.server.server:app` — that path does not exist; our fork fixes this on branch `session-2026-04-16-local-tweaks`).
+
+## Where it sits in the HLT ecosystem
+
+- **Canonical path:** `~/hlt/gpt-researcher/`
+- **GitHub fork:** `Awhitter/hlt-gpt-researcher`
+- **Upstream:** `assafelovic/gpt-researcher` (OSS)
+- **Active branch:** `session-2026-04-16-local-tweaks` — contains the Procfile fix + `railway.toml` + `deploy-to-railway.sh` (commit `463e1333`)
+- **Role:** research-web primitive. Agents compose GPT Researcher alongside Firecrawl / Brave / Tavily / Perplexity in `hub:hub-research` (once registered). Not the only research tool — it's the deep-report variant.
+- **Deploy target:** Railway, domain `gptr.katailyst.com` or `research.katailyst.com` (TBD).
+- **Ecosystem map:** [`~/hlt/katailyst/docs/ecosystem-map/05-llms-ecosystem-master.md`](../katailyst/docs/ecosystem-map/05-llms-ecosystem-master.md)
+
+## Read first (in order)
+
+1. `README.md` — upstream docs; still largely relevant
+2. `Procfile` — **fixed** in this fork; `backend.server.app:app` is the right module path
+3. `railway.toml` — explicit Railway deploy config (NIXPACKS builder, health check `/`, 300s timeout)
+4. `deploy-to-railway.sh` — one-shot deploy script. Run after `railway login`:
+   ```bash
+   cd ~/hlt/gpt-researcher && ./deploy-to-railway.sh
+   ```
+5. `backend/server/app.py` — the actual FastAPI app (line 140: `app = FastAPI(lifespan=lifespan)`)
+6. `.env.example` — required env vars: `OPENAI_API_KEY`, `TAVILY_API_KEY`. Optional: `DOC_PATH`.
+
+## Sibling repos + integrations
+
+- `~/hlt/katailyst/` — once deployed, register as `tool:gpt-researcher.quick-search` + `tool:gpt-researcher.deep-research` + wrapper `skill:gpt-researcher`. Link into `hub:hub-research` alongside Firecrawl/Brave/Tavily/Perplexity peers.
+- `~/hlt/agent-canvas/` — the `researcher` agent here (`src/agents/researcher.ts`) hardcodes `localhost:8000` today. After GPTR Railway deploy, swap to `GPTR_URL` env var (with local fallback).
+- `~/hlt/research-team/` + `~/hlt/mastra/` — Mastra-based research flows that can compose GPT Researcher as a tool once it's in the Katailyst registry.
+
+## Rules of engagement
+
+1. **Don't diverge from upstream casually.** This is a fork of `assafelovic/gpt-researcher`; we want to absorb upstream fixes. Keep HLT-specific changes on the `session-2026-04-16-local-tweaks` branch (or a clearly-named successor), and rebase on upstream regularly.
+2. **Katailyst first** — once this is deployed + registered, agents should discover it via `registry_search "deep cited web research"`, NOT by hardcoding URLs.
+3. **Axon second** — `cd ~/hlt/gpt-researcher && axon status` (indexed 2026-04-17).
+4. **Registry counts rule** — any stats citing Katailyst entities use `registry_capabilities` full-scope.
+5. **Secret handling** — `.env` is gitignored. The deploy script validates keys are non-empty but never prints them. Add new keys the same way.
+
+## Deploy status (as of 2026-04-17)
+
+- [x] Procfile fixed
+- [x] `railway.toml` added
+- [x] `deploy-to-railway.sh` added (executable)
+- [x] `.axon/` added to `.gitignore`
+- [x] Commit `463e1333` pushed to `Awhitter/hlt-gpt-researcher`
+- [ ] `railway login` — **blocked on operator**
+- [ ] Run `./deploy-to-railway.sh`
+- [ ] Register in Katailyst (tool + skill entities + hub links)
+- [ ] Swap Agent Canvas `researcher.ts` hardcode to `GPTR_URL` env var
