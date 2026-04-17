@@ -105,12 +105,12 @@ class GenericLLMProvider:
             if "openai_api_base" not in kwargs and os.environ.get("OPENAI_BASE_URL"):
                 kwargs["openai_api_base"] = os.environ["OPENAI_BASE_URL"]
 
-            llm = ChatOpenAI(**kwargs)
+            llm = ChatOpenAI(request_timeout=60, **kwargs)
         elif provider == "anthropic":
             _check_pkg("langchain_anthropic")
             from langchain_anthropic import ChatAnthropic
 
-            llm = ChatAnthropic(**kwargs)
+            llm = ChatAnthropic(default_request_timeout=60, **kwargs)
         elif provider == "azure_openai":
             _check_pkg("langchain_openai")
             from langchain_openai import AzureChatOpenAI
@@ -119,7 +119,7 @@ class GenericLLMProvider:
                 model_name = kwargs.get("model", None)
                 kwargs = {"azure_deployment": model_name, **kwargs}
 
-            llm = AzureChatOpenAI(**kwargs)
+            llm = AzureChatOpenAI(request_timeout=60, **kwargs)
         elif provider == "cohere":
             _check_pkg("langchain_cohere")
             from langchain_cohere import ChatCohere
@@ -183,6 +183,7 @@ class GenericLLMProvider:
 
             llm = ChatOpenAI(openai_api_base='https://dashscope.aliyuncs.com/compatible-mode/v1',
                      openai_api_key=os.environ["DASHSCOPE_API_KEY"],
+                     request_timeout=60,
                      **kwargs
                 )
         elif provider == "xai":
@@ -196,6 +197,7 @@ class GenericLLMProvider:
 
             llm = ChatOpenAI(openai_api_base='https://api.deepseek.com',
                      openai_api_key=os.environ["DEEPSEEK_API_KEY"],
+                     request_timeout=60,
                      **kwargs
                 )
         elif provider == "litellm":
@@ -234,6 +236,7 @@ class GenericLLMProvider:
             llm = ChatOpenAI(
                 openai_api_key=os.environ["VLLM_OPENAI_API_KEY"],
                 openai_api_base=os.environ["VLLM_OPENAI_API_BASE"],
+                request_timeout=60,
                 **kwargs
             )
         elif provider == "aimlapi":
@@ -242,6 +245,7 @@ class GenericLLMProvider:
 
             llm = ChatOpenAI(openai_api_base='https://api.aimlapi.com/v1',
                              openai_api_key=os.environ["AIMLAPI_API_KEY"],
+                             request_timeout=60,
                              **kwargs
                              )
         elif provider == "forge":
@@ -250,6 +254,7 @@ class GenericLLMProvider:
 
             llm = ChatOpenAI(openai_api_base='https://api.forge.tensorblock.co/v1',
                      openai_api_key=os.environ["FORGE_API_KEY"],
+                     request_timeout=60,
                      **kwargs
                 )
         elif provider == "avian":
@@ -258,6 +263,7 @@ class GenericLLMProvider:
 
             llm = ChatOpenAI(openai_api_base='https://api.avian.io/v1',
                      openai_api_key=os.environ["AVIAN_API_KEY"],
+                     request_timeout=60,
                      **kwargs
                 )
         elif provider == "minimax":

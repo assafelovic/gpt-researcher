@@ -78,9 +78,11 @@ async def main(num_examples: int):
     try:
         # Initialize the evaluator with specified number of examples
         grader_model = ChatOpenAI(
-            temperature=0, 
+            temperature=0,
             model_name="gpt-4-turbo",
-            openai_api_key=os.getenv("OPENAI_API_KEY")
+            openai_api_key=os.getenv("OPENAI_API_KEY"),
+            request_timeout=60,
+            max_retries=3,
         )
         evaluator = SimpleQAEval(grader_model=grader_model, num_examples=num_examples)
         
