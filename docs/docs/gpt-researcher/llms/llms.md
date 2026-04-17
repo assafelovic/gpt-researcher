@@ -10,7 +10,7 @@ Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_ver
 To learn more about support customization options see [here](/docs/gpt-researcher/gptr/config).
 
 **Please note**: GPT Researcher is optimized and heavily tested on GPT models. Some other models might run into context limit errors, and unexpected responses.
-Please provide any feedback in our [Discord community](https://discord.gg/DUmbTebB) channel, so we can better improve the experience and performance.
+Please provide any feedback in our [Discord community](https://discord.gg/QgZXvJAccX) channel, so we can better improve the experience and performance.
 
 Below you can find examples for how to configure the various supported LLMs.
 
@@ -378,6 +378,25 @@ SMART_LLM="aimlapi:openai/o4-mini-2025-04-16"
 STRATEGIC_LLM="aimlapi:x-ai/grok-3-mini-beta"
 EMBEDDING="aimlapi:text-embedding-3-small"
 ```
+
+## Avian
+
+[Avian](https://avian.io) provides an OpenAI-compatible API with access to cost-effective frontier models including DeepSeek-V3.2, Kimi-K2.5, GLM-5, and MiniMax-M2.5.
+
+Sign up at [avian.io](https://avian.io) to get an API key, then set the following environment variables:
+
+```env
+AVIAN_API_KEY=[Your Key]
+FAST_LLM=avian:deepseek/deepseek-v3.2
+SMART_LLM=avian:moonshotai/kimi-k2.5
+STRATEGIC_LLM=avian:z-ai/glm-5
+```
+
+Available models:
+- `deepseek/deepseek-v3.2` — 164K context, $0.26/$0.38 per 1M tokens
+- `moonshotai/kimi-k2.5` — 131K context, $0.45/$2.20 per 1M tokens
+- `z-ai/glm-5` — 131K context, $0.30/$2.55 per 1M tokens
+- `minimax/minimax-m2.5` — 1M context, $0.30/$1.10 per 1M tokens
 
 ## vLLM
 ```env

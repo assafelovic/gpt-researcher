@@ -98,13 +98,19 @@ class DeepResearchSkill:
 
     async def generate_research_plan(self, query: str, num_questions: int = 3) -> List[str]:
         """Generate follow-up questions to clarify research direction"""
-        # Get initial search results to inform query generation
-        # Pass the researcher so MCP retriever receives cfg and mcp_configs
-        search_results = await get_search_results(
-            query,
-            self.researcher.retrievers[0],
-            researcher=self.researcher
-        )
+        # Get initial search results from all retrievers to inform query generation
+        all_search_results = []
+        for retriever in self.researcher.retrievers:
+            try:
+                results = await get_search_results(
+                    query,
+                    retriever,
+                    researcher=self.researcher
+                )
+                all_search_results.extend(results)
+            except Exception as e:
+                logger.warning(f"Error with retriever {retriever.__name__}: {e}")
+        search_results = all_search_results
         logger.info(f"Initial web knowledge obtained: {len(search_results)} results")
 
         # Get current time for context
