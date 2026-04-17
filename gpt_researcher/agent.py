@@ -4,7 +4,9 @@ This module provides the main GPTResearcher class that orchestrates
 autonomous research and report generation using LLMs and web search.
 """
 
+import asyncio
 import json
+import logging
 import os
 from typing import Any, Optional
 
@@ -237,22 +239,20 @@ class GPTResearcher:
                 return mcp_strategy
             # Support old strategy names for backwards compatibility
             elif mcp_strategy == "optimized":
-                import logging
                 logging.getLogger(__name__).warning("mcp_strategy 'optimized' is deprecated, use 'fast' instead")
                 return "fast"
             elif mcp_strategy == "comprehensive":
-                import logging
                 logging.getLogger(__name__).warning("mcp_strategy 'comprehensive' is deprecated, use 'deep' instead")
                 return "deep"
             else:
-                import logging
                 logging.getLogger(__name__).warning(f"Invalid mcp_strategy '{mcp_strategy}', defaulting to 'fast'")
                 return "fast"
         
         # Priority 2: Convert mcp_max_iterations for backwards compatibility
         if mcp_max_iterations is not None:
-            import logging
-            logging.getLogger(__name__).warning("mcp_max_iterations is deprecated, use mcp_strategy instead")
+            logging.getLogger(__name__).warning(
+                "mcp_max_iterations is deprecated, use mcp_strategy instead"
+            )
             
             if mcp_max_iterations == 0:
                 return "disabled"
@@ -320,12 +320,10 @@ class GPTResearcher:
                     await self.log_handler.on_research_step(kwargs.get('step', ''), kwargs.get('details', {}))
 
                 # Add direct logging as backup
-                import logging
                 research_logger = logging.getLogger('research')
                 research_logger.info(f"{event_type}: {json.dumps(kwargs, default=str)}")
 
             except Exception as e:
-                import logging
                 logging.getLogger('research').error(f"Error in _log_event: {e}", exc_info=True)
 
     async def conduct_research(self, on_progress=None):
@@ -732,8 +730,19 @@ class GPTResearcher:
         step = self._current_step
         self.step_costs[step] = self.step_costs.get(step, 0.0) + cost
         if self.log_handler:
-            self._log_event("research", step="cost_update", details={
-                "cost": cost,
-                "total_cost": self.research_costs,
-                "step_name": step,
-            })
+            # _log_event is async — schedule it without blocking the sync caller.
+            # Using asyncio.ensure_future so the coroutine is actually executed
+            # rather than silently discarded.
+            import asyncio
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self._log_event("research", step="cost_update", details={
+                    "cost": cost,
+                    "total_cost": self.research_costs,
+                    "step_name": step,
+                }))
+            except RuntimeError:
+                # No running event loop — log synchronously as fallback
+                logging.getLogger(__name__).debug(
+                    f"Cost update: +${cost:.4f} (total: ${self.research_costs:.4f}, step: {step})"
+                )

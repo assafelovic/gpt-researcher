@@ -1,6 +1,9 @@
+import logging
 import os
 import aiohttp
 import tempfile
+
+logger = logging.getLogger(__name__)
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
     TextLoader,
@@ -41,7 +44,7 @@ class OnlineDocumentLoader:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=headers, timeout=6) as response:
                     if response.status != 200:
-                        print(f"Failed to download {url}: HTTP {response.status}")
+                        logger.warning(f"Failed to download {url}: HTTP {response.status}")
                         return []
 
                     content = await response.read()
@@ -51,12 +54,10 @@ class OnlineDocumentLoader:
 
                     return await self._load_document(tmp_file_path, self._get_extension(url).strip('.'))
         except aiohttp.ClientError as e:
-            print(f"Failed to process {url}")
-            print(e)
+            logger.error(f"Failed to process {url}: {e}")
             return []
         except Exception as e:
-            print(f"Unexpected error processing {url}")
-            print(e)
+            logger.error(f"Unexpected error processing {url}: {e}")
             return []
 
     async def _load_document(self, file_path: str, file_extension: str) -> list:
@@ -79,8 +80,7 @@ class OnlineDocumentLoader:
                 ret_data = loader.load()
 
         except Exception as e:
-            print(f"Failed to load document : {file_path}")
-            print(e)
+            logger.error(f"Failed to load document: {file_path}: {e}")
         finally:
             os.remove(file_path)  # 删除临时文件
 

@@ -4,10 +4,11 @@ This module provides helper functions and constants used by the
 various search retriever implementations.
 """
 
-import importlib.util
 import logging
 import os
 import sys
+
+from ..utils.imports import check_pkg
 
 logger = logging.getLogger(__name__)
 
@@ -41,22 +42,6 @@ async def stream_output(log_type, step, content, websocket=None, with_data=False
         except Exception as e:
             logger.error(f"Error streaming output: {e}")
 
-def check_pkg(pkg: str) -> None:
-    """
-    Checks if a package is installed and raises an error if not.
-    
-    Args:
-        pkg (str): The package name
-    
-    Raises:
-        ImportError: If the package is not installed
-    """
-    if not importlib.util.find_spec(pkg):
-        pkg_kebab = pkg.replace("_", "-")
-        raise ImportError(
-            f"Unable to import {pkg_kebab}. Please install with "
-            f"`pip install -U {pkg_kebab}`"
-        )
 
 # Valid retrievers for fallback
 VALID_RETRIEVERS = [

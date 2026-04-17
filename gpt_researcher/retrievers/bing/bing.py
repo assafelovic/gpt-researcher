@@ -63,7 +63,7 @@ class BingSearch():
             "safeSearch": "Strict"
         }
 
-        resp = requests.get(url, headers=headers, params=params)
+        resp = requests.get(url, headers=headers, params=params, timeout=30)
 
         # Preprocess the results
         if resp is None:

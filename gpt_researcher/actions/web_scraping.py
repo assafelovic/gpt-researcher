@@ -42,25 +42,6 @@ async def scrape_urls(
     return scraped_data, images
 
 
-async def filter_urls(urls: list[str], config: Config) -> list[str]:
-    """
-    Filter URLs based on configuration settings.
-
-    Args:
-        urls (list[str]): List of URLs to filter.
-        config (Config): Configuration object.
-
-    Returns:
-        list[str]: Filtered list of URLs.
-    """
-    filtered_urls = []
-    for url in urls:
-        # Add your filtering logic here
-        # For example, you might want to exclude certain domains or URL patterns
-        if not any(excluded in url for excluded in config.excluded_domains):
-            filtered_urls.append(url)
-    return filtered_urls
-
 async def extract_main_content(html_content: str) -> str:
     """
     Extract the main content from HTML.

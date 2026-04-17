@@ -49,15 +49,10 @@ class Config:
         if config_to_use['REPORT_SOURCE'] != 'web':
           self._set_doc_path(config_to_use)
 
-        # MCP support configuration
-        self.mcp_servers = []  # List of MCP server configurations
-        self.mcp_allowed_root_paths = []  # Allowed root paths for MCP servers
-
-        # Read from config
-        if hasattr(self, 'mcp_servers'):
-            self.mcp_servers = self.mcp_servers
-        if hasattr(self, 'mcp_allowed_root_paths'):
-            self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
+        # MCP support configuration — read from loaded config, falling back to empty lists.
+        # Previously this was a no-op self-assignment that silently discarded config values.
+        self.mcp_servers = config_to_use.get('MCP_SERVERS', [])
+        self.mcp_allowed_root_paths = config_to_use.get('MCP_ALLOWED_ROOT_PATHS', [])
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         """Set configuration attributes from config dictionary.
