@@ -89,6 +89,26 @@ else
   railway init --name gpt-researcher
 fi
 
+# Railway CLI v4.x decoupled project creation from service creation.
+# `railway init` creates the project; a service must be added explicitly
+# before `railway variables --set` or `railway up` will work.
+# Detect "Service: None" and auto-create the service (idempotent).
+if railway status 2>&1 | grep -qE "^Service:\s*None"; then
+  echo "  No service linked yet — creating one (required by Railway CLI v4.x)..."
+  # --service <name> creates an empty service and auto-links this dir to it.
+  # `yes ""` answers the "Enter a variable" prompt with a blank to let it proceed.
+  if ! yes "" 2>/dev/null | railway add --service gpt-researcher >/dev/null 2>&1; then
+    echo "  ERROR: railway add --service gpt-researcher failed. Run it manually and re-invoke this script."
+    exit 1
+  fi
+  # Verify linkage worked
+  if railway status 2>&1 | grep -qE "^Service:\s*None"; then
+    echo "  ERROR: service still not linked after 'railway add'. Check 'railway status' manually."
+    exit 1
+  fi
+  echo "  ✓ service 'gpt-researcher' created + linked"
+fi
+
 echo ""
 echo "=== 5. Push env vars (values never printed) ==="
 # Read each line from .env, skip comments + blanks, pipe to railway variables
@@ -108,28 +128,34 @@ echo "=== 6. Deploy ==="
 railway up --detach
 
 echo ""
-echo "=== 7. Wait for public URL ==="
-# Railway's domain allocation is async; poll for up to 3 minutes.
+echo "=== 7. Allocate + confirm public URL ==="
+# Railway v4.x: `railway domain` with no args ALLOCATES a domain if none
+# exists and prints it. If one already exists it just prints it. So this
+# call works whether it's first-deploy or a re-deploy.
 url=""
-for i in $(seq 1 36); do
-  # `railway domain` returns the assigned domain, or empty until allocated.
-  raw="$(railway domain 2>&1 || true)"
-  if echo "$raw" | grep -qE "https?://"; then
-    url="$(echo "$raw" | grep -oE 'https?://[^ ]+' | head -1)"
-    break
-  fi
-  if [ $((i % 6)) -eq 0 ]; then
-    echo "  still waiting... ($((i*5))s)"
-  fi
-  sleep 5
-done
-
-if [ -z "$url" ]; then
-  echo "  WARN: domain not yet allocated after 3 min — check 'railway domain' manually."
-  exit 0
+raw="$(railway domain 2>&1 || true)"
+if echo "$raw" | grep -qE "https?://"; then
+  url="$(echo "$raw" | grep -oE 'https?://[^ ]+' | head -1)"
+  echo "  ✓ public URL: $url"
+else
+  # Unusual — some Railway states don't allocate on the first call. Retry
+  # with a few-second delay before giving up.
+  for i in $(seq 1 12); do
+    sleep 5
+    raw="$(railway domain 2>&1 || true)"
+    if echo "$raw" | grep -qE "https?://"; then
+      url="$(echo "$raw" | grep -oE 'https?://[^ ]+' | head -1)"
+      echo "  ✓ public URL (after ${i}x5s wait): $url"
+      break
+    fi
+  done
 fi
 
-echo "  ✓ public URL: $url"
+if [ -z "$url" ]; then
+  echo "  WARN: domain not allocated after retry — check 'railway domain' manually."
+  echo "  If Railway says 'no domain yet', try: railway domain generate (on CLIs where it exists)"
+  exit 0
+fi
 
 echo ""
 echo "=== 8. Smoke test /api/quick_search ==="
