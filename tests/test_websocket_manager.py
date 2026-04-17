@@ -24,6 +24,7 @@ def _load_websocket_manager_module():
         "gpt_researcher.actions",
         "gpt_researcher.utils.enum",
         "report_type",
+        "backend.report_type",
         "fastapi",
     ):
         sys.modules.pop(module_name, None)
@@ -31,7 +32,7 @@ def _load_websocket_manager_module():
     fastapi_module = types.ModuleType("fastapi")
     fastapi_module.WebSocket = type("WebSocket", (), {})
 
-    report_type_module = types.ModuleType("report_type")
+    report_type_module = types.ModuleType("backend.report_type")
     report_type_module.BasicReport = type("BasicReport", (), {})
     report_type_module.DetailedReport = type("DetailedReport", (), {})
 
@@ -64,6 +65,7 @@ def _load_websocket_manager_module():
         {
             "fastapi": fastapi_module,
             "report_type": report_type_module,
+            "backend.report_type": report_type_module,
             "gpt_researcher.utils.enum": enum_module,
             "gpt_researcher.actions": actions_module,
             "backend.server.multi_agent_runner": multi_agent_runner_module,
@@ -74,6 +76,14 @@ def _load_websocket_manager_module():
 
 
 class WebSocketManagerTests(unittest.IsolatedAsyncioTestCase):
+    def test_websocket_manager_module_imports(self):
+        module = importlib.import_module("backend.server.websocket_manager")
+        self.assertTrue(hasattr(module, "WebSocketManager"))
+
+    def test_server_app_module_imports(self):
+        module = importlib.import_module("backend.server.app")
+        self.assertTrue(hasattr(module, "app"))
+
     async def test_start_streaming_reads_config_path_from_environment(self):
         websocket_manager = _load_websocket_manager_module()
         manager = websocket_manager.WebSocketManager()
