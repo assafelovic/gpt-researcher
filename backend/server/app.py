@@ -15,7 +15,7 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, File, Uplo
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, ConfigDict
 
 # Add the parent directory to sys.path to make sure we can import from server
@@ -23,13 +23,14 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from server.websocket_manager import WebSocketManager
 from server.server_utils import (
-    get_config_dict, sanitize_filename,
-    update_environment_variables, handle_file_upload, handle_file_deletion,
+    sanitize_filename,
+    handle_file_upload, handle_file_deletion,
     execute_multi_agents, handle_websocket_communication
 )
 
 from server.websocket_manager import run_agent
 from utils import write_md_to_word, write_md_to_pdf
+from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import Tone
 from chat.chat import ChatAgentWithMemory
 
@@ -45,6 +46,50 @@ logger.propagate = True
 
 # Silence uvicorn reload logs
 logging.getLogger("uvicorn.supervisors.ChangeReload").setLevel(logging.WARNING)
+
+# Paths
+REPO_ROOT = Path(__file__).resolve().parents[2]
+FRONTEND_DIR = REPO_ROOT / "frontend"
+FRONTEND_INDEX_PATH = FRONTEND_DIR / "index.html"
+OUTPUTS_DIR = Path("outputs").resolve()
+
+
+def current_timestamp_ms() -> int:
+    return int(time.time() * 1000)
+
+
+def build_chat_response_message(
+    content: str | None,
+    tool_calls_metadata: Any | None,
+) -> Dict[str, Any]:
+    return {
+        "role": "assistant",
+        "content": content,
+        "timestamp": current_timestamp_ms(),
+        "metadata": {
+            "tool_calls": tool_calls_metadata
+        } if tool_calls_metadata else None,
+    }
+
+
+def resolve_report_docx_path(research_id: str) -> Path:
+    safe_name = Path(research_id).name
+    if safe_name != research_id or ".." in research_id:
+        raise HTTPException(status_code=400, detail="Invalid research ID")
+
+    docx_path = OUTPUTS_DIR / f"{safe_name}.docx"
+    resolved_path = docx_path.resolve()
+    if not str(resolved_path).startswith(str(OUTPUTS_DIR)):
+        raise HTTPException(status_code=400, detail="Invalid research ID")
+    return resolved_path
+
+
+async def get_report_or_404(research_id: str) -> Dict[str, Any]:
+    report = await report_store.get_report(research_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return report
+
 
 # Models
 
@@ -70,22 +115,21 @@ class ChatRequest(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    os.makedirs("outputs", exist_ok=True)
-    app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
+    os.makedirs(OUTPUTS_DIR, exist_ok=True)
+    app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
     
     # Mount frontend static files
-    frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
-    if os.path.exists(frontend_path):
-        app.mount("/site", StaticFiles(directory=frontend_path), name="frontend")
-        logger.debug(f"Frontend mounted from: {frontend_path}")
+    if FRONTEND_DIR.exists():
+        app.mount("/site", StaticFiles(directory=str(FRONTEND_DIR)), name="frontend")
+        logger.debug(f"Frontend mounted from: {FRONTEND_DIR}")
         
         # Also mount the static directory directly for assets referenced as /static/
-        static_path = os.path.join(frontend_path, "static")
-        if os.path.exists(static_path):
-            app.mount("/static", StaticFiles(directory=static_path), name="static")
+        static_path = FRONTEND_DIR / "static"
+        if static_path.exists():
+            app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
             logger.debug(f"Static assets mounted from: {static_path}")
     else:
-        logger.warning(f"Frontend directory not found: {frontend_path}")
+        logger.warning(f"Frontend directory not found: {FRONTEND_DIR}")
     
     logger.info("GPT Researcher API ready - local mode (no database persistence)")
     yield
@@ -120,13 +164,8 @@ app.add_middleware(
 
 # Use default JSON response class
 
-# Mount static files for frontend
-# Get the absolute path to the frontend directory
-frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))
-
-# Mount static directories
-app.mount("/static", StaticFiles(directory=os.path.join(frontend_dir, "static")), name="static")
-app.mount("/site", StaticFiles(directory=frontend_dir), name="site")
+# Note: static file mounts are handled in the lifespan context manager above.
+# Previously duplicated here at module level, causing double-registration.
 
 # WebSocket manager
 manager = WebSocketManager()
@@ -146,23 +185,20 @@ DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
     """Serve the main frontend HTML page."""
-    frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))
-    index_path = os.path.join(frontend_dir, "index.html")
-    
-    if not os.path.exists(index_path):
+    if not FRONTEND_INDEX_PATH.exists():
         raise HTTPException(status_code=404, detail="Frontend index.html not found")
     
-    with open(index_path, "r", encoding="utf-8") as f:
+    with FRONTEND_INDEX_PATH.open("r", encoding="utf-8") as f:
         content = f.read()
     
     return HTMLResponse(content=content)
 
 @app.get("/report/{research_id}")
 async def read_report(request: Request, research_id: str):
-    docx_path = os.path.join('outputs', f"{research_id}.docx")
-    if not os.path.exists(docx_path):
-        return {"message": "Report not found."}
-    return FileResponse(docx_path)
+    docx_path = resolve_report_docx_path(research_id)
+    if not docx_path.exists():
+        raise HTTPException(status_code=404, detail="Report not found")
+    return FileResponse(str(docx_path))
 
 
 # Simplified API routes - no database persistence
@@ -175,9 +211,7 @@ async def get_all_reports(report_ids: str = None):
 
 @app.get("/api/reports/{research_id}")
 async def get_report_by_id(research_id: str):
-    report = await report_store.get_report(research_id)
-    if report is None:
-        raise HTTPException(status_code=404, detail="Report not found")
+    report = await get_report_or_404(research_id)
     return {"report": report}
 
 
@@ -187,7 +221,7 @@ async def create_or_update_report(request: Request):
         data = await request.json()
         research_id = data.get("id", "temp_id")
 
-        now_ms = int(time.time() * 1000)
+        now_ms = current_timestamp_ms()
         existing = await report_store.get_report(research_id)
         incoming_timestamp = data.get("timestamp")
         timestamp = incoming_timestamp if isinstance(incoming_timestamp, int) else now_ms
@@ -212,12 +246,10 @@ async def create_or_update_report(request: Request):
 
 @app.put("/api/reports/{research_id}")
 async def update_report(research_id: str, request: Request):
-    existing = await report_store.get_report(research_id)
-    if existing is None:
-        raise HTTPException(status_code=404, detail="Report not found")
+    existing = await get_report_or_404(research_id)
 
     data = await request.json()
-    now_ms = int(time.time() * 1000)
+    now_ms = current_timestamp_ms()
 
     updated = {
         **existing,
@@ -240,17 +272,13 @@ async def delete_report(research_id: str):
 
 @app.get("/api/reports/{research_id}/chat")
 async def get_report_chat(research_id: str):
-    report = await report_store.get_report(research_id)
-    if report is None:
-        raise HTTPException(status_code=404, detail="Report not found")
+    report = await get_report_or_404(research_id)
     return {"chatMessages": report.get("chatMessages") or []}
 
 
 @app.post("/api/reports/{research_id}/chat")
 async def add_report_chat_message(research_id: str, request: Request):
-    report = await report_store.get_report(research_id)
-    if report is None:
-        raise HTTPException(status_code=404, detail="Report not found")
+    report = await get_report_or_404(research_id)
 
     message = await request.json()
     chat_messages = report.get("chatMessages") or []
@@ -259,7 +287,7 @@ async def add_report_chat_message(research_id: str, request: Request):
     else:
         chat_messages = [message]
 
-    now_ms = int(time.time() * 1000)
+    now_ms = current_timestamp_ms()
     updated = {
         **report,
         "chatMessages": chat_messages,
@@ -381,73 +409,48 @@ async def chat(chat_request: ChatRequest):
 
         # Process the chat and get response with metadata
         response_content, tool_calls_metadata = await chat_agent.chat(chat_request.messages, None)
-        logger.info(f"response_content: {response_content}")
         logger.info(f"Got chat response of length: {len(response_content) if response_content else 0}")
         
         if tool_calls_metadata:
             logger.info(f"Tool calls used: {json.dumps(tool_calls_metadata)}")
 
         # Format response as a ChatMessage object with role, content, timestamp and metadata
-        response_message = {
-            "role": "assistant",
-            "content": response_content,
-            "timestamp": int(time.time() * 1000),  # Current time in milliseconds
-            "metadata": {
-                "tool_calls": tool_calls_metadata
-            } if tool_calls_metadata else None
-        }
+        response_message = build_chat_response_message(
+            response_content,
+            tool_calls_metadata,
+        )
 
         logger.info(f"Returning formatted response: {json.dumps(response_message)[:100]}...")
         return {"response": response_message}
     except Exception as e:
         logger.error(f"Error processing chat request: {str(e)}", exc_info=True)
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail="Internal server error")
 
-@app.post("/api/reports/{research_id}/chat")
-async def research_report_chat(research_id: str, request: Request):
-    """Handle chat requests for a specific research report.
-    Directly processes the raw request data to avoid validation errors.
+
+class QuickSearchRequest(BaseModel):
+    query: str
+    domains: list[str] | None = None
+    summary: bool = True
+
+
+@app.post("/api/quick_search")
+async def quick_search_endpoint(search_request: QuickSearchRequest):
+    """Perform a quick web search and return results or an aggregated summary.
+
+    This is a lightweight endpoint for fast fact-checking and lookups,
+    as opposed to the full /report/ endpoint for deep research.
     """
     try:
-        # Get raw JSON data from request
-        data = await request.json()
-        
-        # Create chat agent with the report
-        chat_agent = ChatAgentWithMemory(
-            report=data.get("report", ""),
-            config_path="default",
-            headers=None
+        researcher = GPTResearcher(
+            query=search_request.query,
+            report_type="research_report",
         )
-
-        # Process the chat and get response with metadata
-        response_content, tool_calls_metadata = await chat_agent.chat(data.get("messages", []), None)
-        
-        if tool_calls_metadata:
-            logger.info(f"Tool calls used: {json.dumps(tool_calls_metadata)}")
-
-        # Format response as a ChatMessage object
-        response_message = {
-            "role": "assistant",
-            "content": response_content,
-            "timestamp": int(time.time() * 1000),
-            "metadata": {
-                "tool_calls": tool_calls_metadata
-            } if tool_calls_metadata else None
-        }
-
-        return {"response": response_message}
+        results = await researcher.quick_search(
+            query=search_request.query,
+            query_domains=search_request.domains,
+            aggregated_summary=search_request.summary,
+        )
+        return {"query": search_request.query, "results": results}
     except Exception as e:
-        logger.error(f"Error in research report chat: {str(e)}", exc_info=True)
-        return {"error": str(e)}
-
-@app.put("/api/reports/{research_id}")
-async def update_report(research_id: str, request: Request):
-    """Update a specific research report by ID - no database configured."""
-    logger.debug(f"Update requested for report {research_id} - no database configured, not persisted")
-    return {"success": True, "id": research_id}
-
-@app.delete("/api/reports/{research_id}")
-async def delete_report(research_id: str):
-    """Delete a specific research report by ID - no database configured."""
-    logger.debug(f"Delete requested for report {research_id} - no database configured, nothing to delete")
-    return {"success": True, "id": research_id}
+        logger.error(f"Error in quick_search: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")

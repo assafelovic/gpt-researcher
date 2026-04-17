@@ -1,14 +1,14 @@
 import aiofiles
 import asyncio
-import importlib
 import json
-import subprocess
-import sys
-import traceback
-from typing import Any
-from colorama import Fore, Style, init
 import os
+import traceback
 from enum import Enum
+from typing import Any
+
+from colorama import Fore, Style
+
+from gpt_researcher.utils.imports import check_pkg
 
 _SUPPORTED_PROVIDERS = {
     "openai",
@@ -97,7 +97,7 @@ class GenericLLMProvider:
     @classmethod
     def from_provider(cls, provider: str, chat_log: str | None = None, verbose: bool=True, **kwargs: Any):
         if provider == "openai":
-            _check_pkg("langchain_openai")
+            check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
             # Support custom OpenAI-compatible APIs via OPENAI_BASE_URL
@@ -106,12 +106,12 @@ class GenericLLMProvider:
 
             llm = ChatOpenAI(**kwargs)
         elif provider == "anthropic":
-            _check_pkg("langchain_anthropic")
+            check_pkg("langchain_anthropic")
             from langchain_anthropic import ChatAnthropic
 
             llm = ChatAnthropic(**kwargs)
         elif provider == "azure_openai":
-            _check_pkg("langchain_openai")
+            check_pkg("langchain_openai")
             from langchain_openai import AzureChatOpenAI
 
             if "model" in kwargs:
@@ -120,43 +120,43 @@ class GenericLLMProvider:
 
             llm = AzureChatOpenAI(**kwargs)
         elif provider == "cohere":
-            _check_pkg("langchain_cohere")
+            check_pkg("langchain_cohere")
             from langchain_cohere import ChatCohere
 
             llm = ChatCohere(**kwargs)
         elif provider == "google_vertexai":
-            _check_pkg("langchain_google_vertexai")
+            check_pkg("langchain_google_vertexai")
             from langchain_google_vertexai import ChatVertexAI
 
             llm = ChatVertexAI(**kwargs)
         elif provider == "google_genai":
-            _check_pkg("langchain_google_genai")
+            check_pkg("langchain_google_genai")
             from langchain_google_genai import ChatGoogleGenerativeAI
 
             llm = ChatGoogleGenerativeAI(**kwargs)
         elif provider == "fireworks":
-            _check_pkg("langchain_fireworks")
+            check_pkg("langchain_fireworks")
             from langchain_fireworks import ChatFireworks
 
             llm = ChatFireworks(**kwargs)
         elif provider == "ollama":
-            _check_pkg("langchain_community")
-            _check_pkg("langchain_ollama")
+            check_pkg("langchain_community")
+            check_pkg("langchain_ollama")
             from langchain_ollama import ChatOllama
 
             llm = ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
         elif provider == "together":
-            _check_pkg("langchain_together")
+            check_pkg("langchain_together")
             from langchain_together import ChatTogether
 
             llm = ChatTogether(**kwargs)
         elif provider == "mistralai":
-            _check_pkg("langchain_mistralai")
+            check_pkg("langchain_mistralai")
             from langchain_mistralai import ChatMistralAI
 
             llm = ChatMistralAI(**kwargs)
         elif provider == "huggingface":
-            _check_pkg("langchain_huggingface")
+            check_pkg("langchain_huggingface")
             from langchain_huggingface import ChatHuggingFace
 
             if "model" in kwargs or "model_name" in kwargs:
@@ -164,12 +164,12 @@ class GenericLLMProvider:
                 kwargs = {"model_id": model_id, **kwargs}
             llm = ChatHuggingFace(**kwargs)
         elif provider == "groq":
-            _check_pkg("langchain_groq")
+            check_pkg("langchain_groq")
             from langchain_groq import ChatGroq
 
             llm = ChatGroq(**kwargs)
         elif provider == "bedrock":
-            _check_pkg("langchain_aws")
+            check_pkg("langchain_aws")
             from langchain_aws import ChatBedrock
 
             if "model" in kwargs or "model_name" in kwargs:
@@ -177,7 +177,7 @@ class GenericLLMProvider:
                 kwargs = {"model_id": model_id, "model_kwargs": kwargs}
             llm = ChatBedrock(**kwargs)
         elif provider == "dashscope":
-            _check_pkg("langchain_openai")
+            check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
             llm = ChatOpenAI(openai_api_base='https://dashscope.aliyuncs.com/compatible-mode/v1',
@@ -185,12 +185,12 @@ class GenericLLMProvider:
                      **kwargs
                 )
         elif provider == "xai":
-            _check_pkg("langchain_xai")
+            check_pkg("langchain_xai")
             from langchain_xai import ChatXAI
 
             llm = ChatXAI(**kwargs)
         elif provider == "deepseek":
-            _check_pkg("langchain_openai")
+            check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
             llm = ChatOpenAI(openai_api_base='https://api.deepseek.com',
@@ -198,18 +198,18 @@ class GenericLLMProvider:
                      **kwargs
                 )
         elif provider == "litellm":
-            _check_pkg("langchain_community")
+            check_pkg("langchain_community")
             from langchain_community.chat_models.litellm import ChatLiteLLM
 
             llm = ChatLiteLLM(**kwargs)
         elif provider == "gigachat":
-            _check_pkg("langchain_gigachat")
+            check_pkg("langchain_gigachat")
             from langchain_gigachat.chat_models import GigaChat
 
             kwargs.pop("model", None) # Use env GIGACHAT_MODEL=GigaChat-Max
             llm = GigaChat(**kwargs)
         elif provider == "openrouter":
-            _check_pkg("langchain_openai")
+            check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
             from langchain_core.rate_limiters import InMemoryRateLimiter
 
@@ -228,7 +228,7 @@ class GenericLLMProvider:
                      **kwargs
                 )
         elif provider == "vllm_openai":
-            _check_pkg("langchain_openai")
+            check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
             llm = ChatOpenAI(
                 openai_api_key=os.environ["VLLM_OPENAI_API_KEY"],
@@ -236,7 +236,7 @@ class GenericLLMProvider:
                 **kwargs
             )
         elif provider == "aimlapi":
-            _check_pkg("langchain_openai")
+            check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
             llm = ChatOpenAI(openai_api_base='https://api.aimlapi.com/v1',
@@ -244,7 +244,7 @@ class GenericLLMProvider:
                              **kwargs
                              )
         elif provider == "forge":
-            _check_pkg("langchain_openai")
+            check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
             llm = ChatOpenAI(openai_api_base='https://api.forge.tensorblock.co/v1',
@@ -252,7 +252,7 @@ class GenericLLMProvider:
                      **kwargs
                 )
         elif provider == "avian":
-            _check_pkg("langchain_openai")
+            check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
             llm = ChatOpenAI(openai_api_base='https://api.avian.io/v1',
@@ -260,7 +260,7 @@ class GenericLLMProvider:
                      **kwargs
                 )
         elif provider == 'netmind':
-            _check_pkg("langchain_netmind")
+            check_pkg("langchain_netmind")
             from langchain_netmind import ChatNetmind
 
             llm = ChatNetmind(**kwargs)
@@ -312,23 +312,3 @@ class GenericLLMProvider:
         elif self.verbose:
             print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
 
-
-def _check_pkg(pkg: str) -> None:
-    if not importlib.util.find_spec(pkg):
-        pkg_kebab = pkg.replace("_", "-")
-        # Import colorama and initialize it
-        init(autoreset=True)
-
-        try:
-            print(f"{Fore.YELLOW}Installing {pkg_kebab}...{Style.RESET_ALL}")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", pkg_kebab])
-            print(f"{Fore.GREEN}Successfully installed {pkg_kebab}{Style.RESET_ALL}")
-
-            # Try importing again after install
-            importlib.import_module(pkg)
-
-        except subprocess.CalledProcessError:
-            raise ImportError(
-                Fore.RED + f"Failed to install {pkg_kebab}. Please install manually with "
-                f"`pip install -U {pkg_kebab}`"
-            )

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import traceback
-import pickle
 from pathlib import Path
 from sys import platform
 import time
@@ -122,7 +121,10 @@ class BrowserScraper:
         """Load saved cookies before visiting the target URL"""
         cookie_file = Path(self.cookie_filename)
         if cookie_file.exists():
-            cookies = pickle.load(open(self.cookie_filename, "rb"))
+            # Use JSON instead of pickle to avoid arbitrary code execution risk
+            import json as _json
+            with open(self.cookie_filename, "r") as f:
+                cookies = _json.load(f)
             for cookie in cookies:
                 self.driver.add_cookie(cookie)
         else:
@@ -178,9 +180,11 @@ class BrowserScraper:
             self.driver.get("https://www.google.com")
             time.sleep(2)  # Wait for cookies to be set
 
-            # Save cookies to a file
+            # Save cookies to a file using JSON (safe serialization, no pickle)
+            import json as _json
             cookies = self.driver.get_cookies()
-            pickle.dump(cookies, open(self.cookie_filename, "wb"))
+            with open(self.cookie_filename, "w") as f:
+                _json.dump(cookies, f)
 
             # print("Google cookies saved successfully.")
         except Exception as e:

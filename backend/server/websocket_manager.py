@@ -45,7 +45,7 @@ class WebSocketManager:
                 else:
                     break
             except Exception as e:
-                print(f"Error in sender task: {e}")
+                logger.error(f"Error in sender task: {e}")
                 break
 
     async def connect(self, websocket: WebSocket):
@@ -57,7 +57,7 @@ class WebSocketManager:
             self.sender_tasks[websocket] = asyncio.create_task(
                 self.start_sender(websocket))
         except Exception as e:
-            print(f"Error connecting websocket: {e}")
+            logger.error(f"Error connecting websocket: {e}")
             if websocket in self.active_connections:
                 await self.disconnect(websocket)
 
@@ -116,18 +116,12 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
     # Create logs handler for this research task
     logs_handler = CustomLogsHandler(websocket, task)
 
-    # Set up MCP configuration if enabled
+    # MCP configuration flows through constructor parameters (mcp_configs, mcp_strategy)
+    # to BasicReport/DetailedReport → GPTResearcher.__init__() — no os.environ mutation needed.
     if mcp_enabled and mcp_configs:
-        import os
-        current_retriever = os.getenv("RETRIEVER", "tavily")
-        if "mcp" not in current_retriever:
-            # Add MCP to existing retrievers
-            os.environ["RETRIEVER"] = f"{current_retriever},mcp"
-
-        # Set MCP strategy
-        os.environ["MCP_STRATEGY"] = mcp_strategy
-
-        print(f"🔧 MCP enabled with strategy '{mcp_strategy}' and {len(mcp_configs)} server(s)")
+        logger.info(
+            f"MCP enabled with strategy '{mcp_strategy}' and {len(mcp_configs)} server(s)"
+        )
         await logs_handler.send_json({
             "type": "logs",
             "content": "mcp_init",

@@ -207,7 +207,7 @@ Format each question on a new line starting with 'Question: '"""}
             on_progress=None
     ) -> Dict[str, Any]:
         """Conduct deep iterative research"""
-        print(f"\n📊 DEEP RESEARCH: depth={depth}, breadth={breadth}, query={query[:100]}...", flush=True)
+        logger.info(f"DEEP RESEARCH: depth={depth}, breadth={breadth}, query={query[:100]}...")
         if learnings is None:
             learnings = []
         if citations is None:
@@ -221,9 +221,9 @@ Format each question on a new line starting with 'Question: '"""}
             on_progress(progress)
 
         # Generate search queries
-        print(f"🔎 Generating {breadth} search queries...", flush=True)
+        logger.info(f"Generating {breadth} search queries...")
         serp_queries = await self.generate_search_queries(query, num_queries=breadth)
-        print(f"✅ Generated {len(serp_queries)} queries: {[q['query'] for q in serp_queries]}", flush=True)
+        logger.info(f"Generated {len(serp_queries)} queries: {[q['query'] for q in serp_queries]}")
         progress.total_queries = len(serp_queries)
 
         all_learnings = learnings.copy()
@@ -289,8 +289,7 @@ Format each question on a new line starting with 'Question: '"""}
                 except Exception as e:
                     import traceback
                     error_details = traceback.format_exc()
-                    logger.error(f"Error processing query '{serp_query['query']}': {str(e)}")
-                    print(f"\n❌ DEEP RESEARCH ERROR: {str(e)}\n{error_details}", flush=True)
+                    logger.error(f"Error processing query '{serp_query['query']}': {str(e)}\n{error_details}")
                     return None
 
         # Process queries concurrently with limit
@@ -362,7 +361,7 @@ Format each question on a new line starting with 'Question: '"""}
 
     async def run(self, on_progress=None) -> str:
         """Run the deep research process and generate final report"""
-        print(f"\n🔍 DEEP RESEARCH: Starting with breadth={self.breadth}, depth={self.depth}, concurrency={self.concurrency_limit}", flush=True)
+        logger.info(f"DEEP RESEARCH: Starting with breadth={self.breadth}, depth={self.depth}, concurrency={self.concurrency_limit}")
         start_time = time.time()
 
         # Log initial costs

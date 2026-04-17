@@ -65,7 +65,7 @@ class GoogleSearch:
         print("Searching with query {0}...".format(search_query))
 
         url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={search_query}&start=1"
-        resp = requests.get(url)
+        resp = requests.get(url, timeout=30)
 
         if resp.status_code < 200 or resp.status_code >= 300:
             print("Google search: unexpected response status: ", resp.status_code)

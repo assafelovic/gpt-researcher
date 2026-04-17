@@ -1,7 +1,10 @@
 import aiofiles
+import logging
 import urllib
 import mistune
 import os
+
+logger = logging.getLogger(__name__)
 
 async def write_to_file(filename: str, text: str) -> None:
     """Asynchronously write text to a file in UTF-8 encoding.
@@ -88,9 +91,9 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
                # md_file_path=f"{file_path}.md",
                css_file_path=css_path,
                base_url=base_url)
-        print(f"Report written to {file_path}")
+        logger.info(f"PDF report written to {file_path}")
     except Exception as e:
-        print(f"Error in converting Markdown to PDF: {e}")
+        logger.error(f"Error in converting Markdown to PDF: {e}")
         return ""
 
     encoded_file_path = urllib.parse.quote(file_path)
@@ -120,11 +123,11 @@ async def write_md_to_word(text: str, filename: str = "") -> str:
         # Saving the docx document to file_path
         doc.save(file_path)
 
-        print(f"Report written to {file_path}")
+        logger.info(f"DOCX report written to {file_path}")
 
         encoded_file_path = urllib.parse.quote(file_path)
         return encoded_file_path
 
     except Exception as e:
-        print(f"Error in converting Markdown to DOCX: {e}")
+        logger.error(f"Error in converting Markdown to DOCX: {e}")
         return ""

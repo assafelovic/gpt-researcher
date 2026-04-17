@@ -5,14 +5,11 @@ using various scraping backends (BeautifulSoup, PyMuPDF, Browser, etc.).
 """
 
 import asyncio
-import importlib
 import logging
-import subprocess
-import sys
 
 import requests
-from colorama import Fore, init
 
+from gpt_researcher.utils.imports import check_pkg
 from gpt_researcher.utils.workers import WorkerPool
 
 from . import (
@@ -25,6 +22,22 @@ from . import (
     TavilyExtract,
     WebBaseLoaderScraper,
 )
+
+OPTIONAL_SCRAPER_DEPENDENCIES = {
+    "tavily_extract": ("tavily", "tavily-python"),
+    "firecrawl": ("firecrawl", "firecrawl-py"),
+}
+
+SCRAPER_CLASSES = {
+    "pdf": PyMuPDFScraper,
+    "arxiv": ArxivScraper,
+    "bs": BeautifulSoupScraper,
+    "web_base_loader": WebBaseLoaderScraper,
+    "browser": BrowserScraper,
+    "nodriver": NoDriverScraper,
+    "tavily_extract": TavilyExtract,
+    "firecrawl": FireCrawl,
+}
 
 
 class Scraper:
@@ -46,10 +59,10 @@ class Scraper:
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": user_agent})
         self.scraper = scraper
-        if self.scraper == "tavily_extract":
-            self._check_pkg(self.scraper)
-        if self.scraper == "firecrawl":
-            self._check_pkg(self.scraper)
+        dependency = OPTIONAL_SCRAPER_DEPENDENCIES.get(self.scraper)
+        if dependency:
+            import_name, install_name = dependency
+            check_pkg(import_name, install_name)
         self.logger = logging.getLogger(__name__)
         self.worker_pool = worker_pool
 
@@ -71,39 +84,14 @@ class Scraper:
         res = [content for content in contents if content["raw_content"] is not None]
         return res
 
-    def _check_pkg(self, scrapper_name: str) -> None:
-        """
-        Checks and ensures required Python packages are available for scrapers that need
-        dependencies beyond requirements.txt. When adding a new scraper to the repo, update `pkg_map`
-        with its required information and call check_pkg() during initialization.
-        """
-        pkg_map = {
-            "tavily_extract": {
-                "package_installation_name": "tavily-python",
-                "import_name": "tavily",
-            },
-            "firecrawl": {
-                "package_installation_name": "firecrawl-py",
-                "import_name": "firecrawl",
-            },
+    @staticmethod
+    def _empty_result(link: str, title: str = "") -> dict:
+        return {
+            "url": link,
+            "raw_content": None,
+            "image_urls": [],
+            "title": title,
         }
-        pkg = pkg_map[scrapper_name]
-        if not importlib.util.find_spec(pkg["import_name"]):
-            pkg_inst_name = pkg["package_installation_name"]
-            init(autoreset=True)
-            print(Fore.YELLOW + f"{pkg_inst_name} not found. Attempting to install...")
-            try:
-                subprocess.check_call(
-                    [sys.executable, "-m", "pip", "install", pkg_inst_name]
-                )
-                importlib.invalidate_caches()
-                print(Fore.GREEN + f"{pkg_inst_name} installed successfully.")
-            except subprocess.CalledProcessError:
-                raise ImportError(
-                    Fore.RED
-                    + f"Unable to install {pkg_inst_name}. Please install manually with "
-                    f"`pip install -U {pkg_inst_name}`"
-                )
 
     async def extract_data_from_url(self, link, session):
         """
@@ -132,12 +120,7 @@ class Scraper:
 
                 if len(content) < 100:
                     self.logger.warning(f"Content too short or empty for {link}")
-                    return {
-                        "url": link,
-                        "raw_content": None,
-                        "image_urls": [],
-                        "title": title,
-                    }
+                    return self._empty_result(link, title)
 
                 # Log results
                 self.logger.info(f"\nTitle: {title}")
@@ -150,12 +133,7 @@ class Scraper:
 
                 if not content or len(content) < 100:
                     self.logger.warning(f"Content too short or empty for {link}")
-                    return {
-                        "url": link,
-                        "raw_content": None,
-                        "image_urls": [],
-                        "title": title,
-                    }
+                    return self._empty_result(link, title)
 
                 return {
                     "url": link,
@@ -166,7 +144,7 @@ class Scraper:
 
             except Exception as e:
                 self.logger.error(f"Error processing {link}: {str(e)}")
-                return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+                return self._empty_result(link)
 
     def get_scraper(self, link):
         """
@@ -184,17 +162,6 @@ class Scraper:
         in the `SCRAPER_CLASSES` dictionary. If the link ends with ".pdf", it selects the
         `PyMuPDFScraper` class. If the link contains "arxiv.org", it selects the `ArxivScraper
         """
-
-        SCRAPER_CLASSES = {
-            "pdf": PyMuPDFScraper,
-            "arxiv": ArxivScraper,
-            "bs": BeautifulSoupScraper,
-            "web_base_loader": WebBaseLoaderScraper,
-            "browser": BrowserScraper,
-            "nodriver": NoDriverScraper,
-            "tavily_extract": TavilyExtract,
-            "firecrawl": FireCrawl,
-        }
 
         scraper_key = None
 

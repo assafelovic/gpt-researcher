@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import re
 import time
@@ -13,8 +14,10 @@ from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
-import logging
+import aiofiles
 import hashlib
+
+logger = logging.getLogger(__name__)
 
 from .multi_agent_runner import run_multi_agent_task
 
@@ -27,8 +30,6 @@ try:
     from chat.chat import ChatAgentWithMemory
 except ImportError:
     ChatAgentWithMemory = None
-
-logger = logging.getLogger(__name__)
 
 class CustomLogsHandler:
     """Custom handler to capture streaming logs from the research process"""
@@ -58,11 +59,12 @@ class CustomLogsHandler:
         # Send to websocket for real-time display
         if self.websocket:
             await self.websocket.send_json(data)
-            
-        # Read current log file
-        with open(self.log_file, 'r') as f:
-            log_data = json.load(f)
-            
+
+        # Read current log file asynchronously (avoid blocking the event loop)
+        async with aiofiles.open(self.log_file, 'r') as f:
+            content = await f.read()
+            log_data = json.loads(content)
+
         # Update appropriate section based on data type
         if data.get('type') == 'logs':
             log_data['events'].append({
@@ -73,10 +75,10 @@ class CustomLogsHandler:
         else:
             # Update content section for other types of data
             log_data['content'].update(data)
-            
-        # Save updated log file
-        with open(self.log_file, 'w') as f:
-            json.dump(log_data, f, indent=2)
+
+        # Save updated log file asynchronously
+        async with aiofiles.open(self.log_file, 'w') as f:
+            await f.write(json.dumps(log_data, indent=2))
 
 
 class Researcher:
@@ -141,7 +143,7 @@ async def handle_start_command(websocket, data: str, manager):
     ) = extract_command_data(json_data)
 
     if not task or not report_type:
-        print("Error: Missing task or report_type")
+        logger.error("Missing task or report_type")
         return
 
     # Create logs handler with websocket and task
@@ -180,7 +182,7 @@ async def handle_start_command(websocket, data: str, manager):
 
 async def handle_human_feedback(data: str):
     feedback_data = json.loads(data[14:])  # Remove "human_feedback" prefix
-    print(f"Received human feedback: {feedback_data}")
+    logger.info(f"Received human feedback: {feedback_data}")
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
 
 
@@ -287,16 +289,11 @@ def get_config_dict(
     }
 
 
-def update_environment_variables(config: Dict[str, str]):
-    for key, value in config.items():
-        os.environ[key] = value
-
-
 async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
     file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    print(f"File uploaded to {file_path}")
+    logger.info(f"File uploaded to {file_path}")
 
     document_loader = DocumentLoader(DOC_PATH)
     await document_loader.load()
@@ -308,10 +305,10 @@ async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
     file_path = os.path.join(DOC_PATH, os.path.basename(filename))
     if os.path.exists(file_path):
         os.remove(file_path)
-        print(f"File deleted: {file_path}")
+        logger.info(f"File deleted: {file_path}")
         return JSONResponse(content={"message": "File deleted successfully"})
     else:
-        print(f"File not found: {file_path}")
+        logger.warning(f"File not found: {file_path}")
         return JSONResponse(status_code=404, content={"message": "File not found"})
 
 
@@ -381,7 +378,6 @@ async def handle_websocket_communication(websocket, manager):
                 else:
                     error_msg = f"Error: Unknown command or not enough parameters provided. Received: '{data[:100]}...'" if len(data) > 100 else f"Error: Unknown command or not enough parameters provided. Received: '{data}'"
                     logger.error(error_msg)
-                    print(error_msg)
                     await websocket.send_json({
                         "type": "error",
                         "content": "error",
@@ -389,7 +385,6 @@ async def handle_websocket_communication(websocket, manager):
                     })
             except Exception as e:
                 logger.error(f"WebSocket error: {str(e)}\n{traceback.format_exc()}")
-                print(f"WebSocket error: {e}")
                 break
     finally:
         if running_task and not running_task.done():
