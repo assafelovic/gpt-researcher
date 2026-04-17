@@ -3,7 +3,7 @@
 As described in the [introduction](/docs/gpt-researcher/gptr/config), the default LLM and embedding is OpenAI due to its superior performance and speed. 
 With that said, GPT Researcher supports various open/closed source LLMs and embeddings, and you can easily switch between them by updating the `SMART_LLM`, `FAST_LLM` and `EMBEDDING` env variables. You might also need to include the provider API key and corresponding configuration params.
 
-Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq`, `bedrock` and `litellm`.
+Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq`, `bedrock`, `litellm` and `minimax`.
 
 Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `nomic` ,`voyageai` and `bedrock`.
 
@@ -378,6 +378,27 @@ SMART_LLM="aimlapi:openai/o4-mini-2025-04-16"
 STRATEGIC_LLM="aimlapi:x-ai/grok-3-mini-beta"
 EMBEDDING="aimlapi:text-embedding-3-small"
 ```
+
+## MiniMax
+
+[MiniMax](https://www.minimaxi.com) offers powerful large language models with an OpenAI-compatible API. The latest MiniMax-M2.7 features improved reasoning and competitive pricing.
+
+Sign up at [minimaxi.com](https://www.minimaxi.com) to get an API key, then set the following environment variables:
+
+```env
+MINIMAX_API_KEY=[Your Key]
+FAST_LLM=minimax:MiniMax-M2.7-highspeed
+SMART_LLM=minimax:MiniMax-M2.7
+STRATEGIC_LLM=minimax:MiniMax-M2.7
+
+EMBEDDING=minimax:embo-01
+```
+
+Available models:
+- `MiniMax-M2.7` — latest flagship model with improved reasoning
+- `MiniMax-M2.7-highspeed` — optimized for speed
+- `MiniMax-M2.5` — 204K context, general-purpose model
+- `MiniMax-M2.5-highspeed` — 204K context, optimized for speed
 
 ## Avian
 

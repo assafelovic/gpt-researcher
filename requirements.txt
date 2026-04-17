@@ -25,15 +25,17 @@ google-genai>=1.0.0  # For image generation with Imagen
 
 # Search & Research
 tavily-python>=0.7.12
-duckduckgo-search>=4.1.1
+ddgs>=9.0.0
 arxiv>=2.0.0
 
 # Document Processing
 beautifulsoup4>=4.12.2
 pymupdf>=1.23.6
 python-docx>=1.1.0
+python-pptx>=1.0.0
 unstructured>=0.13
 lxml>=4.9.2
+pandas>=2.0.0
 
 # Vector Store & Embeddings
 tiktoken>=0.7.0

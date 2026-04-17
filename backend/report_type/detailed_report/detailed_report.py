@@ -119,6 +119,22 @@ class DetailedReport:
 
         return subtopic_reports, subtopics_report_body
 
+    def _hashable_context(self, input_context: List[str] | List[dict]):
+        # Convert context to strings to ensure hashability (handle both strings and dicts from MCP)
+        context_items = []
+        
+        for item in input_context:
+            if isinstance(item, dict):
+                # Convert dict context to string format
+                title = item.get("title", "No title")
+                content = item.get("body", item.get("content", ""))
+                context_str = f"Title: {title}\nContent: {content}"
+                context_items.append(context_str)
+            else:
+                context_items.append(str(item))
+        
+        return context_items
+
     async def _get_subtopic_report(self, subtopic: Dict) -> Dict[str, str]:
         current_subtopic_task = subtopic.get("task")
         subtopic_assistant = GPTResearcher(
@@ -145,15 +161,7 @@ class DetailedReport:
         if self.max_search_results is not None:
             subtopic_assistant.cfg.max_search_results_per_query = int(self.max_search_results)
 
-        #subtopic_assistant.context = list(set(self.global_context))
-        
-        # Dictionary-safe deduplication
-        unique_context = []
-        for item in self.global_context:
-            if item not in unique_context:
-                unique_context.append(item)
-        subtopic_assistant.context = unique_context
-        
+        subtopic_assistant.context = list(set(self._hashable_context(self.global_context)))
         await subtopic_assistant.conduct_research()
 
         draft_section_titles = await subtopic_assistant.get_draft_section_titles(current_subtopic_task)
@@ -176,16 +184,7 @@ class DetailedReport:
         )
 
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
-        
-        #self.global_context = list(set(subtopic_assistant.context))
-        
-        # Dictionary-safe deduplication (Reverse direction)
-        updated_context = []
-        for item in subtopic_assistant.context:
-            if item not in updated_context:
-                updated_context.append(item)
-        self.global_context = updated_context
-
+        self.global_context = list(set(self._hashable_context(subtopic_assistant.context)))
         self.global_urls.update(subtopic_assistant.visited_urls)
 
         self.existing_headers.append({

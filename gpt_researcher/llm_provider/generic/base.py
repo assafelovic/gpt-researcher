@@ -35,6 +35,7 @@ _SUPPORTED_PROVIDERS = {
     "netmind",
     "forge",
     "avian",
+    "minimax",
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS = [
@@ -259,6 +260,14 @@ class GenericLLMProvider:
                      openai_api_key=os.environ["AVIAN_API_KEY"],
                      **kwargs
                 )
+        elif provider == "minimax":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(openai_api_base='https://api.minimax.io/v1',
+                     openai_api_key=os.environ["MINIMAX_API_KEY"],
+                     **kwargs
+                )
         elif provider == 'netmind':
             _check_pkg("langchain_netmind")
             from langchain_netmind import ChatNetmind
@@ -294,12 +303,13 @@ class GenericLLMProvider:
         # Streaming the response using the chain astream method from langchain
         async for chunk in self.llm.astream(messages, **kwargs):
             content = chunk.content
-            if content is not None:
-                response += content
-                paragraph += content
-                if "\n" in paragraph:
-                    await self._send_output(paragraph, websocket)
-                    paragraph = ""
+            if not content:
+                continue
+            response += content
+            paragraph += content
+            if "\n" in paragraph:
+                await self._send_output(paragraph, websocket)
+                paragraph = ""
 
         if paragraph:
             await self._send_output(paragraph, websocket)
@@ -310,7 +320,7 @@ class GenericLLMProvider:
         if websocket is not None:
             await websocket.send_json({"type": "report", "output": content})
         elif self.verbose:
-            print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
+            print(f"{Fore.GREEN}{content}{Style.RESET_ALL}", flush=True)
 
 
 def _check_pkg(pkg: str) -> None:
