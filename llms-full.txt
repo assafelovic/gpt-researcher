@@ -1,6 +1,6 @@
 # GPT Researcher Repo Front Door
 
-> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `ada55a32588e`.
+> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `43a54a98d11e`.
 
 ## Repo quickstart
 
@@ -21,11 +21,11 @@ You are currently inside **GPT Researcher**, the research orchestration lane. Cu
 
 ### Recent significant changes (last 5 commits)
 
+- 16553ead 2026-04-18 docs(build-time): double the inner-loop thresholds per operator — 60s/120s/180s
 - fd865342 2026-04-18 docs(llms-txt + canon): agentic-infrastructure posture + friction-to-canon rule + named gaps
 - 0bcb1520 2026-04-18 docs(llms-txt): Replit-style link-index sections (master aadcf80d2a70)
 - 1b3bac36 2026-04-17 docs(llms-txt): audit flag on stale repo-inventory entries
 - 5183d3a8 2026-04-17 docs(llms-txt): v2 ecosystem fan-out — repo quickstart + key entities + jump-to nav
-- 846c31b8 2026-04-17 chore(agents): observability + discoverability — .mcp.json, AGENTS.md, fresh llms.txt
 
 # HLT Ecosystem Index for Agents
 
@@ -940,6 +940,10 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 
 ## Key rules that agents must follow
 
+These rules are HLT's operating principles for agentic work. They are stated in our own voice; external frames (Vercel, OpenAI Frontier, the llms.txt spec) are credited at the end of the section as the places where we sharpened the thinking, not as the source of the rules themselves.
+
+### Foundational rules
+
 - Do not assume the current repo is the whole system.
 - Use Katailyst first.
 - Use Axon second.
@@ -948,10 +952,31 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 - Do not confuse shell and public route ownership with canonical content ownership.
 - Do not perform dangerous publish actions without explicit approval where required.
 - Document concrete things, not vague summaries.
-- **Friction → durable text.** Every non-obvious failure an agent or human hits gets two PRs: (1) fix the immediate problem, (2) encode the invariant into a KB, prompt, lint rule, or system-maps update so the NEXT agent does not repeat it. This is how institutional knowledge compounds instead of evaporating. See `kb:friction-to-canon` for the pattern + worked examples. Corollary: PR comments, failed builds, pages, evaluator criticisms are all prompts for invariant extraction — agents should be trained to treat them that way.
-- **One agent owns the full loop for its lane.** A specialist that drafts content also authors the dashboard definition, subscribes to the alert, reads the logs, and proposes the fix. Do not split "writer" and "operations" personas — same context, same agent. See the Vercel agentic-infrastructure posture section above.
-- **Prefer text over structured tool calls where possible.** MCP tools forcibly inject their catalog into the context window on every turn; they degrade autocompaction. Use `X-Katailyst-Toolset: bootstrap` by default and expand on demand. For narrow per-repo needs, a tiny CLI shim that the agent shells out to is cheaper in tokens than an always-on MCP tool.
-- **Build-time discipline as a forcing function.** Inner-loop thresholds: audit at 60s, escalate at 120s, emergency at 180s. Tokens are cheap; waiting on builds is not. When a breach is observed, decompose the build graph — don't let it grow unmeasured. See `~/hlt/sidecar/docs/build-time.md` for the HLT baseline + tracking template.
+
+### Operating principles for agentic work
+
+- **Canon compounds or evaporates — choose.** Every non-obvious failure an agent or human hits produces two artifacts: the fix, and the invariant encoded as durable text the next session will read. The invariant lives wherever its scope matches — KB, prompt, lint rule, rubric, system-maps entry, repo-local AGENTS.md. Without the second artifact, the team pays the same cost twice. With it, knowledge compounds. This is the single highest-leverage discipline we practice. See `kb:friction-to-canon`.
+
+- **A persona is a domain, not a task.** Each specialist owns the full loop for its lane — drafting, dashboards, alerts, logs, and follow-up fixes. Morgan doesn't just write ad copy; Morgan subscribes to the CPI alert, reads the Meta insights, proposes the creative refresh, and writes the weekly brief. Fragmenting a domain across multiple agents costs more context than it saves. When a new surface enters a persona's domain, it joins that persona — it does not spawn a new one.
+
+- **Minimum necessary context.** Every token in the agent's window is a trade. Pay for the ones that earn their keep; drop the ones that don't. Default to narrow tool surfaces and expand on demand (e.g., Katailyst's `X-Katailyst-Toolset: bootstrap` for first-glance, widen only when the task demands it). Durable text in canon usually beats always-on tool catalogs for narrow needs. When in doubt, a tiny CLI shim the agent shells out to is cheaper in the context window than a forcibly-injected tool set.
+
+- **Identify your actual inner loop and garden it.** For HLT, the inner loop for agentic work is usually **specialist dispatch → evaluator → approval gate**, not build/test. A specialist generating an article on Opus 4.7 is a 15-60s round-trip; a build takes 6s; the build is not the binding constraint. The principle ("measure what the agent actually waits for between iterations, garden it when it regresses") matters; the specific threshold depends on which loop you're measuring. Build time is a secondary hygiene metric — keep it reasonable (HLT soft budgets: audit at 90s, escalate at 180s, emergency at 270s) but don't optimize it at the expense of the real loop. When adding a new specialist or integration, name which inner loop it's in, measure the round-trip once, and log the baseline somewhere (e.g., `~/hlt/sidecar/docs/build-time.md` for sidecar).
+
+- **Drafts, not auto-publishes.** Every specialist's output is a draft until a human signs off. The approval gate is a feature, not a bottleneck — it protects trust with our audience and keeps the team out of customer-facing mistakes. Postmerge review on internal tooling is fine; premerge approval on customer-facing content is non-negotiable.
+
+- **HLT operates in three concentric infrastructure layers.** (1) The layer agents deploy into (Vercel preview URLs + our per-repo canon + Axon). (2) The layer agents run on (Vercel AI SDK + Catalyst MCP + Langfuse + Multimedia Mastery + Cloudinary + Paperclip). (3) The layer that itself acts on HLT's behalf (Katailyst registry + lint_rulesets + drift-verifier + specialist personas with full-loop ownership). Every new surface, vendor, or integration should be evaluated against which layer it strengthens. Gaps we've named (see `## Known gaps` below) live in layers 2 and 3.
+
+- **Seven-layer audit lens.** When something breaks, locate the weakest layer — don't patch symptoms. The stack: reflection (layer 0) → policy → configuration → coordination → execution → integration → observability. Execution + integration + observability are where HLT is strongest. Coordination (durable workflows, pause/resume/retry) and reflection (agent introspection, team trajectory distillation) are where we're thinnest. When reviewing a specialist or a sidecar, ask which layer is the binding constraint.
+
+### Where these principles come from
+
+- **Vercel, "Agentic Infrastructure"** (Tom Occhino, 2026-04-09) — sharpened the 3-pillar framing above. The principle (design for agent primacy, not human-command-line primacy) is ours; the 3-pillar language is borrowed.
+- **OpenAI Frontier "harness engineering"** (Ryan Leopold, 2026-04) — sharpened the friction-to-canon discipline, the persona-owns-its-full-loop rule, the MCP-autocompaction caveat, and the build-time-as-forcing-function discipline.
+- **OpenAI Frontier "Symphony"** (2026-04) — sharpened the seven-layer audit lens.
+- **llms.txt spec** (llmstxt.org) — not applied verbatim; HLT's multi-repo fan-out pattern is deliberately different (see `kb:llms-txt-hlt-pattern`).
+
+These frames get updated as the field moves. The principles above do not change with every new framework. If a principle no longer matches HLT's reality, that's the signal to update it — not to relearn it.
 
 ## Known gaps (named, not hidden)
 
@@ -2501,6 +2526,10 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 
 ## Key rules that agents must follow
 
+These rules are HLT's operating principles for agentic work. They are stated in our own voice; external frames (Vercel, OpenAI Frontier, the llms.txt spec) are credited at the end of the section as the places where we sharpened the thinking, not as the source of the rules themselves.
+
+### Foundational rules
+
 - Do not assume the current repo is the whole system.
 - Use Katailyst first.
 - Use Axon second.
@@ -2509,10 +2538,31 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 - Do not confuse shell and public route ownership with canonical content ownership.
 - Do not perform dangerous publish actions without explicit approval where required.
 - Document concrete things, not vague summaries.
-- **Friction → durable text.** Every non-obvious failure an agent or human hits gets two PRs: (1) fix the immediate problem, (2) encode the invariant into a KB, prompt, lint rule, or system-maps update so the NEXT agent does not repeat it. This is how institutional knowledge compounds instead of evaporating. See `kb:friction-to-canon` for the pattern + worked examples. Corollary: PR comments, failed builds, pages, evaluator criticisms are all prompts for invariant extraction — agents should be trained to treat them that way.
-- **One agent owns the full loop for its lane.** A specialist that drafts content also authors the dashboard definition, subscribes to the alert, reads the logs, and proposes the fix. Do not split "writer" and "operations" personas — same context, same agent. See the Vercel agentic-infrastructure posture section above.
-- **Prefer text over structured tool calls where possible.** MCP tools forcibly inject their catalog into the context window on every turn; they degrade autocompaction. Use `X-Katailyst-Toolset: bootstrap` by default and expand on demand. For narrow per-repo needs, a tiny CLI shim that the agent shells out to is cheaper in tokens than an always-on MCP tool.
-- **Build-time discipline as a forcing function.** Inner-loop thresholds: audit at 60s, escalate at 120s, emergency at 180s. Tokens are cheap; waiting on builds is not. When a breach is observed, decompose the build graph — don't let it grow unmeasured. See `~/hlt/sidecar/docs/build-time.md` for the HLT baseline + tracking template.
+
+### Operating principles for agentic work
+
+- **Canon compounds or evaporates — choose.** Every non-obvious failure an agent or human hits produces two artifacts: the fix, and the invariant encoded as durable text the next session will read. The invariant lives wherever its scope matches — KB, prompt, lint rule, rubric, system-maps entry, repo-local AGENTS.md. Without the second artifact, the team pays the same cost twice. With it, knowledge compounds. This is the single highest-leverage discipline we practice. See `kb:friction-to-canon`.
+
+- **A persona is a domain, not a task.** Each specialist owns the full loop for its lane — drafting, dashboards, alerts, logs, and follow-up fixes. Morgan doesn't just write ad copy; Morgan subscribes to the CPI alert, reads the Meta insights, proposes the creative refresh, and writes the weekly brief. Fragmenting a domain across multiple agents costs more context than it saves. When a new surface enters a persona's domain, it joins that persona — it does not spawn a new one.
+
+- **Minimum necessary context.** Every token in the agent's window is a trade. Pay for the ones that earn their keep; drop the ones that don't. Default to narrow tool surfaces and expand on demand (e.g., Katailyst's `X-Katailyst-Toolset: bootstrap` for first-glance, widen only when the task demands it). Durable text in canon usually beats always-on tool catalogs for narrow needs. When in doubt, a tiny CLI shim the agent shells out to is cheaper in the context window than a forcibly-injected tool set.
+
+- **Identify your actual inner loop and garden it.** For HLT, the inner loop for agentic work is usually **specialist dispatch → evaluator → approval gate**, not build/test. A specialist generating an article on Opus 4.7 is a 15-60s round-trip; a build takes 6s; the build is not the binding constraint. The principle ("measure what the agent actually waits for between iterations, garden it when it regresses") matters; the specific threshold depends on which loop you're measuring. Build time is a secondary hygiene metric — keep it reasonable (HLT soft budgets: audit at 90s, escalate at 180s, emergency at 270s) but don't optimize it at the expense of the real loop. When adding a new specialist or integration, name which inner loop it's in, measure the round-trip once, and log the baseline somewhere (e.g., `~/hlt/sidecar/docs/build-time.md` for sidecar).
+
+- **Drafts, not auto-publishes.** Every specialist's output is a draft until a human signs off. The approval gate is a feature, not a bottleneck — it protects trust with our audience and keeps the team out of customer-facing mistakes. Postmerge review on internal tooling is fine; premerge approval on customer-facing content is non-negotiable.
+
+- **HLT operates in three concentric infrastructure layers.** (1) The layer agents deploy into (Vercel preview URLs + our per-repo canon + Axon). (2) The layer agents run on (Vercel AI SDK + Catalyst MCP + Langfuse + Multimedia Mastery + Cloudinary + Paperclip). (3) The layer that itself acts on HLT's behalf (Katailyst registry + lint_rulesets + drift-verifier + specialist personas with full-loop ownership). Every new surface, vendor, or integration should be evaluated against which layer it strengthens. Gaps we've named (see `## Known gaps` below) live in layers 2 and 3.
+
+- **Seven-layer audit lens.** When something breaks, locate the weakest layer — don't patch symptoms. The stack: reflection (layer 0) → policy → configuration → coordination → execution → integration → observability. Execution + integration + observability are where HLT is strongest. Coordination (durable workflows, pause/resume/retry) and reflection (agent introspection, team trajectory distillation) are where we're thinnest. When reviewing a specialist or a sidecar, ask which layer is the binding constraint.
+
+### Where these principles come from
+
+- **Vercel, "Agentic Infrastructure"** (Tom Occhino, 2026-04-09) — sharpened the 3-pillar framing above. The principle (design for agent primacy, not human-command-line primacy) is ours; the 3-pillar language is borrowed.
+- **OpenAI Frontier "harness engineering"** (Ryan Leopold, 2026-04) — sharpened the friction-to-canon discipline, the persona-owns-its-full-loop rule, the MCP-autocompaction caveat, and the build-time-as-forcing-function discipline.
+- **OpenAI Frontier "Symphony"** (2026-04) — sharpened the seven-layer audit lens.
+- **llms.txt spec** (llmstxt.org) — not applied verbatim; HLT's multi-repo fan-out pattern is deliberately different (see `kb:llms-txt-hlt-pattern`).
+
+These frames get updated as the field moves. The principles above do not change with every new framework. If a principle no longer matches HLT's reality, that's the signal to update it — not to relearn it.
 
 ## Known gaps (named, not hidden)
 
