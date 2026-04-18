@@ -4,6 +4,87 @@
 
 This file is intended to be copied or generated into every major repo as `llms.txt`.
 
+## Jump to
+
+Short index for agents who don't need to read 700 lines sequentially. Every section below is reachable by anchor.
+
+- [Read this first](#read-this-first) — seven rules, read in full
+- [Standard working method](#standard-working-method) — eight-step startup
+- [Big-picture vision](#big-picture-vision) — strategic intent, quality posture, business focus, content ambition, research posture, centerpieces
+- [Katailyst-first rule](#katailyst-first-rule) — discovery pattern + standard startup sequence
+- [Axon rule](#axon-rule) — when and how to use Axon for repo comprehension
+- [Key Katailyst entities](#key-katailyst-entities) — canonical refs to load first (KBs, skills, tools, playbooks, rubrics, hubs)
+- [Official canon docs](#official-canon-docs)
+- [Current truths and decisions](#current-truths-and-decisions)
+- [Repo inventory](#repo-inventory) — 15 repos, roles, inspect-first files
+- [Active agent and runtime inventory](#active-agent-and-runtime-inventory) — Victoria, Julius, Lila + fleet
+- [Current focus — Framer + Next.js + article sidecar flow](#current-focus-framer--nextjs--article-sidecar-flow)
+- [Cross-repo check matrix](#cross-repo-check-matrix)
+- [HLTMastery, Framer, and proxy boundary](#hltmastery-framer-and-proxy-boundary)
+- [Core content and publishing shapes](#core-content-and-publishing-shapes) — ArticleV2, lifecycle, SEO, destinations
+- [Cloudinary system summary](#cloudinary-system-summary)
+- [Corporate data and CMS reality](#corporate-data-and-cms-reality)
+- [Near-term priorities](#near-term-priorities-that-matter-right-now)
+- [Key rules agents must follow](#key-rules-that-agents-must-follow)
+- [Companion files](#companion-files)
+- [Sync and update model](#sync-and-update-model)
+
+## Key Katailyst entities
+
+Load these via MCP `get_entity` or `registry_artifact_body` before doing serious work. Each `type:code` is a canonical registry ref; names stable across revisions. Full catalog of 1,663 entities is discoverable via `registry_capabilities` + `discover`.
+
+### Operating canon
+- `kb:katailyst-vault-access-pattern` — canonical secrets access. Read BEFORE hunting in env files or vault backups. Lists all 128 active secrets + their `secret_key` names.
+- `kb:hlt-brand-voice-hlt-mastery-communication-guide` — live brand voice standard for customer-facing and editorial content.
+- `kb:hlt-brand-voice-fnp` — FNP product voice overlay (pairs with content-patterns-nursing).
+- `kb:content-patterns-nursing` — Nursing voice guide. Load for any nursing-scoped output.
+- `kb:beliefs-operating-constitution` — foundational operating document: vision, philosophy, anti-patterns, build-vs-orchestrate posture.
+- `kb:cloudinary-folder-architecture` — canonical Cloudinary folder tree + naming rules.
+- `kb:cloudinary-integration-guide` — Cloudinary API patterns + transformations.
+- `kb:registry-design-patterns` — how registry entities should be structured.
+- `kb:langfuse-tracing-hlt` — trace tag schema (includes mandatory `paperclip_run_id`).
+
+### Hubs (domain front doors — `traverse` to expand)
+- `hub:hub-research` — research lane (firecrawl, brave, tavily, perplexity, gpt-researcher).
+- `hub:hub-social` — 34 social channels + playbooks + schemas.
+- `hub:hub-email` — email marketing + Marketo.
+- `hub:hub-multimedia` — image/video/audio generation.
+- `hub:hub-registry` — registry self-reference + canonical operating KBs.
+- `hub:hub-education` — education content + QBank tools.
+- `hub:hub-nclex` — NCLEX program hub (217 linked entities).
+
+### Playbooks + prompts
+- `playbook:make-article` — canonical article flow.
+- `playbook:make-social` — canonical social flow.
+- `playbook:upgrade-screen-ab-test` — paywall / upgrade-screen A/B framework.
+- `prompt:hlt-prompt-direct-response-copywriter` — AIDA/PAS/BAB direct-response framework.
+- `prompt:social-post-v1` — platform-aware social drafting.
+
+### Rubrics
+- `rubric:article-quality-v1` — article evaluation gate.
+- `rubric:content-quality` — generic content evaluation fallback.
+- `rubric:engagement-v1` — engagement-focused eval.
+- `rubric:tool-reliability` — executable-tool health check.
+
+### Tools callable via `tool_execute`
+- `tool:cloudinary.transform` — URL-based image transforms (no auth, public delivery).
+- `tool:cloudinary.upload` — signed uploads (vault `cloudinary/api-secret`).
+- `tool:meta-ads.insights` — Meta Graph insights (vault `meta/ads/access-token`, query-param auth; http_multi_action executor pending on MCP side).
+- `tool:manus.agent` — multi-step Manus agent runner (vault `manus/api-key`).
+- `tool:elevenlabs.voice` — TTS (vault `elevenlabs/api-key`).
+- `tool:gpt-researcher.quick-search` — cited web research (live at `gpt-researcher-production-2b53.up.railway.app`).
+- `tool:hlt-metabase-readonly` — HLT warehouse reads (50K+ items).
+- `tool:publish.email` — Resend transactional email (vault `resend/api-key`).
+- `tool:marketo` — Marketo CRUD (vault `marketo/client-id` + `marketo/client-secret`).
+- `tool:v0.model_generate` / `tool:v0.platform_scaffold` — v0 code generation (vault `v0/api-key`).
+
+### Governance + lint
+- `lint_ruleset:registry-graph-governance` — registry graph health checks.
+- `lint_rule:no-hollow-published` — blocks empty-shelled `published` entities.
+- `lint_rule:cascade-warning-on-archive` — flags orphan-making archival.
+- `lint_rule:deprecated-needs-supersedes` — deprecation requires migration target.
+- `lint_rule:cross-type-pair-integrity` — content_type/recipe duality rules.
+
 ## Read this first
 
 - This ecosystem spans multiple repos. Do not assume the current repo contains the whole system.
