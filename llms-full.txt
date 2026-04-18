@@ -1,6 +1,6 @@
 # GPT Researcher Repo Front Door
 
-> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `43a54a98d11e`.
+> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `268a4cc12cd8`.
 
 ## Repo quickstart
 
@@ -21,11 +21,11 @@ You are currently inside **GPT Researcher**, the research orchestration lane. Cu
 
 ### Recent significant changes (last 5 commits)
 
+- 8a1754da 2026-04-18 docs(inner-loop): reframe from build-time to model round-trip; triple hygiene thresholds
 - 16553ead 2026-04-18 docs(build-time): double the inner-loop thresholds per operator — 60s/120s/180s
 - fd865342 2026-04-18 docs(llms-txt + canon): agentic-infrastructure posture + friction-to-canon rule + named gaps
 - 0bcb1520 2026-04-18 docs(llms-txt): Replit-style link-index sections (master aadcf80d2a70)
 - 1b3bac36 2026-04-17 docs(llms-txt): audit flag on stale repo-inventory entries
-- 5183d3a8 2026-04-17 docs(llms-txt): v2 ecosystem fan-out — repo quickstart + key entities + jump-to nav
 
 # HLT Ecosystem Index for Agents
 
@@ -938,9 +938,41 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 - do not rush migration just for elegance
 - measure speed, SEO, workflow quality, and publishing velocity before large-scale sunset decisions
 
+### Other-session mission specs (authored 2026-04-18 by a parallel Claude session)
+
+These are grounded via Axon + Katailyst MCP. Spec-only — zero code changes yet. Each spec is a focused PR sequence with feature-flagged rollout. Total ~3,700 spec-lines across 4 docs in `~/hlt/katailyst/docs/planning/active/`:
+
+- **`2026-04-18-mission-1-2-mcp-bridge-studio-wiring.md`** (786 lines). Mission 1 promotes sidecar's MCP-bridge pattern (`lib/mcp/bridge.ts`, `lib/integrations/catalyst-mcp.ts`, `lib/sidecar/prompt-builder.ts`) into a repo-local primitive that Sidecar, Creation Studio, and agent-canvas each import — three version-locked copies now, private npm publish later. Mission 2 wires the primitive into Creation Studio + adds a `run_registry_tool({ tool_ref, inputs })` tool exposing all 126 Katailyst tools. Studio today has 11 bespoke tools; after M2 it inherits every registered tool.
+- **`2026-04-18-mission-3-5-persistence-replay.md`** (714 lines). Server-side Creation Studio persistence + live thought-stream SSE + replay at `/replay/[session_id]`. **Strategic pivot:** reuse existing `runs` / `run_steps` / `run_events` / `run_tool_calls` / `payload_store` infrastructure (236 runs, 418 steps, 1,460 events, RLS enforced) rather than invent a parallel schema. This supersedes the earlier "thought_stream SSE" proposal in polish-plan Phase 4b.
+- **`2026-04-18-mission-4-sidecar-bml-loop.md`** (1,501 lines). Three sidecar BML-loop fixes, each feature-flagged: **M4.1** registry-backed `loadRubric()` (~180 LOC, 3.5 hrs) — today's stub only returns FNP; Katailyst has 20 published rubrics. **M4.2** `loadBrandVoiceContext(product_slug)` runtime pipe (~260 LOC, 5 hrs) — today's FNP writer voice is hand-distilled in a const string; brand-voice KB updates don't propagate without a code deploy. **M4.3** explicit `routeSpecialist()` (~110 LOC, 2 hrs) — today silently falls through to FNP for 16 of 18 product slugs.
+- **`2026-04-18-mission-6-seam-bugs.md`** (703 lines). Three cross-repo seam bugs: **6a** MM `/api/media/v1/image/generate` unauthenticated (any CORS-allowed origin can burn Fal credits). **6b** Forum `/api/internal/threads` doesn't exist (sidecar's `publishToForum()` 404s end-to-end). **6c** Content-Engine URL default is misleading — canonical prod is `v0-next-js-content-engine.vercel.app`; `mastery-publishing.vercel.app/api/publish` is `DEPLOYMENT_NOT_FOUND`.
+
+Plus `docs/reports/morning-brief/2026-04-17/second-run-audit.md` flagging: 3 integration readiness FAILs (clean-ebb 33/100, openclaw 20/100, replit 60/100 WARN), fleet probe `/api/health` 404 on 4 major repos for 2 consecutive days, canonical scratch folders missing, morning-brief SKILL has no idempotency guard.
+
+These missions are the next-session work plan. This file surfaces them so the next agent landing in any repo knows they're pending — not as a mandate to execute them now.
+
 ## Key rules that agents must follow
 
 These rules are HLT's operating principles for agentic work. They are stated in our own voice; external frames (Vercel, OpenAI Frontier, the llms.txt spec) are credited at the end of the section as the places where we sharpened the thinking, not as the source of the rules themselves.
+
+### Epigraph (HLT operator posture)
+
+> Your primary job is not to "make changes." Your primary job is to understand what the system is trying to do, then make changes that strengthen that system without leaving a mess behind. In this environment, slow and accurate beats fast and sloppy.
+>
+> — HLT_01 Agent Operating Doctrine
+
+### Operator-stated principles
+
+These are the operator's own directives, stated in the operator's voice. They precede the foundational + operating-principle rules below because they set the posture for *why* those rules exist.
+
+1. **Top-1% research bar.** Before bringing anything into HLT, research the top 1% of options in the same space. Find pre-validated concepts from best-in-class companies. More research, more planning, more reading, more looking around the ecosystem is almost always worth it. The operator is not a developer — the team must vet + flesh out research before committing code or customer-facing work.
+2. **Customer discovery is pre-validated, not guessed.** Use Data for SEO, Katailyst's existing research KBs, and real audience signal. Don't ship resonance we haven't tested. Find the things our audience actually cares about, backed by data.
+3. **Katailyst is the centerpiece.** Everything routes through it. MCP as the backbone. Agents decompose objectives via the registry + their own reasoning. New surfaces inherit observability, governance, brand voice, and tools from Katailyst by default.
+4. **Rapid spin-up is a core capability.** We should be able to launch new templates, chatbots, apps, and per-domain front-ends fast, from existing pieces. Katailyst backend + MCP is the fast path. Each new template inherits the full stack by default.
+5. **Partial + flexible over strict orchestration.** Give users and clients building blocks they can fill gaps in. Trust that agents are intelligent — don't over-mandate their paths. The difference between a "rails" platform and a "tools" platform: we want tools.
+6. **Global llms.txt + Axon.** One update point, fans out everywhere. This is the discoverability + observability layer. Continue investing; don't let it drift.
+7. **Observability everywhere.** All agents see all other things as much as humanly possible. Every specialist, every tool, every surface produces traces. This is the reflection layer (layer 0) of the 7-layer operating frame; currently the thinnest layer in HLT's stack.
+8. **Agent Canvas is where agents live.** Not today — today's priority is finishing the long-form content sidecar connection + MasteryPublishing quality + recruiting forum integration. But the architecture direction is: agents live in Agent Canvas, move off Replit eventually.
 
 ### Foundational rules
 
@@ -987,6 +1019,12 @@ These frames get updated as the field moves. The principles above do not change 
 - **Internal-tooling postmerge review discipline.** Specialists use premerge approval gates (right for customer-facing content). Internal tooling could shift to postmerge review to speed agent iteration — not yet adopted.
 - **Build time audits across the 15 repos.** Not measured systematically; a one-off audit is pending.
 - **Obsidian System Maps / `Core Maps/` drift.** 20+ supporting maps not re-verified since 2026-04; operator flagged some as stale. Keep/merge/archive audit pending.
+- **Integration readiness FAILs (from `registry_health` 2026-04-17).** `clean-ebb` score 33/100 FAIL — missing `clean-ebb/api-token` secret + `POST /api/ai-analysis` endpoint. `openclaw` score 20/100 CRITICAL FAIL — missing `openclaw/gateway-token`, `openclaw/victoria/gateway-token` secrets + `GET /health` + `POST /v1/chat/completions`. `replit` score 60/100 WARN — no active account / secret. Fleet probe `/api/health` still 404 on Katailyst, sidecar, MasteryPublishing, Multimedia Mastery for 2+ consecutive days. Source: `~/hlt/katailyst/docs/reports/morning-brief/2026-04-17/second-run-audit.md`.
+- **Content-engine URL default is misleading.** Canonical prod is `v0-next-js-content-engine.vercel.app` (401 on bad key = live). `mastery-publishing.vercel.app/api/publish` is `DEPLOYMENT_NOT_FOUND`. Sidecar + Katailyst silently fall back to the wrong URL when `CONTENT_ENGINE_API_URL` is unset. Mission 6c fix: fail loud in production.
+- **Marketo middleware gap.** `tool:marketo` registered in Katailyst, but the n8n / Make.com webhook middleware that bridges Katailyst content_json → Marketo HTML → delivery is not yet built. Marketo instance: `758-CUU-617` (838K contacts, 7 exam verticals). The zero-manual-email-builds doctrine from the Marketo machine spec is the north star.
+- **Multimedia image/generate is unauthenticated.** Any CORS-allowed origin can burn Fal credits. Four external callers on record (sidecar ×2, mastery-publishing, katailyst). Mission 6a fix.
+- **Forum `/api/internal/threads` doesn't exist.** Sidecar's `publishToForum()` 404s silently. Mission 6b fix.
+- **Canonical Almanac path.** The HLT Master Almanac v2 (operator-owned product + financial canon) is circulated in planning sessions but has no committed path in Obsidian. Needs a real home at `~/Documents/Obsidian Vault/OpenClaw/System Maps/Core Maps/hlt-master-almanac-v2.md` or equivalent.
 
 ## Companion files
 
@@ -2524,9 +2562,41 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 - do not rush migration just for elegance
 - measure speed, SEO, workflow quality, and publishing velocity before large-scale sunset decisions
 
+### Other-session mission specs (authored 2026-04-18 by a parallel Claude session)
+
+These are grounded via Axon + Katailyst MCP. Spec-only — zero code changes yet. Each spec is a focused PR sequence with feature-flagged rollout. Total ~3,700 spec-lines across 4 docs in `~/hlt/katailyst/docs/planning/active/`:
+
+- **`2026-04-18-mission-1-2-mcp-bridge-studio-wiring.md`** (786 lines). Mission 1 promotes sidecar's MCP-bridge pattern (`lib/mcp/bridge.ts`, `lib/integrations/catalyst-mcp.ts`, `lib/sidecar/prompt-builder.ts`) into a repo-local primitive that Sidecar, Creation Studio, and agent-canvas each import — three version-locked copies now, private npm publish later. Mission 2 wires the primitive into Creation Studio + adds a `run_registry_tool({ tool_ref, inputs })` tool exposing all 126 Katailyst tools. Studio today has 11 bespoke tools; after M2 it inherits every registered tool.
+- **`2026-04-18-mission-3-5-persistence-replay.md`** (714 lines). Server-side Creation Studio persistence + live thought-stream SSE + replay at `/replay/[session_id]`. **Strategic pivot:** reuse existing `runs` / `run_steps` / `run_events` / `run_tool_calls` / `payload_store` infrastructure (236 runs, 418 steps, 1,460 events, RLS enforced) rather than invent a parallel schema. This supersedes the earlier "thought_stream SSE" proposal in polish-plan Phase 4b.
+- **`2026-04-18-mission-4-sidecar-bml-loop.md`** (1,501 lines). Three sidecar BML-loop fixes, each feature-flagged: **M4.1** registry-backed `loadRubric()` (~180 LOC, 3.5 hrs) — today's stub only returns FNP; Katailyst has 20 published rubrics. **M4.2** `loadBrandVoiceContext(product_slug)` runtime pipe (~260 LOC, 5 hrs) — today's FNP writer voice is hand-distilled in a const string; brand-voice KB updates don't propagate without a code deploy. **M4.3** explicit `routeSpecialist()` (~110 LOC, 2 hrs) — today silently falls through to FNP for 16 of 18 product slugs.
+- **`2026-04-18-mission-6-seam-bugs.md`** (703 lines). Three cross-repo seam bugs: **6a** MM `/api/media/v1/image/generate` unauthenticated (any CORS-allowed origin can burn Fal credits). **6b** Forum `/api/internal/threads` doesn't exist (sidecar's `publishToForum()` 404s end-to-end). **6c** Content-Engine URL default is misleading — canonical prod is `v0-next-js-content-engine.vercel.app`; `mastery-publishing.vercel.app/api/publish` is `DEPLOYMENT_NOT_FOUND`.
+
+Plus `docs/reports/morning-brief/2026-04-17/second-run-audit.md` flagging: 3 integration readiness FAILs (clean-ebb 33/100, openclaw 20/100, replit 60/100 WARN), fleet probe `/api/health` 404 on 4 major repos for 2 consecutive days, canonical scratch folders missing, morning-brief SKILL has no idempotency guard.
+
+These missions are the next-session work plan. This file surfaces them so the next agent landing in any repo knows they're pending — not as a mandate to execute them now.
+
 ## Key rules that agents must follow
 
 These rules are HLT's operating principles for agentic work. They are stated in our own voice; external frames (Vercel, OpenAI Frontier, the llms.txt spec) are credited at the end of the section as the places where we sharpened the thinking, not as the source of the rules themselves.
+
+### Epigraph (HLT operator posture)
+
+> Your primary job is not to "make changes." Your primary job is to understand what the system is trying to do, then make changes that strengthen that system without leaving a mess behind. In this environment, slow and accurate beats fast and sloppy.
+>
+> — HLT_01 Agent Operating Doctrine
+
+### Operator-stated principles
+
+These are the operator's own directives, stated in the operator's voice. They precede the foundational + operating-principle rules below because they set the posture for *why* those rules exist.
+
+1. **Top-1% research bar.** Before bringing anything into HLT, research the top 1% of options in the same space. Find pre-validated concepts from best-in-class companies. More research, more planning, more reading, more looking around the ecosystem is almost always worth it. The operator is not a developer — the team must vet + flesh out research before committing code or customer-facing work.
+2. **Customer discovery is pre-validated, not guessed.** Use Data for SEO, Katailyst's existing research KBs, and real audience signal. Don't ship resonance we haven't tested. Find the things our audience actually cares about, backed by data.
+3. **Katailyst is the centerpiece.** Everything routes through it. MCP as the backbone. Agents decompose objectives via the registry + their own reasoning. New surfaces inherit observability, governance, brand voice, and tools from Katailyst by default.
+4. **Rapid spin-up is a core capability.** We should be able to launch new templates, chatbots, apps, and per-domain front-ends fast, from existing pieces. Katailyst backend + MCP is the fast path. Each new template inherits the full stack by default.
+5. **Partial + flexible over strict orchestration.** Give users and clients building blocks they can fill gaps in. Trust that agents are intelligent — don't over-mandate their paths. The difference between a "rails" platform and a "tools" platform: we want tools.
+6. **Global llms.txt + Axon.** One update point, fans out everywhere. This is the discoverability + observability layer. Continue investing; don't let it drift.
+7. **Observability everywhere.** All agents see all other things as much as humanly possible. Every specialist, every tool, every surface produces traces. This is the reflection layer (layer 0) of the 7-layer operating frame; currently the thinnest layer in HLT's stack.
+8. **Agent Canvas is where agents live.** Not today — today's priority is finishing the long-form content sidecar connection + MasteryPublishing quality + recruiting forum integration. But the architecture direction is: agents live in Agent Canvas, move off Replit eventually.
 
 ### Foundational rules
 
@@ -2573,6 +2643,12 @@ These frames get updated as the field moves. The principles above do not change 
 - **Internal-tooling postmerge review discipline.** Specialists use premerge approval gates (right for customer-facing content). Internal tooling could shift to postmerge review to speed agent iteration — not yet adopted.
 - **Build time audits across the 15 repos.** Not measured systematically; a one-off audit is pending.
 - **Obsidian System Maps / `Core Maps/` drift.** 20+ supporting maps not re-verified since 2026-04; operator flagged some as stale. Keep/merge/archive audit pending.
+- **Integration readiness FAILs (from `registry_health` 2026-04-17).** `clean-ebb` score 33/100 FAIL — missing `clean-ebb/api-token` secret + `POST /api/ai-analysis` endpoint. `openclaw` score 20/100 CRITICAL FAIL — missing `openclaw/gateway-token`, `openclaw/victoria/gateway-token` secrets + `GET /health` + `POST /v1/chat/completions`. `replit` score 60/100 WARN — no active account / secret. Fleet probe `/api/health` still 404 on Katailyst, sidecar, MasteryPublishing, Multimedia Mastery for 2+ consecutive days. Source: `~/hlt/katailyst/docs/reports/morning-brief/2026-04-17/second-run-audit.md`.
+- **Content-engine URL default is misleading.** Canonical prod is `v0-next-js-content-engine.vercel.app` (401 on bad key = live). `mastery-publishing.vercel.app/api/publish` is `DEPLOYMENT_NOT_FOUND`. Sidecar + Katailyst silently fall back to the wrong URL when `CONTENT_ENGINE_API_URL` is unset. Mission 6c fix: fail loud in production.
+- **Marketo middleware gap.** `tool:marketo` registered in Katailyst, but the n8n / Make.com webhook middleware that bridges Katailyst content_json → Marketo HTML → delivery is not yet built. Marketo instance: `758-CUU-617` (838K contacts, 7 exam verticals). The zero-manual-email-builds doctrine from the Marketo machine spec is the north star.
+- **Multimedia image/generate is unauthenticated.** Any CORS-allowed origin can burn Fal credits. Four external callers on record (sidecar ×2, mastery-publishing, katailyst). Mission 6a fix.
+- **Forum `/api/internal/threads` doesn't exist.** Sidecar's `publishToForum()` 404s silently. Mission 6b fix.
+- **Canonical Almanac path.** The HLT Master Almanac v2 (operator-owned product + financial canon) is circulated in planning sessions but has no committed path in Obsidian. Needs a real home at `~/Documents/Obsidian Vault/OpenClaw/System Maps/Core Maps/hlt-master-almanac-v2.md` or equivalent.
 
 ## Companion files
 
