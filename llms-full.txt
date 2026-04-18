@@ -1,6 +1,6 @@
 # GPT Researcher Repo Front Door
 
-> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `aadcf80d2a70`.
+> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `ce5b90efe15e`.
 
 ## Repo quickstart
 
@@ -21,11 +21,11 @@ You are currently inside **GPT Researcher**, the research orchestration lane. Cu
 
 ### Recent significant changes (last 5 commits)
 
+- 0bcb1520 2026-04-18 docs(llms-txt): Replit-style link-index sections (master aadcf80d2a70)
 - 1b3bac36 2026-04-17 docs(llms-txt): audit flag on stale repo-inventory entries
 - 5183d3a8 2026-04-17 docs(llms-txt): v2 ecosystem fan-out — repo quickstart + key entities + jump-to nav
 - 846c31b8 2026-04-17 chore(agents): observability + discoverability — .mcp.json, AGENTS.md, fresh llms.txt
 - 19be756d 2026-04-17 Merge branch 'session-2026-04-16-local-tweaks' into main
-- 6d2c4c26 2026-04-17 docs(llms): update with live Railway URL + deploy status after successful deploy
 
 # HLT Ecosystem Index for Agents
 
@@ -201,6 +201,26 @@ Study strong operators and apply lessons to the system. Follow and analyze examp
 - **sidecars** are use-case launch surfaces, not hard limitations; they should still be able to call broad capability surfaces
 - **Multimedia Mastery + Cloudinary** are central to the multimedia future
 - **Evidence-Based Business** should increasingly hold important data and measurement layers
+
+### Agentic infrastructure posture (Vercel 3-pillar model, 2026-04)
+
+HLT's ecosystem fits the three-pillar model for agentic infrastructure that Vercel articulated on 2026-04-09. Naming our posture in their frame makes it easier to reason about what we have, what we're missing, and what we're buying / building next.
+
+1. **Infra for coding agents to deploy to.** Vercel preview URLs on every commit + per-repo `llms.txt` + `AGENTS.md` discipline + fresh Axon graphs give Claude Code, Cursor, v0, and our internal agents the programmatic deployment surface they need to close the write-test-ship loop without a human opening a console. Every sidecar + MP + multimedia-mastery runs on Vercel; gpt-researcher runs on Railway; katailyst on Vercel with MCP at `/mcp`.
+2. **Infra for building + running agents.** Vercel AI SDK underpins every specialist writer in sidecar (Opus 4.7 via `generateObject`). Katailyst MCP is our capability canon + vault-resolved `tool_execute` bridge. Langfuse handles tracing (per `kb:langfuse-tracing-hlt`). Cloudinary + Multimedia Mastery handle media. Paperclip handles governance. **Known gaps in this pillar:** (a) durable workflows / queues — specialists dispatch one-shot via `generateObject`; no pause/resume/retry semantics; Inngest (already in `~/hlt/mastra`) or Vercel Workflows would close this; (b) sandboxed execution — we have no isolated environment for agent-generated executable artifacts (dataviz React components, ad landing pages); Vercel Sandbox or E2B-equivalent needed before we let specialists execute code they wrote; (c) AI Gateway equivalent — Katailyst MCP is a capability catalog, not a model-routing + budget + retry + fallback layer; when we operate across Anthropic + OpenAI + Google + Groq, a gateway pattern gives us unified budgets + provider fallbacks.
+3. **Infra that is itself agentic.** Katailyst registry (`discover` → `traverse` → `tool_execute`) + `lint_ruleset:registry-graph-governance` + the planned drift-verifier cron + `memory_query` / `memory_write` MCP tools. The platform senses, reasons, and acts on its own behalf — with approval gates, not autonomously yet. Each specialist owns the full loop for its lane (dashboard + alert + code + fix), matching the OpenAI Frontier team's pattern documented in Ryan Leopold's harness-engineering article (2026-04). Morgan = ads: authors dashboard definition files + subscribes to CPI/fatigue alerts + inspects Meta insights + proposes creative refreshes + writes the weekly operator brief. Same pattern applies to Victoria, Bruce, Sam, Nova.
+
+### Six-layer operating frame (from OpenAI Symphony, 2026-04)
+
+The OpenAI Frontier team's Symphony spec defines six layers — policy, configuration, coordination, execution, integration, observability — plus a reflection layer (zero). Use this as an audit lens when reviewing any HLT sidecar or playbook:
+
+- **Policy**: constraints encoded as text the agent reads (KBs, lint rules, prompts). HLT has solid coverage.
+- **Configuration**: environment, vault, site config. Vault-first is the HLT answer (`kb:katailyst-vault-access-pattern`).
+- **Coordination**: multi-step orchestration, pause/resume/retry. **HLT thin** — see pillar 2 gap above.
+- **Execution**: `generateObject` / `tool_execute` / `dispatchSpecialist`. Strong.
+- **Integration**: Catalyst MCP bridge, per-tool call_specs. Strong.
+- **Observability**: Langfuse tracing, evaluator reports, `history_query`. Solid but not ubiquitous across specialists.
+- **Reflection (layer 0)**: agent introspection of its own sessions, team-wide trajectory distillation. **HLT nearly absent** — `memory_write` is available via MCP but not wired into a daily loop. See drift-verifier + distillation cron in the polish plan.
 
 ## Katailyst-first rule
 
@@ -928,6 +948,20 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 - Do not confuse shell and public route ownership with canonical content ownership.
 - Do not perform dangerous publish actions without explicit approval where required.
 - Document concrete things, not vague summaries.
+- **Friction → durable text.** Every non-obvious failure an agent or human hits gets two PRs: (1) fix the immediate problem, (2) encode the invariant into a KB, prompt, lint rule, or system-maps update so the NEXT agent does not repeat it. This is how institutional knowledge compounds instead of evaporating. See `kb:friction-to-canon` for the pattern + worked examples. Corollary: PR comments, failed builds, pages, evaluator criticisms are all prompts for invariant extraction — agents should be trained to treat them that way.
+- **One agent owns the full loop for its lane.** A specialist that drafts content also authors the dashboard definition, subscribes to the alert, reads the logs, and proposes the fix. Do not split "writer" and "operations" personas — same context, same agent. See the Vercel agentic-infrastructure posture section above.
+- **Prefer text over structured tool calls where possible.** MCP tools forcibly inject their catalog into the context window on every turn; they degrade autocompaction. Use `X-Katailyst-Toolset: bootstrap` by default and expand on demand. For narrow per-repo needs, a tiny CLI shim that the agent shells out to is cheaper in tokens than an always-on MCP tool.
+- **Build-time discipline as a forcing function.** If your repo's `pnpm build` exceeds 90 seconds, the agent's inner loop is broken. Tokens are cheap; waiting on builds is not. When a breach is observed, decompose the build graph — don't let it grow unmeasured.
+
+## Known gaps (named, not hidden)
+
+- **Durable agent workflows / queues.** Specialists dispatch one-shot via `generateObject`; no pause/resume/retry/background semantics. `~/hlt/mastra` has Inngest; Vercel Workflows is another option. Agentic coordination layer is the thinnest layer in our 6-layer frame.
+- **Sandboxed execution.** No isolated environment for agent-generated executable artifacts. Safe today because output is media/text/JSON — but blocks future specialists that emit React components or landing pages. Solution: Vercel Sandbox or E2B-equivalent.
+- **AI Gateway equivalent.** Katailyst MCP is a catalog, not a model-routing + budget + retry + provider-fallback layer. Multi-provider operation (Anthropic + OpenAI + Google + Groq across `~/hlt/sidecar`) would benefit.
+- **Reflection layer (trajectory distillation).** `memory_write` is available via MCP; no daily loop slurps session trajectories, distills patterns, or proposes KB/rule updates yet. Planned as part of the drift-verifier cron.
+- **Internal-tooling postmerge review discipline.** Specialists use premerge approval gates (right for customer-facing content). Internal tooling could shift to postmerge review to speed agent iteration — not yet adopted.
+- **Build time audits across the 15 repos.** Not measured systematically; a one-off audit is pending.
+- **Obsidian System Maps / `Core Maps/` drift.** 20+ supporting maps not re-verified since 2026-04; operator flagged some as stale. Keep/merge/archive audit pending.
 
 ## Companion files
 
@@ -1729,6 +1763,26 @@ Study strong operators and apply lessons to the system. Follow and analyze examp
 - **Multimedia Mastery + Cloudinary** are central to the multimedia future
 - **Evidence-Based Business** should increasingly hold important data and measurement layers
 
+### Agentic infrastructure posture (Vercel 3-pillar model, 2026-04)
+
+HLT's ecosystem fits the three-pillar model for agentic infrastructure that Vercel articulated on 2026-04-09. Naming our posture in their frame makes it easier to reason about what we have, what we're missing, and what we're buying / building next.
+
+1. **Infra for coding agents to deploy to.** Vercel preview URLs on every commit + per-repo `llms.txt` + `AGENTS.md` discipline + fresh Axon graphs give Claude Code, Cursor, v0, and our internal agents the programmatic deployment surface they need to close the write-test-ship loop without a human opening a console. Every sidecar + MP + multimedia-mastery runs on Vercel; gpt-researcher runs on Railway; katailyst on Vercel with MCP at `/mcp`.
+2. **Infra for building + running agents.** Vercel AI SDK underpins every specialist writer in sidecar (Opus 4.7 via `generateObject`). Katailyst MCP is our capability canon + vault-resolved `tool_execute` bridge. Langfuse handles tracing (per `kb:langfuse-tracing-hlt`). Cloudinary + Multimedia Mastery handle media. Paperclip handles governance. **Known gaps in this pillar:** (a) durable workflows / queues — specialists dispatch one-shot via `generateObject`; no pause/resume/retry semantics; Inngest (already in `~/hlt/mastra`) or Vercel Workflows would close this; (b) sandboxed execution — we have no isolated environment for agent-generated executable artifacts (dataviz React components, ad landing pages); Vercel Sandbox or E2B-equivalent needed before we let specialists execute code they wrote; (c) AI Gateway equivalent — Katailyst MCP is a capability catalog, not a model-routing + budget + retry + fallback layer; when we operate across Anthropic + OpenAI + Google + Groq, a gateway pattern gives us unified budgets + provider fallbacks.
+3. **Infra that is itself agentic.** Katailyst registry (`discover` → `traverse` → `tool_execute`) + `lint_ruleset:registry-graph-governance` + the planned drift-verifier cron + `memory_query` / `memory_write` MCP tools. The platform senses, reasons, and acts on its own behalf — with approval gates, not autonomously yet. Each specialist owns the full loop for its lane (dashboard + alert + code + fix), matching the OpenAI Frontier team's pattern documented in Ryan Leopold's harness-engineering article (2026-04). Morgan = ads: authors dashboard definition files + subscribes to CPI/fatigue alerts + inspects Meta insights + proposes creative refreshes + writes the weekly operator brief. Same pattern applies to Victoria, Bruce, Sam, Nova.
+
+### Six-layer operating frame (from OpenAI Symphony, 2026-04)
+
+The OpenAI Frontier team's Symphony spec defines six layers — policy, configuration, coordination, execution, integration, observability — plus a reflection layer (zero). Use this as an audit lens when reviewing any HLT sidecar or playbook:
+
+- **Policy**: constraints encoded as text the agent reads (KBs, lint rules, prompts). HLT has solid coverage.
+- **Configuration**: environment, vault, site config. Vault-first is the HLT answer (`kb:katailyst-vault-access-pattern`).
+- **Coordination**: multi-step orchestration, pause/resume/retry. **HLT thin** — see pillar 2 gap above.
+- **Execution**: `generateObject` / `tool_execute` / `dispatchSpecialist`. Strong.
+- **Integration**: Catalyst MCP bridge, per-tool call_specs. Strong.
+- **Observability**: Langfuse tracing, evaluator reports, `history_query`. Solid but not ubiquitous across specialists.
+- **Reflection (layer 0)**: agent introspection of its own sessions, team-wide trajectory distillation. **HLT nearly absent** — `memory_write` is available via MCP but not wired into a daily loop. See drift-verifier + distillation cron in the polish plan.
+
 ## Katailyst-first rule
 
 Use Katailyst before guessing at capabilities or inventing workflows.
@@ -2455,6 +2509,20 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 - Do not confuse shell and public route ownership with canonical content ownership.
 - Do not perform dangerous publish actions without explicit approval where required.
 - Document concrete things, not vague summaries.
+- **Friction → durable text.** Every non-obvious failure an agent or human hits gets two PRs: (1) fix the immediate problem, (2) encode the invariant into a KB, prompt, lint rule, or system-maps update so the NEXT agent does not repeat it. This is how institutional knowledge compounds instead of evaporating. See `kb:friction-to-canon` for the pattern + worked examples. Corollary: PR comments, failed builds, pages, evaluator criticisms are all prompts for invariant extraction — agents should be trained to treat them that way.
+- **One agent owns the full loop for its lane.** A specialist that drafts content also authors the dashboard definition, subscribes to the alert, reads the logs, and proposes the fix. Do not split "writer" and "operations" personas — same context, same agent. See the Vercel agentic-infrastructure posture section above.
+- **Prefer text over structured tool calls where possible.** MCP tools forcibly inject their catalog into the context window on every turn; they degrade autocompaction. Use `X-Katailyst-Toolset: bootstrap` by default and expand on demand. For narrow per-repo needs, a tiny CLI shim that the agent shells out to is cheaper in tokens than an always-on MCP tool.
+- **Build-time discipline as a forcing function.** If your repo's `pnpm build` exceeds 90 seconds, the agent's inner loop is broken. Tokens are cheap; waiting on builds is not. When a breach is observed, decompose the build graph — don't let it grow unmeasured.
+
+## Known gaps (named, not hidden)
+
+- **Durable agent workflows / queues.** Specialists dispatch one-shot via `generateObject`; no pause/resume/retry/background semantics. `~/hlt/mastra` has Inngest; Vercel Workflows is another option. Agentic coordination layer is the thinnest layer in our 6-layer frame.
+- **Sandboxed execution.** No isolated environment for agent-generated executable artifacts. Safe today because output is media/text/JSON — but blocks future specialists that emit React components or landing pages. Solution: Vercel Sandbox or E2B-equivalent.
+- **AI Gateway equivalent.** Katailyst MCP is a catalog, not a model-routing + budget + retry + provider-fallback layer. Multi-provider operation (Anthropic + OpenAI + Google + Groq across `~/hlt/sidecar`) would benefit.
+- **Reflection layer (trajectory distillation).** `memory_write` is available via MCP; no daily loop slurps session trajectories, distills patterns, or proposes KB/rule updates yet. Planned as part of the drift-verifier cron.
+- **Internal-tooling postmerge review discipline.** Specialists use premerge approval gates (right for customer-facing content). Internal tooling could shift to postmerge review to speed agent iteration — not yet adopted.
+- **Build time audits across the 15 repos.** Not measured systematically; a one-off audit is pending.
+- **Obsidian System Maps / `Core Maps/` drift.** 20+ supporting maps not re-verified since 2026-04; operator flagged some as stale. Keep/merge/archive audit pending.
 
 ## Companion files
 
