@@ -31,11 +31,11 @@ You are currently inside **GPT Researcher**, the research orchestration lane. Cu
 
 ### Recent significant changes (last 5 commits)
 
+- fd865342 2026-04-18 docs(llms-txt + canon): agentic-infrastructure posture + friction-to-canon rule + named gaps
 - 0bcb1520 2026-04-18 docs(llms-txt): Replit-style link-index sections (master aadcf80d2a70)
 - 1b3bac36 2026-04-17 docs(llms-txt): audit flag on stale repo-inventory entries
 - 5183d3a8 2026-04-17 docs(llms-txt): v2 ecosystem fan-out — repo quickstart + key entities + jump-to nav
 - 846c31b8 2026-04-17 chore(agents): observability + discoverability — .mcp.json, AGENTS.md, fresh llms.txt
-- 19be756d 2026-04-17 Merge branch 'session-2026-04-16-local-tweaks' into main
 
 ## Behavioral rules
 

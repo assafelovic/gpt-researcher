@@ -1,6 +1,6 @@
 # GPT Researcher Repo Front Door
 
-> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `ce5b90efe15e`.
+> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `ada55a32588e`.
 
 ## Repo quickstart
 
@@ -21,11 +21,11 @@ You are currently inside **GPT Researcher**, the research orchestration lane. Cu
 
 ### Recent significant changes (last 5 commits)
 
+- fd865342 2026-04-18 docs(llms-txt + canon): agentic-infrastructure posture + friction-to-canon rule + named gaps
 - 0bcb1520 2026-04-18 docs(llms-txt): Replit-style link-index sections (master aadcf80d2a70)
 - 1b3bac36 2026-04-17 docs(llms-txt): audit flag on stale repo-inventory entries
 - 5183d3a8 2026-04-17 docs(llms-txt): v2 ecosystem fan-out — repo quickstart + key entities + jump-to nav
 - 846c31b8 2026-04-17 chore(agents): observability + discoverability — .mcp.json, AGENTS.md, fresh llms.txt
-- 19be756d 2026-04-17 Merge branch 'session-2026-04-16-local-tweaks' into main
 
 # HLT Ecosystem Index for Agents
 
@@ -951,7 +951,7 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 - **Friction → durable text.** Every non-obvious failure an agent or human hits gets two PRs: (1) fix the immediate problem, (2) encode the invariant into a KB, prompt, lint rule, or system-maps update so the NEXT agent does not repeat it. This is how institutional knowledge compounds instead of evaporating. See `kb:friction-to-canon` for the pattern + worked examples. Corollary: PR comments, failed builds, pages, evaluator criticisms are all prompts for invariant extraction — agents should be trained to treat them that way.
 - **One agent owns the full loop for its lane.** A specialist that drafts content also authors the dashboard definition, subscribes to the alert, reads the logs, and proposes the fix. Do not split "writer" and "operations" personas — same context, same agent. See the Vercel agentic-infrastructure posture section above.
 - **Prefer text over structured tool calls where possible.** MCP tools forcibly inject their catalog into the context window on every turn; they degrade autocompaction. Use `X-Katailyst-Toolset: bootstrap` by default and expand on demand. For narrow per-repo needs, a tiny CLI shim that the agent shells out to is cheaper in tokens than an always-on MCP tool.
-- **Build-time discipline as a forcing function.** If your repo's `pnpm build` exceeds 90 seconds, the agent's inner loop is broken. Tokens are cheap; waiting on builds is not. When a breach is observed, decompose the build graph — don't let it grow unmeasured.
+- **Build-time discipline as a forcing function.** Inner-loop thresholds: audit at 60s, escalate at 120s, emergency at 180s. Tokens are cheap; waiting on builds is not. When a breach is observed, decompose the build graph — don't let it grow unmeasured. See `~/hlt/sidecar/docs/build-time.md` for the HLT baseline + tracking template.
 
 ## Known gaps (named, not hidden)
 
@@ -2512,7 +2512,7 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 - **Friction → durable text.** Every non-obvious failure an agent or human hits gets two PRs: (1) fix the immediate problem, (2) encode the invariant into a KB, prompt, lint rule, or system-maps update so the NEXT agent does not repeat it. This is how institutional knowledge compounds instead of evaporating. See `kb:friction-to-canon` for the pattern + worked examples. Corollary: PR comments, failed builds, pages, evaluator criticisms are all prompts for invariant extraction — agents should be trained to treat them that way.
 - **One agent owns the full loop for its lane.** A specialist that drafts content also authors the dashboard definition, subscribes to the alert, reads the logs, and proposes the fix. Do not split "writer" and "operations" personas — same context, same agent. See the Vercel agentic-infrastructure posture section above.
 - **Prefer text over structured tool calls where possible.** MCP tools forcibly inject their catalog into the context window on every turn; they degrade autocompaction. Use `X-Katailyst-Toolset: bootstrap` by default and expand on demand. For narrow per-repo needs, a tiny CLI shim that the agent shells out to is cheaper in tokens than an always-on MCP tool.
-- **Build-time discipline as a forcing function.** If your repo's `pnpm build` exceeds 90 seconds, the agent's inner loop is broken. Tokens are cheap; waiting on builds is not. When a breach is observed, decompose the build graph — don't let it grow unmeasured.
+- **Build-time discipline as a forcing function.** Inner-loop thresholds: audit at 60s, escalate at 120s, emergency at 180s. Tokens are cheap; waiting on builds is not. When a breach is observed, decompose the build graph — don't let it grow unmeasured. See `~/hlt/sidecar/docs/build-time.md` for the HLT baseline + tracking template.
 
 ## Known gaps (named, not hidden)
 
