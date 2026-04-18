@@ -1,6 +1,6 @@
 # GPT Researcher Repo Front Door
 
-> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `534e4e2d3c25`.
+> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `aadcf80d2a70`.
 
 ## Repo quickstart
 
@@ -21,11 +21,11 @@ You are currently inside **GPT Researcher**, the research orchestration lane. Cu
 
 ### Recent significant changes (last 5 commits)
 
+- 1b3bac36 2026-04-17 docs(llms-txt): audit flag on stale repo-inventory entries
 - 5183d3a8 2026-04-17 docs(llms-txt): v2 ecosystem fan-out — repo quickstart + key entities + jump-to nav
 - 846c31b8 2026-04-17 chore(agents): observability + discoverability — .mcp.json, AGENTS.md, fresh llms.txt
 - 19be756d 2026-04-17 Merge branch 'session-2026-04-16-local-tweaks' into main
 - 6d2c4c26 2026-04-17 docs(llms): update with live Railway URL + deploy status after successful deploy
-- ac326a1b 2026-04-17 fix(railway): handle Railway CLI v4.x two-step project→service + domain flow
 
 # HLT Ecosystem Index for Agents
 
@@ -250,6 +250,158 @@ Use Axon for repo comprehension after Katailyst orientation.
 - strategic role decisions
 - public and live route ownership
 - runtime reality
+
+## Repo index (15 active repos)
+
+Every working repo in the HLT ecosystem with a one-line identity + canonical path + live URL + GitHub. Ordered by centrality (capability canon → content factory → destinations → pipelines → specialized substrates).
+
+- **[katailyst](https://github.com/Awhitter/katailyst)** — capability canon + streamable-http MCP server at `/mcp` + 1,663 registry entities + 128 vault secrets + dashboard-cms admin. Stack: Next.js + pnpm 9.15.9, 75 deps. Local: `~/hlt/katailyst`. Live: https://www.katailyst.com (200). Key dirs: `lib/mcp/`, `lib/docs/`, `app/dashboard-cms/`, `registry-packs/`, `integrations/`, `plugins/`.
+- **[sidecar-system](https://github.com/Awhitter/sidecar-system)** — content factory chat: articles/social/ads/recruiting specialists via Vercel AI SDK (Opus 4.7) + destination fan-out + Catalyst MCP bridge. Stack: Next.js 15 + pnpm 8.15.9, 102 deps incl @ai-sdk/{anthropic,google,groq,openai,mcp,replicate,xai}. Local: `~/hlt/sidecar`. Live: https://sidecar-system.vercel.app (200) + https://www.katailyst.com chat surface. Key dirs: `app/(apps)/chat/`, `domains/{articles,social,ads,recruiting}/`, `lib/integrations/`, `lib/publish/`, `lib/mcp/`, `docs/ads-methodology/`, `docs/recruiting-corpus/`.
+- **[mastery-publishing](https://github.com/Awhitter/MasteryPublishing)** — canonical `/resources/**` destination served behind Framer reverse-proxy at `hltmastery.com/nursing/resources`. Next.js + Supabase. Scripts incl `backfill:heroes` + `db:migrate`. Local: `~/hlt/mastery-publishing`. Live: https://hltmastery.com/nursing/resources (200). Key dirs: `app/resources/`, `app/admin/`, `app/api/publish/`, `lib/data/`, `mastra/` (!), `scripts/`.
+- **[multimedia-mastery](https://github.com/Awhitter/Multimedia4Mastery)** — `@mm/studio` monorepo: 4 sub-modules (audio, visual-rationale-wizard, social-studio, learning-studio) + Oracle 6-phase router + Cloudinary + FAL + ElevenLabs + own MCP server federated to Katailyst. Deps: @ai-sdk/gateway, @fal-ai/client, @modelcontextprotocol/sdk, @supabase/ssr. Local: `~/hlt/multimedia-mastery`. Live: https://multimediamastery.vercel.app (307 redirect). Key dirs: `app/api/media/v1/`, `app/studio/`, `modules/`, `lib/media/`, `vendors/`.
+- **[engage](https://github.com/Awhitter/katailyst-engage)** — student-facing companion app (Practice + Studio verticals) + Katailyst MCP graph visualization (react-sigma + graphology). Next.js 15 + React 19 + Supabase + own MCP client. Local: `~/hlt/engage`. Live URL pending deploy. Key dirs: `app/practice/`, `app/studio/`, `app/graph/`, `lib/mcp/`, `hooks/`.
+- **[agent-canvas](https://github.com/Awhitter/Agent-Canvas-)** — coordination plane for agent fleet (Victoria, Julius, Lila, Ares + externals): canvas workspace + federation + heartbeat + telemetry + Liveblocks collab. Bun + React 19, uses @anthropic-ai/{claude-agent-sdk, claude-code} + @liveblocks/node + @replit/connectors-sdk. Local: `~/hlt/agent-canvas`. Live URL pending. Scripts: `dev`, `curator`, `notes`, `articles`. Key dirs: `client/`, `src/`, `src/agents/`, `artifacts/`, `attached_assets/`.
+- **[jobs](https://github.com/Awhitter/v1-Nursing-Jobs)** — nurse recruiting data pipeline (scrape → enrich → rank → surface). Express + Drizzle + Neon Postgres + React. Operator strategic initiative: 20K leads, 60% of surveyed users want job-placement help. Local: `~/hlt/jobs`. No live URL yet. Key dirs: `server/scraper/`, `server/modules/`, `shared/`, `client/`, `migrations/`.
+- **[forum-template](https://github.com/Awhitter/forum-template)** — reusable forum + career-hub template for per-vertical deploys (Nursing Research & Recruitment, PA hub, EMT hub). Generalized successor to NursingNexus. Express + Passport + React + Drizzle + Neon. Local: `~/hlt/forum-template`. Local-only. Key dirs: `server/`, `client/`, `shared/schema.ts`, `email-templates/`, `scripts/`.
+- **[brand-design-lab](https://github.com/Awhitter/katailyst-brand-design-lab)** — `@katailyst/sidecar-template`: reusable Next.js 15 sidecar scaffold for domain-focused workspaces (also hosts Bruce/Sarah/Marcus recruiting persona prompts). Fork + edit `lib/site.config.ts` to spin up a new sidecar. Local: `~/hlt/brand-design-lab`. Local-only (port 3100).
+- **[evidence-based-business](https://github.com/Awhitter/cleanEBB)** — `hlt-data-analyzer`: Vite + React + Express analytics dashboard (Metabase-backed reads Redshift + Supabase) with AI-assisted insight generation. Live: https://answers.hltcorp.com (200). Key dirs: `src/`, `server/`, `migrations/`, `scripts/`, `tests/`. Also ships `/api/ai-analysis` as the endpoint Katailyst agents consume.
+- **[gpt-researcher](https://github.com/Awhitter/hlt-gpt-researcher)** — HLT fork of `assafelovic/gpt-researcher`. FastAPI + LangGraph + Tavily + OpenAI. Endpoints: `POST /api/quick_search` (2-5s cited summary), `POST /report/` (30-90s deep autonomous report). Live: https://gpt-researcher-production-2b53.up.railway.app (405 on HEAD, POST-only — live confirmed). Active branch `session-2026-04-16-local-tweaks`.
+- **[mastra](https://github.com/Awhitter/whastra)** — `agent-stack-mastra`: general Mastra workflow substrate. 4-Hub architecture (Intake → Insight → Agents → Workflows). Invoked by Paperclip's `mastra-gateway` adapter over HTTP with governance. Local: `~/hlt/mastra`. Key deps: @mastra/core, Inngest, Slack Web API, Apify.
+- **[research-team](https://github.com/Awhitter/alecs-research-council)** — specialized Mastra research-council (sibling of `~/hlt/mastra`, focused on research workflows with analyst/validator/synthesizer role agents). Local: `~/hlt/research-team`.
+- **[operator-evals](https://github.com/Awhitter/katailyst-operator-evals)** — standalone Next.js 16 dashboard: Katailyst registry readiness, benchmark runs, tool canaries. Read-only view over Katailyst eval system. Operator-flagged for potential absorption into Katailyst itself. Local: `~/hlt/operator-evals`.
+- **[paperclip](https://github.com/Awhitter/paperclip)** — HLT fork of `paperclipai/paperclip`: governance plane (companies, goals, budgets, approvals, audit log) for agent work. pnpm workspace with `server/`, `ui/`, `adapters/*`, `cli/`, `db/`. HLT fork adds `mastra-gateway` adapter (branch `session-2026-04-16-mastra-gateway-adapter-wip`). Local: `~/hlt/paperclip`.
+
+## Hub index (21 capability hubs)
+
+Hubs are domain front doors in the Katailyst registry. Each links to 20-30 skills + KBs + tools + playbooks for its domain. Use `traverse(ref: "hub:<code>", depth: 1)` after loading one to get the full toolkit.
+
+- **[hub:hlt-brand-system-architecture]** — master map of the complete HLT brand system: Who/How/Products/Audiences/Templates/Channels/Bundles. Single reference for brand landscape + gaps.
+- **[hub:hub-analysis]** — decision-ready analysis + reporting: performance review, finance interpretation, content quality scoring, competitive comparison, synthesis of research into recommendations.
+- **[hub:hub-article]** — article + long-form content (blog, deep dives, how-to, listicles, SEO). Start with `do-research`; layer HLT editorial voice + product-specific brand context.
+- **[hub:hub-brand]** — master brand hub: brand cards, product voice guides, communications references, visual identity, context bundles, family hubs for NCLEX + NP products.
+- **[hub:hub-copywriting]** — landing page, pricing, upgrade screens, CTAs, app store descriptions, ad copy, conversion-focused writing. Routes into writing-craft KBs + HLT copy references.
+- **[hub:hub-data]** — super-router for data/analytics/metrics/measurement: Marketo (838K leads), Localytics (DAU/retention), financial (MRR/churn/LTV/CAC), A/B tools, content performance. Single entry when any agent needs numbers.
+- **[hub:hub-design]** — visual design: landing pages, HTML artifacts, React components, image composition, data viz. Routes to brand-guide + color-schemas + typography + AI image generation.
+- **[hub:hub-education]** — question banks, study guides, exam blueprints, learner personas, pedagogy across HLT exam-prep products.
+- **[hub:hub-email]** — email sequences, newsletters, drip campaigns, transactional emails, in-app messaging, push, SMS. Uses HLT communications guide as tone baseline.
+- **[hub:hub-growth]** — A/B testing, conversion optimization, retention analysis, funnel metrics, build-measure-learn loops. Context: rapid test deployment (minutes not days) is 2026 table stakes.
+- **[hub:hub-marketing]** — campaign planning, channel strategy, brand positioning, competitive analysis, cross-channel coordination.
+- **[hub:hub-meeting]** — high-stakes meeting prep, executive briefings, stakeholder presentations, post-meeting synthesis. NOT the umbrella for all research reporting.
+- **[hub:hub-multimedia]** — provider-neutral visual/audio/video/diagram workflows. 15 tools + 9 skills + 9 content types with KB/prompt/recipe supporting surfaces.
+- **[hub:hub-nclex]** — NCLEX Mastery cluster (RN + PN): brand profiles, unified voice KB, marketing copy (CTA, ASO, upgrade A/B), nursing style guides, app channels. 217 linked entities.
+- **[hub:hub-np]** — NP Mastery cluster (FNP, PMHNP, AGNP, AGACNP): brand profiles, FNP base NP voice, specialty voice guides, product overviews.
+- **[hub:hub-planning]** — strategic planning + PM: plans, roadmaps, OKRs, Linear integration, sprint planning. Routes to brainstorming + strategy-insight docs.
+- **[hub:hub-registry]** — registry operations: 18 active entity types, 1,393 active curated/published entities, 10,429 links, taxonomy coverage, bootstrap-first tool posture.
+- **[hub:hub-research]** — cross-domain research: people, companies, markets, competitors, topics, trends, finance. Start here when the job is to look something up deeply.
+- **[hub:hub-sidecar]** — reusable domain-specific dashboard pages connecting to Katailyst graph via MCP. Shared template pattern + JSON domain config.
+- **[hub:hub-skills]** — creating, improving, managing agent skills/tools/prompts. Composable architecture where skills are atomic capabilities that playbooks orchestrate.
+- **[hub:hub-social]** — platform-specific content creation, distribution, competitive analysis across major social surfaces. 34 channels.
+
+## Canonical KBs (operating rules to load first)
+
+- **[kb:katailyst-vault-access-pattern]** — canonical secrets access. Read BEFORE hunting in `.env.local` or vault backup files. 128 active secrets inventoried.
+- **[kb:llms-txt-hlt-pattern]** — THIS file's structure (shared master + per-repo preface + fan-out via `sync-llms-to-repos.sh`).
+- **[kb:beliefs-operating-constitution]** — foundational vision, philosophy, anti-patterns, agent operating posture, Linear-as-memory, design standards.
+- **[kb:hlt-brand-voice-hlt-mastery-communication-guide]** — live brand voice standard for customer-facing + editorial content.
+- **[kb:hlt-brand-voice-fnp]** — FNP product voice overlay (pairs with content-patterns-nursing).
+- **[kb:content-patterns-nursing]** — Nursing voice guide. Load for any nursing-scoped output.
+- **[kb:cloudinary-folder-architecture]** — canonical `hlt/` folder tree + naming rules.
+- **[kb:cloudinary-integration-guide]** — Cloudinary API patterns + URL transformations.
+- **[kb:registry-design-patterns]** — how registry entities should be structured (lifecycle, tags, links).
+- **[kb:registry-reference-bible]** — registry state snapshot with counts + examples.
+- **[kb:langfuse-tracing-hlt]** — trace tag schema (requires `paperclip_run_id` when invoked through Paperclip).
+- **[kb:social-hook-patterns]** — 8 hook patterns (specific-curiosity-gap, contrarian, relatable-frustration, transformation, etc.).
+- **[kb:social-media-strategy-2026]** — platform-specific algorithm guide + posting patterns.
+- **[kb:headline-frameworks]** — direct-response headline formulas.
+- **[kb:sales-copywriting-legends]** — Ogilvy / Sugarman / Caples reference.
+
+## Canonical playbooks + prompts
+
+- **[playbook:make-article]** — canonical article flow (audience → research → draft → evaluate → destinations).
+- **[playbook:make-social]** — canonical social flow (platform-aware drafting + variant fan-out).
+- **[playbook:upgrade-screen-ab-test]** — paywall / upgrade-screen A/B framework (rating 1.0).
+- **[playbook:create-skill-from-template]** — package a proven workflow as a reusable skill.
+- **[prompt:hlt-prompt-direct-response-copywriter]** — AIDA/PAS/BAB direct-response framework.
+- **[prompt:social-post-v1]** — platform-aware social post drafting with explicit inputs.
+- **[prompt:rubric-judge]** — rubric-driven evaluator prompt.
+
+## Rubrics + lint
+
+- **[rubric:article-quality-v1]** — article evaluation gate.
+- **[rubric:content-quality]** — generic content evaluation fallback.
+- **[rubric:engagement-v1]** — engagement-focused eval (used by `prompt:social-post-v1`).
+- **[rubric:tool-reliability]** — executable-tool health check rubric.
+- **[lint_ruleset:registry-graph-governance]** — registry graph health (owning pack for the lint rules below).
+- **[lint_rule:llms-txt-hlt-shape]** — THIS file's shape compliance (repo-quickstart + master + no secrets).
+- **[lint_rule:no-hollow-published]** — blocks empty-shelled `published` entities.
+- **[lint_rule:cascade-warning-on-archive]** — flags orphan-making archival.
+- **[lint_rule:deprecated-needs-supersedes]** — deprecation requires a migration target.
+- **[lint_rule:cross-type-pair-integrity]** — content_type/recipe duality rules.
+
+## Executable tools (via `tool_execute`)
+
+Every tool here resolves its credentials server-side via Katailyst vault (`auth_secret_key` in its call_spec). Sidecars never see secret values.
+
+- **[tool:cloudinary.transform]** — URL-based image transforms (no auth, public delivery URL).
+- **[tool:cloudinary.upload]** — signed uploads. Vault: `cloudinary/api-secret`.
+- **[tool:cloudinary.manage]** — Cloudinary asset manager.
+- **[tool:meta-ads.insights]** — Meta Graph insights for account `act_28324114`. Action-multiplexed (getActiveCampaigns / getCampaignInsights / getTopCreatives / getDemographicBreakdown / getCreativeFatigueSignals / getBudgetStatus). Vault: `meta/ads/access-token`. Pending `http_multi_action` executor on the MCP side.
+- **[tool:manus.agent]** — multi-step Manus agent runner (create/get/list/cancel task). Vault: `manus/api-key`.
+- **[tool:elevenlabs.voice]** — TTS. Vault: `elevenlabs/api-key`.
+- **[tool:gpt-researcher.quick-search]** — cited web research, 2-5s. Live at Railway.
+- **[tool:hlt-metabase-readonly]** — HLT warehouse reads (50K+ items, question-bank performance, cohorts, engagement).
+- **[tool:publish.email]** — Resend transactional email. Vault: `resend/api-key`.
+- **[tool:marketo]** — Marketo CRUD (838K contacts, 7 exam verticals). Vault: `marketo/client-id` + `marketo/client-secret`.
+- **[tool:v0.model_generate]** / **[tool:v0.platform_scaffold]** / **[tool:v0.send_message]** / **[tool:v0.deploy]** — v0 platform pipeline. Vault: `v0/api-key`.
+- **[tool:firecrawl.search]** / `.scrape` / `.map` / `.crawl` / `.extract` / `.batch-scrape` — deep research primitives. Vault: `firecrawl/api-key`.
+- **[tool:tavily.search]** — mid-tier research. Vault: `tavily/api-key`.
+- **[tool:brave.search]** — lightweight research. Vault: `brave/api-key`.
+- **[tool:novu.trigger]** — notifications. Vault: `novu/secret-key`.
+
+## Live surfaces (deployed URLs across HLT, verified 2026-04-18)
+
+- **https://www.katailyst.com** (200) — Katailyst site + streamable-http MCP at `/mcp`.
+- **https://hltmastery.com** (200) — public HLT domain. Framer shell + reverse-proxied MasteryPublishing `/nursing/resources`.
+- **https://hltmastery.com/nursing/resources** (200) — MasteryPublishing public article surface.
+- **https://sidecar-system.vercel.app** (200) — sidecar-system Vercel production.
+- **https://multimediamastery.vercel.app** (307) — redirects to subpath. Media API + studio at `/api/media/v1/*`.
+- **https://gpt-researcher-production-2b53.up.railway.app** (405 on HEAD, POST-only endpoints live) — `POST /api/quick_search`, `POST /report/`.
+- **https://answers.hltcorp.com** (200) — Evidence-Based Business / Metabase.
+- **https://hltadspdash-gqtedncp.manus.space** — Manus-built Meta Ads dashboard (operator-shared; keep live alongside the sidecar `/admin/ads-command-center` when that ships).
+- **https://ai4mastery-next-two.vercel.app** — AI4EDU publishing surface (`POST /api/publish` consumes ArticleV2).
+- Per-app product sites: `nclexrnmastery.com`, `fnpmastery.com`, `teasmastery.com`, `nclexpnmastery.com`, `asvabmastery.com`, `inbdemastery.com`, and the broader per-exam set — see the HLT Master Almanac (linked below) for the full list with app-store + social handles.
+
+## Agent fleet (identity lives in Katailyst registry)
+
+- **Victoria** — articles persona. Load via `registry_agent_context(agent_ref: "agent:victoria")` or `content_type:agent-doc-map`. Stack: SOUL/AGENTS/USER/TOOLS/MEMORY agent-doc pattern.
+- **Julius** — automation + workflow persona.
+- **Lila** — marketing + content persona.
+- **Ares** — security / governance persona.
+- Plus 11 more agents in the fleet (see `content_type:agent-doc-map` for the full table).
+- Chat-UI persona layer (Sam / Morgan / Bruce / Nova for social / ads / recruiting / dataviz) is a planned overlay on top of the existing agent-doc stack, NOT a replacement — the canonical identity stays in Katailyst `agent_doc:*`. Load existing docs via `registry_agent_context` at session start.
+
+## Product canon (external — pointer only, NEVER inline here)
+
+- **HLT Master Almanac v2** — per-app financials (YTD revenue, AFC%, conversion, user counts, tier flags T1/T2/T3), Meta Dev App IDs, per-product Facebook/Instagram/TikTok/YouTube handles + follower counts, app-store + Play Store links. Operator-owned doc; circulated in planning sessions. **Not yet committed to a canonical path in Obsidian.** Suggested home: `~/Documents/Obsidian Vault/OpenClaw/System Maps/Core Maps/hlt-master-almanac-v2.md`. Until saved, ask the operator for the current copy. Product-level truth lives there; this file (system canon) points at it and does not duplicate.
+- **Nurse Recruiting Corpus** — see `~/hlt/sidecar/docs/recruiting-corpus/` for compensation + demographics + happiness + personality research used by the recruiting specialist.
+- **Ads Methodology** — see `~/hlt/sidecar/docs/ads-methodology/ad-copy-variants.md` for the operator's 7-day NCLEX rotation methodology (4 hook types × 4 audience segments).
+
+## Obsidian System Maps directory (index with status)
+
+- `00-START-HERE.md` — orientation primer. **Status: current.**
+- `01-ecosystem-atlas-master.md` — ecosystem atlas. **Status: current.**
+- `02-content-media-publishing-atlas.md` — content + media atlas. **Status: current.**
+- `03-repo-runtime-ledger.md` — repo runtime ledger. **Status: ⚠ needs audit (paths migrated to `~/hlt/*` 2026-04-17).**
+- `04-integration-schema-reference.md` — integration shapes. **Status: ⚠ needs audit.**
+- `05-llms-ecosystem-master.md` — THIS FILE. **Status: current.**
+- `_index.md`, `share-with-an-agent-v1.md`, `content-media-and-publishing-master-doc-v1.md`, `critical-paths-and-detail-levels-v1.md`, `katailyst-map-and-plan-correction-v1.md`, `system-map-master-doc-v1.md` — 6 top-level supporting docs, mixed freshness. **Status: ⚠ audit pending.**
+- `Core Maps/` — 26 working-copy detail maps (agents-and-runtime-fleet, content-factory-and-testing-strategy, contradictions-and-cleanup-cuts, drift-reports, front-doors, layer-map, repo-doc-hygiene-audit, taxonomy-map, etc.). **Status: ⚠ per-file audit pending; several flagged stale by operator.**
+- `Repo Maps/` — 10 per-repo maps (agent-hub, content-creator-studio, ecosystem-observatory, evidence-based-business, katailyst-engage, katailyst, masterypublishing, multimedia-mastery, sidecar-system, task-hub). **Status: mostly current; need cross-check against the 15-repo working set (Content-Creator-Studio is not in `~/hlt/*`; agent-hub = agent-canvas; etc.).**
+- `Historical/` — 2 legacy docs + Aliases subfolder. **Status: archive.**
+- `Archive/Old Core Maps/`, `Archive/Old Front Doors/` — fully archived. No updates needed.
+- `Templates/` — template files for creating new maps.
+
+Per-file keep/merge/archive audit is a pending task; see the 2026-04-17/18 polish plan for the curation report.
 
 ## Official canon docs
 
@@ -1625,6 +1777,158 @@ Use Axon for repo comprehension after Katailyst orientation.
 - strategic role decisions
 - public and live route ownership
 - runtime reality
+
+## Repo index (15 active repos)
+
+Every working repo in the HLT ecosystem with a one-line identity + canonical path + live URL + GitHub. Ordered by centrality (capability canon → content factory → destinations → pipelines → specialized substrates).
+
+- **[katailyst](https://github.com/Awhitter/katailyst)** — capability canon + streamable-http MCP server at `/mcp` + 1,663 registry entities + 128 vault secrets + dashboard-cms admin. Stack: Next.js + pnpm 9.15.9, 75 deps. Local: `~/hlt/katailyst`. Live: https://www.katailyst.com (200). Key dirs: `lib/mcp/`, `lib/docs/`, `app/dashboard-cms/`, `registry-packs/`, `integrations/`, `plugins/`.
+- **[sidecar-system](https://github.com/Awhitter/sidecar-system)** — content factory chat: articles/social/ads/recruiting specialists via Vercel AI SDK (Opus 4.7) + destination fan-out + Catalyst MCP bridge. Stack: Next.js 15 + pnpm 8.15.9, 102 deps incl @ai-sdk/{anthropic,google,groq,openai,mcp,replicate,xai}. Local: `~/hlt/sidecar`. Live: https://sidecar-system.vercel.app (200) + https://www.katailyst.com chat surface. Key dirs: `app/(apps)/chat/`, `domains/{articles,social,ads,recruiting}/`, `lib/integrations/`, `lib/publish/`, `lib/mcp/`, `docs/ads-methodology/`, `docs/recruiting-corpus/`.
+- **[mastery-publishing](https://github.com/Awhitter/MasteryPublishing)** — canonical `/resources/**` destination served behind Framer reverse-proxy at `hltmastery.com/nursing/resources`. Next.js + Supabase. Scripts incl `backfill:heroes` + `db:migrate`. Local: `~/hlt/mastery-publishing`. Live: https://hltmastery.com/nursing/resources (200). Key dirs: `app/resources/`, `app/admin/`, `app/api/publish/`, `lib/data/`, `mastra/` (!), `scripts/`.
+- **[multimedia-mastery](https://github.com/Awhitter/Multimedia4Mastery)** — `@mm/studio` monorepo: 4 sub-modules (audio, visual-rationale-wizard, social-studio, learning-studio) + Oracle 6-phase router + Cloudinary + FAL + ElevenLabs + own MCP server federated to Katailyst. Deps: @ai-sdk/gateway, @fal-ai/client, @modelcontextprotocol/sdk, @supabase/ssr. Local: `~/hlt/multimedia-mastery`. Live: https://multimediamastery.vercel.app (307 redirect). Key dirs: `app/api/media/v1/`, `app/studio/`, `modules/`, `lib/media/`, `vendors/`.
+- **[engage](https://github.com/Awhitter/katailyst-engage)** — student-facing companion app (Practice + Studio verticals) + Katailyst MCP graph visualization (react-sigma + graphology). Next.js 15 + React 19 + Supabase + own MCP client. Local: `~/hlt/engage`. Live URL pending deploy. Key dirs: `app/practice/`, `app/studio/`, `app/graph/`, `lib/mcp/`, `hooks/`.
+- **[agent-canvas](https://github.com/Awhitter/Agent-Canvas-)** — coordination plane for agent fleet (Victoria, Julius, Lila, Ares + externals): canvas workspace + federation + heartbeat + telemetry + Liveblocks collab. Bun + React 19, uses @anthropic-ai/{claude-agent-sdk, claude-code} + @liveblocks/node + @replit/connectors-sdk. Local: `~/hlt/agent-canvas`. Live URL pending. Scripts: `dev`, `curator`, `notes`, `articles`. Key dirs: `client/`, `src/`, `src/agents/`, `artifacts/`, `attached_assets/`.
+- **[jobs](https://github.com/Awhitter/v1-Nursing-Jobs)** — nurse recruiting data pipeline (scrape → enrich → rank → surface). Express + Drizzle + Neon Postgres + React. Operator strategic initiative: 20K leads, 60% of surveyed users want job-placement help. Local: `~/hlt/jobs`. No live URL yet. Key dirs: `server/scraper/`, `server/modules/`, `shared/`, `client/`, `migrations/`.
+- **[forum-template](https://github.com/Awhitter/forum-template)** — reusable forum + career-hub template for per-vertical deploys (Nursing Research & Recruitment, PA hub, EMT hub). Generalized successor to NursingNexus. Express + Passport + React + Drizzle + Neon. Local: `~/hlt/forum-template`. Local-only. Key dirs: `server/`, `client/`, `shared/schema.ts`, `email-templates/`, `scripts/`.
+- **[brand-design-lab](https://github.com/Awhitter/katailyst-brand-design-lab)** — `@katailyst/sidecar-template`: reusable Next.js 15 sidecar scaffold for domain-focused workspaces (also hosts Bruce/Sarah/Marcus recruiting persona prompts). Fork + edit `lib/site.config.ts` to spin up a new sidecar. Local: `~/hlt/brand-design-lab`. Local-only (port 3100).
+- **[evidence-based-business](https://github.com/Awhitter/cleanEBB)** — `hlt-data-analyzer`: Vite + React + Express analytics dashboard (Metabase-backed reads Redshift + Supabase) with AI-assisted insight generation. Live: https://answers.hltcorp.com (200). Key dirs: `src/`, `server/`, `migrations/`, `scripts/`, `tests/`. Also ships `/api/ai-analysis` as the endpoint Katailyst agents consume.
+- **[gpt-researcher](https://github.com/Awhitter/hlt-gpt-researcher)** — HLT fork of `assafelovic/gpt-researcher`. FastAPI + LangGraph + Tavily + OpenAI. Endpoints: `POST /api/quick_search` (2-5s cited summary), `POST /report/` (30-90s deep autonomous report). Live: https://gpt-researcher-production-2b53.up.railway.app (405 on HEAD, POST-only — live confirmed). Active branch `session-2026-04-16-local-tweaks`.
+- **[mastra](https://github.com/Awhitter/whastra)** — `agent-stack-mastra`: general Mastra workflow substrate. 4-Hub architecture (Intake → Insight → Agents → Workflows). Invoked by Paperclip's `mastra-gateway` adapter over HTTP with governance. Local: `~/hlt/mastra`. Key deps: @mastra/core, Inngest, Slack Web API, Apify.
+- **[research-team](https://github.com/Awhitter/alecs-research-council)** — specialized Mastra research-council (sibling of `~/hlt/mastra`, focused on research workflows with analyst/validator/synthesizer role agents). Local: `~/hlt/research-team`.
+- **[operator-evals](https://github.com/Awhitter/katailyst-operator-evals)** — standalone Next.js 16 dashboard: Katailyst registry readiness, benchmark runs, tool canaries. Read-only view over Katailyst eval system. Operator-flagged for potential absorption into Katailyst itself. Local: `~/hlt/operator-evals`.
+- **[paperclip](https://github.com/Awhitter/paperclip)** — HLT fork of `paperclipai/paperclip`: governance plane (companies, goals, budgets, approvals, audit log) for agent work. pnpm workspace with `server/`, `ui/`, `adapters/*`, `cli/`, `db/`. HLT fork adds `mastra-gateway` adapter (branch `session-2026-04-16-mastra-gateway-adapter-wip`). Local: `~/hlt/paperclip`.
+
+## Hub index (21 capability hubs)
+
+Hubs are domain front doors in the Katailyst registry. Each links to 20-30 skills + KBs + tools + playbooks for its domain. Use `traverse(ref: "hub:<code>", depth: 1)` after loading one to get the full toolkit.
+
+- **[hub:hlt-brand-system-architecture]** — master map of the complete HLT brand system: Who/How/Products/Audiences/Templates/Channels/Bundles. Single reference for brand landscape + gaps.
+- **[hub:hub-analysis]** — decision-ready analysis + reporting: performance review, finance interpretation, content quality scoring, competitive comparison, synthesis of research into recommendations.
+- **[hub:hub-article]** — article + long-form content (blog, deep dives, how-to, listicles, SEO). Start with `do-research`; layer HLT editorial voice + product-specific brand context.
+- **[hub:hub-brand]** — master brand hub: brand cards, product voice guides, communications references, visual identity, context bundles, family hubs for NCLEX + NP products.
+- **[hub:hub-copywriting]** — landing page, pricing, upgrade screens, CTAs, app store descriptions, ad copy, conversion-focused writing. Routes into writing-craft KBs + HLT copy references.
+- **[hub:hub-data]** — super-router for data/analytics/metrics/measurement: Marketo (838K leads), Localytics (DAU/retention), financial (MRR/churn/LTV/CAC), A/B tools, content performance. Single entry when any agent needs numbers.
+- **[hub:hub-design]** — visual design: landing pages, HTML artifacts, React components, image composition, data viz. Routes to brand-guide + color-schemas + typography + AI image generation.
+- **[hub:hub-education]** — question banks, study guides, exam blueprints, learner personas, pedagogy across HLT exam-prep products.
+- **[hub:hub-email]** — email sequences, newsletters, drip campaigns, transactional emails, in-app messaging, push, SMS. Uses HLT communications guide as tone baseline.
+- **[hub:hub-growth]** — A/B testing, conversion optimization, retention analysis, funnel metrics, build-measure-learn loops. Context: rapid test deployment (minutes not days) is 2026 table stakes.
+- **[hub:hub-marketing]** — campaign planning, channel strategy, brand positioning, competitive analysis, cross-channel coordination.
+- **[hub:hub-meeting]** — high-stakes meeting prep, executive briefings, stakeholder presentations, post-meeting synthesis. NOT the umbrella for all research reporting.
+- **[hub:hub-multimedia]** — provider-neutral visual/audio/video/diagram workflows. 15 tools + 9 skills + 9 content types with KB/prompt/recipe supporting surfaces.
+- **[hub:hub-nclex]** — NCLEX Mastery cluster (RN + PN): brand profiles, unified voice KB, marketing copy (CTA, ASO, upgrade A/B), nursing style guides, app channels. 217 linked entities.
+- **[hub:hub-np]** — NP Mastery cluster (FNP, PMHNP, AGNP, AGACNP): brand profiles, FNP base NP voice, specialty voice guides, product overviews.
+- **[hub:hub-planning]** — strategic planning + PM: plans, roadmaps, OKRs, Linear integration, sprint planning. Routes to brainstorming + strategy-insight docs.
+- **[hub:hub-registry]** — registry operations: 18 active entity types, 1,393 active curated/published entities, 10,429 links, taxonomy coverage, bootstrap-first tool posture.
+- **[hub:hub-research]** — cross-domain research: people, companies, markets, competitors, topics, trends, finance. Start here when the job is to look something up deeply.
+- **[hub:hub-sidecar]** — reusable domain-specific dashboard pages connecting to Katailyst graph via MCP. Shared template pattern + JSON domain config.
+- **[hub:hub-skills]** — creating, improving, managing agent skills/tools/prompts. Composable architecture where skills are atomic capabilities that playbooks orchestrate.
+- **[hub:hub-social]** — platform-specific content creation, distribution, competitive analysis across major social surfaces. 34 channels.
+
+## Canonical KBs (operating rules to load first)
+
+- **[kb:katailyst-vault-access-pattern]** — canonical secrets access. Read BEFORE hunting in `.env.local` or vault backup files. 128 active secrets inventoried.
+- **[kb:llms-txt-hlt-pattern]** — THIS file's structure (shared master + per-repo preface + fan-out via `sync-llms-to-repos.sh`).
+- **[kb:beliefs-operating-constitution]** — foundational vision, philosophy, anti-patterns, agent operating posture, Linear-as-memory, design standards.
+- **[kb:hlt-brand-voice-hlt-mastery-communication-guide]** — live brand voice standard for customer-facing + editorial content.
+- **[kb:hlt-brand-voice-fnp]** — FNP product voice overlay (pairs with content-patterns-nursing).
+- **[kb:content-patterns-nursing]** — Nursing voice guide. Load for any nursing-scoped output.
+- **[kb:cloudinary-folder-architecture]** — canonical `hlt/` folder tree + naming rules.
+- **[kb:cloudinary-integration-guide]** — Cloudinary API patterns + URL transformations.
+- **[kb:registry-design-patterns]** — how registry entities should be structured (lifecycle, tags, links).
+- **[kb:registry-reference-bible]** — registry state snapshot with counts + examples.
+- **[kb:langfuse-tracing-hlt]** — trace tag schema (requires `paperclip_run_id` when invoked through Paperclip).
+- **[kb:social-hook-patterns]** — 8 hook patterns (specific-curiosity-gap, contrarian, relatable-frustration, transformation, etc.).
+- **[kb:social-media-strategy-2026]** — platform-specific algorithm guide + posting patterns.
+- **[kb:headline-frameworks]** — direct-response headline formulas.
+- **[kb:sales-copywriting-legends]** — Ogilvy / Sugarman / Caples reference.
+
+## Canonical playbooks + prompts
+
+- **[playbook:make-article]** — canonical article flow (audience → research → draft → evaluate → destinations).
+- **[playbook:make-social]** — canonical social flow (platform-aware drafting + variant fan-out).
+- **[playbook:upgrade-screen-ab-test]** — paywall / upgrade-screen A/B framework (rating 1.0).
+- **[playbook:create-skill-from-template]** — package a proven workflow as a reusable skill.
+- **[prompt:hlt-prompt-direct-response-copywriter]** — AIDA/PAS/BAB direct-response framework.
+- **[prompt:social-post-v1]** — platform-aware social post drafting with explicit inputs.
+- **[prompt:rubric-judge]** — rubric-driven evaluator prompt.
+
+## Rubrics + lint
+
+- **[rubric:article-quality-v1]** — article evaluation gate.
+- **[rubric:content-quality]** — generic content evaluation fallback.
+- **[rubric:engagement-v1]** — engagement-focused eval (used by `prompt:social-post-v1`).
+- **[rubric:tool-reliability]** — executable-tool health check rubric.
+- **[lint_ruleset:registry-graph-governance]** — registry graph health (owning pack for the lint rules below).
+- **[lint_rule:llms-txt-hlt-shape]** — THIS file's shape compliance (repo-quickstart + master + no secrets).
+- **[lint_rule:no-hollow-published]** — blocks empty-shelled `published` entities.
+- **[lint_rule:cascade-warning-on-archive]** — flags orphan-making archival.
+- **[lint_rule:deprecated-needs-supersedes]** — deprecation requires a migration target.
+- **[lint_rule:cross-type-pair-integrity]** — content_type/recipe duality rules.
+
+## Executable tools (via `tool_execute`)
+
+Every tool here resolves its credentials server-side via Katailyst vault (`auth_secret_key` in its call_spec). Sidecars never see secret values.
+
+- **[tool:cloudinary.transform]** — URL-based image transforms (no auth, public delivery URL).
+- **[tool:cloudinary.upload]** — signed uploads. Vault: `cloudinary/api-secret`.
+- **[tool:cloudinary.manage]** — Cloudinary asset manager.
+- **[tool:meta-ads.insights]** — Meta Graph insights for account `act_28324114`. Action-multiplexed (getActiveCampaigns / getCampaignInsights / getTopCreatives / getDemographicBreakdown / getCreativeFatigueSignals / getBudgetStatus). Vault: `meta/ads/access-token`. Pending `http_multi_action` executor on the MCP side.
+- **[tool:manus.agent]** — multi-step Manus agent runner (create/get/list/cancel task). Vault: `manus/api-key`.
+- **[tool:elevenlabs.voice]** — TTS. Vault: `elevenlabs/api-key`.
+- **[tool:gpt-researcher.quick-search]** — cited web research, 2-5s. Live at Railway.
+- **[tool:hlt-metabase-readonly]** — HLT warehouse reads (50K+ items, question-bank performance, cohorts, engagement).
+- **[tool:publish.email]** — Resend transactional email. Vault: `resend/api-key`.
+- **[tool:marketo]** — Marketo CRUD (838K contacts, 7 exam verticals). Vault: `marketo/client-id` + `marketo/client-secret`.
+- **[tool:v0.model_generate]** / **[tool:v0.platform_scaffold]** / **[tool:v0.send_message]** / **[tool:v0.deploy]** — v0 platform pipeline. Vault: `v0/api-key`.
+- **[tool:firecrawl.search]** / `.scrape` / `.map` / `.crawl` / `.extract` / `.batch-scrape` — deep research primitives. Vault: `firecrawl/api-key`.
+- **[tool:tavily.search]** — mid-tier research. Vault: `tavily/api-key`.
+- **[tool:brave.search]** — lightweight research. Vault: `brave/api-key`.
+- **[tool:novu.trigger]** — notifications. Vault: `novu/secret-key`.
+
+## Live surfaces (deployed URLs across HLT, verified 2026-04-18)
+
+- **https://www.katailyst.com** (200) — Katailyst site + streamable-http MCP at `/mcp`.
+- **https://hltmastery.com** (200) — public HLT domain. Framer shell + reverse-proxied MasteryPublishing `/nursing/resources`.
+- **https://hltmastery.com/nursing/resources** (200) — MasteryPublishing public article surface.
+- **https://sidecar-system.vercel.app** (200) — sidecar-system Vercel production.
+- **https://multimediamastery.vercel.app** (307) — redirects to subpath. Media API + studio at `/api/media/v1/*`.
+- **https://gpt-researcher-production-2b53.up.railway.app** (405 on HEAD, POST-only endpoints live) — `POST /api/quick_search`, `POST /report/`.
+- **https://answers.hltcorp.com** (200) — Evidence-Based Business / Metabase.
+- **https://hltadspdash-gqtedncp.manus.space** — Manus-built Meta Ads dashboard (operator-shared; keep live alongside the sidecar `/admin/ads-command-center` when that ships).
+- **https://ai4mastery-next-two.vercel.app** — AI4EDU publishing surface (`POST /api/publish` consumes ArticleV2).
+- Per-app product sites: `nclexrnmastery.com`, `fnpmastery.com`, `teasmastery.com`, `nclexpnmastery.com`, `asvabmastery.com`, `inbdemastery.com`, and the broader per-exam set — see the HLT Master Almanac (linked below) for the full list with app-store + social handles.
+
+## Agent fleet (identity lives in Katailyst registry)
+
+- **Victoria** — articles persona. Load via `registry_agent_context(agent_ref: "agent:victoria")` or `content_type:agent-doc-map`. Stack: SOUL/AGENTS/USER/TOOLS/MEMORY agent-doc pattern.
+- **Julius** — automation + workflow persona.
+- **Lila** — marketing + content persona.
+- **Ares** — security / governance persona.
+- Plus 11 more agents in the fleet (see `content_type:agent-doc-map` for the full table).
+- Chat-UI persona layer (Sam / Morgan / Bruce / Nova for social / ads / recruiting / dataviz) is a planned overlay on top of the existing agent-doc stack, NOT a replacement — the canonical identity stays in Katailyst `agent_doc:*`. Load existing docs via `registry_agent_context` at session start.
+
+## Product canon (external — pointer only, NEVER inline here)
+
+- **HLT Master Almanac v2** — per-app financials (YTD revenue, AFC%, conversion, user counts, tier flags T1/T2/T3), Meta Dev App IDs, per-product Facebook/Instagram/TikTok/YouTube handles + follower counts, app-store + Play Store links. Operator-owned doc; circulated in planning sessions. **Not yet committed to a canonical path in Obsidian.** Suggested home: `~/Documents/Obsidian Vault/OpenClaw/System Maps/Core Maps/hlt-master-almanac-v2.md`. Until saved, ask the operator for the current copy. Product-level truth lives there; this file (system canon) points at it and does not duplicate.
+- **Nurse Recruiting Corpus** — see `~/hlt/sidecar/docs/recruiting-corpus/` for compensation + demographics + happiness + personality research used by the recruiting specialist.
+- **Ads Methodology** — see `~/hlt/sidecar/docs/ads-methodology/ad-copy-variants.md` for the operator's 7-day NCLEX rotation methodology (4 hook types × 4 audience segments).
+
+## Obsidian System Maps directory (index with status)
+
+- `00-START-HERE.md` — orientation primer. **Status: current.**
+- `01-ecosystem-atlas-master.md` — ecosystem atlas. **Status: current.**
+- `02-content-media-publishing-atlas.md` — content + media atlas. **Status: current.**
+- `03-repo-runtime-ledger.md` — repo runtime ledger. **Status: ⚠ needs audit (paths migrated to `~/hlt/*` 2026-04-17).**
+- `04-integration-schema-reference.md` — integration shapes. **Status: ⚠ needs audit.**
+- `05-llms-ecosystem-master.md` — THIS FILE. **Status: current.**
+- `_index.md`, `share-with-an-agent-v1.md`, `content-media-and-publishing-master-doc-v1.md`, `critical-paths-and-detail-levels-v1.md`, `katailyst-map-and-plan-correction-v1.md`, `system-map-master-doc-v1.md` — 6 top-level supporting docs, mixed freshness. **Status: ⚠ audit pending.**
+- `Core Maps/` — 26 working-copy detail maps (agents-and-runtime-fleet, content-factory-and-testing-strategy, contradictions-and-cleanup-cuts, drift-reports, front-doors, layer-map, repo-doc-hygiene-audit, taxonomy-map, etc.). **Status: ⚠ per-file audit pending; several flagged stale by operator.**
+- `Repo Maps/` — 10 per-repo maps (agent-hub, content-creator-studio, ecosystem-observatory, evidence-based-business, katailyst-engage, katailyst, masterypublishing, multimedia-mastery, sidecar-system, task-hub). **Status: mostly current; need cross-check against the 15-repo working set (Content-Creator-Studio is not in `~/hlt/*`; agent-hub = agent-canvas; etc.).**
+- `Historical/` — 2 legacy docs + Aliases subfolder. **Status: archive.**
+- `Archive/Old Core Maps/`, `Archive/Old Front Doors/` — fully archived. No updates needed.
+- `Templates/` — template files for creating new maps.
+
+Per-file keep/merge/archive audit is a pending task; see the 2026-04-17/18 polish plan for the curation report.
 
 ## Official canon docs
 
