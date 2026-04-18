@@ -26,6 +26,12 @@ Short index for agents who don't need to read 700 lines sequentially. Every sect
 - [Corporate data and CMS reality](#corporate-data-and-cms-reality)
 - [Near-term priorities](#near-term-priorities-that-matter-right-now)
 - [Key rules agents must follow](#key-rules-that-agents-must-follow)
+- [Known gaps](#known-gaps-named-not-hidden) — named, not hidden
+- [App portfolio (pointer)](#app-portfolio-pointer-only--product-canon-lives-in-katailyst) — per-app KB roster
+- [Naming consistency drift](#naming-consistency-drift-local-dir--github-remote--packagejson) — local dir ↔ remote ↔ pkg
+- [Deep integration checklist](#deep-integration-checklist-per-repo-surface-state-2026-04-18) — per-repo surface state
+- [New social + ads platforms](#new-social--ads-platforms-planned-scaffolds-not-built-yet) — planned scaffolds
+- [Follow-up long to-do](#follow-up-long-to-do-list-operators-directive-no-debris-highly-operable-for-agents) — 32-item roadmap
 - [Companion files](#companion-files)
 - [Sync and update model](#sync-and-update-model)
 
@@ -172,6 +178,26 @@ Study strong operators and apply lessons to the system. Follow and analyze examp
 - **Multimedia Mastery + Cloudinary** are central to the multimedia future
 - **Evidence-Based Business** should increasingly hold important data and measurement layers
 
+### Agentic infrastructure posture (Vercel 3-pillar model, 2026-04)
+
+HLT's ecosystem fits the three-pillar model for agentic infrastructure that Vercel articulated on 2026-04-09. Naming our posture in their frame makes it easier to reason about what we have, what we're missing, and what we're buying / building next.
+
+1. **Infra for coding agents to deploy to.** Vercel preview URLs on every commit + per-repo `llms.txt` + `AGENTS.md` discipline + fresh Axon graphs give Claude Code, Cursor, v0, and our internal agents the programmatic deployment surface they need to close the write-test-ship loop without a human opening a console. Every sidecar + MP + multimedia-mastery runs on Vercel; gpt-researcher runs on Railway; katailyst on Vercel with MCP at `/mcp`.
+2. **Infra for building + running agents.** Vercel AI SDK underpins every specialist writer in sidecar (Opus 4.7 via `generateObject`). Katailyst MCP is our capability canon + vault-resolved `tool_execute` bridge. Langfuse handles tracing (per `kb:langfuse-tracing-hlt`). Cloudinary + Multimedia Mastery handle media. Paperclip handles governance. **Known gaps in this pillar:** (a) durable workflows / queues — specialists dispatch one-shot via `generateObject`; no pause/resume/retry semantics; Inngest (already in `~/hlt/mastra`) or Vercel Workflows would close this; (b) sandboxed execution — we have no isolated environment for agent-generated executable artifacts (dataviz React components, ad landing pages); Vercel Sandbox or E2B-equivalent needed before we let specialists execute code they wrote; (c) AI Gateway equivalent — Katailyst MCP is a capability catalog, not a model-routing + budget + retry + fallback layer; when we operate across Anthropic + OpenAI + Google + Groq, a gateway pattern gives us unified budgets + provider fallbacks.
+3. **Infra that is itself agentic.** Katailyst registry (`discover` → `traverse` → `tool_execute`) + `lint_ruleset:registry-graph-governance` + the planned drift-verifier cron + `memory_query` / `memory_write` MCP tools. The platform senses, reasons, and acts on its own behalf — with approval gates, not autonomously yet. Each specialist owns the full loop for its lane (dashboard + alert + code + fix), matching the OpenAI Frontier team's pattern documented in Ryan Leopold's harness-engineering article (2026-04). Morgan = ads: authors dashboard definition files + subscribes to CPI/fatigue alerts + inspects Meta insights + proposes creative refreshes + writes the weekly operator brief. Same pattern applies to Victoria, Bruce, Sam, Nova.
+
+### Six-layer operating frame (from OpenAI Symphony, 2026-04)
+
+The OpenAI Frontier team's Symphony spec defines six layers — policy, configuration, coordination, execution, integration, observability — plus a reflection layer (zero). Use this as an audit lens when reviewing any HLT sidecar or playbook:
+
+- **Policy**: constraints encoded as text the agent reads (KBs, lint rules, prompts). HLT has solid coverage.
+- **Configuration**: environment, vault, site config. Vault-first is the HLT answer (`kb:katailyst-vault-access-pattern`).
+- **Coordination**: multi-step orchestration, pause/resume/retry. **HLT thin** — see pillar 2 gap above.
+- **Execution**: `generateObject` / `tool_execute` / `dispatchSpecialist`. Strong.
+- **Integration**: Catalyst MCP bridge, per-tool call_specs. Strong.
+- **Observability**: Langfuse tracing, evaluator reports, `history_query`. Solid but not ubiquitous across specialists.
+- **Reflection (layer 0)**: agent introspection of its own sessions, team-wide trajectory distillation. **HLT nearly absent** — `memory_write` is available via MCP but not wired into a daily loop. See drift-verifier + distillation cron in the polish plan.
+
 ## Katailyst-first rule
 
 Use Katailyst before guessing at capabilities or inventing workflows.
@@ -221,6 +247,158 @@ Use Axon for repo comprehension after Katailyst orientation.
 - public and live route ownership
 - runtime reality
 
+## Repo index (15 active repos)
+
+Every working repo in the HLT ecosystem with a one-line identity + canonical path + live URL + GitHub. Ordered by centrality (capability canon → content factory → destinations → pipelines → specialized substrates).
+
+- **[katailyst](https://github.com/Awhitter/katailyst)** — capability canon + streamable-http MCP server at `/mcp` + 1,663 registry entities + 128 vault secrets + dashboard-cms admin. Stack: Next.js + pnpm 9.15.9, 75 deps. Local: `~/hlt/katailyst`. Live: https://www.katailyst.com (200). Key dirs: `lib/mcp/`, `lib/docs/`, `app/dashboard-cms/`, `registry-packs/`, `integrations/`, `plugins/`.
+- **[sidecar-system](https://github.com/Awhitter/sidecar-system)** — content factory chat: articles/social/ads/recruiting specialists via Vercel AI SDK (Opus 4.7) + destination fan-out + Catalyst MCP bridge. Stack: Next.js 15 + pnpm 8.15.9, 102 deps incl @ai-sdk/{anthropic,google,groq,openai,mcp,replicate,xai}. Local: `~/hlt/sidecar`. Live: https://sidecar-system.vercel.app (200) + https://www.katailyst.com chat surface. Key dirs: `app/(apps)/chat/`, `domains/{articles,social,ads,recruiting}/`, `lib/integrations/`, `lib/publish/`, `lib/mcp/`, `docs/ads-methodology/`, `docs/recruiting-corpus/`.
+- **[mastery-publishing](https://github.com/Awhitter/MasteryPublishing)** — canonical `/resources/**` destination served behind Framer reverse-proxy at `hltmastery.com/nursing/resources`. Next.js + Supabase. Scripts incl `backfill:heroes` + `db:migrate`. Local: `~/hlt/mastery-publishing`. Live: https://hltmastery.com/nursing/resources (200). Key dirs: `app/resources/`, `app/admin/`, `app/api/publish/`, `lib/data/`, `mastra/` (!), `scripts/`.
+- **[multimedia-mastery](https://github.com/Awhitter/Multimedia4Mastery)** — `@mm/studio` monorepo: 4 sub-modules (audio, visual-rationale-wizard, social-studio, learning-studio) + Oracle 6-phase router + Cloudinary + FAL + ElevenLabs + own MCP server federated to Katailyst. Deps: @ai-sdk/gateway, @fal-ai/client, @modelcontextprotocol/sdk, @supabase/ssr. Local: `~/hlt/multimedia-mastery`. Live: https://multimediamastery.vercel.app (307 redirect). Key dirs: `app/api/media/v1/`, `app/studio/`, `modules/`, `lib/media/`, `vendors/`.
+- **[engage](https://github.com/Awhitter/katailyst-engage)** — student-facing companion app (Practice + Studio verticals) + Katailyst MCP graph visualization (react-sigma + graphology). Next.js 15 + React 19 + Supabase + own MCP client. Local: `~/hlt/engage`. Live URL pending deploy. Key dirs: `app/practice/`, `app/studio/`, `app/graph/`, `lib/mcp/`, `hooks/`.
+- **[agent-canvas](https://github.com/Awhitter/Agent-Canvas-)** — coordination plane for agent fleet (Victoria, Julius, Lila, Ares + externals): canvas workspace + federation + heartbeat + telemetry + Liveblocks collab. Bun + React 19, uses @anthropic-ai/{claude-agent-sdk, claude-code} + @liveblocks/node + @replit/connectors-sdk. Local: `~/hlt/agent-canvas`. Live URL pending. Scripts: `dev`, `curator`, `notes`, `articles`. Key dirs: `client/`, `src/`, `src/agents/`, `artifacts/`, `attached_assets/`.
+- **[jobs](https://github.com/Awhitter/v1-Nursing-Jobs)** — nurse recruiting data pipeline (scrape → enrich → rank → surface). Express + Drizzle + Neon Postgres + React. Operator strategic initiative: 20K leads, 60% of surveyed users want job-placement help. Local: `~/hlt/jobs`. No live URL yet. Key dirs: `server/scraper/`, `server/modules/`, `shared/`, `client/`, `migrations/`.
+- **[forum-template](https://github.com/Awhitter/forum-template)** — reusable forum + career-hub template for per-vertical deploys (Nursing Research & Recruitment, PA hub, EMT hub). Generalized successor to NursingNexus. Express + Passport + React + Drizzle + Neon. Local: `~/hlt/forum-template`. Local-only. Key dirs: `server/`, `client/`, `shared/schema.ts`, `email-templates/`, `scripts/`.
+- **[brand-design-lab](https://github.com/Awhitter/katailyst-brand-design-lab)** — `@katailyst/sidecar-template`: reusable Next.js 15 sidecar scaffold for domain-focused workspaces (also hosts Bruce/Sarah/Marcus recruiting persona prompts). Fork + edit `lib/site.config.ts` to spin up a new sidecar. Local: `~/hlt/brand-design-lab`. Local-only (port 3100).
+- **[evidence-based-business](https://github.com/Awhitter/cleanEBB)** — `hlt-data-analyzer`: Vite + React + Express analytics dashboard (Metabase-backed reads Redshift + Supabase) with AI-assisted insight generation. Live: https://answers.hltcorp.com (200). Key dirs: `src/`, `server/`, `migrations/`, `scripts/`, `tests/`. Also ships `/api/ai-analysis` as the endpoint Katailyst agents consume.
+- **[gpt-researcher](https://github.com/Awhitter/hlt-gpt-researcher)** — HLT fork of `assafelovic/gpt-researcher`. FastAPI + LangGraph + Tavily + OpenAI. Endpoints: `POST /api/quick_search` (2-5s cited summary), `POST /report/` (30-90s deep autonomous report). Live: https://gpt-researcher-production-2b53.up.railway.app (405 on HEAD, POST-only — live confirmed). Active branch `session-2026-04-16-local-tweaks`.
+- **[mastra](https://github.com/Awhitter/whastra)** — `agent-stack-mastra`: general Mastra workflow substrate. 4-Hub architecture (Intake → Insight → Agents → Workflows). Invoked by Paperclip's `mastra-gateway` adapter over HTTP with governance. Local: `~/hlt/mastra`. Key deps: @mastra/core, Inngest, Slack Web API, Apify.
+- **[research-team](https://github.com/Awhitter/alecs-research-council)** — specialized Mastra research-council (sibling of `~/hlt/mastra`, focused on research workflows with analyst/validator/synthesizer role agents). Local: `~/hlt/research-team`.
+- **[operator-evals](https://github.com/Awhitter/katailyst-operator-evals)** — standalone Next.js 16 dashboard: Katailyst registry readiness, benchmark runs, tool canaries. Read-only view over Katailyst eval system. Operator-flagged for potential absorption into Katailyst itself. Local: `~/hlt/operator-evals`.
+- **[paperclip](https://github.com/Awhitter/paperclip)** — HLT fork of `paperclipai/paperclip`: governance plane (companies, goals, budgets, approvals, audit log) for agent work. pnpm workspace with `server/`, `ui/`, `adapters/*`, `cli/`, `db/`. HLT fork adds `mastra-gateway` adapter (branch `session-2026-04-16-mastra-gateway-adapter-wip`). Local: `~/hlt/paperclip`.
+
+## Hub index (21 capability hubs)
+
+Hubs are domain front doors in the Katailyst registry. Each links to 20-30 skills + KBs + tools + playbooks for its domain. Use `traverse(ref: "hub:<code>", depth: 1)` after loading one to get the full toolkit.
+
+- **[hub:hlt-brand-system-architecture]** — master map of the complete HLT brand system: Who/How/Products/Audiences/Templates/Channels/Bundles. Single reference for brand landscape + gaps.
+- **[hub:hub-analysis]** — decision-ready analysis + reporting: performance review, finance interpretation, content quality scoring, competitive comparison, synthesis of research into recommendations.
+- **[hub:hub-article]** — article + long-form content (blog, deep dives, how-to, listicles, SEO). Start with `do-research`; layer HLT editorial voice + product-specific brand context.
+- **[hub:hub-brand]** — master brand hub: brand cards, product voice guides, communications references, visual identity, context bundles, family hubs for NCLEX + NP products.
+- **[hub:hub-copywriting]** — landing page, pricing, upgrade screens, CTAs, app store descriptions, ad copy, conversion-focused writing. Routes into writing-craft KBs + HLT copy references.
+- **[hub:hub-data]** — super-router for data/analytics/metrics/measurement: Marketo (838K leads), Localytics (DAU/retention), financial (MRR/churn/LTV/CAC), A/B tools, content performance. Single entry when any agent needs numbers.
+- **[hub:hub-design]** — visual design: landing pages, HTML artifacts, React components, image composition, data viz. Routes to brand-guide + color-schemas + typography + AI image generation.
+- **[hub:hub-education]** — question banks, study guides, exam blueprints, learner personas, pedagogy across HLT exam-prep products.
+- **[hub:hub-email]** — email sequences, newsletters, drip campaigns, transactional emails, in-app messaging, push, SMS. Uses HLT communications guide as tone baseline.
+- **[hub:hub-growth]** — A/B testing, conversion optimization, retention analysis, funnel metrics, build-measure-learn loops. Context: rapid test deployment (minutes not days) is 2026 table stakes.
+- **[hub:hub-marketing]** — campaign planning, channel strategy, brand positioning, competitive analysis, cross-channel coordination.
+- **[hub:hub-meeting]** — high-stakes meeting prep, executive briefings, stakeholder presentations, post-meeting synthesis. NOT the umbrella for all research reporting.
+- **[hub:hub-multimedia]** — provider-neutral visual/audio/video/diagram workflows. 15 tools + 9 skills + 9 content types with KB/prompt/recipe supporting surfaces.
+- **[hub:hub-nclex]** — NCLEX Mastery cluster (RN + PN): brand profiles, unified voice KB, marketing copy (CTA, ASO, upgrade A/B), nursing style guides, app channels. 217 linked entities.
+- **[hub:hub-np]** — NP Mastery cluster (FNP, PMHNP, AGNP, AGACNP): brand profiles, FNP base NP voice, specialty voice guides, product overviews.
+- **[hub:hub-planning]** — strategic planning + PM: plans, roadmaps, OKRs, Linear integration, sprint planning. Routes to brainstorming + strategy-insight docs.
+- **[hub:hub-registry]** — registry operations: 18 active entity types, 1,393 active curated/published entities, 10,429 links, taxonomy coverage, bootstrap-first tool posture.
+- **[hub:hub-research]** — cross-domain research: people, companies, markets, competitors, topics, trends, finance. Start here when the job is to look something up deeply.
+- **[hub:hub-sidecar]** — reusable domain-specific dashboard pages connecting to Katailyst graph via MCP. Shared template pattern + JSON domain config.
+- **[hub:hub-skills]** — creating, improving, managing agent skills/tools/prompts. Composable architecture where skills are atomic capabilities that playbooks orchestrate.
+- **[hub:hub-social]** — platform-specific content creation, distribution, competitive analysis across major social surfaces. 34 channels.
+
+## Canonical KBs (operating rules to load first)
+
+- **[kb:katailyst-vault-access-pattern]** — canonical secrets access. Read BEFORE hunting in `.env.local` or vault backup files. 128 active secrets inventoried.
+- **[kb:llms-txt-hlt-pattern]** — THIS file's structure (shared master + per-repo preface + fan-out via `sync-llms-to-repos.sh`).
+- **[kb:beliefs-operating-constitution]** — foundational vision, philosophy, anti-patterns, agent operating posture, Linear-as-memory, design standards.
+- **[kb:hlt-brand-voice-hlt-mastery-communication-guide]** — live brand voice standard for customer-facing + editorial content.
+- **[kb:hlt-brand-voice-fnp]** — FNP product voice overlay (pairs with content-patterns-nursing).
+- **[kb:content-patterns-nursing]** — Nursing voice guide. Load for any nursing-scoped output.
+- **[kb:cloudinary-folder-architecture]** — canonical `hlt/` folder tree + naming rules.
+- **[kb:cloudinary-integration-guide]** — Cloudinary API patterns + URL transformations.
+- **[kb:registry-design-patterns]** — how registry entities should be structured (lifecycle, tags, links).
+- **[kb:registry-reference-bible]** — registry state snapshot with counts + examples.
+- **[kb:langfuse-tracing-hlt]** — trace tag schema (requires `paperclip_run_id` when invoked through Paperclip).
+- **[kb:social-hook-patterns]** — 8 hook patterns (specific-curiosity-gap, contrarian, relatable-frustration, transformation, etc.).
+- **[kb:social-media-strategy-2026]** — platform-specific algorithm guide + posting patterns.
+- **[kb:headline-frameworks]** — direct-response headline formulas.
+- **[kb:sales-copywriting-legends]** — Ogilvy / Sugarman / Caples reference.
+
+## Canonical playbooks + prompts
+
+- **[playbook:make-article]** — canonical article flow (audience → research → draft → evaluate → destinations).
+- **[playbook:make-social]** — canonical social flow (platform-aware drafting + variant fan-out).
+- **[playbook:upgrade-screen-ab-test]** — paywall / upgrade-screen A/B framework (rating 1.0).
+- **[playbook:create-skill-from-template]** — package a proven workflow as a reusable skill.
+- **[prompt:hlt-prompt-direct-response-copywriter]** — AIDA/PAS/BAB direct-response framework.
+- **[prompt:social-post-v1]** — platform-aware social post drafting with explicit inputs.
+- **[prompt:rubric-judge]** — rubric-driven evaluator prompt.
+
+## Rubrics + lint
+
+- **[rubric:article-quality-v1]** — article evaluation gate.
+- **[rubric:content-quality]** — generic content evaluation fallback.
+- **[rubric:engagement-v1]** — engagement-focused eval (used by `prompt:social-post-v1`).
+- **[rubric:tool-reliability]** — executable-tool health check rubric.
+- **[lint_ruleset:registry-graph-governance]** — registry graph health (owning pack for the lint rules below).
+- **[lint_rule:llms-txt-hlt-shape]** — THIS file's shape compliance (repo-quickstart + master + no secrets).
+- **[lint_rule:no-hollow-published]** — blocks empty-shelled `published` entities.
+- **[lint_rule:cascade-warning-on-archive]** — flags orphan-making archival.
+- **[lint_rule:deprecated-needs-supersedes]** — deprecation requires a migration target.
+- **[lint_rule:cross-type-pair-integrity]** — content_type/recipe duality rules.
+
+## Executable tools (via `tool_execute`)
+
+Every tool here resolves its credentials server-side via Katailyst vault (`auth_secret_key` in its call_spec). Sidecars never see secret values.
+
+- **[tool:cloudinary.transform]** — URL-based image transforms (no auth, public delivery URL).
+- **[tool:cloudinary.upload]** — signed uploads. Vault: `cloudinary/api-secret`.
+- **[tool:cloudinary.manage]** — Cloudinary asset manager.
+- **[tool:meta-ads.insights]** — Meta Graph insights for account `act_28324114`. Action-multiplexed (getActiveCampaigns / getCampaignInsights / getTopCreatives / getDemographicBreakdown / getCreativeFatigueSignals / getBudgetStatus). Vault: `meta/ads/access-token`. Pending `http_multi_action` executor on the MCP side.
+- **[tool:manus.agent]** — multi-step Manus agent runner (create/get/list/cancel task). Vault: `manus/api-key`.
+- **[tool:elevenlabs.voice]** — TTS. Vault: `elevenlabs/api-key`.
+- **[tool:gpt-researcher.quick-search]** — cited web research, 2-5s. Live at Railway.
+- **[tool:hlt-metabase-readonly]** — HLT warehouse reads (50K+ items, question-bank performance, cohorts, engagement).
+- **[tool:publish.email]** — Resend transactional email. Vault: `resend/api-key`.
+- **[tool:marketo]** — Marketo CRUD (838K contacts, 7 exam verticals). Vault: `marketo/client-id` + `marketo/client-secret`.
+- **[tool:v0.model_generate]** / **[tool:v0.platform_scaffold]** / **[tool:v0.send_message]** / **[tool:v0.deploy]** — v0 platform pipeline. Vault: `v0/api-key`.
+- **[tool:firecrawl.search]** / `.scrape` / `.map` / `.crawl` / `.extract` / `.batch-scrape` — deep research primitives. Vault: `firecrawl/api-key`.
+- **[tool:tavily.search]** — mid-tier research. Vault: `tavily/api-key`.
+- **[tool:brave.search]** — lightweight research. Vault: `brave/api-key`.
+- **[tool:novu.trigger]** — notifications. Vault: `novu/secret-key`.
+
+## Live surfaces (deployed URLs across HLT, verified 2026-04-18)
+
+- **https://www.katailyst.com** (200) — Katailyst site + streamable-http MCP at `/mcp`.
+- **https://hltmastery.com** (200) — public HLT domain. Framer shell + reverse-proxied MasteryPublishing `/nursing/resources`.
+- **https://hltmastery.com/nursing/resources** (200) — MasteryPublishing public article surface.
+- **https://sidecar-system.vercel.app** (200) — sidecar-system Vercel production.
+- **https://multimediamastery.vercel.app** (307) — redirects to subpath. Media API + studio at `/api/media/v1/*`.
+- **https://gpt-researcher-production-2b53.up.railway.app** (405 on HEAD, POST-only endpoints live) — `POST /api/quick_search`, `POST /report/`.
+- **https://answers.hltcorp.com** (200) — Evidence-Based Business / Metabase.
+- **https://hltadspdash-gqtedncp.manus.space** — Manus-built Meta Ads dashboard (operator-shared; keep live alongside the sidecar `/admin/ads-command-center` when that ships).
+- **https://ai4mastery-next-two.vercel.app** — AI4EDU publishing surface (`POST /api/publish` consumes ArticleV2).
+- Per-app product sites: `nclexrnmastery.com`, `fnpmastery.com`, `teasmastery.com`, `nclexpnmastery.com`, `asvabmastery.com`, `inbdemastery.com`, and the broader per-exam set — see the HLT Master Almanac (linked below) for the full list with app-store + social handles.
+
+## Agent fleet (identity lives in Katailyst registry)
+
+- **Victoria** — articles persona. Load via `registry_agent_context(agent_ref: "agent:victoria")` or `content_type:agent-doc-map`. Stack: SOUL/AGENTS/USER/TOOLS/MEMORY agent-doc pattern.
+- **Julius** — automation + workflow persona.
+- **Lila** — marketing + content persona.
+- **Ares** — security / governance persona.
+- Plus 11 more agents in the fleet (see `content_type:agent-doc-map` for the full table).
+- Chat-UI persona layer (Sam / Morgan / Bruce / Nova for social / ads / recruiting / dataviz) is a planned overlay on top of the existing agent-doc stack, NOT a replacement — the canonical identity stays in Katailyst `agent_doc:*`. Load existing docs via `registry_agent_context` at session start.
+
+## Product canon (external — pointer only, NEVER inline here)
+
+- **HLT Master Almanac v2** — per-app financials (YTD revenue, AFC%, conversion, user counts, tier flags T1/T2/T3), Meta Dev App IDs, per-product Facebook/Instagram/TikTok/YouTube handles + follower counts, app-store + Play Store links. Operator-owned doc; circulated in planning sessions. **Not yet committed to a canonical path in Obsidian.** Suggested home: `~/Documents/Obsidian Vault/OpenClaw/System Maps/Core Maps/hlt-master-almanac-v2.md`. Until saved, ask the operator for the current copy. Product-level truth lives there; this file (system canon) points at it and does not duplicate.
+- **Nurse Recruiting Corpus** — see `~/hlt/sidecar/docs/recruiting-corpus/` for compensation + demographics + happiness + personality research used by the recruiting specialist.
+- **Ads Methodology** — see `~/hlt/sidecar/docs/ads-methodology/ad-copy-variants.md` for the operator's 7-day NCLEX rotation methodology (4 hook types × 4 audience segments).
+
+## Obsidian System Maps directory (index with status)
+
+- `00-START-HERE.md` — orientation primer. **Status: current.**
+- `01-ecosystem-atlas-master.md` — ecosystem atlas. **Status: current.**
+- `02-content-media-publishing-atlas.md` — content + media atlas. **Status: current.**
+- `03-repo-runtime-ledger.md` — repo runtime ledger. **Status: ⚠ needs audit (paths migrated to `~/hlt/*` 2026-04-17).**
+- `04-integration-schema-reference.md` — integration shapes. **Status: ⚠ needs audit.**
+- `05-llms-ecosystem-master.md` — THIS FILE. **Status: current.**
+- `_index.md`, `share-with-an-agent-v1.md`, `content-media-and-publishing-master-doc-v1.md`, `critical-paths-and-detail-levels-v1.md`, `katailyst-map-and-plan-correction-v1.md`, `system-map-master-doc-v1.md` — 6 top-level supporting docs, mixed freshness. **Status: ⚠ audit pending.**
+- `Core Maps/` — 26 working-copy detail maps (agents-and-runtime-fleet, content-factory-and-testing-strategy, contradictions-and-cleanup-cuts, drift-reports, front-doors, layer-map, repo-doc-hygiene-audit, taxonomy-map, etc.). **Status: ⚠ per-file audit pending; several flagged stale by operator.**
+- `Repo Maps/` — 10 per-repo maps (agent-hub, content-creator-studio, ecosystem-observatory, evidence-based-business, katailyst-engage, katailyst, masterypublishing, multimedia-mastery, sidecar-system, task-hub). **Status: mostly current; need cross-check against the 15-repo working set (Content-Creator-Studio is not in `~/hlt/*`; agent-hub = agent-canvas; etc.).**
+- `Historical/` — 2 legacy docs + Aliases subfolder. **Status: archive.**
+- `Archive/Old Core Maps/`, `Archive/Old Front Doors/` — fully archived. No updates needed.
+- `Templates/` — template files for creating new maps.
+
+Per-file keep/merge/archive audit is a pending task; see the 2026-04-17/18 polish plan for the curation report.
+
 ## Official canon docs
 
 These are the intended top-level canonical docs in Obsidian:
@@ -262,12 +440,14 @@ For each major repo, this document should answer:
 - what shapes or contracts matter operationally
 - where to inspect first
 
+> ⚠ Staleness audit 2026-04-17: this inventory covers **8 of 15** active repos the `sync-llms-to-repos.sh` script now fans into. Missing: **Engage**, **Nursing Jobs**, **Forum Template**, **Brand Design Lab**, **GPT Researcher**, **Mastra**, **Operator Evals**, **Paperclip**, **Research Team**. Local paths below still say `/Users/alecwhitters/Downloads/...` but the canonical path migrated to `/Users/alecwhitters/hlt/<repo>` on 2026-04-17; treat the Downloads paths as aliases. **Content Creator Studio** and **EduMastery** are in `~/Downloads/AI2 April/` and `~/Downloads/` respectively; neither is in the active `~/hlt/` working set or the sync-script target list. Each repo stanza needs a Last-verified refresh; bumping the four primary repos (Katailyst, sidecar-system, MasteryPublishing, Multimedia Mastery) to 2026-04-17 below.
+
 ### Katailyst
 - **Repo:** `Awhitter/katailyst`
 - **GitHub:** `https://github.com/Awhitter/katailyst`
 - **Live:** `https://www.katailyst.com`
 - **MCP:** `https://www.katailyst.com/mcp`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** capability canon, registry, orchestration layer, MCP surface
 - **Main purpose:** the control plane and armory repo for Catalyst and Katailyst, with Supabase-canonical atomic units, discovery APIs, CMS and operator surfaces, portability mirrors, and export layers for downstream runtimes
 - **Main surfaces other agents interact with:** `/mcp`, registry and discovery tools, prompts, resources, toolsets, llms docs surfaces (`/.well-known/llms.txt`, `/llms.txt`, `/llms-full.txt`, `/llm.txt`), docs like `docs/VISION.md`, `docs/RULES.md`, and `docs/QUICK_START_AGENTS.md`
@@ -287,7 +467,7 @@ For each major repo, this document should answer:
 - **Local:** `/Users/alecwhitters/Downloads/sidecar-system`
 - **Live:** `https://sidecar-system.vercel.app`
 - **Alt live:** `https://sidecar-system-work.vercel.app`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** upstream workflow and control plane for content and destination orchestration
 - **Main purpose:** domain-specific AI content interfaces powered by the Katailyst MCP registry, with specialized sidecars for articles, social, email, analytics, education, multimedia, and related workflows
 - **Main surfaces other agents interact with:** article sidecars, `domains/<name>/sidecar-config.ts`, MCP bridge, destination publishing tools, Framer integration routes, content-engine projection routes, chat and runtime workflows
@@ -307,7 +487,7 @@ For each major repo, this document should answer:
 - **Local:** `/Users/alecwhitters/Downloads/MasteryPublishing`
 - **Legacy live alias:** `https://v0-next-js-content-engine.vercel.app`
 - **Public route family:** `https://hltmastery.com/nursing/resources`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** canonical structured `/resources/**` content engine
 - **Main purpose:** the HLT study-resources publishing app and content display layer, rendering the public `/resources/**` library, serving product-specific hubs and article pages, reading from Supabase, and accepting article publishes from the Katailyst pipeline
 - **Main surfaces other agents interact with:** `/resources`, `/resources/[product]`, `/resources/[product]/[slug]`, `/resources/search`, `/admin`, `POST /api/publish`, `POST /api/revalidate`, `GET|POST /api/admin/settings`, Supabase-backed product, topic, author, article, and settings data layer
@@ -325,7 +505,7 @@ For each major repo, this document should answer:
 - **Repo or product:** `Awhitter/Multimedia4Mastery` and local multimedia-mastery-core naming family
 - **Local:** `/Users/alecwhitters/Downloads/multimedia-mastery-core`
 - **Live:** `https://multimediamastery.vercel.app`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** media-native production lane
 - **Main purpose:** a media hub and studio that exposes a canonical media tool surface (`/api/media/v1/*`) and a human editor UI (`/studio`, `/m/[moduleId]`) for image, audio, video, upload, and health workflows
 - **Main surfaces other agents interact with:** `/api/media/v1/*`, `/studio`, `/m/[moduleId]`, media contracts in `docs/api/MEDIA_TOOL_CONTRACT.md`
@@ -340,18 +520,21 @@ For each major repo, this document should answer:
   - image refine flow is centered on `apps/studio/app/api/media/v1/image/refine/route.ts::POST`
 
 ### Content Creator Studio
+- **⚠ Not in active ~/hlt/ working set as of 2026-04-17.** Zip present at `~/Downloads/AI2 April/content-creator-studio-main/`; not in the sync-script target list. Decide whether to migrate to `~/hlt/content-creator-studio` and add to the target list, or retire this section.
 - **Repo:** `Awhitter/content-creator-studio`
 - **GitHub:** `https://github.com/Awhitter/content-creator-studio`
 - **Live:** `https://content-creator-studio-lovat.vercel.app`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-15 (not re-verified 2026-04-17)
 - **Role:** adjacent content workbench frontend
 - **Main purpose:** a lightweight conversational UI for AI-powered content creation, built as a thin frontend over a backend intelligence layer
 - **Main surfaces other agents interact with:** conversational wizard and chat UI, session persistence, registry browser, run history, asset editor, backend API bridge
 
 ### EduMastery
+- **⚠ Not in active ~/hlt/ working set as of 2026-04-17.** Possibly superseded by MasteryPublishing + AI4EDU; decide whether to retire this section or migrate the repo into `~/hlt/`.
 - **Repo:** `Awhitter/EduMastery`
 - **GitHub:** `https://github.com/Awhitter/EduMastery`
 - **Live:** `https://ai4mastery-next-6kpgw1zzw-alecs-projects-e88e78a8.vercel.app`
+- **Last verified:** 2026-04-15 (not re-verified 2026-04-17)
 - **Role:** active-adjacent publishing and admin surface
 - **Main purpose:** adjacent publishing and admin behavior and inventory continuity
 
@@ -731,7 +914,43 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 - do not rush migration just for elegance
 - measure speed, SEO, workflow quality, and publishing velocity before large-scale sunset decisions
 
+### Other-session mission specs (authored 2026-04-18 by a parallel Claude session)
+
+These are grounded via Axon + Katailyst MCP. Spec-only — zero code changes yet. Each spec is a focused PR sequence with feature-flagged rollout. Total ~3,700 spec-lines across 4 docs in `~/hlt/katailyst/docs/planning/active/`:
+
+- **`2026-04-18-mission-1-2-mcp-bridge-studio-wiring.md`** (786 lines). Mission 1 promotes sidecar's MCP-bridge pattern (`lib/mcp/bridge.ts`, `lib/integrations/catalyst-mcp.ts`, `lib/sidecar/prompt-builder.ts`) into a repo-local primitive that Sidecar, Creation Studio, and agent-canvas each import — three version-locked copies now, private npm publish later. Mission 2 wires the primitive into Creation Studio + adds a `run_registry_tool({ tool_ref, inputs })` tool exposing all 126 Katailyst tools. Studio today has 11 bespoke tools; after M2 it inherits every registered tool.
+- **`2026-04-18-mission-3-5-persistence-replay.md`** (714 lines). Server-side Creation Studio persistence + live thought-stream SSE + replay at `/replay/[session_id]`. **Strategic pivot:** reuse existing `runs` / `run_steps` / `run_events` / `run_tool_calls` / `payload_store` infrastructure (236 runs, 418 steps, 1,460 events, RLS enforced) rather than invent a parallel schema. This supersedes the earlier "thought_stream SSE" proposal in polish-plan Phase 4b.
+- **`2026-04-18-mission-4-sidecar-bml-loop.md`** (1,501 lines). Three sidecar BML-loop fixes, each feature-flagged: **M4.1** registry-backed `loadRubric()` (~180 LOC, 3.5 hrs) — today's stub only returns FNP; Katailyst has 20 published rubrics. **M4.2** `loadBrandVoiceContext(product_slug)` runtime pipe (~260 LOC, 5 hrs) — today's FNP writer voice is hand-distilled in a const string; brand-voice KB updates don't propagate without a code deploy. **M4.3** explicit `routeSpecialist()` (~110 LOC, 2 hrs) — today silently falls through to FNP for 16 of 18 product slugs.
+- **`2026-04-18-mission-6-seam-bugs.md`** (703 lines). Three cross-repo seam bugs: **6a** MM `/api/media/v1/image/generate` unauthenticated (any CORS-allowed origin can burn Fal credits). **6b** Forum `/api/internal/threads` doesn't exist (sidecar's `publishToForum()` 404s end-to-end). **6c** Content-Engine URL default is misleading — canonical prod is `v0-next-js-content-engine.vercel.app`; `mastery-publishing.vercel.app/api/publish` is `DEPLOYMENT_NOT_FOUND`.
+
+Plus `docs/reports/morning-brief/2026-04-17/second-run-audit.md` flagging: 3 integration readiness FAILs (clean-ebb 33/100, openclaw 20/100, replit 60/100 WARN), fleet probe `/api/health` 404 on 4 major repos for 2 consecutive days, canonical scratch folders missing, morning-brief SKILL has no idempotency guard.
+
+These missions are the next-session work plan. This file surfaces them so the next agent landing in any repo knows they're pending — not as a mandate to execute them now.
+
 ## Key rules that agents must follow
+
+These rules are HLT's operating principles for agentic work. They are stated in our own voice; external frames (Vercel, OpenAI Frontier, the llms.txt spec) are credited at the end of the section as the places where we sharpened the thinking, not as the source of the rules themselves.
+
+### Epigraph (HLT operator posture)
+
+> Your primary job is not to "make changes." Your primary job is to understand what the system is trying to do, then make changes that strengthen that system without leaving a mess behind. In this environment, slow and accurate beats fast and sloppy.
+>
+> — HLT_01 Agent Operating Doctrine
+
+### Operator-stated principles
+
+These are the operator's own directives, stated in the operator's voice. They precede the foundational + operating-principle rules below because they set the posture for *why* those rules exist.
+
+1. **Top-1% research bar.** Before bringing anything into HLT, research the top 1% of options in the same space. Find pre-validated concepts from best-in-class companies. More research, more planning, more reading, more looking around the ecosystem is almost always worth it. The operator is not a developer — the team must vet + flesh out research before committing code or customer-facing work.
+2. **Customer discovery is pre-validated, not guessed.** Use Data for SEO, Katailyst's existing research KBs, and real audience signal. Don't ship resonance we haven't tested. Find the things our audience actually cares about, backed by data.
+3. **Katailyst is the centerpiece.** Everything routes through it. MCP as the backbone. Agents decompose objectives via the registry + their own reasoning. New surfaces inherit observability, governance, brand voice, and tools from Katailyst by default.
+4. **Rapid spin-up is a core capability.** We should be able to launch new templates, chatbots, apps, and per-domain front-ends fast, from existing pieces. Katailyst backend + MCP is the fast path. Each new template inherits the full stack by default.
+5. **Partial + flexible over strict orchestration.** Give users and clients building blocks they can fill gaps in. Trust that agents are intelligent — don't over-mandate their paths. The difference between a "rails" platform and a "tools" platform: we want tools.
+6. **Global llms.txt + Axon.** One update point, fans out everywhere. This is the discoverability + observability layer. Continue investing; don't let it drift.
+7. **Observability everywhere.** All agents see all other things as much as humanly possible. Every specialist, every tool, every surface produces traces. This is the reflection layer (layer 0) of the 7-layer operating frame; currently the thinnest layer in HLT's stack.
+8. **Agent Canvas is where agents live.** Not today — today's priority is finishing the long-form content sidecar connection + MasteryPublishing quality + recruiting forum integration. But the architecture direction is: agents live in Agent Canvas, move off Replit eventually.
+
+### Foundational rules
 
 - Do not assume the current repo is the whole system.
 - Use Katailyst first.
@@ -741,6 +960,218 @@ The Next.js publishing page and HLTMastery route alignment are among the most im
 - Do not confuse shell and public route ownership with canonical content ownership.
 - Do not perform dangerous publish actions without explicit approval where required.
 - Document concrete things, not vague summaries.
+
+### Operating principles for agentic work
+
+- **Canon compounds or evaporates — choose.** Every non-obvious failure an agent or human hits produces two artifacts: the fix, and the invariant encoded as durable text the next session will read. The invariant lives wherever its scope matches — KB, prompt, lint rule, rubric, system-maps entry, repo-local AGENTS.md. Without the second artifact, the team pays the same cost twice. With it, knowledge compounds. This is the single highest-leverage discipline we practice. See `kb:friction-to-canon`.
+
+- **A persona is a domain, not a task.** Each specialist owns the full loop for its lane — drafting, dashboards, alerts, logs, and follow-up fixes. Morgan doesn't just write ad copy; Morgan subscribes to the CPI alert, reads the Meta insights, proposes the creative refresh, and writes the weekly brief. Fragmenting a domain across multiple agents costs more context than it saves. When a new surface enters a persona's domain, it joins that persona — it does not spawn a new one.
+
+- **Minimum necessary context.** Every token in the agent's window is a trade. Pay for the ones that earn their keep; drop the ones that don't. Default to narrow tool surfaces and expand on demand (e.g., Katailyst's `X-Katailyst-Toolset: bootstrap` for first-glance, widen only when the task demands it). Durable text in canon usually beats always-on tool catalogs for narrow needs. When in doubt, a tiny CLI shim the agent shells out to is cheaper in the context window than a forcibly-injected tool set.
+
+- **Identify your actual inner loop and garden it.** For HLT, the inner loop for agentic work is usually **specialist dispatch → evaluator → approval gate**, not build/test. A specialist generating an article on Opus 4.7 is a 15-60s round-trip; a build takes 6s; the build is not the binding constraint. The principle ("measure what the agent actually waits for between iterations, garden it when it regresses") matters; the specific threshold depends on which loop you're measuring. Build time is a secondary hygiene metric — keep it reasonable (HLT soft budgets: audit at 90s, escalate at 180s, emergency at 270s) but don't optimize it at the expense of the real loop. When adding a new specialist or integration, name which inner loop it's in, measure the round-trip once, and log the baseline somewhere (e.g., `~/hlt/sidecar/docs/build-time.md` for sidecar).
+
+- **Drafts, not auto-publishes.** Every specialist's output is a draft until a human signs off. The approval gate is a feature, not a bottleneck — it protects trust with our audience and keeps the team out of customer-facing mistakes. Postmerge review on internal tooling is fine; premerge approval on customer-facing content is non-negotiable.
+
+- **HLT operates in three concentric infrastructure layers.** (1) The layer agents deploy into (Vercel preview URLs + our per-repo canon + Axon). (2) The layer agents run on (Vercel AI SDK + Catalyst MCP + Langfuse + Multimedia Mastery + Cloudinary + Paperclip). (3) The layer that itself acts on HLT's behalf (Katailyst registry + lint_rulesets + drift-verifier + specialist personas with full-loop ownership). Every new surface, vendor, or integration should be evaluated against which layer it strengthens. Gaps we've named (see `## Known gaps` below) live in layers 2 and 3.
+
+- **Seven-layer audit lens.** When something breaks, locate the weakest layer — don't patch symptoms. The stack: reflection (layer 0) → policy → configuration → coordination → execution → integration → observability. Execution + integration + observability are where HLT is strongest. Coordination (durable workflows, pause/resume/retry) and reflection (agent introspection, team trajectory distillation) are where we're thinnest. When reviewing a specialist or a sidecar, ask which layer is the binding constraint.
+
+### Where these principles come from
+
+- **Vercel, "Agentic Infrastructure"** (Tom Occhino, 2026-04-09) — sharpened the 3-pillar framing above. The principle (design for agent primacy, not human-command-line primacy) is ours; the 3-pillar language is borrowed.
+- **OpenAI Frontier "harness engineering"** (Ryan Leopold, 2026-04) — sharpened the friction-to-canon discipline, the persona-owns-its-full-loop rule, the MCP-autocompaction caveat, and the build-time-as-forcing-function discipline.
+- **OpenAI Frontier "Symphony"** (2026-04) — sharpened the seven-layer audit lens.
+- **llms.txt spec** (llmstxt.org) — not applied verbatim; HLT's multi-repo fan-out pattern is deliberately different (see `kb:llms-txt-hlt-pattern`).
+
+These frames get updated as the field moves. The principles above do not change with every new framework. If a principle no longer matches HLT's reality, that's the signal to update it — not to relearn it.
+
+## Known gaps (named, not hidden)
+
+- **Durable agent workflows / queues.** Specialists dispatch one-shot via `generateObject`; no pause/resume/retry/background semantics. `~/hlt/mastra` has Inngest; Vercel Workflows is another option. Agentic coordination layer is the thinnest layer in our 6-layer frame.
+- **Sandboxed execution.** No isolated environment for agent-generated executable artifacts. Safe today because output is media/text/JSON — but blocks future specialists that emit React components or landing pages. Solution: Vercel Sandbox or E2B-equivalent.
+- **AI Gateway equivalent.** Katailyst MCP is a catalog, not a model-routing + budget + retry + provider-fallback layer. Multi-provider operation (Anthropic + OpenAI + Google + Groq across `~/hlt/sidecar`) would benefit.
+- **Reflection layer (trajectory distillation).** `memory_write` is available via MCP; no daily loop slurps session trajectories, distills patterns, or proposes KB/rule updates yet. Planned as part of the drift-verifier cron.
+- **Internal-tooling postmerge review discipline.** Specialists use premerge approval gates (right for customer-facing content). Internal tooling could shift to postmerge review to speed agent iteration — not yet adopted.
+- **Build time audits across the 15 repos.** Not measured systematically; a one-off audit is pending.
+- **Obsidian System Maps / `Core Maps/` drift.** 20+ supporting maps not re-verified since 2026-04; operator flagged some as stale. Keep/merge/archive audit pending.
+- **Integration readiness FAILs (from `registry_health` 2026-04-17).** `clean-ebb` score 33/100 FAIL — missing `clean-ebb/api-token` secret + `POST /api/ai-analysis` endpoint. `openclaw` score 20/100 CRITICAL FAIL — missing `openclaw/gateway-token`, `openclaw/victoria/gateway-token` secrets + `GET /health` + `POST /v1/chat/completions`. `replit` score 60/100 WARN — no active account / secret. Fleet probe `/api/health` still 404 on Katailyst, sidecar, MasteryPublishing, Multimedia Mastery for 2+ consecutive days. Source: `~/hlt/katailyst/docs/reports/morning-brief/2026-04-17/second-run-audit.md`.
+- **Content-engine URL default is misleading.** Canonical prod is `v0-next-js-content-engine.vercel.app` (401 on bad key = live). `mastery-publishing.vercel.app/api/publish` is `DEPLOYMENT_NOT_FOUND`. Sidecar + Katailyst silently fall back to the wrong URL when `CONTENT_ENGINE_API_URL` is unset. Mission 6c fix: fail loud in production.
+- **Marketo middleware gap.** `tool:marketo` registered in Katailyst, but the n8n / Make.com webhook middleware that bridges Katailyst content_json → Marketo HTML → delivery is not yet built. Marketo instance: `758-CUU-617` (838K contacts, 7 exam verticals). The zero-manual-email-builds doctrine from the Marketo machine spec is the north star.
+- **Multimedia image/generate is unauthenticated.** Any CORS-allowed origin can burn Fal credits. Four external callers on record (sidecar ×2, mastery-publishing, katailyst). Mission 6a fix.
+- **Forum `/api/internal/threads` doesn't exist.** Sidecar's `publishToForum()` 404s silently. Mission 6b fix.
+- **Canonical Almanac path.** The HLT Master Almanac v2 (operator-owned product + financial canon) is circulated in planning sessions but has no committed path in Obsidian. Needs a real home at `~/Documents/Obsidian Vault/OpenClaw/System Maps/Core Maps/hlt-master-almanac-v2.md` or equivalent.
+- **Repo naming drift (local vs remote vs package.json).** Documented below under `## Naming consistency drift`. Four package.json scaffold residues known (`my-project`, `rest-express` ×2, `agent-sdk`). Two GitHub remotes off-pattern (`Agent-Canvas-` trailing dash; `whastra` vs `mastra`). Fix scheduled for a follow-up session with lockfile regen + deploy-manifest check.
+
+## App portfolio (pointer only — product canon lives in Katailyst)
+
+HLT's product portfolio is documented per-app as curated KBs in the Katailyst registry. This is the pointer so agents landing in any repo can find the right product canon without hunting. Every entry below exists; pull it via `get_entity(type: "kb", code: ...)`.
+
+**Per-app brand profiles + platform setup KBs (registry canon, 2026-04-18):**
+
+| App | Brand Profile | Platform Setup | Product Overview | Tier |
+|---|---|---|---|---|
+| NCLEX RN Mastery | `kb:hlt-brand-profile-nclex-rn` | `kb:hlt-product-setup-platform-nclex-rn` | `kb:hlt-product-overview-nclex-rn` | T1 flagship |
+| NCLEX PN Mastery | `kb:hlt-brand-profile-nclex-pn` | `kb:hlt-product-setup-platform-nclex-pn` | — | T2 |
+| FNP Mastery | `kb:hlt-brand-profile-fnp` | `kb:hlt-product-setup-platform-fnp` | `kb:hlt-product-overview-fnp` | T1 (highest revenue) |
+| AGNP Mastery | `kb:hlt-brand-profile-agnp` | `kb:hlt-product-setup-platform-agnp` | — | T2 |
+| AG-ACNP Mastery | `kb:hlt-brand-profile-agacnp` | `kb:hlt-product-setup-platform-agacnp` | — | T2 (store URLs pending) |
+| PMHNP Mastery | `kb:hlt-brand-profile-pmhnp` | `kb:hlt-product-setup-platform-pmhnp` | — | T2 |
+| PANCE PANRE Mastery | `kb:hlt-brand-profile-pance` | `kb:hlt-product-setup-platform-pance` | — | T2 |
+| ATI TEAS Mastery | `kb:hlt-brand-profile-teas` | `kb:hlt-product-setup-platform-teas` | — | T2 |
+| ASVAB Mastery | `kb:hlt-brand-profile-asvab` | — | `kb:hlt-product-overview-asvab` | T2 |
+| DAT Mastery | `kb:hlt-brand-profile-dat` | `kb:hlt-product-setup-platform-dat` | — | T3 |
+
+**Cross-portfolio KBs:**
+
+- `kb:app-specific-notes` — per-app portfolio notes (feature flags, naming conventions, platform quirks, offer differences).
+- `kb:product-positioning` **tier 2** — portfolio positioning backbone (value props, differentiators, market framing).
+- `kb:pricing-and-offers` — subscription structure, price points, discount rules.
+- `kb:hlt-product-config-app-upgrade-screen` — the paywall/upgrade screen config (A/B conversion surface).
+- `kb:hlt-social-media-master` — audit of all HLT social accounts across 29 product verticals × 10 platforms (FB, IG, TikTok, YouTube, Threads, X, Reddit, LinkedIn, Pinterest, Facebook Groups).
+- `kb:hlt-brand-image-style-guide` — visual standards for AI-generated + photographed + designed assets.
+- `kb:cloudinary-folder-architecture` **tier 2** — definitive folder structure under the single root `hlt/` on Cloudinary cloud `dq9xmts6p`. Consult before uploading, moving, or cleaning any asset.
+
+**Known gaps in brand-profile coverage (apps that may or may not be live — operator to confirm):**
+
+- HESI Mastery, CNA Mastery, EMT Mastery, PTCB Mastery, MCAT Mastery, ACLS Mastery, ECG Mastery, INBDE Mastery, NBDHE Mastery, CST Mastery — no `kb:hlt-brand-profile-<slug>` in registry as of 2026-04-18. Either these are not live apps, or the brand profile has not been authored yet. Authoring pass scheduled for a follow-up session once operator confirms the live roster.
+
+**App Store + Play Store URLs and Meta Dev App IDs** live in the per-app `kb:hlt-product-setup-platform-*` KBs, not here. This file does not duplicate.
+
+## Naming consistency drift (local dir ↔ GitHub remote ↔ package.json)
+
+Audit 2026-04-18. Not breaking anything, but worth fixing in a follow-up so cross-repo tooling (remotes, deploy manifests, logs) stays legible.
+
+| Local dir (~/hlt/\*) | GitHub remote | package.json `name` | Drift |
+|---|---|---|---|
+| `katailyst` | `katailyst` | `dashboard-app` | pkg name is scaffold residue |
+| `sidecar` | `sidecar-system` | — (no package.json at root) | remote mismatch tolerable |
+| `mastery-publishing` | `MasteryPublishing` | `my-project` | pkg name is v0/Next scaffold residue |
+| `multimedia-mastery` | `Multimedia4Mastery` | `@mm/studio` | scoped pkg intentional; remote diverges |
+| `engage` | `katailyst-engage` | `katailyst-engage` | consistent |
+| `jobs` | `v1-Nursing-Jobs` | `rest-express` | pkg name is scaffold residue |
+| `forum-template` | `forum-template` | `rest-express` | pkg name is scaffold residue |
+| `agent-canvas` | `Agent-Canvas-` | `agent-sdk` | remote has trailing dash; pkg is scaffold residue |
+| `brand-design-lab` | `katailyst-brand-design-lab` | `@katailyst/sidecar-template` | scoped pkg intentional; remote diverges |
+| `evidence-based-business` | `cleanEBB` | `hlt-data-analyzer` | three different names |
+| `gpt-researcher` | `hlt-gpt-researcher` | — (Python app) | consistent |
+| `mastra` | `whastra` | — | remote typo? "whastra" vs "mastra" |
+| `operator-evals` | `katailyst-operator-evals` | `katailyst-operator-evals` | consistent |
+| `paperclip` | `paperclip` | `paperclip` | consistent |
+| `research-team` | `alecs-research-council` | `agent-stack-mastra` | three different names |
+
+**Fix playbook (follow-up session, not tonight):** rename the 4 obvious scaffold residues (`my-project` → `mastery-publishing`, `rest-express` × 2 → `hlt-jobs` / `hlt-forum-template`, `agent-sdk` → `agent-canvas`). Regenerate lockfiles + verify deploy manifests (Vercel, Render) pick up the new name. Leave scoped packages (`@mm/studio`, `@katailyst/sidecar-template`) alone — the scoping is intentional. Rename GitHub remotes only if the operator decides to, and only after a read of any external doc that hardcodes the old URL.
+
+## Deep integration checklist (per-repo surface state, 2026-04-18)
+
+This is the "are we really integrated" pass. Each repo should know: what it connects to, what keys it needs, what it publishes, who consumes it. Gaps here are integration failures, not code bugs.
+
+| Repo | Catalyst MCP client | Vault secrets used | Publishes to | Consumed by |
+|---|---|---|---|---|
+| `katailyst` | — (IS the MCP server) | 128 secrets in pgvault | Registry MCP | every other repo |
+| `sidecar` | `CATALYST_MCP_URL` + `CATALYST_MCP_TOKEN` ✓ | via tool_execute (never direct) | MP + AI4EDU + Framer + Forum + Multimedia | operator + chat users |
+| `mastery-publishing` | via Content-Engine publish API | `KATAILYST_API_KEY` | Framer proxy `/resources/*` on hltmastery.com | public via Framer |
+| `multimedia-mastery` | direct Supabase + Cloudinary + Fal | Cloudinary + Fal + Supabase keys | Media API `/api/runner/publish` | sidecar + MP + katailyst |
+| `engage` | MCP streamable-http + PAT | student Supabase (separate from katailyst) | in-app Practice + Studio | nurse students |
+| `jobs` | — (data aggregator) | Drizzle/Neon DB creds | its own admin UI | — (inbound aggregator) |
+| `forum-template` | not yet (Mission 6b fix pending) | `FORUM_INTERNAL_PUSH_SECRET` (planned) | its own threads/comments | nurse candidates / students |
+| `agent-canvas` | PAT to katailyst | katailyst PAT | agent runtime canvas | fleet agents (Victoria, Julius, Lila, Ares, Magnus) |
+| `brand-design-lab` | PAT to katailyst | template env | sidecar-template reference | scaffolding new sidecars |
+| `evidence-based-business` | Metabase + Supabase readonly | `clean-ebb/api-token` **MISSING** | `/api/ai-analysis` **ENDPOINT MISSING** | operator via answers.hltcorp.com |
+| `gpt-researcher` | — (cited web research service) | `OPENAI_API_KEY` + `TAVILY_API_KEY` | `/api/quick_search` + `/report/*` | sidecar specialists + direct operator use |
+| `mastra` | Inngest workflow runtime | n/a | Mastra workflow invocations | paperclip mastra-gateway |
+| `operator-evals` | PAT to katailyst | katailyst PAT | eval dashboard | operator |
+| `paperclip` | local agent runtime | `PAPERCLIP_API_URL` + `PAPERCLIP_API_KEY` | approval gates + company governance | sidecar (via mastra-gateway adapter, WIP) |
+| `research-team` | Mastra-based | research API keys | research reports | operator |
+
+**Critical seams to fix (cross-references `## Known gaps` above):**
+
+1. **6a — MM unauthenticated image/generate.** Add bearer auth to `/api/media/v1/image/generate`; update all 4 external callers (sidecar ×2, MP, katailyst).
+2. **6b — Forum missing internal endpoint.** Build `POST /api/internal/threads` on forum-template; sidecar's `publishToForum()` currently 404s.
+3. **6c — Content-engine URL default.** Sidecar + katailyst silently fall back to the wrong URL when `CONTENT_ENGINE_API_URL` is unset. Fix: fail loud in production when missing.
+4. **clean-ebb FAIL.** Missing `clean-ebb/api-token` secret + missing `POST /api/ai-analysis` endpoint. Integration score 33/100.
+5. **openclaw CRITICAL FAIL.** Missing `openclaw/gateway-token` + `openclaw/victoria/gateway-token` secrets, plus missing `GET /health` + `POST /v1/chat/completions`. Integration score 20/100.
+6. **Fleet `/api/health` 404.** 2 consecutive days of red probes on Katailyst, sidecar, MasteryPublishing, Multimedia Mastery. Cheap to add, blocks remote health dashboards.
+
+## New social + ads platforms (planned scaffolds, not built yet)
+
+Operator directive: isolate each platform into its own repo so credentials, rate limits, and error surfaces don't cross-contaminate. Manus-built dashboards stay live as reference while native sidecars catch up.
+
+**Meta Ads (Facebook + Instagram)** — current state: Manus dashboard live at `https://hltadspdash-gqtedncp.manus.space`. Native surface: sidecar `/admin/ads-command-center` (Phase 5 in polish plan), additive not replacement. Reads via `tool:meta-ads.insights` (Catalyst MCP) once `http_multi_action` executor ships.
+
+**Google Ads** — no repo yet. Should be a separate sidecar `~/hlt/google-ads/` or a lane inside sidecar-system. Credentials in vault path `google-ads/*` (to be created). Isolated from Meta Ads per operator.
+
+**Manus agent runs (non-Ads)** — `tool:manus.agent` already in registry. Separate credential path `manus/api-key`. Runs live in katailyst's run/step/event infrastructure.
+
+**Social publishing fan-out** — `skill:social-content` specialist exists in sidecar. `tool:publish.social` is the abstract publisher; per-platform adapters (LinkedIn, TikTok, IG, X, Reddit, Threads, Pinterest, YouTube, Facebook Groups) live as channel KBs + playbooks in Katailyst. New social pages on any platform go here, not into a new repo each time.
+
+**Ads + social isolation principle** — the sidecar hosts the creative + drafting + approval gate. The platform-specific publishing credentials live in vault, accessed via Catalyst MCP tool_execute (`tool:meta-ads.*`, `tool:google-ads.*` when built). No repo has both Meta and Google credentials in process memory at the same time.
+
+**Recruiting forum integration** — the nurse-recruiting destination decided: MP route `/resources/nurse-recruiting/*` with Framer recruiting collection as Phase-3 follow-up. Recruiting specialist drafts push via Content Engine with `surface: "nurse-recruiting"` tag.
+
+## Follow-up long to-do list (operator's directive: no debris; highly operable for agents)
+
+Ordered by unblocked effort. Each item has a clear exit criterion.
+
+### Phase A — Seam fixes (cross-repo correctness; unblocks downstream work)
+
+1. **M6a — MM image/generate auth.** Add bearer token gate to `/api/media/v1/image/generate`; update 4 callers. ~6 hrs + coordinated deploy window. Spec: `~/hlt/katailyst/docs/planning/active/2026-04-18-mission-6-seam-bugs.md`.
+2. **M6b — Forum `/api/internal/threads`.** Build the endpoint; sidecar `publishToForum()` then works end-to-end. ~2-3 hrs.
+3. **M6c — Content-engine URL fail-loud.** Sidecar + katailyst throw at startup if `CONTENT_ENGINE_API_URL` unset in prod. ~1 hr.
+4. **Fleet health probes.** Add `/api/health` 200-OK endpoint to katailyst, sidecar, MP, multimedia. ~30 min per repo × 4.
+5. **clean-ebb integration.** Create `clean-ebb/api-token` vault secret + `POST /api/ai-analysis` endpoint. Integration score 33 → 80+.
+6. **openclaw integration.** Create `openclaw/gateway-token` + `openclaw/victoria/gateway-token` secrets + `GET /health` + `POST /v1/chat/completions`. Score 20 → 80+.
+
+### Phase B — Sidecar BML-loop fixes (Mission 4, feature-flagged)
+
+7. **M4.1 — Registry-backed rubric loader.** Replace `loadRubric(id)` stub with `get_entity` call. Unlocks 20 published rubrics. ~3.5 hrs.
+8. **M4.2 — Brand-voice runtime pipe.** `loadBrandVoiceContext(product_slug)` loads parent + product voice KBs; templated into specialist prompts via `{{BRAND_VOICE_OVERLAY}}`. ~5 hrs.
+9. **M4.3 — Explicit specialist routing.** Replace silent FNP fall-through with `{ specialist_code, supported, reason }`. ~2 hrs.
+
+### Phase C — Creation Studio + persistence (Missions 1-3-5)
+
+10. **M1 — @hlt/agent-runtime extraction.** Three version-locked copies (sidecar, studio, agent-canvas) of the MCP-bridge pattern. Private npm publish later.
+11. **M2 — run_registry_tool in Studio.** Studio inherits all 126 Katailyst tools. Today: 11 bespoke tools.
+12. **M3 + M5 — Server-side persistence + SSE replay.** Reuse existing runs/run_steps/run_events infra; add `creation_sessions` header table + `/api/create/session/stream/[session_id]` + `/replay/[session_id]`. Supersedes earlier thought-stream proposal.
+
+### Phase D — Sidecar specialist fill-in
+
+13. **Social specialist (Tier 1b).** `domains/social/draft/{dispatch,batch-runner,specialists/social-writer}.ts`. Grounded in `kb:social-hook-patterns` + `kb:social-media-strategy-2026`. ~90 min.
+14. **Ads specialist (Tier 2a).** `lib/schemas/ad-copy.ts` with `AdCampaignV1` (hook type + segment + emotional lever + week position + platform adapters). Grounded in `ad-copy-variants.md` + NCLEX ad methodology deck. Draft `rubric:ad-quality-v0` for operator approval. ~3-4 hrs.
+15. **Recruiting specialist (Tier 2b, destination-deferred).** `lib/schemas/recruiting.ts` (outreach-email | landing-page | interview-guide | job-description | comp-package-one-pager). Grounded in `kb:viral-hooks-recruiting` + nurse-compensation corpus. Output lands in `sidecar_drafts` only until recruiting MP route ships. ~90 min.
+16. **Dataviz specialist (polish plan Phase 4).** Pilot = NP state comp with COL adjustment (Hawaii paradox, Georgia anomaly, NM opportunity). Schema `DataVizSpec`; Recharts renderers. Output as new article `data_viz` block type + standalone `/resources/data/<slug>`.
+
+### Phase E — Registry authoring (Tier 3, Katailyst-only session)
+
+17. Author missing brand profiles if operator confirms apps are live: HESI, CNA, EMT, PTCB, MCAT, ACLS, ECG, INBDE, NBDHE, CST.
+18. Author `hub:hub-ads` + `rubric:ad-quality` (after M14 draft approved) + `content_type:ad-copy-variation` + `ad-thumbnail-brief` + `paid-landing-page`.
+19. Author `hub:hub-recruiting` + `rubric:recruiting-quality` + `content_type:nurse-recruiting-outreach-email` + 2 more.
+20. Author `schema:ad_meta_v1` + `schema:ad_google_v1` + `schema:ad_tiktok_v1` as registry canon (sidecar then mirrors).
+21. Author `kb:nurse-compensation-2025` + `kb:nurse-recruiting-market-analysis-2025` + `kb:nurse-personality-by-specialty` from `~/Downloads/recruitment/*` corpus.
+22. Author `kb:nclex-ad-methodology` from `~/hlt/sidecar/docs/ads-methodology/` (ingest PDF + PPTX + MD).
+23. Author `kb:hlt-content-engine-architecture` capturing Option B (Framer shell + Next.js /resources/* rewrite) + the v0-next-js-content-engine.vercel.app canonical URL.
+24. Author `kb:hlt-marketo-operating-blueprint` (instance 758-CUU-617, lead-scoring formula, zero-manual-email-builds doctrine).
+
+### Phase F — Naming + cleanup
+
+25. Rename 4 scaffold-residue package.json names; regen lockfiles; verify deploy manifests.
+26. Audit `Obsidian Vault/OpenClaw/System Maps/Core Maps/` for keep/merge/archive.
+27. Commit the Almanac v2 to a canonical path once operator shares current copy.
+28. Move any remaining `~/Downloads/AI2 April/*` assets that belong in HLT ecosystem to `~/hlt/` or to a dedicated `~/hlt/corpus/` read-only reference dir.
+
+### Phase G — Automation + observability
+
+29. **Drift-verifier cron `com.hlt.llms-verify` at 06:30 daily.** Per-repo: verify `git rev-parse HEAD` matches Recent changes in llms.txt; `axon status` fresh <24h; `REPO_LIVE_URL` resolves; `.env.example` VAR NAMES match master; key registry entities still exist. Output: `~/hlt/katailyst/docs/reports/drift/YYYY-MM-DD.md`. Zero drift → auto-bumps `## Last verified` + commits. Any drift → stops + surfaces report. No silent auto-fix.
+30. **Integration readiness cron.** Daily `registry_health` call; anything <70/100 produces a red-flag report to `docs/reports/integration-readiness/YYYY-MM-DD.md`.
+31. **Fleet probe cron.** Daily ping of each repo's `/api/health`; anything non-200 for 2+ consecutive days creates a Linear issue (or equivalent).
+32. **Langfuse trace coverage cron.** Each specialist dispatch should emit a trace. Missing traces ≥5% over a 24h window = red flag.
+
+### Operator-gated (do not execute until operator confirms)
+
+- A1. Google Ads repo creation + vault path + first campaign scaffold.
+- A2. Paperclip deployment (currently not deployed; mastra-gateway adapter WIP unblocks on this).
+- A3. Move Agent Canvas off Replit onto dedicated infra.
+- A4. Almanac v2 canonical path + any live-data wiring between Almanac and the system master.
 
 ## Companion files
 
@@ -782,8 +1213,8 @@ Each target repo receives:
 If this is hand-maintained separately in each repo, it will drift and stop being trusted. The whole point is to have one document to keep excellent and then spread reliably.
 
 ## Last verified
-- master ecosystem llms draft last updated: 2026-04-15
-- many repo and runtime details remain partially verified and should keep improving
+- master ecosystem llms draft last updated: 2026-04-18 (added app portfolio pointer, naming drift table, deep integration checklist, new social/ads platforms, follow-up long to-do, drift-verifier cron plan)
+- many repo and runtime details remain partially verified and should keep improving via the `com.hlt.llms-verify` drift cron once shipped
 
 ## Bottom line
 
