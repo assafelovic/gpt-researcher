@@ -1,19 +1,4 @@
-# GPT Researcher Repo Front Door
-
-> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows.
-
-## Repo-specific note
-
-You are currently inside **GPT Researcher**, the research orchestration lane. Currently 6 commits diverged from upstream (24 behind) — sync before doing orchestrate-adjacent work. Used for deep customer/competitive research that feeds article writing.
-
-### Inspect first in this repo
-- `gpt_researcher/` core
-- agent surfaces
-- output adapters
-
-
 # HLT Ecosystem Index for Agents
-
 
 > Official cross-repo front door for AI agents working anywhere in the HLT ecosystem. Read this file first. It explains what repos exist, what they are for, where they live, what URLs they own, what core shapes and contracts matter, which systems are canonical, and how to navigate the ecosystem without acting like the current repo is the whole world.
 
