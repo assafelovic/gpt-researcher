@@ -282,29 +282,28 @@ class GPTResearcher:
     def _process_mcp_configs(self, mcp_configs: list[dict]) -> None:
         """
         Process MCP configurations from a list of configuration dictionaries.
-        
-        This method validates the MCP configurations. It only adds MCP to retrievers
-        if no explicit retriever configuration is provided via environment variables.
-        
+
+        Adds the MCP retriever to the active retriever list by modifying
+        self.cfg.retrievers directly.  Deliberately avoids touching os.environ
+        so that concurrent or subsequent requests are not affected by this
+        session's MCP settings (fixes issue #1676 – process-level env pollution).
+
         Args:
             mcp_configs (list[dict]): List of MCP server configuration dictionaries.
         """
-        # Check if user explicitly set RETRIEVER environment variable
-        user_set_retriever = os.getenv("RETRIEVER") is not None
-        
-        if not user_set_retriever:
-            # Only auto-add MCP if user hasn't explicitly set retrievers
-            if hasattr(self.cfg, 'retrievers') and self.cfg.retrievers:
-                # If retrievers is set in config (but not via env var)
-                current_retrievers = set(self.cfg.retrievers.split(",")) if isinstance(self.cfg.retrievers, str) else set(self.cfg.retrievers)
-                if "mcp" not in current_retrievers:
-                    current_retrievers.add("mcp")
-                    self.cfg.retrievers = ",".join(filter(None, current_retrievers))
-            else:
-                # No retrievers configured, use mcp as default
-                self.cfg.retrievers = "mcp"
-        # If user explicitly set RETRIEVER, respect their choice and don't auto-add MCP
-        
+        # Add MCP to retrievers via cfg (not os.environ) to avoid env pollution.
+        if hasattr(self.cfg, 'retrievers') and self.cfg.retrievers:
+            current_retrievers = (
+                list(self.cfg.retrievers)
+                if isinstance(self.cfg.retrievers, list)
+                else [r.strip() for r in str(self.cfg.retrievers).split(",") if r.strip()]
+            )
+            if "mcp" not in current_retrievers:
+                current_retrievers.append("mcp")
+                self.cfg.retrievers = current_retrievers
+        else:
+            self.cfg.retrievers = ["mcp"]
+
         # Store the mcp_configs for use by the MCP retriever
         self.mcp_configs = mcp_configs
 
