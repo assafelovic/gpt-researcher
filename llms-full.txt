@@ -1,6 +1,6 @@
 # GPT Researcher Repo Front Door
 
-> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `a122d2ad42ba`.
+> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `534e4e2d3c25`.
 
 ## Repo quickstart
 
@@ -21,11 +21,11 @@ You are currently inside **GPT Researcher**, the research orchestration lane. Cu
 
 ### Recent significant changes (last 5 commits)
 
+- 5183d3a8 2026-04-17 docs(llms-txt): v2 ecosystem fan-out — repo quickstart + key entities + jump-to nav
 - 846c31b8 2026-04-17 chore(agents): observability + discoverability — .mcp.json, AGENTS.md, fresh llms.txt
 - 19be756d 2026-04-17 Merge branch 'session-2026-04-16-local-tweaks' into main
 - 6d2c4c26 2026-04-17 docs(llms): update with live Railway URL + deploy status after successful deploy
 - ac326a1b 2026-04-17 fix(railway): handle Railway CLI v4.x two-step project→service + domain flow
-- ea907969 2026-04-17 docs(llms): add repo-specific llms.txt for HLT ecosystem bootstrap
 
 # HLT Ecosystem Index for Agents
 
@@ -292,12 +292,14 @@ For each major repo, this document should answer:
 - what shapes or contracts matter operationally
 - where to inspect first
 
+> ⚠ Staleness audit 2026-04-17: this inventory covers **8 of 15** active repos the `sync-llms-to-repos.sh` script now fans into. Missing: **Engage**, **Nursing Jobs**, **Forum Template**, **Brand Design Lab**, **GPT Researcher**, **Mastra**, **Operator Evals**, **Paperclip**, **Research Team**. Local paths below still say `/Users/alecwhitters/Downloads/...` but the canonical path migrated to `/Users/alecwhitters/hlt/<repo>` on 2026-04-17; treat the Downloads paths as aliases. **Content Creator Studio** and **EduMastery** are in `~/Downloads/AI2 April/` and `~/Downloads/` respectively; neither is in the active `~/hlt/` working set or the sync-script target list. Each repo stanza needs a Last-verified refresh; bumping the four primary repos (Katailyst, sidecar-system, MasteryPublishing, Multimedia Mastery) to 2026-04-17 below.
+
 ### Katailyst
 - **Repo:** `Awhitter/katailyst`
 - **GitHub:** `https://github.com/Awhitter/katailyst`
 - **Live:** `https://www.katailyst.com`
 - **MCP:** `https://www.katailyst.com/mcp`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** capability canon, registry, orchestration layer, MCP surface
 - **Main purpose:** the control plane and armory repo for Catalyst and Katailyst, with Supabase-canonical atomic units, discovery APIs, CMS and operator surfaces, portability mirrors, and export layers for downstream runtimes
 - **Main surfaces other agents interact with:** `/mcp`, registry and discovery tools, prompts, resources, toolsets, llms docs surfaces (`/.well-known/llms.txt`, `/llms.txt`, `/llms-full.txt`, `/llm.txt`), docs like `docs/VISION.md`, `docs/RULES.md`, and `docs/QUICK_START_AGENTS.md`
@@ -317,7 +319,7 @@ For each major repo, this document should answer:
 - **Local:** `/Users/alecwhitters/Downloads/sidecar-system`
 - **Live:** `https://sidecar-system.vercel.app`
 - **Alt live:** `https://sidecar-system-work.vercel.app`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** upstream workflow and control plane for content and destination orchestration
 - **Main purpose:** domain-specific AI content interfaces powered by the Katailyst MCP registry, with specialized sidecars for articles, social, email, analytics, education, multimedia, and related workflows
 - **Main surfaces other agents interact with:** article sidecars, `domains/<name>/sidecar-config.ts`, MCP bridge, destination publishing tools, Framer integration routes, content-engine projection routes, chat and runtime workflows
@@ -337,7 +339,7 @@ For each major repo, this document should answer:
 - **Local:** `/Users/alecwhitters/Downloads/MasteryPublishing`
 - **Legacy live alias:** `https://v0-next-js-content-engine.vercel.app`
 - **Public route family:** `https://hltmastery.com/nursing/resources`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** canonical structured `/resources/**` content engine
 - **Main purpose:** the HLT study-resources publishing app and content display layer, rendering the public `/resources/**` library, serving product-specific hubs and article pages, reading from Supabase, and accepting article publishes from the Katailyst pipeline
 - **Main surfaces other agents interact with:** `/resources`, `/resources/[product]`, `/resources/[product]/[slug]`, `/resources/search`, `/admin`, `POST /api/publish`, `POST /api/revalidate`, `GET|POST /api/admin/settings`, Supabase-backed product, topic, author, article, and settings data layer
@@ -355,7 +357,7 @@ For each major repo, this document should answer:
 - **Repo or product:** `Awhitter/Multimedia4Mastery` and local multimedia-mastery-core naming family
 - **Local:** `/Users/alecwhitters/Downloads/multimedia-mastery-core`
 - **Live:** `https://multimediamastery.vercel.app`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** media-native production lane
 - **Main purpose:** a media hub and studio that exposes a canonical media tool surface (`/api/media/v1/*`) and a human editor UI (`/studio`, `/m/[moduleId]`) for image, audio, video, upload, and health workflows
 - **Main surfaces other agents interact with:** `/api/media/v1/*`, `/studio`, `/m/[moduleId]`, media contracts in `docs/api/MEDIA_TOOL_CONTRACT.md`
@@ -370,18 +372,21 @@ For each major repo, this document should answer:
   - image refine flow is centered on `apps/studio/app/api/media/v1/image/refine/route.ts::POST`
 
 ### Content Creator Studio
+- **⚠ Not in active ~/hlt/ working set as of 2026-04-17.** Zip present at `~/Downloads/AI2 April/content-creator-studio-main/`; not in the sync-script target list. Decide whether to migrate to `~/hlt/content-creator-studio` and add to the target list, or retire this section.
 - **Repo:** `Awhitter/content-creator-studio`
 - **GitHub:** `https://github.com/Awhitter/content-creator-studio`
 - **Live:** `https://content-creator-studio-lovat.vercel.app`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-15 (not re-verified 2026-04-17)
 - **Role:** adjacent content workbench frontend
 - **Main purpose:** a lightweight conversational UI for AI-powered content creation, built as a thin frontend over a backend intelligence layer
 - **Main surfaces other agents interact with:** conversational wizard and chat UI, session persistence, registry browser, run history, asset editor, backend API bridge
 
 ### EduMastery
+- **⚠ Not in active ~/hlt/ working set as of 2026-04-17.** Possibly superseded by MasteryPublishing + AI4EDU; decide whether to retire this section or migrate the repo into `~/hlt/`.
 - **Repo:** `Awhitter/EduMastery`
 - **GitHub:** `https://github.com/Awhitter/EduMastery`
 - **Live:** `https://ai4mastery-next-6kpgw1zzw-alecs-projects-e88e78a8.vercel.app`
+- **Last verified:** 2026-04-15 (not re-verified 2026-04-17)
 - **Role:** active-adjacent publishing and admin surface
 - **Main purpose:** adjacent publishing and admin behavior and inventory continuity
 
@@ -1662,12 +1667,14 @@ For each major repo, this document should answer:
 - what shapes or contracts matter operationally
 - where to inspect first
 
+> ⚠ Staleness audit 2026-04-17: this inventory covers **8 of 15** active repos the `sync-llms-to-repos.sh` script now fans into. Missing: **Engage**, **Nursing Jobs**, **Forum Template**, **Brand Design Lab**, **GPT Researcher**, **Mastra**, **Operator Evals**, **Paperclip**, **Research Team**. Local paths below still say `/Users/alecwhitters/Downloads/...` but the canonical path migrated to `/Users/alecwhitters/hlt/<repo>` on 2026-04-17; treat the Downloads paths as aliases. **Content Creator Studio** and **EduMastery** are in `~/Downloads/AI2 April/` and `~/Downloads/` respectively; neither is in the active `~/hlt/` working set or the sync-script target list. Each repo stanza needs a Last-verified refresh; bumping the four primary repos (Katailyst, sidecar-system, MasteryPublishing, Multimedia Mastery) to 2026-04-17 below.
+
 ### Katailyst
 - **Repo:** `Awhitter/katailyst`
 - **GitHub:** `https://github.com/Awhitter/katailyst`
 - **Live:** `https://www.katailyst.com`
 - **MCP:** `https://www.katailyst.com/mcp`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** capability canon, registry, orchestration layer, MCP surface
 - **Main purpose:** the control plane and armory repo for Catalyst and Katailyst, with Supabase-canonical atomic units, discovery APIs, CMS and operator surfaces, portability mirrors, and export layers for downstream runtimes
 - **Main surfaces other agents interact with:** `/mcp`, registry and discovery tools, prompts, resources, toolsets, llms docs surfaces (`/.well-known/llms.txt`, `/llms.txt`, `/llms-full.txt`, `/llm.txt`), docs like `docs/VISION.md`, `docs/RULES.md`, and `docs/QUICK_START_AGENTS.md`
@@ -1687,7 +1694,7 @@ For each major repo, this document should answer:
 - **Local:** `/Users/alecwhitters/Downloads/sidecar-system`
 - **Live:** `https://sidecar-system.vercel.app`
 - **Alt live:** `https://sidecar-system-work.vercel.app`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** upstream workflow and control plane for content and destination orchestration
 - **Main purpose:** domain-specific AI content interfaces powered by the Katailyst MCP registry, with specialized sidecars for articles, social, email, analytics, education, multimedia, and related workflows
 - **Main surfaces other agents interact with:** article sidecars, `domains/<name>/sidecar-config.ts`, MCP bridge, destination publishing tools, Framer integration routes, content-engine projection routes, chat and runtime workflows
@@ -1707,7 +1714,7 @@ For each major repo, this document should answer:
 - **Local:** `/Users/alecwhitters/Downloads/MasteryPublishing`
 - **Legacy live alias:** `https://v0-next-js-content-engine.vercel.app`
 - **Public route family:** `https://hltmastery.com/nursing/resources`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** canonical structured `/resources/**` content engine
 - **Main purpose:** the HLT study-resources publishing app and content display layer, rendering the public `/resources/**` library, serving product-specific hubs and article pages, reading from Supabase, and accepting article publishes from the Katailyst pipeline
 - **Main surfaces other agents interact with:** `/resources`, `/resources/[product]`, `/resources/[product]/[slug]`, `/resources/search`, `/admin`, `POST /api/publish`, `POST /api/revalidate`, `GET|POST /api/admin/settings`, Supabase-backed product, topic, author, article, and settings data layer
@@ -1725,7 +1732,7 @@ For each major repo, this document should answer:
 - **Repo or product:** `Awhitter/Multimedia4Mastery` and local multimedia-mastery-core naming family
 - **Local:** `/Users/alecwhitters/Downloads/multimedia-mastery-core`
 - **Live:** `https://multimediamastery.vercel.app`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-17
 - **Role:** media-native production lane
 - **Main purpose:** a media hub and studio that exposes a canonical media tool surface (`/api/media/v1/*`) and a human editor UI (`/studio`, `/m/[moduleId]`) for image, audio, video, upload, and health workflows
 - **Main surfaces other agents interact with:** `/api/media/v1/*`, `/studio`, `/m/[moduleId]`, media contracts in `docs/api/MEDIA_TOOL_CONTRACT.md`
@@ -1740,18 +1747,21 @@ For each major repo, this document should answer:
   - image refine flow is centered on `apps/studio/app/api/media/v1/image/refine/route.ts::POST`
 
 ### Content Creator Studio
+- **⚠ Not in active ~/hlt/ working set as of 2026-04-17.** Zip present at `~/Downloads/AI2 April/content-creator-studio-main/`; not in the sync-script target list. Decide whether to migrate to `~/hlt/content-creator-studio` and add to the target list, or retire this section.
 - **Repo:** `Awhitter/content-creator-studio`
 - **GitHub:** `https://github.com/Awhitter/content-creator-studio`
 - **Live:** `https://content-creator-studio-lovat.vercel.app`
-- **Last verified:** 2026-04-15
+- **Last verified:** 2026-04-15 (not re-verified 2026-04-17)
 - **Role:** adjacent content workbench frontend
 - **Main purpose:** a lightweight conversational UI for AI-powered content creation, built as a thin frontend over a backend intelligence layer
 - **Main surfaces other agents interact with:** conversational wizard and chat UI, session persistence, registry browser, run history, asset editor, backend API bridge
 
 ### EduMastery
+- **⚠ Not in active ~/hlt/ working set as of 2026-04-17.** Possibly superseded by MasteryPublishing + AI4EDU; decide whether to retire this section or migrate the repo into `~/hlt/`.
 - **Repo:** `Awhitter/EduMastery`
 - **GitHub:** `https://github.com/Awhitter/EduMastery`
 - **Live:** `https://ai4mastery-next-6kpgw1zzw-alecs-projects-e88e78a8.vercel.app`
+- **Last verified:** 2026-04-15 (not re-verified 2026-04-17)
 - **Role:** active-adjacent publishing and admin surface
 - **Main purpose:** adjacent publishing and admin behavior and inventory continuity
 
