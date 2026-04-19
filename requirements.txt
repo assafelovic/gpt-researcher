@@ -22,6 +22,7 @@ openai>=1.3.3
 ollama>=0.4.8
 litellm>=1.71.0
 google-genai>=1.0.0  # For image generation with Imagen
+langchain-anthropic>=1.4.0  # Required when SMART/FAST/STRATEGIC_LLM=anthropic:...
 
 # Search & Research
 tavily-python>=0.7.12
@@ -40,6 +41,8 @@ pandas>=2.0.0
 # Vector Store & Embeddings
 tiktoken>=0.7.0
 numpy>=2.0.0,<2.3.0
+langchain-huggingface>=1.2.0  # Required for EMBEDDING=huggingface:...
+sentence-transformers>=5.0.0  # Backend for HuggingFace embedding models
 
 # Utilities
 aiofiles>=23.2.1
