@@ -1030,7 +1030,7 @@ HLT's product portfolio is documented per-app as curated KBs in the Katailyst re
 - `kb:hlt-product-config-app-upgrade-screen` — the paywall/upgrade screen config (A/B conversion surface).
 - `kb:hlt-social-media-master` — audit of all HLT social accounts across 29 product verticals × 10 platforms (FB, IG, TikTok, YouTube, Threads, X, Reddit, LinkedIn, Pinterest, Facebook Groups).
 - `kb:hlt-brand-image-style-guide` — visual standards for AI-generated + photographed + designed assets.
-- `kb:cloudinary-folder-architecture` **tier 2** — definitive folder structure under the single root `hlt/` on Cloudinary cloud `hlt-media`. Consult before uploading, moving, or cleaning any asset.
+- `kb:cloudinary-folder-architecture` **tier 2** — definitive folder structure for the `hlt-media` Cloudinary cloud. Canonical DAM reference: `docs/references/integrations/HLT_CLOUDINARY_DAM.md`. Legacy cloud `dq9xmts6p` is retired/read-only history; do not use it for new uploads.
 
 **Known gaps in brand-profile coverage (apps that may or may not be live — operator to confirm):**
 

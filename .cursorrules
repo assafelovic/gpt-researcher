@@ -31,11 +31,11 @@ You are currently inside **GPT Researcher**, the research orchestration lane. Cu
 
 ### Recent significant changes (last 5 commits)
 
+- 76c0462b 2026-04-20 docs(cloudinary): fix stale dq9xmts6p reference to hlt-media canonical cloud
+- e32028d4 2026-04-18 docs(llms-txt): master refresh — app portfolio pointer + naming drift + deep integration + social/ads platforms + 32-item follow-up
 - f926fdb6 2026-04-18 docs(llms-txt): HLT operator principles + other-session mission specs + integration-FAIL gaps
 - 8a1754da 2026-04-18 docs(inner-loop): reframe from build-time to model round-trip; triple hygiene thresholds
 - 16553ead 2026-04-18 docs(build-time): double the inner-loop thresholds per operator — 60s/120s/180s
-- fd865342 2026-04-18 docs(llms-txt + canon): agentic-infrastructure posture + friction-to-canon rule + named gaps
-- 0bcb1520 2026-04-18 docs(llms-txt): Replit-style link-index sections (master aadcf80d2a70)
 
 ## Behavioral rules
 
