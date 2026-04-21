@@ -27,6 +27,7 @@ from server.server_utils import (
     update_environment_variables, handle_file_upload, handle_file_deletion,
     execute_multi_agents, handle_websocket_communication
 )
+from server.agent_discovery import build_agent_discovery_document
 
 from server.websocket_manager import run_agent
 from utils import write_md_to_word, write_md_to_pdf
@@ -156,6 +157,19 @@ async def serve_frontend():
         content = f.read()
     
     return HTMLResponse(content=content)
+
+
+@app.get("/.well-known/agent-discovery.json")
+async def agent_discovery(request: Request):
+    """Advertise GPT Researcher services via the Agent Discovery Protocol."""
+    origin = str(request.base_url).rstrip("/")
+    domain = request.url.hostname or request.headers.get("host", "")
+    contact = os.getenv("AGENT_DISCOVERY_CONTACT")
+
+    document = build_agent_discovery_document(origin=origin, domain=domain, contact=contact)
+    response = JSONResponse(content=document)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 @app.get("/report/{research_id}")
 async def read_report(request: Request, research_id: str):
