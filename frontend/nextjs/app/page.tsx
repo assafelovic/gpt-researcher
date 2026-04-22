@@ -11,6 +11,7 @@ import { Data, ChatBoxSettings, QuestionData, ChatMessage, ChatData } from '../t
 import { preprocessOrderedData } from '../utils/dataProcessing';
 import { toast } from "react-hot-toast";
 import { v4 as uuidv4 } from 'uuid';
+import { defaultHLTResearchScope } from "@/lib/hltResearchScope";
 
 import Hero from "@/components/Hero";
 import ResearchPageLayout from "@/components/layouts/ResearchPageLayout";
@@ -45,6 +46,7 @@ export default function Home() {
       mcp_enabled: false,
       mcp_configs: [],
       mcp_strategy: "fast",
+      hlt_research_scope: defaultHLTResearchScope,
     };
 
     // Try to load all settings from localStorage
@@ -929,6 +931,8 @@ export default function Home() {
                 promptValue={promptValue}
                 setPromptValue={setPromptValue}
                 handleDisplayResult={handleDisplayResult}
+                chatBoxSettings={chatBoxSettings}
+                setChatBoxSettings={setChatBoxSettings}
               />
             </>
           )

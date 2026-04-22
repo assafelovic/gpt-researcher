@@ -3,7 +3,7 @@ import { ResearchHistoryItem } from '@/types/data';
 import { useResearchHistoryContext } from '@/hooks/ResearchHistoryContext';
 import LoadingDots from '@/components/LoadingDots';
 import { toast } from "react-hot-toast";
-import CatalystMark from "@/components/CatalystMark";
+import MasteryIcon from "@/components/MasteryIcon";
 import { hltBranding } from "@/lib/hltBranding";
 
 interface MobileHomeScreenProps {
@@ -138,7 +138,7 @@ export default function MobileHomeScreen({
       <div className="pt-10 px-6 text-center mb-8">
         <div className="flex justify-center mb-3">
           {hltBranding.enabled ? (
-            <CatalystMark className="h-[60px] w-[60px] rounded-xl" />
+            <MasteryIcon size={72} />
           ) : (
             <img
               src="/img/gptr-logo.png"

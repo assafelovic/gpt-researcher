@@ -7,6 +7,8 @@ interface MCPConfig {
   env?: Record<string, string>;
   connection_url?: string;
   connection_type?: string;
+  connection_headers?: Record<string, string>;
+  preset?: string;
 }
 
 interface MCPSelectorProps {
@@ -69,8 +71,8 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
         if (!server.name) {
           errors.push(`Server ${index + 1}: missing name`);
         }
-        if (!server.command && !server.connection_url) {
-          errors.push(`Server ${index + 1}: missing command or connection_url`);
+        if (!server.command && !server.connection_url && !server.preset) {
+          errors.push(`Server ${index + 1}: missing command, connection_url, or preset`);
         }
       });
 
@@ -171,6 +173,14 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
         command: 'npx',
         args: ['-y', '@modelcontextprotocol/server-filesystem', '/path/to/allowed/directory'],
         env: {}
+      },
+      katailyst: {
+        name: 'katailyst',
+        preset: 'katailyst'
+      },
+      metabase: {
+        name: 'metabase',
+        preset: 'metabase'
       }
     };
 
@@ -284,9 +294,23 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
                 >
                   <i className="fas fa-folder"></i> Local Files
                 </button>
+                <button
+                  type="button"
+                  className={`settings preset-btn ${isPresetSelected('katailyst') ? 'selected' : ''}`}
+                  onClick={() => togglePreset('katailyst')}
+                >
+                  <i className="fas fa-network-wired"></i> Katailyst
+                </button>
+                <button
+                  type="button"
+                  className={`settings preset-btn ${isPresetSelected('metabase') ? 'selected' : ''}`}
+                  onClick={() => togglePreset('metabase')}
+                >
+                  <i className="fas fa-chart-line"></i> Metrics
+                </button>
               </div>
               <small className="text-muted" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem', marginTop: '8px', display: 'block' }}>
-                Click a preset to toggle MCP servers in the configuration below. Selected presets are highlighted.
+                HLT presets expand server-side from Railway env, so private tokens never enter the browser.
               </small>
             </div>
 

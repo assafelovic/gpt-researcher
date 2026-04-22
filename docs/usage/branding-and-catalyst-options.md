@@ -9,12 +9,13 @@ chrome, metadata, docs, and the calling surfaces around it.
 
 ## What Is Implemented Now
 
-The hosted Next.js UI has a small HLT/Catalyst branding overlay:
+The hosted Next.js UI has a small HLT/Mastery/Catalyst branding overlay:
 
-- App title: `Katailyst Research`
-- Header mark: Catalyst-style K mark
+- App title: `Mastery Research`
+- Header mark: HLT Mastery app icon
 - Header link: `Open Katailyst`
-- Hero copy: "What should Catalyst research next?"
+- Hero copy: "Research anything with Mastery-grade context."
+- Research scope selector: Code files, CMS/Registry, Metrics, High-quality crawl
 - Footer: HLT attribution while preserving GPT Researcher credit
 - PWA metadata/manifest: HLT research workspace naming
 - Color direction: HLT blue `#155EEF`, deep navy `#0B2B33`, warm white direction
@@ -23,12 +24,13 @@ The overlay is controlled by public frontend env vars:
 
 ```bash
 NEXT_PUBLIC_HLT_BRANDING=1
-NEXT_PUBLIC_HLT_BRAND_NAME="Katailyst Research"
+NEXT_PUBLIC_HLT_BRAND_NAME="Mastery Research"
 NEXT_PUBLIC_HLT_PLATFORM_NAME="Katailyst"
 NEXT_PUBLIC_HLT_OWNER_NAME="HLT"
-NEXT_PUBLIC_HLT_BRAND_SUBTITLE="Research workspace"
-NEXT_PUBLIC_HLT_HERO_TITLE="What should Catalyst research next?"
-NEXT_PUBLIC_HLT_HERO_NOTE="Built on GPT Researcher for source-backed web and local research."
+NEXT_PUBLIC_HLT_BRAND_SUBTITLE="Katailyst research console"
+NEXT_PUBLIC_HLT_HERO_TITLE="Research anything with Mastery-grade context."
+NEXT_PUBLIC_HLT_HERO_NOTE="Source-backed web, codebase, CMS, and metrics research through GPT Researcher."
+NEXT_PUBLIC_HLT_BRAND_ICON="/img/hlt-mastery-icon.png"
 NEXT_PUBLIC_KATAILYST_URL="https://www.katailyst.com"
 NEXT_PUBLIC_GPTR_UI_URL="https://gpt-researcher-ui.vercel.app"
 ```
@@ -55,6 +57,33 @@ https://gpt-researcher-ui.vercel.app
 ```
 
 This is the option implemented now.
+
+### Server-Side Research Scope Presets
+
+The UI checkboxes are intentionally token-free. They send
+`hlt_research_scope` metadata over the existing WebSocket start payload. The
+backend expands that metadata in `backend/server/hlt_extensions.py`.
+
+| Checkbox | What it does now | Required env for full power |
+| --- | --- | --- |
+| Code files | Adds codebase instructions and requests Katailyst + GitHub MCP presets | `KATAILYST_MCP_TOKEN`, optional `GITHUB_MCP_URL` / `GITHUB_MCP_TOKEN` |
+| CMS + Registry | Adds Katailyst registry/CMS instructions and requests the Katailyst MCP preset | `KATAILYST_MCP_TOKEN` |
+| Metrics | Adds metrics instructions and requests a Metabase MCP preset | `METABASE_MCP_URL`, optional `METABASE_MCP_TOKEN` |
+| High-quality crawl | Adds extraction-quality instructions | `SCRAPER=firecrawl`, `FIRECRAWL_API_KEY` |
+
+Server-side preset env:
+
+```bash
+KATAILYST_MCP_URL=https://www.katailyst.com/mcp
+KATAILYST_MCP_TOKEN=...
+GITHUB_MCP_URL=...
+GITHUB_MCP_TOKEN=...
+METABASE_MCP_URL=...
+METABASE_MCP_TOKEN=...
+```
+
+If a preset env var is missing, the backend skips that MCP server and logs a
+warning; the research run still proceeds with the remaining available sources.
 
 ### Option 2: Iframe Inside Catalyst
 

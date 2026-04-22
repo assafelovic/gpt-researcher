@@ -4,7 +4,7 @@ import LoadingDots from '@/components/LoadingDots';
 import { Data } from '@/types/data';
 import Question from '@/components/ResearchBlocks/Question';
 import ChatResponse from '@/components/ResearchBlocks/ChatResponse';
-import CatalystMark from "@/components/CatalystMark";
+import MasteryIcon from "@/components/MasteryIcon";
 import { hltBranding } from "@/lib/hltBranding";
 
 interface CopilotPanelProps {
@@ -82,7 +82,7 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
         <div className="flex items-center">
           <a href="/" className="mr-3">
             {hltBranding.enabled ? (
-              <CatalystMark className="h-8 w-8 rounded-md" />
+              <MasteryIcon size={32} />
             ) : (
               <img
                 src="/img/gptr-logo.png"

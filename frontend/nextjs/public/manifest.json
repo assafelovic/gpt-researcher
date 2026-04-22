@@ -1,7 +1,7 @@
 {
-  "name": "Katailyst Research",
-  "short_name": "K Research",
-  "description": "HLT research workspace powered by GPT Researcher.",
+  "name": "Mastery Research",
+  "short_name": "M Research",
+  "description": "HLT Mastery research workspace powered by GPT Researcher.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#06101C",
@@ -9,15 +9,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/img/katailyst-mark.svg",
-      "sizes": "180x180",
-      "type": "image/svg+xml",
+      "src": "/img/hlt-mastery-icon.png",
+      "sizes": "176x176",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/img/katailyst-mark.svg",
-      "sizes": "180x180",
-      "type": "image/svg+xml",
+      "src": "/img/hlt-mastery-icon.png",
+      "sizes": "176x176",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],
@@ -27,7 +27,7 @@
       "short_name": "New",
       "description": "Start a new research query",
       "url": "/?source=pwa",
-      "icons": [{ "src": "/img/katailyst-mark.svg", "sizes": "180x180" }]
+      "icons": [{ "src": "/img/hlt-mastery-icon.png", "sizes": "176x176" }]
     }
   ],
   "screenshots": [

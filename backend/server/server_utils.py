@@ -21,6 +21,7 @@ import hashlib
 logger = logging.getLogger(__name__)
 
 from .multi_agent_runner import run_multi_agent_task
+from .hlt_extensions import prepare_research_request as prepare_hlt_research_request
 
 # Import chat agent
 try:
@@ -213,28 +214,49 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_strategy,
         mcp_configs,
         max_search_results,
+        hlt_research_scope,
     ) = extract_command_data(json_data)
 
     if not task or not report_type:
         logger.error("Missing task or report_type")
         return
 
-    research_id = json_data.get("research_id") or generate_research_id(task)
+    display_task = task
+    research_id = json_data.get("research_id") or generate_research_id(display_task)
 
     # Create logs handler with websocket and task
-    logs_handler = CustomLogsHandler(websocket, task, research_id=research_id)
+    logs_handler = CustomLogsHandler(websocket, display_task, research_id=research_id)
+    (
+        task,
+        mcp_enabled,
+        mcp_strategy,
+        mcp_configs,
+        hlt_scope_metadata,
+    ) = prepare_hlt_research_request(
+        task=display_task,
+        mcp_enabled=mcp_enabled,
+        mcp_strategy=mcp_strategy,
+        mcp_configs=mcp_configs,
+        research_scope=hlt_research_scope,
+    )
+
     # Initialize log content with query
     await logs_handler.send_json({
         "type": "logs",
         "content": "research_started",
-        "output": f"Research started: {task}",
-        "query": task,
+        "output": f"Research started: {display_task}",
+        "query": display_task,
         "sources": [],
         "context": [],
         "report": "",
+        "metadata": {
+            "research_id": research_id,
+            "run_id": research_id,
+            "hlt_research_scope": hlt_scope_metadata,
+        },
     })
 
-    sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
+    sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{display_task}")
 
     try:
         report = await manager.start_streaming(
@@ -508,4 +530,5 @@ def extract_command_data(json_data: Dict) -> tuple:
         json_data.get("mcp_strategy", "fast"),
         json_data.get("mcp_configs", []),
         json_data.get("max_search_results"),
+        json_data.get("hlt_research_scope"),
     )

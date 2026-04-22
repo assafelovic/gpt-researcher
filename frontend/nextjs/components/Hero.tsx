@@ -3,17 +3,25 @@ import React, { FC, useEffect, useState, useRef } from "react";
 import InputArea from "./ResearchBlocks/elements/InputArea";
 import { motion, AnimatePresence } from "framer-motion";
 import { hltBranding } from "@/lib/hltBranding";
+import MasteryIcon from "@/components/MasteryIcon";
+import ResearchScopeSelector from "@/components/ResearchScopeSelector";
+import { ChatBoxSettings, HLTResearchScope } from "@/types/data";
+import { normalizeHLTResearchScope } from "@/lib/hltResearchScope";
 
 type THeroProps = {
   promptValue: string;
   setPromptValue: React.Dispatch<React.SetStateAction<string>>;
   handleDisplayResult: (query : string) => void;
+  chatBoxSettings?: ChatBoxSettings;
+  setChatBoxSettings?: React.Dispatch<React.SetStateAction<ChatBoxSettings>>;
 };
 
 const Hero: FC<THeroProps> = ({
   promptValue,
   setPromptValue,
   handleDisplayResult,
+  chatBoxSettings,
+  setChatBoxSettings,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [showGradient, setShowGradient] = useState(true);
@@ -93,6 +101,21 @@ const Hero: FC<THeroProps> = ({
     setPromptValue(value);
   };
 
+  const handleScopeChange = (scope: HLTResearchScope) => {
+    const normalized = normalizeHLTResearchScope(scope);
+    setChatBoxSettings?.((prev) => ({
+      ...prev,
+      hlt_research_scope: normalized,
+      report_type: normalized.depth === "deep" ? "deep" : prev.report_type,
+      mcp_enabled:
+        prev.mcp_enabled ||
+        normalized.codebase ||
+        normalized.cms ||
+        normalized.metrics,
+      mcp_strategy: normalized.depth === "fast" ? "fast" : "deep",
+    }));
+  };
+
   // Animation variants for consistent animations
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
@@ -111,11 +134,29 @@ const Hero: FC<THeroProps> = ({
         transition={{ duration: 0.8 }}
         className="flex flex-col items-center justify-center w-full py-6 sm:py-8 md:py-16 lg:pt-10 lg:pb-20"
       >
+        {hltBranding.enabled && chatBoxSettings && setChatBoxSettings && (
+          <motion.div
+            variants={fadeInUp}
+            transition={{ duration: 0.8, delay: 0.05 }}
+            className="mb-6 flex flex-col items-center gap-3 text-center"
+          >
+            <MasteryIcon size={76} className="shadow-[0_18px_50px_rgba(21,94,239,0.24)]" />
+            <div>
+              <div className="font-serif text-[42px] leading-none tracking-[-0.02em] text-white sm:text-[56px]">
+                Mastery
+              </div>
+              <div className="mt-2 text-[11px] font-bold uppercase tracking-[0.28em] text-blue-300">
+                Research Console
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Header text */}
         <motion.h1
           variants={fadeInUp}
           transition={{ duration: 0.8, delay: 0.1 }}
-          className="text-2xl sm:text-3xl md:text-4xl font-medium text-center text-white mb-8 sm:mb-10 md:mb-12 px-4"
+          className="max-w-[860px] px-4 text-center text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl md:text-5xl"
         >
           {hltBranding.enabled ? hltBranding.heroTitle : "What would you like to research next?"}
         </motion.h1>
@@ -124,11 +165,11 @@ const Hero: FC<THeroProps> = ({
         <motion.div 
           variants={fadeInUp}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="w-full max-w-[800px] pb-6 sm:pb-8 md:pb-10 px-4"
+          className="w-full max-w-[860px] px-4 pb-5 pt-8 sm:pb-6"
         >
           <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-teal-600/70 via-cyan-500/60 to-blue-600/70 rounded-xl blur-md opacity-60 group-hover:opacity-85 transition duration-1000 group-hover:duration-200 animate-gradient-x"></div>
-            <div className="relative bg-black bg-opacity-20 backdrop-blur-sm rounded-xl ring-1 ring-gray-800/60">
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#155EEF]/80 via-[#1FB2C6]/60 to-[#155EEF]/70 blur-lg opacity-60 transition duration-1000 group-hover:opacity-85 group-hover:duration-200"></div>
+            <div className="relative rounded-2xl bg-[#0A0A0B]/70 shadow-[0_30px_80px_rgba(0,0,0,0.35)] ring-1 ring-white/10 backdrop-blur-sm">
               <InputArea
                 promptValue={promptValue}
                 setPromptValue={setPromptValue}
@@ -151,11 +192,24 @@ const Hero: FC<THeroProps> = ({
           </motion.div>
         </motion.div>
 
+        {hltBranding.enabled && (
+          <motion.div
+            variants={fadeInUp}
+            transition={{ duration: 0.8, delay: 0.35 }}
+            className="w-full"
+          >
+            <ResearchScopeSelector
+              value={chatBoxSettings?.hlt_research_scope}
+              onChange={handleScopeChange}
+            />
+          </motion.div>
+        )}
+
         {/* Suggestions section with enhanced styling */}
         <motion.div 
           variants={fadeInUp}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="flex flex-wrap items-center justify-center gap-2 xs:gap-3 md:gap-4 pb-6 sm:pb-8 md:pb-10 px-4 lg:flex-nowrap lg:justify-normal"
+          className="flex flex-wrap items-center justify-center gap-2 px-4 pb-6 pt-5 xs:gap-3 md:gap-4 sm:pb-8 md:pb-10 lg:flex-nowrap lg:justify-normal"
         >
           <AnimatePresence>
             {suggestions.map((item, index) => (
@@ -166,9 +220,9 @@ const Hero: FC<THeroProps> = ({
                 animate="visible"
                 transition={{ duration: 0.4, delay: 0.6 + (index * 0.1) }}
                 className="flex h-[38px] sm:h-[42px] cursor-pointer items-center justify-center gap-[6px] rounded-lg 
-                         border border-solid border-teal-500/30 bg-gradient-to-r from-teal-900/30 to-cyan-900/30 
-                         backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 hover:border-teal-500/60 hover:from-teal-900/40 
-                         hover:to-cyan-900/40 transition-all duration-300 hover:shadow-lg hover:shadow-teal-900/20 min-w-[100px]"
+                         border border-solid border-white/10 bg-white/[0.045]
+                         backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 hover:border-blue-400/50 hover:bg-white/[0.075]
+                         transition-all duration-300 hover:shadow-lg hover:shadow-blue-900/20 min-w-[100px]"
                 onClick={() => handleClickSuggestion(item?.name)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}

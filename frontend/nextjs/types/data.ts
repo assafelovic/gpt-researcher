@@ -38,6 +38,17 @@ export interface MCPConfig {
   env?: Record<string, string>;
   connection_url?: string;
   connection_type?: string;
+  preset?: string;
+}
+
+export type HLTResearchDepth = "fast" | "balanced" | "deep";
+
+export interface HLTResearchScope {
+  codebase: boolean;
+  cms: boolean;
+  metrics: boolean;
+  firecrawl: boolean;
+  depth: HLTResearchDepth;
 }
 
 export interface ChatBoxSettings {
@@ -50,6 +61,7 @@ export interface ChatBoxSettings {
   mcp_enabled: boolean;
   mcp_configs: MCPConfig[];
   mcp_strategy?: string;
+  hlt_research_scope?: HLTResearchScope;
 }
 
 export interface Domain {

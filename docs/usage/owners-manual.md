@@ -33,6 +33,11 @@ Connection details and raw curl examples live in
 Branding, Catalyst embedding options, and performance configuration guidance
 live in [`docs/usage/branding-and-catalyst-options.md`](./branding-and-catalyst-options.md).
 
+The browser UI is now branded as `Mastery Research`. Its launch screen includes
+research-scope controls for Code files, CMS/Registry, Metrics, and High-quality
+crawl. Those controls do not expose secrets to the browser; the backend expands
+them into server-side MCP presets from Railway env.
+
 ## What Your Agents Can Do
 
 Any agent with the MCP token can mount the hosted MCP endpoint and use GPT

@@ -3,7 +3,7 @@ import { Toaster } from "react-hot-toast";
 import { ChatBoxSettings } from "@/types/data";
 import { useResearchHistoryContext } from "@/hooks/ResearchHistoryContext";
 import { formatDistanceToNow } from "date-fns";
-import CatalystMark from "@/components/CatalystMark";
+import MasteryIcon from "@/components/MasteryIcon";
 import { hltBranding } from "@/lib/hltBranding";
 
 interface MobileLayoutProps {
@@ -74,7 +74,7 @@ export default function MobileLayout({
           <div className="flex items-center">
             <a href="/" className="flex items-center">
               {hltBranding.enabled ? (
-                <CatalystMark className="mr-2 h-[30px] w-[30px] rounded-md" />
+                <MasteryIcon size={30} className="mr-2" />
               ) : (
                 <img
                   src="/img/gptr-logo.png"

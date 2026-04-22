@@ -42,6 +42,11 @@ following servers auto-mount from `.mcp.json`:
    `get_research_context`; resource: `research://{topic}`. Owner's manual:
    `docs/usage/owners-manual.md`.
 
+Human UI: `https://gpt-researcher-ui.vercel.app` is branded as **Mastery
+Research**. The launch screen includes HLT scope toggles for Code files,
+CMS/Registry, Metrics, and high-quality crawling. Those toggles are browser-safe
+metadata; server-side preset expansion lives in `backend/server/hlt_extensions.py`.
+
 ## Rules of engagement
 
 1. **Katailyst first** — for any task that decomposes into multiple facets,

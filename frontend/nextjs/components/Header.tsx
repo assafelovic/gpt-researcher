@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from "next/link";
-import CatalystMark from "@/components/CatalystMark";
+import MasteryIcon from "@/components/MasteryIcon";
 import { hltBranding } from "@/lib/hltBranding";
 
 interface HeaderProps {
@@ -20,7 +20,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch, isCopil
       <div className="container relative flex min-h-[72px] items-center justify-between gap-4 px-4 lg:px-0">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           {hltBranding.enabled ? (
-            <CatalystMark className="h-9 w-9 shrink-0" />
+            <MasteryIcon size={42} className="shrink-0" />
           ) : (
             <img
               src="/img/gptr-logo.png"

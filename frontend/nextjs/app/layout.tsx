@@ -14,7 +14,7 @@ let description = hltBranding.enabled
   ? "HLT research workspace powered by GPT Researcher for source-backed web and local research."
   : "LLM based autonomous agent that conducts local and web research on any topic and generates a comprehensive report with citations.";
 let url = hltBranding.enabled ? hltBranding.uiUrl : "https://github.com/assafelovic/gpt-researcher";
-let ogimage = hltBranding.enabled ? "/img/katailyst-mark.svg" : "/favicon.ico";
+let ogimage = hltBranding.enabled ? hltBranding.icon : "/favicon.ico";
 let sitename = hltBranding.enabled ? hltBranding.productName : "GPT Researcher";
 
 export const metadata: Metadata = {
@@ -23,8 +23,8 @@ export const metadata: Metadata = {
   description,
   manifest: '/manifest.json',
   icons: {
-    icon: hltBranding.enabled ? "/img/katailyst-mark.svg" : "/img/gptr-black-logo.png",
-    apple: hltBranding.enabled ? "/img/katailyst-mark.svg" : '/img/gptr-black-logo.png',
+    icon: hltBranding.enabled ? hltBranding.icon : "/img/gptr-black-logo.png",
+    apple: hltBranding.enabled ? hltBranding.icon : '/img/gptr-black-logo.png',
   },
   appleWebApp: {
     capable: true,
@@ -69,7 +69,7 @@ export default function RootLayout({
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="apple-touch-icon" href={hltBranding.enabled ? "/img/katailyst-mark.svg" : "/img/gptr-black-logo.png"} />
+        <link rel="apple-touch-icon" href={hltBranding.enabled ? hltBranding.icon : "/img/gptr-black-logo.png"} />
       </head>
       <body
         className={`app-container ${inter.className} flex min-h-screen flex-col justify-between`}

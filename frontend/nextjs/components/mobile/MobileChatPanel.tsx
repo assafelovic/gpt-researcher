@@ -4,7 +4,7 @@ import { Data, ChatData } from '@/types/data';
 import { markdownToHtml } from '@/helpers/markdownHelper';
 import '@/styles/markdown.css';
 import Link from "next/link";
-import CatalystMark from "@/components/CatalystMark";
+import MasteryIcon from "@/components/MasteryIcon";
 import { hltBranding } from "@/lib/hltBranding";
 // Simple classname utility function to replace cn from @/lib/utils
 const cn = (...classes: (string | undefined)[]) => classes.filter(Boolean).join(' ');
@@ -28,7 +28,7 @@ interface MobileChatPanelProps {
 const AssistantAvatar = () => (
   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center flex-shrink-0 shadow-md">
     {hltBranding.enabled ? (
-      <CatalystMark className="h-8 w-8 rounded-full shadow-none" />
+      <MasteryIcon size={32} />
     ) : (
       <img src="/img/gptr-logo.png" alt="AI" className="w-6 h-6" />
     )}
