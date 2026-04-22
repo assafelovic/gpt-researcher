@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { backendHeaders, backendUrl } from '../_utils/backend';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
-  
   try {
     const { searchParams, pathname } = new URL(request.url);
     
@@ -32,7 +33,9 @@ export async function GET(request: Request) {
     
     console.log(`GET ${endpoint} - Proxying request to backend`);
     
-    const response = await fetch(`${backendUrl}${endpoint}`);
+    const response = await fetch(`${backendUrl()}${endpoint}`, {
+      headers: backendHeaders(),
+    });
     
     if (!response.ok) {
       // Handle backend errors
@@ -64,8 +67,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
-  
   try {
     // Parse the request body
     let body;
@@ -81,11 +82,11 @@ export async function POST(request: Request) {
     
     console.log(`POST /api/reports - Proxying request to backend for ID: ${body.id || 'unknown'}`);
     
-    const response = await fetch(`${backendUrl}/api/reports`, {
+    const response = await fetch(`${backendUrl()}/api/reports`, {
       method: 'POST',
-      headers: {
+      headers: backendHeaders({
         'Content-Type': 'application/json',
-      },
+      }),
       body: JSON.stringify(body),
     });
     
@@ -109,4 +110,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

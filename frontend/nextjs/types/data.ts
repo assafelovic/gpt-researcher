@@ -33,9 +33,11 @@ export type Data = BasicData | LanggraphButtonData | DifferencesData | QuestionD
 
 export interface MCPConfig {
   name: string;
-  command: string;
-  args: string[];
-  env: Record<string, string>;
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  connection_url?: string;
+  connection_type?: string;
 }
 
 export interface ChatBoxSettings {
@@ -68,4 +70,4 @@ export interface ResearchHistoryItem {
   timestamp: number;
   orderedData: Data[];
   chatMessages?: ChatMessage[];
-} 
+}

@@ -1,5 +1,4 @@
 import React from 'react';
-import {getHost} from '../../helpers/getHost'
 
 interface AccessReportProps {
   accessData: {
@@ -15,8 +14,6 @@ interface AccessReportProps {
 }
 
 const AccessReport: React.FC<AccessReportProps> = ({ accessData, chatBoxSettings, report, onShareClick }) => {
-  const host = getHost();
-
   const getReportLink = (dataType: 'pdf' | 'docx' | 'json'): string => {
     // Early return if path is not available
     if (!accessData?.[dataType]) {
@@ -36,7 +33,7 @@ const AccessReport: React.FC<AccessReportProps> = ({ accessData, chatBoxSettings
       ? cleanPath 
       : `outputs/${cleanPath}`;
     
-    return `${host}/${finalPath}`;
+    return `/${finalPath}`;
   };
 
   // Safety check for accessData

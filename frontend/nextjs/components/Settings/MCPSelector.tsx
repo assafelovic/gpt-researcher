@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 
 interface MCPConfig {
   name: string;
-  command: string;
-  args: string[];
-  env: Record<string, string>;
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  connection_url?: string;
+  connection_type?: string;
 }
 
 interface MCPSelectorProps {
@@ -93,37 +95,29 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
 
   const handleEnabledChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newEnabled = e.target.checked;
-    console.log('🔍 DEBUG: MCP enabled changed to:', newEnabled);
     setEnabled(newEnabled);
 
     if (newEnabled && validationStatus.isValid) {
       try {
         const configs = JSON.parse(configText || '[]');
-        console.log('🔍 DEBUG: Calling onMCPChange with configs:', configs);
         onMCPChange(newEnabled, configs);
       } catch {
-        console.log('🔍 DEBUG: JSON parse failed, calling with empty array');
         onMCPChange(newEnabled, []);
       }
     } else {
-      console.log('🔍 DEBUG: Disabled or invalid, calling with empty array');
       onMCPChange(newEnabled, []);
     }
   };
 
   const handleConfigChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = e.target.value;
-    console.log('🔍 DEBUG: Config text changed to:', newText);
     setConfigText(newText);
 
     if (enabled && validateConfig(newText)) {
       try {
         const configs = JSON.parse(newText || '[]');
-        console.log('🔍 DEBUG: Parsed configs from textarea:', configs);
-        console.log('🔍 DEBUG: Calling onMCPChange from textarea with:', { enabled, configs });
         onMCPChange(enabled, configs);
       } catch {
-        console.log('🔍 DEBUG: JSON parse failed in textarea change');
         // Invalid JSON, don't update
       }
     }
@@ -155,10 +149,6 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
   };
 
   const togglePreset = (preset: string) => {
-    console.log('🔍 DEBUG: togglePreset called with:', preset);
-    console.log('🔍 DEBUG: Current configText:', configText);
-    console.log('🔍 DEBUG: MCP enabled:', enabled);
-    
     const presets: Record<string, MCPConfig> = {
       github: {
         name: 'github',
@@ -186,7 +176,6 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
 
     const config = presets[preset];
     if (!config) {
-      console.log('🔍 DEBUG: Preset config not found for:', preset);
       return;
     }
 
@@ -197,35 +186,28 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
       if (currentText && currentText !== '[]') {
         currentConfig = JSON.parse(currentText);
       }
-      console.log('🔍 DEBUG: Current parsed config:', currentConfig);
 
       const existingIndex = currentConfig.findIndex(server => server.name === config.name);
-      console.log('🔍 DEBUG: Existing index for', config.name, ':', existingIndex);
 
       if (existingIndex !== -1) {
         // Remove the preset if it exists (deselect)
-        console.log('🔍 DEBUG: Removing preset');
         currentConfig.splice(existingIndex, 1);
       } else {
         // Add the preset if it doesn't exist (select)
-        console.log('🔍 DEBUG: Adding preset');
         currentConfig.push(config);
       }
 
       const newText = JSON.stringify(currentConfig, null, 2);
-      console.log('🔍 DEBUG: New config text:', newText);
-      console.log('🔍 DEBUG: Final config array:', currentConfig);
       
       setConfigText(newText);
       
       // IMPORTANT: Also call onMCPChange immediately with the new config
       if (enabled) {
-        console.log('🔍 DEBUG: Calling onMCPChange from togglePreset with:', { enabled, currentConfig });
         onMCPChange(enabled, currentConfig);
       }
       
     } catch (error) {
-      console.error('🔍 DEBUG: Error toggling preset:', error);
+      console.error('Error toggling MCP preset:', error);
     }
   };
 
@@ -334,7 +316,8 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
                 Paste your MCP servers configuration as a JSON array. Each server should have properties like{' '}
                 <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>name</code>,{' '}
                 <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>command</code>,{' '}
-                <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>args</code>, and optional{' '}
+                <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>args</code>,{' '}
+                <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>connection_url</code>, and optional{' '}
                 <code style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', padding: '2px 4px', borderRadius: '3px', color: '#0d9488' }}>env</code> variables.{' '}
                 <a
                   href="#"
@@ -384,6 +367,7 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
                 <li><span className="highlight">name:</span> Unique identifier (e.g., &quot;github&quot;, &quot;filesystem&quot;)</li>
                 <li><span className="highlight">command:</span> Command to run the server (e.g., &quot;npx&quot;, &quot;python&quot;)</li>
                 <li><span className="highlight">args:</span> Array of arguments (e.g., [&quot;-y&quot;, &quot;@modelcontextprotocol/server-github&quot;])</li>
+                <li><span className="highlight">connection_url:</span> Hosted MCP endpoint URL for HTTP or WebSocket servers</li>
                 <li><span className="highlight">env:</span> Object with environment variables (e.g., {JSON.stringify({API_KEY: "your_key"})})</li>
               </ul>
             </div>

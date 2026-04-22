@@ -14,9 +14,12 @@
         "Authorization": "Bearer ${MM_AGENT_TOKEN}"
       }
     },
-    "axon-codegraph": {
-      "command": "axon",
-      "args": ["mcp"]
+    "gpt-researcher": {
+      "type": "http",
+      "url": "https://gpt-researcher-mcp-production.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer ${GPTR_MCP_TOKEN}"
+      }
     }
   }
 }

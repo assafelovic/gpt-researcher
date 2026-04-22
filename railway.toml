@@ -5,30 +5,36 @@
 # defaults, but being explicit avoids version drift and makes the deploy
 # reproducible.
 #
-# Entry point: `backend.server.app:app` (FastAPI, lifespan-enabled).
+# Entry point: `./railway-start.sh` dispatches API vs MCP by service env.
+# API target: `backend.server.app:app` (FastAPI, lifespan-enabled).
+# MCP target: `mcp_server.server:app` (streamable HTTP at /mcp).
 # `main.py` also wraps uvicorn for local dev (`python main.py` listens on 8000).
 #
 # Env vars required at deploy time:
 #   OPENAI_API_KEY   — OpenAI key used by the research agents
 #   TAVILY_API_KEY   — primary web-search backend
+#   API_AUTH_KEY     — required by the API deploy script for REST/WebSocket auth
+#   MCP_AUTH_TOKEN   — required by the MCP deploy script for Bearer auth
 #   PORT             — injected by Railway automatically
 #
 # Optional:
 #   DOC_PATH         — only needed if you use the /upload document flow
 #
-# Health: GET / returns the static UI HTML, so `/` doubles as a liveness probe.
-# When we add a dedicated /health endpoint this should move to that.
+# Health: GET /health returns a JSON liveness probe (installed via
+# `backend/server/hlt_extensions.py`). GET / still works (returns the
+# frontend HTML) but is heavier and brittle.
 
 [build]
 builder = "NIXPACKS"
 
 [deploy]
-# Procfile is the authoritative start command; don't duplicate it here.
+# Procfile and Dockerfile CMD both use `railway-start.sh` so either Railway
+# builder path dispatches correctly for API vs MCP.
 # This restartPolicy matches Railway's default but made explicit so behavior
 # doesn't drift silently if Railway changes defaults.
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
 # Health check — Railway will retry this URL until 2xx before routing traffic.
-healthcheckPath = "/"
+healthcheckPath = "/health"
 healthcheckTimeout = 300

@@ -78,7 +78,7 @@ Load these via MCP `get_entity` or `registry_artifact_body` before doing serious
 - `tool:meta-ads.insights` — Meta Graph insights (vault `meta/ads/access-token`, query-param auth; http_multi_action executor pending on MCP side).
 - `tool:manus.agent` — multi-step Manus agent runner (vault `manus/api-key`).
 - `tool:elevenlabs.voice` — TTS (vault `elevenlabs/api-key`).
-- `tool:gpt-researcher.quick-search` — cited web research (live at `gpt-researcher-production-2b53.up.railway.app`).
+- `tool:gpt-researcher.quick-search` — cited web research (API live at `gpt-researcher-api-production.up.railway.app`; hosted MCP live at `gpt-researcher-mcp-production.up.railway.app/mcp`).
 - `tool:hlt-metabase-readonly` — HLT warehouse reads (50K+ items).
 - `tool:publish.email` — Resend transactional email (vault `resend/api-key`).
 - `tool:marketo` — Marketo CRUD (vault `marketo/client-id` + `marketo/client-secret`).
@@ -261,7 +261,7 @@ Every working repo in the HLT ecosystem with a one-line identity + canonical pat
 - **[forum-template](https://github.com/Awhitter/forum-template)** — reusable forum + career-hub template for per-vertical deploys (Nursing Research & Recruitment, PA hub, EMT hub). Generalized successor to NursingNexus. Express + Passport + React + Drizzle + Neon. Local: `~/hlt/forum-template`. Local-only. Key dirs: `server/`, `client/`, `shared/schema.ts`, `email-templates/`, `scripts/`.
 - **[brand-design-lab](https://github.com/Awhitter/katailyst-brand-design-lab)** — `@katailyst/sidecar-template`: reusable Next.js 15 sidecar scaffold for domain-focused workspaces (also hosts Bruce/Sarah/Marcus recruiting persona prompts). Fork + edit `lib/site.config.ts` to spin up a new sidecar. Local: `~/hlt/brand-design-lab`. Local-only (port 3100).
 - **[evidence-based-business](https://github.com/Awhitter/cleanEBB)** — `hlt-data-analyzer`: Vite + React + Express analytics dashboard (Metabase-backed reads Redshift + Supabase) with AI-assisted insight generation. Live: https://answers.hltcorp.com (200). Key dirs: `src/`, `server/`, `migrations/`, `scripts/`, `tests/`. Also ships `/api/ai-analysis` as the endpoint Katailyst agents consume.
-- **[gpt-researcher](https://github.com/Awhitter/hlt-gpt-researcher)** — HLT fork of `assafelovic/gpt-researcher`. FastAPI + LangGraph + Tavily + OpenAI. Endpoints: `POST /api/quick_search` (2-5s cited summary), `POST /report/` (30-90s deep autonomous report). Live: https://gpt-researcher-production-2b53.up.railway.app (405 on HEAD, POST-only — live confirmed). Active branch `session-2026-04-16-local-tweaks`.
+- **[gpt-researcher](https://github.com/Awhitter/hlt-gpt-researcher)** — HLT fork of `assafelovic/gpt-researcher`. FastAPI + LangGraph + Tavily + OpenAI, with hosted MCP overlay for agents. Endpoints: `POST /api/quick_search` (2-5s cited summary), `POST /report/` (30-90s deep autonomous report), and MCP streamable HTTP at `/mcp`. Live UI: https://gpt-researcher-ui.vercel.app. Live API: https://gpt-researcher-api-production.up.railway.app. Live MCP: https://gpt-researcher-mcp-production.up.railway.app/mcp. Active branch `codex/railway-mcp-vercel-launch`.
 - **[mastra](https://github.com/Awhitter/whastra)** — `agent-stack-mastra`: general Mastra workflow substrate. 4-Hub architecture (Intake → Insight → Agents → Workflows). Invoked by Paperclip's `mastra-gateway` adapter over HTTP with governance. Local: `~/hlt/mastra`. Key deps: @mastra/core, Inngest, Slack Web API, Apify.
 - **[research-team](https://github.com/Awhitter/alecs-research-council)** — specialized Mastra research-council (sibling of `~/hlt/mastra`, focused on research workflows with analyst/validator/synthesizer role agents). Local: `~/hlt/research-team`.
 - **[operator-evals](https://github.com/Awhitter/katailyst-operator-evals)** — standalone Next.js 16 dashboard: Katailyst registry readiness, benchmark runs, tool canaries. Read-only view over Katailyst eval system. Operator-flagged for potential absorption into Katailyst itself. Local: `~/hlt/operator-evals`.
@@ -361,7 +361,9 @@ Every tool here resolves its credentials server-side via Katailyst vault (`auth_
 - **https://hltmastery.com/nursing/resources** (200) — MasteryPublishing public article surface.
 - **https://sidecar-system.vercel.app** (200) — sidecar-system Vercel production.
 - **https://multimediamastery.vercel.app** (307) — redirects to subpath. Media API + studio at `/api/media/v1/*`.
-- **https://gpt-researcher-production-2b53.up.railway.app** (405 on HEAD, POST-only endpoints live) — `POST /api/quick_search`, `POST /report/`.
+- **https://gpt-researcher-ui.vercel.app** (200) — hosted GPT Researcher browser UI.
+- **https://gpt-researcher-api-production.up.railway.app** (200 on `/health`) — authenticated REST API: `POST /api/quick_search`, `POST /report/`.
+- **https://gpt-researcher-mcp-production.up.railway.app/mcp** — authenticated hosted MCP endpoint for GPT Researcher tools.
 - **https://answers.hltcorp.com** (200) — Evidence-Based Business / Metabase.
 - **https://hltadspdash-gqtedncp.manus.space** — Manus-built Meta Ads dashboard (operator-shared; keep live alongside the sidecar `/admin/ads-command-center` when that ships).
 - **https://ai4mastery-next-two.vercel.app** — AI4EDU publishing surface (`POST /api/publish` consumes ArticleV2).

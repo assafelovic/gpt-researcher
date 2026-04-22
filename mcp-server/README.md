@@ -1,66 +1,51 @@
-# 🔍 GPT Researcher MCP Server
+# GPT Researcher Hosted MCP Endpoint
 
-> **Note:** This content has been moved to a dedicated repository: [https://github.com/assafelovic/gptr-mcp](https://github.com/assafelovic/gptr-mcp)
+This directory is kept as the upstream documentation location, but the HLT
+hosted MCP implementation lives in the root Python package `mcp_server/` so it
+can import the local `gpt_researcher` library from the repo root.
 
-## Overview
+Hosted endpoint:
 
-The GPT Researcher MCP Server enables AI assistants like Claude to conduct comprehensive web research and generate detailed reports via the Machine Conversation Protocol (MCP).
+```text
+https://gpt-researcher-mcp-production.up.railway.app/mcp
+```
 
-## Why GPT Researcher MCP?
+Auth:
 
-While LLM apps can access web search tools with MCP, **GPT Researcher MCP delivers deep research results.** Standard search tools return raw results requiring manual filtering, often containing irrelevant sources and wasting context window space.
+```text
+Authorization: Bearer $GPTR_MCP_TOKEN
+```
 
-GPT Researcher autonomously explores and validates numerous sources, focusing only on relevant, trusted and up-to-date information. Though slightly slower than standard search (~30 seconds wait), it delivers:
+Public health check:
 
-* ✨ Higher quality information
-* 📊 Optimized context usage
-* 🔎 Comprehensive results
-* 🧠 Better reasoning for LLMs
+```text
+https://gpt-researcher-mcp-production.up.railway.app/health
+```
 
-## Features
+## Tools
 
-### Resources
-* `research_resource`: Get web resources related to a given task via research.
+- `deep_research(query, report_type?, report_source?, tone?)`
+- `quick_search(query, summary?, domains?)`
+- `write_report(research_id, custom_prompt?)`
+- `get_research_sources(research_id)`
+- `get_research_context(research_id)`
 
-### Primary Tools
-* `deep_research`: Performs deep web research on a topic, finding reliable and relevant information
-* `quick_search`: Performs a fast web search optimized for speed over quality 
-* `write_report`: Generate a report based on research results
-* `get_research_sources`: Get the sources used in the research
-* `get_research_context`: Get the full context of the research
+Resource:
 
-## Installation
+- `research://{topic}`
 
-For detailed installation and usage instructions, please visit the [official repository](https://github.com/assafelovic/gptr-mcp).
+Prompt:
 
-Quick start:
+- `research_query(topic, goal, report_format?)`
 
-1. Clone the new repository:
-   ```bash
-   git clone https://github.com/assafelovic/gptr-mcp.git
-   cd gptr-mcp
-   ```
+## Local Run
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+From the repo root:
 
-3. Create a `.env` file with your API keys:
-   ```
-   OPENAI_API_KEY=your_openai_api_key
-   TAVILY_API_KEY=your_tavily_api_key
-   ```
+```bash
+MCP_AUTH_TOKEN=dev-token \
+python -m uvicorn mcp_server.server:app --host=0.0.0.0 --port=8001
+```
 
-4. Run the server:
-   ```bash
-   python server.py
-   ```
-
-For Docker deployment, Claude Desktop integration, example usage, and troubleshooting, please refer to the [full documentation](https://github.com/assafelovic/gptr-mcp).
-
-## Support & Contact
-
-* Website: [gptr.dev](https://gptr.dev)
-* Email: assaf.elovic@gmail.com
-* GitHub: [assafelovic/gptr-mcp](https://github.com/assafelovic/gptr-mcp) :-)
+The Railway MCP service also runs from the repo root. Do not set the service
+root directory to `mcp-server/`; that would hide the parent package.

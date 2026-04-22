@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
+import { backendHeaders, backendUrl } from '../../../_utils/backend';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
-  
   try {
     if (!id) {
       return NextResponse.json(
@@ -17,7 +18,9 @@ export async function GET(
     
     console.log(`GET /api/reports/${id}/chat - Proxying request to backend`);
     
-    const response = await fetch(`${backendUrl}/api/reports/${id}/chat`);
+    const response = await fetch(`${backendUrl()}/api/reports/${id}/chat`, {
+      headers: backendHeaders(),
+    });
     const data = await response.json();
     
     return NextResponse.json(data, { status: response.status });
@@ -35,8 +38,6 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
-  
   try {
     if (!id) {
       return NextResponse.json(
@@ -59,11 +60,11 @@ export async function POST(
     
     console.log(`POST /api/reports/${id}/chat - Proxying request to backend`);
     
-    const response = await fetch(`${backendUrl}/api/reports/${id}/chat`, {
+    const response = await fetch(`${backendUrl()}/api/reports/${id}/chat`, {
       method: 'POST',
-      headers: {
+      headers: backendHeaders({
         'Content-Type': 'application/json',
-      },
+      }),
       body: JSON.stringify(body),
     });
     
@@ -76,4 +77,4 @@ export async function POST(
       { status: 500 }
     );
   }
-} 
+}

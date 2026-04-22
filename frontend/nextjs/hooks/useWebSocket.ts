@@ -42,6 +42,21 @@ export const useWebSocket = (
     }, 30000); // Send ping every 30 seconds
   };
 
+  const getWebSocketToken = async (): Promise<string | null> => {
+    try {
+      const response = await fetch('/api/ws-token', { method: 'POST' });
+      if (!response.ok) {
+        console.error(`Failed to create WebSocket token: ${response.status}`);
+        return null;
+      }
+      const data = await response.json();
+      return data.ws_token || null;
+    } catch (error) {
+      console.error('Error creating WebSocket token:', error);
+      return null;
+    }
+  };
+
   const initializeWebSocket = useCallback((
     promptValue: string, 
     chatBoxSettings: ChatBoxSettings
@@ -60,14 +75,19 @@ export const useWebSocket = (
       let fullHost = getHost()
       const protocol = fullHost.includes('https') ? 'wss:' : 'ws:'
       const cleanHost = fullHost.replace('http://', '').replace('https://', '')
-      const ws_uri = `${protocol}//${cleanHost}/ws`
+      const buildWsUri = async () => {
+        const token = await getWebSocketToken();
+        const suffix = token ? `?ws_token=${encodeURIComponent(token)}` : '';
+        return `${protocol}//${cleanHost}/ws${suffix}`;
+      };
 
-      console.log(`Creating new WebSocket connection to ${ws_uri}`);
-      const newSocket = new WebSocket(ws_uri);
-      setSocket(newSocket);
+      buildWsUri().then((ws_uri) => {
+        console.log(`Creating new WebSocket connection to ${ws_uri.split('?')[0]}`);
+        const newSocket = new WebSocket(ws_uri);
+        setSocket(newSocket);
 
-      // WebSocket connection opened handler
-      newSocket.onopen = () => {
+        // WebSocket connection opened handler
+        newSocket.onopen = () => {
         console.log('WebSocket connection opened');
         
         const domainFilters = JSON.parse(localStorage.getItem('domainFilters') || '[]');
@@ -96,10 +116,10 @@ export const useWebSocket = (
           console.error("Error preparing start message:", error);
         }
         
-        startHeartbeat(newSocket);
-      };
+          startHeartbeat(newSocket);
+        };
 
-      newSocket.onmessage = (event) => {
+        newSocket.onmessage = (event) => {
         try {
           // Handle ping response
           if (event.data === 'pong') return;
@@ -130,22 +150,23 @@ export const useWebSocket = (
         } catch (error) {
           console.error('Error parsing WebSocket message:', error, event.data);
         }
-      };
+        };
 
-      newSocket.onclose = (event) => {
+        newSocket.onclose = (event) => {
         console.log(`WebSocket connection closed: code=${event.code}, reason=${event.reason}`);
         if (heartbeatInterval.current) {
           clearInterval(heartbeatInterval.current);
         }
         setSocket(null);
-      };
+        };
 
-      newSocket.onerror = (error) => {
+        newSocket.onerror = (error) => {
         console.error('WebSocket error:', error);
         if (heartbeatInterval.current) {
           clearInterval(heartbeatInterval.current);
         }
-      };
+        };
+      });
     }
   }, [socket, setOrderedData, setAnswer, setLoading, setShowHumanFeedback, setQuestionForHuman]);
 

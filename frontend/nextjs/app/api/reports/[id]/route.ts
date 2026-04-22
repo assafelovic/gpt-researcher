@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server';
+import { backendHeaders, backendUrl } from '../../_utils/backend';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
-  
   try {
     console.log(`GET /api/reports/${id} - Proxying request to backend`);
     
-    const response = await fetch(`${backendUrl}/api/reports/${id}`);
+    const response = await fetch(`${backendUrl()}/api/reports/${id}`, {
+      headers: backendHeaders(),
+    });
     
     if (!response.ok) {
       // Handle backend errors
@@ -37,13 +40,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
-  
   try {
     console.log(`DELETE /api/reports/${id} - Proxying request to backend`);
     
-    const response = await fetch(`${backendUrl}/api/reports/${id}`, {
+    const response = await fetch(`${backendUrl()}/api/reports/${id}`, {
       method: 'DELETE',
+      headers: backendHeaders(),
     });
     
     if (!response.ok && response.status !== 404) {
@@ -70,8 +72,6 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
-  
   try {
     // Parse the request body
     let body;
@@ -87,11 +87,11 @@ export async function PUT(
     
     console.log(`PUT /api/reports/${id} - Proxying request to backend`);
     
-    const response = await fetch(`${backendUrl}/api/reports/${id}`, {
+    const response = await fetch(`${backendUrl()}/api/reports/${id}`, {
       method: 'PUT',
-      headers: {
+      headers: backendHeaders({
         'Content-Type': 'application/json',
-      },
+      }),
       body: JSON.stringify(body),
     });
     
@@ -113,4 +113,4 @@ export async function PUT(
       { status: 500 }
     );
   }
-} 
+}

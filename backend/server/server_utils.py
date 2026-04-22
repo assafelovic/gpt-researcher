@@ -6,6 +6,7 @@ import re
 import time
 import shutil
 import traceback
+import uuid
 from typing import Awaitable, Dict, List, Any
 from fastapi.responses import JSONResponse, FileResponse
 from gpt_researcher.document.document import DocumentLoader
@@ -33,52 +34,119 @@ except ImportError:
 
 class CustomLogsHandler:
     """Custom handler to capture streaming logs from the research process"""
-    def __init__(self, websocket, task: str):
+    def __init__(self, websocket, task: str, research_id: str | None = None):
         self.logs = []
         self.websocket = websocket
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
+        self.research_id = research_id or generate_research_id(task)
+        self.run_id = self.research_id
+        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{self.research_id}_{task}")
         self.log_file = os.path.join("outputs", f"{sanitized_filename}.json")
         self.timestamp = datetime.now().isoformat()
+        self._lock = asyncio.Lock()
+
         # Initialize log file with metadata
         os.makedirs("outputs", exist_ok=True)
-        with open(self.log_file, 'w') as f:
-            json.dump({
-                "timestamp": self.timestamp,
-                "events": [],
-                "content": {
-                    "query": "",
-                    "sources": [],
-                    "context": [],
-                    "report": "",
-                    "costs": 0.0
-                }
-            }, f, indent=2)
+        with open(self.log_file, "w") as f:
+            json.dump(self._initial_log_data(), f, indent=2)
+
+    def _initial_log_data(self) -> Dict[str, Any]:
+        return {
+            "timestamp": self.timestamp,
+            "research_id": self.research_id,
+            "run_id": self.run_id,
+            "events": [],
+            "content": {
+                "query": "",
+                "sources": [],
+                "context": [],
+                "report": "",
+                "costs": 0.0,
+            },
+        }
+
+    def _with_run_metadata(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        enriched = dict(data)
+        enriched.setdefault("research_id", self.research_id)
+        enriched.setdefault("run_id", self.run_id)
+        return enriched
+
+    async def _read_log_data(self) -> Dict[str, Any]:
+        if not os.path.exists(self.log_file):
+            return self._initial_log_data()
+
+        try:
+            async with aiofiles.open(self.log_file, "r") as f:
+                content = await f.read()
+            log_data = json.loads(content) if content.strip() else self._initial_log_data()
+        except json.JSONDecodeError:
+            corrupt_path = f"{self.log_file}.corrupt.{int(time.time())}"
+            try:
+                os.replace(self.log_file, corrupt_path)
+                logger.warning(
+                    "Preserved corrupt research log and reinitialized it",
+                    extra={"research_id": self.research_id, "corrupt_path": corrupt_path},
+                )
+            except OSError:
+                logger.warning("Failed to preserve corrupt research log", exc_info=True)
+            return self._initial_log_data()
+
+        log_data.setdefault("timestamp", self.timestamp)
+        log_data.setdefault("research_id", self.research_id)
+        log_data.setdefault("run_id", self.run_id)
+        log_data.setdefault("events", [])
+        log_data.setdefault("content", self._initial_log_data()["content"])
+        return log_data
+
+    async def _write_log_data(self, log_data: Dict[str, Any]) -> None:
+        tmp_path = f"{self.log_file}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
+        async with aiofiles.open(tmp_path, "w") as f:
+            await f.write(json.dumps(log_data, indent=2))
+        os.replace(tmp_path, self.log_file)
 
     async def send_json(self, data: Dict[str, Any]) -> None:
         """Store log data and send to websocket"""
+        enriched_data = self._with_run_metadata(data)
+
         # Send to websocket for real-time display
         if self.websocket:
-            await self.websocket.send_json(data)
+            try:
+                await self.websocket.send_json(enriched_data)
+            except Exception:
+                logger.warning(
+                    "Failed to send WebSocket log event",
+                    extra={"research_id": self.research_id},
+                    exc_info=True,
+                )
 
-        # Read current log file asynchronously (avoid blocking the event loop)
-        async with aiofiles.open(self.log_file, 'r') as f:
-            content = await f.read()
-            log_data = json.loads(content)
+        try:
+            async with self._lock:
+                log_data = await self._read_log_data()
 
-        # Update appropriate section based on data type
-        if data.get('type') == 'logs':
-            log_data['events'].append({
-                "timestamp": datetime.now().isoformat(),
-                "type": "event",
-                "data": data
-            })
-        else:
-            # Update content section for other types of data
-            log_data['content'].update(data)
+                # Update appropriate section based on data type
+                if enriched_data.get("type") == "logs":
+                    log_data["events"].append({
+                        "timestamp": datetime.now().isoformat(),
+                        "type": "event",
+                        "data": enriched_data,
+                    })
+                    content_update = {
+                        key: enriched_data[key]
+                        for key in ("query", "sources", "context", "report", "costs")
+                        if key in enriched_data
+                    }
+                    if content_update:
+                        log_data["content"].update(content_update)
+                else:
+                    # Update content section for other types of data
+                    log_data["content"].update(enriched_data)
 
-        # Save updated log file asynchronously
-        async with aiofiles.open(self.log_file, 'w') as f:
-            await f.write(json.dumps(log_data, indent=2))
+                await self._write_log_data(log_data)
+        except Exception:
+            logger.warning(
+                "Failed to persist research log event",
+                extra={"research_id": self.research_id, "log_file": self.log_file},
+                exc_info=True,
+            )
 
 
 class Researcher:
@@ -125,6 +193,11 @@ def sanitize_filename(filename: str) -> str:
     return re.sub(r"[^\w\s-]", "", sanitized).strip()
 
 
+def generate_research_id(task: str) -> str:
+    task_hash = hashlib.md5(task.encode("utf-8", errors="ignore")).hexdigest()[:10]
+    return f"research_{int(time.time())}_{task_hash}_{uuid.uuid4().hex[:8]}"
+
+
 async def handle_start_command(websocket, data: str, manager):
     json_data = json.loads(data[6:])
     (
@@ -146,38 +219,65 @@ async def handle_start_command(websocket, data: str, manager):
         logger.error("Missing task or report_type")
         return
 
+    research_id = json_data.get("research_id") or generate_research_id(task)
+
     # Create logs handler with websocket and task
-    logs_handler = CustomLogsHandler(websocket, task)
+    logs_handler = CustomLogsHandler(websocket, task, research_id=research_id)
     # Initialize log content with query
     await logs_handler.send_json({
+        "type": "logs",
+        "content": "research_started",
+        "output": f"Research started: {task}",
         "query": task,
         "sources": [],
         "context": [],
-        "report": ""
+        "report": "",
     })
 
     sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
 
-    report = await manager.start_streaming(
-        task,
-        report_type,
-        report_source,
-        source_urls,
-        document_urls,
-        tone,
-        websocket,
-        headers,
-        query_domains,
-        mcp_enabled,
-        mcp_strategy,
-        mcp_configs,
-        max_search_results,
-    )
+    try:
+        report = await manager.start_streaming(
+            task,
+            report_type,
+            report_source,
+            source_urls,
+            document_urls,
+            tone,
+            websocket,
+            headers,
+            query_domains,
+            mcp_enabled,
+            mcp_strategy,
+            mcp_configs,
+            max_search_results,
+            logs_handler=logs_handler,
+        )
+    except Exception as e:
+        logger.error(
+            "Error running research task",
+            extra={"research_id": research_id},
+            exc_info=True,
+        )
+        await logs_handler.send_json({
+            "type": "logs",
+            "content": "error",
+            "output": f"Error: {e}",
+        })
+        return
+
     report = str(report)
     file_paths = await generate_report_files(report, sanitized_filename)
     # Add JSON log path to file_paths
     file_paths["json"] = os.path.relpath(logs_handler.log_file)
-    await send_file_paths(websocket, file_paths)
+    file_paths["research_id"] = research_id
+    file_paths["run_id"] = research_id
+    await logs_handler.send_json({
+        "type": "logs",
+        "content": "research_completed",
+        "output": "Research completed",
+    })
+    await send_file_paths(websocket, file_paths, research_id=research_id)
 
 
 async def handle_human_feedback(data: str):
@@ -262,8 +362,12 @@ async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
     return {"pdf": pdf_path, "docx": docx_path, "md": md_path}
 
 
-async def send_file_paths(websocket, file_paths: Dict[str, str]):
-    await websocket.send_json({"type": "path", "output": file_paths})
+async def send_file_paths(websocket, file_paths: Dict[str, str], research_id: str | None = None):
+    payload = {"type": "path", "output": file_paths}
+    if research_id:
+        payload["research_id"] = research_id
+        payload["run_id"] = research_id
+    await websocket.send_json(payload)
 
 
 def get_config_dict(

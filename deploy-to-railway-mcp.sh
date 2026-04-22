@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy the GPT Researcher FastAPI/frontend service to Railway.
+# Deploy the hosted GPT Researcher MCP service to Railway.
 
 set -euo pipefail
 
@@ -7,8 +7,9 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$here"
 
 project_name="${RAILWAY_PROJECT_NAME:-gpt-researcher}"
-service_name="${RAILWAY_API_SERVICE:-gpt-researcher-api}"
-deploy_marker="api-$(date +%Y%m%d%H%M%S)-$RANDOM"
+service_name="${RAILWAY_MCP_SERVICE:-gpt-researcher-mcp}"
+mcp_start_cmd='python -m uvicorn mcp_server.server:app --host=0.0.0.0 --port=${PORT}'
+deploy_marker="mcp-$(date +%Y%m%d%H%M%S)-$RANDOM"
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -110,7 +111,7 @@ wait_for_health() {
     if echo "$body" | grep -q "\"service\":\"$expected_service\"" && {
       [ -z "$expected_marker" ] || echo "$body" | grep -q "\"deploy_marker\":\"$expected_marker\""
     }; then
-      echo "$body" >/tmp/gptr-api-health.json
+      echo "$body" >/tmp/gptr-mcp-health.json
       return
     fi
     echo "  waiting for $expected_service /health (${i}/60)"
@@ -132,19 +133,15 @@ fi
 echo "  logged in as: $(railway whoami)"
 
 echo ""
-echo "=== 2. Verify API entrypoint and env ==="
-if ! grep -qF "railway-start.sh" Procfile || [ ! -x railway-start.sh ]; then
-  echo "ERROR: Procfile must use executable railway-start.sh"
-  exit 1
-fi
+echo "=== 2. Verify MCP env ==="
 if [ ! -f .env ]; then
   echo "ERROR: .env not found in $here"
   exit 1
 fi
 require_env OPENAI_API_KEY
 require_env TAVILY_API_KEY
-require_env API_AUTH_KEY
-api_auth_key="$(env_value API_AUTH_KEY)"
+require_env MCP_AUTH_TOKEN
+mcp_auth_token="$(env_value MCP_AUTH_TOKEN)"
 echo "  required env vars present"
 
 echo ""
@@ -155,10 +152,12 @@ ensure_service "$service_name"
 echo ""
 echo "=== 4. Push env vars to $service_name ==="
 push_env_file "$service_name"
-railway variable set --service "$service_name" --skip-deploys "GPT_RESEARCHER_SERVICE=api" >/dev/null
+railway variable set --service "$service_name" --skip-deploys "GPT_RESEARCHER_SERVICE=mcp" >/dev/null
 echo "  set GPT_RESEARCHER_SERVICE"
-railway variable set --service "$service_name" --skip-deploys "RAILPACK_START_CMD=./railway-start.sh" >/dev/null
+railway variable set --service "$service_name" --skip-deploys "RAILPACK_START_CMD=$mcp_start_cmd" >/dev/null
 echo "  set RAILPACK_START_CMD"
+railway variable set --service "$service_name" --skip-deploys "NIXPACKS_START_CMD=$mcp_start_cmd" >/dev/null
+echo "  set NIXPACKS_START_CMD"
 railway variable set --service "$service_name" --skip-deploys "HLT_DEPLOY_MARKER=$deploy_marker" >/dev/null
 echo "  set HLT_DEPLOY_MARKER"
 
@@ -178,35 +177,54 @@ echo "  public URL: $url"
 echo ""
 echo "=== 7. Smoke tests ==="
 echo "  /health"
-wait_for_health "$url" "gpt-researcher-api" "$deploy_marker"
-cat /tmp/gptr-api-health.json
+wait_for_health "$url" "gpt-researcher-mcp" "$deploy_marker"
+cat /tmp/gptr-mcp-health.json
 echo ""
 
-echo "  unauthenticated /api/quick_search should be 401"
-unauth_code="$(curl -sS -o /tmp/gptr-api-unauth.json -w '%{http_code}' -X POST \
-  "$url/api/quick_search" \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"NCLEX-RN pass rate 2026","summary":true}' || echo "000")"
+echo "  unauthenticated /mcp should be 401"
+unauth_code="$(curl -sS -o /tmp/gptr-mcp-unauth.json -w '%{http_code}' \
+  -H 'Accept: application/json, text/event-stream' \
+  "$url/mcp" || echo "000")"
 if [ "$unauth_code" != "401" ]; then
   echo "ERROR: expected 401, got $unauth_code"
-  cat /tmp/gptr-api-unauth.json || true
+  cat /tmp/gptr-mcp-unauth.json || true
   exit 1
 fi
 echo "  got 401"
 
-echo "  authenticated /api/quick_search should be 200"
-auth_code="$(curl -sS -o /tmp/gptr-api-auth.json -w '%{http_code}' -X POST \
-  "$url/api/quick_search" \
+echo "  authenticated MCP initialize and tools/list"
+headers_file="$(mktemp)"
+body_file="$(mktemp)"
+curl -sS -D "$headers_file" -o "$body_file" -X POST "$url/mcp" \
+  -H "Authorization: Bearer $mcp_auth_token" \
   -H 'Content-Type: application/json' \
-  -H "X-API-Key: $api_auth_key" \
-  -d '{"query":"NCLEX-RN pass rate 2026","summary":true}' || echo "000")"
-if [ "$auth_code" != "200" ]; then
-  echo "ERROR: expected 200, got $auth_code"
-  cat /tmp/gptr-api-auth.json || true
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"railway-smoke","version":"1.0.0"}}}'
+if ! grep -q '"result"' "$body_file"; then
+  echo "ERROR: MCP initialize did not return a result"
+  cat "$body_file"
   exit 1
 fi
-head -c 500 /tmp/gptr-api-auth.json
+
+session_id="$(awk 'tolower($1) == "mcp-session-id:" {print $2}' "$headers_file" | tr -d '\r' | head -1)"
+tools_headers=(
+  -H "Authorization: Bearer $mcp_auth_token"
+  -H 'Content-Type: application/json'
+  -H 'Accept: application/json, text/event-stream'
+)
+if [ -n "$session_id" ]; then
+  tools_headers+=(-H "mcp-session-id: $session_id")
+fi
+curl -sS -o /tmp/gptr-mcp-tools.json -X POST "$url/mcp" \
+  "${tools_headers[@]}" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+if ! grep -q 'deep_research' /tmp/gptr-mcp-tools.json || ! grep -q 'quick_search' /tmp/gptr-mcp-tools.json; then
+  echo "ERROR: MCP tools/list did not include expected GPT Researcher tools"
+  cat /tmp/gptr-mcp-tools.json
+  exit 1
+fi
+head -c 500 /tmp/gptr-mcp-tools.json
 echo ""
 
 echo ""
-echo "Done. API URL: $url"
+echo "Done. MCP URL: $url/mcp"

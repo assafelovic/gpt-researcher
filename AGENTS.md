@@ -35,9 +35,12 @@ following servers auto-mount from `.mcp.json`:
 2. **`multimediaMastery`** (HTTP, hosted) — image / video / TTS generation.
    Live at `multimediamastery.vercel.app/api/media/v1/*`. Default image model:
    FAL nano-banana-2. Cloudinary upload server-side.
-3. **`axon-codegraph`** (stdio) — local code graph index. Tools: `query`,
-   `context`, `impact`, `dead-code`, `cypher`. Run `axon status` from this
-   repo's root to confirm freshness.
+3. **`gpt-researcher`** (HTTP, hosted) — HLT-hosted GPT Researcher MCP server.
+   URL: `https://gpt-researcher-mcp-production.up.railway.app/mcp`.
+   Auth: `Authorization: Bearer ${GPTR_MCP_TOKEN}`. Tools:
+   `deep_research`, `quick_search`, `write_report`, `get_research_sources`,
+   `get_research_context`; resource: `research://{topic}`. Owner's manual:
+   `docs/usage/owners-manual.md`.
 
 ## Rules of engagement
 
@@ -45,9 +48,11 @@ following servers auto-mount from `.mcp.json`:
    call `discover` against the registry before assuming what's available.
    Many things you might want to build already exist as skills, KBs, prompts,
    playbooks, rubrics, schemas.
-2. **Axon second** — for code understanding inside this repo, prefer
-   `axon query "..."` over grep. The graph captures call chains + dead code +
-   coupling that plain grep misses.
+2. **Upstream-compatible changes only** — this is an external community repo,
+   not an HLT-owned product codebase. Prefer configuration, deployment wrappers,
+   docs, hosted MCP registration, and isolated HLT modules over broad edits to
+   upstream files. If a change belongs upstream, keep it small enough to PR
+   cleanly or document it as an overlay.
 3. **No stale docs** — if you change behavior that this AGENTS.md describes,
    update this file in the same commit.
 4. **Registry counts rule** — when surfacing a count from the registry,
@@ -59,7 +64,9 @@ following servers auto-mount from `.mcp.json`:
 
 ## Read first (in order)
 
-1. `llms.txt` — repo orientation auto-generated nightly, link cross-repo
+1. `llms.txt` — repo orientation auto-generated nightly, link cross-repo.
+   Root `llm*.txt` dumps are gitignored in this fork; if absent, regenerate
+   them from the nightly hygiene workflow or use the ecosystem maps above.
 2. `README.md` — human-facing overview if present
 3. `package.json` (or `pyproject.toml` / `Cargo.toml`) — stack + scripts
 4. The "Inspect first in this repo" list in `llms.txt`

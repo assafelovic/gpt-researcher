@@ -16,8 +16,13 @@ venv.bak/
 #Ignore generated outputs
 outputs/
 *.lock
+!uv.lock
 dist/
 gpt_researcher.egg-info/
+
+# HLT: auto-generated canon dumps (rebuilt nightly by repo-hygiene-nightly.yml in ~/hlt/katailyst)
+/llm.txt
+/llms*.txt
 
 #Ignore my local docs
 my-docs/

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { backendHeaders, backendUrl } from '../_utils/backend';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
-  
   try {
     // Parse the request body
     let body;
@@ -18,11 +19,11 @@ export async function POST(request: Request) {
     
     console.log(`POST /api/chat - Proxying request to backend`);
     
-    const response = await fetch(`${backendUrl}/api/chat`, {
+    const response = await fetch(`${backendUrl()}/api/chat`, {
       method: 'POST',
-      headers: {
+      headers: backendHeaders({
         'Content-Type': 'application/json',
-      },
+      }),
       body: JSON.stringify(body),
     });
     
@@ -35,4 +36,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-} 
+}

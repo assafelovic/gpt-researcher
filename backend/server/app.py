@@ -375,6 +375,13 @@ async def delete_file(filename: str):
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    if not (
+        _hlt_api_key_is_valid(websocket.headers.get("x-api-key"))
+        or _hlt_websocket_token_is_valid(websocket.query_params.get("ws_token"))
+    ):
+        await websocket.close(code=1008, reason="Missing or invalid X-API-Key header")
+        return
+
     await manager.connect(websocket)
     try:
         await handle_websocket_communication(websocket, manager)
@@ -454,3 +461,17 @@ async def quick_search_endpoint(search_request: QuickSearchRequest):
     except Exception as e:
         logger.error(f"Error in quick_search: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.post("/api/ws-token")
+async def websocket_token_endpoint():
+    return {"ws_token": _hlt_create_websocket_token(), "expires_in": 120}
+
+
+# HLT: /health + optional X-API-Key middleware. Isolated in a sibling module
+# so upstream merges stay clean. If `app.py` regresses, re-add this block.
+from server.hlt_extensions import api_key_is_valid as _hlt_api_key_is_valid  # noqa: E402
+from server.hlt_extensions import create_websocket_token as _hlt_create_websocket_token  # noqa: E402
+from server.hlt_extensions import install as _install_hlt_extensions  # noqa: E402
+from server.hlt_extensions import websocket_token_is_valid as _hlt_websocket_token_is_valid  # noqa: E402
+_install_hlt_extensions(app)
