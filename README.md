@@ -263,17 +263,37 @@ Step 2:
 
 ## 🤖 MCP Server
 
-We've moved our MCP server to a dedicated repository: [gptr-mcp](https://github.com/assafelovic/gptr-mcp).
+Upstream GPT Researcher points users to the dedicated
+[gptr-mcp](https://github.com/assafelovic/gptr-mcp) repository. This HLT fork
+also ships a small hosted MCP overlay in `mcp_server/` so internal agents can use
+the local `gpt_researcher` package through Railway.
 
-The GPT Researcher MCP Server enables AI applications like Claude to conduct deep research. While LLM apps can access web search tools with MCP, GPT Researcher MCP delivers deeper, more reliable research results.
+Hosted HLT endpoint:
+
+```text
+https://gpt-researcher-mcp-production.up.railway.app/mcp
+```
+
+Auth:
+
+```text
+Authorization: Bearer $GPTR_MCP_TOKEN
+```
+
+The hosted MCP server enables AI applications like Claude Code, Claude Desktop,
+Cursor, and Katailyst-routed agents to conduct deep research through a stable
+streamable HTTP endpoint.
 
 Features:
 - Deep research capabilities for AI assistants
 - Higher quality information with optimized context usage
 - Comprehensive results with better reasoning for LLMs
-- Claude Desktop integration
+- Claude Desktop, Claude Code, Cursor, and Katailyst integration
+- Fast `quick_search` plus stateful `deep_research` -> `write_report` flows
 
-For detailed installation and usage instructions, please visit the [official repository](https://github.com/assafelovic/gptr-mcp).
+For HLT connection details, Railway deployment notes, and curl smoke tests, see
+[`docs/usage/hosted-mcp.md`](docs/usage/hosted-mcp.md). For the upstream
+standalone server, use the [official gptr-mcp repository](https://github.com/assafelovic/gptr-mcp).
 
 
 ## 👪 Multi-Agent Assistant

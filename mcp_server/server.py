@@ -26,7 +26,10 @@ def _allowed_hosts() -> list[str]:
     configured = os.getenv("MCP_ALLOWED_HOSTS")
     if configured:
         return [host.strip() for host in configured.split(",") if host.strip()]
+    port = os.getenv("PORT", "8001")
     return [
+        f"127.0.0.1:{port}",
+        f"localhost:{port}",
         "127.0.0.1",
         "localhost",
         "0.0.0.0",

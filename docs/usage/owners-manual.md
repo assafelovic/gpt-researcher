@@ -68,6 +68,24 @@ That gives agents these tools:
 The MCP service keeps a bounded in-memory research store with TTL. Treat
 `research_id` as short-lived workflow state, not permanent storage.
 
+## Content Machine And Admin Handoff
+
+GPT Researcher should provide cited research context to the content machine; it
+should not own article drafting, admin UI controls, forum posting, replies, or
+infographic generation. Wire those capabilities through the calling HLT systems:
+
+- Research: `tool:gpt-researcher.mcp`, using `quick_search` or
+  `deep_research` before content generation.
+- Articles: `playbook:make-article` or `playbook:create-article` in Katailyst,
+  usually executed from Sidecar/admin with GPT Researcher context attached.
+- Infographics and visuals: `skill:create-multimedia`,
+  `skill:image-prompting`, and the Multimedia Mastery/Cloudinary lane.
+- Social and community posts: `playbook:make-social`, with distribution gated
+  by verified provider targets.
+- Forums: forum-template must expose write endpoints for threads/comments
+  before agents can post or reply. Until then, GPT Researcher can only supply
+  research packets and suggested responses for review.
+
 ## When To Use Which Surface
 
 Use the browser UI when:

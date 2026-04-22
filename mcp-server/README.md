@@ -44,8 +44,13 @@ From the repo root:
 
 ```bash
 MCP_AUTH_TOKEN=dev-token \
+MCP_ALLOWED_HOSTS=127.0.0.1:8001,localhost:8001,127.0.0.1,localhost,0.0.0.0 \
 python -m uvicorn mcp_server.server:app --host=0.0.0.0 --port=8001
 ```
+
+FastMCP validates the full HTTP `Host` header for streamable HTTP. Include the
+local port in `MCP_ALLOWED_HOSTS`; otherwise authenticated `/mcp` calls can fail
+with `Invalid Host header` even though `/health` works.
 
 The Railway MCP service also runs from the repo root. Do not set the service
 root directory to `mcp-server/`; that would hide the parent package.

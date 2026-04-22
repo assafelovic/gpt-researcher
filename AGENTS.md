@@ -6,7 +6,9 @@
 
 ## What this repo is
 
-Research orchestration lane. Currently 6 commits diverged from upstream (24 behind) — sync before doing orchestrate-adjacent work. Used for deep customer/competitive research that feeds article writing.
+Research orchestration lane. As of 2026-04-22, this fork is 20 commits ahead of
+and 24 commits behind upstream `main`; sync before doing orchestrate-adjacent
+work. Used for deep customer/competitive research that feeds article writing.
 
 ## Where it sits in the HLT ecosystem
 

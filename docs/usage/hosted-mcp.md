@@ -47,6 +47,17 @@ Claude Desktop:
 
 ## MCP Curl Smoke
 
+Local run from the repo root:
+
+```bash
+MCP_AUTH_TOKEN=dev-token \
+MCP_ALLOWED_HOSTS=127.0.0.1:8001,localhost:8001,127.0.0.1,localhost,0.0.0.0 \
+python -m uvicorn mcp_server.server:app --host=0.0.0.0 --port=8001
+```
+
+FastMCP validates the full `Host` header, so include the local port in
+`MCP_ALLOWED_HOSTS` when overriding the default.
+
 Initialize and capture the MCP session id:
 
 ```bash
