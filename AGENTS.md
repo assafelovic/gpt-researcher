@@ -6,8 +6,9 @@
 
 ## What this repo is
 
-Research orchestration lane. As of 2026-04-22, this fork is 20 commits ahead of
-and 24 commits behind upstream `main`; sync before doing orchestrate-adjacent
+Research orchestration lane. As of 2026-04-22, this fork is 24 commits behind
+upstream `main` and carries HLT-specific commits on top; run
+`git rev-list --left-right --count upstream/main...HEAD` before sync-sensitive
 work. Used for deep customer/competitive research that feeds article writing.
 
 ## Where it sits in the HLT ecosystem
