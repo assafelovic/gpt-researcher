@@ -2,6 +2,7 @@ import Image from "next/image";
 import React, { FC, useEffect, useState, useRef } from "react";
 import InputArea from "./ResearchBlocks/elements/InputArea";
 import { motion, AnimatePresence } from "framer-motion";
+import { hltBranding } from "@/lib/hltBranding";
 
 type THeroProps = {
   promptValue: string;
@@ -99,7 +100,7 @@ const Hero: FC<THeroProps> = ({
   };
 
   return (
-    <div className="relative overflow-visible min-h-[100vh] flex items-center pt-[60px] sm:pt-[80px] mt-[-60px] sm:mt-[-130px]">
+    <div className="relative overflow-visible min-h-[100vh] flex items-center pt-[72px] sm:pt-[88px] mt-[-60px] sm:mt-[-110px]">
       {/* Particle background */}
       <div ref={particlesContainerRef} className="absolute inset-0 -z-20"></div>
       
@@ -111,12 +112,12 @@ const Hero: FC<THeroProps> = ({
         className="flex flex-col items-center justify-center w-full py-6 sm:py-8 md:py-16 lg:pt-10 lg:pb-20"
       >
         {/* Header text */}
-        <motion.h1 
+        <motion.h1
           variants={fadeInUp}
           transition={{ duration: 0.8, delay: 0.1 }}
           className="text-2xl sm:text-3xl md:text-4xl font-medium text-center text-white mb-8 sm:mb-10 md:mb-12 px-4"
         >
-          What would you like to research next?
+          {hltBranding.enabled ? hltBranding.heroTitle : "What would you like to research next?"}
         </motion.h1>
 
         {/* Input section with enhanced styling */}
@@ -143,7 +144,9 @@ const Hero: FC<THeroProps> = ({
             className="mt-6 text-center px-4"
           >
             <p className="text-gray-400 text-sm font-light">
-              GPT Researcher may make mistakes. Verify important information and check sources.
+              {hltBranding.enabled
+                ? hltBranding.heroNote
+                : "GPT Researcher may make mistakes. Verify important information and check sources."}
             </p>
           </motion.div>
         </motion.div>
@@ -199,8 +202,12 @@ const Hero: FC<THeroProps> = ({
             className="absolute inset-0"
             style={{
               opacity: 0.85,
-              background: 'radial-gradient(ellipse at center, rgba(12, 219, 182, 1) 0%, rgba(6, 219, 238, 0.7) 25%, rgba(6, 219, 238, 0.2) 50%, rgba(0, 0, 0, 0) 75%)',
-              boxShadow: '0 0 30px 6px rgba(12, 219, 182, 0.5), 0 0 60px 10px rgba(6, 219, 238, 0.25)'
+              background: hltBranding.enabled
+                ? 'radial-gradient(ellipse at center, rgba(21, 94, 239, 1) 0%, rgba(15, 174, 205, 0.72) 28%, rgba(15, 174, 205, 0.2) 52%, rgba(0, 0, 0, 0) 75%)'
+                : 'radial-gradient(ellipse at center, rgba(12, 219, 182, 1) 0%, rgba(6, 219, 238, 0.7) 25%, rgba(6, 219, 238, 0.2) 50%, rgba(0, 0, 0, 0) 75%)',
+              boxShadow: hltBranding.enabled
+                ? '0 0 30px 6px rgba(21, 94, 239, 0.48), 0 0 60px 10px rgba(15, 174, 205, 0.22)'
+                : '0 0 30px 6px rgba(12, 219, 182, 0.5), 0 0 60px 10px rgba(6, 219, 238, 0.25)'
             }}
           />
           

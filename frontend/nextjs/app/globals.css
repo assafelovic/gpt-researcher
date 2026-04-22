@@ -49,7 +49,10 @@ body {
   margin: 0px !important;
   min-height: 100%;
   position: relative;
-  background: #0C111F;
+  background:
+    radial-gradient(circle at 10% -10%, rgba(21, 94, 239, 0.18), transparent 28%),
+    radial-gradient(circle at 92% 12%, rgba(15, 174, 205, 0.12), transparent 28%),
+    linear-gradient(180deg, #06101C 0%, #0B2B33 52%, #06101C 100%);
   overflow-x: hidden;
 }
 
@@ -62,7 +65,7 @@ body::before {
   width: 60%;
   height: 60%;
   border-radius: 9999px;
-  background-color: rgba(13, 148, 136, 0.12);
+  background-color: rgba(21, 94, 239, 0.12);
   filter: blur(120px);
   z-index: -10;
 }
@@ -75,7 +78,7 @@ body::after {
   width: 60%;
   height: 60%;
   border-radius: 9999px;
-  background-color: rgba(8, 145, 178, 0.12);
+  background-color: rgba(15, 174, 205, 0.12);
   filter: blur(120px);
   z-index: -10;
 }
@@ -218,4 +221,3 @@ body::after {
 .sidebar-z-index {
   z-index: 50;
 }
-

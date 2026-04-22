@@ -4,7 +4,8 @@ import LoadingDots from '@/components/LoadingDots';
 import { Data } from '@/types/data';
 import Question from '@/components/ResearchBlocks/Question';
 import ChatResponse from '@/components/ResearchBlocks/ChatResponse';
-import Image from 'next/image';
+import CatalystMark from "@/components/CatalystMark";
+import { hltBranding } from "@/lib/hltBranding";
 
 interface CopilotPanelProps {
   question: string;
@@ -45,7 +46,7 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
 
   // Reference to the chat container
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Function to scroll to bottom
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -61,15 +62,15 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
   // Also handle mutations in the DOM that might affect scroll height
   useEffect(() => {
     if (!chatContainerRef.current) return;
-    
+
     const observer = new MutationObserver(scrollToBottom);
-    
+
     observer.observe(chatContainerRef.current, {
       childList: true,
       subtree: true,
       characterData: true
     });
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -80,19 +81,23 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
         {/* Left side */}
         <div className="flex items-center">
           <a href="/" className="mr-3">
-            <img
-              src="/img/gptr-logo.png"
-              alt="logo"
-              width={32}
-              height={32}
-              className="rounded-md"
-            />
+            {hltBranding.enabled ? (
+              <CatalystMark className="h-8 w-8 rounded-md" />
+            ) : (
+              <img
+                src="/img/gptr-logo.png"
+                alt="logo"
+                width={32}
+                height={32}
+                className="rounded-md"
+              />
+            )}
           </a>
           <h2 className="text-base font-medium text-gray-200">
-            GPT Researcher
+            {hltBranding.enabled ? hltBranding.productName : "GPT Researcher"}
           </h2>
         </div>
-        
+
         {/* Right side */}
         <div className="flex items-center gap-3">
           {/* Connection status indicator */}
@@ -100,10 +105,10 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
             <div className={`w-1.5 h-1.5 rounded-full ${loading || isProcessingChat ? 'bg-amber-500 animate-pulse' : 'bg-teal-500'} mr-2`}></div>
             <span className="text-xs text-gray-400">{loading ? 'researching' : isProcessingChat ? 'thinking' : 'active'}</span>
           </div>
-          
+
           {/* Toggle button */}
           {setIsCopilotVisible && (
-            <button 
+            <button
               onClick={(e) => {
                 e.preventDefault();
                 setIsCopilotVisible(false);
@@ -120,8 +125,8 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
       </div>
 
       {/* Chat Messages - Scrollable */}
-      <div 
-        ref={chatContainerRef} 
+      <div
+        ref={chatContainerRef}
         className="flex-1 overflow-y-auto py-2 px-2 custom-scrollbar bg-gray-900/20"
       >
         {/* Status message - conditional on research state */}
@@ -200,24 +205,24 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
-        
+
         .animate-pulse {
           animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-track {
           background: rgba(17, 24, 39, 0.1);
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: rgba(75, 85, 99, 0.5);
           border-radius: 20px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(75, 85, 99, 0.7);
         }
@@ -226,4 +231,4 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
   );
 };
 
-export default CopilotPanel; 
+export default CopilotPanel;

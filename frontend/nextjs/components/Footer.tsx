@@ -1,8 +1,8 @@
 import React from 'react';
-import Image from "next/image";
 import Link from "next/link";
 import Modal from './Settings/Modal';
 import { ChatBoxSettings } from '@/types/data';
+import { hltBranding } from "@/lib/hltBranding";
 
 interface FooterProps {
   chatBoxSettings: ChatBoxSettings;
@@ -28,9 +28,16 @@ const Footer: React.FC<FooterProps> = ({ chatBoxSettings, setChatBoxSettings }) 
       <div className="container flex flex-col sm:flex-row min-h-[60px] sm:min-h-[72px] mt-2 items-center justify-center sm:justify-between border-t border-gray-700/30 px-4 pb-3 pt-4 sm:py-5 lg:px-0 bg-transparent backdrop-blur-sm gap-3 sm:gap-0">
         <Modal setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
         <div className="text-xs sm:text-sm text-gray-100 text-center sm:text-left order-2 sm:order-1">
-            © {new Date().getFullYear()} GPT Researcher. All rights reserved.
+            {hltBranding.enabled
+              ? `${new Date().getFullYear()} ${hltBranding.ownerName}. Powered by GPT Researcher.`
+              : `${new Date().getFullYear()} GPT Researcher. All rights reserved.`}
         </div>
         <div className="flex items-center gap-4 order-1 sm:order-2 mb-2 sm:mb-0">
+          {hltBranding.enabled && (
+            <Link href={hltBranding.katailystUrl} target="_blank" className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-200 hover:text-white transition-colors duration-300">
+              {hltBranding.platformName}
+            </Link>
+          )}
           <Link href={"https://gptr.dev"} target="_blank" className="p-1">
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 

@@ -30,6 +30,9 @@ curl -fsS https://gpt-researcher-mcp-production.up.railway.app/health
 Connection details and raw curl examples live in
 [`docs/usage/hosted-mcp.md`](./hosted-mcp.md).
 
+Branding, Catalyst embedding options, and performance configuration guidance
+live in [`docs/usage/branding-and-catalyst-options.md`](./branding-and-catalyst-options.md).
+
 ## What Your Agents Can Do
 
 Any agent with the MCP token can mount the hosted MCP endpoint and use GPT

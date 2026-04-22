@@ -3,6 +3,8 @@ import { ResearchHistoryItem } from '@/types/data';
 import { useResearchHistoryContext } from '@/hooks/ResearchHistoryContext';
 import LoadingDots from '@/components/LoadingDots';
 import { toast } from "react-hot-toast";
+import CatalystMark from "@/components/CatalystMark";
+import { hltBranding } from "@/lib/hltBranding";
 
 interface MobileHomeScreenProps {
   promptValue: string;
@@ -67,11 +69,11 @@ export default function MobileHomeScreen({
     if (!promptValue.trim() || isLoading || isSubmitting) {
       return;
     }
-    
+
     try {
       // Set submitting state for UI feedback
       setIsSubmitting(true);
-      
+
       // Add a timeout as a safety measure to prevent infinite loading
       submissionTimeoutRef.current = setTimeout(() => {
         setIsSubmitting(false);
@@ -80,15 +82,15 @@ export default function MobileHomeScreen({
           position: "bottom-center"
         });
       }, 15000); // 15 second timeout
-      
+
       // Create a new simplified direct API submission that won't use websockets
       try {
         // First show visual feedback
         const trimmedPrompt = promptValue.trim();
-        
+
         // Call the display result handler from props
         await handleDisplayResult(trimmedPrompt);
-        
+
         // Clear the timeout since we successfully completed
         if (submissionTimeoutRef.current) {
           clearTimeout(submissionTimeoutRef.current);
@@ -100,7 +102,7 @@ export default function MobileHomeScreen({
           duration: 3000,
           position: "bottom-center"
         });
-        
+
         // Clear submission state
         setIsSubmitting(false);
       }
@@ -108,7 +110,7 @@ export default function MobileHomeScreen({
       console.error("Error during research submission:", error);
       // Reset state in case of error
       setIsSubmitting(false);
-      
+
       // Clear any existing timeout
       if (submissionTimeoutRef.current) {
         clearTimeout(submissionTimeoutRef.current);
@@ -122,7 +124,7 @@ export default function MobileHomeScreen({
     if (handleKeyDown) {
       handleKeyDown(e);
     }
-    
+
     // Submit on Enter (without shift)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -135,20 +137,31 @@ export default function MobileHomeScreen({
       {/* Header with logo and title */}
       <div className="pt-10 px-6 text-center mb-8">
         <div className="flex justify-center mb-3">
-          <img
-            src="/img/gptr-logo.png"
-            alt="GPT Researcher"
-            width={60}
-            height={60}
-            className="rounded-xl"
-          />
+          {hltBranding.enabled ? (
+            <CatalystMark className="h-[60px] w-[60px] rounded-xl" />
+          ) : (
+            <img
+              src="/img/gptr-logo.png"
+              alt="GPT Researcher"
+              width={60}
+              height={60}
+              className="rounded-xl"
+            />
+          )}
         </div>
-        <p className="text-gray-400 text-sm">Say Hello to GPT Researcher, your AI partner for instant insights and comprehensive research</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
+          {hltBranding.enabled ? hltBranding.productName : "GPT Researcher"}
+        </p>
+        <p className="mt-2 text-gray-400 text-sm">
+          {hltBranding.enabled
+            ? "Source-backed research for the HLT agent stack."
+            : "Say Hello to GPT Researcher, your AI partner for instant insights and comprehensive research"}
+        </p>
       </div>
 
       {/* Search Box */}
       <div className="px-4 md:px-8 w-full max-w-lg mx-auto">
-        <div 
+        <div
           className={`relative bg-gray-800 border ${isFocused ? 'border-sky-500/70 input-glow-active' : 'border-gray-700/50 input-glow-subtle'} rounded-xl shadow-lg transition-all duration-300`}
         >
           <textarea
@@ -163,14 +176,14 @@ export default function MobileHomeScreen({
             onBlur={() => setIsFocused(false)}
             disabled={isLoading || isSubmitting}
           />
-          
+
           <div className="absolute bottom-3 right-3">
             <button
               onClick={handleSubmit}
               disabled={isLoading || isSubmitting || !promptValue.trim()}
               className={`rounded-full p-2 ${
-                isLoading || isSubmitting || !promptValue.trim() 
-                  ? 'bg-gray-700 text-gray-500' 
+                isLoading || isSubmitting || !promptValue.trim()
+                  ? 'bg-gray-700 text-gray-500'
                   : 'bg-sky-600 text-white hover:bg-sky-500'
               } transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50`}
               aria-label="Start research"
@@ -250,66 +263,66 @@ export default function MobileHomeScreen({
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 1;
         }
-        
+
         .input-glow-subtle {
-          box-shadow: 
+          box-shadow:
             0 0 5px rgba(56, 189, 248, 0.2),
             0 0 12px rgba(14, 165, 233, 0.15),
             0 0 20px rgba(2, 132, 199, 0.1);
           animation: pulse-glow-subtle 3s infinite alternate;
         }
-        
+
         @keyframes pulse-glow-subtle {
           0% {
-            box-shadow: 
+            box-shadow:
               0 0 5px rgba(56, 189, 248, 0.2),
               0 0 12px rgba(14, 165, 233, 0.15),
               0 0 20px rgba(2, 132, 199, 0.1);
           }
           100% {
-            box-shadow: 
+            box-shadow:
               0 0 8px rgba(56, 189, 248, 0.25),
               0 0 15px rgba(14, 165, 233, 0.2),
               0 0 25px rgba(2, 132, 199, 0.15);
           }
         }
-        
+
         .input-glow-active {
-          box-shadow: 
+          box-shadow:
             0 0 5px rgba(56, 189, 248, 0.3),
             0 0 15px rgba(56, 189, 248, 0.3),
             0 0 25px rgba(14, 165, 233, 0.2),
             inset 0 0 3px rgba(186, 230, 253, 0.1);
           animation: pulse-glow-active 2s infinite alternate;
         }
-        
+
         @keyframes pulse-glow-active {
           0% {
-            box-shadow: 
+            box-shadow:
               0 0 5px rgba(56, 189, 248, 0.3),
               0 0 15px rgba(56, 189, 248, 0.3),
               0 0 25px rgba(14, 165, 233, 0.2),
               inset 0 0 3px rgba(186, 230, 253, 0.1);
           }
           100% {
-            box-shadow: 
+            box-shadow:
               0 0 8px rgba(56, 189, 248, 0.4),
               0 0 20px rgba(14, 165, 233, 0.4),
               0 0 30px rgba(2, 132, 199, 0.3),
               inset 0 0 5px rgba(186, 230, 253, 0.2);
           }
         }
-        
+
         @keyframes spin {
           to {
             transform: rotate(360deg);
           }
         }
-        
+
         .animate-spin {
           animation: spin 1s linear infinite;
         }
       `}</style>
     </div>
   );
-} 
+}

@@ -1,9 +1,10 @@
 import React, { useRef, useState } from "react";
 import { Toaster } from "react-hot-toast";
-import Image from "next/image";
 import { ChatBoxSettings } from "@/types/data";
 import { useResearchHistoryContext } from "@/hooks/ResearchHistoryContext";
 import { formatDistanceToNow } from "date-fns";
+import CatalystMark from "@/components/CatalystMark";
+import { hltBranding } from "@/lib/hltBranding";
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -36,14 +37,14 @@ export default function MobileLayout({
   const contentRef = mainContentRef || defaultRef;
   const [showSettings, setShowSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  
+
   // Get research history from context
   const { history } = useResearchHistoryContext();
-  
+
   // Format timestamp for display
   const formatTimestamp = (timestamp: number | string | Date | undefined) => {
     if (!timestamp) return 'Unknown time';
-    
+
     try {
       const date = new Date(timestamp);
       if (isNaN(date.getTime())) return 'Unknown time';
@@ -52,37 +53,43 @@ export default function MobileLayout({
       return 'Unknown time';
     }
   };
-  
+
   // Handle history item selection
   const handleHistoryItemClick = (id: string) => {
     setShowHistory(false);
     window.location.href = `/research/${id}`;
   };
-  
+
   return (
     <main className="flex flex-col min-h-screen bg-gray-900">
-      <Toaster 
-        position="bottom-center" 
+      <Toaster
+        position="bottom-center"
         toastOptions={toastOptions}
       />
-      
+
       {/* Mobile Header - simplified and compact */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-md border-b border-gray-800/50 shadow-md">
         <div className="flex items-center justify-between px-4 h-14">
           {/* Logo */}
           <div className="flex items-center">
             <a href="/" className="flex items-center">
-              <img
-                src="/img/gptr-logo.png"
-                alt="GPT Researcher"
-                width={30}
-                height={30}
-                className="rounded-md mr-2"
-              />
-              <span className="font-medium text-gray-200 text-sm">GPT Researcher</span>
+              {hltBranding.enabled ? (
+                <CatalystMark className="mr-2 h-[30px] w-[30px] rounded-md" />
+              ) : (
+                <img
+                  src="/img/gptr-logo.png"
+                  alt="GPT Researcher"
+                  width={30}
+                  height={30}
+                  className="rounded-md mr-2"
+                />
+              )}
+              <span className="font-medium text-gray-200 text-sm">
+                {hltBranding.enabled ? hltBranding.productName : "GPT Researcher"}
+              </span>
             </a>
           </div>
-          
+
           {/* Actions */}
           <div className="flex items-center space-x-2">
             {loading && (
@@ -96,7 +103,7 @@ export default function MobileLayout({
                 </svg>
               </button>
             )}
-            
+
             {showResult && onNewResearch && (
               <button
                 onClick={onNewResearch}
@@ -109,7 +116,7 @@ export default function MobileLayout({
                 </svg>
               </button>
             )}
-            
+
             <button
               onClick={() => {
                 setShowHistory(!showHistory);
@@ -127,7 +134,7 @@ export default function MobileLayout({
                 <polyline points="10 9 9 9 8 9"></polyline>
               </svg>
             </button>
-            
+
             <button
               onClick={() => {
                 setShowSettings(!showSettings);
@@ -143,13 +150,13 @@ export default function MobileLayout({
             </button>
           </div>
         </div>
-        
+
         {/* History panel - slides down when active */}
         {showHistory && (
           <div className="px-4 py-3 bg-gray-800/90 border-t border-gray-700/50 animate-slide-down shadow-lg max-h-[70vh] overflow-y-auto custom-scrollbar">
             <div className="mb-3 flex justify-between items-center">
               <h3 className="text-sm font-medium text-gray-200">Research History</h3>
-              <button 
+              <button
                 onClick={() => setShowHistory(false)}
                 className="text-gray-400 hover:text-gray-300"
               >
@@ -159,7 +166,7 @@ export default function MobileLayout({
                 </svg>
               </button>
             </div>
-            
+
             {history.length > 0 ? (
               <div className="space-y-2">
                 {history.map((item) => (
@@ -187,19 +194,19 @@ export default function MobileLayout({
                   </svg>
                 </div>
                 <p className="text-sm text-gray-400">No research history yet</p>
-                <button 
-                  onClick={onNewResearch} 
+                <button
+                  onClick={onNewResearch}
                   className="mt-3 px-4 py-2 text-xs text-teal-300 bg-teal-900/30 hover:bg-teal-800/40 rounded-md transition-colors"
                 >
                   Start New Research
                 </button>
               </div>
             )}
-            
+
             {history.length > 0 && (
               <div className="mt-3 pt-2 border-t border-gray-700/30 flex justify-center">
-                <a 
-                  href="/history" 
+                <a
+                  href="/history"
                   className="text-xs text-teal-400 hover:text-teal-300 transition-colors"
                 >
                   View All Research History
@@ -208,13 +215,13 @@ export default function MobileLayout({
             )}
           </div>
         )}
-        
+
         {/* Settings panel - slides down when active */}
         {showSettings && (
           <div className="px-4 py-3 bg-gray-800/90 border-t border-gray-700/50 animate-slide-down shadow-lg">
             <div className="mb-2 flex justify-between items-center">
               <h3 className="text-sm font-medium text-gray-200">Settings</h3>
-              <button 
+              <button
                 onClick={() => setShowSettings(false)}
                 className="text-gray-400 hover:text-gray-300"
               >
@@ -224,11 +231,11 @@ export default function MobileLayout({
                 </svg>
               </button>
             </div>
-            
+
             <div className="space-y-3">
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Report Type</label>
-                <select 
+                <select
                   className="w-full bg-gray-900 border border-gray-700 rounded-md py-1.5 px-2 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
                   value={chatBoxSettings.report_type}
                   onChange={(e) => setChatBoxSettings({...chatBoxSettings, report_type: e.target.value})}
@@ -239,10 +246,10 @@ export default function MobileLayout({
                   <option value="detailed_report">Detailed - In depth and longer (~5 min)</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Research Source</label>
-                <select 
+                <select
                   className="w-full bg-gray-900 border border-gray-700 rounded-md py-1.5 px-2 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
                   value={chatBoxSettings.report_source}
                   onChange={(e) => setChatBoxSettings({...chatBoxSettings, report_source: e.target.value})}
@@ -251,10 +258,10 @@ export default function MobileLayout({
                   <option value="scholar">Scholar</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Research Tone</label>
-                <select 
+                <select
                   className="w-full bg-gray-900 border border-gray-700 rounded-md py-1.5 px-2 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
                   value={chatBoxSettings.tone}
                   onChange={(e) => setChatBoxSettings({...chatBoxSettings, tone: e.target.value})}
@@ -268,10 +275,10 @@ export default function MobileLayout({
                   <option value="Casual">Casual - Conversational style</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-xs text-gray-400 mb-1">Layout</label>
-                <select 
+                <select
                   className="w-full bg-gray-900 border border-gray-700 rounded-md py-1.5 px-2 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
                   value={chatBoxSettings.layoutType}
                   onChange={(e) => setChatBoxSettings({...chatBoxSettings, layoutType: e.target.value})}
@@ -284,27 +291,27 @@ export default function MobileLayout({
           </div>
         )}
       </header>
-      
+
       {/* Main content area */}
-      <div 
+      <div
         ref={contentRef}
         className="flex-1 pt-14" /* Matches header height */
       >
         {children}
       </div>
-      
+
       {/* Footer */}
       <footer className="mt-auto py-3 px-4 text-center border-t border-gray-800/40 bg-gray-900/80 backdrop-blur-sm">
         <div className="flex items-center justify-center gap-5 mb-3">
           <a href="https://gptr.dev" target="_blank" className="text-gray-400 hover:text-teal-400 transition-colors">
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
               className="w-5 h-5"
             >
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -340,16 +347,18 @@ export default function MobileLayout({
           </a>
         </div>
         <div className="text-xs text-gray-400">
-          © {new Date().getFullYear()} GPT Researcher. All rights reserved.
+          {hltBranding.enabled
+            ? `${new Date().getFullYear()} ${hltBranding.ownerName}. Powered by GPT Researcher.`
+            : `${new Date().getFullYear()} GPT Researcher. All rights reserved.`}
         </div>
       </footer>
-      
+
       {/* Custom animations */}
       <style jsx global>{`
         .animate-slide-down {
           animation: slideDown 0.3s ease-out forwards;
         }
-        
+
         @keyframes slideDown {
           from {
             opacity: 0;
@@ -360,32 +369,32 @@ export default function MobileLayout({
             transform: translateY(0);
           }
         }
-        
+
         /* Custom scrollbar for history panel */
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-track {
           background: rgba(17, 24, 39, 0.1);
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: rgba(75, 85, 99, 0.5);
           border-radius: 20px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(75, 85, 99, 0.7);
         }
-        
+
         .line-clamp-1 {
           overflow: hidden;
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 1;
         }
-        
+
         @media (display-mode: standalone) {
           /* PWA specific styles */
           body {
@@ -398,4 +407,4 @@ export default function MobileLayout({
       `}</style>
     </main>
   );
-} 
+}
