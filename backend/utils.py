@@ -3,8 +3,17 @@ import logging
 import urllib
 import mistune
 import os
+from pathlib import Path
+
+from gpt_researcher.research_run_store import get_outputs_dir
 
 logger = logging.getLogger(__name__)
+
+
+def _output_path(filename: str, suffix: str) -> Path:
+    output_dir = get_outputs_dir()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir / f"{filename[:60]}.{suffix}"
 
 async def write_to_file(filename: str, text: str) -> None:
     """Asynchronously write text to a file in UTF-8 encoding.
@@ -32,9 +41,9 @@ async def write_text_to_md(text: str, filename: str = "") -> str:
     Returns:
         str: The file path of the generated Markdown file.
     """
-    file_path = f"outputs/{filename[:60]}.md"
-    await write_to_file(file_path, text)
-    return urllib.parse.quote(file_path)
+    file_path = _output_path(filename, "md")
+    await write_to_file(str(file_path), text)
+    return urllib.parse.quote(str(file_path))
 
 def _preprocess_images_for_pdf(text: str) -> str:
     """Convert web image URLs to absolute file paths for PDF generation.
@@ -71,7 +80,7 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
     Returns:
         str: The encoded file path of the generated PDF.
     """
-    file_path = f"outputs/{filename[:60]}.pdf"
+    file_path = _output_path(filename, "pdf")
 
     try:
         # Resolve css path relative to this backend module to avoid
@@ -86,7 +95,7 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
         base_url = os.path.abspath(".")
 
         from md2pdf.core import md2pdf
-        md2pdf(file_path,
+        md2pdf(str(file_path),
                md_content=processed_text,
                # md_file_path=f"{file_path}.md",
                css_file_path=css_path,
@@ -96,7 +105,7 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
         logger.error(f"Error in converting Markdown to PDF: {e}")
         return ""
 
-    encoded_file_path = urllib.parse.quote(file_path)
+    encoded_file_path = urllib.parse.quote(str(file_path))
     return encoded_file_path
 
 async def write_md_to_word(text: str, filename: str = "") -> str:
@@ -108,7 +117,7 @@ async def write_md_to_word(text: str, filename: str = "") -> str:
     Returns:
         str: The encoded file path of the generated DOCX.
     """
-    file_path = f"outputs/{filename[:60]}.docx"
+    file_path = _output_path(filename, "docx")
 
     try:
         from docx import Document
@@ -121,11 +130,11 @@ async def write_md_to_word(text: str, filename: str = "") -> str:
         HtmlToDocx().add_html_to_document(html, doc)
 
         # Saving the docx document to file_path
-        doc.save(file_path)
+        doc.save(str(file_path))
 
         logger.info(f"DOCX report written to {file_path}")
 
-        encoded_file_path = urllib.parse.quote(file_path)
+        encoded_file_path = urllib.parse.quote(str(file_path))
         return encoded_file_path
 
     except Exception as e:

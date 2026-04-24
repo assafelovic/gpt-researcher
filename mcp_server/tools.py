@@ -9,14 +9,17 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 import time
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
 from gpt_researcher import GPTResearcher
+from gpt_researcher.research_run_store import get_outputs_dir, get_research_run_store
 from gpt_researcher.utils.enum import Tone
 
 logger = logging.getLogger(__name__)
@@ -31,6 +34,9 @@ class StoredResearch:
 
     researcher: GPTResearcher
     query: str
+    report_type: str
+    report_source: str
+    tone: str
     context: Any
     sources: list[dict[str, Any]]
     source_urls: list[str]
@@ -39,7 +45,7 @@ class StoredResearch:
 
 
 _research_by_id: dict[str, StoredResearch] = {}
-_resource_by_topic: dict[str, StoredResearch] = {}
+_resource_by_topic: dict[str, str] = {}
 _store_lock = asyncio.Lock()
 
 
@@ -83,6 +89,9 @@ def _jsonable(value: Any) -> Any:
 def _format_sources_for_response(sources: list[dict[str, Any]]) -> list[dict[str, Any]]:
     formatted: list[dict[str, Any]] = []
     for source in sources:
+        if not isinstance(source, dict):
+            formatted.append({"title": str(source), "url": "", "content_length": 0})
+            continue
         formatted.append(
             {
                 "title": source.get("title", "Unknown"),
@@ -97,7 +106,10 @@ def _format_context_with_sources(topic: str, context: Any, sources: list[dict[st
     context_text = context if isinstance(context, str) else json.dumps(_jsonable(context), indent=2)
     lines = [f"## Research: {topic}", "", context_text, "", "## Sources:"]
     for index, source in enumerate(sources, start=1):
-        lines.append(f"{index}. {source.get('title', 'Unknown')}: {source.get('url', '')}")
+        if isinstance(source, dict):
+            lines.append(f"{index}. {source.get('title', 'Unknown')}: {source.get('url', '')}")
+        else:
+            lines.append(f"{index}. {source}")
     return "\n".join(lines)
 
 
@@ -124,8 +136,9 @@ async def _prune_locked(now: float | None = None) -> None:
 
     expired_topics = [
         topic
-        for topic, item in _resource_by_topic.items()
-        if now - item.last_accessed_at > STORE_TTL_SECONDS
+        for topic, research_id in _resource_by_topic.items()
+        if research_id not in _research_by_id
+        or now - _research_by_id[research_id].last_accessed_at > STORE_TTL_SECONDS
     ]
     for topic in expired_topics:
         _resource_by_topic.pop(topic, None)
@@ -144,7 +157,7 @@ async def _store_research(research_id: str, item: StoredResearch, *, resource_to
         await _prune_locked()
         _research_by_id[research_id] = item
         if resource_topic:
-            _resource_by_topic[resource_topic] = item
+            _resource_by_topic[resource_topic] = research_id
 
 
 async def _get_research(research_id: str) -> StoredResearch | None:
@@ -159,10 +172,66 @@ async def _get_research(research_id: str) -> StoredResearch | None:
 async def _get_resource_topic(topic: str) -> StoredResearch | None:
     async with _store_lock:
         await _prune_locked()
-        item = _resource_by_topic.get(topic)
+        research_id = _resource_by_topic.get(topic)
+        item = _research_by_id.get(research_id) if research_id else None
         if item:
             item.last_accessed_at = time.time()
         return item
+
+
+def clear_hot_cache() -> None:
+    _research_by_id.clear()
+    _resource_by_topic.clear()
+
+
+def _stored_research_from_run(run: dict[str, Any]) -> StoredResearch:
+    researcher = GPTResearcher(
+        query=run["query"],
+        report_type=run.get("report_type") or "research_report",
+        report_source=run.get("report_source") or "web",
+        tone=_resolve_tone(run.get("tone")),
+    )
+    researcher.context = run.get("context") or []
+    researcher.research_sources = run.get("sources") or []
+    researcher.visited_urls = set(run.get("source_urls") or [])
+    return StoredResearch(
+        researcher=researcher,
+        query=run["query"],
+        report_type=run.get("report_type") or "research_report",
+        report_source=run.get("report_source") or "web",
+        tone=run.get("tone") or "Objective",
+        context=run.get("context") or [],
+        sources=run.get("sources") or [],
+        source_urls=run.get("source_urls") or [],
+    )
+
+
+async def _get_research_or_persisted(research_id: str) -> tuple[StoredResearch | None, dict[str, Any] | None]:
+    item = await _get_research(research_id)
+    if item:
+        return item, None
+
+    run = get_research_run_store().get_run(research_id)
+    if not run:
+        return None, None
+    if run.get("status") != "completed":
+        return None, run
+
+    item = _stored_research_from_run(run)
+    await _store_research(research_id, item, resource_topic=run.get("resource_topic"))
+    return item, run
+
+
+def _safe_report_filename(research_id: str) -> str:
+    return re.sub(r"[^\w\s-]", "", Path(research_id).name).strip() or str(uuid.uuid4())
+
+
+async def _write_report_markdown(report: str, research_id: str) -> str:
+    output_dir = get_outputs_dir()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    report_path = output_dir / f"{_safe_report_filename(research_id)[:60]}.md"
+    await asyncio.to_thread(report_path.write_text, report, "utf-8")
+    return str(report_path)
 
 
 async def _conduct_research(
@@ -182,10 +251,164 @@ async def _conduct_research(
     return StoredResearch(
         researcher=researcher,
         query=query,
+        report_type=report_type,
+        report_source=report_source,
+        tone=tone,
         context=_jsonable(researcher.get_research_context()),
         sources=_jsonable(researcher.get_research_sources()),
         source_urls=list(researcher.get_source_urls()),
     )
+
+
+async def research_resource_tool(topic: str) -> str:
+    cached = await _get_resource_topic(topic)
+    if cached:
+        return _format_context_with_sources(topic, cached.context, cached.sources)
+
+    persisted = get_research_run_store().get_run_by_resource_topic(topic)
+    if persisted and persisted.get("status") == "completed":
+        item = _stored_research_from_run(persisted)
+        await _store_research(persisted["research_id"], item, resource_topic=topic)
+        return _format_context_with_sources(topic, item.context, item.sources)
+
+    logger.info("Conducting resource research for topic=%r", topic)
+    research_id = str(uuid.uuid4())
+    store = get_research_run_store()
+    store.create_run(
+        research_id,
+        query=topic,
+        report_type="research_report",
+        report_source="web",
+        tone="Objective",
+        status="running",
+        resource_topic=topic,
+    )
+    try:
+        item = await _conduct_research(topic)
+        await _store_research(research_id, item, resource_topic=topic)
+        store.complete_run(
+            research_id,
+            context=item.context,
+            sources=item.sources,
+            source_urls=item.source_urls,
+            costs=item.researcher.get_costs(),
+        )
+        return _format_context_with_sources(topic, item.context, item.sources)
+    except Exception as exc:
+        store.fail_run(research_id, error_code="runtime_error", error_message=str(exc))
+        raise
+
+
+async def deep_research_tool(
+    query: str,
+    report_type: str = "research_report",
+    report_source: str = "web",
+    tone: str = "Objective",
+) -> dict[str, Any]:
+    research_id = str(uuid.uuid4())
+    store = get_research_run_store()
+    store.create_run(
+        research_id,
+        query=query,
+        report_type=report_type,
+        report_source=report_source,
+        tone=tone,
+        status="running",
+        resource_topic=query,
+    )
+    try:
+        logger.info("Conducting deep research for research_id=%s query=%r", research_id, query)
+        item = await _conduct_research(
+            query,
+            report_type=report_type,
+            report_source=report_source,
+            tone=tone,
+        )
+        await _store_research(research_id, item, resource_topic=query)
+        store.complete_run(
+            research_id,
+            context=item.context,
+            sources=item.sources,
+            source_urls=item.source_urls,
+            costs=item.researcher.get_costs(),
+        )
+        return _success(
+            {
+                "research_id": research_id,
+                "query": query,
+                "source_count": len(item.sources),
+                "context": item.context,
+                "sources": _format_sources_for_response(item.sources),
+                "source_urls": item.source_urls,
+            }
+        )
+    except Exception as exc:
+        store.fail_run(research_id, error_code="runtime_error", error_message=str(exc))
+        logger.error("deep_research failed for query=%r: %s", query, exc, exc_info=True)
+        return _error(str(exc))
+
+
+async def write_report_tool(research_id: str, custom_prompt: str | None = None) -> dict[str, Any]:
+    item, persisted = await _get_research_or_persisted(research_id)
+    if item is None:
+        if persisted:
+            return _error(f"Research ID is not completed; current status is {persisted.get('status')}.")
+        return _error("Research ID not found. Please conduct research first.")
+
+    try:
+        logger.info("Writing report for research_id=%s", research_id)
+        report = await item.researcher.write_report(custom_prompt=custom_prompt or "")
+        md_path = await _write_report_markdown(report, research_id)
+        item.context = _jsonable(item.researcher.get_research_context())
+        item.sources = _jsonable(item.researcher.get_research_sources()) or item.sources
+        item.source_urls = list(item.researcher.get_source_urls()) or item.source_urls
+        get_research_run_store().complete_run(
+            research_id,
+            context=item.context,
+            sources=item.sources,
+            source_urls=item.source_urls,
+            costs=item.researcher.get_costs(),
+            report_path=md_path,
+            md_path=md_path,
+        )
+        return _success(
+            {
+                "research_id": research_id,
+                "report": report,
+                "source_count": len(item.sources),
+                "costs": item.researcher.get_costs(),
+                "report_path": md_path,
+                "md_path": md_path,
+            }
+        )
+    except Exception as exc:
+        logger.error("write_report failed for research_id=%s: %s", research_id, exc, exc_info=True)
+        get_research_run_store().fail_run(research_id, error_code="runtime_error", error_message=str(exc))
+        return _error(str(exc))
+
+
+async def get_research_sources_tool(research_id: str) -> dict[str, Any]:
+    item, persisted = await _get_research_or_persisted(research_id)
+    if item is None:
+        if persisted:
+            return _error(f"Research ID is not completed; current status is {persisted.get('status')}.")
+        return _error("Research ID not found. Please conduct research first.")
+    return _success(
+        {
+            "research_id": research_id,
+            "sources": _format_sources_for_response(item.sources),
+            "source_urls": item.source_urls,
+        }
+    )
+
+
+async def get_research_context_tool(research_id: str) -> dict[str, Any]:
+    item, persisted = await _get_research_or_persisted(research_id)
+    if item is None:
+        if persisted:
+            return _error(f"Research ID is not completed; current status is {persisted.get('status')}.")
+        return _error("Research ID not found. Please conduct research first.")
+    return _success({"research_id": research_id, "context": item.context})
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -194,16 +417,7 @@ def register_tools(mcp: FastMCP) -> None:
     @mcp.resource("research://{topic}")
     async def research_resource(topic: str) -> str:
         """Return cached or newly generated research context for a topic."""
-
-        cached = await _get_resource_topic(topic)
-        if cached:
-            return _format_context_with_sources(topic, cached.context, cached.sources)
-
-        logger.info("Conducting resource research for topic=%r", topic)
-        item = await _conduct_research(topic)
-        research_id = str(uuid.uuid4())
-        await _store_research(research_id, item, resource_topic=topic)
-        return _format_context_with_sources(topic, item.context, item.sources)
+        return await research_resource_tool(topic)
 
     @mcp.tool()
     async def deep_research(
@@ -214,29 +428,7 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> dict[str, Any]:
         """Conduct deep research and return a research_id for follow-up calls."""
 
-        research_id = str(uuid.uuid4())
-        try:
-            logger.info("Conducting deep research for research_id=%s query=%r", research_id, query)
-            item = await _conduct_research(
-                query,
-                report_type=report_type,
-                report_source=report_source,
-                tone=tone,
-            )
-            await _store_research(research_id, item, resource_topic=query)
-            return _success(
-                {
-                    "research_id": research_id,
-                    "query": query,
-                    "source_count": len(item.sources),
-                    "context": item.context,
-                    "sources": _format_sources_for_response(item.sources),
-                    "source_urls": item.source_urls,
-                }
-            )
-        except Exception as exc:
-            logger.error("deep_research failed for query=%r: %s", query, exc, exc_info=True)
-            return _error(str(exc))
+        return await deep_research_tool(query, report_type, report_source, tone)
 
     @mcp.tool()
     async def quick_search(
@@ -271,48 +463,19 @@ def register_tools(mcp: FastMCP) -> None:
     async def write_report(research_id: str, custom_prompt: str | None = None) -> dict[str, Any]:
         """Generate a report from a previous deep_research research_id."""
 
-        item = await _get_research(research_id)
-        if item is None:
-            return _error("Research ID not found. Please conduct research first.")
-
-        try:
-            logger.info("Writing report for research_id=%s", research_id)
-            report = await item.researcher.write_report(custom_prompt=custom_prompt or "")
-            return _success(
-                {
-                    "research_id": research_id,
-                    "report": report,
-                    "source_count": len(item.sources),
-                    "costs": item.researcher.get_costs(),
-                }
-            )
-        except Exception as exc:
-            logger.error("write_report failed for research_id=%s: %s", research_id, exc, exc_info=True)
-            return _error(str(exc))
+        return await write_report_tool(research_id, custom_prompt)
 
     @mcp.tool()
     async def get_research_sources(research_id: str) -> dict[str, Any]:
         """Return the sources used in a previous deep_research run."""
 
-        item = await _get_research(research_id)
-        if item is None:
-            return _error("Research ID not found. Please conduct research first.")
-        return _success(
-            {
-                "research_id": research_id,
-                "sources": _format_sources_for_response(item.sources),
-                "source_urls": item.source_urls,
-            }
-        )
+        return await get_research_sources_tool(research_id)
 
     @mcp.tool()
     async def get_research_context(research_id: str) -> dict[str, Any]:
         """Return the full context from a previous deep_research run."""
 
-        item = await _get_research(research_id)
-        if item is None:
-            return _error("Research ID not found. Please conduct research first.")
-        return _success({"research_id": research_id, "context": item.context})
+        return await get_research_context_tool(research_id)
 
     @mcp.prompt()
     def research_query(topic: str, goal: str, report_format: str = "research_report") -> str:

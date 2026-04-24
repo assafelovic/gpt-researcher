@@ -22,6 +22,7 @@ class BasicReport:
         mcp_configs=None,
         mcp_strategy=None,
         max_search_results=None,
+        scraper_override: str | None = None,
     ):
         self.query = query
         self.query_domains = query_domains
@@ -33,6 +34,7 @@ class BasicReport:
         self.config_path = config_path
         self.websocket = websocket
         self.headers = headers or {}
+        self.scraper_override = scraper_override
         
         # Generate a unique research ID for this report
         self.research_id = self._generate_research_id(query)
@@ -58,6 +60,9 @@ class BasicReport:
             gpt_researcher_params["mcp_strategy"] = mcp_strategy
 
         self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
+
+        if self.scraper_override:
+            self.gpt_researcher.cfg.scraper = self.scraper_override
 
         # Override max_search_results_per_query if provided by user
         if max_search_results is not None:

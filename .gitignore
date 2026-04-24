@@ -15,6 +15,7 @@ venv.bak/
 
 #Ignore generated outputs
 outputs/
+data/
 *.lock
 !uv.lock
 dist/

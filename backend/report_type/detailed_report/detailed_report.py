@@ -25,6 +25,7 @@ class DetailedReport:
         mcp_configs=None,
         mcp_strategy=None,
         max_search_results=None,
+        scraper_override: str | None = None,
     ):
         self.query = query
         self.report_type = report_type
@@ -39,6 +40,7 @@ class DetailedReport:
         self.headers = headers or {}
         self.complement_source_urls = complement_source_urls
         self.max_search_results = max_search_results
+        self.scraper_override = scraper_override
         
         # Generate a unique research ID for this report
         self.research_id = self._generate_research_id(query)
@@ -65,6 +67,9 @@ class DetailedReport:
             gpt_researcher_params["mcp_strategy"] = mcp_strategy
 
         self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
+
+        if self.scraper_override:
+            self.gpt_researcher.cfg.scraper = self.scraper_override
 
         # Override max_search_results_per_query if provided by user
         if max_search_results is not None:
@@ -140,6 +145,9 @@ class DetailedReport:
             mcp_configs=self.gpt_researcher.mcp_configs,
             mcp_strategy=self.gpt_researcher.mcp_strategy
         )
+
+        if self.scraper_override:
+            subtopic_assistant.cfg.scraper = self.scraper_override
 
         # Propagate max_search_results override to subtopic researcher
         if self.max_search_results is not None:

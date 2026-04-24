@@ -6,7 +6,9 @@ import os
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 from backend.server.server_utils import CustomLogsHandler
+from backend.server import server_utils
 from gpt_researcher.mcp.client import MCPClientManager
+import gpt_researcher.research_run_store as run_store_module
 import json
 import asyncio
 import glob
@@ -161,3 +163,101 @@ def test_mcp_client_manager_forwards_streamable_http_headers():
     assert converted["katailyst"]["transport"] == "streamable_http"
     assert converted["katailyst"]["url"] == "https://katailyst.example/mcp"
     assert converted["katailyst"]["headers"] == {"Authorization": "Bearer test-token"}
+
+
+class _FakeResearcher:
+    def get_research_sources(self):
+        return [{"title": "Source", "url": "https://example.com", "content": "body"}]
+
+    def get_source_urls(self):
+        return ["https://example.com"]
+
+    def get_costs(self):
+        return 0.01
+
+    def get_research_context(self):
+        return ["context"]
+
+
+class _CompletingManager:
+    async def start_streaming(self, *args, **kwargs):
+        return "finished report", _FakeResearcher()
+
+
+class _FailingManager:
+    async def start_streaming(self, *args, **kwargs):
+        raise RuntimeError("planned failure")
+
+
+async def _fake_generate_report_files(report, filename):
+    return {
+        "pdf": f"outputs/{filename}.pdf",
+        "docx": f"outputs/{filename}.docx",
+        "md": f"outputs/{filename}.md",
+    }
+
+
+def _configure_run_store(monkeypatch, tmp_path):
+    monkeypatch.setenv("RESEARCH_RUN_STORE_PATH", str(tmp_path / "runs.sqlite3"))
+    monkeypatch.setenv("OUTPUTS_DIR", str(tmp_path / "outputs"))
+    run_store_module._store = None
+
+
+def test_websocket_start_persists_completed_run(monkeypatch, tmp_path):
+    asyncio.run(_test_websocket_start_persists_completed_run(monkeypatch, tmp_path))
+
+
+async def _test_websocket_start_persists_completed_run(monkeypatch, tmp_path):
+    _configure_run_store(monkeypatch, tmp_path)
+    monkeypatch.setattr(server_utils, "generate_report_files", _fake_generate_report_files)
+
+    websocket = AsyncMock()
+    websocket.send_json = AsyncMock()
+    payload = {
+        "task": "persistent websocket run",
+        "report_type": "research_report",
+        "report_source": "web",
+        "tone": "Objective",
+    }
+
+    await server_utils.handle_start_command(
+        websocket,
+        "start " + json.dumps(payload),
+        _CompletingManager(),
+    )
+
+    research_id = websocket.send_json.call_args_list[-1].args[0]["research_id"]
+    run = run_store_module.get_research_run_store().get_run(research_id)
+    assert run["status"] == "completed"
+    assert run["query"] == "persistent websocket run"
+    assert run["sources"][0]["title"] == "Source"
+    assert run["md_path"].endswith(".md")
+
+
+def test_websocket_start_persists_failed_run(monkeypatch, tmp_path):
+    asyncio.run(_test_websocket_start_persists_failed_run(monkeypatch, tmp_path))
+
+
+async def _test_websocket_start_persists_failed_run(monkeypatch, tmp_path):
+    _configure_run_store(monkeypatch, tmp_path)
+
+    websocket = AsyncMock()
+    websocket.send_json = AsyncMock()
+    payload = {
+        "task": "failing websocket run",
+        "report_type": "research_report",
+        "report_source": "web",
+        "tone": "Objective",
+    }
+
+    await server_utils.handle_start_command(
+        websocket,
+        "start " + json.dumps(payload),
+        _FailingManager(),
+    )
+
+    started_event = websocket.send_json.call_args_list[0].args[0]
+    run = run_store_module.get_research_run_store().get_run(started_event["research_id"])
+    assert run["status"] == "failed"
+    assert run["error_code"] == "runtime_error"
+    assert "planned failure" in run["error_message"]

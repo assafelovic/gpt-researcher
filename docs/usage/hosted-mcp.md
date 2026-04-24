@@ -51,6 +51,8 @@ Local run from the repo root:
 
 ```bash
 MCP_AUTH_TOKEN=dev-token \
+RESEARCH_RUN_STORE_PATH=data/research_runs.sqlite3 \
+OUTPUTS_DIR=outputs \
 MCP_ALLOWED_HOSTS=127.0.0.1:8001,localhost:8001,127.0.0.1,localhost,0.0.0.0 \
 python -m uvicorn mcp_server.server:app --host=0.0.0.0 --port=8001
 ```
@@ -124,6 +126,10 @@ curl -sS -X POST "https://gpt-researcher-api-production.up.railway.app/report/" 
 - MCP service secret: `MCP_AUTH_TOKEN`, sent as `Authorization: Bearer ...`.
 - Local MCP client secret: `GPTR_MCP_TOKEN`; set it to the same value as
   `MCP_AUTH_TOKEN` for clients.
+- Durable run metadata: `RESEARCH_RUN_STORE_PATH`, backed by SQLite. On Railway,
+  set this to a mounted volume path such as `/data/research_runs.sqlite3`.
+- Generated report/log files: `OUTPUTS_DIR`. On Railway, set this to the same
+  mounted volume, such as `/data/outputs`.
 
 To rotate:
 
@@ -154,18 +160,24 @@ without running a full report:
 ```bash
 .venv/bin/python scripts/smoke_websocket_ui.py \
   --ui-url https://gpt-researcher-ui.vercel.app \
-  --api-url https://gpt-researcher-api-production.up.railway.app
+  --api-url https://gpt-researcher-api-production.up.railway.app \
+  --scope codebase,metrics,firecrawl \
+  --allow-degraded-scope
 ```
 
-The command should print a `stream_event_*` line and exit before a full report
-is generated.
+The command should print `hlt_scope_active` / `hlt_scope_degraded` lines and
+exit before a full report is generated. Omit `--allow-degraded-scope` when the
+deployment should fail the smoke test unless all requested scopes are ready.
 
 ## Tools
 
 - `deep_research` creates a `research_id` and returns context, sources, source
-  URLs, and source count.
+  URLs, and source count. Completed run metadata is persisted in SQLite and can
+  be recovered after an MCP/API restart.
 - `quick_search` returns fast search results or a summary.
-- `write_report` accepts a prior `research_id`.
+- `write_report` accepts a prior `research_id`; if the hot cache was lost, it
+  hydrates from persisted context and source metadata.
 - `get_research_sources` accepts a prior `research_id`.
 - `get_research_context` accepts a prior `research_id`.
-- `research://{topic}` returns cached or newly generated research context.
+- `research://{topic}` returns cached, persisted, or newly generated research
+  context.

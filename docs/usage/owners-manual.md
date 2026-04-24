@@ -36,7 +36,9 @@ live in [`docs/usage/branding-and-catalyst-options.md`](./branding-and-catalyst-
 The browser UI is now branded as `Mastery Research`. Its launch screen includes
 research-scope controls for Code files, CMS/Registry, Metrics, and High-quality
 crawl. Those controls do not expose secrets to the browser; the backend expands
-them into server-side MCP presets from Railway env.
+them into server-side MCP presets from Railway env. If a selected scope is not
+configured, the run continues with a `hlt_scope_status` event that names the
+active and degraded scopes.
 
 ## What Your Agents Can Do
 
@@ -65,8 +67,10 @@ That gives agents these tools:
 | `get_research_context` | You want the raw research context for an existing `research_id` | Context packet |
 | `research://{topic}` | You want MCP resource-style access to cached or newly generated context | Research context |
 
-The MCP service keeps a bounded in-memory research store with TTL. Treat
-`research_id` as short-lived workflow state, not permanent storage.
+The MCP service keeps a bounded hot cache for live `GPTResearcher` objects and a
+SQLite metadata store for completed research context, source metadata, status,
+and report paths. Configure `RESEARCH_RUN_STORE_PATH` and `OUTPUTS_DIR` on a
+Railway volume when restart recovery matters.
 
 ## Content Machine And Admin Handoff
 
@@ -315,8 +319,10 @@ rubrics, or a human review queue.
 ## Operating Guardrails
 
 - Start with `quick_search`; deep research costs more and takes longer.
-- Keep `research_id` workflows short. The MCP research store is in-memory with
-  TTL.
+- Completed `research_id` metadata is durable when `RESEARCH_RUN_STORE_PATH` and
+  `OUTPUTS_DIR` point at persistent storage. In-flight runs interrupted by a
+  restart are marked `failed` with `interrupted_by_restart`; they are not
+  resumed automatically.
 - Use REST for deterministic server calls, MCP for agents, and UI for humans.
 - Keep HLT/Katailyst composition in the caller or registry, not in the public
   GPT Researcher browser UI.
@@ -335,6 +341,8 @@ rubrics, or a human review queue.
 | MCP returns `401` | Missing or wrong bearer token | Confirm `GPTR_MCP_TOKEN` in local agent env |
 | MCP session errors | Missing MCP session id after initialize | Re-run initialize and reuse `mcp-session-id` |
 | UI loads but research fails | API auth/WebSocket token path or backend runtime error | Run `scripts/smoke_websocket_ui.py` |
+| Scope badge says `Needs config` | Missing server-side MCP/Firecrawl env | Check `/api/hlt/readiness` through the UI proxy |
+| Scope selected but not used | Backend degraded the scope cleanly | Inspect `hlt_scope_status` in the WebSocket log |
 | Deep research is slow | Expected for broad queries or cold start | Narrow the query; use quick search first |
 | Weak sources | Query too broad or retriever underfilled | Add domains, narrow geography/date/persona, or retry |
 | Report looks alive but logs error | Check Railway logs and `outputs/*.json` handling | Run logging tests before redeploy |
@@ -364,12 +372,20 @@ curl -fsS https://gpt-researcher-mcp-production.up.railway.app/health
 curl -i -sS https://gpt-researcher-mcp-production.up.railway.app/mcp
 ```
 
+Restart persistence:
+
+```bash
+.venv/bin/python scripts/smoke_research_persistence.py
+```
+
 UI/WebSocket:
 
 ```bash
 .venv/bin/python scripts/smoke_websocket_ui.py \
   --ui-url https://gpt-researcher-ui.vercel.app \
-  --api-url https://gpt-researcher-api-production.up.railway.app
+  --api-url https://gpt-researcher-api-production.up.railway.app \
+  --scope codebase,metrics,firecrawl \
+  --allow-degraded-scope
 ```
 
 ## Taking It To The Next Level
@@ -389,8 +405,8 @@ Do these in this order:
    email. Start with topic discovery, not automatic publishing.
 5. Add cost/latency tags in the caller runtime so GPT Researcher usage can be
    measured by lane and output type.
-6. Add durable storage only if repeated reuse of deep research becomes common.
-   Until then, bounded in-memory MCP state is enough.
+6. For production restart safety, keep the SQLite run store and generated
+   outputs on the same durable Railway volume.
 
 The strategic target is simple: Katailyst decides what capability should run,
 GPT Researcher performs external research when it is the right capability,

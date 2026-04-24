@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 # Add the parent directory to sys.path to make sure we can import from server
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
@@ -29,14 +29,15 @@ from server.server_utils import (
 )
 
 from server.websocket_manager import run_agent
-from utils import write_md_to_word, write_md_to_pdf
+from utils import write_md_to_word, write_md_to_pdf, write_text_to_md
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import Tone
 from chat.chat import ChatAgentWithMemory
 
 from server.report_store import ReportStore
+from gpt_researcher.research_run_store import get_outputs_dir, get_research_run_store, jsonable
 
-# MongoDB services removed - no database persistence needed
+# MongoDB services removed; durable run metadata is handled by SQLite.
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ logging.getLogger("uvicorn.supervisors.ChangeReload").setLevel(logging.WARNING)
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FRONTEND_DIR = REPO_ROOT / "frontend"
 FRONTEND_INDEX_PATH = FRONTEND_DIR / "index.html"
-OUTPUTS_DIR = Path("outputs").resolve()
+OUTPUTS_DIR = get_outputs_dir().resolve()
 
 
 def current_timestamp_ms() -> int:
@@ -100,9 +101,14 @@ class ResearchRequest(BaseModel):
     report_source: str
     tone: str
     headers: dict | None = None
-    repo_name: str
-    branch_name: str
+    repo_name: str | None = None
+    branch_name: str | None = None
     generate_in_background: bool = True
+    mcp_enabled: bool = False
+    mcp_strategy: str = "fast"
+    mcp_configs: list[dict[str, Any]] = Field(default_factory=list)
+    max_search_results: int | None = None
+    hlt_research_scope: dict[str, Any] | None = None
 
 
 class ChatRequest(BaseModel):
@@ -116,6 +122,7 @@ class ChatRequest(BaseModel):
 async def lifespan(app: FastAPI):
     # Startup
     os.makedirs(OUTPUTS_DIR, exist_ok=True)
+    get_research_run_store().mark_interrupted_runs_failed()
     app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
     
     # Mount frontend static files
@@ -131,7 +138,7 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning(f"Frontend directory not found: {FRONTEND_DIR}")
     
-    logger.info("GPT Researcher API ready - local mode (no database persistence)")
+    logger.info("GPT Researcher API ready - durable research run metadata enabled")
     yield
     # Shutdown
     logger.info("Research API shutting down")
@@ -171,6 +178,7 @@ app.add_middleware(
 manager = WebSocketManager()
 
 report_store = ReportStore(Path(os.getenv('REPORT_STORE_PATH', os.path.join('data', 'reports.json'))))
+research_run_store = get_research_run_store()
 
 # Constants
 DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
@@ -201,7 +209,7 @@ async def read_report(request: Request, research_id: str):
     return FileResponse(str(docx_path))
 
 
-# Simplified API routes - no database persistence
+# Simplified API routes for frontend report history.
 @app.get("/api/reports")
 async def get_all_reports(report_ids: str = None):
     report_ids_list = report_ids.split(",") if report_ids else None
@@ -262,6 +270,14 @@ async def update_report(research_id: str, request: Request):
     return {"success": True, "id": research_id}
 
 
+@app.get("/api/research-runs/{research_id}")
+async def get_research_run_by_id(research_id: str):
+    run = research_run_store.get_run(research_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Research run not found")
+    return {"research_run": run}
+
+
 @app.delete("/api/reports/{research_id}")
 async def delete_report(research_id: str):
     existed = await report_store.delete_report(research_id)
@@ -299,42 +315,109 @@ async def add_report_chat_message(research_id: str, request: Request):
 
 
 async def write_report(research_request: ResearchRequest, research_id: str = None):
-    report_information = await run_agent(
+    (
+        task,
+        mcp_enabled,
+        mcp_strategy,
+        mcp_configs,
+        hlt_scope_metadata,
+        scraper_override,
+    ) = _hlt_prepare_research_request(
         task=research_request.task,
+        mcp_enabled=research_request.mcp_enabled,
+        mcp_strategy=research_request.mcp_strategy,
+        mcp_configs=research_request.mcp_configs,
+        research_scope=research_request.hlt_research_scope,
+    )
+    research_run_store.create_run(
+        research_id,
+        query=research_request.task,
         report_type=research_request.report_type,
         report_source=research_request.report_source,
-        source_urls=[],
-        document_urls=[],
-        tone=Tone[research_request.tone],
-        websocket=None,
-        stream_output=None,
-        headers=research_request.headers,
-        query_domains=[],
-        config_path="",
-        return_researcher=True
+        tone=research_request.tone,
+        status="running",
+        hlt_research_scope=hlt_scope_metadata,
     )
+    try:
+        report_information = await run_agent(
+            task=task,
+            report_type=research_request.report_type,
+            report_source=research_request.report_source,
+            source_urls=[],
+            document_urls=[],
+            tone=Tone[research_request.tone],
+            websocket=None,
+            stream_output=None,
+            headers=research_request.headers,
+            query_domains=[],
+            config_path="",
+            return_researcher=True,
+            mcp_enabled=mcp_enabled,
+            mcp_strategy=mcp_strategy,
+            mcp_configs=mcp_configs,
+            max_search_results=research_request.max_search_results,
+            scraper_override=scraper_override,
+        )
 
-    docx_path = await write_md_to_word(report_information[0], research_id)
-    pdf_path = await write_md_to_pdf(report_information[0], research_id)
-    if research_request.report_type != "multi_agents":
-        report, researcher = report_information
-        response = {
-            "research_id": research_id,
-            "research_information": {
-                "source_urls": researcher.get_source_urls(),
-                "research_costs": researcher.get_costs(),
-                "visited_urls": list(researcher.visited_urls),
-                "research_images": researcher.get_research_images(),
-                # "research_sources": researcher.get_research_sources(),  # Raw content of sources may be very large
-            },
-            "report": report,
-            "docx_path": docx_path,
-            "pdf_path": pdf_path
-        }
-    else:
-        response = { "research_id": research_id, "report": "", "docx_path": docx_path, "pdf_path": pdf_path }
+        report = report_information[0]
+        docx_path = await write_md_to_word(report, research_id)
+        pdf_path = await write_md_to_pdf(report, research_id)
+        md_path = await write_text_to_md(report, research_id)
+        if research_request.report_type != "multi_agents":
+            report, researcher = report_information
+            sources = jsonable(researcher.get_research_sources())
+            source_urls = list(researcher.get_source_urls())
+            research_run_store.complete_run(
+                research_id,
+                context=jsonable(researcher.get_research_context()),
+                sources=sources,
+                source_urls=source_urls,
+                costs=researcher.get_costs(),
+                report_path=md_path,
+                md_path=md_path,
+                pdf_path=pdf_path,
+                docx_path=docx_path,
+                hlt_research_scope=hlt_scope_metadata,
+            )
+            response = {
+                "research_id": research_id,
+                "research_information": {
+                    "source_urls": source_urls,
+                    "research_costs": researcher.get_costs(),
+                    "visited_urls": list(researcher.visited_urls),
+                    "research_images": researcher.get_research_images(),
+                    # "research_sources": researcher.get_research_sources(),  # Raw content of sources may be very large
+                },
+                "report": report,
+                "md_path": md_path,
+                "docx_path": docx_path,
+                "pdf_path": pdf_path
+            }
+        else:
+            research_run_store.complete_run(
+                research_id,
+                context=[],
+                sources=[],
+                source_urls=[],
+                costs=0.0,
+                report_path=md_path,
+                md_path=md_path,
+                pdf_path=pdf_path,
+                docx_path=docx_path,
+                hlt_research_scope=hlt_scope_metadata,
+            )
+            response = {
+                "research_id": research_id,
+                "report": "",
+                "md_path": md_path,
+                "docx_path": docx_path,
+                "pdf_path": pdf_path,
+            }
 
-    return response
+        return response
+    except Exception as e:
+        research_run_store.fail_run(research_id, error_code="runtime_error", error_message=str(e))
+        raise
 
 @app.post("/report/")
 async def generate_report(research_request: ResearchRequest, background_tasks: BackgroundTasks):
@@ -473,5 +556,6 @@ async def websocket_token_endpoint():
 from server.hlt_extensions import api_key_is_valid as _hlt_api_key_is_valid  # noqa: E402
 from server.hlt_extensions import create_websocket_token as _hlt_create_websocket_token  # noqa: E402
 from server.hlt_extensions import install as _install_hlt_extensions  # noqa: E402
+from server.hlt_extensions import prepare_research_request as _hlt_prepare_research_request  # noqa: E402
 from server.hlt_extensions import websocket_token_is_valid as _hlt_websocket_token_is_valid  # noqa: E402
 _install_hlt_extensions(app)

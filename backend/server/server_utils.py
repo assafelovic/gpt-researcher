@@ -17,6 +17,11 @@ from datetime import datetime
 from fastapi import HTTPException
 import aiofiles
 import hashlib
+from gpt_researcher.research_run_store import (
+    get_outputs_dir,
+    get_research_run_store,
+    jsonable,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +46,13 @@ class CustomLogsHandler:
         self.research_id = research_id or generate_research_id(task)
         self.run_id = self.research_id
         sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{self.research_id}_{task}")
-        self.log_file = os.path.join("outputs", f"{sanitized_filename}.json")
+        output_dir = get_outputs_dir()
+        self.log_file = str(output_dir / f"{sanitized_filename}.json")
         self.timestamp = datetime.now().isoformat()
         self._lock = asyncio.Lock()
 
         # Initialize log file with metadata
-        os.makedirs("outputs", exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
         with open(self.log_file, "w") as f:
             json.dump(self._initial_log_data(), f, indent=2)
 
@@ -232,12 +238,23 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_strategy,
         mcp_configs,
         hlt_scope_metadata,
+        scraper_override,
     ) = prepare_hlt_research_request(
         task=display_task,
         mcp_enabled=mcp_enabled,
         mcp_strategy=mcp_strategy,
         mcp_configs=mcp_configs,
         research_scope=hlt_research_scope,
+    )
+    run_store = get_research_run_store()
+    run_store.create_run(
+        research_id,
+        query=display_task,
+        report_type=report_type,
+        report_source=report_source,
+        tone=tone,
+        status="running",
+        hlt_research_scope=hlt_scope_metadata,
     )
 
     # Initialize log content with query
@@ -255,11 +272,21 @@ async def handle_start_command(websocket, data: str, manager):
             "hlt_research_scope": hlt_scope_metadata,
         },
     })
+    await logs_handler.send_json({
+        "type": "logs",
+        "content": "hlt_scope_status",
+        "output": "HLT research scope resolved",
+        "metadata": {
+            "research_id": research_id,
+            "run_id": research_id,
+            "hlt_research_scope": hlt_scope_metadata,
+        },
+    })
 
     sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{display_task}")
 
     try:
-        report = await manager.start_streaming(
+        report_result = await manager.start_streaming(
             task,
             report_type,
             report_source,
@@ -274,6 +301,8 @@ async def handle_start_command(websocket, data: str, manager):
             mcp_configs,
             max_search_results,
             logs_handler=logs_handler,
+            return_researcher=True,
+            scraper_override=scraper_override,
         )
     except Exception as e:
         logger.error(
@@ -286,14 +315,35 @@ async def handle_start_command(websocket, data: str, manager):
             "content": "error",
             "output": f"Error: {e}",
         })
+        run_store.fail_run(research_id, error_code="runtime_error", error_message=str(e))
         return
 
+    researcher = None
+    if isinstance(report_result, tuple) and len(report_result) == 2:
+        report, researcher = report_result
+    else:
+        report = report_result
     report = str(report)
     file_paths = await generate_report_files(report, sanitized_filename)
     # Add JSON log path to file_paths
     file_paths["json"] = os.path.relpath(logs_handler.log_file)
     file_paths["research_id"] = research_id
     file_paths["run_id"] = research_id
+    sources = jsonable(researcher.get_research_sources()) if researcher else []
+    source_urls = list(researcher.get_source_urls()) if researcher else []
+    costs = researcher.get_costs() if researcher else 0.0
+    run_store.complete_run(
+        research_id,
+        context=jsonable(researcher.get_research_context()) if researcher else [],
+        sources=sources,
+        source_urls=source_urls,
+        costs=costs,
+        report_path=file_paths.get("md"),
+        md_path=file_paths.get("md"),
+        pdf_path=file_paths.get("pdf"),
+        docx_path=file_paths.get("docx"),
+        hlt_research_scope=hlt_scope_metadata,
+    )
     await logs_handler.send_json({
         "type": "logs",
         "content": "research_completed",

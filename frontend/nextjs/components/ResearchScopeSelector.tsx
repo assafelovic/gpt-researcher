@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { HLTResearchScope } from "@/types/data";
 import { normalizeHLTResearchScope, selectedScopeCount } from "@/lib/hltResearchScope";
 
@@ -47,6 +50,29 @@ const depthOptions: Array<{ value: HLTResearchScope["depth"]; label: string }> =
   { value: "deep", label: "Deep" },
 ];
 
+type ReadinessStatus = "ready" | "partial" | "unavailable" | "inactive";
+
+type HLTReadiness = {
+  integrations?: Partial<Record<ScopeKey, {
+    status?: ReadinessStatus;
+    missing?: string[];
+  }>>;
+};
+
+const badgeText: Record<ReadinessStatus, string> = {
+  ready: "Ready",
+  partial: "Partial",
+  unavailable: "Needs config",
+  inactive: "Checking",
+};
+
+const badgeClass: Record<ReadinessStatus, string> = {
+  ready: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
+  partial: "border-amber-300/30 bg-amber-300/10 text-amber-100",
+  unavailable: "border-slate-500/30 bg-slate-500/10 text-slate-300",
+  inactive: "border-slate-500/20 bg-white/[0.04] text-slate-400",
+};
+
 export default function ResearchScopeSelector({
   value,
   onChange,
@@ -54,6 +80,26 @@ export default function ResearchScopeSelector({
 }: ResearchScopeSelectorProps) {
   const scope = normalizeHLTResearchScope(value);
   const count = selectedScopeCount(scope);
+  const [readiness, setReadiness] = useState<HLTReadiness | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/hlt/readiness", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => {
+        if (!cancelled && data) {
+          setReadiness(data);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setReadiness(null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const update = (patch: Partial<HLTResearchScope>) => {
     onChange({ ...scope, ...patch });
@@ -96,6 +142,7 @@ export default function ResearchScopeSelector({
         <div className={`grid gap-2 ${compact ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-4"}`}>
           {scopeOptions.map((option) => {
             const selected = scope[option.key];
+            const status = readiness?.integrations?.[option.key]?.status || "inactive";
             return (
               <label
                 key={option.key}
@@ -110,7 +157,12 @@ export default function ResearchScopeSelector({
                     <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
                       {option.eyebrow}
                     </span>
-                    <span className="mt-1 block text-sm font-semibold text-white">{option.label}</span>
+                    <span className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className="block text-sm font-semibold text-white">{option.label}</span>
+                      <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeClass[status]}`}>
+                        {badgeText[status]}
+                      </span>
+                    </span>
                   </span>
                   <span
                     className={`mt-0.5 flex h-5 w-9 items-center rounded-full p-0.5 transition-colors ${
