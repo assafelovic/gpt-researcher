@@ -133,6 +133,30 @@ def test_codebase_scope_partial_with_only_katailyst(monkeypatch):
     assert metadata["degraded_sources"] == ["codebase"]
 
 
+def test_metrics_scope_uses_katailyst_fallback_without_metabase(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv("KATAILYST_MCP_URL", "https://katailyst.example/mcp")
+    monkeypatch.setenv("KATAILYST_MCP_TOKEN", "kata-secret")
+
+    _, mcp_enabled, _, configs, metadata, _ = hlt_extensions.prepare_research_request(
+        task="Research metrics",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"metrics": True, "depth": "balanced"},
+    )
+
+    assert mcp_enabled is True
+    assert [config["name"] for config in configs] == ["metabase"]
+    assert configs[0]["connection_url"] == "https://katailyst.example/mcp"
+    assert metadata["scope_statuses"]["metrics"]["status"] == "ready"
+    assert metadata["scope_statuses"]["metrics"]["components"]["katailyst_metrics_fallback"] == "ready"
+    assert metadata["active_sources"] == ["metrics"]
+    assert metadata["degraded_sources"] == []
+    assert "kata-secret" not in json.dumps(metadata)
+
+
 class FakeGPTResearcher:
     def __init__(self, **kwargs):
         self.kwargs = kwargs

@@ -26,6 +26,7 @@ google-genai>=1.0.0  # For image generation with Imagen
 
 # Search & Research
 tavily-python>=0.7.12
+firecrawl>=4.22.3
 duckduckgo-search>=4.1.1
 arxiv>=2.0.0
 

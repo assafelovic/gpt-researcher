@@ -158,11 +158,15 @@ def _preset_readiness(preset: str) -> dict[str, Any]:
         }
     if preset == "metabase":
         url = os.getenv("METABASE_MCP_URL")
+        fallback_token = os.getenv("KATAILYST_MCP_TOKEN") or os.getenv("KATAILYST_AUTH_TOKEN")
+        fallback_ready = bool(fallback_token)
+        direct_ready = bool(url)
         return {
-            "status": "ready" if url else "unavailable",
-            "configured": bool(url),
-            "missing": [] if url else ["METABASE_MCP_URL"],
+            "status": "ready" if direct_ready or fallback_ready else "unavailable",
+            "configured": direct_ready or fallback_ready,
+            "missing": [] if direct_ready or fallback_ready else ["METABASE_MCP_URL", "KATAILYST_MCP_TOKEN"],
             "token_configured": bool(os.getenv("METABASE_MCP_TOKEN")),
+            "provider": "metabase" if direct_ready else "katailyst_metrics_fallback",
         }
     return {
         "status": "unknown",
@@ -224,8 +228,16 @@ def get_hlt_readiness() -> dict[str, Any]:
         },
         "metrics": {
             "status": preset_statuses["metabase"]["status"],
-            "components": {"metabase": preset_statuses["metabase"]["status"]},
+            "components": {
+                "metabase": "ready" if os.getenv("METABASE_MCP_URL") else "unavailable",
+                "katailyst_metrics_fallback": (
+                    "ready"
+                    if preset_statuses["metabase"].get("provider") == "katailyst_metrics_fallback"
+                    else "inactive"
+                ),
+            },
             "missing": preset_statuses["metabase"]["missing"],
+            "provider": preset_statuses["metabase"].get("provider"),
         },
         "firecrawl": {
             "status": firecrawl_status["status"],
@@ -280,10 +292,14 @@ def _mcp_config_for_preset(preset: str, name: str | None = None) -> dict[str, An
     elif preset == "metabase":
         readiness = _preset_readiness("metabase")
         if readiness["status"] != "ready":
-            logger.warning("Skipping Metabase MCP preset: METABASE_MCP_URL is unset")
+            logger.warning("Skipping metrics MCP preset: METABASE_MCP_URL and Katailyst fallback are unavailable")
             return None
-        url = os.getenv("METABASE_MCP_URL")
-        token = os.getenv("METABASE_MCP_TOKEN")
+        if readiness.get("provider") == "katailyst_metrics_fallback":
+            url = os.getenv("KATAILYST_MCP_URL", "https://www.katailyst.com/mcp")
+            token = os.getenv("KATAILYST_MCP_TOKEN") or os.getenv("KATAILYST_AUTH_TOKEN")
+        else:
+            url = os.getenv("METABASE_MCP_URL")
+            token = os.getenv("METABASE_MCP_TOKEN")
     else:
         logger.warning("Skipping unknown MCP preset: %s", preset)
         return None

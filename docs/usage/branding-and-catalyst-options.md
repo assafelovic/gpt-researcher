@@ -68,7 +68,7 @@ backend expands that metadata in `backend/server/hlt_extensions.py`.
 | --- | --- | --- |
 | Code files | Adds codebase instructions and requests Katailyst + GitHub MCP presets | `KATAILYST_MCP_TOKEN`, optional `GITHUB_MCP_URL` / `GITHUB_MCP_TOKEN` |
 | CMS + Registry | Adds Katailyst registry/CMS instructions and requests the Katailyst MCP preset | `KATAILYST_MCP_TOKEN` |
-| Metrics | Adds metrics instructions and requests a Metabase MCP preset | `METABASE_MCP_URL`, optional `METABASE_MCP_TOKEN` |
+| Metrics | Adds metrics instructions and requests Metabase; falls back to Katailyst metrics tools when direct Metabase MCP is unset | `KATAILYST_MCP_TOKEN`; optional `METABASE_MCP_URL` / `METABASE_MCP_TOKEN` |
 | High-quality crawl | Adds extraction-quality instructions | `SCRAPER=firecrawl`, `FIRECRAWL_API_KEY` |
 
 Server-side preset env:
@@ -82,7 +82,8 @@ METABASE_MCP_URL=...
 METABASE_MCP_TOKEN=...
 ```
 
-If a preset env var is missing, the backend skips that MCP server and logs a
+If direct Metabase env is missing, Metrics uses the Katailyst MCP fallback.
+If another preset env var is missing, the backend skips that MCP server and logs a
 warning; the research run still proceeds with the remaining available sources.
 
 ### Option 2: Iframe Inside Catalyst
