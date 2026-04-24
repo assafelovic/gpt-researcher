@@ -37,7 +37,7 @@ Short index for agents who don't need to read 700 lines sequentially. Every sect
 
 ## Key Katailyst entities
 
-Load these via MCP `get_entity` or `registry_artifact_body` before doing serious work. Each `type:code` is a canonical registry ref; names stable across revisions. Full catalog of 1,663 entities is discoverable via `registry_capabilities` + `discover`.
+Load these via MCP `get_entity` or `registry_artifact_body` before doing serious work. Each `type:code` is a canonical registry ref; names stable across revisions. Full catalog of 1,771 entities is discoverable via `registry_capabilities` + `discover`.
 
 ### Operating canon
 - `kb:katailyst-vault-access-pattern` — canonical secrets access. Read BEFORE hunting in env files or vault backups. Lists all 128 active secrets + their `secret_key` names.
@@ -78,7 +78,7 @@ Load these via MCP `get_entity` or `registry_artifact_body` before doing serious
 - `tool:meta-ads.insights` — Meta Graph insights (vault `meta/ads/access-token`, query-param auth; http_multi_action executor pending on MCP side).
 - `tool:manus.agent` — multi-step Manus agent runner (vault `manus/api-key`).
 - `tool:elevenlabs.voice` — TTS (vault `elevenlabs/api-key`).
-- `tool:gpt-researcher.quick-search` — cited web research (API live at `gpt-researcher-api-production.up.railway.app`; hosted MCP live at `gpt-researcher-mcp-production.up.railway.app/mcp`).
+- `tool:gpt-researcher.quick-search` — cited web research (live at `gpt-researcher-production-2b53.up.railway.app`).
 - `tool:hlt-metabase-readonly` — HLT warehouse reads (50K+ items).
 - `tool:publish.email` — Resend transactional email (vault `resend/api-key`).
 - `tool:marketo` — Marketo CRUD (vault `marketo/client-id` + `marketo/client-secret`).
@@ -251,7 +251,7 @@ Use Axon for repo comprehension after Katailyst orientation.
 
 Every working repo in the HLT ecosystem with a one-line identity + canonical path + live URL + GitHub. Ordered by centrality (capability canon → content factory → destinations → pipelines → specialized substrates).
 
-- **[katailyst](https://github.com/Awhitter/katailyst)** — capability canon + streamable-http MCP server at `/mcp` + 1,663 registry entities + 128 vault secrets + dashboard-cms admin. Stack: Next.js + pnpm 9.15.9, 75 deps. Local: `~/hlt/katailyst`. Live: https://www.katailyst.com (200). Key dirs: `lib/mcp/`, `lib/docs/`, `app/dashboard-cms/`, `registry-packs/`, `integrations/`, `plugins/`.
+- **[katailyst](https://github.com/Awhitter/katailyst)** — capability canon + streamable-http MCP server at `/mcp` + 1,771 registry entities + 128 vault secrets + dashboard-cms admin. Stack: Next.js + pnpm 9.15.9, 75 deps. Local: `~/hlt/katailyst`. Live: https://www.katailyst.com (200). Key dirs: `lib/mcp/`, `lib/docs/`, `app/dashboard-cms/`, `registry-packs/`, `integrations/`, `plugins/`.
 - **[sidecar-system](https://github.com/Awhitter/sidecar-system)** — content factory chat: articles/social/ads/recruiting specialists via Vercel AI SDK (Opus 4.7) + destination fan-out + Catalyst MCP bridge. Stack: Next.js 15 + pnpm 8.15.9, 102 deps incl @ai-sdk/{anthropic,google,groq,openai,mcp,replicate,xai}. Local: `~/hlt/sidecar`. Live: https://sidecar-system.vercel.app (200) + https://www.katailyst.com chat surface. Key dirs: `app/(apps)/chat/`, `domains/{articles,social,ads,recruiting}/`, `lib/integrations/`, `lib/publish/`, `lib/mcp/`, `docs/ads-methodology/`, `docs/recruiting-corpus/`.
 - **[mastery-publishing](https://github.com/Awhitter/MasteryPublishing)** — canonical `/resources/**` destination served behind Framer reverse-proxy at `hltmastery.com/nursing/resources`. Next.js + Supabase. Scripts incl `backfill:heroes` + `db:migrate`. Local: `~/hlt/mastery-publishing`. Live: https://hltmastery.com/nursing/resources (200). Key dirs: `app/resources/`, `app/admin/`, `app/api/publish/`, `lib/data/`, `mastra/` (!), `scripts/`.
 - **[multimedia-mastery](https://github.com/Awhitter/Multimedia4Mastery)** — `@mm/studio` monorepo: 4 sub-modules (audio, visual-rationale-wizard, social-studio, learning-studio) + Oracle 6-phase router + Cloudinary + FAL + ElevenLabs + own MCP server federated to Katailyst. Deps: @ai-sdk/gateway, @fal-ai/client, @modelcontextprotocol/sdk, @supabase/ssr. Local: `~/hlt/multimedia-mastery`. Live: https://multimediamastery.vercel.app (307 redirect). Key dirs: `app/api/media/v1/`, `app/studio/`, `modules/`, `lib/media/`, `vendors/`.
@@ -261,7 +261,7 @@ Every working repo in the HLT ecosystem with a one-line identity + canonical pat
 - **[forum-template](https://github.com/Awhitter/forum-template)** — reusable forum + career-hub template for per-vertical deploys (Nursing Research & Recruitment, PA hub, EMT hub). Generalized successor to NursingNexus. Express + Passport + React + Drizzle + Neon. Local: `~/hlt/forum-template`. Local-only. Key dirs: `server/`, `client/`, `shared/schema.ts`, `email-templates/`, `scripts/`.
 - **[brand-design-lab](https://github.com/Awhitter/katailyst-brand-design-lab)** — `@katailyst/sidecar-template`: reusable Next.js 15 sidecar scaffold for domain-focused workspaces (also hosts Bruce/Sarah/Marcus recruiting persona prompts). Fork + edit `lib/site.config.ts` to spin up a new sidecar. Local: `~/hlt/brand-design-lab`. Local-only (port 3100).
 - **[evidence-based-business](https://github.com/Awhitter/cleanEBB)** — `hlt-data-analyzer`: Vite + React + Express analytics dashboard (Metabase-backed reads Redshift + Supabase) with AI-assisted insight generation. Live: https://answers.hltcorp.com (200). Key dirs: `src/`, `server/`, `migrations/`, `scripts/`, `tests/`. Also ships `/api/ai-analysis` as the endpoint Katailyst agents consume.
-- **[gpt-researcher](https://github.com/Awhitter/hlt-gpt-researcher)** — HLT fork of `assafelovic/gpt-researcher`. FastAPI + LangGraph + Tavily + OpenAI, with hosted MCP overlay for agents. Endpoints: `POST /api/quick_search` (2-5s cited summary), `POST /report/` (30-90s deep autonomous report), and MCP streamable HTTP at `/mcp`. Live UI: https://gpt-researcher-ui.vercel.app. Live API: https://gpt-researcher-api-production.up.railway.app. Live MCP: https://gpt-researcher-mcp-production.up.railway.app/mcp. Active branch `main`.
+- **[gpt-researcher](https://github.com/Awhitter/hlt-gpt-researcher)** — HLT fork of `assafelovic/gpt-researcher`. FastAPI + LangGraph + Tavily + OpenAI. Endpoints: `POST /api/quick_search` (2-5s cited summary), `POST /report/` (30-90s deep autonomous report). Live: https://gpt-researcher-production-2b53.up.railway.app (405 on HEAD, POST-only — live confirmed). Active branch `session-2026-04-16-local-tweaks`.
 - **[mastra](https://github.com/Awhitter/whastra)** — `agent-stack-mastra`: general Mastra workflow substrate. 4-Hub architecture (Intake → Insight → Agents → Workflows). Invoked by Paperclip's `mastra-gateway` adapter over HTTP with governance. Local: `~/hlt/mastra`. Key deps: @mastra/core, Inngest, Slack Web API, Apify.
 - **[research-team](https://github.com/Awhitter/alecs-research-council)** — specialized Mastra research-council (sibling of `~/hlt/mastra`, focused on research workflows with analyst/validator/synthesizer role agents). Local: `~/hlt/research-team`.
 - **[operator-evals](https://github.com/Awhitter/katailyst-operator-evals)** — standalone Next.js 16 dashboard: Katailyst registry readiness, benchmark runs, tool canaries. Read-only view over Katailyst eval system. Operator-flagged for potential absorption into Katailyst itself. Local: `~/hlt/operator-evals`.
@@ -361,9 +361,7 @@ Every tool here resolves its credentials server-side via Katailyst vault (`auth_
 - **https://hltmastery.com/nursing/resources** (200) — MasteryPublishing public article surface.
 - **https://sidecar-system.vercel.app** (200) — sidecar-system Vercel production.
 - **https://multimediamastery.vercel.app** (307) — redirects to subpath. Media API + studio at `/api/media/v1/*`.
-- **https://gpt-researcher-ui.vercel.app** (200) — hosted GPT Researcher browser UI.
-- **https://gpt-researcher-api-production.up.railway.app** (200 on `/health`) — authenticated REST API: `POST /api/quick_search`, `POST /report/`.
-- **https://gpt-researcher-mcp-production.up.railway.app/mcp** — authenticated hosted MCP endpoint for GPT Researcher tools.
+- **https://gpt-researcher-production-2b53.up.railway.app** (405 on HEAD, POST-only endpoints live) — `POST /api/quick_search`, `POST /report/`.
 - **https://answers.hltcorp.com** (200) — Evidence-Based Business / Metabase.
 - **https://hltadspdash-gqtedncp.manus.space** — Manus-built Meta Ads dashboard (operator-shared; keep live alongside the sidecar `/admin/ads-command-center` when that ships).
 - **https://ai4mastery-next-two.vercel.app** — AI4EDU publishing surface (`POST /api/publish` consumes ArticleV2).
@@ -442,14 +440,14 @@ For each major repo, this document should answer:
 - what shapes or contracts matter operationally
 - where to inspect first
 
-> ⚠ Staleness audit 2026-04-17: this inventory covers **8 of 15** active repos the `sync-llms-to-repos.sh` script now fans into. Missing: **Engage**, **Nursing Jobs**, **Forum Template**, **Brand Design Lab**, **GPT Researcher**, **Mastra**, **Operator Evals**, **Paperclip**, **Research Team**. Local paths below still say `/Users/alecwhitters/Downloads/...` but the canonical path migrated to `/Users/alecwhitters/hlt/<repo>` on 2026-04-17; treat the Downloads paths as aliases. **Content Creator Studio** and **EduMastery** are in `~/Downloads/AI2 April/` and `~/Downloads/` respectively; neither is in the active `~/hlt/` working set or the sync-script target list. Each repo stanza needs a Last-verified refresh; bumping the four primary repos (Katailyst, sidecar-system, MasteryPublishing, Multimedia Mastery) to 2026-04-17 below.
+> 2026-04-24 status: the primary repo index above and `sync-llms-to-repos.sh` cover all 15 active `~/hlt/*` repos. The detailed checklist below remains a deeper execution map; historical non-active sections such as Content Creator Studio and EduMastery stay marked as legacy until they are explicitly migrated or retired.
 
 ### Katailyst
 - **Repo:** `Awhitter/katailyst`
 - **GitHub:** `https://github.com/Awhitter/katailyst`
 - **Live:** `https://www.katailyst.com`
 - **MCP:** `https://www.katailyst.com/mcp`
-- **Last verified:** 2026-04-17
+- **Last verified:** 2026-04-24
 - **Role:** capability canon, registry, orchestration layer, MCP surface
 - **Main purpose:** the control plane and armory repo for Catalyst and Katailyst, with Supabase-canonical atomic units, discovery APIs, CMS and operator surfaces, portability mirrors, and export layers for downstream runtimes
 - **Main surfaces other agents interact with:** `/mcp`, registry and discovery tools, prompts, resources, toolsets, llms docs surfaces (`/.well-known/llms.txt`, `/llms.txt`, `/llms-full.txt`, `/llm.txt`), docs like `docs/VISION.md`, `docs/RULES.md`, and `docs/QUICK_START_AGENTS.md`
@@ -466,10 +464,10 @@ For each major repo, this document should answer:
 ### sidecar-system
 - **Repo:** `Awhitter/sidecar-system`
 - **GitHub:** `https://github.com/Awhitter/sidecar-system`
-- **Local:** `/Users/alecwhitters/Downloads/sidecar-system`
+- **Local:** `/Users/alecwhitters/hlt/sidecar`
 - **Live:** `https://sidecar-system.vercel.app`
 - **Alt live:** `https://sidecar-system-work.vercel.app`
-- **Last verified:** 2026-04-17
+- **Last verified:** 2026-04-24
 - **Role:** upstream workflow and control plane for content and destination orchestration
 - **Main purpose:** domain-specific AI content interfaces powered by the Katailyst MCP registry, with specialized sidecars for articles, social, email, analytics, education, multimedia, and related workflows
 - **Main surfaces other agents interact with:** article sidecars, `domains/<name>/sidecar-config.ts`, MCP bridge, destination publishing tools, Framer integration routes, content-engine projection routes, chat and runtime workflows
@@ -486,10 +484,10 @@ For each major repo, this document should answer:
 ### MasteryPublishing
 - **Repo:** `Awhitter/MasteryPublishing`
 - **GitHub:** `https://github.com/Awhitter/MasteryPublishing`
-- **Local:** `/Users/alecwhitters/Downloads/MasteryPublishing`
+- **Local:** `/Users/alecwhitters/hlt/mastery-publishing`
 - **Legacy live alias:** `https://v0-next-js-content-engine.vercel.app`
 - **Public route family:** `https://hltmastery.com/nursing/resources`
-- **Last verified:** 2026-04-17
+- **Last verified:** 2026-04-24
 - **Role:** canonical structured `/resources/**` content engine
 - **Main purpose:** the HLT study-resources publishing app and content display layer, rendering the public `/resources/**` library, serving product-specific hubs and article pages, reading from Supabase, and accepting article publishes from the Katailyst pipeline
 - **Main surfaces other agents interact with:** `/resources`, `/resources/[product]`, `/resources/[product]/[slug]`, `/resources/search`, `/admin`, `POST /api/publish`, `POST /api/revalidate`, `GET|POST /api/admin/settings`, Supabase-backed product, topic, author, article, and settings data layer
@@ -505,9 +503,9 @@ For each major repo, this document should answer:
 
 ### Multimedia Mastery
 - **Repo or product:** `Awhitter/Multimedia4Mastery` and local multimedia-mastery-core naming family
-- **Local:** `/Users/alecwhitters/Downloads/multimedia-mastery-core`
+- **Local:** `/Users/alecwhitters/hlt/multimedia-mastery`
 - **Live:** `https://multimediamastery.vercel.app`
-- **Last verified:** 2026-04-17
+- **Last verified:** 2026-04-24
 - **Role:** media-native production lane
 - **Main purpose:** a media hub and studio that exposes a canonical media tool surface (`/api/media/v1/*`) and a human editor UI (`/studio`, `/m/[moduleId]`) for image, audio, video, upload, and health workflows
 - **Main surfaces other agents interact with:** `/api/media/v1/*`, `/studio`, `/m/[moduleId]`, media contracts in `docs/api/MEDIA_TOOL_CONTRACT.md`
