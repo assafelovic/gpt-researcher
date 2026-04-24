@@ -16,6 +16,7 @@ from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
+from starlette.websockets import WebSocketDisconnect
 import hashlib
 from gpt_researcher.research_run_store import (
     get_outputs_dir,
@@ -637,6 +638,9 @@ async def handle_websocket_communication(websocket, manager):
                         "content": "error",
                         "output": "Unknown command received by server"
                     })
+            except WebSocketDisconnect as e:
+                logger.info(f"WebSocket disconnected with code {e.code} and reason: '{e.reason}'")
+                break
             except Exception as e:
                 logger.error(f"WebSocket error: {str(e)}\n{traceback.format_exc()}")
                 break

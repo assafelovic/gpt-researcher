@@ -9,6 +9,7 @@ from backend.server.server_utils import CustomLogsHandler
 from backend.server import server_utils
 from gpt_researcher.mcp.client import MCPClientManager
 import gpt_researcher.research_run_store as run_store_module
+from starlette.websockets import WebSocketDisconnect
 import json
 import asyncio
 import glob
@@ -284,3 +285,19 @@ async def _test_websocket_start_persists_failed_run(monkeypatch, tmp_path):
     assert run["status"] == "failed"
     assert run["error_code"] == "runtime_error"
     assert "planned failure" in run["error_message"]
+
+
+def test_websocket_normal_disconnect_is_not_logged_as_error(caplog):
+    asyncio.run(_test_websocket_normal_disconnect_is_not_logged_as_error(caplog))
+
+
+async def _test_websocket_normal_disconnect_is_not_logged_as_error(caplog):
+    caplog.set_level("INFO", logger=server_utils.logger.name)
+    websocket = AsyncMock()
+    websocket.receive_text.side_effect = WebSocketDisconnect(code=1000, reason="")
+    manager = AsyncMock()
+
+    await server_utils.handle_websocket_communication(websocket, manager)
+
+    assert "WebSocket error" not in caplog.text
+    assert "WebSocket disconnected with code 1000" in caplog.text
