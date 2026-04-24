@@ -21,11 +21,11 @@ You are currently inside **GPT Researcher**, the research orchestration lane. Cu
 
 ### Recent significant changes (last 5 commits)
 
+- d7d4a1e7 2026-04-24 docs: refresh llms ecosystem context
 - 91c6d28e 2026-04-24 chore: configure railway volume write permissions
 - f3325048 2026-04-24 fix: make research log persistence event-loop safe
 - 42387367 2026-04-24 feat: persist hosted research runs
 - 0b4a99a6 2026-04-22 Clarify upstream sync status
-- b96797fb 2026-04-22 Fix hosted MCP deploy readiness docs
 
 # HLT Ecosystem Index for Agents
 
