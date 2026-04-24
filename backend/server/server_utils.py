@@ -5,6 +5,7 @@ import os
 import re
 import time
 import shutil
+import threading
 import traceback
 import uuid
 from typing import Awaitable, Dict, List, Any
@@ -15,7 +16,6 @@ from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
-import aiofiles
 import hashlib
 from gpt_researcher.research_run_store import (
     get_outputs_dir,
@@ -49,7 +49,7 @@ class CustomLogsHandler:
         output_dir = get_outputs_dir()
         self.log_file = str(output_dir / f"{sanitized_filename}.json")
         self.timestamp = datetime.now().isoformat()
-        self._lock = asyncio.Lock()
+        self._lock = threading.Lock()
 
         # Initialize log file with metadata
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -77,13 +77,13 @@ class CustomLogsHandler:
         enriched.setdefault("run_id", self.run_id)
         return enriched
 
-    async def _read_log_data(self) -> Dict[str, Any]:
+    def _read_log_data(self) -> Dict[str, Any]:
         if not os.path.exists(self.log_file):
             return self._initial_log_data()
 
         try:
-            async with aiofiles.open(self.log_file, "r") as f:
-                content = await f.read()
+            with open(self.log_file, "r") as f:
+                content = f.read()
             log_data = json.loads(content) if content.strip() else self._initial_log_data()
         except json.JSONDecodeError:
             corrupt_path = f"{self.log_file}.corrupt.{int(time.time())}"
@@ -104,11 +104,35 @@ class CustomLogsHandler:
         log_data.setdefault("content", self._initial_log_data()["content"])
         return log_data
 
-    async def _write_log_data(self, log_data: Dict[str, Any]) -> None:
+    def _write_log_data(self, log_data: Dict[str, Any]) -> None:
         tmp_path = f"{self.log_file}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
-        async with aiofiles.open(tmp_path, "w") as f:
-            await f.write(json.dumps(log_data, indent=2))
+        with open(tmp_path, "w") as f:
+            f.write(json.dumps(log_data, indent=2))
         os.replace(tmp_path, self.log_file)
+
+    def _persist_log_event(self, enriched_data: Dict[str, Any]) -> None:
+        with self._lock:
+            log_data = self._read_log_data()
+
+            # Update appropriate section based on data type
+            if enriched_data.get("type") == "logs":
+                log_data["events"].append({
+                    "timestamp": datetime.now().isoformat(),
+                    "type": "event",
+                    "data": enriched_data,
+                })
+                content_update = {
+                    key: enriched_data[key]
+                    for key in ("query", "sources", "context", "report", "costs")
+                    if key in enriched_data
+                }
+                if content_update:
+                    log_data["content"].update(content_update)
+            else:
+                # Update content section for other types of data
+                log_data["content"].update(enriched_data)
+
+            self._write_log_data(log_data)
 
     async def send_json(self, data: Dict[str, Any]) -> None:
         """Store log data and send to websocket"""
@@ -126,28 +150,7 @@ class CustomLogsHandler:
                 )
 
         try:
-            async with self._lock:
-                log_data = await self._read_log_data()
-
-                # Update appropriate section based on data type
-                if enriched_data.get("type") == "logs":
-                    log_data["events"].append({
-                        "timestamp": datetime.now().isoformat(),
-                        "type": "event",
-                        "data": enriched_data,
-                    })
-                    content_update = {
-                        key: enriched_data[key]
-                        for key in ("query", "sources", "context", "report", "costs")
-                        if key in enriched_data
-                    }
-                    if content_update:
-                        log_data["content"].update(content_update)
-                else:
-                    # Update content section for other types of data
-                    log_data["content"].update(enriched_data)
-
-                await self._write_log_data(log_data)
+            await asyncio.to_thread(self._persist_log_event, enriched_data)
         except Exception:
             logger.warning(
                 "Failed to persist research log event",

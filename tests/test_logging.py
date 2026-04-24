@@ -129,6 +129,29 @@ async def _test_custom_logs_handler_concurrent_writes_remain_valid_json():
     assert len(log_data["events"]) == 50
 
 
+def test_custom_logs_handler_can_be_reused_across_event_loops():
+    mock_websocket = AsyncMock()
+    mock_websocket.send_json = AsyncMock()
+    handler = CustomLogsHandler(mock_websocket, "cross loop query")
+
+    async def write_batch(prefix):
+        await asyncio.gather(*[
+            handler.send_json({
+                "type": "logs",
+                "message": f"{prefix} event {i}",
+            })
+            for i in range(10)
+        ])
+
+    asyncio.run(write_batch("first"))
+    asyncio.run(write_batch("second"))
+
+    with open(handler.log_file, "r") as f:
+        log_data = json.load(f)
+
+    assert len(log_data["events"]) == 20
+
+
 def test_custom_logs_handler_preserves_corrupt_log_and_recovers():
     asyncio.run(_test_custom_logs_handler_preserves_corrupt_log_and_recovers())
 
