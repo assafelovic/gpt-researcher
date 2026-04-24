@@ -10,6 +10,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.responses import JSONResponse
 
+from gpt_researcher.utils.langfuse_observability import get_langfuse_runtime_status
 from mcp_server.auth import BearerAuthMiddleware
 from mcp_server.tools import register_tools
 
@@ -56,6 +57,9 @@ async def health_check(request):  # noqa: D401, ANN001
             "service": "gpt-researcher-mcp",
             "version": os.getenv("RAILWAY_GIT_COMMIT_SHA", "local")[:7],
             "deploy_marker": os.getenv("HLT_DEPLOY_MARKER", "local"),
+            "observability": {
+                "langfuse": get_langfuse_runtime_status(),
+            },
         }
     )
 
