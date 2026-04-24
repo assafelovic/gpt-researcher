@@ -70,7 +70,9 @@ That gives agents these tools:
 The MCP service keeps a bounded hot cache for live `GPTResearcher` objects and a
 SQLite metadata store for completed research context, source metadata, status,
 and report paths. Configure `RESEARCH_RUN_STORE_PATH` and `OUTPUTS_DIR` on a
-Railway volume when restart recovery matters.
+Railway volume when restart recovery matters. Railway volumes mount as `root`,
+so the hosted Docker services also set `RAILWAY_RUN_UID=0` to make the mounted
+SQLite and output paths writable.
 
 ## Content Machine And Admin Handoff
 

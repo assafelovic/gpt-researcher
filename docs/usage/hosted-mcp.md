@@ -130,6 +130,9 @@ curl -sS -X POST "https://gpt-researcher-api-production.up.railway.app/report/" 
   set this to a mounted volume path such as `/data/research_runs.sqlite3`.
 - Generated report/log files: `OUTPUTS_DIR`. On Railway, set this to the same
   mounted volume, such as `/data/outputs`.
+- Volume permissions: Railway mounts volumes as `root`; these hosted Docker
+  services set `RAILWAY_RUN_UID=0` so SQLite metadata and report files are
+  writable on the mounted volume.
 
 To rotate:
 

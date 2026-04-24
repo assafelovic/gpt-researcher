@@ -158,6 +158,8 @@ railway variable set --service "$service_name" --skip-deploys "RAILPACK_START_CM
 echo "  set RAILPACK_START_CMD"
 railway variable set --service "$service_name" --skip-deploys "NIXPACKS_START_CMD=$mcp_start_cmd" >/dev/null
 echo "  set NIXPACKS_START_CMD"
+railway variable set --service "$service_name" --skip-deploys "RAILWAY_RUN_UID=0" >/dev/null
+echo "  set RAILWAY_RUN_UID"
 railway variable set --service "$service_name" --skip-deploys "HLT_DEPLOY_MARKER=$deploy_marker" >/dev/null
 echo "  set HLT_DEPLOY_MARKER"
 

@@ -21,6 +21,7 @@
 #   DOC_PATH         — only needed if you use the /upload document flow
 #   RESEARCH_RUN_STORE_PATH — SQLite run metadata path; use a Railway volume
 #   OUTPUTS_DIR      — generated report/log directory; use the same volume
+#   RAILWAY_RUN_UID  — set to 0 when writing Railway volumes from this Dockerfile
 #
 # Health: GET /health returns a JSON liveness probe (installed via
 # `backend/server/hlt_extensions.py`). GET / still works (returns the

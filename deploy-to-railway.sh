@@ -159,6 +159,8 @@ railway variable set --service "$service_name" --skip-deploys "GPT_RESEARCHER_SE
 echo "  set GPT_RESEARCHER_SERVICE"
 railway variable set --service "$service_name" --skip-deploys "RAILPACK_START_CMD=./railway-start.sh" >/dev/null
 echo "  set RAILPACK_START_CMD"
+railway variable set --service "$service_name" --skip-deploys "RAILWAY_RUN_UID=0" >/dev/null
+echo "  set RAILWAY_RUN_UID"
 railway variable set --service "$service_name" --skip-deploys "HLT_DEPLOY_MARKER=$deploy_marker" >/dev/null
 echo "  set HLT_DEPLOY_MARKER"
 
