@@ -1,4 +1,7 @@
 import asyncio
+import os
+
+import pytest
 from dotenv import load_dotenv
 from gpt_researcher.config.config import Config
 from gpt_researcher.actions.retriever import get_retrievers
@@ -7,6 +10,14 @@ import pprint
 # Load environment variables from .env file
 load_dotenv()
 
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("RUN_LIVE_RESEARCH_TESTS") != "1" or not os.getenv("TAVILY_API_KEY"),
+    reason="Live retriever test requires RUN_LIVE_RESEARCH_TESTS=1 and TAVILY_API_KEY",
+)
+
+
+@pytest.mark.asyncio
 async def test_scrape_data_by_query():
     # Initialize the Config object
     config = Config()

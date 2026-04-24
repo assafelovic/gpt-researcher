@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import os
 from pathlib import Path
 import json
 import logging
@@ -9,7 +10,16 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class TestWebSocket(WebSocket):
+pytestmark = pytest.mark.skipif(
+    not (
+        os.getenv("RUN_LIVE_RESEARCH_TESTS") == "1"
+        and os.getenv("OPENAI_API_KEY")
+        and os.getenv("TAVILY_API_KEY")
+    ),
+    reason="Live research logging test requires RUN_LIVE_RESEARCH_TESTS=1 plus OpenAI/Tavily credentials",
+)
+
+class MockWebSocket(WebSocket):
     def __init__(self):
         self.events = []
         self.scope = {}
@@ -32,7 +42,7 @@ async def test_log_output_file():
     from backend.server.server_utils import CustomLogsHandler
     
     # 1. Setup like the main app
-    websocket = TestWebSocket()
+    websocket = MockWebSocket()
     await websocket.accept()
     
     # 2. Initialize researcher like main app

@@ -13,8 +13,21 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.tools import tool
 
 from .llm import create_chat_completion
+from .langfuse_observability import (
+    observe_langfuse,
+    should_record_langfuse_io,
+    update_observation,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def _messages_summary(messages: List[Dict[str, str]]) -> Dict[str, Any]:
+    return {
+        "message_count": len(messages),
+        "prompt_chars": sum(len(str(message.get("content", ""))) for message in messages),
+        "roles": sorted({message.get("role", "unknown") for message in messages}),
+    }
 
 
 async def create_chat_completion_with_tools(
@@ -86,8 +99,34 @@ async def create_chat_completion_with_tools(
         # For tool calling, we need to handle the full conversation including tool responses
         from langchain_core.messages import ToolMessage
         
+        record_io = should_record_langfuse_io()
+        metadata = {
+            "provider": llm_provider,
+            "tool_count": len(tools),
+            "tool_names": [getattr(tool_item, "name", "unknown") for tool_item in tools],
+            **_messages_summary(messages),
+        }
+
         # First call to LLM
-        response = await llm_with_tools.ainvoke(lc_messages)
+        with observe_langfuse(
+            name="gpt-researcher.llm.tool-call",
+            as_type="generation",
+            model=model,
+            input=messages if record_io else None,
+            metadata={**metadata, "stage": "initial"},
+            model_parameters={"temperature": temperature, "max_tokens": max_tokens},
+        ) as observation:
+            response = await llm_with_tools.ainvoke(lc_messages)
+            update_observation(
+                observation,
+                output=getattr(response, "content", None) if record_io else None,
+                metadata={
+                    **metadata,
+                    "stage": "initial",
+                    "status": "completed",
+                    "tool_call_count": len(getattr(response, "tool_calls", []) or []),
+                },
+            )
         
         # Process tool calls if any were made
         tool_calls_metadata = []
@@ -151,7 +190,29 @@ async def create_chat_completion_with_tools(
             
             # Get final response from LLM after tool execution
             logger.info("Getting final response from LLM after tool execution")
-            final_response = await llm_with_tools.ainvoke(lc_messages)
+            with observe_langfuse(
+                name="gpt-researcher.llm.tool-final",
+                as_type="generation",
+                model=model,
+                input=str(lc_messages) if record_io else None,
+                metadata={
+                    **metadata,
+                    "stage": "final",
+                    "tool_call_count": len(tool_calls_metadata),
+                },
+                model_parameters={"temperature": temperature, "max_tokens": max_tokens},
+            ) as observation:
+                final_response = await llm_with_tools.ainvoke(lc_messages)
+                update_observation(
+                    observation,
+                    output=getattr(final_response, "content", None) if record_io else None,
+                    metadata={
+                        **metadata,
+                        "stage": "final",
+                        "status": "completed",
+                        "tool_call_count": len(tool_calls_metadata),
+                    },
+                )
             
             # Track costs if callback provided
             if cost_callback:

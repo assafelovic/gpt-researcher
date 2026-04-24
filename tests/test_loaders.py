@@ -1,17 +1,29 @@
+from pathlib import Path
+import importlib.util
+
+import pytest
 from langchain_community.document_loaders import PyMuPDFLoader, UnstructuredCSVLoader
 
-# # Test PyMuPDFLoader
-pdf_loader = PyMuPDFLoader("my-docs/Elisha - Coding Career.pdf")
-try:
-    pdf_data = pdf_loader.load()
-    print("PDF Data:", pdf_data)
-except Exception as e:
-    print("Failed to load PDF:", e)
 
-# Test UnstructuredCSVLoader
-csv_loader = UnstructuredCSVLoader("my-docs/active_braze_protocols_from_bq.csv", mode="elements")
-try:
-    csv_data = csv_loader.load()
-    print("CSV Data:", csv_data)
-except Exception as e:
-    print("Failed to load CSV:", e)
+FIXTURE_DIR = Path(__file__).parent / "docs"
+
+
+def test_pymupdf_loader_fixture_loads_pages():
+    loader = PyMuPDFLoader(str(FIXTURE_DIR / "doc.pdf"))
+
+    pages = loader.load()
+
+    assert pages
+    assert pages[0].metadata["source"].endswith("doc.pdf")
+
+
+def test_unstructured_csv_loader_fixture_loads_rows():
+    if importlib.util.find_spec("pandas") is None:
+        pytest.skip("UnstructuredCSVLoader requires pandas, which is not in the base test env")
+
+    loader = UnstructuredCSVLoader(str(FIXTURE_DIR / "sample.csv"), mode="elements")
+
+    rows = loader.load()
+
+    assert rows
+    assert any("NCLEX" in row.page_content for row in rows)

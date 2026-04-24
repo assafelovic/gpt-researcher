@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+import os
 from pathlib import Path
 import sys
 import logging
@@ -11,6 +12,15 @@ sys.path.append(str(project_root))
 # Configure basic logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+pytestmark = pytest.mark.skipif(
+    not (
+        os.getenv("RUN_LIVE_RESEARCH_TESTS") == "1"
+        and os.getenv("OPENAI_API_KEY")
+        and os.getenv("TAVILY_API_KEY")
+    ),
+    reason="Live researcher logging test requires RUN_LIVE_RESEARCH_TESTS=1 plus OpenAI/Tavily credentials",
+)
 
 @pytest.mark.asyncio
 async def test_researcher_logging():  # Renamed function to be more specific
@@ -68,4 +78,4 @@ async def test_researcher_logging():  # Renamed function to be more specific
         raise
 
 if __name__ == "__main__":
-    pytest.main([__file__]) 
+    pytest.main([__file__])

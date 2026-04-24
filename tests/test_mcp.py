@@ -27,6 +27,8 @@ import os
 import logging
 from typing import Dict, List, Any
 
+import pytest
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -35,6 +37,11 @@ logger = logging.getLogger(__name__)
 GITHUB_TOKEN = os.environ.get("GITHUB_PERSONAL_ACCESS_TOKEN")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY")
+
+pytestmark = pytest.mark.skipif(
+    os.getenv("RUN_LIVE_MCP_TESTS") != "1",
+    reason="Live MCP integration tests require RUN_LIVE_MCP_TESTS=1 and provider credentials",
+)
 
 # Test configuration using environment variables
 def get_mcp_config():
@@ -90,6 +97,7 @@ def setup_environment():
     print("✅ All required environment variables are set")
     return True
 
+@pytest.mark.asyncio
 async def test_web_search_mcp():
     """Test MCP integration with web search (Tavily) for news and general topics."""
     print("\n🌐 Testing Web Search MCP Integration")
@@ -152,6 +160,7 @@ async def test_web_search_mcp():
         logger.exception("Web search MCP test error:")
         return False
 
+@pytest.mark.asyncio
 async def test_github_mcp():
     """Test MCP integration with GitHub for code-related queries."""
     print("\n🐙 Testing GitHub MCP Integration")
@@ -266,4 +275,4 @@ if __name__ == "__main__":
     print("Testing Web Search (Tavily) and GitHub MCP integrations with optimal default settings.")
     print()
     
-    asyncio.run(main()) 
+    asyncio.run(main())

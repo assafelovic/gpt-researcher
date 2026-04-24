@@ -21,6 +21,11 @@ from gpt_researcher.llm_provider.generic.base import (
 
 from ..prompts import PromptFamily
 from .costs import estimate_llm_cost
+from .langfuse_observability import (
+    observe_langfuse,
+    should_record_langfuse_io,
+    update_observation,
+)
 from .validators import Subtopics
 
 
@@ -36,6 +41,21 @@ def get_llm(llm_provider: str, **kwargs):
     """
     from gpt_researcher.llm_provider import GenericLLMProvider
     return GenericLLMProvider.from_provider(llm_provider, **kwargs)
+
+
+def _messages_summary(messages: list[dict[str, str]]) -> dict[str, Any]:
+    roles: dict[str, int] = {}
+    prompt_chars = 0
+    for message in messages:
+        role = message.get("role", "unknown")
+        roles[role] = roles.get(role, 0) + 1
+        prompt_chars += len(str(message.get("content", "")))
+
+    return {
+        "message_count": len(messages),
+        "message_roles": roles,
+        "prompt_chars": prompt_chars,
+    }
 
 
 async def create_chat_completion(
@@ -100,30 +120,86 @@ async def create_chat_completion(
     # create response
     max_attempts = 1 if (stream and websocket is not None) else 10
     last_exception: Exception | None = None
+    record_io = should_record_langfuse_io()
+    base_metadata = {
+        "provider": llm_provider,
+        "stream": stream,
+        "websocket": websocket is not None,
+        "max_attempts": max_attempts,
+        "llm_kwargs_keys": sorted((llm_kwargs or {}).keys()),
+        "request_kwargs_keys": sorted(kwargs.keys()),
+        **_messages_summary(messages),
+    }
+    model_parameters = {
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "reasoning_effort": reasoning_effort,
+    }
     for attempt in range(1, max_attempts + 1):
-        try:
-            response = await provider.get_chat_response(
-                messages, stream, websocket, **kwargs
-            )
-        except Exception as exc:
-            last_exception = exc
-            logging.getLogger(__name__).warning(
-                f"LLM request failed (attempt {attempt}/{max_attempts}): {exc}"
-            )
-            if attempt < max_attempts:
-                await asyncio.sleep(min(2 ** (attempt - 1), 8))
-                continue
-            break
+        attempt_metadata = {
+            **base_metadata,
+            "attempt": attempt,
+        }
+        with observe_langfuse(
+            name="gpt-researcher.llm.chat",
+            as_type="generation",
+            model=model,
+            input=messages if record_io else None,
+            metadata=attempt_metadata,
+            model_parameters=model_parameters,
+        ) as observation:
+            try:
+                response = await provider.get_chat_response(
+                    messages, stream, websocket, **kwargs
+                )
+            except Exception as exc:
+                last_exception = exc
+                update_observation(
+                    observation,
+                    level="WARNING" if attempt < max_attempts else "ERROR",
+                    status_message=str(exc)[:500],
+                    metadata={
+                        **attempt_metadata,
+                        "status": "failed",
+                        "error_type": type(exc).__name__,
+                    },
+                )
+                logging.getLogger(__name__).warning(
+                    f"LLM request failed (attempt {attempt}/{max_attempts}): {exc}"
+                )
+                if attempt < max_attempts:
+                    await asyncio.sleep(min(2 ** (attempt - 1), 8))
+                    continue
+                break
 
-        if not response:
-            last_exception = RuntimeError("Empty response from LLM provider")
-            logging.getLogger(__name__).warning(
-                f"LLM returned empty response (attempt {attempt}/{max_attempts})"
+            if not response:
+                last_exception = RuntimeError("Empty response from LLM provider")
+                update_observation(
+                    observation,
+                    level="WARNING" if attempt < max_attempts else "ERROR",
+                    status_message="Empty response from LLM provider",
+                    metadata={
+                        **attempt_metadata,
+                        "status": "empty_response",
+                    },
+                )
+                logging.getLogger(__name__).warning(
+                    f"LLM returned empty response (attempt {attempt}/{max_attempts})"
+                )
+                if attempt < max_attempts:
+                    await asyncio.sleep(min(2 ** (attempt - 1), 8))
+                    continue
+                break
+
+            update_observation(
+                observation,
+                output=response if record_io else None,
+                metadata={
+                    **attempt_metadata,
+                    "status": "completed",
+                    "response_chars": len(str(response)),
+                },
             )
-            if attempt < max_attempts:
-                await asyncio.sleep(min(2 ** (attempt - 1), 8))
-                continue
-            break
 
         if cost_callback:
             llm_costs = estimate_llm_cost(str(messages), response)

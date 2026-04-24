@@ -36,6 +36,11 @@ from chat.chat import ChatAgentWithMemory
 
 from server.report_store import ReportStore
 from gpt_researcher.research_run_store import get_outputs_dir, get_research_run_store, jsonable
+from gpt_researcher.utils.langfuse_observability import (
+    observe_langfuse,
+    should_record_langfuse_io,
+    update_observation,
+)
 
 # MongoDB services removed; durable run metadata is handled by SQLite.
 
@@ -531,15 +536,41 @@ async def quick_search_endpoint(search_request: QuickSearchRequest):
     as opposed to the full /report/ endpoint for deep research.
     """
     try:
-        researcher = GPTResearcher(
-            query=search_request.query,
-            report_type="research_report",
-        )
-        results = await researcher.quick_search(
-            query=search_request.query,
-            query_domains=search_request.domains,
-            aggregated_summary=search_request.summary,
-        )
+        record_io = should_record_langfuse_io()
+        metadata = {
+            "domains_count": len(search_request.domains or []),
+            "summary": search_request.summary,
+            "query_chars": len(search_request.query),
+        }
+        with observe_langfuse(
+            name="gpt-researcher.quick-search",
+            as_type="span",
+            input={
+                "query": search_request.query,
+                "domains": search_request.domains,
+                "summary": search_request.summary,
+            } if record_io else None,
+            metadata=metadata,
+        ) as observation:
+            researcher = GPTResearcher(
+                query=search_request.query,
+                report_type="research_report",
+            )
+            results = await researcher.quick_search(
+                query=search_request.query,
+                query_domains=search_request.domains,
+                aggregated_summary=search_request.summary,
+            )
+            update_observation(
+                observation,
+                output=results if record_io else None,
+                metadata={
+                    **metadata,
+                    "status": "completed",
+                    "result_type": type(results).__name__,
+                    "result_count": len(results) if isinstance(results, list) else None,
+                },
+            )
         return {"query": search_request.query, "results": results}
     except Exception as e:
         logger.error(f"Error in quick_search: {str(e)}", exc_info=True)

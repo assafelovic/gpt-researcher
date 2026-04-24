@@ -203,6 +203,60 @@ def sanitize_filename(filename: str) -> str:
     return re.sub(r"[^\w\s-]", "", sanitized).strip()
 
 
+_WINDOWS_RESERVED_FILENAMES = {
+    "CON",
+    "PRN",
+    "AUX",
+    "NUL",
+    *(f"COM{index}" for index in range(1, 10)),
+    *(f"LPT{index}" for index in range(1, 10)),
+}
+
+
+def secure_filename(filename: str) -> str:
+    """Return a safe single filename or raise ValueError."""
+
+    if not isinstance(filename, str):
+        raise ValueError("Filename must be a string")
+
+    candidate = filename.replace("\\", "/").strip()
+    if not candidate:
+        raise ValueError("Filename is empty")
+
+    if any(part == ".." for part in candidate.split("/")):
+        raise ValueError("Filename contains path traversal")
+
+    candidate = re.sub(r"^[A-Za-z]:", "", candidate)
+    candidate = re.sub(r"[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069]", "", candidate)
+    candidate = candidate.replace("/", "")
+    candidate = re.sub(r"[^A-Za-z0-9._ -]", "", candidate)
+    candidate = candidate.lstrip(" .").rstrip(" .")
+
+    if not candidate:
+        raise ValueError("Filename is empty")
+
+    stem = Path(candidate).stem.upper()
+    if stem in _WINDOWS_RESERVED_FILENAMES:
+        raise ValueError("Filename uses a reserved name")
+
+    if len(candidate.encode("utf-8")) > 255:
+        raise ValueError("Filename is too long")
+
+    return candidate
+
+
+def validate_file_path(file_path: str, base_dir: str) -> str:
+    """Resolve `file_path` and guarantee it stays inside `base_dir`."""
+
+    base = os.path.realpath(base_dir)
+    resolved = os.path.realpath(file_path)
+
+    if os.path.commonpath([base, resolved]) != base:
+        raise ValueError("File path is outside allowed directory")
+
+    return resolved
+
+
 def generate_research_id(task: str) -> str:
     task_hash = hashlib.md5(task.encode("utf-8", errors="ignore")).hexdigest()[:10]
     return f"research_{int(time.time())}_{task_hash}_{uuid.uuid4().hex[:8]}"
@@ -469,7 +523,20 @@ def get_config_dict(
 
 
 async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
-    file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
+    try:
+        filename = secure_filename(file.filename or "")
+        os.makedirs(DOC_PATH, exist_ok=True)
+
+        stem, ext = os.path.splitext(filename)
+        file_path = validate_file_path(os.path.join(DOC_PATH, filename), DOC_PATH)
+        suffix = 1
+        while os.path.exists(file_path):
+            filename = f"{stem}_{suffix}{ext}"
+            file_path = validate_file_path(os.path.join(DOC_PATH, filename), DOC_PATH)
+            suffix += 1
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid file: {exc}") from exc
+
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     logger.info(f"File uploaded to {file_path}")
@@ -477,12 +544,20 @@ async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
     document_loader = DocumentLoader(DOC_PATH)
     await document_loader.load()
 
-    return {"filename": file.filename, "path": file_path}
+    return {"filename": filename, "path": file_path}
 
 
 async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
-    file_path = os.path.join(DOC_PATH, os.path.basename(filename))
+    try:
+        safe_filename = secure_filename(filename)
+        file_path = validate_file_path(os.path.join(DOC_PATH, safe_filename), DOC_PATH)
+    except ValueError as exc:
+        return JSONResponse(status_code=400, content={"message": f"Invalid file: {exc}"})
+
     if os.path.exists(file_path):
+        if not os.path.isfile(file_path):
+            return JSONResponse(status_code=400, content={"message": "Path is not a file"})
+
         os.remove(file_path)
         logger.info(f"File deleted: {file_path}")
         return JSONResponse(content={"message": "File deleted successfully"})

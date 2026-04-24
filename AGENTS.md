@@ -50,6 +50,11 @@ Research**. The launch screen includes HLT scope toggles for Code files,
 CMS/Registry, Metrics, and high-quality crawling. Those toggles are browser-safe
 metadata; server-side preset expansion lives in `backend/server/hlt_extensions.py`.
 
+AI observability: HLT-hosted GPT Researcher emits Langfuse observations when
+`LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are configured. `/health`
+reports redacted readiness under `observability.langfuse`; prompt/output capture
+stays off unless `LANGFUSE_RECORD_IO=true`.
+
 ## Rules of engagement
 
 1. **Katailyst first** — for any task that decomposes into multiple facets,

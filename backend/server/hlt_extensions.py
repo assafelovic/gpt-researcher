@@ -31,6 +31,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from gpt_researcher.utils.langfuse_observability import get_langfuse_runtime_status
+
 logger = logging.getLogger(__name__)
 _WS_TOKEN_TTL_SECONDS = 120
 
@@ -492,6 +494,9 @@ def install(
             "service": "gpt-researcher-api",
             "version": os.getenv("RAILWAY_GIT_COMMIT_SHA", "local")[:7],
             "deploy_marker": os.getenv("HLT_DEPLOY_MARKER", "local"),
+            "observability": {
+                "langfuse": get_langfuse_runtime_status(),
+            },
             "integrations": {
                 "status": readiness["status"],
                 "summary": readiness["summary"],

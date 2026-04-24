@@ -318,6 +318,21 @@ To enable tracing:
    ```
 2. Run your research tasks as usual. All LangGraph-based agent interactions will be automatically traced and visualized in your LangSmith dashboard.
 
+HLT-hosted deployments also support **Langfuse** for cross-ecosystem AI
+observability. It traces quick-search requests, plain LLM completions, and
+tool-enabled chat completions when credentials are configured:
+
+```bash
+export LANGFUSE_PUBLIC_KEY=pk-lf-...
+export LANGFUSE_SECRET_KEY=sk-lf-...
+export LANGFUSE_BASE_URL=https://us.cloud.langfuse.com
+export LANGFUSE_RECORD_IO=false
+```
+
+`LANGFUSE_RECORD_IO` defaults to false so prompts and outputs are not captured
+unless an operator explicitly enables them. `GET /health` exposes redacted
+readiness at `observability.langfuse`.
+
 ## 🖥️ Frontend Applications
 
 GPT-Researcher now features an enhanced frontend to improve the user experience and streamline the research process. The frontend offers:

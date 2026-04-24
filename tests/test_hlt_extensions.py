@@ -23,6 +23,12 @@ HLT_ENV_KEYS = [
     "METABASE_MCP_TOKEN",
     "FIRECRAWL_API_KEY",
     "FIRECRAWL_SERVER_URL",
+    "LANGFUSE_PUBLIC_KEY",
+    "LANGFUSE_SECRET_KEY",
+    "LANGFUSE_BASE_URL",
+    "LANGFUSE_HOST",
+    "LANGFUSE_RECORD_IO",
+    "AI_SDK_TELEMETRY_RECORD_IO",
 ]
 
 
@@ -183,7 +189,10 @@ def test_hlt_readiness_routes_are_sanitized_and_authenticated(monkeypatch):
 
     health = client.get("/health")
     assert health.status_code == 200
-    assert health.json()["integrations"]["status"] in {"partial", "needs_config"}
+    health_body = health.json()
+    assert health_body["integrations"]["status"] in {"partial", "needs_config"}
+    assert health_body["observability"]["langfuse"]["configured"] is False
+    assert "api-secret" not in json.dumps(health_body)
 
     unauthorized = client.get("/api/hlt/readiness")
     assert unauthorized.status_code == 401
@@ -193,3 +202,29 @@ def test_hlt_readiness_routes_are_sanitized_and_authenticated(monkeypatch):
     body = readiness.json()
     assert body["integrations"]["metrics"]["status"] == "ready"
     assert "metabase-secret" not in json.dumps(body)
+
+
+def test_langfuse_health_status_is_redacted(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv("LANGFUSE_PUBLIC_KEY", "pk-test")
+    monkeypatch.setenv("LANGFUSE_SECRET_KEY", "sk-test")
+    monkeypatch.setenv("LANGFUSE_BASE_URL", "https://us.cloud.langfuse.com")
+    monkeypatch.setenv("LANGFUSE_RECORD_IO", "true")
+
+    app = FastAPI()
+    hlt_extensions.install(app)
+    client = TestClient(app)
+
+    health = client.get("/health")
+
+    assert health.status_code == 200
+    body = health.json()
+    langfuse = body["observability"]["langfuse"]
+    assert langfuse["configured"] is True
+    assert langfuse["public_key"] is True
+    assert langfuse["secret_key"] is True
+    assert langfuse["record_io"] is True
+    assert langfuse["base_url"] == "https://us.cloud.langfuse.com"
+    assert "pk-test" not in json.dumps(body)
+    assert "sk-test" not in json.dumps(body)

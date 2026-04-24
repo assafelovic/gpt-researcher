@@ -25,6 +25,7 @@ langchain-core = "^1.0.0"
 langchain-openai = "^1.0.0"
 langchain-text-splitters = "^1.0.0"
 langgraph = ">=0.2.73,<0.3"
+langfuse = ">=3.8.0"
 loguru = "^0.7.2"
 lxml = { version = ">=4.9.2", extras = ["html_clean"] }
 markdown = ">=3.5.1"
@@ -56,7 +57,8 @@ asyncio_mode = "strict"
 addopts = "-v"
 testpaths = ["tests"]
 python_files = "test_*.py"
-asyncio_fixture_loop_scope = "function"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
 
 [tool.uv.sources]
 gpt-researcher = { workspace = true }
@@ -131,6 +133,7 @@ dependencies = [
     "langchain-openai>=1.0.0",
     "langchain-text-splitters>=1.0.0",
     "langdetect>=1.0.9",
+    "langfuse>=3.8.0",
     "langgraph>=0.2.76",
     "langgraph-checkpoint>=2.0.26",
     "langgraph-cli>=0.2.10",
@@ -189,6 +192,7 @@ dependencies = [
     "sqlalchemy>=2.0.41",
     "sse-starlette>=2.3.5",
     "starlette>=0.46.2",
+    "tavily-python>=0.7.12",
     "tenacity>=9.1.2",
     "tiktoken>=0.9.0",
     "tinycss2>=1.4.0",

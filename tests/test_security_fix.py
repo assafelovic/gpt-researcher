@@ -8,8 +8,9 @@ operations to prevent path traversal attacks.
 import pytest
 import tempfile
 import os
+from io import BytesIO
 import shutil
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
@@ -114,7 +115,7 @@ class TestValidateFilePath:
         with tempfile.TemporaryDirectory() as temp_dir:
             file_path = os.path.join(temp_dir, "test.txt")
             result = validate_file_path(file_path, temp_dir)
-            assert result == os.path.abspath(file_path)
+            assert result == os.path.realpath(file_path)
     
     def test_path_traversal_blocked(self):
         """Test that path traversal attempts are blocked."""
@@ -151,7 +152,7 @@ class TestHandleFileUpload:
         """Create a mock file object for testing."""
         mock_file = Mock()
         mock_file.filename = "test.txt"
-        mock_file.file = Mock()
+        mock_file.file = BytesIO(b"test content")
         return mock_file
     
     @pytest.fixture
@@ -194,7 +195,7 @@ class TestHandleFileUpload:
         """Test that malicious filenames are rejected."""
         mock_file = Mock()
         mock_file.filename = "../../../etc/passwd"
-        mock_file.file = Mock()
+        mock_file.file = BytesIO(b"blocked")
         
         with pytest.raises(HTTPException) as exc_info:
             await handle_file_upload(mock_file, temp_doc_path)
@@ -207,7 +208,7 @@ class TestHandleFileUpload:
         """Test that empty filenames are rejected."""
         mock_file = Mock()
         mock_file.filename = ""
-        mock_file.file = Mock()
+        mock_file.file = BytesIO(b"blocked")
         
         with pytest.raises(HTTPException) as exc_info:
             await handle_file_upload(mock_file, temp_doc_path)
@@ -236,6 +237,7 @@ class TestHandleFileUpload:
         backend.server.server_utils.DocumentLoader = MockDocumentLoader
         
         try:
+            mock_file.file = BytesIO(b"new content")
             result = await handle_file_upload(mock_file, temp_doc_path)
             
             # Should create a unique filename
@@ -349,4 +351,4 @@ class TestSecurityIntegration:
 
 if __name__ == "__main__":
     # Run tests if executed directly
-    pytest.main([__file__, "-v"]) 
+    pytest.main([__file__, "-v"])
