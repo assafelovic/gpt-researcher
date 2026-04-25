@@ -41,8 +41,16 @@ class PyMuPDFScraper:
         """
         try:
             if self.is_url():
-                response = requests.get(self.link, timeout=5, stream=True)
-                response.raise_for_status()
+                try:
+                    response = requests.get(self.link, timeout=(5, 30), stream=True)
+                    response.raise_for_status()
+                except requests.exceptions.SSLError:
+                    import logging
+                    logging.getLogger(__name__).warning(
+                        f"SSL verification failed for {self.link}, retrying without verification"
+                    )
+                    response = requests.get(self.link, timeout=(5, 30), stream=True, verify=False)
+                    response.raise_for_status()
 
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
                     temp_filename = temp_file.name  # Get the temporary file name
@@ -59,8 +67,10 @@ class PyMuPDFScraper:
 
             # Extract the content, image (if any), and title from the document.
             image = []
-            # Retrieve the content of the first page to minimize embedding costs.
-            return doc[0].page_content, image, doc[0].metadata["title"]
+            # Retrieve content from ALL pages to ensure PDFs with cover pages pass validation.
+            content = "\n".join(page.page_content for page in doc)
+            title = doc[0].metadata.get("title", "") if doc else ""
+            return content, image, title
 
         except requests.exceptions.Timeout:
             print(f"Download timed out. Please check the link : {self.link}")

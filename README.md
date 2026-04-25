@@ -22,7 +22,7 @@
 
 # 🔎 GPT Researcher
 
-**GPT Researcher is an open deep research agent designed for both web and local research on any given task.** 
+**GPT Researcher the first open deep research agent designed for both web and local research on any given task.** 
 
 The agent produces detailed, factual, and unbiased research reports with citations. GPT Researcher provides a full suite of customization options to create tailor made and domain specific research agents. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses misinformation, speed, determinism, and reliability by offering stable performance and increased speed through parallelized agent work.
 
@@ -318,7 +318,7 @@ We highly welcome contributions! Please check out [contributing](https://github.
 
 Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/QgZXvJAccX) if you're interested in joining our mission.
 <a href="https://github.com/assafelovic/gpt-researcher/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=assafelovic/gpt-researcher" />
+  <img src="https://contrib.rocks/image?repo=assafelovic/gpt-researcher&max=1000" />
 </a>
 ## ✉️ Support / Contact us
 - [Community Discord](https://discord.gg/spBgZmm3Xe)

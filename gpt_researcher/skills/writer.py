@@ -94,6 +94,8 @@ class ReportGenerator:
             )
 
         report_params = self.research_params.copy()
+        if not report_params["agent_role_prompt"]:
+            report_params["agent_role_prompt"] = self.researcher.cfg.agent_role or self.researcher.role
         report_params["context"] = context
         report_params["custom_prompt"] = custom_prompt
         report_params["available_images"] = available_images  # Pass pre-generated images
