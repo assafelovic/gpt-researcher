@@ -13,6 +13,14 @@ class Duckduckgo:
         self.query = query
         self.query_domains = query_domains or None
 
+    def _build_query(self):
+        """Build the search query, optionally filtering by domain."""
+        query = self.query
+        if self.query_domains:
+            domain_query = " OR ".join([f"site:{domain}" for domain in self.query_domains])
+            query = f"({domain_query}) {query}"
+        return query
+
     def search(self, max_results=5):
         """
         Performs the search
@@ -20,9 +28,9 @@ class Duckduckgo:
         :param max_results:
         :return:
         """
-        # TODO: Add support for query domains
         try:
-            search_response = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
+            search_query = self._build_query()
+            search_response = self.ddg.text(search_query, region='wt-wt', max_results=max_results)
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
