@@ -56,15 +56,16 @@ async function proxyArtifact(request: Request, headOnly = false) {
   }
 
   const normalizedPath = normalizeOutputPath(rawPath, kind);
-  let backendPath: string | null = null;
+  const backendPaths: string[] = [];
 
   if (kind === "docx" && researchId) {
-    backendPath = `/report/${encodeURIComponent(researchId)}`;
-  } else if (normalizedPath) {
-    backendPath = normalizedPath;
+    backendPaths.push(`/report/${encodeURIComponent(researchId)}`);
+  }
+  if (normalizedPath) {
+    backendPaths.push(normalizedPath);
   }
 
-  if (!backendPath) {
+  if (backendPaths.length === 0) {
     return jsonError(
       `No safe ${kind.toUpperCase()} artifact path is available.`,
       400,
@@ -72,43 +73,52 @@ async function proxyArtifact(request: Request, headOnly = false) {
   }
 
   try {
-    const response = await fetch(`${backendUrl()}${backendPath}`, {
-      // The FastAPI file routes are GET-first; probing with GET avoids surfacing a
-      // false unavailable state when an upstream route does not implement HEAD.
-      method: "GET",
-      headers: backendHeaders(),
-      cache: "no-store",
-    });
+    let lastStatus = 404;
 
-    if (!response.ok) {
-      return jsonError(
-        `The ${kind.toUpperCase()} report artifact is not available yet or was not generated.`,
-        response.status,
-      );
+    for (const backendPath of backendPaths) {
+      const response = await fetch(`${backendUrl()}${backendPath}`, {
+        // The FastAPI file routes are GET-first; probing with GET avoids surfacing a
+        // false unavailable state when an upstream route does not implement HEAD.
+        method: "GET",
+        headers: backendHeaders(),
+        cache: "no-store",
+      });
+
+      lastStatus = response.status;
+
+      if (!response.ok) {
+        await response.body?.cancel();
+        continue;
+      }
+
+      const headers = new Headers({
+        "content-type": contentTypeFor(
+          kind,
+          response.headers.get("content-type"),
+        ),
+        "cache-control": "no-store",
+        "content-disposition": dispositionFor(
+          kind,
+          response.headers.get("content-disposition"),
+        ),
+      });
+
+      const contentLength = response.headers.get("content-length");
+      if (contentLength) headers.set("content-length", contentLength);
+
+      if (headOnly) {
+        await response.body?.cancel();
+        return new Response(null, { status: 200, headers });
+      }
+
+      const body = await response.arrayBuffer();
+      return new Response(body, { status: 200, headers });
     }
 
-    const headers = new Headers({
-      "content-type": contentTypeFor(
-        kind,
-        response.headers.get("content-type"),
-      ),
-      "cache-control": "no-store",
-      "content-disposition": dispositionFor(
-        kind,
-        response.headers.get("content-disposition"),
-      ),
-    });
-
-    const contentLength = response.headers.get("content-length");
-    if (contentLength) headers.set("content-length", contentLength);
-
-    if (headOnly) {
-      await response.body?.cancel();
-      return new Response(null, { status: 200, headers });
-    }
-
-    const body = await response.arrayBuffer();
-    return new Response(body, { status: 200, headers });
+    return jsonError(
+      `The ${kind.toUpperCase()} report artifact is not available yet or was not generated.`,
+      lastStatus,
+    );
   } catch (error) {
     console.error("GET /api/report-artifact - Error proxying artifact:", error);
     return jsonError("Failed to connect to the report artifact service.", 502);
