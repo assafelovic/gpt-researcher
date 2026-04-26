@@ -62,6 +62,15 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     "gpt-5.4-pro",
     "gpt-5.5",
     "gpt-5.5-pro",
+    # Claude 4.x family: Anthropic deprecates temperature on these models
+    "claude-sonnet-4-5",
+    "claude-sonnet-4-5-20250929",
+    "claude-sonnet-4-6",
+    "claude-opus-4-5",
+    "claude-opus-4-6",
+    "claude-opus-4-7",
+    "claude-haiku-4-5",
+    "claude-haiku-4-5-20251001",
 ]
 
 SUPPORT_REASONING_EFFORT_MODELS = [
