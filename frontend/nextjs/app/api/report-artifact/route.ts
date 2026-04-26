@@ -8,6 +8,8 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const ARTIFACT_FETCH_TIMEOUT_MS = 8000;
+
 const SUPPORTED_KINDS = new Set<ReportArtifactKind>([
   "md",
   "pdf",
@@ -45,6 +47,37 @@ function dispositionFor(
   return 'inline; filename="mastery-research-report.md"';
 }
 
+function isAbortError(error: unknown): boolean {
+  return error instanceof DOMException && error.name === "AbortError";
+}
+
+async function fetchBackendArtifact(
+  backendPath: string,
+): Promise<{ response: Response; timedOut: false } | { timedOut: true }> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, ARTIFACT_FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(`${backendUrl()}${backendPath}`, {
+      // The FastAPI file routes are GET-first; probing with GET avoids surfacing a
+      // false unavailable state when an upstream route does not implement HEAD.
+      method: "GET",
+      headers: backendHeaders(),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+
+    return { response, timedOut: false };
+  } catch (error) {
+    if (isAbortError(error)) return { timedOut: true };
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function proxyArtifact(request: Request, headOnly = false) {
   const url = new URL(request.url);
   const kind = url.searchParams.get("kind") as ReportArtifactKind | null;
@@ -74,15 +107,20 @@ async function proxyArtifact(request: Request, headOnly = false) {
 
   try {
     let lastStatus = 404;
+    let timedOut = false;
 
     for (const backendPath of backendPaths) {
-      const response = await fetch(`${backendUrl()}${backendPath}`, {
-        // The FastAPI file routes are GET-first; probing with GET avoids surfacing a
-        // false unavailable state when an upstream route does not implement HEAD.
-        method: "GET",
-        headers: backendHeaders(),
-        cache: "no-store",
-      });
+      const result = await fetchBackendArtifact(backendPath);
+
+      if (result.timedOut) {
+        timedOut = true;
+        console.warn(
+          `GET /api/report-artifact - Timed out while fetching ${backendPath}`,
+        );
+        continue;
+      }
+
+      const { response } = result;
 
       lastStatus = response.status;
 
@@ -113,6 +151,13 @@ async function proxyArtifact(request: Request, headOnly = false) {
 
       const body = await response.arrayBuffer();
       return new Response(body, { status: 200, headers });
+    }
+
+    if (timedOut && lastStatus === 404) {
+      return jsonError(
+        `The ${kind.toUpperCase()} report artifact service timed out before a file was available. Retry or open the markdown report if present.`,
+        504,
+      );
     }
 
     return jsonError(
