@@ -3,33 +3,61 @@ export interface BaseData {
 }
 
 export interface BasicData extends BaseData {
-  type: 'basic';
+  type: "basic";
   content: string;
 }
 
 export interface LanggraphButtonData extends BaseData {
-  type: 'langgraphButton';
+  type: "langgraphButton";
   link: string;
 }
 
 export interface DifferencesData extends BaseData {
-  type: 'differences';
+  type: "differences";
   content: string;
   output: string;
 }
 
 export interface QuestionData extends BaseData {
-  type: 'question';
+  type: "question";
   content: string;
 }
 
 export interface ChatData extends BaseData {
-  type: 'chat';
+  type: "chat";
   content: string;
   metadata?: any; // For storing search results and other contextual information
 }
 
-export type Data = BasicData | LanggraphButtonData | DifferencesData | QuestionData | ChatData;
+export interface ReportData extends BaseData {
+  type: "report" | "report_complete";
+  content?: string;
+  output: string;
+  metadata?: any;
+}
+
+export interface PathData extends BaseData {
+  type: "path";
+  output: {
+    md?: string;
+    pdf?: string;
+    docx?: string;
+    json?: string;
+    research_id?: string;
+    run_id?: string;
+  };
+  research_id?: string;
+  run_id?: string;
+}
+
+export type Data =
+  | BasicData
+  | LanggraphButtonData
+  | DifferencesData
+  | QuestionData
+  | ChatData
+  | ReportData
+  | PathData;
 
 export interface MCPConfig {
   name: string;

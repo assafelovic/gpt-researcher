@@ -1,5 +1,6 @@
 import json
 import os
+import urllib.parse
 from typing import Dict, List, Any
 import time
 import logging
@@ -83,11 +84,55 @@ def resolve_report_docx_path(research_id: str) -> Path:
     if safe_name != research_id or ".." in research_id:
         raise HTTPException(status_code=400, detail="Invalid research ID")
 
-    docx_path = OUTPUTS_DIR / f"{safe_name}.docx"
-    resolved_path = docx_path.resolve()
+    legacy_docx_path = (OUTPUTS_DIR / f"{safe_name}.docx").resolve()
+    if legacy_docx_path.exists():
+        return legacy_docx_path
+
+    run = research_run_store.get_run(research_id)
+    stored_docx_path = resolve_output_artifact_path(
+        run.get("docx_path") if run else None,
+        expected_suffix="docx",
+    )
+    if stored_docx_path and stored_docx_path.exists():
+        return stored_docx_path
+
+    resolved_path = legacy_docx_path
     if not str(resolved_path).startswith(str(OUTPUTS_DIR)):
         raise HTTPException(status_code=400, detail="Invalid research ID")
     return resolved_path
+
+
+def resolve_output_artifact_path(path_value: str | None, *, expected_suffix: str) -> Path | None:
+    if not path_value:
+        return None
+
+    decoded = urllib.parse.unquote(path_value).strip().replace("\\", "/")
+    if not decoded:
+        return None
+
+    parsed = urllib.parse.urlparse(decoded)
+    if parsed.scheme in {"http", "https", "file"}:
+        decoded = parsed.path
+
+    lowered = decoded.lower()
+    outputs_marker = "/outputs/"
+    if outputs_marker in lowered:
+        relative = decoded[lowered.rfind(outputs_marker) + len(outputs_marker):]
+    elif lowered.startswith("outputs/"):
+        relative = decoded[len("outputs/"):]
+    else:
+        relative = Path(decoded).name
+
+    parts = [part for part in relative.split("/") if part]
+    if not parts or any(part in {".", ".."} for part in parts):
+        return None
+
+    candidate = (OUTPUTS_DIR / Path(*parts)).resolve()
+    if not str(candidate).startswith(str(OUTPUTS_DIR)):
+        return None
+    if candidate.suffix.lower() != f".{expected_suffix.lower()}":
+        return None
+    return candidate
 
 
 async def get_report_or_404(research_id: str) -> Dict[str, Any]:

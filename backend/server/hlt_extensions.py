@@ -51,8 +51,9 @@ _SCOPE_INSTRUCTIONS = {
         "repo maps, pull requests, and architecture notes over generic web sources."
     ),
     "cms": (
-        "Use available Katailyst CMS, registry, knowledge-base, playbook, and "
-        "ecosystem-map context when it is relevant to the question."
+        "Use available Katailyst registry, knowledge-base, playbook, skill, and "
+        "ecosystem-map context when it is relevant to the question. Do not treat "
+        "this as corporate CMS or question-bank access."
     ),
     "metrics": (
         "Use available metrics/analytics context, including Metabase-backed data, "

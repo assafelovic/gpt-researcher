@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { HLTResearchScope } from "@/types/data";
-import { normalizeHLTResearchScope, selectedScopeCount } from "@/lib/hltResearchScope";
+import {
+  normalizeHLTResearchScope,
+  selectedScopeCount,
+} from "@/lib/hltResearchScope";
 
 type ResearchScopeSelectorProps = {
   value?: HLTResearchScope;
@@ -26,9 +29,10 @@ const scopeOptions: Array<{
   },
   {
     key: "cms",
-    label: "CMS + Registry",
+    label: "Katailyst Registry",
     eyebrow: "Katailyst",
-    description: "Use internal entities, playbooks, docs, and KB context.",
+    description:
+      "Use internal entities, playbooks, docs, skills, and KB context.",
   },
   {
     key: "metrics",
@@ -44,19 +48,25 @@ const scopeOptions: Array<{
   },
 ];
 
-const depthOptions: Array<{ value: HLTResearchScope["depth"]; label: string }> = [
-  { value: "fast", label: "Fast" },
-  { value: "balanced", label: "Balanced" },
-  { value: "deep", label: "Deep" },
-];
+const depthOptions: Array<{ value: HLTResearchScope["depth"]; label: string }> =
+  [
+    { value: "fast", label: "Fast" },
+    { value: "balanced", label: "Balanced" },
+    { value: "deep", label: "Deep" },
+  ];
 
 type ReadinessStatus = "ready" | "partial" | "unavailable" | "inactive";
 
 type HLTReadiness = {
-  integrations?: Partial<Record<ScopeKey, {
-    status?: ReadinessStatus;
-    missing?: string[];
-  }>>;
+  integrations?: Partial<
+    Record<
+      ScopeKey,
+      {
+        status?: ReadinessStatus;
+        missing?: string[];
+      }
+    >
+  >;
 };
 
 const badgeText: Record<ReadinessStatus, string> = {
@@ -85,7 +95,7 @@ export default function ResearchScopeSelector({
   useEffect(() => {
     let cancelled = false;
     fetch("/api/hlt/readiness", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : null)
+      .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (!cancelled && data) {
           setReadiness(data);
@@ -110,14 +120,16 @@ export default function ResearchScopeSelector({
       className={`mx-auto w-full max-w-[980px] px-4 ${compact ? "mt-4" : "mt-2"}`}
       aria-label="Research scope"
     >
-      <div className="rounded-2xl border border-white/10 bg-[#0A0A0B]/72 p-3 shadow-[0_24px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl sm:p-4">
+      <div className="bg-[#0A0A0B]/72 rounded-2xl border border-white/10 p-3 shadow-[0_24px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl sm:p-4">
         <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-300">
               Research Scope
             </div>
             <div className="mt-1 text-sm text-slate-300">
-              {count > 0 ? `${count} internal source${count === 1 ? "" : "s"} selected` : "Web research only"}
+              {count > 0
+                ? `${count} internal source${count === 1 ? "" : "s"} selected`
+                : "Web research only"}
             </div>
           </div>
 
@@ -139,16 +151,19 @@ export default function ResearchScopeSelector({
           </div>
         </div>
 
-        <div className={`grid gap-2 ${compact ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-4"}`}>
+        <div
+          className={`grid gap-2 ${compact ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-4"}`}
+        >
           {scopeOptions.map((option) => {
             const selected = scope[option.key];
-            const status = readiness?.integrations?.[option.key]?.status || "inactive";
+            const status =
+              readiness?.integrations?.[option.key]?.status || "inactive";
             return (
               <label
                 key={option.key}
                 className={`group flex min-h-[112px] cursor-pointer flex-col justify-between rounded-xl border p-3 transition-all ${
                   selected
-                    ? "border-[#155EEF]/80 bg-[#155EEF]/14 shadow-[0_16px_36px_rgba(21,94,239,0.18)]"
+                    ? "bg-[#155EEF]/14 border-[#155EEF]/80 shadow-[0_16px_36px_rgba(21,94,239,0.18)]"
                     : "border-white/10 bg-white/[0.045] hover:border-white/20 hover:bg-white/[0.07]"
                 }`}
               >
@@ -158,8 +173,12 @@ export default function ResearchScopeSelector({
                       {option.eyebrow}
                     </span>
                     <span className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="block text-sm font-semibold text-white">{option.label}</span>
-                      <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeClass[status]}`}>
+                      <span className="block text-sm font-semibold text-white">
+                        {option.label}
+                      </span>
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeClass[status]}`}
+                      >
                         {badgeText[status]}
                       </span>
                     </span>
@@ -176,12 +195,18 @@ export default function ResearchScopeSelector({
                     />
                   </span>
                 </span>
-                <span className="mt-3 text-xs leading-5 text-slate-400">{option.description}</span>
+                <span className="mt-3 text-xs leading-5 text-slate-400">
+                  {option.description}
+                </span>
                 <input
                   type="checkbox"
                   className="sr-only"
                   checked={selected}
-                  onChange={() => update({ [option.key]: !selected } as Partial<HLTResearchScope>)}
+                  onChange={() =>
+                    update({
+                      [option.key]: !selected,
+                    } as Partial<HLTResearchScope>)
+                  }
                 />
               </label>
             );
