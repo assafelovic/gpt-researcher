@@ -1,13 +1,13 @@
 # GPT Researcher Repo Front Door
 
-> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `f2342263cd8b`.
+> Repo-local entrypoint generated from the shared HLT ecosystem llms master. Read the repo-specific note below, then use the shared ecosystem guide that follows. Source: `~/Documents/Obsidian Vault/OpenClaw/System Maps/05-llms-ecosystem-master.md` @ `0a6296c06d82`.
 
 ## Repo quickstart
 
 - **What this IS**: Deep web research service (FastAPI): /api/quick_search (fast cited) + /report/ (deep autonomous).
 - **Live URL**: https://gpt-researcher-production-2b53.up.railway.app
 - **Local run**: `uvicorn backend.server.app:app --reload`
-- **Env vars this repo reads**: OPENAI_API_KEY, TAVILY_API_KEY, OPENROUTER_API_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_BASE_URL. Never paste values — resolution via `kb:katailyst-vault-access-pattern`.
+- **Env vars this repo reads**: OPENAI_API_KEY, TAVILY_API_KEY, OPENROUTER_API_KEY. Never paste values — resolution via `kb:katailyst-vault-access-pattern`.
 
 ## Repo-specific note
 
@@ -21,12 +21,11 @@ You are currently inside **GPT Researcher**, the research orchestration lane. Cu
 
 ### Recent significant changes (last 5 commits)
 
-- 2026-04-24 HLT overlay added optional Langfuse tracing for quick search, core LLM calls, and tool-enabled chat; `/health` now reports redacted `observability.langfuse`.
-- d7d4a1e7 2026-04-24 docs: refresh llms ecosystem context
-- 91c6d28e 2026-04-24 chore: configure railway volume write permissions
-- f3325048 2026-04-24 fix: make research log persistence event-loop safe
-- 42387367 2026-04-24 feat: persist hosted research runs
-- 0b4a99a6 2026-04-22 Clarify upstream sync status
+- 536c1db0 2026-04-24 fix: treat normal websocket closes as disconnects
+- f3e2ed66 2026-04-24 fix: lock in demo MCP readiness
+- ecb8aa67 2026-04-24 fix(mcp): expose Langfuse health
+- a2d9d352 2026-04-24 chore: align Tavily dependency metadata
+- 0bb76510 2026-04-24 feat: add Langfuse research observability
 
 # HLT Ecosystem Index for Agents
 
@@ -394,7 +393,7 @@ Every tool here resolves its credentials server-side via Katailyst vault (`auth_
 - **https://multimediamastery.vercel.app** (307) — redirects to subpath. Media API + studio at `/api/media/v1/*`.
 - **https://gpt-researcher-production-2b53.up.railway.app** (405 on HEAD, POST-only endpoints live) — `POST /api/quick_search`, `POST /report/`.
 - **https://answers.hltcorp.com** (200) — Evidence-Based Business / Metabase.
-- **https://hltadspdash-gqtedncp.manus.space** — Manus-built Meta Ads dashboard (operator-shared; keep live alongside the sidecar `/admin/ads-command-center` when that ships).
+- **https://hltadspdash-gqtedncp.manus.space** — Manus-built Meta Ads dashboard (operator-shared; keep live alongside the sidecar `/ads` operator route).
 - **https://ai4mastery-next-two.vercel.app** — AI4EDU publishing surface (`POST /api/publish` consumes ArticleV2).
 - Per-app product sites: `nclexrnmastery.com`, `fnpmastery.com`, `teasmastery.com`, `nclexpnmastery.com`, `asvabmastery.com`, `inbdemastery.com`, and the broader per-exam set — see the HLT Master Almanac (linked below) for the full list with app-store + social handles.
 
@@ -1108,7 +1107,7 @@ This is the "are we really integrated" pass. Each repo should know: what it conn
 | `forum-template` | not yet (Mission 6b fix pending) | `FORUM_INTERNAL_PUSH_SECRET` (planned) | its own threads/comments | nurse candidates / students |
 | `agent-canvas` | PAT to katailyst | katailyst PAT | agent runtime canvas | fleet agents (Victoria, Julius, Lila, Ares, Magnus) |
 | `brand-design-lab` | PAT to katailyst | template env | sidecar-template reference | scaffolding new sidecars |
-| `evidence-based-business` | Metabase + Supabase readonly | `clean-ebb/api-token` **MISSING** | `/api/ai-analysis` **ENDPOINT MISSING** | operator via answers.hltcorp.com |
+| `evidence-based-business` | Metabase + Supabase readonly | `CLEAN_EBB_API_TOKEN` / `EBB_API_TOKEN` for auth smoke | `/api/ai-analysis` exists; 401 without token is expected | operator via answers.hltcorp.com |
 | `gpt-researcher` | — (cited web research service) | `OPENAI_API_KEY` + `TAVILY_API_KEY` | `/api/quick_search` + `/report/*` | sidecar specialists + direct operator use |
 | `mastra` | Inngest workflow runtime | n/a | Mastra workflow invocations | paperclip mastra-gateway |
 | `operator-evals` | PAT to katailyst | katailyst PAT | eval dashboard | operator |
@@ -1128,7 +1127,7 @@ This is the "are we really integrated" pass. Each repo should know: what it conn
 
 Operator directive: isolate each platform into its own repo so credentials, rate limits, and error surfaces don't cross-contaminate. Manus-built dashboards stay live as reference while native sidecars catch up.
 
-**Meta Ads (Facebook + Instagram)** — current state: Manus dashboard live at `https://hltadspdash-gqtedncp.manus.space`. Native surface: sidecar `/admin/ads-command-center` (Phase 5 in polish plan), additive not replacement. Reads via `tool:meta-ads.insights` (Catalyst MCP) once `http_multi_action` executor ships.
+**Meta Ads (Facebook + Instagram)** — current state: Manus dashboard live at `https://hltadspdash-gqtedncp.manus.space`. Native surface: sidecar `/ads` (shipped Ads Factory v1), additive not replacement. Reads via `tool:meta-ads.insights` (Catalyst MCP) once `http_multi_action` executor ships.
 
 **Google Ads** — no repo yet. Should be a separate sidecar `~/hlt/google-ads/` or a lane inside sidecar-system. Credentials in vault path `google-ads/*` (to be created). Isolated from Meta Ads per operator.
 
