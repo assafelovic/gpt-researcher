@@ -15,8 +15,8 @@ from ..utils import get_relevant_images, extract_title, get_text_from_soup, clea
 
 class NoDriverScraper:
     logger = logging.getLogger(__name__)
-    max_browsers = 3
-    browser_load_threshold = 5
+    max_browsers = 5
+    browser_load_threshold = 8
     browsers: set["NoDriverScraper.Browser"] = set()
     browsers_lock = asyncio.Lock()
 
@@ -147,7 +147,7 @@ class NoDriverScraper:
 
             config = zendriver.Config(
                 headless=headless,
-                browser_connection_timeout=1,
+                browser_connection_timeout=10,
             )
             driver = await zendriver.start(config)
             browser = cls.Browser(driver)
@@ -206,6 +206,12 @@ class NoDriverScraper:
                 return str(e), [], ""
 
             page = await browser.get(self.url)
+            if page is None:
+                # browser.get() increments processing_count before returning;
+                # a None result means the connection timed out. Decrement to
+                # avoid leaking the slot and deadlocking the browser pool.
+                browser.processing_count -= 1
+                return "Browser failed to open page (returned None)", [], ""
             await browser.wait_or_timeout(page, "complete", 2)
             # wait for potential redirection
             await page.sleep(random.uniform(0.3, 0.7))

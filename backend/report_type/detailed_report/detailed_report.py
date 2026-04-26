@@ -24,6 +24,7 @@ class DetailedReport:
         complement_source_urls: bool = False,
         mcp_configs=None,
         mcp_strategy=None,
+        max_search_results=None,
     ):
         self.query = query
         self.report_type = report_type
@@ -37,6 +38,7 @@ class DetailedReport:
         self.subtopics = subtopics
         self.headers = headers or {}
         self.complement_source_urls = complement_source_urls
+        self.max_search_results = max_search_results
         
         # Generate a unique research ID for this report
         self.research_id = self._generate_research_id(query)
@@ -63,6 +65,10 @@ class DetailedReport:
             gpt_researcher_params["mcp_strategy"] = mcp_strategy
 
         self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
+
+        # Override max_search_results_per_query if provided by user
+        if max_search_results is not None:
+            self.gpt_researcher.cfg.max_search_results_per_query = int(max_search_results)
         self.existing_headers: List[Dict] = []
         self.global_context: List[str] = []
         self.global_written_sections: List[str] = []
@@ -113,6 +119,22 @@ class DetailedReport:
 
         return subtopic_reports, subtopics_report_body
 
+    def _hashable_context(self, input_context: List[str] | List[dict]):
+        # Convert context to strings to ensure hashability (handle both strings and dicts from MCP)
+        context_items = []
+        
+        for item in input_context:
+            if isinstance(item, dict):
+                # Convert dict context to string format
+                title = item.get("title", "No title")
+                content = item.get("body", item.get("content", ""))
+                context_str = f"Title: {title}\nContent: {content}"
+                context_items.append(context_str)
+            else:
+                context_items.append(str(item))
+        
+        return context_items
+
     async def _get_subtopic_report(self, subtopic: Dict) -> Dict[str, str]:
         current_subtopic_task = subtopic.get("task")
         subtopic_assistant = GPTResearcher(
@@ -135,7 +157,11 @@ class DetailedReport:
             mcp_strategy=self.gpt_researcher.mcp_strategy
         )
 
-        subtopic_assistant.context = list(set(self.global_context))
+        # Propagate max_search_results override to subtopic researcher
+        if self.max_search_results is not None:
+            subtopic_assistant.cfg.max_search_results_per_query = int(self.max_search_results)
+
+        subtopic_assistant.context = list(set(self._hashable_context(self.global_context)))
         await subtopic_assistant.conduct_research()
 
         draft_section_titles = await subtopic_assistant.get_draft_section_titles(current_subtopic_task)
@@ -158,7 +184,7 @@ class DetailedReport:
         )
 
         self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
-        self.global_context = list(set(subtopic_assistant.context))
+        self.global_context = list(set(self._hashable_context(subtopic_assistant.context)))
         self.global_urls.update(subtopic_assistant.visited_urls)
 
         self.existing_headers.append({
