@@ -30,17 +30,14 @@ export default function CopilotLayout({
   setChatBoxSettings,
   mainContentRef,
   toastOptions = {},
-  toggleSidebar
+  toggleSidebar,
 }: CopilotLayoutProps) {
   const defaultRef = useRef<HTMLDivElement>(null);
   const contentRef = mainContentRef || defaultRef;
 
   return (
-    <main className="flex flex-col min-h-screen">
-      <Toaster
-        position="bottom-center"
-        toastOptions={toastOptions}
-      />
+    <main className="flex min-h-screen flex-col">
+      <Toaster position="bottom-center" toastOptions={toastOptions} />
 
       {/* Show Header only when not in research mode */}
       {!showResult && (
@@ -51,18 +48,23 @@ export default function CopilotLayout({
           onStop={onStop || (() => {})}
           onNewResearch={onNewResearch}
           isCopilotMode={true}
+          chatBoxSettings={chatBoxSettings}
+          setChatBoxSettings={setChatBoxSettings}
         />
       )}
 
       <div
         ref={contentRef}
-        className={`flex-1 flex flex-col ${!showResult ? 'pt-[96px]' : ''}`}
+        className={`flex flex-1 flex-col ${!showResult ? "pt-[96px]" : ""}`}
       >
         {children}
       </div>
 
       <div className="relative z-10">
-        <Footer setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
+        <Footer
+          setChatBoxSettings={setChatBoxSettings}
+          chatBoxSettings={chatBoxSettings}
+        />
       </div>
     </main>
   );

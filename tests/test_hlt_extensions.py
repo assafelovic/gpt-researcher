@@ -23,6 +23,9 @@ HLT_ENV_KEYS = [
     "METABASE_MCP_TOKEN",
     "FIRECRAWL_API_KEY",
     "FIRECRAWL_SERVER_URL",
+    "CLOUDINARY_CLOUD_NAME",
+    "CLOUDINARY_API_KEY",
+    "CLOUDINARY_API_SECRET",
     "LANGFUSE_PUBLIC_KEY",
     "LANGFUSE_SECRET_KEY",
     "LANGFUSE_BASE_URL",
@@ -155,6 +158,57 @@ def test_metrics_scope_uses_katailyst_fallback_without_metabase(monkeypatch):
     assert metadata["active_sources"] == ["metrics"]
     assert metadata["degraded_sources"] == []
     assert "kata-secret" not in json.dumps(metadata)
+
+
+def test_media_scope_searches_cloudinary_without_leaking_secrets(monkeypatch):
+    clear_hlt_env(monkeypatch)
+    set_firecrawl_import(monkeypatch, False)
+    monkeypatch.setenv("CLOUDINARY_CLOUD_NAME", "hlt-media")
+    monkeypatch.setenv("CLOUDINARY_API_KEY", "cloudinary-key")
+    monkeypatch.setenv("CLOUDINARY_API_SECRET", "cloudinary-secret")
+
+    monkeypatch.setattr(
+        hlt_extensions,
+        "_cloudinary_list_assets",
+        lambda: (
+            [
+                {
+                    "public_id": "katailyst/ai-trends-hero",
+                    "resource_type": "image",
+                    "format": "png",
+                    "asset_folder": "katailyst",
+                    "secure_url": "https://res.cloudinary.com/hlt-media/image/upload/katailyst/ai-trends-hero.png",
+                    "tags": ["katailyst", "ai"],
+                },
+                {
+                    "public_id": "unrelated/archive",
+                    "resource_type": "image",
+                    "secure_url": "https://res.cloudinary.com/hlt-media/image/upload/unrelated/archive.png",
+                },
+            ],
+            [],
+        ),
+    )
+
+    task, mcp_enabled, _, configs, metadata, _ = hlt_extensions.prepare_research_request(
+        task="Find AI trends for Katailyst",
+        mcp_enabled=False,
+        mcp_strategy="fast",
+        mcp_configs=[],
+        research_scope={"media": True, "depth": "balanced"},
+    )
+
+    assert mcp_enabled is False
+    assert configs == []
+    assert metadata["scope_statuses"]["media"]["status"] == "ready"
+    assert metadata["active_sources"] == ["media"]
+    assert metadata["media"]["searched"] is True
+    assert metadata["media"]["asset_count"] == 1
+    assert metadata["media"]["assets"][0]["public_id"] == "katailyst/ai-trends-hero"
+    assert "Cloudinary media library context" in task
+    assert "katailyst/ai-trends-hero" in task
+    assert "cloudinary-key" not in json.dumps(metadata)
+    assert "cloudinary-secret" not in json.dumps(metadata)
 
 
 class FakeGPTResearcher:

@@ -24,8 +24,12 @@ vm.runInNewContext(outputText, {
   URLSearchParams,
 });
 
-const { buildReportArtifactLink, normalizeOutputPath, sanitizeResearchId } =
-  moduleContext.exports;
+const {
+  buildReportArtifactLink,
+  normalizeOutputPath,
+  reportArtifactUnavailableMessage,
+  sanitizeResearchId,
+} = moduleContext.exports;
 
 test("normalizes encoded absolute output paths", () => {
   assert.equal(
@@ -70,4 +74,16 @@ test("sanitizes research ids used by download links", () => {
   assert.equal(sanitizeResearchId("research_123"), "research_123");
   assert.equal(sanitizeResearchId("../research_123"), null);
   assert.equal(sanitizeResearchId("nested/research_123"), null);
+});
+
+test("uses human artifact unavailable copy instead of raw backend errors", () => {
+  assert.equal(
+    reportArtifactUnavailableMessage("docx"),
+    "DocX unavailable. Retry, or open Markdown when available.",
+  );
+  assert.equal(
+    reportArtifactUnavailableMessage("md"),
+    "Markdown unavailable. Retry after the run finishes syncing artifacts.",
+  );
+  assert.doesNotMatch(reportArtifactUnavailableMessage("docx"), /Not Found/);
 });

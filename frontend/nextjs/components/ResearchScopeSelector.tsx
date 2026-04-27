@@ -1,11 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { HLTResearchScope } from "@/types/data";
-import {
-  normalizeHLTResearchScope,
-  selectedScopeCount,
-} from "@/lib/hltResearchScope";
+import { normalizeHLTResearchScope } from "@/lib/hltResearchScope";
 
 type ResearchScopeSelectorProps = {
   value?: HLTResearchScope;
@@ -13,38 +9,45 @@ type ResearchScopeSelectorProps = {
   compact?: boolean;
 };
 
-type ScopeKey = "codebase" | "cms" | "metrics" | "firecrawl";
+type ScopeKey = "firecrawl" | "qbank" | "media" | "codebase" | "cms" | "metrics";
 
 const scopeOptions: Array<{
   key: ScopeKey;
   label: string;
-  eyebrow: string;
-  description: string;
+  title: string;
 }> = [
   {
+    key: "firecrawl",
+    label: "Deep web",
+    title: "Use deeper public web extraction.",
+  },
+  {
+    key: "qbank",
+    label: "QBank",
+    title:
+      "Use read-only corporate CMS and question-bank context through the protected Katailyst tool path.",
+  },
+  {
+    key: "media",
+    label: "Media",
+    title: "Search the Cloudinary media library through the server-side HLT media connection.",
+  },
+  {
     key: "codebase",
-    label: "Code files",
-    eyebrow: "GitHub + repo maps",
-    description: "Pull implementation context into the research run.",
+    label: "Code",
+    title: "Search selected code context.",
   },
   {
     key: "cms",
-    label: "Katailyst Registry",
-    eyebrow: "Katailyst",
-    description:
-      "Use internal entities, playbooks, docs, skills, and KB context.",
+    label: "Registry",
+    title:
+      "Search Katailyst entities, playbooks, docs, skills, and knowledge-base context.",
   },
   {
     key: "metrics",
     label: "Metrics",
-    eyebrow: "Metabase-ready",
-    description: "Include performance data when a metrics MCP is configured.",
-  },
-  {
-    key: "firecrawl",
-    label: "High-quality crawl",
-    eyebrow: "Firecrawl",
-    description: "Prefer richer extraction for difficult pages.",
+    title:
+      "Include analytics and performance context when metrics access is configured.",
   },
 ];
 
@@ -55,61 +58,12 @@ const depthOptions: Array<{ value: HLTResearchScope["depth"]; label: string }> =
     { value: "deep", label: "Deep" },
   ];
 
-type ReadinessStatus = "ready" | "partial" | "unavailable" | "inactive";
-
-type HLTReadiness = {
-  integrations?: Partial<
-    Record<
-      ScopeKey,
-      {
-        status?: ReadinessStatus;
-        missing?: string[];
-      }
-    >
-  >;
-};
-
-const badgeText: Record<ReadinessStatus, string> = {
-  ready: "Ready",
-  partial: "Partial",
-  unavailable: "Needs config",
-  inactive: "Checking",
-};
-
-const badgeClass: Record<ReadinessStatus, string> = {
-  ready: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
-  partial: "border-amber-300/30 bg-amber-300/10 text-amber-100",
-  unavailable: "border-slate-500/30 bg-slate-500/10 text-slate-300",
-  inactive: "border-slate-500/20 bg-white/[0.04] text-slate-400",
-};
-
 export default function ResearchScopeSelector({
   value,
   onChange,
   compact = false,
 }: ResearchScopeSelectorProps) {
   const scope = normalizeHLTResearchScope(value);
-  const count = selectedScopeCount(scope);
-  const [readiness, setReadiness] = useState<HLTReadiness | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/hlt/readiness", { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        if (!cancelled && data) {
-          setReadiness(data);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setReadiness(null);
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const update = (patch: Partial<HLTResearchScope>) => {
     onChange({ ...scope, ...patch });
@@ -117,86 +71,72 @@ export default function ResearchScopeSelector({
 
   return (
     <section
-      className={`mx-auto w-full max-w-[980px] px-4 ${compact ? "mt-4" : "mt-2"}`}
+      className={`mx-auto w-full max-w-[820px] px-4 ${compact ? "mt-4" : "mt-0"}`}
       aria-label="Research scope"
     >
-      <div className="bg-[#0A0A0B]/72 rounded-2xl border border-white/10 p-3 shadow-[0_24px_70px_rgba(0,0,0,0.32)] backdrop-blur-xl sm:p-4">
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-300">
-              Research Scope
-            </div>
-            <div className="mt-1 text-sm text-slate-300">
-              {count > 0
-                ? `${count} internal source${count === 1 ? "" : "s"} selected`
-                : "Web research only"}
-            </div>
-          </div>
-
-          <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
-            {depthOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => update({ depth: option.value })}
-                className={`h-8 rounded-full px-3 text-xs font-semibold transition-colors ${
-                  scope.depth === option.value
-                    ? "bg-[#155EEF] text-white shadow-[0_0_24px_rgba(21,94,239,0.28)]"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+      <div className="flex flex-col items-center justify-center gap-2.5">
+        <div className="inline-flex w-fit rounded-md border border-white/10 bg-white/[0.04] p-0.5 backdrop-blur">
+          {depthOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => update({ depth: option.value })}
+              className={`h-7 rounded px-3 text-xs font-semibold transition-colors ${
+                scope.depth === option.value
+                  ? "bg-[#155EEF] text-white"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
 
         <div
-          className={`grid gap-2 ${compact ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-4"}`}
+          className={`flex flex-wrap justify-center gap-1.5 ${compact ? "flex-col" : ""}`}
         >
           {scopeOptions.map((option) => {
             const selected = scope[option.key];
-            const status =
-              readiness?.integrations?.[option.key]?.status || "inactive";
             return (
               <label
                 key={option.key}
-                className={`group flex min-h-[112px] cursor-pointer flex-col justify-between rounded-xl border p-3 transition-all ${
+                title={option.title}
+                className={`group flex h-8 cursor-pointer items-center gap-1.5 rounded-md border px-2.5 transition-all ${
                   selected
-                    ? "bg-[#155EEF]/14 border-[#155EEF]/80 shadow-[0_16px_36px_rgba(21,94,239,0.18)]"
-                    : "border-white/10 bg-white/[0.045] hover:border-white/20 hover:bg-white/[0.07]"
+                    ? "bg-[#155EEF]/14 border-[#155EEF]/75 text-white"
+                    : "border-white/10 bg-white/[0.04] text-slate-300 hover:border-white/20 hover:bg-white/[0.07]"
                 }`}
               >
-                <span className="flex items-start justify-between gap-3">
-                  <span>
-                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
-                      {option.eyebrow}
-                    </span>
-                    <span className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="block text-sm font-semibold text-white">
-                        {option.label}
-                      </span>
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badgeClass[status]}`}
-                      >
-                        {badgeText[status]}
-                      </span>
-                    </span>
-                  </span>
-                  <span
-                    className={`mt-0.5 flex h-5 w-9 items-center rounded-full p-0.5 transition-colors ${
-                      selected ? "bg-[#155EEF]" : "bg-slate-700"
-                    }`}
-                  >
-                    <span
-                      className={`h-4 w-4 rounded-full bg-white transition-transform ${
-                        selected ? "translate-x-4" : "translate-x-0"
-                      }`}
-                    />
-                  </span>
+                <span className="truncate text-xs font-medium">
+                  {option.label}
                 </span>
-                <span className="mt-3 text-xs leading-5 text-slate-400">
-                  {option.description}
+                <span
+                  className="flex h-4 w-4 items-center justify-center rounded-full border border-white/10 text-slate-500 transition-colors group-hover:text-slate-300"
+                  aria-hidden="true"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-2.5 w-2.5"
+                  >
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </span>
+                <span
+                  className={`flex h-4 w-7 shrink-0 items-center rounded-full p-0.5 transition-colors ${
+                    selected ? "bg-[#155EEF]" : "bg-slate-700/80"
+                  }`}
+                >
+                  <span
+                    className={`h-3 w-3 rounded-full bg-white transition-transform ${
+                      selected ? "translate-x-3" : "translate-x-0"
+                    }`}
+                  />
                 </span>
                 <input
                   type="checkbox"

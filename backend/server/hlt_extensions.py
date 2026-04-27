@@ -19,13 +19,18 @@ Upstream merges: if `app.py` is regenerated, just re-add that one import.
 """
 from __future__ import annotations
 
+import base64
 import hmac
 import importlib.util
+import json
 import logging
 import os
+import re
 import secrets
 import time
 from typing import Any, Iterable
+import urllib.error
+import urllib.request
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -55,6 +60,11 @@ _SCOPE_INSTRUCTIONS = {
         "ecosystem-map context when it is relevant to the question. Do not treat "
         "this as corporate CMS or question-bank access."
     ),
+    "qbank": (
+        "Use read-only corporate CMS and question-bank context through the "
+        "Katailyst hlt-partner-api tool path when it is available. Never write "
+        "to corporate CMS/QBank, and clearly say when that source was not inspected."
+    ),
     "metrics": (
         "Use available metrics/analytics context, including Metabase-backed data, "
         "when it is relevant. Clearly separate measured data from inference."
@@ -62,6 +72,10 @@ _SCOPE_INSTRUCTIONS = {
     "firecrawl": (
         "For external pages, prefer high-quality extraction and crawling when the "
         "deployment has Firecrawl configured."
+    ),
+    "media": (
+        "Use Cloudinary media-library context when it is relevant. Treat returned "
+        "assets as read-only references for examples, visual direction, and reuse."
     ),
 }
 
@@ -71,8 +85,37 @@ _DEPTH_INSTRUCTIONS = {
     "deep": "Go deeper. Compare sources, inspect primary context, and surface tradeoffs.",
 }
 
-_SCOPE_KEYS = ("codebase", "cms", "metrics", "firecrawl")
+_SCOPE_KEYS = ("codebase", "cms", "qbank", "metrics", "firecrawl", "media")
 _MCP_PRESETS = ("katailyst", "github", "metabase")
+_CLOUDINARY_RESOURCE_TYPES = ("image", "video", "raw")
+_CLOUDINARY_MAX_ASSETS = 8
+_CLOUDINARY_STOPWORDS = {
+    "about",
+    "across",
+    "after",
+    "also",
+    "and",
+    "are",
+    "could",
+    "find",
+    "for",
+    "from",
+    "have",
+    "help",
+    "into",
+    "latest",
+    "like",
+    "make",
+    "that",
+    "the",
+    "this",
+    "through",
+    "what",
+    "when",
+    "with",
+    "would",
+    "your",
+}
 
 
 def api_key_is_valid(provided: str | None) -> bool:
@@ -193,6 +236,186 @@ def _firecrawl_readiness() -> dict[str, Any]:
     }
 
 
+def _cloudinary_readiness() -> dict[str, Any]:
+    missing = [
+        key
+        for key in ("CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET")
+        if not os.getenv(key)
+    ]
+    return {
+        "status": "ready" if not missing else "unavailable",
+        "configured": not missing,
+        "missing": missing,
+        "cloud_configured": bool(os.getenv("CLOUDINARY_CLOUD_NAME")),
+    }
+
+
+def _task_terms(task: str) -> list[str]:
+    seen: set[str] = set()
+    terms: list[str] = []
+    for raw in re.findall(r"[A-Za-z0-9][A-Za-z0-9_-]{2,}", task.lower()):
+        term = raw.strip("_-")
+        if len(term) < 3 or term in _CLOUDINARY_STOPWORDS or term in seen:
+            continue
+        seen.add(term)
+        terms.append(term)
+        if len(terms) >= 12:
+            break
+    return terms
+
+
+def _cloudinary_request(
+    *,
+    method: str,
+    path: str,
+    body: dict[str, Any] | None = None,
+    timeout: int = 8,
+) -> dict[str, Any]:
+    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
+    api_key = os.getenv("CLOUDINARY_API_KEY")
+    api_secret = os.getenv("CLOUDINARY_API_SECRET")
+    if not cloud_name or not api_key or not api_secret:
+        raise RuntimeError("Cloudinary credentials are not configured.")
+
+    url = f"https://api.cloudinary.com/v1_1/{cloud_name}{path}"
+    payload = json.dumps(body).encode("utf-8") if body is not None else None
+    request = urllib.request.Request(url, data=payload, method=method)
+    basic_token = base64.b64encode(f"{api_key}:{api_secret}".encode()).decode()
+    request.add_header("Authorization", f"Basic {basic_token}")
+    if payload is not None:
+        request.add_header("Content-Type", "application/json")
+
+    with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - fixed Cloudinary host
+        raw = response.read().decode("utf-8")
+    parsed = json.loads(raw) if raw else {}
+    return parsed if isinstance(parsed, dict) else {}
+
+
+def _cloudinary_list_assets() -> tuple[list[dict[str, Any]], list[str]]:
+    warnings: list[str] = []
+    resources: list[dict[str, Any]] = []
+
+    try:
+        body = _cloudinary_request(
+            method="POST",
+            path="/resources/search",
+            body={
+                "expression": "resource_type:image OR resource_type:video OR resource_type:raw",
+                "max_results": 60,
+                "with_field": ["context", "tags", "metadata"],
+            },
+        )
+        raw_resources = body.get("resources")
+        if isinstance(raw_resources, list):
+            resources.extend(item for item in raw_resources if isinstance(item, dict))
+    except Exception as error:  # pragma: no cover - exercised by integration smoke
+        warnings.append(
+            "Cloudinary search API unavailable; used resource-list fallback. "
+            f"({type(error).__name__})"
+        )
+
+    if resources:
+        return resources, warnings
+
+    for resource_type in _CLOUDINARY_RESOURCE_TYPES:
+        try:
+            body = _cloudinary_request(
+                method="GET",
+                path=f"/resources/{resource_type}/upload?max_results=25",
+            )
+            raw_resources = body.get("resources")
+            if isinstance(raw_resources, list):
+                resources.extend(item for item in raw_resources if isinstance(item, dict))
+        except urllib.error.HTTPError as error:
+            warnings.append(f"Cloudinary {resource_type} assets unavailable: HTTP {error.code}.")
+        except Exception as error:  # pragma: no cover - network/runtime dependent
+            warnings.append(f"Cloudinary {resource_type} assets unavailable: {type(error).__name__}.")
+
+    return resources, warnings
+
+
+def _stringify_asset_field(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return " ".join(_stringify_asset_field(item) for item in value)
+    if isinstance(value, dict):
+        return " ".join(f"{key} {_stringify_asset_field(item)}" for key, item in value.items())
+    return str(value)
+
+
+def _score_cloudinary_asset(asset: dict[str, Any], terms: list[str]) -> int:
+    if not terms:
+        return 1
+    haystack = " ".join(
+        _stringify_asset_field(asset.get(key))
+        for key in (
+            "public_id",
+            "asset_folder",
+            "folder",
+            "filename",
+            "tags",
+            "context",
+            "metadata",
+        )
+    ).lower()
+    return sum(1 for term in terms if term in haystack)
+
+
+def _summarize_cloudinary_asset(asset: dict[str, Any]) -> dict[str, Any]:
+    tags = asset.get("tags")
+    safe_tags = [tag for tag in tags if isinstance(tag, str)][:8] if isinstance(tags, list) else []
+    return {
+        "public_id": asset.get("public_id"),
+        "resource_type": asset.get("resource_type"),
+        "format": asset.get("format"),
+        "asset_folder": asset.get("asset_folder") or asset.get("folder"),
+        "width": asset.get("width"),
+        "height": asset.get("height"),
+        "secure_url": asset.get("secure_url") or asset.get("url"),
+        "tags": safe_tags,
+    }
+
+
+def search_cloudinary_assets(task: str) -> dict[str, Any]:
+    """Search Cloudinary with server-side credentials and return safe asset metadata."""
+
+    readiness = _cloudinary_readiness()
+    if readiness["status"] != "ready":
+        return {
+            "status": "unavailable",
+            "assets": [],
+            "warnings": ["Cloudinary media search was requested but credentials are not configured."],
+        }
+
+    terms = _task_terms(task)
+    try:
+        resources, warnings = _cloudinary_list_assets()
+    except Exception as error:  # pragma: no cover - defensive boundary
+        return {
+            "status": "degraded",
+            "assets": [],
+            "warnings": [f"Cloudinary media search failed: {type(error).__name__}."],
+        }
+
+    ranked = [
+        (score, index, asset)
+        for index, asset in enumerate(resources)
+        for score in [_score_cloudinary_asset(asset, terms)]
+        if score > 0 or not terms
+    ]
+    ranked.sort(key=lambda item: (-item[0], item[1]))
+    assets = [_summarize_cloudinary_asset(asset) for _, _, asset in ranked[:_CLOUDINARY_MAX_ASSETS]]
+    return {
+        "status": "ready" if assets else "empty",
+        "terms": terms,
+        "assets": assets,
+        "warnings": warnings,
+    }
+
+
 def _status_from_components(statuses: list[str]) -> str:
     if statuses and all(status == "ready" for status in statuses):
         return "ready"
@@ -206,6 +429,7 @@ def get_hlt_readiness() -> dict[str, Any]:
 
     preset_statuses = {preset: _preset_readiness(preset) for preset in _MCP_PRESETS}
     firecrawl_status = _firecrawl_readiness()
+    cloudinary_status = _cloudinary_readiness()
 
     integrations = {
         "codebase": {
@@ -227,6 +451,12 @@ def get_hlt_readiness() -> dict[str, Any]:
             "components": {"katailyst": preset_statuses["katailyst"]["status"]},
             "missing": preset_statuses["katailyst"]["missing"],
         },
+        "qbank": {
+            "status": preset_statuses["katailyst"]["status"],
+            "components": {"katailyst": preset_statuses["katailyst"]["status"]},
+            "missing": preset_statuses["katailyst"]["missing"],
+            "access": "read_only_checked_on_use",
+        },
         "metrics": {
             "status": preset_statuses["metabase"]["status"],
             "components": {
@@ -245,6 +475,12 @@ def get_hlt_readiness() -> dict[str, Any]:
             "components": {"firecrawl": firecrawl_status["status"]},
             "missing": firecrawl_status["missing"],
             "scraper": firecrawl_status["scraper"],
+        },
+        "media": {
+            "status": cloudinary_status["status"],
+            "components": {"cloudinary": cloudinary_status["status"]},
+            "missing": cloudinary_status["missing"],
+            "access": "read_only_server_side",
         },
     }
 
@@ -363,7 +599,7 @@ def resolve_research_scope(
     configs = list(mcp_configs or [])
 
     requested = {key: bool(scope.get(key)) for key in _SCOPE_KEYS}
-    if requested["codebase"] or requested["cms"]:
+    if requested["codebase"] or requested["cms"] or requested["qbank"]:
         _append_unique_mcp_config(configs, {"name": "katailyst", "preset": "katailyst"})
     if requested["codebase"]:
         _append_unique_mcp_config(configs, {"name": "github", "preset": "github"})
@@ -399,6 +635,11 @@ def resolve_research_scope(
             "active": bool(scraper_override),
             "selected": scraper_override or "default",
         },
+        "media": {
+            "requested": requested["media"],
+            "searched": False,
+            "asset_count": 0,
+        },
     }
     return expanded_configs, scraper_override, metadata
 
@@ -426,6 +667,20 @@ def prepare_research_request(
         mcp_configs=mcp_configs,
         research_scope=research_scope,
     )
+    if bool(scope.get("media")):
+        media_result = search_cloudinary_assets(task)
+        assets = media_result.get("assets", [])
+        hlt_scope_metadata["media"] = {
+            "requested": True,
+            "searched": media_result.get("status") in {"ready", "empty"},
+            "status": media_result.get("status"),
+            "asset_count": len(assets) if isinstance(assets, list) else 0,
+            "assets": assets if isinstance(assets, list) else [],
+            "warnings": media_result.get("warnings", []),
+        }
+        if media_result.get("status") in {"degraded", "unavailable"}:
+            if "media" not in hlt_scope_metadata["degraded_sources"]:
+                hlt_scope_metadata["degraded_sources"].append("media")
     next_mcp_enabled = bool(mcp_enabled or expanded_configs)
     next_mcp_strategy = "fast" if depth == "fast" else "deep"
 
@@ -444,11 +699,34 @@ def prepare_research_request(
                 f"{key} scope was requested but is only partially available or unconfigured; "
                 "do not imply unavailable internal data was inspected."
             )
+    media = hlt_scope_metadata.get("media", {})
+    media_assets = media.get("assets") if isinstance(media, dict) else []
+    if isinstance(media_assets, list) and media_assets:
+        instruction_lines.append(
+            "Cloudinary media assets found below are read-only references. Cite public_id or URL when useful."
+        )
     scoped_task = (
         f"{task}\n\n"
         "HLT research scope instructions:\n"
         + "\n".join(f"- {line}" for line in instruction_lines)
     )
+    if isinstance(media_assets, list) and media_assets:
+        scoped_task += "\n\nCloudinary media library context:\n" + "\n".join(
+            "- "
+            + "; ".join(
+                part
+                for part in [
+                    f"public_id={asset.get('public_id')}",
+                    f"type={asset.get('resource_type')}",
+                    f"folder={asset.get('asset_folder')}" if asset.get("asset_folder") else "",
+                    f"tags={', '.join(asset.get('tags') or [])}" if asset.get("tags") else "",
+                    f"url={asset.get('secure_url')}" if asset.get("secure_url") else "",
+                ]
+                if part
+            )
+            for asset in media_assets
+            if isinstance(asset, dict)
+        )
 
     return scoped_task, next_mcp_enabled, next_mcp_strategy, expanded_configs, hlt_scope_metadata, scraper_override
 

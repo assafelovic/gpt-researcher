@@ -25,6 +25,27 @@ const EXTENSIONS_BY_KIND: Record<ReportArtifactKind, string[]> = {
   json: [".json"],
 };
 
+const LABELS_BY_KIND: Record<ReportArtifactKind, string> = {
+  md: "Markdown",
+  pdf: "PDF",
+  docx: "DocX",
+  json: "Logs",
+};
+
+export function reportArtifactLabel(kind: ReportArtifactKind): string {
+  return LABELS_BY_KIND[kind];
+}
+
+export function reportArtifactUnavailableMessage(
+  kind: ReportArtifactKind,
+): string {
+  const label = reportArtifactLabel(kind);
+  if (kind === "md") {
+    return `${label} unavailable. Retry after the run finishes syncing artifacts.`;
+  }
+  return `${label} unavailable. Retry, or open Markdown when available.`;
+}
+
 function decodePath(value: string): string {
   let decoded = value.trim();
 

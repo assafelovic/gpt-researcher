@@ -1,4 +1,11 @@
-import { ReactNode, useRef, useCallback, useEffect, Dispatch, SetStateAction } from "react";
+import {
+  ReactNode,
+  useRef,
+  useCallback,
+  useEffect,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import { Toaster } from "react-hot-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -31,17 +38,14 @@ export default function ResearchPageLayout({
   mainContentRef,
   showScrollButton = false,
   onScrollToBottom,
-  toastOptions = {}
+  toastOptions = {},
 }: ResearchPageLayoutProps) {
   const defaultRef = useRef<HTMLDivElement>(null);
   const contentRef = mainContentRef || defaultRef;
 
   return (
     <main className="flex min-h-screen flex-col">
-      <Toaster
-        position="bottom-center"
-        toastOptions={toastOptions}
-      />
+      <Toaster position="bottom-center" toastOptions={toastOptions} />
 
       <Header
         loading={loading}
@@ -49,19 +53,18 @@ export default function ResearchPageLayout({
         showResult={showResult}
         onStop={onStop || (() => {})}
         onNewResearch={onNewResearch}
+        chatBoxSettings={chatBoxSettings}
+        setChatBoxSettings={setChatBoxSettings}
       />
 
-      <div
-        ref={contentRef}
-        className="min-h-[100vh] pt-[96px]"
-      >
+      <div ref={contentRef} className="min-h-[100vh] pt-[96px]">
         {children}
       </div>
 
       {showScrollButton && showResult && (
         <button
           onClick={onScrollToBottom}
-          className="fixed bottom-8 right-8 flex items-center justify-center w-12 h-12 text-white bg-gradient-to-br from-teal-500 to-teal-600 rounded-full hover:from-teal-600 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-lg z-50 backdrop-blur-sm border border-teal-400/20"
+          className="fixed bottom-8 right-8 z-50 flex h-12 w-12 transform items-center justify-center rounded-full border border-teal-400/20 bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:from-teal-600 hover:to-teal-700"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -80,7 +83,10 @@ export default function ResearchPageLayout({
         </button>
       )}
 
-      <Footer setChatBoxSettings={setChatBoxSettings} chatBoxSettings={chatBoxSettings} />
+      <Footer
+        setChatBoxSettings={setChatBoxSettings}
+        chatBoxSettings={chatBoxSettings}
+      />
     </main>
   );
 }

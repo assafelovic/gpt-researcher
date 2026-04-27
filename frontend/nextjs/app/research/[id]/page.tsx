@@ -134,7 +134,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
       // Step 2: Try to find it in the backend
       let foundInBackend = false;
       try {
-        console.log(`Checking backend for research ${id}...`);
+        console.log(`Loading backend record for research ${id}...`);
         const response = await fetch(`/api/reports/${id}`);
         
         if (response.ok) {

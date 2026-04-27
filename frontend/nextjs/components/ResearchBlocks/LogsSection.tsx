@@ -38,16 +38,16 @@ const LogsSection = ({
   const latestLog = logs[logs.length - 1];
 
   return (
-    <div className="container mt-5 h-auto w-full shrink-0 rounded-lg border border-solid border-gray-700/40 bg-black/30 p-5 shadow-lg backdrop-blur-md">
-      <div className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-start sm:justify-between lg:pb-3.5">
+    <div className="bg-black/24 container mt-4 h-auto w-full shrink-0 rounded-lg border border-solid border-gray-700/35 p-4 shadow-lg backdrop-blur-md">
+      <div className="flex flex-col gap-3 pb-0 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-4">
-          <img src="/img/chat-check.svg" alt="logs" width={24} height={24} />
+          <img src="/img/chat-check.svg" alt="logs" width={20} height={20} />
           <div>
-            <h3 className="text-base font-bold uppercase leading-[152.5%] text-white">
-              Agent Work
+            <h3 className="text-sm font-bold uppercase leading-[152.5%] tracking-[0.08em] text-white">
+              Research activity
             </h3>
             {!expanded && latestLog ? (
-              <p className="mt-1 max-w-[720px] truncate text-xs text-slate-400">
+              <p className="mt-1 max-w-[720px] truncate text-xs leading-5 text-slate-400">
                 Latest: {latestLog.text || latestLog.header}
               </p>
             ) : null}
@@ -64,7 +64,7 @@ const LogsSection = ({
       {expanded ? (
         <div
           ref={logsContainerRef}
-          className="scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300/10 max-h-[500px] min-h-[200px] overflow-y-auto"
+          className="scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300/10 mt-3 max-h-[420px] min-h-[180px] overflow-y-auto"
         >
           <LogMessage logs={logs} />
         </div>

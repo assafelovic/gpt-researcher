@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ResearchHistoryItem } from '@/types/data';
-import { useResearchHistoryContext } from '@/hooks/ResearchHistoryContext';
-import LoadingDots from '@/components/LoadingDots';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { ResearchHistoryItem } from "@/types/data";
+import { useResearchHistoryContext } from "@/hooks/ResearchHistoryContext";
+import LoadingDots from "@/components/LoadingDots";
 import { toast } from "react-hot-toast";
 import MasteryIcon from "@/components/MasteryIcon";
 import { hltBranding } from "@/lib/hltBranding";
@@ -21,7 +21,7 @@ export default function MobileHomeScreen({
   handleDisplayResult,
   isLoading = false,
   placeholder = "What would you like to research today?",
-  handleKeyDown
+  handleKeyDown,
 }: MobileHomeScreenProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { history } = useResearchHistoryContext();
@@ -41,8 +41,9 @@ export default function MobileHomeScreen({
   // Auto resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height =
+        textareaRef.current.scrollHeight + "px";
     }
   }, [promptValue]);
 
@@ -60,9 +61,12 @@ export default function MobileHomeScreen({
     window.location.href = `/research/${id}`;
   }, []);
 
-  const handlePromptChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setPromptValue(e.target.value);
-  }, [setPromptValue]);
+  const handlePromptChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setPromptValue(e.target.value);
+    },
+    [setPromptValue],
+  );
 
   const handleSubmit = useCallback(async () => {
     // Don't submit if empty, already loading, or already submitting
@@ -79,7 +83,7 @@ export default function MobileHomeScreen({
         setIsSubmitting(false);
         toast.error("Research request took too long. Please try again.", {
           duration: 3000,
-          position: "bottom-center"
+          position: "bottom-center",
         });
       }, 15000); // 15 second timeout
 
@@ -98,10 +102,13 @@ export default function MobileHomeScreen({
         }
       } catch (apiError) {
         console.error("API error during research submission:", apiError);
-        toast.error("There was a problem submitting your research. Please try again.", {
-          duration: 3000,
-          position: "bottom-center"
-        });
+        toast.error(
+          "There was a problem submitting your research. Please try again.",
+          {
+            duration: 3000,
+            position: "bottom-center",
+          },
+        );
 
         // Clear submission state
         setIsSubmitting(false);
@@ -120,39 +127,42 @@ export default function MobileHomeScreen({
   }, [promptValue, isLoading, isSubmitting, handleDisplayResult]);
 
   // Handle enter key for submission
-  const handleKeyPress = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (handleKeyDown) {
-      handleKeyDown(e);
-    }
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (handleKeyDown) {
+        handleKeyDown(e);
+      }
 
-    // Submit on Enter (without shift)
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  }, [handleKeyDown, handleSubmit]);
+      // Submit on Enter (without shift)
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    },
+    [handleKeyDown, handleSubmit],
+  );
 
   return (
-    <div className="flex flex-col h-full w-full bg-gradient-to-b from-gray-900 to-gray-950 pb-16">
+    <div className="flex h-full w-full flex-col bg-gradient-to-b from-gray-900 to-gray-950 pb-16">
       {/* Header with logo and title */}
-      <div className="pt-10 px-6 text-center mb-8">
-        <div className="flex justify-center mb-3">
+      <div className="mb-5 px-6 pt-6 text-center">
+        <div className="mb-2 flex justify-center">
           {hltBranding.enabled ? (
-            <MasteryIcon size={72} />
+            <MasteryIcon size={48} />
           ) : (
             <img
               src="/img/gptr-logo.png"
               alt="GPT Researcher"
               width={60}
               height={60}
-              className="rounded-xl"
+              className="h-12 w-12 rounded-xl"
             />
           )}
         </div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-300">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-300">
           {hltBranding.enabled ? hltBranding.productName : "GPT Researcher"}
         </p>
-        <p className="mt-2 text-gray-400 text-sm">
+        <p className="mx-auto mt-1 max-w-[280px] text-xs leading-5 text-gray-500">
           {hltBranding.enabled
             ? "Source-backed research for the HLT agent stack."
             : "Say Hello to GPT Researcher, your AI partner for instant insights and comprehensive research"}
@@ -160,13 +170,13 @@ export default function MobileHomeScreen({
       </div>
 
       {/* Search Box */}
-      <div className="px-4 md:px-8 w-full max-w-lg mx-auto">
+      <div className="mx-auto w-full max-w-lg px-4 md:px-8">
         <div
-          className={`relative bg-gray-800 border ${isFocused ? 'border-sky-500/70 input-glow-active' : 'border-gray-700/50 input-glow-subtle'} rounded-xl shadow-lg transition-all duration-300`}
+          className={`relative rounded-xl border bg-gray-800 shadow-lg transition-all duration-300 ${isFocused ? "input-glow-active border-sky-500/70" : "input-glow-subtle border-gray-700/50"}`}
         >
           <textarea
             ref={textareaRef}
-            className="w-full bg-transparent text-gray-200 px-4 pt-4 pb-12 focus:outline-none resize-none rounded-xl"
+            className="w-full resize-none rounded-xl bg-transparent px-4 pb-11 pt-4 text-sm leading-6 text-gray-200 focus:outline-none"
             placeholder={placeholder}
             value={promptValue}
             onChange={handlePromptChange}
@@ -177,47 +187,78 @@ export default function MobileHomeScreen({
             disabled={isLoading || isSubmitting}
           />
 
-          <div className="absolute bottom-3 right-3">
+          <div className="absolute bottom-2.5 right-2.5">
             <button
               onClick={handleSubmit}
               disabled={isLoading || isSubmitting || !promptValue.trim()}
               className={`rounded-full p-2 ${
                 isLoading || isSubmitting || !promptValue.trim()
-                  ? 'bg-gray-700 text-gray-500'
-                  : 'bg-sky-600 text-white hover:bg-sky-500'
+                  ? "bg-gray-700 text-gray-500"
+                  : "bg-sky-600 text-white hover:bg-sky-500"
               } transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50`}
               aria-label="Start research"
             >
               {isLoading || isSubmitting ? (
-                <div className="flex justify-center items-center">
-                  <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                <div className="flex items-center justify-center">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600"></div>
                 </div>
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               )}
             </button>
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-2 text-center px-2">
+        <p className="mt-2 px-2 text-center text-xs text-gray-500">
           Enter any research topic or specific question
         </p>
       </div>
 
+      <div className="mx-auto mt-4 flex w-full max-w-lg flex-wrap justify-center gap-2 px-4">
+        {[
+          "AI trends for Katailyst",
+          "Frontend cleanup map",
+          "Observability patterns",
+        ].map((suggestion) => (
+          <button
+            key={suggestion}
+            type="button"
+            onClick={() => setPromptValue(suggestion)}
+            className="rounded-md border border-gray-700/70 bg-gray-800/50 px-3 py-1.5 text-xs text-gray-300"
+          >
+            {suggestion}
+          </button>
+        ))}
+      </div>
+
       {/* Recent research history */}
       {recentHistory.length > 0 && (
-        <div className="mt-10 px-4">
-          <h2 className="text-sm font-medium text-gray-400 mb-3 px-2">Recent Research</h2>
+        <div className="mt-7 px-4">
+          <h2 className="mb-3 px-2 text-sm font-medium text-gray-400">
+            Recent Research
+          </h2>
           <div className="space-y-2">
             {recentHistory.map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleHistoryItemClick(item.id)}
-                className="w-full bg-gray-800/60 hover:bg-gray-800 rounded-lg p-3 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-gray-600"
+                className="w-full rounded-lg bg-gray-800/60 p-3 text-left transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600"
               >
-                <h3 className="text-sm font-medium text-gray-200 line-clamp-1">{item.question}</h3>
-                <p className="text-xs text-gray-500 mt-1">
+                <h3 className="line-clamp-1 text-sm font-medium text-gray-200">
+                  {item.question}
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
                   {new Date(item.timestamp || Date.now()).toLocaleString()}
                 </p>
               </button>
@@ -226,7 +267,7 @@ export default function MobileHomeScreen({
           <div className="mt-3 text-center">
             <a
               href="/history"
-              className="inline-block text-sm text-sky-400 hover:text-sky-300 transition-colors"
+              className="inline-block text-sm text-sky-400 transition-colors hover:text-sky-300"
             >
               View all research
             </a>
@@ -235,23 +276,12 @@ export default function MobileHomeScreen({
       )}
 
       {/* Features or tips section */}
-      <div className="mt-auto pb-6 pt-8 px-4">
-        <div className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-4">
-          <h3 className="text-sm font-medium text-gray-300 mb-2">Research Tips</h3>
-          <ul className="text-xs text-gray-400 space-y-1.5">
-            <li className="flex items-start">
-              <span className="text-sky-400 mr-1.5">•</span>
-              <span>Ask specific questions for better results</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-sky-400 mr-1.5">•</span>
-              <span>Include key details like dates or context</span>
-            </li>
-            <li className="flex items-start">
-              <span className="text-sky-400 mr-1.5">•</span>
-              <span>Chat with your research results for deeper insights</span>
-            </li>
-          </ul>
+      <div className="mt-auto px-4 pb-4 pt-6">
+        <div className="rounded-xl border border-gray-800/70 bg-gray-900/40 p-3 text-center">
+          <p className="text-xs leading-5 text-gray-500">
+            Reports are source-backed. Use specific questions, dates, and
+            context for deeper runs.
+          </p>
         </div>
       </div>
 

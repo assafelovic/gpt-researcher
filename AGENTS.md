@@ -13,7 +13,7 @@ work. Used for deep customer/competitive research that feeds article writing.
 
 ## Where it sits in the HLT ecosystem
 
-This repo is one of **15 sibling repos under `~/hlt/`** that share the
+This repo is one of **14 active sibling repos under `~/hlt/`** that share the
 **Katailyst registry** as their capability brain (1,663 entities, 11,151
 graph links, 30+ MCP tools). The full ecosystem map lives at:
 
@@ -23,7 +23,7 @@ graph links, 30+ MCP tools). The full ecosystem map lives at:
 
 Sibling repos: `katailyst, sidecar, mastery-publishing, multimedia-mastery,
 engage, jobs, forum-template, agent-canvas, brand-design-lab,
-evidence-based-business, gpt-researcher, mastra, operator-evals, paperclip,
+evidence-based-business, gpt-researcher, mastra, paperclip,
 research-team`.
 
 ## Tools available in this repo (auto-discovered via `.mcp.json`)
@@ -46,9 +46,10 @@ following servers auto-mount from `.mcp.json`:
    `docs/usage/owners-manual.md`.
 
 Human UI: `https://gpt-researcher-ui.vercel.app` is branded as **Mastery
-Research**. The launch screen includes HLT scope toggles for Code files,
-CMS/Registry, Metrics, and high-quality crawling. Those toggles are browser-safe
-metadata; server-side preset expansion lives in `backend/server/hlt_extensions.py`.
+Research**. The launch screen includes compact HLT scope toggles for Deep web,
+QBank, Media, Code, Registry, and Metrics. Those toggles are browser-safe
+metadata; server-side preset expansion and Cloudinary media lookup live in
+`backend/server/hlt_extensions.py`.
 
 AI observability: HLT-hosted GPT Researcher emits Langfuse observations when
 `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are configured. `/health`

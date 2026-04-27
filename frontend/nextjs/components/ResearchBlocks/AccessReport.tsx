@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import {
   buildReportArtifactLink,
+  reportArtifactUnavailableMessage,
   type ReportArtifactKind,
   type ReportArtifactLink,
 } from "@/utils/reportArtifacts";
@@ -43,9 +44,9 @@ const AccessReport: React.FC<AccessReportProps> = ({
   onShareClick,
 }) => {
   const [artifactError, setArtifactError] = useState<string | null>(null);
-  const [checkingKind, setCheckingKind] = useState<ReportArtifactKind | null>(
-    null,
-  );
+  const [failedAction, setFailedAction] = useState<ArtifactAction | null>(null);
+  const [loadingArtifactKind, setLoadingArtifactKind] =
+    useState<ReportArtifactKind | null>(null);
   const effectiveResearchId =
     researchId || accessData?.research_id || accessData?.run_id || null;
 
@@ -126,11 +127,13 @@ const AccessReport: React.FC<AccessReportProps> = ({
   const openArtifact = async (action: ArtifactAction) => {
     if (!action.link.ok) {
       setArtifactError(action.link.reason);
+      setFailedAction(action);
       return;
     }
 
     setArtifactError(null);
-    setCheckingKind(action.kind);
+    setFailedAction(null);
+    setLoadingArtifactKind(action.kind);
 
     try {
       const response = await fetch(action.link.href, {
@@ -139,19 +142,17 @@ const AccessReport: React.FC<AccessReportProps> = ({
       });
 
       if (!response.ok) {
-        setArtifactError(
-          `${action.label} is not available yet. Use another format or retry after the run finishes syncing artifacts.`,
-        );
+        setArtifactError(reportArtifactUnavailableMessage(action.kind));
+        setFailedAction(action);
         return;
       }
 
       window.open(action.link.href, "_blank", "noopener,noreferrer");
     } catch {
-      setArtifactError(
-        `${action.label} could not be checked. Retry, or open another available report format.`,
-      );
+      setArtifactError(reportArtifactUnavailableMessage(action.kind));
+      setFailedAction(action);
     } finally {
-      setCheckingKind(null);
+      setLoadingArtifactKind(null);
     }
   };
 
@@ -160,8 +161,12 @@ const AccessReport: React.FC<AccessReportProps> = ({
     return null;
   }
 
+  const markdownAction = artifactActions.find(
+    (action) => action.kind === "md" && action.link.ok,
+  );
+
   return (
-    <div className="bg-slate-950/72 container my-5 rounded-lg border border-solid border-teal-400/20 p-5 shadow-lg backdrop-blur-md">
+    <div className="bg-slate-950/72 container my-4 rounded-lg border border-solid border-teal-400/20 p-4 shadow-lg backdrop-blur-md sm:p-5">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -185,8 +190,28 @@ const AccessReport: React.FC<AccessReportProps> = ({
         </div>
 
         {artifactError ? (
-          <div className="rounded-md border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-sm text-amber-100">
-            {artifactError}
+          <div className="flex flex-col gap-3 rounded-md border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-sm text-amber-100 sm:flex-row sm:items-center sm:justify-between">
+            <span>{artifactError}</span>
+            <span className="flex flex-wrap gap-2">
+              {failedAction ? (
+                <button
+                  type="button"
+                  onClick={() => void openArtifact(failedAction)}
+                  className="rounded-md border border-amber-200/30 bg-amber-200/10 px-2.5 py-1 text-xs font-semibold text-amber-50 transition-colors hover:bg-amber-200/20"
+                >
+                  Retry
+                </button>
+              ) : null}
+              {markdownAction && failedAction?.kind !== "md" ? (
+                <button
+                  type="button"
+                  onClick={() => void openArtifact(markdownAction)}
+                  className="rounded-md border border-teal-200/30 bg-teal-200/10 px-2.5 py-1 text-xs font-semibold text-teal-50 transition-colors hover:bg-teal-200/20"
+                >
+                  Open Markdown
+                </button>
+              ) : null}
+            </span>
           </div>
         ) : null}
 
@@ -196,7 +221,7 @@ const AccessReport: React.FC<AccessReportProps> = ({
               key={action.kind}
               type="button"
               onClick={() => void openArtifact(action)}
-              disabled={checkingKind === action.kind}
+              disabled={loadingArtifactKind === action.kind}
               className={`${buttonBaseClass} ${action.tone} border`}
             >
               <svg
@@ -208,7 +233,9 @@ const AccessReport: React.FC<AccessReportProps> = ({
               >
                 {action.icon}
               </svg>
-              {checkingKind === action.kind ? "Checking..." : action.label}
+              {loadingArtifactKind === action.kind
+                ? "Opening..."
+                : action.label}
             </button>
           ))}
 

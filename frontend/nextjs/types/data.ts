@@ -74,8 +74,10 @@ export type HLTResearchDepth = "fast" | "balanced" | "deep";
 export interface HLTResearchScope {
   codebase: boolean;
   cms: boolean;
+  qbank: boolean;
   metrics: boolean;
   firecrawl: boolean;
+  media: boolean;
   depth: HLTResearchDepth;
 }
 

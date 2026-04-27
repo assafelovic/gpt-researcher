@@ -1,9 +1,7 @@
-import Image from "next/image";
-import React, { FC, useEffect, useState, useRef } from "react";
+import React, { FC, useEffect, useState } from "react";
 import InputArea from "./ResearchBlocks/elements/InputArea";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { hltBranding } from "@/lib/hltBranding";
-import MasteryIcon from "@/components/MasteryIcon";
 import ResearchScopeSelector from "@/components/ResearchScopeSelector";
 import { ChatBoxSettings, HLTResearchScope } from "@/types/data";
 import { normalizeHLTResearchScope } from "@/lib/hltResearchScope";
@@ -24,82 +22,10 @@ const Hero: FC<THeroProps> = ({
   setChatBoxSettings,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [showGradient, setShowGradient] = useState(true);
-  const particlesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsVisible(true);
-
-    // Create particles for the background effect
-    if (particlesContainerRef.current) {
-      const container = particlesContainerRef.current;
-      const particleCount = window.innerWidth < 768 ? 15 : 30; // Reduce particles on mobile
-
-      // Clear any existing particles
-      container.innerHTML = "";
-
-      for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement("div");
-
-        // Random particle attributes
-        const size = Math.random() * 4 + 1;
-        const posX = Math.random() * 100;
-        const posY = Math.random() * 100;
-        const duration = Math.random() * 50 + 20;
-        const delay = Math.random() * 5;
-        const opacity = Math.random() * 0.3 + 0.1;
-
-        // Apply styles
-        particle.className = "absolute rounded-full bg-white";
-        Object.assign(particle.style, {
-          width: `${size}px`,
-          height: `${size}px`,
-          left: `${posX}%`,
-          top: `${posY}%`,
-          opacity: opacity.toString(),
-          animation: `float ${duration}s ease-in-out ${delay}s infinite`,
-        });
-
-        container.appendChild(particle);
-      }
-    }
-
-    // Add scroll event listener to show/hide gradient
-    let lastScrollY = window.scrollY;
-    const threshold = 50; // Amount of scroll before hiding gradient (reduced for quicker response)
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      if (currentScrollY <= threshold) {
-        // At or near the top, show gradient
-        setShowGradient(true);
-      } else if (currentScrollY > lastScrollY) {
-        // Scrolling down, hide gradient
-        setShowGradient(false);
-      } else if (currentScrollY < lastScrollY) {
-        // Scrolling up, show gradient
-        setShowGradient(true);
-      }
-
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll);
-
-    const container = particlesContainerRef.current;
-    // Clean up function
-    return () => {
-      if (container) {
-        container.innerHTML = "";
-      }
-      window.removeEventListener("scroll", handleScroll);
-    };
   }, []);
-
-  const handleClickSuggestion = (value: string) => {
-    setPromptValue(value);
-  };
 
   const handleScopeChange = (scope: HLTResearchScope) => {
     const normalized = normalizeHLTResearchScope(scope);
@@ -111,70 +37,49 @@ const Hero: FC<THeroProps> = ({
         prev.mcp_enabled ||
         normalized.codebase ||
         normalized.cms ||
+        normalized.qbank ||
         normalized.metrics,
       mcp_strategy: normalized.depth === "fast" ? "fast" : "deep",
     }));
   };
 
-  // Animation variants for consistent animations
+  const handleExampleSearch = (query: string) => {
+    setPromptValue(query);
+    handleDisplayResult(query);
+  };
+
   const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0 },
   };
 
   return (
-    <div className="relative mt-[-60px] flex min-h-[100vh] items-center overflow-visible pt-[72px] sm:mt-[-110px] sm:pt-[88px]">
-      {/* Particle background */}
-      <div ref={particlesContainerRef} className="absolute inset-0 -z-20"></div>
-
+    <div className="relative mt-[-56px] flex min-h-[440px] items-start overflow-visible pb-5 pt-[74px] sm:min-h-[470px]">
       <motion.div
         initial="hidden"
         animate={isVisible ? "visible" : "hidden"}
         variants={fadeInUp}
-        transition={{ duration: 0.8 }}
-        className="flex w-full flex-col items-center justify-center py-6 sm:py-8 md:py-16 lg:pb-20 lg:pt-10"
+        transition={{ duration: 0.35 }}
+        className="flex w-full flex-col items-center justify-start py-2"
       >
-        {hltBranding.enabled && chatBoxSettings && setChatBoxSettings && (
-          <motion.div
-            variants={fadeInUp}
-            transition={{ duration: 0.8, delay: 0.05 }}
-            className="mb-6 flex flex-col items-center gap-3 text-center"
-          >
-            <MasteryIcon
-              size={76}
-              className="shadow-[0_18px_50px_rgba(21,94,239,0.24)]"
-            />
-            <div>
-              <div className="font-serif text-[42px] leading-none tracking-[-0.02em] text-white sm:text-[56px]">
-                Mastery
-              </div>
-              <div className="mt-2 text-[11px] font-bold uppercase tracking-[0.28em] text-blue-300">
-                Research Console
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Header text */}
         <motion.h1
           variants={fadeInUp}
-          transition={{ duration: 0.8, delay: 0.1 }}
-          className="max-w-[860px] px-4 text-center text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl md:text-5xl"
+          transition={{ duration: 0.35, delay: 0.03 }}
+          className="max-w-[620px] px-4 pt-2 text-center text-lg font-semibold leading-tight text-white sm:text-xl md:text-2xl"
         >
           {hltBranding.enabled
-            ? hltBranding.heroTitle
+            ? "What should Mastery research?"
             : "What would you like to research next?"}
         </motion.h1>
 
-        {/* Input section with enhanced styling */}
         <motion.div
           variants={fadeInUp}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="w-full max-w-[860px] px-4 pb-5 pt-8 sm:pb-6"
+          transition={{ duration: 0.35, delay: 0.08 }}
+          className="w-full max-w-[820px] px-4 pb-2 pt-3"
         >
           <div className="group relative">
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#155EEF]/80 via-[#1FB2C6]/60 to-[#155EEF]/70 opacity-60 blur-lg transition duration-1000 group-hover:opacity-85 group-hover:duration-200"></div>
-            <div className="relative rounded-2xl bg-[#0A0A0B]/70 shadow-[0_30px_80px_rgba(0,0,0,0.35)] ring-1 ring-white/10 backdrop-blur-sm">
+            <div className="absolute -inset-px rounded-xl bg-[#155EEF]/40 opacity-35 blur-sm transition duration-500 group-hover:opacity-55" />
+            <div className="relative rounded-xl bg-[#0A0A0B]/80 shadow-[0_14px_36px_rgba(0,0,0,0.28)] ring-1 ring-white/10 backdrop-blur-sm">
               <InputArea
                 promptValue={promptValue}
                 setPromptValue={setPromptValue}
@@ -183,25 +88,25 @@ const Hero: FC<THeroProps> = ({
             </div>
           </div>
 
-          {/* Disclaimer text */}
           <motion.div
             variants={fadeInUp}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-6 px-4 text-center"
+            transition={{ duration: 0.35, delay: 0.12 }}
+            className="mt-2 px-4 text-center"
           >
-            <p className="text-sm font-light text-gray-400">
-              {hltBranding.enabled
-                ? hltBranding.heroNote
-                : "GPT Researcher may make mistakes. Verify important information and check sources."}
-            </p>
+            {!hltBranding.enabled && (
+              <p className="text-[11px] font-light leading-5 text-gray-500">
+                GPT Researcher may make mistakes. Verify important information
+                and check sources.
+              </p>
+            )}
           </motion.div>
         </motion.div>
 
         {hltBranding.enabled && (
           <motion.div
             variants={fadeInUp}
-            transition={{ duration: 0.8, delay: 0.35 }}
-            className="w-full"
+            transition={{ duration: 0.35, delay: 0.16 }}
+            className="mt-3 w-full"
           >
             <ResearchScopeSelector
               value={chatBoxSettings?.hlt_research_scope}
@@ -210,140 +115,78 @@ const Hero: FC<THeroProps> = ({
           </motion.div>
         )}
 
-        {/* Suggestions section with enhanced styling */}
-        <motion.div
-          variants={fadeInUp}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="xs:gap-3 flex flex-wrap items-center justify-center gap-2 px-4 pb-6 pt-5 sm:pb-8 md:gap-4 md:pb-10 lg:flex-nowrap lg:justify-normal"
-        >
-          <AnimatePresence>
-            {suggestions.map((item, index) => (
-              <motion.div
-                key={item.id}
-                variants={fadeInUp}
-                initial="hidden"
-                animate="visible"
-                transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
-                className="flex h-[38px] min-w-[100px] cursor-pointer items-center justify-center gap-[6px] rounded-lg border border-solid border-white/10 bg-white/[0.045] px-2 py-1 backdrop-blur-sm transition-all duration-300 hover:border-blue-400/50 hover:bg-white/[0.075] hover:shadow-lg hover:shadow-blue-900/20 sm:h-[42px] sm:px-3 sm:py-2"
-                onClick={() => handleClickSuggestion(item?.name)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <img
-                  src={item.icon}
-                  alt={item.name}
-                  width={18}
-                  height={18}
-                  className="w-[18px] opacity-80 brightness-100 invert filter sm:w-[20px]"
-                />
-                <span className="text-xs font-medium leading-[normal] text-gray-200 sm:text-sm">
-                  {item.name}
-                </span>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+        {hltBranding.enabled && (
+          <motion.div
+            variants={fadeInUp}
+            transition={{ duration: 0.35, delay: 0.2 }}
+            className="mt-4 w-full max-w-[820px] px-4"
+            aria-label="Example searches"
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                Try
+              </span>
+              <span className="hidden text-[10px] text-slate-600 sm:inline">
+                Scroll for more
+              </span>
+            </div>
+            <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {exampleSearches.map((example) => (
+                <button
+                  key={example.label}
+                  type="button"
+                  title={example.query}
+                  onClick={() => handleExampleSearch(example.query)}
+                  className="group min-h-[72px] w-[190px] shrink-0 snap-start rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2 text-left transition-colors hover:border-blue-400/40 hover:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+                >
+                  <span className="block text-xs font-semibold text-slate-200 group-hover:text-white">
+                    {example.label}
+                  </span>
+                  <span className="mt-1 block text-[11px] leading-4 text-slate-500 group-hover:text-slate-300">
+                    {example.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        <div className="h-1" />
       </motion.div>
-
-      {/* Magical premium gradient glow at the bottom */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showGradient ? 1 : 0 }}
-        transition={{ duration: 1.2 }}
-        className="pointer-events-none fixed bottom-0 left-0 right-0 z-50 h-[12px] overflow-hidden"
-      >
-        <div className="relative h-full w-full">
-          {/* Main perfect center glow with smooth fade at edges */}
-          <div
-            className="absolute inset-0"
-            style={{
-              opacity: 0.85,
-              background: hltBranding.enabled
-                ? "radial-gradient(ellipse at center, rgba(21, 94, 239, 1) 0%, rgba(15, 174, 205, 0.72) 28%, rgba(15, 174, 205, 0.2) 52%, rgba(0, 0, 0, 0) 75%)"
-                : "radial-gradient(ellipse at center, rgba(12, 219, 182, 1) 0%, rgba(6, 219, 238, 0.7) 25%, rgba(6, 219, 238, 0.2) 50%, rgba(0, 0, 0, 0) 75%)",
-              boxShadow: hltBranding.enabled
-                ? "0 0 30px 6px rgba(21, 94, 239, 0.48), 0 0 60px 10px rgba(15, 174, 205, 0.22)"
-                : "0 0 30px 6px rgba(12, 219, 182, 0.5), 0 0 60px 10px rgba(6, 219, 238, 0.25)",
-            }}
-          />
-
-          {/* Subtle shimmer overlay with perfect center focus */}
-          <div
-            className="absolute inset-0"
-            style={{
-              animation: "shimmer 8s ease-in-out infinite alternate",
-              opacity: 0.5,
-              background:
-                "radial-gradient(ellipse at center, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.2) 30%, rgba(255, 255, 255, 0) 60%)",
-            }}
-          />
-
-          {/* Gentle breathing effect */}
-          <div
-            className="absolute inset-0"
-            style={{
-              opacity: 0.4,
-              animation: "breathe 7s cubic-bezier(0.4, 0.0, 0.2, 1) infinite",
-              background:
-                "radial-gradient(circle at center, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 50%)",
-            }}
-          />
-        </div>
-      </motion.div>
-
-      {/* Custom keyframes for magical animations */}
-      <style jsx global>{`
-        @keyframes shimmer {
-          0% {
-            opacity: 0.4;
-            transform: scale(0.98);
-          }
-          50% {
-            opacity: 0.6;
-          }
-          100% {
-            opacity: 0.4;
-            transform: scale(1.02);
-          }
-        }
-
-        @keyframes breathe {
-          0%,
-          100% {
-            opacity: 0.3;
-            transform: scale(0.96);
-          }
-          50% {
-            opacity: 0.5;
-            transform: scale(1.04);
-          }
-        }
-      `}</style>
     </div>
   );
 };
 
-type suggestionType = {
-  id: number;
-  name: string;
-  icon: string;
-};
-
-const suggestions: suggestionType[] = [
+const exampleSearches = [
   {
-    id: 1,
-    name: "Find AI trends for Katailyst",
-    icon: "/img/search.svg",
+    label: "AI trends",
+    description: "Latest patterns for product, agents, and cleanup.",
+    query:
+      "Find current AI trends that could improve Katailyst workflows, frontend design, observability, and ecosystem cleanup.",
   },
   {
-    id: 2,
-    name: "Map frontend cleanup opportunities",
-    icon: "/img/sources.svg",
+    label: "Frontend cleanup",
+    description: "Find UI debt and design-system fixes.",
+    query:
+      "Map frontend cleanup opportunities across Katailyst-style product interfaces and suggest design-system enforcement patterns.",
   },
   {
-    id: 3,
-    name: "Research observability patterns",
-    icon: "/img/message-question-circle.svg",
+    label: "QBank gaps",
+    description: "Improve corporate CMS and question-bank quality.",
+    query:
+      "Research opportunities to improve corporate CMS and question-bank content quality using read-only internal context when available.",
+  },
+  {
+    label: "Observability",
+    description: "Trace runs, health checks, and drift.",
+    query:
+      "Research observability patterns for agent workflows, run traces, health checks, and ecosystem drift detection.",
+  },
+  {
+    label: "Customer discovery",
+    description: "Find audience pains and workflow signals.",
+    query:
+      "Research customer discovery themes, audience pains, objections, and workflow signals that could inform Katailyst product and content strategy.",
   },
 ];
 
