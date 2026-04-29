@@ -124,10 +124,7 @@ const Hero: FC<THeroProps> = ({
           >
             <div className="mb-2 flex items-center justify-between">
               <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                Try
-              </span>
-              <span className="hidden text-[10px] text-slate-600 sm:inline">
-                Scroll for more
+                Examples
               </span>
             </div>
             <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

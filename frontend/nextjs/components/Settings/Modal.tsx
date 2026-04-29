@@ -125,12 +125,12 @@ const Modal: React.FC<ChatBoxProps> = ({
               <div className="border-b border-gray-800 bg-gray-900 p-5">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-semibold text-white">
-                    <span className="mr-2">⚙️</span>
                     <span className="text-teal-400">Preferences</span>
                   </h3>
                   <button
                     className="ml-auto p-1 text-gray-400 transition-colors duration-200 hover:text-white"
                     onClick={() => setShowModal(false)}
+                    aria-label="Close preferences"
                   >
                     <svg
                       className="h-6 w-6"

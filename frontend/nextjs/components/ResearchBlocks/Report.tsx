@@ -52,15 +52,14 @@ export default function Report({
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(answer.trim());
-                  toast("Report copied to clipboard", {
-                    icon: "✂️",
-                  });
+                  toast.success("Report copied to clipboard");
                 }}
                 className="transition-opacity duration-200 hover:opacity-80"
+                aria-label="Copy report"
               >
                 <img
                   src="/img/copy-white.svg"
-                  alt="copy"
+                  alt=""
                   width={20}
                   height={20}
                   className="cursor-pointer text-white"

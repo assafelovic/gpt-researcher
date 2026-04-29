@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ResearchHistoryItem } from "@/types/data";
 import { useResearchHistoryContext } from "@/hooks/ResearchHistoryContext";
-import LoadingDots from "@/components/LoadingDots";
 import { toast } from "react-hot-toast";
-import MasteryIcon from "@/components/MasteryIcon";
 import { hltBranding } from "@/lib/hltBranding";
 
 interface MobileHomeScreenProps {
@@ -144,12 +142,9 @@ export default function MobileHomeScreen({
 
   return (
     <div className="flex h-full w-full flex-col bg-gradient-to-b from-gray-900 to-gray-950 pb-16">
-      {/* Header with logo and title */}
-      <div className="mb-5 px-6 pt-6 text-center">
-        <div className="mb-2 flex justify-center">
-          {hltBranding.enabled ? (
-            <MasteryIcon size={48} />
-          ) : (
+      {!hltBranding.enabled && (
+        <div className="mb-5 px-6 pt-6 text-center">
+          <div className="mb-2 flex justify-center">
             <img
               src="/img/gptr-logo.png"
               alt="GPT Researcher"
@@ -157,17 +152,12 @@ export default function MobileHomeScreen({
               height={60}
               className="h-12 w-12 rounded-xl"
             />
-          )}
+          </div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-300">
+            GPT Researcher
+          </p>
         </div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-300">
-          {hltBranding.enabled ? hltBranding.productName : "GPT Researcher"}
-        </p>
-        <p className="mx-auto mt-1 max-w-[280px] text-xs leading-5 text-gray-500">
-          {hltBranding.enabled
-            ? "Source-backed research for the HLT agent stack."
-            : "Say Hello to GPT Researcher, your AI partner for instant insights and comprehensive research"}
-        </p>
-      </div>
+      )}
 
       {/* Search Box */}
       <div className="mx-auto w-full max-w-lg px-4 md:px-8">
@@ -220,9 +210,6 @@ export default function MobileHomeScreen({
             </button>
           </div>
         </div>
-        <p className="mt-2 px-2 text-center text-xs text-gray-500">
-          Enter any research topic or specific question
-        </p>
       </div>
 
       <div className="mx-auto mt-4 flex w-full max-w-lg flex-wrap justify-center gap-2 px-4">
@@ -274,16 +261,6 @@ export default function MobileHomeScreen({
           </div>
         </div>
       )}
-
-      {/* Features or tips section */}
-      <div className="mt-auto px-4 pb-4 pt-6">
-        <div className="rounded-xl border border-gray-800/70 bg-gray-900/40 p-3 text-center">
-          <p className="text-xs leading-5 text-gray-500">
-            Reports are source-backed. Use specific questions, dates, and
-            context for deeper runs.
-          </p>
-        </div>
-      </div>
 
       {/* Styling for line clamp and input glow */}
       <style jsx global>{`

@@ -107,17 +107,14 @@ export default function Home() {
     getChatMessages
   } = useResearchHistoryContext();
 
-  // Only initialize the WebSocket hook reference, don't connect automatically
-  const websocketRef = useRef(useWebSocket(
+  // Initialize WebSocket handlers without connecting automatically.
+  const { socket, initializeWebSocket } = useWebSocket(
     setOrderedData,
     setAnswer,
     setLoading,
     setShowHumanFeedback,
     setQuestionForHuman
-  ));
-  
-  // Use the reference to access websocket functions
-  const { socket, initializeWebSocket } = websocketRef.current;
+  );
 
   const handleFeedbackSubmit = (feedback: string | null) => {
     if (socket) {
@@ -334,86 +331,6 @@ export default function Home() {
     setCurrentResearchId(null); // Reset current research ID for new research
     setOrderedData((prevOrder) => [...prevOrder, { type: 'question', content: newQuestion }]);
 
-    // For mobile, use a simplified approach without websockets
-    if (isMobile) {
-      try {
-        // Create a new unique ID for this research
-        const newResearchId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-        
-        // First save the initial question to history - with proper parameters
-        const initialOrderedData: Data[] = [{ type: 'question', content: newQuestion } as QuestionData];
-        await saveResearch(
-          newQuestion,  // question
-          '',           // empty answer initially
-          initialOrderedData  // ordered data
-        );
-        
-        // Make direct API call to get response
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messages: [{ role: 'user', content: newQuestion }],
-            // No report since this is a new research
-          }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.response && data.response.content) {
-          // Add the AI response to the ordered data
-          const chatData: ChatData = { 
-            type: 'chat', 
-            content: data.response.content,
-            metadata: data.response.metadata 
-          };
-          
-          // Set the answer
-          const chatAnswer = data.response.content;
-          setAnswer(chatAnswer);
-          setOrderedData(prevOrder => [...prevOrder, chatData]);
-          
-          // Update the research with the answer
-          const updatedOrderedData: Data[] = [
-            { type: 'question', content: newQuestion } as QuestionData,
-            chatData
-          ];
-          
-          // Save the completed research with proper parameters
-          await updateResearch(
-            newResearchId,    // id
-            chatAnswer,       // answer
-            updatedOrderedData // ordered data
-          );
-          
-          // Set current research ID so we can continue the conversation
-          setCurrentResearchId(newResearchId);
-        } else {
-          // Handle error
-          setOrderedData(prevOrder => [...prevOrder, { 
-            type: 'chat', 
-            content: 'Sorry, I couldn\'t generate a research response. Please try again.' 
-          } as ChatData]);
-        }
-      } catch (error) {
-        console.error('Error in mobile research:', error);
-        // Show error message
-        setOrderedData(prevOrder => [...prevOrder, { 
-          type: 'chat', 
-          content: 'Sorry, there was an error processing your request. Please try again.' 
-        } as ChatData]);
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : {};
     const langgraphHostUrl = apiVariables.LANGGRAPH_HOST_URL;
@@ -447,114 +364,10 @@ export default function Home() {
     }
   };
 
-  // Mobile-specific implementation for research
+  // Mobile uses the same research pipeline as desktop so scope presets,
+  // artifacts, run metadata, and report history stay consistent.
   const handleMobileDisplayResult = async (newQuestion: string) => {
-    // Update UI state
-    setIsInChatMode(false);
-    setShowResult(true);
-    setLoading(true);
-    setQuestion(newQuestion);
-    setPromptValue("");
-    setAnswer("");
-    setCurrentResearchId(null);
-    
-    // Start with just the question
-    setOrderedData([{ type: 'question', content: newQuestion } as QuestionData]);
-    
-    try {
-      // Generate unique ID for this research
-      const mobileResearchId = `mobile-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-      
-      // Save initial research with just the question
-      const initialOrderedData: Data[] = [{ type: 'question', content: newQuestion } as QuestionData];
-      
-      // Save to research history
-      await saveResearch(
-        newQuestion,  // question
-        '',           // empty answer initially
-        initialOrderedData  // ordered data
-      );
-      
-      // Make direct API call instead of using websockets
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [{ role: 'user', content: newQuestion }],
-          // Include the required parameters
-          report: '',  // No report since this is a new research
-          report_source: chatBoxSettings.report_source || 'web',
-          tone: chatBoxSettings.tone || 'Objective'
-        }),
-        // Set reasonable timeout
-        signal: AbortSignal.timeout(30000) // 30-second timeout
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.response && data.response.content) {
-        // Extract the response
-        const responseContent = data.response.content;
-        
-        // Update UI with the answer
-        setAnswer(responseContent);
-        
-        // Create chat data object
-        const chatData: ChatData = { 
-          type: 'chat', 
-          content: responseContent,
-          metadata: data.response.metadata 
-        };
-        
-        // Update ordered data to include the response
-        setOrderedData(prevData => [...prevData, chatData]);
-        
-        // Update the complete research
-        const updatedOrderedData: Data[] = [
-          { type: 'question', content: newQuestion } as QuestionData,
-          chatData
-        ];
-        
-        // Update research history with the answer
-        await updateResearch(
-          mobileResearchId,
-          responseContent,
-          updatedOrderedData
-        );
-        
-        // Set current research ID for future interactions
-        setCurrentResearchId(mobileResearchId);
-      } else {
-        // Handle error in response
-        setOrderedData(prevData => [
-          ...prevData, 
-          { 
-            type: 'chat', 
-            content: "I'm sorry, I couldn't generate a complete response. Please try rephrasing your question." 
-          } as ChatData
-        ]);
-      }
-    } catch (error) {
-      console.error('Mobile research error:', error);
-      
-      // Show error in UI
-      setOrderedData(prevData => [
-        ...prevData, 
-        { 
-          type: 'chat', 
-          content: "Sorry, there was an error processing your request. Please try again." 
-        } as ChatData
-      ]);
-    } finally {
-      // Always finish loading state
-      setLoading(false);
-    }
+    await handleDisplayResult(newQuestion);
   };
 
   // Mobile-specific chat handler

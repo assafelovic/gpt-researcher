@@ -260,8 +260,23 @@ const MCPSelector: React.FC<MCPSelectorProps> = ({
             className="settings mcp-info-btn"
             onClick={() => setShowInfoModal(true)}
             title="Learn about MCP"
+            aria-label="Learn about MCP"
           >
-            ℹ️
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              width="16"
+              height="16"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
           </button>
         </div>
         <small className="text-muted" style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.85rem', marginBottom: '15px', display: 'block' }}>

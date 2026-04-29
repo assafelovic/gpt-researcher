@@ -50,51 +50,10 @@ body {
   min-height: 100%;
   position: relative;
   background:
-    radial-gradient(circle at 10% -10%, rgba(21, 94, 239, 0.18), transparent 28%),
-    radial-gradient(circle at 92% 12%, rgba(15, 174, 205, 0.12), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px),
     linear-gradient(180deg, #06101C 0%, #0B2B33 52%, #06101C 100%);
+  background-size: 44px 44px, auto;
   overflow-x: hidden;
-}
-
-/* Background gradient orbs - static version */
-body::before {
-  content: "";
-  position: fixed;
-  top: -25%;
-  left: -10%;
-  width: 60%;
-  height: 60%;
-  border-radius: 9999px;
-  background-color: rgba(21, 94, 239, 0.12);
-  filter: blur(120px);
-  z-index: -10;
-}
-
-body::after {
-  content: "";
-  position: fixed;
-  bottom: -25%;
-  right: -10%;
-  width: 60%;
-  height: 60%;
-  border-radius: 9999px;
-  background-color: rgba(15, 174, 205, 0.12);
-  filter: blur(120px);
-  z-index: -10;
-}
-
-/* Additional orb */
-.app-container::before {
-  content: "";
-  position: fixed;
-  top: 40%;
-  right: 20%;
-  width: 35%;
-  height: 35%;
-  border-radius: 9999px;
-  background-color: rgba(37, 99, 235, 0.06);
-  filter: blur(80px);
-  z-index: -10;
 }
 
 .landing {

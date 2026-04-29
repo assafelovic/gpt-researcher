@@ -220,8 +220,7 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                         No research history yet
                       </h3>
                       <p className="text-sm text-gray-400">
-                        Start your first research journey to build your
-                        knowledge library
+                        Start a research run to save reports here.
                       </p>
                     </div>
                   ) : (

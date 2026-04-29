@@ -159,6 +159,7 @@ export default function MobileLayout({
               <button
                 onClick={() => setShowHistory(false)}
                 className="text-gray-400 hover:text-gray-300"
+                aria-label="Close research history"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -224,6 +225,7 @@ export default function MobileLayout({
               <button
                 onClick={() => setShowSettings(false)}
                 className="text-gray-400 hover:text-gray-300"
+                aria-label="Close settings"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -237,6 +239,7 @@ export default function MobileLayout({
                 <label className="block text-xs text-gray-400 mb-1">Report Type</label>
                 <select
                   className="w-full bg-gray-900 border border-gray-700 rounded-md py-1.5 px-2 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                  aria-label="Report type"
                   value={chatBoxSettings.report_type}
                   onChange={(e) => setChatBoxSettings({...chatBoxSettings, report_type: e.target.value})}
                 >
@@ -251,6 +254,7 @@ export default function MobileLayout({
                 <label className="block text-xs text-gray-400 mb-1">Research Source</label>
                 <select
                   className="w-full bg-gray-900 border border-gray-700 rounded-md py-1.5 px-2 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                  aria-label="Research source"
                   value={chatBoxSettings.report_source}
                   onChange={(e) => setChatBoxSettings({...chatBoxSettings, report_source: e.target.value})}
                 >
@@ -263,6 +267,7 @@ export default function MobileLayout({
                 <label className="block text-xs text-gray-400 mb-1">Research Tone</label>
                 <select
                   className="w-full bg-gray-900 border border-gray-700 rounded-md py-1.5 px-2 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                  aria-label="Research tone"
                   value={chatBoxSettings.tone}
                   onChange={(e) => setChatBoxSettings({...chatBoxSettings, tone: e.target.value})}
                 >
@@ -280,6 +285,7 @@ export default function MobileLayout({
                 <label className="block text-xs text-gray-400 mb-1">Layout</label>
                 <select
                   className="w-full bg-gray-900 border border-gray-700 rounded-md py-1.5 px-2 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                  aria-label="Layout"
                   value={chatBoxSettings.layoutType}
                   onChange={(e) => setChatBoxSettings({...chatBoxSettings, layoutType: e.target.value})}
                 >
@@ -300,58 +306,81 @@ export default function MobileLayout({
         {children}
       </div>
 
-      {/* Footer */}
-      <footer className="mt-auto py-3 px-4 text-center border-t border-gray-800/40 bg-gray-900/80 backdrop-blur-sm">
-        <div className="flex items-center justify-center gap-5 mb-3">
-          <a href="https://gptr.dev" target="_blank" className="text-gray-400 hover:text-teal-400 transition-colors">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-5 h-5"
+      {!hltBranding.enabled && (
+        <footer className="mt-auto border-t border-gray-800/40 bg-gray-900/80 px-4 py-3 text-center backdrop-blur-sm">
+          <div className="mb-3 flex items-center justify-center gap-5">
+            <a
+              href="https://gptr.dev"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GPT Researcher website"
+              className="text-gray-400 transition-colors hover:text-teal-400"
             >
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
-          </a>
-          <a href="https://github.com/assafelovic/gpt-researcher" target="_blank" className="text-gray-400 hover:text-gray-300 transition-colors">
-            <img
-              src="/img/github.svg"
-              alt="GitHub"
-              width={20}
-              height={20}
-              className="w-5 h-5"
-            />
-          </a>
-          <a href="https://discord.gg/QgZXvJAccX" target="_blank" className="text-gray-400 hover:text-gray-300 transition-colors">
-            <img
-              src="/img/discord.svg"
-              alt="Discord"
-              width={20}
-              height={20}
-              className="w-5 h-5"
-            />
-          </a>
-          <a href="https://hub.docker.com/r/gptresearcher/gpt-researcher" target="_blank" className="text-gray-400 hover:text-gray-300 transition-colors">
-            <img
-              src="/img/docker.svg"
-              alt="Docker"
-              width={20}
-              height={20}
-              className="w-5 h-5"
-            />
-          </a>
-        </div>
-        <div className="text-xs text-gray-400">
-          {hltBranding.enabled
-            ? `${new Date().getFullYear()} ${hltBranding.ownerName}. Powered by GPT Researcher.`
-            : `${new Date().getFullYear()} GPT Researcher. All rights reserved.`}
-        </div>
-      </footer>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-5 w-5"
+              >
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+            </a>
+            <a
+              href="https://github.com/assafelovic/gpt-researcher"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GPT Researcher GitHub"
+              className="text-gray-400 transition-colors hover:text-gray-300"
+            >
+              <img
+                src="/img/github.svg"
+                alt=""
+                width={20}
+                height={20}
+                className="h-5 w-5"
+              />
+            </a>
+            <a
+              href="https://discord.gg/QgZXvJAccX"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GPT Researcher Discord"
+              className="text-gray-400 transition-colors hover:text-gray-300"
+            >
+              <img
+                src="/img/discord.svg"
+                alt=""
+                width={20}
+                height={20}
+                className="h-5 w-5"
+              />
+            </a>
+            <a
+              href="https://hub.docker.com/r/gptresearcher/gpt-researcher"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GPT Researcher Docker image"
+              className="text-gray-400 transition-colors hover:text-gray-300"
+            >
+              <img
+                src="/img/docker.svg"
+                alt=""
+                width={20}
+                height={20}
+                className="h-5 w-5"
+              />
+            </a>
+          </div>
+          <div className="text-xs text-gray-400">
+            {new Date().getFullYear()} GPT Researcher. All rights reserved.
+          </div>
+        </footer>
+      )}
 
       {/* Custom animations */}
       <style jsx global>{`
