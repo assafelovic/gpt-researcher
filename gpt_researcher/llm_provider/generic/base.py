@@ -54,6 +54,11 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     # GPT-5 family: OpenAI enforces default temperature only
     "gpt-5",
     "gpt-5-mini",
+    # Claude 4.x family: Anthropic enforces default temperature only
+    "claude-4-sonnet",
+    "claude-4-sonnet-20250514",
+    "claude-4-opus",
+    "claude-4-opus-20250514",
 ]
 
 SUPPORT_REASONING_EFFORT_MODELS = [
