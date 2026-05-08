@@ -15,14 +15,12 @@ Follow these easy steps to get started:
 pip install gpt-researcher
 ```
 
-2. **Environment Variables:** Create a .env file with your OpenAI API key or simply export it
+2. **Environment Variables:** Create a `.env` file with your OpenAI API key or simply export it. DuckDuckGo is used by default for web search unless you configure another retriever.
 
 ```bash
 export OPENAI_API_KEY={Your OpenAI API Key here}
-```
-
-```bash
-export TAVILY_API_KEY={Your Tavily API Key here}
+# Optional: configure a web retriever key if you want to override the DuckDuckGo default.
+# export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 3. **Start using GPT Researcher in your own codebase**

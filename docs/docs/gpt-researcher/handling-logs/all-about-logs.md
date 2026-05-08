@@ -6,11 +6,11 @@ This document explains how to interpret the log files generated for each report.
 
 The log file is a JSON file that contains a list of events that happened during the research process. Each event is an object with a timestamp, type, and data. The data contains the specific information about the event.
 
-You can find the log file in the `outputs` folder.  
+You can find the log file in the `outputs` folder.
 
 Or you can access the log file from the report page itself by clicking the "Download Logs" button.
 
-For developers, there is an additional `logs` folder that may be useful. See description below for more details.  
+For this fork, the canonical developer artifact directory is `outputs`. The JSON event log, Markdown report, PDF, DOCX, and screenshot artifacts are all written there. See description below for more details.
 
 ## Key Components:
 
@@ -119,10 +119,11 @@ Here's a complete breakdown of all the unique `content` types and what they mean
 By looking at the timestamps, you can see the flow of the research task. The logs will show you the subqueries used by the tool to approach the main query, all the URLs used, if images were selected for the research, and all the steps the tool took to generate the report.
 
 ## Logs for Developers
-In addition to the user-facing log files (detailed and summary reports), the application also generates two types of log files specifically for developers:
-1. A `.log` file which is a basic log file format for logging events as they occur
-2. A `.json` file which is more structured
-Find the logs in the `logs` folder.
+In addition to the user-facing log files (detailed and summary reports), the application also generates two developer-oriented research artifacts:
+1. A `.log` file for streamed event logging
+2. A `.json` file for structured event and content capture
+
+Find the logs in the `outputs` folder.
 
 ### Basic Log File (.log)
 
@@ -150,6 +151,7 @@ Find the logs in the `logs` folder.
 	* Contains technical information not usually relevant to a non-developer user.
 	* Does not have emojis or simplified language.
 	* No information on the images collected
+	* Screenshot debug artifacts, when enabled, are stored under `outputs/screenshots`
 
 ### JSON Log File (.json)
 

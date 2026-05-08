@@ -10,6 +10,12 @@ from colorama import Fore, Style, init
 import os
 from enum import Enum
 
+from gpt_researcher.utils.local_llm import (
+    is_local_openai_base_url,
+    resolve_openai_base_url,
+    resolve_ollama_base_url,
+)
+
 _SUPPORTED_PROVIDERS = {
     "openai",
     "anthropic",
@@ -101,9 +107,37 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
-            # Support custom OpenAI-compatible APIs via OPENAI_BASE_URL
-            if "openai_api_base" not in kwargs and os.environ.get("OPENAI_BASE_URL"):
-                kwargs["openai_api_base"] = os.environ["OPENAI_BASE_URL"]
+            # Support custom OpenAI-compatible APIs via OPENAI_BASE_URL or a detected local server.
+            if "openai_api_base" not in kwargs and "base_url" not in kwargs:
+                openai_base_url = resolve_openai_base_url()
+                if openai_base_url:
+                    kwargs["openai_api_base"] = openai_base_url
+                    if is_local_openai_base_url(openai_base_url):
+                        extra_body = dict(kwargs.get("extra_body") or {})
+                        extra_body["reasoning_format"] = "none"
+                        chat_template_kwargs = dict(extra_body.get("chat_template_kwargs") or {})
+                        chat_template_kwargs["enable_thinking"] = False
+                        extra_body["chat_template_kwargs"] = chat_template_kwargs
+                        kwargs["extra_body"] = extra_body
+
+            # Normalize historical argument names to the current ChatOpenAI signature.
+            if "request_timeout" in kwargs and "timeout" not in kwargs:
+                kwargs["timeout"] = kwargs.pop("request_timeout")
+            if "max_tokens" in kwargs and "max_completion_tokens" not in kwargs:
+                kwargs["max_completion_tokens"] = kwargs.pop("max_tokens")
+
+            if kwargs.get("openai_api_base") or kwargs.get("base_url"):
+                openai_base_url = kwargs.get("openai_api_base") or kwargs.get("base_url")
+                if is_local_openai_base_url(openai_base_url) and "timeout" not in kwargs:
+                    kwargs["timeout"] = float(os.getenv("LOCAL_OPENAI_REQUEST_TIMEOUT", "20"))
+
+            # OpenAI-compatible local or custom servers still require a non-empty key.
+            if (
+                ("openai_api_base" in kwargs or "base_url" in kwargs)
+                and "openai_api_key" not in kwargs
+                and "api_key" not in kwargs
+            ):
+                kwargs["openai_api_key"] = os.environ.get("OPENAI_API_KEY", "sk-local")
 
             llm = ChatOpenAI(**kwargs)
         elif provider == "anthropic":
@@ -145,7 +179,7 @@ class GenericLLMProvider:
             _check_pkg("langchain_ollama")
             from langchain_ollama import ChatOllama
 
-            llm = ChatOllama(base_url=os.environ["OLLAMA_BASE_URL"], **kwargs)
+            llm = ChatOllama(base_url=resolve_ollama_base_url(), **kwargs)
         elif provider == "together":
             _check_pkg("langchain_together")
             from langchain_together import ChatTogether

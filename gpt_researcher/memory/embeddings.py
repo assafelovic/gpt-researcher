@@ -25,6 +25,13 @@ Supported providers:
 import os
 from typing import Any
 
+from gpt_researcher.utils.local_llm import (
+    LocalHashEmbeddings,
+    resolve_openai_base_url,
+    resolve_ollama_base_url,
+    should_use_local_embedding_fallback,
+)
+
 OPENAI_EMBEDDING_MODEL = os.environ.get(
     "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
 )
@@ -86,25 +93,34 @@ class Memory:
         _embeddings = None
         match embedding_provider:
             case "custom":
-                from langchain_openai import OpenAIEmbeddings
+                openai_base_url = resolve_openai_base_url() or os.getenv(
+                    "OPENAI_BASE_URL", "http://localhost:1234/v1"
+                )
+                if should_use_local_embedding_fallback(openai_base_url):
+                    _embeddings = LocalHashEmbeddings()
+                else:
+                    from langchain_openai import OpenAIEmbeddings
 
-                _embeddings = OpenAIEmbeddings(
-                    model=model,
-                    openai_api_key=os.getenv("OPENAI_API_KEY", "custom"),
-                    openai_api_base=os.getenv(
-                        "OPENAI_BASE_URL", "http://localhost:1234/v1"
-                    ),  # default for lmstudio
-                    check_embedding_ctx_length=False,
-                    **embedding_kwargs,
-                )  # quick fix for lmstudio
+                    _embeddings = OpenAIEmbeddings(
+                        model=model,
+                        api_key=os.getenv("OPENAI_API_KEY", "custom"),
+                        base_url=openai_base_url,
+                        check_embedding_ctx_length=False,
+                        **embedding_kwargs,
+                    )  # quick fix for lmstudio
             case "openai":
-                from langchain_openai import OpenAIEmbeddings
+                openai_base_url = resolve_openai_base_url()
+                if should_use_local_embedding_fallback(openai_base_url):
+                    _embeddings = LocalHashEmbeddings()
+                else:
+                    from langchain_openai import OpenAIEmbeddings
 
-                # Support custom OpenAI-compatible APIs via OPENAI_BASE_URL
-                if "openai_api_base" not in embedding_kwargs and os.environ.get("OPENAI_BASE_URL"):
-                    embedding_kwargs["openai_api_base"] = os.environ["OPENAI_BASE_URL"]
+                    if openai_base_url and "base_url" not in embedding_kwargs:
+                        embedding_kwargs["base_url"] = openai_base_url
+                    if "api_key" not in embedding_kwargs:
+                        embedding_kwargs["api_key"] = os.environ.get("OPENAI_API_KEY", "sk-local")
 
-                _embeddings = OpenAIEmbeddings(model=model, **embedding_kwargs)
+                    _embeddings = OpenAIEmbeddings(model=model, **embedding_kwargs)
             case "azure_openai":
                 from langchain_openai import AzureOpenAIEmbeddings
 
@@ -145,7 +161,7 @@ class Memory:
 
                 _embeddings = OllamaEmbeddings(
                     model=model,
-                    base_url=os.environ["OLLAMA_BASE_URL"],
+                    base_url=resolve_ollama_base_url(),
                     **embedding_kwargs,
                 )
             case "together":

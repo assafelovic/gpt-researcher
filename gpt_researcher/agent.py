@@ -195,6 +195,7 @@ class GPTResearcher:
         self.image_generator: Optional[ImageGenerator] = ImageGenerator(self)
         self.available_images: list = []  # Pre-generated images ready for embedding
         self._research_id: str = ""  # Unique ID for this research session
+        self.verification_bundle: dict[str, Any] | None = None
 
         # Handle MCP strategy configuration with backwards compatibility
         self.mcp_strategy = self._resolve_mcp_strategy(mcp_strategy, mcp_max_iterations)

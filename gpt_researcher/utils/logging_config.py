@@ -1,8 +1,11 @@
 import logging
 import json
-import os
 from datetime import datetime
 from pathlib import Path
+
+from .artifacts import make_unique_artifact_stem
+
+ARTIFACTS_DIR = Path("outputs")
 
 class JSONResearchHandler:
     def __init__(self, json_file):
@@ -18,6 +21,7 @@ class JSONResearchHandler:
                 "costs": 0.0
             }
         }
+        self._save_json()
 
     def log_event(self, event_type: str, data: dict):
         self.research_data["events"].append({
@@ -32,20 +36,22 @@ class JSONResearchHandler:
         self._save_json()
 
     def _save_json(self):
-        with open(self.json_file, 'w') as f:
+        json_path = Path(self.json_file)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        with json_path.open('w') as f:
             json.dump(self.research_data, f, indent=2)
 
 def setup_research_logging():
-    # Create logs directory if it doesn't exist
-    logs_dir = Path("logs")
-    logs_dir.mkdir(exist_ok=True)
+    # Create the research artifact directory if it doesn't exist.
+    artifacts_dir = ARTIFACTS_DIR
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
     
-    # Generate timestamp for log files
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Generate a collision-resistant stem for the research artifact files.
+    artifact_stem = make_unique_artifact_stem("research", "session")
     
-    # Create log file paths
-    log_file = logs_dir / f"research_{timestamp}.log"
-    json_file = logs_dir / f"research_{timestamp}.json"
+    # Create research artifact file paths.
+    log_file = artifacts_dir / f"{artifact_stem}.log"
+    json_file = artifacts_dir / f"{artifact_stem}.json"
     
     # Configure file handler for research logs
     file_handler = logging.FileHandler(log_file)
@@ -72,6 +78,10 @@ def setup_research_logging():
     
     # Create JSON handler
     json_handler = JSONResearchHandler(json_file)
+    research_logger.json_handler = json_handler
+    research_logger.log_file = str(log_file)
+    research_logger.json_file = str(json_file)
+    research_logger.output_dir = str(artifacts_dir)
     
     return str(log_file), str(json_file), research_logger, json_handler
 

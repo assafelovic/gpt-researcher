@@ -1,20 +1,27 @@
 import asyncio
 import json
 import os
-import re
-import time
 import shutil
 import traceback
+from urllib.parse import quote
 from typing import Awaitable, Dict, List, Any
 from fastapi.responses import JSONResponse, FileResponse
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher import GPTResearcher
-from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
 import logging
-import hashlib
+
+from gpt_researcher.utils.artifacts import (
+    make_unique_artifact_stem,
+    sanitize_filename as sanitize_artifact_filename,
+)
+
+try:
+    from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
+except ImportError:  # pragma: no cover - package import fallback for tests.
+    from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 
 from .multi_agent_runner import run_multi_agent_task
 
@@ -35,8 +42,8 @@ class CustomLogsHandler:
     def __init__(self, websocket, task: str):
         self.logs = []
         self.websocket = websocket
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
-        self.log_file = os.path.join("outputs", f"{sanitized_filename}.json")
+        artifact_stem = make_unique_artifact_stem("task", task)
+        self.log_file = os.path.join("outputs", f"{artifact_stem}.json")
         self.timestamp = datetime.now().isoformat()
         # Initialize log file with metadata
         os.makedirs("outputs", exist_ok=True)
@@ -84,7 +91,7 @@ class Researcher:
         self.query = query
         self.report_type = report_type
         # Generate unique ID for this research task
-        self.research_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(query)}"
+        self.research_id = make_unique_artifact_stem("task", query)
         # Initialize logs handler with research ID
         self.logs_handler = CustomLogsHandler(None, self.research_id)
         self.researcher = GPTResearcher(
@@ -99,8 +106,13 @@ class Researcher:
         report = await self.researcher.write_report()
         
         # Generate the files
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{self.query}")
-        file_paths = await generate_report_files(report, sanitized_filename)
+        artifact_stem = make_unique_artifact_stem("task", self.query)
+        verification_bundle = getattr(self.researcher, "verification_bundle", None)
+        file_paths = await generate_report_files(
+            report,
+            artifact_stem,
+            verification_bundle=verification_bundle,
+        )
         
         # Get the JSON log path that was created by CustomLogsHandler
         json_relative_path = os.path.relpath(self.logs_handler.log_file)
@@ -113,14 +125,7 @@ class Researcher:
         }
 
 def sanitize_filename(filename: str) -> str:
-    # Split into components
-    prefix, timestamp, *task_parts = filename.split('_')
-    task = '_'.join(task_parts)
-    task_hash = hashlib.md5(task.encode('utf-8', errors='ignore')).hexdigest()[:10]
-            
-    # Reassemble and clean the filename
-    sanitized = f"{prefix}_{timestamp}_{task_hash}"
-    return re.sub(r"[^\w\s-]", "", sanitized).strip()
+    return sanitize_artifact_filename(filename)
 
 
 async def handle_start_command(websocket, data: str, manager):
@@ -154,7 +159,7 @@ async def handle_start_command(websocket, data: str, manager):
         "report": ""
     })
 
-    sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
+    artifact_stem = make_unique_artifact_stem("task", task)
 
     report = await manager.start_streaming(
         task,
@@ -172,7 +177,7 @@ async def handle_start_command(websocket, data: str, manager):
         max_search_results,
     )
     report = str(report)
-    file_paths = await generate_report_files(report, sanitized_filename)
+    file_paths = await generate_report_files(report, artifact_stem)
     # Add JSON log path to file_paths
     file_paths["json"] = os.path.relpath(logs_handler.log_file)
     await send_file_paths(websocket, file_paths)
@@ -253,11 +258,28 @@ async def handle_chat_command(websocket, data: str):
             "role": "assistant"
         })
 
-async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
+async def write_verification_json(verification_bundle: dict[str, Any], filename: str) -> str:
+    verification_path = os.path.join("outputs", f"{filename[:60]}.verification.json")
+    os.makedirs("outputs", exist_ok=True)
+    with open(verification_path, "w", encoding="utf-8") as handle:
+        json.dump(verification_bundle, handle, indent=2, ensure_ascii=False)
+    return quote(verification_path)
+
+
+async def generate_report_files(
+    report: str,
+    filename: str,
+    verification_bundle: dict[str, Any] | None = None,
+) -> Dict[str, str]:
     pdf_path = await write_md_to_pdf(report, filename)
     docx_path = await write_md_to_word(report, filename)
     md_path = await write_text_to_md(report, filename)
-    return {"pdf": pdf_path, "docx": docx_path, "md": md_path}
+
+    file_paths = {"pdf": pdf_path, "docx": docx_path, "md": md_path}
+    if verification_bundle:
+        file_paths["verification"] = await write_verification_json(verification_bundle, filename)
+
+    return file_paths
 
 
 async def send_file_paths(websocket, file_paths: Dict[str, str]):
@@ -282,7 +304,7 @@ def get_config_dict(
         "SEARX_URL": searx_url or os.getenv("SEARX_URL", ""),
         "LANGCHAIN_TRACING_V2": os.getenv("LANGCHAIN_TRACING_V2", "true"),
         "DOC_PATH": os.getenv("DOC_PATH", "./my-docs"),
-        "RETRIEVER": os.getenv("RETRIEVER", ""),
+        "RETRIEVER": os.getenv("RETRIEVER", "duckduckgo"),
         "EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "")
     }
 

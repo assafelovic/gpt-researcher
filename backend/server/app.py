@@ -23,13 +23,12 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from server.websocket_manager import WebSocketManager
 from server.server_utils import (
-    get_config_dict, sanitize_filename,
+    get_config_dict, make_unique_artifact_stem,
     update_environment_variables, handle_file_upload, handle_file_deletion,
-    execute_multi_agents, handle_websocket_communication
+    execute_multi_agents, handle_websocket_communication, generate_report_files
 )
 
 from server.websocket_manager import run_agent
-from utils import write_md_to_word, write_md_to_pdf
 from gpt_researcher.utils.enum import Tone
 from chat.chat import ChatAgentWithMemory
 
@@ -286,10 +285,14 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
         return_researcher=True
     )
 
-    docx_path = await write_md_to_word(report_information[0], research_id)
-    pdf_path = await write_md_to_pdf(report_information[0], research_id)
     if research_request.report_type != "multi_agents":
         report, researcher = report_information
+        verification_bundle = getattr(researcher, "verification_bundle", None)
+        file_paths = await generate_report_files(
+            report,
+            research_id,
+            verification_bundle=verification_bundle,
+        )
         response = {
             "research_id": research_id,
             "research_information": {
@@ -297,20 +300,21 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
                 "research_costs": researcher.get_costs(),
                 "visited_urls": list(researcher.visited_urls),
                 "research_images": researcher.get_research_images(),
+                "verification": verification_bundle,
                 # "research_sources": researcher.get_research_sources(),  # Raw content of sources may be very large
             },
             "report": report,
-            "docx_path": docx_path,
-            "pdf_path": pdf_path
+            **file_paths,
         }
     else:
-        response = { "research_id": research_id, "report": "", "docx_path": docx_path, "pdf_path": pdf_path }
+        file_paths = await generate_report_files(report_information[0], research_id)
+        response = { "research_id": research_id, "report": "", **file_paths }
 
     return response
 
 @app.post("/report/")
 async def generate_report(research_request: ResearchRequest, background_tasks: BackgroundTasks):
-    research_id = sanitize_filename(f"task_{int(time.time())}_{research_request.task}")
+    research_id = make_unique_artifact_stem("task", research_request.task)
 
     if research_request.generate_in_background:
         background_tasks.add_task(write_report, research_request=research_request, research_id=research_id)

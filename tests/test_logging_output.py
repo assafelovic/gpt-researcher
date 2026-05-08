@@ -1,15 +1,15 @@
 import pytest
-import asyncio
 from pathlib import Path
 import json
 import logging
 from fastapi import WebSocket
-from datetime import datetime
+
+from gpt_researcher.utils.artifacts import make_unique_artifact_stem
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class TestWebSocket(WebSocket):
+class MockWebSocket(WebSocket):
     def __init__(self):
         self.events = []
         self.scope = {}
@@ -32,12 +32,12 @@ async def test_log_output_file():
     from backend.server.server_utils import CustomLogsHandler
     
     # 1. Setup like the main app
-    websocket = TestWebSocket()
+    websocket = MockWebSocket()
     await websocket.accept()
     
     # 2. Initialize researcher like main app
     query = "What is the capital of France?"
-    research_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(query)}"
+    research_id = make_unique_artifact_stem("task", query)
     logs_handler = CustomLogsHandler(websocket=websocket, task=research_id)
     researcher = GPTResearcher(query=query, websocket=logs_handler)
     
@@ -49,15 +49,13 @@ async def test_log_output_file():
     assert len(websocket.events) > 0, "No events were captured"
     
     # 5. Check output file
-    output_dir = Path().joinpath(Path.cwd(), "outputs")
-    output_files = list(output_dir.glob(f"task_*{research_id}*.json"))
-    assert len(output_files) > 0, "No output file was created"
-    
-    with open(output_files[-1]) as f:
+    output_file = Path(logs_handler.log_file)
+    assert output_file.exists(), f"No output file was created: {output_file}"
+
+    with output_file.open() as f:
         data = json.load(f)
         assert len(data.get('events', [])) > 0, "No events in output file" 
 
-    # Clean up the output files
-    for output_file in output_files:
-        output_file.unlink()
-        logger.info(f"Deleted output file: {output_file}")
+    # Clean up the output file
+    output_file.unlink()
+    logger.info(f"Deleted output file: {output_file}")

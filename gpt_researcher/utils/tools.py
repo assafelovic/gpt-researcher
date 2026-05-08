@@ -27,6 +27,7 @@ async def create_chat_completion_with_tools(
     llm_kwargs: Dict[str, Any] | None = None,
     cost_callback: Callable = None,
     websocket: Any | None = None,
+    timeout: float | None = None,
     **kwargs
 ) -> Tuple[str, List[Dict[str, Any]]]:
     """
@@ -61,6 +62,13 @@ async def create_chat_completion_with_tools(
             'model': model,
             **(llm_kwargs or {})
         }
+
+        if temperature is not None:
+            provider_kwargs["temperature"] = temperature
+        if max_tokens is not None:
+            provider_kwargs["max_tokens"] = max_tokens
+        if timeout is not None:
+            provider_kwargs["timeout"] = timeout
         
         llm_provider_instance = GenericLLMProvider.from_provider(
             llm_provider, 

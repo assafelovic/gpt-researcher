@@ -15,7 +15,8 @@ For Linux/Temporary Windows Setup, use the export method:
 
 ```bash
 export OPENAI_API_KEY={Your OpenAI API Key here}
-export TAVILY_API_KEY={Your Tavily API Key here}
+# Optional: configure a web retriever if you want to override the DuckDuckGo default.
+# export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
 For custom OpenAI-compatible APIs (e.g., local models, other providers), you can also set:
@@ -27,7 +28,7 @@ export OPENAI_BASE_URL={Your custom API base URL here}
 For a more permanent setup, create a `.env` file in the current `gpt-researcher` directory and input the env vars (without `export`).
 
 - For LLM provider, we recommend **[OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources). To learn how to change the LLM model, please refer to the [documentation](https://docs.gptr.dev/docs/gpt-researcher/llms) page. 
-- For web search API, we recommend **[Tavily Search API](https://app.tavily.com)**, but you can also refer to other search APIs of your choice by changing the search provider in config/config.py to `duckduckgo`, `google`, `bing`, `searchapi`, `serper`, `searx` and more. Then add the corresponding env API key.
+- For web search, DuckDuckGo is the default when no retriever API key is configured. If you want Tavily or another provider, change the search provider in `config/config.py` and add the matching env API key.
 
 ## Quickstart
 
@@ -106,5 +107,4 @@ python -m uvicorn main:app --reload
 > Visit http://localhost:8000 in any web browser and explore your research!
 
 <br />
-
 

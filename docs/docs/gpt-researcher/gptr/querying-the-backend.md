@@ -4,6 +4,8 @@
 
 In this section, we will discuss how to query the GPTR backend server. The GPTR backend server is a Python server that runs the GPTR Python package. The server listens for WebSocket connections and processes incoming messages to generate reports, streaming back logs and results to the client.
 
+> Fork note: this repository's validated local stack uses `localhost:8002` for the backend API. The upstream example below keeps the original `localhost:8000` value, so replace it if you are following the fork-specific local setup.
+
 An example WebSocket client is implemented in the `gptr-webhook.js` file below.
 
 This function sends a Webhook Message to the GPTR Python backend running on localhost:8000, but this example can also be modified to query a [GPTR Server hosted on Linux](https://docs.gptr.dev/docs/gpt-researcher/getting-started/linux-deployment).

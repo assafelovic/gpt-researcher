@@ -1,12 +1,399 @@
+import os
+import re
 import asyncio
+from collections import Counter
 from typing import List, Dict, Any
 from ..config.config import Config
 from ..utils.llm import create_chat_completion
 from ..utils.logger import get_formatted_logger
 from ..prompts import PromptFamily, get_prompt_by_report_type
 from ..utils.enum import Tone
+from ..utils.local_llm import is_local_openai_base_url, resolve_openai_base_url
+from .verification import build_verification_bundle, render_verification_section
+from .reasoning_critic import build_reasoning_critic_bundle, render_reasoning_critic_section
 
 logger = get_formatted_logger()
+
+_REPORT_PRELUDE_PATTERNS = (
+    re.compile(r"^\$prelude\$\s*$", re.IGNORECASE),
+    re.compile(r"^includes all source images\b", re.IGNORECASE),
+    re.compile(r"^```(?:markdown)?\s*$", re.IGNORECASE),
+)
+
+
+def _normalize_context_text(context: Any) -> str:
+    if context is None:
+        return ""
+    if isinstance(context, str):
+        return context
+    if isinstance(context, bytes):
+        return context.decode("utf-8", errors="ignore")
+    if isinstance(context, dict):
+        for key in ("content", "text", "body", "summary"):
+            value = context.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+        return " ".join(
+            str(value).strip()
+            for value in context.values()
+            if isinstance(value, str) and value.strip()
+        )
+    if isinstance(context, (list, tuple, set)):
+        parts: list[str] = []
+        for item in context:
+            item_text = _normalize_context_text(item)
+            if item_text:
+                parts.append(item_text.strip())
+        return "\n\n".join(parts)
+    return str(context)
+
+
+def _extract_urls_from_text(text: str) -> list[str]:
+    if not text:
+        return []
+    seen: set[str] = set()
+    urls: list[str] = []
+    for match in re.findall(r"https?://[^\s)\]>,]+", text):
+        url = match.rstrip(".,;:")
+        if url not in seen:
+            seen.add(url)
+            urls.append(url)
+    return urls
+
+
+def _render_reference_section(visited_urls: list[str] | None, context: str) -> str:
+    urls: list[str] = []
+    if visited_urls:
+        urls.extend(visited_urls)
+    urls.extend(_extract_urls_from_text(context))
+
+    unique_urls: list[str] = []
+    seen: set[str] = set()
+    for url in urls:
+        if url and url not in seen:
+            seen.add(url)
+            unique_urls.append(url)
+
+    if not unique_urls:
+        return "## References\n- No explicit source URLs were preserved in the research context."
+
+    return "## References\n" + "\n".join(f"- [{url}]({url})" for url in unique_urls[:10])
+
+
+def _is_report_noise_line(line: str) -> bool:
+    normalized = re.sub(r"\s+", " ", line).strip()
+    if not normalized:
+        return True
+    lowered = normalized.lower()
+    if "source images" in lowered and "videos" in lowered:
+        return True
+    if normalized.startswith("[http") or normalized.startswith("http://") or normalized.startswith("https://"):
+        return len(normalized) > 80 or normalized.count("/") > 8
+    return any(pattern.match(normalized) for pattern in _REPORT_PRELUDE_PATTERNS)
+
+
+def _strip_report_prelude(report_markdown: str) -> str:
+    lines = report_markdown.splitlines()
+    stripped_lines: list[str] = []
+    skipping_prelude = True
+
+    for line in lines:
+        if skipping_prelude:
+            if _is_report_noise_line(line):
+                continue
+            skipping_prelude = False
+        stripped_lines.append(line)
+
+    return "\n".join(stripped_lines).strip()
+
+
+def _ensure_report_heading(report_markdown: str, question: str) -> str:
+    report_markdown = report_markdown.strip()
+    if not report_markdown:
+        return f"# {question}".strip()
+
+    for line in report_markdown.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if re.match(r"^#(?!#)\s*", stripped):
+            return report_markdown
+        break
+
+    return f"# {question}\n\n{report_markdown}".strip()
+
+
+def _strip_leading_noise_after_heading(report_markdown: str) -> str:
+    lines = report_markdown.splitlines()
+    if len(lines) <= 1:
+        return report_markdown.strip()
+
+    cleaned_lines = [lines[0]]
+    index = 1
+
+    while index < len(lines) and not lines[index].strip():
+        index += 1
+
+    while index < len(lines) and _is_report_noise_line(lines[index]):
+        index += 1
+        while index < len(lines) and not lines[index].strip():
+            index += 1
+
+    cleaned_lines.extend(lines[index:])
+    return "\n".join(cleaned_lines).strip()
+
+
+def _looks_like_corrupt_body_line(line: str) -> bool:
+    normalized = re.sub(r"\s+", " ", line).strip()
+    if not normalized:
+        return True
+    if _is_report_noise_line(normalized):
+        return True
+
+    lowered = normalized.lower()
+    if len(normalized) > 200 and ("vibes" in lowered or "超" in normalized or normalized.count("/") > 8):
+        return True
+
+    tokens = re.findall(r"[A-Za-z0-9\u4e00-\u9fff]+", lowered)
+    if len(tokens) >= 12:
+        counts = Counter(tokens)
+        most_common = counts.most_common(1)[0][1]
+        if most_common / len(tokens) >= 0.35 and len(counts) <= len(tokens) / 2:
+            return True
+
+    if re.search(r"(.{3,12})\1{4,}", normalized):
+        return True
+
+    return False
+
+
+def _report_needs_deterministic_fallback(report_markdown: str) -> bool:
+    lines = [line.strip() for line in report_markdown.splitlines() if line.strip()]
+    if not lines:
+        return True
+
+    if not re.match(r"^#(?!#)\s*", lines[0]):
+        return True
+
+    body_lines = lines[1:4]
+    if body_lines and any(_looks_like_corrupt_body_line(line) for line in body_lines[:2]):
+        return True
+
+    if "##" not in report_markdown[:800]:
+        return True
+
+    return False
+
+
+def _normalize_report_markdown(
+    report_markdown: str,
+    question: str,
+    context: str,
+    visited_urls: list[str] | None = None,
+) -> str:
+    report_markdown = _strip_report_prelude(report_markdown or "")
+    report_markdown = _ensure_report_heading(report_markdown, question)
+    report_markdown = _strip_leading_noise_after_heading(report_markdown)
+
+    source_urls = list(visited_urls or [])
+    if not source_urls:
+        source_urls = _extract_urls_from_text(context)
+
+    if source_urls and not re.search(r"(?im)^\s*##?\s*references\b", report_markdown):
+        report_markdown = f"{report_markdown.rstrip()}\n\n{_render_reference_section(source_urls, context)}"
+
+    return report_markdown.strip()
+
+
+def _append_verification_review(
+    report_markdown: str,
+    question: str,
+    context: str,
+    visited_urls: list[str] | None,
+    cfg: Config,
+    verification_sink: Any | None = None,
+    return_bundle: bool = False,
+) -> tuple[str, dict[str, Any] | None] | str:
+    if not getattr(cfg, "enable_verification_review", True):
+        return (report_markdown, None) if return_bundle else report_markdown
+
+    if re.search(r"(?im)^\s*##\s*verification review\b", report_markdown):
+        bundle = (
+            getattr(verification_sink, "verification_bundle", None)
+            if verification_sink is not None
+            else None
+        )
+        return (report_markdown, bundle) if return_bundle else report_markdown
+
+    bundle = build_verification_bundle(
+        query=question,
+        context=context,
+        report_markdown=report_markdown,
+        visited_urls=visited_urls,
+    )
+
+    if verification_sink is not None:
+        try:
+            setattr(verification_sink, "verification_bundle", bundle)
+        except Exception:
+            logger.debug("Unable to store verification bundle on sink", exc_info=True)
+
+    verification_section = render_verification_section(bundle)
+    rendered = f"{report_markdown.rstrip()}\n\n{verification_section}".strip()
+    return (rendered, bundle) if return_bundle else rendered
+
+
+async def _append_reasoning_critic_review(
+    report_markdown: str,
+    question: str,
+    context: str,
+    visited_urls: list[str] | None,
+    cfg: Config,
+    verification_bundle: dict[str, Any] | None = None,
+    verification_sink: Any | None = None,
+    cost_callback: callable = None,
+    agent_role_prompt: str = "",
+    websocket=None,
+    return_bundle: bool = False,
+    **kwargs,
+) -> tuple[str, dict[str, Any] | None] | str:
+    if not getattr(cfg, "enable_reasoning_critic", True):
+        if return_bundle:
+            return report_markdown, None
+        return report_markdown
+
+    if re.search(r"(?im)^\s*##\s*reasoning critic\b", report_markdown):
+        critic_bundle = None
+        if verification_sink is not None:
+            critic_bundle = getattr(verification_sink, "reasoning_critic_bundle", None)
+        if return_bundle:
+            return report_markdown, critic_bundle
+        return report_markdown
+
+    critic_bundle = await build_reasoning_critic_bundle(
+        query=question,
+        context=context,
+        report_markdown=report_markdown,
+        verification_bundle=verification_bundle,
+        cfg=cfg,
+        agent_role_prompt=agent_role_prompt,
+        websocket=websocket,
+        cost_callback=cost_callback,
+        visited_urls=visited_urls,
+        **kwargs,
+    )
+
+    if verification_bundle is not None:
+        verification_bundle["critic"] = critic_bundle
+        if verification_sink is not None:
+            try:
+                setattr(verification_sink, "verification_bundle", verification_bundle)
+            except Exception:
+                logger.debug("Unable to update verification bundle with critic", exc_info=True)
+
+    if verification_sink is not None:
+        try:
+            setattr(verification_sink, "reasoning_critic_bundle", critic_bundle)
+        except Exception:
+            logger.debug("Unable to store reasoning critic bundle on sink", exc_info=True)
+
+    critic_section = render_reasoning_critic_section(critic_bundle)
+    rendered = f"{report_markdown.rstrip()}\n\n{critic_section}".strip()
+    if return_bundle:
+        return rendered, critic_bundle
+    return rendered
+
+
+async def _generate_local_report(
+    question: str,
+    context: str,
+    language: str,
+    tone: Tone | None,
+    cfg: Config,
+    llm_provider: str,
+    llm_kwargs: dict[str, Any],
+    agent_role_prompt: str,
+    cost_callback: callable = None,
+    visited_urls: list[str] | None = None,
+    websocket=None,
+    **kwargs,
+) -> str:
+    del tone, cfg, llm_provider, llm_kwargs, agent_role_prompt, cost_callback, websocket, kwargs
+    context = _normalize_context_text(context)
+
+    def split_sentences(text: str) -> list[str]:
+        chunks = re.split(r"(?<=[.!?])\s+|\n{2,}", text or "")
+        cleaned: list[str] = []
+        seen: set[str] = set()
+        for chunk in chunks:
+            sentence = re.sub(r"\s+", " ", chunk).strip()
+            if len(sentence) < 40:
+                continue
+            if sentence in seen:
+                continue
+            seen.add(sentence)
+            cleaned.append(sentence)
+        return cleaned
+
+    def shorten(text: str, max_length: int = 220) -> str:
+        text = re.sub(r"\s+", " ", text).strip()
+        if len(text) <= max_length:
+            return text
+        return text[: max_length - 1].rstrip() + "…"
+
+    keywords = [word for word in re.findall(r"[A-Za-z0-9]+", question.lower()) if len(word) > 3]
+    sentences = split_sentences(context)
+
+    if keywords:
+        matched = [
+            sentence
+            for sentence in sentences
+            if any(keyword in sentence.lower() for keyword in keywords) or re.search(r"\d", sentence)
+        ]
+    else:
+        matched = []
+
+    if not matched:
+        matched = sentences
+
+    overview_parts = matched[:3] if matched else [context[:600].strip()]
+    overview = " ".join(part for part in overview_parts if part).strip()
+    if not overview:
+        overview = "The available research context did not contain enough structured text to build a detailed summary."
+
+    key_findings = matched[:5] if matched else []
+    if not key_findings:
+        key_findings = [overview]
+
+    references = _render_reference_section(visited_urls, context)
+
+    report_lines = [
+        f"# {question}",
+        "",
+        "## Overview",
+        overview,
+        "",
+        "## Key Findings",
+    ]
+
+    for item in key_findings[:5]:
+        report_lines.append(f"- {shorten(item)}")
+
+    report_lines.extend([
+        "",
+        "## Caveats",
+        "- This report is a deterministic synthesis of the live research context.",
+        "- If a source URL is missing from the context, it may still appear in the research logs but not in the extracted text.",
+        "",
+        references,
+    ])
+
+    return _normalize_report_markdown(
+        "\n".join(report_lines).strip(),
+        question=question,
+        context=context,
+        visited_urls=visited_urls,
+    )
 
 
 async def write_report_introduction(
@@ -35,6 +422,7 @@ async def write_report_introduction(
         str: The generated introduction.
     """
     try:
+        context = _normalize_context_text(context)
         introduction = await create_chat_completion(
             model=config.smart_llm_model,
             messages=[
@@ -86,6 +474,7 @@ async def write_conclusion(
         str: The generated conclusion.
     """
     try:
+        context = _normalize_context_text(context)
         conclusion = await create_chat_completion(
             model=config.smart_llm_model,
             messages=[
@@ -184,6 +573,7 @@ async def generate_draft_section_titles(
         List[str]: A list of generated section titles.
     """
     try:
+        context = _normalize_context_text(context)
         section_titles = await create_chat_completion(
             model=config.smart_llm_model,
             messages=[
@@ -223,6 +613,7 @@ async def generate_report(
     headers=None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
     available_images: list = None,
+    visited_urls: list[str] | None = None,
     **kwargs
 ):
     """
@@ -247,23 +638,44 @@ async def generate_report(
 
     """
     available_images = available_images or []
-    generate_prompt = get_prompt_by_report_type(report_type, prompt_family)
-    report = ""
+    verification_sink = kwargs.pop("verification_sink", None)
+    context_text = _normalize_context_text(context)
+    local_openai_base_url = resolve_openai_base_url()
+    use_local_report_fallback = bool(local_openai_base_url and is_local_openai_base_url(local_openai_base_url))
 
-    if report_type == "subtopic_report":
-        content = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
-    elif custom_prompt:
-        content = f"{custom_prompt}\n\nContext: {context}"
+    if use_local_report_fallback and not custom_prompt:
+        report = await _generate_local_report(
+            question=query,
+            context=context_text,
+            language=cfg.language,
+            tone=tone,
+            cfg=cfg,
+            llm_provider=cfg.smart_llm_provider,
+            llm_kwargs=cfg.llm_kwargs,
+            agent_role_prompt=agent_role_prompt,
+            cost_callback=cost_callback,
+            visited_urls=visited_urls,
+            websocket=websocket,
+            **kwargs,
+        )
     else:
-        content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
-    
-    # Add available images instruction if images were pre-generated
-    if available_images:
-        images_info = "\n".join([
-            f"- Image {i+1}: ![{img.get('title', img.get('alt_text', 'Illustration'))}]({img['url']}) - {img.get('section_hint', 'General')}"
-            for i, img in enumerate(available_images)
-        ])
-        content += f"""
+        generate_prompt = get_prompt_by_report_type(report_type, prompt_family)
+        report = ""
+
+        if report_type == "subtopic_report":
+            content = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context_text, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
+        elif custom_prompt:
+            content = f"{custom_prompt}\n\nContext: {context_text}"
+        else:
+            content = f"{generate_prompt(query, context_text, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
+
+        # Add available images instruction if images were pre-generated
+        if available_images:
+            images_info = "\n".join([
+                f"- Image {i+1}: ![{img.get('title', img.get('alt_text', 'Illustration'))}]({img['url']}) - {img.get('section_hint', 'General')}"
+                for i, img in enumerate(available_images)
+            ])
+            content += f"""
 
 AVAILABLE IMAGES:
 You have the following pre-generated images available. Embed them in relevant sections of your report using the exact markdown syntax provided:
@@ -271,28 +683,12 @@ You have the following pre-generated images available. Embed them in relevant se
 {images_info}
 
 Place each image on its own line after the relevant section header or paragraph. Use all available images where they add value to the content."""
-    try:
-        report = await create_chat_completion(
-            model=cfg.smart_llm_model,
-            messages=[
-                {"role": "system", "content": f"{agent_role_prompt}"},
-                {"role": "user", "content": content},
-            ],
-            temperature=0.35,
-            llm_provider=cfg.smart_llm_provider,
-            stream=True,
-            websocket=websocket,
-            max_tokens=cfg.smart_token_limit,
-            llm_kwargs=cfg.llm_kwargs,
-            cost_callback=cost_callback,
-            **kwargs
-        )
-    except Exception:
         try:
             report = await create_chat_completion(
                 model=cfg.smart_llm_model,
                 messages=[
-                    {"role": "user", "content": f"{agent_role_prompt}\n\n{content}"},
+                    {"role": "system", "content": f"{agent_role_prompt}"},
+                    {"role": "user", "content": content},
                 ],
                 temperature=0.35,
                 llm_provider=cfg.smart_llm_provider,
@@ -303,7 +699,85 @@ Place each image on its own line after the relevant section header or paragraph.
                 cost_callback=cost_callback,
                 **kwargs
             )
-        except Exception as e:
-            print(f"Error in generate_report: {e}")
+        except Exception:
+            try:
+                report = await create_chat_completion(
+                    model=cfg.smart_llm_model,
+                    messages=[
+                        {"role": "user", "content": f"{agent_role_prompt}\n\n{content}"},
+                    ],
+                    temperature=0.35,
+                    llm_provider=cfg.smart_llm_provider,
+                    stream=True,
+                    websocket=websocket,
+                    max_tokens=cfg.smart_token_limit,
+                    llm_kwargs=cfg.llm_kwargs,
+                    cost_callback=cost_callback,
+                    **kwargs
+                )
+            except Exception as e:
+                print(f"Error in generate_report: {e}")
+
+    report = _normalize_report_markdown(
+        report,
+        question=query,
+        context=context_text,
+        visited_urls=visited_urls,
+    )
+
+    if _report_needs_deterministic_fallback(report):
+        logger.warning(
+            "Model report looked corrupted or unstructured; falling back to deterministic synthesis."
+        )
+        report = await _generate_local_report(
+            question=query,
+            context=context_text,
+            language=cfg.language,
+            tone=tone,
+            cfg=cfg,
+            llm_provider=cfg.smart_llm_provider,
+            llm_kwargs=cfg.llm_kwargs,
+            agent_role_prompt=agent_role_prompt,
+            cost_callback=cost_callback,
+            visited_urls=visited_urls,
+            websocket=websocket,
+            **kwargs,
+        )
+
+    report, verification_bundle = _append_verification_review(
+        report,
+        question=query,
+        context=context_text,
+        visited_urls=visited_urls,
+        cfg=cfg,
+        verification_sink=verification_sink,
+        return_bundle=True,
+    )
+
+    report, critic_bundle = await _append_reasoning_critic_review(
+        report,
+        question=query,
+        context=context_text,
+        visited_urls=visited_urls,
+        cfg=cfg,
+        verification_bundle=verification_bundle,
+        verification_sink=verification_sink,
+        cost_callback=cost_callback,
+        agent_role_prompt=agent_role_prompt,
+        websocket=websocket,
+        return_bundle=True,
+        **kwargs,
+    )
+
+    if verification_sink is not None and verification_bundle is not None:
+        try:
+            setattr(verification_sink, "verification_bundle", verification_bundle)
+        except Exception:
+            logger.debug("Unable to update verification bundle on sink", exc_info=True)
+        if critic_bundle is not None:
+            try:
+                setattr(verification_sink, "reasoning_critic_bundle", critic_bundle)
+            except Exception:
+                logger.debug("Unable to update reasoning critic bundle on sink", exc_info=True)
 
     return report

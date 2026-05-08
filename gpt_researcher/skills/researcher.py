@@ -8,14 +8,36 @@ and context gathering.
 import asyncio
 import logging
 import os
-import random
 
 from ..actions.agent_creator import choose_agent
+from ..actions.deep_crawler import prioritize_and_expand_urls
 from ..actions.query_processing import get_search_results, plan_research_outline
 from ..actions.utils import stream_output
 from ..document import DocumentLoader, LangChainDocumentLoader, OnlineDocumentLoader
 from ..utils.enum import ReportSource, ReportType
 from ..utils.logging_config import get_json_handler
+
+
+def _dedupe_queries(queries: list[str]) -> list[str]:
+    """Deduplicate queries while preserving order and normalizing whitespace."""
+    deduped: list[str] = []
+    seen: set[str] = set()
+
+    for query in queries:
+        if not query:
+            continue
+        candidate = " ".join(str(query).split()).strip()
+        if not candidate:
+            continue
+
+        key = candidate.lower()
+        if key in seen:
+            continue
+
+        seen.add(key)
+        deduped.append(candidate)
+
+    return deduped
 
 
 class ResearchConductor:
@@ -243,6 +265,7 @@ class ResearchConductor:
         # If this is not part of a sub researcher, add original query to research for better results
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
+        sub_queries = _dedupe_queries(sub_queries)
 
         if self.researcher.verbose:
             await stream_output(
@@ -333,6 +356,7 @@ class ResearchConductor:
         # If this is not part of a sub researcher, add original query to research for better results
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
+        sub_queries = _dedupe_queries(sub_queries)
 
         if self.researcher.verbose:
             await stream_output(
@@ -751,6 +775,7 @@ class ResearchConductor:
     async def _search_relevant_source_urls(self, query, query_domains: list | None = None):
         new_search_urls = []
         prefetched_content = []
+        candidate_entries: list[dict[str, str]] = []
         if query_domains is None:
             query_domains = []
 
@@ -785,13 +810,28 @@ class ResearchConductor:
                         })
                         self.researcher.add_research_sources([{"url": url}])
                     elif url:
-                        new_search_urls.append(url)
+                        candidate_entries.append({
+                            "url": url,
+                            "title": result.get("title", ""),
+                            "snippet": result.get("body") or result.get("content") or "",
+                            "source": retriever_class.__name__,
+                        })
             except Exception as e:
                 self.logger.error(f"Error searching with {retriever_class.__name__}: {e}")
 
-        # Get unique URLs
-        new_search_urls = await self._get_new_urls(new_search_urls)
-        random.shuffle(new_search_urls)
+        prioritized_entries = await prioritize_and_expand_urls(
+            query=query,
+            candidate_entries=candidate_entries,
+            cfg=self.researcher.cfg,
+            query_domains=query_domains,
+            visited_urls=self.researcher.visited_urls,
+        )
+
+        if not prioritized_entries:
+            prioritized_entries = [{"url": entry["url"]} for entry in candidate_entries if entry.get("url")]
+
+        # Get unique URLs while preserving the crawler's ordering
+        new_search_urls = await self._get_new_urls([entry["url"] for entry in prioritized_entries])
 
         return new_search_urls, prefetched_content
 
@@ -1005,4 +1045,3 @@ class ResearchConductor:
                     "progress": progress
                 }
             )
-

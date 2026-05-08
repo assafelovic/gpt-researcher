@@ -15,6 +15,34 @@ import InputArea from "../components/ResearchBlocks/elements/InputArea";
 import HumanFeedback from "../components/HumanFeedback";
 import LoadingDots from "../components/LoadingDots";
 
+const DEFAULT_BACKEND_URL = 'http://localhost:8002';
+
+const normalizeBackendUrl = (value?: string | null): string => {
+  if (!value) {
+    return '';
+  }
+
+  return value
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/, '');
+};
+
+const resolveBackendRootUrl = (...candidates: Array<string | undefined | null>): string => {
+  for (const candidate of candidates) {
+    const normalized = normalizeBackendUrl(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return DEFAULT_BACKEND_URL;
+};
+
+const resolveBackendApiUrl = (...candidates: Array<string | undefined | null>): string => {
+  return `${resolveBackendRootUrl(...candidates)}/api`;
+};
+
 export interface GPTResearcherProps {
   apiUrl?: string;
   apiKey?: string;
@@ -64,6 +92,9 @@ export const GPTResearcher = ({
   // Update currentApiUrl when prop changes
   useEffect(() => {
     setCurrentApiUrl(apiUrl);
+    if (typeof window !== 'undefined' && apiUrl) {
+      localStorage.setItem('GPTR_API_URL', apiUrl);
+    }
   }, [apiUrl]);
 
   // Update callback when results change
@@ -113,7 +144,11 @@ export const GPTResearcher = ({
       };
       
       // Call the chat API
-      const apiBaseUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || '';
+      const apiBaseUrl = resolveBackendApiUrl(
+        currentApiUrl,
+        process.env.NEXT_PUBLIC_GPTR_API_URL,
+        process.env.NEXT_PUBLIC_BACKEND_URL,
+      );
       const response = await fetch(`${apiBaseUrl}/chat`, {
         method: 'POST',
         headers: {
@@ -165,6 +200,7 @@ export const GPTResearcher = ({
     // Use provided apiUrl if available
     if (apiUrl) {
       apiVariables.API_URL = apiUrl;
+      localStorage.setItem('GPTR_API_URL', apiUrl);
     }
     
     // Use provided apiKey if available

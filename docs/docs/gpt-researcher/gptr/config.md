@@ -5,7 +5,7 @@ The config.py enables you to customize GPT Researcher to your specific needs and
 Thanks to our amazing community and contributions, GPT Researcher supports multiple LLMs and Retrievers.
 In addition, GPT Researcher can be tailored to various report formats (such as APA), word count, research iterations depth, etc.
 
-GPT Researcher defaults to our recommended suite of integrations: [OpenAI](https://platform.openai.com/docs/overview) for LLM calls and [Tavily API](https://app.tavily.com) for retrieving real-time web information.
+GPT Researcher defaults to our recommended suite of integrations: [OpenAI](https://platform.openai.com/docs/overview) for LLM calls and [DuckDuckGo](https://pypi.org/project/duckduckgo-search/) for retrieving real-time web information when no retriever API key is configured. Tavily remains available as an optional retriever if you set `TAVILY_API_KEY`.
 
 As seen below, OpenAI still stands as the superior LLM. We assume it will stay this way for some time, and that prices will only continue to decrease, while performance and speed increase over time.
 
@@ -18,7 +18,7 @@ You can also include your own external JSON file `config.json` by adding the pat
 The config JSON should follow the format/keys in the default config. Below is a sample config.json file to help get you started:
 ```json
 {
-  "RETRIEVER": "tavily",
+  "RETRIEVER": "duckduckgo",
   "EMBEDDING": "openai:text-embedding-3-small",
   "SIMILARITY_THRESHOLD": 0.42,
   "FAST_LLM": "openai:gpt-4o-mini",
@@ -50,7 +50,7 @@ python gpt_researcher/main.py --config_path my_config.json
 
 Below is a list of current supported options:
 
-- **`RETRIEVER`**: Web search engine used for retrieving sources. Defaults to `tavily`. Options: `duckduckgo`, `bing`, `google`, `searchapi`, `serper`, `searx`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
+- **`RETRIEVER`**: Web search engine used for retrieving sources. Defaults to `duckduckgo` when no `TAVILY_API_KEY` is configured. Options: `duckduckgo`, `bing`, `google`, `searchapi`, `serper`, `searx`, `tavily`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
 - **`EMBEDDING`**: Embedding model. Defaults to `openai:text-embedding-3-small`. Options: `ollama`, `huggingface`, `azure_openai`, `custom`.
 - **`SIMILARITY_THRESHOLD`**: Threshold value for similarity comparison when processing documents. Defaults to `0.42`.
 - **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `openai:gpt-4o-mini`.
@@ -105,4 +105,3 @@ export REPORT_FORMAT=IEEE
 ```
 Please note that you might need to export additional env vars and obtain API keys for other supported search retrievers and LLM providers. Please follow your console logs for further assistance.
 To learn more about additional LLM support you can check out the docs [here](/docs/gpt-researcher/llms/llms).
-

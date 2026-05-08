@@ -51,6 +51,17 @@ npx skills add assafelovic/gpt-researcher
 
 Once installed, Claude can leverage GPT Researcher's deep research capabilities directly within your conversations.
 
+## Fork-Specific Local Stack
+
+This repository snapshot has been validated with a local Gemma/llama.cpp server and a patched backend/frontend stack.
+
+- LLM server: `http://127.0.0.1:8081`
+- Backend API: `http://127.0.0.1:8002`
+- Frontend: `http://127.0.0.1:3000`
+- Research artifacts: `outputs/`
+
+See the fork-specific notes in [docs/docs/gpt-researcher/gptr/local-stack.md](docs/docs/gpt-researcher/gptr/local-stack.md).
+
 ## Architecture
 
 The core idea is to utilize 'planner' and 'execution' agents. The planner generates research questions, while the execution agents gather relevant information. The publisher then aggregates all findings into a comprehensive report.
@@ -107,8 +118,11 @@ See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-starte
 
     ```bash
     export OPENAI_API_KEY={Your OpenAI API Key here}
-    export TAVILY_API_KEY={Your Tavily API Key here}
+    # Optional: configure a web retriever if you want to override the DuckDuckGo default.
+    # export TAVILY_API_KEY={Your Tavily API Key here}
     ```
+
+    By default, web search uses DuckDuckGo. Set a retriever API key only if you want to override that default with Tavily or another provider.
 
     (Optional) For enhanced tracing and observability, you can also set:
     
@@ -159,7 +173,7 @@ report = await researcher.write_report()
 GPT Researcher supports MCP integration to connect with specialized data sources like GitHub repositories, databases, and custom APIs. This enables research from data sources alongside web search.
 
 ```bash
-export RETRIEVER=tavily,mcp  # Enable hybrid web + MCP research
+export RETRIEVER=duckduckgo,mcp  # Enable hybrid web + MCP research
 ```
 
 ```python
@@ -169,7 +183,7 @@ import os
 
 async def mcp_research_example():
     # Enable MCP with web search
-    os.environ["RETRIEVER"] = "tavily,mcp"
+    os.environ["RETRIEVER"] = "duckduckgo,mcp"
     
     researcher = GPTResearcher(
         query="What are the top open source web research agents?",
@@ -258,7 +272,7 @@ export DOC_PATH="./my-docs"
 
 Step 2: 
  - If you're running the frontend app on localhost:8000, simply select "My Documents" from the "Report Source" Dropdown Options.
- - If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/guides/gpt-researcher/gpt-researcher#pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
+- If you're running GPT Researcher with the [PIP package](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
 
 
 ## 🤖 MCP Server

@@ -231,8 +231,8 @@ class NoDriverScraper:
                     f"excerpt: {text}."
                 )
                 if self.debug:
-                    screenshot_dir = Path("logs/screenshots")
-                    screenshot_dir.mkdir(exist_ok=True)
+                    screenshot_dir = Path("outputs/screenshots")
+                    screenshot_dir.mkdir(parents=True, exist_ok=True)
                     screenshot_path = (
                         screenshot_dir
                         / f"screenshot-error-{NoDriverScraper.get_domain(self.url)}.jpeg"

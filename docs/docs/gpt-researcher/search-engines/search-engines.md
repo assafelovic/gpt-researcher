@@ -5,8 +5,8 @@ You can specify your preferred web search or use any custom retriever of your ch
 
 ## Web Search Engines
 
-GPT Researcher defaults to using the [Tavily](https://app.tavily.com) search engine for retrieving search results.
-But you can also use other search engines by specifying the `RETRIEVER` env var. Please note that each search engine has its own API Key requirements and usage limits.
+GPT Researcher defaults to using [DuckDuckGo](https://pypi.org/project/duckduckgo-search/) when no Tavily key is configured.
+You can also use other search engines by specifying the `RETRIEVER` env var. Please note that each search engine has its own API Key requirements and usage limits.
 
 For example:
 
@@ -18,19 +18,19 @@ You can also specify multiple retrievers by separating them with commas. The sys
 For example:
 
 ```bash
-RETRIEVER=tavily, arxiv
+RETRIEVER=duckduckgo, arxiv
 ```
 
 Thanks to our community, we have integrated the following web search engines:
 
-- [Tavily](https://app.tavily.com) - Default
+- [Tavily](https://app.tavily.com) - Optional, requires `TAVILY_API_KEY`
 - [Bing](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) - Env: `RETRIEVER=bing`
 - [Google](https://developers.google.com/custom-search/v1/overview) - Env: `RETRIEVER=google`
 - [SearchApi](https://www.searchapi.io/) - Env: `RETRIEVER=searchapi`
 - [Serp API](https://serpapi.com/) - Env: `RETRIEVER=serpapi`
 - [Serper](https://serper.dev/) - Env: `RETRIEVER=serper` - [Setup Guide](#serper)
 - [Searx](https://searx.github.io/searx/) - Env: `RETRIEVER=searx`
-- [Duckduckgo](https://pypi.org/project/duckduckgo-search/) - Env: `RETRIEVER=duckduckgo`
+- [Duckduckgo](https://pypi.org/project/duckduckgo-search/) - Default when no Tavily key is configured
 - [Arxiv](https://info.arxiv.org/help/api/index.html) - Env: `RETRIEVER=arxiv`
 - [Exa](https://docs.exa.ai/reference/getting-started) - Env: `RETRIEVER=exa`
 - [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`

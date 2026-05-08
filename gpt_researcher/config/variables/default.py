@@ -1,7 +1,7 @@
 from .base import BaseConfig
 
 DEFAULT_CONFIG: BaseConfig = {
-    "RETRIEVER": "tavily",
+    "RETRIEVER": "duckduckgo",
     "EMBEDDING": "openai:text-embedding-3-small",
     "SIMILARITY_THRESHOLD": 0.42,
     "FAST_LLM": "openai:gpt-4o-mini",
@@ -51,4 +51,14 @@ DEFAULT_CONFIG: BaseConfig = {
     "IMAGE_GENERATION_MAX_IMAGES": 3,  # Maximum number of images to generate per report
     "IMAGE_GENERATION_ENABLED": False,  # Master switch for inline image generation
     "IMAGE_GENERATION_STYLE": "dark",  # Image style: "dark" (matches app theme), "light", or "auto"
+    "ENABLE_VERIFICATION_REVIEW": True,
+    "ENABLE_REASONING_CRITIC": True,
+    "ENABLE_DEEP_CRAWLER": True,
+    "DEEP_CRAWLER_DEPTH": 1,
+    "DEEP_CRAWLER_BREADTH": 4,
+    "DEEP_CRAWLER_CONCURRENCY": 3,
+    "DEEP_CRAWLER_MAX_PAGES": 12,
+    "DEEP_CRAWLER_MAX_LINKS_PER_PAGE": 24,
+    "DEEP_CRAWLER_ALLOW_EXTERNAL_LINKS": False,
+    "DEEP_CRAWLER_TIMEOUT": 8.0,
 }

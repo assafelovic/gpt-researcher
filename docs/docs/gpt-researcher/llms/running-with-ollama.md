@@ -1,41 +1,74 @@
 # Running with Ollama
 
-Ollama is a platform that allows you to deploy and manage custom language models. This guide will walk you through deploying a custom language model on Ollama.
+Ollama lets you turn a local GGUF into a named model and serve it on your own hardware.
+For this repository, the recommended local model is `gemma4_obliterated`, backed by the
+GGUF at:
 
-Read on to understand how to install a Custom LLM with the Ollama WebUI, and how to query it with GPT-Researcher.
-
-
-## Fetching the Desired LLM Models
-
-After deploying Ollama WebUI, you'll want to enter the [Open WebUI Admin App](https://github.com/open-webui/open-webui/tree/main) & download a custom LLM.
-
-Choose a model from [Ollama's Library of LLM's](https://ollama.com/library?sort=popular)
-
-Paste the model name & size into the Web UI:
-
-<img width="1511" alt="Screen Shot 2024-08-27 at 23 26 28" src="https://github.com/user-attachments/assets/32abd048-745c-4232-9f1f-6af265cff250"></img>
-
-For our example, let's choose to download the `qwen2:1.5b` from the chat completion model & `nomic-embed-text` for the embeddings model.
-
-This model now automatically becomes available via your Server's out-of-the-box API - we'll leverage it within our GPT-Researcher .env file in the next step.
-
-
-## Querying your Custom LLM with GPT-Researcher
-
-If you deploy ollama locally, a .env like so, should enable powering GPT-Researcher with Ollama:
-
-```bash
-OPENAI_API_KEY="123"
-OPENAI_API_BASE="http://127.0.0.1:11434/v1"
-OLLAMA_BASE_URL="http://127.0.0.1:11434/"
-FAST_LLM="ollama:qwen2:1.5b"
-SMART_LLM="ollama:qwen2:1.5b"
-STRATEGIC_LLM="ollama:qwen2:1.5b"
-EMBEDDING_PROVIDER="ollama"
-OLLAMA_EMBEDDING_MODEL="nomic-embed-text"
+```text
+/home/xxammaxx/Schreibtisch/gemma4/llama.cpp/models/gemma-4-E4B-it-OBLITERATED-Q4_K_M.gguf
 ```
 
-Replace `FAST_LLM` & `SMART_LLM` with the model you downloaded from the Elestio Web UI in the previous step.
+## Create the local model
+
+The repo includes a ready-to-use Modelfile:
+
+```bash
+ollama create gemma4_obliterated -f ollama/Modelfile.gemma4_obliterated
+```
+
+If you want a quick smoke test after creation:
+
+```bash
+ollama run gemma4_obliterated "Reply with one short sentence confirming the model is ready."
+```
+
+If Ollama complains about insufficient system memory, stop the large
+`llama-server` on port `8081` and retry. On this machine, that was the
+main competing process during setup.
+
+To verify how Ollama is scheduling the model:
+
+```bash
+ollama ps
+```
+
+On Linux, Ollama uses `OLLAMA_CONTEXT_LENGTH=8192 ollama serve` style overrides for the server.
+For the GTX 1070 / 8 GB VRAM box, start conservatively with a smaller context window:
+
+```bash
+OLLAMA_CONTEXT_LENGTH=2048 ollama serve
+```
+
+If you want to keep Ollama's model cache in a custom location, set `OLLAMA_MODELS` before
+starting the server:
+
+```bash
+OLLAMA_MODELS="$PWD/.ollama" ollama serve
+```
+
+## Querying `gemma4_obliterated` with GPT-Researcher
+
+GPT-Researcher can talk to the local Ollama server directly. The code now defaults to
+`http://127.0.0.1:11434` when `OLLAMA_BASE_URL` is not set, but setting it explicitly keeps
+the setup obvious:
+
+```bash
+OLLAMA_BASE_URL="http://127.0.0.1:11434"
+FAST_LLM="ollama:gemma4_obliterated"
+SMART_LLM="ollama:gemma4_obliterated"
+STRATEGIC_LLM="ollama:gemma4_obliterated"
+EMBEDDING="ollama:nomic-embed-text"
+```
+
+If you want the whole stack local, keep `OLLAMA_BASE_URL` pointed at your local Ollama instance
+and optionally use Ollama embeddings as shown above.
+
+## Historical WebUI flow
+
+If you deploy Ollama together with Open WebUI, you can still pull models from the WebUI and
+query them through GPT-Researcher. That flow is unchanged; the difference here is that the
+repo now ships a direct GGUF import for `gemma4_obliterated`, so you do not need to rely on
+the public Ollama library for this setup.
 
 
 ## Deploy Ollama on Elestio

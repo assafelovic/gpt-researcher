@@ -56,7 +56,7 @@ asyncio_mode = "strict"
 addopts = "-v"
 testpaths = ["tests"]
 python_files = "test_*.py"
-asyncio_fixture_loop_scope = "function"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.uv.sources]
 gpt-researcher = { workspace = true }

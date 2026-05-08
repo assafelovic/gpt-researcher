@@ -5,7 +5,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
+  const backendUrl = (process.env.NEXT_PUBLIC_GPTR_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8002')
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/, '');
   
   try {
     console.log(`GET /api/reports/${id} - Proxying request to backend`);
@@ -37,7 +40,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
+  const backendUrl = (process.env.NEXT_PUBLIC_GPTR_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8002')
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/, '');
   
   try {
     console.log(`DELETE /api/reports/${id} - Proxying request to backend`);
@@ -70,7 +76,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = process.env.NEXT_PUBLIC_GPTR_API_URL || 'http://localhost:8000';
+  const backendUrl = (process.env.NEXT_PUBLIC_GPTR_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8002')
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/, '');
   
   try {
     // Parse the request body
@@ -113,4 +122,4 @@ export async function PUT(
       { status: 500 }
     );
   }
-} 
+}

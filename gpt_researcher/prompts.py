@@ -216,6 +216,7 @@ STYLE REQUIREMENTS:
         report_type: str,
         max_iterations: int = 3,
         context: List[Dict[str, Any]] = [],
+        focus_terms: list[str] | None = None,
     ):
         """Generates the search queries prompt for the given question.
         Args:
@@ -224,6 +225,7 @@ STYLE REQUIREMENTS:
             report_type (str): The report type
             max_iterations (int): The maximum number of search queries to generate
             context (str): Context for better understanding of the task with realtime web information
+            focus_terms (list[str] | None): Key terms that must stay anchored in the generated queries.
 
         Returns: str: The search queries prompt for the given question
         """
@@ -243,15 +245,37 @@ Context: {context}
 Use this context to inform and refine your search queries. The context provides real-time web information that can help you generate more specific and relevant queries. Consider any current events, recent developments, or specific details mentioned in the context that could enhance the search queries.
 """ if context else ""
 
+        focus_prompt = ""
+        if focus_terms:
+            focus_prompt = f"""
+FOCUS TERMS:
+{", ".join(focus_terms)}
+
+RULES:
+- Keep every generated query anchored to the focus terms from the task.
+- Do not introduce unrelated frameworks, products, companies, or technologies that do not appear in the task or context.
+- If the task compares two or more named entities, keep those named entities in every query whenever possible.
+- Prefer concise search phrases that stay tightly on topic.
+"""
+
         dynamic_example = ", ".join([f'"query {i+1}"' for i in range(max_iterations)])
 
-        return f"""Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"
+        return f"""Generate exactly {max_iterations} concise web search queries for the task: "{task}".
 
 Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 
 {context_prompt}
-You must respond with a list of strings in the following format: [{dynamic_example}].
-The response should contain ONLY the list.
+{focus_prompt}
+
+Requirements:
+- Return ONLY a valid JSON array of strings.
+- Keep the queries directly relevant, diverse, and factual.
+- Prefer broad search terms over long natural-language sentences.
+- Do not include markdown, explanations, numbering, or code fences.
+- Avoid unrelated site filters unless they are clearly useful for the task.
+
+Example format:
+[ {dynamic_example} ]
 """
 
     @staticmethod
@@ -304,6 +328,8 @@ Please follow all of the following guidelines in your report:
 - You MUST NOT include a table of contents, but DO include proper markdown headers (# ## ###) to structure your report clearly.
 - Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
 - Don't forget to add a reference list at the end of the report in {report_format} format and full url links without hyperlinks.
+- Do not output chain-of-thought, prompt analysis, style guides, or meta commentary.
+- Write only the final report content.
 - {reference_prompt}
 - {tone_prompt}
 You MUST write the report in the following language: {language}.
@@ -382,6 +408,8 @@ The response MUST not contain any markdown format or additional text (like ```js
             f"You MUST write the report in the following language: {language}.\n"
             "You MUST include all relevant source urls."
             "Every url should be hyperlinked: [url website](url)"
+            "Do not output chain-of-thought, prompt analysis, style guides, or meta commentary."
+            "Write only the final report content."
             f"{reference_prompt}"
         )
 
@@ -408,6 +436,7 @@ The response MUST not contain any markdown format or additional text (like ```js
             f" The research report should be detailed, informative, in-depth, and a minimum of {total_words} words."
             " Use appropriate Markdown syntax to format the outline and ensure readability."
             " Consider using markdown tables and other formatting features where they would enhance the presentation of information."
+            " Do not add chain-of-thought, style guides, or meta commentary."
         )
 
     @staticmethod
@@ -475,6 +504,8 @@ Additional requirements:
 - Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
 - {tone_prompt}
 - Write in {language}
+- Do not output chain-of-thought, prompt analysis, style guides, or meta commentary.
+- Write only the final report content.
 
 {reference_prompt}
 
@@ -485,28 +516,44 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')}.
     @staticmethod
     def auto_agent_instructions():
         return """
-This task involves researching a given topic, regardless of its complexity or the availability of a definitive answer. The research is conducted by a specific server, defined by its type and role, with each server requiring distinct instructions.
-Agent
-The server is determined by the field of the topic and the specific name of the server that could be utilized to research the topic provided. Agents are categorized by their area of expertise, and each server type is associated with a corresponding emoji.
+You are selecting the best research server for a task.
 
-examples:
+Return ONLY valid JSON with exactly these keys:
+{
+  "server": "Agent name with emoji",
+  "agent_role_prompt": "A single sentence describing how the agent should research and write"
+}
+
+Rules:
+- Return JSON only. No markdown, no code fences, no commentary.
+- Use double quotes for all keys and strings.
+- Keep the agent_role_prompt concise and specific.
+- If the topic is general or technical research, choose a generic research assistant agent.
+
+Examples:
 task: "should I invest in apple stocks?"
 response:
 {
-    "server": "💰 Finance Agent",
-    "agent_role_prompt: "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends."
+  "server": "💰 Finance Agent",
+  "agent_role_prompt": "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends."
 }
 task: "could reselling sneakers become profitable?"
 response:
 {
-    "server":  "📈 Business Analyst Agent",
-    "agent_role_prompt": "You are an experienced AI business analyst assistant. Your main objective is to produce comprehensive, insightful, impartial, and systematically structured business reports based on provided business data, market trends, and strategic analysis."
+  "server": "📈 Business Analyst Agent",
+  "agent_role_prompt": "You are an experienced AI business analyst assistant. Your main objective is to produce comprehensive, insightful, impartial, and systematically structured business reports based on provided business data, market trends, and strategic analysis."
 }
 task: "what are the most interesting sites in Tel Aviv?"
 response:
 {
-    "server":  "🌍 Travel Agent",
-    "agent_role_prompt": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights."
+  "server": "🌍 Travel Agent",
+  "agent_role_prompt": "You are a world-travelled AI tour guide assistant. Your main purpose is to draft engaging, insightful, unbiased, and well-structured travel reports on given locations, including history, attractions, and cultural insights."
+}
+task: "how is this local research stack working?"
+response:
+{
+  "server": "🔬 Research Assistant Agent",
+  "agent_role_prompt": "You are a meticulous research assistant AI. Your primary goal is to produce accurate, structured, evidence-based research summaries with clear reasoning and references."
 }
 """
 
@@ -613,6 +660,8 @@ Content Focus:
 - The report should focus on answering the question, be well-structured, informative, in-depth, and include facts and numbers if available.
 - Use markdown syntax and follow the {report_format.upper()} format.
 - When presenting data, comparisons, or structured information, use markdown tables to enhance readability.
+- Do not output chain-of-thought, prompt analysis, style guides, or meta commentary.
+- Write only the subtopic report content.
 
 IMPORTANT:Content and Sections Uniqueness:
 - This part of the instructions is crucial to ensure the content is unique and does not overlap with existing reports.
@@ -697,6 +746,7 @@ Provide the draft headers in a list format using markdown syntax, for example:
 - The focus MUST be on the main topic! You MUST Leave out any information un-related to it!
 - Must NOT have any introduction, conclusion, summary or reference section.
 - Focus solely on creating headers, not content.
+- Do not add meta commentary or explanatory text outside the headers.
 """
 
     @staticmethod
@@ -707,6 +757,8 @@ Using the above latest information, Prepare a detailed report introduction on th
 - As this introduction will be part of a larger report, do NOT include any other sections, which are generally present in a report.
 - The introduction should be preceded by an H1 heading with a suitable topic for the entire report.
 - You must use in-text citation references in {report_format.upper()} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
+- Do not output chain-of-thought, prompt analysis, style guides, or meta commentary.
+- Write only the introduction content.
 Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 - The output must be in {language} language.
 """
@@ -742,6 +794,8 @@ Assume that the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y'
     You must use in-text citation references in {report_format.upper()} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
 
     IMPORTANT: The entire conclusion MUST be written in {language} language.
+    Do not output chain-of-thought, prompt analysis, style guides, or meta commentary.
+    Write only the conclusion content.
 
     Write the conclusion:
     """

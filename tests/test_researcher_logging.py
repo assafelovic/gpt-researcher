@@ -1,8 +1,9 @@
 import pytest
-import asyncio
 from pathlib import Path
 import sys
 import logging
+import json
+from urllib.parse import unquote
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent
@@ -33,31 +34,41 @@ async def test_researcher_logging():  # Renamed function to be more specific
         # Run the research
         report = await researcher.research()
         logger.info("Research completed successfully!")
-        logger.info(f"Report length: {len(report)}")
+        logger.info(f"Report type: {type(report).__name__}")
         
         # Basic report assertions
-        assert report is not None
-        assert len(report) > 0
-        
-        # Detailed log file verification
-        logs_dir = Path(project_root) / "logs"
-        log_files = list(logs_dir.glob("research_*.log"))
-        json_files = list(logs_dir.glob("research_*.json"))
-        
-        # Verify log files exist
-        assert len(log_files) > 0, "No log files were created"
-        assert len(json_files) > 0, "No JSON files were created"
-        
-        # Log the findings
-        logger.info(f"\nFound {len(log_files)} log files:")
-        for log_file in log_files:
-            logger.info(f"- {log_file.name}")
-            # Could add additional checks for log file format/content here
-            
-        logger.info(f"\nFound {len(json_files)} JSON files:")
-        for json_file in json_files:
-            logger.info(f"- {json_file.name}")
-            # Could add additional checks for JSON file structure here
+        assert isinstance(report, dict)
+        assert "output" in report
+
+        output = report["output"]
+        assert {"pdf", "docx", "md", "json"}.issubset(output.keys())
+
+        # Detailed artifact verification
+        json_path = Path(project_root) / unquote(output["json"])
+        assert json_path.exists(), f"Expected JSON log file was not created: {json_path}"
+
+        with json_path.open() as f:
+            data = json.load(f)
+
+        assert "timestamp" in data
+        assert "events" in data
+        assert "content" in data
+        assert isinstance(data["events"], list)
+        assert isinstance(data["content"], dict)
+        assert data["content"].get("query") is not None
+
+        # The report artifacts should also exist on disk.
+        for key in ("pdf", "docx", "md"):
+            artifact_path = Path(project_root) / unquote(output[key])
+            assert artifact_path.exists(), f"Expected artifact was not created: {artifact_path}"
+            logger.info(f"- {artifact_path.name}")
+
+        # Clean up generated artifacts so the test does not leave state behind.
+        for key in ("pdf", "docx", "md", "json"):
+            artifact_path = Path(project_root) / unquote(output[key])
+            if artifact_path.exists():
+                artifact_path.unlink()
+                logger.info(f"Deleted artifact: {artifact_path}")
             
     except ImportError as e:
         logger.error(f"Import error: {e}")
@@ -68,4 +79,4 @@ async def test_researcher_logging():  # Renamed function to be more specific
         raise
 
 if __name__ == "__main__":
-    pytest.main([__file__]) 
+    pytest.main([__file__])

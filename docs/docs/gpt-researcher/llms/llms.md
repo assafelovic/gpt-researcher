@@ -104,15 +104,21 @@ GPT Researcher supports both Ollama LLMs and embeddings. You can choose each or 
 To use [Ollama](http://www.ollama.com) you can set the following environment variables
 
 ```env
-OLLAMA_BASE_URL=http://localhost:11434
-FAST_LLM=ollama:llama3
-SMART_LLM=ollama:llama3
-STRATEGIC_LLM=ollama:llama3
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+FAST_LLM=ollama:gemma4_obliterated
+SMART_LLM=ollama:gemma4_obliterated
+STRATEGIC_LLM=ollama:gemma4_obliterated
 
 EMBEDDING=ollama:nomic-embed-text
 ```
 
 Add `langchain-ollama` to [requirements.txt](https://github.com/assafelovic/gpt-researcher/blob/master/requirements.txt) for Docker Support or `pip install` it
+
+For the local GGUF shipped with this repo, create the model first:
+
+```bash
+ollama create gemma4_obliterated -f ollama/Modelfile.gemma4_obliterated
+```
 
 ### Granite with Ollama
 

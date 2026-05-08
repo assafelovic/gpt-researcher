@@ -7,9 +7,50 @@ research sources based on relevance, credibility, and reliability.
 import json
 from typing import Dict, List, Optional
 
+import json_repair
+
 from ..actions import stream_output
 from ..config.config import Config
 from ..utils.llm import create_chat_completion
+
+
+def _extract_json_object(response: str | None) -> str | None:
+    if not response:
+        return None
+    start = response.find("{")
+    end = response.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        return None
+    return response[start : end + 1]
+
+
+def _normalize_curated_sources(payload: object) -> list | None:
+    if isinstance(payload, list) and all(isinstance(item, dict) for item in payload):
+        return payload
+
+    if isinstance(payload, dict):
+        for key in ("sources", "curated_sources", "results"):
+            value = payload.get(key)
+            if isinstance(value, list) and all(isinstance(item, dict) for item in value):
+                return value
+
+    if isinstance(payload, str):
+        candidates = []
+        if json_object := _extract_json_object(payload):
+            candidates.append(json_object)
+
+        for candidate in candidates:
+            for loader in (json_repair.loads, json.loads):
+                try:
+                    parsed = loader(candidate)
+                except Exception:
+                    continue
+
+                normalized = _normalize_curated_sources(parsed)
+                if normalized is not None:
+                    return normalized
+
+    return None
 
 
 class SourceCurator:
@@ -71,7 +112,9 @@ class SourceCurator:
                 cost_callback=self.researcher.add_costs,
             )
 
-            curated_sources = json.loads(response)
+            curated_sources = _normalize_curated_sources(response)
+            if curated_sources is None:
+                raise ValueError("LLM did not return a valid list of source objects")
             print(f"\n\nFinal Curated sources {len(source_data)} sources: {curated_sources}")
 
             if self.researcher.verbose:

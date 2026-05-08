@@ -14,6 +14,7 @@ from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 
 from .variables.base import BaseConfig
 from .variables.default import DEFAULT_CONFIG
+from ..actions.retriever import get_default_retriever_name, normalize_retriever_names
 
 
 class Config:
@@ -75,12 +76,16 @@ class Config:
             setattr(self, key.lower(), value)
 
         # Handle RETRIEVER with default value
-        retriever_env = os.environ.get("RETRIEVER", config.get("RETRIEVER", "tavily"))
+        retriever_env = os.environ.get("RETRIEVER")
+        if not retriever_env:
+            retriever_env = config.get("RETRIEVER", get_default_retriever_name())
+        retriever_env = ",".join(normalize_retriever_names(retriever_env.split(",")))
         try:
             self.retrievers = self.parse_retrievers(retriever_env)
         except ValueError as e:
-            print(f"Warning: {str(e)}. Defaulting to 'tavily' retriever.")
-            self.retrievers = ["tavily"]
+            fallback_retriever = get_default_retriever_name()
+            print(f"Warning: {str(e)}. Defaulting to '{fallback_retriever}' retriever.")
+            self.retrievers = [fallback_retriever]
 
     def _set_embedding_attributes(self) -> None:
         """Parse and set embedding provider and model attributes."""

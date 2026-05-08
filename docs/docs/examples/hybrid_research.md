@@ -13,7 +13,7 @@ Before you begin, ensure you have the following:
 - Python 3.10 or higher installed on your system
 - pip (Python package installer)
 - An OpenAI API key (you can also choose other supported [LLMs](../gpt-researcher/llms/llms.md))
-- A Tavily API key (you can also choose other supported [Retrievers](../gpt-researcher/search-engines/retrievers.md))
+- A web retriever is optional; DuckDuckGo is the default, and Tavily works if you set `TAVILY_API_KEY` (you can also choose other supported [Retrievers](../gpt-researcher/search-engines/retrievers.md))
 
 ## Installation
 
@@ -27,7 +27,8 @@ Export your API keys as environment variables:
 
 ```bash
 export OPENAI_API_KEY=your_openai_api_key_here
-export TAVILY_API_KEY=your_tavily_api_key_here
+# Optional: override the DuckDuckGo default with Tavily or another retriever.
+# export TAVILY_API_KEY=your_tavily_api_key_here
 ```
 
 For custom OpenAI-compatible APIs, you can also set:
@@ -41,7 +42,7 @@ Alternatively, you can set these in your Python script:
 ```python
 import os
 os.environ['OPENAI_API_KEY'] = 'your_openai_api_key_here'
-os.environ['TAVILY_API_KEY'] = 'your_tavily_api_key_here'
+# os.environ['TAVILY_API_KEY'] = 'your_tavily_api_key_here'
 os.environ['OPENAI_BASE_URL'] = 'your_custom_api_base_url_here'  # Optional
 ```
 Set the environment variable REPORT_SOURCE to an empty string "" in default.py

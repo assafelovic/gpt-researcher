@@ -1,22 +1,54 @@
 import logging
 import os
-import uuid
-import json
-from fastapi import WebSocket
+import asyncio
+import re
 from typing import List, Dict, Any
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import InMemoryVectorStore
-from gpt_researcher.memory import Memory
 from gpt_researcher.config.config import Config
 from gpt_researcher.utils.llm import create_chat_completion
-from gpt_researcher.utils.tools import create_chat_completion_with_tools, create_search_tool
-from tavily import TavilyClient
-from datetime import datetime
+from gpt_researcher.retrievers import Duckduckgo
+
+try:
+    from tavily import TavilyClient
+except ImportError:  # pragma: no cover - optional dependency.
+    TavilyClient = None
 
 # Setup logging
 # Get logger instance
 logger = logging.getLogger(__name__)
+
+CHAT_REQUEST_TIMEOUT = float(os.getenv("CHAT_REQUEST_TIMEOUT", "6"))
+CHAT_MAX_TOKENS = int(os.getenv("CHAT_MAX_TOKENS", "800"))
+CHAT_REPORT_CONTEXT_CHARS = int(os.getenv("CHAT_REPORT_CONTEXT_CHARS", "12000"))
+
+_GREETING_RE = re.compile(
+    r"^(hi|hello|hey|hallo|moin|yo|good morning|good afternoon|good evening|thanks|thank you|danke)([!.?\s]*)$",
+    re.IGNORECASE,
+)
+_SEARCH_HINTS = (
+    "latest",
+    "recent",
+    "current",
+    "today",
+    "tonight",
+    "right now",
+    "now",
+    "news",
+    "breaking",
+    "updated",
+    "update",
+    "live",
+    "stock",
+    "price",
+    "weather",
+    "forecast",
+    "search the web",
+    "search online",
+    "look up",
+    "browse",
+    "internet",
+    "web",
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -25,32 +57,6 @@ logging.basicConfig(
         logging.StreamHandler()  # Only log to console
     ]
 )
-
-# Note: LLM client is now handled through GPT Researcher's unified LLM system
-# This supports all configured providers (OpenAI, Google Gemini, Anthropic, etc.)
-
-def get_tools():
-    """Define tools for LLM function calling (primarily for OpenAI-compatible providers)"""
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "quick_search",
-                "description": "Search for current events or online information when you need new knowledge that doesn't exist in the current context",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "The search query"
-                        }
-                    },
-                    "required": ["query"]
-                }
-            }
-        }
-    ]
-    return tools
 
 class ChatAgentWithMemory:
     def __init__(
@@ -67,121 +73,268 @@ class ChatAgentWithMemory:
         self.retriever = None
         self.search_metadata = None
         
-        # Initialize Tavily client (optional - only if API key is available)
+        # Initialize Tavily client (optional - only if API key and package are available)
         tavily_api_key = os.environ.get("TAVILY_API_KEY")
-        if tavily_api_key:
+        if tavily_api_key and TavilyClient is not None:
             self.tavily_client = TavilyClient(api_key=tavily_api_key)
         else:
             self.tavily_client = None
-            logger.warning("TAVILY_API_KEY not set - web search in chat will be disabled")
-        
-        # Process document and create vector store if not provided
-        if not self.vector_store and False:
-            self._setup_vector_store()
-    
-    def _setup_vector_store(self):
-        """Setup vector store for document retrieval"""
-        # Process document into chunks
-        documents = self._process_document(self.report)
-        
-        # Create unique thread ID
-        self.thread_id = str(uuid.uuid4())
-        
-        # Setup embeddings and vector store
-        cfg = Config()
-        self.embedding = Memory(
-            cfg.embedding_provider,
-            cfg.embedding_model,
-            **cfg.embedding_kwargs
-        ).get_embeddings()
-        
-        # Create vector store and retriever
-        self.vector_store = InMemoryVectorStore(self.embedding)
-        self.vector_store.add_texts(documents)
-        self.retriever = self.vector_store.as_retriever(k=4)
-        
-    def _process_document(self, report):
-        """Split Report into Chunks"""
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1024,
-            chunk_overlap=20,
-            length_function=len,
-            is_separator_regex=False,
+            logger.warning("Tavily is unavailable - chat web search will use DuckDuckGo fallback")
+
+    @staticmethod
+    def _latest_user_message(messages: List[Dict[str, str]]) -> str:
+        for message in reversed(messages or []):
+            if message.get("role") == "user":
+                content = message.get("content")
+                if isinstance(content, str):
+                    cleaned = content.strip()
+                    if cleaned:
+                        return cleaned
+        return ""
+
+    @staticmethod
+    def _is_simple_greeting(message: str) -> bool:
+        if not message:
+            return False
+        if len(message.split()) > 4:
+            return False
+        return bool(_GREETING_RE.match(message.strip()))
+
+    @staticmethod
+    def _should_use_search(message: str) -> bool:
+        if not message:
+            return False
+        lowered = message.lower()
+        return any(hint in lowered for hint in _SEARCH_HINTS)
+
+    @staticmethod
+    def _is_summary_request(message: str) -> bool:
+        if not message:
+            return False
+        lowered = message.lower()
+        return any(
+            phrase in lowered
+            for phrase in (
+                "summarize",
+                "summary",
+                "tl;dr",
+                "tldr",
+                "one sentence",
+                "in one sentence",
+                "brief summary",
+                "short summary",
+            )
         )
-        documents = text_splitter.split_text(report)
-        return documents
+
+    @staticmethod
+    def _extract_report_summary(report: str) -> str:
+        if not report:
+            return ""
+
+        text = re.sub(r"(?m)^#+\s*", "", report).strip()
+        paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+        source = paragraphs[0] if paragraphs else text
+        first_sentence = re.split(r"(?<=[.!?])\s+", source, maxsplit=1)[0].strip()
+        if not first_sentence:
+            first_sentence = source[:240].strip()
+        if not first_sentence.endswith((".", "!", "?")):
+            first_sentence += "."
+        return f"According to the report, {first_sentence}"
+
+    @staticmethod
+    def _build_report_answer(query: str, report: str) -> str:
+        if not report:
+            return ""
+
+        query_tokens = {
+            token
+            for token in re.findall(r"[a-z0-9]+", (query or "").lower())
+            if len(token) > 2
+        }
+        sentences = [
+            sentence.strip()
+            for sentence in re.split(r"(?<=[.!?])\s+|\n+", report)
+            if sentence.strip()
+        ]
+        if not sentences:
+            return ""
+
+        scored_sentences = []
+        for sentence in sentences:
+            sentence_tokens = set(re.findall(r"[a-z0-9]+", sentence.lower()))
+            score = len(query_tokens & sentence_tokens)
+            scored_sentences.append((score, sentence))
+
+        scored_sentences.sort(key=lambda item: (item[0], len(item[1])), reverse=True)
+        best_sentences = [sentence for score, sentence in scored_sentences[:2] if score > 0]
+        if not best_sentences:
+            best_sentences = sentences[:2]
+
+        answer = " ".join(best_sentences).strip()
+        if not answer.endswith((".", "!", "?")):
+            answer += "."
+        return f"Based on the report, {answer}"
+
+    @staticmethod
+    def _build_search_answer(query: str, search_metadata: Dict[str, Any] | None) -> str:
+        if not search_metadata:
+            return f"I couldn't find live search results for {query}."
+
+        sources = search_metadata.get("sources") or []
+        if not sources:
+            error = search_metadata.get("error")
+            if error:
+                return f"I couldn't complete the live search for {query}: {error}"
+            return f"I couldn't find live search results for {query}."
+
+        lines = [f"Here's what I found about {query.strip()}:"]
+        for source in sources[:3]:
+            title = source.get("title") or "Source"
+            url = source.get("url") or ""
+            content = (source.get("content") or "").strip()
+            if content:
+                lines.append(f"* **{title}**: {content}")
+            else:
+                lines.append(f"* **{title}**")
+            if url:
+                lines.append(f"  Source: {url}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _sanitize_ai_message(message: str) -> str:
+        if not message:
+            return message
+        cleaned = re.sub(r"/\*\s*content-m:.*?\*/", "", message, flags=re.DOTALL)
+        return cleaned.strip()
+
+    def _build_system_prompt(self) -> str:
+        report_context = (self.report or "").strip()
+        if report_context and len(report_context) > CHAT_REPORT_CONTEXT_CHARS:
+            report_context = (
+                report_context[:CHAT_REPORT_CONTEXT_CHARS]
+                + "\n\n[Report context truncated for chat.]"
+            )
+
+        prompt_parts = [
+            "You are GPT Researcher chat assistant.",
+            "Answer in markdown. Keep it concise, direct, and useful.",
+        ]
+
+        if report_context:
+            prompt_parts.append(
+                "Use the report context below as the primary source for report questions."
+            )
+            prompt_parts.append(
+                "If the answer is not in the report, say that clearly instead of inventing details."
+            )
+            prompt_parts.append(f"Report context:\n{report_context}")
+        else:
+            prompt_parts.append(
+                "No report context was provided."
+            )
+
+        return "\n\n".join(prompt_parts)
 
     def quick_search(self, query):
-        """Perform a web search for current information using Tavily"""
+        """Perform a web search for current information."""
         try:
             # Check if Tavily client is available
             if self.tavily_client is None:
-                logger.warning(f"Tavily client not available, skipping web search for: {query}")
+                logger.info(f"Using DuckDuckGo fallback search for: {query}")
+                results = Duckduckgo(query).search(max_results=5)
+                normalized_results = self._normalize_search_results(results)
                 self.search_metadata = {
                     "query": query,
-                    "sources": [],
-                    "error": "Web search is disabled - TAVILY_API_KEY not configured"
+                    "sources": normalized_results,
                 }
-                return {
-                    "error": "Web search is disabled - TAVILY_API_KEY not configured",
-                    "results": []
-                }
-            
+                return {"results": normalized_results}
+
             logger.info(f"Performing web search for: {query}")
             results = self.tavily_client.search(query=query, max_results=5)
+            normalized_results = self._normalize_search_results(results.get("results", []))
             
             # Store search metadata for frontend
             self.search_metadata = {
                 "query": query,
-                "sources": [
-                    {"title": result.get("title", ""), 
-                     "url": result.get("url", ""),
-                     "content": result.get("content", "")[:200] + "..." if len(result.get("content", "")) > 200 else result.get("content", "")}
-                    for result in results.get("results", [])
-                ]
+                "sources": normalized_results,
             }
             
-            return results
+            return {"results": normalized_results}
         except Exception as e:
             logger.error(f"Error performing web search: {str(e)}", exc_info=True)
+            self.search_metadata = {
+                "query": query,
+                "sources": [],
+                "error": str(e),
+            }
             return {
                 "error": str(e),
                 "results": []
             }
 
+    @staticmethod
+    def _normalize_search_results(results):
+        normalized = []
+        for result in results[:5]:
+            title = result.get("title") or result.get("name") or ""
+            url = result.get("url") or result.get("href") or ""
+            content = result.get("content") or result.get("body") or ""
+            normalized.append(
+                {
+                    "title": title,
+                    "url": url,
+                    "content": content[:300],
+                }
+            )
+        return normalized
+
 
     async def process_chat_completion(self, messages: List[Dict[str, str]]):
-        """Process chat completion using configured LLM provider with tool calling support"""
-        # Create a search tool using the utility function
-        search_tool = create_search_tool(self.quick_search)
-        
-        # Use the tool-enabled chat completion utility
-        response, tool_calls_metadata = await create_chat_completion_with_tools(
-            messages=messages,
-            tools=[search_tool],
-            model=self.config.smart_llm_model,
-            llm_provider=self.config.smart_llm_provider,
-            llm_kwargs=self.config.llm_kwargs,
-        )
-        
-        # Process metadata to match the expected format for the chat system
-        processed_metadata = []
-        for metadata in tool_calls_metadata:
-            if metadata.get("tool") == "search_tool":
-                # Extract query from args
-                query = metadata.get("args", {}).get("query", "")
-                
-                # Trigger search again to get metadata (the search was already executed by LangChain)
-                if query:
-                    self.quick_search(query)  # This populates self.search_metadata
-                    
-                processed_metadata.append({
-                    "tool": "quick_search",
-                    "query": query,
-                    "search_metadata": self.search_metadata
-                })
-        
-        return response, processed_metadata
+        """Process chat completion using configured LLM provider."""
+        llm_kwargs = dict(self.config.llm_kwargs or {})
+        llm_kwargs.setdefault("timeout", CHAT_REQUEST_TIMEOUT)
+        model = self.config.smart_llm_model or self.config.fast_llm_model
+        provider = self.config.smart_llm_provider or self.config.fast_llm_provider
+        try:
+            response = await asyncio.wait_for(
+                create_chat_completion(
+                    messages=messages,
+                    model=model,
+                    temperature=self.config.temperature,
+                    max_tokens=min(self.config.smart_token_limit, CHAT_MAX_TOKENS),
+                    llm_provider=provider,
+                    llm_kwargs=llm_kwargs,
+                ),
+                timeout=CHAT_REQUEST_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Chat completion timed out")
+            if self.report:
+                fallback = self._build_report_answer(
+                    self._latest_user_message(messages),
+                    self.report,
+                )
+                if fallback:
+                    return fallback, []
+            return (
+                "I couldn't generate a response quickly enough. Please narrow the question and try again.",
+                [],
+            )
+        except Exception as exc:
+            logger.error(f"Chat completion failed: {exc}", exc_info=True)
+            if self.report:
+                fallback = self._build_report_answer(
+                    self._latest_user_message(messages),
+                    self.report,
+                )
+                if fallback:
+                    return fallback, []
+            return (
+                "I couldn't generate a response for that message right now. Please try again.",
+                [],
+            )
+
+        return response, []
 
 
     async def chat(self, messages, websocket=None):
@@ -195,27 +348,35 @@ class ChatAgentWithMemory:
             tuple: (str: The AI response message, dict: metadata about tool usage)
         """
         try:
-            
-            # Format system prompt with the report context
-            system_prompt = f"""
-            You are GPT Researcher, an autonomous research agent created by an open source community at https://github.com/assafelovic/gpt-researcher, homepage: https://gptr.dev. 
-            To learn more about GPT Researcher you can suggest to check out: https://docs.gptr.dev.
-            
-            This is a chat about a research report that you created. Answer based on the given context and report.
-            You must include citations to your answer based on the report.
-            
-            You may use the quick_search tool when the user asks about information that might require current data 
-            not found in the report, such as recent events, updated statistics, or news. If there's no report available,
-            you can use the quick_search tool to find information online.
-            
-            You must respond in markdown format. You must make it readable with paragraphs, tables, etc when possible. 
-            Remember that you're answering in a chat not a report.
-            
-            Assume the current time is: {datetime.now()}.
-            
-            Report: {self.report}
-            
-            """
+            self.search_metadata = None
+            latest_user_message = self._latest_user_message(messages)
+            use_search = self._should_use_search(latest_user_message)
+
+            if self._is_simple_greeting(latest_user_message):
+                if self.report:
+                    return (
+                        "Hello. Ask me about the report or a current topic, and I will answer directly.",
+                        [],
+                    )
+                return ("Hello. What would you like to research?", [])
+
+            if self.report and not use_search and self._is_summary_request(latest_user_message):
+                return (self._extract_report_summary(self.report), [])
+
+            tool_calls_metadata = []
+            if use_search:
+                self.quick_search(latest_user_message)
+                tool_calls_metadata = [{
+                    "tool": "quick_search",
+                    "query": latest_user_message,
+                    "search_metadata": self.search_metadata,
+                }]
+                return (
+                    self._build_search_answer(latest_user_message, self.search_metadata),
+                    tool_calls_metadata,
+                )
+
+            system_prompt = self._build_system_prompt()
             
             # Format message history for OpenAI input
             formatted_messages = []
@@ -237,7 +398,10 @@ class ChatAgentWithMemory:
                     logger.warning(f"Skipping message with missing role or content: {msg}")
             
             # Process the chat using configured LLM provider
-            ai_message, tool_calls_metadata = await self.process_chat_completion(formatted_messages)
+            ai_message, tool_calls_metadata = await self.process_chat_completion(
+                formatted_messages,
+            )
+            ai_message = self._sanitize_ai_message(ai_message)
             
             # Provide fallback response if message is empty
             if not ai_message:

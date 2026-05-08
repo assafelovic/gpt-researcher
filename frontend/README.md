@@ -60,7 +60,7 @@ A more robust solution with enhanced features and performance.
 
 5. Access at `http://localhost:3000`
 
-Note: Requires backend server on `localhost:8000` as detailed in option 1.
+Note: Requires backend server on `localhost:8002` as detailed in option 1.
 
 #### Demo
 https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
