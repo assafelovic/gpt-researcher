@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { useTaskQueue } from '@/hooks/useTaskQueue';
 import { useResearchHistoryContext } from '@/hooks/ResearchHistoryContext';
 import { useScrollHandler } from '@/hooks/useScrollHandler';
 import { startLanggraphResearch } from '../components/Langgraph/Langgraph';
@@ -116,6 +117,29 @@ export default function Home() {
   
   // Use the reference to access websocket functions
   const { socket, initializeWebSocket } = websocketRef.current;
+
+  // Task Queue mode — tasks survive page refresh
+  const [useQueueMode, setUseQueueMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('gptr_queue_mode') === 'true';
+    }
+    return false;
+  });
+  const { taskInfo, taskStatus, submitTask } = useTaskQueue(
+    setOrderedData,
+    setAnswer,
+    setLoading,
+    setShowHumanFeedback,
+    setQuestionForHuman
+  );
+
+  const toggleQueueMode = () => {
+    setUseQueueMode((prev: boolean) => {
+      const next = !prev;
+      localStorage.setItem('gptr_queue_mode', String(next));
+      return next;
+    });
+  };
 
   const handleFeedbackSubmit = (feedback: string | null) => {
     if (socket) {
@@ -440,6 +464,8 @@ export default function Home() {
         }
         previousChunk = chunk;
       }
+    } else if (useQueueMode) {
+      submitTask(newQuestion, chatBoxSettings);
     } else {
       initializeWebSocket(newQuestion, chatBoxSettings);
     }
@@ -930,6 +956,25 @@ export default function Home() {
                 setPromptValue={setPromptValue}
                 handleDisplayResult={handleDisplayResult}
               />
+              {/* Task Queue Mode toggle */}
+              <div className="flex justify-center mt-2">
+                <button
+                  onClick={toggleQueueMode}
+                  title="Queue mode: tasks survive page refresh and run sequentially"
+                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                    useQueueMode
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-transparent text-gray-400 border-gray-600 hover:border-gray-400'
+                  }`}
+                >
+                  {useQueueMode ? '🗂 Queue Mode ON' : '🗂 Queue Mode'}
+                </button>
+                {taskInfo && (
+                  <span className="ml-3 text-xs text-gray-400 self-center">
+                    Task {taskInfo.task_id} — {taskStatus}
+                  </span>
+                )}
+              </div>
             </>
           )
         })

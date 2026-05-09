@@ -34,6 +34,7 @@ from gpt_researcher.utils.enum import Tone
 from chat.chat import ChatAgentWithMemory
 
 from server.report_store import ReportStore
+from server.task_manager import task_manager
 
 # MongoDB services removed - no database persistence needed
 
@@ -72,6 +73,7 @@ async def lifespan(app: FastAPI):
     # Startup
     os.makedirs("outputs", exist_ok=True)
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
+    task_manager.start(max_workers=int(os.getenv("TASK_QUEUE_WORKERS", "1")))
     
     # Mount frontend static files
     frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
@@ -91,6 +93,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     logger.info("Research API shutting down")
+    await task_manager.stop()
 
 # App initialization
 app = FastAPI(lifespan=lifespan)
@@ -451,3 +454,106 @@ async def delete_report(research_id: str):
     """Delete a specific research report by ID - no database configured."""
     logger.debug(f"Delete requested for report {research_id} - no database configured, nothing to delete")
     return {"success": True, "id": research_id}
+
+
+# ---------------------------------------------------------------------------
+# Task Queue API  (new: refresh-safe, persistent task queue)
+# ---------------------------------------------------------------------------
+
+@app.post("/api/tasks")
+async def submit_task(request: Request):
+    """
+    Submit a research task to the persistent queue.
+
+    Returns immediately with a task_id. The task runs in the background and
+    survives WebSocket disconnects / page refreshes.
+
+    Request body (same fields as the WS "start" command):
+        task, report_type, report_source, tone, headers, source_urls,
+        document_urls, query_domains, mcp_enabled, mcp_strategy, mcp_configs,
+        max_search_results
+    """
+    params = await request.json()
+    if not params.get("task") or not params.get("report_type"):
+        raise HTTPException(status_code=422, detail="Fields 'task' and 'report_type' are required")
+    task_id = await task_manager.submit(params)
+    task = task_manager.get(task_id)
+    return {"task_id": task_id, "status": task.status, "queued_at": task.created_at}
+
+
+@app.get("/api/tasks")
+async def list_tasks():
+    """List all tasks (newest first)."""
+    return {"tasks": task_manager.list_tasks()}
+
+
+@app.get("/api/tasks/{task_id}")
+async def get_task(task_id: str):
+    """Poll task status. Returns summary including file_paths when done."""
+    task = task_manager.get(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task.summary()
+
+
+@app.get("/api/tasks/{task_id}/logs")
+async def get_task_logs(task_id: str, offset: int = 0):
+    """Return stored log messages for a task (useful for REST polling fallback)."""
+    task = task_manager.get(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {
+        "task_id": task_id,
+        "status": task.status,
+        "total": len(task.logs),
+        "logs": task.logs[offset:],
+    }
+
+
+@app.websocket("/ws/tasks/{task_id}")
+async def task_log_stream(websocket: WebSocket, task_id: str):
+    """
+    WebSocket endpoint for streaming task logs.
+
+    Replays all stored logs immediately on connect, then streams new ones
+    as they arrive. Disconnecting (e.g. page refresh) does NOT cancel the task —
+    just reconnect with the same task_id to resume the stream.
+    """
+    task = task_manager.get(task_id)
+    if task is None:
+        await websocket.close(code=4004, reason="Task not found")
+        return
+
+    await websocket.accept()
+    q = await task_manager.subscribe(task_id)
+    if q is None:
+        await websocket.close(code=4004, reason="Task not found")
+        return
+
+    try:
+        while True:
+            try:
+                msg = await asyncio.wait_for(q.get(), timeout=30)
+                await websocket.send_json(msg)
+                # If task is terminal, send one last message then close
+                if msg.get("type") == "task_status" and msg.get("status") in (
+                    "done", "failed", "cancelled"
+                ):
+                    break
+            except asyncio.TimeoutError:
+                # Send keepalive ping
+                try:
+                    await websocket.send_json({"type": "ping"})
+                except Exception:
+                    break
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        logger.error(f"task_log_stream error for {task_id}: {e}")
+    finally:
+        task_manager.unsubscribe(task_id, q)
+        try:
+            await websocket.close()
+        except Exception:
+            pass
+
