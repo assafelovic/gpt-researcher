@@ -12,12 +12,21 @@ from typing import Any
 
 import json_repair
 
+_ANSI_ESCAPE_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+
+
+def strip_ansi_sequences(text: str | None) -> str:
+    if not text:
+        return ""
+
+    return _ANSI_ESCAPE_RE.sub("", text)
+
 
 def strip_model_wrappers(response: str | None) -> str:
     if not response:
         return ""
 
-    cleaned = response.strip()
+    cleaned = strip_ansi_sequences(response).strip()
     cleaned = re.sub(r"^```(?:json|JSON)?\s*", "", cleaned)
     cleaned = re.sub(r"\s*```$", "", cleaned)
     return cleaned.strip()

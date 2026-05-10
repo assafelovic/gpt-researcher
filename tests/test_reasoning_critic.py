@@ -201,3 +201,44 @@ recommendations: ["Soften absolute performance language."]
     assert payload is not None
     assert payload["verdict"] == "revise"
     assert payload["confidence"] == 0.83
+
+
+@pytest.mark.asyncio
+async def test_reasoning_critic_parses_ansi_wrapped_code_fenced_payload_without_braces(monkeypatch):
+    async def fake_create_chat_completion(**kwargs):
+        return "\x1b[32m```json\n\x1b[0mbuce: \"no brand touchpoints or extras, no extras added\"\n\x1b[32m```\x1b[0m"
+
+    monkeypatch.setattr(reasoning_critic, "create_chat_completion", fake_create_chat_completion)
+
+    cfg = Config()
+    cfg.enable_reasoning_critic = True
+
+    bundle = await reasoning_critic.build_reasoning_critic_bundle(
+        query="Compare FastAPI and Flask for async Python APIs",
+        context="FastAPI and Flask have different async capabilities.",
+        report_markdown="# Report\n\n## Overview\nFastAPI is async-first.",
+        verification_bundle={
+            "query": "Compare FastAPI and Flask for async Python APIs",
+            "summary": {
+                "claims_total": 1,
+                "supported_claims": 1,
+                "partial_claims": 0,
+                "unsupported_claims": 0,
+                "support_rate": 1.0,
+                "source_count": 1,
+            },
+            "risk": {
+                "level": "low",
+                "human_review_required": False,
+                "reason": "general",
+            },
+            "claims": [],
+            "evidence_graph": {"nodes": [], "edges": []},
+        },
+        cfg=cfg,
+        agent_role_prompt="You are a skeptical editor.",
+        visited_urls=[],
+    )
+
+    assert bundle["source"] == "llm"
+    assert bundle["verdict"] == "revise"

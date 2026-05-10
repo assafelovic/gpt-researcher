@@ -31,3 +31,12 @@ def test_parse_llm_json_response_handles_code_fenced_array():
         "OpenAI Python API library",
         "OpenAI API Platform Documentation",
     ]
+
+
+def test_parse_llm_json_response_strips_ansi_wrapped_code_fences():
+    response = "\x1b[32m```json\n\x1b[0mbuce: \"no brand touchpoints or extras, no extras added\"\n\x1b[32m```\x1b[0m"
+
+    payload = parse_llm_json_response(response, expected_kind="object")
+
+    assert isinstance(payload, dict)
+    assert payload["buce"] == "no brand touchpoints or extras, no extras added"
