@@ -12,11 +12,9 @@ import json
 import re
 from typing import Any
 
-import json_repair
-
-from .agent_creator import extract_json_with_regex
 from .verification import build_verification_bundle
 from ..llm_provider.generic.base import ReasoningEfforts
+from ..utils.json_parsing import parse_llm_json_response
 from ..utils.llm import create_chat_completion
 from ..utils.logger import get_formatted_logger
 
@@ -147,24 +145,8 @@ def _deterministic_critic_bundle(
 
 
 def _parse_critic_payload(response: str | None) -> dict[str, Any] | None:
-    if not response:
-        return None
-
-    candidates = [response]
-    if json_fragment := extract_json_with_regex(response):
-        candidates.append(json_fragment)
-
-    for candidate in candidates:
-        for loader in (json.loads, json_repair.loads):
-            try:
-                payload = loader(candidate)
-            except Exception:
-                continue
-
-            if isinstance(payload, dict):
-                return payload
-
-    return None
+    payload = parse_llm_json_response(response, expected_kind="object")
+    return payload if isinstance(payload, dict) else None
 
 
 def _normalize_critic_payload(payload: dict[str, Any], fallback_bundle: dict[str, Any]) -> dict[str, Any]:
@@ -305,6 +287,10 @@ async def build_reasoning_critic_bundle(
     """Build a structured LLM-backed critique of the report."""
     del websocket
 
+    # Keep internal research metadata out of the provider call surface.
+    # Some backends reject unexpected keyword arguments such as visited_urls.
+    llm_call_kwargs = {key: value for key, value in kwargs.items() if key != "visited_urls"}
+
     if verification_bundle is None:
         verification_bundle = build_verification_bundle(
             query=query,
@@ -378,7 +364,7 @@ Be strict but fair. If the report is acceptable, say so directly with verdict "p
             llm_kwargs=getattr(cfg, "llm_kwargs", {}),
             cost_callback=cost_callback,
             reasoning_effort=ReasoningEfforts.High.value,
-            **kwargs,
+            **llm_call_kwargs,
         )
         payload = _parse_critic_payload(response)
         if payload:

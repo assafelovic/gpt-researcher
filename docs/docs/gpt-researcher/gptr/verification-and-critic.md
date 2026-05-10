@@ -1,27 +1,27 @@
-# Verification and Reasoning Critic
+# Verifikation und Reasoning-Critic
 
-This fork now adds two review layers to report generation:
+Dieser Fork ergänzt die Report-Erzeugung jetzt um zwei Review-Schichten:
 
-1. A verification layer that builds a claim ledger and evidence graph.
-2. A reasoning critic that reviews the report against that verification bundle.
+1. Eine Verifikationsschicht, die ein Claim-Ledger und einen Evidence-Graph erzeugt.
+2. Einen Reasoning-Critic, der den Report gegen dieses Verifikations-Bundle prüft.
 
-The intent is not to guarantee truth. The intent is to make support, uncertainty, and review needs visible by default.
+Das Ziel ist nicht, Wahrheit zu garantieren. Das Ziel ist, Unterstützung, Unsicherheit und Prüfbarkeit standardmäßig sichtbar zu machen.
 
-## Verification Review
+## Verifikations-Review
 
-The verification layer is implemented in:
+Die Verifikationsschicht ist implementiert in:
 
 - `gpt_researcher/actions/verification.py`
 - `gpt_researcher/actions/report_generation.py`
 
-It extracts report claims, compares them against the research context, and produces:
+Sie extrahiert Claims aus dem Report, vergleicht sie mit dem Research-Kontext und erzeugt:
 
-- a claim ledger
-- an evidence graph
-- a support summary
-- a risk classification
+- ein Claim-Ledger
+- einen Evidence-Graph
+- eine Support-Zusammenfassung
+- eine Risikoklassifizierung
 
-Risk gating currently focuses on:
+Das Risk-Gating konzentriert sich derzeit auf:
 
 - health
 - legal
@@ -29,76 +29,78 @@ Risk gating currently focuses on:
 - security
 - politics
 
-When the report touches higher-risk topics, the output is marked for human review.
+Wenn der Report höher riskante Themen berührt, wird die Ausgabe für eine menschliche Prüfung markiert.
 
-## Reasoning Critic
+## Reasoning-Critic
 
-The reasoning critic is implemented in:
+Der Reasoning-Critic ist implementiert in:
 
 - `gpt_researcher/actions/reasoning_critic.py`
 - `gpt_researcher/actions/report_generation.py`
 
-It reads the report plus the verification bundle and asks a narrower question:
+Er liest den Report plus das Verifikations-Bundle und stellt eine engere Frage:
 
-- Are there unsupported claims?
-- Are there overconfident statements?
-- Are there missing caveats?
-- Does the report need manual review?
+- Gibt es unbelegte Claims?
+- Gibt es zu selbstsichere Aussagen?
+- Fehlen wichtige Einschränkungen?
+- Muss der Report manuell geprüft werden?
 
-The critic returns structured JSON and is appended to the report as:
+Der Critic liefert strukturiertes JSON und wird an den Report angehängt als:
 
 - `## Verification Review`
 - `## Reasoning Critic`
 
-If the LLM response is malformed or unavailable, the critic falls back to a deterministic review based on the verification bundle.
+Die LLM-Antwort wird über den gemeinsamen JSON-Parser normalisiert, bevor der deterministic fallback greift. Dadurch überlebt der Critic auch code-fenced oder leicht beschädigte JSON-Payloads.
 
-## Configuration
+Wenn die LLM-Antwort fehlerhaft oder nicht verfügbar ist, fällt der Critic auf ein deterministisches Review auf Basis des Verifikations-Bundles zurück.
 
-The review layers are enabled by default:
+## Konfiguration
+
+Die Review-Schichten sind standardmäßig aktiviert:
 
 - `ENABLE_VERIFICATION_REVIEW`
 - `ENABLE_REASONING_CRITIC`
 
-If you want to disable either layer temporarily, set the corresponding flag to `false` in your config or environment.
+Wenn du eine der Schichten vorübergehend deaktivieren möchtest, setze das entsprechende Flag in deiner Konfiguration oder Umgebung auf `false`.
 
-## What You Will See In A Report
+## Was du im Report sehen wirst
 
-The final report can now include:
+Der finale Report kann jetzt enthalten:
 
 - the main synthesis
 - a verification appendix
 - a critic appendix
 
-The critic appendix typically contains:
+Der Critic-Anhang enthält typischerweise:
 
-- a verdict (`pass`, `revise`, or `high_risk`)
-- a confidence score
-- strengths
-- issues
-- recommendations
+- ein Urteil (`pass`, `revise` oder `high_risk`)
+- einen Confidence-Score
+- Stärken
+- Probleme
+- Empfehlungen
 
-## Why This Matters
+## Warum das wichtig ist
 
-This review stack is especially useful when the research output is being used for:
+Dieser Review-Stack ist besonders nützlich, wenn die Research-Ausgabe verwendet wird für:
 
 - technical comparisons
 - product decisions
 - operational analysis
 - sensitive domains where unsupported claims are costly
 
-It does not replace human review for critical topics, but it makes the failure modes much easier to inspect.
+Er ersetzt bei kritischen Themen keine menschliche Prüfung, macht die Fehlermodi aber wesentlich leichter sichtbar.
 
-## Validation
+## Validierung
 
-The review layers are covered by:
+Die Review-Schichten werden abgedeckt durch:
 
 - `tests/test_verification.py`
 - `tests/test_reasoning_critic.py`
 
-These tests check:
+Diese Tests prüfen:
 
-- claim extraction
-- evidence graph creation
-- risk detection
-- critic fallback behavior
-- integration into the final report
+- Claim-Extraktion
+- Erstellung des Evidence-Graphen
+- Risikoerkennung
+- Fallback-Verhalten des Critics
+- Integration in den finalen Report

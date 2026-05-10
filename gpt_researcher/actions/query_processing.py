@@ -1,10 +1,8 @@
-import json
 import re
-
-import json_repair
 
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 from ..utils.llm import create_chat_completion
+from ..utils.json_parsing import parse_llm_json_response, strip_model_wrappers
 from ..prompts import PromptFamily
 from typing import Any, List, Dict
 from ..config import Config
@@ -214,14 +212,16 @@ def _normalize_query_items(items) -> list[str]:
     return normalized
 
 
-def _extract_bracketed_json(response: str | None, open_char: str, close_char: str) -> str | None:
-    if not response:
-        return None
-    start = response.find(open_char)
-    end = response.rfind(close_char)
-    if start == -1 or end == -1 or end <= start:
-        return None
-    return response[start : end + 1]
+def _extract_quoted_items(response: str) -> list[str]:
+    quoted_items = re.findall(r'"((?:[^"\\]|\\.)*)"', response)
+    if quoted_items:
+        return _normalize_query_items(quoted_items)
+
+    single_quoted_items = re.findall(r"'((?:[^'\\]|\\.)*)'", response)
+    if single_quoted_items:
+        return _normalize_query_items(single_quoted_items)
+
+    return []
 
 
 def _extract_query_list(payload: object) -> list[str]:
@@ -237,24 +237,26 @@ def _extract_query_list(payload: object) -> list[str]:
                     return normalized
 
     if isinstance(payload, str):
-        candidates = []
-        if json_array := _extract_bracketed_json(payload, "[", "]"):
-            candidates.append(json_array)
-        if json_object := _extract_bracketed_json(payload, "{", "}"):
-            candidates.append(json_object)
+        # Prefer the shared JSON parser before falling back to plain-text heuristics.
+        parsed = parse_llm_json_response(payload, expected_kind="any")
+        if parsed is not None:
+            extracted = _extract_query_list(parsed)
+            if extracted:
+                return extracted
 
-        for candidate in candidates:
-            for loader in (json_repair.loads, json.loads):
-                try:
-                    parsed = loader(candidate)
-                except Exception:
-                    continue
+        cleaned_payload = strip_model_wrappers(payload)
+        quoted_items = _extract_quoted_items(cleaned_payload)
+        if quoted_items:
+            return quoted_items
 
-                extracted = _extract_query_list(parsed)
-                if extracted:
-                    return extracted
+        if "," in cleaned_payload:
+            comma_items = _normalize_query_items(
+                part for part in re.split(r",", cleaned_payload)
+            )
+            if len(comma_items) > 1:
+                return comma_items
 
-        bullet_lines = _normalize_query_items(line for line in payload.splitlines())
+        bullet_lines = _normalize_query_items(line for line in cleaned_payload.splitlines())
         if bullet_lines:
             return bullet_lines
 
@@ -263,20 +265,9 @@ def _extract_query_list(payload: object) -> list[str]:
 
 def _fallback_sub_queries(query: str, parent_query: str, max_iterations: int) -> list[str]:
     task = _task_text(query, parent_query)
-    candidates = [
-        task,
-        f"{task} overview",
-        f"{task} analysis",
-        f"{task} official documentation",
-        f"{task} examples",
-        f"{task} benchmarks",
-    ]
-    anchored_candidates = [
-        candidate
-        for candidate in _normalize_query_items(candidates)
-        if _is_task_anchored_query(candidate, query, parent_query)
-    ]
-    return anchored_candidates[:max_iterations]
+    # If the LLM returns nothing usable, keep the search grounded in the
+    # original task instead of inventing synthetic sub-queries.
+    return _normalize_query_items([task])[:max_iterations] or [task][:max_iterations]
 
 
 def _complete_sub_queries(
@@ -302,20 +293,15 @@ def _complete_sub_queries(
     if not normalized:
         return _fallback_sub_queries(query, parent_query, max_iterations)
 
-    if len(normalized) >= max_iterations:
-        return normalized[:max_iterations]
-
-    for candidate in _fallback_sub_queries(query, parent_query, max_iterations * 2):
-        candidate_key = re.sub(r"\s+", " ", candidate).strip().lower()
-        if candidate_key not in normalized_keys:
-            normalized_keys.add(candidate_key)
-            normalized.append(candidate)
-        if len(normalized) >= max_iterations:
-            break
-
     return normalized[:max_iterations]
 
-async def get_search_results(query: str, retriever: Any, query_domains: List[str] = None, researcher=None) -> List[Dict[str, Any]]:
+async def get_search_results(
+    query: str,
+    retriever: Any,
+    query_domains: List[str] = None,
+    researcher=None,
+    proxy_url: str | None = None,
+) -> List[Dict[str, Any]]:
     """
     Get web search results for a given query.
 
@@ -331,13 +317,16 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
     # Check if this is an MCP retriever and pass the researcher instance
     if "mcpretriever" in retriever.__name__.lower():
         search_retriever = retriever(
-            query, 
+            query,
             query_domains=query_domains,
             researcher=researcher  # Pass researcher instance for MCP retrievers
         )
     else:
-        search_retriever = retriever(query, query_domains=query_domains)
-    
+        retriever_kwargs = {"query_domains": query_domains}
+        if retriever.__name__.lower() == "duckduckgo" and proxy_url:
+            retriever_kwargs["proxy_url"] = proxy_url
+        search_retriever = retriever(query, **retriever_kwargs)
+
     return search_retriever.search()
 
 async def generate_sub_queries(
@@ -419,7 +408,7 @@ async def generate_sub_queries(
                 )
             except Exception as smart_error:
                 logger.warning(
-                    f"Smart LLM fallback failed: {smart_error}. Using deterministic anchored sub-queries."
+                    f"Smart LLM fallback failed: {smart_error}. Using original query fallback."
                 )
                 return _fallback_sub_queries(query, parent_query, cfg.max_iterations or 3)
 
@@ -461,13 +450,13 @@ async def plan_research_outline(
     # Handle the case where retriever_names is not provided
     if retriever_names is None:
         retriever_names = []
-    
+
     # For MCP retrievers, we may want to skip sub-query generation
     # Check if MCP is the only retriever or one of multiple retrievers
     if retriever_names and ("mcp" in retriever_names or "MCPRetriever" in retriever_names):
-        mcp_only = (len(retriever_names) == 1 and 
+        mcp_only = (len(retriever_names) == 1 and
                    ("mcp" in retriever_names or "MCPRetriever" in retriever_names))
-        
+
         if mcp_only:
             # If MCP is the only retriever, skip sub-query generation
             logger.info("Using MCP retriever only - skipping sub-query generation")

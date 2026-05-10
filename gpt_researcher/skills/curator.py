@@ -4,24 +4,11 @@ This module provides the SourceCurator class that evaluates and ranks
 research sources based on relevance, credibility, and reliability.
 """
 
-import json
 from typing import Dict, List, Optional
 
-import json_repair
-
 from ..actions import stream_output
-from ..config.config import Config
+from ..utils.json_parsing import parse_llm_json_response
 from ..utils.llm import create_chat_completion
-
-
-def _extract_json_object(response: str | None) -> str | None:
-    if not response:
-        return None
-    start = response.find("{")
-    end = response.rfind("}")
-    if start == -1 or end == -1 or end <= start:
-        return None
-    return response[start : end + 1]
 
 
 def _normalize_curated_sources(payload: object) -> list | None:
@@ -35,20 +22,11 @@ def _normalize_curated_sources(payload: object) -> list | None:
                 return value
 
     if isinstance(payload, str):
-        candidates = []
-        if json_object := _extract_json_object(payload):
-            candidates.append(json_object)
-
-        for candidate in candidates:
-            for loader in (json_repair.loads, json.loads):
-                try:
-                    parsed = loader(candidate)
-                except Exception:
-                    continue
-
-                normalized = _normalize_curated_sources(parsed)
-                if normalized is not None:
-                    return normalized
+        parsed = parse_llm_json_response(payload, expected_kind="any")
+        if parsed is not None:
+            normalized = _normalize_curated_sources(parsed)
+            if normalized is not None:
+                return normalized
 
     return None
 

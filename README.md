@@ -8,7 +8,6 @@
 [![Documentation](https://img.shields.io/badge/Documentation-DOCS-f472b6?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
 [![Discord](https://img.shields.io/discord/1127851779011391548?logo=discord&logoColor=white&label=Discord&color=34b76a&style=for-the-badge)](https://discord.gg/QgZXvJAccX)
 
-
 [![PyPI version](https://img.shields.io/pypi/v/gpt-researcher?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/gpt-researcher)
 ![GitHub Release](https://img.shields.io/github/v/release/assafelovic/gpt-researcher?style=flat&logo=github)
 [![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/docs/docs/examples/pip-run.ipynb)
@@ -22,158 +21,160 @@
 
 # 🔎 GPT Researcher
 
-**GPT Researcher the first open deep research agent designed for both web and local research on any given task.** 
+**GPT Researcher ist ein offener Deep-Research-Agent für Web- und Lokalrecherche auf beliebige Aufgaben.**
 
-The agent produces detailed, factual, and unbiased research reports with citations. GPT Researcher provides a full suite of customization options to create tailor made and domain specific research agents. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses misinformation, speed, determinism, and reliability by offering stable performance and increased speed through parallelized agent work.
+Der Agent erzeugt detaillierte, faktenbasierte und möglichst neutrale Forschungsberichte mit Quellenangaben. GPT Researcher bietet umfangreiche Anpassungsmöglichkeiten, damit sich domänenspezifische Forschungsagenten bauen lassen. Inspiriert von den neueren [Plan-and-Solve](https://arxiv.org/abs/2305.04091)- und [RAG](https://arxiv.org/abs/2005.11401)-Arbeiten adressiert GPT Researcher Fehlinformationen, Geschwindigkeit, Determinismus und Zuverlässigkeit durch stabile Performance und parallelisierte Agentenarbeit.
 
-**Our mission is to empower individuals and organizations with accurate, unbiased, and factual information through AI.**
+**Unsere Mission ist es, Menschen und Organisationen mit präzisen, unvoreingenommenen und belastbaren Informationen durch KI zu unterstützen.**
 
-## Why GPT Researcher?
+## Warum GPT Researcher?
 
-- Objective conclusions for manual research can take weeks, requiring vast resources and time.
-- LLMs trained on outdated information can hallucinate, becoming irrelevant for current research tasks.
-- Current LLMs have token limitations, insufficient for generating long research reports.
-- Limited web sources in existing services lead to misinformation and shallow results.
-- Selective web sources can introduce bias into research tasks.
+- Objektive Schlussfolgerungen aus manueller Recherche können Wochen dauern und verschlingen enorme Ressourcen.
+- Auf veralteten Informationen trainierte LLMs halluzinieren und werden für aktuelle Recherchen schnell unbrauchbar.
+- Viele LLMs haben Token-Limits, die für lange Forschungsberichte nicht ausreichen.
+- Begrenzte Webquellen in bestehenden Diensten führen zu Fehlinformationen und oberflächlichen Ergebnissen.
+- Selektive Webquellen können Forschungsergebnisse verzerren.
 
 ## Demo
 <a href="https://www.youtube.com/watch?v=f60rlc_QCxE" target="_blank" rel="noopener">
-  <img src="https://github.com/user-attachments/assets/ac2ec55f-b487-4b3f-ae6f-b8743ad296e4" alt="Demo video" width="800" target="_blank" />
+  <img src="https://github.com/user-attachments/assets/ac2ec55f-b487-4b3f-ae6f-b8743ad296e4" alt="Demo-Video" width="800" target="_blank" />
 </a>
 
-## Install as Claude Skill
+## Als Claude-Skill installieren
 
-Extend Claude's deep research capabilities by installing GPT Researcher as a [Claude Skill](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher):
+Erweitere die Deep-Research-Fähigkeiten von Claude, indem du GPT Researcher als [Claude Skill](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher) installierst:
 
 ```bash
 npx skills add assafelovic/gpt-researcher
 ```
 
-Once installed, Claude can leverage GPT Researcher's deep research capabilities directly within your conversations.
+Nach der Installation kann Claude die Deep-Research-Funktionen von GPT Researcher direkt in Gesprächen verwenden.
 
-## Fork-Specific Local Stack
+## Fork-spezifischer lokaler Stack
 
-This repository snapshot has been validated with a local Gemma/llama.cpp server and a patched backend/frontend stack.
+Dieser Repository-Snapshot wurde mit einem lokalen Gemma-/llama.cpp-Server und einem angepassten Backend-/Frontend-Stack validiert.
 
-- LLM server: `http://127.0.0.1:8081`
-- Backend API: `http://127.0.0.1:8002`
+- LLM-Server: `http://127.0.0.1:8081`
+- Backend-API: `http://127.0.0.1:8002`
 - Frontend: `http://127.0.0.1:3000`
-- Research artifacts: `outputs/`
+- Forschungsartefakte: `outputs/`
 
-See the fork-specific notes in [docs/docs/gpt-researcher/gptr/local-stack.md](docs/docs/gpt-researcher/gptr/local-stack.md).
+Siehe die fork-spezifischen Hinweise in [docs/docs/gpt-researcher/gptr/local-stack.md](docs/docs/gpt-researcher/gptr/local-stack.md).
 
-## Architecture
+Strukturierte LLM-Ausgaben werden im Backend über einen gemeinsamen JSON-Parser normalisiert. Dadurch bleiben Planner-, Critic-, Tool-Selection- und Bildgenerator-Flows auch dann stabil, wenn ein Modell versehentlich Code-Fences oder leicht beschädigte JSON-Payloads liefert. Die Prompts bleiben trotzdem auf reines JSON ausgerichtet.
 
-The core idea is to utilize 'planner' and 'execution' agents. The planner generates research questions, while the execution agents gather relevant information. The publisher then aggregates all findings into a comprehensive report.
+## Architektur
+
+Die Kernidee ist die Nutzung von „Planer“- und „Ausführungs“-Agenten. Der Planer erzeugt Forschungsfragen, während die Ausführungsagenten relevante Informationen sammeln. Der Publisher fasst anschließend alle Ergebnisse in einem umfassenden Bericht zusammen.
 
 <div align="center">
 <img align="center" height="600" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527">
 </div>
 
-Steps:
-* Create a task-specific agent based on a research query.
-* Generate questions that collectively form an objective opinion on the task.
-* Use a crawler agent for gathering information for each question.
-* Summarize and source-track each resource.
-* Filter and aggregate summaries into a final research report.
+Schritte:
+* Erzeuge einen auf die Aufgabe zugeschnittenen Agenten auf Basis einer Forschungsfrage.
+* Entwickle Fragen, die gemeinsam eine objektive Einschätzung der Aufgabe ergeben.
+* Nutze einen Crawler-Agenten, um Informationen zu jeder Frage zu sammeln.
+* Fasse jede Quelle zusammen und verfolge ihre Herkunft.
+* Filtere und aggregiere die Zusammenfassungen zu einem finalen Forschungsbericht.
 
-## Tutorials
- - [How it Works](https://docs.gptr.dev/blog/building-gpt-researcher)
- - [How to Install](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
- - [Live Demo](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
+## Anleitungen
+ - [So funktioniert es](https://docs.gptr.dev/blog/building-gpt-researcher)
+ - [So installierst du es](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
+ - [Live-Demo](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
-## Features
+## Funktionen
 
-- 📝 Generate detailed research reports using web and local documents.
-- 🖼️ Smart image scraping and filtering for reports.
-- 🍌 **AI-generated inline images** using Google Gemini (Nano Banana) for visual illustrations.
-- 📜 Generate detailed reports exceeding 2,000 words.
-- 🌐 Aggregate over 20 sources for objective conclusions.
-- 🖥️ Frontend available in lightweight (HTML/CSS/JS) and production-ready (NextJS + Tailwind) versions.
-- 🔍 JavaScript-enabled web scraping.
-- 📂 Maintains memory and context throughout research.
-- 📄 Export reports to PDF, Word, and other formats.
+- 📝 Erstelle detaillierte Forschungsberichte auf Basis von Web- und lokalen Dokumenten.
+- 🖼️ Intelligentes Bild-Scraping und Filtern für Berichte.
+- 🍌 **KI-generierte Inline-Bilder** mit Google Gemini (Nano Banana) für visuelle Illustrationen.
+- 📜 Erzeuge ausführliche Berichte mit mehr als 2.000 Wörtern.
+- 🌐 Aggregiere über 20 Quellen für objektive Schlussfolgerungen.
+- 🖥️ Frontend als leichtgewichtige Variante (HTML/CSS/JS) und als produktionsreife Variante (NextJS + Tailwind) verfügbar.
+- 🔍 Web-Scraping mit JavaScript-Unterstützung.
+- 📂 Behält während der Recherche Gedächtnis und Kontext.
+- 📄 Exportiere Berichte als PDF, Word und in weitere Formate.
 
-## 📖 Documentation
+## 📖 Dokumentation
 
-See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) for:
-- Installation and setup guides
-- Configuration and customization options
-- How-To examples
-- Full API references
+Siehe die [Dokumentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) für:
+- Installations- und Einrichtungsanleitungen
+- Konfigurations- und Anpassungsoptionen
+- How-to-Beispiele
+- Vollständige API-Referenzen
 
-## ⚙️ Getting Started
+## ⚙️ Erste Schritte
 
 ### Installation
 
-1. Install Python 3.11 or later. [Guide](https://www.tutorialsteacher.com/python/install-python).
-2. Clone the project and navigate to the directory:
+1. Installiere Python 3.11 oder neuer. [Anleitung](https://www.tutorialsteacher.com/python/install-python).
+2. Klone das Projekt und wechsle in das Verzeichnis:
 
     ```bash
     git clone https://github.com/assafelovic/gpt-researcher.git
     cd gpt-researcher
     ```
 
-3. Set up API keys by exporting them or storing them in a `.env` file.
+3. Lege API-Schlüssel per Umgebungsvariablen oder in einer `.env`-Datei ab.
 
     ```bash
-    export OPENAI_API_KEY={Your OpenAI API Key here}
-    # Optional: configure a web retriever if you want to override the DuckDuckGo default.
-    # export TAVILY_API_KEY={Your Tavily API Key here}
+    export OPENAI_API_KEY={Dein OpenAI-API-Schlüssel}
+    # Optional: konfiguriere einen Web-Retriever, wenn du DuckDuckGo überschreiben willst.
+    # export TAVILY_API_KEY={Dein Tavily-API-Schlüssel}
     ```
 
-    By default, web search uses DuckDuckGo. Set a retriever API key only if you want to override that default with Tavily or another provider.
+    Standardmäßig nutzt die Websuche DuckDuckGo. Setze einen Retriever-API-Schlüssel nur dann, wenn du den Standard mit Tavily oder einem anderen Anbieter überschreiben willst.
 
-    (Optional) For enhanced tracing and observability, you can also set:
+    (Optional) Für erweitertes Tracing und Observability kannst du außerdem setzen:
     
     ```bash
     # export LANGCHAIN_TRACING_V2=true
-    # export LANGCHAIN_API_KEY={Your LangChain API Key here}
+    # export LANGCHAIN_API_KEY={Dein LangChain-API-Schlüssel}
     ```
 
-    For custom OpenAI-compatible APIs (e.g., local models, other providers), you can also set:
+    Für benutzerdefinierte OpenAI-kompatible APIs (z. B. lokale Modelle oder andere Anbieter) kannst du außerdem setzen:
     
     ```bash
-    export OPENAI_BASE_URL={Your custom API base URL here}
+    export OPENAI_BASE_URL={Deine benutzerdefinierte API-Basis-URL}
     ```
 
-4. Install dependencies and start the server:
+4. Installiere die Abhängigkeiten und starte den Server:
 
     ```bash
     pip install -r requirements.txt
     python -m uvicorn main:app --reload
     ```
 
-Visit [http://localhost:8000](http://localhost:8000) to start.
+Rufe [http://localhost:8000](http://localhost:8000) auf, um zu starten.
 
-For other setups (e.g., Poetry or virtual environments), check the [Getting Started page](https://docs.gptr.dev/docs/gpt-researcher/getting-started).
+Für andere Setups (z. B. Poetry oder virtuelle Umgebungen) sieh dir die [Getting-Started-Seite](https://docs.gptr.dev/docs/gpt-researcher/getting-started) an.
 
-## Run as PIP package
+## Als PIP-Paket ausführen
 ```bash
 pip install gpt-researcher
 
 ```
-### Example Usage:
+### Beispielverwendung:
 ```python
 ...
 from gpt_researcher import GPTResearcher
 
 query = "why is Nvidia stock going up?"
 researcher = GPTResearcher(query=query)
-# Conduct research on the given query
+# Starte die Recherche für die angegebene Frage
 research_result = await researcher.conduct_research()
-# Write the report
+# Schreibe den Bericht
 report = await researcher.write_report()
 ...
 ```
 
-**For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package) page.**
+**Weitere Beispiele und Konfigurationen findest du auf der [PIP-Dokumentationsseite](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package).**
 
-### 🔧 MCP Client
-GPT Researcher supports MCP integration to connect with specialized data sources like GitHub repositories, databases, and custom APIs. This enables research from data sources alongside web search.
+### 🔧 MCP-Client
+GPT Researcher unterstützt MCP-Integration, um mit spezialisierten Datenquellen wie GitHub-Repositories, Datenbanken und benutzerdefinierten APIs zu verbinden. Damit kann Recherche auf Datenquellen zusätzlich zur Websuche erfolgen.
 
 ```bash
-export RETRIEVER=duckduckgo,mcp  # Enable hybrid web + MCP research
+export RETRIEVER=duckduckgo,mcp  # Hybridrecherche aus Web + MCP aktivieren
 ```
 
 ```python
@@ -182,7 +183,7 @@ import asyncio
 import os
 
 async def mcp_research_example():
-    # Enable MCP with web search
+    # MCP zusammen mit Websuche aktivieren
     os.environ["RETRIEVER"] = "duckduckgo,mcp"
     
     researcher = GPTResearcher(
@@ -202,150 +203,150 @@ async def mcp_research_example():
     return report
 ```
 
-> For comprehensive MCP documentation and advanced examples, visit the [MCP Integration Guide](https://docs.gptr.dev/docs/gpt-researcher/retrievers/mcp-configs).
+> Eine umfassende MCP-Dokumentation und erweiterte Beispiele findest du im [MCP-Integrationsleitfaden](https://docs.gptr.dev/docs/gpt-researcher/retrievers/mcp-configs).
 
-## 🍌 Inline Image Generation
+## 🍌 Inline-Bildgenerierung
 
-GPT Researcher can automatically generate and embed AI-created illustrations in your research reports using Google's Gemini models (Nano Banana).
+GPT Researcher kann automatisch KI-erzeugte Illustrationen in Forschungsberichte einbetten, indem Google-Gemini-Modelle (Nano Banana) verwendet werden.
 
 ```bash
-# Enable in your .env file
+# In deiner .env-Datei aktivieren
 IMAGE_GENERATION_ENABLED=true
 GOOGLE_API_KEY=your_google_api_key
 IMAGE_GENERATION_MODEL=models/gemini-2.5-flash-image
 ```
 
-When enabled, the system will:
-1. Analyze your research context to identify visualization opportunities
-2. Pre-generate 2-3 relevant images during the research phase
-3. Embed them inline as the report is written
+Wenn die Funktion aktiviert ist, passiert Folgendes:
+1. Der Forschungskontext wird analysiert, um Visualisierungsmöglichkeiten zu erkennen
+2. Während der Recherchephase werden 2 bis 3 passende Bilder vorab erzeugt
+3. Die Bilder werden direkt beim Schreiben des Berichts eingebettet
 
-Images are generated with dark-mode styling that matches the GPT Researcher UI, featuring professional infographic aesthetics with teal accents.
+Die Bilder werden im Dark-Mode-Stil erzeugt, der zur GPT-Researcher-UI passt, mit professioneller Infografik-Ästhetik und türkisfarbenen Akzenten.
 
-[Learn more about Image Generation](https://docs.gptr.dev/docs/gpt-researcher/gptr/image_generation) in our documentation.
+[Mehr über die Bildgenerierung erfahren](https://docs.gptr.dev/docs/gpt-researcher/gptr/image_generation) in unserer Dokumentation.
 
 ## ✨ Deep Research
 
-GPT Researcher now includes Deep Research - an advanced recursive research workflow that explores topics with agentic depth and breadth. This feature employs a tree-like exploration pattern, diving deeper into subtopics while maintaining a comprehensive view of the research subject.
+GPT Researcher enthält jetzt Deep Research - einen fortgeschrittenen rekursiven Forschungs-Workflow, der Themen mit Tiefe und Breite erkundet. Diese Funktion verwendet ein baumartiges Erkundungsmuster und taucht tiefer in Unterthemen ein, während sie gleichzeitig einen Gesamtüberblick über das Thema behält.
 
-- 🌳 Tree-like exploration with configurable depth and breadth
-- ⚡️ Concurrent processing for faster results
-- 🤝 Smart context management across research branches
-- ⏱️ Takes ~5 minutes per deep research
-- 💰 Costs ~$0.4 per research (using `o3-mini` on "high" reasoning effort)
+- 🌳 Baumartige Erkundung mit konfigurierbarer Tiefe und Breite
+- ⚡️ Parallele Verarbeitung für schnellere Ergebnisse
+- 🤝 Intelligentes Kontextmanagement über Forschungszweige hinweg
+- ⏱️ Etwa 5 Minuten pro Deep-Research-Lauf
+- 💰 Etwa 0,4 $ pro Recherche (mit `o3-mini` bei Reasoning-Effort „high“)
 
-[Learn more about Deep Research](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research) in our documentation.
+[Mehr über Deep Research erfahren](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research) in unserer Dokumentation.
 
-## Run with Docker
+## Mit Docker ausführen
 
-> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
+> **Schritt 1** - [Docker installieren](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
 
-> **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
+> **Schritt 2** - Die Datei `.env.example` kopieren, deine API-Schlüssel in die Kopie eintragen und die Datei als `.env` speichern.
 
-> **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
+> **Schritt 3** - In der `docker-compose`-Datei die Dienste auskommentieren, die du nicht mit Docker ausführen willst.
 
 ```bash
 docker-compose up --build
 ```
 
-If that doesn't work, try running it without the dash:
+Wenn das nicht funktioniert, probiere es ohne Bindestrich:
 ```bash
 docker compose up --build
 ```
 
-> **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
- - the Python server running on localhost:8000<br>
- - the React app running on localhost:3000<br>
+> **Schritt 4** - Standardmäßig startet dieser Ablauf, sofern du in deiner `docker-compose`-Datei nichts auskommentiert hast, zwei Prozesse:
+ - den Python-Server auf `localhost:8000`<br>
+ - die React-App auf `localhost:3000`<br>
 
-Visit localhost:3000 on any browser and enjoy researching!
+Rufe `localhost:3000` im Browser auf und lege direkt los.
 
 
-## 📄 Research on Local Documents
+## 📄 Recherche auf lokalen Dokumenten
 
-You can instruct the GPT Researcher to run research tasks based on your local documents. Currently supported file formats are: PDF, plain text, CSV, Excel, Markdown, PowerPoint, and Word documents.
+Du kannst GPT Researcher anweisen, Aufgaben auf Basis lokaler Dokumente zu bearbeiten. Unterstützte Dateiformate sind derzeit: PDF, Klartext, CSV, Excel, Markdown, PowerPoint und Word-Dokumente.
 
-Step 1: Add the env variable `DOC_PATH` pointing to the folder where your documents are located.
+Schritt 1: Lege die Umgebungsvariable `DOC_PATH` an, die auf den Ordner mit deinen Dokumenten zeigt.
 
 ```bash
 export DOC_PATH="./my-docs"
 ```
 
-Step 2: 
- - If you're running the frontend app on localhost:8000, simply select "My Documents" from the "Report Source" Dropdown Options.
-- If you're running GPT Researcher with the [PIP package](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
+Schritt 2:
+ - Wenn du die Frontend-App auf `localhost:8000` ausführst, wähle einfach „My Documents“ in der Dropdown-Option „Report Source“ aus.
+- Wenn du GPT Researcher mit dem [PIP-Paket](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package) verwendest, übergib das Argument `report_source` als `"local"`, wenn du die Klasse `GPTResearcher` instanziierst. Ein Codebeispiel findest du [hier](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
 
 
-## 🤖 MCP Server
+## 🤖 MCP-Server
 
-We've moved our MCP server to a dedicated repository: [gptr-mcp](https://github.com/assafelovic/gptr-mcp).
+Unser MCP-Server wurde in ein eigenes Repository verschoben: [gptr-mcp](https://github.com/assafelovic/gptr-mcp).
 
-The GPT Researcher MCP Server enables AI applications like Claude to conduct deep research. While LLM apps can access web search tools with MCP, GPT Researcher MCP delivers deeper, more reliable research results.
+Der GPT Researcher MCP-Server ermöglicht es KI-Anwendungen wie Claude, tiefergehende Recherchen durchzuführen. Während LLM-Apps mit MCP Websuche-Tools nutzen können, liefert der GPT Researcher MCP tiefere und zuverlässigere Forschungsergebnisse.
 
-Features:
-- Deep research capabilities for AI assistants
-- Higher quality information with optimized context usage
-- Comprehensive results with better reasoning for LLMs
-- Claude Desktop integration
+Funktionen:
+- Deep-Research-Fähigkeiten für KI-Assistenten
+- Höhere Informationsqualität durch optimierte Kontextnutzung
+- Umfassende Ergebnisse mit besserem Reasoning für LLMs
+- Claude-Desktop-Integration
 
-For detailed installation and usage instructions, please visit the [official repository](https://github.com/assafelovic/gptr-mcp).
+Ausführliche Installations- und Nutzungshinweise findest du im [offiziellen Repository](https://github.com/assafelovic/gptr-mcp).
 
 
-## 👪 Multi-Agent Assistant
-As AI evolves from prompt engineering and RAG to multi-agent systems, we're excited to introduce multi-agent assistants built with [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/) and [AG2](https://github.com/ag2ai/ag2).
+## 👪 Multi-Agent-Assistent
+Während sich KI von Prompt Engineering und RAG hin zu Multi-Agent-Systemen entwickelt, freuen wir uns, Multi-Agent-Assistenten auf Basis von [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/) und [AG2](https://github.com/ag2ai/ag2) vorzustellen.
 
-By using multi-agent frameworks, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this project showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
+Durch den Einsatz von Multi-Agent-Frameworks kann der Forschungsprozess in Tiefe und Qualität deutlich verbessert werden, indem mehrere spezialisierte Agenten zusammenarbeiten. Inspiriert von der jüngeren [STORM](https://arxiv.org/abs/2402.14207)-Arbeit zeigt dieses Projekt, wie ein Team von KI-Agenten gemeinsam eine Recherche von der Planung bis zur Veröffentlichung durchführen kann.
 
-An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
+Ein durchschnittlicher Lauf erzeugt einen 5- bis 6-seitigen Forschungsbericht in mehreren Formaten wie PDF, Docx und Markdown.
 
-Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our documentation for [LangGraph](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) and [AG2](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2) for more information.
+Sieh es dir [hier](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) an oder besuche unsere Dokumentation zu [LangGraph](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) und [AG2](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2) für weitere Informationen.
 
 ## 🔍 Observability
 
-GPT Researcher supports **LangSmith** for enhanced tracing and observability, making it easier to debug and optimize complex multi-agent workflows.
+GPT Researcher unterstützt **LangSmith** für erweitertes Tracing und Observability, damit sich komplexe Multi-Agent-Workflows leichter debuggen und optimieren lassen.
 
-To enable tracing:
-1. Set the following environment variables:
+So aktivierst du Tracing:
+1. Setze die folgenden Umgebungsvariablen:
    ```bash
    export LANGCHAIN_TRACING_V2=true
    export LANGCHAIN_API_KEY=your_api_key
    export LANGCHAIN_PROJECT="gpt-researcher"
    ```
-2. Run your research tasks as usual. All LangGraph-based agent interactions will be automatically traced and visualized in your LangSmith dashboard.
+2. Starte deine Rechercheaufgaben wie gewohnt. Alle LangGraph-basierten Agenteninteraktionen werden automatisch getraced und in deinem LangSmith-Dashboard visualisiert.
 
-## 🖥️ Frontend Applications
+## 🖥️ Frontend-Anwendungen
 
-GPT-Researcher now features an enhanced frontend to improve the user experience and streamline the research process. The frontend offers:
+GPT-Researcher verfügt jetzt über ein verbessertes Frontend, das die Benutzererfahrung verbessert und den Forschungsprozess strafft. Das Frontend bietet:
 
-- An intuitive interface for inputting research queries
-- Real-time progress tracking of research tasks
-- Interactive display of research findings
-- Customizable settings for tailored research experiences
+- Eine intuitive Oberfläche für Forschungsanfragen
+- Echtzeit-Fortschrittsanzeige für laufende Aufgaben
+- Interaktive Darstellung von Forschungsergebnissen
+- Anpassbare Einstellungen für maßgeschneiderte Rechercheerlebnisse
 
-Two deployment options are available:
-1. A lightweight static frontend served by FastAPI
-2. A feature-rich NextJS application for advanced functionality
+Es stehen zwei Bereitstellungsoptionen zur Verfügung:
+1. Ein leichtgewichtiges statisches Frontend, das über FastAPI ausgeliefert wird
+2. Eine funktionsreiche NextJS-Anwendung für erweiterte Funktionen
 
-For detailed setup instructions and more information about the frontend features, please visit our [documentation page](https://docs.gptr.dev/docs/gpt-researcher/frontend/introduction).
+Für detaillierte Einrichtungsanleitungen und weitere Informationen zu den Frontend-Funktionen besuche bitte unsere [Dokumentationsseite](https://docs.gptr.dev/docs/gpt-researcher/frontend/introduction).
 
-## 🚀 Contributing
-We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md) if you're interested.
+## 🚀 Mitwirken
+Beiträge sind sehr willkommen! Schau dir bitte [contributing](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md) an, wenn du mitmachen möchtest.
 
-Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/QgZXvJAccX) if you're interested in joining our mission.
+Sieh dir bitte auch unsere [Roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) an und melde dich über unsere [Discord-Community](https://discord.gg/QgZXvJAccX), wenn du bei unserer Mission mitmachen möchtest.
 <a href="https://github.com/assafelovic/gpt-researcher/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=assafelovic/gpt-researcher&max=1000" />
 </a>
-## ✉️ Support / Contact us
+## ✉️ Support / Kontakt
 - [Community Discord](https://discord.gg/spBgZmm3Xe)
-- Author Email: assaf.elovic@gmail.com
+- E-Mail des Autors: assaf.elovic@gmail.com
 
-## 🛡 Disclaimer
+## 🛡 Haftungsausschluss
 
-This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the Apache 2 license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
+Dieses Projekt, GPT Researcher, ist eine experimentelle Anwendung und wird „wie besehen“ ohne jegliche ausdrückliche oder stillschweigende Gewährleistung bereitgestellt. Wir stellen den Code zu akademischen Zwecken unter der Apache-2-Lizenz bereit. Nichts hierin ist akademische Beratung und keine Empfehlung, es in akademischen Arbeiten oder Forschungsarbeiten zu verwenden.
 
-Our view on unbiased research claims:
-1. The main goal of GPT Researcher is to reduce incorrect and biased facts. How? We assume that the more sites we scrape the less chances of incorrect data. By scraping multiple sites per research, and choosing the most frequent information, the chances that they are all wrong is extremely low.
-2. We do not aim to eliminate biases; we aim to reduce it as much as possible. **We are here as a community to figure out the most effective human/llm interactions.**
-3. In research, people also tend towards biases as most have already opinions on the topics they research about. This tool scrapes many opinions and will evenly explain diverse views that a biased person would never have read.
+Unsere Sicht auf unvoreingenommene Forschungsaussagen:
+1. Das Hauptziel von GPT Researcher ist es, falsche und verzerrte Fakten zu reduzieren. Wie? Wir nehmen an, dass die Wahrscheinlichkeit für falsche Daten sinkt, je mehr Seiten wir scrapen. Wenn wir für eine Recherche mehrere Seiten scrapen und die häufigsten Informationen auswählen, ist die Chance, dass sie alle falsch sind, extrem gering.
+2. Wir wollen Verzerrungen nicht vollständig eliminieren; wir wollen sie so weit wie möglich reduzieren. **Wir sind hier als Community, um die wirksamsten Interaktionen zwischen Mensch und LLM herauszufinden.**
+3. Auch Menschen neigen in der Forschung zu Verzerrungen, da viele bereits Meinungen zu den Themen haben, über die sie recherchieren. Dieses Tool scrapt viele Meinungen und erklärt unterschiedliche Sichtweisen gleichgewichtig, die eine voreingenommene Person sonst nie gelesen hätte.
 
 ---
 
@@ -359,7 +360,6 @@ Our view on unbiased research claims:
 </a>
 </p>
 
-
 <p align="right">
-  <a href="#top">⬆️ Back to Top</a>
+  <a href="#top">⬆️ Zurück nach oben</a>
 </p>

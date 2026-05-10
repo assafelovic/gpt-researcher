@@ -4,13 +4,10 @@ This module provides functions to automatically select and configure
 the appropriate research agent based on the query type.
 """
 
-import json
 import logging
-import re
-
-import json_repair
 
 from ..prompts import PromptFamily
+from ..utils.json_parsing import extract_json_fragment, parse_llm_json_response
 from ..utils.llm import create_chat_completion
 
 logger = logging.getLogger(__name__)
@@ -112,6 +109,11 @@ def _extract_agent_choice(payload: object) -> tuple[str, str] | None:
 
     return None
 
+
+def _extract_agent_choice_from_text(response: str | object | None) -> tuple[str, str] | None:
+    payload = parse_llm_json_response(response, expected_kind="object")
+    return _extract_agent_choice(payload)
+
 async def choose_agent(
     query,
     cfg,
@@ -152,13 +154,9 @@ async def choose_agent(
             **kwargs
         )
 
-        try:
-            agent_dict = json.loads(response)
-            extracted = _extract_agent_choice(agent_dict)
-            if extracted:
-                return extracted
-        except Exception:
-            pass
+        extracted = _extract_agent_choice_from_text(response)
+        if extracted:
+            return extracted
 
         return await handle_json_error(response, query)
 
@@ -167,10 +165,10 @@ async def choose_agent(
 
 
 async def handle_json_error(response: str | None, query: str | None = None):
-    """Handle JSON parsing errors from LLM responses.
+    """Recover an agent choice from a malformed LLM response.
 
-    Attempts to recover agent information from malformed JSON responses
-    using json_repair and regex extraction as fallbacks.
+    This uses the shared JSON parser first and only falls back to the
+    heuristic agent picker if the response still cannot be normalized.
 
     Args:
         response: The LLM response string that failed initial JSON parsing.
@@ -179,39 +177,18 @@ async def handle_json_error(response: str | None, query: str | None = None):
         A tuple of (agent_name, agent_role_prompt). Returns default agent
         if all parsing attempts fail.
     """
-    candidates: list[str] = []
-    if response:
-        candidates.append(response)
-        if json_string := extract_json_with_regex(response):
-            candidates.append(json_string)
-
-    for candidate in candidates:
-        for loader in (json_repair.loads, json.loads):
-            try:
-                payload = loader(candidate)
-            except Exception as exc:
-                if candidate == response:
-                    logger.warning(
-                        "Failed to parse agent JSON with %s: %s: %s",
-                        loader.__name__,
-                        type(exc).__name__,
-                        exc,
-                        exc_info=True,
-                    )
-                continue
-
-            extracted = _extract_agent_choice(payload)
-            if extracted:
-                return extracted
+    if extracted := _extract_agent_choice_from_text(response):
+        return extracted
 
     logger.info("No valid JSON found in LLM response. Falling back to heuristic agent.")
     return _fallback_agent_for_query(query)
 
 
 def extract_json_with_regex(response: str | None) -> str | None:
-    """Extract JSON object from a string using regex.
+    """Compatibility wrapper around the shared JSON fragment extractor.
 
-    Attempts to find the first JSON object pattern in the response string.
+    Older callers still import this name, but the central parsing logic now
+    lives in :func:`gpt_researcher.utils.json_parsing.extract_json_fragment`.
 
     Args:
         response: The string to search for JSON content.
@@ -219,9 +196,4 @@ def extract_json_with_regex(response: str | None) -> str | None:
     Returns:
         The extracted JSON string if found, None otherwise.
     """
-    if not response:
-        return None
-    json_match = re.search(r"{.*?}", response, re.DOTALL)
-    if json_match:
-        return json_match.group(0)
-    return None
+    return extract_json_fragment(response)

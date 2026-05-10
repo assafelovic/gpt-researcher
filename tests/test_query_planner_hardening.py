@@ -1,6 +1,7 @@
 from gpt_researcher.actions.query_processing import (
     _complete_sub_queries,
     _extract_focus_terms,
+    _extract_query_list,
     _is_task_anchored_query,
 )
 from gpt_researcher.prompts import PromptFamily
@@ -41,19 +42,35 @@ def test_task_anchoring_rejects_off_topic_frameworks():
     assert _is_task_anchored_query("fastapi flask async benchmarks", query, "") is True
 
 
-def test_complete_sub_queries_falls_back_to_anchored_queries():
-    query = "What are the practical tradeoffs between FastAPI and Flask for async Python APIs?"
-    response = [
-        "django vs flask tutorial",
-        "spring boot rest api guide",
+def test_extract_query_list_handles_quoted_comma_separated_items():
+    response = '"OpenAI API docs", "OpenAI Python API library", "OpenAI API Platform Documentation"\n```'
+
+    assert _extract_query_list(response) == [
+        "OpenAI API docs",
+        "OpenAI Python API library",
+        "OpenAI API Platform Documentation",
     ]
+
+
+def test_complete_sub_queries_preserves_model_queries_without_padding():
+    query = "OpenAI API docs"
+    response = '"OpenAI API docs", "OpenAI Python API library", "OpenAI API Platform Documentation"\n```'
 
     result = _complete_sub_queries(response, query, "", 3)
 
-    assert result[0] == query
-    assert len(result) == 3
-    assert all("django" not in candidate.lower() for candidate in result)
-    assert all("spring boot" not in candidate.lower() for candidate in result)
+    assert result == [
+        "OpenAI API docs",
+        "OpenAI Python API library",
+        "OpenAI API Platform Documentation",
+    ]
+
+
+def test_complete_sub_queries_uses_original_query_when_model_returns_nothing():
+    query = "OpenAI API docs"
+
+    result = _complete_sub_queries("", query, "", 3)
+
+    assert result == [query]
 
 
 def test_dedupe_queries_preserves_first_unique_variant():

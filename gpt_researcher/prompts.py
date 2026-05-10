@@ -40,17 +40,17 @@ class PromptFamily:
     def generate_mcp_tool_selection_prompt(query: str, tools_info: List[Dict], max_tools: int = 3) -> str:
         """
         Generate prompt for LLM-based MCP tool selection.
-        
+
         Args:
             query: The research query
             tools_info: List of available tools with their metadata
             max_tools: Maximum number of tools to select
-            
+
         Returns:
             str: The tool selection prompt
         """
         import json
-        
+
         return f"""You are a research assistant helping to select the most relevant tools for a research query.
 
 RESEARCH QUERY: "{query}"
@@ -66,7 +66,7 @@ SELECTION CRITERIA:
 - Consider tools that complement each other (e.g., different data sources)
 - Exclude tools that are clearly unrelated to the research topic
 
-Return a JSON object with this exact format:
+Return a single JSON object with this exact format. Do not add markdown fences, prose, or commentary:
 {{
   "selected_tools": [
     {{
@@ -86,11 +86,11 @@ Select exactly {max_tools} tools, ranked by relevance to the research query.
     def generate_mcp_research_prompt(query: str, selected_tools: List) -> str:
         """
         Generate prompt for MCP research execution with selected tools.
-        
+
         Args:
             query: The research query
             selected_tools: List of selected MCP tools
-            
+
         Returns:
             str: The research execution prompt
         """
@@ -101,7 +101,7 @@ Select exactly {max_tools} tools, ranked by relevance to the research query.
                 tool_names.append(tool.name)
             else:
                 tool_names.append(str(tool))
-        
+
         return f"""You are a research assistant with access to specialized tools. Your task is to research the following query and provide comprehensive, accurate information.
 
 RESEARCH QUERY: "{query}"
@@ -125,12 +125,12 @@ Please conduct thorough research and provide your findings. Use the tools strate
         max_images: int = 3,
     ) -> str:
         """Generate prompt for analyzing which report sections need images.
-        
+
         Args:
             query: The research query.
             sections: List of report sections with header and content.
             max_images: Maximum number of images to suggest.
-            
+
         Returns:
             str: The analysis prompt.
         """
@@ -138,7 +138,7 @@ Please conduct thorough research and provide your findings. Use the tools strate
             f"### Section {i+1}: {s['header']}\n{s['content'][:500]}..."
             for i, s in enumerate(sections)
         ])
-        
+
         return f"""Analyze the following research report sections and identify which {max_images} sections would benefit MOST from a visual illustration or diagram.
 
 RESEARCH TOPIC: {query}
@@ -159,7 +159,7 @@ IMPORTANT GUIDELINES:
 - Images should be informative and educational, not decorative
 - Consider diagrams, flowcharts, comparison charts, or conceptual illustrations
 
-Respond in JSON format:
+Respond with a single JSON object in this exact schema:
 {{
     "suggestions": [
         {{
@@ -172,7 +172,7 @@ Respond in JSON format:
     ]
 }}
 
-Return ONLY the JSON, no additional text."""
+Return only the JSON object, with no additional text."""
 
     @staticmethod
     def generate_image_prompt_enhancement(
@@ -181,12 +181,12 @@ Return ONLY the JSON, no additional text."""
         research_topic: str,
     ) -> str:
         """Enhance an image prompt with context for better generation.
-        
+
         Args:
             base_prompt: The base image generation prompt.
             section_content: Content from the report section.
             research_topic: The main research topic.
-            
+
         Returns:
             str: Enhanced image prompt.
         """
@@ -268,7 +268,7 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if
 {focus_prompt}
 
 Requirements:
-- Return ONLY a valid JSON array of strings.
+- Return a single valid JSON array of strings.
 - Keep the queries directly relevant, diverse, and factual.
 - Prefer broad search terms over long natural-language sentences.
 - Do not include markdown, explanations, numbering, or code fences.
@@ -295,7 +295,7 @@ Example format:
         """
 
         reference_prompt = ""
-        if report_source == ReportSource.Web.value:
+        if report_source in (ReportSource.Web.value, ReportSource.Onion.value):
             reference_prompt = f"""
 You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
 Every url should be hyperlinked: [url website](url)
@@ -368,7 +368,7 @@ SOURCES LIST TO EVALUATE:
 {sources}
 
 You MUST return your response in the EXACT sources JSON list format as the original sources.
-The response MUST not contain any markdown format or additional text (like ```json), just the JSON list!
+The response MUST be a plain JSON list with no markdown format, code fences, or additional text.
 """
 
     @staticmethod
@@ -386,7 +386,7 @@ The response MUST not contain any markdown format or additional text (like ```js
         """
 
         reference_prompt = ""
-        if report_source == ReportSource.Web.value:
+        if report_source in (ReportSource.Web.value, ReportSource.Onion.value):
             reference_prompt = f"""
             You MUST include all relevant source urls.
             Every url should be hyperlinked: [url website](url)
@@ -462,7 +462,7 @@ The response MUST not contain any markdown format or additional text (like ```js
             str: The deep research report prompt
         """
         reference_prompt = ""
-        if report_source == ReportSource.Web.value:
+        if report_source in (ReportSource.Web.value, ReportSource.Onion.value):
             reference_prompt = f"""
 You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
 Every url should be hyperlinked: [url website](url)
@@ -518,14 +518,14 @@ Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')}.
         return """
 You are selecting the best research server for a task.
 
-Return ONLY valid JSON with exactly these keys:
+Return a single JSON object with exactly these keys:
 {
   "server": "Agent name with emoji",
   "agent_role_prompt": "A single sentence describing how the agent should research and write"
 }
 
 Rules:
-- Return JSON only. No markdown, no code fences, no commentary.
+- Return plain JSON only. No markdown, no code fences, no commentary.
 - Use double quotes for all keys and strings.
 - Keep the agent_role_prompt concise and specific.
 - If the topic is general or technical research, choose a generic research assistant agent.

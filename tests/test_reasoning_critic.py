@@ -131,3 +131,73 @@ async def test_reasoning_critic_falls_back_to_deterministic_bundle(monkeypatch):
     assert bundle["source"] == "deterministic"
     assert bundle["verdict"] == "high_risk"
     assert bundle["issues"]
+
+
+@pytest.mark.asyncio
+async def test_reasoning_critic_strips_internal_metadata_from_llm_call(monkeypatch):
+    captured = {}
+
+    async def fake_create_chat_completion(**kwargs):
+        captured.update(kwargs)
+        return """
+        {
+          "verdict": "pass",
+          "confidence": 0.91,
+          "summary": "Looks good.",
+          "issues": [],
+          "strengths": ["The report is grounded in the evidence bundle."],
+          "recommendations": []
+        }
+        """
+
+    monkeypatch.setattr(reasoning_critic, "create_chat_completion", fake_create_chat_completion)
+
+    cfg = Config()
+    cfg.enable_reasoning_critic = True
+
+    bundle = await reasoning_critic.build_reasoning_critic_bundle(
+        query="Compare FastAPI and Flask for async Python APIs",
+        context="FastAPI and Flask have different async capabilities.",
+        report_markdown="# Report\n\n## Overview\nFastAPI is async-first.",
+        verification_bundle={
+            "query": "Compare FastAPI and Flask for async Python APIs",
+            "summary": {
+                "claims_total": 1,
+                "supported_claims": 1,
+                "partial_claims": 0,
+                "unsupported_claims": 0,
+                "support_rate": 1.0,
+                "source_count": 1,
+            },
+            "risk": {
+                "level": "low",
+                "human_review_required": False,
+                "reason": "general",
+            },
+            "claims": [],
+            "evidence_graph": {"nodes": [], "edges": []},
+        },
+        cfg=cfg,
+        agent_role_prompt="You are a skeptical editor.",
+        visited_urls=["https://example.com/should-not-be-forwarded"],
+    )
+
+    assert bundle["source"] == "llm"
+    assert "visited_urls" not in captured
+
+
+def test_reasoning_critic_parses_code_fenced_payload_without_braces():
+    response = """```json
+verdict: revise
+confidence: 0.83
+summary: One comparative claim is a little too strong.
+issues: []
+strengths: ["The report includes a verification appendix."]
+recommendations: ["Soften absolute performance language."]
+```"""
+
+    payload = reasoning_critic._parse_critic_payload(response)
+
+    assert payload is not None
+    assert payload["verdict"] == "revise"
+    assert payload["confidence"] == 0.83
