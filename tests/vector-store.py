@@ -115,7 +115,7 @@ async def test_gpt_researcher_with_vector_store():
     vectorstore = create_vectorstore(docs)
 
     query = """
-        Summarize the essay into 3 or 4 succint sections.
+        Summarize the essay into 3 or 4 succinct sections.
         Make sure to include key points regarding the differences between
         persistance vs obstinate.
 

@@ -95,7 +95,7 @@ from langchain_openai import OpenAIEmbeddings
 CONNECTION_STRING = 'postgresql://someuser:somepass@localhost:5432/somedatabase'
 
 
-# assuming the vector store exists and contains the relevent documents
+# assuming the vector store exists and contains the relevant documents
 # also assuming embeddings have been or will be generated
 vector_store = PGVector.from_existing_index(
     use_jsonb=True,
