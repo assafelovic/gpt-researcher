@@ -66,6 +66,7 @@ To change the research query and customize the report, edit the `task.json` file
 - `query` - The research query or task.
 - `model` - The OpenAI LLM to use for the agents.
 - `max_sections` - The maximum number of sections in the report. Each section is a subtopic of the research query.
+- `max_plan_revisions` - The maximum number of human-requested plan revisions before the workflow exits with a clear error. Set to `null` to rely on LangGraph's recursion limit instead.
 - `include_human_feedback` - If true, the user can provide feedback to the agents. If false, the agents will work autonomously.
 - `publish_formats` - The formats to publish the report in. The reports will be written in the `output` directory.
 - `source` - The location from which to conduct the research. Options: `web` or `local`. For local, please add `DOC_PATH` env var.
@@ -78,7 +79,8 @@ To change the research query and customize the report, edit the `task.json` file
 {
   "query": "Is AI in a hype cycle?",
   "model": "gpt-4o",
-  "max_sections": 3, 
+  "max_sections": 3,
+  "max_plan_revisions": 3,
   "publish_formats": { 
     "markdown": true,
     "pdf": true,
