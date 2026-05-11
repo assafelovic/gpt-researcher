@@ -1,17 +1,17 @@
-# Intro to the Frontends
+# Einführung in die Frontends
 
-The frontends enhance GPT-Researcher by providing:
+Die Frontends erweitern GPT Researcher um:
 
-1. Intuitive Research Interface: Streamlined input for research queries.
-2. Real-time Progress Tracking: Visual feedback on ongoing research tasks.
-3. Interactive Results Display: Easy-to-navigate presentation of findings.
-4. Customizable Settings: Adjust research parameters to suit specific needs.
-5. Responsive Design: Optimal experience across various devices.
+1. **Intuitive Recherche-Oberfläche**: Vereinfachte Eingabe für Rechercheanfragen
+2. **Fortschrittsanzeige in Echtzeit**: Visuelles Feedback zu laufenden Rechercheaufgaben
+3. **Interaktive Ergebnisanzeige**: Leicht navigierbare Darstellung der Ergebnisse
+4. **Anpassbare Einstellungen**: Rechercheparameter auf die eigenen Bedürfnisse abstimmen
+5. **Responsives Design**: Gute Nutzung auf verschiedenen Geräten
 
-These features aim to make the research process more efficient and user-friendly, complementing GPT-Researcher's powerful agent capabilities.
+Diese Funktionen machen den Rechercheprozess effizienter und benutzerfreundlicher und ergänzen die starken Agentenfähigkeiten von GPT Researcher.
 
-## Choosing an Option
+## Eine Option wählen
 
-- Static Frontend: Quick setup, lightweight deployment.
-- NextJS Frontend: Feature-rich, scalable, better performance and SEO (For production, NextJS is recommended)
-- Discord Bot: Integrate GPT-Researcher into your Discord server.
+- **Statisches Frontend**: Schnelles Setup, leichte Bereitstellung
+- **NextJS-Frontend**: Funktionsreich, skalierbar, bessere Performance und SEO. Für die Produktion empfohlen.
+- **Discord-Bot**: GPT Researcher in deinen Discord-Server integrieren

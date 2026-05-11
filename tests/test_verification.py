@@ -58,6 +58,29 @@ def test_classify_risk_marks_medical_topics_high():
     assert "health" in risk["categories"]
 
 
+def test_classify_risk_localizes_reason_in_german():
+    risk = classify_risk(
+        "What are the treatment options for diabetes?",
+        "Diabetes treatment should be reviewed by a clinician.",
+        language="german",
+    )
+
+    assert risk["level"] == "high"
+    assert risk["human_review_required"] is True
+    assert "gesundheit" in risk["reason"].lower()
+
+
+def test_classify_risk_localizes_default_reason_in_german():
+    risk = classify_risk(
+        "General research topic without risk terms.",
+        "A neutral report without sensitive content.",
+        language="german",
+    )
+
+    assert risk["level"] == "low"
+    assert "hochrisiko" in risk["reason"].lower()
+
+
 def test_render_verification_section_mentions_human_review():
     bundle = {
         "summary": {
@@ -93,7 +116,27 @@ def test_render_verification_section_mentions_human_review():
 
 @pytest.mark.asyncio
 async def test_generate_report_appends_verification_review_and_stores_bundle(monkeypatch):
+    calls: list[str] = []
+
     async def fake_create_chat_completion(**kwargs):
+        prompt_text = "\n".join(message.get("content", "") for message in kwargs.get("messages", []))
+        calls.append(prompt_text)
+
+        if "Translate the following markdown report into German" in prompt_text:
+            return """# Vergleiche FastAPI und Flask für asynchrone Python-APIs
+
+## Überblick
+FastAPI ist für asynchrones APIs ausgelegt und validiert Daten mit Pydantic.
+
+## Zentrale Erkenntnisse
+- Flask bleibt ein kompaktes Microframework und kann mit Erweiterungen für asynchrone Unterstützung kombiniert werden.
+- FastAPI wird häufig für typisierte Request-Validierung gewählt.
+
+## Verifikationsprüfung
+- Risikostufe: niedrig
+- Manuelle Prüfung erforderlich: nein
+"""
+
         return """# Compare FastAPI and Flask for async Python APIs
 
 ## Overview
@@ -105,10 +148,10 @@ FastAPI is designed for async-first APIs and validates data with Pydantic.
 """
 
     monkeypatch.setattr(report_generation, "create_chat_completion", fake_create_chat_completion)
-    monkeypatch.setattr(report_generation, "resolve_openai_base_url", lambda: None)
 
     cfg = Config()
     cfg.enable_verification_review = True
+    cfg.enable_reasoning_critic = False
 
     sink = SimpleNamespace()
 
@@ -130,6 +173,8 @@ https://flask.palletsprojects.com/
         verification_sink=sink,
     )
 
-    assert "## Verification Review" in report
     assert getattr(sink, "verification_bundle", None) is not None
     assert sink.verification_bundle["summary"]["claims_total"] >= 1
+    assert report.startswith("# Vergleiche FastAPI und Flask für asynchrone Python-APIs")
+    assert "## Verifikationsprüfung" in report
+    assert any("Translate the following markdown report into German" in prompt for prompt in calls)

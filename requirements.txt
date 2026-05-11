@@ -6,6 +6,7 @@ fastapi>=0.104.1
 uvicorn>=0.24.0.post1
 pydantic>=2.5.1
 python-dotenv>=1.0.0
+aiohttp>=3.12.0
 
 # LangChain v1
 langchain>=1.0.0
@@ -66,4 +67,3 @@ python-multipart>=0.0.6
 json-repair>=0.29.8
 json5>=0.9.25
 markdown>=3.5.1
-

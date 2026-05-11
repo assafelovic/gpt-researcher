@@ -1,26 +1,27 @@
-# Deep Research ✨ NEW ✨
+# Deep Research ✨ NEU ✨
 
-With the latest "Deep Research" trend in the AI community, we're excited to implement our own Open source deep research capability! Introducing GPT Researcher's Deep Research - an advanced recursive research system that explores topics with unprecedented depth and breadth. 
+Mit dem aktuellen Deep-Research-Trend in der KI-Community freuen wir uns, unsere eigene Open-Source-Deep-Research-Funktion bereitzustellen. GPT Researchers Deep Research ist ein fortgeschrittenes rekursives Forschungssystem, das Themen mit ungewöhnlicher Tiefe und Breite erkundet.
 
-Each deep research takes around 5 minutes to complete and costs around $0.4 (using `o3-mini` on `"high" `reasoning effort)
+Ein Deep-Research-Lauf dauert etwa 5 Minuten und kostet ungefähr 0,40 US-Dollar, wenn `o3-mini` mit `high` Reasoning-Effort verwendet wird.
 
-## How It Works
+## So funktioniert es
 
-Deep Research employs a fascinating tree-like exploration pattern:
+Deep Research nutzt ein baumartiges Explorationsmuster:
 
-1. **Breadth**: At each level, it generates multiple search queries to explore different aspects of your topic
-2. **Depth**: For each branch, it recursively dives deeper, following leads and uncovering connections
-3. **Concurrent Processing**: Utilizes async/await patterns to run multiple research paths simultaneously
-4. **Smart Context Management**: Automatically aggregates and synthesizes findings across all branches
-5. **Progress Tracking**: Real-time updates on research progress across both breadth and depth dimensions
+1. **Breite**: Auf jeder Ebene werden mehrere Suchanfragen erzeugt, um unterschiedliche Aspekte des Themas abzudecken
+2. **Tiefe**: Jeder Zweig wird rekursiv weiterverfolgt, um Hinweise und Zusammenhänge zu entdecken
+3. **Parallele Verarbeitung**: Über `async/await` werden mehrere Recherchepfade gleichzeitig ausgeführt
+4. **Intelligentes Kontextmanagement**: Erkenntnisse aus allen Zweigen werden automatisch aggregiert und verdichtet
+5. **Fortschrittsanzeige**: Der Recherchefortschritt wird live über Breite und Tiefe hinweg angezeigt
 
-Think of it as deploying a team of AI researchers, each following their own research path while collaborating to build a comprehensive understanding of your topic.
+Stell dir das wie ein Team von KI-Forschenden vor, das parallel an verschiedenen Pfaden arbeitet und gemeinsam ein umfassendes Bild des Themas aufbaut.
 
-## Process Flow
+## Prozessfluss
+
 <img src="https://github.com/user-attachments/assets/eba2d94b-bef3-4f8d-bbc0-f15bd0a40968" alt="Logo" width="568"></img>
 <br></br>
 
-## Quick Start
+## Schnellstart
 
 ```python
 from gpt_researcher import GPTResearcher
@@ -28,16 +29,16 @@ from gpt_researcher.utils.enum import ReportType, Tone
 import asyncio
 
 async def main():
-    # Initialize researcher with deep research type
+    # Researcher mit Deep-Research-Typ initialisieren
     researcher = GPTResearcher(
-        query="What are the latest developments in quantum computing?",
-        report_type="deep",  # This triggers deep research modd
+        query="Was sind die neuesten Entwicklungen im Quantencomputing?",
+        report_type="deep",  # Das aktiviert Deep Research
     )
 
-    # Run research
+    # Recherche ausführen
     research_data = await researcher.conduct_research()
 
-    # Generate report
+    # Report erzeugen
     report = await researcher.write_report()
     print(report)
 
@@ -45,18 +46,18 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## Configuration
+## Konfiguration
 
-Deep Research behavior can be customized through several parameters:
+Das Deep-Research-Verhalten lässt sich über mehrere Parameter steuern:
 
-- `deep_research_breadth`: Number of parallel research paths at each level (default: 4)
-- `deep_research_depth`: How many levels deep to explore (default: 2)
-- `deep_research_concurrency`: Maximum number of concurrent research operations (default: 4)
-- `total_words`: Total words in the generated report (recommended: 2000)
+- `deep_research_breadth`: Anzahl paralleler Recherchepfade pro Ebene (Standard: 4)
+- `deep_research_depth`: Wie viele Ebenen tief gesucht wird (Standard: 2)
+- `deep_research_concurrency`: Maximale Anzahl gleichzeitiger Rechercheoperationen (Standard: 4)
+- `total_words`: Gesamtwortzahl des erzeugten Reports (Empfehlung: 2000)
 
-You can configure these parameters in multiple ways:
+Diese Parameter kannst du auf verschiedene Arten setzen:
 
-1. **Environment Variables**:
+1. **Umgebungsvariablen**:
 ```bash
 export DEEP_RESEARCH_BREADTH=4
 export DEEP_RESEARCH_DEPTH=2
@@ -64,7 +65,7 @@ export DEEP_RESEARCH_CONCURRENCY=4
 export TOTAL_WORDS=2500
 ```
 
-2. **Config File**:
+2. **Konfigurationsdatei**:
 ```yaml
 deep_research_breadth: 4
 deep_research_depth: 2
@@ -74,49 +75,49 @@ total_words: 2500
 
 ```python
 researcher = GPTResearcher(
-    query="your query",
+    query="deine Anfrage",
     report_type="deep",
-    config_path="path/to/config.yaml"  # Configure deep research parameters here
+    config_path="pfad/zur/config.yaml"  # Deep-Research-Parameter hier setzen
 )
 ```
 
-## Progress Tracking
+## Fortschrittsanzeige
 
-The `on_progress` callback provides real-time insights into the research process:
+Der `on_progress`-Callback liefert Live-Einblicke in den Rechercheprozess:
 
 ```python
 class ResearchProgress:
-    current_depth: int       # Current depth level
-    total_depth: int         # Maximum depth to explore
-    current_breadth: int     # Current number of parallel paths
-    total_breadth: int       # Maximum breadth at each level
-    current_query: str       # Currently processing query
-    completed_queries: int   # Number of completed queries
-    total_queries: int       # Total queries to process
+    current_depth: int       # Aktuelle Tiefe
+    total_depth: int         # Maximale Tiefe
+    current_breadth: int     # Aktuelle Anzahl paralleler Pfade
+    total_breadth: int       # Maximale Breite pro Ebene
+    current_query: str       # Aktuell verarbeitete Query
+    completed_queries: int   # Anzahl abgeschlossener Queries
+    total_queries: int       # Gesamtzahl der zu verarbeitenden Queries
 ```
 
-## Error Handling
+## Fehlerbehandlung
 
-The deep research workflow is designed to be resilient:
+Der Deep-Research-Workflow ist auf Robustheit ausgelegt:
 
-- Failed queries are automatically skipped
-- Research continues even if some branches fail
-- Progress tracking helps identify any issues
+- Fehlgeschlagene Queries werden automatisch übersprungen
+- Die Recherche läuft weiter, auch wenn einige Zweige scheitern
+- Die Fortschrittsanzeige hilft dabei, Probleme zu erkennen
 
 ## Best Practices
 
-1. **Start Broad**: Begin with a general query and let the system explore specifics
-2. **Monitor Progress**: Use the progress callback to understand the research flow
-3. **Adjust Parameters**: Tune breadth and depth based on your needs:
-   - More breadth = wider coverage
-   - More depth = deeper insights
-4. **Resource Management**: Consider concurrency limits based on your system capabilities
+1. **Breit starten**: Beginne mit einer allgemeinen Anfrage und lass das System Details erkunden
+2. **Fortschritt beobachten**: Nutze den Progress-Callback, um den Verlauf nachzuvollziehen
+3. **Parameter anpassen**: Justiere Breite und Tiefe nach Bedarf:
+   - Mehr Breite = breitere Abdeckung
+   - Mehr Tiefe = tiefere Einblicke
+4. **Ressourcen im Blick behalten**: Berücksichtige die Concurrency-Limits deines Systems
 
-## Limitations
+## Grenzen
 
-- Usage of reasoning LLM models such as `o3-mini`
-- Deep research may take longer than standard research
-- Higher API usage and costs due to multiple concurrent queries
-- May require more system resources for parallel processing
+- Der Einsatz von Reasoning-LLMs wie `o3-mini`
+- Deep Research kann länger dauern als Standard-Recherche
+- Höhere API-Kosten durch mehrere parallele Abfragen
+- Mehr Systemressourcen für parallele Verarbeitung können nötig sein
 
-Happy researching! 🎉 
+Viel Erfolg bei der Recherche! 🎉

@@ -1,50 +1,50 @@
 # Claude Skill
 
-GPT Researcher is available as a [Claude Skill](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher), allowing you to extend Claude's research capabilities directly within Claude Code and other Claude-powered applications.
+GPT Researcher ist als [Claude Skill](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher) verfügbar. Damit kannst du Claudes Recherche-Fähigkeiten direkt in Claude Code und anderen Claude-gestützten Anwendungen erweitern.
 
-## What are Claude Skills?
+## Was sind Claude Skills?
 
-Skills are modular packages that extend Claude's capabilities by providing specialized knowledge, workflows, and tools. When you install GPT Researcher as a skill, Claude gains access to deep research procedures, helping it conduct comprehensive research with citations.
+Skills sind modulare Pakete, die Claudes Fähigkeiten durch spezialisiertes Wissen, Workflows und Werkzeuge erweitern. Wenn du GPT Researcher als Skill installierst, erhält Claude Zugriff auf tiefere Rechercheabläufe mit Zitaten.
 
 ## Installation
 
-Install GPT Researcher as a Claude Skill using the skills CLI:
+Installiere GPT Researcher als Claude Skill mit dem Skills-CLI:
 
 ```bash
 npx skills add assafelovic/gpt-researcher
 ```
 
-This installs the skill from the [GPT Researcher GitHub repository](https://github.com/assafelovic/gpt-researcher).
+Dadurch wird der Skill aus dem [GPT-Researcher-GitHub-Repository](https://github.com/assafelovic/gpt-researcher) installiert.
 
-## What's Included
+## Was enthalten ist
 
-The GPT Researcher skill provides Claude with:
+Der GPT-Researcher-Skill gibt Claude Zugriff auf:
 
-- **Architecture Knowledge** - Understanding of the planner-executor-publisher pattern
-- **Component Signatures** - Method signatures for `GPTResearcher`, `ResearchConductor`, `ReportGenerator`
-- **Integration Patterns** - How to add features, retrievers, and customize workflows
-- **Configuration Reference** - All environment variables and config options
-- **API Reference** - REST and WebSocket API documentation
+- **Architektur-Wissen** - Verständnis des Planner-Executor-Publisher-Musters
+- **Komponenten-Signaturen** - Methodensignaturen für `GPTResearcher`, `ResearchConductor`, `ReportGenerator`
+- **Integrationsmuster** - Wie man Features hinzufügt, Retriever erweitert und Workflows anpasst
+- **Konfigurationsreferenz** - Alle Umgebungsvariablen und Config-Optionen
+- **API-Referenz** - REST- und WebSocket-API-Dokumentation
 
-## Usage
+## Nutzung
 
-Once installed, Claude can help you with:
+Nach der Installation kann Claude dir helfen bei:
 
-- Understanding GPT Researcher's architecture
-- Adding new features following the 8-step pattern
-- Debugging research pipelines
-- Integrating MCP data sources
-- Customizing report generation
-- Adding new retrievers
+- dem Verständnis der GPT-Researcher-Architektur
+- dem Hinzufügen neuer Funktionen nach dem 8-Schritte-Muster
+- dem Debuggen von Research-Pipelines
+- der Integration von MCP-Datenquellen
+- der Anpassung der Report-Erzeugung
+- dem Hinzufügen neuer Retriever
 
-## Skill Structure
+## Struktur des Skills
 
-The skill is located in the `.claude/` directory of the repository:
+Der Skill liegt im `.claude/`-Verzeichnis des Repos:
 
 ```
 .claude/
-├── SKILL.md              # Main skill file (lean, <500 lines)
-└── references/           # Detailed documentation
+├── SKILL.md              # Hauptdatei des Skills (schlank, <500 Zeilen)
+└── references/           # Detaillierte Dokumentation
     ├── architecture.md
     ├── components.md
     ├── flows.md
@@ -59,8 +59,8 @@ The skill is located in the `.claude/` directory of the repository:
     └── config-reference.md
 ```
 
-## Learn More
+## Mehr erfahren
 
-- [Skills.sh - GPT Researcher](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher) - View on skills.sh registry
-- [Claude Code Documentation](https://docs.claude.com/en/docs/claude-code/skills) - Official skills documentation
-- [GPT Researcher Documentation](https://docs.gptr.dev) - Full project documentation
+- [Skills.sh - GPT Researcher](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher) - Anzeige im Skills.sh-Register
+- [Claude Code Dokumentation](https://docs.claude.com/en/docs/claude-code/skills) - Offizielle Skills-Dokumentation
+- [GPT-Researcher-Dokumentation](https://docs.gptr.dev) - Vollständige Projektdokumentation

@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 
 from gpt_researcher.scraper.browser.processing.html import extract_hyperlinks
 from gpt_researcher.utils.logger import get_formatted_logger
+from gpt_researcher.utils.network import build_requests_proxies
 
 from .query_processing import _extract_focus_terms
 
@@ -334,11 +335,17 @@ def _allowed_candidate(url: str, query_domains: list[str] | None, root_host: str
     return _host_matches(host, root_host or host)
 
 
-async def _fetch_page_html(url: str, user_agent: str, timeout: float) -> tuple[str | None, str | None, str | None]:
+async def _fetch_page_html(
+    url: str,
+    user_agent: str,
+    timeout: float,
+    proxy_url: str | None = None,
+) -> tuple[str | None, str | None, str | None]:
     def _fetch() -> tuple[str | None, str | None, str | None]:
         response = requests.get(
             url,
             headers={"User-Agent": user_agent},
+            proxies=build_requests_proxies(proxy_url),
             timeout=timeout,
         )
         response.raise_for_status()
@@ -412,6 +419,7 @@ async def prioritize_and_expand_urls(
     cfg: Any,
     query_domains: list[str] | None = None,
     visited_urls: set[str] | list[str] | None = None,
+    proxy_url: str | None = None,
 ) -> list[dict[str, Any]]:
     """Rank seed URLs and optionally expand them through a bounded crawl."""
     query_domains = query_domains or []
@@ -466,7 +474,12 @@ async def prioritize_and_expand_urls(
 
     async def crawl_one(entry: dict[str, Any]) -> list[dict[str, Any]]:
         async with semaphore:
-            html, final_url, content_type = await _fetch_page_html(entry["url"], user_agent, request_timeout)
+            html, final_url, content_type = await _fetch_page_html(
+                entry["url"],
+                user_agent,
+                request_timeout,
+                proxy_url=proxy_url,
+            )
             if not html or not final_url:
                 return []
 

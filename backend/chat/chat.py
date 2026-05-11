@@ -178,14 +178,14 @@ class ChatAgentWithMemory:
     @staticmethod
     def _build_search_answer(query: str, search_metadata: Dict[str, Any] | None) -> str:
         if not search_metadata:
-            return f"I couldn't find live search results for {query}."
+            return f"Ich konnte für {query} keine Live-Suchergebnisse finden."
 
         sources = search_metadata.get("sources") or []
         if not sources:
             error = search_metadata.get("error")
             if error:
-                return f"I couldn't complete the live search for {query}: {error}"
-            return f"I couldn't find live search results for {query}."
+                return f"Ich konnte die Live-Suche für {query} nicht abschließen: {error}"
+            return f"Ich konnte für {query} keine Live-Suchergebnisse finden."
 
         lines = [f"Here's what I found about {query.strip()}:"]
         for source in sources[:3]:
@@ -212,7 +212,7 @@ class ChatAgentWithMemory:
         if report_context and len(report_context) > CHAT_REPORT_CONTEXT_CHARS:
             report_context = (
                 report_context[:CHAT_REPORT_CONTEXT_CHARS]
-                + "\n\n[Report context truncated for chat.]"
+                + "\n\n[Report-Kontext für den Chat gekürzt.]"
             )
 
         prompt_parts = [
@@ -227,7 +227,7 @@ class ChatAgentWithMemory:
             prompt_parts.append(
                 "If the answer is not in the report, say that clearly instead of inventing details."
             )
-            prompt_parts.append(f"Report context:\n{report_context}")
+            prompt_parts.append(f"Report-Kontext:\n{report_context}")
         else:
             prompt_parts.append(
                 "No report context was provided."
@@ -261,7 +261,7 @@ class ChatAgentWithMemory:
             
             return {"results": normalized_results}
         except Exception as e:
-            logger.error(f"Error performing web search: {str(e)}", exc_info=True)
+            logger.error(f"Fehler bei der Websuche: {str(e)}", exc_info=True)
             self.search_metadata = {
                 "query": query,
                 "sources": [],
@@ -308,7 +308,7 @@ class ChatAgentWithMemory:
                 timeout=CHAT_REQUEST_TIMEOUT,
             )
         except asyncio.TimeoutError:
-            logger.warning("Chat completion timed out")
+            logger.warning("Chat-Antwort hat das Zeitlimit überschritten")
             if self.report:
                 fallback = self._build_report_answer(
                     self._latest_user_message(messages),
@@ -317,11 +317,11 @@ class ChatAgentWithMemory:
                 if fallback:
                     return fallback, []
             return (
-                "I couldn't generate a response quickly enough. Please narrow the question and try again.",
+                "Ich konnte nicht schnell genug antworten. Bitte stelle die Frage enger und versuche es erneut.",
                 [],
             )
         except Exception as exc:
-            logger.error(f"Chat completion failed: {exc}", exc_info=True)
+            logger.error(f"Chat-Antwort fehlgeschlagen: {exc}", exc_info=True)
             if self.report:
                 fallback = self._build_report_answer(
                     self._latest_user_message(messages),
@@ -330,7 +330,7 @@ class ChatAgentWithMemory:
                 if fallback:
                     return fallback, []
             return (
-                "I couldn't generate a response for that message right now. Please try again.",
+                "Ich konnte für diese Nachricht im Moment keine Antwort erzeugen. Bitte versuche es erneut.",
                 [],
             )
 
@@ -355,10 +355,10 @@ class ChatAgentWithMemory:
             if self._is_simple_greeting(latest_user_message):
                 if self.report:
                     return (
-                        "Hello. Ask me about the report or a current topic, and I will answer directly.",
+                        "Hallo. Frage mich etwas zum Report oder zu einem aktuellen Thema, und ich antworte direkt.",
                         [],
                     )
-                return ("Hello. What would you like to research?", [])
+                return ("Hallo. Worüber möchtest du recherchieren?", [])
 
             if self.report and not use_search and self._is_summary_request(latest_user_message):
                 return (self._extract_report_summary(self.report), [])
@@ -395,7 +395,7 @@ class ChatAgentWithMemory:
                         "content": msg["content"]
                     })
                 else:
-                    logger.warning(f"Skipping message with missing role or content: {msg}")
+                    logger.warning(f"Nachricht ohne Rolle oder Inhalt wird übersprungen: {msg}")
             
             # Process the chat using configured LLM provider
             ai_message, tool_calls_metadata = await self.process_chat_completion(
@@ -405,16 +405,16 @@ class ChatAgentWithMemory:
             
             # Provide fallback response if message is empty
             if not ai_message:
-                logger.warning("No AI message content found in response, using fallback message")
-                ai_message = "I apologize, but I couldn't generate a proper response. Please try asking your question again."
+                logger.warning("Keine KI-Nachricht in der Antwort gefunden, Fallback wird verwendet")
+                ai_message = "Entschuldige, ich konnte keine passende Antwort erzeugen. Bitte stelle deine Frage erneut."
             
-            logger.info(f"Generated response: {ai_message[:100]}..." if len(ai_message) > 100 else f"Generated response: {ai_message}")
+            logger.info(f"Erzeugte Antwort: {ai_message[:100]}..." if len(ai_message) > 100 else f"Erzeugte Antwort: {ai_message}")
             
             # Return both the message and any metadata about tools used
             return ai_message, tool_calls_metadata
             
         except Exception as e:
-            logger.error(f"Error in chat: {str(e)}", exc_info=True)
+            logger.error(f"Fehler im Chat: {str(e)}", exc_info=True)
             raise
 
     def get_context(self):

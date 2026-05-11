@@ -14,29 +14,10 @@ import Footer from "../components/Footer";
 import InputArea from "../components/ResearchBlocks/elements/InputArea";
 import HumanFeedback from "../components/HumanFeedback";
 import LoadingDots from "../components/LoadingDots";
-
-const DEFAULT_BACKEND_URL = 'http://localhost:8002';
-
-const normalizeBackendUrl = (value?: string | null): string => {
-  if (!value) {
-    return '';
-  }
-
-  return value
-    .trim()
-    .replace(/\/+$/, '')
-    .replace(/\/api$/, '');
-};
+import { resolveBrowserBackendUrl } from '../helpers/backendUrl';
 
 const resolveBackendRootUrl = (...candidates: Array<string | undefined | null>): string => {
-  for (const candidate of candidates) {
-    const normalized = normalizeBackendUrl(candidate);
-    if (normalized) {
-      return normalized;
-    }
-  }
-
-  return DEFAULT_BACKEND_URL;
+  return resolveBrowserBackendUrl(...candidates);
 };
 
 const resolveBackendApiUrl = (...candidates: Array<string | undefined | null>): string => {
@@ -65,9 +46,9 @@ export const GPTResearcher = ({
   const [showResult, setShowResult] = useState(false);
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({ 
-    report_source: 'web', 
-    report_type: 'research_report', 
+  const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({
+    report_source: 'web',
+    report_type: 'research_report',
     tone: 'Objective',
     domains: [],
     defaultReportType: 'research_report',
@@ -124,25 +105,25 @@ export const GPTResearcher = ({
     setQuestion(message);
     setLoading(true);
     setPromptValue("");
-    
+
     // Create a user message
     const userMessage = {
       role: 'user',
       content: message,
       timestamp: Date.now()
     };
-    
+
     // Add question to display in research results
     const questionData: QuestionData = { type: 'question', content: message };
     setOrderedData(prevOrder => [...prevOrder, questionData]);
-    
+
     try {
       // Format message to ensure it only contains role and content
       const formattedMessage = {
         role: userMessage.role,
         content: userMessage.content
       };
-      
+
       // Call the chat API
       const apiBaseUrl = resolveBackendApiUrl(
         currentApiUrl,
@@ -159,27 +140,27 @@ export const GPTResearcher = ({
           messages: [formattedMessage]
         }),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to get chat response');
+        throw new Error('Chat-Antwort konnte nicht geladen werden');
       }
-      
+
       const data = await response.json();
-      
+
       if (data.response) {
         // Add AI response to display in research results
-        setOrderedData(prevOrder => [...prevOrder, { 
-          type: 'chat', 
-          content: data.response.content 
+        setOrderedData(prevOrder => [...prevOrder, {
+          type: 'chat',
+          content: data.response.content
         }]);
       }
     } catch (error) {
       console.error('Error during chat:', error);
-      
+
       // Add error message to display
-      setOrderedData(prevOrder => [...prevOrder, { 
-        type: 'chat', 
-        content: 'Sorry, there was an error processing your request. Please try again.' 
+      setOrderedData(prevOrder => [...prevOrder, {
+        type: 'chat',
+        content: 'Beim Verarbeiten deiner Anfrage ist ein Fehler aufgetreten. Bitte versuche es erneut.'
       }]);
     } finally {
       setLoading(false);
@@ -196,18 +177,18 @@ export const GPTResearcher = ({
 
     const storedConfig = localStorage.getItem('apiVariables');
     const apiVariables = storedConfig ? JSON.parse(storedConfig) : { LANGGRAPH_HOST_URL: '' };
-    
+
     // Use provided apiUrl if available
     if (apiUrl) {
       apiVariables.API_URL = apiUrl;
       localStorage.setItem('GPTR_API_URL', apiUrl);
     }
-    
+
     // Use provided apiKey if available
     if (apiKey) {
       apiVariables.API_KEY = apiKey;
     }
-    
+
     initializeWebSocket(newQuestion, chatBoxSettings);
 
   };
@@ -233,7 +214,7 @@ export const GPTResearcher = ({
     }
     setLoading(false);
     setIsStopped(true);
-    
+
     // Reload the page to completely reset the socket connection
     window.location.reload();
   };
@@ -242,15 +223,15 @@ export const GPTResearcher = ({
     setShowResult(false);
     setPromptValue("");
     setIsStopped(false);
-    
+
     setQuestion("");
     setAnswer("");
     setOrderedData([]);
     setAllLogs([]);
-    
+
     setShowHumanFeedback(false);
     setQuestionForHuman(false);
-    
+
     if (socket) {
       socket.close();
     }
@@ -260,7 +241,7 @@ export const GPTResearcher = ({
   useEffect(() => {
     const groupedData = preprocessOrderedData(orderedData);
     const statusReports = ["agent_generated", "starting_research", "planning_research", "error"];
-    
+
     const newLogs = groupedData.reduce((acc: any[], data) => {
       if (data.type === 'accordionBlock') {
         const logs = data.items.map((item: any, subIndex: any) => ({
@@ -270,7 +251,7 @@ export const GPTResearcher = ({
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
         return [...acc, ...logs];
-      } 
+      }
       else if (statusReports.includes(data.content)) {
         return [...acc, {
           header: data.content,
@@ -281,14 +262,14 @@ export const GPTResearcher = ({
       }
       return acc;
     }, []);
-    
+
     setAllLogs(newLogs);
   }, [orderedData]);
 
   const handleScroll = useCallback(() => {
     const scrollPosition = window.scrollY + window.innerHeight;
     const nearBottom = scrollPosition >= document.documentElement.scrollHeight - 100;
-    
+
     const isPageScrollable = document.documentElement.scrollHeight > window.innerHeight;
     setShowScrollButton(isPageScrollable && !nearBottom);
   }, []);
@@ -305,7 +286,7 @@ export const GPTResearcher = ({
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleScroll);
-    
+
     return () => {
       if (mainContentElement) {
         resizeObserver.unobserve(mainContentElement);
@@ -325,7 +306,7 @@ export const GPTResearcher = ({
 
   return (
     <>
-      <Header 
+      <Header
         loading={loading}
         isStopped={isStopped}
         showResult={showResult}
@@ -387,18 +368,18 @@ export const GPTResearcher = ({
           onClick={scrollToBottom}
           className="fixed bottom-8 right-8 flex items-center justify-center w-12 h-12 text-white bg-[rgb(168,85,247)] rounded-full hover:bg-[rgb(147,51,234)] transform hover:scale-105 transition-all duration-200 shadow-lg z-50"
         >
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-6 w-6" 
-            fill="none" 
-            viewBox="0 0 24 24" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 14l-7 7m0 0l-7-7m7 7V3"
             />
           </svg>
         </button>

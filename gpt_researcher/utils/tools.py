@@ -13,6 +13,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.tools import tool
 
 from .llm import create_chat_completion
+from .language import normalize_source_title, strip_source_boilerplate
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +118,7 @@ async def create_chat_completion_with_tools(
                     logger.debug(f"Tool arguments: {args_str}")
                 
                 # Find and execute the tool
-                tool_result = "Tool execution failed"
+                tool_result = "Tool-Ausführung fehlgeschlagen"
                 for tool in tools:
                     if tool.name == tool_name:
                         try:
@@ -132,18 +133,18 @@ async def create_chat_completion_with_tools(
                             error_type = type(e).__name__
                             error_msg = str(e)
                             logger.error(
-                                f"Error executing tool '{tool_name}': {error_type}: {error_msg}",
+                                f"Fehler beim Ausführen des Tools '{tool_name}': {error_type}: {error_msg}",
                                 exc_info=True
                             )
                             # Provide user-friendly error message
                             if "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-                                tool_result = f"Tool '{tool_name}' timed out. The operation took too long to complete. Please try again or check your network connection."
+                                tool_result = f"Tool '{tool_name}' hat das Zeitlimit überschritten. Der Vorgang hat zu lange gedauert. Bitte versuche es erneut oder prüfe deine Netzwerkverbindung."
                             elif "connection" in error_msg.lower() or "network" in error_msg.lower():
-                                tool_result = f"Tool '{tool_name}' failed due to a network issue. Please check your internet connection and try again."
+                                tool_result = f"Tool '{tool_name}' ist wegen eines Netzwerkproblems fehlgeschlagen. Bitte prüfe deine Internetverbindung und versuche es erneut."
                             elif "permission" in error_msg.lower() or "access" in error_msg.lower():
-                                tool_result = f"Tool '{tool_name}' failed due to insufficient permissions. Please check your API keys or access credentials."
+                                tool_result = f"Tool '{tool_name}' ist wegen unzureichender Berechtigungen fehlgeschlagen. Bitte prüfe deine API-Keys oder Zugriffsdaten."
                             else:
-                                tool_result = f"Tool '{tool_name}' encountered an error: {error_msg}. Please check the logs for more details."
+                                tool_result = f"Tool '{tool_name}' ist auf einen Fehler gestoßen: {error_msg}. Bitte prüfe die Logs für weitere Details."
                 
                 # Add tool result to conversation
                 tool_message = ToolMessage(content=str(tool_result), tool_call_id=tool_id)
@@ -183,7 +184,7 @@ async def create_chat_completion_with_tools(
         error_type = type(e).__name__
         error_msg = str(e)
         logger.error(
-            f"Error in tool-enabled chat completion: {error_type}: {error_msg}",
+            f"Fehler in der Tool-gestützten Chat-Antwort: {error_type}: {error_msg}",
             exc_info=True
         )
         logger.info("Falling back to simple chat completion without tools")
@@ -219,30 +220,32 @@ def create_search_tool(search_function: Callable[[str], Dict]) -> Callable:
         try:
             results = search_function(query)
             if results and 'results' in results:
-                search_content = f"Search results for '{query}':\n\n"
+                search_content = f"Suchergebnisse für '{query}':\n\n"
                 for result in results['results'][:5]:
-                    search_content += f"Title: {result.get('title', '')}\n"
-                    search_content += f"Content: {result.get('content', '')[:300]}...\n"
+                    normalized_title = normalize_source_title(result.get("title", ""), result.get("url", ""))
+                    if normalized_title:
+                        search_content += f"Title: {normalized_title}\n"
+                    search_content += f"Content: {strip_source_boilerplate(result.get('content', '')[:300])}...\n"
                     search_content += f"URL: {result.get('url', '')}\n\n"
                 return search_content
             else:
-                return f"No search results found for: {query}"
+                return f"Keine Suchergebnisse gefunden für: {query}"
         except Exception as e:
             error_type = type(e).__name__
             error_msg = str(e)
             logger.error(
-                f"Search tool error: {error_type}: {error_msg}",
+                f"Fehler im Such-Tool: {error_type}: {error_msg}",
                 exc_info=True
             )
             # Provide context-aware error messages
             if "api" in error_msg.lower() or "key" in error_msg.lower():
-                return f"Search failed: API key issue. Please verify your search API credentials are configured correctly."
+                return f"Suche fehlgeschlagen: Problem mit dem API-Key. Bitte prüfe, ob deine Such-API-Zugangsdaten korrekt konfiguriert sind."
             elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-                return f"Search timed out. The search request took too long. Please try again with a different query."
+                return f"Suche hat das Zeitlimit überschritten. Die Anfrage hat zu lange gedauert. Bitte versuche es mit einer anderen Query erneut."
             elif "rate limit" in error_msg.lower() or "quota" in error_msg.lower():
-                return f"Search rate limit exceeded. Please wait a moment before trying again."
+                return f"Such-Rate-Limit überschritten. Bitte warte einen Moment und versuche es erneut."
             else:
-                return f"Search encountered an error: {error_msg}. Please check your search provider configuration."
+                return f"Bei der Suche ist ein Fehler aufgetreten: {error_msg}. Bitte prüfe die Konfiguration deines Suchanbieters."
     
     return search_tool
 
@@ -279,11 +282,11 @@ def create_custom_tool(
             )
             # Provide informative error message without exposing internal details
             if "validation" in error_msg.lower() or "invalid" in error_msg.lower():
-                return f"Tool '{name}' received invalid input. Please check the parameters and try again."
+                return f"Tool '{name}' hat ungültige Eingaben erhalten. Bitte prüfe die Parameter und versuche es erneut."
             elif "not found" in error_msg.lower() or "missing" in error_msg.lower():
-                return f"Tool '{name}' could not find required resources. Please verify the input data is correct."
+                return f"Tool '{name}' konnte die benötigten Ressourcen nicht finden. Bitte prüfe, ob die Eingabedaten korrekt sind."
             else:
-                return f"Tool '{name}' encountered an error: {error_msg}. Please check the tool configuration."
+                return f"Tool '{name}' ist auf einen Fehler gestoßen: {error_msg}. Bitte prüfe die Tool-Konfiguration."
     
     # Set tool metadata
     custom_tool.name = name

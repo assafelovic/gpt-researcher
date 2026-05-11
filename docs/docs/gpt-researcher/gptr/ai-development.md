@@ -1,167 +1,167 @@
 ---
-sidebar_label: AI-Assisted Development
+sidebar_label: KI-gestützte Entwicklung
 sidebar_position: 6
 ---
 
-# 🤖 AI-Assisted Development with Claude
+# 🤖 KI-gestützte Entwicklung mit Claude
 
-GPT Researcher includes a comprehensive skill file that enables AI assistants like Claude to understand, use, and extend the codebase effectively. This guide explains how to leverage Claude Code for contributing to GPT Researcher.
+GPT Researcher enthält eine umfassende Skill-Datei, mit der KI-Assistenten wie Claude den Codebestand besser verstehen, nutzen und erweitern können. Dieser Leitfaden zeigt, wie du Claude Code zum Beitragen an GPT Researcher einsetzen kannst.
 
-## Overview
+## Überblick
 
-We maintain a `.claude/skills/` directory containing detailed documentation that Claude automatically discovers and uses when working with this repository. This enables:
+Wir pflegen ein `.claude/skills/`-Verzeichnis mit ausführlicher Dokumentation, die Claude automatisch erkennt und beim Arbeiten mit diesem Repository nutzt. Das ermöglicht:
 
-- **Faster onboarding** - Claude understands the architecture instantly
-- **Consistent contributions** - Follows established patterns
-- **Fewer errors** - Knows common gotchas and best practices
-- **End-to-end features** - Can implement complete features following the 8-step pattern
+- **Schnelleres Onboarding** - Claude versteht die Architektur sofort
+- **Konsistente Beiträge** - Eingeführte Muster werden beibehalten
+- **Weniger Fehler** - Häufige Stolperfallen und Best Practices sind bekannt
+- **Ende-zu-Ende-Funktionen** - Claude kann komplette Funktionen nach dem 8-Schritte-Muster umsetzen
 
-## The Skills Directory
+## Das Skills-Verzeichnis
 
 ```
 .claude/
 └── skills/
-    ├── SKILL.md      # Comprehensive development guide (~1,500 lines)
-    └── REFERENCE.md  # Quick lookup for config, API, WebSocket events
+    ├── SKILL.md      # Umfassender Entwicklungsleitfaden (~1.500 Zeilen)
+    └── REFERENCE.md  # Schnelle Referenz für Config, API, WebSocket-Events
 ```
 
-### What's in SKILL.md
+### Was in `SKILL.md` steckt
 
-| Section | Description |
+| Abschnitt | Beschreibung |
 |---------|-------------|
-| Architecture Deep Dive | Full system diagram with all layers and components |
-| Core Components | Method signatures for `GPTResearcher`, `ResearchConductor`, etc. |
-| End-to-End Flow | Complete code paths from request to report |
-| Data Flow | What gets passed between components |
-| Prompt System | Real prompt examples from `prompts.py` |
-| Retriever System | All 14 retrievers, how to add new ones |
-| MCP Integration | Strategy options, configuration, processing logic |
-| Deep Research | Recursive exploration configuration |
-| Multi-Agent System | LangGraph-based 8-agent workflow |
-| Image Generation Case Study | Complete real implementation as reference |
-| 8-Step Feature Pattern | How to add new features |
-| Advanced Usage | Callbacks, LangChain, vector stores |
-| Error Handling | Graceful degradation patterns |
-| Testing Guide | pytest setup and examples |
-| Critical Gotchas | Common mistakes to avoid |
+| Architektur-Deep-Dive | Vollständiges Systemdiagramm mit allen Schichten und Komponenten |
+| Kernkomponenten | Methodensignaturen für `GPTResearcher`, `ResearchConductor` usw. |
+| End-to-End-Flow | Vollständige Codepfade von der Anfrage bis zum Report |
+| Datenfluss | Was zwischen den Komponenten übergeben wird |
+| Prompt-System | Reale Prompt-Beispiele aus `prompts.py` |
+| Retriever-System | Alle 14 Retriever, inklusive Anleitung zum Hinzufügen neuer Retriever |
+| MCP-Integration | Strategieoptionen, Konfiguration, Verarbeitungslogik |
+| Deep Research | Konfiguration rekursiver Erkundung |
+| Multi-Agent-System | LangGraph-basierter 8-Agenten-Workflow |
+| Fallstudie Bildgenerierung | Vollständige echte Implementierung als Referenz |
+| 8-Schritte-Funktionsmuster | So fügst du neue Funktionen hinzu |
+| Erweiterte Nutzung | Callbacks, LangChain, Vector Stores |
+| Fehlerbehandlung | Muster für sanfte Degradierung |
+| Testleitfaden | pytest-Setup und Beispiele |
+| Wichtige Stolperfallen | Häufige Fehler, die du vermeiden solltest |
 
-### What's in REFERENCE.md
+### Was in `REFERENCE.md` steckt
 
-- All environment variables
-- REST API endpoints
-- WebSocket message types
-- Python client parameters
+- Alle Umgebungsvariablen
+- REST-API-Endpunkte
+- WebSocket-Nachrichtentypen
+- Parameter des Python-Clients
 
-## Using Claude Code
+## Claude Code verwenden
 
 ### Installation
 
-1. Install [Claude Code](https://claude.ai/code) (VS Code extension or CLI)
-2. Open the GPT Researcher repository
-3. Claude automatically discovers the skills in `.claude/skills/`
+1. [Claude Code](https://claude.ai/code) installieren, als VS-Code-Extension oder CLI
+2. Das GPT-Researcher-Repository öffnen
+3. Claude entdeckt die Skills in `.claude/skills/` automatisch
 
-### Example Prompts
+### Beispiel-Prompts
 
-**Understanding the codebase:**
+**Codebasis verstehen:**
 ```
-How does the research flow work from query to report?
+Wie funktioniert der Research-Flow von der Anfrage bis zum Report?
 ```
 
-**Adding a feature:**
+**Eine Funktion hinzufügen:**
 ```
-I want to add a feature that generates audio summaries of reports. 
-Follow the 8-step pattern from the skills file.
+Ich möchte eine Funktion hinzufügen, die Audio-Zusammenfassungen von Reports erstellt.
+Nutze dabei das 8-Schritte-Muster aus der Skill-Datei.
 ```
 
 **Debugging:**
 ```
-Why might images not be appearing in the report? Check the image generation flow.
+Warum werden Bilder möglicherweise nicht im Report angezeigt? Prüfe den Bildgenerierungs-Flow.
 ```
 
-**Extending functionality:**
+**Funktionalität erweitern:**
 ```
-Add a new retriever for Wikipedia. Follow the retriever pattern in the skills.
-```
-
-### What Claude Can Do
-
-With the skills loaded, Claude can:
-
-1. **Explain any part of the codebase** - Architecture, data flow, component interactions
-2. **Implement features end-to-end** - Config → Provider → Skill → Agent → Prompts → Frontend
-3. **Debug issues** - Understands common gotchas and error patterns
-4. **Write tests** - Knows the testing patterns and pytest setup
-5. **Add retrievers** - Follows the exact pattern for new search engines
-6. **Modify prompts** - Understands the PromptFamily system
-7. **Extend the API** - Knows FastAPI patterns and WebSocket events
-
-## Contributing with Claude
-
-### Before You Start
-
-1. Fork and clone the repository
-2. Install in editable mode: `pip install -e .`
-3. Set up your `.env` file with required API keys
-4. Open in an editor with Claude Code
-
-### Contribution Workflow
-
-1. **Describe your feature/fix** to Claude with context
-2. **Let Claude implement** following the established patterns
-3. **Review the changes** - Claude will explain what it did
-4. **Test thoroughly** - `python -m pytest tests/`
-5. **Submit PR** with clear description
-
-### Example: Adding a New Feature
-
-```
-I want to add a feature that allows users to specify a custom 
-writing style for reports (e.g., "academic", "blog post", "executive summary").
-
-This should:
-1. Be configurable via environment variable
-2. Affect the report generation prompt
-3. Be optional with a sensible default
-
-Please implement following the 8-step pattern.
+Füge einen neuen Retriever für Wikipedia hinzu. Halte dich dabei an das Retriever-Muster in den Skills.
 ```
 
-Claude will:
-1. Add `REPORT_STYLE` to config defaults
-2. Add type to `BaseConfig`
-3. Update the prompt in `prompts.py`
-4. Show you exactly what changed
-5. Explain any gotchas (like lowercase config access)
+### Was Claude kann
 
-## Updating the Skills
+Mit geladenen Skills kann Claude:
 
-If you add significant features or change the architecture:
+1. **Jeden Teil der Codebasis erklären** - Architektur, Datenfluss, Komponenteninteraktionen
+2. **Funktionen Ende-zu-Ende implementieren** - Config → Provider → Skill → Agent → Prompts → Frontend
+3. **Probleme debuggen** - Versteht häufige Stolperfallen und Fehlermuster
+4. **Tests schreiben** - Kennt Testmuster und pytest-Setup
+5. **Retriever hinzufügen** - Folgt exakt dem Muster für neue Suchmaschinen
+6. **Prompts anpassen** - Versteht das PromptFamily-System
+7. **Die API erweitern** - Kennt FastAPI-Muster und WebSocket-Events
 
-1. Update `.claude/skills/SKILL.md` with the new patterns
-2. Add any new config vars to `.claude/skills/REFERENCE.md`
-3. Include your feature as a case study if it's a good example
+## Mit Claude beitragen
 
-### Skills File Best Practices
+### Vor dem Start
 
-- Keep code examples real (from actual implementation)
-- Include both "what" and "why"
-- Document gotchas prominently
-- Update data flow diagrams when adding components
-- Add new features to the "Supported Options" sections
+1. Repository forken und klonen
+2. In editierbarem Modus installieren: `pip install -e .`
+3. `.env`-Datei mit den nötigen API-Keys einrichten
+4. Das Projekt in einem Editor mit Claude Code öffnen
 
-## Why This Matters
+### Beitrags-Workflow
 
-AI-assisted development is becoming standard practice. By maintaining high-quality skills files:
+1. **Feature/Fix beschreiben** und Claude den Kontext geben
+2. **Claude implementieren lassen** und dabei die bestehenden Muster befolgen
+3. **Änderungen prüfen** - Claude erklärt, was geändert wurde
+4. **Gründlich testen** - `python -m pytest tests/`
+5. **PR einreichen** mit klarer Beschreibung
 
-- **New contributors** can onboard in minutes instead of hours
-- **Experienced contributors** can work faster with AI assistance
-- **Code quality** stays consistent across contributions
-- **Documentation** stays up-to-date as a side effect
+### Beispiel: Eine neue Funktion hinzufügen
 
-The skills file is essentially a "brain dump" of everything an expert developer knows about GPT Researcher, made available to AI assistants.
+```
+Ich möchte eine Funktion hinzufügen, mit der Nutzer einen eigenen
+Schreibstil für Reports angeben können, z. B. "akademisch", "Blogpost" oder "Executive Summary".
 
-## Learn More
+Das soll:
+1. über eine Umgebungsvariable konfigurierbar sein
+2. den Report-Generierungs-Prompt beeinflussen
+3. optional sein und einen sinnvollen Standard haben
 
-- [Claude Code Documentation](https://claude.ai/code/docs)
+Bitte setze das nach dem 8-Schritte-Muster um.
+```
+
+Claude würde dann:
+1. `REPORT_STYLE` zu den Konfigurations-Defaults hinzufügen
+2. Den Typ zu `BaseConfig` ergänzen
+3. Den Prompt in `prompts.py` aktualisieren
+4. Genau zeigen, was geändert wurde
+5. Auf mögliche Stolperfallen hinweisen, etwa Kleinbuchstaben-Zugriffe auf Config-Werte
+
+## Skills aktualisieren
+
+Wenn du größere Funktionen hinzufügst oder die Architektur änderst:
+
+1. Aktualisiere `.claude/skills/SKILL.md` mit den neuen Mustern
+2. Füge neue Config-Variablen zu `.claude/skills/REFERENCE.md` hinzu
+3. Nimm deine Funktion als Fallstudie auf, wenn sie ein gutes Beispiel ist
+
+### Best Practices für Skill-Dateien
+
+- Verwende echte Codebeispiele aus der Umsetzung
+- Beschreibe immer sowohl das „Was“ als auch das „Warum“
+- Dokumentiere Stolperfallen deutlich
+- Aktualisiere Datenflussdiagramme, wenn Komponenten hinzukommen
+- Ergänze neue Funktionen in den Abschnitten zu den unterstützten Optionen
+
+## Warum das wichtig ist
+
+KI-gestützte Entwicklung wird immer mehr zum Standard. Hochwertige Skill-Dateien bringen Vorteile:
+
+- **Neue Contributor** können sich in Minuten statt Stunden einarbeiten
+- **Erfahrene Contributor** arbeiten mit KI-Unterstützung schneller
+- **Die Codequalität** bleibt über Beiträge hinweg konsistent
+- **Die Dokumentation** bleibt als Nebeneffekt aktuell
+
+Die Skill-Datei ist im Grunde ein „Brain Dump“ von allem, was ein erfahrener Entwickler über GPT Researcher wissen muss - verfügbar für KI-Assistenten.
+
+## Mehr erfahren
+
+- [Claude Code Dokumentation](https://claude.ai/code/docs)
 - [Anthropic Agent Skills](https://github.com/anthropics/skills)
-- [Contributing Guidelines](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md)
+- [Beitragsrichtlinien](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md)

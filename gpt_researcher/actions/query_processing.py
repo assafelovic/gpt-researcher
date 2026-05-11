@@ -193,6 +193,23 @@ def _looks_like_search_query(candidate: str) -> bool:
     return True
 
 
+def _split_compound_query_item(candidate: str) -> list[str]:
+    cleaned = candidate.replace('\\"', '"').replace("\\'", "'").strip()
+    if not cleaned:
+        return []
+
+    if cleaned.count('"') >= 2 and re.search(r'"\s*,\s*"', cleaned):
+        pieces = re.split(r'"\s*,\s*"', cleaned)
+    elif cleaned.count("'") >= 2 and re.search(r"'\s*,\s*'", cleaned):
+        pieces = re.split(r"'\s*,\s*'", cleaned)
+    elif cleaned.count(",") >= 2 and (cleaned.count('"') or cleaned.count("'")):
+        pieces = re.split(r"\s*,\s*", cleaned)
+    else:
+        return [cleaned]
+
+    return [piece.strip().strip("\"'") for piece in pieces if piece.strip()]
+
+
 def _normalize_query_items(items) -> list[str]:
     normalized: list[str] = []
     seen: set[str] = set()
@@ -200,14 +217,15 @@ def _normalize_query_items(items) -> list[str]:
     for item in items:
         if item is None:
             continue
-        candidate = str(item).strip()
-        candidate = re.sub(r"^[\-\*\u2022\d\.\)\s]+", "", candidate).strip()
-        candidate = candidate.strip("\"'").strip()
-        key = re.sub(r"\s+", " ", candidate).strip().lower()
-        if not candidate or key in seen or not _looks_like_search_query(candidate):
-            continue
-        seen.add(key)
-        normalized.append(candidate)
+        raw_candidate = str(item).strip()
+        for candidate in _split_compound_query_item(raw_candidate):
+            candidate = re.sub(r"^[\-\*\u2022\d\.\)\s]+", "", candidate).strip()
+            candidate = candidate.strip("\"'").strip()
+            key = re.sub(r"\s+", " ", candidate).strip().lower()
+            if not candidate or key in seen or not _looks_like_search_query(candidate):
+                continue
+            seen.add(key)
+            normalized.append(candidate)
 
     return normalized
 

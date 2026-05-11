@@ -1,172 +1,177 @@
-# All About Logs
+# Alles über Logs
 
-This document explains how to interpret the log files generated for each report. These logs provide a detailed record of the research process, from initial task planning to the gathering of information, and finally, the report writing process. Reports may change over time as new features are developed. 
-  
-## Log File Overview  
+Dieses Dokument erklärt, wie du die Logdateien interpretierst, die für jeden Report erzeugt werden. Sie geben einen detaillierten Überblick über den Research-Prozess: von der ersten Aufgabenplanung über das Sammeln von Informationen bis hin zum Schreiben des Reports. Reports können sich im Laufe der Zeit ändern, wenn neue Funktionen hinzukommen.
 
-The log file is a JSON file that contains a list of events that happened during the research process. Each event is an object with a timestamp, type, and data. The data contains the specific information about the event.
+## Überblick über die Logdateien
 
-You can find the log file in the `outputs` folder.
+Die Logdatei ist eine JSON-Datei mit einer Liste aller Ereignisse, die während der Recherche passiert sind. Jedes Ereignis ist ein Objekt mit Zeitstempel, Typ und Daten. Die Daten enthalten die konkreten Informationen zum Ereignis.
 
-Or you can access the log file from the report page itself by clicking the "Download Logs" button.
+Die Logdatei findest du im Ordner `outputs`.
 
-For this fork, the canonical developer artifact directory is `outputs`. The JSON event log, Markdown report, PDF, DOCX, and screenshot artifacts are all written there. See description below for more details.
+Alternativ kannst du sie direkt auf der Report-Seite über den Button **Logs herunterladen** öffnen.
 
-## Key Components:
+Für diesen Fork ist `outputs` das kanonische Artefaktverzeichnis. Die JSON-Ereignislogs, Markdown-Reports, PDFs, DOCX-Dateien und Screenshots werden dort abgelegt. Unten findest du die Details dazu.
 
-* `timestamp`: The timestamp is in the format `YYYY-MM-DDTHH:MM:SS.ffffff` which is an ISO format. The main timestamp is for the generation of the file itself. The timestamps for the events are when each specific event happened during the research process. 
-* `events`: This is an array containing all the logged events during the research task. Each event object has the following structure.
-* `timestamp`: The specific time when the event occurred, allowing you to follow the sequence of actions.
-* `type`: This will always be "event" for now.
-* `data`: Contains specific information about the event. Includes:
-* `type`: This indicates the general kind of event (e.g., "logs").
-* `content`: A descriptor of what the tool is doing (e.g., "starting\_research", "running\_subquery\_research", "scraping\_content").
-* `output`: A more detailed message, which often includes visual indicators (emojis), that is sent to the user when the tool performs the task
-* `metadata`: Additional data related to the event. This can be `null` or contain an array of relevant information like URLs.
+## Wichtige Bestandteile
 
-## Types of Events & Their Significance
-Here's a complete breakdown of all the unique `content` types and what they mean. This is a comprehensive list of all the different actions the research tool will perform.
+* `timestamp`: Zeitstempel im Format `YYYY-MM-DDTHH:MM:SS.ffffff` im ISO-Format. Der Hauptzeitstempel beschreibt die Erstellung der Datei selbst. Die Ereignis-Zeitstempel zeigen, wann ein bestimmter Schritt während der Recherche passiert ist.
+* `events`: Ein Array mit allen geloggten Ereignissen während der Recherche.
+* `timestamp`: Der konkrete Zeitpunkt des Ereignisses.
+* `type`: Der Typ ist aktuell immer `event`.
+* `data`: Enthält spezifische Informationen zum Ereignis. Dazu gehören:
+* `type`: Beschreibt die allgemeine Ereigniskategorie, zum Beispiel `"logs"`.
+* `content`: Eine Kurzbeschreibung dessen, was das Tool gerade tut, zum Beispiel `"starting_research"`, `"running_subquery_research"` oder `"scraping_content"`.
+* `output`: Eine ausführlichere Nachricht, die oft auch visuelle Hinweise wie Emojis enthält und an den Nutzer gesendet wird.
+* `metadata`: Zusätzliche Daten zum Ereignis. Das kann `null` sein oder ein Array mit relevanten Informationen wie URLs enthalten.
+
+## Ereignistypen und ihre Bedeutung
+
+Hier ist eine vollständige Übersicht über die wichtigsten `content`-Typen und ihre Bedeutung:
+
 1. **`starting_research`**:
-* Indicates that the research process has begun for a given task.
-* `output`: Includes the text of the research query.
+* Zeigt an, dass die Recherche für eine Aufgabe begonnen hat.
+* `output`: Enthält den Text der Recherche-Anfrage.
 2. **`agent_generated`**:
-* This is an indicator of what the agent is used for this task
-* `output`: Will show the name of the agent
+* Kennzeichnet, welcher Agent für diese Aufgabe verwendet wird.
+* `output`: Zeigt den Namen des Agents.
 3. **`planning_research`**:
-* Shows the tool is initially browsing to understand the scope of the request and start planning.
-* The `output` indicates the tool is either browsing or doing initial planning.
+* Zeigt, dass das Tool zunächst browsed, um den Umfang der Anfrage zu verstehen und zu planen.
+* `output`: Gibt an, ob gerade gebrowst oder initial geplant wird.
 4. **`subqueries`**:
-* Indicates that the tool has created subqueries that it will use for research
-* `output`: Lists out all of the subqueries that the tool will be running to perform the research
-* `metadata`: An array of strings that contain the subqueries to be run
+* Zeigt, dass das Tool Unteranfragen erzeugt hat, die für die Recherche genutzt werden.
+* `output`: Listet alle Subqueries auf, die ausgeführt werden.
+* `metadata`: Ein Array mit den Subqueries.
 5. **`running_subquery_research`**:
-* Indicates that a specific subquery research is being performed.
-* `output`: Shows the specific subquery being run.
+* Zeigt an, dass eine bestimmte Subquery bearbeitet wird.
+* `output`: Zeigt die gerade laufende Subquery.
 6. **`added_source_url`**:
-* Signifies a URL that was identified as a relevant source of information.
-* `output`: Provides the URL with a checkmark emoji to indicate success.
-* `metadata`: Contains the actual URL added.
+* Kennzeichnet eine URL, die als relevante Informationsquelle identifiziert wurde.
+* `output`: Zeigt die URL mit einem Häkchen an.
+* `metadata`: Enthält die tatsächlich hinzugefügte URL.
 7. **`researching`**:
-* Indicates the tool is actively searching across multiple sources for information.
-* `output`: A general message indicating research across multiple sources is happening.
+* Zeigt an, dass das Tool aktiv über mehrere Quellen hinweg recherchiert.
+* `output`: Allgemeine Nachricht zur laufenden Recherche.
 8. **`scraping_urls`**:
-* Shows the tool is beginning to scrape content from a group of URLs.
-* `output`: Indicates how many URLs the tool will be scraping from.
+* Zeigt, dass das Tool mit dem Scraping einer URL-Gruppe beginnt.
+* `output`: Gibt an, wie viele URLs gescraped werden.
 9. **`scraping_content`**:
-* Indicates the tool successfully scraped the content from the URLs.
-* `output`: Shows the number of pages that have been successfully scraped.
+* Zeigt an, dass Inhalte erfolgreich aus den URLs gescraped wurden.
+* `output`: Zeigt an, wie viele Seiten erfolgreich ausgelesen wurden.
 10. **`scraping_images`**:
-* Signifies that images were identified and selected during the scraping process.
-* `output`: Shows the number of new images selected and the total images found
-* `metadata`: An array containing URLs of the selected images.
+* Zeigt an, dass während des Scrapings Bilder gefunden und ausgewählt wurden.
+* `output`: Zeigt die Anzahl neuer Bilder und die Gesamtzahl gefundener Bilder.
+* `metadata`: Enthält die URLs der ausgewählten Bilder.
 11. **`scraping_complete`**:
-* Indicates that the scraping process is complete for the URLs.
-* `output`: A message stating that the scraping process is complete
+* Zeigt an, dass das Scraping für die URLs abgeschlossen ist.
+* `output`: Meldung, dass der Scraping-Prozess abgeschlossen ist.
 12. **`fetching_query_content`**:
-* Indicates that the tool is fetching content based on a specific query.
-* `output`: The specific query for which content is being fetched
+* Zeigt an, dass Inhalte zu einer bestimmten Query abgerufen werden.
+* `output`: Die konkrete Query, für die Inhalte geholt werden.
 13. **`subquery_context_window`**:
-* Indicates the tool is creating a context window for a given subquery to help with more detailed research.
-* `output`: A message stating the context window for the subquery is created.
+* Zeigt, dass für eine Subquery ein Kontextfenster erstellt wird.
+* `output`: Meldung, dass das Kontextfenster erstellt wurde.
 14. **`research_step_finalized`**:
-* Indicates that the research portion of a step is finalized.
-* `output`: A message stating that the research is complete.
+* Zeigt an, dass ein Research-Schritt abgeschlossen wurde.
+* `output`: Meldung, dass die Recherche beendet ist.
 15. **`generating_subtopics`**:
-* Signifies that the tool is generating subtopics to guide the report.
-* `output`: A message indicating that the tool is generating subtopics.
+* Zeigt, dass Unterthemen erzeugt werden, um den Report zu strukturieren.
+* `output`: Meldung zur Erzeugung der Unterthemen.
 16. **`subtopics_generated`**:
-* Indicates that subtopics have been generated.
-* `output`: A message that subtopics have been generated.
+* Zeigt an, dass Unterthemen erzeugt wurden.
+* `output`: Meldung, dass die Unterthemen fertig sind.
 17. **`writing_introduction`**:
-* Indicates the tool is beginning to write the introduction to the report.
-* `output`: A message to the user that the introduction writing has started.
+* Zeigt an, dass die Einleitung des Reports geschrieben wird.
+* `output`: Meldung, dass das Schreiben der Einleitung begonnen hat.
 18. **`introduction_written`**:
-* Indicates the introduction to the report is finished
-* `output`: A message to the user that the introduction writing is complete
+* Zeigt an, dass die Einleitung fertig ist.
+* `output`: Meldung, dass die Einleitung geschrieben wurde.
 19. **`generating_draft_sections`**:
-* Shows that the tool is generating draft sections for the report.
-* `output`: A message that the report is generating draft sections.
+* Zeigt, dass Entwurfsabschnitte für den Report erzeugt werden.
+* `output`: Meldung, dass die Entwurfsabschnitte erstellt werden.
 20. **`draft_sections_generated`**:
-* Indicates the draft sections of the report are generated.
-* `output`: A message to the user that the draft sections have been generated.
+* Zeigt an, dass die Entwurfsabschnitte erzeugt wurden.
+* `output`: Meldung, dass die Entwurfsabschnitte fertig sind.
 21. **`fetching_relevant_written_content`**:
-* Indicates the tool is fetching relevant written content for the report.
-* `output`: A message to the user that relevant content is being fetched
+* Zeigt, dass relevantes geschriebenes Material für den Report abgerufen wird.
+* `output`: Meldung, dass relevante Inhalte geholt werden.
 22. **`writing_report`**:
-* Indicates that the tool is starting to compile the research into a report.
-* `output`: A message to the user that the report generation has started.
+* Zeigt an, dass das Tool gerade den Research-Report zusammenstellt.
+* `output`: Meldung, dass die Report-Erzeugung begonnen hat.
 23. **`report_written`**:
-* Signifies that the report generation is complete.
-* `output`: A message that the report generation is finished.
+* Zeigt an, dass der Report fertig ist.
+* `output`: Meldung, dass die Report-Erzeugung abgeschlossen ist.
 24. **`relevant_contents_context`**:
-* Indicates that a context window for relevant content has been created.
-* `output`: A message indicating a context window for relevant content has been created.
+* Zeigt, dass ein Kontextfenster für relevante Inhalte erstellt wurde.
+* `output`: Meldung, dass ein Kontextfenster erstellt wurde.
 25. **`writing_conclusion`**:
-* Indicates the tool has started writing the conclusion for the report
-* `output`: A message to the user that the conclusion is being written
+* Zeigt an, dass das Fazit des Reports geschrieben wird.
+* `output`: Meldung, dass das Fazit geschrieben wird.
 26. **`conclusion_written`**:
-* Indicates the conclusion of the report has been written
-* `output`: A message to the user that the conclusion has been written
+* Zeigt an, dass das Fazit geschrieben wurde.
+* `output`: Meldung, dass das Fazit fertig ist.
 
-## How to Use the Logs
+## So nutzt du die Logs
 
-* **Troubleshooting:** If the research results are unexpected, the log files can help you understand the exact steps the tool took, including the queries used, the sources it visited, and how the report was generated.
-* **Transparency:** The logs provide transparency into the research process. You can see exactly which URLs were visited, which images were selected, and how the report was built.
-* **Understanding the Process**: The logs will provide an overview of what the tool does and what each of the steps look like.
-* **Reproducibility:** The log files allow users to trace the exact process.
+* **Fehlersuche:** Wenn die Ergebnisse unerwartet sind, helfen die Logs, die exakten Schritte des Tools zu verstehen.
+* **Transparenz:** Die Logs zeigen genau, welche URLs besucht wurden, welche Bilder ausgewählt wurden und wie der Report entstanden ist.
+* **Prozessverständnis:** Die Logs geben einen Überblick darüber, was das Tool tut und wie die einzelnen Schritte aussehen.
+* **Reproduzierbarkeit:** Mit den Logdateien kannst du den genauen Ablauf nachvollziehen.
 
-## Example Usage
-By looking at the timestamps, you can see the flow of the research task. The logs will show you the subqueries used by the tool to approach the main query, all the URLs used, if images were selected for the research, and all the steps the tool took to generate the report.
+## Beispielnutzung
 
-## Logs for Developers
-In addition to the user-facing log files (detailed and summary reports), the application also generates two developer-oriented research artifacts:
-1. A `.log` file for streamed event logging
-2. A `.json` file for structured event and content capture
+Anhand der Zeitstempel kannst du den Verlauf einer Research-Aufgabe nachvollziehen. Die Logs zeigen dir die genutzten Subqueries, alle verwendeten URLs, eventuelle Bilder und alle Schritte, die zur Report-Erzeugung nötig waren.
 
-Find the logs in the `outputs` folder.
+## Logs für Entwickler
 
-### Basic Log File (.log)
+Zusätzlich zu den nutzerorientierten Logdateien erzeugt die Anwendung zwei Entwickler-Artefakte:
 
-* **Format:** Plain text format. Each line represents a log entry.
-* **Content:**
-	* Timestamps with millisecond precision.
-	* Log level: Usually `INFO`, but could include `DEBUG`, `WARNING`, or `ERROR` in a more complex setup.
-	* Module name (e.g., "research").
-	* Descriptive messages about various processes.
-	* Includes data about:
-		* Start and end of research tasks
-		* Web searches being performed
-		* Planning of the research
-		* Subqueries generated and their results
-		* The sizes of scraped data
-		* The size of content found from subqueries
-		* The final combined size of all context found
-* **Use Cases for Developers:**
-	* **Real-time Monitoring:** Can be used to monitor the tool's activity in real time.
-	* **Debugging:** Helpful for pinpointing issues by seeing the chronological flow of operations, the size of content collected, etc.
-	* **Performance Analysis:** Timestamps can help in identifying bottlenecks by measuring how long certain operations take.
-	* **High-level overview**: Allows developers to easily see which steps of the tool were performed, and some basic information like sizes of collected content.
-* **Key Differences from User Logs:**
-	* Less structured, more for developers to review in real-time.
-	* Contains technical information not usually relevant to a non-developer user.
-	* Does not have emojis or simplified language.
-	* No information on the images collected
-	* Screenshot debug artifacts, when enabled, are stored under `outputs/screenshots`
+1. Eine `.log`-Datei für gestreamte Event-Logs
+2. Eine `.json`-Datei für strukturierte Ereignis- und Inhaltsdaten
 
-### JSON Log File (.json)
+Du findest die Logs im Ordner `outputs`.
 
-* **Format**: Structured JSON format
-* **Content**:
-	* Timestamps, as in all log files
-		* `type` field that can be:
-		* `sub_query`: which contains the subquery string along with `scraped_data_size`
-		* `content_found`: which includes the `sub_query` and the `content_size`
-		* A `content` field which gives a snapshot of the overall research and can contain the final context and sources found from the research for that task
-* **Use Cases for Developers**:
-	* **Detailed Analysis**: Allows developers to view specific details of how the tool is running, particularly related to the subqueries and the results of the research.
-	* **Process Understanding**: Developers can see the different subqueries run and how much content each generated which can lead to better debugging and understanding of the tool.
-	* **Data Inspection**: Can be useful for reviewing the generated queries and content sizes.
-* **Key Differences from User Logs**:
-	* Highly structured and focused on subquery execution, and the results of this process, specifically the sizes of collected information.
-	* Does not contain simplified language, emojis, or high-level explanations.
-	* Does not contain information on the overall context or the images collected, it mainly focuses on the subquery process.
+### Einfache Logdatei (.log)
+
+* **Format:** Klartext. Jede Zeile ist ein Log-Eintrag.
+* **Inhalt:**
+	* Zeitstempel mit Millisekundenauflösung
+	* Log-Level, meist `INFO`, in komplexeren Setups auch `DEBUG`, `WARNING` oder `ERROR`
+	* Modulname, zum Beispiel `research`
+	* Beschreibende Meldungen zu verschiedenen Prozessen
+	* Enthält Daten zu:
+		* Start und Ende von Research-Aufgaben
+		* ausgeführten Web-Suchen
+		* Planung der Recherche
+		* erzeugten Subqueries und deren Ergebnissen
+		* Größen der gescrapten Daten
+		* Größe der Inhalte aus Subqueries
+		* der finalen Gesamtgröße des gefundenen Kontexts
+* **Anwendungsfälle für Entwickler:**
+	* **Live-Monitoring:** Zum Beobachten der Tool-Aktivität in Echtzeit
+	* **Debugging:** Zum Auffinden von Problemen über den chronologischen Ablauf
+	* **Analyse der Performance:** Zeitstempel helfen beim Erkennen von Engpässen
+	* **Überblick:** Zeigt schnell, welche Schritte ausgeführt wurden und wie viel Inhalt gesammelt wurde
+* **Unterschiede zu Nutzerlogs:**
+	* Weniger strukturiert und mehr für Entwickler gedacht
+	* Enthält technische Informationen, die für Nicht-Entwickler meist nicht relevant sind
+	* Keine Emojis oder vereinfachte Sprache
+	* Keine Informationen zu gesammelten Bildern
+	* Screenshot-Debug-Artefakte werden, wenn aktiviert, unter `outputs/screenshots` gespeichert
+
+### JSON-Logdatei (.json)
+
+* **Format:** Strukturierte JSON-Datei
+* **Inhalt:**
+	* Zeitstempel wie in allen Logdateien
+	* `type`-Feld, das enthalten kann:
+		* `sub_query`: enthält den Subquery-String plus `scraped_data_size`
+		* `content_found`: enthält `sub_query` und `content_size`
+		* Ein `content`-Feld mit einer Momentaufnahme der Gesamt-Recherche, inklusive des finalen Kontexts und der gefundenen Quellen
+* **Anwendungsfälle für Entwickler:**
+	* **Detaillierte Analyse:** Zeigt, wie das Tool im Detail läuft
+	* **Prozessverständnis:** Macht sichtbar, welche Subqueries liefen und wie viel Inhalt sie erzeugt haben
+	* **Dateninspektion:** Nützlich zum Prüfen der erzeugten Queries und Inhaltsgrößen
+* **Unterschiede zu Nutzerlogs:**
+	* Stark strukturiert und auf Subquery-Ausführung fokussiert
+	* Keine vereinfachte Sprache, keine Emojis, keine hohen Abstraktionen
+	* Keine Informationen zum Gesamt-Kontext oder zu Bildern, sondern Fokus auf den Subquery-Prozess

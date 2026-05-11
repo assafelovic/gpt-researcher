@@ -44,6 +44,7 @@ class ReportSource(Enum):
     """
     Web = "web"
     Local = "local"
+    Onion = "onion"
     Azure = "azure"
     LangChainDocuments = "langchain_documents"
     LangChainVectorStore = "langchain_vectorstore"

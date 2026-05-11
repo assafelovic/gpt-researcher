@@ -1,34 +1,34 @@
 # FAQ
 
-### How do I get started?
-It really depends on what you're aiming for. 
+### Wie fange ich an?
+Das hängt davon ab, was du erreichen willst.
 
-If you're looking to connect your AI application to the internet with Tavily tailored API, check out the [Tavily API](https://docs.tavily.com/docs/tavily-api/introductionn) documentation. 
-If you're looking to build and deploy our open source autonomous research agent GPT Researcher, please see [GPT Researcher](/docs/gpt-researcher/getting-started/introduction) documentation.
-You can also check out demos and examples for inspiration [here](/docs/examples/examples).
+Wenn du deine KI-Anwendung über die Tavily-API mit dem Internet verbinden willst, schau dir die [Tavily-API-Dokumentation](https://docs.tavily.com/docs/tavily-api/introductionn) an.
+Wenn du unseren Open-Source-Research-Agenten GPT Researcher bauen und deployen willst, findest du die passende Anleitung in der [GPT-Researcher-Dokumentation](/docs/gpt-researcher/getting-started/introduction).
+Für Inspiration kannst du dir außerdem Demos und Beispiele [hier](/docs/examples/examples) ansehen.
 
-### What is GPT Researcher?
+### Was ist GPT Researcher?
 
-GPT Researcher is a popular open source autonomous research agent that takes care of the tedious task of research for you, by scraping, filtering and aggregating over 20+ web sources per a single research task.
+GPT Researcher ist ein beliebter Open-Source-Research-Agent, der dir die aufwendige Recherche abnimmt, indem er für eine einzelne Aufgabe Inhalte aus über 20 Webquellen sammelt, filtert und zusammenführt.
 
-GPT Researcher is built with best practices for leveraging LLMs (prompt engineering, RAG, chains, embeddings, etc), and is optimized for quick and efficient research. It is also fully customizable and can be tailored to your specific needs.
+GPT Researcher setzt Best Practices für den Einsatz von LLMs ein, etwa Prompt Engineering, RAG, Chains und Embeddings, und ist auf schnelle sowie effiziente Recherche optimiert. Außerdem ist er vollständig anpassbar und kann auf deine Anforderungen zugeschnitten werden.
 
-To learn more about GPT Researcher, check out the [documentation page](/docs/gpt-researcher/getting-started/introduction).
+Mehr über GPT Researcher erfährst du auf der [Dokumentationsseite](/docs/gpt-researcher/getting-started/introduction).
 
-### How much does each research run cost?
+### Wie viel kostet ein Research-Lauf?
 
-A research task using GPT Researcher costs around $0.01 per a single run (for GPT-4 usage). We're constantly optimizing LLM calls to reduce costs and improve performance. 
+Eine Research-Aufgabe mit GPT Researcher kostet ungefähr 0,01 US-Dollar pro Lauf (bei GPT-4-Nutzung). Wir optimieren die LLM-Aufrufe ständig, um Kosten zu senken und die Leistung zu verbessern.
 
-### How do you ensure the report is factual and accurate?
+### Wie stellt ihr sicher, dass der Report faktenbasiert und korrekt ist?
 
-we do our best to ensure that the information we provide is factual and accurate. We do this by using multiple sources, and by using proprietary AI to score and rank the most relevant and accurate information. We also use proprietary AI to filter out irrelevant information and sources.
+Wir tun unser Bestes, um sicherzustellen, dass die bereitgestellten Informationen faktenbasiert und korrekt sind. Dafür nutzen wir mehrere Quellen und setzen eigene KI ein, um die relevantesten und genauesten Informationen zu bewerten und zu priorisieren. Außerdem filtern wir damit irrelevante Informationen und Quellen heraus.
 
-Lastly, by using RAG and other techniques, we ensure that the information is relevant to the context of the research task, leading to more accurate generative AI content and reduced hallucinations.
+Mit RAG und weiteren Verfahren stellen wir außerdem sicher, dass die Informationen zum Kontext der Aufgabe passen. Das führt zu präziseren generativen Inhalten und weniger Halluzinationen.
 
-### What are your plans for the future?
+### Was sind eure Pläne für die Zukunft?
 
-We're constantly working on improving our products and services. We're currently working on improving our search API together with design partners, and adding more data sources to our search engine. We're also working on improving our research agent GPT Researcher, and adding more features to it while growing our amazing open source community.
+Wir arbeiten kontinuierlich daran, unsere Produkte und Services zu verbessern. Aktuell entwickeln wir unsere Such-API gemeinsam mit Design-Partnern weiter und binden zusätzliche Datenquellen an unsere Suchmaschine an. Außerdem verbessern wir unseren Research-Agenten GPT Researcher fortlaufend und erweitern ihn um neue Funktionen, während unsere großartige Open-Source-Community weiter wächst.
 
-If you're interested in our roadmap or looking to collaborate, check out our [roadmap page](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap). 
+Wenn du dich für unsere Roadmap interessierst oder mit uns zusammenarbeiten möchtest, schau dir unsere [Roadmap-Seite](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) an.
 
-Feel free to [contact us](mailto:assafelovic@gmail.com) if you have any further questions or suggestions!
+Wenn du weitere Fragen oder Vorschläge hast, kannst du uns gern [kontaktieren](mailto:assafelovic@gmail.com)!

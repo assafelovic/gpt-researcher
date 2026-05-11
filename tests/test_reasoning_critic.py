@@ -14,6 +14,24 @@ async def test_generate_report_appends_reasoning_critic_and_stores_bundle(monkey
         prompt_text = "\n".join(message.get("content", "") for message in kwargs.get("messages", []))
         calls.append(prompt_text)
 
+        if "Translate the following markdown report into German" in prompt_text:
+            return """# Vergleiche FastAPI und Flask für asynchrone Python-APIs
+
+## Überblick
+FastAPI ist für asynchrone APIs ausgelegt und validiert Daten mit Pydantic.
+
+## Zentrale Erkenntnisse
+- Flask bleibt ein kompaktes Microframework und kann mit Erweiterungen für asynchrone Unterstützung kombiniert werden.
+- FastAPI wird häufig für typisierte Request-Validierung gewählt.
+
+## Verifikationsprüfung
+- Risikostufe: niedrig
+- Manuelle Prüfung erforderlich: nein
+
+## Begründungskritik
+- Urteil: überarbeiten
+"""
+
         if "skeptical senior research editor" in prompt_text or "VERIFICATION BUNDLE" in prompt_text:
             return """
             {
@@ -46,7 +64,6 @@ FastAPI is designed for async-first APIs and validates data with Pydantic.
 
     monkeypatch.setattr(report_generation, "create_chat_completion", fake_create_chat_completion)
     monkeypatch.setattr(reasoning_critic, "create_chat_completion", fake_create_chat_completion)
-    monkeypatch.setattr(report_generation, "resolve_openai_base_url", lambda: None)
 
     cfg = Config()
     cfg.enable_verification_review = True
@@ -72,13 +89,15 @@ https://flask.palletsprojects.com/
         verification_sink=sink,
     )
 
-    assert "## Verification Review" in report
-    assert "## Reasoning Critic" in report
+    assert report.startswith("# Vergleiche FastAPI und Flask für asynchrone Python-APIs")
+    assert "## Verifikationsprüfung" in report
+    assert "## Begründungskritik" in report
     assert getattr(sink, "verification_bundle", None) is not None
     assert getattr(sink, "reasoning_critic_bundle", None) is not None
     assert sink.reasoning_critic_bundle["verdict"] == "revise"
     assert sink.verification_bundle["critic"]["verdict"] == "revise"
     assert any("skeptical senior research editor" in prompt for prompt in calls)
+    assert any("Translate the following markdown report into German" in prompt for prompt in calls)
 
 
 @pytest.mark.asyncio
@@ -131,6 +150,64 @@ async def test_reasoning_critic_falls_back_to_deterministic_bundle(monkeypatch):
     assert bundle["source"] == "deterministic"
     assert bundle["verdict"] == "high_risk"
     assert bundle["issues"]
+
+
+@pytest.mark.asyncio
+async def test_reasoning_critic_localizes_default_llm_fallbacks(monkeypatch):
+    calls: list[str] = []
+
+    async def fake_create_chat_completion(**kwargs):
+        prompt_text = "\n".join(message.get("content", "") for message in kwargs.get("messages", []))
+        calls.append(prompt_text)
+        return """
+        {
+          "verdict": "revise",
+          "confidence": 0.83,
+          "summary": "",
+          "issues": [],
+          "strengths": [],
+          "recommendations": []
+        }
+        """
+
+    monkeypatch.setattr(reasoning_critic, "create_chat_completion", fake_create_chat_completion)
+
+    cfg = Config()
+    cfg.enable_reasoning_critic = True
+
+    bundle = await reasoning_critic.build_reasoning_critic_bundle(
+        query="Compare FastAPI and Flask for async Python APIs",
+        context="FastAPI and Flask have different async capabilities.",
+        report_markdown="# Bericht\n\n## Überblick\nFastAPI ist asynchron.",
+        verification_bundle={
+            "query": "Compare FastAPI and Flask for async Python APIs",
+            "summary": {
+                "claims_total": 1,
+                "supported_claims": 1,
+                "partial_claims": 0,
+                "unsupported_claims": 0,
+                "support_rate": 1.0,
+                "source_count": 1,
+            },
+            "risk": {
+                "level": "low",
+                "human_review_required": False,
+                "reason": "general",
+            },
+            "claims": [],
+            "evidence_graph": {"nodes": [], "edges": []},
+        },
+        cfg=cfg,
+        agent_role_prompt="You are a skeptical editor.",
+        language="german",
+        visited_urls=[],
+    )
+
+    assert bundle["source"] == "llm"
+    assert bundle["summary"] == "Der Begründungskritiker hat den Bericht und den Verifikationsanhang geprüft."
+    assert any("Aussagen werden direkt durch das Evidenzpaket gestützt." in strength for strength in bundle["strengths"])
+    assert any("Priorisieren Sie Aussagen" in recommendation for recommendation in bundle["recommendations"])
+    assert any("Respond in German" in prompt for prompt in calls)
 
 
 @pytest.mark.asyncio

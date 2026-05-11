@@ -7,7 +7,7 @@ export const useResearchHistory = () => {
   const [history, setHistory] = useState<ResearchHistoryItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const dataLoadedRef = useRef(false); // Track if data has been loaded
-  
+
   // Fetch all research history on mount
   useEffect(() => {
     // Skip if data is already loaded to prevent excessive API calls
@@ -20,26 +20,26 @@ export const useResearchHistory = () => {
         console.log('Fetching research history from server...');
         // First, load data from localStorage for immediate display
         const localHistory = loadFromLocalStorage();
-        
+
         // Set local history immediately to show something to user
         if (localHistory && localHistory.length > 0) {
           setHistory(localHistory);
         }
-        
+
         // Then try to fetch from server, but only for items we have locally
         if (localHistory && localHistory.length > 0) {
           // Extract IDs from local history to filter server results
           const localIds = localHistory.map((item: ResearchHistoryItem) => item.id).join(',');
           console.log(`Sending ${localHistory.length} local IDs to server for filtering`);
-          
+
           const response = await fetch(`/api/reports?report_ids=${localIds}`);
           if (response.ok) {
             const data = await response.json();
-            
+
             // Check if the response has the expected structure
             if (data.reports && Array.isArray(data.reports)) {
               console.log('Loaded research history from server:', data.reports.length, 'items');
-              
+
               // Merge local and server history
               await syncLocalHistoryWithServer(localHistory, data.reports);
             } else {
@@ -47,7 +47,7 @@ export const useResearchHistory = () => {
               // Keep using the local history we already loaded
             }
           } else {
-            console.warn('Failed to load history from server, status:', response.status);
+            console.warn('Verlauf konnte nicht vom Server geladen werden, Status:', response.status);
             // We're already using local history from above
           }
         } else {
@@ -61,7 +61,7 @@ export const useResearchHistory = () => {
         setLoading(false);
       }
     };
-    
+
     // Helper to load from localStorage
     const loadFromLocalStorage = () => {
       const localHistoryStr = localStorage.getItem('researchHistory');
@@ -83,26 +83,26 @@ export const useResearchHistory = () => {
         return [];
       }
     };
-    
+
     // Helper to sync local history with server
     const syncLocalHistoryWithServer = async (localHistory: ResearchHistoryItem[], serverHistory: ResearchHistoryItem[]) => {
       console.log('Syncing local history with server...');
-      
+
       // Create a map of server history IDs for quick lookup
       const serverIds = new Set(serverHistory.map(item => item.id));
-      
+
       // Find local reports that aren't on the server
       const localOnlyReports = localHistory.filter(item => !serverIds.has(item.id));
       console.log('Found local-only reports:', localOnlyReports.length);
-      
+
       // Upload local-only reports to server
       for (const report of localOnlyReports) {
         try {
           // Skip reports without questions or answers
           if (!report.question || !report.answer) continue;
-          
+
           console.log(`Uploading local report to server: ${report.id}`);
-          
+
           const response = await fetch('/api/reports', {
             method: 'POST',
             headers: {
@@ -116,49 +116,49 @@ export const useResearchHistory = () => {
               chatMessages: report.chatMessages || []
             }),
           });
-          
+
           if (!response.ok) {
-            console.warn(`Failed to upload local report ${report.id} to server:`, response.status);
+            console.warn(`Lokaler Bericht ${report.id} konnte nicht auf den Server hochgeladen werden:`, response.status);
           }
         } catch (error) {
           console.error(`Error uploading local report ${report.id} to server:`, error);
         }
       }
-      
+
       // Create a unified history with server data prioritized
       const combinedHistory = [...serverHistory];
-      
+
       // Add local-only reports to the combined history
       for (const report of localOnlyReports) {
         if (!serverIds.has(report.id)) {
           combinedHistory.push(report);
         }
       }
-      
+
       // Sort by timestamp if available, newest first
       const sortedHistory = combinedHistory.sort((a, b) => {
         const timeA = a.timestamp || 0;
         const timeB = b.timestamp || 0;
         return timeB - timeA;
       });
-      
+
       setHistory(sortedHistory);
-      
+
       // Update localStorage with the complete merged set
       localStorage.setItem('researchHistory', JSON.stringify(sortedHistory));
-      
+
       console.log('History sync complete, total items:', sortedHistory.length);
     };
-    
+
     fetchHistory();
   }, []); // Empty dependency array - only run once on mount
-  
+
   // Save new research
   const saveResearch = async (question: string, answer: string, orderedData: Data[]) => {
     try {
       // Generate a unique ID
       const id = uuidv4();
-      
+
       // Save to backend
       const response = await fetch('/api/reports', {
         method: 'POST',
@@ -173,11 +173,11 @@ export const useResearchHistory = () => {
           chatMessages: []
         }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         const newId = data.id;
-        
+
         // Update local state
         const newResearch = {
           id: newId,
@@ -187,9 +187,9 @@ export const useResearchHistory = () => {
           chatMessages: [],
           timestamp: Date.now(),
         };
-        
+
         setHistory(prev => [newResearch, ...prev]);
-        
+
         // Also save to localStorage as fallback
         const localHistory = localStorage.getItem('researchHistory');
         const parsedHistory = localHistory ? JSON.parse(localHistory) : [];
@@ -197,15 +197,15 @@ export const useResearchHistory = () => {
           'researchHistory',
           JSON.stringify([newResearch, ...parsedHistory])
         );
-        
+
         return newId;
       } else {
         throw new Error(`API error: ${response.status}`);
       }
     } catch (error) {
       console.error('Error saving research:', error);
-      toast.error('Failed to save research to server. Saved locally only.');
-      
+      toast.error('Recherche konnte nicht auf dem Server gespeichert werden. Sie wurde nur lokal gespeichert.');
+
       // Fallback: save to localStorage only
       const newResearch = {
         id: uuidv4(),
@@ -215,10 +215,10 @@ export const useResearchHistory = () => {
         chatMessages: [],
         timestamp: Date.now(),
       };
-      
+
       // Update local state
       setHistory(prev => [newResearch, ...prev]);
-      
+
       // Save to localStorage
       const localHistory = localStorage.getItem('researchHistory');
       const parsedHistory = localHistory ? JSON.parse(localHistory) : [];
@@ -226,11 +226,11 @@ export const useResearchHistory = () => {
         'researchHistory',
         JSON.stringify([newResearch, ...parsedHistory])
       );
-      
+
       return newResearch.id;
     }
   };
-  
+
   // Update existing research
   const updateResearch = async (id: string, answer: string, orderedData: Data[]) => {
     try {
@@ -245,49 +245,49 @@ export const useResearchHistory = () => {
           orderedData
         }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
-      
+
       // Update local state
-      setHistory(prev => 
-        prev.map(item => 
+      setHistory(prev =>
+        prev.map(item =>
           item.id === id ? { ...item, answer, orderedData, timestamp: Date.now() } : item
         )
       );
-      
+
       // Also update localStorage as fallback
       const localHistory = localStorage.getItem('researchHistory');
       if (localHistory) {
         const parsedHistory = JSON.parse(localHistory);
-        const updatedHistory = parsedHistory.map((item: any) => 
+        const updatedHistory = parsedHistory.map((item: any) =>
           item.id === id ? { ...item, answer, orderedData, timestamp: Date.now() } : item
         );
         localStorage.setItem('researchHistory', JSON.stringify(updatedHistory));
       }
-      
+
       return true;
     } catch (error) {
       console.error('Error updating research:', error);
-      
+
       // Update local state anyway
-      setHistory(prev => 
-        prev.map(item => 
+      setHistory(prev =>
+        prev.map(item =>
           item.id === id ? { ...item, answer, orderedData, timestamp: Date.now() } : item
         )
       );
-      
+
       // Update localStorage
       const localHistory = localStorage.getItem('researchHistory');
       if (localHistory) {
         const parsedHistory = JSON.parse(localHistory);
-        const updatedHistory = parsedHistory.map((item: any) => 
+        const updatedHistory = parsedHistory.map((item: any) =>
           item.id === id ? { ...item, answer, orderedData, timestamp: Date.now() } : item
         );
         localStorage.setItem('researchHistory', JSON.stringify(updatedHistory));
       }
-      
+
       return false;
     }
   };
@@ -311,14 +311,14 @@ export const useResearchHistory = () => {
       }
     } catch (error) {
       console.error('Error getting research by ID:', error);
-      
+
       // Try localStorage as fallback
       const localHistory = localStorage.getItem('researchHistory');
       if (localHistory) {
         const parsedHistory = JSON.parse(localHistory);
         return parsedHistory.find((item: any) => item.id === id) || null;
       }
-      
+
       return null;
     }
   };
@@ -329,14 +329,14 @@ export const useResearchHistory = () => {
       const response = await fetch(`/api/reports/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok && response.status !== 404) {
         throw new Error(`API error: ${response.status}`);
       }
-      
+
       // Update local state
       setHistory(prev => prev.filter(item => item.id !== id));
-      
+
       // Also update localStorage
       const localHistory = localStorage.getItem('researchHistory');
       if (localHistory) {
@@ -344,14 +344,14 @@ export const useResearchHistory = () => {
         const filteredHistory = parsedHistory.filter((item: any) => item.id !== id);
         localStorage.setItem('researchHistory', JSON.stringify(filteredHistory));
       }
-      
+
       return true;
     } catch (error) {
       console.error('Error deleting research:', error);
-      
+
       // Update local state anyway
       setHistory(prev => prev.filter(item => item.id !== id));
-      
+
       // Update localStorage
       const localHistory = localStorage.getItem('researchHistory');
       if (localHistory) {
@@ -359,7 +359,7 @@ export const useResearchHistory = () => {
         const filteredHistory = parsedHistory.filter((item: any) => item.id !== id);
         localStorage.setItem('researchHistory', JSON.stringify(filteredHistory));
       }
-      
+
       return false;
     }
   };
@@ -374,13 +374,13 @@ export const useResearchHistory = () => {
         },
         body: JSON.stringify(message),
       });
-      
+
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
       }
-      
+
       // Update local state
-      setHistory(prev => 
+      setHistory(prev =>
         prev.map(item => {
           if (item.id === id) {
             const chatMessages = item.chatMessages || [];
@@ -389,7 +389,7 @@ export const useResearchHistory = () => {
           return item;
         })
       );
-      
+
       // Also update localStorage
       const localHistory = localStorage.getItem('researchHistory');
       if (localHistory) {
@@ -403,13 +403,13 @@ export const useResearchHistory = () => {
         });
         localStorage.setItem('researchHistory', JSON.stringify(updatedHistory));
       }
-      
+
       return true;
     } catch (error) {
       console.error('Error adding chat message:', error);
-      
+
       // Update local state anyway
-      setHistory(prev => 
+      setHistory(prev =>
         prev.map(item => {
           if (item.id === id) {
             const chatMessages = item.chatMessages || [];
@@ -418,7 +418,7 @@ export const useResearchHistory = () => {
           return item;
         })
       );
-      
+
       // Update localStorage
       const localHistory = localStorage.getItem('researchHistory');
       if (localHistory) {
@@ -432,7 +432,7 @@ export const useResearchHistory = () => {
         });
         localStorage.setItem('researchHistory', JSON.stringify(updatedHistory));
       }
-      
+
       return false;
     }
   };
@@ -449,7 +449,7 @@ export const useResearchHistory = () => {
     } else {
       console.warn('History is not an array when getting chat messages');
     }
-    
+
     // Fallback to localStorage
     const localHistory = localStorage.getItem('researchHistory');
     if (localHistory) {
@@ -468,7 +468,7 @@ export const useResearchHistory = () => {
         console.error('Error parsing history from localStorage:', error);
       }
     }
-    
+
     return [];
   };
 
@@ -477,11 +477,11 @@ export const useResearchHistory = () => {
     try {
       // Not implementing bulk delete on the server for now
       // This would require a new API endpoint
-      
+
       // Just clear local state and storage
       setHistory([]);
       localStorage.removeItem('researchHistory');
-      
+
       return true;
     } catch (error) {
       console.error('Error clearing history:', error);
@@ -500,4 +500,4 @@ export const useResearchHistory = () => {
     getChatMessages,
     clearHistory
   };
-}; 
+};

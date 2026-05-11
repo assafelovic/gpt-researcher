@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 from typing import Any, Iterable
 
+from ..utils.language import is_german_language
+
 _STOPWORDS = {
     "a",
     "about",
@@ -295,7 +297,48 @@ def _risk_keywords_for_text(text: str | None) -> dict[str, list[str]]:
     return matched
 
 
-def classify_risk(query: str, report_markdown: str, claims: list[str] | None = None) -> dict[str, Any]:
+def _risk_category_label(category: str, language: str | None) -> str:
+    if not is_german_language(language):
+        return category
+    return {
+        "health": "gesundheit",
+        "legal": "recht",
+        "finance": "finanzen",
+        "security": "sicherheit",
+    }.get(category, category)
+
+
+def _risk_no_keywords_reason(language: str | None) -> str:
+    if is_german_language(language):
+        return "Es wurden keine Hochrisiko-Schlüsselwörter im Frage- oder Berichtstext erkannt."
+    return "No high-risk keywords were detected in the query or report."
+
+
+def _localize_risk_reason(reason: str | None, language: str | None) -> str:
+    if not reason:
+        return ""
+
+    normalized = reason.strip()
+    if not is_german_language(language):
+        return normalized
+
+    if normalized == "No high-risk keywords were detected in the query or report.":
+        return _risk_no_keywords_reason(language)
+
+    for category in _HIGH_RISK_CATEGORIES:
+        prefix = f"{category}:"
+        if normalized.lower().startswith(prefix):
+            return f"{_risk_category_label(category, language)}:{normalized[len(prefix):]}"
+
+    return normalized
+
+
+def classify_risk(
+    query: str,
+    report_markdown: str,
+    claims: list[str] | None = None,
+    language: str | None = None,
+) -> dict[str, Any]:
     """Classify the topic risk for human review purposes."""
     combined_text = f"{query}\n{report_markdown}"
     claim_text = "\n".join(claims or [])
@@ -313,11 +356,11 @@ def classify_risk(query: str, report_markdown: str, claims: list[str] | None = N
         level = "low"
 
     if not categories:
-        reason = "No high-risk keywords were detected in the query or report."
+        reason = _risk_no_keywords_reason(language)
     else:
         parts = []
         for category, hits in matched.items():
-            parts.append(f"{category}: {', '.join(hits[:4])}")
+            parts.append(f"{_risk_category_label(category, language)}: {', '.join(hits[:4])}")
         reason = "; ".join(parts)
 
     return {
@@ -371,6 +414,7 @@ def build_verification_bundle(
     context: str,
     report_markdown: str,
     visited_urls: list[str] | None = None,
+    language: str | None = None,
     max_claims: int = 12,
 ) -> dict[str, Any]:
     """Build a structured verification bundle for a generated report."""
@@ -508,7 +552,12 @@ def build_verification_bundle(
     support_rate = round(supported_count / total_claims, 3) if total_claims else 1.0
     unsupported_ratio = round(unsupported_count / total_claims, 3) if total_claims else 0.0
 
-    risk = classify_risk(query, report_markdown, [claim["claim"] for claim in claim_entries])
+    risk = classify_risk(
+        query,
+        report_markdown,
+        [claim["claim"] for claim in claim_entries],
+        language=language,
+    )
     if risk["level"] == "high" or unsupported_ratio >= 0.5:
         risk["human_review_required"] = True
 
@@ -535,38 +584,113 @@ def build_verification_bundle(
     }
 
 
-def render_verification_section(bundle: dict[str, Any]) -> str:
+def _verification_text(language: str | None) -> dict[str, str]:
+    if is_german_language(language):
+        return {
+            "title": "## Verifikationsprüfung",
+            "risk_level": "Risikostufe",
+            "human_review_required": "Manuelle Prüfung erforderlich",
+            "claims_analyzed": "Analysierte Aussagen",
+            "supported_claims": "Unterstützte Aussagen",
+            "partial_claims": "Teilweise unterstützte Aussagen",
+            "unsupported_claims": "Nicht unterstützte Aussagen",
+            "support_rate": "Abdeckungsrate",
+            "source_coverage": "Quellenabdeckung",
+            "risk_reason": "Risikogrund",
+            "claim_ledger": "### Anspruchsübersicht",
+            "no_claims": "- Aus dem Berichtstext konnten keine überprüfbaren Aussagen extrahiert werden.",
+            "no_direct_context_match": "kein direkter Kontextabgleich",
+            "evidence_summary": "### Zusammenfassung des Evidenzgraphen",
+            "nodes": "Knoten",
+            "edges": "Kanten",
+            "human_review_note": "### Hinweis zur manuellen Prüfung",
+            "human_review_text": "- Dieses Thema sollte manuell geprüft werden, bevor auf die Schlussfolgerungen vertraut wird.",
+            "confidence": "Konfidenz",
+            "sources": "Quellen",
+        }
+
+    return {
+        "title": "## Verification Review",
+        "risk_level": "Risk level",
+        "human_review_required": "Human review required",
+        "claims_analyzed": "Claims analyzed",
+        "supported_claims": "Supported claims",
+        "partial_claims": "Partial claims",
+        "unsupported_claims": "Unsupported claims",
+        "support_rate": "Support rate",
+        "source_coverage": "Source coverage",
+        "risk_reason": "Risk reason",
+        "claim_ledger": "### Claim Ledger",
+        "no_claims": "- No verifiable claims could be extracted from the report body.",
+        "no_direct_context_match": "no direct context match",
+        "evidence_summary": "### Evidence Graph Summary",
+        "nodes": "Nodes",
+        "edges": "Edges",
+        "human_review_note": "### Human Review Note",
+        "human_review_text": "- This topic should be reviewed manually before relying on the conclusions.",
+        "confidence": "Confidence",
+        "sources": "Sources",
+    }
+
+
+def _render_claim_status(status: str, language: str | None) -> str:
+    if not is_german_language(language):
+        return status.upper()
+    return {
+        "supported": "UNTERSTÜTZT",
+        "partial": "TEILWEISE",
+        "unsupported": "NICHT UNTERSTÜTZT",
+        "unknown": "UNBEKANNT",
+    }.get(status.lower(), status.upper())
+
+
+def render_verification_section(bundle: dict[str, Any], language: str = "english") -> str:
     """Render a human-readable verification appendix."""
     summary = bundle.get("summary", {})
     risk = bundle.get("risk", {})
     claims = bundle.get("claims", [])
+    text = _verification_text(language)
+
+    risk_level = str(risk.get("level", "unknown") or "unknown")
+    if is_german_language(language):
+        risk_level = {
+            "low": "niedrig",
+            "medium": "mittel",
+            "high": "hoch",
+            "unknown": "unbekannt",
+        }.get(risk_level.lower(), risk_level)
+
+    human_review_required = "ja" if risk.get("human_review_required") else "nein"
+    if not is_german_language(language):
+        human_review_required = "yes" if risk.get("human_review_required") else "no"
+
     lines: list[str] = [
-        "## Verification Review",
-        f"- Risk level: {risk.get('level', 'unknown')}",
-        f"- Human review required: {'yes' if risk.get('human_review_required') else 'no'}",
-        f"- Claims analyzed: {summary.get('claims_total', 0)}",
-        f"- Supported claims: {summary.get('supported_claims', 0)}",
-        f"- Partial claims: {summary.get('partial_claims', 0)}",
-        f"- Unsupported claims: {summary.get('unsupported_claims', 0)}",
-        f"- Support rate: {summary.get('support_rate', 0.0):.0%}",
-        f"- Source coverage: {summary.get('source_count', 0)}",
+        text["title"],
+        f"- {text['risk_level']}: {risk_level}",
+        f"- {text['human_review_required']}: {human_review_required}",
+        f"- {text['claims_analyzed']}: {summary.get('claims_total', 0)}",
+        f"- {text['supported_claims']}: {summary.get('supported_claims', 0)}",
+        f"- {text['partial_claims']}: {summary.get('partial_claims', 0)}",
+        f"- {text['unsupported_claims']}: {summary.get('unsupported_claims', 0)}",
+        f"- {text['support_rate']}: {summary.get('support_rate', 0.0):.0%}",
+        f"- {text['source_coverage']}: {summary.get('source_count', 0)}",
     ]
 
-    reason = risk.get("reason")
+    reason = _localize_risk_reason(risk.get("reason"), language)
     if reason:
-        lines.append(f"- Risk reason: {reason}")
+        lines.append(f"- {text['risk_reason']}: {reason}")
 
     if not claims:
         lines.extend(
             [
                 "",
-                "### Claim Ledger",
-                "- No verifiable claims could be extracted from the report body.",
+                text["claim_ledger"],
+                text["no_claims"],
             ]
         )
         return "\n".join(lines).strip()
 
-    lines.extend(["", "### Claim Ledger"])
+    lines.extend(["", text["claim_ledger"]])
     for claim in claims[:12]:
         status = claim.get("status", "unknown")
         sources = claim.get("sources", [])
@@ -581,19 +705,19 @@ def render_verification_section(bundle: dict[str, Any]) -> str:
         if source_labels:
             sources_text = ", ".join(source_labels)
         else:
-            sources_text = "no direct context match"
+            sources_text = text["no_direct_context_match"]
 
         lines.append(
-            f"- {status.upper()}: {claim.get('claim')}  "
-            f"(confidence {claim.get('confidence', 0.0):.2f}; sources: {sources_text})"
+            f"- {_render_claim_status(status, language)}: {claim.get('claim')}  "
+            f"({text['confidence']} {claim.get('confidence', 0.0):.2f}; {text['sources']}: {sources_text})"
         )
 
     lines.extend(
         [
             "",
-            "### Evidence Graph Summary",
-            f"- Nodes: {len(bundle.get('evidence_graph', {}).get('nodes', []))}",
-            f"- Edges: {len(bundle.get('evidence_graph', {}).get('edges', []))}",
+            text["evidence_summary"],
+            f"- {text['nodes']}: {len(bundle.get('evidence_graph', {}).get('nodes', []))}",
+            f"- {text['edges']}: {len(bundle.get('evidence_graph', {}).get('edges', []))}",
         ]
     )
 
@@ -601,8 +725,8 @@ def render_verification_section(bundle: dict[str, Any]) -> str:
         lines.extend(
             [
                 "",
-                "### Human Review Note",
-                "- This topic should be reviewed manually before relying on the conclusions.",
+                text["human_review_note"],
+                text["human_review_text"],
             ]
         )
 

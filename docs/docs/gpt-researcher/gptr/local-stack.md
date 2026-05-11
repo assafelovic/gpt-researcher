@@ -1,17 +1,17 @@
-# Fork-Specific Local Stack
+# Fork-spezifischer lokaler Stack
 
-This fork has been validated end-to-end with a local Gemma/llama.cpp server and a patched GPT Researcher backend.
+Dieser Fork wurde Ende-zu-Ende mit einem lokalen Gemma/llama.cpp-Server und einem angepassten GPT-Researcher-Backend validiert.
 
-The validated runtime layout is:
+Das validierte Laufzeit-Setup ist:
 
 - LLM server: `http://127.0.0.1:8081`
 - Backend API: `http://127.0.0.1:8002`
 - Next.js frontend: `http://127.0.0.1:3000`
 - Research artifacts: `outputs/`
 
-## What Works
+## Was funktioniert
 
-The current stack supports:
+Der aktuelle Stack unterstützt:
 
 - Greeting shortcuts in chat
 - Summary questions answered directly from the report
@@ -22,17 +22,17 @@ The current stack supports:
 - Verification reviews and a reasoning critic appended to generated reports
 - A bounded deep-crawler that improves source discovery without uncontrolled fan-out
 
-## Why This Fork Differs From Upstream
+## Warum sich dieser Fork vom Upstream unterscheidet
 
-The local model is OpenAI-compatible, but it is slower and less reliable for long free-form synthesis than the upstream cloud setup. To keep the system usable, the fork applies a few targeted changes:
+Das lokale Modell ist OpenAI-kompatibel, aber für lange freie Synthesen langsamer und weniger zuverlässig als das Cloud-Setup des Upstreams. Damit das System brauchbar bleibt, wendet der Fork einige gezielte Änderungen an:
 
-- Shorter local LLM timeouts and fewer retries
-- Deterministic fallbacks for summary and report-style questions
-- Live search answers that do not depend on tool-calling round trips
-- Collision-resistant artifact names for concurrent runs
-- A single canonical artifact directory: `outputs/`
+- Kürzere Timeouts und weniger Wiederholungen für lokale LLMs
+- Deterministische Fallbacks für Zusammenfassungs- und Report-Fragen
+- Live-Suchantworten, die nicht von Tool-Calling-Roundtrips abhängen
+- Kollisionssichere Artefaktnamen für parallele Läufe
+- Ein einziges kanonisches Artefaktverzeichnis: `outputs/`
 
-## Relevant Code Paths
+## Relevante Code-Pfade
 
 - `backend/chat/chat.py`
 - `backend/server/server_utils.py`
@@ -49,7 +49,7 @@ The local model is OpenAI-compatible, but it is slower and less reliable for lon
 - `tests/test_reasoning_critic.py`
 - `tests/test_verification.py`
 
-## How To Run It
+## So startest du es
 
 Start the local model server first, then the backend, then the frontend:
 
@@ -59,9 +59,9 @@ PORT=8002 PYTHONPATH=. .venv/bin/python backend/run_server.py
 env NEXT_PUBLIC_GPTR_API_URL=http://127.0.0.1:8002 NEXT_PUBLIC_BACKEND_URL=http://127.0.0.1:8002 npm run dev -- --hostname 127.0.0.1 --port 3000
 ```
 
-If you are following upstream examples, replace `8000` with `8002` for this fork.
+Wenn du Upstream-Beispiele verwendest, ersetze für diesen Fork `8000` durch `8002`.
 
-## Ollama Variant
+## Ollama-Variante
 
 This fork also ships an Ollama setup for the same local GGUF checkpoint.
 The model name is `gemma4_obliterated`, and the repo includes the Modelfile
@@ -82,12 +82,12 @@ STRATEGIC_LLM=ollama:gemma4_obliterated
 EMBEDDING=ollama:nomic-embed-text
 ```
 
-If you need a smaller context window on constrained hardware, start Ollama with
+Wenn du auf eingeschränkter Hardware ein kleineres Kontextfenster brauchst, starte Ollama mit
 `OLLAMA_CONTEXT_LENGTH=2048 ollama serve`.
 
-## Validation
+## Validierung
 
-The following checks were run against the live local stack:
+Die folgenden Prüfungen wurden gegen den laufenden lokalen Stack ausgeführt:
 
 - `pytest tests/test_chat_regressions.py`
 - `pytest tests/test_logs.py`
@@ -95,9 +95,9 @@ The following checks were run against the live local stack:
 - `pytest tests/test_logging_output.py`
 - `pytest tests/test_researcher_logging.py`
 
-## Artifact Notes
+## Artefakthinweise
 
-- `outputs/` is the canonical artifact directory for this fork.
-- Research JSON logs, Markdown reports, PDFs, DOCX files, and screenshots are all written under `outputs/`.
-- The old `logs/` path is legacy and should not be used for new research artifacts.
-- Screenshot debugging now writes to `outputs/screenshots`.
+- `outputs/` ist das kanonische Artefaktverzeichnis dieses Forks.
+- Research-JSON-Logs, Markdown-Reports, PDFs, DOCX-Dateien und Screenshots werden alle unter `outputs/` geschrieben.
+- Der alte Pfad `logs/` ist Legacy und sollte für neue Research-Artefakte nicht mehr verwendet werden.
+- Das Screenshot-Debugging schreibt jetzt nach `outputs/screenshots`.

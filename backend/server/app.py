@@ -84,12 +84,12 @@ async def lifespan(app: FastAPI):
             app.mount("/static", StaticFiles(directory=static_path), name="static")
             logger.debug(f"Static assets mounted from: {static_path}")
     else:
-        logger.warning(f"Frontend directory not found: {frontend_path}")
+        logger.warning(f"Frontend-Verzeichnis nicht gefunden: {frontend_path}")
     
-    logger.info("GPT Researcher API ready - local mode (no database persistence)")
+    logger.info("GPT Researcher API bereit - lokaler Modus (keine Datenbank-Persistenz)")
     yield
     # Shutdown
-    logger.info("Research API shutting down")
+    logger.info("Research-API fährt herunter")
 
 # App initialization
 app = FastAPI(lifespan=lifespan)
@@ -149,7 +149,7 @@ async def serve_frontend():
     index_path = os.path.join(frontend_dir, "index.html")
     
     if not os.path.exists(index_path):
-        raise HTTPException(status_code=404, detail="Frontend index.html not found")
+        raise HTTPException(status_code=404, detail="Frontend index.html nicht gefunden")
     
     with open(index_path, "r", encoding="utf-8") as f:
         content = f.read()
@@ -160,7 +160,7 @@ async def serve_frontend():
 async def read_report(request: Request, research_id: str):
     docx_path = os.path.join('outputs', f"{research_id}.docx")
     if not os.path.exists(docx_path):
-        return {"message": "Report not found."}
+        return {"message": "Report nicht gefunden."}
     return FileResponse(docx_path)
 
 
@@ -176,7 +176,7 @@ async def get_all_reports(report_ids: str = None):
 async def get_report_by_id(research_id: str):
     report = await report_store.get_report(research_id)
     if report is None:
-        raise HTTPException(status_code=404, detail="Report not found")
+        raise HTTPException(status_code=404, detail="Report nicht gefunden")
     return {"report": report}
 
 
@@ -205,7 +205,7 @@ async def create_or_update_report(request: Request):
         await report_store.upsert_report(research_id, report)
         return {"success": True, "id": research_id}
     except Exception as e:
-        logger.error(f"Error processing report creation: {e}")
+        logger.error(f"Fehler bei der Verarbeitung der Report-Erstellung: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -213,7 +213,7 @@ async def create_or_update_report(request: Request):
 async def update_report(research_id: str, request: Request):
     existing = await report_store.get_report(research_id)
     if existing is None:
-        raise HTTPException(status_code=404, detail="Report not found")
+        raise HTTPException(status_code=404, detail="Report nicht gefunden")
 
     data = await request.json()
     now_ms = int(time.time() * 1000)
@@ -233,7 +233,7 @@ async def update_report(research_id: str, request: Request):
 async def delete_report(research_id: str):
     existed = await report_store.delete_report(research_id)
     if not existed:
-        raise HTTPException(status_code=404, detail="Report not found")
+        raise HTTPException(status_code=404, detail="Report nicht gefunden")
     return {"success": True}
 
 
@@ -241,7 +241,7 @@ async def delete_report(research_id: str):
 async def get_report_chat(research_id: str):
     report = await report_store.get_report(research_id)
     if report is None:
-        raise HTTPException(status_code=404, detail="Report not found")
+        raise HTTPException(status_code=404, detail="Report nicht gefunden")
     return {"chatMessages": report.get("chatMessages") or []}
 
 
@@ -318,7 +318,7 @@ async def generate_report(research_request: ResearchRequest, background_tasks: B
 
     if research_request.generate_in_background:
         background_tasks.add_task(write_report, research_request=research_request, research_id=research_id)
-        return {"message": "Your report is being generated in the background. Please check back later.",
+        return {"message": "Dein Report wird im Hintergrund erstellt. Bitte schau später noch einmal nach.",
                 "research_id": research_id}
     else:
         response = await write_report(research_request, research_id)
@@ -330,7 +330,7 @@ async def list_files():
     if not os.path.exists(DOC_PATH):
         os.makedirs(DOC_PATH, exist_ok=True)
     files = os.listdir(DOC_PATH)
-    print(f"Files in {DOC_PATH}: {files}")
+    print(f"Dateien in {DOC_PATH}: {files}")
     return {"files": files}
 
 
@@ -356,11 +356,11 @@ async def websocket_endpoint(websocket: WebSocket):
         await handle_websocket_communication(websocket, manager)
     except WebSocketDisconnect as e:
         # Disconnect with more detailed logging about the WebSocket disconnect reason
-        logger.info(f"WebSocket disconnected with code {e.code} and reason: '{e.reason}'")
+        logger.info(f"WebSocket getrennt mit Code {e.code} und Grund: '{e.reason}'")
         await manager.disconnect(websocket)
     except Exception as e:
         # More general exception handling
-        logger.error(f"Unexpected WebSocket error: {str(e)}")
+        logger.error(f"Unerwarteter WebSocket-Fehler: {str(e)}")
         await manager.disconnect(websocket)
 
 @app.post("/api/chat")
@@ -404,7 +404,7 @@ async def chat(chat_request: ChatRequest):
         logger.info(f"Returning formatted response: {json.dumps(response_message)[:100]}...")
         return {"response": response_message}
     except Exception as e:
-        logger.error(f"Error processing chat request: {str(e)}", exc_info=True)
+        logger.error(f"Fehler bei der Verarbeitung der Chat-Anfrage: {str(e)}", exc_info=True)
         return {"error": str(e)}
 
 @app.post("/api/reports/{research_id}/chat")
@@ -441,17 +441,17 @@ async def research_report_chat(research_id: str, request: Request):
 
         return {"response": response_message}
     except Exception as e:
-        logger.error(f"Error in research report chat: {str(e)}", exc_info=True)
+        logger.error(f"Fehler im Chat zum Research-Report: {str(e)}", exc_info=True)
         return {"error": str(e)}
 
 @app.put("/api/reports/{research_id}")
 async def update_report(research_id: str, request: Request):
     """Update a specific research report by ID - no database configured."""
-    logger.debug(f"Update requested for report {research_id} - no database configured, not persisted")
+    logger.debug(f"Aktualisierung für Report {research_id} angefordert - keine Datenbank konfiguriert, nicht gespeichert")
     return {"success": True, "id": research_id}
 
 @app.delete("/api/reports/{research_id}")
 async def delete_report(research_id: str):
     """Delete a specific research report by ID - no database configured."""
-    logger.debug(f"Delete requested for report {research_id} - no database configured, nothing to delete")
+    logger.debug(f"Löschen für Report {research_id} angefordert - keine Datenbank konfiguriert, nichts zu löschen")
     return {"success": True, "id": research_id}

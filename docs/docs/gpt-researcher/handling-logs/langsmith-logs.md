@@ -1,28 +1,28 @@
-# Langsmith Logs
+# LangSmith-Logs
 
-With the help of Langsmith, you can easily visualize logs on cost and errors within your Langsmith Dashboard (calculated per LLM call or grouped by project)
+Mit LangSmith kannst du Logs zu Kosten und Fehlern direkt in deinem LangSmith-Dashboard visualisieren, entweder pro LLM-Aufruf oder gebündelt nach Projekt.
 
-Here are the steps to setup Langsmith:
+So richtest du LangSmith ein:
 
-Step 1: Setup a Langsmith account at: [smith.langchain.com](https://smith.langchain.com)
+Schritt 1: Lege einen LangSmith-Account an unter [smith.langchain.com](https://smith.langchain.com)
 
-Step 2: Create a new API key at: [smith.langchain.com/settings](https://smith.langchain.com/settings)
+Schritt 2: Erstelle einen neuen API-Key unter [smith.langchain.com/settings](https://smith.langchain.com/settings)
 
-Step 3: Add these 2 environment variables:
+Schritt 3: Setze diese beiden Umgebungsvariablen:
 
 ```bash
 LANGCHAIN_TRACING_V2=true
-LANGCHAIN_API_KEY=Set this to your API key
+LANGCHAIN_API_KEY=Hier deinen API-Key eintragen
 ```
 
-Here's what this looks like in the Langsmith Dashboard:
+So sieht das im LangSmith-Dashboard aus:
 
 ![Langsmith Dashboard](./langsmith.png)
 
-This can be helpful for: 
+Das kann nützlich sein für:
 
-- Enabling users to visualize and inspect the backend data flow
-- Quality assurance debugging - where can the input or output of our AI flows use improvement
-- Cost analysis - where are we spending the most on LLM calls
-- Error analysis - where are we getting the most errors
-- Optimizing speed - which parts of the flow are taking the most time
+- Das Visualisieren und Prüfen des Backend-Datenflusses
+- Debugging zur Qualitätssicherung, um zu sehen, wo Input oder Output verbessert werden kann
+- Kostenanalyse, um zu erkennen, wo die meisten LLM-Aufrufe stattfinden
+- Fehleranalyse, um die häufigsten Fehler zu finden
+- Geschwindigkeitsoptimierung, um die langsamsten Teile des Flows zu identifizieren

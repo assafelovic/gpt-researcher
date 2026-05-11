@@ -146,7 +146,7 @@ async def handle_start_command(websocket, data: str, manager):
     ) = extract_command_data(json_data)
 
     if not task or not report_type:
-        print("Error: Missing task or report_type")
+        print("Fehler: task oder report_type fehlt")
         return
 
     # Create logs handler with websocket and task
@@ -185,7 +185,7 @@ async def handle_start_command(websocket, data: str, manager):
 
 async def handle_human_feedback(data: str):
     feedback_data = json.loads(data[14:])  # Remove "human_feedback" prefix
-    print(f"Received human feedback: {feedback_data}")
+    print(f"Erhaltenes menschliches Feedback: {feedback_data}")
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
 
 
@@ -207,7 +207,7 @@ async def handle_chat_command(websocket, data: str):
         if not messages:
             await websocket.send_json({
                 "type": "chat",
-                "content": "No message provided.",
+                "content": "Keine Nachricht angegeben.",
                 "role": "assistant"
             })
             return
@@ -216,7 +216,7 @@ async def handle_chat_command(websocket, data: str):
         if ChatAgentWithMemory is None:
             await websocket.send_json({
                 "type": "chat",
-                "content": "Chat functionality is not available. Please check the server configuration.",
+                "content": "Chat-Funktionalität ist nicht verfügbar. Bitte prüfe die Serverkonfiguration.",
                 "role": "assistant"
             })
             return
@@ -244,17 +244,17 @@ async def handle_chat_command(websocket, data: str):
         logger.info(f"Chat response sent successfully")
         
     except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse chat data: {e}")
+        logger.error(f"Chat-Daten konnten nicht geparst werden: {e}")
         await websocket.send_json({
             "type": "chat",
-            "content": f"Error: Invalid message format - {str(e)}",
+            "content": f"Fehler: Ungültiges Nachrichtenformat - {str(e)}",
             "role": "assistant"
         })
     except Exception as e:
-        logger.error(f"Error handling chat command: {e}\n{traceback.format_exc()}")
+        logger.error(f"Fehler beim Verarbeiten des Chat-Befehls: {e}\n{traceback.format_exc()}")
         await websocket.send_json({
             "type": "chat",
-            "content": f"Error processing your message: {str(e)}",
+            "content": f"Fehler bei der Verarbeitung deiner Nachricht: {str(e)}",
             "role": "assistant"
         })
 
@@ -318,7 +318,7 @@ async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
     file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    print(f"File uploaded to {file_path}")
+    print(f"Datei hochgeladen nach {file_path}")
 
     document_loader = DocumentLoader(DOC_PATH)
     await document_loader.load()
@@ -330,11 +330,11 @@ async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
     file_path = os.path.join(DOC_PATH, os.path.basename(filename))
     if os.path.exists(file_path):
         os.remove(file_path)
-        print(f"File deleted: {file_path}")
-        return JSONResponse(content={"message": "File deleted successfully"})
+        print(f"Datei gelöscht: {file_path}")
+        return JSONResponse(content={"message": "Datei erfolgreich gelöscht"})
     else:
-        print(f"File not found: {file_path}")
-        return JSONResponse(status_code=404, content={"message": "File not found"})
+        print(f"Datei nicht gefunden: {file_path}")
+        return JSONResponse(status_code=404, content={"message": "Datei nicht gefunden"})
 
 
 async def execute_multi_agents(manager) -> Any:
@@ -343,7 +343,7 @@ async def execute_multi_agents(manager) -> Any:
         report = await run_multi_agent_task("Is AI in a hype cycle?", websocket, stream_output)
         return {"report": report}
     else:
-        return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
+        return JSONResponse(status_code=400, content={"message": "Keine aktive WebSocket-Verbindung"})
 
 
 async def handle_websocket_communication(websocket, manager):
@@ -357,7 +357,7 @@ async def handle_websocket_communication(websocket, manager):
                 logger.info("Task cancelled.")
                 raise
             except Exception as e:
-                logger.error(f"Error running task: {e}\n{traceback.format_exc()}")
+                logger.error(f"Fehler beim Ausführen der Aufgabe: {e}\n{traceback.format_exc()}")
                 await websocket.send_json(
                     {
                         "type": "logs",
@@ -372,7 +372,7 @@ async def handle_websocket_communication(websocket, manager):
         while True:
             try:
                 data = await websocket.receive_text()
-                logger.info(f"Received WebSocket message: {data[:50]}..." if len(data) > 50 else data)
+                logger.info(f"Empfangene WebSocket-Nachricht: {data[:50]}..." if len(data) > 50 else data)
                 
                 if data == "ping":
                     await websocket.send_text("pong")
@@ -385,33 +385,33 @@ async def handle_websocket_communication(websocket, manager):
                         {
                             "type": "logs",
                             "content": "warning",
-                            "output": "Task already running. Please wait.",
+                            "output": "Aufgabe läuft bereits. Bitte warten.",
                         }
                     )
                 # Normalize command detection by checking startswith after stripping whitespace
                 elif data.strip().startswith("start"):
-                    logger.info(f"Processing start command")
+                    logger.info("Verarbeite Start-Befehl")
                     running_task = run_long_running_task(
                         handle_start_command(websocket, data, manager)
                     )
                 elif data.strip().startswith("human_feedback"):
-                    logger.info(f"Processing human_feedback command")
+                    logger.info("Verarbeite human_feedback-Befehl")
                     running_task = run_long_running_task(handle_human_feedback(data))
                 elif data.strip().startswith("chat"):
-                    logger.info(f"Processing chat command")
+                    logger.info("Verarbeite Chat-Befehl")
                     running_task = run_long_running_task(handle_chat_command(websocket, data))
                 else:
-                    error_msg = f"Error: Unknown command or not enough parameters provided. Received: '{data[:100]}...'" if len(data) > 100 else f"Error: Unknown command or not enough parameters provided. Received: '{data}'"
+                    error_msg = f"Fehler: Unbekannter Befehl oder zu wenige Parameter. Empfangen: '{data[:100]}...'" if len(data) > 100 else f"Fehler: Unbekannter Befehl oder zu wenige Parameter. Empfangen: '{data}'"
                     logger.error(error_msg)
                     print(error_msg)
                     await websocket.send_json({
                         "type": "error",
                         "content": "error",
-                        "output": "Unknown command received by server"
+                        "output": "Unbekannter Befehl vom Server empfangen"
                     })
             except Exception as e:
-                logger.error(f"WebSocket error: {str(e)}\n{traceback.format_exc()}")
-                print(f"WebSocket error: {e}")
+                logger.error(f"WebSocket-Fehler: {str(e)}\n{traceback.format_exc()}")
+                print(f"WebSocket-Fehler: {e}")
                 break
     finally:
         if running_task and not running_task.done():

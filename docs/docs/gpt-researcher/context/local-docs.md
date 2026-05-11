@@ -1,22 +1,23 @@
-# Local Documents
+# Lokale Dokumente
 
-## Just Local Docs
+## Nur lokale Dokumente
 
-You can instruct the GPT Researcher to run research tasks based on your local documents. Currently supported file formats are: PDF, plain text, CSV, Excel, Markdown, PowerPoint, and Word documents.
+Du kannst GPT Researcher anweisen, auf Basis deiner lokalen Dokumente zu recherchieren. Unterstützte Formate sind aktuell: PDF, Text, CSV, Excel, Markdown, PowerPoint und Word.
 
-Step 1: Add the env variable `DOC_PATH` pointing to the folder where your documents are located.
+### Schritt 1
+Setze die Umgebungsvariable `DOC_PATH` auf den Ordner, in dem deine Dokumente liegen.
 
 ```bash
 export DOC_PATH="./my-docs"
 ```
 
-Step 2: 
- - If you're running the frontend app on localhost:8000, simply select "My Documents" from the "Report Source" Dropdown Options.
- - If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/docs/gpt-researcher/gptr/pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
+### Schritt 2
 
-## Local Docs + Web (Hybrid)
+- Wenn du die Frontend-App auf `localhost:8000` laufen hast, wähle im Dropdown **Report Source** einfach **My Documents** aus.
+- Wenn du GPT Researcher als [PIP-Paket](/docs/gpt-researcher/gptr/pip-package) verwendest, übergib beim Erzeugen der `GPTResearcher`-Instanz `report_source="local"`.
+
+## Lokale Dokumente + Web (Hybrid)
 
 ![GPT Researcher hybrid research](./img/gptr-hybrid.png)
 
-Check out the blog post on [Hybrid Research](https://docs.gptr.dev/blog/gptr-hybrid) to learn more about how to combine local documents with web research.
-```
+Mehr dazu im Blogpost über [Hybrid Research](/blog/gptr-hybrid).

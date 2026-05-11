@@ -373,6 +373,6 @@ def _check_pkg(pkg: str) -> None:
 
         except subprocess.CalledProcessError:
             raise ImportError(
-                Fore.RED + f"Failed to install {pkg_kebab}. Please install manually with "
+                Fore.RED + f"{pkg_kebab} konnte nicht installiert werden. Bitte manuell installieren mit "
                 f"`pip install -U {pkg_kebab}`"
             )

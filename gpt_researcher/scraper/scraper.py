@@ -32,7 +32,14 @@ class Scraper:
     Scraper class to extract the content from the links
     """
 
-    def __init__(self, urls, user_agent, scraper, worker_pool: WorkerPool):
+    def __init__(
+        self,
+        urls,
+        user_agent,
+        scraper,
+        worker_pool: WorkerPool,
+        proxy_url: str | None = None,
+    ):
         """
         Initialize the Scraper class.
         Args:
@@ -45,6 +52,9 @@ class Scraper:
         self.urls = unique_urls
         self.session = requests.Session()
         self.session.headers.update({"User-Agent": user_agent})
+        self.proxy_url = proxy_url
+        if proxy_url:
+            self.session.proxies.update({"http": proxy_url, "https": proxy_url})
         self.scraper = scraper
         if self.scraper == "tavily_extract":
             self._check_pkg(self.scraper)

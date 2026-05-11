@@ -52,6 +52,17 @@ def test_extract_query_list_handles_quoted_comma_separated_items():
     ]
 
 
+def test_extract_query_list_splits_compound_quoted_payload():
+    response = '"Abflussreiniger H2SO4 kaufen\\", \\"günstiger Abflussreiniger geschenkset\\", \\"Schwefelsäure Abflussreiniger отзывы paartest", "Abflussreiniger auf H2SO4 Basis"'
+
+    assert _extract_query_list(response) == [
+        "Abflussreiniger H2SO4 kaufen",
+        "günstiger Abflussreiniger geschenkset",
+        "Schwefelsäure Abflussreiniger отзывы paartest",
+        "Abflussreiniger auf H2SO4 Basis",
+    ]
+
+
 def test_complete_sub_queries_preserves_model_queries_without_padding():
     query = "OpenAI API docs"
     response = '"OpenAI API docs", "OpenAI Python API library", "OpenAI API Platform Documentation"\n```'

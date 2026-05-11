@@ -85,8 +85,8 @@ class MCPRetriever:
             self.streamer.stream_log_sync(f"🔧 Initializing MCP retriever for query: {self.query}")
             self.streamer.stream_log_sync(f"🔧 Found {len(self.mcp_configs)} MCP server configurations")
         else:
-            logger.error("No MCP server configurations found. The retriever will fail during search.")
-            self.streamer.stream_log_sync("❌ CRITICAL: No MCP server configurations found. Please check documentation.")
+            logger.error("Keine MCP-Server-Konfigurationen gefunden. Der Retriever wird bei der Suche fehlschlagen.")
+            self.streamer.stream_log_sync("❌ KRITISCH: Keine MCP-Server-Konfigurationen gefunden. Bitte die Dokumentation prüfen.")
 
     def _get_mcp_configs(self) -> List[Dict[str, Any]]:
         """
@@ -125,7 +125,7 @@ class MCPRetriever:
         """
         # Check if we have any server configurations
         if not self.mcp_configs:
-            error_msg = "No MCP server configurations available. Please provide mcp_configs parameter to GPTResearcher."
+            error_msg = "Keine MCP-Server-Konfigurationen verfügbar. Bitte den Parameter `mcp_configs` an GPTResearcher übergeben."
             logger.error(error_msg)
             await self.streamer.stream_error("MCP retriever cannot proceed without server configurations.")
             return []  # Return empty instead of raising to allow research to continue
@@ -139,7 +139,7 @@ class MCPRetriever:
             all_tools = await self._get_all_tools()
             
             if not all_tools:
-                await self.streamer.stream_warning("No MCP tools available, skipping MCP research")
+                await self.streamer.stream_warning("Keine MCP-Tools verfügbar, MCP-Recherche wird übersprungen")
                 return []
             
             # Stage 2: Select most relevant tools
@@ -147,11 +147,11 @@ class MCPRetriever:
             selected_tools = await self.tool_selector.select_relevant_tools(self.query, all_tools, max_tools=3)
             
             if not selected_tools:
-                await self.streamer.stream_warning("No relevant tools selected, skipping MCP research")
+                await self.streamer.stream_warning("Keine relevanten Tools ausgewählt, MCP-Recherche wird übersprungen")
                 return []
             
             # Stage 3: Conduct research with selected tools
-            await self.streamer.stream_stage_start("Stage 3", "Conducting research with selected tools")
+            await self.streamer.stream_stage_start("Phase 3", "Recherche mit den ausgewählten Tools wird durchgeführt")
             results = await self.mcp_researcher.conduct_research_with_tools(self.query, selected_tools)
             
             # Limit the number of results
@@ -188,15 +188,15 @@ class MCPRetriever:
             return results
             
         except Exception as e:
-            logger.error(f"Error in MCP search: {e}")
-            await self.streamer.stream_error(f"Error in MCP search: {str(e)}")
+            logger.error(f"Fehler bei der MCP-Suche: {e}")
+            await self.streamer.stream_error(f"Fehler bei der MCP-Suche: {str(e)}")
             return []
         finally:
             # Ensure client cleanup after search completes
             try:
                 await self.client_manager.close_client()
             except Exception as e:
-                logger.error(f"Error during client cleanup: {e}")
+                logger.error(f"Fehler beim Aufräumen des Clients: {e}")
 
     def search(self, max_results: int = 10) -> List[Dict[str, str]]:
         """
@@ -292,8 +292,8 @@ class MCPRetriever:
             return results
             
         except Exception as e:
-            logger.error(f"Error in MCP search: {e}")
-            self.streamer.stream_log_sync(f"❌ Error in MCP search: {str(e)}")
+            logger.error(f"Fehler bei der MCP-Suche: {e}")
+            self.streamer.stream_log_sync(f"❌ Fehler bei der MCP-Suche: {str(e)}")
             # Return empty results instead of raising to allow research to continue
             return []
 
@@ -315,10 +315,10 @@ class MCPRetriever:
                 self._all_tools_cache = all_tools
                 return all_tools
             else:
-                await self.streamer.stream_warning("No tools available from MCP servers")
+                await self.streamer.stream_warning("Keine Tools von MCP-Servern verfügbar")
                 return []
                 
         except Exception as e:
-            logger.error(f"Error getting MCP tools: {e}")
-            await self.streamer.stream_error(f"Error getting MCP tools: {str(e)}")
-            return [] 
+            logger.error(f"Fehler beim Abrufen der MCP-Tools: {e}")
+            await self.streamer.stream_error(f"Fehler beim Abrufen der MCP-Tools: {str(e)}")
+            return []

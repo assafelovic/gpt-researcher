@@ -1,13 +1,13 @@
 # Welcome
 
-Hey there! 👋
+Willkommen! 👋
 
-We're a team of AI researchers and developers who are passionate about building the next generation of AI assistants. 
-Our mission is to empower individuals and organizations with accurate, unbiased, and factual information.
+Wir sind ein Team aus KI-Forschenden und Entwicklern, die mit Leidenschaft an der nächsten Generation von KI-Assistenten arbeiten.
+Unsere Aufgabe ist es, Einzelpersonen und Organisationen mit präzisen, ausgewogenen und faktenbasierten Informationen zu unterstützen.
 
 ### GPT Researcher
-Quickly accessing relevant and trustworthy information is more crucial than ever. However, we've learned that none of today's search engines provide a suitable tool that provides factual, explicit and objective answers without the need to continuously click and explore multiple sites for a given research task. 
+Schnell auf relevante und vertrauenswürdige Informationen zuzugreifen ist heute wichtiger denn je. Gleichzeitig haben wir gelernt, dass keine der heutigen Suchmaschinen ein passendes Werkzeug liefert, das für eine Recherche faktenbasierte, klare und objektive Antworten gibt, ohne dass man sich ständig durch mehrere Seiten klicken muss.
 
-This is why we've built the trending open source **[GPT Researcher](https://github.com/assafelovic/gpt-researcher)**. GPT Researcher is an autonomous agent that takes care of the tedious task of research for you, by scraping, filtering and aggregating over 20+ web sources per a single research task. 
+Deshalb haben wir den populären Open-Source-Stack **[GPT Researcher](https://github.com/assafelovic/gpt-researcher)** gebaut. GPT Researcher ist ein autonomer Agent, der dir die aufwendige Recherche abnimmt, indem er für eine einzige Aufgabe Inhalte aus über 20 Webquellen sammelt, filtert und zusammenführt.
 
-To learn more about GPT Researcher, check out the [documentation page](/docs/gpt-researcher/getting-started/introduction).
+Mehr über GPT Researcher erfährst du auf der [Dokumentationsseite](/docs/gpt-researcher/getting-started/introduction).

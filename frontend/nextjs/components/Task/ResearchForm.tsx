@@ -37,7 +37,7 @@ export default function ResearchForm({
     }
     return [];
   });
-  
+
   useEffect(() => {
     localStorage.setItem('domainFilters', JSON.stringify(domains));
     setChatBoxSettings(prev => ({
@@ -110,7 +110,7 @@ export default function ResearchForm({
     >
       <div className="form-group">
         <label htmlFor="report_type" className="agent_question">
-          Report Type{" "}
+          Berichtsart{" "}
         </label>
         <select
           name="report_type"
@@ -120,19 +120,19 @@ export default function ResearchForm({
           required
         >
           <option value="research_report">
-            Summary - Short and fast (~2 min)
+            Kurzfassung - Schnell und knapp (~2 Min.)
           </option>
-          <option value="deep">Deep Research Report</option>
-          <option value="multi_agents">Multi Agents Report</option>
+          <option value="deep">Tiefenrecherche-Bericht</option>
+          <option value="multi_agents">Multi-Agenten-Bericht</option>
           <option value="detailed_report">
-            Detailed - In depth and longer (~5 min)
+            Ausführlich - Detaillierter und länger (~5 Min.)
           </option>
         </select>
       </div>
 
       <div className="form-group">
         <label htmlFor="report_source" className="agent_question">
-          Report Source{" "}
+          Quellenmodus{" "}
         </label>
         <select
           name="report_source"
@@ -141,26 +141,32 @@ export default function ResearchForm({
           className="form-control-static"
           required
         >
-          <option value="web">The Internet</option>
-          <option value="local">My Documents</option>
+          <option value="web">Websuche</option>
+          <option value="local">Lokale Dateien</option>
+          <option value="onion">Onion / Tor</option>
           <option value="hybrid">Hybrid</option>
         </select>
+        {report_source === "onion" ? (
+          <p className="mt-2 text-sm text-amber-400">
+            Der Onion-Modus benötigt einen konfigurierten `ONION_PROXY_URL`-Proxy.
+          </p>
+        ) : null}
       </div>
 
-      
+
 
       {report_source === "local" || report_source === "hybrid" ? (
         <FileUpload />
       ) : null}
-      
+
       <ToneSelector tone={tone} onToneChange={onToneChange} />
 
-      <MCPSelector 
+      <MCPSelector
         mcpEnabled={chatBoxSettings.mcp_enabled || false}
         mcpConfigs={chatBoxSettings.mcp_configs || []}
         onMCPChange={onMCPChange}
       />
-      
+
       <LayoutSelector layoutType={layoutType || 'copilot'} onLayoutChange={onLayoutChange} />
 
       {/** TODO: move the below to its own component */}

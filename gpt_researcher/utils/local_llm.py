@@ -22,8 +22,10 @@ from langchain_core.embeddings import Embeddings
 LOCAL_OPENAI_BASE_URL_CANDIDATES = (
     "http://127.0.0.1:8081/v1",
     "http://localhost:8081/v1",
+    "http://host.docker.internal:8081/v1",
     "http://127.0.0.1:8080/v1",
     "http://localhost:8080/v1",
+    "http://host.docker.internal:8080/v1",
 )
 
 LOCAL_OLLAMA_BASE_URL = "http://127.0.0.1:11434"

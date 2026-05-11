@@ -11,14 +11,17 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
+from gpt_researcher.utils.network import build_requests_proxies
+
 
 class Duckduckgo:
     """
     Duckduckgo API Retriever
     """
-    def __init__(self, query, query_domains=None):
+    def __init__(self, query, query_domains=None, proxy_url: str | None = None):
         self.query = query
         self.query_domains = query_domains or None
+        self.proxy_url = proxy_url
 
     def search(self, max_results=5):
         """
@@ -52,6 +55,7 @@ class Duckduckgo:
             "https://html.duckduckgo.com/html/",
             params=params,
             headers=headers,
+            proxies=build_requests_proxies(self.proxy_url),
             timeout=20,
         )
         response.raise_for_status()

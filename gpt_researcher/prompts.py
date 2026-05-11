@@ -6,6 +6,7 @@ from langchain_core.documents import Document
 from .config import Config
 from .utils.enum import ReportSource, ReportType, Tone
 from .utils.enum import PromptFamily as PromptFamilyEnum
+from .utils.language import normalize_source_title, strip_source_boilerplate
 from typing import Callable, List, Dict, Any
 
 
@@ -256,6 +257,8 @@ RULES:
 - Do not introduce unrelated frameworks, products, companies, or technologies that do not appear in the task or context.
 - If the task compares two or more named entities, keep those named entities in every query whenever possible.
 - Prefer concise search phrases that stay tightly on topic.
+- Return each query as one standalone string. Do not merge multiple queries into one list item.
+- Do not wrap the full array in an extra layer of quotes and do not include embedded comma-separated query blobs.
 """
 
         dynamic_example = ", ".join([f'"query {i+1}"' for i in range(max_iterations)])
@@ -597,11 +600,29 @@ Instructions:
     @staticmethod
     def pretty_print_docs(docs: list[Document], top_n: int | None = None) -> str:
         """Compress the list of documents into a context string"""
-        return f"\n".join(f"Source: {d.metadata.get('source')}\n"
-                          f"Title: {d.metadata.get('title')}\n"
-                          f"Content: {d.page_content}\n"
-                          for i, d in enumerate(docs)
-                          if top_n is None or i < top_n)
+        chunks: list[str] = []
+        for i, d in enumerate(docs):
+            if top_n is not None and i >= top_n:
+                break
+
+            lines: list[str] = []
+            source = d.metadata.get("source")
+            if source not in (None, "", "None"):
+                lines.append(f"Source: {source}")
+
+            title = d.metadata.get("title")
+            normalized_title = normalize_source_title(title, d.metadata.get("source"))
+            if normalized_title:
+                lines.append(f"Title: {normalized_title}")
+
+            content = strip_source_boilerplate(d.page_content or "")
+            if content:
+                lines.append(f"Content: {content}")
+
+            if lines:
+                chunks.append("\n".join(lines))
+
+        return "\n\n".join(chunks)
 
     @staticmethod
     def join_local_web_documents(docs_context: str, web_context: str) -> str:
@@ -834,9 +855,13 @@ class Granite3PromptFamily(PromptFamily):
         if not docs:
             return ""
         all_documents = "\n\n".join([
-            f"Document {doc.metadata.get('source', i)}\n" + \
-            f"Title: {doc.metadata.get('title')}\n" + \
-            doc.page_content
+            f"Document {doc.metadata.get('source', i)}\n"
+            + (
+                f"Title: {normalize_source_title(doc.metadata.get('title'), doc.metadata.get('source'))}\n"
+                if normalize_source_title(doc.metadata.get('title'), doc.metadata.get('source'))
+                else ""
+            )
+            + strip_source_boilerplate(doc.page_content)
             for i, doc in enumerate(docs)
             if top_n is None or i < top_n
         ])
@@ -862,8 +887,8 @@ class Granite33PromptFamily(PromptFamily):
 
     @staticmethod
     def _get_content(doc: Document) -> str:
-        doc_content = doc.page_content
-        if title := doc.metadata.get("title"):
+        doc_content = strip_source_boilerplate(doc.page_content)
+        if title := normalize_source_title(doc.metadata.get("title"), doc.metadata.get("source")):
             doc_content = f"Title: {title}\n{doc_content}"
         return doc_content.strip()
 

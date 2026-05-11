@@ -1,56 +1,55 @@
-# Troubleshooting
+# Fehlerbehebung
 
-We're constantly working to provide a more stable version. If you're running into any issues, please first check out the resolved issues or ask us via our [Discord community](https://discord.gg/QgZXvJAccX).
+Wir arbeiten ständig daran, eine stabilere Version bereitzustellen. Wenn du auf Probleme stößt, schau dir zuerst die gelösten Issues an oder frag uns in unserer [Discord-Community](https://discord.gg/QgZXvJAccX).
 
 ### model: gpt-4 does not exist
-This relates to not having permission to use gpt-4 yet. Based on OpenAI, it will be [widely available for all by end of July](https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4).
+Das hängt damit zusammen, dass du noch keine Berechtigung für `gpt-4` hast. Laut OpenAI wird das Modell [bis Ende Juli für alle breit verfügbar](https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4).
 
 ### cannot load library 'gobject-2.0-0'
 
-The issue relates to the library WeasyPrint (which is used to generate PDFs from the research report). Please follow this guide to resolve it: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
+Das Problem betrifft die Bibliothek WeasyPrint, die für die PDF-Erzeugung aus dem Research-Report verwendet wird. Folge zur Behebung dieser Anleitung: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html
 
-Or you can install this package manually
+Alternativ kannst du das Paket manuell installieren.
 
-In case of MacOS you can install this lib using
+Unter macOS kannst du die Bibliothek so installieren:
 `brew install glib pango`
-If you face an issue with linking afterward, you can try running `brew link glib`
+Falls es danach Probleme beim Linken gibt, versuche `brew link glib`.
 
-In case of Linux you can install this lib using
+Unter Linux kannst du die Bibliothek so installieren:
 `sudo apt install libglib2.0-dev`
 
 ### cannot load library 'pango'
 
-In case of MacOS you can install this lib using
+Unter macOS kannst du die Bibliothek so installieren:
 `brew install pango`
 
-In case of Linux you can install this lib using
+Unter Linux kannst du die Bibliothek so installieren:
 `sudo apt install libpango-1.0-0`
 
-**Workaround for Mac M chip users**
+**Workaround für Mac-Nutzer mit M-Chip**
 
-If the above solutions don't work, you can try the following:
-- Install a fresh version of Python 3.11 pointed to brew:
+Wenn die obigen Lösungen nicht helfen, probiere Folgendes:
+- Installiere eine frische Python-3.11-Version über Homebrew:
 `brew install python@3.11`
-- Install the required libraries:
+- Installiere die benötigten Bibliotheken:
 `brew install pango glib gobject-introspection`
-- Install the required GPT Researcher Python packages:
+- Installiere die benötigten GPT-Researcher-Python-Pakete:
 `pip3.11 install -r requirements.txt`
-- Run the app with Python 3.11 (using brew):
+- Starte die App mit Python 3.11 aus Homebrew:
 `python3.11 -m uvicorn main:app --reload`
 
 ### Error processing the url
 
-We're using [Selenium](https://www.selenium.dev) for site scraping. Some sites fail to be scraped. In these cases, restart and try running again.
+Wir nutzen [Selenium](https://www.selenium.dev) für das Scraping von Websites. Manche Seiten lassen sich nicht zuverlässig auslesen. In solchen Fällen hilft es oft, den Lauf neu zu starten.
 
 
 ### Chrome version issues
 
-Many users have an issue with their chromedriver because the latest chrome browser version doesn't have a compatible chrome driver yet.
+Viele Nutzer haben Probleme mit ihrem Chromedriver, weil die neueste Chrome-Version noch keinen kompatiblen Treiber hat.
 
-To downgrade your Chrome web browser using [slimjet](https://www.slimjet.com/chrome/google-chrome-old-version.php), follow these steps. First, visit the website and scroll down to find the list of available older Chrome versions. Choose the version you wish to install
-making sure it's compatible with your operating system.
-Once you've selected the desired version, click on the corresponding link to download the installer. Before proceeding with the installation, it's crucial to uninstall your current version of Chrome to avoid conflicts.
+Wenn du Chrome über [slimjet](https://www.slimjet.com/chrome/google-chrome-old-version.php) herunterstufen möchtest, gehe so vor: Öffne die Website und suche in der Liste nach einer älteren Chrome-Version. Wähle eine Version, die zu deinem Betriebssystem passt.
+Sobald du die gewünschte Version ausgewählt hast, lade den Installer über den passenden Link herunter. Vor der Installation solltest du deine aktuelle Chrome-Version deinstallieren, um Konflikte zu vermeiden.
 
-It's important to check if the version you downgrade to, has a chromedriver available in the official [chrome driver website](https://chromedriver.chromium.org/downloads)
+Wichtig ist außerdem, dass die gewählte Version einen verfügbaren Chromedriver auf der offiziellen [Chrome-Driver-Seite](https://chromedriver.chromium.org/downloads) hat.
 
-**If none of the above work, you can [try out our hosted beta](https://app.tavily.com)**
+**Wenn nichts davon hilft, kannst du unsere [gehostete Beta ausprobieren](https://app.tavily.com)**

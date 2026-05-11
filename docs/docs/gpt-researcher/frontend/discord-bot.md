@@ -1,73 +1,71 @@
-# Discord Bot
+# Discord-Bot
 
-## Intro
+## Einführung
 
-You can either leverage the official GPTR Discord bot or create your own custom bot.
+Du kannst entweder den offiziellen GPTR-Discord-Bot verwenden oder dir einen eigenen Bot bauen.
 
-To add the official GPTR Discord bot, simply [click here to invite GPTR to your Discord server](https://discord.com/oauth2/authorize?client_id=1281438963034361856&permissions=1689934339898432&integration_type=0&scope=bot).
+Um den offiziellen GPTR-Discord-Bot hinzuzufügen, [klicke hier und lade GPTR in deinen Discord-Server ein](https://discord.com/oauth2/authorize?client_id=1281438963034361856&permissions=1689934339898432&integration_type=0&scope=bot).
 
+## Einen eigenen Discord-Bot mit GPTR-Funktionalität erstellen
 
-## To create your own discord bot with GPTR functionality
-
-Add a .env file in the root of the project and add the following:
+Lege im Projektstamm eine `.env`-Datei an und trage Folgendes ein:
 
 ```
 DISCORD_BOT_TOKEN=
 DISCORD_CLIENT_ID=
 ```
-You can fetch the token from the Discord Developer Portal by following these steps:
 
-1. Go to https://discord.com/developers/applications/
-2. Click the "New Application" button and give your bot a name
-3. Navigate to the OAuth2 tab to generate an invite URL for your bot
-4. Under "Scopes", select "bot"
+Den Token bekommst du über das Discord Developer Portal:
+
+1. Öffne https://discord.com/developers/applications/
+2. Klicke auf **New Application** und vergebe einen Namen
+3. Wechsle zum Tab **OAuth2**, um eine Invite-URL für deinen Bot zu erzeugen
+4. Wähle unter **Scopes** den Eintrag **bot**
 
 ![OAuth2 URL Generator](./img/oath2-url-generator.png)
 
-5. Select the appropriate bot permissions
+5. Wähle die passenden Bot-Berechtigungen
 
 ![Bot Permissions](./img/bot-permissions.png)
 
-6. Copy your bot's token and paste it into the `.env` file you created earlier
+6. Kopiere den Bot-Token und füge ihn in deine `.env`-Datei ein
 
-
-### Deploying the bot commands
+### Bot-Befehle deployen
 
 ```bash
 node deploy-commands.js
 ```
 
-In our case, this will make the "ask" and "ping" commands available to users of the bot.
+Dadurch stehen den Nutzern die Befehle **ask** und **ping** zur Verfügung.
 
-
-### Running the bot via Docker
+### Bot per Docker starten
 
 ```bash
 docker compose --profile discord run --rm discord-bot
 ```
 
-### Running the bot via CLI
+### Bot per CLI starten
 
 ```bash
-# install dependencies
+# Abhängigkeiten installieren
 npm install
 
-# run the bot
+# Bot starten
 npm run dev
 ```
 
-### Installing NodeJS and NPM on Ubuntu
+### NodeJS und NPM unter Ubuntu installieren
 
 ```bash
-#install nvm
+# nvm installieren
 wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.4/install.sh | bash
 
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # Lädt nvm
 
-# install nodejs
+# nodejs installieren
 nvm install 18.17.0
 
-# install npm
+# npm installieren
 sudo apt-get install npm
 ```

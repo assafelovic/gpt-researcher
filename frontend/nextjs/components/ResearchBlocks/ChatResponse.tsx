@@ -24,12 +24,12 @@ interface ChatResponseProps {
 
 export default function ChatResponse({ answer, metadata }: ChatResponseProps) {
     const [htmlContent, setHtmlContent] = useState('');
-    
+
     // Check if we have sources from a web search tool call
     const hasWebSources = metadata?.tool_calls?.some(
       tool => tool.tool === 'quick_search' && tool.search_metadata?.sources?.length > 0
     );
-    
+
     // Get all sources from web searches
     const webSources = metadata?.tool_calls
       ?.filter(tool => tool.tool === 'quick_search')
@@ -44,22 +44,22 @@ export default function ChatResponse({ answer, metadata }: ChatResponseProps) {
         markdownToHtml(answer).then((html) => setHtmlContent(html));
       }
     }, [answer]);
-    
+
     // Format the answer for display
-    const formattedAnswer = answer.trim() || 'No answer available.';
-    
+    const formattedAnswer = answer.trim() || 'Keine Antwort verfügbar.';
+
     const copyToClipboard = () => {
         // Copy the plain text of the answer instead of the HTML
         navigator.clipboard.writeText(formattedAnswer)
             .then(() => {
-                toast.success('Copied to clipboard!');
+                toast.success('In die Zwischenablage kopiert!');
             })
             .catch((err) => {
                 console.error('Failed to copy: ', err);
-                toast.error('Failed to copy to clipboard');
+                toast.error('Kopieren in die Zwischenablage fehlgeschlagen');
             });
     };
-  
+
     return (
       <div className="container flex h-auto w-full shrink-0 gap-4 bg-black/30 backdrop-blur-md shadow-lg rounded-lg border border-solid border-gray-700/40 p-5">
         <div className="w-full">
@@ -70,13 +70,13 @@ export default function ChatResponse({ answer, metadata }: ChatResponseProps) {
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
               </div>
-              <h3 className="text-sm font-medium text-teal-200">Answer</h3>
+              <h3 className="text-sm font-medium text-teal-200">Antwort</h3>
             </div>
-            <button 
+            <button
               onClick={copyToClipboard}
               className="hover:opacity-80 transition-opacity duration-200"
-              aria-label="Copy to clipboard"
-              title="Copy to clipboard"
+              aria-label="In die Zwischenablage kopieren"
+              title="In die Zwischenablage kopieren"
             >
               <img
                 src="/img/copy-white.svg"
@@ -87,16 +87,16 @@ export default function ChatResponse({ answer, metadata }: ChatResponseProps) {
               />
             </button>
           </div>
-          
+
           <div className="flex flex-wrap content-center items-center gap-[15px] pl-5 pr-5">
             <div className="w-full whitespace-pre-wrap text-base font-light leading-[152.5%] text-white log-message">
-              <div 
+              <div
                 className="markdown-content prose prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: htmlContent }}
               />
             </div>
           </div>
-          
+
           {/* Display web search sources if available */}
           {hasWebSources && webSources.length > 0 && (
             <div className="mt-4 pt-3 border-t border-gray-700/30">
@@ -108,7 +108,7 @@ export default function ChatResponse({ answer, metadata }: ChatResponseProps) {
                     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                   </svg>
                 </div>
-                <span className="text-xs font-medium text-blue-300">New Sources</span>
+                <span className="text-xs font-medium text-blue-300">Neue Quellen</span>
               </div>
               <Sources sources={webSources} compact={true} />
             </div>
@@ -116,4 +116,4 @@ export default function ChatResponse({ answer, metadata }: ChatResponseProps) {
         </div>
       </div>
     );
-} 
+}

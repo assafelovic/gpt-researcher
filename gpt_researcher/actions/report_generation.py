@@ -6,9 +6,9 @@ from typing import List, Dict, Any
 from ..config.config import Config
 from ..utils.llm import create_chat_completion
 from ..utils.logger import get_formatted_logger
+from ..utils.language import is_german_language, normalize_german_technical_terms, strip_source_boilerplate
 from ..prompts import PromptFamily, get_prompt_by_report_type
 from ..utils.enum import Tone
-from ..utils.local_llm import is_local_openai_base_url, resolve_openai_base_url
 from .verification import build_verification_bundle, render_verification_section
 from .reasoning_critic import build_reasoning_critic_bundle, render_reasoning_critic_section
 
@@ -25,18 +25,22 @@ def _normalize_context_text(context: Any) -> str:
     if context is None:
         return ""
     if isinstance(context, str):
-        return context
+        return strip_source_boilerplate(_strip_context_metadata(context))
     if isinstance(context, bytes):
-        return context.decode("utf-8", errors="ignore")
+        return strip_source_boilerplate(_strip_context_metadata(context.decode("utf-8", errors="ignore")))
     if isinstance(context, dict):
         for key in ("content", "text", "body", "summary"):
             value = context.get(key)
             if isinstance(value, str) and value.strip():
-                return value.strip()
-        return " ".join(
-            str(value).strip()
-            for value in context.values()
-            if isinstance(value, str) and value.strip()
+                return strip_source_boilerplate(_strip_context_metadata(value.strip()))
+        return strip_source_boilerplate(
+            _strip_context_metadata(
+                " ".join(
+                    str(value).strip()
+                    for value in context.values()
+                    if isinstance(value, str) and value.strip()
+                )
+            )
         )
     if isinstance(context, (list, tuple, set)):
         parts: list[str] = []
@@ -44,8 +48,28 @@ def _normalize_context_text(context: Any) -> str:
             item_text = _normalize_context_text(item)
             if item_text:
                 parts.append(item_text.strip())
-        return "\n\n".join(parts)
-    return str(context)
+        return strip_source_boilerplate(_strip_context_metadata("\n\n".join(parts)))
+    return strip_source_boilerplate(_strip_context_metadata(str(context)))
+
+
+def _strip_context_metadata(text: str) -> str:
+    if not text:
+        return ""
+
+    lines: list[str] = []
+    for raw_line in text.splitlines():
+        stripped = raw_line.strip()
+        if not stripped:
+            lines.append("")
+            continue
+
+        cleaned = re.sub(r"(?i)\b(source|title|content)\s*:\s*", "", stripped)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        if not cleaned or cleaned.lower() in {"none", "null"}:
+            continue
+        lines.append(cleaned)
+
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
 
 
 def _extract_urls_from_text(text: str) -> list[str]:
@@ -61,7 +85,7 @@ def _extract_urls_from_text(text: str) -> list[str]:
     return urls
 
 
-def _render_reference_section(visited_urls: list[str] | None, context: str) -> str:
+def _render_reference_section(visited_urls: list[str] | None, context: str, language: str | None = None) -> str:
     urls: list[str] = []
     if visited_urls:
         urls.extend(visited_urls)
@@ -74,10 +98,11 @@ def _render_reference_section(visited_urls: list[str] | None, context: str) -> s
             seen.add(url)
             unique_urls.append(url)
 
+    text = _report_language_text(language)
     if not unique_urls:
-        return "## References\n- No explicit source URLs were preserved in the research context."
+        return f"{text['references_missing']}\n{text['references_text']}"
 
-    return "## References\n" + "\n".join(f"- [{url}]({url})" for url in unique_urls[:10])
+    return f"{text['references_missing']}\n" + "\n".join(f"- [{url}]({url})" for url in unique_urls[:10])
 
 
 def _is_report_noise_line(line: str) -> bool:
@@ -185,11 +210,115 @@ def _report_needs_deterministic_fallback(report_markdown: str) -> bool:
     return False
 
 
+def _report_language_text(language: str | None) -> dict[str, str]:
+    if is_german_language(language):
+        return {
+            "overview": "## Überblick",
+            "key_findings": "## Zentrale Erkenntnisse",
+            "caveats": "## Einschränkungen",
+            "deterministic_summary": "- Dieser Bericht ist eine deterministische Synthese des live erfassten Recherchekontexts.",
+            "missing_source": "- Wenn eine Quell-URL im Kontext fehlt, kann sie trotzdem in den Rechercheprotokollen erscheinen, aber nicht im extrahierten Text.",
+            "no_context": "Der verfügbare Recherchekontext enthielt nicht genug strukturierten Text, um eine detaillierte Zusammenfassung zu erstellen.",
+            "references_missing": "## Quellen",
+            "references_text": "- Keine expliziten Quell-URLs wurden im Recherchekontext erhalten.",
+            "title": "# {question}",
+        }
+
+    return {
+        "overview": "## Overview",
+        "key_findings": "## Key Findings",
+        "caveats": "## Caveats",
+        "deterministic_summary": "- This report is a deterministic synthesis of the live research context.",
+        "missing_source": "- If a source URL is missing from the context, it may still appear in the research logs but not in the extracted text.",
+        "no_context": "The available research context did not contain enough structured text to build a detailed summary.",
+        "references_missing": "## References",
+        "references_text": "- No explicit source URLs were preserved in the research context.",
+        "title": "# {question}",
+    }
+
+
+def _translate_report_prompt(report_markdown: str, language: str) -> str:
+    target_language = "German" if is_german_language(language) else language
+    return f"""Translate the following markdown report into {target_language}.
+
+Rules:
+- Preserve the markdown structure, including headings, lists, tables, links, citations, and blank lines.
+- Preserve URLs, inline code, code fences, file paths, identifiers, and product names exactly.
+- Translate all prose and section labels into {language}.
+- Prefer natural German technical terms where they read better, for example "vs" -> "gegenüber", "Best Practices" -> "bewährte Vorgehensweisen", "Open Source" -> "Open-Source", "use case" -> "Anwendungsfall", and "trade-off" -> "Abwägung".
+- Do not add commentary, summaries, or new sections.
+- Return only the translated markdown.
+
+REPORT:
+{report_markdown}
+"""
+
+
+async def _translate_final_report(
+    report_markdown: str,
+    language: str,
+    cfg: Config,
+    websocket=None,
+    cost_callback: callable = None,
+    **kwargs,
+) -> str:
+    if not report_markdown.strip() or not is_german_language(language):
+        return report_markdown
+
+    appendix_match = re.search(
+        r"(?im)^\s*##\s*(verifikationsprüfung|verification review|begründungskritik|reasoning critic)\b",
+        report_markdown,
+    )
+    appendix_markdown = ""
+    body_markdown = report_markdown
+    if appendix_match:
+        body_markdown = report_markdown[: appendix_match.start()].rstrip()
+        appendix_markdown = report_markdown[appendix_match.start() :].strip()
+        if not body_markdown.strip():
+            body_markdown = report_markdown
+
+    try:
+        translated = await create_chat_completion(
+            model=cfg.smart_llm_model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a precise translation engine. Return only the translated markdown.",
+                },
+                {"role": "user", "content": _translate_report_prompt(body_markdown, language)},
+            ],
+            temperature=0.0,
+            llm_provider=cfg.smart_llm_provider,
+            stream=True,
+            websocket=websocket,
+            max_tokens=cfg.smart_token_limit,
+            llm_kwargs=cfg.llm_kwargs,
+            cost_callback=cost_callback,
+            **kwargs,
+        )
+    except Exception as exc:
+        logger.warning("Unable to translate final report to %s: %s", language, exc, exc_info=True)
+        return normalize_german_technical_terms(report_markdown) if is_german_language(language) else report_markdown
+
+    translated = re.sub(r"^\s*```(?:markdown|md|text)?\s*|\s*```\s*$", "", translated or "", flags=re.IGNORECASE | re.DOTALL).strip()
+    if not translated:
+        return normalize_german_technical_terms(report_markdown) if is_german_language(language) else report_markdown
+
+    if is_german_language(language):
+        translated = normalize_german_technical_terms(translated)
+        appendix_markdown = normalize_german_technical_terms(appendix_markdown)
+
+    if appendix_markdown:
+        return f"{translated.rstrip()}\n\n{appendix_markdown}".strip()
+    return translated
+
+
 def _normalize_report_markdown(
     report_markdown: str,
     question: str,
     context: str,
     visited_urls: list[str] | None = None,
+    language: str | None = None,
 ) -> str:
     report_markdown = _strip_report_prelude(report_markdown or "")
     report_markdown = _ensure_report_heading(report_markdown, question)
@@ -199,8 +328,13 @@ def _normalize_report_markdown(
     if not source_urls:
         source_urls = _extract_urls_from_text(context)
 
-    if source_urls and not re.search(r"(?im)^\s*##?\s*references\b", report_markdown):
-        report_markdown = f"{report_markdown.rstrip()}\n\n{_render_reference_section(source_urls, context)}"
+    if is_german_language(language):
+        references_pattern = r"(?im)^\s*##?\s*(references|quellen)\b"
+    else:
+        references_pattern = r"(?im)^\s*##?\s*references\b"
+
+    if source_urls and not re.search(references_pattern, report_markdown):
+        report_markdown = f"{report_markdown.rstrip()}\n\n{_render_reference_section(source_urls, context, language=language)}"
 
     return report_markdown.strip()
 
@@ -230,6 +364,7 @@ def _append_verification_review(
         context=context,
         report_markdown=report_markdown,
         visited_urls=visited_urls,
+        language=getattr(cfg, "language", None),
     )
 
     if verification_sink is not None:
@@ -238,7 +373,7 @@ def _append_verification_review(
         except Exception:
             logger.debug("Unable to store verification bundle on sink", exc_info=True)
 
-    verification_section = render_verification_section(bundle)
+    verification_section = render_verification_section(bundle, language=getattr(cfg, "language", "english"))
     rendered = f"{report_markdown.rstrip()}\n\n{verification_section}".strip()
     return (rendered, bundle) if return_bundle else rendered
 
@@ -277,6 +412,7 @@ async def _append_reasoning_critic_review(
         verification_bundle=verification_bundle,
         cfg=cfg,
         agent_role_prompt=agent_role_prompt,
+        language=getattr(cfg, "language", None),
         websocket=websocket,
         cost_callback=cost_callback,
         visited_urls=visited_urls,
@@ -297,7 +433,7 @@ async def _append_reasoning_critic_review(
         except Exception:
             logger.debug("Unable to store reasoning critic bundle on sink", exc_info=True)
 
-    critic_section = render_reasoning_critic_section(critic_bundle)
+    critic_section = render_reasoning_critic_section(critic_bundle, language=getattr(cfg, "language", "english"))
     rendered = f"{report_markdown.rstrip()}\n\n{critic_section}".strip()
     if return_bundle:
         return rendered, critic_bundle
@@ -356,24 +492,25 @@ async def _generate_local_report(
     if not matched:
         matched = sentences
 
+    text = _report_language_text(language)
     overview_parts = matched[:3] if matched else [context[:600].strip()]
     overview = " ".join(part for part in overview_parts if part).strip()
     if not overview:
-        overview = "The available research context did not contain enough structured text to build a detailed summary."
+        overview = text["no_context"]
 
     key_findings = matched[:5] if matched else []
     if not key_findings:
         key_findings = [overview]
 
-    references = _render_reference_section(visited_urls, context)
+    references = _render_reference_section(visited_urls, context, language=language)
 
     report_lines = [
-        f"# {question}",
+        text["title"].format(question=question),
         "",
-        "## Overview",
+        text["overview"],
         overview,
         "",
-        "## Key Findings",
+        text["key_findings"],
     ]
 
     for item in key_findings[:5]:
@@ -381,9 +518,9 @@ async def _generate_local_report(
 
     report_lines.extend([
         "",
-        "## Caveats",
-        "- This report is a deterministic synthesis of the live research context.",
-        "- If a source URL is missing from the context, it may still appear in the research logs but not in the extracted text.",
+        text["caveats"],
+        text["deterministic_summary"],
+        text["missing_source"],
         "",
         references,
     ])
@@ -393,6 +530,7 @@ async def _generate_local_report(
         question=question,
         context=context,
         visited_urls=visited_urls,
+        language=language,
     )
 
 
@@ -640,42 +778,23 @@ async def generate_report(
     available_images = available_images or []
     verification_sink = kwargs.pop("verification_sink", None)
     context_text = _normalize_context_text(context)
-    local_openai_base_url = resolve_openai_base_url()
-    use_local_report_fallback = bool(local_openai_base_url and is_local_openai_base_url(local_openai_base_url))
+    generate_prompt = get_prompt_by_report_type(report_type, prompt_family)
+    report = ""
 
-    if use_local_report_fallback and not custom_prompt:
-        report = await _generate_local_report(
-            question=query,
-            context=context_text,
-            language=cfg.language,
-            tone=tone,
-            cfg=cfg,
-            llm_provider=cfg.smart_llm_provider,
-            llm_kwargs=cfg.llm_kwargs,
-            agent_role_prompt=agent_role_prompt,
-            cost_callback=cost_callback,
-            visited_urls=visited_urls,
-            websocket=websocket,
-            **kwargs,
-        )
+    if report_type == "subtopic_report":
+        content = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context_text, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
+    elif custom_prompt:
+        content = f"{custom_prompt}\n\nContext: {context_text}"
     else:
-        generate_prompt = get_prompt_by_report_type(report_type, prompt_family)
-        report = ""
+        content = f"{generate_prompt(query, context_text, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
 
-        if report_type == "subtopic_report":
-            content = f"{generate_prompt(query, existing_headers, relevant_written_contents, main_topic, context_text, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
-        elif custom_prompt:
-            content = f"{custom_prompt}\n\nContext: {context_text}"
-        else:
-            content = f"{generate_prompt(query, context_text, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
-
-        # Add available images instruction if images were pre-generated
-        if available_images:
-            images_info = "\n".join([
-                f"- Image {i+1}: ![{img.get('title', img.get('alt_text', 'Illustration'))}]({img['url']}) - {img.get('section_hint', 'General')}"
-                for i, img in enumerate(available_images)
-            ])
-            content += f"""
+    # Add available images instruction if images were pre-generated
+    if available_images:
+        images_info = "\n".join([
+            f"- Image {i+1}: ![{img.get('title', img.get('alt_text', 'Illustration'))}]({img['url']}) - {img.get('section_hint', 'General')}"
+            for i, img in enumerate(available_images)
+        ])
+        content += f"""
 
 AVAILABLE IMAGES:
 You have the following pre-generated images available. Embed them in relevant sections of your report using the exact markdown syntax provided:
@@ -683,12 +802,28 @@ You have the following pre-generated images available. Embed them in relevant se
 {images_info}
 
 Place each image on its own line after the relevant section header or paragraph. Use all available images where they add value to the content."""
+    try:
+        report = await create_chat_completion(
+            model=cfg.smart_llm_model,
+            messages=[
+                {"role": "system", "content": f"{agent_role_prompt}"},
+                {"role": "user", "content": content},
+            ],
+            temperature=0.35,
+            llm_provider=cfg.smart_llm_provider,
+            stream=True,
+            websocket=websocket,
+            max_tokens=cfg.smart_token_limit,
+            llm_kwargs=cfg.llm_kwargs,
+            cost_callback=cost_callback,
+            **kwargs
+        )
+    except Exception:
         try:
             report = await create_chat_completion(
                 model=cfg.smart_llm_model,
                 messages=[
-                    {"role": "system", "content": f"{agent_role_prompt}"},
-                    {"role": "user", "content": content},
+                    {"role": "user", "content": f"{agent_role_prompt}\n\n{content}"},
                 ],
                 temperature=0.35,
                 llm_provider=cfg.smart_llm_provider,
@@ -699,30 +834,15 @@ Place each image on its own line after the relevant section header or paragraph.
                 cost_callback=cost_callback,
                 **kwargs
             )
-        except Exception:
-            try:
-                report = await create_chat_completion(
-                    model=cfg.smart_llm_model,
-                    messages=[
-                        {"role": "user", "content": f"{agent_role_prompt}\n\n{content}"},
-                    ],
-                    temperature=0.35,
-                    llm_provider=cfg.smart_llm_provider,
-                    stream=True,
-                    websocket=websocket,
-                    max_tokens=cfg.smart_token_limit,
-                    llm_kwargs=cfg.llm_kwargs,
-                    cost_callback=cost_callback,
-                    **kwargs
-                )
-            except Exception as e:
-                print(f"Error in generate_report: {e}")
+        except Exception as e:
+            print(f"Error in generate_report: {e}")
 
     report = _normalize_report_markdown(
         report,
         question=query,
         context=context_text,
         visited_urls=visited_urls,
+        language=cfg.language,
     )
 
     if _report_needs_deterministic_fallback(report):
@@ -767,6 +887,14 @@ Place each image on its own line after the relevant section header or paragraph.
         websocket=websocket,
         return_bundle=True,
         **kwargs,
+    )
+
+    report = await _translate_final_report(
+        report,
+        language=cfg.language,
+        cfg=cfg,
+        websocket=websocket,
+        cost_callback=cost_callback,
     )
 
     if verification_sink is not None and verification_bundle is not None:

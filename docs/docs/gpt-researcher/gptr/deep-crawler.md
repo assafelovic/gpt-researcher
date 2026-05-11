@@ -1,38 +1,38 @@
-# Bounded Deep Crawler
+# Begrenzter Deep-Crawler
 
-GPT Researcher in this fork does not rely on a free-form, unbounded crawl. Instead, it uses a bounded discovery layer that ranks search hits, follows a small number of relevant links, and hands the resulting URL set to the existing scraper pipeline.
+GPT Researcher verlässt sich in diesem Fork nicht auf ein freies, unbegrenztes Crawling. Stattdessen nutzt er eine begrenzte Discovery-Schicht, die Suchtreffer bewertet, nur eine kleine Zahl relevanter Links verfolgt und die resultierende URL-Menge an die bestehende Scraper-Pipeline übergibt.
 
-The goal is simple: improve source coverage and source quality without turning research into a noisy spider.
+Das Ziel ist einfach: bessere Quellenabdeckung und höhere Quellenqualität, ohne die Recherche in einen unkontrollierten Spider zu verwandeln.
 
-## What It Does
+## Was er macht
 
-- Scores search results before scraping them
-- Prefers same-domain and docs-style pages when they match the task
-- Follows a limited number of links from promising pages
-- Filters obvious noise such as login, signup, privacy, and other utility pages
-- Deduplicates URLs before they reach the scraper
-- Preserves the original order of the highest-ranked URLs
+- Bewertet Suchergebnisse vor dem Scraping
+- Bevorzugt Seiten aus derselben Domain und dokumentationsähnliche Seiten, wenn sie zur Aufgabe passen
+- Folgt nur einer begrenzten Anzahl von Links von vielversprechenden Seiten
+- Filtert offensichtliches Rauschen wie Login-, Signup-, Datenschutz- und andere Hilfsseiten
+- Entfernt doppelte URLs, bevor sie den Scraper erreichen
+- Behält die ursprüngliche Reihenfolge der höchstbewerteten URLs bei
 
-## How It Works
+## So funktioniert es
 
-The discovery flow is implemented in:
+Der Discovery-Flow ist implementiert in:
 
 - `gpt_researcher/actions/deep_crawler.py`
 - `gpt_researcher/skills/researcher.py`
 
-At a high level, the flow is:
+Auf hoher Ebene läuft das so ab:
 
-1. Search retrievers return seed URLs.
-2. Each candidate URL is scored with query overlap, domain preference, and docs/reference hints.
-3. The top candidates are crawled one level deeper by extracting hyperlinks from the page HTML.
-4. New links are scored again and filtered against the current query and domain constraints.
-5. The final ranked list is passed to the scraper layer for normal content extraction.
+1. Such-Retriever liefern Seed-URLs.
+2. Jede Kandidaten-URL wird anhand von Query-Overlap, Domain-Präferenz und Docs-/Reference-Hinweisen bewertet.
+3. Die besten Kandidaten werden eine Ebene tiefer gecrawlt, indem Hyperlinks aus dem HTML extrahiert werden.
+4. Neue Links werden erneut bewertet und gegen die aktuelle Anfrage sowie die Domain-Regeln gefiltert.
+5. Die final sortierte Liste geht an die Scraper-Schicht für die normale Inhaltsextraktion.
 
-This means the crawler is a discovery step, not a replacement for the scraper. It decides *what to fetch next*, while the existing scraper decides *how to extract the content*.
+Das bedeutet: Der Crawler ist ein Discovery-Schritt, kein Ersatz für den Scraper. Er entscheidet *was als Nächstes geholt wird*, während der vorhandene Scraper entscheidet *wie der Inhalt extrahiert wird*.
 
-## Configuration
+## Konfiguration
 
-The crawler is enabled by default and can be tuned with these settings:
+Der Crawler ist standardmäßig aktiviert und kann über diese Einstellungen angepasst werden:
 
 - `ENABLE_DEEP_CRAWLER`
 - `DEEP_CRAWLER_DEPTH`
@@ -43,16 +43,16 @@ The crawler is enabled by default and can be tuned with these settings:
 - `DEEP_CRAWLER_ALLOW_EXTERNAL_LINKS`
 - `DEEP_CRAWLER_TIMEOUT`
 
-Recommended starting values for most research tasks:
+Empfohlene Startwerte für die meisten Rechercheaufgaben:
 
 - `DEEP_CRAWLER_DEPTH=1`
 - `DEEP_CRAWLER_BREADTH=4`
 - `DEEP_CRAWLER_MAX_PAGES=12`
 - `DEEP_CRAWLER_ALLOW_EXTERNAL_LINKS=false`
 
-## When It Helps
+## Wann er hilft
 
-The bounded crawler is most useful for:
+Der begrenzte Crawler ist besonders nützlich für:
 
 - API documentation
 - SDK references
@@ -60,25 +60,25 @@ The bounded crawler is most useful for:
 - developer guides
 - knowledge-base articles
 
-It is less useful for:
+Weniger nützlich ist er für:
 
 - broad news research
 - highly heterogeneous search spaces
 - tasks where every result is intentionally unrelated but still useful
 
-## Validation
+## Validierung
 
-The crawler is covered by:
+Der Crawler wird abgedeckt durch:
 
 - `tests/test_deep_crawler.py`
 - `tests/test_query_planner_hardening.py`
 
-Those tests verify:
+Diese Tests prüfen:
 
-- docs pages outrank obvious noise pages
-- same-domain links are discovered and retained
-- the research conductor preserves the crawler's ordering
+- Docs-Seiten werden gegenüber offensichtlichen Noise-Seiten höher bewertet
+- Same-Domain-Links werden entdeckt und behalten
+- Der Research-Conductor erhält die Reihenfolge des Crawlers
 
-## Practical Effect
+## Praktische Wirkung
 
-For a query like "FastAPI async API docs", the crawler will prefer official documentation paths and deprioritize pages like login or account flows. For a broader query, it still stays bounded and will not recursively fan out forever.
+Bei einer Anfrage wie „FastAPI async API docs“ bevorzugt der Crawler offizielle Dokumentationspfade und stuft Seiten wie Login- oder Account-Flows niedriger ein. Bei einer breiteren Anfrage bleibt er trotzdem begrenzt und fächert nicht endlos rekursiv auf.

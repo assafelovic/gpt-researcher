@@ -70,7 +70,7 @@ async def create_chat_completion(
     """
     # validate input
     if model is None:
-        raise ValueError("Model cannot be None")
+        raise ValueError("Modell darf nicht `None` sein")
     if max_tokens is not None and max_tokens > 32001:
         raise ValueError(
             f"Max tokens cannot be more than 32,000, but got {max_tokens}")
@@ -146,8 +146,8 @@ async def create_chat_completion(
 
         return response
 
-    logging.error(f"Failed to get response from {llm_provider} API")
-    raise RuntimeError(f"Failed to get response from {llm_provider} API") from last_exception
+    logging.error(f"Keine Antwort von der {llm_provider}-API erhalten")
+    raise RuntimeError(f"Keine Antwort von der {llm_provider}-API erhalten") from last_exception
 
 
 async def construct_subtopics(

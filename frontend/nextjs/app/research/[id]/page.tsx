@@ -69,9 +69,9 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const toastShownRef = useRef(false);
 
-  const { 
+  const {
     history,
-    getResearchById, 
+    getResearchById,
     addChatMessage,
     getChatMessages,
     updateResearch,
@@ -103,24 +103,24 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
       console.log(`Skipping duplicate fetch for research ${id} (already attempted)`);
       return;
     }
-    
+
     const fetchResearch = async () => {
       setLoading(true);
       setFetchAttempted(true); // Mark that we've attempted a fetch
       console.log(`Attempting to load research ${id}...`);
-      
+
       // Reset toast tracking on each fetch attempt
       toastShownRef.current = false;
-      
+
       // Step 1: Try to find it in localStorage first
       const storedHistory = localStorage.getItem('researchHistory');
       let localItem = null;
-      
+
       if (storedHistory) {
         try {
           const localHistory = JSON.parse(storedHistory);
           localItem = localHistory.find((item: any) => item.id === id);
-          
+
           if (localItem) {
             console.log(`Found research ${id} in localStorage!`);
             console.log(`- Question length: ${localItem.question.length}`);
@@ -130,25 +130,25 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
           console.error('Error parsing localStorage:', error);
         }
       }
-      
+
       // Step 2: Try to find it in the backend
       let foundInBackend = false;
       try {
         console.log(`Checking backend for research ${id}...`);
         const response = await fetch(`/api/reports/${id}`);
-        
+
         if (response.ok) {
           console.log(`Found research ${id} in backend!`);
           foundInBackend = true;
           const data = await response.json();
-          
+
           // Validate backend data
           if (!data.report) {
             console.error(`Backend response missing report object for ${id}`);
           } else {
             console.log(`- Question length: ${data.report.question.length}`);
             console.log(`- Answer length: ${data.report.answer?.length || 0}`);
-            
+
             // Use the backend data, ensuring orderedData and chatMessages are arrays
             setQuestion(data.report.question);
             setAnswer(data.report.answer || '');
@@ -159,16 +159,16 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
         } else if (response.status === 500) {
           // Handle server error
           console.error(`Backend server error when fetching research ${id}`);
-          
+
           // Only show error toast if we haven't shown a toast yet in this component instance
           if (!toastShownRef.current) {
             console.log('Showing backend error toast');
-            toast.error("Server connection error. Using local data if available.", {
+            toast.error("Serververbindung fehlgeschlagen. Falls vorhanden, werden lokale Daten verwendet.", {
               id: `server-error-${id}`, // Unique ID per research
             });
             toastShownRef.current = true;
           }
-          
+
           // If we have local data, use it even if backend fails
           if (localItem) {
             setQuestion(localItem.question);
@@ -178,7 +178,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
             setLoading(false);
             return;
           }
-          
+
           // If no local data, show not found
           setNotFound(true);
           setLoading(false);
@@ -187,16 +187,16 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
         }
       } catch (error) {
         console.error('Error fetching from backend:', error);
-        
+
         // Only show error toast if we haven't shown a toast yet in this component instance
         if (!toastShownRef.current) {
           console.log('Showing fetch error toast');
-          toast.error("Failed to connect to server. Using local data if available.", {
+          toast.error("Verbindung zum Server fehlgeschlagen. Falls vorhanden, werden lokale Daten verwendet.", {
             id: `fetch-error-${id}`, // Unique ID per research
           });
           toastShownRef.current = true;
         }
-        
+
         // If we have local data, use it as fallback
         if (localItem) {
           setQuestion(localItem.question);
@@ -207,7 +207,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
           return;
         }
       }
-      
+
       // Step 3: If found in localStorage but not in backend, save it
       if (localItem && !foundInBackend) {
         console.log(`Saving research ${id} from localStorage to backend...`);
@@ -220,7 +220,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
             orderedData: Array.isArray(localItem.orderedData) ? JSON.parse(JSON.stringify(localItem.orderedData)) : [],
             chatMessages: Array.isArray(localItem.chatMessages) ? JSON.parse(JSON.stringify(localItem.chatMessages)) : [],
           };
-          
+
           const saveResponse = await fetch('/api/reports', {
             method: 'POST',
             headers: {
@@ -228,13 +228,13 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
             },
             body: JSON.stringify(cleanItem),
           });
-          
+
           if (saveResponse.ok) {
             console.log(`Successfully saved research ${id} to backend!`);
           } else {
             console.warn(`Failed to save research to backend: ${await saveResponse.text()}`);
           }
-          
+
           // Use the localStorage data
           setQuestion(localItem.question);
           setAnswer(localItem.answer || '');
@@ -243,7 +243,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
           setLoading(false);
         } catch (error) {
           console.error('Error saving to backend:', error);
-          
+
           // Still use the localStorage data even if save fails
           setQuestion(localItem.question);
           setAnswer(localItem.answer || '');
@@ -252,7 +252,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
           setLoading(false);
         }
       }
-      
+
       // Step 4: If not found anywhere, show not found message
       if (!localItem && !foundInBackend) {
         console.log(`Research ${id} not found anywhere`);
@@ -260,7 +260,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
         setLoading(false);
       }
     };
-    
+
     fetchResearch();
   }, [id, fetchAttempted]);
 
@@ -268,7 +268,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
   useEffect(() => {
     const groupedData = preprocessOrderedData(orderedData);
     const statusReports = ["agent_generated", "starting_research", "planning_research", "error"];
-    
+
     const newLogs = groupedData.reduce((acc: any[], data) => {
       // Process accordion blocks (grouped data)
       if (data.type === 'accordionBlock') {
@@ -279,7 +279,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
           key: `${item.type}-${item.content}-${subIndex}`,
         }));
         return [...acc, ...logs];
-      } 
+      }
       // Process status reports
       else if (statusReports.includes(data.content)) {
         return [...acc, {
@@ -291,7 +291,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
       }
       return acc;
     }, []);
-    
+
     setAllLogs(newLogs);
   }, [orderedData]);
 
@@ -312,51 +312,51 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     // Initial check
     checkIfMobile();
-    
+
     // Add event listener for window resize
     window.addEventListener('resize', checkIfMobile);
-    
+
     // Cleanup
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
   const handleChat = async (message: string) => {
     if (!currentResearchId || !answer) return;
-    
+
     setIsProcessingChat(true);
     setChatPromptValue("");
-    
+
     // Create a user message
     const userMessage: ChatMessage = {
       role: 'user',
       content: message,
       timestamp: Date.now()
     };
-    
+
     // Create question data object to be shown immediately
     const questionData: QuestionData = { type: 'question', content: message };
-    
+
     // IMPORTANT CHANGE: Add user question to UI immediately for better responsiveness
     setOrderedData(prevOrder => [...prevOrder, questionData]);
-    
+
     // Then add to history asynchronously
     addChatMessage(currentResearchId, userMessage).catch(error => {
       console.error('Error adding chat message to history:', error);
     });
-    
+
     try {
       // Get all chat messages for this research
       const chatMessages = getChatMessages(currentResearchId);
-      
+
       // Format messages to ensure they only contain role and content properties
       const formattedMessages = [...chatMessages, userMessage].map(msg => ({
         role: msg.role,
         content: msg.content
       }));
-      
+
       // Call the chat API
       const response = await fetch(`/api/chat`, {
         method: 'POST',
@@ -366,27 +366,27 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
           messages: formattedMessages
         }),
       });
-      
+
       if (!response.ok) {
-        throw new Error(`Failed to get chat response: ${response.status}`);
+        throw new Error(`Chat-Antwort konnte nicht geladen werden: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.response) {
         // Add AI response to chat history asynchronously
         addChatMessage(currentResearchId, data.response).catch(error => {
           console.error('Error adding AI response to history:', error);
         });
-        
+
         // Add response to the UI with any metadata
-        const chatData: ChatData = { 
-          type: 'chat', 
+        const chatData: ChatData = {
+          type: 'chat',
           content: data.response.content,
           metadata: data.response.metadata // Include metadata from the response
         };
         setOrderedData(prevOrder => [...prevOrder, chatData]);
-        
+
         // Update research in history with both question and response asynchronously
         // Create a copy of the current orderedData plus the new items
         const updatedOrderedData = [...orderedData, questionData, chatData];
@@ -395,19 +395,19 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
         });
       } else {
         // Show error message
-        const errorChatData: ChatData = { 
-          type: 'chat', 
-          content: 'Sorry, something went wrong. Please try again.' 
+        const errorChatData: ChatData = {
+          type: 'chat',
+          content: 'Es ist etwas schiefgelaufen. Bitte versuche es erneut.'
         };
         setOrderedData(prevOrder => [...prevOrder, errorChatData]);
       }
     } catch (error) {
       console.error('Error during chat:', error);
-      
+
       // Add error message
-      const errorChatData: ChatData = { 
-        type: 'chat', 
-        content: 'Sorry, there was an error processing your request. Please try again.' 
+      const errorChatData: ChatData = {
+        type: 'chat',
+        content: 'Beim Verarbeiten deiner Anfrage ist ein Fehler aufgetreten. Bitte versuche es erneut.'
       };
       setOrderedData(prevOrder => [...prevOrder, errorChatData]);
     } finally {
@@ -423,12 +423,12 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
     const url = window.location.href;
     navigator.clipboard.writeText(url)
       .then(() => {
-        toast.success("URL copied to clipboard!", {
+        toast.success("URL in die Zwischenablage kopiert!", {
           id: `copy-success-${id}`, // Unique ID per research
         });
       })
       .catch(() => {
-        toast.error("Failed to copy URL", {
+        toast.error("URL konnte nicht kopiert werden", {
           id: `copy-error-${id}`, // Unique ID per research
         });
       });
@@ -449,7 +449,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
     if (notFound) {
       return <NotFoundContent onNewResearch={handleNewResearch} />;
     }
-    
+
     if (loading) {
       return (
         <div className="min-h-[100vh] flex items-center justify-center">
@@ -457,10 +457,10 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
         </div>
       );
     }
-    
+
     // Make sure we're loading chat messages for the current research
     const chatMessages = currentResearchId ? getChatMessages(currentResearchId) : [];
-    
+
     return (
       <MobileResearchContent
         orderedData={orderedData}
@@ -545,7 +545,7 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
           isOpen={sidebarOpen}
           toggleSidebar={toggleSidebar}
         />
-        
+
         {chatBoxSettings.layoutType === 'copilot' ? (
           <CopilotResearchContent
             orderedData={orderedData}
@@ -591,4 +591,4 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
       </div>
     )
   });
-} 
+}

@@ -1,56 +1,49 @@
-# Running with Ollama
+# Mit Ollama ausführen
 
-Ollama lets you turn a local GGUF into a named model and serve it on your own hardware.
-For this repository, the recommended local model is `gemma4_obliterated`, backed by the
-GGUF at:
+Ollama erlaubt dir, ein lokales GGUF in ein benanntes Modell zu verwandeln und auf deiner eigenen Hardware bereitzustellen. Für dieses Repository ist das empfohlene lokale Modell `gemma4_obliterated`, das auf diesem GGUF basiert:
 
 ```text
 /home/xxammaxx/Schreibtisch/gemma4/llama.cpp/models/gemma-4-E4B-it-OBLITERATED-Q4_K_M.gguf
 ```
 
-## Create the local model
+## Das lokale Modell anlegen
 
-The repo includes a ready-to-use Modelfile:
+Das Repo enthält eine fertige Modelfile:
 
 ```bash
 ollama create gemma4_obliterated -f ollama/Modelfile.gemma4_obliterated
 ```
 
-If you want a quick smoke test after creation:
+Für einen kurzen Smoke-Test nach dem Erstellen:
 
 ```bash
-ollama run gemma4_obliterated "Reply with one short sentence confirming the model is ready."
+ollama run gemma4_obliterated "Antworte mit einem kurzen Satz und bestätige, dass das Modell bereit ist."
 ```
 
-If Ollama complains about insufficient system memory, stop the large
-`llama-server` on port `8081` and retry. On this machine, that was the
-main competing process during setup.
+Wenn Ollama über zu wenig Arbeitsspeicher klagt, stoppe den großen `llama-server` auf Port `8081` und versuche es erneut. Auf dieser Maschine war das der Hauptkonkurrent während des Setups.
 
-To verify how Ollama is scheduling the model:
+Mit diesem Befehl prüfst du, wie Ollama das Modell plant:
 
 ```bash
 ollama ps
 ```
 
-On Linux, Ollama uses `OLLAMA_CONTEXT_LENGTH=8192 ollama serve` style overrides for the server.
-For the GTX 1070 / 8 GB VRAM box, start conservatively with a smaller context window:
+Unter Linux lassen sich Ollama-Server-Overrides mit `OLLAMA_CONTEXT_LENGTH=8192 ollama serve` setzen.
+Auf der GTX-1070-/8-GB-VRAM-Maschine solltest du mit einem kleineren Kontextfenster starten:
 
 ```bash
 OLLAMA_CONTEXT_LENGTH=2048 ollama serve
 ```
 
-If you want to keep Ollama's model cache in a custom location, set `OLLAMA_MODELS` before
-starting the server:
+Wenn du den Modell-Cache an einem eigenen Ort ablegen möchtest, setze vor dem Start `OLLAMA_MODELS`:
 
 ```bash
 OLLAMA_MODELS="$PWD/.ollama" ollama serve
 ```
 
-## Querying `gemma4_obliterated` with GPT-Researcher
+## `gemma4_obliterated` mit GPT Researcher abfragen
 
-GPT-Researcher can talk to the local Ollama server directly. The code now defaults to
-`http://127.0.0.1:11434` when `OLLAMA_BASE_URL` is not set, but setting it explicitly keeps
-the setup obvious:
+GPT Researcher kann direkt mit dem lokalen Ollama-Server sprechen. Der Code verwendet standardmäßig `http://127.0.0.1:11434`, wenn `OLLAMA_BASE_URL` nicht gesetzt ist. Ein explizites Setzen hält das Setup jedoch verständlicher:
 
 ```bash
 OLLAMA_BASE_URL="http://127.0.0.1:11434"
@@ -60,30 +53,23 @@ STRATEGIC_LLM="ollama:gemma4_obliterated"
 EMBEDDING="ollama:nomic-embed-text"
 ```
 
-If you want the whole stack local, keep `OLLAMA_BASE_URL` pointed at your local Ollama instance
-and optionally use Ollama embeddings as shown above.
+Wenn du den gesamten Stack lokal halten möchtest, lasse `OLLAMA_BASE_URL` auf deine lokale Ollama-Instanz zeigen und nutze optional wie oben gezeigt auch Ollama-Embeddings.
 
-## Historical WebUI flow
+## Historischer WebUI-Flow
 
-If you deploy Ollama together with Open WebUI, you can still pull models from the WebUI and
-query them through GPT-Researcher. That flow is unchanged; the difference here is that the
-repo now ships a direct GGUF import for `gemma4_obliterated`, so you do not need to rely on
-the public Ollama library for this setup.
+Wenn du Ollama zusammen mit Open WebUI bereitstellst, kannst du Modelle weiterhin über die WebUI ziehen und sie über GPT Researcher abfragen. Dieser Flow bleibt unverändert; der Unterschied hier ist, dass das Repo jetzt einen direkten GGUF-Import für `gemma4_obliterated` mitbringt. Du musst dich für dieses Setup also nicht auf die öffentliche Ollama-Bibliothek verlassen.
 
+## Ollama auf Elestio bereitstellen
 
-## Deploy Ollama on Elestio
+Elestio ist eine Plattform zum Bereitstellen und Verwalten eigener Sprachmodelle. Diese Anleitung zeigt dir, wie du ein benutzerdefiniertes Modell auf Elestio deployen kannst.
 
-Elestio is a platform that allows you to deploy and manage custom language models. This guide will walk you through deploying a custom language model on Elestio.
+Du kannst einen [Open WebUI](https://github.com/open-webui/open-webui/tree/main)-Server mit [Elestio](https://elest.io/open-source/ollama) bereitstellen.
 
-You can deploy an [Open WebUI](https://github.com/open-webui/open-webui/tree/main) server with [Elestio](https://elest.io/open-source/ollama)
+## LLM-Testskript für GPTR ausführen
 
+Du kannst die globale Funktion `test-your-llm` mit `tests/test-your-llm` verwenden. So geht's:
 
-## Run LLM Test Script for GPTR
-
-You can leverage the global `test-your-llm` function with `tests/test-your-llm`.
-Here are the steps to do so:
-
-Step 1: Set the following values in your `.env`. Note: replace the base urls with the custom domain that your web app is available on - for example: if the web app is available on `https://ollama-2d52b-u21899.vm.elestio.app/` within the browser, that becomes the value to use in your .env file.
+Schritt 1: Setze die folgenden Werte in deiner `.env`. Hinweis: Ersetze die Base-URLs durch die benutzerdefinierte Domain, unter der deine Web-App erreichbar ist. Wenn die App zum Beispiel unter `https://ollama-2d52b-u21899.vm.elestio.app/` erreichbar ist, verwende diese Adresse in deiner `.env`.
 
 ```bash
 OPENAI_API_KEY="123"
@@ -96,37 +82,37 @@ EMBEDDING_PROVIDER="ollama"
 OLLAMA_EMBEDDING_MODEL="nomic-embed-text"
 ```
 
-Note: to verify you're pointing at the correct API URL, you can run something like this in your terminal:
+Hinweis: Um zu prüfen, ob du auf die richtige API-URL zeigst, kannst du im Terminal zum Beispiel Folgendes ausführen:
 
 ```bash
 nslookup ollama-2d52b-u21899.vm.elestio.app
 ```
 
-Step 2:
+Schritt 2:
 
 ```bash
 cd tests
 python -m test-your-llm
 ```
 
-You should get an LLM response, such as:
+Du solltest eine LLM-Antwort erhalten, zum Beispiel:
 ```
-Sup! How can I assist you today? Feel free to ask me any questions or let me know if you need help with anything.
+Hallo! Wie kann ich dir heute helfen? Wenn du Fragen hast oder Unterstützung brauchst, melde dich einfach.
 ```
 
-#### Disable Elestio Authentication or Add Auth Headers
+#### Elestio-Authentifizierung deaktivieren oder Auth-Header hinzufügen
 
-To remove the basic auth you have to follow the below steps:
+Um die Basic-Auth zu entfernen, gehe so vor:
 
-Go to your service -> Security in your Elestio admin panel.
+Öffne in deinem Elestio-Admin-Panel deinen Service und gehe zu **Security**.
 
-Step 1: Disable the Firewall.
+Schritt 1: Deaktiviere die Firewall.
 
-Step 2: Edit your Nginx Configuration. You'll want to comment both these both these lines out:
+Schritt 2: Bearbeite deine Nginx-Konfiguration. Kommentiere diese beiden Zeilen aus:
 
 ```bash
 auth_basic           "Authentication"; 
 auth_basic_user_file /etc/nginx/conf.d/.htpasswd;
 ```
 
-Step 2: Click the button "Update & Restart" to apply your nginx changes.
+Schritt 2: Klicke auf **Update & Restart**, um die Nginx-Änderungen zu übernehmen.

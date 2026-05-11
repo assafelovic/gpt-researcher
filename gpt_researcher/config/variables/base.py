@@ -30,6 +30,7 @@ class BaseConfig(TypedDict):
     MAX_SUBTOPICS: int
     REPORT_SOURCE: Union[str, None]
     DOC_PATH: str
+    ONION_PROXY_URL: Union[str, None]
     PROMPT_FAMILY: str
     LLM_KWARGS: dict
     EMBEDDING_KWARGS: dict

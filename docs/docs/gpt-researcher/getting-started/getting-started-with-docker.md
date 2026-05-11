@@ -1,40 +1,40 @@
-# Docker: Quickstart
+# Docker: Schnellstart
 
-> **Step 1** - Install & Open Docker Desktop
+> **Schritt 1** - Docker Desktop installieren und öffnen
 
-Follow instructions at https://www.docker.com/products/docker-desktop/
+Folge den Anweisungen unter https://www.docker.com/products/docker-desktop/
 
 
-> **Step 2** - [Follow this flow](https://www.youtube.com/watch?v=x1gKFt_6Us4)
+> **Schritt 2** - [Diesem Ablauf folgen](https://www.youtube.com/watch?v=x1gKFt_6Us4)
 
-This mainly includes cloning the '.env.example' file, adding your API Keys to the cloned file and saving the file as '.env'
+Dabei geht es vor allem darum, die Datei `.env.example` zu kopieren, deine API-Keys in die Kopie einzutragen und die Datei anschließend als `.env` zu speichern.
 
-In `requirements.txt` add the relevant langchain packages for the LLM your choose (langchain-google-genai, langchain-deepseek, langchain_mistralai for example)
+In `requirements.txt` musst du die passenden LangChain-Pakete für das von dir gewählte LLM ergänzen, zum Beispiel `langchain-google-genai`, `langchain-deepseek` oder `langchain_mistralai`.
 
-> **Step 3** - Within root, run with Docker.
+> **Schritt 3** - Im Projektstamm mit Docker starten.
 
 ```bash
 docker-compose up --build
 ```
 
-If that doesn't work, try running it without the dash:
+Wenn das nicht funktioniert, versuche es ohne Bindestrich:
 ```bash
 docker compose up --build
 ```
 
-> **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
- - the Python server running on localhost:8000
- - the React app running on localhost:3000
+> **Schritt 4** - Wenn du in deiner `docker-compose`-Datei nichts auskommentiert hast, startet dieser Ablauf standardmäßig zwei Prozesse:
+ - der Python-Server auf `localhost:8000`
+ - die React-App auf `localhost:3000`
 
-Visit localhost:3000 on any browser and enjoy researching!
+Öffne `localhost:3000` in deinem Browser und leg direkt mit der Recherche los!
 
 
 ## Running with the Docker CLI
 
-If you want to run the Docker container without using docker-compose, you can use the following command:
+Wenn du den Docker-Container ohne `docker-compose` starten möchtest, kannst du folgenden Befehl verwenden:
 
 ```bash
 docker run -it --name gpt-researcher -p 8000:8000 --env-file .env  -v /absolute/path/to/gptr_docs:/my-docs  gpt-researcher
 ```
 
-This will run the Docker container and mount the `/gptr_docs` directory to the container's `/my-docs` directory for analysis by the GPTR API Server.
+Dadurch wird der Docker-Container gestartet und das Verzeichnis `/gptr_docs` auf das Verzeichnis `/my-docs` im Container gemountet, damit der GPTR-API-Server es analysieren kann.

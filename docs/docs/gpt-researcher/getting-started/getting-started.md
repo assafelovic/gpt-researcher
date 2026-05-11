@@ -1,79 +1,79 @@
-# Getting Started
+# Erste Schritte
 
-> **Step 0** - Install Python 3.11 or later. [See here](https://www.tutorialsteacher.com/python/install-python) for a step-by-step guide.
+> **Schritt 0** - Installiere Python 3.11 oder neuer. Eine Schritt-für-Schritt-Anleitung findest du [hier](https://www.tutorialsteacher.com/python/install-python).
 
-> **Step 1** - Download the project and navigate to its directory
+> **Schritt 1** - Lade das Projekt herunter und wechsle in das Verzeichnis
 
 ```bash
 $ git clone https://github.com/assafelovic/gpt-researcher.git
 $ cd gpt-researcher
 ```
 
-> **Step 3** - Set up API keys using two methods: exporting them directly or storing them in a `.env` file.
+> **Schritt 3** - Richte die API-Keys auf zwei Arten ein: direkt als Umgebungsvariablen oder über eine `.env`-Datei.
 
-For Linux/Temporary Windows Setup, use the export method:
+Für Linux oder eine temporäre Windows-Einrichtung nutze die Export-Variante:
 
 ```bash
 export OPENAI_API_KEY={Your OpenAI API Key here}
-# Optional: configure a web retriever if you want to override the DuckDuckGo default.
+# Optional: Web-Retriever konfigurieren, wenn du den DuckDuckGo-Standard überschreiben möchtest.
 # export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
-For custom OpenAI-compatible APIs (e.g., local models, other providers), you can also set:
+Für eigene OpenAI-kompatible APIs, zum Beispiel lokale Modelle oder andere Provider, kannst du außerdem setzen:
 
 ```bash
 export OPENAI_BASE_URL={Your custom API base URL here}
 ```
 
-For a more permanent setup, create a `.env` file in the current `gpt-researcher` directory and input the env vars (without `export`).
+Für eine dauerhafte Einrichtung lege im aktuellen `gpt-researcher`-Verzeichnis eine `.env`-Datei an und trage die Variablen dort ohne `export` ein.
 
-- For LLM provider, we recommend **[OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources). To learn how to change the LLM model, please refer to the [documentation](https://docs.gptr.dev/docs/gpt-researcher/llms) page. 
-- For web search, DuckDuckGo is the default when no retriever API key is configured. If you want Tavily or another provider, change the search provider in `config/config.py` and add the matching env API key.
+- Als LLM-Provider empfehlen wir **[OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, du kannst aber jedes andere LLM-Modell verwenden, auch Open Source. Wie du das LLM wechselst, erfährst du auf der [Dokumentationsseite](https://docs.gptr.dev/docs/gpt-researcher/llms).
+- Für die Websuche ist DuckDuckGo der Standard, wenn kein Retriever-API-Key gesetzt ist. Wenn du Tavily oder einen anderen Provider nutzen möchtest, ändere den Suchanbieter in `config/config.py` und setze den passenden API-Key.
 
-## Quickstart
+## Schnellstart
 
-> **Step 1** - Install dependencies
+> **Schritt 1** - Abhängigkeiten installieren
 
 ```bash
 $ pip install -r requirements.txt
 ```
 
-> **Step 2** - Run the agent with FastAPI
+> **Schritt 2** - Den Agenten mit FastAPI starten
 
 ```bash
 $ uvicorn main:app --reload
 ```
 
-> **Step 3** - Go to http://localhost:8000 on any browser and enjoy researching!
+> **Schritt 3** - Öffne http://localhost:8000 in deinem Browser und leg los!
 
 ## Using Virtual Environment or Poetry
-Select either based on your familiarity with each:
+Wähle je nach Vorliebe entweder Virtual Environment oder Poetry:
 
 ### Virtual Environment
 
-#### *Establishing the Virtual Environment with Activate/Deactivate configuration*
+#### *Virtuelle Umgebung mit Aktivieren/Deaktivieren einrichten*
 
-Create a virtual environment using the `venv` package with the environment name `<your_name>`, for example, `env`. Execute the following command in the PowerShell/CMD terminal:
+Erstelle mit dem `venv`-Paket eine virtuelle Umgebung mit dem Namen `<your_name>`, zum Beispiel `env`. Führe dazu im PowerShell- oder CMD-Terminal folgenden Befehl aus:
 
 ```bash
 python -m venv env
 ```
 
-To activate the virtual environment, use the following activation script in PowerShell/CMD terminal:
+Zum Aktivieren der virtuellen Umgebung nutze im PowerShell- oder CMD-Terminal das folgende Skript:
 
 ```bash
 .\env\Scripts\activate
 ```
 
-To deactivate the virtual environment, run the following deactivation script in PowerShell/CMD terminal:
+Zum Deaktivieren der virtuellen Umgebung führe das folgende Skript aus:
 
 ```bash
 deactivate
 ```
 
-#### *Install the dependencies for a Virtual environment*
+#### *Abhängigkeiten für eine virtuelle Umgebung installieren*
 
-After activating the `env` environment, install dependencies using the `requirements.txt` file with the following command:
+Nachdem du die `env`-Umgebung aktiviert hast, installiere die Abhängigkeiten mit folgendem Befehl:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -83,28 +83,27 @@ python -m pip install -r requirements.txt
 
 ### Poetry
 
-#### *Establishing the Poetry dependencies and virtual environment with Poetry version `~1.7.1`*
+#### *Poetry-Abhängigkeiten und virtuelle Umgebung mit Poetry-Version `~1.7.1` einrichten*
 
-Install project dependencies and simultaneously create a virtual environment for the specified project. By executing this command, Poetry reads the project's "pyproject.toml" file to determine the required dependencies and their versions, ensuring a consistent and isolated development environment. The virtual environment allows for a clean separation of project-specific dependencies, preventing conflicts with system-wide packages and enabling more straightforward dependency management throughout the project's lifecycle.
+Installiere die Projektabhängigkeiten und erstelle gleichzeitig eine virtuelle Umgebung für das Projekt. Poetry liest dabei die `pyproject.toml`, bestimmt die benötigten Abhängigkeiten und deren Versionen und sorgt so für eine konsistente, isolierte Entwicklungsumgebung. Die virtuelle Umgebung trennt projektspezifische Pakete sauber von systemweiten Paketen und erleichtert das Abhängigkeitsmanagement über den gesamten Projektlebenszyklus.
 
 ```bash
 poetry install
 ```
 
-#### *Activate the virtual environment associated with a Poetry project*
+#### *Die mit dem Poetry-Projekt verknüpfte virtuelle Umgebung aktivieren*
 
-By running this command, the user enters a shell session within the isolated environment associated with the project, providing a dedicated space for development and execution. This virtual environment ensures that the project dependencies are encapsulated, avoiding conflicts with system-wide packages. Activating the Poetry shell is essential for seamlessly working on a project, as it ensures that the correct versions of dependencies are used and provides a controlled environment conducive to efficient development and testing.
+Mit diesem Befehl öffnest du eine Shell-Sitzung innerhalb der isolierten Projektumgebung. Dadurch erhältst du einen eigenen Arbeitsbereich für Entwicklung und Ausführung. Die virtuelle Umgebung kapselt die Projektabhängigkeiten ab und verhindert Konflikte mit systemweiten Paketen. Das Aktivieren der Poetry-Shell ist wichtig, damit die richtigen Abhängigkeitsversionen verwendet werden und du in einer kontrollierten Umgebung entwickeln und testen kannst.
 
 ```bash
 poetry shell
 ```
 
-### *Run the app*
-> Launch the FastAPI application agent on a *Virtual Environment or Poetry* setup by executing the following command:
+### *Die Anwendung starten*
+> Starte die FastAPI-Anwendung in einer *Virtual-Environment- oder Poetry*-Einrichtung mit folgendem Befehl:
 ```bash
 python -m uvicorn main:app --reload
 ```
-> Visit http://localhost:8000 in any web browser and explore your research!
+> Öffne http://localhost:8000 in deinem Browser und erkunde deine Recherchen!
 
 <br />
-

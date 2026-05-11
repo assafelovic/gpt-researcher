@@ -1,131 +1,131 @@
-# How to Choose
+# Wie du es auswählst
 
-GPT Researcher is a powerful autonomous research agent designed to enhance and streamline your research processes. Whether you're a developer looking to integrate research capabilities into your project or an end-user seeking a comprehensive research solution, GPT Researcher offers flexible options to meet your needs.
+GPT Researcher ist ein leistungsstarker autonomer Research-Agent, der deine Rechercheprozesse verbessert und verschlankt. Egal, ob du als Entwickler Recherche-Funktionen in dein Projekt integrieren möchtest oder als Endnutzer eine umfassende Lösung suchst: GPT Researcher bietet flexible Optionen für unterschiedliche Anforderungen.
 
-We envision a future where AI agents collaborate to complete complex tasks, with research being a critical step in the process. GPT Researcher aims to be your go-to agent for any research task, regardless of complexity. It can be easily integrated into existing agent workflows, eliminating the need to create your own research agent from scratch.
+Wir stellen uns eine Zukunft vor, in der KI-Agenten gemeinsam komplexe Aufgaben lösen und Recherche dabei ein zentraler Schritt ist. GPT Researcher soll dein Standard-Agent für jede Recherchetätigkeit sein, unabhängig von der Komplexität. Er lässt sich leicht in bestehende Agenten-Workflows integrieren, sodass du keinen eigenen Research-Agenten von Grund auf bauen musst.
 
-## Options
+## Optionen
 
-GPT Researcher offers multiple ways to leverage its capabilities:
+GPT Researcher bietet mehrere Möglichkeiten, seine Fähigkeiten zu nutzen:
 
 <img src="https://github.com/user-attachments/assets/305fa3b9-60fa-42b6-a4b0-84740ab6c665" alt="Logo" width="568"></img>
 <br></br>
 
-1. **GPT Researcher PIP agent**: Ideal for integrating GPT Researcher into your existing projects and workflows.
-2. **Backend**: A backend service to interact with the frontend user interfaces, offering advanced features like detailed reports.
-3. **Multi Agent System**: An advanced setup using LangGraph, offering the most comprehensive research capabilities.
-4. **Frontend**: Several front-end solutions depending on your needs, including a simple HTML/JS version and a more advanced NextJS version.
+1. **GPT Researcher PIP-Agent**: Ideal, um GPT Researcher in bestehende Projekte und Workflows einzubinden.
+2. **Backend**: Ein Backend-Dienst zur Anbindung an die Frontend-Oberflächen mit erweiterten Funktionen wie detaillierten Reports.
+3. **Multi-Agent-System**: Ein fortgeschrittenes Setup auf Basis von LangGraph mit den umfangreichsten Research-Funktionen.
+4. **Frontend**: Verschiedene Frontend-Optionen je nach Bedarf, darunter eine einfache HTML/JS-Version und eine modernere NextJS-Version.
 
-## Usage Options
+## Einsatzmöglichkeiten
 
 ### 1. PIP Package
 
-The PIP package is ideal for leveraging GPT Researcher as an agent in your preferred environment and code.
+Das PIP-Paket eignet sich ideal, wenn du GPT Researcher als Agent in deiner bevorzugten Entwicklungsumgebung und in deinem Code einsetzen willst.
 
-**Pros:**
-- Easy integration into existing projects
-- Flexible usage in multi-agent systems, chains, or workflows
-- Optimized for production performance
+**Vorteile:**
+- Einfache Integration in bestehende Projekte
+- Flexible Nutzung in Multi-Agent-Systemen, Chains oder Workflows
+- Auf Produktionsleistung optimiert
 
-**Cons:**
-- Requires some coding knowledge
-- May need additional setup for advanced features
+**Nachteile:**
+- Erfordert etwas Programmierwissen
+- Für erweiterte Funktionen kann zusätzliche Einrichtung nötig sein
 
 **Installation:**
 ```
 pip install gpt-researcher
 ```
 
-**System Requirements:**
+**Systemvoraussetzungen:**
 - Python 3.10+
-- pip package manager
+- Paketmanager `pip`
 
-**Learn More:** [PIP Documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package)
+**Mehr erfahren:** [PIP-Dokumentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package)
 
 ### 2. End-to-End Application
 
-For a complete out-of-the-box experience, including a sleek frontend, you can clone our repository.
+Für ein komplettes Out-of-the-box-Erlebnis inklusive eines schicken Frontends kannst du unser Repository klonen.
 
-**Pros:**
-- Ready-to-use frontend and backend services
-- Includes advanced use cases like detailed report generation
-- Optimal user experience
+**Vorteile:**
+- Direkt nutzbare Frontend- und Backend-Dienste
+- Enthält erweiterte Anwendungsfälle wie detaillierte Report-Erzeugung
+- Optimale Nutzererfahrung
 
-**Cons:**
-- Less flexible than the PIP package for custom integrations
-- Requires setting up the entire application
+**Nachteile:**
+- Weniger flexibel als das PIP-Paket für eigene Integrationen
+- Das komplette Projekt muss eingerichtet werden
 
-**Getting Started:**
-1. Clone the repository: `git clone https://github.com/assafelovic/gpt-researcher.git`
-2. Follow the [installation instructions](https://docs.gptr.dev/docs/gpt-researcher/getting-started)
+**Los geht's:**
+1. Repository klonen: `git clone https://github.com/assafelovic/gpt-researcher.git`
+2. Den [Installationsanweisungen](https://docs.gptr.dev/docs/gpt-researcher/getting-started) folgen
 
-**System Requirements:**
+**Systemvoraussetzungen:**
 - Git
 - Python 3.10+
-- Node.js and npm (for frontend)
+- Node.js und npm für das Frontend
 
-**Advanced Usage Example:** [Detailed Report Implementation](https://github.com/assafelovic/gpt-researcher/tree/master/backend/report_type/detailed_report)
+**Beispiel für erweiterte Nutzung:** [Implementierung für detaillierte Reports](https://github.com/assafelovic/gpt-researcher/tree/master/backend/report_type/detailed_report)
 
 ### 3. Multi Agent System with LangGraph or AG2
 
-We've collaborated with LangChain and AG2 to support multi-agent workflows with GPT Researcher, offering the most complex and comprehensive version of GPT Researcher.
+Wir haben mit LangChain und AG2 zusammengearbeitet, um Multi-Agent-Workflows mit GPT Researcher zu unterstützen. Das ist die komplexeste und umfassendste Version von GPT Researcher.
 
-**Pros:**
-- Very detailed, customized research reports
-- Inner AI agent loops and reasoning
+**Vorteile:**
+- Sehr detaillierte, maßgeschneiderte Research-Reports
+- Interne Agenten-Schleifen und Reasoning
 
-**Cons:**
-- More expensive and time-consuming
-- Heavyweight for production use
+**Nachteile:**
+- Teurer und zeitaufwendiger
+- Für den Produktionseinsatz recht schwergewichtig
 
-This version is recommended for local, experimental, and educational use. We're working on providing a lighter version soon!
+Diese Variante wird für lokale, experimentelle und didaktische Nutzung empfohlen. Wir arbeiten daran, bald eine schlankere Version bereitzustellen.
 
-**System Requirements:**
+**Systemvoraussetzungen:**
 - Python 3.10+
-- LangGraph or AG2 library
+- LangGraph- oder AG2-Bibliothek
 
-**Learn More:**
+**Mehr erfahren:**
 - [GPT Researcher x LangGraph](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph)
 - [GPT Researcher x AG2](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2)
 
-## Comparison Table
+## Vergleichstabelle
 
-| Feature | PIP Package | End-to-End Application | Multi Agent System |
+| Funktion | PIP-Paket | End-to-End-Anwendung | Multi-Agent-System |
 |---------|-------------|------------------------|---------------------|
-| Ease of Integration | High | Medium | Low |
-| Customization | High | Medium | High |
-| Out-of-the-box UI | No | Yes | No |
-| Complexity | Low | Medium | High |
-| Best for | Developers | End-users | Researchers/Experimenters |
+| Integrationsaufwand | Hoch | Mittel | Niedrig |
+| Anpassbarkeit | Hoch | Mittel | Hoch |
+| UI direkt nutzbar | Nein | Ja | Nein |
+| Komplexität | Niedrig | Mittel | Hoch |
+| Am besten geeignet für | Entwickler | Endnutzer | Forschende/Experimentierende |
 
-Please note that all options have been optimized and refined for production use.
+Hinweis: Alle Optionen wurden für den Produktionseinsatz optimiert und verfeinert.
 
-## Deep Dive
+## Tieferer Einblick
 
-To learn more about each of the options, check out these docs and code snippets:
+Wenn du mehr über die einzelnen Optionen erfahren möchtest, schau dir diese Dokus und Code-Snippets an:
 
-1. **PIP Package**: 
+1. **PIP-Paket**:
    - Install: `pip install gpt-researcher`
-   - [Integration guide](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package)
+   - [Integrationsanleitung](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package)
 
-2. **End-to-End Application**: 
+2. **End-to-End-Anwendung**:
    - Clone the repository: `git clone https://github.com/assafelovic/gpt-researcher.git`
-   - [Installation instructions](https://docs.gptr.dev/docs/gpt-researcher/getting-started)
+   - [Installationsanweisungen](https://docs.gptr.dev/docs/gpt-researcher/getting-started)
 
-3. **Multi-Agent System**: 
-   - [Multi-Agents code](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents)
-   - [LangGraph documentation](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph)
-   - [AG2 documentation](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2)
+3. **Multi-Agent-System**:
+   - [Multi-Agent-Code](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents)
+   - [LangGraph-Dokumentation](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph)
+   - [AG2-Dokumentation](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2)
    - [Blog](https://docs.gptr.dev/blog/gptr-langgraph)
 
-## Versioning and Updates
+## Versionierung und Updates
 
-GPT Researcher is actively maintained and updated. To ensure you're using the latest version:
+GPT Researcher wird aktiv gepflegt und weiterentwickelt. Damit du die neueste Version nutzt:
 
-- For the PIP package: `pip install --upgrade gpt-researcher`
-- For the End-to-End Application: Pull the latest changes from the GitHub repository
-- For the Multi-Agent System: Check the documentation for compatibility with the latest LangGraph and AG2 versions
+- Für das PIP-Paket: `pip install --upgrade gpt-researcher`
+- Für die End-to-End-Anwendung: Ziehe die neuesten Änderungen aus dem GitHub-Repository
+- Für das Multi-Agent-System: Prüfe die Dokumentation auf Kompatibilität mit den aktuellen LangGraph- und AG2-Versionen
 
-## Troubleshooting and FAQs
+## Fehlerbehebung und FAQ
 
-For common issues and questions, please refer to our [FAQ section](https://docs.gptr.dev/docs/faq) in the documentation.
+Bei häufigen Problemen und Fragen hilft dir unser [FAQ-Bereich](https://docs.gptr.dev/docs/faq) in der Dokumentation weiter.

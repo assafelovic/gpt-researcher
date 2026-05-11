@@ -11,13 +11,13 @@ const Question: React.FC<QuestionProps> = ({ question }) => {
       <div className="flex items-center gap-2 sm:gap-4">
         <img
           src={"/img/message-question-circle.svg"}
-          alt="message"
+          alt="Nachricht"
           width={24}
           height={24}
           className="w-6 h-6"
         />
         {/*<p className="font-bold uppercase leading-[152%] text-teal-200">
-          Research Task:
+          Rechercheaufgabe:
         </p>*/}
       </div>
       <div className="grow text-white break-words max-w-full log-message mt-1 sm:mt-0 font-medium">{question}</div>

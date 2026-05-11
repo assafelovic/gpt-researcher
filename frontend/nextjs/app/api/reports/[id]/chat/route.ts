@@ -1,33 +1,36 @@
 import { NextResponse } from 'next/server';
+import { resolveServerBackendUrl } from '@/helpers/backendUrl';
 
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = (process.env.NEXT_PUBLIC_GPTR_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8002')
-    .trim()
-    .replace(/\/+$/, '')
-    .replace(/\/api$/, '');
-  
+  const backendUrl = resolveServerBackendUrl(
+    process.env.BACKEND_INTERNAL_URL,
+    process.env.BACKEND_URL,
+    process.env.NEXT_PUBLIC_GPTR_API_URL,
+    process.env.NEXT_PUBLIC_BACKEND_URL,
+  );
+
   try {
     if (!id) {
       return NextResponse.json(
-        { error: 'Missing report ID parameter' },
+        { error: 'Fehlender Bericht-ID-Parameter' },
         { status: 400 }
       );
     }
-    
+
     console.log(`GET /api/reports/${id}/chat - Proxying request to backend`);
-    
+
     const response = await fetch(`${backendUrl}/api/reports/${id}/chat`);
     const data = await response.json();
-    
+
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
     console.error(`GET /api/reports/${id}/chat - Error proxying to backend:`, error);
     return NextResponse.json(
-      { error: 'Failed to connect to backend service' },
+      { error: 'Verbindung zum Backend-Dienst fehlgeschlagen' },
       { status: 500 }
     );
   }
@@ -38,19 +41,21 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
-  const backendUrl = (process.env.NEXT_PUBLIC_GPTR_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8002')
-    .trim()
-    .replace(/\/+$/, '')
-    .replace(/\/api$/, '');
-  
+  const backendUrl = resolveServerBackendUrl(
+    process.env.BACKEND_INTERNAL_URL,
+    process.env.BACKEND_URL,
+    process.env.NEXT_PUBLIC_GPTR_API_URL,
+    process.env.NEXT_PUBLIC_BACKEND_URL,
+  );
+
   try {
     if (!id) {
       return NextResponse.json(
-        { error: 'Missing report ID parameter' },
+        { error: 'Fehlender Bericht-ID-Parameter' },
         { status: 400 }
       );
     }
-    
+
     // Parse the request body
     let body;
     try {
@@ -58,13 +63,13 @@ export async function POST(
     } catch (parseError) {
       console.error('Error parsing request body:', parseError);
       return NextResponse.json(
-        { error: 'Invalid JSON in request body' },
+        { error: 'Ungültiges JSON im Request-Body' },
         { status: 400 }
       );
     }
-    
+
     console.log(`POST /api/reports/${id}/chat - Proxying request to backend`);
-    
+
     const response = await fetch(`${backendUrl}/api/reports/${id}/chat`, {
       method: 'POST',
       headers: {
@@ -72,13 +77,13 @@ export async function POST(
       },
       body: JSON.stringify(body),
     });
-    
+
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch (error: any) {
     console.error(`POST /api/reports/${id}/chat - Error proxying to backend:`, error);
     return NextResponse.json(
-      { error: 'Failed to connect to backend service' },
+      { error: 'Verbindung zum Backend-Dienst fehlgeschlagen' },
       { status: 500 }
     );
   }
