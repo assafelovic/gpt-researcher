@@ -33,36 +33,16 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
   const [isProcessingChat, setIsProcessingChat] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>(() => {
-    // Default settings
-    const defaultSettings = {
-      report_source: "web",
-      report_type: "research_report",
-      tone: "Objective",
-      domains: [],
-      defaultReportType: "research_report",
-      layoutType: 'copilot',
-      mcp_enabled: false,
-      mcp_configs: [],
-      mcp_strategy: "fast",
-    };
-
-    // Try to load all settings from localStorage
-    if (typeof window !== 'undefined') {
-      const savedSettings = localStorage.getItem('chatBoxSettings');
-      if (savedSettings) {
-        try {
-          const parsedSettings = JSON.parse(savedSettings);
-          return {
-            ...defaultSettings,
-            ...parsedSettings, // Override defaults with saved settings
-          };
-        } catch (e) {
-          console.error('Error parsing saved settings:', e);
-        }
-      }
-    }
-    return defaultSettings;
+const [chatBoxSettings, setChatBoxSettings] = useState<ChatBoxSettings>({
+    report_type: "research_report",
+    report_source: "web",
+    tone: "Objective",
+    domains: [],
+    defaultReportType: "research_report",
+    layoutType: 'copilot',
+    mcp_enabled: false,
+    mcp_configs: [],
+    mcp_strategy: "fast",
   });
   const [notFound, setNotFound] = useState(false);
   const [fetchAttempted, setFetchAttempted] = useState(false);
@@ -90,6 +70,19 @@ export default function ResearchPage({ params }: { params: { id: string } }) {
     }
     setSidebarOpen(false);
   };
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('chatBoxSettings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        setChatBoxSettings(prev => ({ ...prev, ...parsedSettings }));
+      } catch (e) {
+        console.error('Error parsing saved settings:', e);
+      }
+    }
+  }, []);
 
   // Save chatBoxSettings to localStorage when they change
   useEffect(() => {
