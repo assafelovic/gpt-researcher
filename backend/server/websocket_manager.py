@@ -13,10 +13,31 @@ from report_type import BasicReport, DetailedReport
 
 from gpt_researcher.utils.enum import ReportType, Tone
 from gpt_researcher.actions import stream_output  # Import stream_output
+from gpt_researcher.utils.query_safety import detect_unsafe_query, render_query_refusal
 from .multi_agent_runner import run_multi_agent_task
 from .server_utils import CustomLogsHandler
 
 logger = logging.getLogger(__name__)
+
+
+class SafetyBlockedResearcher:
+    """Lightweight placeholder used when a request is blocked before research starts."""
+
+    def __init__(self, query: str, safety_decision):
+        self.query = query
+        self.safety_decision = safety_decision
+        self.verification_bundle = None
+        self.visited_urls: set[str] = set()
+
+    def get_source_urls(self):
+        return []
+
+    def get_costs(self):
+        return 0.0
+
+    def get_research_images(self):
+        return []
+
 
 class WebSocketManager:
     """Manage websockets"""
@@ -98,7 +119,7 @@ class WebSocketManager:
             except Exception:
                 pass  # If this fails too, there's nothing more we can do
 
-    async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[], mcp_enabled=False, mcp_strategy="fast", mcp_configs=[], max_search_results=None):
+    async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[], mcp_enabled=False, mcp_strategy="fast", mcp_configs=[], max_search_results=None, logs_handler=None):
         """Start streaming the output."""
         tone = Tone[tone]
         # add customized JSON config file path here
@@ -109,18 +130,36 @@ class WebSocketManager:
             task, report_type, report_source, source_urls, document_urls, tone, websocket, 
             headers=headers, query_domains=query_domains, config_path=config_path,
             mcp_enabled=mcp_enabled, mcp_strategy=mcp_strategy, mcp_configs=mcp_configs,
-            max_search_results=max_search_results
+            max_search_results=max_search_results, logs_handler=logs_handler
         )
         return report
 
-async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, stream_output=stream_output, headers=None, query_domains=[], config_path="", return_researcher=False, mcp_enabled=False, mcp_strategy="fast", mcp_configs=[], max_search_results=None):
-    """Run the agent."""    
+async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, stream_output=stream_output, headers=None, query_domains=[], config_path="", return_researcher=False, mcp_enabled=False, mcp_strategy="fast", mcp_configs=[], max_search_results=None, logs_handler=None):
+    """Run the agent."""
     # Create logs handler for this research task
-    logs_handler = CustomLogsHandler(websocket, task)
+    if logs_handler is None:
+        logs_handler = CustomLogsHandler(websocket, task)
+
+    # Respect RESEARCH_SAFETY_MODE setting
+    safety_mode = os.getenv("RESEARCH_SAFETY_MODE", "TRANSPARENT")
+    if safety_mode != "TRANSPARENT":
+        safety_decision = detect_unsafe_query(task)
+        if safety_decision is not None:
+            refusal_language = os.getenv("LANGUAGE", "german")
+            refusal_report = render_query_refusal(task, safety_decision, language=refusal_language)
+            await logs_handler.send_json({
+                "type": "logs",
+                "content": "query_blocked",
+                "output": f"❌ Anfrage abgelehnt: {safety_decision.reason}",
+            })
+            if return_researcher:
+                return refusal_report, SafetyBlockedResearcher(task, safety_decision)
+            return refusal_report
+    else:
+        safety_decision = None
 
     # Set up MCP configuration if enabled
     if mcp_enabled and mcp_configs:
-        import os
         current_retriever = os.getenv("RETRIEVER", "duckduckgo")
         if "mcp" not in current_retriever:
             # Add MCP to existing retrievers
