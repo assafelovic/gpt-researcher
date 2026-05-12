@@ -51,6 +51,7 @@ class BaseConfig(TypedDict):
     IMAGE_GENERATION_STYLE: str  # Image style: "dark", "light", or "auto"
     ENABLE_VERIFICATION_REVIEW: bool
     ENABLE_REASONING_CRITIC: bool
+    RESEARCH_SAFETY_MODE: str
     ENABLE_DEEP_CRAWLER: bool
     DEEP_CRAWLER_DEPTH: int
     DEEP_CRAWLER_BREADTH: int

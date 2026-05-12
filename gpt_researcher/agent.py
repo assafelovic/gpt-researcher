@@ -28,6 +28,7 @@ from .skills.deep_research import DeepResearchSkill
 from .skills.image_generator import ImageGenerator
 from .skills.researcher import ResearchConductor
 from .skills.writer import ReportGenerator
+from .utils.query_safety import detect_unsafe_query, render_query_refusal, QuerySafetyDecision
 from .utils.enum import ReportSource, ReportType, Tone
 from .utils.llm import create_chat_completion
 from .vector_store import VectorStoreWrapper
@@ -196,6 +197,10 @@ class GPTResearcher:
         self.available_images: list = []  # Pre-generated images ready for embedding
         self._research_id: str = ""  # Unique ID for this research session
         self.verification_bundle: dict[str, Any] | None = None
+        self.safety_decision: QuerySafetyDecision | None = None
+        self.safety_mode: str = "TRANSPARENT"
+        if hasattr(self.cfg, 'research_safety_mode'):
+            self.safety_mode = self.cfg.research_safety_mode
 
         # Handle MCP strategy configuration with backwards compatibility
         self.mcp_strategy = self._resolve_mcp_strategy(mcp_strategy, mcp_max_iterations)
@@ -348,6 +353,26 @@ class GPTResearcher:
             "role": self.role
         })
 
+        # TRANSPARENT mode: skip safety check entirely
+        # WARN_ONLY/STRICT modes: perform safety check
+        if self.safety_mode != "TRANSPARENT":
+            self.safety_decision = detect_unsafe_query(self.query)
+            if self.safety_decision is not None:
+                self.context = [render_query_refusal(self.query, self.safety_decision, language=self.cfg.language)]
+                self.visited_urls.clear()
+                self.available_images = []
+                self._current_step = "blocked"
+                await self._log_event(
+                    "research",
+                    step="query_blocked",
+                    details={
+                        "category": self.safety_decision.category,
+                        "reason": self.safety_decision.reason,
+                        "matched_terms": list(self.safety_decision.matched_terms),
+                    },
+                )
+                return self.context
+
         # Handle deep research separately
         if self.report_type == ReportType.DeepResearch.value and self.deep_researcher:
             self._current_step = "deep_research"
@@ -467,6 +492,17 @@ class GPTResearcher:
         Returns:
             The generated report as a string.
         """
+        if self.safety_decision is not None:
+            await self._log_event(
+                "research",
+                step="report_blocked",
+                details={
+                    "category": self.safety_decision.category,
+                    "reason": self.safety_decision.reason,
+                },
+            )
+            return render_query_refusal(self.query, self.safety_decision, language=self.cfg.language)
+
         # Use pre-generated images if available (generated during conduct_research)
         has_available_images = bool(self.available_images)
         

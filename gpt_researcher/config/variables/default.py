@@ -52,6 +52,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "IMAGE_GENERATION_MAX_IMAGES": 3,  # Maximum number of images to generate per report
     "IMAGE_GENERATION_ENABLED": False,  # Master switch for inline image generation
     "IMAGE_GENERATION_STYLE": "dark",  # Image style: "dark" (matches app theme), "light", or "auto"
+    "RESEARCH_SAFETY_MODE": "TRANSPARENT",
     "ENABLE_VERIFICATION_REVIEW": True,
     "ENABLE_REASONING_CRITIC": True,
     "ENABLE_DEEP_CRAWLER": True,
