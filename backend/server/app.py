@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 from gpt_researcher.config.variables.default import DEFAULT_CONFIG
 from server.websocket_manager import WebSocketManager
 from server.server_utils import (
-    get_config_dict, make_unique_artifact_stem,
+    make_unique_artifact_stem,
     update_environment_variables, handle_file_upload, handle_file_deletion,
     execute_multi_agents, handle_websocket_communication, generate_report_files
 )

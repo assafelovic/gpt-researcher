@@ -124,3 +124,101 @@ class TestReportTypeSwitches:
             report_type=ReportType.ResearchReport.value,
         )
         assert researcher.deep_researcher is None
+
+
+class TestGenerateResearchID:
+    def test_id_generated_on_access(self):
+        researcher = GPTResearcher(query="test query")
+        assert researcher._research_id == ""
+        rid = researcher._generate_research_id()
+        assert rid.startswith("research_")
+        assert len(rid) > 10
+        assert researcher._research_id == rid
+
+    def test_id_is_stable(self):
+        researcher = GPTResearcher(query="test query")
+        rid1 = researcher._generate_research_id()
+        rid2 = researcher._generate_research_id()
+        assert rid1 == rid2
+
+
+class TestAddCosts:
+    def test_adds_cost_to_current_step(self):
+        researcher = GPTResearcher(query="test")
+        researcher.add_costs(1.5)
+        assert researcher.research_costs == 1.5
+        assert researcher.step_costs.get("general") == 1.5
+
+    def test_adds_cost_to_tracked_step(self):
+        researcher = GPTResearcher(query="test")
+        researcher._current_step = "research"
+        researcher.add_costs(2.0)
+        researcher.add_costs(0.5)
+        assert researcher.research_costs == 2.5
+        assert researcher.step_costs.get("research") == 2.5
+
+    def test_invalid_type_raises_value_error(self):
+        researcher = GPTResearcher(query="test")
+        with pytest.raises(ValueError, match="Cost must be an integer or float"):
+            researcher.add_costs("not-a-number")
+
+
+class TestUtilityWrappers:
+    def test_get_costs_returns_total(self):
+        researcher = GPTResearcher(query="test")
+        researcher.research_costs = 42.0
+        assert researcher.get_costs() == 42.0
+
+    def test_set_verbose(self):
+        researcher = GPTResearcher(query="test")
+        researcher.set_verbose(False)
+        assert researcher.verbose is False
+        researcher.set_verbose(True)
+        assert researcher.verbose is True
+
+    def test_get_source_urls(self):
+        researcher = GPTResearcher(query="test")
+        researcher.visited_urls = {"https://example.com/a", "https://example.com/b"}
+        urls = researcher.get_source_urls()
+        assert len(urls) == 2
+
+    def test_get_research_context(self):
+        researcher = GPTResearcher(query="test")
+        researcher.context = ["ctx1", "ctx2"]
+        assert researcher.get_research_context() == ["ctx1", "ctx2"]
+
+    def test_get_step_costs(self):
+        researcher = GPTResearcher(query="test")
+        researcher.step_costs = {"research": 1.0, "writing": 2.0}
+        assert researcher.get_step_costs() == {"research": 1.0, "writing": 2.0}
+
+    def test_add_research_images(self):
+        researcher = GPTResearcher(query="test")
+        researcher.add_research_images([{"url": "img1.jpg"}])
+        assert len(researcher.research_images) == 1
+
+    def test_get_research_images(self):
+        researcher = GPTResearcher(query="test")
+        researcher.research_images = [{"url": f"img{i}.jpg"} for i in range(5)]
+        assert len(researcher.get_research_images(top_k=3)) == 3
+        assert len(researcher.get_research_images(top_k=10)) == 5
+
+    def test_add_research_sources(self):
+        researcher = GPTResearcher(query="test")
+        researcher.add_research_sources([{"url": "https://example.com"}])
+        assert len(researcher.research_sources) == 1
+
+    def test_get_research_sources(self):
+        researcher = GPTResearcher(query="test")
+        researcher.research_sources = [{"url": "https://example.com"}]
+        assert len(researcher.get_research_sources()) == 1
+
+
+class TestSafetyModeInitialization:
+    def test_default_safety_mode_is_transparent(self):
+        researcher = GPTResearcher(query="test")
+        assert researcher.safety_mode == "TRANSPARENT"
+
+    def test_safety_decision_initially_none(self):
+        researcher = GPTResearcher(query="test")
+        assert researcher.safety_decision is None

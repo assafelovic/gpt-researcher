@@ -344,27 +344,35 @@ async def send_file_paths(websocket, file_paths: Dict[str, str]):
     await websocket.send_json({"type": "path", "output": file_paths})
 
 
-def get_config_dict(
-    langchain_api_key: str, openai_api_key: str, tavily_api_key: str,
-    google_api_key: str, google_cx_key: str, bing_api_key: str,
-    searchapi_api_key: str, serpapi_api_key: str, serper_api_key: str, searx_url: str
-) -> Dict[str, str]:
-    return {
-        "LANGCHAIN_API_KEY": langchain_api_key or os.getenv("LANGCHAIN_API_KEY", ""),
-        "OPENAI_API_KEY": openai_api_key or os.getenv("OPENAI_API_KEY", ""),
-        "TAVILY_API_KEY": tavily_api_key or os.getenv("TAVILY_API_KEY", ""),
-        "GOOGLE_API_KEY": google_api_key or os.getenv("GOOGLE_API_KEY", ""),
-        "GOOGLE_CX_KEY": google_cx_key or os.getenv("GOOGLE_CX_KEY", ""),
-        "BING_API_KEY": bing_api_key or os.getenv("BING_API_KEY", ""),
-        "SEARCHAPI_API_KEY": searchapi_api_key or os.getenv("SEARCHAPI_API_KEY", ""),
-        "SERPAPI_API_KEY": serpapi_api_key or os.getenv("SERPAPI_API_KEY", ""),
-        "SERPER_API_KEY": serper_api_key or os.getenv("SERPER_API_KEY", ""),
-        "SEARX_URL": searx_url or os.getenv("SEARX_URL", ""),
-        "LANGCHAIN_TRACING_V2": os.getenv("LANGCHAIN_TRACING_V2", "true"),
-        "DOC_PATH": os.getenv("DOC_PATH", "./my-docs"),
-        "RETRIEVER": os.getenv("RETRIEVER", "duckduckgo"),
-        "EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "")
-    }
+_CONFIG_DICT_KEYS = [
+    "LANGCHAIN_API_KEY",
+    "OPENAI_API_KEY",
+    "TAVILY_API_KEY",
+    "GOOGLE_API_KEY",
+    "GOOGLE_CX_KEY",
+    "BING_API_KEY",
+    "SEARCHAPI_API_KEY",
+    "SERPAPI_API_KEY",
+    "SERPER_API_KEY",
+    "SEARX_URL",
+]
+
+_STATIC_ENV_KEYS = {
+    "LANGCHAIN_TRACING_V2": "true",
+    "DOC_PATH": "./my-docs",
+    "RETRIEVER": "duckduckgo",
+    "EMBEDDING_MODEL": "",
+}
+
+
+def get_config_dict(**overrides: str) -> Dict[str, str]:
+    result = {}
+    for key in _CONFIG_DICT_KEYS:
+        param_key = key.lower()
+        result[key] = overrides.get(param_key) or os.getenv(key, "")
+    for key, default in _STATIC_ENV_KEYS.items():
+        result[key] = os.getenv(key, default)
+    return result
 
 
 def update_environment_variables(config: Dict[str, str]):

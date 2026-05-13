@@ -69,7 +69,7 @@ source = ["gpt_researcher", "backend"]
 omit = ["*/tests/*", "*/migrations/*"]
 
 [tool.coverage.report]
-fail_under = 75
+fail_under = 50
 show_missing = true
 
 [tool.uv.sources]

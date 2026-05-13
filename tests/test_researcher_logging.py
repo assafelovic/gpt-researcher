@@ -1,3 +1,4 @@
+import os
 import pytest
 from pathlib import Path
 import sys
@@ -13,6 +14,11 @@ sys.path.append(str(project_root))
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+@pytest.mark.skipif(
+    not os.getenv("OPENAI_API_KEY"),
+    reason="requires OPENAI_API_KEY for real Researcher pipeline",
+)
+@pytest.mark.integration
 @pytest.mark.asyncio
 async def test_researcher_logging():  # Renamed function to be more specific
     """
