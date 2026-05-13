@@ -1,6 +1,6 @@
-# npm package
+# npm-Paket
 
-The [gpt-researcher npm package](https://www.npmjs.com/package/gpt-researcher) is a WebSocket client for interacting with GPT Researcher.
+Das [gpt-researcher npm-Paket](https://www.npmjs.com/package/gpt-researcher) ist ein WebSocket-Client für die Kommunikation mit GPT Researcher.
 
 ## Installation
 
@@ -8,7 +8,7 @@ The [gpt-researcher npm package](https://www.npmjs.com/package/gpt-researcher) i
 npm install gpt-researcher
 ```
 
-## Usage
+## Nutzung
 
 ```javascript
 const GPTResearcher = require('gpt-researcher');

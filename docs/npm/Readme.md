@@ -1,6 +1,6 @@
 # GPT Researcher
 
-The gpt-researcher npm package is a WebSocket client for interacting with GPT Researcher.
+Das npm-Paket `gpt-researcher` ist ein WebSocket-Client für die Interaktion mit GPT Researcher.
 
 <div align="center" id="top">
 
@@ -23,11 +23,11 @@ The gpt-researcher npm package is a WebSocket client for interacting with GPT Re
 
 # 🔎 GPT Researcher
 
-**GPT Researcher is an open deep research agent designed for both web and local research on any given task.** 
+**GPT Researcher ist ein offener Deep-Research-Agent für Web- und Lokalrecherche auf beliebige Aufgaben.**
 
-The agent produces detailed, factual, and unbiased research reports with citations. GPT Researcher provides a full suite of customization options to create tailor made and domain specific research agents. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses misinformation, speed, determinism, and reliability by offering stable performance and increased speed through parallelized agent work.
+Der Agent erzeugt detaillierte, faktenbasierte und möglichst neutrale Forschungsberichte mit Quellenangaben. GPT Researcher bietet umfangreiche Anpassungsmöglichkeiten, damit sich domänenspezifische Forschungsagenten bauen lassen. Inspiriert von den neueren [Plan-and-Solve](https://arxiv.org/abs/2305.04091)- und [RAG](https://arxiv.org/abs/2005.11401)-Arbeiten adressiert GPT Researcher Fehlinformationen, Geschwindigkeit, Determinismus und Zuverlässigkeit durch stabile Performance und parallelisierte Agentenarbeit.
 
-**Our mission is to empower individuals and organizations with accurate, unbiased, and factual information through AI.**
+**Unsere Mission ist es, Menschen und Organisationen mit präzisen, unvoreingenommenen und belastbaren Informationen durch KI zu unterstützen.**
 
 ## Installation
 
@@ -35,70 +35,69 @@ The agent produces detailed, factual, and unbiased research reports with citatio
 npm install gpt-researcher
 ```
 
-## Usage
+## Verwendung
 
-### Basic Usage
+### Grundverwendung
 
 ```javascript
 const GPTResearcher = require('gpt-researcher');
 
 const researcher = new GPTResearcher({
   host: 'http://localhost:8000',
-  logListener: (data) => console.log('logListener logging data: ',data)
+  logListener: (data) => console.log('logListener protokolliert Daten:', data)
 });
 
 researcher.sendMessage({
-  query: 'Does providing better context reduce LLM hallucinations?'
+  query: 'Verringert besserer Kontext die Halluzinationen von LLMs?'
 });
 ```
 
+### Logdaten-Struktur
 
-### Log Data Structure
-
-The `logListener` function receives log data with this structure:
+Die Funktion `logListener` erhält Protokolldaten in dieser Struktur:
 
 ```javascript
 {
   type: 'logs',
-  content: string,    // e.g., 'added_source_url', 'researching', 'scraping_content'
-  output: string,     // Human-readable output message
-  metadata: any       // Additional data (URLs, counts, etc.)
+  content: string,    // z. B. 'added_source_url', 'researching', 'scraping_content'
+  output: string,     // Menschenlesbare Ausgabemeldung
+  metadata: any       // Zusätzliche Daten (URLs, Zähler usw.)
 }
 ```
 
-Common log content types:
+Gängige `content`-Typen:
 
 ```javascript
-'added_source_url': New source URL added
-'researching': Research status updates
-'scraping_urls': Starting URL scraping
-'scraping_content': Content scraping progress
-'scraping_images': Image processing updates
-'scraping_complete': Scraping completion
-'fetching_query_content': Query processing
+'added_source_url': Neue Quell-URL hinzugefügt
+'researching': Statusaktualisierung zur Recherche
+'scraping_urls': URL-Scraping gestartet
+'scraping_content': Fortschritt beim Inhaltsscraping
+'scraping_images': Fortschritt bei der Bildverarbeitung
+'scraping_complete': Scraping abgeschlossen
+'fetching_query_content': Verarbeitung der Anfrage
 ```
 
-### Parameters
+### Parameter
 
-- `task` (required): The research question or task to investigate
-- `reportType` (optional): Type of report to generate (default: 'research_report')
-- `reportSource` (optional): Source of the report data (default: 'web')
-- `tone` (optional): Tone of the report
-- `queryDomains` (optional): Array of domain names to filter search results
+- `task` (erforderlich): Die Forschungsfrage oder Aufgabe
+- `reportType` (optional): Art des zu erzeugenden Berichts (Standard: `research_report`)
+- `reportSource` (optional): Quelle der Berichtsdaten (Standard: `web`)
+- `tone` (optional): Tonalität des Berichts
+- `queryDomains` (optional): Liste von Domainnamen zur Filterung der Suchergebnisse
 
-
-### Advanced usage
+### Erweiterte Nutzung
 
 ```javascript
 const researcher = new GPTResearcher({
   host: 'http://localhost:8000',
-  logListener: (data) => console.log('Log:', data)
+  logListener: (data) => console.log('Protokoll:', data)
 });
 
-// Advanced usage with all parameters
+// Erweiterte Nutzung mit allen Parametern
 researcher.sendMessage({
-  task: "What are the latest developments in AI?",
+  task: "Was sind die neuesten Entwicklungen im Bereich KI?",
   reportType: "research_report",
   reportSource: "web",
   queryDomains: ["techcrunch.com", "wired.com"]
 });
+```

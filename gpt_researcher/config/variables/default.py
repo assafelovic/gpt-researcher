@@ -1,15 +1,17 @@
 from .base import BaseConfig
 
 DEFAULT_CONFIG: BaseConfig = {
-    "RETRIEVER": "tavily",
+    "RETRIEVER": "duckduckgo",
     "EMBEDDING": "openai:text-embedding-3-small",
     "SIMILARITY_THRESHOLD": 0.42,
+    "COMPRESSION_THRESHOLD": 8000,
     "FAST_LLM": "openai:gpt-4o-mini",
     "SMART_LLM": "openai:gpt-4.1",  # Has support for long responses (2k+ words).
     "STRATEGIC_LLM": "openai:o4-mini",  # Can be used with o1 or o3, please note it will make tasks slower.
     "FAST_TOKEN_LIMIT": 3000,
     "SMART_TOKEN_LIMIT": 6000,
     "STRATEGIC_TOKEN_LIMIT": 4000,
+    "MAX_CONTEXT_TOKENS": 4000,
     "BROWSE_CHUNK_MAX_LENGTH": 8192,
     "CURATE_SOURCES": False,
     "SUMMARY_TOKEN_LIMIT": 700,
@@ -25,9 +27,10 @@ DEFAULT_CONFIG: BaseConfig = {
     "MAX_SCRAPER_WORKERS": 15,
     "SCRAPER_RATE_LIMIT_DELAY": 0.0,  # Minimum seconds between scraper requests (0 = no limit, useful for API rate limiting)
     "MAX_SUBTOPICS": 3,
-    "LANGUAGE": "english",
+    "LANGUAGE": "german",
     "REPORT_SOURCE": "web",
     "DOC_PATH": "./my-docs",
+    "ONION_PROXY_URL": "",
     "PROMPT_FAMILY": "default",
     "LLM_KWARGS": {},
     "EMBEDDING_KWARGS": {},
@@ -36,14 +39,14 @@ DEFAULT_CONFIG: BaseConfig = {
     "DEEP_RESEARCH_BREADTH": 3,
     "DEEP_RESEARCH_DEPTH": 2,
     "DEEP_RESEARCH_CONCURRENCY": 4,
-    
+
     # MCP retriever specific settings
     "MCP_SERVERS": [],  # List of predefined MCP server configurations
     "MCP_AUTO_TOOL_SELECTION": True,  # Whether to automatically select the best tool for a query
     "MCP_ALLOWED_ROOT_PATHS": [],  # List of allowed root paths for local file access
     "MCP_STRATEGY": "fast",  # MCP execution strategy: "fast", "deep", "disabled"
     "REASONING_EFFORT": "medium",
-    
+
     # Image generation settings (optional - requires GOOGLE_API_KEY)
     # Free tier models: gemini-2.5-flash-image, gemini-2.0-flash-exp-image-generation
     # Paid tier models: imagen-4.0-generate-001, imagen-4.0-fast-generate-001
@@ -51,4 +54,18 @@ DEFAULT_CONFIG: BaseConfig = {
     "IMAGE_GENERATION_MAX_IMAGES": 3,  # Maximum number of images to generate per report
     "IMAGE_GENERATION_ENABLED": False,  # Master switch for inline image generation
     "IMAGE_GENERATION_STYLE": "dark",  # Image style: "dark" (matches app theme), "light", or "auto"
+    "RESEARCH_SAFETY_MODE": "TRANSPARENT",
+    "ENABLE_VERIFICATION_REVIEW": True,
+    "ENABLE_REASONING_CRITIC": True,
+    "ENABLE_DEEP_CRAWLER": True,
+    "DEEP_CRAWLER_DEPTH": 1,
+    "DEEP_CRAWLER_BREADTH": 4,
+    "DEEP_CRAWLER_CONCURRENCY": 3,
+    "DEEP_CRAWLER_MAX_PAGES": 12,
+    "DEEP_CRAWLER_MAX_LINKS_PER_PAGE": 24,
+    "DEEP_CRAWLER_ALLOW_EXTERNAL_LINKS": False,
+    "DEEP_CRAWLER_TIMEOUT": 8.0,
+    "CORS_ALLOW_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,https://app.gptr.dev",
+    "AZURE_CONTAINER_NAME": "",
+    "AZURE_CONNECTION_STRING": "",
 }

@@ -1,17 +1,27 @@
-from itertools import islice
-from ..utils import check_pkg
+"""DuckDuckGo web search retriever.
+
+This implementation uses DuckDuckGo's HTML endpoint directly so it works
+without the external `ddgs` package.
+"""
+
+from __future__ import annotations
+
+from urllib.parse import urljoin
+
+import requests
+from bs4 import BeautifulSoup
+
+from gpt_researcher.utils.network import build_requests_proxies
 
 
 class Duckduckgo:
     """
     Duckduckgo API Retriever
     """
-    def __init__(self, query, query_domains=None):
-        check_pkg('ddgs')
-        from ddgs import DDGS
-        self.ddg = DDGS()
+    def __init__(self, query, query_domains=None, proxy_url: str | None = None):
         self.query = query
         self.query_domains = query_domains or None
+        self.proxy_url = proxy_url
 
     def search(self, max_results=5):
         """
@@ -22,8 +32,59 @@ class Duckduckgo:
         """
         # TODO: Add support for query domains
         try:
-            search_response = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
+            search_response = self._search(max_results=max_results)
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
         return search_response
+
+    def _search(self, max_results: int = 5) -> list[dict[str, str]]:
+        params = {
+            "q": self.query,
+            "kl": "wt-wt",
+            "kp": "-2",
+        }
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/125.0 Safari/537.36"
+            )
+        }
+
+        response = requests.get(
+            "https://html.duckduckgo.com/html/",
+            params=params,
+            headers=headers,
+            proxies=build_requests_proxies(self.proxy_url),
+            timeout=20,
+        )
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        results: list[dict[str, str]] = []
+        for result in soup.select(".result")[:max_results]:
+            title_link = result.select_one(".result__title a")
+            snippet = result.select_one(".result__snippet")
+            if not title_link:
+                continue
+
+            href = title_link.get("href", "").strip()
+            if href.startswith("//"):
+                href = f"https:{href}"
+            elif href.startswith("/"):
+                href = urljoin("https://duckduckgo.com", href)
+
+            title = title_link.get_text(" ", strip=True)
+            body = snippet.get_text(" ", strip=True) if snippet else ""
+
+            results.append(
+                {
+                    "title": title,
+                    "href": href,
+                    "body": body,
+                    "url": href,
+                    "content": body,
+                }
+            )
+
+        return results

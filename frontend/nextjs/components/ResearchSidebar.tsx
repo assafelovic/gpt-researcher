@@ -26,15 +26,15 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isOpen && 
-          sidebarRef.current && 
+      if (isOpen &&
+          sidebarRef.current &&
           !sidebarRef.current.contains(event.target as Node)) {
         toggleSidebar();
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -42,29 +42,29 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
 
   // Format timestamp for display
   const formatTimestamp = (timestamp: number | string | Date | undefined) => {
-    if (!timestamp) return 'Unknown time';
-    
+    if (!timestamp) return 'Unbekannte Zeit';
+
     try {
       const date = new Date(timestamp);
-      if (isNaN(date.getTime())) return 'Unknown time';
+      if (isNaN(date.getTime())) return 'Unbekannte Zeit';
       return formatDistanceToNow(date, { addSuffix: true });
     } catch {
-      return 'Unknown time';
+      return 'Unbekannte Zeit';
     }
   };
 
   // Animation variants
   const sidebarVariants = {
-    open: { 
-      width: 'var(--sidebar-width)', 
-      transition: { type: 'spring', stiffness: 250, damping: 25 } 
+    open: {
+      width: 'var(--sidebar-width)',
+      transition: { type: 'spring', stiffness: 250, damping: 25 }
     },
-    closed: { 
-      width: 'var(--sidebar-min-width)', 
-      transition: { type: 'spring', stiffness: 250, damping: 25, delay: 0.1 } 
+    closed: {
+      width: 'var(--sidebar-min-width)',
+      transition: { type: 'spring', stiffness: 250, damping: 25, delay: 0.1 }
     }
   };
-  
+
   const fadeInVariants = {
     hidden: { opacity: 0, transition: { duration: 0.2 } },
     visible: { opacity: 1, transition: { duration: 0.3 } }
@@ -75,20 +75,20 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
       {/* Overlay for mobile */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="sidebar-overlay md:hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40" 
+            className="sidebar-overlay md:hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40"
             onClick={toggleSidebar}
             aria-hidden="true"
           />
         )}
       </AnimatePresence>
-      
-      <motion.div 
-        ref={sidebarRef} 
+
+      <motion.div
+        ref={sidebarRef}
         className="fixed top-0 left-0 h-full sidebar-z-index"
         variants={sidebarVariants}
         initial={false}
@@ -99,10 +99,10 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
         } as React.CSSProperties}
       >
         {/* Sidebar content */}
-        <div 
-          className={`h-full transition-all duration-300 text-white overflow-hidden 
-            ${isOpen 
-              ? 'bg-gray-900/80 backdrop-blur-md shadow-2xl shadow-black/30 p-3 sm:p-4' 
+        <div
+          className={`h-full transition-all duration-300 text-white overflow-hidden
+            ${isOpen
+              ? 'bg-gray-900/80 backdrop-blur-md shadow-2xl shadow-black/30 p-3 sm:p-4'
               : 'bg-transparent p-0'
             }`}
         >
@@ -117,17 +117,17 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                 transition={{ duration: 0.2 }}
                 className="absolute left-4 sm:left-6 mx-auto top-1.5 sm:top-3.5 w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center rounded-full shadow-sm z-10 overflow-hidden cursor-pointer group"
                 onClick={toggleSidebar}
-                aria-label="Open sidebar"
+                aria-label="Seitenleiste öffnen"
               >
                 {/* Subtle glowing background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-teal-500/15 via-cyan-400/12 to-blue-500/10 group-hover:from-teal-500/25 group-hover:via-cyan-400/20 group-hover:to-blue-500/15 transition-all duration-300 group-hover:shadow-[0_0_15px_rgba(20,184,166,0.3)]"></div>
-                
+
                 {/* Icon with subtle glow effect */}
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  className="h-5 sm:h-6 w-5 sm:w-6 relative text-teal-100/90 filter drop-shadow-[0_0_1px_rgba(45,212,191,0.5)]" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 sm:h-6 w-5 sm:w-6 relative text-teal-100/90 filter drop-shadow-[0_0_1px_rgba(45,212,191,0.5)]"
+                  fill="none"
+                  viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -142,11 +142,11 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                 variants={fadeInVariants}
               >
                 <div className="flex justify-between items-center mb-5 sm:mb-6">
-                  <h2 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">Research History</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">Rechercheverlauf</h2>
                   <button
                     onClick={toggleSidebar}
                     className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-gray-800/60 text-white rounded-full shadow-lg hover:bg-gray-800 transition-all duration-300 group"
-                    aria-label="Close sidebar"
+                    aria-label="Seitenleiste schließen"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -161,20 +161,20 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                 >
                   {/* Gradient background on hover */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br from-[#0cdbb6] via-[#1fd0f0] to-[#06dbee] transition-opacity duration-500"></div>
-                  
+
                   {/* Magical glow effect */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                       style={{
                         boxShadow: 'inset 0 0 20px 5px rgba(255, 255, 255, 0.2)',
                         background: 'radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 70%)'
                       }}>
                   </div>
-                  
+
                   <div className="relative z-10 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 sm:h-5 w-4 sm:w-5 mr-2 transition-transform duration-300 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    New Research
+                    Neue Recherche
                   </div>
                 </button>
 
@@ -187,19 +187,19 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-medium text-gray-300 mb-2">No research history yet</h3>
-                      <p className="text-sm text-gray-400">Start your first research journey to build your knowledge library</p>
+                      <h3 className="text-lg font-medium text-gray-300 mb-2">Noch kein Rechercheverlauf vorhanden</h3>
+                      <p className="text-sm text-gray-400">Starte deine erste Recherche, um deine Wissenssammlung aufzubauen.</p>
                     </div>
                   ) : (
                     <ul className="space-y-2 sm:space-y-3">
                       {history.map((item) => (
-                        <motion.li 
+                        <motion.li
                           key={item.id}
                           className="relative rounded-xl transition-all duration-300 overflow-hidden group bg-gray-900/40 hover:bg-gray-800/60 border border-gray-700/30 hover:border-gray-600/50 backdrop-blur-sm"
                           onMouseEnter={() => setHoveredItem(item.id)}
                           onMouseLeave={() => setHoveredItem(null)}
                         >
-                          
+
                           <Link
                             href={`/research/${item.id}`}
                             className="block w-full text-left p-3 sm:p-4 pr-10 min-h-[56px] relative"
@@ -224,14 +224,14 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
                               {formatTimestamp(item.timestamp || (item as any).updated_at || (item as any).created_at)}
                             </p>
                           </Link>
-                          
+
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               onDeleteResearch(item.id);
                             }}
                             className="absolute top-2 right-2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-white hover:bg-gray-700"
-                            aria-label="Delete research"
+                            aria-label="Recherche löschen"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -247,24 +247,24 @@ const ResearchSidebar: React.FC<ResearchSidebarProps> = ({
           </AnimatePresence>
         </div>
       </motion.div>
-      
+
       {/* Custom scrollbar styles */}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 5px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-track {
           background: rgba(15, 23, 42, 0.3);
           border-radius: 20px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: rgba(45, 212, 191, 0.3);
           border-radius: 20px;
           transition: all 0.3s;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(45, 212, 191, 0.6);
         }

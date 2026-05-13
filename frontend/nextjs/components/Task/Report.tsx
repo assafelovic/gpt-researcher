@@ -12,7 +12,7 @@ export default function Report({report}:any) {
                 setHtmlContent(processedHtml);
             } catch (error) {
                 console.error('Error converting markdown to HTML:', error);
-                setHtmlContent('<p>Error rendering content</p>');
+                setHtmlContent('<p>Fehler beim Rendern des Inhalts</p>');
             }
         };
 
@@ -23,7 +23,7 @@ export default function Report({report}:any) {
 
     return (
         <div>
-            <h2>Research Report</h2>
+            <h2>Forschungsbericht</h2>
             <div id="reportContainer" className="markdown-content">
                 <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
             </div>

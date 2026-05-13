@@ -1,23 +1,23 @@
-# Embed Script
+# Embed-Skript
 
-The embed script enables you to embed the latest GPTR NextJS app into your web app.
+Mit dem Embed-Skript kannst du die neueste GPTR-NextJS-App in deine Webanwendung einbetten.
 
-To achieve this, simply add these 2 script tags into your HTML:
+Füge dazu einfach diese zwei Script-Tags in dein HTML ein:
 
 ```javascript
 <script>localStorage.setItem("GPTR_API_URL", "http://localhost:8000");</script>
 <script src="https://app.gptr.dev/embed.js"></script>
 ```
 
-Here's a minmalistic HTML example (P.S. You can also save this as an index.html file and open it with your Web Browser)
+Hier ist ein minimalistisches HTML-Beispiel. Du kannst es auch als `index.html` speichern und im Browser öffnen:
 
 ```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPT Researcher Embed Demo</title>
+    <title>GPT Researcher Embed-Demo</title>
 </head>
 <body style="margin: 0; padding: 0;">
     <!-- GPT Researcher Embed -->
@@ -27,4 +27,4 @@ Here's a minmalistic HTML example (P.S. You can also save this as an index.html 
 </html>
 ```
 
-This example relies on setting a custom localstorage value for `GPTR_API_URL`. To point your embedded frontend at a custom GPTR API Server, feel free to edit `http://localhost:8000` to your custom GPTR server address.
+Das Beispiel nutzt einen eigenen `localStorage`-Wert für `GPTR_API_URL`. Wenn du dein eingebettetes Frontend auf einen anderen GPTR-API-Server zeigen lassen möchtest, ersetze `http://localhost:8000` einfach durch deine Serveradresse.

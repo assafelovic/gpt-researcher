@@ -5,7 +5,6 @@ writing, including introductions, conclusions, and subtopic management.
 """
 
 import json
-from typing import Dict, Optional
 
 from ..actions import (
     generate_draft_section_titles,
@@ -99,6 +98,8 @@ class ReportGenerator:
         report_params["context"] = context
         report_params["custom_prompt"] = custom_prompt
         report_params["available_images"] = available_images  # Pass pre-generated images
+        report_params["visited_urls"] = list(self.researcher.visited_urls)
+        report_params["verification_sink"] = self.researcher
 
         if self.researcher.report_type == "subtopic_report":
             report_params.update({
@@ -111,6 +112,13 @@ class ReportGenerator:
             report_params["cost_callback"] = self.researcher.add_costs
 
         report = await generate_report(**report_params, **self.researcher.kwargs)
+
+        verification_bundle = getattr(self.researcher, "verification_bundle", None)
+        if verification_bundle:
+            json_handler = getattr(self.researcher.research_conductor, "json_handler", None)
+            if json_handler:
+                json_handler.update_content("verification", verification_bundle)
+                json_handler.update_content("verification_summary", verification_bundle.get("summary", {}))
 
         if self.researcher.verbose:
             await stream_output(

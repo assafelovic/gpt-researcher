@@ -5,7 +5,6 @@ autonomous research and report generation using LLMs and web search.
 """
 
 import json
-import os
 from typing import Any, Optional
 
 from .actions import (
@@ -18,7 +17,6 @@ from .actions import (
     table_of_contents,
 )
 from .config import Config
-from .llm_provider import GenericLLMProvider
 from .memory import Memory
 from .prompts import get_prompt_family
 from .skills.browser import BrowserManager
@@ -28,6 +26,7 @@ from .skills.deep_research import DeepResearchSkill
 from .skills.image_generator import ImageGenerator
 from .skills.researcher import ResearchConductor
 from .skills.writer import ReportGenerator
+from .utils.query_safety import detect_unsafe_query, render_query_refusal, QuerySafetyDecision
 from .utils.enum import ReportSource, ReportType, Tone
 from .utils.llm import create_chat_completion
 from .vector_store import VectorStoreWrapper
@@ -195,6 +194,9 @@ class GPTResearcher:
         self.image_generator: Optional[ImageGenerator] = ImageGenerator(self)
         self.available_images: list = []  # Pre-generated images ready for embedding
         self._research_id: str = ""  # Unique ID for this research session
+        self.verification_bundle: dict[str, Any] | None = None
+        self.safety_decision: QuerySafetyDecision | None = None
+        self.safety_mode = getattr(self.cfg, "research_safety_mode", "TRANSPARENT")
 
         # Handle MCP strategy configuration with backwards compatibility
         self.mcp_strategy = self._resolve_mcp_strategy(mcp_strategy, mcp_max_iterations)
@@ -290,7 +292,7 @@ class GPTResearcher:
             mcp_configs (list[dict]): List of MCP server configuration dictionaries.
         """
         # Check if user explicitly set RETRIEVER environment variable
-        user_set_retriever = os.getenv("RETRIEVER") is not None
+        user_set_retriever = "RETRIEVER" in getattr(self.cfg, '_explicit_env_keys', set())
         
         if not user_set_retriever:
             # Only auto-add MCP if user hasn't explicitly set retrievers
@@ -346,6 +348,26 @@ class GPTResearcher:
             "agent": self.agent,
             "role": self.role
         })
+
+        # TRANSPARENT mode: skip safety check entirely
+        # WARN_ONLY/STRICT modes: perform safety check
+        if self.safety_mode != "TRANSPARENT":
+            self.safety_decision = detect_unsafe_query(self.query)
+            if self.safety_decision is not None:
+                self.context = [render_query_refusal(self.query, self.safety_decision, language=self.cfg.language)]
+                self.visited_urls.clear()
+                self.available_images = []
+                self._current_step = "blocked"
+                await self._log_event(
+                    "research",
+                    step="query_blocked",
+                    details={
+                        "category": self.safety_decision.category,
+                        "reason": self.safety_decision.reason,
+                        "matched_terms": list(self.safety_decision.matched_terms),
+                    },
+                )
+                return self.context
 
         # Handle deep research separately
         if self.report_type == ReportType.DeepResearch.value and self.deep_researcher:
@@ -466,6 +488,17 @@ class GPTResearcher:
         Returns:
             The generated report as a string.
         """
+        if self.safety_decision is not None:
+            await self._log_event(
+                "research",
+                step="report_blocked",
+                details={
+                    "category": self.safety_decision.category,
+                    "reason": self.safety_decision.reason,
+                },
+            )
+            return render_query_refusal(self.query, self.safety_decision, language=self.cfg.language)
+
         # Use pre-generated images if available (generated during conduct_research)
         has_available_images = bool(self.available_images)
         

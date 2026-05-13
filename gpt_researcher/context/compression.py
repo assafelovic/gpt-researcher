@@ -15,7 +15,6 @@ Classes:
 """
 
 import asyncio
-import os
 from typing import Optional
 
 from langchain_classic.retrievers import ContextualCompressionRetriever
@@ -100,6 +99,10 @@ class ContextCompressor:
         documents,
         embeddings,
         max_results: int = 5,
+        max_tokens: int | None = None,
+        embedding_k: int | None = None,
+        similarity_threshold: float | None = None,
+        compression_threshold: int | None = None,
         prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
         **kwargs,
     ):
@@ -109,15 +112,29 @@ class ContextCompressor:
             documents: List of documents to compress.
             embeddings: Embedding model instance.
             max_results: Maximum number of results to return.
+            max_tokens: Maximum number of tokens for the output context.
+                If set, the returned context string is truncated to this
+                many tokens (using a simple whitespace-based token count).
+            embedding_k: If set, enables similarity-based ranking in the
+                EmbeddingsFilter, keeping the top-k most similar chunks
+                sorted by relevance (highest first).
+            similarity_threshold: Minimum similarity score for inclusion.
+                Falls back to 0.38 if not provided.
+            compression_threshold: Total character count below which the
+                expensive compression pipeline is skipped entirely.
+                Falls back to 8000 if not provided.
             prompt_family: Prompt family for formatting output.
             **kwargs: Additional keyword arguments.
         """
         self.max_results = max_results
+        self.max_tokens = max_tokens
         self.documents = documents
         self.kwargs = kwargs
         self.embeddings = embeddings
-        self.similarity_threshold = os.environ.get("SIMILARITY_THRESHOLD", 0.35)
+        self.similarity_threshold = similarity_threshold if similarity_threshold is not None else 0.38
+        self.compression_threshold = compression_threshold if compression_threshold is not None else 8000
         self.prompt_family = prompt_family
+        self.embedding_k = embedding_k
 
     def __get_contextual_retriever(self):
         """Build the contextual compression retriever pipeline.
@@ -128,7 +145,8 @@ class ContextCompressor:
         """
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         relevance_filter = EmbeddingsFilter(embeddings=self.embeddings,
-                                            similarity_threshold=self.similarity_threshold)
+                                            similarity_threshold=self.similarity_threshold,
+                                            k=self.embedding_k)
         pipeline_compressor = DocumentCompressorPipeline(
             transformers=[splitter, relevance_filter]
         )
@@ -156,7 +174,7 @@ class ContextCompressor:
         """
         # Optimization: Calculate total content size
         total_chars = sum(len(str(doc.get('raw_content', ''))) for doc in self.documents)
-        chunk_threshold = int(os.environ.get("COMPRESSION_THRESHOLD", "8000"))
+        chunk_threshold = self.compression_threshold
 
         # If total content is small, skip expensive compression and return directly
         if total_chars < chunk_threshold and len(self.documents) <= max_results:
@@ -168,14 +186,25 @@ class ContextCompressor:
                 )
                 for doc in self.documents[:max_results]
             ]
-            return self.prompt_family.pretty_print_docs(direct_docs, max_results)
+            context = self.prompt_family.pretty_print_docs(direct_docs, max_results)
+            return self._truncate(context)
 
         # Standard path: use compression for large content
         compressed_docs = self.__get_contextual_retriever()
-        if cost_callback:
+        if cost_callback and getattr(self.embeddings, "model", "") != "local-hash-embeddings":
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
         relevant_docs = await asyncio.to_thread(compressed_docs.invoke, query, **self.kwargs)
-        return self.prompt_family.pretty_print_docs(relevant_docs, max_results)
+        context = self.prompt_family.pretty_print_docs(relevant_docs, max_results)
+        return self._truncate(context)
+
+    def _truncate(self, context: str) -> str:
+        """Truncate context to ``max_tokens`` tokens if configured."""
+        if self.max_tokens is None:
+            return context
+        tokens = context.split()
+        if len(tokens) <= self.max_tokens:
+            return context
+        return " ".join(tokens[:self.max_tokens])
 
 
 class WrittenContentCompressor:
@@ -249,7 +278,7 @@ class WrittenContentCompressor:
             List of formatted section strings.
         """
         compressed_docs = self.__get_contextual_retriever()
-        if cost_callback:
+        if cost_callback and getattr(self.embeddings, "model", "") != "local-hash-embeddings":
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
         relevant_docs = await asyncio.to_thread(compressed_docs.invoke, query, **self.kwargs)
         return self.__pretty_docs_list(relevant_docs, max_results)

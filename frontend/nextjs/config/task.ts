@@ -1,6 +1,6 @@
 export const task = {
   "task": {
-    "query": "Is AI in a hype cycle?",
+    "query": "Befindet sich KI in einem Hype-Zyklus?",
     "include_human_feedback": false,
     "model": "gpt-4o",
     "max_sections": 3,
@@ -12,26 +12,26 @@ export const task = {
     "source": "web",
     "follow_guidelines": true,
     "guidelines": [
-      "The report MUST fully answer the original question",
-      "The report MUST be written in apa format",
-      "The report MUST be written in english"
+      "Der Bericht MUSS die ursprüngliche Frage vollständig beantworten",
+      "Der Bericht MUSS im APA-Format geschrieben sein",
+      "Der Bericht MUSS auf Deutsch geschrieben sein"
     ],
     "verbose": true
   },
-  "initial_research": "Initial research data here",
-  "sections": ["Section 1", "Section 2"],
-  "research_data": "Research data here",
-  "title": "Research Title",
+  "initial_research": "Erste Recherchedaten hier",
+  "sections": ["Abschnitt 1", "Abschnitt 2"],
+  "research_data": "Recherchedaten hier",
+  "title": "Forschungstitel",
   "headers": {
-    "introduction": "Introduction header",
-    "table_of_contents": "Table of Contents header",
-    "conclusion": "Conclusion header",
-    "sources": "Sources header"
+    "introduction": "Einleitungsüberschrift",
+    "table_of_contents": "Inhaltsverzeichnis-Überschrift",
+    "conclusion": "Fazit-Überschrift",
+    "sources": "Quellen-Überschrift"
   },
   "date": "2023-10-01",
-  "table_of_contents": "- Introduction\n- Section 1\n- Section 2\n- Conclusion",
-  "introduction": "Introduction content here",
-  "conclusion": "Conclusion content here",
-  "sources": ["Source 1", "Source 2"],
-  "report": "Full report content here"
+  "table_of_contents": "- Einleitung\n- Abschnitt 1\n- Abschnitt 2\n- Fazit",
+  "introduction": "Einleitungsinhalt hier",
+  "conclusion": "Fazitinhalte hier",
+  "sources": ["Quelle 1", "Quelle 2"],
+  "report": "Vollständiger Berichtstext hier"
 }

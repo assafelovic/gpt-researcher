@@ -1,5 +1,6 @@
 #Ignore env containing secrets
 .env
+.env.backup.*
 .venv
 .envrc
 
@@ -39,6 +40,10 @@ docs/build
 .next/
 package-lock.json
 
+# E2E test artifacts
+tests/e2e/playwright-report/
+tests/e2e/screenshots/
+
 #Vim swp files
 *.swp
 
@@ -52,3 +57,11 @@ server_log.txt
 .cursorrules
 CURSOR_RULES.md
 /.history
+
+#Coverage output
+.coverage
+.generated/
+artifacts/
+
+#Venv
+/tmp/testenv

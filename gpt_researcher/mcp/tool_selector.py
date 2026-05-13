@@ -1,12 +1,12 @@
-"""
-MCP Tool Selection Module
+"""MCP Tool Selection Module.
 
-Handles intelligent tool selection using LLM analysis.
+Handles intelligent tool selection using LLM analysis and the shared JSON
+parser before falling back to deterministic selection.
 """
-import asyncio
-import json
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List
+
+from ..utils.json_parsing import parse_llm_json_response
 
 logger = logging.getLogger(__name__)
 
@@ -80,22 +80,11 @@ class MCPToolSelector:
             response_preview = response[:500] + "..." if len(response) > 500 else response
             logger.debug(f"LLM tool selection response: {response_preview}")
             
-            # Parse LLM response
-            try:
-                selection_result = json.loads(response)
-            except json.JSONDecodeError:
-                # Try to extract JSON from response
-                import re
-                json_match = re.search(r"\{.*\}", response, re.DOTALL)
-                if json_match:
-                    try:
-                        selection_result = json.loads(json_match.group(0))
-                    except json.JSONDecodeError:
-                        logger.warning("Could not parse extracted JSON, using fallback")
-                        return self._fallback_tool_selection(all_tools, max_tools)
-                else:
-                    logger.warning("No JSON found in LLM response, using fallback")
-                    return self._fallback_tool_selection(all_tools, max_tools)
+            # Parse the model output through the shared JSON repair helper.
+            selection_result = parse_llm_json_response(response, expected_kind="object")
+            if not isinstance(selection_result, dict):
+                logger.warning("Could not parse tool selection JSON, using fallback")
+                return self._fallback_tool_selection(all_tools, max_tools)
             
             selected_tools = []
             

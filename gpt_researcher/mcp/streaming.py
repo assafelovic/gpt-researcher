@@ -5,7 +5,7 @@ Handles websocket streaming and logging for MCP operations.
 """
 import asyncio
 import logging
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

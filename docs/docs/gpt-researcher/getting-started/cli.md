@@ -1,81 +1,81 @@
-# Run with CLI
+# Mit der CLI ausführen
 
-This command-line interface (CLI) tool allows you to generate research reports using the GPTResearcher class. It provides an easy way to conduct research on various topics and generate different types of reports.
+Dieses Kommandozeilen-Tool (CLI) ermöglicht dir, mit der `GPTResearcher`-Klasse Research-Reports zu erzeugen. So kannst du zu verschiedensten Themen einfach recherchieren und unterschiedliche Report-Typen generieren.
 
 ## Installation
 
-1. Clone the repository:
+1. Repository klonen:
    ```
    git clone https://github.com/assafelovic/gpt-researcher.git
    cd gpt-researcher
    ```
 
-2. Install the required dependencies:
+2. Die benötigten Abhängigkeiten installieren:
    ```
    pip install -r requirements.txt
    ```
 
-3. Set up your environment variables:
-   Create a `.env` file in the project root and add your API keys or other necessary configurations.
+3. Die Umgebungsvariablen einrichten:
+   Lege im Projektstamm eine `.env`-Datei an und trage dort deine API-Keys oder andere nötige Konfigurationen ein.
 
-## Usage
+## Nutzung
 
-The basic syntax for using the CLI is:
+Die Grundsyntax für die CLI lautet:
 
 ```
 python cli.py "<query>" --report_type <report_type> [--tone <tone>]
 ```
 
-### Arguments
+### Parameter
 
-- `query` (required): The research query you want to investigate.
-- `--report_type` (required): The type of report to generate. Options include:
-  - `research_report`: Summary - Short and fast (~2 min)
-  - `detailed_report`: Detailed - In depth and longer (~5 min)
+- `query` (erforderlich): Die Forschungsfrage, die du untersuchen möchtest.
+- `--report_type` (erforderlich): Der zu erzeugende Report-Typ. Mögliche Werte:
+  - `research_report`: Zusammenfassung - kurz und schnell (~2 min)
+  - `detailed_report`: Detailliert - tiefergehend und länger (~5 min)
   - `resource_report`
   - `outline_report`
   - `custom_report`
   - `subtopic_report`
-- `--tone` (optional): The tone of the report. Defaults to 'objective'. Options include:
-  - `objective`: Impartial and unbiased presentation
-  - `formal`: Academic standards with sophisticated language
-  - `analytical`: Critical evaluation and examination
-  - `persuasive`: Convincing viewpoint
-  - `informative`: Clear and comprehensive information
-  - `explanatory`: Clarifying complex concepts
-  - `descriptive`: Detailed depiction
-  - `critical`: Judging validity and relevance
-  - `comparative`: Juxtaposing different theories
-  - `speculative`: Exploring hypotheses
-  - `reflective`: Personal insights
-  - `narrative`: Story-based presentation
-  - `humorous`: Light-hearted and engaging
-  - `optimistic`: Highlighting positive aspects
-  - `pessimistic`: Focusing on challenges
+- `--tone` (optional): Der Ton des Reports. Standard ist `objective`. Mögliche Werte:
+  - `objective`: Sachlich und unvoreingenommen
+  - `formal`: Akademischer Stil mit gehobener Sprache
+  - `analytical`: Kritische Bewertung und Analyse
+  - `persuasive`: Überzeugende Perspektive
+  - `informative`: Klare und umfassende Information
+  - `explanatory`: Verständliche Erklärung komplexer Konzepte
+  - `descriptive`: Detaillierte Beschreibung
+  - `critical`: Bewertung von Gültigkeit und Relevanz
+  - `comparative`: Gegenüberstellung verschiedener Ansätze
+  - `speculative`: Erkundung von Hypothesen
+  - `reflective`: Persönliche Einblicke
+  - `narrative`: Erzählerische Darstellung
+  - `humorous`: Locker und unterhaltsam
+  - `optimistic`: Fokus auf positive Aspekte
+  - `pessimistic`: Fokus auf Herausforderungen
 
-## Examples
+## Beispiele
 
-1. Generate a quick research report on climate change:
+1. Einen schnellen Research-Report zu Klimawandel erzeugen:
    ```
    python cli.py "What are the main causes of climate change?" --report_type research_report
    ```
 
-2. Create a detailed report on artificial intelligence with an analytical tone:
+2. Einen detaillierten Report über künstliche Intelligenz mit analytischem Ton erstellen:
    ```
    python cli.py "The impact of artificial intelligence on job markets" --report_type detailed_report --tone analytical
    ```
 
-3. Generate an outline report on renewable energy with a persuasive tone:
+3. Einen Gliederungs-Report zu erneuerbaren Energien mit überzeugendem Ton erzeugen:
    ```
    python cli.py "Renewable energy sources and their potential" --report_type outline_report --tone persuasive
    ```
 
-## Output
+## Ausgabe
 
-The generated report will be saved as a Markdown file in the `outputs` directory. The filename will be a unique UUID.
+Der erzeugte Report wird als Markdown-Datei im Verzeichnis `outputs` gespeichert. Der Dateiname ist eine eindeutige UUID.
 
-## Note
+## Hinweis
 
-- The execution time may vary depending on the complexity of the query and the type of report requested.
-- Make sure you have the necessary API keys and permissions set up in your `.env` file for the tool to function correctly.
-- All tone options should be provided in lowercase.
+- Die Ausführungszeit kann je nach Komplexität der Anfrage und gewähltem Report-Typ variieren.
+- Stelle sicher, dass die nötigen API-Keys und Berechtigungen in deiner `.env`-Datei korrekt gesetzt sind.
+- Alle Ton-Optionen müssen in Kleinbuchstaben angegeben werden.

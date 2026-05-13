@@ -4,6 +4,42 @@ This module provides functions to instantiate and manage various
 search retriever implementations.
 """
 
+import os
+
+
+def get_default_retriever_name() -> str:
+    """Return the default retriever name for this environment.
+
+    DuckDuckGo is the visible default; Tavily becomes the default only when a
+    Tavily API key is configured.
+    """
+    return "tavily" if os.environ.get("TAVILY_API_KEY") else "duckduckgo"
+
+
+def normalize_retriever_name(retriever: str | None) -> str:
+    """Normalize a retriever name and fall back away from Tavily if needed."""
+    candidate = (retriever or "").strip().lower()
+    if not candidate:
+        return get_default_retriever_name()
+    if candidate == "tavily" and not os.environ.get("TAVILY_API_KEY"):
+        return "duckduckgo"
+    return candidate
+
+
+def normalize_retriever_names(retrievers: list[str]) -> list[str]:
+    """Normalize, deduplicate, and preserve order for retriever names."""
+    normalized: list[str] = []
+    seen: set[str] = set()
+
+    for retriever in retrievers:
+        candidate = normalize_retriever_name(retriever)
+        if not candidate or candidate in seen:
+            continue
+        seen.add(candidate)
+        normalized.append(candidate)
+
+    return normalized
+
 
 def get_retriever(retriever: str):
     """Get a retriever class by name.
@@ -31,6 +67,8 @@ def get_retriever(retriever: str):
         - mcp: Model Context Protocol retriever
         - xquik: Xquik X/Twitter search
     """
+    retriever = normalize_retriever_name(retriever)
+
     match retriever:
         case "google":
             from gpt_researcher.retrievers import GoogleSearch
@@ -132,11 +170,14 @@ def get_retrievers(headers: dict[str, str], cfg):
         retrievers = [cfg.retriever]
     # If still not set, use default retriever
     else:
-        retrievers = [get_default_retriever().__name__]
+        retrievers = [get_default_retriever_name()]
 
     # Convert retriever names to actual retriever classes
     # Use get_default_retriever() as a fallback for any invalid retriever names
-    retriever_classes = [get_retriever(r) or get_default_retriever() for r in retrievers]
+    retriever_classes = [
+        get_retriever(r) or get_default_retriever()
+        for r in normalize_retriever_names(retrievers)
+    ]
     
     return retriever_classes
 
@@ -145,8 +186,13 @@ def get_default_retriever():
     """Get the default retriever class.
 
     Returns:
-        The TavilySearch retriever class as the default search provider.
+        DuckDuckGo by default, or Tavily when a Tavily API key is configured.
     """
-    from gpt_researcher.retrievers import TavilySearch
+    if get_default_retriever_name() == "tavily":
+        from gpt_researcher.retrievers import TavilySearch
 
-    return TavilySearch
+        return TavilySearch
+
+    from gpt_researcher.retrievers import Duckduckgo
+
+    return Duckduckgo

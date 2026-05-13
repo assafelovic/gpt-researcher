@@ -1,33 +1,22 @@
-"""Embedding provider management for GPT Researcher.
-
-This module provides the Memory class that handles embedding generation
-across multiple providers (OpenAI, Cohere, Google, Ollama, etc.).
-
-Supported providers:
-    - openai: OpenAI embeddings
-    - azure_openai: Azure OpenAI embeddings
-    - cohere: Cohere embeddings
-    - google_vertexai: Google Vertex AI embeddings
-    - google_genai: Google Generative AI embeddings
-    - fireworks: Fireworks AI embeddings
-    - ollama: Local Ollama embeddings
-    - together: Together AI embeddings
-    - mistralai: Mistral AI embeddings
-    - huggingface: HuggingFace embeddings
-    - nomic: Nomic embeddings
-    - voyageai: Voyage AI embeddings
-    - dashscope: DashScope embeddings
-    - bedrock: AWS Bedrock embeddings
-    - aimlapi: AIML API embeddings
-    - custom: Custom OpenAI-compatible API
-"""
+"""Embedding provider management for GPT Researcher."""
 
 import os
 from typing import Any
 
-OPENAI_EMBEDDING_MODEL = os.environ.get(
-    "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
+from gpt_researcher.utils.local_llm import (
+    LocalHashEmbeddings,
+    resolve_openai_base_url,
+    resolve_ollama_base_url,
+    should_use_local_embedding_fallback,
 )
+
+
+def _get_openai_embedding_model() -> str:
+    from gpt_researcher.config.config import Config
+    return Config.get_env("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+
+
+OPENAI_EMBEDDING_MODEL = _get_openai_embedding_model()
 
 _SUPPORTED_PROVIDERS = {
     "openai",
@@ -86,25 +75,34 @@ class Memory:
         _embeddings = None
         match embedding_provider:
             case "custom":
-                from langchain_openai import OpenAIEmbeddings
+                openai_base_url = resolve_openai_base_url() or os.getenv(
+                    "OPENAI_BASE_URL", "http://localhost:1234/v1"
+                )
+                if should_use_local_embedding_fallback(openai_base_url):
+                    _embeddings = LocalHashEmbeddings()
+                else:
+                    from langchain_openai import OpenAIEmbeddings
 
-                _embeddings = OpenAIEmbeddings(
-                    model=model,
-                    openai_api_key=os.getenv("OPENAI_API_KEY", "custom"),
-                    openai_api_base=os.getenv(
-                        "OPENAI_BASE_URL", "http://localhost:1234/v1"
-                    ),  # default for lmstudio
-                    check_embedding_ctx_length=False,
-                    **embedding_kwargs,
-                )  # quick fix for lmstudio
+                    _embeddings = OpenAIEmbeddings(
+                        model=model,
+                        api_key=os.getenv("OPENAI_API_KEY", "custom"),
+                        base_url=openai_base_url,
+                        check_embedding_ctx_length=False,
+                        **embedding_kwargs,
+                    )  # quick fix for lmstudio
             case "openai":
-                from langchain_openai import OpenAIEmbeddings
+                openai_base_url = resolve_openai_base_url()
+                if should_use_local_embedding_fallback(openai_base_url):
+                    _embeddings = LocalHashEmbeddings()
+                else:
+                    from langchain_openai import OpenAIEmbeddings
 
-                # Support custom OpenAI-compatible APIs via OPENAI_BASE_URL
-                if "openai_api_base" not in embedding_kwargs and os.environ.get("OPENAI_BASE_URL"):
-                    embedding_kwargs["openai_api_base"] = os.environ["OPENAI_BASE_URL"]
+                    if openai_base_url and "base_url" not in embedding_kwargs:
+                        embedding_kwargs["base_url"] = openai_base_url
+                    if "api_key" not in embedding_kwargs:
+                        embedding_kwargs["api_key"] = os.environ.get("OPENAI_API_KEY", "sk-local")
 
-                _embeddings = OpenAIEmbeddings(model=model, **embedding_kwargs)
+                    _embeddings = OpenAIEmbeddings(model=model, **embedding_kwargs)
             case "azure_openai":
                 from langchain_openai import AzureOpenAIEmbeddings
 
@@ -145,7 +143,7 @@ class Memory:
 
                 _embeddings = OllamaEmbeddings(
                     model=model,
-                    base_url=os.environ["OLLAMA_BASE_URL"],
+                    base_url=resolve_ollama_base_url(),
                     **embedding_kwargs,
                 )
             case "together":

@@ -1,87 +1,95 @@
 # LangGraph
 
-[LangGraph](https://python.langchain.com/docs/langgraph) is a library for building stateful, multi-actor applications with LLMs. 
-This example uses Langgraph to automate the process of an in depth research on any given topic.
+[LangGraph](https://python.langchain.com/docs/langgraph) ist eine Bibliothek für zustandsbehaftete Multi-Agent-Anwendungen mit LLMs.
+Dieses Beispiel nutzt LangGraph, um den Rechercheprozess für ein beliebiges Thema zu automatisieren.
 
-## Use case
-By using Langgraph, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. 
-Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
+## Anwendungsfall
 
-An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
+Mit LangGraph lässt sich der Rechercheprozess deutlich in Tiefe und Qualität verbessern, weil mehrere Agenten mit spezialisierten Fähigkeiten zusammenarbeiten.
+Inspiriert von der [STORM](https://arxiv.org/abs/2402.14207)-Arbeit zeigt dieses Beispiel, wie ein Team von KI-Agenten ein Thema von der Planung bis zur Veröffentlichung bearbeitet.
 
-Please note: This example uses the OpenAI API only for optimized performance.
+Ein durchschnittlicher Lauf erzeugt einen 5- bis 6-seitigen Research-Report in mehreren Formaten wie PDF, DOCX und Markdown.
 
-## The Multi Agent Team
-The research team is made up of 7 AI agents:
-- **Human** - The human in the loop that oversees the process and provides feedback to the agents.
-- **Chief Editor** - Oversees the research process and manages the team. This is the "master" agent that coordinates the other agents using Langgraph.
-- **Researcher** (gpt-researcher) - A specialized autonomous agent that conducts in depth research on a given topic.
-- **Editor** - Responsible for planning the research outline and structure.
-- **Reviewer** - Validates the correctness of the research results given a set of criteria.
-- **Revisor** - Revises the research results based on the feedback from the reviewer.
-- **Writer** - Responsible for compiling and writing the final report.
-- **Publisher** - Responsible for publishing the final report in various formats.
+Hinweis: Dieses Beispiel verwendet die OpenAI-API nur für eine optimierte Performance.
 
-## How it works
-Generally, the process is based on the following stages: 
-1. Planning stage
-2. Data collection and analysis
-3. Review and revision
-4. Writing and submission
-5. Publication
+## Das Multi-Agent-Team
 
-### Architecture
+Das Rechercheteam besteht aus 7 KI-Agenten:
+- **Human** - Der Mensch im Loop, der den Prozess überwacht und Feedback gibt
+- **Chief Editor** - Überwacht den Prozess und koordiniert das Team
+- **Researcher** (`gpt-researcher`) - Ein spezialisierter autonomer Agent für tiefgehende Recherche
+- **Editor** - Plant Gliederung und Struktur des Reports
+- **Reviewer** - Prüft die Korrektheit der Ergebnisse anhand definierter Kriterien
+- **Revisor** - Überarbeitet die Ergebnisse anhand des Feedbacks
+- **Writer** - Schreibt den finalen Report
+- **Publisher** - Veröffentlicht den finalen Report in verschiedenen Formaten
+
+## So funktioniert es
+
+Der Ablauf besteht im Wesentlichen aus diesen Phasen:
+1. Planungsphase
+2. Datensammlung und Analyse
+3. Review und Überarbeitung
+4. Schreiben und Einreichen
+5. Veröffentlichung
+
+### Architektur
+
 <div align="center">
 <img align="center" height="600" src="https://cowriter-images.s3.amazonaws.com/multi-agents-gptr.png"></img>
 </div>
 <br clear="all"/>
 
-### Steps
-More specifically (as seen in the architecture diagram) the process is as follows:
-- Browser (gpt-researcher) - Browses the internet for initial research based on the given research task.
-- Editor - Plans the report outline and structure based on the initial research.
-- For each outline topic (in parallel):
-  - Researcher (gpt-researcher) - Runs an in depth research on the subtopics and writes a draft.
-  - Reviewer - Validates the correctness of the draft given a set of criteria and provides feedback.
-  - Revisor - Revises the draft until it is satisfactory based on the reviewer feedback.
-- Writer - Compiles and writes the final report including an introduction, conclusion and references section from the given research findings.
-- Publisher - Publishes the final report to multi formats such as PDF, Docx, Markdown, etc.
+### Schritte
 
-## How to run
-1. Install required packages:
+Im Detail läuft der Prozess so ab:
+- Browser (`gpt-researcher`) durchsucht das Internet für die erste Recherche
+- Der Editor plant auf Basis der ersten Ergebnisse die Struktur des Reports
+- Für jedes Gliederungsthema parallel:
+  - Der Researcher recherchiert tief in den Unterthemen und schreibt einen Entwurf
+  - Der Reviewer prüft die Korrektheit des Entwurfs und gibt Feedback
+  - Der Revisor verbessert den Entwurf anhand dieses Feedbacks
+- Der Writer erstellt den finalen Report inklusive Einleitung, Fazit und Quellen
+- Der Publisher gibt den finalen Report in mehreren Formaten aus, zum Beispiel PDF, DOCX oder Markdown
+
+## So startest du es
+
+1. Benötigte Pakete installieren:
     ```bash
     pip install -r requirements.txt
     ```
-3. Update env variables
+2. Umgebungsvariablen setzen:
    ```bash
    export OPENAI_API_KEY={Your OpenAI API Key here}
    export TAVILY_API_KEY={Your Tavily API Key here}
    ```
-2. Run the application:
+3. Anwendung starten:
     ```bash
     python main.py
     ```
 
-## Usage
-To change the research query and customize the report, edit the `task.json` file in the main directory.
-#### Task.json contains the following fields:
-- `query` - The research query or task.
-- `model` - The OpenAI LLM to use for the agents.
-- `max_sections` - The maximum number of sections in the report. Each section is a subtopic of the research query.
-- `include_human_feedback` - If true, the user can provide feedback to the agents. If false, the agents will work autonomously.
-- `publish_formats` - The formats to publish the report in. The reports will be written in the `output` directory.
-- `source` - The location from which to conduct the research. Options: `web` or `local`. For local, please add `DOC_PATH` env var.
-- `follow_guidelines` - If true, the research report will follow the guidelines below. It will take longer to complete. If false, the report will be generated faster but may not follow the guidelines.
-- `guidelines` - A list of guidelines that the report must follow.
-- `verbose` - If true, the application will print detailed logs to the console.
+## Nutzung
 
-#### For example:
+Wenn du die Forschungsfrage oder den Report anpassen willst, bearbeite die Datei `task.json` im Hauptverzeichnis.
+
+#### `task.json` enthält diese Felder:
+- `query` - Die Forschungsfrage oder Aufgabe
+- `model` - Das für die Agenten zu nutzende OpenAI-LLM
+- `max_sections` - Maximale Anzahl an Abschnitten im Report
+- `include_human_feedback` - Wenn `true`, kann der Nutzer Feedback geben
+- `publish_formats` - Formate, in denen der Report veröffentlicht wird
+- `source` - Die Quelle für die Recherche (`web` oder `local`)
+- `follow_guidelines` - Wenn `true`, werden die unten definierten Leitlinien befolgt
+- `guidelines` - Liste von Leitlinien für den Report
+- `verbose` - Wenn `true`, werden detaillierte Logs auf der Konsole ausgegeben
+
+#### Beispiel:
 ```json
 {
-  "query": "Is AI in a hype cycle?",
+  "query": "Ist KI in einer Hype-Phase?",
   "model": "gpt-4o",
-  "max_sections": 3, 
-  "publish_formats": { 
+  "max_sections": 3,
+  "publish_formats": {
     "markdown": true,
     "pdf": true,
     "docx": true
@@ -90,54 +98,52 @@ To change the research query and customize the report, edit the `task.json` file
   "source": "web",
   "follow_guidelines": true,
   "guidelines": [
-    "The report MUST fully answer the original question",
-    "The report MUST be written in apa format",
-    "The report MUST be written in english"
+    "Der Report MUSS die ursprüngliche Frage vollständig beantworten",
+    "Der Report MUSS im APA-Format geschrieben sein",
+    "Der Report MUSS auf Englisch geschrieben sein"
   ],
   "verbose": true
 }
 ```
 
-## To Deploy
+## Bereitstellen
 
 ```shell
 pip install langgraph-cli
 langgraph up
 ```
 
-From there, see documentation [here](https://github.com/langchain-ai/langgraph-example) on how to use the streaming and async endpoints, as well as the playground.
+Mehr dazu findest du [hier](https://github.com/langchain-ai/langgraph-example), insbesondere zu Streaming-, Async-Endpunkten und dem Playground.
 
-## NextJS Frontend App
+## NextJS-Frontend-App
 
-The React app (located in `frontend` directory) is our Frontend 2.0 which we hope will enable us to display the robustness of the backend on the frontend, as well.
+Die React-App im `frontend`-Verzeichnis ist unsere Frontend-2.0-Version. Sie soll die Stärke des Backends auch im Frontend sichtbar machen.
 
-It comes with loads of added features, such as: 
- - a drag-n-drop user interface for uploading and deleting files to be used as local documents by GPTResearcher.
- - a GUI for setting your GPTR environment variables.
- - the ability to trigger the multi_agents flow via the Backend Module or Langgraph Cloud Host (currently in closed beta).
- - stability fixes
- - and more coming soon!
+Sie bringt viele zusätzliche Funktionen mit, zum Beispiel:
+- Drag-and-Drop-Oberfläche zum Hochladen und Löschen von Dateien für lokale Dokumente
+- GUI zum Setzen deiner GPTR-Umgebungsvariablen
+- Möglichkeit, den Multi-Agents-Flow über das Backend-Modul oder den LangGraph-Cloud-Host auszulösen
+- Stabilitätsverbesserungen
 
-### Run the NextJS React App with Docker
+### NextJS-React-App mit Docker starten
 
-> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
+> **Schritt 1** - [Docker installieren](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
 
-> **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
+> **Schritt 2** - Die `.env.example` kopieren, API-Keys eintragen und als `.env` speichern
 
-> **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
+> **Schritt 3** - In der `docker-compose`-Datei die Services auskommentieren, die du nicht mit Docker starten willst
 
 ```bash
 $ docker-compose up --build
 ```
 
-> **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
- - the Python server running on localhost:8000
- - the React app running on localhost:3000
+> **Schritt 4** - Wenn du nichts auskommentiert hast, starten standardmäßig zwei Prozesse:
+ - der Python-Server auf `localhost:8000`
+ - die React-App auf `localhost:3000`
 
-Visit localhost:3000 on any browser and enjoy researching!
+Öffne `localhost:3000` im Browser und leg los.
 
-
-### Run the NextJS React App with NPM
+### NextJS-React-App mit NPM starten
 
 ```bash
 cd frontend/nextjs

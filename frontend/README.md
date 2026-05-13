@@ -1,85 +1,85 @@
-# Frontend Application
+# Frontend-Anwendung
 
-This frontend project aims to enhance the user experience of GPT-Researcher, providing an intuitive and efficient interface for automated research. It offers two deployment options to suit different needs and environments.
+Dieses Frontend-Projekt soll die Benutzererfahrung von GPT Researcher verbessern und eine intuitive, effiziente Oberfläche für automatisierte Recherche bieten. Es gibt zwei Bereitstellungsoptionen, damit unterschiedliche Anforderungen und Umgebungen abgedeckt sind.
 
-## Option 1: Static Frontend (FastAPI)
+## Option 1: Statisches Frontend (FastAPI)
 
-A lightweight solution using FastAPI to serve static files.
+Eine leichte Lösung, bei der FastAPI statische Dateien ausliefert.
 
-#### Prerequisites
+#### Voraussetzungen
 - Python 3.11+
 - pip
 
-#### Setup and Running
+#### Einrichtung und Start
 
-1. Install required packages:
+1. Erforderliche Pakete installieren:
    ```
    pip install -r requirements.txt
    ```
 
-2. Start the server:
+2. Server starten:
    ```
    python -m uvicorn main:app
    ```
 
-3. Access at `http://localhost:8000`
+3. Auf `http://localhost:8000` zugreifen
 
 #### Demo
 https://github.com/assafelovic/gpt-researcher/assets/13554167/dd6cf08f-b31e-40c6-9907-1915f52a7110
 
-## Option 2: NextJS Frontend
+## Option 2: NextJS-Frontend
 
-A more robust solution with enhanced features and performance.
+Eine robustere Lösung mit erweiterten Funktionen und besserer Performance.
 
-#### Prerequisites
-- Node.js (v18.17.0 recommended)
+#### Voraussetzungen
+- Node.js (empfohlen: v18.17.0)
 - npm
 
-#### Setup and Running
+#### Einrichtung und Start
 
-1. Navigate to NextJS directory:
+1. Ins NextJS-Verzeichnis wechseln:
    ```
    cd nextjs
    ```
 
-2. Set up Node.js:
+2. Node.js einrichten:
    ```
    nvm install 18.17.0
    nvm use v18.17.0
    ```
 
-3. Install dependencies:
+3. Abhängigkeiten installieren:
    ```
    npm install --legacy-peer-deps
    ```
 
-4. Start development server:
+4. Entwicklungsserver starten:
    ```
    npm run dev
    ```
 
-5. Access at `http://localhost:3000`
+5. Auf `http://localhost:3000` zugreifen
 
-Note: Requires backend server on `localhost:8000` as detailed in option 1.
+Hinweis: Dafür wird ein Backend-Server auf `localhost:8002` benötigt, wie in Option 1 beschrieben.
 
 #### Demo
 https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
 
-## Choosing an Option
+## Wie wähle ich die Option?
 
-- Static Frontend: Quick setup, lightweight deployment.
-- NextJS Frontend: Feature-rich, scalable, better performance and SEO.
+- Statisches Frontend: Schnelle Einrichtung, leichtgewichtiges Deployment.
+- NextJS-Frontend: Funktionsreicher, skalierbarer, bessere Performance und SEO.
 
-For production, NextJS is recommended.
+Für die Produktion wird NextJS empfohlen.
 
-## Frontend Features
+## Frontend-Funktionen
 
-Our frontend enhances GPT-Researcher by providing:
+Unser Frontend verbessert GPT Researcher durch:
 
-1. Intuitive Research Interface: Streamlined input for research queries.
-2. Real-time Progress Tracking: Visual feedback on ongoing research tasks.
-3. Interactive Results Display: Easy-to-navigate presentation of findings.
-4. Customizable Settings: Adjust research parameters to suit specific needs.
-5. Responsive Design: Optimal experience across various devices.
+1. Eine intuitive Forschungsoberfläche: Straffes Eingabefeld für Suchanfragen.
+2. Fortschrittsanzeige in Echtzeit: Visuelles Feedback für laufende Aufgaben.
+3. Interaktive Ergebnisdarstellung: Leicht navigierbare Präsentation der Ergebnisse.
+4. Anpassbare Einstellungen: Passe Rechercheparameter an deine Anforderungen an.
+5. Responsives Design: Optimales Erlebnis auf verschiedenen Geräten.
 
-These features aim to make the research process more efficient and user-friendly, complementing GPT-Researcher's powerful agent capabilities.
+Diese Funktionen sollen den Forschungsprozess effizienter und benutzerfreundlicher machen und die leistungsstarken Agentenfähigkeiten von GPT Researcher ergänzen.

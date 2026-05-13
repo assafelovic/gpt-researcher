@@ -46,7 +46,7 @@ function App() {
   return (
     <div className="App">
       <GPTResearcher 
-        apiUrl="http://localhost:8000"
+        apiUrl="http://localhost:8002"
         defaultPrompt="What is quantum computing?"
         onResultsChange={(results) => console.log('Research results:', results)}
       />
@@ -76,7 +76,7 @@ function App() {
       <h1>My Research Application</h1>
       
       <GPTResearcher 
-        apiUrl="http://localhost:8000"
+        apiUrl="http://localhost:8002"
         apiKey="your-api-key-if-needed"
         defaultPrompt="Explain the impact of quantum computing on cryptography"
         onResultsChange={handleResultsChange}

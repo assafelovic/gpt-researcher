@@ -14,8 +14,9 @@ from langchain_community.document_loaders import (
 
 class OnlineDocumentLoader:
 
-    def __init__(self, urls):
+    def __init__(self, urls, proxy_url: str | None = None):
         self.urls = urls
+        self.proxy_url = proxy_url
 
     async def load(self) -> list:
         docs = []
@@ -38,8 +39,11 @@ class OnlineDocumentLoader:
             headers = {
                 "User-Agent": "Mozilla/5.0"
             }
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, timeout=6) as response:
+            async with aiohttp.ClientSession(trust_env=True) as session:
+                request_kwargs = {"headers": headers, "timeout": 6}
+                if self.proxy_url:
+                    request_kwargs["proxy"] = self.proxy_url
+                async with session.get(url, **request_kwargs) as response:
                     if response.status != 200:
                         print(f"Failed to download {url}: HTTP {response.status}")
                         return []

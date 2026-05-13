@@ -34,7 +34,7 @@ class BrowserManager:
             researcher.cfg.scraper_rate_limit_delay
         )
 
-    async def browse_urls(self, urls: list[str]) -> list[dict]:
+    async def browse_urls(self, urls: list[str], proxy_url: str | None = None) -> list[dict]:
         """
         Scrape content from a list of URLs.
 
@@ -53,7 +53,7 @@ class BrowserManager:
             )
 
         scraped_content, images = await scrape_urls(
-            urls, self.researcher.cfg, self.worker_pool
+            urls, self.researcher.cfg, self.worker_pool, proxy_url=proxy_url
         )
         self.researcher.add_research_sources(scraped_content)
         new_images = self.select_top_images(images, k=4)  # Select top 4 images
@@ -77,7 +77,7 @@ class BrowserManager:
             await stream_output(
                 "logs",
                 "scraping_complete",
-                f"🌐 Scraping complete",
+                "🌐 Scraping complete",
                 self.researcher.websocket,
             )
 

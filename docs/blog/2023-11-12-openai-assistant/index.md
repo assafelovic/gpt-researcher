@@ -1,32 +1,32 @@
 ---
 slug: building-openai-assistant
-title: How to build an OpenAI Assistant with Internet access
+title: Wie man einen OpenAI Assistant mit Internetzugang baut
 authors: [assafe]
 tags: [tavily, search-api, openai, assistant-api]
 ---
 
-OpenAI has done it again with a [groundbreaking DevDay](https://openai.com/blog/new-models-and-developer-products-announced-at-devday) showcasing some of the latest improvements to the OpenAI suite of tools, products and services. One major release was the new [Assistants API](https://platform.openai.com/docs/assistants/overview) that makes it easier for developers to build their own assistive AI apps that have goals and can call models and tools.
+OpenAI hat mit einem [bahnbrechenden DevDay](https://openai.com/blog/new-models-and-developer-products-announced-at-devday) erneut gezeigt, wie weit die OpenAI-Suite aus Tools, Produkten und Diensten inzwischen ist. Eine wichtige Neuerung war die neue [Assistants API](https://platform.openai.com/docs/assistants/overview), mit der Entwickler leichter eigene assistive KI-Apps bauen können, die Ziele verfolgen und Modelle sowie Tools aufrufen.
 
-The new Assistants API currently supports three types of tools: Code Interpreter, Retrieval, and Function calling. Although you might expect the Retrieval tool to support online information retrieval (such as search APIs or as ChatGPT plugins), it only supports raw data for now such as text or CSV files.
+Die neue Assistants API unterstützt aktuell drei Tool-Typen: Code Interpreter, Retrieval und Function Calling. Auch wenn man erwarten könnte, dass das Retrieval-Tool auch Online-Informationen unterstützt, also Such-APIs oder ChatGPT-Plugins, unterstützt es derzeit nur Rohdaten wie Text- oder CSV-Dateien.
 
-This blog will demonstrate how to leverage the latest Assistants API with online information using the function calling tool.
+Dieser Beitrag zeigt, wie man die aktuelle Assistants API mit Online-Informationen über das Function-Calling-Tool nutzt.
 
-To skip the tutorial below, feel free to check out the full [Github Gist here](https://gist.github.com/assafelovic/579822cd42d52d80db1e1c1ff82ffffd).
+Wer das Tutorial überspringen möchte, findet hier den vollständigen [Github Gist](https://gist.github.com/assafelovic/579822cd42d52d80db1e1c1ff82ffffd).
 
-At a high level, a typical integration of the Assistants API has the following steps:
+Auf hoher Ebene umfasst eine typische Integration der Assistants API diese Schritte:
 
-- Create an [Assistant](https://platform.openai.com/docs/api-reference/assistants/createAssistant) in the API by defining its custom instructions and picking a model. If helpful, enable tools like Code Interpreter, Retrieval, and Function calling.
-- Create a [Thread](https://platform.openai.com/docs/api-reference/threads) when a user starts a conversation.
-- Add [Messages](https://platform.openai.com/docs/api-reference/messages) to the Thread as the user ask questions.
-- [Run](https://platform.openai.com/docs/api-reference/runs) the Assistant on the Thread to trigger responses. This automatically calls the relevant tools.
+- Erstelle einen [Assistant](https://platform.openai.com/docs/api-reference/assistants/createAssistant), indem du eigene Anweisungen definierst und ein Modell auswählst. Falls hilfreich, aktiviere Tools wie Code Interpreter, Retrieval und Function Calling.
+- Erstelle einen [Thread](https://platform.openai.com/docs/api-reference/threads), wenn ein Nutzer eine Unterhaltung startet.
+- Füge [Messages](https://platform.openai.com/docs/api-reference/messages) zum Thread hinzu, wenn Nutzer Fragen stellen.
+- [Run](https://platform.openai.com/docs/api-reference/runs) den Assistant auf dem Thread, um Antworten auszulösen. Dabei werden passende Tools automatisch aufgerufen.
 
-As you can see below, an Assistant object includes Threads for storing and handling conversation sessions between the assistant and users, and Run for invocation of an Assistant on a Thread.
+Wie unten zu sehen ist, enthält ein Assistant-Objekt Threads zum Speichern und Verwalten von Gesprächssitzungen zwischen Assistant und Nutzer, und Runs dienen dazu, einen Assistant auf einem Thread auszuführen.
 
 ![OpenAI Assistant Object](./diagram-assistant.jpeg)
 
-Let’s go ahead and implement these steps one by one! For the example, we will build a finance GPT that can provide insights about financial questions. We will use the [OpenAI Python SDK v1.2](https://github.com/openai/openai-python/tree/main#installation) and [Tavily Search API](https://tavily.com).
+Legen wir direkt los und setzen diese Schritte nacheinander um! Im Beispiel bauen wir einen Finance-GPT, der Fragen rund um Finanzen beantworten kann. Wir nutzen dafür das [OpenAI Python SDK v1.2](https://github.com/openai/openai-python/tree/main#installation) und die [Tavily Search API](https://tavily.com).
 
-First things first, let’s define the assistant’s instructions:
+Zuerst definieren wir die Anweisungen des Assistants:
 
 ```python
 assistant_prompt_instruction = """You are a finance expert. 
@@ -36,10 +36,10 @@ You should never use your own knowledge to answer questions.
 Please include relevant url sources in the end of your answers.
 """
 ```
-Next, let’s finalize step 1 and create an assistant using the latest [GPT-4 Turbo model](https://github.com/openai/openai-python/tree/main#installation) (128K context), and the call function using the [Tavily web search API](https://tavily.com/):
+Als Nächstes schließen wir Schritt 1 ab und erstellen einen Assistant mit dem neuesten [GPT-4 Turbo-Modell](https://github.com/openai/openai-python/tree/main#installation) (128K Kontext) sowie einer Function-Call-Verknüpfung mit der [Tavily-Websuche](https://tavily.com/):
 
 ```python
-# Create an assistant
+# Assistant erstellen
 assistant = client.beta.assistants.create(
     instructions=assistant_prompt_instruction,
     model="gpt-4-1106-preview",
@@ -60,7 +60,7 @@ assistant = client.beta.assistants.create(
 )
 ```
 
-Step 2+3 are quite straight forward, we’ll initiate a new thread and update it with a user message:
+Schritt 2 und 3 sind recht unkompliziert: Wir starten einen neuen Thread und fügen ihm eine Nutzernachricht hinzu:
 
 ```python
 thread = client.beta.threads.create()
@@ -72,7 +72,7 @@ message = client.beta.threads.messages.create(
 )
 ```
 
-Finally, we’ll run the assistant on the thread to trigger the function call and get the response:
+Schließlich führen wir den Assistant auf dem Thread aus, um den Funktionsaufruf auszulösen und die Antwort zu erhalten:
 
 ```python
 run = client.beta.threads.runs.create(
@@ -81,14 +81,14 @@ run = client.beta.threads.runs.create(
 )
 ```
 
-So far so good! But this is where it gets a bit messy. Unlike with the regular GPT APIs, the Assistants API doesn’t return a synchronous response, but returns a status. This allows for asynchronous operations across assistants, but requires more overhead for fetching statuses and dealing with each manually.
+Bisher sieht alles gut aus. Aber genau hier wird es etwas unübersichtlich. Anders als bei den normalen GPT-APIs liefert die Assistants API keine synchrone Antwort, sondern einen Status. Das ermöglicht asynchrone Operationen über mehrere Assistants hinweg, erfordert aber zusätzlichen Aufwand beim Abfragen von Status und beim Umgang damit.
 
 ![Status Diagram](./diagram-1.png)
 
-To manage this status lifecycle, let’s build a function that can be reused and handles waiting for various statuses (such as ‘requires_action’):
+Um diesen Status-Lebenszyklus zu verwalten, bauen wir eine Funktion, die wiederverwendbar ist und verschiedene Zustände abwarten kann (zum Beispiel `requires_action`):
 
 ```python
-# Function to wait for a run to complete
+# Funktion, um auf den Abschluss eines Runs zu warten
 def wait_for_run_completion(thread_id, run_id):
     while True:
         time.sleep(1)
@@ -98,12 +98,12 @@ def wait_for_run_completion(thread_id, run_id):
             return run
 ```
 
-This function will sleep as long as the run has not been finalized such as in cases where it’s completed or requires an action from a function call.
+Diese Funktion schläft so lange, bis der Run finalisiert ist, etwa wenn er abgeschlossen wurde oder wenn eine Aktion aus einem Function Call erforderlich ist.
 
-We’re almost there! Lastly, let’s take care of when the assistant wants to call the web search API:
+Fast geschafft! Zuletzt kümmern wir uns darum, was passiert, wenn der Assistant die Websuche aufrufen möchte:
 
 ```python
-# Function to handle tool output submission
+# Funktion zur Übermittlung von Tool-Ausgaben
 def submit_tool_outputs(thread_id, run_id, tools_to_call):
     tool_output_array = []
     for tool in tools_to_call:
@@ -125,7 +125,7 @@ def submit_tool_outputs(thread_id, run_id, tools_to_call):
     )
 ```
 
-As seen above, if the assistant has reasoned that a function call should trigger, we extract the given required function params and pass back to the runnable thread. We catch this status and call our functions as seen below:
+Wie oben zu sehen ist, extrahieren wir die erforderlichen Parameter aus dem Function Call und geben sie an den laufenden Thread zurück. Diesen Status behandeln wir dann wie unten gezeigt:
 
 ```python
 if run.status == 'requires_action':
@@ -133,7 +133,7 @@ if run.status == 'requires_action':
     run = wait_for_run_completion(thread.id, run.id)
 ```
 
-That’s it! We now have a working OpenAI Assistant that can be used to answer financial questions using real time online information. Below is the full runnable code:
+Das war's! Jetzt haben wir einen funktionierenden OpenAI Assistant, der Finanzfragen mit aktuellen Online-Informationen beantworten kann. Unten steht der vollständige lauffähige Code:
 
 ```python
 import os
@@ -142,7 +142,7 @@ import time
 from openai import OpenAI
 from tavily import TavilyClient
 
-# Initialize clients with API keys
+# Clients mit API-Keys initialisieren
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
 
@@ -153,12 +153,12 @@ You should never use your own knowledge to answer questions.
 Please include relevant url sources in the end of your answers.
 """
 
-# Function to perform a Tavily search
+# Funktion für eine Tavily-Suche
 def tavily_search(query):
     search_result = tavily_client.get_search_context(query, search_depth="advanced", max_tokens=8000)
     return search_result
 
-# Function to wait for a run to complete
+# Auf den Abschluss eines Runs warten
 def wait_for_run_completion(thread_id, run_id):
     while True:
         time.sleep(1)
@@ -167,7 +167,7 @@ def wait_for_run_completion(thread_id, run_id):
         if run.status in ['completed', 'failed', 'requires_action']:
             return run
 
-# Function to handle tool output submission
+# Tool-Ausgaben übermitteln
 def submit_tool_outputs(thread_id, run_id, tools_to_call):
     tool_output_array = []
     for tool in tools_to_call:
@@ -188,13 +188,13 @@ def submit_tool_outputs(thread_id, run_id, tools_to_call):
         tool_outputs=tool_output_array
     )
 
-# Function to print messages from a thread
+# Nachrichten eines Threads ausgeben
 def print_messages_from_thread(thread_id):
     messages = client.beta.threads.messages.list(thread_id=thread_id)
     for msg in messages:
         print(f"{msg.role}: {msg.content[0].text.value}")
 
-# Create an assistant
+# Assistant erstellen
 assistant = client.beta.assistants.create(
     instructions=assistant_prompt_instruction,
     model="gpt-4-1106-preview",
@@ -216,31 +216,31 @@ assistant = client.beta.assistants.create(
 assistant_id = assistant.id
 print(f"Assistant ID: {assistant_id}")
 
-# Create a thread
+# Thread erstellen
 thread = client.beta.threads.create()
 print(f"Thread: {thread}")
 
-# Ongoing conversation loop
+# Laufende Gesprächsschleife
 while True:
     user_input = input("You: ")
     if user_input.lower() == 'exit':
         break
 
-    # Create a message
+    # Nachricht erstellen
     message = client.beta.threads.messages.create(
         thread_id=thread.id,
         role="user",
         content=user_input,
     )
 
-    # Create a run
+    # Run erstellen
     run = client.beta.threads.runs.create(
         thread_id=thread.id,
         assistant_id=assistant_id,
     )
     print(f"Run ID: {run.id}")
 
-    # Wait for run to complete
+    # Auf Abschluss warten
     run = wait_for_run_completion(thread.id, run.id)
 
     if run.status == 'failed':
@@ -250,10 +250,10 @@ while True:
         run = submit_tool_outputs(thread.id, run.id, run.required_action.submit_tool_outputs.tool_calls)
         run = wait_for_run_completion(thread.id, run.id)
 
-    # Print messages from the thread
+    # Nachrichten aus dem Thread ausgeben
     print_messages_from_thread(thread.id)
 ```
 
-The assistant can be further customized and improved using additional retrieval information, OpenAI’s coding interpreter and more. Also, you can go ahead and add more function tools to make the assistant even smarter.
+Der Assistant kann mit zusätzlicher Retrieval-Information, dem OpenAI Code Interpreter und mehr weiter angepasst und verbessert werden. Außerdem kannst du weitere Function-Tools hinzufügen, um den Assistant noch smarter zu machen.
 
-Feel free to drop a comment below if you have any further questions!
+Wenn du weitere Fragen hast, hinterlasse gern einen Kommentar!

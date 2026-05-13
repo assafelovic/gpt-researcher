@@ -6,7 +6,7 @@ using the Tavily API.
 
 import json
 import os
-from typing import Literal, Optional, Sequence
+from typing import Literal, Sequence
 
 import requests
 

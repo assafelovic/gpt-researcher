@@ -24,16 +24,16 @@ interface MobileChatPanelProps {
 }
 
 // Memoize the chat message component to prevent re-rendering all messages
-const ChatMessage = memo(({ 
-  type, 
-  content, 
-  html, 
-  metadata 
-}: { 
-  type: string, 
-  content: string, 
-  html: string, 
-  metadata?: any 
+const ChatMessage = memo(({
+  type,
+  content,
+  html,
+  metadata
+}: {
+  type: string,
+  content: string,
+  html: string,
+  metadata?: any
 }) => {
   if (type === 'question') {
     // User question - now with teal/turquoise color to match theme
@@ -56,7 +56,7 @@ const ChatMessage = memo(({
     const hasWebSources = metadata?.tool_calls?.some(
       (tool: any) => tool.tool === 'quick_search' && tool.search_metadata?.sources?.length > 0
     );
-    
+
     // Get all sources from web searches
     const webSources = metadata?.tool_calls
       ?.filter((tool: any) => tool.tool === 'quick_search')
@@ -65,17 +65,17 @@ const ChatMessage = memo(({
         name: source.title,
         url: source.url
       })) || [];
-    
+
     // Also check for direct sources in metadata (for backward compatibility)
     const directSources = metadata?.sources?.map((source: any) => ({
       name: source.title || source.url,
       url: source.url
     })) || [];
-    
+
     // Combine sources from both locations
     const allSources = [...webSources, ...directSources];
     const hasSources = allSources.length > 0;
-    
+
     // AI response - with darker color
     return (
       <div className="flex flex-col space-y-2 py-1 max-w-full animate-fade-in">
@@ -87,15 +87,15 @@ const ChatMessage = memo(({
             <div className="markdown-content prose prose-sm prose-invert max-w-none">
               <div dangerouslySetInnerHTML={{ __html: html }} />
             </div>
-            
+
             {/* Collapsed sources UI (old way) - still included for toggle behavior */}
-            {metadata && 
-             metadata.sources && 
+            {metadata &&
+             metadata.sources &&
              metadata.sources.length > 0 && (
               <div className="mt-2 pt-2 border-t border-gray-700/50 text-xs text-gray-200">
                 <details className="group">
                   <summary className="cursor-pointer hover:text-white flex items-center">
-                    <span className="mr-1">Sources</span>
+                    <span className="mr-1">Quellen</span>
                     <svg className="h-3 w-3 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -103,9 +103,9 @@ const ChatMessage = memo(({
                   <ul className="mt-1 ml-4 space-y-1 list-disc">
                     {metadata.sources.map((source: any, i: number) => (
                       <li key={i}>
-                        <a 
-                          href={source.url} 
-                          target="_blank" 
+                        <a
+                          href={source.url}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-teal-300 hover:text-teal-200 hover:underline truncate block"
                         >
@@ -119,7 +119,7 @@ const ChatMessage = memo(({
             )}
           </div>
         </div>
-        
+
         {/* Source cards display - similar to Sources component with compact=true */}
         {hasSources && (
           <div className="ml-10 mr-4">
@@ -131,7 +131,7 @@ const ChatMessage = memo(({
                   <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                 </svg>
               </div>
-              <span className="text-xs font-medium text-blue-300">Sources</span>
+              <span className="text-xs font-medium text-blue-300">Quellen</span>
             </div>
             <div className="max-h-[180px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300/10">
               <div className="flex w-full flex-wrap content-center items-center gap-2">
@@ -144,13 +144,13 @@ const ChatMessage = memo(({
                   } catch (e) {
                     // If URL parsing fails, use the original URL
                   }
-                  
+
                   return (
-                    <a 
-                      key={`${source.url}-${index}`} 
-                      href={source.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
+                    <a
+                      key={`${source.url}-${index}`}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-gray-800/60 text-gray-300 hover:text-teal-300 hover:bg-gray-800/90 rounded border border-gray-700/40 transition-colors"
                       title={source.name}
                     >
@@ -206,22 +206,22 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
   const [renderedMessages, setRenderedMessages] = useState<{id: string, content: string, html: string, type: string, metadata?: any}[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const prevOrderedDataLengthRef = useRef(0);
-  
+
   // Process markdown in messages - memoized for performance
   useEffect(() => {
     // Only process if data has changed
     if (orderedData.length === prevOrderedDataLengthRef.current && !loading && !isProcessingChat) {
       return;
     }
-    
+
     // Update reference for comparison
     prevOrderedDataLengthRef.current = orderedData.length;
-    
+
     // Filter to only get chat messages (questions and responses)
     const chatMessages = orderedData.filter((data) => {
       return data.type === 'question' || data.type === 'chat';
     });
-    
+
     const processMessages = async () => {
       try {
         // Process in batches if needed for large message sets
@@ -260,45 +260,45 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
             }
           })
         );
-        
+
         // Use function form to ensure we're working with latest state
         setRenderedMessages(rendered);
       } catch (error) {
         console.error('Error processing messages:', error);
       }
     };
-    
+
     processMessages();
   }, [orderedData, loading, isProcessingChat]);
 
   // Auto-resize textarea when content changes - memoized
   const handleTextAreaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setChatPromptValue(e.target.value);
-    
+
     if (!inputRef.current) return;
-    
+
     // Reset height to auto to accurately calculate the new height
     inputRef.current.style.height = 'auto';
-    
+
     // Set the height based on the scroll height (content height)
     // with a maximum height
     const newHeight = Math.min(e.target.scrollHeight, 120);
     inputRef.current.style.height = `${newHeight}px`;
   }, [setChatPromptValue]);
-  
+
   // Handle submitting chat messages - memoized
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
+
     if (!chatPromptValue.trim() || isProcessingChat || isSubmitting || isStopped) {
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
       await handleChat(chatPromptValue);
       setChatPromptValue('');
-      
+
       // Focus back on input after sending
       setTimeout(() => {
         if (inputRef.current) {
@@ -307,19 +307,19 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
       }, 100);
     } catch (error) {
       console.error('Error submitting chat:', error);
-      toast.error('Failed to send message. Please try again.');
+      toast.error('Nachricht konnte nicht gesendet werden. Bitte versuche es erneut.');
     } finally {
       setIsSubmitting(false);
     }
   }, [chatPromptValue, isProcessingChat, isSubmitting, isStopped, setChatPromptValue, handleChat]);
-  
+
   // Handle keyboard shortcuts - memoized
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       handleSubmit();
     }
   }, [handleSubmit]);
-  
+
   // Function to scroll to bottom - memoized
   const scrollToBottom = useCallback(() => {
     if (chatContainerRef.current) {
@@ -327,7 +327,7 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
       // Only scroll if we're not already at the bottom
       // Add a small buffer to prevent unnecessary scrolls
       const shouldScroll = scrollHeight - chatContainerRef.current.scrollTop - clientHeight > 20;
-      
+
       if (shouldScroll) {
         chatContainerRef.current.scrollTop = scrollHeight;
       }
@@ -345,17 +345,17 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
   // Also handle mutations in the DOM that might affect scroll height
   useEffect(() => {
     if (!chatContainerRef.current) return;
-    
+
     const observer = new MutationObserver(() => {
       requestAnimationFrame(scrollToBottom);
     });
-    
+
     observer.observe(chatContainerRef.current, {
       childList: true,
       subtree: true,
       characterData: true
     });
-    
+
     return () => observer.disconnect();
   }, [scrollToBottom]);
 
@@ -365,15 +365,15 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
   // Optimize the message rendering with better chunking
   const processedMessages = useMemo(() => {
     if (!renderedMessages || renderedMessages.length === 0) return [];
-    
+
     // Process in smaller batches to prevent UI freeze
     // Limit the size of message content to prevent memory issues
     return renderedMessages.map(message => {
       // Trim very long messages to prevent rendering issues
-      const processedContent = message.content.length > 50000 
+      const processedContent = message.content.length > 50000
         ? message.content.substring(0, 50000) + "... (message truncated for performance)"
         : message.content;
-        
+
       return {
         ...message,
         content: processedContent,
@@ -396,7 +396,7 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
   return (
     <div className={cn("flex flex-col h-full bg-gradient-to-b from-gray-900 to-gray-950", className)}>
       {/* Chat Messages Area */}
-      <div 
+      <div
         ref={chatContainerRef}
         className="flex-1 overflow-y-auto px-3 py-2 space-y-3 custom-scrollbar"
       >
@@ -407,11 +407,11 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
               <img src="/img/gptr-logo.png" alt="AI" className="w-6 h-6" />
             </div>
             <div className="flex-1 ai-message-bubble rounded-2xl p-4 text-sm text-white shadow-lg">
-              <p>Hi there! I&apos;m your research assistant. Type your question and I&apos;ll help you find information and insights.</p>
+              <p>Hallo! Ich bin dein Recherche-Assistent. Schreibe deine Frage, und ich helfe dir dabei, Informationen und Erkenntnisse zu finden.</p>
             </div>
           </div>
         )}
-        
+
         {/* Research in progress message */}
         {loading && renderedMessages.length === 0 && (
           <div className="flex items-start space-x-2 py-2 animate-fade-in">
@@ -419,17 +419,17 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
               <img src="/img/gptr-logo.png" alt="AI" className="w-6 h-6" />
             </div>
             <div className="flex-1 ai-message-bubble rounded-2xl p-4 text-sm text-white shadow-lg">
-              <p>I&apos;m researching your question. This may take a moment...</p>
+              <p>Ich recherchiere gerade deine Frage. Das kann einen Moment dauern ...</p>
               <div className="mt-2 flex justify-center">
                 <LoadingDots />
               </div>
             </div>
           </div>
         )}
-        
+
         {/* Render chat messages */}
         {processedMessages.map((message) => (
-          <ChatMessage 
+          <ChatMessage
             key={message.id}
             type={message.type}
             content={message.content}
@@ -437,7 +437,7 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
             metadata={message.metadata}
           />
         ))}
-        
+
         {/* Show typing indicator when processing */}
         {isProcessingChat && (
           <div className="flex items-start space-x-2 py-1 animate-fade-in">
@@ -454,7 +454,7 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
           </div>
         )}
       </div>
-      
+
       {/* Input Area */}
       <div className={`px-3 py-3 border-t border-gray-800 ${inputFocused ? 'bg-gray-800/90' : 'bg-gray-900/90'} backdrop-blur-sm transition-colors duration-200 safe-bottom`}>
         {!isStopped ? (
@@ -471,7 +471,7 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
               style={{ minHeight: '48px', maxHeight: '120px' }}
               disabled={isProcessingChat || isSubmitting}
             />
-            
+
             <button
               type="submit"
               disabled={!chatPromptValue.trim() || isProcessingChat || isSubmitting}
@@ -495,10 +495,10 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
           </form>
         ) : (
           <div className="text-center p-3 text-gray-300 bg-gray-800/60 rounded-xl border border-gray-700/50 text-sm shadow-sm">
-            Research has been stopped. 
+            Die Recherche wurde gestoppt.
             {onNewResearch && (
-              <button 
-                onClick={onNewResearch} 
+              <button
+                onClick={onNewResearch}
                 className="ml-2 text-teal-400 hover:text-teal-300 hover:underline font-medium"
               >
                 Start new research
@@ -533,37 +533,37 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
             opacity: 1;
           }
         }
-        
+
         .animate-pulse-slow {
           animation: pulse-slow 1.5s infinite;
         }
-        
+
         .animation-delay-200 {
           animation-delay: 0.2s;
         }
-        
+
         .animation-delay-400 {
           animation-delay: 0.4s;
         }
-        
+
         /* Custom scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-track {
           background: rgba(17, 24, 39, 0.1);
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: rgba(75, 85, 99, 0.5);
           border-radius: 20px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(75, 85, 99, 0.7);
         }
-        
+
         /* AI message bubble with subtle gradient */
         .ai-message-bubble {
           background: linear-gradient(145deg, rgba(31, 41, 55, 0.95), rgba(17, 24, 39, 0.9));
@@ -571,7 +571,7 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
           position: relative;
           overflow: hidden;
         }
-        
+
         .ai-message-bubble::before {
           content: '';
           position: absolute;
@@ -583,28 +583,28 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
           pointer-events: none;
           z-index: 0;
         }
-        
+
         .ai-message-bubble > * {
           position: relative;
           z-index: 1;
         }
-        
+
         /* Improved markdown content styling */
         .markdown-content {
           line-height: 1.6;
         }
-        
+
         .markdown-content ul, .markdown-content ol {
           padding-left: 1.5rem;
         }
-        
+
         .markdown-content code {
           background: rgba(0, 0, 0, 0.2);
           padding: 0.1em 0.3em;
           border-radius: 0.25rem;
           font-size: 0.875em;
         }
-        
+
         .markdown-content pre {
           background: rgba(0, 0, 0, 0.2);
           padding: 0.75rem;
@@ -612,17 +612,17 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
           overflow-x: auto;
           margin: 0.75rem 0;
         }
-        
+
         .markdown-content pre code {
           background: transparent;
           padding: 0;
         }
-        
+
         .markdown-content a {
           color: #5eead4;
           text-decoration: none;
         }
-        
+
         .markdown-content a:hover {
           text-decoration: underline;
         }
@@ -631,4 +631,4 @@ const MobileChatPanel: React.FC<MobileChatPanelProps> = ({
   );
 };
 
-export default MobileChatPanel; 
+export default MobileChatPanel;

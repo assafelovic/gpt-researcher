@@ -1,12 +1,14 @@
-# Querying the Backend
+# Backend abfragen
 
-## Introduction
+## Einführung
 
-In this section, we will discuss how to query the GPTR backend server. The GPTR backend server is a Python server that runs the GPTR Python package. The server listens for WebSocket connections and processes incoming messages to generate reports, streaming back logs and results to the client.
+In diesem Abschnitt zeigen wir, wie du den GPTR-Backend-Server abfragst. Der GPTR-Backend-Server ist ein Python-Server, der das GPTR-Python-Paket ausführt. Er lauscht auf WebSocket-Verbindungen und verarbeitet eingehende Nachrichten, um Reports zu erzeugen und Logs sowie Ergebnisse an den Client zurückzustreamen.
 
-An example WebSocket client is implemented in the `gptr-webhook.js` file below.
+> Hinweis zum Fork: Der validierte lokale Stack dieses Repos verwendet `localhost:8002` für die Backend-API. Das folgende Upstream-Beispiel nutzt weiterhin den ursprünglichen Wert `localhost:8000`, also ersetze ihn, wenn du dem fork-spezifischen Setup folgst.
 
-This function sends a Webhook Message to the GPTR Python backend running on localhost:8000, but this example can also be modified to query a [GPTR Server hosted on Linux](https://docs.gptr.dev/docs/gpt-researcher/getting-started/linux-deployment).
+Ein Beispiel für einen WebSocket-Client ist in der folgenden Datei `gptr-webhook.js` implementiert.
+
+Diese Funktion sendet eine Webhook-Nachricht an das GPTR-Python-Backend auf `localhost:8000`. Das Beispiel lässt sich aber auch anpassen, um einen [auf Linux gehosteten GPTR-Server](https://docs.gptr.dev/docs/gpt-researcher/getting-started/linux-deployment) abzufragen.
 
 // gptr-webhook.js
 
@@ -25,32 +27,32 @@ async function initializeWebSocket() {
     socket = new WebSocket(ws_uri);
 
     socket.onopen = () => {
-      console.log('WebSocket connection established');
+      console.log('WebSocket-Verbindung hergestellt');
     };
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log('WebSocket data received:', data);
+      console.log('WebSocket-Daten empfangen:', data);
 
       if (data.content === 'dev_team_result' 
           && data.output.rubber_ducker_thoughts != undefined
           && data.output.tech_lead_review != undefined) {
         if (responseCallback) {
           responseCallback(data.output);
-          responseCallback = null; // Clear callback after use
+          responseCallback = null; // Callback danach löschen
         }
       } else {
-        console.log('Received data:', data);
+        console.log('Daten empfangen:', data);
       }
     };
 
     socket.onclose = () => {
-      console.log('WebSocket connection closed');
+      console.log('WebSocket-Verbindung geschlossen');
       socket = null;
     };
 
     socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error('WebSocket-Fehler:', error);
     };
   }
 }
@@ -73,16 +75,16 @@ async function sendWebhookMessage(message) {
     const payload = "start " + JSON.stringify(data);
 
     responseCallback = (response) => {
-      resolve(response); // Resolve the promise with the WebSocket response
+      resolve(response); // Promise mit der WebSocket-Antwort auflösen
     };
 
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(payload);
-      console.log('Message sent:', payload);
+      console.log('Nachricht gesendet:', payload);
     } else {
       socket.onopen = () => {
         socket.send(payload);
-        console.log('Message sent after connection:', payload);
+        console.log('Nachricht nach Verbindungsaufbau gesendet:', payload);
       };
     }
   });
@@ -93,7 +95,7 @@ module.exports = {
 };
 ```
 
-And here's how you can leverage this helper function:
+Und so kannst du diese Hilfsfunktion verwenden:
 
 ```javascript
 const { sendWebhookMessage } = require('./gptr-webhook');

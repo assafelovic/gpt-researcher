@@ -2,147 +2,110 @@
 sidebar_position: 1
 ---
 
-# Getting Started
+# Erste Schritte
 
-The GPT Researcher MCP Server provides Model Context Protocol (MCP) integration for GPT Researcher, allowing AI assistants to perform autonomous, comprehensive web research and generate reports via the MCP protocol.
+Der GPT-Researcher-MCP-Server bringt Model Context Protocol (MCP) in GPT Researcher. Damit können KI-Assistenten autonome, umfassende Webrecherchen durchführen und über MCP Reports erzeugen.
 
-## Why GPT Researcher MCP?
+## Warum GPT Researcher MCP?
 
-While many AI apps can access web search tools with MCP, GPT Researcher MCP delivers in-depth results. Standard search tools return raw results requiring manual filtering, often containing irrelevant sources and wasting context window space.
+Viele KI-Apps können über MCP auf Websuche zugreifen, aber GPT Researcher MCP liefert tiefere Ergebnisse. Normale Suchwerkzeuge geben rohe Treffer zurück, die man manuell filtern muss und die oft irrelevante Quellen enthalten.
 
-GPT Researcher performs autonomous, deep research - not just search. It intelligently explores and validates multiple sources, focusing only on relevant and up-to-date information. Though slightly slower (30-40 seconds) than standard search, it delivers higher quality information, optimized context, comprehensive results, and better reasoning for LLMs.
+GPT Researcher führt autonome, tiefe Recherchen durch - nicht nur einfache Suchen. Das System erkundet und validiert mehrere Quellen intelligent, konzentriert sich auf relevante und aktuelle Informationen und liefert trotz etwas höherer Laufzeit meist bessere Resultate.
 
-The MCP server exposes the following capabilities to AI assistants:
+Der MCP-Server stellt diesen Fähigkeiten folgende Funktionen zur Verfügung:
 
-### Resources
-- `research_resource`: Get web resources related to a given task via research.
+### Ressourcen
+- `research_resource`: Liefert Webressourcen zu einer Aufgabe über Recherche
 
-### Primary Tools
-
-- `deep_research`: Performs autonomous web research on a topic, finding the most reliable and relevant information
-- `quick_search`: Performs a fast web search optimized for speed over quality, returning search results with snippets
-- `write_report`: Generate a report based on research results
-- `get_research_sources`: Get the sources used in the research
-- `get_research_context`: Get the full context of the research
+### Hauptwerkzeuge
+- `deep_research`: Führt autonome Webrecherche zu einem Thema aus
+- `quick_search`: Führt eine schnelle Websuche aus und gibt Treffer mit Snippets zurück
+- `write_report`: Erzeugt einen Report aus den Rechercheergebnissen
+- `get_research_sources`: Liefert die in der Recherche verwendeten Quellen
+- `get_research_context`: Liefert den vollständigen Recherche-Kontext
 
 ### Prompts
+- `research_query`: Erzeugt einen Research-Query-Prompt
 
-- `research_query`: Create a research query prompt
+## Voraussetzungen
 
-## Prerequisites
+Bevor du den MCP-Server startest, stelle sicher, dass du Folgendes hast:
 
-Before running the MCP server, make sure you have:
-
-1. Python 3.10 or higher installed
-2. API keys for the services you plan to use:
-   - OpenAI API key
-   - Tavily API key (or other search APIs you plan to use)
+1. Python 3.10 oder neuer
+2. API-Keys für die Dienste, die du nutzen möchtest:
+   - OpenAI API Key
+   - Tavily API Key oder andere Such-API-Keys
 
 ## Installation
 
-1. Clone the GPT Researcher repository:
+1. GPT-Researcher-Repository klonen:
 ```bash
 git clone https://github.com/assafelovic/gptr-mcp.git
 ```
 
-2. Install the dependencies:
+2. Abhängigkeiten installieren:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Set up your environment variables:
-   - Copy the `.env.example` file to create a new file named `.env`:
+3. Umgebungsvariablen einrichten:
+   - `.env.example` zu `.env` kopieren:
    ```bash
    cp .env.example .env
    ```
-   - Edit the `.env` file and add your API keys and configure other settings:
+   - `.env` bearbeiten und API-Keys eintragen:
    ```bash
    OPENAI_API_KEY=your_openai_api_key
    TAVILY_API_KEY=your_tavily_api_key
    ```
 
-## Running the MCP Server
+## MCP-Server starten
 
-You can start the MCP server in two ways:
+Du kannst den Server auf zwei Arten starten:
 
-### Method 1: Directly using Python
+### Methode 1: Direkt mit Python
 
 ```bash
 python server.py
 ```
 
-### Method 2: Using the MCP CLI (if installed)
+### Methode 2: Mit der MCP-CLI
 
 ```bash
 mcp run server.py
 ```
 
-Once the server is running, you'll see output indicating that the server is ready to accept connections.
+Sobald der Server läuft, siehst du eine Meldung, dass er Verbindungen akzeptiert.
 
-## Integrating with Claude
+## Integration mit Claude
 
-There are two primary ways to integrate your MCP server with Claude:
+Es gibt zwei Hauptwege, den MCP-Server mit Claude zu verbinden:
 
-1. **[API Integration](./claude-integration)** - For programmatic access through Claude API
-2. **[Desktop Integration](./claude-desktop-integration)** - For using with Claude desktop application on Mac
+1. **[API-Integration](./claude-integration)** - Programmatischer Zugriff über die Claude API
+2. **[Desktop-Integration](./claude-desktop-integration)** - Nutzung mit der Claude-Desktop-App auf dem Mac
 
-For detailed instructions on each method, follow the links above.
-
-## Example Usage with Claude
+## Beispielnutzung mit Claude
 
 ```
-User: I'm considering investing in NVIDIA. Can you research the current state of the company, recent stock performance, latest product announcements, and analyst opinions?
+User: Ich überlege, in NVIDIA zu investieren. Kannst du die aktuelle Lage des Unternehmens, die jüngste Kursentwicklung, Produktankündigungen und Analystenmeinungen recherchieren?
 
-Claude: I'll help you research NVIDIA for investment purposes. This will take a moment as I conduct comprehensive research to find the most up-to-date information about their stock performance, recent developments, and expert analysis.
+Claude: Ich helfe dir dabei, NVIDIA für Investitionszwecke zu recherchieren. Das dauert einen Moment, weil ich umfassend die aktuellsten Informationen zu Kursentwicklung, Entwicklungen und Experteneinschätzungen sammle.
 
-[Claude uses conduct_research tool - this takes 30-40 seconds]
+[Claude nutzt das conduct_research-Tool - das dauert 30-40 Sekunden]
 
-Claude: Based on my research, here's a comprehensive analysis of NVIDIA's current state:
+Claude: Auf Basis meiner Recherche hier eine umfassende Analyse des aktuellen Standes von NVIDIA:
 
-## NVIDIA (NVDA) Current Status
+## Aktueller Status von NVIDIA (NVDA)
 
-### Recent Stock Performance
-- Current price: $942.89 (as of my research)
-- YTD performance: +90.4% 
-- 52-week range: $460.30 - $974.00
-- Market cap: ~$2.32 trillion
+### Jüngste Kursentwicklung
+- Aktueller Kurs: $942.89 (zum Zeitpunkt der Recherche)
+- YTD-Performance: +90.4%
+- 52-Wochen-Spanne: $460.30 - $974.00
+- Marktkapitalisierung: ca. $2.32 Billionen
 
-### Recent Key Developments
-1. **Blackwell AI Platform**: At GTC 2024, NVIDIA unveiled the Blackwell architecture, their next-generation AI chip platform promising 4x performance improvement over Hopper. Major cloud providers (AWS, Google, Microsoft) have already committed to integrating Blackwell.
+### Wichtige jüngste Entwicklungen
+1. **Blackwell-AI-Plattform**: Auf der GTC 2024 stellte NVIDIA die Blackwell-Architektur vor, die nächste Generation ihrer KI-Chip-Plattform, mit angeblich 4x mehr Leistung als Hopper.
 
-2. **Q1 FY2025 Earnings (May 2024)**: 
-   - Revenue: $26.0 billion (+262% YoY)
-   - Data Center revenue: $22.6 billion (+427% YoY)
-   - Gross margin: 78.4%
-   - Announced 10-for-1 stock split effective June 7, 2024
-
-3. **Supply Chain Expansion**: Increased investments in manufacturing capacity with TSMC to address ongoing chip shortages for their high-demand AI GPUs.
-
-### Analyst Consensus
-- Strong Buy consensus with 37 analysts rating it "Buy," 5 "Hold," and 0 "Sell"
-- Average price target: $1,042 (post-split adjusted: $104.20)
-- Key bull thesis: Continued AI infrastructure spending and NVIDIA's dominant position in AI chips
-- Key bear concerns: Valuation, potential competition from AMD, Intel, and custom silicon from tech giants
-
-### Industry Position
-- Dominant in AI GPU market with estimated 80-90% market share
-- Expanding ecosystem through CUDA software platform and industry partnerships
-- Diversifying beyond chips with DGX Cloud, AI software platforms, and automotive solutions
+2. **Q1 FY2025-Ergebnisse (Mai 2024)**:
+   - R…
 ```
-
-## Troubleshooting
-
-If you encounter issues while running the MCP server:
-
-1. Make sure your API keys are correctly set in the `.env` file
-2. Check that you're using Python 3.10 or higher
-3. Ensure all dependencies are installed correctly
-4. Check the server logs for error messages
-
-## Next Steps
-
-- Explore the [MCP protocol documentation](https://docs.anthropic.com/claude/docs/model-context-protocol) to better understand how to integrate with Claude
-- Learn about [GPT Researcher's core features](../getting-started/introduction) to enhance your research capabilities
-- Check out the [Advanced Usage](./advanced-usage) guide for more configuration options
-
-:-) 

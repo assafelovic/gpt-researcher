@@ -15,7 +15,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch, isCopil
     <div className="fixed top-0 left-0 right-0 z-50">
       {/* Pure transparent blur background */}
       <div className="absolute inset-0 backdrop-blur-sm bg-transparent"></div>
-      
+
       {/* Header container */}
       <div className="container relative h-[60px] px-4 lg:h-[80px] lg:px-0 pt-4 pb-4">
         <div className="flex flex-col items-center">
@@ -29,7 +29,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch, isCopil
               className="lg:h-16 lg:w-16"
             />
           </a>
-          
+
           {/* Action buttons container */}
           <div className="flex gap-2 mt-2 transition-all duration-300 ease-in-out">
             {/* Stop button - shown only during active research */}
@@ -38,7 +38,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch, isCopil
                 onClick={onStop}
                 className="flex items-center justify-center px-4 sm:px-6 h-9 sm:h-10 text-sm text-white bg-red-500 rounded-full hover:bg-red-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap min-w-[80px]"
               >
-                Stop
+                Stopp
               </button>
             )}
             {/* New Research button - shown after stopping or completing research - but not in copilot mode */}
@@ -47,7 +47,7 @@ const Header = ({ loading, isStopped, showResult, onStop, onNewResearch, isCopil
                 onClick={onNewResearch}
                 className="flex items-center justify-center px-4 sm:px-6 h-9 sm:h-10 text-sm text-white bg-teal-500 rounded-full hover:bg-teal-600 transform hover:scale-105 transition-all duration-200 shadow-lg whitespace-nowrap min-w-[120px]"
               >
-                New Research
+                Neue Recherche
               </button>
             )}
           </div>

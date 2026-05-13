@@ -23,13 +23,13 @@ export default function Sources({
             } catch (e) {
               // If URL parsing fails, use the original URL
             }
-            
+
             return (
-              <a 
-                key={source.url} 
-                href={source.url} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                key={source.url}
+                href={source.url}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-2 py-1 text-xs bg-gray-800/60 text-gray-300 hover:text-teal-300 hover:bg-gray-800/90 rounded border border-gray-700/40 transition-colors"
                 title={source.name}
               >
@@ -51,9 +51,9 @@ export default function Sources({
   return (
     <div className="container h-auto w-full shrink-0 rounded-lg border border-solid border-gray-700/40 bg-black/30 backdrop-blur-md shadow-lg p-5">
       <div className="flex items-start gap-4 pb-3 lg:pb-3.5">
-        <img src="/img/browser.svg" alt="sources" width={24} height={24} />
+        <img src="/img/browser.svg" alt="Quellen" width={24} height={24} />
         <h3 className="text-base font-bold uppercase leading-[152.5%] text-white">
-          {sources.length} Sources{" "}
+          {sources.length} Quellen{" "}
         </h3>
       </div>
       <div className="overflow-y-auto max-h-[250px] scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-300/10">

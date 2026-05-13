@@ -17,7 +17,10 @@ const nextConfig = {
   },
   // Proxy /outputs requests to the backend server for generated images
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = (process.env.BACKEND_INTERNAL_URL || process.env.BACKEND_URL || process.env.NEXT_PUBLIC_GPTR_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8002')
+      .trim()
+      .replace(/\/+$/, '')
+      .replace(/\/api$/, '');
     return [
       {
         source: '/outputs/:path*',

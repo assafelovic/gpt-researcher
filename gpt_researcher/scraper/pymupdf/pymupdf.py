@@ -42,14 +42,25 @@ class PyMuPDFScraper:
         try:
             if self.is_url():
                 try:
-                    response = requests.get(self.link, timeout=(5, 30), stream=True)
+                    if self.session is not None:
+                        response = self.session.get(self.link, timeout=(5, 30), stream=True)
+                    else:
+                        response = requests.get(self.link, timeout=(5, 30), stream=True)
                     response.raise_for_status()
                 except requests.exceptions.SSLError:
                     import logging
                     logging.getLogger(__name__).warning(
                         f"SSL verification failed for {self.link}, retrying without verification"
                     )
-                    response = requests.get(self.link, timeout=(5, 30), stream=True, verify=False)
+                    if self.session is not None:
+                        response = self.session.get(
+                            self.link,
+                            timeout=(5, 30),
+                            stream=True,
+                            verify=False,
+                        )
+                    else:
+                        response = requests.get(self.link, timeout=(5, 30), stream=True, verify=False)
                     response.raise_for_status()
 
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
@@ -73,8 +84,8 @@ class PyMuPDFScraper:
             return content, image, title
 
         except requests.exceptions.Timeout:
-            print(f"Download timed out. Please check the link : {self.link}")
+            print(f"Download hat das Zeitlimit überschritten. Bitte prüfe den Link: {self.link}")
             return "", [], ""
         except Exception as e:
-            print(f"Error loading PDF : {self.link} {e}")
+            print(f"Fehler beim Laden der PDF: {self.link} {e}")
             return "", [], ""

@@ -1,26 +1,26 @@
-# Running with Azure
+# Mit Azure ausführen
 
-## Example: Azure OpenAI Configuration
+## Beispiel: Azure-OpenAI-Konfiguration
 
-If you are not using OpenAI's models, but other model providers, besides the general configuration above, also additional environment variables are required.
+Wenn du nicht die Modelle von OpenAI selbst nutzt, sondern andere Modellanbieter, brauchst du neben der allgemeinen Konfiguration zusätzliche Umgebungsvariablen.
 
-Here is an example for [Azure OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models) configuration:
+Hier ist ein Beispiel für eine [Azure-OpenAI](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models)-Konfiguration:
 
 ```bash
-OPENAI_API_VERSION="2024-05-01-preview" # or whatever you are using
-AZURE_OPENAI_ENDPOINT="https://CHANGEMEN.openai.azure.com/" # change to the name of your deployment
-AZURE_OPENAI_API_KEY="[Your Key]" # change to your API key
+OPENAI_API_VERSION="2024-05-01-preview" # oder die von dir verwendete Version
+AZURE_OPENAI_ENDPOINT="https://CHANGEMEN.openai.azure.com/" # an den Namen deines Deployments anpassen
+AZURE_OPENAI_API_KEY="[Dein Key]" # an deinen API-Key anpassen
 
-EMBEDDING="azure_openai:text-embedding-ada-002" # change to the deployment of your embedding model
+EMBEDDING="azure_openai:text-embedding-ada-002" # an das Deployment deines Embedding-Modells anpassen
 
-FAST_LLM="azure_openai:gpt-4o-mini" # change to the name of your deployment (not model-name)
+FAST_LLM="azure_openai:gpt-4o-mini" # an den Namen deines Deployments anpassen, nicht an den Modellnamen
 FAST_TOKEN_LIMIT=4000
 
-SMART_LLM="azure_openai:gpt-4o" # change to the name of your deployment (not model-name)
+SMART_LLM="azure_openai:gpt-4o" # an den Namen deines Deployments anpassen, nicht an den Modellnamen
 SMART_TOKEN_LIMIT=4000
 
-RETRIEVER="bing" # if you are using Bing as your search engine (which is likely if you use Azure)
-BING_API_KEY="[Your Key]"
+RETRIEVER="bing" # wenn du Bing als Suchmaschine verwendest, was bei Azure oft der Fall ist
+BING_API_KEY="[Dein Key]"
 ```
 
-For more details on what each variable does, you can check out the [GPTR Config Docs](https://docs.gptr.dev/docs/gpt-researcher/gptr/config)
+Weitere Details zu den einzelnen Variablen findest du in der [GPTR-Konfigurationsdokumentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/config).

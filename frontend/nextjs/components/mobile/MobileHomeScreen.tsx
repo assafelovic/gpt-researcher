@@ -18,7 +18,7 @@ export default function MobileHomeScreen({
   setPromptValue,
   handleDisplayResult,
   isLoading = false,
-  placeholder = "What would you like to research today?",
+  placeholder = "Was möchtest du heute recherchieren?",
   handleKeyDown
 }: MobileHomeScreenProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -67,28 +67,28 @@ export default function MobileHomeScreen({
     if (!promptValue.trim() || isLoading || isSubmitting) {
       return;
     }
-    
+
     try {
       // Set submitting state for UI feedback
       setIsSubmitting(true);
-      
+
       // Add a timeout as a safety measure to prevent infinite loading
       submissionTimeoutRef.current = setTimeout(() => {
         setIsSubmitting(false);
-        toast.error("Research request took too long. Please try again.", {
+        toast.error("Die Rechercheanfrage hat zu lange gedauert. Bitte versuche es erneut.", {
           duration: 3000,
           position: "bottom-center"
         });
       }, 15000); // 15 second timeout
-      
+
       // Create a new simplified direct API submission that won't use websockets
       try {
         // First show visual feedback
         const trimmedPrompt = promptValue.trim();
-        
+
         // Call the display result handler from props
         await handleDisplayResult(trimmedPrompt);
-        
+
         // Clear the timeout since we successfully completed
         if (submissionTimeoutRef.current) {
           clearTimeout(submissionTimeoutRef.current);
@@ -96,11 +96,11 @@ export default function MobileHomeScreen({
         }
       } catch (apiError) {
         console.error("API error during research submission:", apiError);
-        toast.error("There was a problem submitting your research. Please try again.", {
+        toast.error("Beim Senden deiner Recherche ist ein Problem aufgetreten. Bitte versuche es erneut.", {
           duration: 3000,
           position: "bottom-center"
         });
-        
+
         // Clear submission state
         setIsSubmitting(false);
       }
@@ -108,7 +108,7 @@ export default function MobileHomeScreen({
       console.error("Error during research submission:", error);
       // Reset state in case of error
       setIsSubmitting(false);
-      
+
       // Clear any existing timeout
       if (submissionTimeoutRef.current) {
         clearTimeout(submissionTimeoutRef.current);
@@ -122,7 +122,7 @@ export default function MobileHomeScreen({
     if (handleKeyDown) {
       handleKeyDown(e);
     }
-    
+
     // Submit on Enter (without shift)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -143,12 +143,12 @@ export default function MobileHomeScreen({
             className="rounded-xl"
           />
         </div>
-        <p className="text-gray-400 text-sm">Say Hello to GPT Researcher, your AI partner for instant insights and comprehensive research</p>
+        <p className="text-gray-400 text-sm">Sag Hallo zu GPT Researcher, deinem KI-Partner für schnelle Erkenntnisse und umfassende Recherchen.</p>
       </div>
 
       {/* Search Box */}
       <div className="px-4 md:px-8 w-full max-w-lg mx-auto">
-        <div 
+        <div
           className={`relative bg-gray-800 border ${isFocused ? 'border-sky-500/70 input-glow-active' : 'border-gray-700/50 input-glow-subtle'} rounded-xl shadow-lg transition-all duration-300`}
         >
           <textarea
@@ -163,17 +163,17 @@ export default function MobileHomeScreen({
             onBlur={() => setIsFocused(false)}
             disabled={isLoading || isSubmitting}
           />
-          
+
           <div className="absolute bottom-3 right-3">
             <button
               onClick={handleSubmit}
               disabled={isLoading || isSubmitting || !promptValue.trim()}
               className={`rounded-full p-2 ${
-                isLoading || isSubmitting || !promptValue.trim() 
-                  ? 'bg-gray-700 text-gray-500' 
+                isLoading || isSubmitting || !promptValue.trim()
+                  ? 'bg-gray-700 text-gray-500'
                   : 'bg-sky-600 text-white hover:bg-sky-500'
               } transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50`}
-              aria-label="Start research"
+                aria-label="Recherche starten"
             >
               {isLoading || isSubmitting ? (
                 <div className="flex justify-center items-center">
@@ -188,14 +188,14 @@ export default function MobileHomeScreen({
           </div>
         </div>
         <p className="text-xs text-gray-500 mt-2 text-center px-2">
-          Enter any research topic or specific question
+          Gib ein beliebiges Forschungsthema oder eine konkrete Frage ein
         </p>
       </div>
 
       {/* Recent research history */}
       {recentHistory.length > 0 && (
         <div className="mt-10 px-4">
-          <h2 className="text-sm font-medium text-gray-400 mb-3 px-2">Recent Research</h2>
+          <h2 className="text-sm font-medium text-gray-400 mb-3 px-2">Letzte Recherchen</h2>
           <div className="space-y-2">
             {recentHistory.map((item) => (
               <button
@@ -215,7 +215,7 @@ export default function MobileHomeScreen({
               href="/history"
               className="inline-block text-sm text-sky-400 hover:text-sky-300 transition-colors"
             >
-              View all research
+              Alle Recherchen anzeigen
             </a>
           </div>
         </div>
@@ -224,19 +224,19 @@ export default function MobileHomeScreen({
       {/* Features or tips section */}
       <div className="mt-auto pb-6 pt-8 px-4">
         <div className="bg-gray-800/40 border border-gray-700/50 rounded-xl p-4">
-          <h3 className="text-sm font-medium text-gray-300 mb-2">Research Tips</h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-2">Recherche-Tipps</h3>
           <ul className="text-xs text-gray-400 space-y-1.5">
             <li className="flex items-start">
               <span className="text-sky-400 mr-1.5">•</span>
-              <span>Ask specific questions for better results</span>
+              <span>Stelle konkrete Fragen für bessere Ergebnisse</span>
             </li>
             <li className="flex items-start">
               <span className="text-sky-400 mr-1.5">•</span>
-              <span>Include key details like dates or context</span>
+              <span>Nenne wichtige Details wie Daten oder Kontext</span>
             </li>
             <li className="flex items-start">
               <span className="text-sky-400 mr-1.5">•</span>
-              <span>Chat with your research results for deeper insights</span>
+              <span>Chatte mit deinen Recherchergebnissen für tiefere Einblicke</span>
             </li>
           </ul>
         </div>
@@ -250,66 +250,66 @@ export default function MobileHomeScreen({
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 1;
         }
-        
+
         .input-glow-subtle {
-          box-shadow: 
+          box-shadow:
             0 0 5px rgba(56, 189, 248, 0.2),
             0 0 12px rgba(14, 165, 233, 0.15),
             0 0 20px rgba(2, 132, 199, 0.1);
           animation: pulse-glow-subtle 3s infinite alternate;
         }
-        
+
         @keyframes pulse-glow-subtle {
           0% {
-            box-shadow: 
+            box-shadow:
               0 0 5px rgba(56, 189, 248, 0.2),
               0 0 12px rgba(14, 165, 233, 0.15),
               0 0 20px rgba(2, 132, 199, 0.1);
           }
           100% {
-            box-shadow: 
+            box-shadow:
               0 0 8px rgba(56, 189, 248, 0.25),
               0 0 15px rgba(14, 165, 233, 0.2),
               0 0 25px rgba(2, 132, 199, 0.15);
           }
         }
-        
+
         .input-glow-active {
-          box-shadow: 
+          box-shadow:
             0 0 5px rgba(56, 189, 248, 0.3),
             0 0 15px rgba(56, 189, 248, 0.3),
             0 0 25px rgba(14, 165, 233, 0.2),
             inset 0 0 3px rgba(186, 230, 253, 0.1);
           animation: pulse-glow-active 2s infinite alternate;
         }
-        
+
         @keyframes pulse-glow-active {
           0% {
-            box-shadow: 
+            box-shadow:
               0 0 5px rgba(56, 189, 248, 0.3),
               0 0 15px rgba(56, 189, 248, 0.3),
               0 0 25px rgba(14, 165, 233, 0.2),
               inset 0 0 3px rgba(186, 230, 253, 0.1);
           }
           100% {
-            box-shadow: 
+            box-shadow:
               0 0 8px rgba(56, 189, 248, 0.4),
               0 0 20px rgba(14, 165, 233, 0.4),
               0 0 30px rgba(2, 132, 199, 0.3),
               inset 0 0 5px rgba(186, 230, 253, 0.2);
           }
         }
-        
+
         @keyframes spin {
           to {
             transform: rotate(360deg);
           }
         }
-        
+
         .animate-spin {
           animation: spin 1s linear infinite;
         }
       `}</style>
     </div>
   );
-} 
+}

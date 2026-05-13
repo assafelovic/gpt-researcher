@@ -1,0 +1,10 @@
+# Local Ollama import for the Gemma 4 Obliterated GGUF checkpoint.
+# The GGUF already carries the model's prompt template, so keep the
+# Modelfile minimal and avoid overriding it here.
+FROM /home/xxammaxx/Schreibtisch/gemma4/llama.cpp/models/gemma-4-E4B-it-OBLITERATED-Q4_K_M.gguf
+PARAMETER num_ctx 2048
+PARAMETER num_predict 1024
+PARAMETER temperature 0.2
+PARAMETER top_p 0.9
+PARAMETER top_k 40
+PARAMETER repeat_penalty 1.05

@@ -21,7 +21,7 @@ export const useAnalytics = () => {
 
   const trackResearchQuery = (data: TrackResearchData) => {
     ReactGA.event({
-      category: 'Research',
+      category: 'Recherche',
       action: 'Submit Query',
       label: JSON.stringify({
         query: data.query,

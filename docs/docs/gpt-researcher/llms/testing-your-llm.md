@@ -1,6 +1,6 @@
-# Testing your LLM
+# Dein LLM testen
 
-Here is a snippet of code to help you verify that your LLM-related environment variables are set up correctly.
+Hier ist ein kurzes Snippet, mit dem du prüfen kannst, ob deine LLM-bezogenen Umgebungsvariablen korrekt gesetzt sind.
 
 ```python
 from gpt_researcher.config.config import Config
@@ -15,7 +15,7 @@ async def main():
     try:
         report = await create_chat_completion(
             model=cfg.smart_llm_model,
-            messages = [{"role": "user", "content": "sup?"}],
+            messages = [{"role": "user", "content": "Hallo?"}],
             temperature=0.35,
             llm_provider=cfg.smart_llm_provider,
             stream=True,
@@ -23,8 +23,8 @@ async def main():
             llm_kwargs=cfg.llm_kwargs
         )
     except Exception as e:
-        print(f"Error in calling LLM: {e}")
+        print(f"Fehler beim Aufruf des LLM: {e}")
 
-# Run the async function
+# Async-Funktion starten
 asyncio.run(main())
 ```

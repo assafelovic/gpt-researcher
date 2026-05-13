@@ -1,25 +1,25 @@
 # Azure Storage
 
-If you want to use Azure Blob Storage as the source for your GPT Researcher report context, follow these steps:
+Wenn du Azure Blob Storage als Quelle für den Kontext deines GPT-Researcher-Reports nutzen möchtest, gehe so vor:
 
-> **Step 1** - Set these environment variables with a .env file in the root folder
+> **Schritt 1** - Setze diese Umgebungsvariablen in einer `.env`-Datei im Projektstamm
 
 ```bash
 AZURE_CONNECTION_STRING=
 AZURE_CONTAINER_NAME=
 ```
 
-> **Step 2** - Add the `azure-storage-blob` dependency to your requirements.txt file
+> **Schritt 2** - Füge die Abhängigkeit `azure-storage-blob` zu deiner `requirements.txt` hinzu
 
 ```bash
 azure-storage-blob
 ```
 
-> **Step 3** - When running the GPTResearcher class, pass the `report_source` as `azure`
+> **Schritt 3** - Wenn du die `GPTResearcher`-Klasse aufrufst, übergib `report_source="azure"`
 
 ```python
 report = GPTResearcher(
-    query="What happened in the latest burning man floods?",
+    query="Was ist bei den letzten Burning-Man-Überschwemmungen passiert?",
     report_type="research_report",
     report_source="azure",
 )

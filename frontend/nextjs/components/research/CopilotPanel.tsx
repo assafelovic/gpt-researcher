@@ -45,7 +45,7 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
 
   // Reference to the chat container
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Function to scroll to bottom
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -61,15 +61,15 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
   // Also handle mutations in the DOM that might affect scroll height
   useEffect(() => {
     if (!chatContainerRef.current) return;
-    
+
     const observer = new MutationObserver(scrollToBottom);
-    
+
     observer.observe(chatContainerRef.current, {
       childList: true,
       subtree: true,
       characterData: true
     });
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -92,24 +92,24 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
             GPT Researcher
           </h2>
         </div>
-        
+
         {/* Right side */}
         <div className="flex items-center gap-3">
           {/* Connection status indicator */}
           <div className="flex items-center">
             <div className={`w-1.5 h-1.5 rounded-full ${loading || isProcessingChat ? 'bg-amber-500 animate-pulse' : 'bg-teal-500'} mr-2`}></div>
-            <span className="text-xs text-gray-400">{loading ? 'researching' : isProcessingChat ? 'thinking' : 'active'}</span>
+            <span className="text-xs text-gray-400">{loading ? 'recherchiert' : isProcessingChat ? 'denkt nach' : 'aktiv'}</span>
           </div>
-          
+
           {/* Toggle button */}
           {setIsCopilotVisible && (
-            <button 
+            <button
               onClick={(e) => {
                 e.preventDefault();
                 setIsCopilotVisible(false);
               }}
               className="flex items-center justify-center w-7 h-7 rounded-md hover:bg-gray-800 text-gray-400 hover:text-gray-200 transition-colors border border-transparent hover:border-gray-700/50"
-              aria-label="Hide copilot panel"
+              aria-label="Copilot-Ansicht ausblenden"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 18l6-6-6-6" />
@@ -120,8 +120,8 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
       </div>
 
       {/* Chat Messages - Scrollable */}
-      <div 
-        ref={chatContainerRef} 
+      <div
+        ref={chatContainerRef}
         className="flex-1 overflow-y-auto py-2 px-2 custom-scrollbar bg-gray-900/20"
       >
         {/* Status message - conditional on research state */}
@@ -135,9 +135,9 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
               </div>
               <div className="text-gray-300 text-sm">
                 {loading ? (
-                  <p>Working on your research... I&apos;ll analyze the results once they&apos;re complete.</p>
+                  <p>Ich arbeite an deiner Recherche. Sobald die Ergebnisse fertig sind, werte ich sie aus.</p>
                 ) : (
-                  <p>I&apos;ve analyzed all the research results and can answer any questions about it. How can I help?</p>
+                  <p>Ich habe alle Rechercheergebnisse ausgewertet und kann jede Frage dazu beantworten. Wobei kann ich helfen?</p>
                 )}
               </div>
             </div>
@@ -189,7 +189,7 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
         )}
         {isStopped && (
           <div className="text-center p-2 text-gray-400 bg-gray-800/40 rounded-md border border-gray-700/40 text-sm">
-            Research has been stopped. Start a new research to continue chatting.
+            Die Recherche wurde gestoppt. Starte eine neue Recherche, um weiter zu chatten.
           </div>
         )}
       </div>
@@ -200,24 +200,24 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
-        
+
         .animate-pulse {
           animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-track {
           background: rgba(17, 24, 39, 0.1);
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: rgba(75, 85, 99, 0.5);
           border-radius: 20px;
         }
-        
+
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(75, 85, 99, 0.7);
         }
@@ -226,4 +226,4 @@ const CopilotPanel: React.FC<CopilotPanelProps> = ({
   );
 };
 
-export default CopilotPanel; 
+export default CopilotPanel;

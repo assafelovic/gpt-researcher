@@ -1,41 +1,41 @@
 ---
-sidebar_label: Image Generation
+sidebar_label: Bildgenerierung
 sidebar_position: 5
 ---
 
-# 🍌 Inline Image Generation
+# 🍌 Inline-Bildgenerierung
 
-GPT Researcher supports **inline image generation** for research reports using Google's Gemini image generation models (Nano Banana). This feature creates contextually relevant illustrations that are embedded directly within your research reports.
+GPT Researcher unterstützt **Inline-Bildgenerierung** für Research-Reports mit den Bildmodellen von Google Gemini (Nano Banana). Diese Funktion erstellt kontextuell passende Illustrationen, die direkt in den Report eingebettet werden.
 
-## Overview
+## Überblick
 
-When enabled, GPT Researcher will:
-1. **Analyze research context** after gathering information to identify visualization opportunities
-2. **Pre-generate images** before writing the report (for seamless UX)
-3. **Embed images inline** as the report is written - no post-processing delays!
+Wenn die Funktion aktiviert ist, dann:
+1. **analysiert GPT Researcher den Research-Kontext** und sucht nach sinnvollen Visualisierungen
+2. **werden Bilder vorab generiert**, bevor der Report geschrieben wird
+3. **werden die Bilder inline eingebettet** - ohne zusätzliche Wartezeit nach dem Schreiben
 
-## Quick Start
+## Schnellstart
 
-### 1. Set Environment Variables
+### 1. Umgebungsvariablen setzen
 
 ```bash
-# Required: Enable the feature
+# Erforderlich: Feature aktivieren
 IMAGE_GENERATION_ENABLED=true
 
-# Required: Your Google API key
+# Erforderlich: Dein Google API Key
 GOOGLE_API_KEY=your_google_api_key_here
 
-# Optional: Specify the model (default shown)
+# Optional: Modell angeben (Standardwert gezeigt)
 IMAGE_GENERATION_MODEL=models/gemini-2.5-flash-image
 
-# Optional: Maximum images per report (default: 3)
+# Optional: Maximale Bilder pro Report (Standard: 3)
 IMAGE_GENERATION_MAX_IMAGES=3
 
-# Optional: Image style - "dark" (default), "light", or "auto"
+# Optional: Bildstil - "dark" (Standard), "light" oder "auto"
 IMAGE_GENERATION_STYLE=dark
 ```
 
-### 2. Run Research
+### 2. Recherche starten
 
 ```python
 import asyncio
@@ -43,169 +43,166 @@ from gpt_researcher import GPTResearcher
 
 async def main():
     researcher = GPTResearcher(
-        query="What are the key components of a modern solar panel system?",
+        query="Was sind die wichtigsten Komponenten eines modernen Solarpanelsystems?",
         report_type="research_report"
     )
-    
-    # Images are automatically generated during research
+
+    # Bilder werden automatisch während der Recherche generiert
     await researcher.conduct_research()
-    
-    # Report includes embedded images
+
+    # Der Report enthält eingebettete Bilder
     report = await researcher.write_report()
     print(report)
 
 asyncio.run(main())
 ```
 
-That's it! Images will be automatically generated and embedded in your report.
+Fertig. Die Bilder werden automatisch erzeugt und im Report eingebettet.
 
-## How It Works
+## So funktioniert es
 
-### The Smart Pre-Generation Flow
+### Der smarte Vorab-Generierungs-Flow
 
 ```
-Research Phase          Image Planning          Report Writing
+Research-Phase          Bildplanung            Report-Schreiben
      │                       │                       │
      ▼                       ▼                       ▼
 ┌─────────────┐      ┌──────────────┐      ┌─────────────────┐
-│ Gather      │      │ LLM analyzes │      │ Report streams  │
-│ information │  →   │ context for  │  →   │ with images     │
-│ from sources│      │ 2-3 visuals  │      │ already inline! │
+│ Informationen│      │ LLM analysiert│      │ Report streamt  │
+│ sammeln     │  →   │ den Kontext   │  →   │ mit Bildern     │
+│ aus Quellen  │      │ für 2-3 Visuals│     │ bereits inline! │
 └─────────────┘      └──────────────┘      └─────────────────┘
                             │
                             ▼
                      ┌──────────────┐
-                     │ Generate all │
-                     │ images in    │
+                     │ Alle Bilder  │
                      │ parallel     │
+                     │ generieren   │
                      └──────────────┘
 ```
 
-**Key benefits:**
-- **No waiting** - Images are generated during research, not after
-- **Seamless UX** - Report streams with images already embedded
-- **Context-aware** - LLM chooses the best visualization opportunities
+**Vorteile:**
+- **Kein Warten** - Bilder werden während der Recherche generiert, nicht danach
+- **Nahtlose UX** - Der Report streamt bereits mit eingebetteten Bildern
+- **Kontextbewusst** - Das LLM wählt die besten Visualisierungsmöglichkeiten aus
 
-## Configuration Options
+## Konfigurationsoptionen
 
-### Environment Variables
+### Umgebungsvariablen
 
-| Variable | Default | Description |
+| Variable | Standard | Beschreibung |
 |----------|---------|-------------|
-| `IMAGE_GENERATION_ENABLED` | `false` | Master switch to enable/disable |
-| `GOOGLE_API_KEY` | - | Your Google API key (required) |
-| `IMAGE_GENERATION_MODEL` | `models/gemini-2.5-flash-image` | Gemini model to use |
-| `IMAGE_GENERATION_MAX_IMAGES` | `3` | Maximum images per report |
-| `IMAGE_GENERATION_STYLE` | `dark` | Image style: `dark`, `light`, `auto` |
+| `IMAGE_GENERATION_ENABLED` | `false` | Hauptschalter zum Aktivieren/Deaktivieren |
+| `GOOGLE_API_KEY` | - | Dein Google API Key (erforderlich) |
+| `IMAGE_GENERATION_MODEL` | `models/gemini-2.5-flash-image` | Zu verwendendes Gemini-Modell |
+| `IMAGE_GENERATION_MAX_IMAGES` | `3` | Maximale Bilder pro Report |
+| `IMAGE_GENERATION_STYLE` | `dark` | Bildstil: `dark`, `light`, `auto` |
 
-### Supported Models
+### Unterstützte Modelle
 
-**Free Tier (Gemini):**
-| Model | Description |
+**Kostenlose Stufe (Gemini):**
+| Modell | Beschreibung |
 |-------|-------------|
-| `models/gemini-2.5-flash-image` | Recommended - fast and free |
-| `gemini-2.0-flash-exp-image-generation` | Experimental variant |
+| `models/gemini-2.5-flash-image` | Empfohlen - schnell und kostenlos |
+| `gemini-2.0-flash-exp-image-generation` | Experimentelle Variante |
 
-**Paid Tier (Imagen) - requires Google Cloud billing:**
-| Model | Description |
+**Bezahlte Stufe (Imagen) - erfordert Google Cloud Billing:**
+| Modell | Beschreibung |
 |-------|-------------|
-| `imagen-4.0-generate-001` | Highest quality, supports aspect ratios |
-| `imagen-4.0-fast-generate-001` | Faster generation |
+| `imagen-4.0-generate-001` | Höchste Qualität, unterstützt Seitenverhältnisse |
+| `imagen-4.0-fast-generate-001` | Schnellere Generierung |
 
-## Image Styling
+## Bildstil
 
-### Dark Mode (Default)
+### Dunkler Modus (Standard)
 
-Images are generated with styling that matches the GPT Researcher UI:
-- Dark background (`#0d1117`)
-- Teal/cyan accents (`#14b8a6`)
-- Glowing, futuristic aesthetic
-- Professional infographic style
+Die Bilder werden mit einem Stil erzeugt, der zur GPT-Researcher-UI passt:
+- Dunkler Hintergrund (`#0d1117`)
+- Teal-/Cyan-Akzente (`#14b8a6`)
+- Leuchtende, futuristische Ästhetik
+- Professioneller Infografik-Stil
 
-### Light Mode
+### Heller Modus
 
-Set `IMAGE_GENERATION_STYLE=light` for:
-- Clean white/light gray backgrounds
-- Deep blue and teal accents
-- Corporate/professional aesthetic
+Setze `IMAGE_GENERATION_STYLE=light` für:
+- Klare weiße/hellgraue Hintergründe
+- Dunkelblaue und tealfarbene Akzente
+- Ein Corporate-/Professional-Look
 
-### Auto Mode
+### Auto-Modus
 
-Set `IMAGE_GENERATION_STYLE=auto` for neutral styling that works in any context.
+Setze `IMAGE_GENERATION_STYLE=auto` für ein neutrales Styling, das in jedem Kontext funktioniert.
 
-## Output
+## Ausgabe
 
-### Image Storage
+### Bildspeicherung
 
-Generated images are saved to:
+Generierte Bilder werden gespeichert unter:
 ```
 outputs/images/{research_id}/img_{hash}_{index}.png
 ```
 
-### Markdown Embedding
+### Markdown-Einbettung
 
-Images are embedded using standard markdown syntax:
+Die Bilder werden mit der normalen Markdown-Syntax eingebettet:
 ```markdown
-## System Architecture
+## Systemarchitektur
 
-![System Architecture Overview](/outputs/images/research_abc123/img_def456_0.png)
+![Übersicht der Systemarchitektur](/outputs/images/research_abc123/img_def456_0.png)
 
-The architecture consists of three main components...
+Die Architektur besteht aus drei Hauptkomponenten...
 ```
 
-### Frontend Display
+### Darstellung im Frontend
 
-For the Next.js frontend, images are served via the `/outputs/` route which proxies to the backend. Images display at 75% width with teal accent borders.
+Im Next.js-Frontend werden die Bilder über die Route `/outputs/` ausgeliefert, die an das Backend weiterleitet. Die Bilder erscheinen mit 75 % Breite und tealfarbenen Akzentrahmen.
 
-## WebSocket Events
+## WebSocket-Events
 
-When using the web interface, these events are emitted:
+Bei Nutzung der Weboberfläche werden diese Events gesendet:
 
-| Event | Description |
+| Event | Beschreibung |
 |-------|-------------|
-| `image_planning` | Analyzing context for visuals |
-| `image_concepts_identified` | Found N visualization opportunities |
-| `image_generating` | Generating image X of Y |
-| `images_ready` | All images generated successfully |
+| `image_planning` | Kontext für Visuals analysieren |
+| `image_concepts_identified` | N Visualisierungsmöglichkeiten gefunden |
+| `image_generating` | Bild X von Y wird generiert |
+| `images_ready` | Alle Bilder erfolgreich erzeugt |
 
 ## Best Practices
 
-1. **Enable for detailed reports** - Works best with `research_report` and `detailed_report` types
+1. **Für detaillierte Reports aktivieren** - Am besten für `research_report` und `detailed_report`
+2. **API-Nutzung im Blick behalten** - Die Free Tier hat Tageslimits. Mit `IMAGE_GENERATION_MAX_IMAGES=2` sparst du Kontingent
+3. **Dunklen Modus verwenden** - Der Standardstil passt zur App und wirkt professionell
+4. **Erzeugte Bilder prüfen** - KI-Bilder brauchen gelegentlich manuelle Nachkontrolle
 
-2. **Monitor API usage** - Free tier has daily quotas. Set `IMAGE_GENERATION_MAX_IMAGES=2` to conserve
+## Fehlerbehebung
 
-3. **Use dark mode** - Default styling matches the app and looks professional
+### Bilder werden nicht erzeugt
 
-4. **Review generated images** - AI images occasionally need manual review
+1. Prüfe `IMAGE_GENERATION_ENABLED=true`
+2. Prüfe, ob `GOOGLE_API_KEY` gesetzt und gültig ist
+3. Stelle sicher, dass der Modellname korrekt ist (bei Gemini mit `models/`-Prefix)
+4. Prüfe die Logs auf API-Fehler
 
-## Troubleshooting
+### Kontingent überschritten
 
-### Images Not Generating
+Wenn `RESOURCE_EXHAUSTED`-Fehler auftauchen:
+- Warte bis Mitternacht UTC auf den täglichen Reset
+- Reduziere `IMAGE_GENERATION_MAX_IMAGES`
+- Aktiviere Google Cloud Billing für höhere Kontingente
+- Erstelle ein neues Google-Cloud-Projekt für frisches Kontingent
 
-1. Verify `IMAGE_GENERATION_ENABLED=true`
-2. Check that `GOOGLE_API_KEY` is set and valid
-3. Ensure model name is correct (include `models/` prefix for Gemini)
-4. Check logs for API errors
+### Bilder werden im Frontend nicht angezeigt
 
-### Quota Exceeded
+1. Stelle sicher, dass das Next.js-Frontend den `/outputs`-Proxy verwendet
+2. Prüfe, ob das Backend statische Dateien aus `outputs/` ausliefert
+3. Verifiziere, dass die Bildpfade im Markdown korrekt sind
 
-If you see `RESOURCE_EXHAUSTED` errors:
-- Wait until midnight UTC for daily quota reset
-- Reduce `IMAGE_GENERATION_MAX_IMAGES`
-- Enable Google Cloud billing for higher quotas
-- Create a new Google Cloud project for fresh quota
+## Bildgenerierung deaktivieren
 
-### Images Not Displaying in Frontend
-
-1. Ensure Next.js frontend is configured with the `/outputs` proxy
-2. Check that backend is serving static files from `outputs/`
-3. Verify image paths in the markdown are correct
-
-## Disabling Image Generation
-
-To disable completely:
+Zum vollständigen Deaktivieren:
 ```bash
 IMAGE_GENERATION_ENABLED=false
 ```
 
-Or simply don't set any `IMAGE_GENERATION_*` variables - the feature is off by default.
+Oder setze einfach keine `IMAGE_GENERATION_*`-Variablen - die Funktion ist standardmäßig aus.

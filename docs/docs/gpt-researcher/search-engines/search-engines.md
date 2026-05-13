@@ -1,51 +1,49 @@
-# Search Engines
+# Suchmaschinen
 
-Search Engines are used to find the most relevant web sources and content for a given research task.
-You can specify your preferred web search or use any custom retriever of your choice.
+Suchmaschinen werden verwendet, um die relevantesten Webquellen und Inhalte für eine Research-Aufgabe zu finden. Du kannst deine bevorzugte Websuche auswählen oder einen eigenen Retriever einsetzen.
 
-## Web Search Engines
+## Web-Suchmaschinen
 
-GPT Researcher defaults to using the [Tavily](https://app.tavily.com) search engine for retrieving search results.
-But you can also use other search engines by specifying the `RETRIEVER` env var. Please note that each search engine has its own API Key requirements and usage limits.
+GPT Researcher verwendet standardmäßig [DuckDuckGo](https://pypi.org/project/duckduckgo-search/), wenn kein Tavily-Key konfiguriert ist.
+Du kannst auch andere Suchmaschinen über die Umgebungsvariable `RETRIEVER` angeben. Beachte, dass jede Suchmaschine ihre eigenen API-Keys und Nutzungslimits hat.
 
-For example:
+Beispiel:
 
 ```bash
 RETRIEVER=bing
 ```
 
-You can also specify multiple retrievers by separating them with commas. The system will use each specified retriever in sequence.
-For example:
+Du kannst auch mehrere Retriever angeben, indem du sie mit Kommas trennst. Das System nutzt sie dann nacheinander.
 
 ```bash
-RETRIEVER=tavily, arxiv
+RETRIEVER=duckduckgo, arxiv
 ```
 
-Thanks to our community, we have integrated the following web search engines:
+Dank unserer Community sind diese Web-Suchmaschinen integriert:
 
-- [Tavily](https://app.tavily.com) - Default
-- [Bing](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) - Env: `RETRIEVER=bing`
-- [Google](https://developers.google.com/custom-search/v1/overview) - Env: `RETRIEVER=google`
-- [SearchApi](https://www.searchapi.io/) - Env: `RETRIEVER=searchapi`
-- [Serp API](https://serpapi.com/) - Env: `RETRIEVER=serpapi`
-- [Serper](https://serper.dev/) - Env: `RETRIEVER=serper` - [Setup Guide](#serper)
-- [Searx](https://searx.github.io/searx/) - Env: `RETRIEVER=searx`
-- [Duckduckgo](https://pypi.org/project/duckduckgo-search/) - Env: `RETRIEVER=duckduckgo`
-- [Arxiv](https://info.arxiv.org/help/api/index.html) - Env: `RETRIEVER=arxiv`
-- [Exa](https://docs.exa.ai/reference/getting-started) - Env: `RETRIEVER=exa`
-- [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`
+- [Tavily](https://app.tavily.com) - optional, benötigt `TAVILY_API_KEY`
+- [Bing](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) - `RETRIEVER=bing`
+- [Google](https://developers.google.com/custom-search/v1/overview) - `RETRIEVER=google`
+- [SearchApi](https://www.searchapi.io/) - `RETRIEVER=searchapi`
+- [Serp API](https://serpapi.com/) - `RETRIEVER=serpapi`
+- [Serper](https://serper.dev/) - `RETRIEVER=serper`
+- [Searx](https://searx.github.io/searx/) - `RETRIEVER=searx`
+- [DuckDuckGo](https://pypi.org/project/duckduckgo-search/) - Standard, wenn kein Tavily-Key gesetzt ist
+- [Arxiv](https://info.arxiv.org/help/api/index.html) - `RETRIEVER=arxiv`
+- [Exa](https://docs.exa.ai/reference/getting-started) - `RETRIEVER=exa`
+- [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - `RETRIEVER=pubmed_central`
 
-## Custom Retrievers
+## Eigene Retriever
 
-You can also use any custom retriever of your choice by specifying the `RETRIEVER=custom` env var.
-Custom retrievers allow you to use any search engine that provides an API to retrieve documents and is widely used for enterprise research tasks.
+Du kannst auch einen eigenen Retriever verwenden, indem du `RETRIEVER=custom` setzt.
+Damit kannst du jede Suchmaschine nutzen, die über eine API Dokumente zurückliefert. Das ist vor allem für Enterprise-Use-Cases praktisch.
 
-In addition to setting the `RETRIEVER` env, you also need to set the following env vars:
+Zusätzlich zu `RETRIEVER` brauchst du diese Variablen:
 
-- `RETRIEVER_ENDPOINT`: The endpoint URL of the custom retriever.
-- Additional arguments required by the retriever should be prefixed with `RETRIEVER_ARG_` (e.g., RETRIEVER_ARG_API_KEY).
+- `RETRIEVER_ENDPOINT`: Die URL deines benutzerdefinierten Retrievers
+- Weitere benötigte Argumente im Format `RETRIEVER_ARG_...`, zum Beispiel `RETRIEVER_ARG_API_KEY`
 
-### Example
+### Beispiel
 
 ```bash
 RETRIEVER=custom
@@ -53,9 +51,9 @@ RETRIEVER_ENDPOINT=https://api.myretriever.com
 RETRIEVER_ARG_API_KEY=YOUR_API_KEY
 ```
 
-### Response Format
+### Antwortformat
 
-For the custom retriever to work correctly, the response from the endpoint should be in the following format:
+Damit der Custom Retriever korrekt funktioniert, muss die Antwort im folgenden Format zurückkommen:
 
 ```json
 [
@@ -70,29 +68,29 @@ For the custom retriever to work correctly, the response from the endpoint shoul
 ]
 ```
 
-The system assumes this response format and processes the list of sources accordingly.
+Das System erwartet genau dieses Format und verarbeitet die Quellenliste entsprechend.
 
-## Search Engine Configuration
+## Suchmaschinen-Konfiguration
 
 ### Serper
 
-To use [Serper](https://serper.dev/) as your search engine:
+Um [Serper](https://serper.dev/) zu verwenden:
 
-1. Get your API key from [serper.dev](https://serper.dev/)
-2. Set the required environment variables:
+1. API-Key auf [serper.dev](https://serper.dev/) holen
+2. Die Umgebungsvariablen setzen:
 
 ```bash
 RETRIEVER=serper
 SERPER_API_KEY=your_api_key_here
 ```
 
-**Optional Configuration:**
+**Optionale Konfiguration:**
 
 ```bash
-SERPER_REGION=us                    # Country code (us, kr, jp, etc.)
-SERPER_LANGUAGE=en                  # Language code (en, ko, ja, etc.)
-SERPER_TIME_RANGE=qdr:w            # Time filter (qdr:h, qdr:d, qdr:w, qdr:m, qdr:y)
-SERPER_EXCLUDE_SITES=youtube.com   # Exclude sites (comma-separated)
+SERPER_REGION=us                    # Ländercode (us, kr, jp, etc.)
+SERPER_LANGUAGE=en                  # Sprachcode (en, ko, ja, etc.)
+SERPER_TIME_RANGE=qdr:w             # Zeitfilter (qdr:h, qdr:d, qdr:w, qdr:m, qdr:y)
+SERPER_EXCLUDE_SITES=youtube.com    # Seiten ausschließen (durch Kommas getrennt)
 ```
 
-Missing a retriever? Feel free to contribute to this project by submitting issues or pull requests on our [GitHub](https://github.com/assafelovic/gpt-researcher) page.
+Fehlt dir ein Retriever? Dann eröffne gern ein Issue oder einen Pull Request auf unserer [GitHub-Seite](https://github.com/assafelovic/gpt-researcher).

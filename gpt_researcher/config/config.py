@@ -14,6 +14,7 @@ from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
 
 from .variables.base import BaseConfig
 from .variables.default import DEFAULT_CONFIG
+from ..actions.retriever import get_default_retriever_name, normalize_retriever_names
 
 
 class Config:
@@ -40,6 +41,7 @@ class Config:
         self.config_path = config_path
         self.llm_kwargs: Dict[str, Any] = {}
         self.embedding_kwargs: Dict[str, Any] = {}
+        self._explicit_env_keys: set[str] = set()
 
         config_to_use = self.load_config(config_path)
         self._set_attributes(config_to_use)
@@ -49,21 +51,12 @@ class Config:
         if config_to_use['REPORT_SOURCE'] != 'web':
           self._set_doc_path(config_to_use)
 
-        # MCP support configuration
-        self.mcp_servers = []  # List of MCP server configurations
-        self.mcp_allowed_root_paths = []  # Allowed root paths for MCP servers
-
-        # Read from config
-        if hasattr(self, 'mcp_servers'):
-            self.mcp_servers = self.mcp_servers
-        if hasattr(self, 'mcp_allowed_root_paths'):
-            self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
-
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         """Set configuration attributes from config dictionary.
 
         Merges environment variables with config file values, with
-        environment variables taking precedence.
+        environment variables taking precedence. Tracks which keys
+        were explicitly set via environment in _explicit_env_keys.
 
         Args:
             config: Dictionary of configuration key-value pairs.
@@ -72,15 +65,20 @@ class Config:
             env_value = os.getenv(key)
             if env_value is not None:
                 value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
+                self._explicit_env_keys.add(key)
             setattr(self, key.lower(), value)
 
         # Handle RETRIEVER with default value
-        retriever_env = os.environ.get("RETRIEVER", config.get("RETRIEVER", "tavily"))
+        retriever_env = os.environ.get("RETRIEVER")
+        if not retriever_env:
+            retriever_env = config.get("RETRIEVER", get_default_retriever_name())
+        retriever_env = ",".join(normalize_retriever_names(retriever_env.split(",")))
         try:
             self.retrievers = self.parse_retrievers(retriever_env)
         except ValueError as e:
-            print(f"Warning: {str(e)}. Defaulting to 'tavily' retriever.")
-            self.retrievers = ["tavily"]
+            fallback_retriever = get_default_retriever_name()
+            print(f"Warning: {str(e)}. Defaulting to '{fallback_retriever}' retriever.")
+            self.retrievers = [fallback_retriever]
 
     def _set_embedding_attributes(self) -> None:
         """Parse and set embedding provider and model attributes."""
@@ -291,6 +289,22 @@ class Config:
     def set_verbose(self, verbose: bool) -> None:
         """Set the verbosity level."""
         self.llm_kwargs["verbose"] = verbose
+
+    @staticmethod
+    def get_env(key: str, default: Any = None) -> Any:
+        """Read an environment variable with optional default.
+
+        Centralises env-reads so they can be tracked/tested.  Bypasses
+        ``_explicit_env_keys`` – callers that want tracking should use
+        the instance-level :meth:`get` instead.
+        """
+        return os.environ.get(key, default)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Look up *key* (case-insensitive) in this config, then env, then *default*."""
+        if hasattr(self, key.lower()):
+            return getattr(self, key.lower())
+        return self.get_env(key, default)
 
     def get_mcp_server_config(self, name: str) -> dict:
         """

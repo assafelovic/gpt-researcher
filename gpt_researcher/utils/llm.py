@@ -13,11 +13,13 @@ import asyncio
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 
+from gpt_researcher.config import Config
 from gpt_researcher.llm_provider.generic.base import (
     NO_SUPPORT_TEMPERATURE_MODELS,
     SUPPORT_REASONING_EFFORT_MODELS,
     ReasoningEfforts,
 )
+from gpt_researcher.utils.local_llm import is_local_openai_base_url, resolve_openai_base_url
 
 from ..prompts import PromptFamily
 from .costs import estimate_llm_cost
@@ -69,7 +71,7 @@ async def create_chat_completion(
     """
     # validate input
     if model is None:
-        raise ValueError("Model cannot be None")
+        raise ValueError("Modell darf nicht `None` sein")
     if max_tokens is not None and max_tokens > 32001:
         raise ValueError(
             f"Max tokens cannot be more than 32,000, but got {max_tokens}")
@@ -90,15 +92,29 @@ async def create_chat_completion(
         provider_kwargs['temperature'] = None
         provider_kwargs['max_tokens'] = None
 
+    using_local_openai = False
     if llm_provider == "openai":
-        base_url = os.environ.get("OPENAI_BASE_URL", None)
+        base_url = os.environ.get("OPENAI_BASE_URL", None) or resolve_openai_base_url()
         if base_url:
             provider_kwargs['openai_api_base'] = base_url
+            using_local_openai = is_local_openai_base_url(base_url)
+
+    if using_local_openai and provider_kwargs.get("temperature") is not None:
+        provider_kwargs["temperature"] = min(float(provider_kwargs["temperature"]), 0.2)
+
+    if using_local_openai and provider_kwargs.get("max_tokens") is not None:
+        local_max_tokens = int(Config.get_env("LOCAL_OPENAI_MAX_TOKENS", "3000"))
+        provider_kwargs["max_tokens"] = min(int(provider_kwargs["max_tokens"]), local_max_tokens)
 
     provider = get_llm(llm_provider, **provider_kwargs)
     response = ""
     # create response
-    max_attempts = 1 if (stream and websocket is not None) else 10
+    if stream and websocket is not None:
+        max_attempts = 1
+    elif using_local_openai:
+        max_attempts = int(Config.get_env("LOCAL_OPENAI_MAX_ATTEMPTS", "1"))
+    else:
+        max_attempts = 10
     last_exception: Exception | None = None
     for attempt in range(1, max_attempts + 1):
         try:
@@ -131,8 +147,8 @@ async def create_chat_completion(
 
         return response
 
-    logging.error(f"Failed to get response from {llm_provider} API")
-    raise RuntimeError(f"Failed to get response from {llm_provider} API") from last_exception
+    logging.error(f"Keine Antwort von der {llm_provider}-API erhalten")
+    raise RuntimeError(f"Keine Antwort von der {llm_provider}-API erhalten") from last_exception
 
 
 async def construct_subtopics(

@@ -27,9 +27,13 @@ import os
 import logging
 from typing import Dict, List, Any
 
+import pytest
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+pytestmark = pytest.mark.asyncio
 
 # Get API keys from environment variables
 GITHUB_TOKEN = os.environ.get("GITHUB_PERSONAL_ACCESS_TOKEN")
@@ -90,6 +94,7 @@ def setup_environment():
     print("✅ All required environment variables are set")
     return True
 
+@pytest.mark.skipif(not os.environ.get("TAVILY_API_KEY"), reason="TAVILY_API_KEY not set")
 async def test_web_search_mcp():
     """Test MCP integration with web search (Tavily) for news and general topics."""
     print("\n🌐 Testing Web Search MCP Integration")
@@ -152,6 +157,7 @@ async def test_web_search_mcp():
         logger.exception("Web search MCP test error:")
         return False
 
+@pytest.mark.skipif(not os.environ.get("GITHUB_PERSONAL_ACCESS_TOKEN") or not os.environ.get("OPENAI_API_KEY"), reason="GitHub token or OpenAI key not set")
 async def test_github_mcp():
     """Test MCP integration with GitHub for code-related queries."""
     print("\n🐙 Testing GitHub MCP Integration")

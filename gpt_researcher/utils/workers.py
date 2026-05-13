@@ -1,5 +1,4 @@
 import asyncio
-import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from .rate_limiter import get_global_rate_limiter

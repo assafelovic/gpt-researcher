@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from ..actions.utils import stream_output
 from ..llm_provider.image import ImageGeneratorProvider
+from ..utils.json_parsing import parse_llm_json_response
 from ..utils.llm import create_chat_completion
 
 logger = logging.getLogger(__name__)
@@ -239,14 +240,11 @@ Return 2-3 visualization concepts as a JSON array:"""
                 cost_callback=self.researcher.add_costs,
             )
             
-            # Parse JSON response
-            response = response.strip()
-            # Remove markdown code blocks if present
-            if response.startswith("```"):
-                response = re.sub(r'^```(?:json)?\n?', '', response)
-                response = re.sub(r'\n?```$', '', response)
-            
-            concepts = json.loads(response)
+            # Parse the model output through the shared JSON repair helper.
+            concepts = parse_llm_json_response(response, expected_kind="array")
+            if not isinstance(concepts, list):
+                logger.warning("Failed to parse image planning response")
+                return []
             
             # Validate and limit to max_images
             valid_concepts = []
@@ -257,9 +255,6 @@ Return 2-3 visualization concepts as a JSON array:"""
             logger.info(f"Planned {len(valid_concepts)} image concepts")
             return valid_concepts
             
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse image planning response: {e}")
-            return []
         except Exception as e:
             logger.error(f"Error during image planning: {e}")
             return []
@@ -309,7 +304,7 @@ Return 2-3 visualization concepts as a JSON array:"""
                 llm_kwargs=self.cfg.llm_kwargs,
             )
             
-            # Parse the response
+            # Parse the model output through the shared JSON repair helper.
             image_suggestions = self._parse_analysis_response(response, sections)
             return image_suggestions[:self.max_images]
             
@@ -431,13 +426,11 @@ Return ONLY the JSON, no additional text."""
             List of image suggestion dictionaries.
         """
         try:
-            # Try to extract JSON from the response
-            json_match = re.search(r'\{[\s\S]*\}', response)
-            if not json_match:
+            data = parse_llm_json_response(response, expected_kind="object")
+            if not isinstance(data, dict):
                 logger.warning("No JSON found in analysis response")
                 return []
-            
-            data = json.loads(json_match.group())
+
             suggestions = data.get("suggestions", [])
             
             # Enrich with section data
@@ -456,7 +449,7 @@ Return ONLY the JSON, no additional text."""
             
             return enriched
             
-        except json.JSONDecodeError as e:
+        except Exception as e:
             logger.error(f"Failed to parse analysis JSON: {e}")
             return []
     

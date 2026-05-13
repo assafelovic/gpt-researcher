@@ -6,6 +6,7 @@ class BaseConfig(TypedDict):
     RETRIEVER: str
     EMBEDDING: str
     SIMILARITY_THRESHOLD: float
+    COMPRESSION_THRESHOLD: int
     FAST_LLM: str
     SMART_LLM: str
     STRATEGIC_LLM: str
@@ -30,6 +31,7 @@ class BaseConfig(TypedDict):
     MAX_SUBTOPICS: int
     REPORT_SOURCE: Union[str, None]
     DOC_PATH: str
+    ONION_PROXY_URL: Union[str, None]
     PROMPT_FAMILY: str
     LLM_KWARGS: dict
     EMBEDDING_KWARGS: dict
@@ -48,3 +50,18 @@ class BaseConfig(TypedDict):
     IMAGE_GENERATION_MAX_IMAGES: int
     IMAGE_GENERATION_ENABLED: bool
     IMAGE_GENERATION_STYLE: str  # Image style: "dark", "light", or "auto"
+    ENABLE_VERIFICATION_REVIEW: bool
+    ENABLE_REASONING_CRITIC: bool
+    RESEARCH_SAFETY_MODE: str
+    ENABLE_DEEP_CRAWLER: bool
+    DEEP_CRAWLER_DEPTH: int
+    DEEP_CRAWLER_BREADTH: int
+    DEEP_CRAWLER_CONCURRENCY: int
+    DEEP_CRAWLER_MAX_PAGES: int
+    DEEP_CRAWLER_MAX_LINKS_PER_PAGE: int
+    DEEP_CRAWLER_ALLOW_EXTERNAL_LINKS: bool
+    DEEP_CRAWLER_TIMEOUT: float
+    MAX_CONTEXT_TOKENS: int
+    CORS_ALLOW_ORIGINS: str
+    AZURE_CONTAINER_NAME: str
+    AZURE_CONNECTION_STRING: str

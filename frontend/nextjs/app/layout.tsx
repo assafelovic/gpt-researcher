@@ -10,7 +10,7 @@ const inter = Lexend({ subsets: ["latin"] });
 
 let title = "GPT Researcher";
 let description =
-  "LLM based autonomous agent that conducts local and web research on any topic and generates a comprehensive report with citations.";
+  "Ein lokal und im Web recherchierender KI-Agent, der zu beliebigen Themen umfassende Berichte mit Quellenangaben erstellt.";
 let url = "https://github.com/assafelovic/gpt-researcher";
 let ogimage = "/favicon.ico";
 let sitename = "GPT Researcher";
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     description,
     url: url,
     siteName: sitename,
-    locale: "en_US",
+    locale: "de_DE",
     type: "website",
   },
   twitter: {
@@ -60,7 +60,7 @@ export default function RootLayout({
 }>) {
 
   return (
-    <html className="gptr-root" lang="en" suppressHydrationWarning>
+    <html className="gptr-root" lang="de" suppressHydrationWarning>
       <head>
         <PlausibleProvider domain="localhost:3000" />
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID!} />

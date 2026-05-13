@@ -1,19 +1,19 @@
-# Hybrid Research
+# Hybride Recherche
 
-## Introduction
+## Einführung
 
-GPT Researcher can combine web search capabilities with local document analysis to provide comprehensive, context-aware research results. 
+GPT Researcher kann Websuche und lokale Dokumentenanalyse kombinieren, um umfassende und kontextbewusste Rechercheergebnisse zu liefern.
 
-This guide will walk you through the process of setting up and running hybrid research using GPT Researcher.
+Dieser Leitfaden zeigt dir, wie du Hybrid Research mit GPT Researcher einrichtest und ausführst.
 
-## Prerequisites
+## Voraussetzungen
 
-Before you begin, ensure you have the following:
+Bevor du startest, stelle sicher, dass du Folgendes hast:
 
-- Python 3.10 or higher installed on your system
-- pip (Python package installer)
-- An OpenAI API key (you can also choose other supported [LLMs](../gpt-researcher/llms/llms.md))
-- A Tavily API key (you can also choose other supported [Retrievers](../gpt-researcher/search-engines/retrievers.md))
+- Python 3.10 oder neuer
+- pip
+- Einen OpenAI-API-Key oder ein anderes unterstütztes LLM
+- Optional einen Web-Retriever. DuckDuckGo ist Standard, Tavily funktioniert, wenn `TAVILY_API_KEY` gesetzt ist.
 
 ## Installation
 
@@ -21,43 +21,41 @@ Before you begin, ensure you have the following:
 pip install gpt-researcher
 ```
 
-## Setting Up the Environment
+## Umgebung einrichten
 
-Export your API keys as environment variables:
+Setze deine API-Keys als Umgebungsvariablen:
 
 ```bash
 export OPENAI_API_KEY=your_openai_api_key_here
-export TAVILY_API_KEY=your_tavily_api_key_here
+# Optional: den DuckDuckGo-Standard mit Tavily oder einem anderen Retriever überschreiben
+# export TAVILY_API_KEY=your_tavily_api_key_here
 ```
 
-For custom OpenAI-compatible APIs, you can also set:
+Für eigene OpenAI-kompatible APIs kannst du auch setzen:
 
 ```bash
 export OPENAI_BASE_URL=your_custom_api_base_url_here
 ```
 
-Alternatively, you can set these in your Python script:
+Alternativ kannst du die Werte auch direkt in deinem Python-Skript setzen:
 
 ```python
 import os
 os.environ['OPENAI_API_KEY'] = 'your_openai_api_key_here'
-os.environ['TAVILY_API_KEY'] = 'your_tavily_api_key_here'
-os.environ['OPENAI_BASE_URL'] = 'your_custom_api_base_url_here'  # Optional
+# os.environ['TAVILY_API_KEY'] = 'your_tavily_api_key_here'
+os.environ['OPENAI_BASE_URL'] = 'your_custom_api_base_url_here'
 ```
-Set the environment variable REPORT_SOURCE to an empty string "" in default.py
-## Preparing Documents
 
-### 1. Local Documents
-1. Create a directory named `my-docs` in your project folder.
-2. Place all relevant local documents (PDFs, TXTs, DOCXs, etc.) in this directory.
+## Dokumente vorbereiten
 
-### 2. Online Documents
-1. Here is an example of your online document URL example: https://xxxx.xxx.pdf (supports file formats like PDFs, TXTs, DOCXs, etc.) 
+### 1. Lokale Dokumente
+1. Erstelle im Projektordner ein Verzeichnis namens `my-docs`.
+2. Lege dort alle relevanten lokalen Dokumente ab, zum Beispiel PDFs, TXT-, DOCX- oder CSV-Dateien.
 
+### 2. Online-Dokumente
+1. Nutze Online-Dokument-URLs, zum Beispiel `https://xxxx.xxx.pdf` - unterstützt werden Formate wie PDFs, TXTs und DOCXs.
 
-## Running Hybrid Research By "Local Documents"
-
-Here's a basic script to run hybrid research:
+## Hybrid Research mit lokalen Dokumenten
 
 ```python
 from gpt_researcher import GPTResearcher
@@ -65,21 +63,19 @@ import asyncio
 
 async def get_research_report(query: str, report_type: str, report_source: str) -> str:
     researcher = GPTResearcher(query=query, report_type=report_type, report_source=report_source)
-    research = await researcher.conduct_research()
+    await researcher.conduct_research()
     report = await researcher.write_report()
     return report
 
 if __name__ == "__main__":
-    query = "How does our product roadmap compare to emerging market trends in our industry?"
+    query = "Wie unterscheidet sich unsere Produkt-Roadmap von den Markttrends in unserer Branche?"
     report_source = "hybrid"
 
     report = asyncio.run(get_research_report(query=query, report_type="research_report", report_source=report_source))
     print(report)
 ```
 
-## Running Hybrid Research By "Online Documents"
-
-Here's a basic script to run hybrid research:
+## Hybrid Research mit Online-Dokumenten
 
 ```python
 from gpt_researcher import GPTResearcher
@@ -87,12 +83,12 @@ import asyncio
 
 async def get_research_report(query: str, report_type: str, report_source: str) -> str:
     researcher = GPTResearcher(query=query, report_type=report_type, document_urls=document_urls, report_source=report_source)
-    research = await researcher.conduct_research()
+    await researcher.conduct_research()
     report = await researcher.write_report()
     return report
 
 if __name__ == "__main__":
-    query = "How does our product roadmap compare to emerging market trends in our industry?"
+    query = "Wie unterscheidet sich unsere Produkt-Roadmap von den Markttrends in unserer Branche?"
     report_source = "hybrid"
     document_urls = ["https://xxxx.xxx.pdf", "https://xxxx.xxx.doc"]
 
@@ -100,33 +96,33 @@ if __name__ == "__main__":
     print(report)
 ```
 
-To run the script:
+## Ausführen
 
-1. Save it as `run_research.py`
-2. Execute it with: `python run_research.py`
+1. Als `run_research.py` speichern
+2. Mit `python run_research.py` ausführen
 
-## Understanding the Results
+## Ergebnisse verstehen
 
-The output will be a comprehensive research report that combines insights from both web sources and your local documents. The report typically includes an executive summary, key findings, detailed analysis, comparisons between your internal data and external trends, and recommendations based on the combined insights.
+Der Output ist ein umfassender Research-Report, der Erkenntnisse aus Webquellen und lokalen Dokumenten kombiniert. Der Report enthält typischerweise eine Zusammenfassung, wichtige Ergebnisse, eine detaillierte Analyse, Vergleiche zwischen internen Daten und externen Trends sowie Empfehlungen.
 
-## Troubleshooting
+## Fehlerbehebung
 
-1. **API Key Issues**: Ensure your API keys are correctly set and have the necessary permissions.
-2. **Document Loading Errors**: Check that your local documents are in supported formats and are not corrupted.
-3. **Memory Issues**: For large documents or extensive research, you may need to increase your system's available memory or adjust the `chunk_size` in the document processing step.
+1. **API-Key-Probleme**: Prüfe, ob deine API-Keys korrekt gesetzt sind.
+2. **Dokumentenladefehler**: Prüfe, ob die lokalen Dokumente in unterstützten Formaten vorliegen und nicht beschädigt sind.
+3. **Speicherprobleme**: Bei großen Dokumenten oder umfangreicher Recherche kann mehr Arbeitsspeicher nötig sein.
 
 ## FAQ
 
-**Q: How long does a typical research session take?**
-A: The duration varies based on the complexity of the query and the amount of data to process. It can range from 1-5 minutes for very comprehensive research.
+**F: Wie lange dauert eine typische Recherche?**
+**A:** Das hängt von der Komplexität und der Datenmenge ab. Für sehr umfangreiche Recherchen können es 1-5 Minuten sein.
 
-**Q: Can I use GPT Researcher with other language models?**
-A: Currently, GPT Researcher is optimized for OpenAI's models. Support for other models can be found [here](../gpt-researcher/llms/llms.md).
+**F: Kann ich GPT Researcher mit anderen Sprachmodellen verwenden?**
+**A:** Aktuell ist GPT Researcher für OpenAI-Modelle optimiert. Unterstützung für andere Modelle findest du in der LLM-Dokumentation.
 
-**Q: How does GPT Researcher handle conflicting information between local and web sources?**
-A: The system attempts to reconcile differences by providing context and noting discrepancies in the final report. It prioritizes more recent or authoritative sources when conflicts arise.
+**F: Wie geht GPT Researcher mit widersprüchlichen Informationen um?**
+**A:** Das System versucht, Unterschiede durch Kontext und Hinweise auf Abweichungen im finalen Report sichtbar zu machen.
 
-**Q: Is my local data sent to external servers during the research process?**
-A: No, your local documents are processed on your machine. Only the generated queries and synthesized information (not raw data) are sent to external services for web research.
+**F: Werden lokale Daten an externe Server gesendet?**
+**A:** Nein, lokale Dokumente werden auf deiner Maschine verarbeitet. Nur erzeugte Suchanfragen und zusammengefasste Informationen werden für die Webrecherche an externe Dienste gesendet.
 
-For more information and updates, please visit the [GPT Researcher GitHub repository](https://github.com/assafelovic/gpt-researcher).
+Weitere Informationen und Updates findest du im [GPT-Researcher-GitHub-Repository](https://github.com/assafelovic/gpt-researcher).

@@ -1,98 +1,96 @@
-# NextJS Frontend
+# NextJS-Frontend
 
-This frontend project aims to enhance the user experience of GPT Researcher, providing an intuitive and efficient interface for automated research. It offers two deployment options to suit different needs and environments.
+Dieses Frontend soll die Nutzererfahrung von GPT Researcher verbessern und bietet eine intuitive, effiziente Oberfläche für automatisierte Recherche. Es gibt zwei Bereitstellungsoptionen für unterschiedliche Bedürfnisse und Umgebungen.
 
 #### Demo
 <iframe height="400" width="700" src="https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-View an in-depth Product Tutorial here: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
+Ein ausführliches Produkt-Tutorial findest du hier: [GPT-Researcher Frontend Tutorial](https://www.youtube.com/watch?v=hIZqA6lPusk)
 
+## NextJS-Frontend-App
 
-## NextJS Frontend App
+Die React-App im Verzeichnis `frontend` ist unsere Frontend-2.0-Version. Damit wollen wir die Stärke des Backends auch im Frontend sichtbar machen.
 
-The React app (located in the `frontend` directory) is our Frontend 2.0 which we hope will enable us to display the robustness of the backend on the frontend, as well.
+Sie bringt viele zusätzliche Funktionen mit, zum Beispiel:
+- Drag-and-Drop-Oberfläche zum Hochladen und Löschen von Dateien, die GPT Researcher als lokale Dokumente nutzen kann
+- GUI zum Setzen deiner GPTR-Umgebungsvariablen
+- Möglichkeit, den Multi-Agents-Flow über das Backend-Modul oder den LangGraph-Cloud-Host auszulösen
+- Stabilitätsverbesserungen
+- und weitere Funktionen folgen
 
-It comes with loads of added features, such as: 
- - a drag-n-drop user interface for uploading and deleting files to be used as local documents by GPTResearcher.
- - a GUI for setting your GPTR environment variables.
- - the ability to trigger the multi_agents flow via the Backend Module or Langgraph Cloud Host (currently in closed beta).
- - stability fixes
- - and more coming soon!
+### NextJS-React-App mit Docker starten
 
-### Run the NextJS React App with Docker
+> **Schritt 1** - [Docker installieren](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
 
-> **Step 1** - [Install Docker](https://docs.gptr.dev/docs/gpt-researcher/getting-started/getting-started-with-docker)
+> **Schritt 2** - Die `.env.example` kopieren, die API-Keys eintragen und die Datei als `.env` speichern
 
-> **Step 2** - Clone the '.env.example' file, add your API Keys to the cloned file and save the file as '.env'
-
-> **Step 3** - Within the docker-compose file comment out services that you don't want to run with Docker.
+> **Schritt 3** - In der `docker-compose`-Datei die Services auskommentieren, die du nicht mit Docker laufen lassen möchtest
 
 ```bash
 docker compose up --build
 ```
 
-If that doesn't work, try running it without the dash:
+Wenn das nicht funktioniert, probiere es ohne Bindestrich:
 ```bash
 docker compose up --build
 ```
 
-> **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
- - the Python server running on localhost:8000
- - the React app running on localhost:3000
+> **Schritt 4** - Wenn du in der `docker-compose`-Datei nichts aktiviert hast, starten standardmäßig zwei Prozesse:
+ - der Python-Server auf `localhost:8000`
+ - die React-App auf `localhost:3000`
 
-Visit localhost:3000 on any browser and enjoy researching!
+Öffne `localhost:3000` im Browser und lege los.
 
-If, for some reason, you don't want to run the GPTR API Server on localhost:8000, no problem! You can set the `NEXT_PUBLIC_GPTR_API_URL` environment variable in your `.env` file to the URL of your GPTR API Server.
+Wenn du den GPTR-API-Server nicht auf `localhost:8000` laufen lassen möchtest, kannst du die Umgebungsvariable `NEXT_PUBLIC_GPTR_API_URL` in deiner `.env`-Datei setzen.
 
-For example:
+Beispiele:
 ```
 NEXT_PUBLIC_GPTR_API_URL=https://app.gptr.dev
 ```
 
-Or: 
+Oder:
 ```
 NEXT_PUBLIC_GPTR_API_URL=http://localhost:7000
 ```
 
-## Running NextJS Frontend via CLI
+## NextJS-Frontend per CLI starten
 
-A more robust solution with enhanced features and performance.
+Eine robustere Lösung mit erweiterten Funktionen und besserer Performance.
 
-#### Prerequisites
-- Node.js (v18.17.0 recommended)
+#### Voraussetzungen
+- Node.js (empfohlen: v18.17.0)
 - npm
 
-#### Setup and Running
+#### Einrichtung und Start
 
-1. Navigate to NextJS directory:
+1. In das NextJS-Verzeichnis wechseln:
    ```
    cd nextjs
    ```
 
-2. Set up Node.js:
+2. Node.js einrichten:
    ```
    nvm install 18.17.0
    nvm use v18.17.0
    ```
 
-3. Install dependencies:
+3. Abhängigkeiten installieren:
    ```
    npm install --legacy-peer-deps
    ```
 
-4. Start development server:
+4. Entwicklungsserver starten:
    ```
    npm run dev
    ```
 
-5. Access at `http://localhost:3000`
+5. Unter `http://localhost:3000` öffnen
 
-Note: Requires backend server on `localhost:8000` as detailed in option 1.
+Hinweis: Dafür muss der Backend-Server wie in Option 1 auf `localhost:8000` laufen.
 
+### Google Analytics hinzufügen
 
-### Adding Google Analytics
-
-To add Google Analytics to your NextJS frontend, simply add the following to your `.env` file:
+Wenn du Google Analytics in dein NextJS-Frontend einbinden möchtest, füge einfach Folgendes in deine `.env`-Datei ein:
 
 ```
 NEXT_PUBLIC_GA_MEASUREMENT_ID="G-G2YVXKHJNZ"

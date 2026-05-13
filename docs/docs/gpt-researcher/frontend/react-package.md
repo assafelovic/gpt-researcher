@@ -1,7 +1,6 @@
-# React Package
+# React-Paket
 
-The GPTR React package is an abstraction on top of the NextJS app meant to empower users to easily import the GPTR frontend into any React App. The package is [available on npm](https://www.npmjs.com/package/gpt-researcher-ui).
-
+Das GPTR-React-Paket ist eine Abstraktionsschicht über der NextJS-App. Damit können Nutzer das GPTR-Frontend leicht in jede React-App einbinden. Das Paket ist [auf npm verfügbar](https://www.npmjs.com/package/gpt-researcher-ui).
 
 ## Installation
 
@@ -9,7 +8,7 @@ The GPTR React package is an abstraction on top of the NextJS app meant to empow
 npm install gpt-researcher-ui
 ```
 
-## Usage
+## Nutzung
 
 ```javascript
 import React from 'react';
@@ -20,8 +19,8 @@ function App() {
     <div className="App">
       <GPTResearcher 
         apiUrl="http://localhost:8000"
-        defaultPrompt="What is quantum computing?"
-        onResultsChange={(results) => console.log('Research results:', results)}
+        defaultPrompt="Was ist Quantencomputing?"
+        onResultsChange={(results) => console.log('Rechercheergebnisse:', results)}
       />
     </div>
   );
@@ -30,15 +29,13 @@ function App() {
 export default App;
 ```
 
+## In eine private npm-Registry veröffentlichen
 
-## Publishing to a private npm registry
+Wenn du das Paket in deine eigene private npm-Registry bauen und veröffentlichen möchtest, kannst du folgende Befehle ausführen:
 
-If you'd like to build and publish the package into your own private npm registry, you can do so by running the following commands:
-
- ```bash
- cd frontend/nextjs/
- npm run build:lib
- npm run build:types
- npm publish
- ```
- 
+```bash
+cd frontend/nextjs/
+npm run build:lib
+npm run build:types
+npm publish
+```

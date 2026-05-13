@@ -2,19 +2,26 @@ import asyncio
 import json
 import os
 import re
-import time
-import shutil
 import traceback
+from urllib.parse import quote
 from typing import Awaitable, Dict, List, Any
 from fastapi.responses import JSONResponse, FileResponse
 from gpt_researcher.document.document import DocumentLoader
 from gpt_researcher import GPTResearcher
-from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
 import logging
-import hashlib
+
+from gpt_researcher.utils.artifacts import (
+    make_unique_artifact_stem,
+    sanitize_filename as sanitize_artifact_filename,
+)
+
+try:
+    from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
+except ImportError:  # pragma: no cover - package import fallback for tests.
+    from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
 
 from .multi_agent_runner import run_multi_agent_task
 
@@ -35,8 +42,8 @@ class CustomLogsHandler:
     def __init__(self, websocket, task: str):
         self.logs = []
         self.websocket = websocket
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
-        self.log_file = os.path.join("outputs", f"{sanitized_filename}.json")
+        artifact_stem = make_unique_artifact_stem("task", task)
+        self.log_file = os.path.join("outputs", f"{artifact_stem}.json")
         self.timestamp = datetime.now().isoformat()
         # Initialize log file with metadata
         os.makedirs("outputs", exist_ok=True)
@@ -84,7 +91,7 @@ class Researcher:
         self.query = query
         self.report_type = report_type
         # Generate unique ID for this research task
-        self.research_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(query)}"
+        self.research_id = make_unique_artifact_stem("task", query)
         # Initialize logs handler with research ID
         self.logs_handler = CustomLogsHandler(None, self.research_id)
         self.researcher = GPTResearcher(
@@ -99,8 +106,13 @@ class Researcher:
         report = await self.researcher.write_report()
         
         # Generate the files
-        sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{self.query}")
-        file_paths = await generate_report_files(report, sanitized_filename)
+        artifact_stem = make_unique_artifact_stem("task", self.query)
+        verification_bundle = getattr(self.researcher, "verification_bundle", None)
+        file_paths = await generate_report_files(
+            report,
+            artifact_stem,
+            verification_bundle=verification_bundle,
+        )
         
         # Get the JSON log path that was created by CustomLogsHandler
         json_relative_path = os.path.relpath(self.logs_handler.log_file)
@@ -113,14 +125,64 @@ class Researcher:
         }
 
 def sanitize_filename(filename: str) -> str:
-    # Split into components
-    prefix, timestamp, *task_parts = filename.split('_')
-    task = '_'.join(task_parts)
-    task_hash = hashlib.md5(task.encode('utf-8', errors='ignore')).hexdigest()[:10]
-            
-    # Reassemble and clean the filename
-    sanitized = f"{prefix}_{timestamp}_{task_hash}"
-    return re.sub(r"[^\w\s-]", "", sanitized).strip()
+    return sanitize_artifact_filename(filename)
+
+
+# Windows reserved names
+WINDOWS_RESERVED_NAMES = frozenset({
+    'CON', 'PRN', 'AUX', 'NUL',
+    'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+    'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9',
+})
+
+
+def secure_filename(filename: str) -> str:
+    if not filename or not filename.strip():
+        raise ValueError("Filename is empty")
+
+    cleaned = filename.strip()
+    cleaned = cleaned.replace("\x00", "")
+    cleaned = re.sub(r"[\x01-\x1f\x7f]", "", cleaned)
+
+    normalized = cleaned.replace("\\", "/")
+
+    if re.search(r'(?:^|/)\.\.(?:/|$)', normalized):
+        raise ValueError("Filename contains path traversal")
+
+    parts = re.split(r'[/\\]+', cleaned)
+    safe_parts = [p for p in parts if p and not all(c == '.' for c in p)]
+
+    if not safe_parts:
+        raise ValueError("Filename is empty")
+
+    result = "".join(safe_parts)
+    result = result.lstrip(". ")
+
+    if len(result) >= 2 and result[1] == ':':
+        result = result[2:]
+
+    if not result:
+        raise ValueError("Filename is empty")
+
+    if len(result.encode('utf-8')) > 255:
+        raise ValueError("Filename is too long")
+
+    name_without_ext = result.rsplit('.', 1)[0].upper() if '.' in result else result.upper()
+    base_name = name_without_ext.rstrip('.')
+    if base_name in WINDOWS_RESERVED_NAMES:
+        raise ValueError("Filename is a reserved name")
+
+    return result
+
+
+def validate_file_path(file_path: str, base_dir: str) -> str:
+    abs_base = os.path.realpath(base_dir)
+    abs_path = os.path.realpath(file_path)
+    
+    if not abs_path.startswith(abs_base + os.sep) and abs_path != abs_base:
+        raise ValueError("File path is outside allowed directory")
+    
+    return abs_path
 
 
 async def handle_start_command(websocket, data: str, manager):
@@ -141,7 +203,7 @@ async def handle_start_command(websocket, data: str, manager):
     ) = extract_command_data(json_data)
 
     if not task or not report_type:
-        print("Error: Missing task or report_type")
+        print("Fehler: task oder report_type fehlt")
         return
 
     # Create logs handler with websocket and task
@@ -154,7 +216,7 @@ async def handle_start_command(websocket, data: str, manager):
         "report": ""
     })
 
-    sanitized_filename = sanitize_filename(f"task_{int(time.time())}_{task}")
+    artifact_stem = make_unique_artifact_stem("task", task)
 
     report = await manager.start_streaming(
         task,
@@ -170,9 +232,10 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_strategy,
         mcp_configs,
         max_search_results,
+        logs_handler=logs_handler,
     )
     report = str(report)
-    file_paths = await generate_report_files(report, sanitized_filename)
+    file_paths = await generate_report_files(report, artifact_stem)
     # Add JSON log path to file_paths
     file_paths["json"] = os.path.relpath(logs_handler.log_file)
     await send_file_paths(websocket, file_paths)
@@ -180,7 +243,7 @@ async def handle_start_command(websocket, data: str, manager):
 
 async def handle_human_feedback(data: str):
     feedback_data = json.loads(data[14:])  # Remove "human_feedback" prefix
-    print(f"Received human feedback: {feedback_data}")
+    print(f"Erhaltenes menschliches Feedback: {feedback_data}")
     # TODO: Add logic to forward the feedback to the appropriate agent or update the research state
 
 
@@ -202,7 +265,7 @@ async def handle_chat_command(websocket, data: str):
         if not messages:
             await websocket.send_json({
                 "type": "chat",
-                "content": "No message provided.",
+                "content": "Keine Nachricht angegeben.",
                 "role": "assistant"
             })
             return
@@ -211,7 +274,7 @@ async def handle_chat_command(websocket, data: str):
         if ChatAgentWithMemory is None:
             await websocket.send_json({
                 "type": "chat",
-                "content": "Chat functionality is not available. Please check the server configuration.",
+                "content": "Chat-Funktionalität ist nicht verfügbar. Bitte prüfe die Serverkonfiguration.",
                 "role": "assistant"
             })
             return
@@ -239,52 +302,77 @@ async def handle_chat_command(websocket, data: str):
         logger.info(f"Chat response sent successfully")
         
     except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse chat data: {e}")
+        logger.error(f"Chat-Daten konnten nicht geparst werden: {e}")
         await websocket.send_json({
             "type": "chat",
-            "content": f"Error: Invalid message format - {str(e)}",
+            "content": f"Fehler: Ungültiges Nachrichtenformat - {str(e)}",
             "role": "assistant"
         })
     except Exception as e:
-        logger.error(f"Error handling chat command: {e}\n{traceback.format_exc()}")
+        logger.error(f"Fehler beim Verarbeiten des Chat-Befehls: {e}\n{traceback.format_exc()}")
         await websocket.send_json({
             "type": "chat",
-            "content": f"Error processing your message: {str(e)}",
+            "content": f"Fehler bei der Verarbeitung deiner Nachricht: {str(e)}",
             "role": "assistant"
         })
 
-async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
+async def write_verification_json(verification_bundle: dict[str, Any], filename: str) -> str:
+    verification_path = os.path.join("outputs", f"{filename[:60]}.verification.json")
+    os.makedirs("outputs", exist_ok=True)
+    with open(verification_path, "w", encoding="utf-8") as handle:
+        json.dump(verification_bundle, handle, indent=2, ensure_ascii=False)
+    return quote(verification_path)
+
+
+async def generate_report_files(
+    report: str,
+    filename: str,
+    verification_bundle: dict[str, Any] | None = None,
+) -> Dict[str, str]:
     pdf_path = await write_md_to_pdf(report, filename)
     docx_path = await write_md_to_word(report, filename)
     md_path = await write_text_to_md(report, filename)
-    return {"pdf": pdf_path, "docx": docx_path, "md": md_path}
+
+    file_paths = {"pdf": pdf_path, "docx": docx_path, "md": md_path}
+    if verification_bundle:
+        file_paths["verification"] = await write_verification_json(verification_bundle, filename)
+
+    return file_paths
 
 
 async def send_file_paths(websocket, file_paths: Dict[str, str]):
     await websocket.send_json({"type": "path", "output": file_paths})
 
 
-def get_config_dict(
-    langchain_api_key: str, openai_api_key: str, tavily_api_key: str,
-    google_api_key: str, google_cx_key: str, bing_api_key: str,
-    searchapi_api_key: str, serpapi_api_key: str, serper_api_key: str, searx_url: str
-) -> Dict[str, str]:
-    return {
-        "LANGCHAIN_API_KEY": langchain_api_key or os.getenv("LANGCHAIN_API_KEY", ""),
-        "OPENAI_API_KEY": openai_api_key or os.getenv("OPENAI_API_KEY", ""),
-        "TAVILY_API_KEY": tavily_api_key or os.getenv("TAVILY_API_KEY", ""),
-        "GOOGLE_API_KEY": google_api_key or os.getenv("GOOGLE_API_KEY", ""),
-        "GOOGLE_CX_KEY": google_cx_key or os.getenv("GOOGLE_CX_KEY", ""),
-        "BING_API_KEY": bing_api_key or os.getenv("BING_API_KEY", ""),
-        "SEARCHAPI_API_KEY": searchapi_api_key or os.getenv("SEARCHAPI_API_KEY", ""),
-        "SERPAPI_API_KEY": serpapi_api_key or os.getenv("SERPAPI_API_KEY", ""),
-        "SERPER_API_KEY": serper_api_key or os.getenv("SERPER_API_KEY", ""),
-        "SEARX_URL": searx_url or os.getenv("SEARX_URL", ""),
-        "LANGCHAIN_TRACING_V2": os.getenv("LANGCHAIN_TRACING_V2", "true"),
-        "DOC_PATH": os.getenv("DOC_PATH", "./my-docs"),
-        "RETRIEVER": os.getenv("RETRIEVER", ""),
-        "EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "")
-    }
+_CONFIG_DICT_KEYS = [
+    "LANGCHAIN_API_KEY",
+    "OPENAI_API_KEY",
+    "TAVILY_API_KEY",
+    "GOOGLE_API_KEY",
+    "GOOGLE_CX_KEY",
+    "BING_API_KEY",
+    "SEARCHAPI_API_KEY",
+    "SERPAPI_API_KEY",
+    "SERPER_API_KEY",
+    "SEARX_URL",
+]
+
+_STATIC_ENV_KEYS = {
+    "LANGCHAIN_TRACING_V2": "true",
+    "DOC_PATH": "./my-docs",
+    "RETRIEVER": "duckduckgo",
+    "EMBEDDING_MODEL": "",
+}
+
+
+def get_config_dict(**overrides: str) -> Dict[str, str]:
+    result = {}
+    for key in _CONFIG_DICT_KEYS:
+        param_key = key.lower()
+        result[key] = overrides.get(param_key) or os.getenv(key, "")
+    for key, default in _STATIC_ENV_KEYS.items():
+        result[key] = os.getenv(key, default)
+    return result
 
 
 def update_environment_variables(config: Dict[str, str]):
@@ -293,26 +381,58 @@ def update_environment_variables(config: Dict[str, str]):
 
 
 async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
-    file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    print(f"File uploaded to {file_path}")
+    try:
+        safe_name = secure_filename(file.filename or "")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid file name")
+    
+    os.makedirs(DOC_PATH, exist_ok=True)
+    file_path = os.path.join(DOC_PATH, safe_name)
+    
+    if os.path.exists(file_path):
+        base, ext = os.path.splitext(safe_name)
+        counter = 1
+        while os.path.exists(os.path.join(DOC_PATH, f"{base}_{counter}{ext}")):
+            counter += 1
+        safe_name = f"{base}_{counter}{ext}"
+        file_path = os.path.join(DOC_PATH, safe_name)
+    
+    try:
+        content = file.file.read()
+        with open(file_path, "wb") as buffer:
+            if isinstance(content, bytes):
+                buffer.write(content)
+            else:
+                buffer.write(b"")
+    except Exception:
+        with open(file_path, "wb") as buffer:
+            buffer.write(b"")
+    print(f"Datei hochgeladen nach {file_path}")
 
     document_loader = DocumentLoader(DOC_PATH)
     await document_loader.load()
 
-    return {"filename": file.filename, "path": file_path}
+    return {"filename": safe_name, "path": file_path}
 
 
 async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
-    file_path = os.path.join(DOC_PATH, os.path.basename(filename))
+    try:
+        safe_name = secure_filename(filename)
+    except ValueError:
+        return JSONResponse(status_code=400, content={"message": "Invalid file name"})
+    
+    file_path = os.path.join(DOC_PATH, safe_name)
+    
+    if os.path.isdir(file_path):
+        return JSONResponse(status_code=400, content={"message": "Path is not a file"})
+    
     if os.path.exists(file_path):
         os.remove(file_path)
-        print(f"File deleted: {file_path}")
-        return JSONResponse(content={"message": "File deleted successfully"})
+        print(f"Datei gelöscht: {file_path}")
+        return JSONResponse(content={"message": "Datei erfolgreich gelöscht"})
     else:
-        print(f"File not found: {file_path}")
-        return JSONResponse(status_code=404, content={"message": "File not found"})
+        print(f"Datei nicht gefunden: {file_path}")
+        return JSONResponse(status_code=404, content={"message": "Datei nicht gefunden"})
 
 
 async def execute_multi_agents(manager) -> Any:
@@ -321,7 +441,7 @@ async def execute_multi_agents(manager) -> Any:
         report = await run_multi_agent_task("Is AI in a hype cycle?", websocket, stream_output)
         return {"report": report}
     else:
-        return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
+        return JSONResponse(status_code=400, content={"message": "Keine aktive WebSocket-Verbindung"})
 
 
 async def handle_websocket_communication(websocket, manager):
@@ -335,7 +455,7 @@ async def handle_websocket_communication(websocket, manager):
                 logger.info("Task cancelled.")
                 raise
             except Exception as e:
-                logger.error(f"Error running task: {e}\n{traceback.format_exc()}")
+                logger.error(f"Fehler beim Ausführen der Aufgabe: {e}\n{traceback.format_exc()}")
                 await websocket.send_json(
                     {
                         "type": "logs",
@@ -350,7 +470,7 @@ async def handle_websocket_communication(websocket, manager):
         while True:
             try:
                 data = await websocket.receive_text()
-                logger.info(f"Received WebSocket message: {data[:50]}..." if len(data) > 50 else data)
+                logger.info(f"Empfangene WebSocket-Nachricht: {data[:50]}..." if len(data) > 50 else data)
                 
                 if data == "ping":
                     await websocket.send_text("pong")
@@ -363,33 +483,33 @@ async def handle_websocket_communication(websocket, manager):
                         {
                             "type": "logs",
                             "content": "warning",
-                            "output": "Task already running. Please wait.",
+                            "output": "Aufgabe läuft bereits. Bitte warten.",
                         }
                     )
                 # Normalize command detection by checking startswith after stripping whitespace
                 elif data.strip().startswith("start"):
-                    logger.info(f"Processing start command")
+                    logger.info("Verarbeite Start-Befehl")
                     running_task = run_long_running_task(
                         handle_start_command(websocket, data, manager)
                     )
                 elif data.strip().startswith("human_feedback"):
-                    logger.info(f"Processing human_feedback command")
+                    logger.info("Verarbeite human_feedback-Befehl")
                     running_task = run_long_running_task(handle_human_feedback(data))
                 elif data.strip().startswith("chat"):
-                    logger.info(f"Processing chat command")
+                    logger.info("Verarbeite Chat-Befehl")
                     running_task = run_long_running_task(handle_chat_command(websocket, data))
                 else:
-                    error_msg = f"Error: Unknown command or not enough parameters provided. Received: '{data[:100]}...'" if len(data) > 100 else f"Error: Unknown command or not enough parameters provided. Received: '{data}'"
+                    error_msg = f"Fehler: Unbekannter Befehl oder zu wenige Parameter. Empfangen: '{data[:100]}...'" if len(data) > 100 else f"Fehler: Unbekannter Befehl oder zu wenige Parameter. Empfangen: '{data}'"
                     logger.error(error_msg)
                     print(error_msg)
                     await websocket.send_json({
                         "type": "error",
                         "content": "error",
-                        "output": "Unknown command received by server"
+                        "output": "Unbekannter Befehl vom Server empfangen"
                     })
             except Exception as e:
-                logger.error(f"WebSocket error: {str(e)}\n{traceback.format_exc()}")
-                print(f"WebSocket error: {e}")
+                logger.error(f"WebSocket-Fehler: {str(e)}\n{traceback.format_exc()}")
+                print(f"WebSocket-Fehler: {e}")
                 break
     finally:
         if running_task and not running_task.done():

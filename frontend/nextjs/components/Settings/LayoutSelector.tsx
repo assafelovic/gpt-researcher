@@ -8,18 +8,18 @@ interface LayoutSelectorProps {
 export default function LayoutSelector({ layoutType, onLayoutChange }: LayoutSelectorProps) {
   return (
     <div className="form-group">
-      <label htmlFor="layoutType" className="agent_question">Layout Type </label>
-      <select 
-        name="layoutType" 
-        id="layoutType" 
-        value={layoutType} 
-        onChange={onLayoutChange} 
+      <label htmlFor="layoutType" className="agent_question">Layout-Typ </label>
+      <select
+        name="layoutType"
+        id="layoutType"
+        value={layoutType}
+        onChange={onLayoutChange}
         className="form-control-static"
         required
       >
-        <option value="research">Research - Traditional research layout with detailed results</option>
-        <option value="copilot">Copilot - Side-by-side research and chat interface</option>
+        <option value="research">Forschung - Klassisches Forschungs-Layout mit detaillierten Ergebnissen</option>
+        <option value="copilot">Copilot - Nebeneinander angeordnete Forschungs- und Chat-Ansicht</option>
       </select>
     </div>
   );
-} 
+}

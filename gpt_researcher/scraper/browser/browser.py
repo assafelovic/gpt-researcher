@@ -10,12 +10,10 @@ import string
 import os
 
 from bs4 import BeautifulSoup
-from typing import Iterable, cast
 
 from .processing.scrape_skills import (scrape_pdf_with_pymupdf,
                                        scrape_pdf_with_arxiv)
 
-from urllib.parse import urljoin
 
 from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
 
@@ -195,7 +193,7 @@ class BrowserScraper:
             WebDriverWait(self.driver, 20).until(
                 EC.presence_of_element_located((By.TAG_NAME, "body"))
             )
-        except TimeoutException as e:
+        except TimeoutException:
             print("Timed out waiting for page to load")
             print(f"Full stack trace:\n{traceback.format_exc()}")
             return "Page load timed out", [], ""
