@@ -41,6 +41,38 @@ class TestSubtopicsValidator:
         assert st.subtopics[0].task == "topic1"
 
 
+class TestResolveOnionProxy:
+    def test_from_config(self):
+        from gpt_researcher.utils.network import resolve_onion_proxy_url
+        from types import SimpleNamespace
+        cfg = SimpleNamespace(onion_proxy_url="socks5://localhost:9050")
+        assert resolve_onion_proxy_url(cfg) == "socks5://localhost:9050"
+
+    def test_from_config_empty(self):
+        from gpt_researcher.utils.network import resolve_onion_proxy_url
+        from types import SimpleNamespace
+        cfg = SimpleNamespace(onion_proxy_url="")
+        assert resolve_onion_proxy_url(cfg) is None
+
+    def test_from_environment(self, monkeypatch):
+        from gpt_researcher.utils.network import resolve_onion_proxy_url
+        monkeypatch.setenv("ONION_PROXY_URL", "socks5://tor:9050")
+        assert resolve_onion_proxy_url() == "socks5://tor:9050"
+
+    def test_no_proxy_configured(self):
+        from gpt_researcher.utils.network import resolve_onion_proxy_url
+        assert resolve_onion_proxy_url(None) is None
+
+    def test_build_proxies(self):
+        from gpt_researcher.utils.network import build_requests_proxies
+        proxies = build_requests_proxies("socks5://localhost:9050")
+        assert proxies == {"http": "socks5://localhost:9050", "https": "socks5://localhost:9050"}
+
+    def test_build_proxies_none(self):
+        from gpt_researcher.utils.network import build_requests_proxies
+        assert build_requests_proxies(None) is None
+
+
 class TestGlobalRateLimiter:
     def test_singleton(self):
         rl1 = GlobalRateLimiter()
