@@ -9,6 +9,7 @@ coverage and source quality without turning research into an uncontrolled crawl.
 from __future__ import annotations
 
 import asyncio
+from collections import Counter
 import re
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse, urldefrag
@@ -114,6 +115,10 @@ def _canonicalize_url(url: str | None) -> str | None:
     if not parsed.scheme:
         return None
 
+    path_segments = [segment for segment in parsed.path.split("/") if segment]
+    if _has_repeated_path_segment_chain(path_segments):
+        return None
+
     query_parts = [
         (key, value)
         for key, value in parse_qsl(parsed.query, keep_blank_values=True)
@@ -121,11 +126,65 @@ def _canonicalize_url(url: str | None) -> str | None:
     ]
     cleaned = parsed._replace(
         netloc=_normalize_host(parsed.netloc),
+        path="/" + "/".join(path_segments) if path_segments else "",
         query=urlencode(query_parts, doseq=True),
     )
     cleaned_url = urlunparse(cleaned)
     cleaned_url, _fragment = urldefrag(cleaned_url)
     return cleaned_url.rstrip("/") if cleaned_url.endswith("/") and cleaned_url not in {"http://", "https://"} else cleaned_url
+
+
+def _path_segment_signature(segment: str) -> str:
+    normalized = re.sub(r"[^0-9a-z]+", "-", segment.casefold())
+    normalized = re.sub(r"-+", "-", normalized).strip("-")
+    return normalized or segment.casefold().strip()
+
+
+def _collapse_repeated_path_segments(path_segments: list[str]) -> list[str]:
+    if not path_segments:
+        return []
+
+    collapsed: list[str] = []
+    group: list[str] = []
+    group_signature: str | None = None
+
+    def flush_group() -> None:
+        if not group:
+            return
+        collapsed.append(min(group, key=lambda item: (len(item), item)))
+
+    for segment in path_segments:
+        signature = _path_segment_signature(segment)
+        if group_signature is None or signature == group_signature:
+            group.append(segment)
+            group_signature = signature
+            continue
+
+        flush_group()
+        group = [segment]
+        group_signature = signature
+
+    flush_group()
+    return collapsed
+
+
+def _has_repeated_path_segment_chain(path_segments: list[str]) -> bool:
+    if len(path_segments) < 2:
+        return False
+
+    signatures = [_path_segment_signature(segment) for segment in path_segments]
+    run_length = 1
+    previous = signatures[0]
+    for current in signatures[1:]:
+        if current and current == previous:
+            run_length += 1
+            if run_length >= 2:
+                return True
+        else:
+            run_length = 1
+        previous = current
+
+    return False
 
 
 def _candidate_text(*parts: str | None) -> str:

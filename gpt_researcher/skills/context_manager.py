@@ -52,11 +52,19 @@ class ContextManager:
                 self.researcher.websocket,
             )
 
+        max_tokens = self.researcher.kwargs.get("max_tokens") or getattr(self.researcher.cfg, "max_context_tokens", None)
+        compression_threshold = getattr(self.researcher.cfg, "compression_threshold", None)
+        similarity_threshold = getattr(self.researcher.cfg, "similarity_threshold", None)
+        kwargs = {k: v for k, v in self.researcher.kwargs.items() if k != "max_tokens"}
+
         context_compressor = ContextCompressor(
             documents=pages,
             embeddings=self.researcher.memory.get_embeddings(),
+            compression_threshold=compression_threshold,
+            similarity_threshold=similarity_threshold,
             prompt_family=self.researcher.prompt_family,
-            **self.researcher.kwargs
+            max_tokens=max_tokens,
+            **kwargs
         )
         return await context_compressor.async_get_context(
             query=query, max_results=10, cost_callback=self.researcher.add_costs

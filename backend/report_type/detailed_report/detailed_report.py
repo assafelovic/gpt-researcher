@@ -83,6 +83,8 @@ class DetailedReport:
 
     async def run(self) -> str:
         await self._initial_research()
+        if getattr(self.gpt_researcher, "safety_decision", None) is not None:
+            return await self.gpt_researcher.write_report()
         subtopics = await self._get_all_subtopics()
         report_introduction = await self.gpt_researcher.write_introduction()
         _, report_body = await self._generate_subtopic_reports(subtopics)

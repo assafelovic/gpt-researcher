@@ -57,6 +57,20 @@ addopts = "-v"
 testpaths = ["tests"]
 python_files = "test_*.py"
 asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "integration: tests that call external APIs (mocked or not)",
+    "smoke: quick sanity checks (sub second)",
+    "retriever: tests for specific retriever implementations",
+    "security: query integrity / unfiltered search tests",
+]
+
+[tool.coverage.run]
+source = ["gpt_researcher", "backend"]
+omit = ["*/tests/*", "*/migrations/*"]
+
+[tool.coverage.report]
+fail_under = 75
+show_missing = true
 
 [tool.uv.sources]
 gpt-researcher = { workspace = true }
@@ -240,6 +254,9 @@ requirements-txt = [
 
 [dependency-groups]
 dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.25",
+    "pytest-cov>=6.0",
     "types-aiofiles>=24.1.0.20250516",
     "types-beautifulsoup4>=4.12.0.20250516",
     "types-colorama>=0.4.15.20240311",
