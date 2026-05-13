@@ -44,7 +44,6 @@ class ResearchPipeline:
         self.mode = ResearchSafetyMode(mode_str)
 
     def process(self, query: str) -> ResearchResult:
-        safety_info: SafetyInfo
         subqueries: list = [query]
 
         if self.mode == ResearchSafetyMode.TRANSPARENT:
@@ -55,29 +54,7 @@ class ResearchPipeline:
                 reason=None,
                 action_taken="proceeded_by_configuration",
             )
-
-        elif self.mode == ResearchSafetyMode.WARN_ONLY:
-            decision = detect_unsafe_query(query)
-            if decision is not None:
-                safety_info = SafetyInfo(
-                    checked=True,
-                    mode="WARN_ONLY",
-                    blocked=False,
-                    reason=decision.reason,
-                    action_taken="proceeded_with_warning",
-                )
-                logger.warning("Unsafe query detected (WARN_ONLY): %s", decision.reason)
-                subqueries = [query]
-            else:
-                safety_info = SafetyInfo(
-                    checked=True,
-                    mode="WARN_ONLY",
-                    blocked=False,
-                    reason=None,
-                    action_taken="proceeded_clean",
-                )
-
-        else:
+        elif self.mode == ResearchSafetyMode.STRICT:
             decision = detect_unsafe_query(query)
             if decision is not None:
                 safety_info = SafetyInfo(
@@ -95,6 +72,32 @@ class ResearchPipeline:
                     reason=None,
                     action_taken="proceeded_clean",
                 )
+        elif self.mode == ResearchSafetyMode.WARN_ONLY:
+            decision = detect_unsafe_query(query)
+            if decision is not None:
+                safety_info = SafetyInfo(
+                    checked=True,
+                    mode="WARN_ONLY",
+                    blocked=False,
+                    reason=decision.reason,
+                    action_taken="proceeded_with_warning",
+                )
+            else:
+                safety_info = SafetyInfo(
+                    checked=True,
+                    mode="WARN_ONLY",
+                    blocked=False,
+                    reason=None,
+                    action_taken="proceeded_clean",
+                )
+        else:
+            safety_info = SafetyInfo(
+                checked=False,
+                mode="TRANSPARENT",
+                blocked=False,
+                reason=None,
+                action_taken="proceeded_by_configuration",
+            )
 
         log_entry = query_logger.log_query_start(query, safety_info.to_dict())
         log_entry["research_metadata"]["subqueries_generated"] = subqueries
