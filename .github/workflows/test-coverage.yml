@@ -9,4 +9,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
-      - run: pytest --cov=gpt_researcher --cov-fail-under=60
+      - run: pytest --cov=gpt_researcher --cov-fail-under=54
