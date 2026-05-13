@@ -4,12 +4,14 @@ DEFAULT_CONFIG: BaseConfig = {
     "RETRIEVER": "duckduckgo",
     "EMBEDDING": "openai:text-embedding-3-small",
     "SIMILARITY_THRESHOLD": 0.42,
+    "COMPRESSION_THRESHOLD": 8000,
     "FAST_LLM": "openai:gpt-4o-mini",
     "SMART_LLM": "openai:gpt-4.1",  # Has support for long responses (2k+ words).
     "STRATEGIC_LLM": "openai:o4-mini",  # Can be used with o1 or o3, please note it will make tasks slower.
     "FAST_TOKEN_LIMIT": 3000,
     "SMART_TOKEN_LIMIT": 6000,
     "STRATEGIC_TOKEN_LIMIT": 4000,
+    "MAX_CONTEXT_TOKENS": 4000,
     "BROWSE_CHUNK_MAX_LENGTH": 8192,
     "CURATE_SOURCES": False,
     "SUMMARY_TOKEN_LIMIT": 700,
@@ -63,4 +65,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "DEEP_CRAWLER_MAX_LINKS_PER_PAGE": 24,
     "DEEP_CRAWLER_ALLOW_EXTERNAL_LINKS": False,
     "DEEP_CRAWLER_TIMEOUT": 8.0,
+    "CORS_ALLOW_ORIGINS": "http://localhost:3000,http://127.0.0.1:3000,https://app.gptr.dev",
+    "AZURE_CONTAINER_NAME": "",
+    "AZURE_CONNECTION_STRING": "",
 }

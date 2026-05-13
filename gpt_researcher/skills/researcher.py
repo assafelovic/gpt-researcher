@@ -250,8 +250,8 @@ class ResearchConductor:
         elif self.researcher.report_source == ReportSource.Azure.value:
             from ..document.azure_document_loader import AzureDocumentLoader
             azure_loader = AzureDocumentLoader(
-                container_name=os.getenv("AZURE_CONTAINER_NAME"),
-                connection_string=os.getenv("AZURE_CONNECTION_STRING")
+                container_name=getattr(self.researcher.cfg, 'azure_container_name', ""),
+                connection_string=getattr(self.researcher.cfg, 'azure_connection_string', "")
             )
             azure_files = await azure_loader.load()
             document_data = await DocumentLoader(azure_files).load()  # Reuse existing loader

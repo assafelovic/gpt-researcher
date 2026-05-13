@@ -198,7 +198,7 @@ class GPTResearcher:
         self._research_id: str = ""  # Unique ID for this research session
         self.verification_bundle: dict[str, Any] | None = None
         self.safety_decision: QuerySafetyDecision | None = None
-        self.safety_mode = os.getenv("RESEARCH_SAFETY_MODE", "TRANSPARENT")
+        self.safety_mode = getattr(self.cfg, "research_safety_mode", "TRANSPARENT")
 
         # Handle MCP strategy configuration with backwards compatibility
         self.mcp_strategy = self._resolve_mcp_strategy(mcp_strategy, mcp_max_iterations)
@@ -294,7 +294,7 @@ class GPTResearcher:
             mcp_configs (list[dict]): List of MCP server configuration dictionaries.
         """
         # Check if user explicitly set RETRIEVER environment variable
-        user_set_retriever = os.getenv("RETRIEVER") is not None
+        user_set_retriever = "RETRIEVER" in getattr(self.cfg, '_explicit_env_keys', set())
         
         if not user_set_retriever:
             # Only auto-add MCP if user hasn't explicitly set retrievers

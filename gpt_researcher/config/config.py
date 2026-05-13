@@ -41,6 +41,7 @@ class Config:
         self.config_path = config_path
         self.llm_kwargs: Dict[str, Any] = {}
         self.embedding_kwargs: Dict[str, Any] = {}
+        self._explicit_env_keys: set[str] = set()
 
         config_to_use = self.load_config(config_path)
         self._set_attributes(config_to_use)
@@ -50,21 +51,12 @@ class Config:
         if config_to_use['REPORT_SOURCE'] != 'web':
           self._set_doc_path(config_to_use)
 
-        # MCP support configuration
-        self.mcp_servers = []  # List of MCP server configurations
-        self.mcp_allowed_root_paths = []  # Allowed root paths for MCP servers
-
-        # Read from config
-        if hasattr(self, 'mcp_servers'):
-            self.mcp_servers = self.mcp_servers
-        if hasattr(self, 'mcp_allowed_root_paths'):
-            self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
-
     def _set_attributes(self, config: Dict[str, Any]) -> None:
         """Set configuration attributes from config dictionary.
 
         Merges environment variables with config file values, with
-        environment variables taking precedence.
+        environment variables taking precedence. Tracks which keys
+        were explicitly set via environment in _explicit_env_keys.
 
         Args:
             config: Dictionary of configuration key-value pairs.
@@ -73,6 +65,7 @@ class Config:
             env_value = os.getenv(key)
             if env_value is not None:
                 value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
+                self._explicit_env_keys.add(key)
             setattr(self, key.lower(), value)
 
         # Handle RETRIEVER with default value

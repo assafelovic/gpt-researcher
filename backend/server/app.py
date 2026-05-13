@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict
 # Add the parent directory to sys.path to make sure we can import from server
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
+from gpt_researcher.config.variables.default import DEFAULT_CONFIG
 from server.websocket_manager import WebSocketManager
 from server.server_utils import (
     get_config_dict, make_unique_artifact_stem,
@@ -95,15 +96,11 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 # Configure allowed origins for CORS
-allowed_origins_env = os.getenv("CORS_ALLOW_ORIGINS")
+allowed_origins_raw = os.getenv("CORS_ALLOW_ORIGINS", DEFAULT_CONFIG.get("CORS_ALLOW_ORIGINS", ""))
 ALLOWED_ORIGINS = (
-    [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
-    if allowed_origins_env
-    else [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://app.gptr.dev",
-    ]
+    [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
+    if allowed_origins_raw
+    else ["http://localhost:3000", "http://127.0.0.1:3000", "https://app.gptr.dev"]
 )
 
 # Standard JSON response - no custom MongoDB encoding needed
@@ -287,7 +284,8 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
 
     if research_request.report_type != "multi_agents":
         report, researcher = report_information
-        verification_bundle = getattr(researcher, "verification_bundle", None)
+        verification_bundle = getattr(researcher, "verification_bundle", None) if researcher else None
+        safety_decision = getattr(researcher, "safety_decision", None) if researcher else None
         file_paths = await generate_report_files(
             report,
             research_id,
@@ -296,11 +294,12 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
         response = {
             "research_id": research_id,
             "research_information": {
-                "source_urls": researcher.get_source_urls(),
-                "research_costs": researcher.get_costs(),
-                "visited_urls": list(researcher.visited_urls),
-                "research_images": researcher.get_research_images(),
+                "source_urls": researcher.get_source_urls() if researcher else [],
+                "research_costs": researcher.get_costs() if researcher else 0.0,
+                "visited_urls": list(researcher.visited_urls) if researcher else [],
+                "research_images": researcher.get_research_images() if researcher else [],
                 "verification": verification_bundle,
+                "safety": safety_decision.to_dict() if safety_decision else None,
                 # "research_sources": researcher.get_research_sources(),  # Raw content of sources may be very large
             },
             "report": report,

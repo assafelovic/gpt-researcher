@@ -6,6 +6,7 @@ class BaseConfig(TypedDict):
     RETRIEVER: str
     EMBEDDING: str
     SIMILARITY_THRESHOLD: float
+    COMPRESSION_THRESHOLD: int
     FAST_LLM: str
     SMART_LLM: str
     STRATEGIC_LLM: str
@@ -60,3 +61,7 @@ class BaseConfig(TypedDict):
     DEEP_CRAWLER_MAX_LINKS_PER_PAGE: int
     DEEP_CRAWLER_ALLOW_EXTERNAL_LINKS: bool
     DEEP_CRAWLER_TIMEOUT: float
+    MAX_CONTEXT_TOKENS: int
+    CORS_ALLOW_ORIGINS: str
+    AZURE_CONTAINER_NAME: str
+    AZURE_CONNECTION_STRING: str
