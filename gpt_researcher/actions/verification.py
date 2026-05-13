@@ -8,7 +8,7 @@ make support, uncertainty, and escalation visible by default.
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable
+from typing import Any
 
 from ..utils.language import is_german_language
 

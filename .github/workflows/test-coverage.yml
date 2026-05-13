@@ -1,12 +1,39 @@
 name: Test & Coverage
-on: [pull_request]
+on:
+  pull_request:
+  push:
+    branches: [master, main, refactor/compression-safety-deepcrawler]
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || '' }}
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY || '' }}
+      PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
       - run: pip install -e ".[dev]"
-      - run: pytest --cov=gpt_researcher --cov-fail-under=54
+      - name: Install Playwright (for browser scraper tests)
+        if: always()
+        run: |
+          pip install playwright 2>/dev/null || true
+          python -m playwright install chromium --with-deps 2>/dev/null || true
+        continue-on-error: true
+      - name: Run tests with coverage
+        run: pytest --cov=gpt_researcher --cov-report=xml --cov-report=term-missing --cov-fail-under=54 -v
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            .coverage
+            htmlcov/
+          retention-days: 14

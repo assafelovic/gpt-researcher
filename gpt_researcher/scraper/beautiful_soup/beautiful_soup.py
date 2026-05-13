@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
 
 from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
 

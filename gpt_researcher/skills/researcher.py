@@ -7,7 +7,6 @@ and context gathering.
 
 import asyncio
 import logging
-import os
 
 from ..actions.agent_creator import choose_agent
 from ..actions.deep_crawler import prioritize_and_expand_urls
@@ -15,7 +14,7 @@ from ..actions.query_processing import get_search_results, plan_research_outline
 from ..actions.utils import stream_output
 from ..document import DocumentLoader, LangChainDocumentLoader, OnlineDocumentLoader
 from ..retrievers import Duckduckgo
-from ..utils.enum import ReportSource, ReportType
+from ..utils.enum import ReportSource
 from ..utils.network import resolve_onion_proxy_url
 from ..utils.logging_config import get_json_handler
 from ..utils.language import normalize_source_title, strip_source_boilerplate
@@ -120,7 +119,7 @@ class ResearchConductor:
         await stream_output(
             "logs",
             "planning_research",
-            f"🤔 Planning the research strategy and subtasks...",
+            "🤔 Planning the research strategy and subtasks...",
             self.researcher.websocket,
         )
 
@@ -205,7 +204,7 @@ class ResearchConductor:
                 await stream_output(
                     "logs",
                     "answering_from_memory",
-                    f"🧐 I was unable to find relevant context in the provided sources...",
+                    "🧐 I was unable to find relevant context in the provided sources...",
                     self.researcher.websocket,
                 )
             if self.researcher.complement_source_urls:
@@ -381,7 +380,7 @@ class ResearchConductor:
                     await stream_output(
                         "logs",
                         "mcp_disabled",
-                        f"⚡ MCP research disabled by configuration",
+                        "⚡ MCP research disabled by configuration",
                         self.researcher.websocket,
                     )
             elif mcp_strategy == "fast":
@@ -391,7 +390,7 @@ class ResearchConductor:
                     await stream_output(
                         "logs",
                         "mcp_optimization",
-                        f"🚀 MCP Fast: Running once for main query (performance mode)",
+                        "🚀 MCP Fast: Running once for main query (performance mode)",
                         self.researcher.websocket,
                     )
 
@@ -406,7 +405,7 @@ class ResearchConductor:
                     await stream_output(
                         "logs",
                         "mcp_comprehensive",
-                        f"🔍 MCP Deep: Will run for each sub-query (thorough mode)",
+                        "🔍 MCP Deep: Will run for each sub-query (thorough mode)",
                         self.researcher.websocket,
                     )
                 # Don't cache - let each sub-query run MCP individually
@@ -785,7 +784,7 @@ class ResearchConductor:
                 if content and content.strip():
                     content_text = strip_source_boilerplate(content.strip())
                     # Create a well-formatted context entry
-                    if url and url != f"mcp://llm_analysis":
+                    if url and url != "mcp://llm_analysis":
                         citation = f"\n\n*Source: {normalized_title or title} ({url})*"
                     else:
                         citation = f"\n\n*Source: {normalized_title or title}*"
@@ -956,7 +955,7 @@ class ResearchConductor:
             await stream_output(
                 "logs",
                 "researching",
-                f"🤔 Researching for relevant information across multiple sources...\n",
+                "🤔 Researching for relevant information across multiple sources...\n",
                 self.researcher.websocket,
             )
 

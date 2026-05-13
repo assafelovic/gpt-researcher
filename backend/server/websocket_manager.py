@@ -1,9 +1,6 @@
 import asyncio
-import datetime
-import json
 import logging
 import os
-import traceback
 from typing import Dict, List
 
 from fastapi import WebSocket
@@ -121,7 +118,8 @@ class WebSocketManager:
         """Start streaming the output."""
         tone = Tone[tone]
         # add customized JSON config file path here
-        config_path = os.environ.get("CONFIG_PATH", "default")
+        from gpt_researcher.config import Config as _Cfg
+        config_path = _Cfg.get_env("CONFIG_PATH", "default")
 
         # Pass MCP parameters to run_agent
         report = await run_agent(
@@ -138,16 +136,13 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
     if logs_handler is None:
         logs_handler = CustomLogsHandler(websocket, task)
 
-    safety_decision = None
-
     # Set up MCP configuration if enabled
     if mcp_enabled and mcp_configs:
-        current_retriever = os.getenv("RETRIEVER", "duckduckgo")
+        from gpt_researcher.config import Config as _Cfg
+        current_retriever = _Cfg.get_env("RETRIEVER", "duckduckgo")
         if "mcp" not in current_retriever:
-            # Add MCP to existing retrievers
             os.environ["RETRIEVER"] = f"{current_retriever},mcp"
 
-        # Set MCP strategy
         os.environ["MCP_STRATEGY"] = mcp_strategy
 
         print(f"🔧 MCP enabled with strategy '{mcp_strategy}' and {len(mcp_configs)} server(s)")

@@ -4,7 +4,7 @@ This module provides the SourceCurator class that evaluates and ranks
 research sources based on relevance, credibility, and reliability.
 """
 
-from typing import Dict, List, Optional
+from typing import List
 
 from ..actions import stream_output
 from ..utils.json_parsing import parse_llm_json_response
@@ -70,7 +70,7 @@ class SourceCurator:
             await stream_output(
                 "logs",
                 "research_plan",
-                f"⚖️ Evaluating and curating sources by credibility and relevance...",
+                "⚖️ Evaluating and curating sources by credibility and relevance...",
                 self.researcher.websocket,
             )
 

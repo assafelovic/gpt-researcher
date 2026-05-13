@@ -13,6 +13,7 @@ import asyncio
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 
+from gpt_researcher.config import Config
 from gpt_researcher.llm_provider.generic.base import (
     NO_SUPPORT_TEMPERATURE_MODELS,
     SUPPORT_REASONING_EFFORT_MODELS,
@@ -102,7 +103,7 @@ async def create_chat_completion(
         provider_kwargs["temperature"] = min(float(provider_kwargs["temperature"]), 0.2)
 
     if using_local_openai and provider_kwargs.get("max_tokens") is not None:
-        local_max_tokens = int(os.getenv("LOCAL_OPENAI_MAX_TOKENS", "3000"))
+        local_max_tokens = int(Config.get_env("LOCAL_OPENAI_MAX_TOKENS", "3000"))
         provider_kwargs["max_tokens"] = min(int(provider_kwargs["max_tokens"]), local_max_tokens)
 
     provider = get_llm(llm_provider, **provider_kwargs)
@@ -111,7 +112,7 @@ async def create_chat_completion(
     if stream and websocket is not None:
         max_attempts = 1
     elif using_local_openai:
-        max_attempts = int(os.getenv("LOCAL_OPENAI_MAX_ATTEMPTS", "1"))
+        max_attempts = int(Config.get_env("LOCAL_OPENAI_MAX_ATTEMPTS", "1"))
     else:
         max_attempts = 10
     last_exception: Exception | None = None

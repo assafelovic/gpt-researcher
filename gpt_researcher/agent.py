@@ -5,7 +5,6 @@ autonomous research and report generation using LLMs and web search.
 """
 
 import json
-import os
 from typing import Any, Optional
 
 from .actions import (
@@ -18,7 +17,6 @@ from .actions import (
     table_of_contents,
 )
 from .config import Config
-from .llm_provider import GenericLLMProvider
 from .memory import Memory
 from .prompts import get_prompt_family
 from .skills.browser import BrowserManager

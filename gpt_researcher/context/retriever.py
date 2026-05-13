@@ -1,5 +1,4 @@
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document

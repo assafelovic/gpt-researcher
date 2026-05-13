@@ -290,6 +290,22 @@ class Config:
         """Set the verbosity level."""
         self.llm_kwargs["verbose"] = verbose
 
+    @staticmethod
+    def get_env(key: str, default: Any = None) -> Any:
+        """Read an environment variable with optional default.
+
+        Centralises env-reads so they can be tracked/tested.  Bypasses
+        ``_explicit_env_keys`` – callers that want tracking should use
+        the instance-level :meth:`get` instead.
+        """
+        return os.environ.get(key, default)
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Look up *key* (case-insensitive) in this config, then env, then *default*."""
+        if hasattr(self, key.lower()):
+            return getattr(self, key.lower())
+        return self.get_env(key, default)
+
     def get_mcp_server_config(self, name: str) -> dict:
         """
         Get the configuration for an MCP server.

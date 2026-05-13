@@ -5,7 +5,7 @@ retrieval, compression, and similarity matching for research queries.
 """
 
 import asyncio
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Set
 
 from ..actions.utils import stream_output
 from ..context.compression import (

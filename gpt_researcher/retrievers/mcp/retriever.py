@@ -229,7 +229,6 @@ class MCPRetriever:
                 # If we're in an async context, we need to schedule the coroutine
                 # This is a bit tricky - we'll create a task and let it run
                 import concurrent.futures
-                import threading
                 
                 # Create a new event loop in a separate thread
                 def run_in_thread():

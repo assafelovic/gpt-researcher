@@ -9,7 +9,6 @@ coverage and source quality without turning research into an uncontrolled crawl.
 from __future__ import annotations
 
 import asyncio
-from collections import Counter
 import re
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse, urldefrag

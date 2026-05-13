@@ -119,10 +119,10 @@ class PubMedCentralSearch:
                     "title": title_text
                 }
                 
-            except ET.ParseError as e:
+            except ET.ParseError:
                 return None
                 
-        except requests.RequestException as e:
+        except requests.RequestException:
             return None
 
     def search(self, max_results: int = 5) -> Optional[List[Dict[str, Any]]]:

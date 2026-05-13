@@ -299,7 +299,7 @@ Example format:
 
         reference_prompt = ""
         if report_source in (ReportSource.Web.value, ReportSource.Onion.value):
-            reference_prompt = f"""
+            reference_prompt = """
 You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
 Every url should be hyperlinked: [url website](url)
 Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report:
@@ -307,7 +307,7 @@ Additionally, you MUST include hyperlinks to the relevant URLs wherever they are
 eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
 """
         else:
-            reference_prompt = f"""
+            reference_prompt = """
 You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
 """
 
@@ -390,12 +390,12 @@ The response MUST be a plain JSON list with no markdown format, code fences, or 
 
         reference_prompt = ""
         if report_source in (ReportSource.Web.value, ReportSource.Onion.value):
-            reference_prompt = f"""
+            reference_prompt = """
             You MUST include all relevant source urls.
             Every url should be hyperlinked: [url website](url)
             """
         else:
-            reference_prompt = f"""
+            reference_prompt = """
             You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
         """
 
@@ -466,7 +466,7 @@ The response MUST be a plain JSON list with no markdown format, code fences, or 
         """
         reference_prompt = ""
         if report_source in (ReportSource.Web.value, ReportSource.Onion.value):
-            reference_prompt = f"""
+            reference_prompt = """
 You MUST write all used source urls at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each.
 Every url should be hyperlinked: [url website](url)
 Additionally, you MUST include hyperlinks to the relevant URLs wherever they are referenced in the report:
@@ -474,7 +474,7 @@ Additionally, you MUST include hyperlinks to the relevant URLs wherever they are
 eg: Author, A. A. (Year, Month Date). Title of web page. Website Name. [url website](url)
 """
         else:
-            reference_prompt = f"""
+            reference_prompt = """
 You MUST write all used source document names at the end of the report as references, and make sure to not add duplicated sources, but only one reference for each."
 """
 

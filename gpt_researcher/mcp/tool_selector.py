@@ -4,7 +4,7 @@ Handles intelligent tool selection using LLM analysis and the shared JSON
 parser before falling back to deterministic selection.
 """
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List
 
 from ..utils.json_parsing import parse_llm_json_response
 

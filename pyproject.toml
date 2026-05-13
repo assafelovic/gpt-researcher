@@ -228,6 +228,22 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.25",
+    "pytest-cov>=6.0",
+    "types-aiofiles>=24.1.0.20250516",
+    "types-beautifulsoup4>=4.12.0.20250516",
+    "types-colorama>=0.4.15.20240311",
+    "types-markdown>=3.8.0.20250415",
+    "types-requests>=2.32.0.20250515",
+]
+mcp = [
+    "langchain-mcp-adapters>=0.1.0",
+]
+browser = [
+    "playwright>=1.40.0",
+]
 requirements-txt = [
     "ag2[openai]>=0.11.2",
     "arxiv_client",
@@ -250,16 +266,4 @@ requirements-txt = [
     "playwright",
     "scrapy",
     "selenium",
-]
-
-[dependency-groups]
-dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.25",
-    "pytest-cov>=6.0",
-    "types-aiofiles>=24.1.0.20250516",
-    "types-beautifulsoup4>=4.12.0.20250516",
-    "types-colorama>=0.4.15.20240311",
-    "types-markdown>=3.8.0.20250415",
-    "types-requests>=2.32.0.20250515",
 ]

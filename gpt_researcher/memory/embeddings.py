@@ -1,26 +1,4 @@
-"""Embedding provider management for GPT Researcher.
-
-This module provides the Memory class that handles embedding generation
-across multiple providers (OpenAI, Cohere, Google, Ollama, etc.).
-
-Supported providers:
-    - openai: OpenAI embeddings
-    - azure_openai: Azure OpenAI embeddings
-    - cohere: Cohere embeddings
-    - google_vertexai: Google Vertex AI embeddings
-    - google_genai: Google Generative AI embeddings
-    - fireworks: Fireworks AI embeddings
-    - ollama: Local Ollama embeddings
-    - together: Together AI embeddings
-    - mistralai: Mistral AI embeddings
-    - huggingface: HuggingFace embeddings
-    - nomic: Nomic embeddings
-    - voyageai: Voyage AI embeddings
-    - dashscope: DashScope embeddings
-    - bedrock: AWS Bedrock embeddings
-    - aimlapi: AIML API embeddings
-    - custom: Custom OpenAI-compatible API
-"""
+"""Embedding provider management for GPT Researcher."""
 
 import os
 from typing import Any
@@ -32,9 +10,13 @@ from gpt_researcher.utils.local_llm import (
     should_use_local_embedding_fallback,
 )
 
-OPENAI_EMBEDDING_MODEL = os.environ.get(
-    "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
-)
+
+def _get_openai_embedding_model() -> str:
+    from gpt_researcher.config.config import Config
+    return Config.get_env("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
+
+
+OPENAI_EMBEDDING_MODEL = _get_openai_embedding_model()
 
 _SUPPORTED_PROVIDERS = {
     "openai",

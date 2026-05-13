@@ -239,11 +239,11 @@ def create_search_tool(search_function: Callable[[str], Dict]) -> Callable:
             )
             # Provide context-aware error messages
             if "api" in error_msg.lower() or "key" in error_msg.lower():
-                return f"Suche fehlgeschlagen: Problem mit dem API-Key. Bitte prüfe, ob deine Such-API-Zugangsdaten korrekt konfiguriert sind."
+                return "Suche fehlgeschlagen: Problem mit dem API-Key. Bitte prüfe, ob deine Such-API-Zugangsdaten korrekt konfiguriert sind."
             elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
-                return f"Suche hat das Zeitlimit überschritten. Die Anfrage hat zu lange gedauert. Bitte versuche es mit einer anderen Query erneut."
+                return "Suche hat das Zeitlimit überschritten. Die Anfrage hat zu lange gedauert. Bitte versuche es mit einer anderen Query erneut."
             elif "rate limit" in error_msg.lower() or "quota" in error_msg.lower():
-                return f"Such-Rate-Limit überschritten. Bitte warte einen Moment und versuche es erneut."
+                return "Such-Rate-Limit überschritten. Bitte warte einen Moment und versuche es erneut."
             else:
                 return f"Bei der Suche ist ein Fehler aufgetreten: {error_msg}. Bitte prüfe die Konfiguration deines Suchanbieters."
     
