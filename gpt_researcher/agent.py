@@ -198,9 +198,7 @@ class GPTResearcher:
         self._research_id: str = ""  # Unique ID for this research session
         self.verification_bundle: dict[str, Any] | None = None
         self.safety_decision: QuerySafetyDecision | None = None
-        self.safety_mode: str = "TRANSPARENT"
-        if hasattr(self.cfg, 'research_safety_mode'):
-            self.safety_mode = self.cfg.research_safety_mode
+        self.safety_mode = os.getenv("RESEARCH_SAFETY_MODE", "TRANSPARENT")
 
         # Handle MCP strategy configuration with backwards compatibility
         self.mcp_strategy = self._resolve_mcp_strategy(mcp_strategy, mcp_max_iterations)
