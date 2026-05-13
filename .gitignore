@@ -39,6 +39,10 @@ docs/build
 .next/
 package-lock.json
 
+# E2E test artifacts
+tests/e2e/playwright-report/
+tests/e2e/screenshots/
+
 #Vim swp files
 *.swp
 

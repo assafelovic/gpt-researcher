@@ -1,0 +1,16 @@
+{
+  "name": "gpt-researcher-e2e",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:vanilla": "playwright test --project=vanilla",
+    "test:nextjs": "playwright test --project=nextjs",
+    "test:api": "playwright test --project=api",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^25.7.0",
+    "typescript": "^5.7.0"
+  }
+}
