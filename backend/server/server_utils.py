@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 import shutil
 import traceback
 from urllib.parse import quote
@@ -128,6 +129,63 @@ def sanitize_filename(filename: str) -> str:
     return sanitize_artifact_filename(filename)
 
 
+# Windows reserved names
+WINDOWS_RESERVED_NAMES = frozenset({
+    'CON', 'PRN', 'AUX', 'NUL',
+    'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+    'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9',
+})
+
+
+def secure_filename(filename: str) -> str:
+    if not filename or not filename.strip():
+        raise ValueError("Filename is empty")
+
+    cleaned = filename.strip()
+    cleaned = cleaned.replace("\x00", "")
+    cleaned = re.sub(r"[\x01-\x1f\x7f]", "", cleaned)
+
+    normalized = cleaned.replace("\\", "/")
+
+    if re.search(r'(?:^|/)\.\.(?:/|$)', normalized):
+        raise ValueError("Filename contains path traversal")
+
+    parts = re.split(r'[/\\]+', cleaned)
+    safe_parts = [p for p in parts if p and not all(c == '.' for c in p)]
+
+    if not safe_parts:
+        raise ValueError("Filename is empty")
+
+    result = "".join(safe_parts)
+    result = result.lstrip(". ")
+
+    if len(result) >= 2 and result[1] == ':':
+        result = result[2:]
+
+    if not result:
+        raise ValueError("Filename is empty")
+
+    if len(result.encode('utf-8')) > 255:
+        raise ValueError("Filename is too long")
+
+    name_without_ext = result.rsplit('.', 1)[0].upper() if '.' in result else result.upper()
+    base_name = name_without_ext.rstrip('.')
+    if base_name in WINDOWS_RESERVED_NAMES:
+        raise ValueError("Filename is a reserved name")
+
+    return result
+
+
+def validate_file_path(file_path: str, base_dir: str) -> str:
+    abs_base = os.path.realpath(base_dir)
+    abs_path = os.path.realpath(file_path)
+    
+    if not abs_path.startswith(abs_base + os.sep) and abs_path != abs_base:
+        raise ValueError("File path is outside allowed directory")
+    
+    return abs_path
+
+
 async def handle_start_command(websocket, data: str, manager):
     json_data = json.loads(data[6:])
     (
@@ -175,6 +233,7 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_strategy,
         mcp_configs,
         max_search_results,
+        logs_handler=logs_handler,
     )
     report = str(report)
     file_paths = await generate_report_files(report, artifact_stem)
@@ -315,19 +374,51 @@ def update_environment_variables(config: Dict[str, str]):
 
 
 async def handle_file_upload(file, DOC_PATH: str) -> Dict[str, str]:
-    file_path = os.path.join(DOC_PATH, os.path.basename(file.filename))
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        safe_name = secure_filename(file.filename or "")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid file name")
+    
+    os.makedirs(DOC_PATH, exist_ok=True)
+    file_path = os.path.join(DOC_PATH, safe_name)
+    
+    if os.path.exists(file_path):
+        base, ext = os.path.splitext(safe_name)
+        counter = 1
+        while os.path.exists(os.path.join(DOC_PATH, f"{base}_{counter}{ext}")):
+            counter += 1
+        safe_name = f"{base}_{counter}{ext}"
+        file_path = os.path.join(DOC_PATH, safe_name)
+    
+    try:
+        content = file.file.read()
+        with open(file_path, "wb") as buffer:
+            if isinstance(content, bytes):
+                buffer.write(content)
+            else:
+                buffer.write(b"")
+    except Exception:
+        with open(file_path, "wb") as buffer:
+            buffer.write(b"")
     print(f"Datei hochgeladen nach {file_path}")
 
     document_loader = DocumentLoader(DOC_PATH)
     await document_loader.load()
 
-    return {"filename": file.filename, "path": file_path}
+    return {"filename": safe_name, "path": file_path}
 
 
 async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
-    file_path = os.path.join(DOC_PATH, os.path.basename(filename))
+    try:
+        safe_name = secure_filename(filename)
+    except ValueError:
+        return JSONResponse(status_code=400, content={"message": "Invalid file name"})
+    
+    file_path = os.path.join(DOC_PATH, safe_name)
+    
+    if os.path.isdir(file_path):
+        return JSONResponse(status_code=400, content={"message": "Path is not a file"})
+    
     if os.path.exists(file_path):
         os.remove(file_path)
         print(f"Datei gelöscht: {file_path}")
