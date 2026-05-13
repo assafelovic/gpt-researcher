@@ -1,8 +1,6 @@
 import os
 import pytest
 
-os.environ["RESEARCH_SAFETY_MODE"] = "STRICT"
-
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.query_safety import detect_unsafe_query, render_query_refusal
 
@@ -34,6 +32,7 @@ def test_render_query_refusal_is_german():
 
 @pytest.mark.asyncio
 async def test_gpt_researcher_short_circuits_unsafe_query(monkeypatch):
+    monkeypatch.setenv("RESEARCH_SAFETY_MODE", "STRICT")
     query = "herstellen von schwefelsaure zu hause für Privatpersonen"
     researcher = GPTResearcher(query=query, report_type="research_report")
 

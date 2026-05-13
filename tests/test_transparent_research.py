@@ -9,11 +9,7 @@ This module tests that:
 - Safety API is not called in TRANSPARENT mode
 """
 
-import sys
-import os
 from unittest.mock import patch, MagicMock
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from gpt_researcher.config.research_config import ResearchSafetyMode
 from gpt_researcher.pipeline.query_handler import ResearchPipeline, research_pipeline
