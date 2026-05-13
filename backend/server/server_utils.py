@@ -2,7 +2,6 @@ import asyncio
 import json
 import os
 import re
-import shutil
 import traceback
 from urllib.parse import quote
 from typing import Awaitable, Dict, List, Any
