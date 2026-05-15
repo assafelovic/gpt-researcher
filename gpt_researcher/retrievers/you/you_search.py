@@ -35,6 +35,17 @@ class YouSearch:
         self.topic = topic
         self.query_domains = query_domains or None
 
+    def _get_api_key(self):
+        """
+        Resolves the You.com API key. The ``you_api_key`` header takes
+        precedence over the ``YOU_API_KEY`` environment variable so that
+        callers (e.g. the backend server) may inject per-request keys.
+        """
+        api_key = self.headers.get("you_api_key")
+        if not api_key:
+            api_key = os.environ.get("YOU_API_KEY", "")
+        return api_key
+
     def search(self, max_results=7):
         """
         Searches the query against the You.com Search API.
@@ -45,4 +56,33 @@ class YouSearch:
         Returns:
             list[dict]: A list of result dicts with keys ``href``, ``body``, ``title``.
         """
-        raise NotImplementedError
+        api_key = self._get_api_key()
+
+        params = {
+            "query": self.query,
+            "count": max_results,
+        }
+
+        response = requests.get(
+            BASE_URL,
+            headers={"X-API-Key": api_key},
+            params=params,
+            timeout=DEFAULT_TIMEOUT,
+        )
+
+        payload = response.json()
+        web_results = payload.get("results", {}).get("web", [])
+
+        search_response = []
+        for item in web_results:
+            snippets = item.get("snippets") or []
+            body = " ".join(snippets) if snippets else item.get("description", "")
+            search_response.append(
+                {
+                    "href": item.get("url", ""),
+                    "body": body,
+                    "title": item.get("title", ""),
+                }
+            )
+
+        return search_response
