@@ -14,6 +14,7 @@ from .exa.exa import ExaSearch
 from .mcp import MCPRetriever
 from .bocha.bocha import BoChaSearch
 from .xquik.xquik import XquikSearch
+from .you.you_search import YouSearch
 
 __all__ = [
     "TavilySearch",
@@ -31,5 +32,6 @@ __all__ = [
     "ExaSearch",
     "MCPRetriever",
     "BoChaSearch",
-    "XquikSearch"
+    "XquikSearch",
+    "YouSearch",
 ]

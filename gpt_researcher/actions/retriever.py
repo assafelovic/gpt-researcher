@@ -30,6 +30,7 @@ def get_retriever(retriever: str):
         - custom: Custom user-defined retriever
         - mcp: Model Context Protocol retriever
         - xquik: Xquik X/Twitter search
+        - you: You.com Search API
     """
     match retriever:
         case "google":
@@ -96,6 +97,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import XquikSearch
 
             return XquikSearch
+        case "you":
+            from gpt_researcher.retrievers import YouSearch
+
+            return YouSearch
 
         case _:
             return None
