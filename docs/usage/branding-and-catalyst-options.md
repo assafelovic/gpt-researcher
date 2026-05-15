@@ -249,6 +249,6 @@ education/source packets. Watch provider rate limits.
 - Do not bury GPT Researcher behind Catalyst before the standalone UI and MCP
   endpoint are stable.
 
-The best operating model is: Catalyst/Katailyst is the front door and routing
+The best operating model is: Catalyst/Katailyst is the docs index and routing
 brain, GPT Researcher is the external research engine, Sidecar turns research
 into production outputs, and this repo remains a thin upstream-friendly fork.
