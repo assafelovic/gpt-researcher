@@ -4,6 +4,11 @@ import asyncio
 import logging
 from gpt_researcher import GPTResearcher
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
+from gpt_researcher.skills.deep_research import (
+    parse_follow_up_questions_response,
+    parse_research_results_response,
+    parse_search_queries_response,
+)
 from gpt_researcher.utils.llm import create_chat_completion
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 
@@ -50,8 +55,22 @@ class DeepResearch:
     async def generate_feedback(self, query: str, num_questions: int = 3) -> List[str]:
         """Generate follow-up questions to clarify research direction"""
         messages = [
-            {"role": "system", "content": "You are an expert researcher helping to clarify research directions."},
-            {"role": "user", "content": f"Given the following query from the user, ask some follow up questions to clarify the research direction. Return a maximum of {num_questions} questions, but feel free to return less if the original query is clear. Format each question on a new line starting with 'Question: ': {query}"}
+            {
+                "role": "system",
+                "content": (
+                    "You are an expert researcher helping to clarify research directions. "
+                    "Return valid JSON only."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Given the following query from the user, ask some follow up questions to clarify the research direction. "
+                    f"Return a maximum of {num_questions} questions, but feel free to return less if the original query is clear.\n\n"
+                    'Return ONLY a JSON object using this exact schema:\n{"questions": ["<question 1>", "<question 2>"]}\n\n'
+                    f"Query: {query}"
+                ),
+            },
         ]
 
         response = await create_chat_completion(
@@ -63,17 +82,28 @@ class DeepResearch:
             reasoning_effort=ReasoningEfforts.High.value
         )
 
-        # Parse questions from response
-        questions = [q.replace('Question:', '').strip()
-                    for q in response.split('\n')
-                    if q.strip().startswith('Question:')]
-        return questions[:num_questions]
+        return parse_follow_up_questions_response(response, num_questions)
 
     async def generate_serp_queries(self, query: str, num_queries: int = 3) -> List[Dict[str, str]]:
         """Generate SERP queries for research"""
         messages = [
-            {"role": "system", "content": "You are an expert researcher generating search queries."},
-            {"role": "user", "content": f"Given the following prompt, generate {num_queries} unique search queries to research the topic thoroughly. For each query, provide a research goal. Format as 'Query: <query>' followed by 'Goal: <goal>' for each pair: {query}"}
+            {
+                "role": "system",
+                "content": (
+                    "You are an expert researcher generating search queries. "
+                    "Return valid JSON only. Do not include markdown, code fences, bullets, numbering, or prose."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Given the following prompt, generate {num_queries} unique search queries to research the topic thoroughly. "
+                    "For each query, provide a research goal.\n\n"
+                    'Return ONLY a JSON array of objects using this exact schema:\n'
+                    '[{"query": "<search query>", "researchGoal": "<research goal>"}]\n\n'
+                    f"Prompt: {query}"
+                ),
+            },
         ]
 
         response = await create_chat_completion(
@@ -84,30 +114,29 @@ class DeepResearch:
             max_tokens=1000
         )
 
-        # Parse queries and goals from response
-        lines = response.split('\n')
-        queries = []
-        current_query = {}
-
-        for line in lines:
-            line = line.strip()
-            if line.startswith('Query:'):
-                if current_query:
-                    queries.append(current_query)
-                current_query = {'query': line.replace('Query:', '').strip()}
-            elif line.startswith('Goal:') and current_query:
-                current_query['researchGoal'] = line.replace('Goal:', '').strip()
-
-        if current_query:
-            queries.append(current_query)
-
-        return queries[:num_queries]
+        return parse_search_queries_response(response, num_queries)
 
     async def process_serp_result(self, query: str, context: str, num_learnings: int = 3) -> Dict[str, List[str]]:
         """Process research results to extract learnings and follow-up questions"""
         messages = [
-            {"role": "system", "content": "You are an expert researcher analyzing search results."},
-            {"role": "user", "content": f"Given the following research results for the query '{query}', extract key learnings and suggest follow-up questions. For each learning, include a citation to the source URL if available. Format each learning as 'Learning [source_url]: <insight>' and each question as 'Question: <question>':\n\n{context}"}
+            {
+                "role": "system",
+                "content": (
+                    "You are an expert researcher analyzing search results. "
+                    "Return valid JSON only."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Given the following research results for the query '{query}', extract key learnings and suggest "
+                    "follow-up questions. For each learning, include a citation to the source URL if available.\n\n"
+                    'Return ONLY a JSON object using this exact schema:\n'
+                    '{"learnings": [{"insight": "<insight>", "sourceUrl": "<url or empty string>"}], '
+                    '"followUpQuestions": ["<question 1>", "<question 2>"]}\n\n'
+                    f"Research results:\n{context}"
+                ),
+            },
         ]
 
         response = await create_chat_completion(
@@ -119,33 +148,7 @@ class DeepResearch:
             reasoning_effort=ReasoningEfforts.High.value
         )
 
-        # Parse learnings and questions with citations
-        lines = response.split('\n')
-        learnings = []
-        questions = []
-        citations = {}
-
-        for line in lines:
-            line = line.strip()
-            if line.startswith('Learning'):
-                # Extract URL if present in square brackets
-                import re
-                url_match = re.search(r'\[(.*?)\]:', line)
-                if url_match:
-                    url = url_match.group(1)
-                    learning = line.split(':', 1)[1].strip()
-                    learnings.append(learning)
-                    citations[learning] = url
-                else:
-                    learnings.append(line.replace('Learning:', '').strip())
-            elif line.startswith('Question:'):
-                questions.append(line.replace('Question:', '').strip())
-
-        return {
-            'learnings': learnings[:num_learnings],
-            'followUpQuestions': questions[:num_learnings],
-            'citations': citations
-        }
+        return parse_research_results_response(response, num_learnings)
 
     async def deep_research(
         self,
