@@ -34,6 +34,7 @@ Thanks to our community, we have integrated the following web search engines:
 - [Arxiv](https://info.arxiv.org/help/api/index.html) - Env: `RETRIEVER=arxiv`
 - [Exa](https://docs.exa.ai/reference/getting-started) - Env: `RETRIEVER=exa`
 - [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`
+- [You.com](https://you.com/) - Env: `RETRIEVER=you` - [Setup Guide](#youcom)
 
 ## Custom Retrievers
 
@@ -94,5 +95,26 @@ SERPER_LANGUAGE=en                  # Language code (en, ko, ja, etc.)
 SERPER_TIME_RANGE=qdr:w            # Time filter (qdr:h, qdr:d, qdr:w, qdr:m, qdr:y)
 SERPER_EXCLUDE_SITES=youtube.com   # Exclude sites (comma-separated)
 ```
+
+### You.com
+
+To use the [You.com Search API](https://documentation.you.com/quickstart) as your search engine:
+
+1. Get your API key from [api.you.com/plans](https://api.you.com/plans).
+2. Set the required environment variables:
+
+```bash
+RETRIEVER=you
+YOU_API_KEY=your_api_key_here
+```
+
+**Optional Configuration:**
+
+```bash
+YOU_COUNTRY=SA          # ISO-3166 alpha-2 country code (e.g. US, GB, SA, JP)
+YOU_SAFE_SEARCH=ar      # BCP-47 language tag (e.g. en, ar for Arabic, ja for Japanese)
+```
+
+The retriever is multilingual: pair `YOU_COUNTRY=SA` with `YOU_SAFE_SEARCH=ar` for Arabic-language results from Saudi Arabia, or `YOU_COUNTRY=JP` with `YOU_SAFE_SEARCH=ja` for Japanese results. If `YOU_API_KEY` is not set the retriever logs a warning and returns no results, so it can be combined safely with other retrievers (e.g. `RETRIEVER=tavily,you`).
 
 Missing a retriever? Feel free to contribute to this project by submitting issues or pull requests on our [GitHub](https://github.com/assafelovic/gpt-researcher) page.
