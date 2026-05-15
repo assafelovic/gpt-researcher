@@ -104,12 +104,31 @@ class YouSearch:
         if self.language:
             params["search_lang"] = self.language
 
-        response = requests.get(
-            BASE_URL,
-            headers={"X-API-Key": api_key},
-            params=params,
-            timeout=DEFAULT_TIMEOUT,
-        )
+        try:
+            response = requests.get(
+                BASE_URL,
+                headers={"X-API-Key": api_key},
+                params=params,
+                timeout=DEFAULT_TIMEOUT,
+            )
+        except requests.exceptions.Timeout:
+            logger.warning(
+                "You.com Search request timed out after %ss. Returning empty results.",
+                DEFAULT_TIMEOUT,
+            )
+            return []
+        except requests.exceptions.RequestException as exc:
+            logger.warning(
+                "You.com Search request failed: %s. Returning empty results.", exc
+            )
+            return []
+
+        if response.status_code != 200:
+            logger.warning(
+                "You.com Search returned HTTP %s. Returning empty results.",
+                response.status_code,
+            )
+            return []
 
         payload = response.json()
         web_results = payload.get("results", {}).get("web", [])
