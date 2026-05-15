@@ -29,7 +29,7 @@ class YouSearch:
       ``ja`` (Japanese). The user-facing kwarg is ``language`` for
       readability but the wire parameter is ``search_lang``.
 
-    Both kwargs fall back to the ``YOU_COUNTRY`` and ``YOU_SAFE_SEARCH``
+    Both kwargs fall back to the ``YOU_COUNTRY`` and ``YOU_LANGUAGE``
     environment variables, mirroring Serper's ``SERPER_REGION`` /
     ``SERPER_LANGUAGE`` precedent.
     """
@@ -57,14 +57,14 @@ class YouSearch:
                 ``JP``). Falls back to the ``YOU_COUNTRY`` env var.
             language (str, optional): BCP-47 language tag (e.g. ``ar``, ``ja``).
                 Sent on the wire as ``search_lang``. Falls back to the
-                ``YOU_SAFE_SEARCH`` env var.
+                ``YOU_LANGUAGE`` env var.
         """
         self.query = query
         self.headers = headers or {}
         self.topic = topic
         self.query_domains = query_domains or None
         self.country = country or os.getenv("YOU_COUNTRY")
-        self.language = language or os.getenv("YOU_SAFE_SEARCH")
+        self.language = language or os.getenv("YOU_LANGUAGE")
 
     def _get_api_key(self):
         """

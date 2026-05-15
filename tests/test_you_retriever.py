@@ -81,7 +81,7 @@ class YouSearchTests(unittest.TestCase):
         # Ensure no environment leakage between tests.
         self._env_backup = {
             key: os.environ.pop(key, None)
-            for key in ("YOU_API_KEY", "YOU_COUNTRY", "YOU_SAFE_SEARCH")
+            for key in ("YOU_API_KEY", "YOU_COUNTRY", "YOU_LANGUAGE")
         }
 
     def tearDown(self):

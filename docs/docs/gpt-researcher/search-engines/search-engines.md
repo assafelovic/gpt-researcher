@@ -112,9 +112,9 @@ YOU_API_KEY=your_api_key_here
 
 ```bash
 YOU_COUNTRY=SA          # ISO-3166 alpha-2 country code (e.g. US, GB, SA, JP)
-YOU_SAFE_SEARCH=ar      # BCP-47 language tag (e.g. en, ar for Arabic, ja for Japanese)
+YOU_LANGUAGE=ar      # BCP-47 language tag (e.g. en, ar for Arabic, ja for Japanese)
 ```
 
-The retriever is multilingual: pair `YOU_COUNTRY=SA` with `YOU_SAFE_SEARCH=ar` for Arabic-language results from Saudi Arabia, or `YOU_COUNTRY=JP` with `YOU_SAFE_SEARCH=ja` for Japanese results. If `YOU_API_KEY` is not set the retriever logs a warning and returns no results, so it can be combined safely with other retrievers (e.g. `RETRIEVER=tavily,you`).
+The retriever is multilingual: pair `YOU_COUNTRY=SA` with `YOU_LANGUAGE=ar` for Arabic-language results from Saudi Arabia, or `YOU_COUNTRY=JP` with `YOU_LANGUAGE=ja` for Japanese results. If `YOU_API_KEY` is not set the retriever logs a warning and returns no results, so it can be combined safely with other retrievers (e.g. `RETRIEVER=tavily,you`).
 
 Missing a retriever? Feel free to contribute to this project by submitting issues or pull requests on our [GitHub](https://github.com/assafelovic/gpt-researcher) page.
