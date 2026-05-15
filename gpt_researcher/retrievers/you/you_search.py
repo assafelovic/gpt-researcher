@@ -4,6 +4,7 @@ This module provides the YouSearch class for performing web searches
 using the You.com Search API (https://documentation.you.com/quickstart).
 """
 
+import logging
 import os
 
 import requests
@@ -11,6 +12,8 @@ import requests
 
 BASE_URL = "https://ydc-index.io/v1/search"
 DEFAULT_TIMEOUT = 10
+
+logger = logging.getLogger(__name__)
 
 
 class YouSearch:
@@ -57,6 +60,12 @@ class YouSearch:
             list[dict]: A list of result dicts with keys ``href``, ``body``, ``title``.
         """
         api_key = self._get_api_key()
+        if not api_key:
+            logger.warning(
+                "You.com API key not found, set to blank. If you need a retriver, "
+                "please set the YOU_API_KEY environment variable."
+            )
+            return []
 
         params = {
             "query": self.query,
