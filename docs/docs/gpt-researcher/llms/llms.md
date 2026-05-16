@@ -10,6 +10,12 @@ Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_ver
 To learn more about support customization options see [here](/docs/gpt-researcher/gptr/config).
 
 **Please note**: GPT Researcher is optimized and heavily tested on GPT models. Some other models might run into context limit errors, and unexpected responses.
+> **Token limits**: Modern long-output models (Claude 4.x, GPT-5)
+> require raising `SMART_TOKEN_LIMIT` and related variables above
+> their defaults to avoid truncated reports. See
+> [config documentation](../gptr/config#recommended-values-for-modern-long-output-models)
+> for recommended values.
+
 Please provide any feedback in our [Discord community](https://discord.gg/QgZXvJAccX) channel, so we can better improve the experience and performance.
 
 Below you can find examples for how to configure the various supported LLMs.

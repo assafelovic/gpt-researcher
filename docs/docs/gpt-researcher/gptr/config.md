@@ -26,8 +26,8 @@ The config JSON should follow the format/keys in the default config. Below is a 
   "STRATEGIC_LLM": "openai:o4-mini",
   "LANGUAGE": "english",
   "CURATE_SOURCES": false,
-  "FAST_TOKEN_LIMIT": 2000,
-  "SMART_TOKEN_LIMIT": 4000,
+  "FAST_TOKEN_LIMIT": 3000,
+  "SMART_TOKEN_LIMIT": 6000,
   "STRATEGIC_TOKEN_LIMIT": 4000,
   "BROWSE_CHUNK_MAX_LENGTH": 8192,
   "SUMMARY_TOKEN_LIMIT": 700,
@@ -58,9 +58,28 @@ Below is a list of current supported options:
 - **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `openai:gpt-5-mini`.
 - **`LANGUAGE`**: Language to be used for the final research report. Defaults to `english`.
 - **`CURATE_SOURCES`**: Whether to curate sources for research. This step adds an LLM run which may increase costs and total run time but improves quality of source selection. Defaults to `False`.
-- **`FAST_TOKEN_LIMIT`**: Maximum token limit for fast LLM responses. Defaults to `2000`.
-- **`SMART_TOKEN_LIMIT`**: Maximum token limit for smart LLM responses. Defaults to `4000`.
+- **`FAST_TOKEN_LIMIT`**: Maximum token limit for fast LLM responses. Defaults to `3000`.
+- **`SMART_TOKEN_LIMIT`**: Maximum token limit for smart LLM responses. Defaults to `6000`.
 - **`STRATEGIC_TOKEN_LIMIT`**: Maximum token limit for strategic LLM responses. Defaults to `4000`.
+
+#### Recommended values for modern long-output models
+
+The default token limits are calibrated for GPT-4o-class models
+(16k max output). For models with larger output capacity, increase
+these limits to avoid truncated reports:
+
+| Model family            | Max output | Recommended SMART_TOKEN_LIMIT |
+|-------------------------|-----------:|------------------------------:|
+| GPT-4o / GPT-4.1        |        16k |                          8000 |
+| Claude Haiku 4.5        |        64k |                         16000 |
+| Claude Sonnet 4.6       |        64k |                         16000 |
+| Claude Opus 4.7         |       128k |                         32000 |
+| GPT-5 family            |       128k |                         32000 |
+
+Apply proportional values to `FAST_TOKEN_LIMIT` and
+`STRATEGIC_TOKEN_LIMIT` if you use distinct models for those roles.
+The hard upper bound is 200k (sanity guard against typos).
+
 - **`BROWSE_CHUNK_MAX_LENGTH`**: Maximum length of text chunks to browse in web sources. Defaults to `8192`.
 - **`SUMMARY_TOKEN_LIMIT`**: Maximum token limit for generating summaries. Defaults to `700`.
 - **`TEMPERATURE`**: Sampling temperature for LLM responses, typically between 0 and 1. A higher value results in more randomness and creativity, while a lower value results in more focused and deterministic responses. Defaults to `0.4`.
