@@ -23,7 +23,7 @@ import yaml
 from gpt_researcher import GPTResearcher
 from gpt_researcher.actions.retriever import get_retriever
 from gpt_researcher.config.config import Config
-from gpt_researcher.exceptions import RetrievalFailureError
+from gpt_researcher.exceptions import BudgetExceededError, RetrievalFailureError
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from backend.report_type import DetailedReport
 from backend.utils import write_md_to_pdf, write_md_to_word
@@ -289,6 +289,11 @@ async def main(args):
         _abort_run(
             "[RETRIEVAL] Aborting after 3 consecutive empty retrieval steps. "
             f"Last queries: {', '.join(exc.failed_queries)}"
+        )
+    except BudgetExceededError as exc:
+        _abort_run(
+            "[BUDGET] Aborting because the cumulative research cost exceeded "
+            f"MAX_COST_USD (${exc.max_cost_usd:.6f}). Current total: ${exc.total_cost_usd:.6f}."
         )
 
     # Write the report to markdown file

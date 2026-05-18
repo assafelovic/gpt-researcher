@@ -155,7 +155,8 @@ class DetailedReport:
             source_urls=self.source_urls,
             # Propagate MCP configuration so follow-up researchers can use MCP
             mcp_configs=self.gpt_researcher.mcp_configs,
-            mcp_strategy=self.gpt_researcher.mcp_strategy
+            mcp_strategy=self.gpt_researcher.mcp_strategy,
+            budget_state=self.gpt_researcher.budget_state,
         )
 
         # Propagate max_search_results override to subtopic researcher
