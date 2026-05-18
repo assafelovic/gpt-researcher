@@ -190,24 +190,45 @@ async def _run_retriever_preflight(cfg: Config) -> None:
     retriever_names = cfg.retrievers if isinstance(cfg.retrievers, list) else [cfg.retrievers]
     first_retriever = retriever_names[0]
     retriever_class = get_retriever(first_retriever)
+    probe_queries = [
+        "test connectivity",
+        "rust programming language",
+        "python decorators tutorial",
+    ]
 
     if retriever_class is None:
         _abort_run(f"[PREFLIGHT] Unknown retriever '{first_retriever}'.")
 
-    try:
-        retriever = retriever_class("test connectivity", query_domains=[])
-        results = await asyncio.to_thread(retriever.search, max_results=3)
-    except Exception as exc:
-        _abort_run(
-            f"[PREFLIGHT] Retriever probe failed for '{first_retriever}': {exc}"
-        )
+    for index, probe_query in enumerate(probe_queries, start=1):
+        try:
+            retriever = retriever_class(probe_query, query_domains=[])
+            results = await asyncio.to_thread(retriever.search, max_results=3)
+        except Exception as exc:
+            _abort_run(
+                f"[PREFLIGHT] Retriever probe failed for '{first_retriever}' on "
+                f"query {probe_query!r}: {exc}"
+            )
 
-    print(f"[PREFLIGHT] retriever={first_retriever} results={len(results)}")
-    if not results:
-        _abort_run(
-            f"[PREFLIGHT] Retriever '{first_retriever}' returned 0 results for "
-            "'test connectivity'. Aborting before any LLM calls."
+        rate_limit_remaining = getattr(retriever, "last_rate_limit_remaining", None)
+        rate_limit_reset = getattr(retriever, "last_rate_limit_reset", None)
+        rate_limit_metadata = ""
+        if rate_limit_remaining is not None:
+            rate_limit_metadata = f" rate_limit_remaining={rate_limit_remaining}"
+            if rate_limit_reset is not None:
+                rate_limit_metadata += f" rate_limit_reset={rate_limit_reset}"
+
+        print(
+            f"[PREFLIGHT] retriever={first_retriever} probe={index} "
+            f"query={probe_query!r} results={len(results)}{rate_limit_metadata}"
         )
+        if not results:
+            _abort_run(
+                f"[PREFLIGHT] Retriever '{first_retriever}' returned 0 results for "
+                f"{probe_query!r}. Aborting before any LLM calls."
+            )
+
+        if index < len(probe_queries):
+            await asyncio.sleep(1.5)
 
 
 def _build_run_metadata(run_context, cfg: Config, query: str, runtime_seconds: float) -> dict[str, object]:
