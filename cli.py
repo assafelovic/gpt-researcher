@@ -13,10 +13,14 @@ import argparse
 from argparse import RawTextHelpFormatter
 from uuid import uuid4
 import os
+import sys
 
 from dotenv import load_dotenv
 
 from gpt_researcher import GPTResearcher
+from gpt_researcher.actions.retriever import get_retriever
+from gpt_researcher.config.config import Config
+from gpt_researcher.exceptions import RetrievalFailureError
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from backend.report_type import DetailedReport
 from backend.utils import write_md_to_pdf, write_md_to_word
@@ -135,54 +139,108 @@ cli.add_argument(
 # Main
 # =============================================================================
 
+def _env_status(name: str) -> str:
+    return "present" if os.getenv(name) else "missing"
+
+
+def _abort_run(message: str) -> None:
+    print(message, file=sys.stderr)
+    sys.exit(1)
+
+
+def _log_resolved_config(cfg: Config) -> None:
+    print(
+        f"[CONFIG] retriever={cfg.retriever}, fast_llm={cfg.fast_llm}, "
+        f"smart_llm={cfg.smart_llm}, strategic_llm={cfg.strategic_llm}, "
+        f"embedding={cfg.embedding_model}"
+    )
+    print(
+        f"[CONFIG] BRAVE_API_KEY={_env_status('BRAVE_API_KEY')}, "
+        f"TAVILY_API_KEY={_env_status('TAVILY_API_KEY')}, "
+        f"OPENAI_API_KEY={_env_status('OPENAI_API_KEY')}, "
+        f"ANTHROPIC_API_KEY={_env_status('ANTHROPIC_API_KEY')}"
+    )
+
+
+async def _run_retriever_preflight(cfg: Config) -> None:
+    retriever_names = cfg.retrievers if isinstance(cfg.retrievers, list) else [cfg.retrievers]
+    first_retriever = retriever_names[0]
+    retriever_class = get_retriever(first_retriever)
+
+    if retriever_class is None:
+        _abort_run(f"[PREFLIGHT] Unknown retriever '{first_retriever}'.")
+
+    try:
+        retriever = retriever_class("test connectivity", query_domains=[])
+        results = await asyncio.to_thread(retriever.search, max_results=3)
+    except Exception as exc:
+        _abort_run(
+            f"[PREFLIGHT] Retriever probe failed for '{first_retriever}': {exc}"
+        )
+
+    print(f"[PREFLIGHT] retriever={first_retriever} results={len(results)}")
+    if not results:
+        _abort_run(
+            f"[PREFLIGHT] Retriever '{first_retriever}' returned 0 results for "
+            "'test connectivity'. Aborting before any LLM calls."
+        )
 async def main(args):
     """
     Conduct research on the given query, generate the report, and write
     it as a markdown file to the output directory.
     """
     query_domains = args.query_domains.split(",") if args.query_domains else []
+    cfg = Config()
 
-    if args.report_type == 'detailed_report':
-        detailed_report = DetailedReport(
-            query=args.query,
-            query_domains=query_domains,
-            report_type="research_report",
-            report_source="web_search",
+    _log_resolved_config(cfg)
+    await _run_retriever_preflight(cfg)
+
+    try:
+        if args.report_type == 'detailed_report':
+            detailed_report = DetailedReport(
+                query=args.query,
+                query_domains=query_domains,
+                report_type="research_report",
+                report_source="web_search",
+            )
+
+            report = await detailed_report.run()
+        else:
+            # Convert the simple keyword to the full Tone enum value
+            tone_map = {
+                "objective": Tone.Objective,
+                "formal": Tone.Formal,
+                "analytical": Tone.Analytical,
+                "persuasive": Tone.Persuasive,
+                "informative": Tone.Informative,
+                "explanatory": Tone.Explanatory,
+                "descriptive": Tone.Descriptive,
+                "critical": Tone.Critical,
+                "comparative": Tone.Comparative,
+                "speculative": Tone.Speculative,
+                "reflective": Tone.Reflective,
+                "narrative": Tone.Narrative,
+                "humorous": Tone.Humorous,
+                "optimistic": Tone.Optimistic,
+                "pessimistic": Tone.Pessimistic
+            }
+
+            researcher = GPTResearcher(
+                query=args.query,
+                query_domains=query_domains,
+                report_type=args.report_type,
+                report_source=args.report_source,
+                tone=tone_map[args.tone],
+                encoding=args.encoding
+            )
+
+            await researcher.conduct_research()
+            report = await researcher.write_report()
+    except RetrievalFailureError as exc:
+        _abort_run(
+            "[RETRIEVAL] Aborting after 3 consecutive empty retrieval steps. "
+            f"Last queries: {', '.join(exc.failed_queries)}"
         )
-
-        report = await detailed_report.run()
-    else:
-        # Convert the simple keyword to the full Tone enum value
-        tone_map = {
-            "objective": Tone.Objective,
-            "formal": Tone.Formal,
-            "analytical": Tone.Analytical,
-            "persuasive": Tone.Persuasive,
-            "informative": Tone.Informative,
-            "explanatory": Tone.Explanatory,
-            "descriptive": Tone.Descriptive,
-            "critical": Tone.Critical,
-            "comparative": Tone.Comparative,
-            "speculative": Tone.Speculative,
-            "reflective": Tone.Reflective,
-            "narrative": Tone.Narrative,
-            "humorous": Tone.Humorous,
-            "optimistic": Tone.Optimistic,
-            "pessimistic": Tone.Pessimistic
-        }
-
-        researcher = GPTResearcher(
-            query=args.query,
-            query_domains=query_domains,
-            report_type=args.report_type,
-            report_source=args.report_source,
-            tone=tone_map[args.tone],
-            encoding=args.encoding
-        )
-
-        await researcher.conduct_research()
-
-        report = await researcher.write_report()
 
     # Write the report to markdown file
     task_id = str(uuid4())
