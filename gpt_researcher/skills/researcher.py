@@ -337,6 +337,8 @@ class ResearchConductor:
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
 
+        self.researcher.total_sub_queries += len(sub_queries)
+
         if self.researcher.verbose:
             await stream_output(
                 "logs",
