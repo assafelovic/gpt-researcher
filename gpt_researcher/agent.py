@@ -163,6 +163,8 @@ class GPTResearcher:
         self.headers = headers or {}
         self.research_costs = 0.0
         self.step_costs: dict[str, float] = {}
+        self.total_sub_queries = 0
+        self.successful_scrapes = 0
         self._current_step: str = "general"
         self.log_handler = log_handler
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
@@ -706,6 +708,14 @@ class GPTResearcher:
             Dictionary mapping step names to their costs in USD.
         """
         return dict(self.step_costs)
+
+    def get_total_sub_queries(self) -> int:
+        """Get the number of sub-queries attempted during the run."""
+        return self.total_sub_queries
+
+    def get_successful_scrapes(self) -> int:
+        """Get the number of successfully retrieved content entries."""
+        return self.successful_scrapes
 
     def set_verbose(self, verbose: bool) -> None:
         """Set the verbose output mode.

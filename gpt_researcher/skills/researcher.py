@@ -245,6 +245,8 @@ class ResearchConductor:
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
 
+        self.researcher.total_sub_queries += len(sub_queries)
+
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -866,6 +868,7 @@ class ResearchConductor:
 
         # Merge pre-fetched content from retrievers that already provide full text
         scraped_content.extend(prefetched_content)
+        self.researcher.successful_scrapes += len(scraped_content)
 
         if self.researcher.vector_store:
             self.researcher.vector_store.load(scraped_content)
