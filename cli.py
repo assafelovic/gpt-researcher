@@ -25,6 +25,12 @@ from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from backend.report_type import DetailedReport
 from backend.utils import write_md_to_pdf, write_md_to_word
 
+# Safeguard patterns:
+# - print the resolved config and credential presence before starting a run
+# - probe the first configured retriever before any LLM work starts
+# - fail fast on terminal runtime conditions instead of writing partial artifacts
+# - attach run metadata to outputs for postmortem debugging
+
 # =============================================================================
 # CLI
 # =============================================================================
@@ -138,7 +144,6 @@ cli.add_argument(
 # =============================================================================
 # Main
 # =============================================================================
-
 def _env_status(name: str) -> str:
     return "present" if os.getenv(name) else "missing"
 
@@ -146,8 +151,6 @@ def _env_status(name: str) -> str:
 def _abort_run(message: str) -> None:
     print(message, file=sys.stderr)
     sys.exit(1)
-
-
 def _log_resolved_config(cfg: Config) -> None:
     print(
         f"[CONFIG] retriever={cfg.retriever}, fast_llm={cfg.fast_llm}, "
