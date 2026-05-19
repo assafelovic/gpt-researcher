@@ -75,7 +75,8 @@ class DeepResearchSkill:
             llm_provider=self.researcher.cfg.strategic_llm_provider,
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=self.researcher.cfg.reasoning_effort,
-            temperature=0.4
+            temperature=0.4,
+            cost_callback=self.researcher.add_costs,
         )
 
         lines = response.split('\n')
@@ -136,7 +137,8 @@ Format each question on a new line starting with 'Question: '"""}
             llm_provider=self.researcher.cfg.strategic_llm_provider,
             model=self.researcher.cfg.strategic_llm_model,
             reasoning_effort=ReasoningEfforts.High.value,
-            temperature=0.4
+            temperature=0.4,
+            cost_callback=self.researcher.add_costs,
         )
 
         questions = [q.replace('Question:', '').strip()
@@ -158,7 +160,8 @@ Format each question on a new line starting with 'Question: '"""}
             model=self.researcher.cfg.strategic_llm_model,
             temperature=0.4,
             reasoning_effort=ReasoningEfforts.High.value,
-            max_tokens=1000
+            max_tokens=1000,
+            cost_callback=self.researcher.add_costs,
         )
 
         lines = response.split('\n')
@@ -254,11 +257,13 @@ Format each question on a new line starting with 'Question: '"""}
                         visited_urls=self.visited_urls,
                         # Propagate MCP configuration to nested researchers
                         mcp_configs=self.researcher.mcp_configs,
-                        mcp_strategy=self.researcher.mcp_strategy
+                        mcp_strategy=self.researcher.mcp_strategy,
+                        budget_state=self.researcher.budget_state,
                     )
 
                     # Conduct research
                     context = await researcher.conduct_research()
+                    self.researcher.research_costs += researcher.get_costs()
 
                     # Get results and visited URLs
                     visited = researcher.visited_urls
