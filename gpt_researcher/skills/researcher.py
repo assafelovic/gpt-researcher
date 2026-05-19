@@ -208,7 +208,21 @@ class ResearchConductor:
         self.researcher.context = research_data
         if self.researcher.cfg.curate_sources:
             self.logger.info("Curating sources")
-            self.researcher.context = await self.researcher.source_curator.curate_sources(research_data)
+            curated = await self.researcher.source_curator.curate_sources(research_data)
+            # curate_sources() returns List[dict] with Title/Content/Source keys.
+            # Normalize to str so downstream code that expects researcher.context
+            # to be a string (e.g. "\n".join, .split(), len()) doesn't crash.
+            if isinstance(curated, list):
+                self.researcher.context = "\n\n".join(
+                    "Title: {title}\nContent: {content}\nSource: {source}".format(
+                        title=s.get("Title", ""),
+                        content=s.get("Content", ""),
+                        source=s.get("Source", ""),
+                    ) if isinstance(s, dict) else str(s)
+                    for s in curated
+                )
+            else:
+                self.researcher.context = curated
 
         if self.researcher.verbose:
             await stream_output(
