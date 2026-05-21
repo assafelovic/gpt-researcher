@@ -17,6 +17,7 @@ from .actions import (
     get_search_results,
     table_of_contents,
 )
+from .exceptions import BudgetExceededError
 from .config import Config
 from .llm_provider import GenericLLMProvider
 from .memory import Memory
@@ -79,6 +80,7 @@ class GPTResearcher:
         mcp_configs: list[dict] | None = None,
         mcp_max_iterations: int | None = None,
         mcp_strategy: str | None = None,
+        budget_state: dict[str, float | None] | None = None,
         **kwargs
     ):
         """
@@ -163,6 +165,12 @@ class GPTResearcher:
         self.headers = headers or {}
         self.research_costs = 0.0
         self.step_costs: dict[str, float] = {}
+        self.total_sub_queries = 0
+        self.successful_scrapes = 0
+        self.budget_state = budget_state or {
+            "max_cost_usd": self._parse_max_cost_usd(os.getenv("MAX_COST_USD")),
+            "total_cost_usd": 0.0,
+        }
         self._current_step: str = "general"
         self.log_handler = log_handler
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
@@ -212,6 +220,16 @@ class GPTResearcher:
             unique_str = f"{self.query}_{time.time()}"
             self._research_id = f"research_{hashlib.md5(unique_str.encode()).hexdigest()[:12]}"
         return self._research_id
+
+    @staticmethod
+    def _parse_max_cost_usd(raw_value: str | None) -> float | None:
+        if raw_value in (None, ""):
+            return None
+
+        max_cost_usd = float(raw_value)
+        if max_cost_usd < 0:
+            raise ValueError("MAX_COST_USD must be non-negative")
+        return max_cost_usd
 
     def _resolve_mcp_strategy(self, mcp_strategy: str | None, mcp_max_iterations: int | None) -> str:
         """
@@ -707,6 +725,14 @@ class GPTResearcher:
         """
         return dict(self.step_costs)
 
+    def get_total_sub_queries(self) -> int:
+        """Get the number of sub-queries attempted during the run."""
+        return self.total_sub_queries
+
+    def get_successful_scrapes(self) -> int:
+        """Get the number of successfully retrieved content entries."""
+        return self.successful_scrapes
+
     def set_verbose(self, verbose: bool) -> None:
         """Set the verbose output mode.
 
@@ -729,8 +755,15 @@ class GPTResearcher:
         if not isinstance(cost, (float, int)):
             raise ValueError("Cost must be an integer or float")
         self.research_costs += cost
+        self.budget_state["total_cost_usd"] = (
+            float(self.budget_state.get("total_cost_usd") or 0.0) + float(cost)
+        )
         step = self._current_step
         self.step_costs[step] = self.step_costs.get(step, 0.0) + cost
+        max_cost_usd = self.budget_state.get("max_cost_usd")
+        total_cost_usd = float(self.budget_state["total_cost_usd"])
+        if max_cost_usd is not None and total_cost_usd > float(max_cost_usd):
+            raise BudgetExceededError(float(max_cost_usd), total_cost_usd)
         if self.log_handler:
             self._log_event("research", step="cost_update", details={
                 "cost": cost,

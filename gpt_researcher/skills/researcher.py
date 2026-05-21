@@ -14,6 +14,7 @@ from ..actions.agent_creator import choose_agent
 from ..actions.query_processing import get_search_results, plan_research_outline
 from ..actions.utils import stream_output
 from ..document import DocumentLoader, LangChainDocumentLoader, OnlineDocumentLoader
+from ..exceptions import RetrievalFailureError
 from ..utils.enum import ReportSource, ReportType
 from ..utils.logging_config import get_json_handler
 
@@ -244,6 +245,8 @@ class ResearchConductor:
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
 
+        self.researcher.total_sub_queries += len(sub_queries)
+
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -334,6 +337,8 @@ class ResearchConductor:
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
 
+        self.researcher.total_sub_queries += len(sub_queries)
+
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -344,22 +349,39 @@ class ResearchConductor:
                 sub_queries,
             )
 
-        # Using asyncio.gather to process the sub_queries asynchronously
         try:
-            context = await asyncio.gather(
-                *[
-                    self._process_sub_query(sub_query, scraped_data, query_domains)
-                    for sub_query in sub_queries
-                ]
-            )
+            context = []
+            empty_retrieval_streak = 0
+            failed_queries: list[str] = []
+
+            for sub_query in sub_queries:
+                sub_query_result = await self._process_sub_query(
+                    sub_query,
+                    scraped_data,
+                    query_domains,
+                )
+
+                if sub_query_result["context"]:
+                    context.append(sub_query_result["context"])
+
+                if sub_query_result["retrieved_source_count"] == 0:
+                    empty_retrieval_streak += 1
+                    failed_queries.append(sub_query)
+                    failed_queries = failed_queries[-3:]
+                    if empty_retrieval_streak >= 3:
+                        raise RetrievalFailureError(failed_queries)
+                else:
+                    empty_retrieval_streak = 0
+                    failed_queries.clear()
+
             self.logger.info(f"Gathered context from {len(context)} sub-queries")
-            # Filter out empty results and join the context
-            context = [c for c in context if c]
             if context:
                 combined_context = " ".join(context)
                 self.logger.info(f"Combined context size: {len(combined_context)}")
                 return combined_context
             return []
+        except RetrievalFailureError:
+            raise
         except Exception as e:
             self.logger.error(f"Error during web search: {e}", exc_info=True)
             return []
@@ -446,8 +468,18 @@ class ResearchConductor:
         
         return all_mcp_context
 
-    async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = []):
+    async def _process_sub_query(
+        self,
+        sub_query: str,
+        scraped_data: list | None = None,
+        query_domains: list | None = None,
+    ):
         """Takes in a sub query and scrapes urls based on it and gathers context."""
+        if scraped_data is None:
+            scraped_data = []
+        if query_domains is None:
+            query_domains = []
+
         if self.json_handler:
             self.json_handler.log_event("sub_query", {
                 "query": sub_query,
@@ -470,7 +502,8 @@ class ResearchConductor:
             # Initialize context components
             mcp_context = []
             web_context = ""
-            
+            retrieved_source_count = len(scraped_data)
+             
             # Get MCP strategy configuration
             mcp_strategy = self._get_mcp_strategy()
             
@@ -519,7 +552,10 @@ class ResearchConductor:
             
             # Get web search context using non-MCP retrievers (if no scraped data provided)
             if not scraped_data:
-                scraped_data = await self._scrape_data_by_urls(sub_query, query_domains)
+                scraped_data, retrieved_source_count = await self._scrape_data_by_urls(
+                    sub_query,
+                    query_domains,
+                )
                 self.logger.info(f"Scraped data size: {len(scraped_data)}")
 
             # Get similar content based on scraped data
@@ -563,9 +599,14 @@ class ResearchConductor:
                     "mcp_sources": len(mcp_context),
                     "web_content": bool(web_context)
                 })
-                
-            return combined_context
-            
+                 
+            return {
+                "context": combined_context,
+                "retrieved_source_count": retrieved_source_count,
+            }
+             
+        except RetrievalFailureError:
+            raise
         except Exception as e:
             self.logger.error(f"Error processing sub-query {sub_query}: {e}", exc_info=True)
             if self.researcher.verbose:
@@ -575,7 +616,10 @@ class ResearchConductor:
                     f"❌ Error processing '{sub_query}': {str(e)}",
                     self.researcher.websocket,
                 )
-            return ""
+            return {
+                "context": "",
+                "retrieved_source_count": 0,
+            }
 
     async def _execute_mcp_research(self, retriever, query):
         """
@@ -805,7 +849,7 @@ class ResearchConductor:
             sub_query (str): The sub-query to search for.
 
         Returns:
-            list: A list of scraped content results.
+            tuple[list, int]: Scraped content plus the number of retrievable sources found.
         """
         if query_domains is None:
             query_domains = []
@@ -826,11 +870,12 @@ class ResearchConductor:
 
         # Merge pre-fetched content from retrievers that already provide full text
         scraped_content.extend(prefetched_content)
+        self.researcher.successful_scrapes += len(scraped_content)
 
         if self.researcher.vector_store:
             self.researcher.vector_store.load(scraped_content)
 
-        return scraped_content
+        return scraped_content, len(scraped_content)
 
     async def _search(self, retriever, query):
         """

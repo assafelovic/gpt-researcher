@@ -72,6 +72,7 @@ class DetailedReport:
         self.existing_headers: List[Dict] = []
         self.global_context: List[str] = []
         self.global_written_sections: List[str] = []
+        self.subtopic_researchers: List[GPTResearcher] = []
         self.global_urls: Set[str] = set(
             self.source_urls) if self.source_urls else set()
 
@@ -154,13 +155,15 @@ class DetailedReport:
             source_urls=self.source_urls,
             # Propagate MCP configuration so follow-up researchers can use MCP
             mcp_configs=self.gpt_researcher.mcp_configs,
-            mcp_strategy=self.gpt_researcher.mcp_strategy
+            mcp_strategy=self.gpt_researcher.mcp_strategy,
+            budget_state=self.gpt_researcher.budget_state,
         )
 
         # Propagate max_search_results override to subtopic researcher
         if self.max_search_results is not None:
             subtopic_assistant.cfg.max_search_results_per_query = int(self.max_search_results)
 
+        self.subtopic_researchers.append(subtopic_assistant)
         subtopic_assistant.context = list(set(self._hashable_context(self.global_context)))
         await subtopic_assistant.conduct_research()
 
@@ -203,3 +206,15 @@ class DetailedReport:
         
         # Note: Images are now pre-generated during conduct_research() and embedded during write_report()
         return report
+
+    def get_costs(self) -> float:
+        researchers = [self.gpt_researcher, *self.subtopic_researchers]
+        return sum(researcher.get_costs() for researcher in researchers)
+
+    def get_total_sub_queries(self) -> int:
+        researchers = [self.gpt_researcher, *self.subtopic_researchers]
+        return sum(researcher.get_total_sub_queries() for researcher in researchers)
+
+    def get_successful_scrapes(self) -> int:
+        researchers = [self.gpt_researcher, *self.subtopic_researchers]
+        return sum(researcher.get_successful_scrapes() for researcher in researchers)

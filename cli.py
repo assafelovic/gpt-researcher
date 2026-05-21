@@ -10,16 +10,29 @@ python cli.py "<query>" --report_type <report_type> --tone <tone> --query_domain
 """
 import asyncio
 import argparse
+import json
 from argparse import RawTextHelpFormatter
-from uuid import uuid4
 import os
+import sys
+import time
+from uuid import uuid4
 
 from dotenv import load_dotenv
+import yaml
 
 from gpt_researcher import GPTResearcher
+from gpt_researcher.actions.retriever import get_retriever
+from gpt_researcher.config.config import Config
+from gpt_researcher.exceptions import BudgetExceededError, RetrievalFailureError
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from backend.report_type import DetailedReport
 from backend.utils import write_md_to_pdf, write_md_to_word
+
+# Safeguard patterns:
+# - print the resolved config and credential presence before starting a run
+# - probe the first configured retriever before any LLM work starts
+# - fail fast on terminal runtime conditions instead of writing partial artifacts
+# - attach run metadata to outputs for postmortem debugging
 
 # =============================================================================
 # CLI
@@ -134,63 +147,196 @@ cli.add_argument(
 # =============================================================================
 # Main
 # =============================================================================
+def _env_status(name: str) -> str:
+    return "present" if os.getenv(name) else "missing"
+
+
+def _abort_run(message: str) -> None:
+    print(message, file=sys.stderr)
+    sys.exit(1)
+
+
+def _resolved_env_statuses() -> dict[str, str]:
+    tracked_env_vars = (
+        "RETRIEVER",
+        "FAST_LLM",
+        "SMART_LLM",
+        "STRATEGIC_LLM",
+        "EMBEDDING",
+        "MAX_COST_USD",
+        "BRAVE_API_KEY",
+        "TAVILY_API_KEY",
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+    )
+    return {name: _env_status(name) for name in tracked_env_vars}
+
+
+def _log_resolved_config(cfg: Config) -> None:
+    print(
+        f"[CONFIG] retriever={cfg.retriever}, fast_llm={cfg.fast_llm}, "
+        f"smart_llm={cfg.smart_llm}, strategic_llm={cfg.strategic_llm}, "
+        f"embedding={cfg.embedding_model}"
+    )
+    print(
+        f"[CONFIG] BRAVE_API_KEY={_env_status('BRAVE_API_KEY')}, "
+        f"TAVILY_API_KEY={_env_status('TAVILY_API_KEY')}, "
+        f"OPENAI_API_KEY={_env_status('OPENAI_API_KEY')}, "
+        f"ANTHROPIC_API_KEY={_env_status('ANTHROPIC_API_KEY')}"
+    )
+
+
+async def _run_retriever_preflight(cfg: Config) -> None:
+    retriever_names = cfg.retrievers if isinstance(cfg.retrievers, list) else [cfg.retrievers]
+    first_retriever = retriever_names[0]
+    retriever_class = get_retriever(first_retriever)
+    probe_queries = [
+        "test connectivity",
+        "rust programming language",
+        "python decorators tutorial",
+    ]
+
+    if retriever_class is None:
+        _abort_run(f"[PREFLIGHT] Unknown retriever '{first_retriever}'.")
+
+    for index, probe_query in enumerate(probe_queries, start=1):
+        try:
+            retriever = retriever_class(probe_query, query_domains=[])
+            results = await asyncio.to_thread(retriever.search, max_results=3)
+        except Exception as exc:
+            _abort_run(
+                f"[PREFLIGHT] Retriever probe failed for '{first_retriever}' on "
+                f"query {probe_query!r}: {exc}"
+            )
+
+        rate_limit_remaining = getattr(retriever, "last_rate_limit_remaining", None)
+        rate_limit_reset = getattr(retriever, "last_rate_limit_reset", None)
+        rate_limit_metadata = ""
+        if rate_limit_remaining is not None:
+            rate_limit_metadata = f" rate_limit_remaining={rate_limit_remaining}"
+            if rate_limit_reset is not None:
+                rate_limit_metadata += f" rate_limit_reset={rate_limit_reset}"
+
+        print(
+            f"[PREFLIGHT] retriever={first_retriever} probe={index} "
+            f"query={probe_query!r} results={len(results)}{rate_limit_metadata}"
+        )
+        if not results:
+            _abort_run(
+                f"[PREFLIGHT] Retriever '{first_retriever}' returned 0 results for "
+                f"{probe_query!r}. Aborting before any LLM calls."
+            )
+
+        if index < len(probe_queries):
+            await asyncio.sleep(1.5)
+
+
+def _build_run_metadata(run_context, cfg: Config, query: str, runtime_seconds: float) -> dict[str, object]:
+    return {
+        "retriever": cfg.retriever,
+        "fast_llm": cfg.fast_llm,
+        "smart_llm": cfg.smart_llm,
+        "strategic_llm": cfg.strategic_llm,
+        "total_sub_queries": run_context.get_total_sub_queries(),
+        "successful_scrapes": run_context.get_successful_scrapes(),
+        "total_cost_usd": round(run_context.get_costs(), 6),
+        "runtime_seconds": round(runtime_seconds, 3),
+        "query": query,
+    }
+
+
+def _prepend_frontmatter(report: str, metadata: dict[str, object]) -> str:
+    frontmatter = yaml.safe_dump(metadata, sort_keys=False, allow_unicode=True).strip()
+    return f"---\n{frontmatter}\n---\n\n{report}"
+
 
 async def main(args):
     """
     Conduct research on the given query, generate the report, and write
     it as a markdown file to the output directory.
     """
+    start_time = time.monotonic()
     query_domains = args.query_domains.split(",") if args.query_domains else []
+    cfg = Config()
+    run_context = None
 
-    if args.report_type == 'detailed_report':
-        detailed_report = DetailedReport(
-            query=args.query,
-            query_domains=query_domains,
-            report_type="research_report",
-            report_source="web_search",
+    _log_resolved_config(cfg)
+    await _run_retriever_preflight(cfg)
+
+    try:
+        if args.report_type == 'detailed_report':
+            detailed_report = DetailedReport(
+                query=args.query,
+                query_domains=query_domains,
+                report_type="research_report",
+                report_source="web_search",
+            )
+
+            run_context = detailed_report
+            report = await detailed_report.run()
+        else:
+            # Convert the simple keyword to the full Tone enum value
+            tone_map = {
+                "objective": Tone.Objective,
+                "formal": Tone.Formal,
+                "analytical": Tone.Analytical,
+                "persuasive": Tone.Persuasive,
+                "informative": Tone.Informative,
+                "explanatory": Tone.Explanatory,
+                "descriptive": Tone.Descriptive,
+                "critical": Tone.Critical,
+                "comparative": Tone.Comparative,
+                "speculative": Tone.Speculative,
+                "reflective": Tone.Reflective,
+                "narrative": Tone.Narrative,
+                "humorous": Tone.Humorous,
+                "optimistic": Tone.Optimistic,
+                "pessimistic": Tone.Pessimistic
+            }
+
+            researcher = GPTResearcher(
+                query=args.query,
+                query_domains=query_domains,
+                report_type=args.report_type,
+                report_source=args.report_source,
+                tone=tone_map[args.tone],
+                encoding=args.encoding
+            )
+
+            run_context = researcher
+            await researcher.conduct_research()
+            report = await researcher.write_report()
+    except RetrievalFailureError as exc:
+        _abort_run(
+            "[RETRIEVAL] Aborting after 3 consecutive empty retrieval steps. "
+            f"Last queries: {', '.join(exc.failed_queries)}"
         )
-
-        report = await detailed_report.run()
-    else:
-        # Convert the simple keyword to the full Tone enum value
-        tone_map = {
-            "objective": Tone.Objective,
-            "formal": Tone.Formal,
-            "analytical": Tone.Analytical,
-            "persuasive": Tone.Persuasive,
-            "informative": Tone.Informative,
-            "explanatory": Tone.Explanatory,
-            "descriptive": Tone.Descriptive,
-            "critical": Tone.Critical,
-            "comparative": Tone.Comparative,
-            "speculative": Tone.Speculative,
-            "reflective": Tone.Reflective,
-            "narrative": Tone.Narrative,
-            "humorous": Tone.Humorous,
-            "optimistic": Tone.Optimistic,
-            "pessimistic": Tone.Pessimistic
-        }
-
-        researcher = GPTResearcher(
-            query=args.query,
-            query_domains=query_domains,
-            report_type=args.report_type,
-            report_source=args.report_source,
-            tone=tone_map[args.tone],
-            encoding=args.encoding
+    except BudgetExceededError as exc:
+        _abort_run(
+            "[BUDGET] Aborting because the cumulative research cost exceeded "
+            f"MAX_COST_USD (${exc.max_cost_usd:.6f}). Current total: ${exc.total_cost_usd:.6f}."
         )
-
-        await researcher.conduct_research()
-
-        report = await researcher.write_report()
 
     # Write the report to markdown file
+    runtime_seconds = time.monotonic() - start_time
+    metadata = _build_run_metadata(run_context, cfg, args.query, runtime_seconds)
     task_id = str(uuid4())
     artifact_filepath = f"outputs/{task_id}.md"
+    meta_filepath = f"outputs/{task_id}.meta.json"
     os.makedirs("outputs", exist_ok=True)
     with open(artifact_filepath, "w", encoding="utf-8") as f:
-        f.write(report)
+        f.write(_prepend_frontmatter(report, metadata))
+    with open(meta_filepath, "w", encoding="utf-8") as f:
+        json.dump(
+            {
+                **metadata,
+                "resolved_env_vars": _resolved_env_statuses(),
+            },
+            f,
+            indent=2,
+        )
     print(f"Report written to '{artifact_filepath}'")
+    print(f"Run metadata written to '{meta_filepath}'")
 
     # Generate PDF if not disabled
     if not args.no_pdf:
