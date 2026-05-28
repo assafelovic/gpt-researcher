@@ -9,7 +9,7 @@ from typing import Dict, List
 
 from fastapi import WebSocket
 
-from report_type import BasicReport, DetailedReport
+from backend.report_type import BasicReport, DetailedReport
 
 from gpt_researcher.utils.enum import ReportType, Tone
 from gpt_researcher.actions import stream_output  # Import stream_output
