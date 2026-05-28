@@ -23,6 +23,7 @@ from langchain_classic.retrievers.document_compressors import (
     DocumentCompressorPipeline,
     EmbeddingsFilter,
 )
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from ..memory.embeddings import OPENAI_EMBEDDING_MODEL
@@ -142,6 +143,9 @@ class ContextCompressor:
     async def async_get_context(self, query: str, max_results: int = 5, cost_callback=None) -> str:
         """Get relevant context from documents asynchronously.
 
+        Optimization: Skip expensive compression pipeline for small document sets.
+        When documents are already concise, directly use them without embedding-based filtering.
+
         Args:
             query: The search query.
             max_results: Maximum number of results to return.
@@ -150,6 +154,23 @@ class ContextCompressor:
         Returns:
             Formatted string of relevant document content.
         """
+        # Optimization: Calculate total content size
+        total_chars = sum(len(str(doc.get('raw_content', ''))) for doc in self.documents)
+        chunk_threshold = int(os.environ.get("COMPRESSION_THRESHOLD", "8000"))
+
+        # If total content is small, skip expensive compression and return directly
+        if total_chars < chunk_threshold and len(self.documents) <= max_results:
+            # Fast path: no compression needed
+            direct_docs = [
+                Document(
+                    page_content=doc.get('raw_content', ''),
+                    metadata=doc
+                )
+                for doc in self.documents[:max_results]
+            ]
+            return self.prompt_family.pretty_print_docs(direct_docs, max_results)
+
+        # Standard path: use compression for large content
         compressed_docs = self.__get_contextual_retriever()
         if cost_callback:
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))

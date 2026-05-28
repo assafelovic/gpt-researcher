@@ -222,6 +222,11 @@
                 </select>
             </div>
             <div class="form-group">
+                <label for="maxSearchResults" class="agent-question">How many websites should be scraped per query?</label>
+                <input type="number" class="form-control highlight-connection" id="maxSearchResults" name="max_search_results" min="1" max="20" value="5">
+                <small class="text-muted">Controls the number of websites scraped per search query (default: 5)</small>
+            </div>
+            <div class="form-group">
                 <label for="queryDomains" class="form-label">Query Domains (Optional)</label>
                 <input type="text" class="form-control highlight-connection" id="queryDomains" name="query_domains" placeholder="Enter domains separated by commas" autocomplete="on">
                 <small class="text-muted">Example: techcrunch.com, forbes.com</small>

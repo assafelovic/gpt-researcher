@@ -7,7 +7,7 @@ const FeatureList = [
   {
     title: 'GPT Researcher',
     Svg: require('../../static/img/gptr-logo.png').default,
-    docLink: './docs/gpt-researcher/getting-started/getting-started',
+    docLink: './docs/gpt-researcher/getting-started',
     description: (
       <>
         GPT Researcher is an open source autonomous agent designed for comprehensive online research on a variety of tasks.
@@ -37,7 +37,7 @@ const FeatureList = [
   {
     title: 'Examples and Demos',
     Svg: require('../../static/img/examples.png').default,
-    docLink: './docs/examples/examples',
+    docLink: './docs/examples',
     description: (
       <>
           Check out GPT Researcher in action across multiple frameworks and use cases such as hybrid research and long detailed reports.

@@ -287,7 +287,7 @@ Place each image on its own line after the relevant section header or paragraph.
             cost_callback=cost_callback,
             **kwargs
         )
-    except:
+    except Exception:
         try:
             report = await create_chat_completion(
                 model=cfg.smart_llm_model,

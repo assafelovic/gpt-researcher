@@ -16,6 +16,8 @@ from fastapi import HTTPException
 import logging
 import hashlib
 
+from .multi_agent_runner import run_multi_agent_task
+
 # Import chat agent
 try:
     import sys
@@ -135,6 +137,7 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_enabled,
         mcp_strategy,
         mcp_configs,
+        max_search_results,
     ) = extract_command_data(json_data)
 
     if not task or not report_type:
@@ -166,6 +169,7 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_enabled,
         mcp_strategy,
         mcp_configs,
+        max_search_results,
     )
     report = str(report)
     file_paths = await generate_report_files(report, sanitized_filename)
@@ -314,7 +318,7 @@ async def handle_file_deletion(filename: str, DOC_PATH: str) -> JSONResponse:
 async def execute_multi_agents(manager) -> Any:
     websocket = manager.active_connections[0] if manager.active_connections else None
     if websocket:
-        report = await run_research_task("Is AI in a hype cycle?", websocket, stream_output)
+        report = await run_multi_agent_task("Is AI in a hype cycle?", websocket, stream_output)
         return {"report": report}
     else:
         return JSONResponse(status_code=400, content={"message": "No active WebSocket connection"})
@@ -404,4 +408,5 @@ def extract_command_data(json_data: Dict) -> tuple:
         json_data.get("mcp_enabled", False),
         json_data.get("mcp_strategy", "fast"),
         json_data.get("mcp_configs", []),
+        json_data.get("max_search_results"),
     )

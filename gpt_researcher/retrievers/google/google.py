@@ -31,7 +31,7 @@ class GoogleSearch:
         # Get the API key
         try:
             api_key = os.environ["GOOGLE_API_KEY"]
-        except:
+        except Exception:
             raise Exception("Google API key not found. Please set the GOOGLE_API_KEY environment variable. "
                             "You can get a key at https://developers.google.com/custom-search/v1/overview")
         return api_key
@@ -45,7 +45,7 @@ class GoogleSearch:
         # Get the API key
         try:
             api_key = os.environ["GOOGLE_CX_KEY"]
-        except:
+        except Exception:
             raise Exception("Google CX key not found. Please set the GOOGLE_CX_KEY environment variable. "
                             "You can get a key at https://developers.google.com/custom-search/v1/overview")
         return api_key
@@ -93,7 +93,7 @@ class GoogleSearch:
                     "href": result["link"],
                     "body": result["snippet"],
                 }
-            except:
+            except Exception:
                 continue
             search_results.append(search_result)
 

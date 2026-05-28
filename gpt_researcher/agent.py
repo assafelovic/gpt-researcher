@@ -46,6 +46,7 @@ class GPTResearcher:
         cfg: Configuration object.
         context: Accumulated research context.
         research_costs: Total accumulated API costs.
+        step_costs: Per-step cost breakdown dictionary.
     """
 
     def __init__(
@@ -161,6 +162,8 @@ class GPTResearcher:
         self.context = context or []
         self.headers = headers or {}
         self.research_costs = 0.0
+        self.step_costs: dict[str, float] = {}
+        self._current_step: str = "general"
         self.log_handler = log_handler
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
         
@@ -346,9 +349,11 @@ class GPTResearcher:
 
         # Handle deep research separately
         if self.report_type == ReportType.DeepResearch.value and self.deep_researcher:
+            self._current_step = "deep_research"
             return await self._handle_deep_research(on_progress)
 
         if not (self.agent and self.role):
+            self._current_step = "agent_selection"
             await self._log_event("action", action="choose_agent")
             # Filter out encoding parameter as it's not supported by LLM APIs
             # filtered_kwargs = {k: v for k, v in self.kwargs.items() if k != 'encoding'}
@@ -371,6 +376,7 @@ class GPTResearcher:
             "agent": self.agent,
             "role": self.role
         })
+        self._current_step = "research"
         self.context = await self.research_conductor.conduct_research()
 
         await self._log_event("research", step="research_completed", details={
@@ -463,6 +469,7 @@ class GPTResearcher:
         # Use pre-generated images if available (generated during conduct_research)
         has_available_images = bool(self.available_images)
         
+        self._current_step = "report_writing"
         await self._log_event("research", step="writing_report", details={
             "existing_headers": existing_headers,
             "context_source": "external" if ext_context else "internal",
@@ -692,6 +699,14 @@ class GPTResearcher:
         """
         return self.research_costs
 
+    def get_step_costs(self) -> dict[str, float]:
+        """Get a breakdown of API costs per research step.
+
+        Returns:
+            Dictionary mapping step names to their costs in USD.
+        """
+        return dict(self.step_costs)
+
     def set_verbose(self, verbose: bool) -> None:
         """Set the verbose output mode.
 
@@ -703,6 +718,8 @@ class GPTResearcher:
     def add_costs(self, cost: float) -> None:
         """Add to the accumulated API costs.
 
+        The cost is attributed to the current step set via ``_current_step``.
+
         Args:
             cost: Cost amount to add in USD.
 
@@ -712,8 +729,11 @@ class GPTResearcher:
         if not isinstance(cost, (float, int)):
             raise ValueError("Cost must be an integer or float")
         self.research_costs += cost
+        step = self._current_step
+        self.step_costs[step] = self.step_costs.get(step, 0.0) + cost
         if self.log_handler:
             self._log_event("research", step="cost_update", details={
                 "cost": cost,
-                "total_cost": self.research_costs
+                "total_cost": self.research_costs,
+                "step_name": step,
             })
