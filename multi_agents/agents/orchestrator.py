@@ -6,6 +6,10 @@ from langgraph.graph import StateGraph, END
 from .utils.views import print_agent_output
 from ..memory.research import ResearchState
 from .utils.utils import sanitize_filename
+from .plan_review import (
+    DEFAULT_MAX_PLAN_REVISIONS,
+    route_human_feedback,
+)
 
 # Import agent classes
 from . import \
@@ -76,9 +80,14 @@ class ChiefEditorAgent:
         # Add human in the loop
         workflow.add_conditional_edges(
             'human',
-            lambda review: "accept" if review['human_feedback'] is None else "revise",
+            self._route_human_feedback,
             {"accept": "researcher", "revise": "planner"}
         )
+
+    def _route_human_feedback(self, review):
+        max_plan_revisions = self.task.get(
+            "max_plan_revisions", DEFAULT_MAX_PLAN_REVISIONS)
+        return route_human_feedback(review, max_plan_revisions)
 
     def init_research_team(self):
         """Initialize and create a workflow for the research team."""
