@@ -12,9 +12,35 @@ from typing import Any, Dict, List, Tuple, Callable, Optional
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_core.tools import tool
 
+from .costs import calculate_llm_cost
 from .llm import create_chat_completion
 
 logger = logging.getLogger(__name__)
+
+
+def _track_response_cost(
+    *,
+    llm_provider: str | None,
+    model: str | None,
+    input_payload: Any,
+    response_message: Any,
+    request_options: Dict[str, Any],
+    cost_callback: Callable | None,
+) -> None:
+    if not cost_callback:
+        return
+
+    response_content = getattr(response_message, "content", "") or ""
+    llm_costs = calculate_llm_cost(
+        llm_provider=llm_provider,
+        model=model,
+        input_content=str(input_payload),
+        output_content=str(response_content),
+        response_metadata=getattr(response_message, "response_metadata", None),
+        usage_metadata=getattr(response_message, "usage_metadata", None),
+        request_options=request_options,
+    )
+    cost_callback(llm_costs)
 
 
 async def create_chat_completion_with_tools(
@@ -88,6 +114,14 @@ async def create_chat_completion_with_tools(
         
         # First call to LLM
         response = await llm_with_tools.ainvoke(lc_messages)
+        _track_response_cost(
+            llm_provider=llm_provider,
+            model=model,
+            input_payload=lc_messages,
+            response_message=response,
+            request_options=provider_kwargs,
+            cost_callback=cost_callback,
+        )
         
         # Process tool calls if any were made
         tool_calls_metadata = []
@@ -152,23 +186,21 @@ async def create_chat_completion_with_tools(
             # Get final response from LLM after tool execution
             logger.info("Getting final response from LLM after tool execution")
             final_response = await llm_with_tools.ainvoke(lc_messages)
-            
+             
             # Track costs if callback provided
-            if cost_callback:
-                from .costs import estimate_llm_cost
-                # Calculate costs for both calls
-                llm_costs = estimate_llm_cost(str(lc_messages), final_response.content or "")
-                cost_callback(llm_costs)
-            
+            _track_response_cost(
+                llm_provider=llm_provider,
+                model=model,
+                input_payload=lc_messages,
+                response_message=final_response,
+                request_options=provider_kwargs,
+                cost_callback=cost_callback,
+            )
+             
             return final_response.content, tool_calls_metadata
-        
+         
         else:
             # No tool calls, return regular response
-            if cost_callback:
-                from .costs import estimate_llm_cost
-                llm_costs = estimate_llm_cost(str(messages), response.content or "")
-                cost_callback(llm_costs)
-            
             return response.content, []
         
     except Exception as e:

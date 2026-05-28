@@ -20,7 +20,7 @@ from gpt_researcher.llm_provider.generic.base import (
 )
 
 from ..prompts import PromptFamily
-from .costs import estimate_llm_cost
+from .costs import calculate_llm_cost
 from .validators import Subtopics
 
 
@@ -132,7 +132,15 @@ async def create_chat_completion(
             break
 
         if cost_callback:
-            llm_costs = estimate_llm_cost(str(messages), response)
+            llm_costs = calculate_llm_cost(
+                llm_provider=llm_provider,
+                model=model,
+                input_content=str(messages),
+                output_content=response,
+                response_metadata=provider.last_response_metadata,
+                usage_metadata=provider.last_usage_metadata,
+                request_options=provider_kwargs,
+            )
             cost_callback(llm_costs)
 
         return response
