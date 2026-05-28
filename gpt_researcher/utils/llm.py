@@ -70,9 +70,15 @@ async def create_chat_completion(
     # validate input
     if model is None:
         raise ValueError("Model cannot be None")
-    if max_tokens is not None and max_tokens > 32001:
+    # Sanity guard against absurd values (e.g., env var typos). The actual
+    # per-model output limits are enforced by the upstream provider.
+    if max_tokens is not None and max_tokens > 200_000:
         raise ValueError(
-            f"Max tokens cannot be more than 32,000, but got {max_tokens}")
+            f"max_tokens={max_tokens} exceeds the largest output limit of "
+            "any currently available model (128k as of late 2025). "
+            "Check your FAST_TOKEN_LIMIT / SMART_TOKEN_LIMIT / "
+            "STRATEGIC_TOKEN_LIMIT env vars for typos."
+        )
 
     # Get the provider from supported providers
     provider_kwargs = {'model': model}
