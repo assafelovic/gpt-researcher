@@ -11,7 +11,7 @@
 
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.11/dist/katex.min.css" integrity="sha384-Um5gpz1odJg5Z4HAmzPtgZKdTBHZdw8S29IecapCSB31ligYPhHQZMIlWLYQGVoc" crossorigin="anonymous"><link rel="stylesheet" href="/assets/css/styles.da8418ca.css">
-<script src="/assets/js/runtime~main.3f05249d.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.1f90bc4c.js" defer="defer"></script>
 <script src="/assets/js/main.81c0b883.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -156,9 +156,13 @@ Make sure to install the pip package <code>firecrawl-py</code>. Then:</p>
 <li>Set your FireCrawl API key:<!-- -->
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">export FIRECRAWL_API_KEY=&lt;your-firecrawl-api&gt;</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
 </li>
+<li>Set your FireCrawl URL:<!-- -->
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_biex"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">export FIRECRAWL_SERVER_URL=&lt;your-firecrawl-url&gt;</span><br></span></code></pre><div class="buttonGroup__atx"><button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn"><span class="copyButtonIcons_eSgA" aria-hidden="true"><svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path fill="currentColor" d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg><svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path fill="currentColor" d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg></span></button></div></div></div>
+</li>
 </ol>
 <p>Note: <code>FIRECRAWL_API_KEY</code> can be empty if you not setup authentication for your self host server (<code>FIRECRAWL_API_KEY=&quot;&quot;</code>).
 There will be some difference between their cloud service and open source service. To understand differences between FireCrawl option read <a href="https://docs.firecrawl.dev/contributing/open-source-or-cloud" target="_blank" rel="noopener noreferrer">here</a>.</p>
+<p>Note 2: <code>FIRECRAWL_SERVER_URL</code> must be set for self-hosted server, otherwise it will default to FireCrawl&#x27;s cloud url.</p>
 <p>Usage Considerations:</p>
 <ul>
 <li>Requires a FireCrawl API key and account or self-hosted server</li>
