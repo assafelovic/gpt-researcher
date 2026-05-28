@@ -1,8 +1,11 @@
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
-const math = require('remark-math');
-const katex = require('rehype-katex');
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import { createRequire } from 'module';
 
-module.exports = {
+const require = createRequire(import.meta.url);
+
+export default {
   title: 'GPT Researcher',
   tagline: 'The leading autonomous AI research agent',
   url: 'https://docs.gptr.dev',
@@ -91,11 +94,10 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
           editUrl:
             'https://github.com/assafelovic/gpt-researcher/tree/master/docs',
-          remarkPlugins: [math],
-          rehypePlugins: [katex],
+          remarkPlugins: [remarkMath],
+          rehypePlugins: [rehypeKatex],
         },
         blog: {
           onUntruncatedBlogPosts: 'ignore',
@@ -115,19 +117,11 @@ module.exports = {
   ],
 
   plugins: [
-    // ... Your other plugins.
     [
       require.resolve("@easyops-cn/docusaurus-search-local"),
       {
-        // ... Your options.
-        // `hashed` is recommended as long-term-cache of index file is possible.
         hashed: true,
         blogDir:"./blog/"
-        // For Docs using Chinese, The `language` is recommended to set to:
-        // ```
-        // language: ["en", "zh"],
-        // ```
-        // When applying `zh` in language, please install `nodejieba` in your project.
       },
     ],
   ],
