@@ -309,7 +309,14 @@ Format each question on a new line starting with 'Question: '"""}
             all_visited_urls.update(result['visited_urls'])
             all_citations.update(result['citations'])
             if result['context']:
-                all_context.append(result['context'])
+                # Use extend, not append: when CURATE_SOURCES=True, result['context'] is
+                # a List[dict]. append() nests it as a single item, which causes
+                # "\n".join() to crash later with "expected str instance, dict found".
+                ctx = result['context']
+                if isinstance(ctx, list):
+                    all_context.extend(ctx)
+                else:
+                    all_context.append(ctx)
             if result['sources']:
                 all_sources.extend(result['sources'])
 
@@ -410,7 +417,12 @@ Format each question on a new line starting with 'Question: '"""}
         final_context = trim_context_to_word_limit(context_with_citations)
         
         # Set enhanced context and visited URLs
-        self.researcher.context = "\n".join(final_context)
+        self.researcher.context = "\n".join(
+            item if isinstance(item, str)
+            else item.get("Content", str(item)) if isinstance(item, dict)
+            else str(item)
+            for item in final_context
+        )
         self.researcher.visited_urls = results['visited_urls']
 
         # Set research sources
