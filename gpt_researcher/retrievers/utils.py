@@ -75,6 +75,7 @@ VALID_RETRIEVERS = [
     "exa",
     "mcp",
     "xquik",
+    "openalex",
     "mock"
 ]
 
