@@ -3,6 +3,7 @@ from multi_agents.agents import ChiefEditorAgent
 chief_editor = ChiefEditorAgent({
   "query": "Is AI in a hype cycle?",
   "max_sections": 3,
+  "max_plan_revisions": 3,
   "follow_guidelines": False,
   "model": "gpt-4o",
   "guidelines": [
