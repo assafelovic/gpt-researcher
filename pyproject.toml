@@ -24,7 +24,7 @@ langchain_community = "^0.4.0"
 langchain-core = "^1.0.0"
 langchain-openai = "^1.0.0"
 langchain-text-splitters = "^1.0.0"
-langgraph = ">=0.2.73,<0.3"
+langgraph = ">=0.2.73,<1.1"
 loguru = "^0.7.2"
 lxml = { version = ">=4.9.2", extras = ["html_clean"] }
 markdown = ">=3.5.1"
