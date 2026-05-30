@@ -20,9 +20,14 @@ class Duckduckgo:
         :param max_results:
         :return:
         """
-        # TODO: Add support for query domains
+        # Build query with domain filtering if query_domains is provided
+        query = self.query
+        if self.query_domains:
+            domain_filter = " OR ".join([f"site:{domain}" for domain in self.query_domains])
+            query = f"{self.query} ({domain_filter})"
+
         try:
-            search_response = self.ddg.text(self.query, region='wt-wt', max_results=max_results)
+            search_response = self.ddg.text(query, region='wt-wt', max_results=max_results)
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
