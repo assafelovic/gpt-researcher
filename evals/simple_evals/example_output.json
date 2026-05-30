@@ -1,0 +1,92 @@
+{
+  "run_metadata": {
+    "timestamp": "2025-02-22T10:32:11.423000+00:00",
+    "git_commit": "b364917",
+    "grader_model": "gpt-4-turbo",
+    "researcher_model": "openai:gpt-4.1",
+    "num_examples": 5,
+    "total_duration_seconds": 243.7
+  },
+  "aggregate_metrics": {
+    "correct_rate": 0.8,
+    "incorrect_rate": 0.2,
+    "not_attempted_rate": 0.0,
+    "answer_rate": 1.0,
+    "accuracy": 0.8,
+    "f1": 0.888,
+    "total_cost": 0.482,
+    "avg_cost_per_query": 0.0964,
+    "avg_latency_seconds": 48.7,
+    "p50_latency_seconds": 45.1,
+    "p95_latency_seconds": 89.2,
+    "successful": 5,
+    "failed": 0
+  },
+  "results": [
+    {
+      "query": "What is the name of the astronomer who discovered 83 Beatrix?",
+      "context_length": 12453,
+      "report_length": 3241,
+      "latency_seconds": 45.1,
+      "cost": 0.0921,
+      "sources": [
+        "https://en.wikipedia.org/wiki/83_Beatrix",
+        "https://www.minorplanetcenter.net/db_search/show_object?object_id=83"
+      ],
+      "evaluation_score": 1.0,
+      "evaluation_grade": "CORRECT"
+    },
+    {
+      "query": "In what year was the International Space Station first inhabited?",
+      "context_length": 9871,
+      "report_length": 2987,
+      "latency_seconds": 41.3,
+      "cost": 0.0883,
+      "sources": [
+        "https://www.nasa.gov/international-space-station/",
+        "https://en.wikipedia.org/wiki/International_Space_Station"
+      ],
+      "evaluation_score": 1.0,
+      "evaluation_grade": "CORRECT"
+    },
+    {
+      "query": "Who wrote the novel 'The Left Hand of Darkness'?",
+      "context_length": 8102,
+      "report_length": 2654,
+      "latency_seconds": 38.9,
+      "cost": 0.0812,
+      "sources": [
+        "https://en.wikipedia.org/wiki/The_Left_Hand_of_Darkness",
+        "https://www.ursulakleguin.com/"
+      ],
+      "evaluation_score": 1.0,
+      "evaluation_grade": "CORRECT"
+    },
+    {
+      "query": "What country does the Mekong River empty into the sea from?",
+      "context_length": 10234,
+      "report_length": 3102,
+      "latency_seconds": 52.6,
+      "cost": 0.1024,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Mekong",
+        "https://www.britannica.com/place/Mekong-River"
+      ],
+      "evaluation_score": 0.0,
+      "evaluation_grade": "INCORRECT"
+    },
+    {
+      "query": "What is the chemical symbol for tungsten?",
+      "context_length": 7654,
+      "report_length": 2108,
+      "latency_seconds": 89.2,
+      "cost": 0.116,
+      "sources": [
+        "https://en.wikipedia.org/wiki/Tungsten",
+        "https://www.rsc.org/periodic-table/element/74/tungsten"
+      ],
+      "evaluation_score": 1.0,
+      "evaluation_grade": "CORRECT"
+    }
+  ]
+}

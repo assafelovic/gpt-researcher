@@ -20,16 +20,16 @@ The `problems/` directory contains the evaluation dataset:
 
 ### Evaluation Logs
 
-The `logs/` directory contains detailed evaluation run histories that are preserved in version control:
+The `logs/` directory contains evaluation run histories preserved in version control.
 
-- Format: `SimpleQA Eval {num_problems} Problems {date}.txt`
-- Example: `SimpleQA Eval 100 Problems 2-22-25.txt`
+Two formats are kept side-by-side:
 
-These logs provide historical performance data and are crucial for:
-- Tracking performance improvements over time
-- Debugging evaluation issues
-- Comparing results across different versions
-- Maintaining transparency in our evaluation process
+| Format | Example filename | Purpose |
+| --- | --- | --- |
+| Plain text (legacy) | `SimpleQA Eval 100 Problems 2-22-25.txt` | Human-readable terminal output |
+| Structured JSON | `eval_2025-02-22_10-32-11_n100.jsonl` | Machine-readable, suitable for trend analysis |
+
+Each JSON log file contains one record with three sections: `run_metadata`, `aggregate_metrics`, and per-query `results`. See [`example_output.json`](simple_evals/example_output.json) for the full schema.
 
 **Note:** Unlike typical log directories, this folder and its contents are intentionally tracked in git to maintain a historical record of evaluation runs.
 
@@ -54,12 +54,11 @@ These logs provide historical performance data and are crucial for:
 
 ### Metrics Tracked
 
-- Accuracy rate
-- F1 score
-- Cost per query
-- Success/failure rates
-- Answer attempt rates
-- Source coverage
+- Accuracy rate and F1 score
+- Cost — total and per-query average
+- Latency — average, p50 (median), and p95 per query
+- Success/failure counts and answer attempt rates
+- Source coverage per query
 
 ### Running Evaluations
 
@@ -110,18 +109,17 @@ This separation allows for unbiased evaluation across different researcher confi
 
 ### Output
 
-The evaluation provides detailed metrics including:
-- Per-query results with sources and costs
-- Aggregate metrics (accuracy, F1 score)
-- Total and average costs
-- Success/failure counts
-- Detailed grading breakdowns
+Each run produces two outputs:
 
-### Example Output
-```
+#### Console summary
+
+```text
 === Evaluation Summary ===
-=== AGGREGATE METRICS ===
+Total queries tested: 100
+Successful queries: 100
+Failed queries: 0
 
+=== AGGREGATE METRICS ===
 Debug counts:
 Total successful: 100
 CORRECT: 92
@@ -139,9 +137,22 @@ NOT_ATTEMPTED: 1
 Accuracy: 0.929
 F1 Score: 0.925
 
-Total cost: $1.2345
-Average cost per query: $0.1371
-``` 
+Total cost: $9.6000
+Average cost per query: $0.0960
+Latency — avg: 48.3s  p50: 45.1s  p95: 89.2s
+
+Structured log saved → evals/simple_evals/logs/eval_2025-02-22_10-32-11_n100.jsonl
+```
+
+**Structured JSON log** (`logs/eval_YYYY-MM-DD_HH-MM-SS_n{N}.jsonl`)
+
+See [`example_output.json`](simple_evals/example_output.json) for the full schema. Key fields:
+
+```
+run_metadata        → timestamp, git_commit, grader_model, researcher_model
+aggregate_metrics   → accuracy, f1, cost, avg/p50/p95 latency, success/fail counts
+results             → per-query list with grade, score, latency, cost, sources
+```
 
 ## Hallucination Evaluation (`hallucination_eval/`)
 
