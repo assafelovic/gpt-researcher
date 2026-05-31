@@ -14,6 +14,7 @@ from .tavily.tavily_search import TavilySearch
 from .groundroute.groundroute import GroundRouteSearch
 from .exa.exa import ExaSearch
 from .crw.crw import CRWRetriever
+from .getxapi.getxapi import GetXAPISearch
 from .mcp import MCPRetriever
 from .bocha.bocha import BoChaSearch
 from .xquik.xquik import XquikSearch
@@ -36,6 +37,7 @@ __all__ = [
     "PubMedCentralSearch",
     "ExaSearch",
     "CRWRetriever",
+    "GetXAPISearch",
     "MCPRetriever",
     "BoChaSearch",
     "XquikSearch",
