@@ -2,6 +2,29 @@
 
 This directory contains evaluation tools and frameworks for assessing the performance of GPT-Researcher across different research tasks.
 
+## Evaluation Overview
+
+Three complementary evaluation systems, each answering a different question:
+
+| System | Question | Requires ground truth? |
+| --- | --- | --- |
+| `simple_evals/` | Is the answer factually correct? | Yes (OpenAI SimpleQA dataset) |
+| `quality_eval/` | Is the report well-sourced and complete? | No — works on any query |
+| `hallucination_eval/` | Does the report fabricate content? | No — compares against scraped sources |
+
+**Quick start:**
+
+```bash
+# Factual accuracy (needs ground-truth answers)
+python -m evals.simple_evals.run_eval --num_examples 10
+
+# Report quality (works on any query, zero-cost metrics only)
+python -m evals.quality_eval.run_eval --num_examples 10 --no-subtopic --no-hallucination --no-unsupported-claim
+
+# Hallucination detection
+python -m evals.hallucination_eval.run_eval -n 5
+```
+
 ## Simple Evaluations (`simple_evals/`)
 
 The `simple_evals` directory contains a straightforward evaluation framework adapted from [OpenAI's simple-evals system](https://github.com/openai/simple-evals), specifically designed to measure short-form factuality in large language models. Our implementation is based on OpenAI's [SimpleQA evaluation methodology](https://github.com/openai/simple-evals/blob/main/simpleqa_eval.py), following their zero-shot, chain-of-thought approach while adapting it for GPT-Researcher's specific use case.
@@ -156,30 +179,80 @@ results             → per-query list with grade, score, latency, cost, sources
 
 ## Quality Evaluation (`quality_eval/`)
 
-The `quality_eval` directory measures the **structural and content quality** of research reports across four metrics. Unlike SimpleQA (which needs a ground-truth answer), these metrics can be run on any open-ended query.
+Measures the structural and content quality of research reports without requiring ground-truth answers. All metrics run on any open-ended query.
+
+All metric logic lives in `metrics.py`. The runner is `run_eval.py`.
 
 ### Metrics
 
 | Metric | Description | LLM calls | Cost |
 | --- | --- | --- | --- |
-| **Citation Coverage** | Fraction of source domains cited in the report | 0 | $0 |
+| **Citation Ratio** | Fraction of *used* source domains cited in the report | 0 | $0 |
 | **Source Diversity** | Domain variety via ratio + Shannon entropy | 0 | $0 |
-| **Source Authority** | Heuristic authority score per domain (.gov=1.0 → unknown=0.4) | 0 | $0 |
-| **Subtopic Coverage** | LLM-judged coverage of expected subtopics | 2 | ~$0.02/query |
+| **Source Authority** | Heuristic score per domain (.gov=1.0 → .com=0.5); unknown domains optionally LLM-scored | 0–1 | $0–$0.01 |
+| **Subtopic Coverage** | LLM-judged coverage of expected subtopics (adaptive count) | 2 | ~$0.02/query |
+| **Hallucination** | Binary faithfulness check — report vs. scraped sources | 1 | ~$0.01/query |
+| **Unsupported Claim Rate** | Claim-level credibility: supported (1.0) / inferred (0.3–0.9) / unsupported (0.0) | 2 | ~$0.02/query |
+
+**Citation Ratio** uses the research context (already filtered for relevance by GPT-Researcher) as the denominator, so sources discarded during research do not unfairly lower the score.
+
+**Unsupported Claim Rate** distinguishes between:
+
+- `supported` — claim directly found in source text (score 1.0)
+- `inferred` — reasonable synthesis from multiple sources; never applied to data claims (score 0.3–0.9)
+- `unsupported` — no traceable basis in sources (score 0.0)
 
 ### Running
 
 ```bash
-cd gpt-researcher
-
-# Run all 4 metrics on 5 queries
+# Run all 6 metrics (most expensive, ~$0.06/query)
 python -m evals.quality_eval.run_eval --num_examples 5
 
-# Skip subtopic_coverage to save cost
+# Zero-cost only (citation ratio, diversity, authority)
+python -m evals.quality_eval.run_eval --num_examples 10 --no-subtopic --no-hallucination --no-unsupported-claim
+
+# Skip individual LLM metrics selectively
 python -m evals.quality_eval.run_eval --num_examples 10 --no-subtopic
+python -m evals.quality_eval.run_eval --num_examples 10 --no-hallucination
+python -m evals.quality_eval.run_eval --num_examples 10 --no-unsupported-claim
 ```
 
-Logs are saved to `evals/quality_eval/logs/quality_eval_YYYY-MM-DD_n{N}.jsonl`.
+Logs are saved to `evals/quality_eval/logs/quality_eval_YYYY-MM-DD_HH-MM-SS_n{N}.jsonl`.
+
+### Example Output
+
+```text
+Quality eval: 5 queries  subtopic=off  hallucination=off  unsupported_claim=on
+
+>> Query: What legal frameworks govern cross-border data transfers?
+   citation_ratio:          0.91  (10/11 used domains)
+   diversity_ratio:         1.00  entropy=4.32
+   authority_score:         0.62
+   avg_claim_score:         0.79  (unsupported=0.11  inferred=0.22  n=9)
+   latency=37.2s  cost=$0.13
+
+=== QUALITY EVAL SUMMARY ===
+  avg_citation_ratio: 0.878
+  avg_diversity_ratio: 0.796
+  avg_domain_entropy: 3.525
+  avg_authority_score: 0.597
+  avg_claim_score: 0.428
+  avg_unsupported_claim_rate: 0.535
+  avg_inferred_claim_rate: 0.148
+  avg_latency_seconds: 33.6
+  avg_cost: 0.116
+```
+
+### Dependencies
+
+```bash
+pip install langchain-openai python-dotenv
+
+# Hallucination metric only:
+pip install judges
+```
+
+Environment variables required: `OPENAI_API_KEY`, `TAVILY_API_KEY`.
 
 ---
 
@@ -240,7 +313,8 @@ python run_eval.py -n <number_of_queries>
 
 The `-n` parameter determines how many queries to evaluate from the test set (default: 1).
 
-### Example Output
+### Sample Result
+
 ```json
 {
   "total_queries": 1,
