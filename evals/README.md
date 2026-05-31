@@ -154,6 +154,51 @@ aggregate_metrics   → accuracy, f1, cost, avg/p50/p95 latency, success/fail co
 results             → per-query list with grade, score, latency, cost, sources
 ```
 
+## Quality Evaluation (`quality_eval/`)
+
+The `quality_eval` directory measures the **structural and content quality** of research reports across four metrics. Unlike SimpleQA (which needs a ground-truth answer), these metrics can be run on any open-ended query.
+
+### Metrics
+
+| Metric | Description | LLM calls | Cost |
+| --- | --- | --- | --- |
+| **Citation Coverage** | Fraction of source domains cited in the report | 0 | $0 |
+| **Source Diversity** | Domain variety via ratio + Shannon entropy | 0 | $0 |
+| **Source Authority** | Heuristic authority score per domain (.gov=1.0 → unknown=0.4) | 0 | $0 |
+| **Subtopic Coverage** | LLM-judged coverage of expected subtopics | 2 | ~$0.02/query |
+
+### Running
+
+```bash
+cd gpt-researcher
+
+# Run all 4 metrics on 5 queries
+python -m evals.quality_eval.run_eval --num_examples 5
+
+# Skip subtopic_coverage to save cost
+python -m evals.quality_eval.run_eval --num_examples 10 --no-subtopic
+```
+
+Logs are saved to `evals/quality_eval/logs/quality_eval_YYYY-MM-DD_n{N}.jsonl`.
+
+---
+
+## Report Generator (`report_generator/`)
+
+Runs GPT-Researcher on one or more queries and saves each report as a timestamped Markdown file — useful for manual review and quality spot-checks.
+
+```bash
+# Single query
+python -m evals.report_generator.run --query "What caused the 2008 financial crisis?"
+
+# Batch from JSONL file (limit to 3)
+python -m evals.report_generator.run --file evals/report_generator/queries.jsonl --limit 3
+```
+
+Reports are saved to `evals/report_generator/outputs/` (git-ignored).
+
+---
+
 ## Hallucination Evaluation (`hallucination_eval/`)
 
 The `hallucination_eval` directory contains tools for evaluating GPT-Researcher's outputs for hallucination. This evaluation system compares the generated research reports against their source materials to detect non-factual or hallucinated content, ensuring the reliability and accuracy of the research outputs.
