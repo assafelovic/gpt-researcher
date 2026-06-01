@@ -69,6 +69,7 @@ VALID_RETRIEVERS = [
     "google",
     "searx",
     "bing",
+    "brave",
     "arxiv",
     "semantic_scholar",
     "pubmed_central",
