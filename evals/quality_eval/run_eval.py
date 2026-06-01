@@ -74,6 +74,24 @@ def _check_env():
         raise ValueError(f"Missing environment variables: {', '.join(missing)}")
 
 
+def _skipped(reason: str) -> dict:
+    """Uniform skipped-metric sentinel returned when a metric cannot run."""
+    return {"status": "skipped", "reason": reason}
+
+
+def _is_skipped(result) -> bool:
+    return isinstance(result, dict) and result.get("status") == "skipped"
+
+
+async def _safe_metric(coro, name: str):
+    """Await a metric coroutine; on any exception return a skipped sentinel."""
+    try:
+        return await coro
+    except Exception as e:
+        print(f"   [WARN] {name} failed: {type(e).__name__}: {e}")
+        return _skipped(f"{type(e).__name__}: {e}")
+
+
 async def evaluate_single_query(
     query: str,
     grader_model,
@@ -98,84 +116,113 @@ async def evaluate_single_query(
     cost     = researcher.get_costs()
     latency  = round(time.perf_counter() - t_start, 2)
 
-    # --- Zero-cost metrics ---
-    citation  = metrics.citation_ratio(report, sources, context=context)
-    diversity = metrics.source_diversity(sources)
-    authority = await metrics.source_authority(sources, grader_model=grader_model)
+    # --- Zero-cost metrics (wrapped for safety) ---
+    try:
+        citation = metrics.citation_ratio(report, sources, context=context)
+    except Exception as e:
+        citation = _skipped(str(e))
+
+    try:
+        diversity = metrics.source_diversity(sources)
+    except Exception as e:
+        diversity = _skipped(str(e))
+
+    authority = await _safe_metric(
+        metrics.source_authority(sources, grader_model=grader_model),
+        "source_authority",
+    )
 
     # --- LLM metric: subtopic (optional) ---
-    subtopic = None
     if run_subtopic:
-        subtopic = await metrics.subtopic_coverage(query, report, grader_model)
+        subtopic = await _safe_metric(
+            metrics.subtopic_coverage(query, report, grader_model),
+            "subtopic_coverage",
+        )
+    else:
+        subtopic = None
 
-    # --- LLM metric: unsupported claim rate (optional) ---
-    unsupported = None
+    # --- LLM metric: unsupported claim (optional) ---
     if run_unsupported_claim:
         if not context:
-            unsupported = {"error": "no source context available"}
+            unsupported = _skipped("no source context available")
         else:
-            unsupported = await metrics.unsupported_claim(report, context, grader_model)
+            unsupported = await _safe_metric(
+                metrics.unsupported_claim(report, context, grader_model),
+                "unsupported_claim",
+            )
+    else:
+        unsupported = None
 
     # --- LLM metric: hallucination (optional, requires `judges` library) ---
-    hallucination = None
     if run_hallucination:
         if not _HALLUCINATION_AVAILABLE:
-            hallucination = {"error": "judges library not installed — run: pip install judges"}
+            hallucination = _skipped("judges library not installed — run: pip install judges")
         elif not context:
-            hallucination = {"error": "no source context available for hallucination check"}
+            hallucination = _skipped("no source context available")
         else:
-            source_text = context if isinstance(context, str) else json.dumps(context)
-            h_eval = HallucinationEvaluator()
-            hallucination = h_eval.evaluate_response(
-                model_output=report,
-                source_text=source_text[:8000],  # cap to avoid token overflow
-            )
-            # drop bulky fields already stored elsewhere
-            hallucination = {
-                "is_hallucination": hallucination.get("is_hallucination"),
-                "reasoning":        hallucination.get("reasoning"),
-            }
+            try:
+                source_text = context if isinstance(context, str) else json.dumps(context)
+                h_eval = HallucinationEvaluator()
+                h_raw  = h_eval.evaluate_response(
+                    model_output=report,
+                    source_text=source_text[:8000],
+                )
+                hallucination = {
+                    "is_hallucination": h_raw.get("is_hallucination"),
+                    "reasoning":        h_raw.get("reasoning"),
+                }
+            except Exception as e:
+                hallucination = _skipped(str(e))
+    else:
+        hallucination = None
 
     result = {
-        "query":                query,
-        "latency_seconds":      latency,
-        "cost":                 cost,
-        "source_count":         len(sources),
-        "report_length":        len(report),
-        "citation_coverage":    citation,
-        "source_diversity":     diversity,
-        "source_authority":     authority,
-        "subtopic_coverage":    subtopic,
-        "hallucination":        hallucination,
-        "unsupported_claim":    unsupported,
+        "query":             query,
+        "latency_seconds":   latency,
+        "cost":              cost,
+        "source_count":      len(sources),
+        "report_length":     len(report),
+        "citation_coverage": citation,
+        "source_diversity":  diversity,
+        "source_authority":  authority,
+        "subtopic_coverage": subtopic,
+        "hallucination":     hallucination,
+        "unsupported_claim": unsupported,
     }
 
-    print(f"   citation_ratio:          {citation['citation_ratio']:.2f}  "
-          f"({citation['cited_source_count']}/{citation['used_source_domains']} used domains)")
-    print(f"   diversity_ratio:         {diversity['diversity_ratio']:.2f}  "
-          f"entropy={diversity['domain_entropy']:.2f}")
-    print(f"   authority_score:         {authority['avg_authority_score']:.2f}")
-    if subtopic:
-        rate = subtopic.get("subtopic_coverage_rate")
-        print(f"   subtopic_coverage:       {rate:.2f}" if rate is not None else
-              "   subtopic_coverage:       ERROR")
-    if hallucination:
-        is_h = hallucination.get("is_hallucination")
-        if "error" in hallucination:
-            print(f"   hallucination:           SKIPPED ({hallucination['error']})")
+    # --- Console output ---
+    def _fmt_metric(label, value, fmt_fn):
+        if _is_skipped(value):
+            print(f"   {label:<24} SKIPPED ({value['reason']})")
         else:
-            print(f"   hallucination:           {'YES' if is_h else 'NO'}")
-    if unsupported:
-        if "error" in unsupported:
-            print(f"   claim_score:             SKIPPED ({unsupported['error']})")
-        else:
-            avg_cs = unsupported.get("avg_claim_score")
-            ucr    = unsupported.get("unsupported_claim_rate")
-            icr    = unsupported.get("inferred_claim_rate")
-            total  = unsupported.get("total_claims", 0)
-            print(f"   avg_claim_score:         {avg_cs:.2f}  "
-                  f"(unsupported={ucr:.2f}  inferred={icr:.2f}  "
-                  f"n={total})")
+            fmt_fn(value)
+
+    _fmt_metric("citation_ratio:", citation, lambda v:
+        print(f"   citation_ratio:          {v['citation_ratio']:.2f}  "
+              f"({v['cited_source_count']}/{v['used_source_domains']} used domains)"))
+    _fmt_metric("diversity_ratio:", diversity, lambda v:
+        print(f"   diversity_ratio:         {v['diversity_ratio']:.2f}  "
+              f"entropy={v['domain_entropy']:.2f}"))
+    _fmt_metric("authority_score:", authority, lambda v:
+        print(f"   authority_score:         {v['avg_authority_score']:.2f}"))
+
+    if subtopic is not None:
+        _fmt_metric("subtopic_coverage:", subtopic, lambda v:
+            print(f"   subtopic_coverage:       "
+                  + (f"{v['subtopic_coverage_rate']:.2f}"
+                     if v.get('subtopic_coverage_rate') is not None else "ERROR")))
+
+    if hallucination is not None:
+        _fmt_metric("hallucination:", hallucination, lambda v:
+            print(f"   hallucination:           {'YES' if v.get('is_hallucination') else 'NO'}"))
+
+    if unsupported is not None:
+        _fmt_metric("avg_claim_score:", unsupported, lambda v:
+            print(f"   avg_claim_score:         {v.get('avg_claim_score', 0):.2f}  "
+                  f"(unsupported={v.get('unsupported_claim_rate', 0):.2f}  "
+                  f"inferred={v.get('inferred_claim_rate', 0):.2f}  "
+                  f"n={v.get('total_claims', 0)})"))
+
     print(f"   latency={latency}s  cost=${cost:.4f}")
 
     return result
@@ -226,8 +273,9 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
         for r in successful:
             obj = r
             for k in key_path:
-                obj = obj.get(k) if obj else None
-            if obj is not None:
+                obj = obj.get(k) if isinstance(obj, dict) else None
+            # Skip None and skipped-sentinel values
+            if obj is not None and not _is_skipped(obj):
                 vals.append(obj)
         return round(sum(vals) / len(vals), 3) if vals else None
 
