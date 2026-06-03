@@ -83,6 +83,12 @@ Steps:
 - 📂 Maintains memory and context throughout research.
 - 📄 Export reports to PDF, Word, and other formats.
 
+## 📊 EvalMonkey Benchmark Results (Claude Sonnet 4.5)
+
+[![EvalMonkey Reliability](https://img.shields.io/badge/Production%20Reliability-Score%3A56.9-orange)](https://github.com/Corbell-AI/evalmonkey)
+
+*This agent scored a Production Reliability of **56.9/100** when benchmarked on Claude Sonnet 4.5 across HotpotQA, TruthfulQA, and MMLU with adversarial chaos profiles (prompt injection & schema mutation) by [EvalMonkey](https://github.com/Corbell-AI/evalmonkey).*
+
 ## 📖 Documentation
 
 See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-started) for:
