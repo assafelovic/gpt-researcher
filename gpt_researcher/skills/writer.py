@@ -75,6 +75,17 @@ class ReportGenerator:
             )
 
         context = ext_context or self.researcher.context
+
+        # Guard against fabricating a report from nothing: if no research content was
+        # gathered (every retriever returned empty / was blocked / rate-limited), don't
+        # silently write a confident, sourced-looking report - abstain so it is visible.
+        _ctx = "\n".join(context) if isinstance(context, list) else str(context or "")
+        if not _ctx.strip():
+            return (
+                f'I could not gather any source material for "{self.researcher.query}". '
+                "No sources were retrieved (searches may have returned nothing or been "
+                "blocked), so I am not able to produce a reliable, sourced report."
+            )
         
         # Log image availability
         if available_images and self.researcher.verbose:
