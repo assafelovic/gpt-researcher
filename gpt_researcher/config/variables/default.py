@@ -52,4 +52,26 @@ DEFAULT_CONFIG: BaseConfig = {
     "IMAGE_GENERATION_ENABLED": False,  # Master switch for inline image generation
     "IMAGE_GENERATION_STYLE": "dark",  # Image style: "dark" (matches app theme), "light", or "auto"
     "IMAGE_GENERATION_PROVIDER": "google",  # Image provider: "google" or "modelslab"
+    
+    # Pixabay image search settings (optional - requires PIXABAY_API_KEY)
+    "PIXABAY_API_KEY": None,  # Get one at pixabay.com/api/docs
+    "PIXABAY_IMAGE_SEARCH_ENABLED": False,  # Master switch for Pixabay photo search
+    "PIXABAY_MAX_IMAGES": 3,  # Maximum number of Pixabay photos to fetch per report
+    "PIXABAY_IMAGE_TYPE": "photo",  # Image type: "all", "photo", "illustration", "vector"
+    "PIXABAY_SAFESEARCH": True,  # Filter adult content
+    "PIXABAY_SHOW_ATTRIBUTION": True,  # Include photographer attribution metadata
+    "PIXABAY_MIN_WIDTH": 800,  # Minimum image width
+    "PIXABAY_MIN_HEIGHT": 600,  # Minimum image height
+    
+    # Pexels image search settings (optional - requires PEXELS_API_KEY)
+    "PEXELS_API_KEY": None,  # Get one at pexels.com/api
+    "PEXELS_IMAGE_SEARCH_ENABLED": False,  # Master switch for Pexels photo search
+    "PEXELS_MAX_IMAGES": 3,  # Maximum number of Pexels photos to fetch per report
+    "PEXELS_SHOW_ATTRIBUTION": True,  # Include photographer attribution metadata
+    
+    # Unsplash image search settings (optional - requires UNSPLASH_ACCESS_KEY)
+    "UNSPLASH_ACCESS_KEY": None,  # Get one at unsplash.com/developers
+    "UNSPLASH_IMAGE_SEARCH_ENABLED": False,  # Master switch for Unsplash photo search
+    "UNSPLASH_MAX_IMAGES": 3,  # Maximum number of Unsplash photos to fetch per report
+    "UNSPLASH_SHOW_ATTRIBUTION": True,  # Include photographer attribution metadata
 }
