@@ -33,6 +33,7 @@ Thanks to our community, we have integrated the following web search engines:
 - [Duckduckgo](https://pypi.org/project/duckduckgo-search/) - Env: `RETRIEVER=duckduckgo`
 - [Arxiv](https://info.arxiv.org/help/api/index.html) - Env: `RETRIEVER=arxiv`
 - [Exa](https://docs.exa.ai/reference/getting-started) - Env: `RETRIEVER=exa`
+- [fastCRW](https://fastcrw.com/docs/rest-api) - Env: `RETRIEVER=crw`
 - [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`
 
 ## Custom Retrievers
