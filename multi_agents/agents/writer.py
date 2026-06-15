@@ -36,6 +36,9 @@ class WriterAgent:
         follow_guidelines = task.get("follow_guidelines")
         guidelines = task.get("guidelines")
 
+        fact_notes = research_state.get('fact_check_notes')
+        fact_notes_str = f"Fact Checker Notes: {fact_notes}. You MUST revise the introduction and conclusion to address these issues.\n" if fact_notes else ""
+
         prompt = [
             {
                 "role": "system",
@@ -48,6 +51,7 @@ class WriterAgent:
                 "content": f"Today's date is {datetime.now().strftime('%d/%m/%Y')}\n."
                 f"Query or Topic: {query}\n"
                 f"Research data: {str(data)}\n"
+                f"{fact_notes_str}"
                 f"Your task is to write an in depth, well written and detailed "
                 f"introduction and conclusion to the research report based on the provided research data. "
                 f"Do not include headers in the results.\n"

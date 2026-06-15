@@ -17,7 +17,9 @@ from . import \
     EditorAgent, \
     PublisherAgent, \
     ResearchAgent, \
-    HumanAgent
+    HumanAgent, \
+    FactCheckerAgent, \
+    VisualizerAgent
 
 
 class ChiefEditorAgent:
@@ -50,7 +52,9 @@ class ChiefEditorAgent:
             "editor": EditorAgent(self.websocket, self.stream_output, self.tone, self.headers),
             "research": ResearchAgent(self.websocket, self.stream_output, self.tone, self.headers),
             "publisher": PublisherAgent(self.output_dir, self.websocket, self.stream_output, self.headers),
-            "human": HumanAgent(self.websocket, self.stream_output, self.headers)
+            "human": HumanAgent(self.websocket, self.stream_output, self.headers),
+            "fact_checker": FactCheckerAgent(self.websocket, self.stream_output, self.headers),
+            "visualizer": VisualizerAgent(self.websocket, self.stream_output, self.headers)
         }
 
     def _create_workflow(self, agents):
@@ -61,6 +65,8 @@ class ChiefEditorAgent:
         workflow.add_node("planner", agents["editor"].plan_research)
         workflow.add_node("researcher", agents["editor"].run_parallel_research)
         workflow.add_node("writer", agents["writer"].run)
+        workflow.add_node("fact_checker", agents["fact_checker"].run)
+        workflow.add_node("visualizer", agents["visualizer"].run)
         workflow.add_node("publisher", agents["publisher"].run)
         workflow.add_node("human", agents["human"].review_plan)
 
@@ -73,7 +79,8 @@ class ChiefEditorAgent:
         workflow.add_edge('browser', 'planner')
         workflow.add_edge('planner', 'human')
         workflow.add_edge('researcher', 'writer')
-        workflow.add_edge('writer', 'publisher')
+        workflow.add_edge('writer', 'fact_checker')
+        workflow.add_edge('visualizer', 'publisher')
         workflow.set_entry_point("browser")
         workflow.add_edge('publisher', END)
 
@@ -82,6 +89,13 @@ class ChiefEditorAgent:
             'human',
             self._route_human_feedback,
             {"accept": "researcher", "revise": "planner"}
+        )
+
+        # Add fact checker loop
+        workflow.add_conditional_edges(
+            'fact_checker',
+            lambda draft: "accept" if draft.get("fact_check_notes") is None else "revise",
+            {"accept": "visualizer", "revise": "writer"}
         )
 
     def _route_human_feedback(self, review):

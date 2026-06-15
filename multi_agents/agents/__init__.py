@@ -5,6 +5,8 @@ from .reviser import ReviserAgent
 from .reviewer import ReviewerAgent
 from .editor import EditorAgent
 from .human import HumanAgent
+from .fact_checker import FactCheckerAgent
+from .visualizer import VisualizerAgent
 
 # Below import should remain last since it imports all of the above
 from .orchestrator import ChiefEditorAgent
@@ -17,5 +19,7 @@ __all__ = [
     "PublisherAgent",
     "ReviserAgent",
     "ReviewerAgent",
-    "HumanAgent"
+    "HumanAgent",
+    "FactCheckerAgent",
+    "VisualizerAgent"
 ]
