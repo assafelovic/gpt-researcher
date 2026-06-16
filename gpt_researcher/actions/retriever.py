@@ -73,6 +73,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import TavilySearch
 
             return TavilySearch
+        case "groundroute":
+            from gpt_researcher.retrievers import GroundRouteSearch
+
+            return GroundRouteSearch
         case "exa":
             from gpt_researcher.retrievers import ExaSearch
 
