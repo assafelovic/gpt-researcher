@@ -3,7 +3,7 @@
 As described in the [introduction](/docs/gpt-researcher/gptr/config), the default LLM and embedding is OpenAI due to its superior performance and speed. 
 With that said, GPT Researcher supports various open/closed source LLMs and embeddings, and you can easily switch between them by updating the `SMART_LLM`, `FAST_LLM` and `EMBEDDING` env variables. You might also need to include the provider API key and corresponding configuration params.
 
-Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq`, `bedrock`, `litellm` and `minimax`.
+Current supported LLMs are `openai`, `anthropic`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `groq`, `bedrock`, `litellm`, `minimax` and `atlascloud`.
 
 Current supported embeddings are `openai`, `azure_openai`, `cohere`, `google_vertexai`, `google_genai`, `fireworks`, `ollama`, `together`, `mistralai`, `huggingface`, `nomic` ,`voyageai` and `bedrock`.
 
@@ -424,6 +424,19 @@ Available models:
 - `moonshotai/kimi-k2.5` — 131K context, $0.45/$2.20 per 1M tokens
 - `z-ai/glm-5` — 131K context, $0.30/$2.55 per 1M tokens
 - `minimax/minimax-m2.5` — 1M context, $0.30/$1.10 per 1M tokens
+
+## Atlas Cloud
+
+[Atlas Cloud](https://www.atlascloud.ai) provides an OpenAI-compatible API with access to 300+ models (including DeepSeek, Llama, Qwen, and more) at competitive prices.
+
+Sign up at [atlascloud.ai](https://www.atlascloud.ai) to get an API key, then set the following environment variables:
+
+```env
+ATLASCLOUD_API_KEY=[Your Key]
+FAST_LLM=atlascloud:deepseek-ai/DeepSeek-V3
+SMART_LLM=atlascloud:deepseek-ai/DeepSeek-R1
+STRATEGIC_LLM=atlascloud:deepseek-ai/DeepSeek-R1
+```
 
 ## vLLM
 ```env
