@@ -30,6 +30,7 @@ RETRIEVER=tavily,openalex,semantic_scholar
 Thanks to our community, we have integrated the following web search engines and research retrievers:
 
 - [Tavily](https://app.tavily.com) - Default
+- [Keenable](https://keenable.ai) - Env: `RETRIEVER=keenable` - keyless by default - [Setup Guide](#keenable)
 - [Bing](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) - Env: `RETRIEVER=bing`
 - [Brave Search](https://brave.com/search/api/) - Env: `RETRIEVER=brave` and `BRAVE_API_KEY`
 - [GroundRoute](https://groundroute.ai/) - Env: `RETRIEVER=groundroute` and `GROUNDROUTE_API_KEY`
@@ -98,6 +99,31 @@ To use [Brave Search](https://brave.com/search/api/) as your search engine:
 ```bash
 RETRIEVER=brave
 BRAVE_API_KEY=your_api_key_here
+```
+
+### Keenable
+
+[Keenable](https://keenable.ai) is a web search API built for AI agents. It
+works **without an API key** — by default it uses the keyless public endpoint,
+so you only need to set the retriever:
+
+```bash
+RETRIEVER=keenable
+```
+
+To lift rate limits and enable `realtime` mode, set an API key (create one at
+[keenable.ai/console](https://keenable.ai/console)):
+
+```bash
+RETRIEVER=keenable
+KEENABLE_API_KEY=your_api_key_here   # optional
+```
+
+**Optional Configuration:**
+
+```bash
+KEENABLE_SEARCH_MODE=pro             # "pro" (default, deeper) or "realtime" (low latency, requires a key)
+KEENABLE_API_URL=https://api.keenable.ai   # override the API base URL (HTTPS); e.g. for staging
 ```
 
 ### Serper
