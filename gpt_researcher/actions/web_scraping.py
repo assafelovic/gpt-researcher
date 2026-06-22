@@ -30,6 +30,7 @@ async def scrape_urls(
         else "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
     )
 
+    scraper = None
     try:
         scraper = Scraper(urls, user_agent, cfg.scraper, worker_pool=worker_pool)
         scraped_data = await scraper.run()
@@ -38,6 +39,11 @@ async def scrape_urls(
                 images.extend(item['image_urls'])
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
+    finally:
+        # Close the requests.Session so its underlying connection pool (and the
+        # sockets it keeps alive) is released
+        if scraper is not None and getattr(scraper, "session", None) is not None:
+            scraper.session.close()
 
     return scraped_data, images
 
