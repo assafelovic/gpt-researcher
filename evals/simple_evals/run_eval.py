@@ -1,6 +1,16 @@
 import asyncio
 import os
+import sys
 import argparse
+import json
+import subprocess
+
+# Ensure Unicode output works on Windows terminals (GBK → UTF-8)
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+import time
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Callable, List, TypeVar
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -8,7 +18,21 @@ from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 from evals.simple_evals.simpleqa_eval import SimpleQAEval
 from langchain_openai import ChatOpenAI
-import json
+
+GRADER_MODEL_NAME = "gpt-4-turbo"
+LOGS_DIR = Path(__file__).parent / "logs"
+
+
+def get_git_commit() -> str:
+    """Return the current HEAD commit hash, or 'unknown' if not in a git repo."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, check=True
+        )
+        return result.stdout.strip()
+    except Exception:
+        return "unknown"
 
 # Type variables for generic function
 T = TypeVar('T')
@@ -18,20 +42,22 @@ def map_with_progress(fn: Callable[[T], R], items: List[T]) -> List[R]:
     """Map function over items with progress bar."""
     return [fn(item) for item in tqdm(items)]
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Verify all required environment variables
-required_env_vars = ["OPENAI_API_KEY", "TAVILY_API_KEY", "LANGCHAIN_API_KEY"]
-for var in required_env_vars:
-    if not os.getenv(var):
-        raise ValueError(f"{var} not found in environment variables")
+def _check_env_vars():
+    """Verify required environment variables are set. Called inside main() so --help works."""
+    load_dotenv()
+    required = ["OPENAI_API_KEY", "TAVILY_API_KEY"]
+    missing = [v for v in required if not os.getenv(v)]
+    if missing:
+        raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+    if not os.getenv("LANGCHAIN_API_KEY"):
+        print("Note: LANGCHAIN_API_KEY not set — LangSmith tracing disabled (optional)")
 
 async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
     """Run a single evaluation query and return results"""
     print(f"\nEvaluating query: {query}")
     
-    # Run the researcher and get report
+    t_start = time.perf_counter()   # timmer for each query
+
     researcher = GPTResearcher(
         query=query,
         report_type=ReportType.ResearchReport.value,
@@ -42,44 +68,55 @@ async def evaluate_single_query(query: str, evaluator: SimpleQAEval) -> dict:
     )
     context = await researcher.conduct_research()
     report = await researcher.write_report()
-    
+
+    latency_seconds = round(time.perf_counter() - t_start, 2)   # latency of responding
+
     # Get the correct answer and evaluate
-    example = next(ex for ex in evaluator.examples if ex['problem'] == query)
+    example = next((ex for ex in evaluator.examples if ex['problem'] == query), None)   # None if no attribute 'problem'
+    if example is None:
+        raise ValueError(f"No matching example found for query: {query}")
     correct_answer = example['answer']
-    
+
     eval_result = evaluator.evaluate_example({
         "problem": query,
         "answer": correct_answer,
         "predicted": report
     })
-    
+
+    # result gathering and formating
     result = {
         'query': query,
         'context_length': len(context),
         'report_length': len(report),
+        'latency_seconds': latency_seconds,
         'cost': researcher.get_costs(),
         'sources': researcher.get_source_urls(),
         'evaluation_score': eval_result["score"],
         'evaluation_grade': eval_result["metrics"]["grade"]
     }
-    
-    # Print just the essential info
+
     print(f"✓ Completed research and evaluation")
     print(f"  - Sources found: {len(result['sources'])}")
     print(f"  - Evaluation grade: {result['evaluation_grade']}")
+    print(f"  - Latency: {latency_seconds}s")
     print(f"  - Cost: ${result['cost']:.4f}")
-    
+
     return result
 
 async def main(num_examples: int):
     if num_examples < 1:
         raise ValueError("num_examples must be at least 1")
-        
+    # start timming
+    _check_env_vars()
+
+    run_start = time.perf_counter()
+    run_timestamp = datetime.now(timezone.utc).isoformat()
+
     try:
-        # Initialize the evaluator with specified number of examples
+        # initiate evaluator
         grader_model = ChatOpenAI(
-            temperature=0, 
-            model_name="gpt-4-turbo",
+            temperature=0,
+            model_name=GRADER_MODEL_NAME,
             openai_api_key=os.getenv("OPENAI_API_KEY")
         )
         evaluator = SimpleQAEval(grader_model=grader_model, num_examples=num_examples)
@@ -89,6 +126,7 @@ async def main(num_examples: int):
         
         print(f"Starting GPT-Researcher evaluation with {num_examples} test queries...")
         
+        # get evaluation for each example
         results = []
         for example in evaluator.examples:
             if 'problem' not in example:
@@ -100,14 +138,6 @@ async def main(num_examples: int):
             try:
                 result = await evaluate_single_query(query, evaluator)
                 results.append(result)
-                
-                print(f"✓ Completed research and evaluation")
-                print(f"  - Sources found: {len(result['sources'])}")
-                print(f"  - Context length: {result['context_length']}")
-                print(f"  - Report length: {result['report_length']}")
-                print(f"  - Evaluation score: {result['evaluation_score']}")
-                print(f"  - Evaluation grade: {result['evaluation_grade']}")
-                print(f"  - Cost: ${result['cost']:.4f}")
                 
             except Exception as e:
                 print(f"✗ Error evaluating query: {str(e)}")
@@ -173,11 +203,44 @@ async def main(num_examples: int):
                 print(f"Accuracy: {metrics['accuracy']:.3f}")
                 print(f"F1 Score: {metrics['f1']:.3f}")
                 
-                # Print cost metrics
                 total_cost = sum(r['cost'] for r in results if 'error' not in r)
+                latencies = sorted(r['latency_seconds'] for r in results if 'error' not in r)
+                avg_latency = sum(latencies) / successful
+                p50_latency = latencies[int(successful * 0.50)]
+                p95_latency = latencies[min(int(successful * 0.95), successful - 1)]
                 print(f"\nTotal cost: ${total_cost:.4f}")
                 print(f"Average cost per query: ${total_cost/successful:.4f}")
-                
+                print(f"Latency — avg: {avg_latency:.1f}s  p50: {p50_latency:.1f}s  p95: {p95_latency:.1f}s")
+
+                # Write structured JSON log
+                run_metadata = {
+                    "timestamp": run_timestamp,
+                    "git_commit": get_git_commit(),
+                    "grader_model": GRADER_MODEL_NAME,
+                    "researcher_model": os.getenv("SMART_LLM", "openai:gpt-4.1"),
+                    "num_examples": num_examples,
+                    "total_duration_seconds": round(time.perf_counter() - run_start, 2),
+                }
+                log_record = {
+                    "run_metadata": run_metadata,
+                    "aggregate_metrics": {
+                        **metrics,
+                        "total_cost": round(total_cost, 6),
+                        "avg_cost_per_query": round(total_cost / successful, 6),
+                        "avg_latency_seconds": round(avg_latency, 2),
+                        "p50_latency_seconds": round(p50_latency, 2),
+                        "p95_latency_seconds": round(p95_latency, 2),
+                        "successful": successful,
+                        "failed": len(evaluator.examples) - successful,
+                    },
+                    "results": [r for r in results],
+                }
+                LOGS_DIR.mkdir(exist_ok=True)
+                log_filename = LOGS_DIR / f"eval_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_n{num_examples}.jsonl"
+                with open(log_filename, "w", encoding="utf-8") as f:
+                    f.write(json.dumps(log_record) + "\n")
+                print(f"\nStructured log saved → {log_filename}")
+
     except Exception as e:
         print(f"Fatal error in main: {str(e)}")
         raise

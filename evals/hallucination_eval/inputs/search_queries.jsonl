@@ -68,3 +68,38 @@
 {"question": "How is AI impacting creative industries like film and design?"}
 {"question": "What\u2019s the future of real-time multilingual AI translation?"}
 {"question": "What are next-gen LLM interface trends (beyond chat)?"}
+{"question": "What are the current first-line treatment guidelines for type 2 diabetes?", "domain": "healthcare"}
+{"question": "How effective are mRNA vaccines against emerging variants of COVID-19?", "domain": "healthcare"}
+{"question": "What are the latest advances in CAR-T cell therapy for blood cancers?", "domain": "healthcare"}
+{"question": "Summarize recent clinical trial results for GLP-1 receptor agonists in obesity treatment.", "domain": "healthcare"}
+{"question": "What are the leading causes of antibiotic resistance and how is it being addressed?", "domain": "healthcare"}
+{"question": "What does the EU AI Act require from high-risk AI system providers?", "domain": "legal"}
+{"question": "How has the US Supreme Court ruled on data privacy in the last five years?", "domain": "legal"}
+{"question": "What legal frameworks govern cross-border data transfers between the EU and US?", "domain": "legal"}
+{"question": "Summarize the key provisions of the Digital Markets Act and its enforcement actions.", "domain": "legal"}
+{"question": "What are the legal obligations of employers under GDPR regarding employee data?", "domain": "legal"}
+{"question": "What caused the collapse of the Bronze Age civilizations around 1200 BCE?", "domain": "history"}
+{"question": "How did the Marshall Plan reshape the economic landscape of post-WWII Europe?", "domain": "history"}
+{"question": "What were the key turning points in the decolonization of Africa during the 1960s?", "domain": "history"}
+{"question": "How did the Black Death reshape European society and economy in the 14th century?", "domain": "history"}
+{"question": "What role did the Silk Road play in the spread of religion and culture?", "domain": "history"}
+{"question": "What are the latest IPCC findings on global temperature rise projections?", "domain": "climate"}
+{"question": "How are coral reefs responding to ocean warming and acidification?", "domain": "climate"}
+{"question": "What is the current state of Arctic sea ice loss and its global impact?", "domain": "climate"}
+{"question": "Summarize the outcomes and commitments from COP29.", "domain": "climate"}
+{"question": "How do carbon capture technologies compare in cost and scalability?", "domain": "climate"}
+{"question": "What are the implications of the US Federal Reserve's recent interest rate decisions?", "domain": "finance"}
+{"question": "How has the commercial real estate market been affected by remote work trends?", "domain": "finance"}
+{"question": "What is the current state of global sovereign debt and default risks?", "domain": "finance"}
+{"question": "How are central banks approaching digital currency (CBDC) implementation?", "domain": "finance"}
+{"question": "Summarize the economic impact of the 2024 supply chain disruptions.", "domain": "finance"}
+{"question": "What evidence exists for the cognitive benefits of bilingual education?", "domain": "education"}
+{"question": "How are universities adapting their curricula to address AI literacy?", "domain": "education"}
+{"question": "What does research say about the effectiveness of online learning vs in-person?", "domain": "education"}
+{"question": "What are the outcomes of early childhood education programs on long-term development?", "domain": "education"}
+{"question": "How has student mental health changed since the COVID-19 pandemic?", "domain": "education"}
+{"question": "What are the main findings from the James Webb Space Telescope in its first two years?", "domain": "science"}
+{"question": "How close are scientists to achieving nuclear fusion as a commercial energy source?", "domain": "science"}
+{"question": "What is the current scientific consensus on microplastics and human health risks?", "domain": "science"}
+{"question": "Summarize recent breakthroughs in quantum error correction.", "domain": "science"}
+{"question": "What is CRISPR-Cas9 and what are the most significant recent applications?", "domain": "science"}
