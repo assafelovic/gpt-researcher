@@ -33,6 +33,12 @@ class PublisherAgent:
         sections_text = '\n\n'.join(sections)
         references = '\n'.join(f"{reference}" for reference in research_state.get("sources", []))
         headers = research_state.get("headers", {})
+        
+        diagrams_text = ""
+        diagrams = research_state.get("diagrams", [])
+        if diagrams:
+            diagrams_text = "\n## Visualizations\n" + "\n\n".join(diagrams) + "\n"
+
         layout = f"""# {headers.get('title')}
 #### {headers.get("date")}: {research_state.get('date')}
 
@@ -46,7 +52,7 @@ class PublisherAgent:
 
 ## {headers.get("conclusion")}
 {research_state.get('conclusion')}
-
+{diagrams_text}
 ## {headers.get("references")}
 {references}
 """
