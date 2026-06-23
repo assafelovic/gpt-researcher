@@ -5,9 +5,11 @@ import pytest
 import gpt_researcher.skills.deep_research as deep_research_module
 from gpt_researcher.skills.deep_research import (
     DeepResearchSkill,
+    MAX_CONTEXT_WORDS,
     parse_follow_up_questions_response,
     parse_research_results_response,
     parse_search_queries_response,
+    trim_context_to_word_limit,
 )
 
 
@@ -294,3 +296,21 @@ def test_parse_research_results_response_extracts_inline_legacy_url():
 
     assert result["learnings"] == ["stuff happened at"]
     assert result["citations"]["stuff happened at"] == "https://example.com/api/v1?key=value"
+
+
+def test_trim_context_to_word_limit_keeps_first_item_when_it_alone_exceeds_cap():
+    oversized_item = "word " * (MAX_CONTEXT_WORDS + 500)
+
+    result = trim_context_to_word_limit([oversized_item], max_words=MAX_CONTEXT_WORDS)
+
+    assert result, "trim_context_to_word_limit() should not return an empty context when the first item is oversized"
+    assert len(result[0].split()) == MAX_CONTEXT_WORDS
+
+
+def test_trim_context_to_word_limit_preserves_recent_context_and_keeps_one_oversized_tail_item():
+    earlier = "early context " * 50
+    oversized_latest = "latest " * (MAX_CONTEXT_WORDS + 250)
+
+    result = trim_context_to_word_limit([earlier, oversized_latest], max_words=MAX_CONTEXT_WORDS)
+
+    assert result == [" ".join(oversized_latest.split()[:MAX_CONTEXT_WORDS])]

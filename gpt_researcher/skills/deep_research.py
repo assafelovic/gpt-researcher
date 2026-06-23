@@ -217,10 +217,14 @@ def trim_context_to_word_limit(context_list: List[str], max_words: int = MAX_CON
 
     # Process in reverse to keep most recent items
     for item in reversed(context_list):
+        text = " ".join(str(part) for part in item) if isinstance(item, list) else str(item)
         words = count_words(item)
         if total_words + words <= max_words:
             trimmed_context.insert(0, item)  # Insert at start to maintain original order
             total_words += words
+        elif not trimmed_context:
+            trimmed_context.insert(0, " ".join(text.split()[:max_words]))
+            break
         else:
             break
 
