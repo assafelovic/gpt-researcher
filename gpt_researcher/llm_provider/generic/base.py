@@ -36,6 +36,7 @@ _SUPPORTED_PROVIDERS = {
     "forge",
     "avian",
     "minimax",
+    "atlascloud",
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS = [
@@ -223,6 +224,14 @@ class GenericLLMProvider:
 
             llm = ChatOpenAI(openai_api_base='https://api.deepseek.com',
                      openai_api_key=os.environ["DEEPSEEK_API_KEY"],
+                     **kwargs
+                )
+        elif provider == "atlascloud":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+
+            llm = ChatOpenAI(openai_api_base='https://api.atlascloud.ai/v1',
+                     openai_api_key=os.environ["ATLASCLOUD_API_KEY"],
                      **kwargs
                 )
         elif provider == "litellm":
