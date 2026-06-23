@@ -78,10 +78,15 @@ class ChiefEditorAgent:
         workflow.add_edge('publisher', END)
 
         # Add human in the loop
+        MAX_REVISIONS = 5
         workflow.add_conditional_edges(
             'human',
-            self._route_human_feedback,
-            {"accept": "researcher", "revise": "planner"}
+            lambda state: (
+                "accept" if state['human_feedback'] is None
+                else "force_accept" if state.get('revisions_count', 0) >= MAX_REVISIONS
+                else "revise"
+            ),
+            {"accept": "researcher", "force_accept": "researcher", "revise": "planner"}
         )
 
     def _route_human_feedback(self, review):
