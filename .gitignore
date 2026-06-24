@@ -52,3 +52,6 @@ server_log.txt
 .cursorrules
 CURSOR_RULES.md
 /.history
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
