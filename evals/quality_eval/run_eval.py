@@ -34,7 +34,7 @@ from langchain_openai import ChatOpenAI
 from gpt_researcher.agent import GPTResearcher
 from gpt_researcher.utils.enum import ReportType, ReportSource, Tone
 
-from evals.quality_eval import metrics
+from evals.quality_eval.metrics import evaluate_report, skipped as _skipped, is_skipped as _is_skipped
 
 try:
     from evals.hallucination_eval.evaluate import HallucinationEvaluator
@@ -74,24 +74,6 @@ def _check_env():
         raise ValueError(f"Missing environment variables: {', '.join(missing)}")
 
 
-def _skipped(reason: str) -> dict:
-    """Uniform skipped-metric sentinel returned when a metric cannot run."""
-    return {"status": "skipped", "reason": reason}
-
-
-def _is_skipped(result) -> bool:
-    return isinstance(result, dict) and result.get("status") == "skipped"
-
-
-async def _safe_metric(coro, name: str):
-    """Await a metric coroutine; on any exception return a skipped sentinel."""
-    try:
-        return await coro
-    except Exception as e:
-        print(f"   [WARN] {name} failed: {type(e).__name__}: {e}")
-        return _skipped(f"{type(e).__name__}: {e}")
-
-
 async def evaluate_single_query(
     query: str,
     grader_model,
@@ -116,42 +98,15 @@ async def evaluate_single_query(
     cost     = researcher.get_costs()
     latency  = round(time.perf_counter() - t_start, 2)
 
-    # --- Zero-cost metrics (wrapped for safety) ---
-    try:
-        citation = metrics.citation_ratio(report, sources, context=context)
-    except Exception as e:
-        citation = _skipped(str(e))
-
-    try:
-        diversity = metrics.source_diversity(sources)
-    except Exception as e:
-        diversity = _skipped(str(e))
-
-    authority = await _safe_metric(
-        metrics.source_authority(sources, grader_model=grader_model),
-        "source_authority",
+    m = await evaluate_report(
+        report, sources, context, query, grader_model,
+        run_subtopic=run_subtopic, run_unsupported=run_unsupported_claim,
     )
-
-    # --- LLM metric: subtopic (optional) ---
-    if run_subtopic:
-        subtopic = await _safe_metric(
-            metrics.subtopic_coverage(query, report, grader_model),
-            "subtopic_coverage",
-        )
-    else:
-        subtopic = None
-
-    # --- LLM metric: unsupported claim (optional) ---
-    if run_unsupported_claim:
-        if not context:
-            unsupported = _skipped("no source context available")
-        else:
-            unsupported = await _safe_metric(
-                metrics.unsupported_claim(report, context, grader_model),
-                "unsupported_claim",
-            )
-    else:
-        unsupported = None
+    citation    = m["citation_faithfulness"]
+    diversity   = m["source_diversity"]
+    authority   = m["source_authority"]
+    subtopic    = m["subtopic_coverage"]
+    unsupported = m["unsupported_claim"]
 
     # --- LLM metric: hallucination (optional, requires `judges` library) ---
     if run_hallucination:
@@ -182,7 +137,7 @@ async def evaluate_single_query(
         "cost":              cost,
         "source_count":      len(sources),
         "report_length":     len(report),
-        "citation_coverage": citation,
+        "citation_faithfulness": citation,
         "source_diversity":  diversity,
         "source_authority":  authority,
         "subtopic_coverage": subtopic,
@@ -197,9 +152,11 @@ async def evaluate_single_query(
         else:
             fmt_fn(value)
 
-    _fmt_metric("citation_ratio:", citation, lambda v:
-        print(f"   citation_ratio:          {v['citation_ratio']:.2f}  "
-              f"({v['cited_source_count']}/{v['used_source_domains']} used domains)"))
+    _fmt_metric("citation_faithful:", citation, lambda v:
+        print(f"   citation_faithful:       "
+              + (f"{v['citation_faithfulness']:.2f}"
+                 if v.get('citation_faithfulness') is not None else 'n/a')
+              + f"  ({len(v['listed_only_domains'])} listed-only)"))
     _fmt_metric("diversity_ratio:", diversity, lambda v:
         print(f"   diversity_ratio:         {v['diversity_ratio']:.2f}  "
               f"entropy={v['domain_entropy']:.2f}"))
@@ -295,7 +252,7 @@ async def main(num_examples: int, run_subtopic: bool, run_hallucination: bool, r
     )
 
     aggregate = {
-        "avg_citation_ratio":         avg(["citation_coverage",  "citation_ratio"]),
+        "avg_citation_faithfulness":  avg(["citation_faithfulness", "citation_faithfulness"]),
         "avg_diversity_ratio":        avg(["source_diversity",   "diversity_ratio"]),
         "avg_domain_entropy":         avg(["source_diversity",   "domain_entropy"]),
         "avg_authority_score":        avg(["source_authority",   "avg_authority_score"]),

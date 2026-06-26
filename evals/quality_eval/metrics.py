@@ -1,18 +1,21 @@
 """
 Quality Evaluation Metrics
 --------------------------
-All report quality metrics in one module.
+All report quality metrics in one module, grouped by what they measure:
 
-Zero-cost metrics (no LLM calls):
-  citation_ratio()    — fraction of used source domains cited in the report
-  source_diversity()  — domain variety via ratio + Shannon entropy
-  source_authority()  — heuristic authority score; unknown domains use LLM if provided
+Source Quality — is the input good?
+  source_diversity()      — domain variety via ratio + Shannon entropy        ($0)
+  source_authority()      — authority score; unknown domains use LLM if given  ($0 / LLM)
 
-LLM metrics (~$0.02/query each):
-  subtopic_coverage() — how thoroughly the report covers expected subtopics
-  unsupported_claim() — claim-level credibility scoring (supported / inferred / unsupported)
+Writing Behavior — how was the report written?
+  citation_faithfulness() — do cited-in-body sources match the References list ($0)
+  subtopic_coverage()     — how thoroughly the report covers expected subtopics (LLM)
+
+Hallucination — is the content supported?
+  unsupported_claim()     — claim-level credibility (supported/inferred/unsupported) (LLM)
 """
 
+import asyncio
 import json
 import math
 import re
@@ -26,7 +29,7 @@ from urllib.parse import urlparse
 
 def _extract_domains(urls: list[str]) -> set[str]:
     """Return normalised domain set from a list of URLs (strips www.)."""
-    return {urlparse(u).netloc.lower().lstrip("www.") for u in urls if u}
+    return {urlparse(u).netloc.lower().removeprefix("www.") for u in urls if u}
 
 
 def _extract_domains_from_text(text: str) -> set[str]:
@@ -44,54 +47,83 @@ def _parse_json(text: str):
     return json.loads(text)
 
 
+def _split_at_references(report: str) -> tuple[str, str]:
+    """Split a report into (body, references_section).
+
+    Both single- and multi-agent reports end with a `## References` (or
+    Sources/Citations/Bibliography) section listing every source. That list is
+    not evidence the body was written from those sources, so citation metrics
+    should look at the body only. Returns (body, refs); refs is "" if absent.
+    """
+    m = re.search(r'(?im)^#+\s*(references|sources|citations|bibliography)\s*$', report)
+    if m:
+        return report[:m.start()], report[m.start():]
+    return report, ""
+
+
 # ---------------------------------------------------------------------------
-# 1. Citation Ratio
+# 1. Citation Faithfulness  (Writing Behavior)
 # ---------------------------------------------------------------------------
 
-def citation_ratio(report: str, source_urls: list[str], context=None) -> dict:
+def citation_faithfulness(report: str, source_urls: list[str], context=None) -> dict:
     """
-    Fraction of used source domains that are explicitly cited in the report.
+    Alignment between the sources a report CLAIMS to use and the sources it
+    actually cites in the prose.
+
+        citation_faithfulness = |cited_in_body ∩ listed_in_refs| / |listed_in_refs|
+
+      1.0  = every source in the trailing `## References` list is actually
+             referenced somewhere in the body
+      low  = many sources are listed as references but never cited in the prose
+             (decorative / unused citations — a self-consistency failure)
+      None = the report has no References section to compare against
+
+    This measures the LLM's citation discipline (does it use what it claims to
+    use?), NOT whether the content is correct — that is unsupported_claim's job.
+
+    Also returns `citation_coverage` as a DESCRIPTIVE statistic (not a quality
+    score): of the sources actually used in research, how many are cited in the
+    body. A low coverage can simply mean the agent sensibly discarded sources,
+    so it should not be read as a quality signal on its own.
 
     Args:
         report:      Full markdown report text.
         source_urls: URLs from researcher.get_source_urls().
-        context:     Raw context from researcher.conduct_research() (str or list).
-                     When provided, denominator = domains that made it into context
-                     (relevance-filtered), giving a fairer ratio than all visited sources.
-
-    NOTE: Low ratio does not necessarily mean poor reporting — the researcher may
-    have legitimately discarded irrelevant sources after reading them.
-    TODO (Phase 3): weight denominator by embedding similarity to further refine.
+        context:     Raw context from researcher.conduct_research() (str or list);
+                     when provided, coverage denominator = sources that made it
+                     into context (relevance-filtered).
     """
-    if not source_urls:
-        return {
-            "total_source_domains": 0,
-            "used_source_domains":  0,
-            "cited_source_count":   0,
-            "citation_presence":    False,
-            "citation_ratio":       0.0,
-            "uncited_domains":      [],
-        }
-
     source_domains = _extract_domains(source_urls)
 
+    body, refs     = _split_at_references(report)
+    cited_domains  = _extract_domains_from_text(body)   # in-text citations only
+    listed_domains = _extract_domains_from_text(refs)   # end-of-report list only
+
+    # --- Faithfulness: of what is listed as references, how much is cited in body ---
+    if listed_domains:
+        aligned      = cited_domains & listed_domains
+        faithfulness = round(len(aligned) / len(listed_domains), 3)
+        listed_only  = sorted(listed_domains - cited_domains)
+    else:
+        faithfulness = None        # no references section → not applicable
+        listed_only  = []
+
+    # --- Coverage (descriptive only) ---
     if context:
         context_text = context if isinstance(context, str) else json.dumps(context)
         used_domains = _extract_domains_from_text(context_text) & source_domains
     else:
         used_domains = source_domains
-
-    cited_domains = _extract_domains_from_text(report)
-    covered = cited_domains & used_domains
-    denom   = len(used_domains) if used_domains else len(source_domains)
+    covered  = cited_domains & used_domains
+    coverage = round(len(covered) / len(used_domains), 3) if used_domains else None
 
     return {
-        "total_source_domains": len(source_domains),
-        "used_source_domains":  len(used_domains),
-        "cited_source_count":   len(covered),
-        "citation_presence":    len(covered) > 0,
-        "citation_ratio":       round(len(covered) / denom, 3) if denom else 0.0,
-        "uncited_domains":      sorted(used_domains - cited_domains),
+        "citation_faithfulness": faithfulness,
+        "listed_ref_domains":    len(listed_domains),
+        "cited_body_domains":    len(cited_domains),
+        "listed_only_domains":   listed_only,    # listed as ref but never cited in body
+        "citation_coverage":     coverage,       # descriptive, NOT a quality score
+        "uncited_used_domains":  sorted(used_domains - cited_domains),
     }
 
 
@@ -116,7 +148,7 @@ def source_diversity(source_urls: list[str]) -> dict:
             "top_domains":     [],
         }
 
-    domains = [urlparse(u).netloc.lower().lstrip("www.") for u in source_urls if u]
+    domains = [urlparse(u).netloc.lower().removeprefix("www.") for u in source_urls if u]
     counts  = Counter(domains)
     total   = len(domains)
     unique  = len(counts)
@@ -170,17 +202,33 @@ Return ONLY a JSON array in this exact format, one entry per domain:
 """.strip()
 
 
-def _score_domain(domain: str) -> tuple[float, str]:
-    # TODO (Phase 3): Hybrid authority scoring — batch LLM call for unknown domains.
-    # Current rule table defaults unknown domains to 0.4 regardless of actual authority.
-    d = domain.lower().lstrip("www.")
+def _score_domain(domain: str):
+    """High-confidence rule match only.
+
+    Returns (score, tier) for domains we can score reliably by rule
+    (.gov, .edu, known academic/news whitelists, wikipedia), or None to
+    signal the domain should be deferred to the LLM.
+
+    NOTE: .com / .org are intentionally NOT scored here. Many high-authority
+    sources live on .com/.org (e.g. sciencedirect.com, bmj.com, cureus.com),
+    so a blanket ".com → 0.5" rule misclassifies them as low-authority and,
+    critically, prevents them from ever reaching the LLM scorer. We defer all
+    such domains to the LLM instead (batched, so cost stays at ~1 call/query).
+    """
+    d = domain.lower().removeprefix("www.")
     if d.endswith(".gov"):           return 1.0, "government"
     if d.endswith(".edu"):           return 0.9, "academic-edu"
     if d in _HIGH_AUTHORITY_DOMAINS: return 0.9, "high-authority"
     if d in _MAJOR_NEWS_DOMAINS:     return 0.8, "major-news"
     if "wikipedia.org" in d:         return 0.75, "wikipedia"
-    if d.endswith(".org"):           return 0.65, "nonprofit-org"
-    if d.endswith(".com"):           return 0.5,  "commercial"
+    return None   # defer .com / .org / everything else to the LLM
+
+
+def _fallback_score(domain: str) -> tuple[float, str]:
+    """Rule-only score for deferred domains when no grader_model is available."""
+    d = domain.lower().removeprefix("www.")
+    if d.endswith(".org"): return 0.65, "nonprofit-org"
+    if d.endswith(".com"): return 0.5,  "commercial"
     return 0.4, "unknown"
 
 
@@ -203,30 +251,43 @@ async def source_authority(source_urls: list[str], grader_model=None) -> dict:
     """
     Average authority score per source domain (0.0–1.0).
 
-    Rule-based tiers: .gov=1.0, .edu=0.9, known academic/news=0.8-0.9,
-    wikipedia=0.75, .org=0.65, .com=0.5, unknown=0.4.
-    When grader_model is provided, unknown domains are batch-scored by LLM.
+    High-confidence rule tiers: .gov=1.0, .edu=0.9, known academic/news=0.8-0.9,
+    wikipedia=0.75. Everything else (.com, .org, unknown TLDs) is deferred to a
+    single batched LLM call when grader_model is provided — this is what lets
+    sources like sciencedirect.com or bmj.com be recognised as high-authority.
+    Without a grader_model, deferred domains fall back to .org=0.65 / .com=0.5 / 0.4.
     """
     if not source_urls:
         return {"avg_authority_score": 0.0, "breakdown": []}
 
-    known, unknown_domains = [], []
+    domains = [urlparse(u).netloc.lower().removeprefix("www.") for u in source_urls if u]
 
-    for url in source_urls:
-        domain = urlparse(url).netloc.lower().lstrip("www.")
-        score, tier = _score_domain(domain)
-        if tier == "unknown" and grader_model:
-            unknown_domains.append(domain)
+    breakdown = []
+    deferred  = []
+    for domain in domains:
+        match = _score_domain(domain)
+        if match is not None:
+            score, tier = match
+            breakdown.append({"domain": domain, "score": score, "tier": tier})
         else:
-            known.append({"domain": domain, "score": score, "tier": tier})
+            deferred.append(domain)
 
-    llm_scores = []
-    if unknown_domains and grader_model:
-        llm_scores = await _llm_score_domains(unknown_domains, grader_model)
-    elif unknown_domains:
-        llm_scores = [{"domain": d, "score": 0.4, "tier": "unknown"} for d in unknown_domains]
+    if deferred:
+        score_map = {}
+        if grader_model:
+            # Batch-score unique deferred domains in a single LLM call.
+            scored    = await _llm_score_domains(sorted(set(deferred)), grader_model)
+            score_map = {s["domain"]: s for s in scored}
+        for domain in deferred:
+            entry = score_map.get(domain)
+            if entry is None:
+                fb_score, fb_tier = _fallback_score(domain)
+                entry = {"domain": domain, "score": fb_score, "tier": fb_tier}
+            breakdown.append(dict(entry))
 
-    breakdown = known + llm_scores
+    if not breakdown:
+        return {"avg_authority_score": 0.0, "breakdown": []}
+
     avg = sum(b["score"] for b in breakdown) / len(breakdown)
 
     return {
@@ -256,61 +317,64 @@ Do not include any explanation or extra text.
 Question: {query}
 """.strip()
 
-_COVERAGE_PROMPT = """
+_COVERAGE_ONE_PROMPT = """
 You are a research quality evaluator.
 
-Given the list of expected subtopics and the research report excerpt below,
-identify which subtopics are clearly addressed and which are missing or
-only superficially mentioned.
+Decide whether the single subtopic below is clearly and substantively addressed
+in the research report (not merely mentioned in passing).
 
-Expected subtopics:
-{subtopics}
+Subtopic: {subtopic}
 
-Report (first 3000 characters):
+Report:
 {report}
 
-Return ONLY a JSON object in this exact format:
-{{"covered": ["subtopic1", ...], "missing": ["subtopic2", ...]}}
+Return ONLY a JSON object: {{"covered": true}} or {{"covered": false}}.
 """.strip()
 
 
-async def subtopic_coverage(query: str, report: str, grader_model) -> dict:
+async def _check_one_subtopic(subtopic: str, report: str, grader_model) -> bool:
+    """Judge a single subtopic's coverage independently (no batch effects)."""
+    try:
+        resp   = await grader_model.ainvoke(
+            _COVERAGE_ONE_PROMPT.format(subtopic=subtopic, report=report[:12000]))
+        result = _parse_json(resp.content)
+        return bool(result.get("covered", False))
+    except Exception:
+        return False
+
+
+async def subtopic_coverage(query: str, report: str, grader_model, subtopics=None) -> dict:
     """
     LLM-judged coverage of expected subtopics (~2 calls, ~$0.02/query).
 
     Step 1: generate expected subtopics for the query (adaptive count).
     Step 2: check which subtopics the report covers.
-    """
-    try:
-        resp1     = await grader_model.ainvoke(_SUBTOPICS_PROMPT.format(query=query))
-        subtopics = _parse_json(resp1.content)
-    except Exception:
-        return {
-            "expected_subtopics":     [],
-            "covered":                [],
-            "missing":                [],
-            "subtopic_coverage_rate": None,
-            "error":                  "Failed to parse subtopics from LLM",
-        }
 
-    try:
-        resp2  = await grader_model.ainvoke(
-            _COVERAGE_PROMPT.format(
-                subtopics=json.dumps(subtopics, ensure_ascii=False),
-                report=report[:3000],
-            )
-        )
-        result  = _parse_json(resp2.content)
-        covered = result.get("covered", [])
-        missing = result.get("missing", [])
-    except Exception:
-        return {
-            "expected_subtopics":     subtopics,
-            "covered":                [],
-            "missing":                subtopics,
-            "subtopic_coverage_rate": None,
-            "error":                  "Failed to parse coverage from LLM",
-        }
+    `subtopics`: optional pre-generated subtopic list. When provided, step 1 is
+    skipped and coverage is judged against these exact subtopics — this fixes the
+    subtopic set across calls (e.g. for perturbation testing, so coverage isn't
+    confounded by re-generation drift).
+    """
+    if subtopics is None:
+        try:
+            resp1     = await grader_model.ainvoke(_SUBTOPICS_PROMPT.format(query=query))
+            subtopics = _parse_json(resp1.content)
+        except Exception:
+            return {
+                "expected_subtopics":     [],
+                "covered":                [],
+                "missing":                [],
+                "subtopic_coverage_rate": None,
+                "error":                  "Failed to parse subtopics from LLM",
+            }
+
+    # Judge each subtopic INDEPENDENTLY (one call each, concurrent) so a
+    # subtopic's verdict isn't swayed by the others in the same batch.
+    flags   = await asyncio.gather(
+        *(_check_one_subtopic(s, report, grader_model) for s in subtopics)
+    )
+    covered = [s for s, ok in zip(subtopics, flags) if ok]
+    missing = [s for s, ok in zip(subtopics, flags) if not ok]
 
     total = len(subtopics)
     return {
@@ -384,7 +448,27 @@ Return ONLY a JSON array, one object per claim:
 """.strip()
 
 
-async def unsupported_claim(report: str, context, grader_model) -> dict:
+async def _verify_one_claim(claim: str, context_text: str, grader_model) -> dict:
+    """Score a single claim independently against the context (no batch effects)."""
+    try:
+        resp   = await grader_model.ainvoke(
+            _VERIFY_CLAIMS_PROMPT.format(
+                claims=json.dumps([claim], ensure_ascii=False),
+                context=context_text[:4000],
+            )
+        )
+        result = _parse_json(resp.content)
+        if isinstance(result, list) and result:
+            return result[0]
+        if isinstance(result, dict):
+            return result
+    except Exception:
+        pass
+    return {"claim": claim, "category": "unsupported", "score": 0.0,
+            "reason": "verification failed"}
+
+
+async def unsupported_claim(report: str, context, grader_model, claims=None) -> dict:
     """
     Claim-level credibility scoring (~2 calls, ~$0.02/query).
 
@@ -394,18 +478,24 @@ async def unsupported_claim(report: str, context, grader_model) -> dict:
     Data claims (numbers/dates/stats) are strictly supported or unsupported — never inferred.
     Returns avg_claim_score (overall credibility), unsupported_claim_rate (hard failures only),
     inferred_claim_rate (synthesis proportion), and per-claim breakdown.
+
+    `claims`: optional pre-extracted claim list. When provided, the extraction
+    step is skipped and these exact claims are scored — this fixes the claim set
+    across calls (e.g. for perturbation testing, so scoring isn't confounded by
+    re-extraction drift).
     """
     context_text = context if isinstance(context, str) else json.dumps(context)
 
-    try:
-        resp1  = await grader_model.ainvoke(_EXTRACT_CLAIMS_PROMPT.format(report=report[:3000]))
-        claims = _parse_json(resp1.content)
-    except Exception as e:
-        return {
-            "total_claims": 0, "avg_claim_score": None,
-            "unsupported_claim_rate": None, "inferred_claim_rate": None,
-            "breakdown": [], "error": f"Claim extraction failed: {e}",
-        }
+    if claims is None:
+        try:
+            resp1  = await grader_model.ainvoke(_EXTRACT_CLAIMS_PROMPT.format(report=report[:12000]))
+            claims = _parse_json(resp1.content)
+        except Exception as e:
+            return {
+                "total_claims": 0, "avg_claim_score": None,
+                "unsupported_claim_rate": None, "inferred_claim_rate": None,
+                "breakdown": [], "error": f"Claim extraction failed: {e}",
+            }
 
     if not claims:
         return {
@@ -414,20 +504,13 @@ async def unsupported_claim(report: str, context, grader_model) -> dict:
             "breakdown": [],
         }
 
-    try:
-        resp2         = await grader_model.ainvoke(
-            _VERIFY_CLAIMS_PROMPT.format(
-                claims=json.dumps(claims, ensure_ascii=False),
-                context=context_text[:4000],
-            )
-        )
-        scored_claims = _parse_json(resp2.content)
-    except Exception as e:
-        return {
-            "total_claims": len(claims), "avg_claim_score": None,
-            "unsupported_claim_rate": None, "inferred_claim_rate": None,
-            "breakdown": [], "error": f"Claim verification failed: {e}",
-        }
+    # Score each claim INDEPENDENTLY (one LLM call per claim, run concurrently).
+    # Batch scoring let a corrupted/absurd claim shift the model's judgement of
+    # unrelated claims in the same batch — so a claim's score depended on its
+    # batch-mates. Independent scoring makes each claim's score self-contained.
+    scored_claims = await asyncio.gather(
+        *(_verify_one_claim(c, context_text, grader_model) for c in claims)
+    )
 
     supported_l   = [c for c in scored_claims if c.get("category") == "supported"]
     inferred_l    = [c for c in scored_claims if c.get("category") == "inferred"]
@@ -454,3 +537,75 @@ async def unsupported_claim(report: str, context, grader_model) -> dict:
             for c in scored_claims
         ],
     }
+
+
+# ---------------------------------------------------------------------------
+# Orchestration  (shared by run_eval.py and benchmark.py)
+# ---------------------------------------------------------------------------
+
+def skipped(reason: str) -> dict:
+    """Sentinel returned when a metric can't run, so one failure doesn't abort."""
+    return {"status": "skipped", "reason": reason}
+
+
+def is_skipped(value) -> bool:
+    return isinstance(value, dict) and value.get("status") == "skipped"
+
+
+async def _safe(coro, name: str):
+    """Await a metric coroutine; on any exception return a skipped sentinel."""
+    try:
+        return await coro
+    except Exception as e:
+        print(f"   [WARN] {name} failed: {type(e).__name__}: {e}")
+        return skipped(f"{type(e).__name__}: {e}")
+
+
+async def evaluate_report(
+    report: str,
+    sources: list,
+    context,
+    query: str,
+    grader_model,
+    *,
+    run_subtopic: bool = True,
+    run_unsupported: bool = True,
+) -> dict:
+    """Compute all quality metrics for one report.
+
+    Each metric is wrapped so a failure becomes a `skipped()` sentinel rather
+    than aborting the whole evaluation. Returns a dict keyed by metric name;
+    callers add latency/cost/console output and any extra metrics (e.g.
+    run_eval's hallucination check). Zero-cost metrics always run; the two LLM
+    metrics are gated by the flags.
+    """
+    out = {}
+
+    try:
+        out["citation_faithfulness"] = citation_faithfulness(report, sources, context=context)
+    except Exception as e:
+        out["citation_faithfulness"] = skipped(str(e))
+
+    try:
+        out["source_diversity"] = source_diversity(sources)
+    except Exception as e:
+        out["source_diversity"] = skipped(str(e))
+
+    out["source_authority"] = await _safe(
+        source_authority(sources, grader_model=grader_model), "source_authority"
+    )
+
+    out["subtopic_coverage"] = (
+        await _safe(subtopic_coverage(query, report, grader_model), "subtopic_coverage")
+        if run_subtopic else None
+    )
+
+    if run_unsupported:
+        out["unsupported_claim"] = (
+            skipped("no source context available") if not context
+            else await _safe(unsupported_claim(report, context, grader_model), "unsupported_claim")
+        )
+    else:
+        out["unsupported_claim"] = None
+
+    return out
