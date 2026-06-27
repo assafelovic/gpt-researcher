@@ -1,6 +1,37 @@
 import json_repair
 
 from gpt_researcher.llm_provider.generic.base import ReasoningEfforts
+
+
+def _normalize_sub_queries(parsed: Any, fallback_query: str) -> List[str]:
+    """Coerce a parsed LLM response into a flat list of query strings.
+
+    ``json_repair.loads`` may return a list, a dict (e.g. ``{"queries": [...]}``
+    or a single ``{"query": "..."}``), a bare string, or ``None`` when the model
+    does not return clean JSON. Callers expect a ``list[str]`` and otherwise crash
+    on ``.append`` / iteration, so normalize defensively here.
+    """
+    if isinstance(parsed, dict):
+        for key in ("queries", "sub_queries", "subQueries", "items"):
+            value = parsed.get(key)
+            if isinstance(value, list):
+                parsed = value
+                break
+        else:
+            # Single-query dict like {"query": "..."} or unrecognized shape.
+            single = parsed.get("query")
+            parsed = [single] if isinstance(single, str) else []
+
+    if isinstance(parsed, str):
+        parsed = [parsed] if parsed.strip() else []
+
+    if not isinstance(parsed, list):
+        parsed = []
+
+    queries = [str(item).strip() for item in parsed if str(item).strip()]
+    if not queries and fallback_query.strip():
+        return [fallback_query.strip()]
+    return queries
 from ..utils.llm import create_chat_completion
 from ..prompts import PromptFamily
 from typing import Any, List, Dict
@@ -107,7 +138,7 @@ async def generate_sub_queries(
                 **kwargs
             )
 
-    return json_repair.loads(response)
+    return _normalize_sub_queries(json_repair.loads(response), query)
 
 async def plan_research_outline(
     query: str,
