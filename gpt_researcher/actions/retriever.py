@@ -27,6 +27,7 @@ def get_retriever(retriever: str):
         - tavily: Tavily search API
         - exa: Exa search
         - crw: fastCRW search (Firecrawl-compatible web scraper)
+        - caesar: Caesar agentic web search (free, no API key required)
         - semantic_scholar: Semantic Scholar academic search
         - pubmed_central: PubMed Central medical literature
         - openalex: OpenAlex scholarly works catalog
@@ -91,6 +92,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import CRWRetriever
 
             return CRWRetriever
+        case "caesar":
+            from gpt_researcher.retrievers import CaesarSearch
+
+            return CaesarSearch
         case "semantic_scholar":
             from gpt_researcher.retrievers import SemanticScholarSearch
 
