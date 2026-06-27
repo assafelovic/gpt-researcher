@@ -1,6 +1,11 @@
 import unittest
 
-from gpt_researcher.utils.costs import calculate_llm_cost, estimate_llm_cost
+from gpt_researcher.utils.costs import (
+    EMBEDDING_COST,
+    calculate_llm_cost,
+    estimate_embedding_cost,
+    estimate_llm_cost,
+)
 
 
 class TestCosts(unittest.TestCase):
@@ -66,6 +71,31 @@ class TestCosts(unittest.TestCase):
         )
 
         self.assertEqual(fallback_cost, estimate_llm_cost("hello", "world"))
+
+
+class TestEmbeddingCost(unittest.TestCase):
+    def test_estimate_embedding_cost_openai_model(self):
+        cost = estimate_embedding_cost(
+            model="text-embedding-3-small",
+            docs=["hello world", "another document"],
+        )
+        self.assertGreater(cost, 0.0)
+
+    def test_estimate_embedding_cost_non_openai_model_does_not_raise(self):
+        # Non-OpenAI embedding models (Ollama, Cohere, Nomic, HuggingFace, ...)
+        # are not known to tiktoken and used to raise KeyError, aborting cost
+        # tracking mid-research. The estimator must degrade gracefully instead.
+        cost = estimate_embedding_cost(
+            model="nomic-embed-text",
+            docs=["hello world", "another document"],
+        )
+        self.assertGreater(cost, 0.0)
+
+    def test_estimate_embedding_cost_empty_docs(self):
+        self.assertEqual(
+            estimate_embedding_cost(model="nomic-embed-text", docs=[]),
+            0.0,
+        )
 
 
 if __name__ == "__main__":
