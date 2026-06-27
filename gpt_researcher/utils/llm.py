@@ -211,6 +211,7 @@ async def construct_subtopics(
         return output
 
     except Exception as e:
-        print("Exception in parsing subtopics : ", e)
-        logging.getLogger(__name__).error("Exception in parsing subtopics : \n {e}")
+        logging.getLogger(__name__).error(
+            "Exception in parsing subtopics: %s", e, exc_info=True
+        )
         return subtopics
