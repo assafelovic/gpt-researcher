@@ -63,7 +63,9 @@ def parse_dimension(value: str) -> int:
         # Convert to float first to handle decimal values like '409.12'
         return int(float(value))
     except (ValueError, TypeError) as e:
-        print(f"Error parsing dimension value {value}: {e}")
+        # Non-numeric dimensions (e.g. '100%', 'auto', '50em') are common and
+        # expected on real pages; log at debug level instead of spamming stdout.
+        logging.debug("Could not parse dimension value %r: %s", value, e)
         return None
 
 def extract_title(soup: BeautifulSoup) -> str:
