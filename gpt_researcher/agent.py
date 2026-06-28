@@ -19,6 +19,7 @@ from .actions import (
 )
 from .config import Config
 from .llm_provider import GenericLLMProvider
+from .llm_provider.image import PixabayImageSearchProvider, PexelsImageSearchProvider, UnsplashImageSearchProvider
 from .memory import Memory
 from .prompts import get_prompt_family
 from .skills.browser import BrowserManager
@@ -195,6 +196,15 @@ class GPTResearcher:
         self.image_generator: Optional[ImageGenerator] = ImageGenerator(self)
         self.available_images: list = []  # Pre-generated images ready for embedding
         self._research_id: str = ""  # Unique ID for this research session
+        
+        # Initialize Pixabay image search provider (optional - only if configured)
+        self.pixabay_provider: Optional[PixabayImageSearchProvider] = PixabayImageSearchProvider.from_config(self.cfg)
+        
+        # Initialize Pexels image search provider (optional - only if configured)
+        self.pexels_provider: Optional[PexelsImageSearchProvider] = PexelsImageSearchProvider.from_config(self.cfg)
+        
+        # Initialize Unsplash image search provider (optional - only if configured)
+        self.unsplash_provider: Optional[UnsplashImageSearchProvider] = UnsplashImageSearchProvider.from_config(self.cfg)
 
         # Handle MCP strategy configuration with backwards compatibility
         self.mcp_strategy = self._resolve_mcp_strategy(mcp_strategy, mcp_max_iterations)
@@ -381,6 +391,50 @@ class GPTResearcher:
         await self._log_event("research", step="research_completed", details={
             "context_length": len(self.context)
         })
+        
+        # Search Pixabay for relevant stock photos if enabled
+        if self.pixabay_provider and self.pixabay_provider.is_available():
+            await self._log_event("research", step="pixabay_search_start")
+            context_str = "\n\n".join(self.context) if isinstance(self.context, list) else str(self.context)
+            pixabay_images = await self._search_pixabay_images(
+                context=context_str,
+                query=self.query,
+                research_id=self._generate_research_id(),
+            )
+            if pixabay_images:
+                self.add_research_images(pixabay_images)
+                await self._log_event("research", step="pixabay_search_complete", details={
+                    "images_count": len(pixabay_images)
+                })
+        
+        # Search Pexels for relevant stock photos if enabled
+        if self.pexels_provider and self.pexels_provider.is_available():
+            await self._log_event("research", step="pexels_search_start")
+            context_str = "\n\n".join(self.context) if isinstance(self.context, list) else str(self.context)
+            pexels_images = await self._search_pexels_images(
+                context=context_str,
+                query=self.query,
+                research_id=self._generate_research_id(),
+            )
+            if pexels_images:
+                self.add_research_images(pexels_images)
+                await self._log_event("research", step="pexels_search_complete", details={
+                    "images_count": len(pexels_images)
+                })
+        
+        # Search Unsplash for relevant stock photos if enabled
+        if self.unsplash_provider and self.unsplash_provider.is_available():
+            await self._log_event("research", step="unsplash_search_start")
+            context_str = "\n\n".join(self.context) if isinstance(self.context, list) else str(self.context)
+            unsplash_images = await self._search_unsplash_images(
+                context=context_str,
+                query=self.query,
+            )
+            if unsplash_images:
+                self.add_research_images(unsplash_images)
+                await self._log_event("research", step="unsplash_search_complete", details={
+                    "images_count": len(unsplash_images)
+                })
         
         # Pre-generate images if enabled (happens BEFORE report writing for better UX)
         self.available_images = []
@@ -592,6 +646,335 @@ class GPTResearcher:
             written_contents,
             max_results
         )
+
+    async def _generate_pixabay_search_queries(
+        self,
+        context: str,
+        query: str,
+    ) -> list[str]:
+        """Use LLM to generate Pixabay search queries from research context.
+        
+        Analyzes the accumulated research context and produces 2-3 concise,
+        effective stock-photo search queries optimized for Pixabay's API.
+        
+        Args:
+            context: The accumulated research context.
+            query: The main research query.
+            
+        Returns:
+            List of search query strings (each ≤100 characters).
+        """
+        max_context_length = 4000
+        truncated_context = context[:max_context_length] if len(context) > max_context_length else context
+        
+        search_prompt = f"""Analyze this research context and generate 2-3 concise stock-photo search queries that would find relevant, high-quality images for this topic.
+
+RESEARCH QUERY: {query}
+
+RESEARCH CONTEXT:
+{truncated_context}
+
+Requirements:
+- Each query must be ≤100 characters (Pixabay API limit)
+- Focus on concrete, visual subjects — not abstract concepts
+- Use simple, common keywords that photo search engines understand
+- Avoid overly specific technical jargon
+- Think about what a professional photographer would have tagged their photo with
+
+Example queries for a report on "renewable energy":
+["solar panels rooftop sunset", "wind turbines green field", "electric car charging station"]
+
+Return ONLY a valid JSON array of strings. No markdown, no explanation.
+
+Example output:
+["query one", "query two", "query three"]"""
+
+        try:
+            response = await create_chat_completion(
+                model=self.cfg.fast_llm_model,
+                messages=[
+                    {"role": "system", "content": "You are a photo search expert. Return only valid JSON arrays."},
+                    {"role": "user", "content": search_prompt}
+                ],
+                temperature=0.3,
+                llm_provider=self.cfg.fast_llm_provider,
+                max_tokens=300,
+                llm_kwargs=self.cfg.llm_kwargs,
+                cost_callback=self.add_costs,
+            )
+            
+            response = response.strip()
+            # Remove markdown code blocks if present
+            if response.startswith("```"):
+                import re
+                response = re.sub(r'^```(?:json)?\n?', '', response)
+                response = re.sub(r'\n?```$', '', response)
+            
+            queries = json.loads(response)
+            
+            # Validate: must be a list of strings
+            if isinstance(queries, list):
+                valid_queries = [
+                    q.strip()[:100] for q in queries 
+                    if isinstance(q, str) and q.strip()
+                ]
+                return valid_queries[:self.cfg.pixabay_max_images]
+            
+            return []
+            
+        except json.JSONDecodeError as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to parse Pixabay search query response: {e}")
+            return []
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error generating Pixabay search queries: {e}")
+            return []
+    
+    async def _search_pixabay_images(
+        self,
+        context: str,
+        query: str,
+        research_id: str = "",
+    ) -> list[dict[str, Any]]:
+        """Search Pixabay for relevant photos based on research context.
+        
+        Uses the fast LLM to generate search queries from context, then
+        searches Pixabay and downloads the best matching images locally.
+        
+        Args:
+            context: The accumulated research context.
+            query: The main research query.
+            research_id: Optional research ID for file organization.
+            
+        Returns:
+            List of downloaded image metadata dicts.
+        """
+        if not self.pixabay_provider or not self.pixabay_provider.is_available():
+            return []
+        
+        if self.verbose:
+            from .actions.utils import stream_output
+            await stream_output(
+                "logs",
+                "pixabay_search_start",
+                "📷 Analyzing research context for Pixabay photo search...",
+                self.websocket,
+            )
+        
+        # Step 1: Generate search queries from research context
+        search_queries = await self._generate_pixabay_search_queries(context, query)
+        
+        if not search_queries:
+            if self.verbose:
+                from .actions.utils import stream_output
+                await stream_output(
+                    "logs",
+                    "pixabay_search_skip",
+                    "📷 No suitable photo search queries identified",
+                    self.websocket,
+                )
+            return []
+        
+        if self.verbose:
+            from .actions.utils import stream_output
+            await stream_output(
+                "logs",
+                "pixabay_search_queries",
+                f"📷 Searching Pixabay for: {', '.join(search_queries[:3])}",
+                self.websocket,
+            )
+        
+        # Step 2: Search and download images
+        images = await self.pixabay_provider.fetch_images(
+            search_queries=search_queries,
+            research_id=research_id,
+            max_images=getattr(self.cfg, 'pixabay_max_images', 3),
+        )
+        
+        if self.verbose:
+            from .actions.utils import stream_output
+            if images:
+                await stream_output(
+                    "logs",
+                    "pixabay_search_complete",
+                    f"📷 Found {len(images)} Pixabay photos",
+                    self.websocket,
+                    True,
+                    images,
+                )
+            else:
+                await stream_output(
+                    "logs",
+                    "pixabay_search_empty",
+                    "📷 No Pixabay photos found for the generated queries",
+                    self.websocket,
+                )
+        
+        return images
+
+    async def _search_pexels_images(
+        self,
+        context: str,
+        query: str,
+        research_id: str = "",
+    ) -> list[dict[str, Any]]:
+        """Search Pexels for relevant photos based on research context.
+        
+        Uses the fast LLM to generate search queries from context, then
+        searches Pexels and downloads the best matching images locally.
+        
+        Args:
+            context: The accumulated research context.
+            query: The main research query.
+            research_id: Optional research ID for file organization.
+            
+        Returns:
+            List of downloaded image metadata dicts.
+        """
+        if not self.pexels_provider or not self.pexels_provider.is_available():
+            return []
+        
+        if self.verbose:
+            from .actions.utils import stream_output
+            await stream_output(
+                "logs",
+                "pexels_search_start",
+                "📸 Analyzing research context for Pexels photo search...",
+                self.websocket,
+            )
+        
+        # Step 1: Generate search queries from research context
+        search_queries = await self._generate_pixabay_search_queries(context, query)
+        
+        if not search_queries:
+            if self.verbose:
+                from .actions.utils import stream_output
+                await stream_output(
+                    "logs",
+                    "pexels_search_skip",
+                    "📸 No suitable photo search queries identified",
+                    self.websocket,
+                )
+            return []
+        
+        if self.verbose:
+            from .actions.utils import stream_output
+            await stream_output(
+                "logs",
+                "pexels_search_queries",
+                f"📸 Searching Pexels for: {', '.join(search_queries[:3])}",
+                self.websocket,
+            )
+        
+        # Step 2: Search and download images
+        images = await self.pexels_provider.fetch_images(
+            search_queries=search_queries,
+            research_id=research_id,
+            max_images=getattr(self.cfg, 'pexels_max_images', 3),
+        )
+        
+        if self.verbose:
+            from .actions.utils import stream_output
+            if images:
+                await stream_output(
+                    "logs",
+                    "pexels_search_complete",
+                    f"📸 Found {len(images)} Pexels photos",
+                    self.websocket,
+                    True,
+                    images,
+                )
+            else:
+                await stream_output(
+                    "logs",
+                    "pexels_search_empty",
+                    "📸 No Pexels photos found for the generated queries",
+                    self.websocket,
+                )
+        
+        return images
+
+    async def _search_unsplash_images(
+        self,
+        context: str,
+        query: str,
+    ) -> list[dict[str, Any]]:
+        """Search Unsplash for relevant photos based on research context.
+        
+        Uses the fast LLM to generate search queries from context, then
+        searches Unsplash and returns hotlinked CDN URLs.
+        
+        Unsplash requires hotlinking — images are NOT downloaded locally.
+        
+        Args:
+            context: The accumulated research context.
+            query: The main research query.
+            
+        Returns:
+            List of image metadata dicts with Unsplash CDN URLs.
+        """
+        if not self.unsplash_provider or not self.unsplash_provider.is_available():
+            return []
+        
+        if self.verbose:
+            from .actions.utils import stream_output
+            await stream_output(
+                "logs",
+                "unsplash_search_start",
+                "🖼️ Analyzing research context for Unsplash photo search...",
+                self.websocket,
+            )
+        
+        # Step 1: Generate search queries from research context
+        search_queries = await self._generate_pixabay_search_queries(context, query)
+        
+        if not search_queries:
+            if self.verbose:
+                from .actions.utils import stream_output
+                await stream_output(
+                    "logs",
+                    "unsplash_search_skip",
+                    "🖼️ No suitable photo search queries identified",
+                    self.websocket,
+                )
+            return []
+        
+        if self.verbose:
+            from .actions.utils import stream_output
+            await stream_output(
+                "logs",
+                "unsplash_search_queries",
+                f"🖼️ Searching Unsplash for: {', '.join(search_queries[:3])}",
+                self.websocket,
+            )
+        
+        # Step 2: Search Unsplash (returns hotlinked CDN URLs)
+        images = await self.unsplash_provider.fetch_images(
+            search_queries=search_queries,
+            max_images=getattr(self.cfg, 'unsplash_max_images', 3),
+        )
+        
+        if self.verbose:
+            from .actions.utils import stream_output
+            if images:
+                await stream_output(
+                    "logs",
+                    "unsplash_search_complete",
+                    f"🖼️ Found {len(images)} Unsplash photos",
+                    self.websocket,
+                    True,
+                    images,
+                )
+            else:
+                await stream_output(
+                    "logs",
+                    "unsplash_search_empty",
+                    "🖼️ No Unsplash photos found for the generated queries",
+                    self.websocket,
+                )
+        
+        return images
 
     # Utility methods
     def get_research_images(self, top_k: int = 10) -> list[dict[str, Any]]:

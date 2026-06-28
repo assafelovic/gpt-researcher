@@ -49,3 +49,22 @@ class BaseConfig(TypedDict):
     IMAGE_GENERATION_ENABLED: bool
     IMAGE_GENERATION_STYLE: str  # Image style: "dark", "light", or "auto"
     IMAGE_GENERATION_PROVIDER: str  # Image provider: "google" or "modelslab"
+    # Pixabay image search settings
+    PIXABAY_API_KEY: Union[str, None]
+    PIXABAY_IMAGE_SEARCH_ENABLED: bool
+    PIXABAY_MAX_IMAGES: int
+    PIXABAY_IMAGE_TYPE: str
+    PIXABAY_SAFESEARCH: bool
+    PIXABAY_SHOW_ATTRIBUTION: bool
+    PIXABAY_MIN_WIDTH: int
+    PIXABAY_MIN_HEIGHT: int
+    # Pexels image search settings
+    PEXELS_API_KEY: Union[str, None]
+    PEXELS_IMAGE_SEARCH_ENABLED: bool
+    PEXELS_MAX_IMAGES: int
+    PEXELS_SHOW_ATTRIBUTION: bool
+    # Unsplash image search settings
+    UNSPLASH_ACCESS_KEY: Union[str, None]
+    UNSPLASH_IMAGE_SEARCH_ENABLED: bool
+    UNSPLASH_MAX_IMAGES: int
+    UNSPLASH_SHOW_ATTRIBUTION: bool
