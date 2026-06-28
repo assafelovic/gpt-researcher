@@ -67,8 +67,17 @@ def parse_dimension(value: str) -> int:
         return None
 
 def extract_title(soup: BeautifulSoup) -> str:
-    """Extract the title from the BeautifulSoup object"""
-    return soup.title.string if soup.title else ""
+    """Extract the title text from the BeautifulSoup object.
+
+    Always returns a string. An empty ``<title></title>`` yields ``""`` (not
+    ``None``), and a title containing nested markup (e.g.
+    ``<title><span>x</span></title>``) yields its text content rather than the
+    raw inner HTML.
+    """
+    title_tag = soup.title
+    if not title_tag:
+        return ""
+    return title_tag.get_text(strip=True)
 
 def get_image_hash(image_url: str) -> str:
     """Calculate a simple hash based on the image filename and essential query parameters"""
