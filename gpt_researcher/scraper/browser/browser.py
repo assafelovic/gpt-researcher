@@ -15,7 +15,20 @@ from typing import Iterable, cast
 from .processing.scrape_skills import (scrape_pdf_with_pymupdf,
                                        scrape_pdf_with_arxiv)
 
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
+
+
+def _is_pdf_url(url: str) -> bool:
+    """Return True when ``url`` points at a PDF.
+
+    Inspects only the path component so query strings / fragments don't hide
+    the extension (signed CDN/S3 links like ``https://host/doc.pdf?sig=...``
+    are extremely common), and matches case-insensitively because ``.PDF`` is
+    a perfectly valid suffix.
+    """
+    if not url:
+        return False
+    return urlparse(url).path.lower().endswith(".pdf")
 
 from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
 
@@ -204,7 +217,7 @@ class BrowserScraper:
 
         self._scroll_to_bottom()
 
-        if self.url.endswith(".pdf"):
+        if _is_pdf_url(self.url):
             text = scrape_pdf_with_pymupdf(self.url)
             return text, [], ""
         elif "arxiv" in self.url:
