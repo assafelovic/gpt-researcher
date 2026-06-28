@@ -1039,11 +1039,25 @@ const GPTResearcher = (() => {
     };
   }
 
+  // Sanitize HTML before inserting it into the DOM. Report and agent content is
+  // derived from untrusted sources (scraped web pages and LLM output), so it
+  // must be sanitized to prevent cross-site scripting (XSS).
+  const sanitizeHtml = (html) => {
+    if (typeof DOMPurify !== 'undefined') {
+      return DOMPurify.sanitize(html, { ADD_ATTR: ['target'] });
+    }
+    // Defensive fallback if DOMPurify failed to load: escape everything.
+    console.warn('DOMPurify not loaded; escaping content as a fallback.');
+    const tmp = document.createElement('div');
+    tmp.textContent = html;
+    return tmp.innerHTML;
+  };
+
   const addAgentResponse = (data) => {
     const output = document.getElementById('output');
     const responseDiv = document.createElement('div');
     responseDiv.className = 'agent_response';
-    responseDiv.innerHTML = data.output; // Assuming data.output is safe HTML or simple text from agent
+    responseDiv.innerHTML = sanitizeHtml(data.output);
     output.appendChild(responseDiv);
     output.scrollTop = output.scrollHeight;
     output.style.display = 'block';
@@ -1077,8 +1091,9 @@ const GPTResearcher = (() => {
   const writeReport = (data, converter, isFinal = false, append = false) => {
     const reportContainer = document.getElementById('reportContainer');
 
-    // Convert markdown to HTML
-    const markdownOutput = converter.makeHtml(data.output);
+    // Convert markdown to HTML, then sanitize to prevent XSS from untrusted
+    // report content (scraped pages / LLM output).
+    const markdownOutput = sanitizeHtml(converter.makeHtml(data.output));
 
     // If this is the final report or we should append
     if (isFinal) {
