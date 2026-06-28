@@ -191,7 +191,14 @@ def estimate_embedding_cost(model: str, docs: list) -> float:
     Returns:
         The estimated embedding cost in USD.
     """
-    encoding = tiktoken.encoding_for_model(model)
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        # tiktoken only knows OpenAI model names. Non-OpenAI embedding
+        # providers (Ollama, Cohere, Nomic, HuggingFace, ...) raise KeyError
+        # here, which would otherwise abort cost tracking mid-research. Fall
+        # back to the default OpenAI encoding for a best-effort token estimate.
+        encoding = tiktoken.get_encoding(ENCODING_MODEL)
     total_tokens = sum(len(encoding.encode(str(doc))) for doc in docs)
     return total_tokens * EMBEDDING_COST
 
