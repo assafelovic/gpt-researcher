@@ -120,7 +120,12 @@ def extract_json_with_regex(response: str | None) -> str | None:
     """
     if not response:
         return None
-    json_match = re.search(r"{.*?}", response, re.DOTALL)
+    # Greedy ``{.*}`` so the match spans from the first ``{`` to the LAST ``}``
+    # in the response, capturing the whole object. A non-greedy ``{.*?}``
+    # stopped at the first ``}``, truncating any object with more than one
+    # key or with a ``}`` inside a string value (e.g. an agent_role_prompt
+    # mentioning "{markets}") into invalid JSON.
+    json_match = re.search(r"{.*}", response, re.DOTALL)
     if json_match:
         return json_match.group(0)
     return None
