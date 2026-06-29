@@ -88,4 +88,8 @@ class OnlineDocumentLoader:
 
     @staticmethod
     def _get_extension(url: str) -> str:
-        return os.path.splitext(url.split("?")[0])[1]
+        # Lower-case the extension so loader lookup (whose keys are lower-case,
+        # e.g. "pdf"/"docx") matches URLs that use upper-case extensions like
+        # "report.PDF" or "doc.DOCX". The leading "?" split drops query strings
+        # (signed CDN/S3 URLs) before extracting the suffix.
+        return os.path.splitext(url.split("?")[0])[1].lower()
