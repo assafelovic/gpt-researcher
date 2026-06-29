@@ -116,7 +116,7 @@ class ContextCompressor:
         self.documents = documents
         self.kwargs = kwargs
         self.embeddings = embeddings
-        self.similarity_threshold = os.environ.get("SIMILARITY_THRESHOLD", 0.35)
+        self.similarity_threshold = float(os.environ.get("SIMILARITY_THRESHOLD", 0.35))
         self.prompt_family = prompt_family
 
     def __get_contextual_retriever(self):
