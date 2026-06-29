@@ -125,7 +125,7 @@ class PubMedCentralSearch:
         except requests.RequestException as e:
             return None
 
-    def search(self, max_results: int = 5) -> Optional[List[Dict[str, Any]]]:
+    def search(self, max_results: int = 5) -> List[Dict[str, Any]]:
         """
         Performs the search and retrieves full text content.
 
@@ -139,10 +139,13 @@ class PubMedCentralSearch:
               ...
             ]
         """
-        # Step 1: Search for article IDs
+        # Step 1: Search for article IDs. Always return a list (never None):
+        # callers such as actions.query_processing.get_search_results are typed
+        # -> List[Dict] and skills.researcher does len(search_results), which
+        # raises TypeError on None.
         article_ids = self._search_articles(max_results)
         if not article_ids:
-            return None
+            return []
         
         # Step 2: Fetch full text for each article
         results = []
