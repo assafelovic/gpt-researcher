@@ -20,9 +20,22 @@ class ArxivScraper:
         retriever = ArxivRetriever(load_max_docs=2, doc_content_chars_max=None)
         docs = retriever.invoke(query)
 
+        # ArxivRetriever returns an empty list when the query matches no paper
+        # (e.g. a malformed/non-arXiv link or a transient API failure). Indexing
+        # docs[0] then raised IndexError and aborted the whole scrape; mirror the
+        # other scrapers and degrade to an empty result instead.
+        if not docs:
+            return "", [], ""
+
         # Include the published date and author to provide additional context, 
         # aligning with APA-style formatting in the report.
-        context = f"Published: {docs[0].metadata['Published']}; Author: {docs[0].metadata['Authors']}; Content: {docs[0].page_content}"
+        first = docs[0]
+        metadata = first.metadata or {}
+        context = (
+            f"Published: {metadata.get('Published')}; "
+            f"Author: {metadata.get('Authors')}; "
+            f"Content: {first.page_content}"
+        )
         image = []
 
-        return context, image, docs[0].metadata["Title"]
+        return context, image, metadata.get("Title", "")
