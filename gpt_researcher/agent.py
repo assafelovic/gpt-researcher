@@ -4,6 +4,7 @@ This module provides the main GPTResearcher class that orchestrates
 autonomous research and report generation using LLMs and web search.
 """
 
+import asyncio
 import json
 import os
 from typing import Any, Optional
@@ -515,18 +516,32 @@ class GPTResearcher:
         await self._log_event("research", step="introduction_completed")
         return intro
 
-    async def quick_search(self, query: str, query_domains: list[str] = None, aggregated_summary: bool = False) -> list[Any] | str:
+    async def quick_search(
+        self,
+        query: str,
+        query_domains: list[str] = None,
+        aggregated_summary: bool = False,
+        all_retrievers: bool = False,
+    ) -> list[Any] | str:
         """Perform a quick search without full research workflow.
 
         Args:
             query: The search query.
             query_domains: Optional list of domains to restrict search to.
             aggregated_summary: Whether to return an aggregated summary of the search results.
+            all_retrievers: If True, query every configured retriever concurrently and
+                merge the results (de-duplicated by URL). Defaults to False, which uses
+                only the primary retriever for backward compatibility.
 
         Returns:
             List of search results or a synthesized summary string.
         """
-        search_results = await get_search_results(query, self.retrievers[0], query_domains=query_domains)
+        if all_retrievers and len(self.retrievers) > 1:
+            search_results = await self._search_all_retrievers(query, query_domains)
+        else:
+            search_results = await get_search_results(
+                query, self.retrievers[0], query_domains=query_domains, researcher=self
+            )
 
         if not aggregated_summary:
             return search_results
@@ -553,6 +568,42 @@ class GPTResearcher:
         )
 
         return summary
+
+    async def _search_all_retrievers(
+        self, query: str, query_domains: list[str] = None
+    ) -> list[dict[str, Any]]:
+        """Query every configured retriever concurrently and merge the results.
+
+        Results are de-duplicated by URL (checking both ``url`` and ``href`` keys,
+        which different retrievers use). Retrievers that raise are skipped so a
+        single failing provider does not abort the whole search.
+
+        Args:
+            query: The search query.
+            query_domains: Optional list of domains to restrict search to.
+
+        Returns:
+            A merged, de-duplicated list of search results.
+        """
+        tasks = [
+            get_search_results(query, retriever, query_domains=query_domains, researcher=self)
+            for retriever in self.retrievers
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        merged: list[dict[str, Any]] = []
+        seen_urls: set[str] = set()
+        for result in results:
+            if isinstance(result, Exception) or not result:
+                continue
+            for item in result:
+                url = item.get("url") or item.get("href") or ""
+                if url and url in seen_urls:
+                    continue
+                if url:
+                    seen_urls.add(url)
+                merged.append(item)
+        return merged
 
     async def get_subtopics(self):
         """Generate subtopics for the research query.
