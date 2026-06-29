@@ -532,10 +532,15 @@ class GPTResearcher:
         if not aggregated_summary:
             return search_results
 
-        # Format results for summary
+        # Format results for summary. Search retrievers return records keyed
+        # by "href" (URL) and "body" (content); fall back to the alternate
+        # keys so callers that pass pre-normalized records still work.
         context = ""
         for i, result in enumerate(search_results, 1):
-            context += f"[{i}] {result.get('title', '')}: {result.get('content', '')} ({result.get('url', '')})\n\n"
+            title = result.get("title", "")
+            body = result.get("body") or result.get("content", "")
+            url = result.get("href") or result.get("url", "")
+            context += f"[{i}] {title}: {body} ({url})\n\n"
 
         prompt = self.prompt_family.generate_quick_summary_prompt(query, context)
 
