@@ -12,6 +12,7 @@ from .serpapi.serpapi import SerpApiSearch
 from .serper.serper import SerperSearch
 from .tavily.tavily_search import TavilySearch
 from .groundroute.groundroute import GroundRouteSearch
+from .keenable.keenable import KeenableSearch
 from .exa.exa import ExaSearch
 from .crw.crw import CRWRetriever
 from .mcp import MCPRetriever
@@ -22,6 +23,7 @@ from .openalex.openalex import OpenAlexSearch
 __all__ = [
     "TavilySearch",
     "GroundRouteSearch",
+    "KeenableSearch",
     "CustomRetriever",
     "Duckduckgo",
     "SearchApiSearch",

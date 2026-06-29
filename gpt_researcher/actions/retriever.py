@@ -25,6 +25,7 @@ def get_retriever(retriever: str):
         - brave: Brave Search API
         - arxiv: arXiv academic search
         - tavily: Tavily search API
+        - keenable: Keenable web search API (keyless by default)
         - exa: Exa search
         - crw: fastCRW search (Firecrawl-compatible web scraper)
         - semantic_scholar: Semantic Scholar academic search
@@ -83,6 +84,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import GroundRouteSearch
 
             return GroundRouteSearch
+        case "keenable":
+            from gpt_researcher.retrievers import KeenableSearch
+
+            return KeenableSearch
         case "exa":
             from gpt_researcher.retrievers import ExaSearch
 
