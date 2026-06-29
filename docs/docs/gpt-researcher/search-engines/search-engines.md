@@ -99,7 +99,7 @@ so you only need to set the retriever:
 RETRIEVER=keenable
 ```
 
-To lift rate limits and enable `realtime` mode, set an API key (create one at
+To lift rate limits, set an API key (create one at
 [keenable.ai/console](https://keenable.ai/console)):
 
 ```bash
@@ -110,7 +110,6 @@ KEENABLE_API_KEY=your_api_key_here   # optional
 **Optional Configuration:**
 
 ```bash
-KEENABLE_SEARCH_MODE=pro             # "pro" (default, deeper) or "realtime" (low latency, requires a key)
 KEENABLE_API_URL=https://api.keenable.ai   # override the API base URL (HTTPS); e.g. for staging
 ```
 

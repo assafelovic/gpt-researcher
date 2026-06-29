@@ -14,7 +14,7 @@ class KeenableSearch:
     Keyless by default: with no ``KEENABLE_API_KEY`` set, the free public
     endpoint is used, so this retriever works out of the box. Set
     ``KEENABLE_API_KEY`` (create one at https://keenable.ai/console) to use the
-    authenticated endpoint, lift rate limits, and enable ``realtime`` mode.
+    authenticated endpoint and lift rate limits.
     """
 
     def __init__(self, query, query_domains=None, **kwargs):
@@ -29,8 +29,7 @@ class KeenableSearch:
         """
         self.query = query
         self.query_domains = query_domains or None
-        # "pro" (default, deeper retrieval) or "realtime" (low latency; requires
-        # a key — not available on the keyless public endpoint).
+        # "pro" (default): deeper retrieval. Keyless public endpoint supported.
         self.mode = os.getenv("KEENABLE_SEARCH_MODE", "pro")
         self.api_key = self.get_api_key()
         self.base_url = self.get_base_url()
