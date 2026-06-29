@@ -104,15 +104,16 @@ class SerperSearch():
 
         resp = requests.request("POST", url, timeout=10, headers=headers, data=data)
 
-        # Preprocess the results
+        # Preprocess the results. Always return a list so callers (which do
+        # `len(...)` / iterate over the result) never receive None.
         if resp is None:
-            return
+            return []
         try:
             search_results = json.loads(resp.text)
         except Exception:
-            return
+            return []
         if search_results is None:
-            return
+            return []
 
         results = search_results.get("organic", [])
         search_results = []
