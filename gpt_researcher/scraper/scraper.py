@@ -9,6 +9,7 @@ import importlib
 import logging
 import subprocess
 import sys
+from urllib.parse import urlparse
 
 import requests
 from colorama import Fore, init
@@ -198,7 +199,11 @@ class Scraper:
 
         scraper_key = None
 
-        if link.endswith(".pdf"):
+        # Inspect only the path component so query strings / fragments don't
+        # hide the extension (e.g. signed CDN/S3 links like "…/doc.pdf?sig=…").
+        # Match case-insensitively because ".PDF" is a perfectly valid suffix.
+        path = urlparse(link).path
+        if path.lower().endswith(".pdf"):
             scraper_key = "pdf"
         elif "arxiv.org" in link:
             scraper_key = "arxiv"
