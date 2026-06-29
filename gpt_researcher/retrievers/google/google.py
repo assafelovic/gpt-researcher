@@ -4,6 +4,7 @@
 import os
 import requests
 import json
+from urllib.parse import urlencode
 
 
 class GoogleSearch:
@@ -64,7 +65,18 @@ class GoogleSearch:
 
         print("Searching with query {0}...".format(search_query))
 
-        url = f"https://www.googleapis.com/customsearch/v1?key={self.api_key}&cx={self.cx_key}&q={search_query}&start=1"
+        # URL-encode every parameter. Interpolating the raw query broke any
+        # search containing reserved characters (e.g. "&" in "AT&T" added a
+        # spurious param, "#" truncated the rest of the query).
+        query_string = urlencode(
+            {
+                "key": self.api_key,
+                "cx": self.cx_key,
+                "q": search_query,
+                "start": 1,
+            }
+        )
+        url = f"https://www.googleapis.com/customsearch/v1?{query_string}"
         resp = requests.get(url)
 
         if resp.status_code < 200 or resp.status_code >= 300:
