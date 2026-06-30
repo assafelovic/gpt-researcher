@@ -32,7 +32,12 @@ def trim_context_to_word_limit(context_list: List[str], max_words: int = MAX_CON
             trimmed_context.insert(0, item)  # Insert at start to maintain original order
             total_words += words
         else:
-            break
+            # Skip this item but keep scanning: a single oversized entry (often
+            # the most recent one) must not drop every smaller item that would
+            # still fit. Stop only once the budget is exhausted.
+            if total_words >= max_words:
+                break
+            continue
 
     return trimmed_context
 
