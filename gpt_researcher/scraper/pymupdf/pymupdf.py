@@ -57,10 +57,16 @@ class PyMuPDFScraper:
                     for chunk in response.iter_content(chunk_size=8192):
                         temp_file.write(chunk)  # Write the downloaded content to the temporary file
 
-                loader = PyMuPDFLoader(temp_filename)
-                doc = loader.load()
-
-                os.remove(temp_filename)
+                # Always clean up the downloaded temp file, even if loading fails
+                # (PyMuPDFLoader.load() can raise on a malformed/partial PDF).
+                try:
+                    loader = PyMuPDFLoader(temp_filename)
+                    doc = loader.load()
+                finally:
+                    try:
+                        os.remove(temp_filename)
+                    except OSError:
+                        pass
             else:
                 loader = PyMuPDFLoader(self.link)
                 doc = loader.load()
