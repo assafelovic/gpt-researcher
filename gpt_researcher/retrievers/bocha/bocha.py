@@ -40,19 +40,32 @@ class BoChaSearch():
             "count": max_results
         }
 
-        response = requests.post(url, headers=headers, json=data)
+        try:
+            response = requests.post(url, headers=headers, json=data, timeout=10)
+            response.raise_for_status()
+            json_response = response.json()
+        except (requests.RequestException, ValueError) as e:
+            logging.getLogger(__name__).warning(
+                f"Error: {e}. Failed fetching sources. Resulting in empty response."
+            )
+            return []
 
-        json_response = response.json()
-        results = json_response["data"]["webPages"]["value"]
+        # The BoCha response shape is data.webPages.value; any of these may be
+        # missing on an error/empty payload, so walk it defensively rather than
+        # KeyError-ing the whole research run.
+        results = (
+            ((json_response or {}).get("data") or {}).get("webPages") or {}
+        ).get("value") or []
         search_results = []
 
         # Normalize the results to match the format of the other search APIs
         for result in results:
-            search_result = {
-                "title": result["name"],
-                "href": result["url"],
-                "body": result["snippet"],
-            }
-            search_results.append(search_result)
+            search_results.append(
+                {
+                    "title": result.get("name", ""),
+                    "href": result.get("url", ""),
+                    "body": result.get("snippet", ""),
+                }
+            )
 
         return search_results
