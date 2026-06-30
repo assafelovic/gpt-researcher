@@ -173,7 +173,10 @@ Format each question on a new line starting with 'Question: '"""}
                 url_match = re.search(r'\[(.*?)\]:', line)
                 if url_match:
                     url = url_match.group(1)
-                    learning = line.split(':', 1)[1].strip()
+                    # Take everything AFTER the matched ``[url]:`` marker. Using
+                    # ``line.split(':', 1)`` would split on the colon inside the
+                    # URL scheme (``https:``) and mangle the learning text.
+                    learning = line[url_match.end():].strip()
                     learnings.append(learning)
                     citations[learning] = url
                 else:
