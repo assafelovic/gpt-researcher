@@ -14,6 +14,7 @@ import requests
 from colorama import Fore, init
 
 from gpt_researcher.utils.workers import WorkerPool
+from gpt_researcher.utils.url_security import UnsafeURLError, validate_url
 
 from . import (
     ArxivScraper,
@@ -111,6 +112,19 @@ class Scraper:
         """
         async with self.worker_pool.throttle():
             try:
+                # Reject SSRF / local-file targets (internal hosts, cloud metadata
+                # endpoints, file:// paths, etc.) before any request is made.
+                try:
+                    validate_url(link)
+                except UnsafeURLError as e:
+                    self.logger.warning(f"Skipping unsafe URL {link}: {e}")
+                    return {
+                        "url": link,
+                        "raw_content": None,
+                        "image_urls": [],
+                        "title": "",
+                    }
+
                 Scraper = self.get_scraper(link)
                 scraper = Scraper(link, session)
 
