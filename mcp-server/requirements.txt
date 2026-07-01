@@ -1,0 +1,13 @@
+# GPT Researcher MCP Server Requirements
+
+# Core dependencies
+mcp>=0.9.0
+python-dotenv>=1.0.0
+httpx>=0.27.0
+
+# GPT Researcher (parent package)
+# Note: Install from parent directory: pip install -e ../
+
+# Optional dependencies for enhanced functionality
+# numpy>=1.24.0  # For vector operations
+# pymongo>=4.0.0  # For MongoDB vector storage
