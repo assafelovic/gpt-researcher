@@ -756,6 +756,10 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         provided = request.headers.get("x-api-key", "")
+        if not provided:
+            auth_header = request.headers.get("authorization", "")
+            if auth_header.lower().startswith("bearer "):
+                provided = auth_header[7:].strip()
         if not provided or not hmac.compare_digest(provided, self._api_key):
             return JSONResponse(
                 status_code=401,
@@ -801,6 +805,82 @@ def install(
     @app.get("/api/hlt/readiness", tags=["hlt"])
     def readiness():  # noqa: D401
         return get_hlt_readiness()
+
+    @app.post("/gather", tags=["hlt"])
+    async def katailyst_gather(request: Request):  # noqa: D401
+        """Katailyst2 HTTP gather adapter — maps quick_search results to typed findings."""
+        from gpt_researcher import GPTResearcher
+
+        body = await request.json()
+        query_obj = body.get("query") or {}
+        keyword = (
+            query_obj.get("keyword")
+            or query_obj.get("query")
+            or query_obj.get("url")
+            or ""
+        )
+        if not keyword:
+            return JSONResponse(status_code=400, content={"detail": "query.keyword required"})
+
+        max_findings = min(int(body.get("max_findings") or 10), 25)
+        research_kind = body.get("research_kind") or "topic_deep_dive"
+
+        kind_to_finding = {
+            "seo_research": "content_gap",
+            "competitor_research": "content_gap",
+            "trend_scan": "trend",
+            "forum_scan": "pain",
+            "audience_language_mining": "language",
+            "topic_deep_dive": "topic_opportunity",
+            "cross_industry_scan": "trend",
+        }
+        default_finding = kind_to_finding.get(research_kind, "topic_opportunity")
+
+        researcher = GPTResearcher(query=str(keyword), report_type="research_report")
+        results = await researcher.quick_search(
+            query=str(keyword),
+            query_domains=query_obj.get("domains"),
+            aggregated_summary=True,
+        )
+
+        findings = []
+        if isinstance(results, str) and results.strip():
+            findings.append(
+                {
+                    "finding_type": default_finding,
+                    "summary": results.strip()[:240],
+                    "detail_md": results.strip()[:4000],
+                    "source_kind": "gpt_researcher",
+                    "confidence": 0.72,
+                }
+            )
+        elif isinstance(results, list):
+            for item in results[:max_findings]:
+                if isinstance(item, dict):
+                    summary = str(item.get("title") or item.get("content") or item.get("snippet") or keyword)[:240]
+                    url = item.get("url") or item.get("link")
+                    findings.append(
+                        {
+                            "finding_type": default_finding,
+                            "summary": summary,
+                            "detail_md": str(item.get("content") or item.get("snippet") or summary)[:4000],
+                            "source_url": url,
+                            "source_kind": "gpt_researcher",
+                            "confidence": 0.7,
+                        }
+                    )
+                elif isinstance(item, str) and item.strip():
+                    findings.append(
+                        {
+                            "finding_type": default_finding,
+                            "summary": item.strip()[:240],
+                            "detail_md": item.strip()[:4000],
+                            "source_kind": "gpt_researcher",
+                            "confidence": 0.65,
+                        }
+                    )
+
+        return {"findings": findings[:max_findings], "cost_usd": 0.01, "external_scan_id": None}
 
     # 2. API-key auth (opt-in via env).
     api_key = os.getenv("API_AUTH_KEY") or None

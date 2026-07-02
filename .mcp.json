@@ -2,7 +2,7 @@
   "mcpServers": {
     "katailyst": {
       "type": "http",
-      "url": "https://www.katailyst.com/mcp",
+      "url": "https://katailyst2.vercel.app/api/mcp",
       "headers": {
         "Authorization": "Bearer ${KATAILYST_MCP_TOKEN}"
       }
