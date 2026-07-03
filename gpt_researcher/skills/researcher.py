@@ -790,7 +790,13 @@ class ResearchConductor:
                 # Separate results that already have content from those needing scraping
                 for result in search_results:
                     url = result.get("href") or result.get("url")
-                    raw_content = result.get("raw_content") or result.get("body")
+                    # Only the ``raw_content`` key carries genuine full-page text
+                    # (pubmed_central, tavily-with-raw-content, custom). The ``body``
+                    # key holds search-result *snippets* (e.g. searx maps SearXNG's
+                    # ``content`` field to ``body``); those are typically 150-400 chars,
+                    # so treating them as prefetched content would pass the length guard
+                    # below and skip scraping entirely (see issue #1846).
+                    raw_content = result.get("raw_content")
                     if url and raw_content and len(raw_content) > 100:
                         # Retriever already fetched full content (e.g. PubMed Central)
                         prefetched_content.append({
