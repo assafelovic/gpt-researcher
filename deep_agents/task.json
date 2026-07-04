@@ -1,0 +1,13 @@
+{
+  "query": "Is AI in a hype cycle?",
+  "model": "openai:gpt-5.4",
+  "max_sections": 3,
+  "source": "web",
+  "follow_guidelines": false,
+  "guidelines": [
+    "The report MUST fully answer the original question",
+    "Each section MUST include supporting sources using hyperlinks",
+    "The report MUST be written in APA format"
+  ],
+  "verbose": true
+}

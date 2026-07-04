@@ -55,6 +55,13 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     # GPT-5 family: OpenAI enforces default temperature only
     "gpt-5",
     "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-5.4",
+    "gpt-5.4-mini",
+    "gpt-5.4-nano",
+    "gpt-5.4-pro",
+    "gpt-5.5",
+    "gpt-5.5-pro",
 ]
 
 SUPPORT_REASONING_EFFORT_MODELS = [
@@ -64,6 +71,12 @@ SUPPORT_REASONING_EFFORT_MODELS = [
     "o3-2025-04-16",
     "o4-mini",
     "o4-mini-2025-04-16",
+    "gpt-5.4",
+    "gpt-5.4-mini",
+    "gpt-5.4-nano",
+    "gpt-5.4-pro",
+    "gpt-5.5",
+    "gpt-5.5-pro",
 ]
 
 class ReasoningEfforts(Enum):
