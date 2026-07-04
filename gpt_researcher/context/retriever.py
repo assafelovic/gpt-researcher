@@ -23,7 +23,10 @@ class SearchAPIRetriever(BaseRetriever):
 
         docs = [
             Document(
-                page_content=page.get("raw_content", "")[:_MAX_CONTENT_CHARS],
+                # ``raw_content`` may be explicitly None (the scraper sets it to
+                # None for pages that failed to scrape), and slicing None raises
+                # TypeError. Coerce to a string before truncating.
+                page_content=(page.get("raw_content") or "")[:_MAX_CONTENT_CHARS],
                 metadata={
                     "title": page.get("title", ""),
                     "source": page.get("url", ""),
