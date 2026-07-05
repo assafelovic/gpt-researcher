@@ -73,7 +73,7 @@ class MCPClientManager:
                 connection_type = config.get("connection_type", "stdio")
                 server_config["transport"] = connection_type
             
-            if server_config.get("connection_type") in ["streamable_http", "http"]:
+            if server_config.get("transport") in ["streamable_http", "http", "websocket"]:
                 connection_headers = config.get("connection_headers")
                 if connection_headers and isinstance(connection_headers, dict):
                     server_config["headers"] = connection_headers
