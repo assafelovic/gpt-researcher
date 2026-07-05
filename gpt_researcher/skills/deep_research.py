@@ -368,7 +368,8 @@ Return ONLY a JSON object using this exact schema:
             model=self.researcher.cfg.strategic_llm_model,
             temperature=0.4,
             reasoning_effort=ReasoningEfforts.High.value,
-            max_tokens=1000
+            # Needs headroom for reasoning tokens on reasoning models
+            max_tokens=4000
         )
 
         return parse_research_results_response(response, num_learnings)

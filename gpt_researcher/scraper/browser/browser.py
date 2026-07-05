@@ -38,7 +38,7 @@ class BrowserScraper:
     def scrape(self) -> tuple:
         if not self.url:
             print("URL not specified")
-            return "A URL was not specified, cancelling request to browse website.", [], ""
+            return "", [], ""
 
         try:
             self.setup_driver()
@@ -52,7 +52,9 @@ class BrowserScraper:
             print(f"An error occurred during scraping: {str(e)}")
             print("Full stack trace:")
             print(traceback.format_exc())
-            return f"An error occurred: {str(e)}\n\nStack trace:\n{traceback.format_exc()}", [], ""
+            # Return empty content so the failure is dropped instead of the
+            # error text being treated as page content downstream.
+            return "", [], ""
         finally:
             if self.driver:
                 self.driver.quit()

@@ -9,7 +9,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def get_search_results(query: str, retriever: Any, query_domains: List[str] = None, researcher=None) -> List[Dict[str, Any]]:
+async def get_search_results(
+    query: str,
+    retriever: Any,
+    query_domains: List[str] = None,
+    researcher=None,
+    max_results: int | None = None,
+) -> List[Dict[str, Any]]:
     """
     Get web search results for a given query.
 
@@ -18,10 +24,13 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
         retriever: The retriever instance
         query_domains: Optional list of domains to search
         researcher: The researcher instance (needed for MCP retrievers)
+        max_results: Optional cap on the number of results
 
     Returns:
         A list of search results
     """
+    import asyncio
+
     # Check if this is an MCP retriever and pass the researcher instance
     if "mcpretriever" in retriever.__name__.lower():
         search_retriever = retriever(
@@ -31,8 +40,13 @@ async def get_search_results(query: str, retriever: Any, query_domains: List[str
         )
     else:
         search_retriever = retriever(query, query_domains=query_domains)
-    
-    return search_retriever.search()
+
+    search_kwargs = {}
+    if max_results is not None:
+        search_kwargs["max_results"] = max_results
+
+    # Retriever searches are blocking HTTP calls; keep the event loop free
+    return await asyncio.to_thread(search_retriever.search, **search_kwargs)
 
 async def generate_sub_queries(
     query: str,

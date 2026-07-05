@@ -7,9 +7,12 @@ DEFAULT_CONFIG: BaseConfig = {
     "FAST_LLM": "openai:gpt-5.4-mini",
     "SMART_LLM": "openai:gpt-5.4",  # Has support for long responses (2k+ words).
     "STRATEGIC_LLM": "openai:gpt-5.4",  # Reasoning model used for planning; tune REASONING_EFFORT for speed vs. depth.
-    "FAST_TOKEN_LIMIT": 3000,
-    "SMART_TOKEN_LIMIT": 6000,
-    "STRATEGIC_TOKEN_LIMIT": 4000,
+    # Output token limits. For reasoning models (the default gpt-5.x family)
+    # these map to max_completion_tokens, which also covers reasoning tokens -
+    # hence the generous headroom on top of the visible output.
+    "FAST_TOKEN_LIMIT": 6000,
+    "SMART_TOKEN_LIMIT": 12000,
+    "STRATEGIC_TOKEN_LIMIT": 8000,
     "BROWSE_CHUNK_MAX_LENGTH": 8192,
     "CURATE_SOURCES": False,
     "SUMMARY_TOKEN_LIMIT": 700,

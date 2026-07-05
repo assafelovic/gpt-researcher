@@ -17,6 +17,29 @@ EMBEDDING_COST = 0.02 / 1000000  # Assumes new ada-3-small
 
 logger = logging.getLogger(__name__)
 
+# (patterns, input $/MTok, output $/MTok) - first match wins, so more
+# specific patterns (e.g. "-mini") must come before their base model.
+# Prices as of July 2026: https://openai.com/api/pricing/
+OPENAI_MODEL_PRICING = (
+    (("gpt-5.5-pro",), 30.0, 180.0),
+    (("gpt-5.5",), 5.0, 30.0),
+    (("gpt-5.4-pro",), 30.0, 180.0),
+    (("gpt-5.4-mini",), 0.75, 4.5),
+    (("gpt-5.4-nano",), 0.2, 1.25),
+    (("gpt-5.4",), 2.5, 15.0),
+    (("gpt-5-mini",), 0.25, 2.0),
+    (("gpt-5-nano",), 0.05, 0.4),
+    (("gpt-5",), 1.25, 10.0),
+    (("gpt-4.1-mini",), 0.4, 1.6),
+    (("gpt-4.1-nano",), 0.1, 0.4),
+    (("gpt-4.1",), 2.0, 8.0),
+    (("gpt-4o-mini",), 0.15, 0.6),
+    (("gpt-4o",), 2.5, 10.0),
+    (("o4-mini",), 1.1, 4.4),
+    (("o3-mini",), 1.1, 4.4),
+    (("o3",), 2.0, 8.0),
+)
+
 ANTHROPIC_MODEL_PRICING = (
     (("claude-opus-4-7",), 5.0, 25.0),
     (("claude-opus-4-6",), 5.0, 25.0),
@@ -159,6 +182,25 @@ def calculate_anthropic_cost(
     return (input_cost + output_cost) * multiplier
 
 
+def _extract_usage_tokens(
+    usage_metadata: Mapping[str, Any] | Any | None,
+) -> tuple[int, int] | None:
+    usage = _mapping_to_dict(usage_metadata)
+    input_tokens = usage.get("input_tokens")
+    output_tokens = usage.get("output_tokens")
+    if input_tokens is None or output_tokens is None:
+        return None
+    return int(input_tokens), int(output_tokens)
+
+
+def _get_openai_pricing(model: str | None) -> tuple[float, float] | None:
+    normalized = (model or "").lower()
+    for patterns, input_price_per_mtok, output_price_per_mtok in OPENAI_MODEL_PRICING:
+        if any(pattern in normalized for pattern in patterns):
+            return input_price_per_mtok, output_price_per_mtok
+    return None
+
+
 def calculate_llm_cost(
     llm_provider: str | None,
     model: str | None,
@@ -177,6 +219,24 @@ def calculate_llm_cost(
         )
         if anthropic_cost is not None:
             return anthropic_cost
+
+    # Prefer the API-reported token usage over tiktoken estimates on
+    # serialized message dicts; the latter overcounts input and misses
+    # reasoning tokens entirely.
+    usage_tokens = _extract_usage_tokens(usage_metadata)
+    if usage_tokens is not None:
+        input_tokens, output_tokens = usage_tokens
+        pricing = _get_openai_pricing(model)
+        if pricing is not None:
+            input_price_per_mtok, output_price_per_mtok = pricing
+            return (
+                input_tokens * input_price_per_mtok
+                + output_tokens * output_price_per_mtok
+            ) / 1_000_000
+        return (
+            input_tokens * INPUT_COST_PER_TOKEN
+            + output_tokens * OUTPUT_COST_PER_TOKEN
+        )
 
     return estimate_llm_cost(input_content, output_content)
 

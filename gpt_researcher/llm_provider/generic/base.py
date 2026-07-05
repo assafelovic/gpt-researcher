@@ -142,6 +142,10 @@ class GenericLLMProvider:
             if "openai_api_base" not in kwargs and os.environ.get("OPENAI_BASE_URL"):
                 kwargs["openai_api_base"] = os.environ["OPENAI_BASE_URL"]
 
+            # Report token usage on streamed responses too, so cost
+            # tracking can use real usage instead of tiktoken estimates.
+            kwargs.setdefault("stream_usage", True)
+
             llm = ChatOpenAI(**kwargs)
         elif provider == "anthropic":
             _check_pkg("langchain_anthropic")

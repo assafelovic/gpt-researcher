@@ -91,10 +91,13 @@ async def create_chat_completion(
 
     if model not in NO_SUPPORT_TEMPERATURE_MODELS:
         provider_kwargs['temperature'] = temperature
-        provider_kwargs['max_tokens'] = max_tokens
     else:
+        # These models enforce their default temperature, but output limits
+        # still apply (langchain-openai maps max_tokens to the API's
+        # max_completion_tokens). Note that for reasoning models the limit
+        # covers reasoning tokens too, so budgets need extra headroom.
         provider_kwargs['temperature'] = None
-        provider_kwargs['max_tokens'] = None
+    provider_kwargs['max_tokens'] = max_tokens
 
     if llm_provider == "openai":
         base_url = os.environ.get("OPENAI_BASE_URL", None)
@@ -190,7 +193,7 @@ async def construct_subtopics(
             provider_kwargs['reasoning_effort'] = ReasoningEfforts.High.value
         else:
             provider_kwargs['temperature'] = config.temperature
-            provider_kwargs['max_tokens'] = config.smart_token_limit
+        provider_kwargs['max_tokens'] = config.smart_token_limit
 
         provider = get_llm(config.smart_llm_provider, **provider_kwargs)
 
