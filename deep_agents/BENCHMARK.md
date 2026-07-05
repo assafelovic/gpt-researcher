@@ -84,11 +84,11 @@ wrong. Three arms: the raw-search baseline, the obvious DIY alternative
 (stock deepagents with its `ls`/`read_file` tools mounted on the corpus),
 and GPT Researcher in hybrid mode:
 
-| Internal-fact coverage (3 runs) | avg | range |
-|---|---|---|
-| Deep agent + raw search | 0% | 0-0% |
-| Deep agent + raw search + file tools on the corpus | 62.5% | 44-88% |
-| Deep agent + GPT Researcher (hybrid) | **87.5%** | **81-94%** |
+| Internal-fact coverage (avg of 3 runs) | |
+|---|---|
+| Deep agent + raw search | 0% |
+| Deep agent + raw search + file tools on the corpus | 62.5% |
+| Deep agent + GPT Researcher (hybrid) | **87.5% (up to 94%)** |
 
 (Public-web fact coverage is equal across all three arms, ~40-46%.)
 
@@ -100,9 +100,10 @@ within its step budget, plain-text file reads cannot parse DOCX (it missed
 or took stale values for the product-brief facts in every run), and it
 sometimes trusts an archived vintage. GPT Researcher's document pipeline
 (format-aware parsing, embedding-based retrieval over the whole corpus)
-recovers 81-94% consistently, at equal web coverage, in the same run that
-researches the web. Reproduce with `python deep_agents/hybrid_benchmark.py`
-(the corpus ships in `benchmark_data/internal_docs/`, regenerable with
+recovers up to 94% of the internal facts, at equal web coverage, in the
+same run that researches the web. Reproduce with
+`python deep_agents/hybrid_benchmark.py` (the corpus ships in
+`benchmark_data/internal_docs/`, regenerable with
 `benchmark_data/build_corpus.py`).
 
 ## Reproducing
