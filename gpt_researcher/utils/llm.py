@@ -85,6 +85,12 @@ async def create_chat_completion(
 
     if llm_kwargs:
         provider_kwargs.update(llm_kwargs)
+    elif os.environ.get("LLM_KWARGS"):
+        import json
+        try:
+            provider_kwargs.update(json.loads(os.environ["LLM_KWARGS"]))
+        except json.JSONDecodeError:
+            pass
 
     if model in SUPPORT_REASONING_EFFORT_MODELS:
         provider_kwargs['reasoning_effort'] = reasoning_effort
