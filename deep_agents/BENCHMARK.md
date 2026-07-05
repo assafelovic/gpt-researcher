@@ -60,14 +60,22 @@ prompts): before those fixes the same agent scored 25.8 effective citations
 
 ## Supporting results
 
-**No accuracy tax on quick factual Q&A.** On standard single-fact benchmarks
-the two setups are at parity - [SimpleQA](https://openai.com/index/introducing-simpleqa/)
-(30-question sample, standard grader): 83.3% vs 83.3%;
-[FRAMES](https://huggingface.co/datasets/google/frames-benchmark)
-(20-question sample): 80% vs 85%, within noise at this sample size. That is
-the expected result - a raw search snippet is enough to look up one fact -
-and it means the heavier pipeline costs nothing on simple accuracy. The
-gap opens when the task is actual research.
+**No accuracy tax on quick factual Q&A.** On
+[SimpleQA](https://openai.com/index/introducing-simpleqa/) (30-question
+sample, standard grader) the two setups are at parity: 83.3% vs 83.3%. That
+is the expected result - a raw search snippet is enough to look up one
+fact - and it means the heavier pipeline costs nothing on simple accuracy.
+The gap opens when the task is actual research.
+
+**Report head-to-head (n=8, LLM judge).** Before adopting DeepResearch
+Bench we ran a blind pairwise comparison: both agents wrote reports on the
+same 8 topics, and an LLM judge picked the better report of each pair
+(sides randomized). The GPT Researcher agent won **overall on 5 of 8
+topics**, with more distinct sources cited per report (24.5 vs 19.5 unique
+URLs) at comparable length. This run predates the core improvements of
+[#1861](https://github.com/assafelovic/gpt-researcher/pull/1861);
+DeepResearch Bench above is the rigorous, post-fix version of the same
+question. Reproduce with `python deep_agents/report_benchmark.py`.
 
 **Breadth beyond the web: private documents.** GPT Researcher's `local` and
 `hybrid` modes run the same pipeline over your own documents (`DOC_PATH`).
@@ -148,3 +156,15 @@ Notes: FACT re-fetches every cited URL at scoring time, so sites that block
 scrapers count against both agents equally. Scores on a 10-task sample have
 meaningful variance; the RACE gap is small, while the effective-citation gap
 is large and consistent (7/10 per-task wins).
+
+## Raw results
+
+Following the repo's [`evals/`](../evals) convention, the run artifacts
+behind every table above are tracked in `benchmark_results/`:
+
+| Table | Artifact |
+|---|---|
+| DeepResearch Bench RACE + FACT | `benchmark_results/drb/<agent>_race_result.txt` and `<agent>_fact_result.txt` (official pipeline output) |
+| Hybrid private-docs (3 runs) | `benchmark_results/hybrid_2026-07-05_*.json` (per-checkpoint grades, full reports) |
+| SimpleQA parity | `benchmark_results/simpleqa_2026-07-04_14-*.json` |
+| Report head-to-head (n=8) | `benchmark_results/reports_2026-07-04_14-33-21_n8.json` (per-topic verdicts, full reports) |
