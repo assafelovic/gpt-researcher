@@ -70,22 +70,40 @@ and it means the heavier pipeline costs nothing on simple accuracy. The
 gap opens when the task is actual research.
 
 **Breadth beyond the web: private documents.** GPT Researcher's `local` and
-`hybrid` modes run the same pipeline over your own documents (`DOC_PATH`),
-which no web-search tool can reach. We measured this with a due-diligence
-task over a corpus of fictional internal company documents (an invented
-robotics company, so no fact can leak from the public web) combined with
-real market context, graded per fact-checkpoint by an LLM judge against
-ground truth:
+`hybrid` modes run the same pipeline over your own documents (`DOC_PATH`).
+We measured this with a due-diligence task over a corpus of fictional
+internal company documents (an invented robotics company, so no fact can
+leak from the public web) combined with real market context, graded per
+fact-checkpoint by an LLM judge against ground truth.
 
-| Coverage (avg of 3 runs) | Deep agent + raw search | Deep agent + GPT Researcher (hybrid) |
+The corpus is shaped like a real document share: 27 files across department
+folders, with the fact-bearing documents as PDF, DOCX and markdown,
+surrounded by distractors (HR policies, IT runbooks, marketing notes) and
+stale archived vintages of the same reports whose outdated numbers count as
+wrong. Three arms: the raw-search baseline, the obvious DIY alternative
+(stock deepagents with its `ls`/`read_file` tools mounted on the corpus),
+and GPT Researcher in hybrid mode:
+
+| Internal-fact coverage (3 runs) | avg | range |
 |---|---|---|
-| Internal-document facts | 6.2% | **95.9%** |
-| Public web facts | 33% | 33% |
+| Deep agent + raw search | 0% | 0-0% |
+| Deep agent + raw search + file tools on the corpus | 62.5% | 44-88% |
+| Deep agent + GPT Researcher (hybrid) | **87.5%** | **81-94%** |
 
-The web-only agent hallucinates or omits nearly every internal fact; the
-hybrid agent recovers essentially all of them at identical web-fact
-coverage. Reproduce with `python deep_agents/hybrid_benchmark.py` (the
-corpus ships in `benchmark_data/internal_docs/`).
+(Public-web fact coverage is equal across all three arms, ~40-46%.)
+
+The web-only agent hallucinates or omits every internal fact. The DIY
+file-tools agent does recover internal facts - on a trivial corpus of just
+the four fact documents as markdown it even reaches parity - but on the
+realistic corpus it turns erratic: it must guess which of 27 files to read
+within its step budget, plain-text file reads cannot parse DOCX (it missed
+or took stale values for the product-brief facts in every run), and it
+sometimes trusts an archived vintage. GPT Researcher's document pipeline
+(format-aware parsing, embedding-based retrieval over the whole corpus)
+recovers 81-94% consistently, at equal web coverage, in the same run that
+researches the web. Reproduce with `python deep_agents/hybrid_benchmark.py`
+(the corpus ships in `benchmark_data/internal_docs/`, regenerable with
+`benchmark_data/build_corpus.py`).
 
 ## Reproducing
 
