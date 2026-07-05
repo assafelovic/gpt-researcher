@@ -58,6 +58,35 @@ failures, stricter relevance filtering, stronger citation grounding in
 prompts): before those fixes the same agent scored 25.8 effective citations
 (+39% over baseline); after them, 35.2 (+89%).
 
+## Supporting results
+
+**No accuracy tax on quick factual Q&A.** On standard single-fact benchmarks
+the two setups are at parity - [SimpleQA](https://openai.com/index/introducing-simpleqa/)
+(30-question sample, standard grader): 83.3% vs 83.3%;
+[FRAMES](https://huggingface.co/datasets/google/frames-benchmark)
+(20-question sample): 80% vs 85%, within noise at this sample size. That is
+the expected result - a raw search snippet is enough to look up one fact -
+and it means the heavier pipeline costs nothing on simple accuracy. The
+gap opens when the task is actual research.
+
+**Breadth beyond the web: private documents.** GPT Researcher's `local` and
+`hybrid` modes run the same pipeline over your own documents (`DOC_PATH`),
+which no web-search tool can reach. We measured this with a due-diligence
+task over a corpus of fictional internal company documents (an invented
+robotics company, so no fact can leak from the public web) combined with
+real market context, graded per fact-checkpoint by an LLM judge against
+ground truth:
+
+| Coverage (avg of 3 runs) | Deep agent + raw search | Deep agent + GPT Researcher (hybrid) |
+|---|---|---|
+| Internal-document facts | 6.2% | **95.9%** |
+| Public web facts | 33% | 33% |
+
+The web-only agent hallucinates or omits nearly every internal fact; the
+hybrid agent recovers essentially all of them at identical web-fact
+coverage. Reproduce with `python deep_agents/hybrid_benchmark.py` (the
+corpus ships in `benchmark_data/internal_docs/`).
+
 ## Reproducing
 
 1. Clone the benchmark harness, apply the small patch from this directory
