@@ -1,0 +1,99 @@
+diff --git a/run_benchmark.sh b/run_benchmark.sh
+index acbf556..1e49b58 100644
+--- a/run_benchmark.sh
++++ b/run_benchmark.sh
+@@ -1,11 +1,11 @@
+ #!/bin/bash
+ # Target model name list
+-TARGET_MODELS=("claude-3-7-sonnet-latest")
++TARGET_MODELS=("baseline-tavily-deepagent" "gptr-deepagent")
+ 
+ # Common parameters for both RACE and Citation evaluations
+ RAW_DATA_DIR="data/test_data/raw_data"
+ OUTPUT_DIR="results"
+-N_TOTAL_PROCESS=10
++N_TOTAL_PROCESS=4
+ QUERY_DATA_PATH="data/prompt_data/query.jsonl"
+ 
+ # Limit on number of prompts to process (for testing). Uncomment to enable
+diff --git a/utils/api.py b/utils/api.py
+index 4d2cea3..a777a6e 100644
+--- a/utils/api.py
++++ b/utils/api.py
+@@ -199,25 +199,44 @@ def call_model(user_prompt: str) -> str:
+     return client.generate(user_prompt, stage="fact")
+ 
+ 
+-# ── Jina scraping (unchanged from upstream) ──────────────────────
++# ── Jina scraping (patched: keyless Jina + local BS4 fallback) ────
+ class WebScrapingJinaTool:
+     def __init__(self, api_key: Optional[str] = None):
+-        self.api_key = api_key or os.environ.get("JINA_API_KEY")
+-        if not self.api_key:
+-            raise ValueError(
+-                "Jina API key not provided! Please set JINA_API_KEY environment variable."
+-            )
++        # Keyless operation is allowed: r.jina.ai works unauthenticated at a
++        # lower rate limit, and we fall back to local scraping on failure.
++        self.api_key = api_key or os.environ.get("JINA_API_KEY") or None
++
++    def _scrape_local(self, url: str) -> Dict[str, Any]:
++        from bs4 import BeautifulSoup
++        response = requests.get(url, timeout=30, headers={
++            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
++                          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
++        })
++        response.raise_for_status()
++        soup = BeautifulSoup(response.text, "html.parser")
++        for tag in soup(["script", "style", "noscript"]):
++            tag.decompose()
++        text = " ".join(soup.get_text(separator=" ").split())
++        title = soup.title.get_text(strip=True) if soup.title else ""
++        return {
++            'url': url,
++            'title': title,
++            'description': '',
++            'content': text[:60000],
++            'publish_time': 'unknown',
++        }
+ 
+     def __call__(self, url: str) -> Dict[str, Any]:
+         try:
+             jina_url = f'https://r.jina.ai/{url}'
+             headers = {
+                 "Accept": "application/json",
+-                'Authorization': self.api_key,
+                 'X-Timeout': "60000",
+                 "X-With-Generated-Alt": "true",
+             }
+-            response = requests.get(jina_url, headers=headers)
++            if self.api_key:
++                headers['Authorization'] = self.api_key
++            response = requests.get(jina_url, headers=headers, timeout=90)
+ 
+             if response.status_code != 200:
+                 raise Exception(f"Jina AI Reader Failed for {url}: {response.status_code}")
+@@ -232,13 +251,16 @@ class WebScrapingJinaTool:
+                 'publish_time': response_dict['data'].get('publishedTime', 'unknown')
+             }
+ 
+-        except Exception as e:
+-            logger.error(str(e))
+-            return {
+-                'url': url,
+-                'content': '',
+-                'error': str(e)
+-            }
++        except Exception as jina_error:
++            try:
++                return self._scrape_local(url)
++            except Exception as e:
++                logger.error(f"jina: {jina_error}; local: {e}")
++                return {
++                    'url': url,
++                    'content': '',
++                    'error': f"jina: {jina_error}; local: {e}"
++                }
+ 
+ 
+ # Lazy-init Jina tool: only instantiate when JINA_API_KEY is actually needed.
