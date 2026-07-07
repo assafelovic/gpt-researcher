@@ -44,6 +44,7 @@ Thanks to our community, we have integrated the following web search engines and
 - [OpenAlex](https://docs.openalex.org/) - Env: `RETRIEVER=openalex`; optional `OPENALEX_EMAIL` and `OPENALEX_API_KEY`
 - [Semantic Scholar](https://www.semanticscholar.org/product/api) - Env: `RETRIEVER=semantic_scholar`
 - [Exa](https://docs.exa.ai/reference/getting-started) - Env: `RETRIEVER=exa`
+- [Nimble](https://docs.nimbleway.com/nimble-sdk/web-tools/search) - Env: `RETRIEVER=nimble` and `NIMBLE_API_KEY`
 - [fastCRW](https://fastcrw.com/docs/rest-api) - Env: `RETRIEVER=crw`
 - [PubMedCentral](https://www.ncbi.nlm.nih.gov/home/develop/api/) - Env: `RETRIEVER=pubmed_central`
 - [Xquik](https://xquik.com/) - Env: `RETRIEVER=xquik` and `XQUIK_API_KEY`
