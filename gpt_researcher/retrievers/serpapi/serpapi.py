@@ -60,18 +60,26 @@ class SerpApiSearch():
             if response.status_code == 200:
                 search_results = response.json()
                 if search_results:
-                    results = search_results["organic_results"]
+                    # A response with no organic results (e.g. an error payload
+                    # or a query that matched nothing) has no "organic_results"
+                    # key; default to [] instead of raising KeyError.
+                    results = search_results.get("organic_results") or []
                     results_processed = 0
                     for result in results:
-                        # skip youtube results
-                        if "youtube.com" in result["link"]:
-                            continue
                         if results_processed >= max_results:
                             break
+                        link = result.get("link")
+                        # A result without a link is unusable; skip it rather
+                        # than emitting an entry with href=None.
+                        if not link:
+                            continue
+                        # skip youtube results
+                        if "youtube.com" in link:
+                            continue
                         search_result = {
-                            "title": result["title"],
-                            "href": result["link"],
-                            "body": result["snippet"],
+                            "title": result.get("title", ""),
+                            "href": link,
+                            "body": result.get("snippet", ""),
                         }
                         search_response.append(search_result)
                         results_processed += 1
