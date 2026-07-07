@@ -26,6 +26,7 @@ def get_retriever(retriever: str):
         - arxiv: arXiv academic search
         - tavily: Tavily search API
         - exa: Exa search
+        - nimble: Nimble Search API
         - crw: fastCRW search (Firecrawl-compatible web scraper)
         - semantic_scholar: Semantic Scholar academic search
         - pubmed_central: PubMed Central medical literature
@@ -87,6 +88,10 @@ def get_retriever(retriever: str):
             from gpt_researcher.retrievers import ExaSearch
 
             return ExaSearch
+        case "nimble":
+            from gpt_researcher.retrievers import NimbleSearch
+
+            return NimbleSearch
         case "crw":
             from gpt_researcher.retrievers import CRWRetriever
 
