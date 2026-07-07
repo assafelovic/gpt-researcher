@@ -107,16 +107,18 @@ class CRWRetriever:
         try:
             # Search the query
             results = self._search(self.query, max_results=max_results)
-            sources = results.get("data", [])
+            sources = results.get("data") or []
             if not sources:
                 raise Exception("No results found with fastCRW API search.")
-            # Return the results
+            # Return the results. A source missing "url" is unusable, so skip it
+            # rather than raising a KeyError that discards the whole result set.
             search_response = [
                 {
                     "href": obj["url"],
                     "body": obj.get("markdown") or obj.get("description", ""),
                 }
                 for obj in sources
+                if obj.get("url")
             ]
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
