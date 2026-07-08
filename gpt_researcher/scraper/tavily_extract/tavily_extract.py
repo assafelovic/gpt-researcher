@@ -40,20 +40,23 @@ class TavilyExtract:
             if response['failed_results']:
                 return "", [], ""
 
-            # Parse the HTML content of the response to create a BeautifulSoup object for the utility functions
-            response_bs = self.session.get(self.link, timeout=4)
-            soup = BeautifulSoup(
-                response_bs.content, "lxml", from_encoding=response_bs.encoding
-            )
-
             # Since only a single link is provided to tavily_client, the results will contain only one entry.
             content = response['results'][0]['raw_content']
 
-            # Get relevant images using the utility function
-            image_urls = get_relevant_images(soup, self.link)
-
-            # Extract the title using the utility function
-            title = extract_title(soup)
+            # Image and title enrichment fetches the page a second time, directly. That
+            # can fail on the very sites Tavily is used for (bot-blocked, JS-only, slow),
+            # so treat it as best-effort: never discard the content Tavily already returned.
+            image_urls: list = []
+            title = ""
+            try:
+                response_bs = self.session.get(self.link, timeout=4)
+                soup = BeautifulSoup(
+                    response_bs.content, "lxml", from_encoding=response_bs.encoding
+                )
+                image_urls = get_relevant_images(soup, self.link)
+                title = extract_title(soup)
+            except Exception as e:
+                print(f"Error enriching Tavily result for {self.link}, skipping images/title: {e}")
 
             return content, image_urls, title
 
