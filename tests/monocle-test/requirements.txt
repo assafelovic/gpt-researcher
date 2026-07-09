@@ -1,0 +1,5 @@
+# Installing monocle_test_tools pulls in everything this suite needs
+# (pytest, pytest-asyncio, and monocle_apptrace come transitively).
+monocle_test_tools
+# Auto-loads the repo .env so the suite runs without manually sourcing keys.
+python-dotenv

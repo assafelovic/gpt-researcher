@@ -52,3 +52,6 @@ server_log.txt
 .cursorrules
 CURSOR_RULES.md
 /.history
+
+# Monocle runtime trace output (committed fixtures live in monocle-test/traces/)
+.monocle/
