@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 import requests
 import os
 
@@ -26,7 +26,7 @@ class CustomRetriever:
             if key.startswith('RETRIEVER_ARG_')
         }
 
-    def search(self, max_results: int = 5) -> Optional[List[Dict[str, Any]]]:
+    def search(self, max_results: int = 5) -> List[Dict[str, Any]]:
         """
         Performs the search using the custom retriever endpoint.
 
@@ -44,9 +44,28 @@ class CustomRetriever:
             ]
         """
         try:
-            response = requests.get(self.endpoint, params={**self.params, 'query': self.query})
+            response = requests.get(
+                self.endpoint,
+                params={**self.params, "query": self.query},
+                timeout=20,
+            )
             response.raise_for_status()
-            return response.json()
-        except requests.RequestException as e:
+            payload = response.json()
+        except (requests.RequestException, ValueError) as e:
+            # ValueError covers JSONDecodeError (subclass) and other parse fails.
             print(f"Failed to retrieve search results: {e}")
-            return None
+            return []
+
+        # Contract: callers iterate the return value. A null JSON body or a
+        # non-list payload used to surface as TypeError later (or as the
+        # documented but surprising Optional). Always hand back a list.
+        if payload is None:
+            return []
+        if not isinstance(payload, list):
+            print(
+                "Custom retriever response must be a JSON list of "
+                "{url, raw_content} objects; got "
+                f"{type(payload).__name__}"
+            )
+            return []
+        return payload
