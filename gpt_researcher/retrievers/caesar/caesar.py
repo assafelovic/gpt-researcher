@@ -1,8 +1,8 @@
 """Caesar API search retriever for GPT Researcher.
 
 This module provides the CaesarSearch class for performing web searches
-using Caesar, a free agentic web-search API. Caesar works anonymously with
-no API key; an optional CAESAR_API_KEY raises rate limits for partners.
+using Caesar, an agentic web-search API. Caesar requires an API key, read
+from the CAESAR_API_KEY environment variable.
 
 Docs: https://docs.trycaesar.com
 """
@@ -35,27 +35,29 @@ class CaesarSearch:
         self.api_key = self.get_api_key(input_headers)
         self.headers = {
             "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
         }
-        # Caesar works fully anonymously; only attach a Bearer token when a
-        # partner key is explicitly provided.
-        if self.api_key:
-            self.headers["Authorization"] = f"Bearer {self.api_key}"
         self.query_domains = query_domains or None
 
     def get_api_key(self, headers):
         """
-        Gets the optional Caesar API key.
+        Gets the Caesar API key.
 
-        Caesar works without any key. A key is only used to raise rate limits
-        for partners, so a missing key is not an error.
+        Caesar requires an API key on every request.
         Args:
             headers (dict): The headers passed to the retriever.
         Returns:
-            The API key string, or "" when running anonymously.
+            The API key string.
         """
         api_key = headers.get("caesar_api_key")
         if not api_key:
-            api_key = os.environ.get("CAESAR_API_KEY", "")
+            try:
+                api_key = os.environ["CAESAR_API_KEY"]
+            except KeyError:
+                raise Exception(
+                    "Caesar API key not found. Please set the CAESAR_API_KEY environment variable. "
+                    "You can obtain your key from https://app.trycaesar.com"
+                )
         return api_key
 
     def get_base_url(self, headers):

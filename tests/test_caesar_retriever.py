@@ -6,13 +6,11 @@ from gpt_researcher.retrievers.caesar.caesar import CaesarSearch
 
 
 class TestCaesarSearch(unittest.TestCase):
-    def test_works_without_api_key(self):
-        # Caesar is keyless: constructing with no env key must not raise and
-        # must not attach an Authorization header.
+    def test_missing_api_key_raises(self):
+        # Caesar requires an API key: constructing with no env key must raise.
         with patch.dict(os.environ, {}, clear=True):
-            retriever = CaesarSearch("test query")
-        self.assertEqual(retriever.api_key, "")
-        self.assertNotIn("Authorization", retriever.headers)
+            with self.assertRaises(Exception):
+                CaesarSearch("test query")
 
     def test_api_key_adds_bearer_header(self):
         with patch.dict(os.environ, {"CAESAR_API_KEY": "sk_live_test"}, clear=True):
@@ -40,7 +38,7 @@ class TestCaesarSearch(unittest.TestCase):
         }
         mock_post.return_value = mock_response
 
-        with patch.dict(os.environ, {}, clear=True):
+        with patch.dict(os.environ, {"CAESAR_API_KEY": "sk_live_test"}, clear=True):
             results = CaesarSearch("test query").search(max_results=2)
 
         called_url = mock_post.call_args.args[0]
@@ -66,7 +64,7 @@ class TestCaesarSearch(unittest.TestCase):
         }
         mock_post.return_value = mock_response
 
-        with patch.dict(os.environ, {}, clear=True):
+        with patch.dict(os.environ, {"CAESAR_API_KEY": "sk_live_test"}, clear=True):
             results = CaesarSearch("test query").search(max_results=5)
 
         self.assertEqual(
@@ -80,7 +78,7 @@ class TestCaesarSearch(unittest.TestCase):
     @patch("gpt_researcher.retrievers.caesar.caesar.requests.post")
     def test_search_returns_empty_on_error(self, mock_post):
         mock_post.side_effect = Exception("network down")
-        with patch.dict(os.environ, {}, clear=True):
+        with patch.dict(os.environ, {"CAESAR_API_KEY": "sk_live_test"}, clear=True):
             results = CaesarSearch("test query").search()
         self.assertEqual(results, [])
 
