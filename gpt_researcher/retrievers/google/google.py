@@ -71,30 +71,32 @@ class GoogleSearch:
             print("Google search: unexpected response status: ", resp.status_code)
 
         if resp is None:
-            return
+            return []
         try:
             search_results = json.loads(resp.text)
         except Exception:
-            return
-        if search_results is None:
-            return
+            return []
+        if not isinstance(search_results, dict):
+            return []
 
-        results = search_results.get("items", [])
-        search_results = []
+        results = search_results.get("items", []) or []
+        search_response = []
 
-        # Normalizing results to match the format of the other search APIs
+        # Normalizing results to match the format of the other search APIs.
+        # Use .get so a missing title/snippet cannot drop a valid link; skip
+        # non-dict rows and empty links outright.
         for result in results:
-            # skip youtube results
-            if "youtube.com" in result["link"]:
+            if not isinstance(result, dict):
                 continue
-            try:
-                search_result = {
-                    "title": result["title"],
-                    "href": result["link"],
-                    "body": result["snippet"],
+            link = result.get("link") or ""
+            if not link or "youtube.com" in link:
+                continue
+            search_response.append(
+                {
+                    "title": result.get("title") or "",
+                    "href": link,
+                    "body": result.get("snippet") or "",
                 }
-            except Exception:
-                continue
-            search_results.append(search_result)
+            )
 
-        return search_results[:max_results]
+        return search_response[:max_results]
