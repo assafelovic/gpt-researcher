@@ -86,6 +86,8 @@ class CaesarSearch:
             "query": query,
             "max_results": max_results,
         }
+        if self.query_domains:
+            data["source_policy"] = {"include_domains": self.query_domains}
 
         response = requests.post(
             f"{self.base_url}/v1/search",
@@ -96,6 +98,25 @@ class CaesarSearch:
         # Raises a HTTPError if the HTTP request returned an unsuccessful status code
         response.raise_for_status()
         return response.json()
+
+    @staticmethod
+    def _body(obj: dict) -> str:
+        """
+        Builds the result body.
+
+        Caesar's `snippet` is the page's meta description, so it is identical for
+        every query that surfaces the document. Its `passages` are the spans Caesar
+        selected for this query, so they carry the text that actually answers it.
+        Prefer those, and fall back to the flat fields when a result has none.
+        """
+        parts = []
+        for passage in obj.get("passages") or []:
+            text = passage.get("text") if isinstance(passage, dict) else passage
+            if isinstance(text, str) and text.strip():
+                parts.append(text.strip())
+        if parts:
+            return "\n\n".join(parts)
+        return obj.get("snippet") or obj.get("content") or obj.get("passage") or ""
 
     def search(self, max_results=10):
         """
@@ -115,13 +136,7 @@ class CaesarSearch:
                 href = obj.get("url") or obj.get("canonical_url") or obj.get("source_url")
                 if not href:
                     continue
-                body = (
-                    obj.get("snippet")
-                    or obj.get("content")
-                    or obj.get("passage")
-                    or ""
-                )
-                search_response.append({"href": href, "body": body})
+                search_response.append({"href": href, "body": self._body(obj)})
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []

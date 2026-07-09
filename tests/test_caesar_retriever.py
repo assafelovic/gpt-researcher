@@ -1,3 +1,4 @@
+import json
 import os
 import unittest
 from unittest.mock import MagicMock, patch
@@ -74,6 +75,73 @@ class TestCaesarSearch(unittest.TestCase):
                 {"href": "https://example.com/s", "body": "body via passage"},
             ],
         )
+
+    @patch("gpt_researcher.retrievers.caesar.caesar.requests.post")
+    def test_search_prefers_query_selected_passages(self, mock_post):
+        # `snippet` is the page's meta description, identical for every query that
+        # surfaces the document. `passages` are selected for this query.
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "results": [
+                {
+                    "url": "https://tokio.rs/blog/2019-10-scheduler",
+                    "snippet": "A blog about the Tokio runtime.",
+                    "passages": [
+                        {"text": "Work stealing balances load across worker threads."},
+                        {"text": "The new scheduler avoids the atomic increment in wake_by_ref."},
+                    ],
+                }
+            ]
+        }
+        mock_post.return_value = mock_response
+
+        with patch.dict(os.environ, {"CAESAR_API_KEY": "sk_live_test"}, clear=True):
+            results = CaesarSearch("work stealing").search(max_results=1)
+
+        self.assertEqual(
+            results[0]["body"],
+            "Work stealing balances load across worker threads.\n\n"
+            "The new scheduler avoids the atomic increment in wake_by_ref.",
+        )
+
+    @patch("gpt_researcher.retrievers.caesar.caesar.requests.post")
+    def test_search_ignores_blank_passages(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "results": [
+                {"url": "https://example.com/a", "snippet": "fallback", "passages": [{"text": "  "}]}
+            ]
+        }
+        mock_post.return_value = mock_response
+
+        with patch.dict(os.environ, {"CAESAR_API_KEY": "sk_live_test"}, clear=True):
+            results = CaesarSearch("q").search(max_results=1)
+
+        self.assertEqual(results[0]["body"], "fallback")
+
+    @patch("gpt_researcher.retrievers.caesar.caesar.requests.post")
+    def test_query_domains_scope_the_search(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"results": [{"url": "https://tokio.rs/x", "snippet": "s"}]}
+        mock_post.return_value = mock_response
+
+        with patch.dict(os.environ, {"CAESAR_API_KEY": "sk_live_test"}, clear=True):
+            CaesarSearch("q", query_domains=["tokio.rs"]).search(max_results=1)
+
+        body = json.loads(mock_post.call_args.kwargs["data"])
+        self.assertEqual(body["source_policy"], {"include_domains": ["tokio.rs"]})
+
+    @patch("gpt_researcher.retrievers.caesar.caesar.requests.post")
+    def test_no_source_policy_without_query_domains(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"results": [{"url": "https://example.com/a", "snippet": "s"}]}
+        mock_post.return_value = mock_response
+
+        with patch.dict(os.environ, {"CAESAR_API_KEY": "sk_live_test"}, clear=True):
+            CaesarSearch("q").search(max_results=1)
+
+        body = json.loads(mock_post.call_args.kwargs["data"])
+        self.assertNotIn("source_policy", body)
 
     @patch("gpt_researcher.retrievers.caesar.caesar.requests.post")
     def test_search_returns_empty_on_error(self, mock_post):
