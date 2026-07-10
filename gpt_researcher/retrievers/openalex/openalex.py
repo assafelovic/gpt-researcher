@@ -65,9 +65,17 @@ class OpenAlexSearch:
             print(f"An error occurred while accessing OpenAlex API: {e}")
             return []
 
-        results = response.json().get("results", [])
+        payload = response.json()
+        if not isinstance(payload, dict):
+            return []
+        results = payload.get("results", [])
+        if not isinstance(results, list):
+            return []
+
         search_result = []
         for result in results:
+            if not isinstance(result, dict):
+                continue
             title = result.get("title") or "No Title"
             href = self._pick_href(result)
             body = self._reconstruct_abstract(result.get("abstract_inverted_index"))
@@ -107,11 +115,18 @@ class OpenAlexSearch:
         OpenAlex returns abstracts as an inverted index (word -> positions).
         Reconstruct the original text.
         """
-        if not inverted:
+        if not inverted or not isinstance(inverted, dict):
             return None
         positions: List[tuple] = []
         for word, indexes in inverted.items():
+            if not isinstance(indexes, (list, tuple)):
+                continue
             for i in indexes:
-                positions.append((i, word))
+                try:
+                    positions.append((int(i), word))
+                except (TypeError, ValueError):
+                    continue
+        if not positions:
+            return None
         positions.sort(key=lambda x: x[0])
         return " ".join(word for _, word in positions)
