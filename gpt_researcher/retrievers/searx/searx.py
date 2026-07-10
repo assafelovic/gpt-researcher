@@ -47,8 +47,8 @@ class SearxSearch():
         search_url = urljoin(self.base_url, "search")
         # TODO: Add support for query domains
         params = {
-            # The search query. 
-            'q': self.query, 
+            # The search query.
+            'q': self.query,
             # Output format of results. Format needs to be activated in searxng config.
             'format': 'json'
         }
@@ -61,18 +61,30 @@ class SearxSearch():
             )
             response.raise_for_status()
             results = response.json()
-
-            # Normalize results to match the expected format
-            search_response = []
-            for result in results.get('results', [])[:max_results]:
-                search_response.append({
-                    "href": result.get('url', ''),
-                    "body": result.get('content', '')
-                })
-
-            return search_response
-
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error querying SearxNG: {str(e)}")
         except json.JSONDecodeError:
             raise Exception("Error parsing SearxNG response")
+
+        if not isinstance(results, dict):
+            return []
+
+        search_response = []
+        raw_results = results.get('results', [])
+        if not isinstance(raw_results, list):
+            return []
+
+        for result in raw_results:
+            if not isinstance(result, dict):
+                continue
+            href = result.get('url') or result.get('href') or ''
+            if not href:
+                continue
+            search_response.append({
+                "href": href,
+                "body": result.get('content') or result.get('snippet') or '',
+            })
+            if len(search_response) >= max_results:
+                break
+
+        return search_response
