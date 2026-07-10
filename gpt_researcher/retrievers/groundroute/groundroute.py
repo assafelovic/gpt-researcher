@@ -47,12 +47,30 @@ class GroundRouteSearch:
                 timeout=20,
             )
             response.raise_for_status()
-            results = response.json().get("results", [])
-            return [
-                {"href": r.get("url"), "body": r.get("content") or r.get("snippet") or ""}
-                for r in results
-                if r.get("url")
-            ]
+            payload = response.json()
         except Exception as e:
             print(f"Error performing GroundRoute search: {e}")
             return []
+
+        if isinstance(payload, list):
+            results = payload
+        elif isinstance(payload, dict):
+            results = payload.get("results", [])
+        else:
+            return []
+
+        if not isinstance(results, list):
+            return []
+
+        normalized = []
+        for r in results:
+            if not isinstance(r, dict):
+                continue
+            href = r.get("url") or r.get("href") or r.get("link") or ""
+            if not href:
+                continue
+            body = r.get("content") or r.get("snippet") or r.get("body") or ""
+            normalized.append({"href": href, "body": body})
+            if len(normalized) >= max_results:
+                break
+        return normalized
