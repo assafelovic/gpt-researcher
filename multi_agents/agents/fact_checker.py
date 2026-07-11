@@ -58,4 +58,9 @@ class FactCheckerAgent:
             else:
                 print_agent_output(f"Fact Checker found issues: {review}...", agent="FACT_CHECKER")
 
-        return {"fact_check_notes": review}
+        out = {"fact_check_notes": review}
+        if review is not None:
+            out["fact_check_revision_count"] = research_state.get(
+                "fact_check_revision_count", 0
+            ) + 1
+        return out
