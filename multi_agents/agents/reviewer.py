@@ -56,7 +56,9 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
                     f"Review feedback is: {response}...", agent="REVIEWER"
                 )
 
-        if "None" in response:
+        from .utils.none_sentinels import is_none_accept_response
+
+        if is_none_accept_response(response):
             return None
         return response
 
