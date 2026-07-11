@@ -44,7 +44,9 @@ class HumanAgent:
                     f"Any feedback on this plan? {layout}? If not, please reply with 'no'.\n>> "
                 )
 
-        if user_feedback and "no" in user_feedback.strip().lower():
+        from .utils.none_sentinels import is_human_plan_approval
+
+        if is_human_plan_approval(user_feedback):
             user_feedback = None
 
         plan_revision_count = research_state.get("plan_revision_count", 0)
