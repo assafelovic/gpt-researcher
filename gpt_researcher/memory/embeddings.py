@@ -50,6 +50,7 @@ _SUPPORTED_PROVIDERS = {
     "netmind",
     "openrouter",
     "minimax",
+    "nebius",
 }
 
 
@@ -209,6 +210,15 @@ class Memory:
                     model=model,
                     openai_api_key=os.getenv("MINIMAX_API_KEY"),
                     openai_api_base="https://api.minimax.io/v1",
+                    **embedding_kwargs,
+                )
+            case "nebius":
+                from langchain_openai import OpenAIEmbeddings
+
+                _embeddings = OpenAIEmbeddings(
+                    model=model,
+                    openai_api_key=os.getenv("NEBIUS_API_KEY"),
+                    openai_api_base=os.getenv("NEBIUS_BASE_URL", "https://api.tokenfactory.nebius.com/v1"),
                     **embedding_kwargs,
                 )
             case _:
