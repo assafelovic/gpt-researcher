@@ -46,6 +46,29 @@ class ReportGenerator:
             "headers": self.researcher.headers,
         }
 
+    @staticmethod
+    def _is_empty_context(context) -> bool:
+        """Return True when context has no usable research content."""
+        if context is None:
+            return True
+        if isinstance(context, str):
+            return len(context.strip()) == 0
+        if isinstance(context, (list, tuple, set)):
+            if len(context) == 0:
+                return True
+            # list of empty strings / empty dicts still unusable
+            usable = []
+            for item in context:
+                if isinstance(item, str) and item.strip():
+                    usable.append(item)
+                elif isinstance(item, dict) and any(str(v).strip() for v in item.values() if v is not None):
+                    usable.append(item)
+                elif item not in (None, "", [], {}):
+                    usable.append(item)
+            return len(usable) == 0
+        return False
+
+
     async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="", available_images: list = None) -> str:
         """
         Write a report based on existing headers and relevant contents.
@@ -74,7 +97,25 @@ class ReportGenerator:
                 research_images
             )
 
-        context = ext_context or self.researcher.context
+        context = ext_context if ext_context is not None else self.researcher.context
+
+        # Surface empty retrieval instead of letting the LLM invent sources.
+        # Aligns with report integrity when retrievers return no usable context.
+        if self._is_empty_context(context):
+            empty_report = (
+                f"## No Relevant Sources Found\n\n"
+                f"Research for **{self.researcher.query}** could not gather any "
+                f"source context. The report was not generated to avoid "
+                f"fabricated claims or citations.\n"
+            )
+            if self.researcher.verbose:
+                await stream_output(
+                    "logs",
+                    "empty_context",
+                    "⚠️ No research context available; skipping report generation to avoid hallucination.",
+                    self.researcher.websocket,
+                )
+            return empty_report
         
         # Log image availability
         if available_images and self.researcher.verbose:
