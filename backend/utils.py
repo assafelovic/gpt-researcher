@@ -29,7 +29,12 @@ async def write_text_to_md(text: str, filename: str = "") -> str:
     Returns:
         str: The file path of the generated Markdown file.
     """
-    file_path = f"outputs/{filename[:60]}.md"
+    import uuid
+
+    safe_name = (filename or "").strip()[:60] or f"report-{uuid.uuid4().hex[:12]}"
+    safe_name = safe_name.replace("/", "-").replace("\\", "-")
+    os.makedirs("outputs", exist_ok=True)
+    file_path = f"outputs/{safe_name}.md"
     await write_to_file(file_path, text)
     return urllib.parse.quote(file_path)
 
@@ -68,7 +73,15 @@ async def write_md_to_pdf(text: str, filename: str = "") -> str:
     Returns:
         str: The encoded file path of the generated PDF.
     """
-    file_path = f"outputs/{filename[:60]}.pdf"
+    import uuid
+
+    # Empty / whitespace-only filename previously wrote "outputs/.pdf" which
+    # confuses download UIs (#1718). Prefer a stable non-empty basename.
+    safe_name = (filename or "").strip()[:60] or f"report-{uuid.uuid4().hex[:12]}"
+    # Replace path separators to keep the PDF under outputs/.
+    safe_name = safe_name.replace("/", "-").replace("\\", "-")
+    os.makedirs("outputs", exist_ok=True)
+    file_path = f"outputs/{safe_name}.pdf"
 
     try:
         # Resolve css path relative to this backend module to avoid
@@ -105,7 +118,12 @@ async def write_md_to_word(text: str, filename: str = "") -> str:
     Returns:
         str: The encoded file path of the generated DOCX.
     """
-    file_path = f"outputs/{filename[:60]}.docx"
+    import uuid
+
+    safe_name = (filename or "").strip()[:60] or f"report-{uuid.uuid4().hex[:12]}"
+    safe_name = safe_name.replace("/", "-").replace("\\", "-")
+    os.makedirs("outputs", exist_ok=True)
+    file_path = f"outputs/{safe_name}.docx"
 
     try:
         from docx import Document
