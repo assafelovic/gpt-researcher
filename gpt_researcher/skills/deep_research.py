@@ -225,6 +225,15 @@ Format each question on a new line starting with 'Question: '"""}
         serp_queries = await self.generate_search_queries(query, num_queries=breadth)
         print(f"✅ Generated {len(serp_queries)} queries: {[q['query'] for q in serp_queries]}", flush=True)
         progress.total_queries = len(serp_queries)
+        if not serp_queries:
+            logger.warning("Deep research generated zero search queries; stopping descent.")
+            return {
+                'learnings': all_learnings,
+                'visited_urls': all_visited_urls,
+                'citations': all_citations,
+                'context': all_context,
+                'sources': all_sources,
+            }
 
         all_learnings = learnings.copy()
         all_citations = citations.copy()
@@ -302,6 +311,26 @@ Format each question on a new line starting with 'Question: '"""}
         progress.current_breadth = len(results)
         if on_progress:
             on_progress(progress)
+
+        # #1579: if every branch at this level failed (bad API key, offline
+        # retriever, etc.), stop instead of endlessly generating follow-ups
+        # from empty goals / empty learnings.
+        if not results:
+            logger.warning(
+                "Deep research produced no successful query results at depth=%s; stopping descent.",
+                depth,
+            )
+            print(
+                f"\nDEEP RESEARCH: no successful results at depth={depth}; stopping to avoid infinite work.",
+                flush=True,
+            )
+            return {
+                'learnings': all_learnings,
+                'visited_urls': all_visited_urls,
+                'citations': all_citations,
+                'context': all_context,
+                'sources': all_sources,
+            }
 
         # Collect all results
         for result in results:
