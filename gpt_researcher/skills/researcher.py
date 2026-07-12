@@ -463,6 +463,34 @@ class ResearchConductor:
         
         return all_mcp_context
 
+    def _tavily_mcp_redundant_with_direct(self, mcp_retrievers, non_mcp_retrievers) -> bool:
+        """True when MCP would only re-query Tavily while direct Tavily is active.
+
+        The frontend Tavily Web Search MCP preset hits the same API as
+        `TavilySearch` and adds extra LLM tool-selection cost for no new data
+        when both run together (#1875).
+        """
+        if not mcp_retrievers or not non_mcp_retrievers:
+            return False
+        has_direct_tavily = any(
+            getattr(r, "__name__", "").lower() == "tavilysearch" for r in non_mcp_retrievers
+        )
+        if not has_direct_tavily:
+            return False
+        configs = getattr(self.researcher, "mcp_configs", None) or []
+        if not configs:
+            return False
+        # If every configured MCP server is a Tavily MCP package, treat as redundant.
+        def _is_tavily_mcp(cfg: dict) -> bool:
+            name = str(cfg.get("name", "")).lower()
+            args = " ".join(str(a) for a in (cfg.get("args") or [])).lower()
+            command = str(cfg.get("command", "")).lower()
+            blob = f"{name} {args} {command}"
+            return "tavily" in blob
+
+        return all(isinstance(c, dict) and _is_tavily_mcp(c) for c in configs)
+
+
     async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = []):
         """Takes in a sub query and scrapes urls based on it and gathers context."""
         if self.json_handler:
@@ -483,6 +511,20 @@ class ResearchConductor:
             # Identify MCP retrievers
             mcp_retrievers = [r for r in self.researcher.retrievers if "mcpretriever" in r.__name__.lower()]
             non_mcp_retrievers = [r for r in self.researcher.retrievers if "mcpretriever" not in r.__name__.lower()]
+
+            # Avoid dual Tavily path (direct retriever + tavily-mcp) under default RETRIEVER=tavily.
+            if self._tavily_mcp_redundant_with_direct(mcp_retrievers, non_mcp_retrievers):
+                self.logger.warning(
+                    "Skipping LLM MCP Tavily path because TavilySearch is already configured as a direct retriever; set RETRIEVER without tavily or use non-Tavily MCP servers to keep MCP."
+                )
+                if self.researcher.verbose:
+                    await stream_output(
+                        "logs",
+                        "mcp_tavily_deduped",
+                        "⚠️ Skipping Tavily MCP (redundant with direct Tavily retriever) to avoid double API cost",
+                        self.researcher.websocket,
+                    )
+                mcp_retrievers = []
             
             # Initialize context components
             mcp_context = []
