@@ -18,7 +18,19 @@ By using Deep Agents, the same STORM-style research pipeline as the [LangGraph e
 
 An average run generates a 5-6 page research report with inline citations and a deduplicated references section.
 
-Research is not limited to the web: by setting `source` to `local` or `hybrid` in `task.json`, the same pipeline runs over your own documents (PDF, DOCX, markdown and more via the `DOC_PATH` env var), or combines them with web sources - for example, researching an internal strategy doc and enriching it with market data from the web.
+## Why GPT Researcher as the research engine?
+
+We benchmarked this setup against the stock deepagents quickstart (same harness, same model, same prompt and step budget - the only difference being a raw Tavily search tool vs GPT Researcher's tools) on [DeepResearch Bench](https://github.com/Ayanami0730/deep_research_bench), the industry-standard benchmark for deep research agents:
+
+| Metric | Deep agent + raw search | Deep agent + GPT Researcher |
+|---|---|---|
+| RACE report quality | 0.503 | **0.512** |
+| **Effective (verified) citations per report** | 18.6 | **35.2 (+89%)** |
+| Citation precision | 53.9% | **56.0%** |
+
+Because GPT Researcher plans sub-queries, scrapes and reads full pages, and returns pre-cited synthesis (instead of search snippets), the same agent grounds its reports in roughly **2x the verified evidence** - putting it in the effective-citation range of dedicated deep research products on the DeepResearch Bench leaderboard. Full methodology, results and reproduction steps in [BENCHMARK.md](BENCHMARK.md) - see [Benchmarks](#benchmarks) below for the full result set.
+
+Research is not limited to the web: by setting `source` to `local` or `hybrid` in `task.json`, the same pipeline runs over your own documents (PDF, DOCX, markdown and more via the `DOC_PATH` env var), or combines them with web sources - for example, researching an internal strategy doc and enriching it with market data from the web. On a benchmarked due-diligence task over a realistic private corpus, this recovered **up to 94% of internal-document facts** where a web-only deep agent scores 0%.
 
 Please note: the deep agent model is set in `task.json` (`provider:model` format), while the GPT Researcher tools use the standard [LLM config](https://docs.gptr.dev/docs/gpt-researcher/llms) from env variables.
 
@@ -155,3 +167,34 @@ To change the research query and customize the report, edit the `task.json` file
 ## Observability
 
 Set `LANGCHAIN_API_KEY` to trace runs in [LangSmith](https://smith.langchain.com). Each subagent's runs are tagged with `lc_agent_name` metadata (e.g. `researcher`), so you can filter the coordinator and each section's research separately.
+
+## Benchmarks
+
+We benchmarked a deep agent using GPT Researcher tools against the [deepagents quickstart](https://docs.langchain.com/oss/python/deepagents/quickstart) setup (raw Tavily search tool) on [DeepResearch Bench](https://github.com/Ayanami0730/deep_research_bench) - the industry-standard benchmark for deep research agents. Same harness, same model (`gpt-5.4`), same prompt and step budget; the only difference is the research tooling.
+
+| Metric (10 tasks, official RACE + FACT pipelines) | Raw search tool | GPT Researcher tools |
+|---|---|---|
+| Report quality (RACE overall) | 0.503 | **0.512** |
+| Citations per report | 34.5 | **62.9** |
+| **Verified citations per report (FACT)** | 18.6 | **35.2 (+89%)** |
+| Reports with zero verifiable citations | 2/10 | **0/10** |
+
+The takeaway: the same chief agent produces reports backed by nearly **twice the verified, checkable evidence** when its research tool scrapes and synthesizes full sources instead of reading search snippets.
+
+Supporting results (full details in [BENCHMARK.md](BENCHMARK.md)):
+
+| Benchmark | Raw search tool | GPT Researcher tools |
+|---|---|---|
+| Private-docs coverage (hybrid, 27-file corpus, 3 runs) | 0% (62.5% with file tools mounted) | **87.5% avg, up to 94%** |
+| Report head-to-head, blind LLM judge (8 topics) | 3 wins | **5 wins** |
+| SimpleQA single-fact accuracy (n=30) | 83.3% | 83.3% (parity - no accuracy tax) |
+
+### Running the benchmarks
+
+Requirements: `OPENAI_API_KEY` and `TAVILY_API_KEY` env vars, plus the installs from [How to run](#how-to-run) (`pip install -r requirements.txt -r deep_agents/requirements.txt`).
+
+- **DeepResearch Bench**: follow the step-by-step in [BENCHMARK.md](BENCHMARK.md) (clones the official harness, generates reports with `drb_generate.py`, scores with the official RACE/FACT pipelines).
+- **Hybrid private-docs**: `python deep_agents/hybrid_benchmark.py` - the document corpus ships in `benchmark_data/internal_docs/` (regenerable with `benchmark_data/build_corpus.py`).
+- **Report head-to-head**: `python deep_agents/report_benchmark.py`.
+
+Raw artifacts for every published run (per-checkpoint grades, judge verdicts, full reports and official pipeline outputs) are tracked in [`benchmark_results/`](benchmark_results/).
