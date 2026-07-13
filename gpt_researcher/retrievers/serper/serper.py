@@ -114,17 +114,25 @@ class SerperSearch():
         if search_results is None:
             return
 
-        results = search_results.get("organic", [])
+        results = search_results.get("organic") or []
+        if not isinstance(results, list):
+            return []
         search_results = []
 
         # Normalize the results to match the format of the other search APIs
         # Excluded sites should already be filtered out by the query parameters
         for result in results:
-            search_result = {
-                "title": result["title"],
-                "href": result["link"],
-                "body": result["snippet"],
-            }
-            search_results.append(search_result)
+            if not isinstance(result, dict):
+                continue
+            href = result.get("link") or result.get("url") or ""
+            if not href:
+                continue
+            search_results.append(
+                {
+                    "title": result.get("title") or "",
+                    "href": href,
+                    "body": result.get("snippet") or result.get("body") or "",
+                }
+            )
 
         return search_results
