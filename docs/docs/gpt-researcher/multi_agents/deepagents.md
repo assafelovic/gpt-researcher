@@ -20,6 +20,18 @@ The LangGraph example wires 8 agents into an explicit state machine. This exampl
 
 Research is not limited to the web: by setting `source` to `local` or `hybrid` in `task.json`, the same pipeline runs over your own documents (PDF, DOCX, markdown and more via the `DOC_PATH` env var), or combines them with web sources — for example, researching an internal strategy doc and enriching it with market data from the web.
 
+## Benchmarked against the stock setup
+
+We measured this setup against the deepagents quickstart (same harness, same `gpt-5.4` model, same prompt and step budget — the only variable being a raw Tavily search tool vs GPT Researcher's `quick_search`/`deep_research` tools) on [DeepResearch Bench](https://github.com/Ayanami0730/deep_research_bench), the industry-standard benchmark for deep research agents, using its official RACE (report quality) and FACT (citation verification) scoring:
+
+| Metric | Deep agent + raw search | Deep agent + GPT Researcher |
+|---|---|---|
+| RACE report quality | 0.503 | **0.512** |
+| **Effective (verified) citations per report** | 18.6 | **35.2 (+89%)** |
+| Citation precision | 53.9% | **56.0%** |
+
+With GPT Researcher as the engine, the same agent grounds its reports in roughly **2x the verified evidence**: a raw search tool returns snippets, while GPT Researcher plans sub-queries, scrapes and reads the full pages, filters them for relevance and returns pre-cited synthesis. Full methodology and reproduction steps live in [`deep_agents/BENCHMARK.md`](https://github.com/assafelovic/gpt-researcher/blob/master/deep_agents/BENCHMARK.md).
+
 ## How it works
 
 The team is two agents plus the core GPT Researcher:
@@ -130,3 +142,16 @@ To change the research query and customize the report, edit `deep_agents/task.js
 ## Observability
 
 Set `LANGCHAIN_API_KEY` to trace runs in [LangSmith](https://smith.langchain.com). Each subagent's runs are tagged with `lc_agent_name` metadata (e.g. `researcher`), so you can filter the coordinator and each section's research separately.
+
+## Benchmarks
+
+Why use GPT Researcher as the research engine instead of a raw search tool? We benchmarked both setups on [DeepResearch Bench](https://github.com/Ayanami0730/deep_research_bench) — the industry-standard benchmark for deep research agents — using the same harness, model (`gpt-5.4`), prompt and step budget. The only variable was the research tooling.
+
+| Metric (10 tasks, official RACE + FACT pipelines) | Raw search tool | GPT Researcher tools |
+|---|---|---|
+| Report quality (RACE overall) | 0.503 | **0.512** |
+| Citations per report | 34.5 | **62.9** |
+| **Verified citations per report (FACT)** | 18.6 | **35.2 (+89%)** |
+| Reports with zero verifiable citations | 2/10 | **0/10** |
+
+FACT scrapes every cited page and verifies each claim against its source, so the headline number measures **real, checkable evidence**: the same chief agent puts nearly twice as much of it behind every report when its research tool scrapes and synthesizes full sources instead of reading search snippets. Full methodology and reproduction steps live in [`deep_agents/BENCHMARK.md`](https://github.com/assafelovic/gpt-researcher/blob/master/deep_agents/BENCHMARK.md).
