@@ -447,6 +447,32 @@ SMART_LLM=vllm_openai:Qwen/Qwen3-8B-AWQ
 STRATEGIC_LLM=vllm_openai:Qwen/Qwen3-8B-AWQ
 ```
 
+## DaoXE
+
+[DaoXE](https://daoxe.com) is a multi-model multi-protocol API gateway (OpenAI Chat Completions / Responses and Anthropic Messages, plus image-compatible endpoints where available). GPT Researcher can call it through the OpenAI-compatible Chat Completions path.
+
+Use **exact** model IDs from your DaoXE account catalog (`GET https://daoxe.com/v1/models` or the pricing / model square in the dashboard). Do not hardcode a public model list—availability is account-scoped. DaoXE is not available in mainland China.
+
+```env
+# DaoXE OpenAI-compatible Chat Completions base
+OPENAI_API_KEY=[Your DaoXE API key]
+OPENAI_BASE_URL=https://daoxe.com/v1
+
+# Replace placeholders with exact IDs from your account catalog
+FAST_LLM=openai:YOUR_FAST_MODEL_ID
+SMART_LLM=openai:YOUR_SMART_MODEL_ID
+STRATEGIC_LLM=openai:YOUR_STRATEGIC_MODEL_ID
+
+# Prefer a separate embedding provider if your DaoXE plan does not expose embeddings
+# EMBEDDING=openai:YOUR_EMBEDDING_MODEL_ID
+```
+
+Smoke-test with a small research query before long runs. Prefer models that support tool calling / long context for SMART and STRATEGIC roles.
+
+For a longer walkthrough (protocol notes, smoke checks, troubleshooting), see [Running with DaoXE](/docs/gpt-researcher/llms/running-with-daoxe).
+
+> Disclosure: this section was contributed by a DaoXE maintainer. Examples: [DaoXE-AI](https://github.com/seven7763/DaoXE-AI).
+
 ## Other Embedding Models
 
 ### Nomic
