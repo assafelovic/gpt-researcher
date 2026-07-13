@@ -55,6 +55,13 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     # GPT-5 family: OpenAI enforces default temperature only
     "gpt-5",
     "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-5.4",
+    "gpt-5.4-mini",
+    "gpt-5.4-nano",
+    "gpt-5.4-pro",
+    "gpt-5.5",
+    "gpt-5.5-pro",
 ]
 
 SUPPORT_REASONING_EFFORT_MODELS = [
@@ -64,6 +71,12 @@ SUPPORT_REASONING_EFFORT_MODELS = [
     "o3-2025-04-16",
     "o4-mini",
     "o4-mini-2025-04-16",
+    "gpt-5.4",
+    "gpt-5.4-mini",
+    "gpt-5.4-nano",
+    "gpt-5.4-pro",
+    "gpt-5.5",
+    "gpt-5.5-pro",
 ]
 
 class ReasoningEfforts(Enum):
@@ -128,6 +141,10 @@ class GenericLLMProvider:
             # Support custom OpenAI-compatible APIs via OPENAI_BASE_URL
             if "openai_api_base" not in kwargs and os.environ.get("OPENAI_BASE_URL"):
                 kwargs["openai_api_base"] = os.environ["OPENAI_BASE_URL"]
+
+            # Report token usage on streamed responses too, so cost
+            # tracking can use real usage instead of tiktoken estimates.
+            kwargs.setdefault("stream_usage", True)
 
             llm = ChatOpenAI(**kwargs)
         elif provider == "anthropic":

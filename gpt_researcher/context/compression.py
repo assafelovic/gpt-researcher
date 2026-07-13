@@ -100,6 +100,7 @@ class ContextCompressor:
         documents,
         embeddings,
         max_results: int = 5,
+        similarity_threshold: float | None = None,
         prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
         **kwargs,
     ):
@@ -109,6 +110,8 @@ class ContextCompressor:
             documents: List of documents to compress.
             embeddings: Embedding model instance.
             max_results: Maximum number of results to return.
+            similarity_threshold: Minimum similarity score for inclusion.
+                Falls back to the SIMILARITY_THRESHOLD env var when not given.
             prompt_family: Prompt family for formatting output.
             **kwargs: Additional keyword arguments.
         """
@@ -116,7 +119,9 @@ class ContextCompressor:
         self.documents = documents
         self.kwargs = kwargs
         self.embeddings = embeddings
-        self.similarity_threshold = os.environ.get("SIMILARITY_THRESHOLD", 0.35)
+        if similarity_threshold is None:
+            similarity_threshold = float(os.environ.get("SIMILARITY_THRESHOLD", 0.35))
+        self.similarity_threshold = similarity_threshold
         self.prompt_family = prompt_family
 
     def __get_contextual_retriever(self):

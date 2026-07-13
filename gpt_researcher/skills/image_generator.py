@@ -238,7 +238,7 @@ Return 2-3 visualization concepts as a JSON array:"""
                 ],
                 temperature=0.4,
                 llm_provider=self.cfg.fast_llm_provider,
-                max_tokens=1000,
+                max_tokens=4000,  # headroom for reasoning tokens on reasoning models
                 llm_kwargs=self.cfg.llm_kwargs,
                 cost_callback=self.researcher.add_costs,
             )
@@ -309,7 +309,7 @@ Return 2-3 visualization concepts as a JSON array:"""
                 llm_provider=self.cfg.fast_llm_provider,
                 stream=False,
                 websocket=None,
-                max_tokens=1500,
+                max_tokens=4000,  # headroom for reasoning tokens on reasoning models
                 llm_kwargs=self.cfg.llm_kwargs,
             )
             

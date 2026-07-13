@@ -17,6 +17,10 @@ export default {
   organizationName: 'assafelovic',
   trailingSlash: false,
   projectName: 'gpt-researcher',
+  markdown: {
+    mermaid: true,
+  },
+  themes: ['@docusaurus/theme-mermaid'],
   themeConfig: {
     navbar: {
       title: 'GPT Researcher',

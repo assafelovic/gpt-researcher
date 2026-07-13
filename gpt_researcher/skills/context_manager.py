@@ -55,6 +55,7 @@ class ContextManager:
         context_compressor = ContextCompressor(
             documents=pages,
             embeddings=self.researcher.memory.get_embeddings(),
+            similarity_threshold=getattr(self.researcher.cfg, "similarity_threshold", None),
             prompt_family=self.researcher.prompt_family,
             **self.researcher.kwargs
         )

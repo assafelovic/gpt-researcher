@@ -27,9 +27,9 @@ Below you can find examples for how to configure the various supported LLMs.
 OPENAI_API_KEY=[Your Key]
 
 # specify llms
-FAST_LLM=openai:gpt-5-mini
-SMART_LLM=openai:gpt-5
-STRATEGIC_LLM=openai:o4-mini
+FAST_LLM=openai:gpt-5.4-mini
+SMART_LLM=openai:gpt-5.4
+STRATEGIC_LLM=openai:gpt-5.4
 
 # specify embedding
 EMBEDDING=openai:text-embedding-3-small

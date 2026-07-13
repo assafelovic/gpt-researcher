@@ -303,11 +303,11 @@ Please follow all of the following guidelines in your report:
 - You must also prioritize new articles over older articles if the source can be trusted.
 - You MUST NOT include a table of contents, but DO include proper markdown headers (# ## ###) to structure your report clearly.
 - Use in-text citation references in {report_format} format and make it with markdown hyperlink placed at the end of the sentence or paragraph that references them like this: ([in-text citation](url)).
-- Don't forget to add a reference list at the end of the report in {report_format} format and full url links without hyperlinks.
+- Every substantive claim, figure or quote MUST carry an in-text citation to the source it came from. Do NOT cite sources that do not appear in the provided information.
+- Don't forget to add a reference list at the end of the report in {report_format} format.
 - {reference_prompt}
 - {tone_prompt}
 You MUST write the report in the following language: {language}.
-Please do your best, this is very important to my career.
 Assume that the current date is {date.today()}.
 """
 
@@ -494,7 +494,7 @@ task: "should I invest in apple stocks?"
 response:
 {
     "server": "💰 Finance Agent",
-    "agent_role_prompt: "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends."
+    "agent_role_prompt": "You are a seasoned finance analyst AI assistant. Your primary goal is to compose comprehensive, astute, impartial, and methodically arranged financial reports based on provided data and trends."
 }
 task: "could reselling sneakers become profitable?"
 response:

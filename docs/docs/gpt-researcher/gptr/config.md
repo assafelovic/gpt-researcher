@@ -21,9 +21,9 @@ The config JSON should follow the format/keys in the default config. Below is a 
   "RETRIEVER": "tavily",
   "EMBEDDING": "openai:text-embedding-3-small",
   "SIMILARITY_THRESHOLD": 0.42,
-  "FAST_LLM": "openai:gpt-4o-mini",
-  "SMART_LLM": "openai:gpt-4.1",
-  "STRATEGIC_LLM": "openai:o4-mini",
+  "FAST_LLM": "openai:gpt-5.4-mini",
+  "SMART_LLM": "openai:gpt-5.4",
+  "STRATEGIC_LLM": "openai:gpt-5.4",
   "LANGUAGE": "english",
   "CURATE_SOURCES": false,
   "FAST_TOKEN_LIMIT": 3000,
@@ -53,9 +53,9 @@ Below is a list of current supported options:
 - **`RETRIEVER`**: Web search engine used for retrieving sources. Defaults to `tavily`. Options: `duckduckgo`, `bing`, `brave`, `google`, `searchapi`, `serper`, `searx`. [Check here](https://github.com/assafelovic/gpt-researcher/tree/master/gpt_researcher/retrievers) for supported retrievers
 - **`EMBEDDING`**: Embedding model. Defaults to `openai:text-embedding-3-small`. Options: `ollama`, `huggingface`, `azure_openai`, `custom`.
 - **`SIMILARITY_THRESHOLD`**: Threshold value for similarity comparison when processing documents. Defaults to `0.42`.
-- **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `openai:gpt-4o-mini`.
-- **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-5`.
-- **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `openai:gpt-5-mini`.
+- **`FAST_LLM`**: Model name for fast LLM operations such summaries. Defaults to `openai:gpt-5.4-mini`.
+- **`SMART_LLM`**: Model name for smart operations like generating research reports and reasoning. Defaults to `openai:gpt-5.4`.
+- **`STRATEGIC_LLM`**: Model name for strategic operations like generating research plans and strategies. Defaults to `openai:gpt-5.4`.
 - **`LANGUAGE`**: Language to be used for the final research report. Defaults to `english`.
 - **`CURATE_SOURCES`**: Whether to curate sources for research. This step adds an LLM run which may increase costs and total run time but improves quality of source selection. Defaults to `False`.
 - **`FAST_TOKEN_LIMIT`**: Maximum token limit for fast LLM responses. Defaults to `3000`.
