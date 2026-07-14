@@ -20,7 +20,11 @@ class SemanticScholarSearch:
         """
         self.query = query
         assert sort in self.VALID_SORT_CRITERIA, "Invalid sort criterion"
-        self.sort = sort.lower()
+        # Preserve the exact (camelCase) criterion. The Semantic Scholar API
+        # expects ``citationCount`` / ``publicationDate`` verbatim; lowercasing
+        # them produced ``citationcount`` / ``publicationdate``, which the API
+        # rejects or silently ignores.
+        self.sort = sort
 
     def search(self, max_results: int = 20) -> List[Dict[str, str]]:
         """

@@ -60,9 +60,13 @@ class ExaSearch:
             **filters
         )
 
-        search_response = [
-            {"href": result.url, "body": result.text} for result in results.results
-        ]
+        search_response = []
+        for result in results.results or []:
+            href = getattr(result, "url", None)
+            if not href:
+                continue
+            body = getattr(result, "text", None) or getattr(result, "summary", None) or ""
+            search_response.append({"href": href, "body": body})
         return search_response
 
     def find_similar(self, url, exclude_source_domain=False, **filters):
@@ -79,9 +83,13 @@ class ExaSearch:
             url, exclude_source_domain=exclude_source_domain, **filters
         )
 
-        similar_response = [
-            {"href": result.url, "body": result.text} for result in results.results
-        ]
+        similar_response = []
+        for result in results.results or []:
+            href = getattr(result, "url", None)
+            if not href:
+                continue
+            body = getattr(result, "text", None) or getattr(result, "summary", None) or ""
+            similar_response.append({"href": href, "body": body})
         return similar_response
 
     def get_contents(self, ids, **options):
@@ -95,7 +103,11 @@ class ExaSearch:
         """
         results = self.client.get_contents(ids, **options)
 
-        contents_response = [
-            {"id": result.id, "content": result.text} for result in results.results
-        ]
+        contents_response = []
+        for result in results.results or []:
+            result_id = getattr(result, "id", None)
+            if result_id is None:
+                continue
+            content = getattr(result, "text", None) or ""
+            contents_response.append({"id": result_id, "content": content})
         return contents_response

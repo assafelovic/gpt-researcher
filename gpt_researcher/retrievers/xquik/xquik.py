@@ -68,14 +68,19 @@ class XquikSearch:
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode("utf-8"))
 
-        tweets = data.get("tweets", [])
+        # Use `or` fallbacks so an explicit JSON null ("tweets": null,
+        # "author": null, "text": null) does not slip a None past `.get()`'s
+        # default and crash slicing / attribute access below — which the
+        # broad except in search() would swallow, silently dropping every
+        # result. Mirrors the sibling GetXAPI retriever.
+        tweets = data.get("tweets") or []
         search_results = []
 
         for tweet in tweets[:max_results]:
-            author = tweet.get("author", {})
-            username = author.get("username", "unknown")
-            text = tweet.get("text", "")
-            tweet_id = tweet.get("id", "")
+            author = tweet.get("author") or {}
+            username = author.get("username") or "unknown"
+            text = tweet.get("text") or ""
+            tweet_id = tweet.get("id") or ""
 
             likes = tweet.get("likeCount", 0)
             retweets = tweet.get("retweetCount", 0)
