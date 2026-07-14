@@ -853,6 +853,12 @@ class ResearchConductor:
                     if url and raw_content and len(raw_content) > 100:
                         # Only raw_content signals that a retriever already fetched the full page.
                         # body is snippet-sized text for most web retrievers and still needs scraping.
+                        # Record prefetched URLs in visited_urls, same as scraped URLs: their
+                        # content feeds the context, so they must be deduped across sub-queries
+                        # (and across retrievers) and listed in the report's sources/references.
+                        if url in self.researcher.visited_urls:
+                            continue
+                        self.researcher.visited_urls.add(url)
                         prefetched_content.append({
                             "url": url,
                             "raw_content": raw_content,
