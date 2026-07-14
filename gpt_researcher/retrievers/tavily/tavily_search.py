@@ -131,10 +131,17 @@ class TavilySearch:
             sources = results.get("results", [])
             if not sources:
                 raise Exception("No results found with Tavily API search.")
-            # Return the results
-            search_response = [
-                {"href": obj["url"], "body": obj["content"]} for obj in sources
-            ]
+            # Return the results; skip non-dict / missing-URL items so one bad
+            # payload entry does not KeyError the whole search() call.
+            search_response = []
+            for obj in sources:
+                if not isinstance(obj, dict):
+                    continue
+                url = obj.get("url") or obj.get("href")
+                if not url:
+                    continue
+                body = obj.get("content") or obj.get("snippet") or obj.get("body") or ""
+                search_response.append({"href": url, "body": body})
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
