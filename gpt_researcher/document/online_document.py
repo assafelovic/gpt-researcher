@@ -1,6 +1,8 @@
 import os
 import aiohttp
 import tempfile
+
+from gpt_researcher.utils.url_security import UnsafeURLError, validate_url
 from langchain_community.document_loaders import (
     PyMuPDFLoader,
     TextLoader,
@@ -35,6 +37,13 @@ class OnlineDocumentLoader:
 
     async def _download_and_process(self, url: str) -> list:
         try:
+            # Reject SSRF / local-file targets before issuing the request.
+            try:
+                validate_url(url)
+            except UnsafeURLError as e:
+                print(f"Skipping unsafe document URL {url}: {e}")
+                return []
+
             headers = {
                 "User-Agent": "Mozilla/5.0"
             }
