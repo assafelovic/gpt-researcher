@@ -37,6 +37,7 @@ _SUPPORTED_PROVIDERS = {
     "avian",
     "minimax",
     "atlascloud",
+    "nebius",
 }
 
 NO_SUPPORT_TEMPERATURE_MODELS = [
@@ -328,6 +329,15 @@ class GenericLLMProvider:
 
             llm = ChatOpenAI(openai_api_base='https://api.minimax.io/v1',
                      openai_api_key=os.environ["MINIMAX_API_KEY"],
+                     **kwargs
+                )
+        elif provider == "nebius":
+            _check_pkg("langchain_openai")
+            from langchain_openai import ChatOpenAI
+
+            # NEBIUS_BASE_URL overrides the default endpoint (self-hosted / regional)
+            llm = ChatOpenAI(openai_api_base=os.getenv("NEBIUS_BASE_URL", 'https://api.tokenfactory.nebius.com/v1'),
+                     openai_api_key=os.environ["NEBIUS_API_KEY"],
                      **kwargs
                 )
         elif provider == 'netmind':
