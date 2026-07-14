@@ -5,6 +5,16 @@
       "args": [
         "gpt-researcher"
       ]
+    },
+    "globalcheck": {
+      "command": "globalcheck",
+      "args": [
+        "start",
+        "--port", "8001"
+      ],
+      "env": {
+        "GLOBALCHECK_API_KEY": "${GLOBALCHECK_API_KEY}"
+      }
     }
   }
 }
