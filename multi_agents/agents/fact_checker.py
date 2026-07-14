@@ -44,7 +44,9 @@ class FactCheckerAgent:
 
         review = await self.check_facts(research_state)
 
-        if "None" in review:
+        from .utils.none_sentinels import is_none_accept_response
+
+        if is_none_accept_response(review):
             review = None
             if self.websocket and self.stream_output:
                 await self.stream_output("logs", "fact_checking", "Draft accepted by Fact Checker.", self.websocket)
@@ -56,4 +58,9 @@ class FactCheckerAgent:
             else:
                 print_agent_output(f"Fact Checker found issues: {review}...", agent="FACT_CHECKER")
 
-        return {"fact_check_notes": review}
+        out = {"fact_check_notes": review}
+        if review is not None:
+            out["fact_check_revision_count"] = research_state.get(
+                "fact_check_revision_count", 0
+            ) + 1
+        return out

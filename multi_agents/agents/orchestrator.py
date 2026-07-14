@@ -96,10 +96,10 @@ class ChiefEditorAgent:
             {"accept": "researcher", "force_accept": "researcher", "revise": "planner"}
         )
 
-        # Add fact checker loop
+        # Fact-checker loop — bounded via task.max_fact_check_revisions
         workflow.add_conditional_edges(
             'fact_checker',
-            lambda draft: "accept" if draft.get("fact_check_notes") is None else "revise",
+            self._route_fact_check,
             {"accept": "visualizer", "revise": "writer"}
         )
 

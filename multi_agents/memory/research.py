@@ -20,3 +20,4 @@ class ResearchState(TypedDict):
     report: str
     fact_check_notes: str
     diagrams: List[str]
+    fact_check_revision_count: int

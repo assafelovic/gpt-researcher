@@ -56,7 +56,9 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
                     f"Review feedback is: {response}...", agent="REVIEWER"
                 )
 
-        if "None" in response:
+        from .utils.none_sentinels import is_none_accept_response
+
+        if is_none_accept_response(response):
             return None
         return response
 
@@ -76,4 +78,7 @@ Guidelines: {guidelines}\nDraft: {draft_state.get("draft")}\n
             review = await self.review_draft(draft_state)
         else:
             print_agent_output(f"Ignoring guidelines...", agent="REVIEWER")
-        return {"review": review}
+        out = {"review": review}
+        if review is not None:
+            out["draft_revision_count"] = draft_state.get("draft_revision_count", 0) + 1
+        return out

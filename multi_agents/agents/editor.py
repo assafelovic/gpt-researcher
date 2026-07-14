@@ -137,7 +137,7 @@ class EditorAgent:
         workflow.add_edge("reviser", "reviewer")
         workflow.add_conditional_edges(
             "reviewer",
-            lambda draft: "accept" if draft["review"] is None else "revise",
+            self._route_draft_review,
             {"accept": END, "revise": "reviser"},
         )
 

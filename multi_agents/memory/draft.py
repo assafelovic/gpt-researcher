@@ -8,3 +8,4 @@ class DraftState(TypedDict):
     draft: dict
     review: str
     revision_notes: str
+    draft_revision_count: int
