@@ -4,16 +4,21 @@
       "command": "uvx",
       "args": [
         "gpt-researcher"
-      ]
+      ],
+      "env": {
+        "OPENAI_API_BASE": "http://localhost:7000/v1"
+      }
     },
     "globalcheck": {
       "command": "globalcheck",
       "args": [
-        "start",
-        "--port", "8001"
+        "proxy",
+        "--port", "7000",
+        "--target-url", "https://api.openai.com"
       ],
       "env": {
-        "GLOBALCHECK_API_KEY": "${GLOBALCHECK_API_KEY}"
+        "GLOBALCHECK_API_KEY": "${GLOBALCHECK_API_KEY}",
+        "GLOBALCHECK_ORG_ID": "${GLOBALCHECK_ORG_ID}"
       }
     }
   }
