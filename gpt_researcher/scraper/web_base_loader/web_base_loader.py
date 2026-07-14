@@ -29,12 +29,17 @@ class WebBaseLoaderScraper:
             for doc in docs:
                 content += doc.page_content
 
-            response = self.session.get(self.link)
-            soup = BeautifulSoup(response.content, 'html.parser')
-            image_urls = get_relevant_images(soup, self.link)
-            
-            # Extract the title using the utility function
-            title = extract_title(soup)
+            # Image and title enrichment fetches the page a second time; treat it as
+            # best-effort so a failure here never discards the content already loaded.
+            image_urls: list = []
+            title = ""
+            try:
+                response = self.session.get(self.link)
+                soup = BeautifulSoup(response.content, 'html.parser')
+                image_urls = get_relevant_images(soup, self.link)
+                title = extract_title(soup)
+            except Exception as e:
+                print(f"Error enriching WebBaseLoader result for {self.link}, skipping images/title: {e}")
 
             return content, image_urls, title
 
