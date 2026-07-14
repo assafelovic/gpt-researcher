@@ -245,7 +245,11 @@ Use this context to inform and refine your search queries. The context provides 
 
         dynamic_example = ", ".join([f'"query {i+1}"' for i in range(max_iterations)])
 
-        return f"""Write {max_iterations} google search queries to search online that form an objective opinion from the following task: "{task}"
+        return f"""Write {max_iterations} search queries to research the following task: "{task}"
+
+Each query must be a plain natural language phrase. Do not use search operator syntax
+such as site:, filetype:, inurl:, intitle:, OR, AND, or NOT — these operators are
+not universally supported and will return empty results on many search backends.
 
 Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 
