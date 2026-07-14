@@ -260,16 +260,19 @@ class Config:
         args = get_args(type_hint)
 
         if origin is Union:
-            # Handle Union types (e.g., Union[str, None])
+            # Handle Union types (e.g., Union[str, None] / Optional[str]).
+            # Check the None sentinel BEFORE non-None args: for Optional[str],
+            # str conversion never raises, so looping str-first permanently
+            # shadowed the none/null/"" → None branch (see issue #1899).
+            if type(None) in args and env_value.lower() in ("none", "null", ""):
+                return None
             for arg in args:
                 if arg is type(None):
-                    if env_value.lower() in ("none", "null", ""):
-                        return None
-                else:
-                    try:
-                        return Config.convert_env_value(key, env_value, arg)
-                    except ValueError:
-                        continue
+                    continue
+                try:
+                    return Config.convert_env_value(key, env_value, arg)
+                except ValueError:
+                    continue
             raise ValueError(f"Cannot convert {env_value} to any of {args}")
 
         if type_hint is bool:
