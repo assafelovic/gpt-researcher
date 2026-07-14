@@ -104,7 +104,11 @@ def add_references(report_markdown: str, visited_urls: set) -> str:
     """
     try:
         url_markdown = "\n\n\n## References\n\n"
-        url_markdown += "".join(f"- [{url}]({url})\n" for url in visited_urls)
+        # Sort so the reference list is deterministic. ``visited_urls`` is a
+        # set, whose iteration order varies from run to run (and across
+        # processes), which made the final report's References section
+        # non-reproducible for the same inputs.
+        url_markdown += "".join(f"- [{url}]({url})\n" for url in sorted(visited_urls))
         updated_markdown_report = report_markdown + url_markdown
         return updated_markdown_report
     except Exception as e:
