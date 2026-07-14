@@ -106,3 +106,29 @@ class CRWRetrieverTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+    @patch.dict("os.environ", {"CRW_API_KEY": "test-key"}, clear=False)
+    @patch("gpt_researcher.retrievers.crw.crw.requests.post")
+    def test_search_skips_malformed_items(self, mock_post):
+        mock_post.return_value = make_response(
+            {
+                "success": True,
+                "data": [
+                    None,
+                    "not-a-dict",
+                    {"description": "missing-url"},
+                    {"url": "https://example.com/ok", "description": "ok"},
+                    {"href": "https://example.com/href-only", "markdown": "md"},
+                ],
+            }
+        )
+
+        results = CRWRetriever("query").search()
+        self.assertEqual(
+            results,
+            [
+                {"href": "https://example.com/ok", "body": "ok"},
+                {"href": "https://example.com/href-only", "body": "md"},
+            ],
+        )

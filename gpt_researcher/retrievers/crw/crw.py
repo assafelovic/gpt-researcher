@@ -110,14 +110,21 @@ class CRWRetriever:
             sources = results.get("data", [])
             if not sources:
                 raise Exception("No results found with fastCRW API search.")
-            # Return the results
-            search_response = [
-                {
-                    "href": obj["url"],
-                    "body": obj.get("markdown") or obj.get("description", ""),
-                }
-                for obj in sources
-            ]
+            # Return the results. Tolerate non-dict / missing-URL items so one
+            # bad payload entry does not KeyError the whole search call.
+            search_response = []
+            for obj in sources:
+                if not isinstance(obj, dict):
+                    continue
+                url = obj.get("url") or obj.get("href")
+                if not url:
+                    continue
+                search_response.append(
+                    {
+                        "href": url,
+                        "body": obj.get("markdown") or obj.get("description") or "",
+                    }
+                )
         except Exception as e:
             print(f"Error: {e}. Failed fetching sources. Resulting in empty response.")
             search_response = []
