@@ -32,11 +32,16 @@ Base URL: `http://localhost:8000`
 
 ```json
 {
-    "report": "# Research Report\n\n...",
     "research_id": "task_1234567890_query",
-    "costs": 0.05,
-    "pdf_path": "outputs/task_123.pdf",
-    "docx_path": "outputs/task_123.docx"
+    "research_information": {
+        "source_urls": ["..."],
+        "research_costs": 0.05,
+        "visited_urls": ["..."],
+        "research_images": ["..."]
+    },
+    "report": "# Research Report\n\n...",
+    "docx_path": "outputs/task_123.docx",
+    "pdf_path": "outputs/task_123.pdf"
 }
 ```
 
@@ -67,16 +72,10 @@ Base URL: `http://localhost:8000`
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET | `/files/` | List uploaded documents |
 | POST | `/upload/` | Upload document |
-| DELETE | `/delete/{filename}` | Delete file |
+| DELETE | `/files/{filename}` | Delete file |
 | GET | `/outputs/{filename}` | Get output file |
-
-### Configuration
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/getConfig` | Get current config |
-| POST | `/setConfig` | Update config |
 
 ---
 
