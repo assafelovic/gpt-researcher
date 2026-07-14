@@ -1,0 +1,2643 @@
+[
+  {
+    "number": 1719,
+    "title": "Security Vulnerability Report - Awaiting Acknowledgment",
+    "type": "security",
+    "difficulty": "trivial",
+    "action": "fix-pr",
+    "confidence": 0.9,
+    "area": "docs",
+    "one_liner": "Researcher asks for a private disclosure channel; enable GitHub private vulnerability reporting and add SECURITY.md (none exists today).",
+    "relevant_files": [
+      "SECURITY.md"
+    ],
+    "score": 163
+  },
+  {
+    "number": 1659,
+    "title": "Brotli decompression bomb DoS via scraper (CVE-2025-6176) — pin brotli >= 1.2.0",
+    "type": "security",
+    "difficulty": "trivial",
+    "action": "fix-pr",
+    "confidence": 0.85,
+    "area": "scrapers",
+    "one_liner": "Scraper decompresses brotli responses without size limit (CVE-2025-6176); pin brotli>=1.2.0 in dependencies as a quick mitigation.",
+    "relevant_files": [
+      "pyproject.toml",
+      "gpt_researcher/scraper/beautiful_soup/beautiful_soup.py"
+    ],
+    "score": 162
+  },
+  {
+    "number": 1819,
+    "title": "Dependency hardening: pin minimum safe dependency versions",
+    "type": "security",
+    "difficulty": "trivial",
+    "action": "fix-pr",
+    "confidence": 0.8,
+    "area": "config",
+    "one_liner": "Low-priority hygiene: pin brotli>=1.2.0 (and similar) to avoid downgrading into known CVEs; small requirements/pyproject change.",
+    "relevant_files": [
+      "requirements.txt",
+      "pyproject.toml"
+    ],
+    "score": 161
+  },
+  {
+    "number": 1692,
+    "title": "Reflected Cross-Site Scripting (XSS) via Task Name in gpt-researcher",
+    "type": "security",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.8,
+    "area": "frontend",
+    "one_liner": "User task string is rendered via innerHTML in lightweight frontend, enabling reflected XSS; sanitize/escape log output in frontend scripts.js.",
+    "relevant_files": [
+      "frontend/scripts.js",
+      "backend/server/server_utils.py"
+    ],
+    "score": 158
+  },
+  {
+    "number": 1794,
+    "title": "[Security] Unauthenticated Server-Side Request Forgery (SSRF)",
+    "type": "security",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.9,
+    "area": "scrapers",
+    "one_liner": "Confirmed: source_urls/document_urls from unauthenticated /ws reach scrapers with no URL validation, enabling SSRF to internal hosts/metadata; add scheme allowlist + private-IP/metadata blocklist before session.get.",
+    "relevant_files": [
+      "gpt_researcher/skills/researcher.py",
+      "gpt_researcher/scraper/beautiful_soup/beautiful_soup.py",
+      "gpt_researcher/document/online_document.py",
+      "backend/server/server_utils.py"
+    ],
+    "score": 154
+  },
+  {
+    "number": 1805,
+    "title": "Unauthenticated arbitrary local PDF file read via source_urls",
+    "type": "security",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.85,
+    "area": "scrapers",
+    "one_liner": "Related to SSRF #1794: bare local paths ending in .pdf route to PyMuPDFScraper local-file branch enabling arbitrary local PDF read; fix by validating URL scheme/rejecting local paths in the source_urls path.",
+    "relevant_files": [
+      "gpt_researcher/scraper/pymupdf/pymupdf.py",
+      "gpt_researcher/scraper/scraper.py",
+      "gpt_researcher/skills/researcher.py"
+    ],
+    "score": 153
+  },
+  {
+    "number": 1549,
+    "title": "GPT-Researcher File Upload Vulnerability Summary",
+    "type": "security",
+    "difficulty": "small",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.8,
+    "area": "websocket",
+    "one_liner": "Upload endpoint accepts arbitrary file types with no size/type validation; maintainer noted backend is demo-only, but adding type/size validation in handle_file_upload is a cheap hardening win to decide on.",
+    "relevant_files": [
+      "backend/server/server_utils.py"
+    ],
+    "score": 128
+  },
+  {
+    "number": 1694,
+    "title": "Unauthenticated Remote Code Execution via MCP Command Injection",
+    "type": "security",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.9,
+    "area": "mcp",
+    "one_liner": "Unauthenticated /ws endpoint passes user mcp_configs command/args to subprocess spawn (CVSS 10.0 RCE); needs auth gating and/or disabling user-supplied MCP commands — same root cause as #1675.",
+    "relevant_files": [
+      "backend/server/app.py",
+      "backend/server/server_utils.py",
+      "backend/server/websocket_manager.py",
+      "gpt_researcher/mcp/client.py"
+    ],
+    "score": 124
+  },
+  {
+    "number": 1675,
+    "title": "command-injection lead to Remote Code Execution",
+    "type": "security",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.85,
+    "area": "mcp",
+    "one_liner": "Unauthenticated WebSocket lets user-supplied mcp_configs spawn arbitrary commands (RCE); needs validation/allowlisting or auth gating on MCP configs — duplicate of #1694.",
+    "relevant_files": [
+      "backend/server/server_utils.py",
+      "backend/server/websocket_manager.py",
+      "gpt_researcher/mcp/client.py",
+      "gpt_researcher/retrievers/mcp/retriever.py"
+    ],
+    "score": 123
+  },
+  {
+    "number": 1693,
+    "title": "Stored Cross-Site Scripting (XSS) via Unauthenticated Report API",
+    "type": "security",
+    "difficulty": "small",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.55,
+    "area": "frontend",
+    "one_liner": "Stored XSS via unauthenticated report API (CVE-2026-5632); body is sparse but credible — needs maintainer to confirm sink and sanitize report rendering/storage.",
+    "relevant_files": [
+      "backend/server/app.py",
+      "backend/server/server_utils.py",
+      "frontend/scripts.js"
+    ],
+    "score": 123
+  },
+  {
+    "number": 1063,
+    "title": "Possible License Issue (PyMuPDF AGPL-3.0)",
+    "type": "security",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "config",
+    "one_liner": "PyMuPDF is AGPL-3.0, which conflicts with GPTR's permissive license for SaaS users; maintainer should decide whether to swap to a permissively-licensed PDF parser (e.g. pypdf) or make it optional.",
+    "relevant_files": [
+      "pyproject.toml",
+      "setup.py",
+      "gpt_researcher/scraper/pymupdf/"
+    ],
+    "score": 120
+  },
+  {
+    "number": 1103,
+    "title": "Security Issue - LLM05 - Insecure output handling (XSS)",
+    "type": "security",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "frontend",
+    "one_liner": "Reports containing XSS payloads render unsanitized in the hosted/vanilla frontend; needs markdown sanitization on report rendering (NextJS frontend likely safer). Real concern but scope/owner decision needed.",
+    "relevant_files": [
+      "frontend/",
+      "frontend/nextjs/"
+    ],
+    "score": 118
+  },
+  {
+    "number": 1695,
+    "title": "Missing Authentication and Unrestricted Access to Critical Functions",
+    "type": "security",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.85,
+    "area": "websocket",
+    "one_liner": "All REST/WebSocket endpoints are unauthenticated (CVSS 9.8); design decision needed on whether to add optional auth or document that the server is intended for trusted/local use.",
+    "relevant_files": [
+      "backend/server/app.py",
+      "backend/run_server.py",
+      "main.py"
+    ],
+    "score": 117
+  },
+  {
+    "number": 1696,
+    "title": "CVE-2026-5633",
+    "type": "security",
+    "difficulty": "unknown",
+    "action": "reply-needs-info",
+    "confidence": 0.4,
+    "area": "unknown",
+    "one_liner": "Body is just a CVE number with no detail; ask reporter for specifics or cross-link to the related August829 security reports (likely the RCE/auth set).",
+    "relevant_files": [],
+    "score": 108
+  },
+  {
+    "number": 1759,
+    "title": "SECURITY INQUIRY",
+    "type": "docs",
+    "difficulty": "trivial",
+    "action": "fix-pr",
+    "confidence": 0.9,
+    "area": "docs",
+    "one_liner": "Request to add SECURITY.md and enable GitHub vuln reporting; add the file (overlaps #1719).",
+    "relevant_files": [
+      "SECURITY.md"
+    ],
+    "score": 63
+  },
+  {
+    "number": 794,
+    "title": "Unlogged error while using Groq (missing langchain-groq)",
+    "type": "bug",
+    "difficulty": "trivial",
+    "action": "fix-pr",
+    "confidence": 0.8,
+    "area": "llm-provider",
+    "one_liner": "Groq import failure is swallowed and shown as a misleading JSON-repair warning; log the real exception in choose_agent/get_llm so missing langchain-groq is actionable.",
+    "relevant_files": [
+      "gpt_researcher/actions/agent_creator.py",
+      "gpt_researcher/llm_provider/generic/base.py"
+    ],
+    "score": 61
+  },
+  {
+    "number": 1580,
+    "title": "Cloudflare MITM included in the self-hosted codebase",
+    "type": "bug",
+    "difficulty": "trivial",
+    "action": "fix-pr",
+    "confidence": 0.8,
+    "area": "frontend",
+    "one_liner": "Static frontend/index.html loads font-awesome and showdown from cdnjs.cloudflare.com CDN (not a MITM, just external CDN deps); vendor these assets locally to remove the external dependency.",
+    "relevant_files": [
+      "frontend/index.html"
+    ],
+    "score": 61
+  },
+  {
+    "number": 1006,
+    "title": "PDFs are not always scraped correctly (non-.pdf URLs)",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.85,
+    "area": "scrapers",
+    "one_liner": "scraper.py picks PyMuPDFScraper only when link.endswith('.pdf') (line 201); SemanticScholar returns PDF links without the extension — detect PDF by content-type/header instead of suffix.",
+    "relevant_files": [
+      "gpt_researcher/scraper/scraper.py",
+      "gpt_researcher/retrievers/semantic_scholar/semantic_scholar.py"
+    ],
+    "score": 59
+  },
+  {
+    "number": 1787,
+    "title": "Feature: JSON constrained output for Deep Research query extraction",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.85,
+    "area": "llm-provider",
+    "one_liner": "Deep Research uses fragile startswith('Query:'/'Learning'/'Question:') parsing (confirmed in deep_research.py) causing 0 queries on some models; switch to JSON-constrained output + json_repair like query_processing.py.",
+    "relevant_files": [
+      "gpt_researcher/skills/deep_research.py",
+      "gpt_researcher/actions/query_processing.py"
+    ],
+    "score": 59
+  },
+  {
+    "number": 1306,
+    "title": "<think> text gets to the output when using deepseek models with ollama",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.8,
+    "area": "llm-provider",
+    "one_liner": "deepseek-r1 via ollama leaks <think>...</think> reasoning into the final report; strip think tags from LLM responses (same root cause as #1303).",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/utils/llm.py"
+    ],
+    "score": 58
+  },
+  {
+    "number": 1457,
+    "title": "Error using SCRAPER=browser (missing overlay.js)",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.8,
+    "area": "scrapers",
+    "one_liner": "Selenium scraper fails because js/overlay.js isn't shipped in the pip package; add the js data files to package_data/MANIFEST so they install alongside the module.",
+    "relevant_files": [
+      "gpt_researcher/scraper/browser/js/overlay.js",
+      "pyproject.toml",
+      "setup.py"
+    ],
+    "score": 58
+  },
+  {
+    "number": 1067,
+    "title": "OpenAI API Key required even when .env has DeepSeek settings",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.75,
+    "area": "config",
+    "one_liner": "Default EMBEDDING is still 'openai:text-embedding-3-small', so OpenAI key is demanded even with DeepSeek LLMs; users must also set EMBEDDING — improve error/docs and validate embedding config (recurring, latest comment 2026-05).",
+    "relevant_files": [
+      "gpt_researcher/config/variables/default.py",
+      "gpt_researcher/memory/embeddings.py",
+      "gpt_researcher/config/config.py"
+    ],
+    "score": 57
+  },
+  {
+    "number": 1263,
+    "title": "Long queries cause an uncaught Tavily bug (400, max 400 chars)",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.75,
+    "area": "retrievers",
+    "one_liner": "Tavily rejects queries >400 chars with a 400 error that propagates uncaught; tavily_search.py has no length guard. Fix is to truncate/validate query length before calling the Tavily API.",
+    "relevant_files": [
+      "gpt_researcher/retrievers/tavily/tavily_search.py"
+    ],
+    "score": 57
+  },
+  {
+    "number": 1303,
+    "title": "BUG: Pydantic error: Input should be a valid string",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.75,
+    "area": "llm-provider",
+    "one_liner": "Thinking models (ollama qwen3/deepseek) wrap query-generation output in <think> tags, breaking json_repair and yielding nested/empty sub_query lists; strip reasoning tags in the generic LLM provider response.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/actions/query_processing.py",
+      "gpt_researcher/skills/researcher.py"
+    ],
+    "score": 57
+  },
+  {
+    "number": 1367,
+    "title": "Llama.cpp Server: Separate LLM and Embedding Endpoints",
+    "type": "feature",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.75,
+    "area": "config",
+    "one_liner": "Request to point embeddings at a different OpenAI-compatible base URL than the LLM; add OPENAI_EMBEDDING_BASE_URL support (a contributor flagged a PR; issue 1380 has the concrete patch).",
+    "relevant_files": [
+      "gpt_researcher/memory/embeddings.py"
+    ],
+    "score": 57
+  },
+  {
+    "number": 1380,
+    "title": "Out Of Memory with deep research + local embedding model",
+    "type": "feature",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.75,
+    "area": "llm-provider",
+    "one_liner": "Local embedding model competes with LLM for VRAM; a contributor proposes adding OPENAI_EMBEDDING_BASE_URL to CustomEmbedding so embeddings can be offloaded to a separate endpoint (overlaps 1367).",
+    "relevant_files": [
+      "gpt_researcher/memory/embeddings.py"
+    ],
+    "score": 57
+  },
+  {
+    "number": 1449,
+    "title": "Install Poetry dependencies will cause incompatible constraints",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.75,
+    "area": "config",
+    "one_liner": "pyproject.toml has conflicting json-repair constraints between [tool.poetry] and [project] sections causing poetry install to fail; reconcile the dependency versions.",
+    "relevant_files": [
+      "pyproject.toml"
+    ],
+    "score": 57
+  },
+  {
+    "number": 1520,
+    "title": "Error converting markdown to pdf (pdf_styles.css not found)",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.75,
+    "area": "frontend",
+    "one_liner": "PDF export fails with relative path './styles/pdf_styles.css' not found when CWD differs; fix by resolving the CSS path relative to the module/package rather than CWD.",
+    "relevant_files": [
+      "backend/utils.py",
+      "backend/server/server_utils.py"
+    ],
+    "score": 57
+  },
+  {
+    "number": 591,
+    "title": "Support disabling of API response streaming via config",
+    "type": "feature",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "config",
+    "one_liner": "Streaming is hardcoded in actions.py; add a config flag to disable streaming for LLMs/APIs that mishandle it (still relevant per 2025 GPT-5 streaming comment).",
+    "relevant_files": [
+      "gpt_researcher/actions/",
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/config/variables/default.py"
+    ],
+    "score": 56
+  },
+  {
+    "number": 1051,
+    "title": "Send 400/500 error status on Internal Server Error",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "websocket",
+    "one_liner": "Server errors leave the UI hanging with no status; add try/catch in the main request/websocket handler and surface errors to the client (raised by collaborator ElishaKay).",
+    "relevant_files": [
+      "backend/server/server.py",
+      "backend/server/websocket_manager.py",
+      "gpt_researcher/llm_provider/generic/base.py"
+    ],
+    "score": 56
+  },
+  {
+    "number": 1087,
+    "title": "Error When Running Ollama LLM Test Script for GPTR (OLLAMA_BASE_URL KeyError)",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "docs",
+    "one_liner": "Docs Ollama test script passes base_url both as kwarg and via os.environ['OLLAMA_BASE_URL'], causing KeyError / duplicate-arg errors; fix is to align the doc script and base.py to read OLLAMA_BASE_URL from env safely.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "docs/docs/gpt-researcher/llms/running-with-ollama.md"
+    ],
+    "score": 56
+  },
+  {
+    "number": 1275,
+    "title": "No error handling on empty search results from retriever",
+    "type": "feature",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "retrievers",
+    "one_liner": "When the retriever returns zero results, empty context is streamed to the LLM producing an unhelpful response; add explicit handling/logging and a friendly 'no sources found' message instead of generating a report.",
+    "relevant_files": [
+      "gpt_researcher/skills/researcher.py",
+      "gpt_researcher/actions/report_generation.py"
+    ],
+    "score": 56
+  },
+  {
+    "number": 1325,
+    "title": "[Feature request] Download markdown and json logs in NextJS backend",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "frontend",
+    "one_liner": "Markdown and JSON-log downloads work in the uvicorn frontend but are missing/broken in the NextJS frontend; add the markdown/json export buttons there.",
+    "relevant_files": [
+      "frontend/nextjs/components/",
+      "frontend/nextjs/actions/"
+    ],
+    "score": 56
+  },
+  {
+    "number": 1332,
+    "title": "Deep Research - Context Trimming Failure",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "config",
+    "one_liner": "trim_context_to_word_limit got nested lists of dicts instead of strings (introduced by PR #1195); count_words now coerces lists but deep_research still passes nested structures, so flatten all_context before trimming.",
+    "relevant_files": [
+      "gpt_researcher/skills/deep_research.py"
+    ],
+    "score": 56
+  },
+  {
+    "number": 1359,
+    "title": "Incorrect Placement of Deep Research Option in Frontend Forms",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "frontend",
+    "one_liner": "Deep Research appears under the sources form instead of the report-type form; minor frontend reorganization to align with ReportType enum.",
+    "relevant_files": [
+      "frontend/",
+      "gpt_researcher/utils/enum.py"
+    ],
+    "score": 56
+  },
+  {
+    "number": 1373,
+    "title": "KeyError: 'organic' error while calling the execution via Docker Linux",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "retrievers",
+    "one_liner": "Serper returns an error payload (e.g. 'Query too long. Max 2048 characters') instead of 'organic', causing a KeyError; add graceful handling of Serper error responses.",
+    "relevant_files": [
+      "gpt_researcher/retrievers/serper/serper.py"
+    ],
+    "score": 56
+  },
+  {
+    "number": 1517,
+    "title": "Frontend docker image is ARM64, missing AMD64",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "config",
+    "one_liner": "Next.js frontend Docker image is published only for arm64; fix the docker build/publish workflow to do multi-arch (buildx amd64+arm64), possibly removing the primp dep blocker as a collaborator noted.",
+    "relevant_files": [
+      ".github/workflows/docker-build.yml",
+      "frontend/nextjs/Dockerfile"
+    ],
+    "score": 56
+  },
+  {
+    "number": 605,
+    "title": "Crashes instead of graceful message when no answers found / bad LLM JSON",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.65,
+    "area": "llm-provider",
+    "one_liner": "Detailed report crashes with AttributeError when subtopics LLM JSON parse fails (non-GPT models); wrap get_sub_queries/subtopics parsing to return empty list gracefully.",
+    "relevant_files": [
+      "backend/report_type/detailed_report/detailed_report.py",
+      "gpt_researcher/actions/query_processing.py"
+    ],
+    "score": 55
+  },
+  {
+    "number": 1586,
+    "title": "WebSocket error, fixable with reload",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.65,
+    "area": "websocket",
+    "one_liner": "Starting a new research raises an unhandled WebSocketDisconnect (1005) in handle_websocket_communication, requiring a page reload; handle the disconnect gracefully instead of logging an error/breaking the loop.",
+    "relevant_files": [
+      "backend/server/server_utils.py"
+    ],
+    "score": 55
+  },
+  {
+    "number": 1801,
+    "title": "Runtime Open Federation — federate GPT-Researcher, earn USDC",
+    "type": "integration-promo",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.97,
+    "area": "unknown",
+    "one_liner": "Crypto/USDC federation node promotion (multilingual spam); close as promo.",
+    "relevant_files": [],
+    "score": 54.4
+  },
+  {
+    "number": 565,
+    "title": "No references are returned for detailed reports on local data",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.6,
+    "area": "config",
+    "one_liner": "References for local docs are missing because they derive from visited_urls; reporter proposed tracking sources in ContextCompressor — likely partially addressed already but worth verifying against current source-tracking code.",
+    "relevant_files": [
+      "gpt_researcher/context/compression.py",
+      "gpt_researcher/skills/context_manager.py"
+    ],
+    "score": 54
+  },
+  {
+    "number": 766,
+    "title": "gpt-researcher pip package ships messy file structure (backend/, etc.)",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.6,
+    "area": "config",
+    "one_liner": "The published wheel includes top-level backend/ and other dirs polluting site-packages; tighten packaging (find_packages/include) in setup.py/pyproject — verify against current packaging config.",
+    "relevant_files": [
+      "setup.py",
+      "pyproject.toml",
+      "MANIFEST.in"
+    ],
+    "score": 54
+  },
+  {
+    "number": 1037,
+    "title": "Error parsing dimension value 100%: invalid literal for int() base 10 '100%'",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.6,
+    "area": "scrapers",
+    "one_liner": "Image/dimension parsing chokes on percentage values like '100%' (int() cast) during image extraction; guard non-numeric width/height in get_relevant_images. Non-fatal but noisy.",
+    "relevant_files": [
+      "gpt_researcher/scraper/utils.py"
+    ],
+    "score": 54
+  },
+  {
+    "number": 1628,
+    "title": "add support for gemini-3-flash-preview",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.6,
+    "area": "llm-provider",
+    "one_liner": "New Gemini 3 model fails with a content-format mismatch; likely needs litellm/google provider bump and possibly message-format handling.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/config/config.py"
+    ],
+    "score": 54
+  },
+  {
+    "number": 1729,
+    "title": "Your MCP server earned an A security grade on Loaditout",
+    "type": "integration-promo",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "unknown",
+    "one_liner": "Loaditout badge solicitation; close as promotional, no action needed.",
+    "relevant_files": [],
+    "score": 54
+  },
+  {
+    "number": 1733,
+    "title": "Add AgentWeb — free business data API for agents",
+    "type": "integration-promo",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "unknown",
+    "one_liner": "AgentWeb product promotion; close as promo.",
+    "relevant_files": [],
+    "score": 54
+  },
+  {
+    "number": 1736,
+    "title": "Proposal: Enabling agent monetization and commerce via Merxex",
+    "type": "integration-promo",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "unknown",
+    "one_liner": "Merxex agent-commerce promotion (one of several duplicates); close as promo.",
+    "relevant_files": [],
+    "score": 54
+  },
+  {
+    "number": 1744,
+    "title": "Merxex Integration: Enabling Agent-to-Agent Commerce",
+    "type": "duplicate",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "unknown",
+    "one_liner": "Duplicate Merxex promo (see #1736/#1745/#1747); close.",
+    "relevant_files": [],
+    "score": 54
+  },
+  {
+    "number": 1745,
+    "title": "Proposal: Enabling Agent-to-Agent Commerce via Merxex",
+    "type": "duplicate",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "unknown",
+    "one_liner": "Duplicate Merxex promo (verbatim copy of #1736); close.",
+    "relevant_files": [],
+    "score": 54
+  },
+  {
+    "number": 1747,
+    "title": "Standardizing Agent Commerce: Merxex Integration Proposal",
+    "type": "duplicate",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "unknown",
+    "one_liner": "Duplicate Merxex promo; close.",
+    "relevant_files": [],
+    "score": 54
+  },
+  {
+    "number": 1789,
+    "title": "Independent trust comparison data available for GPT Researcher",
+    "type": "integration-promo",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "unknown",
+    "one_liner": "HVTracker ranking/badge promotion; close as promo.",
+    "relevant_files": [],
+    "score": 54
+  },
+  {
+    "number": 1105,
+    "title": "Inconsistent required Python versions",
+    "type": "stale",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.92,
+    "area": "config",
+    "one_liner": "pyproject said python >=3.10,<3.12 while README said 3.11+; pyproject.toml now declares python >=3.11 (and requires-python >=3.11), so the inconsistency is resolved.",
+    "relevant_files": [
+      "pyproject.toml",
+      "README.md"
+    ],
+    "score": 53.400000000000006
+  },
+  {
+    "number": 1028,
+    "title": "Mistral embedding bug (\"An error occurred with MistralAI: 'data'\")",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "fix-pr",
+    "confidence": 0.55,
+    "area": "llm-provider",
+    "one_liner": "Mistral embeddings raise a KeyError 'data' during context retrieval; likely a response-shape/batching mismatch in the embeddings wrapper — reproduce with Mistral embedding provider and fix parsing.",
+    "relevant_files": [
+      "gpt_researcher/memory/embeddings.py"
+    ],
+    "score": 53
+  },
+  {
+    "number": 1079,
+    "title": "Error when trying to submit a form (LLM retry loop returns on first attempt)",
+    "type": "stale",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.9,
+    "area": "llm-provider",
+    "one_liner": "Reported that the retry `for _ in range(10)` loop returned on the first iteration; current llm.py has been rewritten with a proper attempt loop and exception handling, so this is already fixed.",
+    "relevant_files": [
+      "gpt_researcher/utils/llm.py"
+    ],
+    "score": 53
+  },
+  {
+    "number": 1131,
+    "title": "Long prompts give FileNotFoundError (filename too long)",
+    "type": "stale",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.9,
+    "area": "websocket",
+    "one_liner": "Long queries created over-long output filenames on Windows; sanitize_filename in server_utils.py now hashes the task portion (md5[:10]) instead of embedding the full prompt, so this is fixed.",
+    "relevant_files": [
+      "backend/server/server_utils.py"
+    ],
+    "score": 53
+  },
+  {
+    "number": 1288,
+    "title": "Needed workaround for \"Error: 429 Resource has been exhausted\"",
+    "type": "bug",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.9,
+    "area": "llm-provider",
+    "one_liner": "Requested 429 retry-with-backoff in the LLM completion loop is already implemented in current llm.py (try/except + exponential backoff over max_attempts); close as resolved.",
+    "relevant_files": [
+      "gpt_researcher/utils/llm.py"
+    ],
+    "score": 53
+  },
+  {
+    "number": 1343,
+    "title": "How can i use local ollama instead of openAI api?",
+    "type": "question",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.9,
+    "area": "docs",
+    "one_liner": "User asks how to use local Ollama; answered in comments with the OLLAMA_BASE_URL/FAST_LLM/EMBEDDING env config, close pointing to the Ollama docs.",
+    "relevant_files": [
+      "docs/docs/gpt-researcher/llms/llms.md",
+      "docs/docs/gpt-researcher/llms/running-with-ollama.md"
+    ],
+    "score": 53
+  },
+  {
+    "number": 1415,
+    "title": "Source verification failed: 'PromptFamily' object has no attribute 'curate_soures'",
+    "type": "stale",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.9,
+    "area": "config",
+    "one_liner": "Typo curate_soures vs curate_sources; current code uses the correct spelling everywhere (prompts.py, curator.py), so already fixed—close.",
+    "relevant_files": [
+      "gpt_researcher/prompts.py",
+      "gpt_researcher/skills/curator.py"
+    ],
+    "score": 53
+  },
+  {
+    "number": 1712,
+    "title": "Bug: Missing `import os` in backend/server/websocket_manager.py causes NameError",
+    "type": "bug",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.9,
+    "area": "websocket",
+    "one_liner": "Reported NameError from missing `import os`; current code already imports os (line 1) and a fix PR (#1717) exists — verify and close as resolved.",
+    "relevant_files": [
+      "backend/server/websocket_manager.py"
+    ],
+    "score": 53
+  },
+  {
+    "number": 1808,
+    "title": "Integration idea: BGPT evidence retrieval tool",
+    "type": "integration-promo",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.9,
+    "area": "unknown",
+    "one_liner": "BGPT literature-evidence MCP/API promotion; close as promo.",
+    "relevant_files": [],
+    "score": 53
+  },
+  {
+    "number": 1254,
+    "title": "Parse Dimensions Function Appears to Be Incorrect",
+    "type": "stale",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.85,
+    "area": "scrapers",
+    "one_liner": "parse_dimension converted to int and didn't handle decimals/%; current scraper/utils.py now does int(float(value)) handling decimals. Percent handling still absent but the core bug is fixed; close or label-only.",
+    "relevant_files": [
+      "gpt_researcher/scraper/utils.py"
+    ],
+    "score": 52
+  },
+  {
+    "number": 1358,
+    "title": "NotImplementedError: Provider claude-3-5-sonnet-...does not support chat",
+    "type": "question",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.85,
+    "area": "llm-provider",
+    "one_liner": "User omitted the provider prefix; answer already given in comments (use bedrock:claude-... format) so reply confirming and close.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "docs/docs/gpt-researcher/llms/llms.md"
+    ],
+    "score": 52
+  },
+  {
+    "number": 1391,
+    "title": "Could not connect to MCP Server via HTTP",
+    "type": "stale",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.85,
+    "area": "mcp",
+    "one_liner": "MCP server moved to a dedicated repo (assafelovic/gptr-mcp); maintainer already redirected the user—close as moved.",
+    "relevant_files": [],
+    "score": 52
+  },
+  {
+    "number": 1705,
+    "title": "How was the version 0.14.8 on PyPI published?",
+    "type": "question",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.85,
+    "area": "config",
+    "one_liner": "Asks why PyPI 0.14.8 didn't match pyproject 0.14.7; repo is now at 0.15.1, so this is a stale release-process question — answer and close.",
+    "relevant_files": [
+      "pyproject.toml"
+    ],
+    "score": 52
+  },
+  {
+    "number": 578,
+    "title": "Title of scraped articles not scraped",
+    "type": "bug",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.8,
+    "area": "scrapers",
+    "one_liner": "Scrapers previously didn't return titles causing hallucinated reference titles; current code extracts title (extract_title) and threads it through scraper.py, so this is fixed — verify and close (PR #1118).",
+    "relevant_files": [
+      "gpt_researcher/scraper/scraper.py",
+      "gpt_researcher/scraper/beautiful_soup/beautiful_soup.py",
+      "gpt_researcher/scraper/utils.py"
+    ],
+    "score": 51
+  },
+  {
+    "number": 1386,
+    "title": "Deep research - request too large for gpt-4.1",
+    "type": "question",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.8,
+    "area": "config",
+    "one_liner": "429 TPM rate-limit from OpenAI on gpt-4.1, not a GPTR bug; maintainer already responded recommending o4-mini and tuning deep-research params—close.",
+    "relevant_files": [
+      "backend/report_type/deep_research/"
+    ],
+    "score": 51
+  },
+  {
+    "number": 1447,
+    "title": "Customize the Report prompt",
+    "type": "question",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.8,
+    "area": "config",
+    "one_liner": "User wants a custom_prompt argument on write_report(); this already exists (write_report(custom_prompt=...)), so reply pointing to it and close.",
+    "relevant_files": [
+      "gpt_researcher/agent.py",
+      "gpt_researcher/skills/writer.py"
+    ],
+    "score": 51
+  },
+  {
+    "number": 1496,
+    "title": "How/where to set DEEP_RESEARCH_BREADTH so multi-agent uses it",
+    "type": "question",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.8,
+    "area": "config",
+    "one_liner": "User wants to know where to point a custom config.json / set deep research params; answer is via .env or config_file param (a commenter already confirmed .env works), reply and close.",
+    "relevant_files": [
+      "gpt_researcher/config/config.py",
+      "gpt_researcher/config/variables/default.py"
+    ],
+    "score": 51
+  },
+  {
+    "number": 1523,
+    "title": "MCP server configs not found when agent asks follow-up questions",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.75,
+    "area": "mcp",
+    "one_liner": "MCP configs work for the initial query but are lost (empty mcp_configs) for agent-generated sub-queries and in deep research mode; fix config/researcher-instance propagation to sub-researchers.",
+    "relevant_files": [
+      "gpt_researcher/mcp/streaming.py",
+      "gpt_researcher/retrievers/mcp/retriever.py",
+      "gpt_researcher/skills/researcher.py"
+    ],
+    "score": 51
+  },
+  {
+    "number": 1572,
+    "title": "Report Generator Hallucinates Sources",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.75,
+    "area": "report-generation",
+    "one_liner": "When context is empty the writer invents fake/homepage URLs; reporter also found writer.py/ReportGenerator don't thread the custom prompt_family and deep-research process_research_results bypasses it, fix prompt_family propagation plus add an empty-context / URL-allowlist guard.",
+    "relevant_files": [
+      "gpt_researcher/skills/writer.py",
+      "gpt_researcher/actions/report_generation.py",
+      "gpt_researcher/skills/deep_research.py",
+      "gpt_researcher/prompts.py"
+    ],
+    "score": 51
+  },
+  {
+    "number": 1605,
+    "title": "Move Docker image publishing to GHCR only and remove AWS ECR/OIDC dependency",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.75,
+    "area": "config",
+    "one_liner": "ECR push via OIDC assume-role is failing and blocking image builds; consolidate Docker publishing to GHCR (packages: write) and drop the AWS credential/ECR steps from build.yml/deploy.yml.",
+    "relevant_files": [
+      ".github/workflows/build.yml",
+      ".github/workflows/deploy.yml",
+      ".github/workflows/docker-build.yml"
+    ],
+    "score": 51
+  },
+  {
+    "number": 1119,
+    "title": "Detailed Report on local docs: missing/empty references and broken citations",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "report-generation",
+    "one_liner": "Detailed reports over local docs produce empty reference lists and hallucinated URLs because local documents never get URLs set in visited_urls; fix is to populate document file paths/URLs so add_references works.",
+    "relevant_files": [
+      "gpt_researcher/skills/writer.py",
+      "gpt_researcher/document/",
+      "gpt_researcher/actions/report_generation.py"
+    ],
+    "score": 50
+  },
+  {
+    "number": 1279,
+    "title": "AttributeError: 'list' object has no attribute 'split' in deep research (count_words)",
+    "type": "stale",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.75,
+    "area": "report-generation",
+    "one_liner": "count_words crashed on list input when CURATE_SOURCES=true; deep_research.py count_words now handles lists and there's an explicit extend-vs-append fix for curated context. Likely resolved on latest master though one comment (2026-04) reports it on an older pip; verify version and close.",
+    "relevant_files": [
+      "gpt_researcher/skills/deep_research.py"
+    ],
+    "score": 50
+  },
+  {
+    "number": 1307,
+    "title": "Follow-up questions broken",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "frontend",
+    "one_liner": "The NextJS 'ask questions about this report' chat freezes/redirects to homepage instead of running; chat agent wiring in websocket_manager + frontend needs fixing.",
+    "relevant_files": [
+      "backend/server/websocket_manager.py",
+      "backend/chat/chat.py",
+      "frontend/nextjs/components/"
+    ],
+    "score": 50
+  },
+  {
+    "number": 1534,
+    "title": "Running research on local documents doesn't work",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "document-loader",
+    "one_liner": "Selecting 'My Documents' with DOC_PATH set produces no output; maintainer committed to testing, needs reproduction of the DOC_PATH/local-docs flow in the FastAPI backend and a fix.",
+    "relevant_files": [
+      "gpt_researcher/document/document.py",
+      "backend/server/server_utils.py",
+      "gpt_researcher/skills/researcher.py"
+    ],
+    "score": 50
+  },
+  {
+    "number": 1579,
+    "title": "DEEP mode does not stop when retrievers cannot obtain context",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "deep-research",
+    "one_liner": "Deep research loops forever when retrievers return no context (e.g. bad Tavily key / no internet); add an empty-context termination / max-iteration guard in deep_research.",
+    "relevant_files": [
+      "gpt_researcher/skills/deep_research.py"
+    ],
+    "score": 50
+  },
+  {
+    "number": 1602,
+    "title": "FireCrawl scraper returns empty content under concurrent requests in deep research",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.7,
+    "area": "scrapers",
+    "one_liner": "FireCrawl scraper hits API rate limits under deep-research concurrency (~71% empty content) with no retry/backoff; add rate-limit handling/retry-with-backoff or concurrency throttling in the firecrawl scraper.",
+    "relevant_files": [
+      "gpt_researcher/scraper/firecrawl/firecrawl.py",
+      "gpt_researcher/scraper/scraper.py"
+    ],
+    "score": 50
+  },
+  {
+    "number": 1137,
+    "title": "Multi-Agent endless loop / endless failure in json_repair",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "fix-pr",
+    "confidence": 0.65,
+    "area": "mcp",
+    "one_liner": "Multi-agent reviewer loop can spin forever when LLM JSON can't be repaired (often truncated by low SMART_TOKEN_LIMIT); needs a max-retry / hard-failure guard and a shared text->JSON util in multi_agents/agents/utils/llms.py.",
+    "relevant_files": [
+      "multi_agents/agents/utils/llms.py",
+      "multi_agents/agents/reviewer.py"
+    ],
+    "score": 49
+  },
+  {
+    "number": 1398,
+    "title": "Deep Research - Runtime error (temperature None for ChatOpenAI)",
+    "type": "stale",
+    "difficulty": "trivial",
+    "action": "reply-close",
+    "confidence": 0.7,
+    "area": "llm-provider",
+    "one_liner": "Pydantic temperature=None validation error on reasoning models; current base.py has NO_SUPPORT_TEMPERATURE_MODELS handling, so likely already fixed—verify and close.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py"
+    ],
+    "score": 49
+  },
+  {
+    "number": 1751,
+    "title": "Provider suggestion: SerpBase for lower-cost SERP access",
+    "type": "integration-promo",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.85,
+    "area": "retrievers",
+    "one_liner": "Vendor self-promoting SerpBase as a SERP retriever (with sockpuppet comment); close as promo unless Assaf wants a community PR.",
+    "relevant_files": [
+      "gpt_researcher/retrievers/"
+    ],
+    "score": 49
+  },
+  {
+    "number": 1098,
+    "title": "o3 / reasoning models reject temperature argument",
+    "type": "stale",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.8,
+    "area": "llm-provider",
+    "one_liner": "Requested support for o3/o-series models that don't accept temperature; base.py now has NO_SUPPORT_TEMPERATURE_MODELS handling for o1/o3/o4/gpt-5, so the core ask is implemented (LiteLLM users must match exact model name) and the thread can be closed.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/utils/llm.py"
+    ],
+    "score": 48
+  },
+  {
+    "number": 1232,
+    "title": "gpt-researcher npm package does not support https/wss host",
+    "type": "stale",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.75,
+    "area": "frontend",
+    "one_liner": "npm package hardcoded ws:// instead of wss:// for https hosts; a contributor commented that http/https support has since been added to the npm package, so verify and close.",
+    "relevant_files": [
+      "gpt-researcher/",
+      "frontend/nextjs/"
+    ],
+    "score": 47
+  },
+  {
+    "number": 1378,
+    "title": "researcher.write_report() yields incomplete/inconsistent results",
+    "type": "question",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.7,
+    "area": "config",
+    "one_liner": "Truncated deep-research reports caused by token limits and provider TPM caps; maintainer already advised raising SMART_TOKEN_LIMIT, resolved—reply and close.",
+    "relevant_files": [
+      "gpt_researcher/config/variables/default.py",
+      "backend/report_type/deep_research/"
+    ],
+    "score": 46
+  },
+  {
+    "number": 1423,
+    "title": "'ScrapeResponse' object is not subscriptable - even after updating to latest package",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.7,
+    "area": "scrapers",
+    "one_liner": "Firecrawl ScrapeResponse accessed with subscript; current firecrawl.py uses attribute access, so likely resolved on master—verify against a fresh release and close (relates to 1404).",
+    "relevant_files": [
+      "gpt_researcher/scraper/firecrawl/firecrawl.py"
+    ],
+    "score": 46
+  },
+  {
+    "number": 1404,
+    "title": "Self hosted firecrawl returning 0 scraped results",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.65,
+    "area": "scrapers",
+    "one_liner": "Firecrawl response accessed as dict instead of object attributes; current firecrawl.py already uses dot notation (response.metadata/response.markdown), so likely fixed—verify and close (duplicate of 1423).",
+    "relevant_files": [
+      "gpt_researcher/scraper/firecrawl/firecrawl.py"
+    ],
+    "score": 45
+  },
+  {
+    "number": 1427,
+    "title": "choose_agent failing on OpenAI models that don't support temperature",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.65,
+    "area": "llm-provider",
+    "one_liner": "o3 fails in choose_agent due to unsupported temperature; base.py now maintains NO_SUPPORT_TEMPERATURE_MODELS including o3, so likely fixed—verify choose_agent path and close.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/actions/agent_creator.py"
+    ],
+    "score": 45
+  },
+  {
+    "number": 1047,
+    "title": "Tavily - Too Many Requests (429) -> empty response",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.6,
+    "area": "retrievers",
+    "one_liner": "Tavily 429 leads to empty report; mostly a free-tier rate-limit/usage issue — reply with retry/backoff guidance and graceful fallback note, close unless we want retry logic in the Tavily retriever.",
+    "relevant_files": [
+      "gpt_researcher/retrievers/tavily/tavily_search.py"
+    ],
+    "score": 44
+  },
+  {
+    "number": 1209,
+    "title": "openai.BadRequestError using openai:o1-preview and Deep Research (developer role)",
+    "type": "stale",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.6,
+    "area": "llm-provider",
+    "one_liner": "o1-preview rejects the 'developer' role / reasoning params; o1-preview is now in NO_SUPPORT_TEMPERATURE_MODELS and maintainers recommended o1/o3-mini. Likely resolved for supported models; close or verify developer-role handling.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/skills/deep_research.py"
+    ],
+    "score": 44
+  },
+  {
+    "number": 1430,
+    "title": "Structured JSON output",
+    "type": "question",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.6,
+    "area": "config",
+    "one_liner": "User asks how to get schema-constrained JSON output; not currently a first-class feature—answer with custom_prompt/post-processing guidance and close (or label as feature if desired).",
+    "relevant_files": [
+      "gpt_researcher/skills/writer.py"
+    ],
+    "score": 44
+  },
+  {
+    "number": 1480,
+    "title": "MCP Integration Not Using Structured Content",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-close",
+    "confidence": 0.6,
+    "area": "mcp",
+    "one_liner": "Reports MCP integration ignores structured_content; code in gpt_researcher/mcp/research.py already handles structured_content (preferring it over content), so likely already fixed in a later version, verify against reporter's v3.3.3 then close.",
+    "relevant_files": [
+      "gpt_researcher/mcp/research.py"
+    ],
+    "score": 44
+  },
+  {
+    "number": 510,
+    "title": "HuggingFace Open Source Models Integration",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "reply-close",
+    "confidence": 0.75,
+    "area": "llm-provider",
+    "one_liner": "Old request to support HuggingFace LLMs/embeddings; GPTR now supports many providers via generic langchain init, so this is effectively addressed/stale and can be closed pointing to current LLM docs.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/config/config.py",
+      "docs/docs/gpt-researcher/llms"
+    ],
+    "score": 41
+  },
+  {
+    "number": 1229,
+    "title": "Feature request: use official tavily python client (async)",
+    "type": "question",
+    "difficulty": "medium",
+    "action": "reply-close",
+    "confidence": 0.7,
+    "area": "retrievers",
+    "one_liner": "Asks why GPTR uses raw HTTP instead of tavily-python's Async client; maintainer explained intentional choice to keep the pip package light. Answer and close (or label as low-priority enhancement).",
+    "relevant_files": [
+      "gpt_researcher/retrievers/tavily/tavily_search.py"
+    ],
+    "score": 40
+  },
+  {
+    "number": 1687,
+    "title": "Proposal: Research Agent Discovery Pipeline via WheatCoin Community",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.97,
+    "area": "unknown",
+    "one_liner": "Crypto/token discovery-platform promotion; close as out of scope.",
+    "relevant_files": [],
+    "score": 39.4
+  },
+  {
+    "number": 1711,
+    "title": "Your AI agent has a profile on AgentFolio — claim it",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.97,
+    "area": "unknown",
+    "one_liner": "Automated AgentFolio/Solana directory-claim promo; close as spam.",
+    "relevant_files": [],
+    "score": 39.4
+  },
+  {
+    "number": 1714,
+    "title": "Clarvia AEO Badge — verify gpt-researcher MCP quality score",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.97,
+    "area": "unknown",
+    "one_liner": "Clarvia badge/promo outreach; close as out of scope.",
+    "relevant_files": [],
+    "score": 39.4
+  },
+  {
+    "number": 1629,
+    "title": "Integration Proposal: MoltBridge Trust Layer for Agent-to-Agent Research",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "unknown",
+    "one_liner": "Self-promotion of MoltBridge product as an integration; close as not aligned with project scope.",
+    "relevant_files": [],
+    "score": 39
+  },
+  {
+    "number": 1685,
+    "title": "Feature request: anybrowse MCP integration for Cloudflare-protected scraping",
+    "type": "duplicate",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "scrapers",
+    "one_liner": "Exact duplicate of #1684 (anybrowse promo); close as duplicate.",
+    "relevant_files": [],
+    "score": 39
+  },
+  {
+    "number": 1689,
+    "title": "Feature: AgentID for verifiable researcher agent identity",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "unknown",
+    "one_liner": "Self-promotion of AgentID identity layer; close as not aligned with project scope.",
+    "relevant_files": [],
+    "score": 39
+  },
+  {
+    "number": 1699,
+    "title": "AI Village: Agent-to-agent collaboration invitation",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "unknown",
+    "one_liner": "Automated agent-collaboration outreach with no concrete code ask; close as out of scope.",
+    "relevant_files": [],
+    "score": 39
+  },
+  {
+    "number": 1707,
+    "title": "Security audit findings — tool description injection + missing output sanitization",
+    "type": "duplicate",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "security",
+    "one_liner": "Duplicate of #1706 (same paid-audit solicitation); close as duplicate/spam.",
+    "relevant_files": [],
+    "score": 39
+  },
+  {
+    "number": 1716,
+    "title": "MCP integration: Add Clarvia for tool quality research and discovery",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.95,
+    "area": "mcp",
+    "one_liner": "Clarvia MCP-server self-promotion; close as not aligned with project scope.",
+    "relevant_files": [],
+    "score": 39
+  },
+  {
+    "number": 1706,
+    "title": "Security audit findings — tool description injection + missing output sanitization",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.9,
+    "area": "security",
+    "one_liner": "Paywalled '$29 audit report' solicitation framed as security findings; close as spam/promo (prompt-injection concerns are generic, not actionable as filed).",
+    "relevant_files": [],
+    "score": 38
+  },
+  {
+    "number": 1732,
+    "title": "Trust layer for autonomous research sources?",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.9,
+    "area": "unknown",
+    "one_liner": "Thread of competing third-party 'trust score' / smsh / PCH / joy-connect promos; close as spam/promo.",
+    "relevant_files": [],
+    "score": 38
+  },
+  {
+    "number": 1796,
+    "title": "Feature: Add persistent behavioral memory via Agent Magnet integration",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.9,
+    "area": "unknown",
+    "one_liner": "Agent Magnet / Universal Memory Protocol cross-promo thread; close as promo.",
+    "relevant_files": [],
+    "score": 38
+  },
+  {
+    "number": 676,
+    "title": "ERROR: Exception in ASGI application when running with Ollama",
+    "type": "bug",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.85,
+    "area": "llm-provider",
+    "one_liner": "Reporter confirmed it works after upgrading the pip package and pulling latest; resolved — close.",
+    "relevant_files": [
+      "docs/docs/gpt-researcher/llms"
+    ],
+    "score": 37
+  },
+  {
+    "number": 1684,
+    "title": "Feature request: anybrowse MCP integration for Cloudflare-protected scraping",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.85,
+    "area": "scrapers",
+    "one_liner": "Promotes anybrowse paid scraper as a fallback; real underlying problem (silent 403 on Cloudflare sites) is valid but the ask is product promo — close or redirect to generic fallback-scraper discussion.",
+    "relevant_files": [
+      "gpt_researcher/scraper/"
+    ],
+    "score": 37
+  },
+  {
+    "number": 1704,
+    "title": "Idea: Plasmate for faster, cheaper web content extraction",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.85,
+    "area": "scrapers",
+    "one_liner": "Promotes Plasmate scraper as a token-reducing extraction option; close or label as optional third-party suggestion.",
+    "relevant_files": [
+      "gpt_researcher/scraper/"
+    ],
+    "score": 37
+  },
+  {
+    "number": 1728,
+    "title": "Verifiable research audit trail — signed receipts for agent actions",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.85,
+    "area": "unknown",
+    "one_liner": "Promotion of the 'protect-mcp' / veritasacta signed-receipt product framed as a feature; close as out-of-scope promo.",
+    "relevant_files": [],
+    "score": 37
+  },
+  {
+    "number": 1458,
+    "title": "Can you have the crawler follow links?",
+    "type": "question",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.8,
+    "area": "scrapers",
+    "one_liner": "User asks whether the scraper can recursively follow links on parsed pages; it does not, this is a clarifying question to answer and close (research is driven by retriever search results, not link crawling).",
+    "relevant_files": [
+      "gpt_researcher/scraper/scraper.py",
+      "gpt_researcher/scraper/utils.py"
+    ],
+    "score": 36
+  },
+  {
+    "number": 1702,
+    "title": "Are current benchmarks enough to measure research agents?",
+    "type": "integration-promo",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.7,
+    "area": "evals",
+    "one_liner": "Discussion-style promotion of ResearchClawBench benchmark; informational, close or redirect to Discussions.",
+    "relevant_files": [],
+    "score": 34
+  },
+  {
+    "number": 1239,
+    "title": "Chapters on reports generated by multi-agent systems don't match TOC",
+    "type": "needs-info",
+    "difficulty": "unknown",
+    "action": "reply-close",
+    "confidence": 0.6,
+    "area": "mcp",
+    "one_liner": "Chapter names vs. appended chapter list mismatch when using a local Ollama 32b model; maintainer indicated this is model-quality related (better on OpenAI). Likely a duplicate of the multi-agent formatting issues; close or merge into #1139.",
+    "relevant_files": [
+      "multi_agents/agents/",
+      "multi_agents/task.json"
+    ],
+    "score": 32
+  },
+  {
+    "number": 1259,
+    "title": "Feature Request: Adding Human Feedback to Research Strategy Planning",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "reply-close",
+    "confidence": 0.6,
+    "area": "mcp",
+    "one_liner": "Wants a human-in-the-loop review/edit step before research strategy is finalized; maintainer notes this already exists for the multi_agents flow via include_human_feedback in task.json. Point user there and close, or keep open for the single-agent flow.",
+    "relevant_files": [
+      "multi_agents/task.json",
+      "multi_agents/agents/human.py"
+    ],
+    "score": 32
+  },
+  {
+    "number": 1222,
+    "title": "Lightweight docker image (without Playwright)",
+    "type": "feature",
+    "difficulty": "small",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.8,
+    "area": "config",
+    "one_liner": "Requests a slim Docker image (~680MB) without Playwright for users relying on external scrapers like Firecrawl; reporter offered a PR, so maintainer just needs to greenlight an additional lite Dockerfile.",
+    "relevant_files": [
+      "Dockerfile",
+      "docker-compose.yml"
+    ],
+    "score": 28
+  },
+  {
+    "number": 1076,
+    "title": "Add open-source provider AI/ML API",
+    "type": "integration-promo",
+    "difficulty": "small",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "llm-provider",
+    "one_liner": "Vendor (aimlapi.com) offering to contribute an AI/ML API provider integration; maintainer green-light decision — likely accept as a community PR given generic provider support.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "docs/docs/gpt-researcher/llms"
+    ],
+    "score": 26
+  },
+  {
+    "number": 1582,
+    "title": "GPL License Alternative PDF Scraper Implementation",
+    "type": "feature",
+    "difficulty": "small",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "scrapers",
+    "one_liner": "Proposes a pdfminer.six (MIT) PDF scraper to avoid PyMuPDF AGPL licensing (re #1571); maintainer to decide whether to swap/offer alternative scraper, code is provided.",
+    "relevant_files": [
+      "gpt_researcher/scraper/pymupdf/pymupdf.py",
+      "gpt_researcher/scraper/__init__.py"
+    ],
+    "score": 26
+  },
+  {
+    "number": 1598,
+    "title": "why ECR and not Github Container Registry?",
+    "type": "question",
+    "difficulty": "small",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "config",
+    "one_liner": "Asks why Docker images depend on AWS ECR rather than a free registry like GHCR; overlaps with #1605, decide on registry strategy (likely move to GHCR).",
+    "relevant_files": [
+      ".github/workflows/build.yml",
+      ".github/workflows/deploy.yml",
+      ".github/workflows/docker-build.yml"
+    ],
+    "score": 26
+  },
+  {
+    "number": 1800,
+    "title": "Add Obscura as a scraper backend",
+    "type": "feature",
+    "difficulty": "small",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "scrapers",
+    "one_liner": "Plausible community contribution adding an Obscura (Rust headless) scraper backend with a PR ready; Assaf to decide whether to accept the new dependency/backend.",
+    "relevant_files": [
+      "gpt_researcher/scraper/scraper.py",
+      "gpt_researcher/scraper/",
+      "docs/docs/gpt-researcher/gptr/scraping.md"
+    ],
+    "score": 26
+  },
+  {
+    "number": 1331,
+    "title": "Can't find local pdf documents when using pip package",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-needs-info",
+    "confidence": 0.6,
+    "area": "scrapers",
+    "one_liner": "DOC_PATH local docs work via CLI but 'no documents found' through the pip package; likely missing optional parsing deps or report_source not set to local, needs DEBUG logs to confirm.",
+    "relevant_files": [
+      "gpt_researcher/document/document.py",
+      "gpt_researcher/document/langchain_document.py"
+    ],
+    "score": 24
+  },
+  {
+    "number": 1526,
+    "title": "No embedding data received",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-needs-info",
+    "confidence": 0.6,
+    "area": "llm-provider",
+    "one_liner": "User points FAST/SMART/STRATEGIC_LLM at a vLLM gpt-oss endpoint but no EMBEDDING is configured, so embedding calls hit an incompatible endpoint; reply explaining EMBEDDING config requirement and that the chat base_url doesn't serve embeddings.",
+    "relevant_files": [
+      "gpt_researcher/memory/embeddings.py",
+      "gpt_researcher/config/config.py"
+    ],
+    "score": 24
+  },
+  {
+    "number": 1591,
+    "title": "Optional CI check for agent behavior?",
+    "type": "feature",
+    "difficulty": "small",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "config",
+    "one_liner": "Contributor offering to add an optional snapshot-based agent-behavior eval CI check; maintainer to decide if wanted and which entrypoint to wire it to.",
+    "relevant_files": [
+      ".github/workflows/",
+      "tests/"
+    ],
+    "score": 24
+  },
+  {
+    "number": 1442,
+    "title": "Can't use Groq provider",
+    "type": "question",
+    "difficulty": "small",
+    "action": "reply-needs-info",
+    "confidence": 0.55,
+    "area": "llm-provider",
+    "one_liner": "GPTR still demands OPENAI_API_KEY despite Groq config; Groq is supported in base.py but EMBEDDING likely still defaults to OpenAI—needs full config to confirm vs ask reporter.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/memory/embeddings.py"
+    ],
+    "score": 23
+  },
+  {
+    "number": 1718,
+    "title": "PDF generation does not work",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.55,
+    "area": "frontend",
+    "one_liner": "Frontend PDF export button does nothing; reporter linked PR #1720 with a fix, so review/merge that PR.",
+    "relevant_files": [
+      "frontend/",
+      "frontend/static/scripts.js",
+      "backend/server/server_utils.py"
+    ],
+    "score": 23
+  },
+  {
+    "number": 717,
+    "title": "Publisher agent 'directory not found' with multi-agent + local docs",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-needs-info",
+    "confidence": 0.5,
+    "area": "mcp",
+    "one_liner": "multi_agents publisher_agent fails to save report when output dir doesn't exist; likely an mkdir(exist_ok) fix, but reporter never confirmed on latest — ask for repro on current version or close as stale.",
+    "relevant_files": [
+      "multi_agents/agents/publisher.py",
+      "multi_agents/main.py"
+    ],
+    "score": 22
+  },
+  {
+    "number": 1041,
+    "title": "Cannot set custom variables via config.json (TOTAL_WORDS ignored)",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-needs-info",
+    "confidence": 0.5,
+    "area": "config",
+    "one_liner": "User reports config.json passed via config_path is ignored; load_config now reads the JSON file so likely fixed or a key-casing/path issue — verify on current config.py and reply, or fix if keys still not applied.",
+    "relevant_files": [
+      "gpt_researcher/config/config.py",
+      "gpt_researcher/config/variables/default.py"
+    ],
+    "score": 22
+  },
+  {
+    "number": 1244,
+    "title": "Issue with Anthropic llm provider (claude-2.1 / opus)",
+    "type": "needs-info",
+    "difficulty": "small",
+    "action": "reply-needs-info",
+    "confidence": 0.5,
+    "area": "llm-provider",
+    "one_liner": "Error in get_llm when configuring anthropic provider with old models (claude-2.1, claude-3-opus); truncated traceback. Anthropic support exists in base.py, so ask for full error and suggest current model names / installing langchain_anthropic.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/actions/agent_creator.py"
+    ],
+    "score": 22
+  },
+  {
+    "number": 1356,
+    "title": "API Reference Docs",
+    "type": "docs",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.8,
+    "area": "docs",
+    "one_liner": "User requests comprehensive API/config-reference docs (not just how-to guides); maintainer aware, needs decision on producing a reference section enumerating all config options.",
+    "relevant_files": [
+      "docs/docs/gpt-researcher/gptr/config.md",
+      "gpt_researcher/config/variables/default.py"
+    ],
+    "score": 22
+  },
+  {
+    "number": 1369,
+    "title": "Using every documents in local mode",
+    "type": "question",
+    "difficulty": "small",
+    "action": "reply-needs-info",
+    "confidence": 0.5,
+    "area": "config",
+    "one_liner": "Only a fraction of uploaded docs used; likely similarity-threshold/embedding retrieval limiting, needs config guidance (SIMILARITY_THRESHOLD, MAX_SEARCH_RESULTS) or more info.",
+    "relevant_files": [
+      "gpt_researcher/memory/embeddings.py",
+      "gpt_researcher/skills/context_manager.py"
+    ],
+    "score": 22
+  },
+  {
+    "number": 1300,
+    "title": "Reranker models",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.75,
+    "area": "config",
+    "one_liner": "Support dedicated reranker models (Cohere/AWS) for source curation with the current LLM-prompt ranking as fallback; needs a configurable reranker abstraction.",
+    "relevant_files": [
+      "gpt_researcher/skills/curator.py",
+      "gpt_researcher/actions/query_processing.py",
+      "gpt_researcher/config/config.py"
+    ],
+    "score": 21
+  },
+  {
+    "number": 1326,
+    "title": "[FEATURE REQUEST] Multiple OpenAI base URLs for local hosting",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.75,
+    "area": "llm-provider",
+    "one_liner": "Allow separate OpenAI base URLs per role (fast/smart/strategic/embedding) so e.g. OpenRouter + a local embedding endpoint can coexist; workaround is a LiteLLM proxy.",
+    "relevant_files": [
+      "gpt_researcher/config/config.py",
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/memory/embeddings.py"
+    ],
+    "score": 21
+  },
+  {
+    "number": 1393,
+    "title": "The function get_research_sources has garbled characters",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-needs-info",
+    "confidence": 0.45,
+    "area": "scrapers",
+    "one_liner": "Non-ASCII/special characters render as garbled (encoding issue) in research sources; image-only report, needs repro details but likely an encoding fix in source handling.",
+    "relevant_files": [
+      "gpt_researcher/skills/context_manager.py",
+      "gpt_researcher/scraper/utils.py"
+    ],
+    "score": 21
+  },
+  {
+    "number": 1081,
+    "title": "Cloudflare Protection Blocking Crunchbase Results",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "scrapers",
+    "one_liner": "Scraping Crunchbase via Tavily hits Cloudflare blocks; suggested adding Tavily Extract / headless-browser fallback to bypass anti-bot pages, which is a real but non-trivial scraper enhancement.",
+    "relevant_files": [
+      "gpt_researcher/scraper/",
+      "gpt_researcher/retrievers/tavily/tavily_search.py"
+    ],
+    "score": 20
+  },
+  {
+    "number": 1293,
+    "title": "FEATURE REQUEST: Build Open-WebUI tool / integration",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "integration",
+    "one_liner": "Build an Open-WebUI tool/integration using the GPTR pip library; a trivial PR (#1241) exists but deep integration (shared knowledgebase embeddings) is undecided.",
+    "relevant_files": [
+      "docs/docs/gpt-researcher/",
+      "gpt_researcher/agent.py"
+    ],
+    "score": 20
+  },
+  {
+    "number": 1403,
+    "title": "Specifying time range for research",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "retrievers",
+    "one_liner": "Request to expose a time-range filter so searches are constrained to a recency window; needs per-retriever support and an API/config surface decision.",
+    "relevant_files": [
+      "gpt_researcher/retrievers/",
+      "gpt_researcher/config/variables/default.py"
+    ],
+    "score": 20
+  },
+  {
+    "number": 1414,
+    "title": "document_urls path inconsistent with get_research_context() reference path",
+    "type": "bug",
+    "difficulty": "small",
+    "action": "reply-needs-info",
+    "confidence": 0.4,
+    "area": "scrapers",
+    "one_liner": "Passed document_urls paths don't match the citation paths generated in research context; image-only report (Chinese), needs repro but plausibly a path-normalization fix.",
+    "relevant_files": [
+      "gpt_researcher/document/",
+      "gpt_researcher/skills/context_manager.py"
+    ],
+    "score": 20
+  },
+  {
+    "number": 1468,
+    "title": "Connect with Langfuse (single trace per operation)",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "config",
+    "one_liner": "Request to wrap a full research run in a single Langfuse trace instead of many; requires adding tracing/observability context propagation, a design decision for the maintainer.",
+    "relevant_files": [
+      "gpt_researcher/agent.py",
+      "gpt_researcher/skills/researcher.py"
+    ],
+    "score": 20
+  },
+  {
+    "number": 1321,
+    "title": "Connection from NextJS Frontend to GPTR Backend",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.65,
+    "area": "frontend",
+    "one_liner": "Frontend connects to backend directly from the browser via NEXT_PUBLIC_GPTR_API_URL, forcing backend port exposure; proxying requests through the Next server would avoid exposing port 8000.",
+    "relevant_files": [
+      "frontend/nextjs/",
+      "frontend/nextjs/helpers/"
+    ],
+    "score": 19
+  },
+  {
+    "number": 1354,
+    "title": "Better leverage large context length LLMs",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.65,
+    "area": "config",
+    "one_liner": "Make hard-coded content-truncation lengths configurable so 1M-token models (Gemini/GPT-4.1) can ingest more content; needs auditing truncation points and exposing config.",
+    "relevant_files": [
+      "gpt_researcher/config/variables/default.py",
+      "gpt_researcher/skills/context_manager.py",
+      "gpt_researcher/actions/utils.py"
+    ],
+    "score": 19
+  },
+  {
+    "number": 1495,
+    "title": "Multi agents still have redundant content across different sections",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.65,
+    "area": "multi-agents",
+    "one_liner": "Multi-agent reports still repeat content across chapters (regression of #548); needs prompt/orchestration work in multi_agents to dedupe section content.",
+    "relevant_files": [
+      "multi_agents/main.py",
+      "multi_agents/agents/writer.py",
+      "multi_agents/agents/editor.py"
+    ],
+    "score": 19
+  },
+  {
+    "number": 1603,
+    "title": "Add summarization flag to quick_search: search-grounded quick summaries",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.65,
+    "area": "config",
+    "one_liner": "Feature request for an opt-in aggregated-summary mode on quick_search (single grounded synthesis without full deep_research pipeline); maintainer to decide on API surface.",
+    "relevant_files": [
+      "gpt_researcher/agent.py",
+      "gpt_researcher/skills/writer.py"
+    ],
+    "score": 19
+  },
+  {
+    "number": 563,
+    "title": "Add support for GPT to research from images (.png/.jpg/.jpeg) and OCR",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "scrapers",
+    "one_liner": "Feature request to support image inputs/OCR and embedding scraped images in reports; multiple volunteers but no merged PR — Assaf should decide scope/assignment.",
+    "relevant_files": [
+      "gpt_researcher/scraper/",
+      "gpt_researcher/document/"
+    ],
+    "score": 18
+  },
+  {
+    "number": 1030,
+    "title": "Best way to impose a global rate limit on LLM interactions",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "llm-provider",
+    "one_liner": "Request for a built-in/configurable global rate limiter to avoid provider 429s; langchain supports InMemoryRateLimiter — maintainer should decide whether to wire it into config.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py",
+      "gpt_researcher/config/variables/default.py"
+    ],
+    "score": 18
+  },
+  {
+    "number": 1255,
+    "title": "Validate followup chat feature for newly-created & saved reports",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "websocket",
+    "one_liner": "Follow-up chat on saved reports throws WebSocket close-code 1005; needs a new API endpoint to chat with previously saved reports (referenced PR #1241). Feature work requiring maintainer scoping.",
+    "relevant_files": [
+      "backend/server/server.py",
+      "backend/chat/"
+    ],
+    "score": 18
+  },
+  {
+    "number": 1282,
+    "title": "No subquery generation if tavily api fails",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "retrievers",
+    "one_liner": "Tavily fails on long (>400 char) queries and subquery generation returns an empty list instead of falling back to other configured retrievers; needs fallback logic across retrievers.",
+    "relevant_files": [
+      "gpt_researcher/actions/query_processing.py",
+      "gpt_researcher/skills/researcher.py",
+      "gpt_researcher/retrievers/tavily/tavily_search.py"
+    ],
+    "score": 18
+  },
+  {
+    "number": 1311,
+    "title": "IndexError: list index out of range when running a research",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "reply-needs-info",
+    "confidence": 0.6,
+    "area": "config",
+    "one_liner": "Detailed report on local docs with Gemini/DeepSeek crashes with IndexError in subtopic report generation; likely empty subtopics list, needs repro/logs but a guard in detailed_report is the likely fix.",
+    "relevant_files": [
+      "backend/report_type/detailed_report/detailed_report.py",
+      "gpt_researcher/skills/researcher.py"
+    ],
+    "score": 18
+  },
+  {
+    "number": 1581,
+    "title": "[Dependency Review] 2025-12-31",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "config",
+    "one_liner": "Automated dependency audit listing pending dependabot PRs, stale deps (langgraph, next, fastapi) and a UV-migration recommendation; maintainer to decide which upgrades/migrations to accept.",
+    "relevant_files": [
+      "pyproject.toml",
+      "requirements.txt",
+      "frontend/nextjs/package.json"
+    ],
+    "score": 18
+  },
+  {
+    "number": 1617,
+    "title": "Latest version cannot final export report documents",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "reply-needs-info",
+    "confidence": 0.6,
+    "area": "llm-provider",
+    "one_liner": "Final export hangs with an error in the embeddings_filter contextual-compression path (embeddings.embed_documents failing); likely an embedding-provider misconfig or langchain_classic compat issue, needs the full traceback/embedding config to pinpoint.",
+    "relevant_files": [
+      "gpt_researcher/context/compression.py",
+      "gpt_researcher/memory/embeddings.py"
+    ],
+    "score": 18
+  },
+  {
+    "number": 1139,
+    "title": "Multi-Agent reviewer following guidelines makes output inconsistent (missing headers/refs)",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.55,
+    "area": "mcp",
+    "one_liner": "Multi-agent reports show missing markdown header formatting and inconsistent reference aggregation, largely prompt/model-quality dependent (non-OpenAI models); needs prompt hardening rather than a clear single fix.",
+    "relevant_files": [
+      "multi_agents/agents/",
+      "multi_agents/agents/utils/"
+    ],
+    "score": 17
+  },
+  {
+    "number": 1276,
+    "title": "Are there any known issues with the reference section?",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.55,
+    "area": "report-generation",
+    "one_liner": "References frequently have wrong author/link, duplicate links, or 404s (LLM mismatches source URLs during synthesis); affects multiple users/models. Needs improved citation grounding (map references to actual visited_urls) but root cause is fuzzy.",
+    "relevant_files": [
+      "gpt_researcher/actions/report_generation.py",
+      "gpt_researcher/skills/writer.py",
+      "gpt_researcher/context/"
+    ],
+    "score": 17
+  },
+  {
+    "number": 1330,
+    "title": "NextJS UI Issues",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "reply-needs-info",
+    "confidence": 0.55,
+    "area": "frontend",
+    "one_liner": "Multiple NextJS UI console errors on load/preferences page behind a reverse proxy; mix of config (NEXT_PUBLIC_GPTR_API_URL) and possible missing build deps, needs clarification/repro.",
+    "relevant_files": [
+      "frontend/nextjs/",
+      "frontend/nextjs/package.json"
+    ],
+    "score": 17
+  },
+  {
+    "number": 1334,
+    "title": "My Documents Mode pulls information from the internet",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "reply-needs-info",
+    "confidence": 0.55,
+    "area": "scrapers",
+    "one_liner": "In Documents-only mode the report includes external web sources/citations; need to verify report_source handling restricts retrieval to local docs, repro details requested.",
+    "relevant_files": [
+      "gpt_researcher/skills/researcher.py",
+      "gpt_researcher/document/document.py",
+      "gpt_researcher/config/config.py"
+    ],
+    "score": 17
+  },
+  {
+    "number": 1385,
+    "title": "Markdown tables wrong format and cause write_md_to_pdf to fail",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.55,
+    "area": "frontend",
+    "one_liner": "Gemini-generated markdown tables are malformed and crash PDF/Word export; needs either prompt hardening or defensive table sanitization in the md-to-doc conversion.",
+    "relevant_files": [
+      "backend/utils.py",
+      "gpt_researcher/prompts.py"
+    ],
+    "score": 17
+  },
+  {
+    "number": 1575,
+    "title": "Can't output PDF and more",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "reply-needs-info",
+    "confidence": 0.55,
+    "area": "frontend",
+    "one_liner": "PDF button opens a blank page (200 OK) and N8N HTTP requests return temp_id without executing; likely same PDF-export path issue as #1520 plus async task handling, needs more detail/repro.",
+    "relevant_files": [
+      "backend/server/server_utils.py",
+      "backend/server/app.py",
+      "frontend/scripts.js"
+    ],
+    "score": 17
+  },
+  {
+    "number": 1764,
+    "title": "Research gets stuck with no meaningful logs/UI hints",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "reply-needs-info",
+    "confidence": 0.55,
+    "area": "llm-provider",
+    "one_liner": "Research hangs intermittently with local SearXNG+Ollama and no timeout/retry feedback; likely missing timeouts on external LLM/search calls — needs repro details and could lead to adding timeout/retry+logging.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/",
+      "gpt_researcher/retrievers/",
+      "backend/server/server_utils.py"
+    ],
+    "score": 17
+  },
+  {
+    "number": 1004,
+    "title": "Agent is not using my documents ('my documents' still web-searches)",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.5,
+    "area": "config",
+    "one_liner": "Selecting 'my documents' report_source still triggers web search per reporter (Azure config); needs repro on current report_source routing — recurring complaint, worth maintainer triage.",
+    "relevant_files": [
+      "gpt_researcher/skills/researcher.py",
+      "gpt_researcher/document/document.py",
+      "backend/server/server_utils.py"
+    ],
+    "score": 16
+  },
+  {
+    "number": 1271,
+    "title": "Never Ending Generation Loop with Ollama and Searxng",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.5,
+    "area": "llm-provider",
+    "one_liner": "With Ollama models the report generation never terminates (repeats 'End of Document'/References endlessly); appears to be a missing stop-token/length guard for non-OpenAI models. Reproducible across many models, but root cause needs investigation.",
+    "relevant_files": [
+      "gpt_researcher/actions/report_generation.py",
+      "gpt_researcher/llm_provider/generic/base.py"
+    ],
+    "score": 16
+  },
+  {
+    "number": 1290,
+    "title": "FEATURE REQUEST: Add user login and rights management",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.8,
+    "area": "frontend",
+    "one_liner": "Requests multi-user auth/LDAP/rights groups (OpenWebUI-style); large product decision, maintainer leans toward wrapping in OpenWebUI rather than building in-repo.",
+    "relevant_files": [
+      "frontend/nextjs/",
+      "backend/server/server.py"
+    ],
+    "score": 16
+  },
+  {
+    "number": 1690,
+    "title": "Implement DeepResearchGym-style evaluations",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.8,
+    "area": "evals",
+    "one_liner": "Substantive proposal to replace existing eval modules with DeepResearchGym protocol and research-quality benchmarks; needs maintainer decision on direction.",
+    "relevant_files": [
+      "evals/",
+      "tests/"
+    ],
+    "score": 16
+  },
+  {
+    "number": 1710,
+    "title": "Add codex auth login as alternative instead of api",
+    "type": "feature",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.5,
+    "area": "llm-provider",
+    "one_liner": "Requests Codex auth-login (OAuth-style) as an alternative to API keys; one-line request needs maintainer decision and more specification.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/"
+    ],
+    "score": 16
+  },
+  {
+    "number": 1767,
+    "title": "Language not supported well (Vietnamese output stays English)",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.5,
+    "area": "config",
+    "one_liner": "Report output ignores input language (Vietnamese) and defaults to English; needs language/locale handling in prompts/config.",
+    "relevant_files": [
+      "gpt_researcher/config/",
+      "gpt_researcher/prompts.py",
+      "gpt_researcher/utils/llm.py"
+    ],
+    "score": 16
+  },
+  {
+    "number": 1289,
+    "title": "FEATURE REQUEST: Allow user selection of models at query time",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.75,
+    "area": "config",
+    "one_liner": "Let users pick FAST/SMART/STRATEGIC models per request (via headers) instead of only env vars; product-level direction decision tied to user-management work.",
+    "relevant_files": [
+      "gpt_researcher/config/config.py",
+      "backend/server/server_utils.py",
+      "backend/server/websocket_manager.py"
+    ],
+    "score": 15
+  },
+  {
+    "number": 1291,
+    "title": "FEATURE REQUEST: Keep history / embedding to allow query and report rewriting",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.75,
+    "area": "config",
+    "one_liner": "Persist per-report embeddings/vector store so saved reports can be re-queried/rewritten; needs persistent vector-store support, a design decision.",
+    "relevant_files": [
+      "gpt_researcher/memory/",
+      "gpt_researcher/vector_store/",
+      "gpt_researcher/skills/context_manager.py"
+    ],
+    "score": 15
+  },
+  {
+    "number": 1299,
+    "title": "Graph RAG",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.75,
+    "area": "config",
+    "one_liner": "Add knowledge-graph / Neo4j vector-store support to extract entities/relationships during research; maintainer green-lit but needs a swappable vector-store provider design.",
+    "relevant_files": [
+      "gpt_researcher/vector_store/",
+      "gpt_researcher/memory/",
+      "gpt_researcher/skills/context_manager.py"
+    ],
+    "score": 15
+  },
+  {
+    "number": 1361,
+    "title": "Retrieval of documents from databases and vectorstores like PostgreSQL/pgvector",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.75,
+    "area": "retrievers",
+    "one_liner": "Feature request for official SQL/pgvector document retrieval; vector_store integration partly exists but a dedicated pgvector path is a larger design decision.",
+    "relevant_files": [
+      "gpt_researcher/vector_store/",
+      "gpt_researcher/retrievers/"
+    ],
+    "score": 15
+  },
+  {
+    "number": 1502,
+    "title": "Add Multi-Agent Functionality to FastAPI Frontend",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.75,
+    "area": "frontend",
+    "one_liner": "Request to bring multi-agent workflows (currently only in the Next.js frontend) to the FastAPI/static frontend; large feature requiring maintainer prioritization.",
+    "relevant_files": [
+      "backend/server/server.py",
+      "frontend/index.html",
+      "multi_agents/main.py"
+    ],
+    "score": 15
+  },
+  {
+    "number": 883,
+    "title": "Possible embedding bug (runaway embedding cost, process stuck)",
+    "type": "bug",
+    "difficulty": "medium",
+    "action": "reply-needs-info",
+    "confidence": 0.4,
+    "area": "config",
+    "one_liner": "Embeddings appear to loop/explode in cost on large local content; hard to act without repro details (doc size, config) — needs info, possibly related to chunking/max_results.",
+    "relevant_files": [
+      "gpt_researcher/memory/embeddings.py",
+      "gpt_researcher/context/compression.py"
+    ],
+    "score": 14
+  },
+  {
+    "number": 1114,
+    "title": "Proposal: Unified Provider Configuration Management",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "config",
+    "one_liner": "Proposes type-safe/dataclass-based unified provider (esp. Azure OpenAI) config instead of scattered env vars + JSON; a sizable architectural change requiring maintainer direction.",
+    "relevant_files": [
+      "gpt_researcher/config/config.py",
+      "gpt_researcher/config/variables/"
+    ],
+    "score": 14
+  },
+  {
+    "number": 1284,
+    "title": "WebSocket is disconnected, how to retrieve it after the disconnection",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "websocket",
+    "one_liner": "Long deep-research runs drop the websocket and the in-progress report is lost; requires backend persistence/reconnect architecture, a larger design decision.",
+    "relevant_files": [
+      "backend/server/websocket_manager.py",
+      "backend/server/server.py",
+      "frontend/nextjs/components/"
+    ],
+    "score": 14
+  },
+  {
+    "number": 1292,
+    "title": "FEATURE REQUEST: Schedule and queue research requests",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "websocket",
+    "one_liner": "Add scheduling/queuing/throttling of research jobs for multi-user/self-hosted setups; backend job-queue architecture decision.",
+    "relevant_files": [
+      "backend/server/server.py",
+      "backend/server/websocket_manager.py"
+    ],
+    "score": 14
+  },
+  {
+    "number": 1483,
+    "title": "GPTR Randomly Fails to Generate a Report",
+    "type": "needs-info",
+    "difficulty": "unknown",
+    "action": "reply-needs-info",
+    "confidence": 0.7,
+    "area": "websocket",
+    "one_liner": "Intermittent failure to start research with no reproduction; maintainer already asked for more logs, keep as needs-info or close as stale (no response since Aug 2025).",
+    "relevant_files": [
+      "backend/server/server_utils.py",
+      "backend/server/websocket_manager.py"
+    ],
+    "score": 14
+  },
+  {
+    "number": 1727,
+    "title": "[Feature Request] Add research quality scoring and source reliability ranking",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.7,
+    "area": "unknown",
+    "one_liner": "Large enhancement to score sources and findings (authority, cross-referencing, confidence intervals); needs Assaf's roadmap decision.",
+    "relevant_files": [
+      "gpt_researcher/skills/researcher.py",
+      "gpt_researcher/actions/"
+    ],
+    "score": 14
+  },
+  {
+    "number": 753,
+    "title": "Using OpenAI Batch endpoint",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "llm-provider",
+    "one_liner": "Request to integrate OpenAI Batch API for cost savings; architecturally significant (batch is async/offline) — maintainer decision, likely won't-fix given GPTR's interactive flow.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py"
+    ],
+    "score": 12
+  },
+  {
+    "number": 1050,
+    "title": "[Feature] Add API tool to agents + vector store for tool retrieval",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "retrievers",
+    "one_liner": "Proposal to let agents call arbitrary APIs as tools, indexed in a vector store for retrieval; large architectural feature (overlaps with MCP support) — maintainer direction needed.",
+    "relevant_files": [
+      "gpt_researcher/mcp/",
+      "gpt_researcher/retrievers/"
+    ],
+    "score": 12
+  },
+  {
+    "number": 1340,
+    "title": "Upload a document and have the LLM parse its format for custom formatting",
+    "type": "feature",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "config",
+    "one_liner": "Feature request to upload a template document, have the model learn its format, and generate output matching that format/length; open-ended product decision.",
+    "relevant_files": [
+      "gpt_researcher/prompts.py",
+      "gpt_researcher/document/document.py"
+    ],
+    "score": 12
+  },
+  {
+    "number": 1807,
+    "title": "Website is broken (gptr.dev/#features client-side exception)",
+    "type": "bug",
+    "difficulty": "unknown",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.6,
+    "area": "frontend",
+    "one_liner": "Marketing site gptr.dev #features crashes with a Next.js client-side exception; lives in a separate website repo, route to whoever owns gptr.dev.",
+    "relevant_files": [],
+    "score": 12
+  },
+  {
+    "number": 1262,
+    "title": "Fails at fairly straightforward, deterministic search tasks",
+    "type": "needs-info",
+    "difficulty": "unknown",
+    "action": "reply-needs-info",
+    "confidence": 0.55,
+    "area": "unknown",
+    "one_liner": "User expects exhaustive deterministic results (enumerating files across a repo) that GPTR doesn't fully return; this is a general capability expectation. Maintainer already asked for the config/report type; await response or close as out-of-scope.",
+    "relevant_files": [
+      "gpt_researcher/skills/researcher.py"
+    ],
+    "score": 11
+  },
+  {
+    "number": 1419,
+    "title": "Reports with redundant, disorganized content with mis-matching TOC",
+    "type": "bug",
+    "difficulty": "large",
+    "action": "needs-maintainer-decision",
+    "confidence": 0.55,
+    "area": "config",
+    "one_liner": "Multi-agent report generator consistently yields redundant content, mismatched TOC, and excessive nesting; a structural prompt/orchestration quality issue requiring maintainer direction.",
+    "relevant_files": [
+      "multi_agents/",
+      "multi_agents/agents/"
+    ],
+    "score": 11
+  },
+  {
+    "number": 1336,
+    "title": "No / Empty Report Generated",
+    "type": "bug",
+    "difficulty": "unknown",
+    "action": "reply-needs-info",
+    "confidence": 0.5,
+    "area": "llm-provider",
+    "one_liner": "Empty report when using Gemini + DuckDuckGo via Docker; maintainer asked for logs/outputs folder contents, blocked on reporter info.",
+    "relevant_files": [
+      "backend/server/websocket_manager.py",
+      "gpt_researcher/llm_provider/generic/base.py"
+    ],
+    "score": 10
+  },
+  {
+    "number": 558,
+    "title": "Change/Add Code interpreter on user input",
+    "type": "feature",
+    "difficulty": "unknown",
+    "action": "reply-needs-info",
+    "confidence": 0.45,
+    "area": "frontend",
+    "one_liner": "Vague request about toggling a 'code interpreter' field in the UI; underspecified and stale (2024), needs clarification or close.",
+    "relevant_files": [
+      "frontend"
+    ],
+    "score": 9
+  },
+  {
+    "number": 1357,
+    "title": "TypeError: expected string or bytes-like object, got 'NoneType'",
+    "type": "needs-info",
+    "difficulty": "unknown",
+    "action": "reply-needs-info",
+    "confidence": 0.4,
+    "area": "unknown",
+    "one_liner": "Empty body bug report with no repro, version, or stack trace; a second user reports the same but the issue is unactionable without details.",
+    "relevant_files": [],
+    "score": 8
+  },
+  {
+    "number": 1619,
+    "title": "YOU ARE STILL INFECTED WITH GPL POISONING",
+    "type": "needs-info",
+    "difficulty": "unknown",
+    "action": "reply-needs-info",
+    "confidence": 0.4,
+    "area": "config",
+    "one_liner": "Vague licensing complaint about a GPL dependency with no specifics; ask reporter which dependency/file they mean or close as non-actionable.",
+    "relevant_files": [
+      "pyproject.toml",
+      "LICENSE"
+    ],
+    "score": 8
+  },
+  {
+    "number": 751,
+    "title": "openai BadRequest error",
+    "type": "bug",
+    "difficulty": "unknown",
+    "action": "reply-needs-info",
+    "confidence": 0.35,
+    "area": "llm-provider",
+    "one_liner": "Bare OpenAI BadRequest traceback with no model/config details; stale (2024) and under-specified — needs info or close.",
+    "relevant_files": [
+      "gpt_researcher/llm_provider/generic/base.py"
+    ],
+    "score": 7
+  }
+]

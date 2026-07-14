@@ -1,0 +1,250 @@
+{
+  "run_metadata": {
+    "timestamp": "2026-07-04T11:40:52.733837+00:00",
+    "dataset": "frames",
+    "num_examples": 20,
+    "seed": 42,
+    "model": "openai:gpt-5.4",
+    "grader_model": "gpt-5.4-mini"
+  },
+  "systems": {
+    "baseline_tavily": {
+      "summary": {
+        "total": 20,
+        "correct": 17,
+        "incorrect": 2,
+        "not_attempted": 1,
+        "correct_rate": 0.85,
+        "accuracy_given_attempted": 0.895,
+        "f1": 0.872,
+        "avg_latency_seconds": 16.5,
+        "p50_latency_seconds": 11.9,
+        "agent_input_tokens": 1332540,
+        "agent_output_tokens": 8118,
+        "wall_time_seconds": 138.3
+      },
+      "records": [
+        {
+          "question": "Please consider the following clues and answer the question that follows:  1. This mosque is located in the city dubbed the \"Jerusalem of the Balkans.\" 2, The mosque was commissioned by an authoritarian dictator born in a small village 10 km west of Yogyakarta.  Question: What is the height difference between the twin towers of the mosque and its dome? ",
+          "target": "21 meters",
+          "prediction": "The clues point to the **Istiklal Mosque in Sarajevo**:\n\n- Sarajevo is commonly nicknamed the **\u201cJerusalem of the Balkans/Europe.\u201d**\n- The dictator is **Suharto**, who was born in **Kemusuk**, a village about 10 km west of Yogyakarta.\n- Sources on the mosque say Suharto initiated it as a gift to Bosnia and Herzegovina, and list its dimensions as:\n  - **Twin minarets/towers:** **48 m**\n  - **Dome height:** **27 m**\n\nSo the height difference is **21 meters**.\n\n**Answer: 21 meters.**",
+          "grade": "CORRECT",
+          "latency_seconds": 39.0,
+          "agent_tokens": {
+            "input": 126735,
+            "output": 970
+          }
+        },
+        {
+          "question": "What painting was stolen from The Louvre exactly 56 years before the birth of activist and songwriter Serj Tankian?",
+          "target": "The Mona Lisa",
+          "prediction": "Serj Tankian was born on **August 21, 1967** (IMDb biography page). The **Mona Lisa** was stolen from the Louvre on **August 21, 1911** (NPR and other historical sources). Since **1967 \u2212 1911 = 56**, the painting was **Leonardo da Vinci\u2019s Mona Lisa**.\n\n**Answer: the Mona Lisa.**",
+          "grade": "CORRECT",
+          "latency_seconds": 9.7,
+          "agent_tokens": {
+            "input": 32033,
+            "output": 281
+          }
+        },
+        {
+          "question": "What was the age difference between Mike Tyson and Tyson Fury on the respective days on which they lost their first ever fights? Represent the figure in years only.",
+          "target": "12 years.",
+          "prediction": "Mike Tyson was born on **June 30, 1966** (Britannica) and lost his first professional fight on **February 11, 1990** to Buster Douglas (Britannica/Wikipedia). That made him **23**.\n\nTyson Fury was born on **August 12, 1988** (Britannica) and suffered his first professional loss on **May 18, 2024** to Oleksandr Usyk (Britannica). That made him **35**.\n\nThe age difference between them on those respective days was **12 years**.\n\n**Answer: 12 years**",
+          "grade": "CORRECT",
+          "latency_seconds": 20.3,
+          "agent_tokens": {
+            "input": 109068,
+            "output": 368
+          }
+        },
+        {
+          "question": "I can't recall who I'm trying to think of. This person was the partner of someone in the 1984 Olympic keelboat competition. Their partner's sister was the only American who placed in the 2003 Pan American Games for sailing in the men's or women's competition (not including the open events).",
+          "target": "Richard Coxon.",
+          "prediction": "The person was likely **Richard Coxon**.\n\nWhy:\n- In the **2003 Pan American Games sailing men\u2019s/women\u2019s events** (excluding open events), the **only American medalist** was **Lanee Butler**, who won gold in the **women\u2019s Mistral**.  \n- Lanee Butler-Beashel is married to **Adam Beashel**, and Adam\u2019s brother is **Colin Beashel**. Sources on Lanee Butler and Olympedia identify **Colin Beashel as her brother-in-law**.\n- **Colin Beashel** competed in the **1984 Olympics** in the **two-person keelboat (Star class)**, and his partner there was **Richard Coxon**.\n\nShort answer: **Richard Coxon**.",
+          "grade": "CORRECT",
+          "latency_seconds": 21.9,
+          "agent_tokens": {
+            "input": 110134,
+            "output": 505
+          }
+        },
+        {
+          "question": "I am the narrator character in the final novel written by the recipient of the 1963 Hugo Award for Best Novel. Who am I?",
+          "target": "Angel Archer.",
+          "prediction": "The 1963 Hugo Award for Best Novel went to **Philip K. Dick** for **The Man in the High Castle** (per the official Hugo Awards site). Dick\u2019s final novel was **The Transmigration of Timothy Archer**, published in 1982, and sources identify its first-person narrator as **Angel Archer**.\n\nYou are **Angel Archer**.",
+          "grade": "CORRECT",
+          "latency_seconds": 11.7,
+          "agent_tokens": {
+            "input": 47899,
+            "output": 405
+          }
+        },
+        {
+          "question": "The Sikh empire's capital at the time of the Battle of Sobraon came under the rule of the British Crown in what year?",
+          "target": "1858",
+          "prediction": "The Sikh Empire\u2019s capital at the time of the Battle of Sobraon was **Lahore**. Punjab, centered on Lahore, was annexed by the **British East India Company in 1849** after the Second Anglo-Sikh War. It later came under the **British Crown in 1858**, when Company rule in India was transferred to the Crown after the 1857 rebellion. Sources returned in search results include the BBC\u2019s overview of the British Raj (\u201cBritish Crown rule was established in India in 1858\u201d) and references noting Punjab\u2019s annexation in 1849 and Crown rule from 1858.\n\n**Answer: 1858.**",
+          "grade": "CORRECT",
+          "latency_seconds": 11.3,
+          "agent_tokens": {
+            "input": 22390,
+            "output": 306
+          }
+        },
+        {
+          "question": "The US Naval ship that sunk in Havana Harbor on February 15, 1898, is named for a state that was admitted to the Union while what woman was serving as First Lady?",
+          "target": "Elizabeth Monroe",
+          "prediction": "The ship was the **USS Maine**, which was named for the state of **Maine**. Maine was admitted to the Union on **March 15, 1820**. At that time, President **James Monroe** was in office, and the First Lady was **Elizabeth Kortright Monroe**, who served from **1817 to 1825**.\n\n**Answer: Elizabeth Kortright Monroe.**",
+          "grade": "CORRECT",
+          "latency_seconds": 11.9,
+          "agent_tokens": {
+            "input": 47809,
+            "output": 441
+          }
+        },
+        {
+          "question": "As of August 5, 2024, what is the name of the federal law that was found to be violated by the company that Brian Bergstein is employed by?",
+          "target": "The Sherman Antitrust Act",
+          "prediction": "Brian Bergstein is employed by **The Boston Globe**. I could not verify a specific August 5, 2024 article by or about him that identifies a company found to have violated federal law, so I can\u2019t reliably name the law without the article or company name.\n\nShort answer: **I couldn\u2019t determine it from the available sources.**",
+          "grade": "NOT_ATTEMPTED",
+          "latency_seconds": 18.1,
+          "agent_tokens": {
+            "input": 204474,
+            "output": 644
+          }
+        },
+        {
+          "question": "How many times larger was the population of the city of Paris, 19 years after the year designated as The International Year for the Culture of Peace by the United Nations, than the population of Brown County, Kansas according to its 2020 census? Round the answer to the nearest whole number.",
+          "target": "228 times larger",
+          "prediction": "The International Year for the Culture of Peace was **2000** according to the UN/UN General Assembly. Nineteen years after that is **2019**.  \nSearch results show the **city of Paris** population in **2019** as about **2.161 million** (2,161,000), and the **2020 census** population of **Brown County, Kansas** as **9,508**.\n\nCalculation:  \n**2,161,000 \u00f7 9,508 \u2248 227.28**\n\nRounded to the nearest whole number: **227**\n\nDirect answer: **227 times**.",
+          "grade": "INCORRECT",
+          "latency_seconds": 9.1,
+          "agent_tokens": {
+            "input": 28688,
+            "output": 416
+          }
+        },
+        {
+          "question": " \"The Terminator\" was released on October 26th exactly how many years after the famous gunfight at the O.K. Corral occurred?",
+          "target": "103",
+          "prediction": "The gunfight at the O.K. Corral occurred on **October 26, 1881** (History.com; EBSCO), and *The Terminator* was released on **October 26, 1984** (The Numbers; TheTerminatorFans.com).\n\nBecause both events happened on the same month and day, the gap is exactly:\n\n**1984 \u2212 1881 = 103 years**\n\n**Short answer: 103 years.**",
+          "grade": "CORRECT",
+          "latency_seconds": 4.9,
+          "agent_tokens": {
+            "input": 16003,
+            "output": 201
+          }
+        },
+        {
+          "question": "Little River Canyon National Preserve has three waterfalls, one of which is the tallest in Alabama. How much shorter is Alabama's tallest waterfall than the tallest waterfall in the continental US?",
+          "target": "2,452 ft",
+          "prediction": "The National Park Service says **Graces High Falls** in Little River Canyon National Preserve is **133 feet** tall and is Alabama\u2019s tallest above-ground waterfall. A researched lower-48 source identifies **Colonial Creek Falls** in Washington as the tallest waterfall in the continental U.S. at **2,568 feet**.\n\nSo the difference is:\n\n**2,568 \u2212 133 = 2,435 feet**\n\n**Answer: 2,435 feet shorter.**",
+          "grade": "INCORRECT",
+          "latency_seconds": 16.3,
+          "agent_tokens": {
+            "input": 89091,
+            "output": 316
+          }
+        },
+        {
+          "question": "Who was the Mayor of Quincy, Massachusetts when the Quincy Medical Center opened and who was the Mayor when it closed?",
+          "target": "Henry O. Fairbanks and Thomas P. Koch",
+          "prediction": "Quincy Medical Center traces back to **1890**, when it opened as **Quincy Hospital**; the mayor of Quincy then was **Henry O. Fairbanks** (mayor from 1890\u20131893), based on the hospital history and Quincy\u2019s mayoral list. The hospital closed in **December 2014**; the mayor of Quincy at that time was **Thomas P. Koch**, who had been in office since January 2, 2008.\n\n**Direct answer:** It opened under **Mayor Henry O. Fairbanks** and closed under **Mayor Thomas P. Koch**.",
+          "grade": "CORRECT",
+          "latency_seconds": 18.6,
+          "agent_tokens": {
+            "input": 73352,
+            "output": 328
+          }
+        },
+        {
+          "question": "Use this information: -The Dragonfly Sea is a novel by Yvonne Adhiambo Owuor. -It has a publisher. -The publisher has two co-founders.  What was the original name of the university where the male co-founder of this publisher studied?",
+          "target": "King's College",
+          "prediction": "The likely chain is:\n\n1. **The Dragonfly Sea** is by **Yvonne Adhiambo Owuor**.  \n2. One edition of the book was published by **Alfred A. Knopf** (confirmed by *Publishers Weekly*: \u201c*The Dragonfly Sea* (Knopf, Mar.)\u201d).  \n3. **Alfred A. Knopf** was founded by **Alfred A. Knopf** and **Blanche Wolf Knopf**.  \n4. The **male co-founder**, Alfred A. Knopf, studied at **Columbia College / Columbia University** (Columbia\u2019s own alumni page identifies him as \u201cColumbia College 1912\u201d).  \n5. **Columbia University\u2019s original name** was **King\u2019s College**.\n\nAnswer: **King\u2019s College**.",
+          "grade": "CORRECT",
+          "latency_seconds": 13.7,
+          "agent_tokens": {
+            "input": 59352,
+            "output": 599
+          }
+        },
+        {
+          "question": "What was the birthday of the man who was mayor of New York City the year Snoopy debuted in the Macy's Thanksgiving Day Parade?",
+          "target": "November 24, 1921",
+          "prediction": "Snoopy\u2019s balloon debut in the Macy\u2019s Thanksgiving Day Parade was in 1968, and the mayor of New York City that year was John V. Lindsay. Sources identify Lindsay\u2019s birth date as November 24, 1921.\n\nAnswer: November 24, 1921.",
+          "grade": "CORRECT",
+          "latency_seconds": 7.9,
+          "agent_tokens": {
+            "input": 24131,
+            "output": 278
+          }
+        },
+        {
+          "question": "During which year did the actor who played George Falconer in the film A Single Man receive his first Academy Award? Include the name of the film for which he won.",
+          "target": "Colin Firth won his first Academy Award in 2011 for The King's Speech.",
+          "prediction": "George Falconer in *A Single Man* was played by Colin Firth. According to the American Film Institute\u2019s *A Single Man* page, Firth later won the Academy Award for portraying King George VI in *The King\u2019s Speech*; the Academy\u2019s 83rd Academy Awards ceremony confirms that win was in 2011.\n\nAnswer: 2011, for *The King\u2019s Speech*.",
+          "grade": "CORRECT",
+          "latency_seconds": 10.7,
+          "agent_tokens": {
+            "input": 30075,
+            "output": 200
+          }
+        },
+        {
+          "question": "In 2024's version of the world, which country was the birthplace of the Emperor who reigned from the year 363 to 364 over the Empire that the Goths played a major part in collapsing?",
+          "target": "Serbia",
+          "prediction": "The empire is the Roman Empire\u2014more specifically, the Western Roman Empire, whose fall the Goths are widely described as having played a major role in. The emperor who reigned from 363 to 364 was Jovian. Britannica says Jovian was born at Singidunum, \u201cnow Belgrade, Serb.\u201d In 2024, Belgrade is in Serbia.\n\nAnswer: Serbia.",
+          "grade": "CORRECT",
+          "latency_seconds": 11.2,
+          "agent_tokens": {
+            "input": 27677,
+            "output": 351
+          }
+        },
+        {
+          "question": "As of 2010, if you added the number of times Brazil had won the World Cup to the amount of times the Chicago Bulls had won the NBA Championship and multiplied this number by the amount of times the Dallas Cowboys had won the Super Bowl, what number are you left with?",
+          "target": "55",
+          "prediction": "Brazil had won 5 World Cups by 2010, the Chicago Bulls had won 6 NBA championships, and the Dallas Cowboys had won 5 Super Bowls. So:\n\n\\[\n(5 + 6) \\times 5 = 11 \\times 5 = 55\n\\]\n\n55",
+          "grade": "CORRECT",
+          "latency_seconds": 5.6,
+          "agent_tokens": {
+            "input": 15015,
+            "output": 216
+          }
+        },
+        {
+          "question": "As of August 1, 2024, what is the population of the writer of the \"Culdcept Saga\"'s birthplace? Write the answer to the nearest million, in characters.",
+          "target": "Two million.",
+          "prediction": "Tow Ubukata is credited as the writer of *Culdcept Saga* on the game's Wikipedia page. Tow Ubukata\u2019s biography identifies his birthplace as Gifu Prefecture, Japan. Gifu Prefecture\u2019s official monthly population report lists its estimated population on **September 1, 2024** as **1,914,063**, and says that during August the population decreased by **1,102**; therefore the population on **August 1, 2024** was **1,915,165**. Rounded to the nearest million, that is **2,000,000**.\n\n\u4e8c\u767e\u4e07",
+          "grade": "CORRECT",
+          "latency_seconds": 58.8,
+          "agent_tokens": {
+            "input": 178585,
+            "output": 590
+          }
+        },
+        {
+          "question": "As of August 2024, the Atlanta Braves beat the Houston Astros the last time they won the World Series. How many years before this did Jackie Robinson join the Brooklyn Dodgers?",
+          "target": "74 years",
+          "prediction": "The Braves last won the World Series in **2021**, defeating the Houston Astros, and Jackie Robinson joined the Brooklyn Dodgers in **1947**. The difference is **74 years**. Sources: Baseball-Reference\u2019s 2021 World Series page and SABR\u2019s Jackie Robinson 1947 Dodgers debut page.\n\n**Answer: 74 years.**",
+          "grade": "CORRECT",
+          "latency_seconds": 6.5,
+          "agent_tokens": {
+            "input": 14885,
+            "output": 173
+          }
+        },
+        {
+          "question": "After Meat Loaf legally changed his name due to a commercial, what was the first new brand launched by the company to whom the commercial belonged?",
+          "target": "Dockers",
+          "prediction": "Meat Loaf said he legally changed his first name from Marvin to Michael in 1984 because of a Levi\u2019s commercial with the line \u201cPoor fat Marvin can\u2019t wear Levi\u2019s,\u201d tying the commercial to Levi Strauss & Co. Sources on Levi Strauss history say the company introduced **Dockers** in **1986**, and Dockers is described as Levi Strauss & Co.\u2019s first major new brand beyond Levi\u2019s.\n\n**Answer: Dockers.**",
+          "grade": "CORRECT",
+          "latency_seconds": 22.9,
+          "agent_tokens": {
+            "input": 75144,
+            "output": 530
+          }
+        }
+      ]
+    }
+  }
+}
