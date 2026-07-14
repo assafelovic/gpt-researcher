@@ -21,11 +21,11 @@ LangGraph-based system inspired by [STORM paper](https://arxiv.org/abs/2402.1420
 | Agent | File | Role |
 |-------|------|------|
 | Human | - | Oversees and provides feedback |
-| Chief Editor | `agents/editor.py` | Master coordinator via LangGraph |
+| Chief Editor | `agents/orchestrator.py` | Master coordinator via LangGraph |
 | Researcher | Uses GPTResearcher | Deep research on topics |
 | Editor | `agents/editor.py` | Plans outline and structure |
 | Reviewer | `agents/reviewer.py` | Validates research correctness |
-| Revisor | `agents/revisor.py` | Revises based on feedback |
+| Reviser | `agents/reviser.py` | Revises based on feedback |
 | Writer | `agents/writer.py` | Compiles final report |
 | Publisher | `agents/publisher.py` | Exports to PDF, DOCX, Markdown |
 
@@ -39,7 +39,7 @@ LangGraph-based system inspired by [STORM paper](https://arxiv.org/abs/2402.1420
 3. For each outline topic (parallel):
    a. Researcher → In-depth subtopic research
    b. Reviewer → Validates draft
-   c. Revisor → Revises until satisfactory
+   c. Reviser → Revises until satisfactory
 4. Writer → Compiles final report
 5. Publisher → Exports to multiple formats
 ```
@@ -67,7 +67,7 @@ report_type = "multi_agents"
 ### Directly in Python
 
 ```python
-from multi_agents import run_research_task
+from multi_agents.main import run_research_task
 
 report = await run_research_task(
     query="Comprehensive analysis of market trends",
