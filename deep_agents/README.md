@@ -4,7 +4,7 @@ This example uses LangChain's [Deep Agents](https://docs.langchain.com/oss/pytho
 
 ## Use case
 
-By using Deep Agents, the same STORM-style research pipeline as the [LangGraph example](../multi_agents) (plan → parallel section research → review → publish) can be achieved with far less code, because planning, delegation and context management are emergent from the agent harness rather than a hardcoded graph:
+By using Deep Agents, the same research pipeline as the [LangGraph example](../multi_agents) (plan → parallel section research → review → publish) can be achieved with far less code, because planning, delegation and context management are emergent from the agent harness rather than a hardcoded graph:
 
 
 | Capability                | LangGraph example                        | Deep Agents example                                          |
